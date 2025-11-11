@@ -79,7 +79,12 @@ export class LineStyleLayer extends StyleLayer {
     }
 
     createBucket(parameters: BucketParameters<any>) {
-        return new LineBucket(parameters);
+        if(parameters._encoding && parameters._encoding === 'mlt') {
+            console.log('columnar Line Bucket initialized');
+            return new LineBucket(parameters);
+        }else{
+            return new LineBucket(parameters);
+        }
     }
 
     queryRadius(bucket: Bucket): number {

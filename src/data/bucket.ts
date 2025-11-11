@@ -11,6 +11,7 @@ import type Point from '@mapbox/point-geometry';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import type {DashEntry} from '../render/line_atlas';
 import type {Feature as StyleFeature} from '@maplibre/maplibre-gl-style-spec';
+import {type FeatureTable} from '@maplibre/mlt';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -21,6 +22,7 @@ export type BucketParameters<Layer extends TypedStyleLayer> = {
     collisionBoxArray: CollisionBoxArray;
     sourceLayerIndex: number;
     sourceID: string;
+    _encoding?: string;
 };
 
 export type PopulateParameters = {
@@ -86,8 +88,38 @@ export interface Bucket {
     readonly layers: Array<any>;
     readonly stateDependentLayers: Array<any>;
     readonly stateDependentLayerIds: Array<string>;
-    populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID): void;
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>): void;
+
+    populate?(
+        features: Array<IndexedFeature>,
+        options: PopulateParameters,
+        canonical: CanonicalTileID
+    ): void;
+
+    /**
+     * Populate using columnar FeatureTable path.
+     */
+    populateColumnar?(
+        table: FeatureTable,
+        options: PopulateParameters,
+        canonical: CanonicalTileID
+    ): void;
+
+    /**
+     * Update dynamic state (e.g. icon positions, dash patterns).
+     */
+    update?(
+        states: FeatureStates,
+        vtLayer: VectorTileLayer,
+        imagePositions: {[_: string]: ImagePosition},
+        dashPositions?: Record<string, DashEntry>
+    ): void;
+
+    updateColumnar?(
+        states: FeatureStates,
+        vtLayer: VectorTileLayer,
+        imagePositions: {[_: string]: ImagePosition}
+    ): void;
+
     isEmpty(): boolean;
     upload(context: Context): void;
     uploadPending(): boolean;
@@ -125,6 +157,5 @@ export function deserialize(input: Array<Bucket>, style: Style): {[_: string]: B
             output[layer.id] = bucket;
         }
     }
-
     return output;
 }

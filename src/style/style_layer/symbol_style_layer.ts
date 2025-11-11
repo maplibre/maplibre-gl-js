@@ -100,7 +100,12 @@ export class SymbolStyleLayer extends StyleLayer {
     }
 
     createBucket(parameters: BucketParameters<any>) {
-        return new SymbolBucket(parameters);
+        if(parameters._encoding && parameters._encoding === 'mlt'){
+            console.log('columnar Symbol Bucket initialized');
+            return new SymbolBucket(parameters);
+        }else{
+            return new SymbolBucket(parameters);
+        }
     }
 
     queryRadius(): number {

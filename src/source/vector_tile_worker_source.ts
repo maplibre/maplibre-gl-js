@@ -69,8 +69,8 @@ export class VectorTileWorkerSource implements WorkerSource {
     async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
         const response = await getArrayBuffer(params.request, abortController);
         try {
-            const vectorTile = params.encoding !== 'mlt' 
-                ? new VectorTile(new Protobuf(response.data)) 
+            const vectorTile = params.encoding !== 'mlt'
+                ? new VectorTile(new Protobuf(response.data))
                 : new MLTVectorTile(response.data);
             return {
                 vectorTile,
@@ -132,21 +132,17 @@ export class VectorTileWorkerSource implements WorkerSource {
             const resourceTiming = {} as {resourceTiming: any};
             if (perf) {
                 const resourceTimingData = perf.finish();
-                // it's necessary to eval the result of getEntriesByName() here via parse/stringify
-                // late evaluation in the main thread causes TypeError: illegal invocation
                 if (resourceTimingData)
                     resourceTiming.resourceTiming = JSON.parse(JSON.stringify(resourceTimingData));
             }
 
             workerTile.vectorTile = response.vectorTile;
-            const parsePromise = workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
+            const parsePromise = workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity, params.encoding);
             this.loaded[tileUid] = workerTile;
-            // keep the original fetching state so that reload tile can pick it up if the original parse is cancelled by reloads' parse
             this.fetching[tileUid] = {rawTileData, cacheControl, resourceTiming};
 
             try {
                 const result = await parsePromise;
-                // Transferring a copy of rawTileData because the worker needs to retain its copy.
                 return extend({rawTileData: rawTileData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
             } finally {
                 delete this.fetching[tileUid];
@@ -171,7 +167,7 @@ export class VectorTileWorkerSource implements WorkerSource {
 
         const cacheKey = `${maxZoomTileID.key}_${tileID.key}`;
         const cachedOverzoomTile = this.overzoomedTileResultCache.get(cacheKey);
-        
+
         if (cachedOverzoomTile) {
             return cachedOverzoomTile;
         }

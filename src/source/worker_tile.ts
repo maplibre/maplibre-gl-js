@@ -60,7 +60,7 @@ export class WorkerTile {
         this.inFlightDependencies = [];
     }
 
-    async parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
+    async parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting, _encoding?: string): Promise<WorkerTileResult> {
         this.status = 'parsing';
         this.data = data;
 
@@ -119,7 +119,8 @@ export class WorkerTile {
                     overscaling: this.overscaling,
                     collisionBoxArray: this.collisionBoxArray,
                     sourceLayerIndex,
-                    sourceID: this.source
+                    sourceID: this.source,
+                    _encoding: _encoding
                 });
 
                 bucket.populate(features, options, this.tileID.canonical);
