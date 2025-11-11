@@ -686,7 +686,7 @@ export class TileManager extends Evented {
      * If no loaded children are available, fallback to seeking loaded parents as an alternative substitute.
      */
     _updateRetainedTiles(idealTileIDs: Array<OverscaledTileID>, zoom: number): Record<string, OverscaledTileID> {
-        let idealTilesWithoutData = new Set<OverscaledTileID>();
+        const idealTilesWithoutData = new Set<OverscaledTileID>();
         for (const idealID of idealTileIDs) {
             const idealTile = this._addTile(idealID);
 
@@ -696,7 +696,7 @@ export class TileManager extends Evented {
         }
 
         // retain the tile even if it's not loaded because it's an ideal tile.
-        const retainTileMap: Record<string, OverscaledTileID> = idealTileIDs.reduce((acc, t) => { acc[t.key] = t; return acc}, {});
+        const retainTileMap: Record<string, OverscaledTileID> = idealTileIDs.reduce((acc, t) => { acc[t.key] = t; return acc;}, {});
         const tileIdsWithoutData = this._retainLoadedChildren(retainTileMap, idealTilesWithoutData);
 
         // for remaining missing tiles with incomplete child coverage, seek a loaded parent tile
