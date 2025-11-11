@@ -18,9 +18,9 @@
 <div id="time"></div>
 <script>
     const COUNT = 100_000;
-    const POSITIONS = [
-        [-10, 0],
-        [10, 0]
+    const GEOMETRIES = [
+        {type: 'Point', coordinates: [-10, 45]},
+        {type: 'Point', coordinates: [10, 45]}
     ]
 
     const map = new maplibregl.Map({
@@ -34,8 +34,14 @@
 
     map.showTileBoundaries = true;
 
-    function getRandomPoint() {
-        return
+    function getRandomGeometry() {
+        return {
+            type: "Point",
+            coordinates: [
+                -180 + Math.random() * 360,
+                -85 + Math.random() * 170
+            ]
+        }
     }
 
     map.on('load', () => {
@@ -46,17 +52,10 @@
                 features: new Array(COUNT).fill(0).map((_, i) => ({
                     type: "Feature",
                     id: i,
-                    geometry: {
-                        type: "Point",
-                        coordinates: i === 0 ? POSITIONS[0] : [
-                            -180 + Math.random() * 360,
-                            -85 + Math.random() * 170
-                        ]
-                    },
+                    geometry: i === 0 ? GEOMETRIES[0] : getRandomGeometry(),
                 }))
             }
         });
-
 
         map.addLayer({
             id: 'test',
@@ -82,7 +81,7 @@
         map.getSource('test').updateData({
             update: [{
                 id: 0,
-                newGeometry: {type: 'Point', coordinates: POSITIONS[i++ % POSITIONS.length] }
+                newGeometry: GEOMETRIES[(i++) % GEOMETRIES.length]
             }]
         });
 
