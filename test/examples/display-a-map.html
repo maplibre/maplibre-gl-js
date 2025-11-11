@@ -8,96 +8,183 @@
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
     <script src='../../dist/maplibre-gl-dev.js'></script>
     <style>
-        body { margin: 0; padding: 0; }
-        html, body, #map { height: 100%; }
-        #time { position: absolute; top: 0; left: 0; }
+html, body, #map { height: 100%; }
+body { margin: 0; padding: 0; background: #111111}
+
+#info {
+  position: fixed;
+  top: 0;
+  left: calc(50% - 250px);
+  width: 500px;
+  font-size: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  text-align: center;
+  font-family: Arial;
+  padding: 10px 0;
+}
+#info div {
+    display: inline-block;
+    margin-right: 30px;
+}
+
     </style>
 </head>
 <body>
 <div id="map"></div>
-<div id="time"></div>
+  <div id="info">
+      <div id="rate"></div>
+      <div id="count"></div>
+      <button onclick="stop=true;">Stop</button>
+  </div>
 <script>
-    const COUNT = 10_000;
+    let stop = false;
 
-    const size = 1;
-
-    const GEOMETRIES = [
-        getGeometry(0.01 * size, 45),
-        getGeometry(2 * size, 45),
-    ]
-
-    function getGeometry(lon = -180 + Math.random() * 360, lat = -85 + Math.random() * 170) {
-        const size = 1;
-        return {
-            type: "Polygon",
-            coordinates: [[
-                [lon - size/2, lat - size * Math.sqrt(3)/6],
-                [lon + size/2, lat - size * Math.sqrt(3)/6],
-                [lon, lat + size * Math.sqrt(3)/3],
-                [lon - size/2, lat - size * Math.sqrt(3)/6]
-            ]]
-        }
-    }
+(async () => {
+    const divRate = document.getElementById('rate');
+    const divCount = document.getElementById('count');
+    const startingFeatures = 1000;
+    const updatingFeatures = 1;
 
     const map = new maplibregl.Map({
-        container: 'map',
-        style: 'https://demotiles.maplibre.org/style.json',
-        center: [0, 45],
-        zoom: 5,
-        maplibreLogo: true,
+        container: "map",
+        style: "https://tiles.openfreemap.org/styles/dark",
+        center: [-121.403738, 40.592392],
+        zoom: 10,
+        pitch: 0,
+        maxPitch: 89,
         fadeDuration: 0
     });
+    await map.once("load");
 
     map.showTileBoundaries = true;
 
-    map.on('load', () => {
-        map.addSource('test', {
-            type: 'geojson',
-            data: {
-                type: "FeatureCollection",
-                features: new Array(COUNT).fill(0).map((_, i) => ({
-                    type: "Feature",
-                    id: i,
-                    geometry: i === 0 ? GEOMETRIES[0] : getGeometry(),
-                }))
-            }
-        });
+    const startData = getData(startingFeatures);
 
-        map.addLayer({
-            id: 'test',
-            type: 'fill',
-            source: 'test',
-            paint: {
-                'fill-color': ['case', ['==', ['id'], 0], 'red', 'blue'],
-                'fill-opacity': ['case', ['==', ['id'], 0], 1, 0.2]
-            }
-        });
+    map.addSource("poly_source", {
+        type: "geojson",
+        data: startData
+    });
+    const source = map.getSource("poly_source");
 
-        map.once('idle', () => {
-            test();
-        });
+    map.addLayer({
+        id: "fill",
+        type: "fill",
+        source: "poly_source",
+        paint: {
+            "fill-color": ["get", "color"],
+            // "fill-opacity": ["get", "opacity"]
+        },
+        filter: ["==", "$type", "Polygon"]
     });
 
-    let i = 1;
+    let nextData = getData(updatingFeatures);
+    removeAddFeatures([], nextData);
 
-    function test() {
-        const start = performance.now()
+    async function removeAddFeatures(removeData, addData) {
+        console.log(map.queryRenderedFeatures({layers: ['fill']})[0])
+        const dataDiff = {
+            update: removeData.features?.map((feature) => ({id: feature.id, newGeometry: addData.features[0].geometry})),
+        };
+        await atomicUpdateData(dataDiff);
 
-        map.getSource('test').updateData({
-            update: [{
-                id: 0,
-                newGeometry: GEOMETRIES[(i++) % GEOMETRIES.length]
-            }]
-        });
-
-        map.once('idle', () => {
-            console.log('------ IDLE -----')
-            document.getElementById('time').innerText += Math.round(performance.now() - start) + "\n"
-            if (i < 5) {
-                test();
-            }
-        })
+        if (stop) return;
+        let nextData = getData(updatingFeatures, 0.0000005);
+        setTimeout(() => removeAddFeatures(addData, nextData), 500);
     }
+
+    // ATOMIC UPDATE DATA - WAIT UNTIL THE EVENT IS FIRED
+    let idleCount = 0;
+    async function atomicUpdateData(dataDiff) {
+        return new Promise((resolve, reject) => {
+            const onSourceData = (e) => {
+                idleCount++;
+                resolve();
+            };
+            map.once('idle', onSourceData);
+            source.updateData(dataDiff);
+        });
+    }
+
+    // IDLE COUNT
+    let lastIdleCount = 0;
+    setInterval(() => {
+        lastIdleCount = idleCount;
+        idleCount = 0;
+        divRate.innerHTML = `Renders / sec: ${lastIdleCount}`;
+    }, 1000);
+
+    let renderCount = 0;
+    map.on('render', () => {
+        divCount.innerHTML = `Renders: ${++renderCount}`;
+    });
+})();
+
+//==================================================================
+// RANDOM POLY FEATURE GENERATION
+//==================================================================
+
+function getData(numFeatures, size = 0.00000005) {
+    const features = [];
+
+    const minLng = -121.8;
+    const maxLng = -121.0;
+    const minLat = 40.3;
+    const maxLat = 40.9;
+
+    for (let i = 0; i < numFeatures; i++) {
+        const centerLng = randomInRange(minLng, maxLng);
+        const centerLat = randomInRange(minLat, maxLat);
+        const coordinates = [makeCircle(centerLng, centerLat, size, 50)];
+
+        features.push({
+            id: i + 1,
+            type: "Feature",
+            geometry: {
+                type: "Polygon",
+                coordinates: coordinates
+            },
+            properties: {
+                color: randomColor(),
+                opacity: Math.random(),
+                height: Math.floor(Math.random() * 5000) + 1
+            }
+        });
+    }
+
+    return {
+        type: "FeatureCollection",
+        features: features
+    };
+}
+
+function makeCircle(lng, lat, radius, points = 50) {
+    const coords = [];
+    const earthCircumference = 40075000; // meters
+    const metersPerDegree = earthCircumference / 360;
+
+    const latOffset = radius * metersPerDegree;
+    const lngOffset = radius * metersPerDegree * Math.cos(lat * Math.PI / 180);
+
+    for (let i = 0; i <= points; i++) {
+        const angle = (i / points) * (2 * Math.PI);
+        coords.push([
+            lng + (Math.cos(angle) * lngOffset),
+            lat + (Math.sin(angle) * latOffset),
+        ]);
+    }
+
+    return coords;
+}
+
+const randomInt = (min, max) =>
+    Math.floor(Math.random() * (max - min + 1)) + min;
+const randomInRange = (min, max) => Math.random() * (max - min) + min;
+const randomColor = () =>
+    `#${randomInt(0, 255).toString(16).padStart(2, "0")}${randomInt(0, 255)
+        .toString(16)
+        .padStart(2, "0")}${randomInt(0, 255).toString(16).padStart(2, "0")}`;
+
 </script>
 </body>
 </html>
