@@ -453,6 +453,10 @@ export class GeoJSONSource extends Evented implements Source {
             .map((id) => typeof id === 'number' ? id : parseInt(id, 10))
         );
 
+        if (prevIds.has(NaN)) {
+            warnOnce('GeoJSONSource#updateData only supports numeric feature IDs or string IDs that can be cast to numbers. See issue #1043 for more details.');
+        }
+
         const nextBounds = [
             ...update.map(f => f.newGeometry),
             ...add.map(f => f.geometry)
