@@ -912,6 +912,20 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         expect(result).toBe(true);
     });
 
+    test('returns true when tile contains a feature that is being updated via addOrUpdateProperties', () => {
+        const tile = getMockTile(0, 0, 0, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {
+            update: [{
+                id: 0,
+                addOrUpdateProperties: [{key: 'foo', value: true}]
+            }]
+        };
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(true);
+    });
+
     test('returns true when tile contains a feature that is being removed', () => {
         const tile = getMockTile(0, 0, 0, [{id: 0}]);
         const diff: GeoJSONSourceDiff = {remove: [0]};

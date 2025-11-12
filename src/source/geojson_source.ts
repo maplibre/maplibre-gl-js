@@ -460,7 +460,9 @@ export class GeoJSONSource extends Evented implements Source {
         const nextBounds = [
             ...update.map(f => f.newGeometry),
             ...add.map(f => f.geometry)
-        ].map(g => getGeoJSONBounds(g));
+        ]
+            .filter(Boolean)
+            .map(g => getGeoJSONBounds(g));
 
         return {
             nextBounds,
