@@ -1,5 +1,5 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import {extend, warnOnce} from '../util/util';
+import {extend, warnOnce, type ExactlyOne} from '../util/util';
 import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
@@ -137,7 +137,11 @@ export class GeoJSONSource extends Evented implements Source {
 
     isTileClipped: boolean;
     reparseOverscaled: boolean;
-    _data: GeoJSON.GeoJSON | string | undefined | globalThis.Map<GeoJSONFeatureId, GeoJSON.Feature>;
+    _data: ExactlyOne<{
+        url: string;
+        geojson: GeoJSON.GeoJSON;
+        updateable: globalThis.Map<GeoJSONFeatureId, GeoJSON.Feature>;
+    }>;
     _options: GeoJSONSourceInternalOptions;
     workerOptions: GeoJSONWorkerOptions;
     map: Map;
@@ -169,7 +173,7 @@ export class GeoJSONSource extends Evented implements Source {
         this.actor = dispatcher.getActor();
         this.setEventedParent(eventedParent);
 
-        this._data = options.data;
+        this._data = typeof options.data === 'string' ? {url: options.data} : {geojson: options.data};
         this._options = extend({}, options);
 
         this._collectResourceTiming = options.collectResourceTiming;
@@ -250,7 +254,7 @@ export class GeoJSONSource extends Evented implements Source {
     setData(data: GeoJSON.GeoJSON | string, waitForCompletion: true): Promise<void>;
     setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: false): this;
     setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: boolean): this | Promise<void> {
-        this._data = data;
+        this._data = typeof data === 'string' ? {url: data} : {geojson: data};
         this._pendingWorkerUpdate = {data};
         const updatePromise = this._updateWorkerData();
         if (waitForCompletion) return updatePromise;
@@ -421,7 +425,7 @@ export class GeoJSONSource extends Evented implements Source {
             }
 
             if (!result.shouldApplyDiff) {
-                this._data = result.data;
+                this._data = {geojson: result.data};
             } else {
                 this._applyDiff(diff);
             }
@@ -460,15 +464,15 @@ export class GeoJSONSource extends Evented implements Source {
 
         // Lazily convert `this._data` to updateable if it's not already
         if (
-            typeof this._data !== 'string' &&
-            !(this._data instanceof globalThis.Map) &&
-            isUpdateableGeoJSON(this._data, promoteId)
+            !this._data.url &&
+            !this._data.updateable &&
+            isUpdateableGeoJSON(this._data.geojson, promoteId)
         ) {
-            this._data = toUpdateable(this._data, promoteId);
+            this._data = {updateable: toUpdateable(this._data.geojson, promoteId)};
         }
 
-        if (diff && this._data instanceof globalThis.Map) {
-            applySourceDiff(this._data, diff, promoteId);
+        if (diff && this._data.updateable) {
+            applySourceDiff(this._data.updateable, diff, promoteId);
         } else {
             // This should never happen because the worker would not set `shouldApplyDiff: true` if the source was not updateable.
             warnOnce('Cannot apply GeoJSONSource#updateData due to internal error');
@@ -588,12 +592,12 @@ export class GeoJSONSource extends Evented implements Source {
     serialize(): GeoJSONSourceSpecification {
         return extend({}, this._options, {
             type: this.type,
-            data: this._data instanceof globalThis.Map ?
+            data: this._data.updateable ?
                 {
                     type: 'FeatureCollection',
-                    features: Array.from(this._data.values())
+                    features: Array.from(this._data.updateable.values())
                 } :
-                this._data
+                this._data.url || this._data.geojson
         });
     }
 

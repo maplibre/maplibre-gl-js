@@ -1086,6 +1086,13 @@ export type Complete<T> = {
  */
 export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
 
+/**
+* A helper to allow require exactly one one property
+ */
+export type ExactlyOne<T, Keys extends keyof T = keyof T> = {
+    [K in Keys]: Required<Pick<T, K>> & { [P in Exclude<Keys, K>]?: never }
+}[Keys];
+
 export type TileJSON = {
     tilejson: '2.2.0' | '2.1.0' | '2.0.1' | '2.0.0' | '1.0.0';
     name?: string;
