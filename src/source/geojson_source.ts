@@ -448,13 +448,11 @@ export class GeoJSONSource extends Evented implements Source {
 
         const {add = [], update = [], remove = []} = (diff || {});
 
-        const prevIds = new Set([...update.map(u => u.id), ...remove]
-            // Cast all feature ids to numbers. Arbitrary string feature ids are not supported per #1043
-            .map((id) => typeof id === 'number' ? id : parseInt(id, 10))
-        );
+        const prevIds = new Set([...update.map(u => u.id), ...remove]);
 
-        if (prevIds.has(NaN)) {
-            warnOnce('GeoJSONSource#updateData only supports numeric feature IDs or string IDs that can be cast to numbers. See issue #1043 for more details.');
+        if (prevIds.values().find(id => typeof id !== 'number')) {
+            warnOnce('GeoJSONSource#updateData is slower when using string GeoJSON feature IDs. Consider using numeric IDs for better performance.');
+            return undefined;
         }
 
         const nextBounds = [
