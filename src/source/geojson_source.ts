@@ -412,10 +412,10 @@ export class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            if (diff) {
+            if (result.shouldApplyDiff) {
                 const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
-                // Lazily convert `this._data` to updateable format if it's not already
+                // Lazily convert `this._data` to updateable if it's not already
                 if (typeof this._data !== 'string' && !(this._data instanceof globalThis.Map) && isUpdateableGeoJSON(this._data, promoteId)) {
                     this._data = toUpdateable(this._data, promoteId);
                 }
