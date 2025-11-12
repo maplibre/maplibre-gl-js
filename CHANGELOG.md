@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 - Text labels can now include relatively uncommon Chinese, Japanese, Korean, and Vietnamese characters, as well as characters from historical writing systems. When using server-side fonts, the map may request glyph PBFs beyond U+FFFF from the server instead of throwing an error as before. ([#6640](https://github.com/maplibre/maplibre-gl-js/pull/6640)) (by [@1ec5](https://github.com/1ec5))
 - GeoJSON Source Diff: improve, abstract, refactor, optimize, and fix regressions. ([#6681](https://github.com/maplibre/maplibre-gl-js/pull/6681)) (by [@wayofthefuture](https://github.com/wayofthefuture))
+- GeoJSONSource setData and updateData waitForCompletion option ([#6688](https://github.com/maplibre/maplibre-gl-js/pull/6688)) (by [@wayofthefuture](https://github.com/wayofthefuture))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
