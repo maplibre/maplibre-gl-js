@@ -412,7 +412,9 @@ export class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            if (result.shouldApplyDiff) {
+            if (!result.shouldApplyDiff) {
+                this._data = result.data;
+            } else {
                 const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
                 // Lazily convert `this._data` to updateable if it's not already
@@ -435,8 +437,6 @@ export class GeoJSONSource extends Evented implements Source {
                     // This should never happen because whe worker would not set `shouldApplyDiff: true` if the source was not updateable.
                     warnOnce('Cannot apply GeoJSONSource#updateData due to internal error');
                 }
-            } else {
-                this._data = result.data;
             }
 
             let resourceTiming: PerformanceResourceTiming[] = null;

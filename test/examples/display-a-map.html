@@ -10,18 +10,84 @@
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
+        #time { position: absolute; top: 0; left: 0; }
     </style>
 </head>
 <body>
 <div id="map"></div>
+<div id="time"></div>
 <script>
+    const COUNT = 100_000;
+
     const map = new maplibregl.Map({
-        container: 'map', // container id
-        style: 'https://demotiles.maplibre.org/style.json', // style URL
-        center: [0, 0], // starting position [lng, lat]
-        zoom: 1, // starting zoom
-        maplibreLogo: true
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [0.2, 0.2],
+        zoom: 1,
+        maplibreLogo: true,
+        fadeDuration: 0
     });
+
+    map.showTileBoundaries = true;
+
+    function getRandomPoint() {
+        return
+    }
+
+    map.on('load', () => {
+        map.addSource('test', {
+            type: 'geojson',
+            data: {
+                type: "FeatureCollection",
+                features: new Array(COUNT).fill(0).map((_, i) => ({
+                    type: "Feature",
+                    id: i,
+                    geometry: {
+                        type: "Point",
+                        coordinates: i === 0 ? [40, 40] : [
+                            -180 + Math.random() * 360,
+                            -85 + Math.random() * 170
+                        ]
+                    },
+                }))
+            }
+        });
+
+
+        map.addLayer({
+            id: 'test',
+            type: 'circle',
+            source: 'test',
+            paint: {
+                'circle-radius': ['case', ['==', ['id'], 0], 4, 1],
+                'circle-color': ['case', ['==', ['id'], 0], 'red', 'blue'],
+                'circle-opacity': ['case', ['==', ['id'], 0], 1, 0.2]
+            }
+        });
+
+        map.once('idle', () => {
+            test();
+        });
+    });
+
+    let i = 0;
+
+    function test() {
+        const start = performance.now()
+
+        map.getSource('test').updateData({
+            update: [{
+                id: 0,
+                newGeometry: {type: 'Point', coordinates: i++ % 2 ? [40, 40] : [45, 45] }
+            }]
+        });
+
+        map.once('idle', () => {
+            console.log('------ IDLE -----')
+            document.getElementById('time').innerText += Math.round(performance.now() - start) + "\n"
+            test();
+        })
+    }
 </script>
 </body>
 </html>
