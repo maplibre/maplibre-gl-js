@@ -245,11 +245,15 @@ export class GeoJSONSource extends Evented implements Source {
      * Sets the GeoJSON data and re-renders the map.
      *
      * @param data - A GeoJSON data object or a URL to one. The latter is preferable in the case of large GeoJSON files.
+     * @param waitForCompletion - If true, the method will return a promise that resolves when set data is complete.
      */
-    setData(data: GeoJSON.GeoJSON | string): this {
+    setData(data: GeoJSON.GeoJSON | string, waitForCompletion: true): Promise<void>;
+    setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: false): this;
+    setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: boolean): this | Promise<void> {
         this._data = data;
         this._pendingWorkerUpdate = {data};
-        this._updateWorkerData();
+        const updatePromise = this._updateWorkerData();
+        if (waitForCompletion) return updatePromise;
         return this;
     }
 
@@ -266,10 +270,14 @@ export class GeoJSONSource extends Evented implements Source {
      * Updates are applied on a best-effort basis, updating an ID that does not exist will not result in an error.
      *
      * @param diff - The changes that need to be applied.
+     * @param waitForCompletion - If true, the method will return a promise that resolves when the update is complete.
      */
-    updateData(diff: GeoJSONSourceDiff): this {
+    updateData(diff: GeoJSONSourceDiff, waitForCompletion: true): Promise<void>;
+    updateData(diff: GeoJSONSourceDiff, waitForCompletion?: false): this;
+    updateData(diff: GeoJSONSourceDiff, waitForCompletion?: boolean): this | Promise<void> {
         this._pendingWorkerUpdate.diff = mergeSourceDiffs(this._pendingWorkerUpdate.diff, diff);
-        this._updateWorkerData();
+        const updatePromise = this._updateWorkerData();
+        if (waitForCompletion) return updatePromise;
         return this;
     }
 
