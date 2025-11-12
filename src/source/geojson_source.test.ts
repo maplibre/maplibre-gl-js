@@ -867,7 +867,7 @@ describe('GeoJSONSource.load', () => {
 });
 
 describe('GeoJSONSource.shouldApplyDiff', () => {
-    test('simple case ', async () => {
+    test('applies diff', async () => {
         const initialData: GeoJSON.FeatureCollection = {
             type: 'FeatureCollection',
             features: [
