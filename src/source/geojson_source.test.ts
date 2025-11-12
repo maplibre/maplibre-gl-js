@@ -936,6 +936,20 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         expect(result).toBe(true);
     });
 
+    test('returns true when tile contains a feature that is being updated via addOrUpdateProperties', () => {
+        const tile = getMockTile(0, 0, 0, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {
+            update: [{
+                id: 0,
+                addOrUpdateProperties: [{key: 'foo', value: true}]
+            }]
+        };
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(true);
+    });
+
     test('returns true when tile contains a feature that is being removed', () => {
         const tile = getMockTile(0, 0, 0, [{id: 0}]);
         const diff: GeoJSONSourceDiff = {remove: [0]};
@@ -989,12 +1003,32 @@ describe('GeoJSONSource.shoudReloadTile', () => {
     test('returns false when tile has been unloaded', () => {
         const tile = getMockTile(0, 0, 0, []);
         tile.latestFeatureIndex = null;
+        tile.state = 'unloaded';
 
         const diff: GeoJSONSourceDiff = {};
 
         const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
 
         expect(result).toBe(false);
+    });
+
+    test('returns true when tile is still loading', () => {
+        const tile = getMockTile(0, 0, 0, []);
+        tile.latestFeatureIndex = null;
+
+        const diff: GeoJSONSourceDiff = {};
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(true);
+    });
+
+    test('handles string feature ids', () => {
+        const diff: GeoJSONSourceDiff = {remove: ['abc']};
+
+        const result = source._getShouldReloadTileOptions(diff);
+
+        expect(result).toBe(undefined);
     });
 
     test('handles features that span the international date line', () => {

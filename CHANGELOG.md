@@ -7,7 +7,9 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix runtime exception when calling `GeoJSONSource#updateData` after unloading a vector tile ([#6689](https://github.com/maplibre/maplibre-gl-js/pull/6689) (by [@lucaswoj](https://github.com/lucaswoj)))
+- Fix runtime exception when calling `GeoJSONSource#updateData` while the source is processing another data update ([#6689](https://github.com/maplibre/maplibre-gl-js/pull/6689), [#6690](https://github.com/maplibre/maplibre-gl-js/pull/6690) (by [@lucaswoj](https://github.com/lucaswoj)))
+- Improve `GeoJSONSource#updateData` support for string feature IDs ([#6690](https://github.com/maplibre/maplibre-gl-js/pull/6690) (by [@lucaswoj](https://github.com/lucaswoj)))
+- Fix `GeoJSONSource#updateData` support for diffs containing `addOrUpdateProperties` but not `newGeometry` ([#6690](https://github.com/maplibre/maplibre-gl-js/pull/6690) (by [@lucaswoj](https://github.com/lucaswoj)))
 - _...Add new stuff here..._
 
 ## 5.12.0
