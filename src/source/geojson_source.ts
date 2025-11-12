@@ -272,12 +272,12 @@ export class GeoJSONSource extends Evented implements Source {
      * @param diff - The changes that need to be applied.
      * @param waitForCompletion - If true, the method will return a promise that resolves when the update is complete.
      */
-    updateData(diff: GeoJSONSourceDiff, waitForCompletion: true): Promise<this>;
+    updateData(diff: GeoJSONSourceDiff, waitForCompletion: true): Promise<void>;
     updateData(diff: GeoJSONSourceDiff, waitForCompletion?: false): this;
-    updateData(diff: GeoJSONSourceDiff, waitForCompletion?: boolean): this | Promise<this> {
+    updateData(diff: GeoJSONSourceDiff, waitForCompletion?: boolean): this | Promise<void> {
         this._pendingWorkerUpdate.diff = mergeSourceDiffs(this._pendingWorkerUpdate.diff, diff);
         const updatePromise = this._updateWorkerData();
-        if (waitForCompletion) return updatePromise.then(() => this);
+        if (waitForCompletion) return updatePromise;
         return this;
     }
 
