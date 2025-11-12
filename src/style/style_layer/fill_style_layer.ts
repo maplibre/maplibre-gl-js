@@ -35,7 +35,6 @@ export class FillStyleLayer extends StyleLayer {
 
     createBucket(parameters: BucketParameters<any>) {
         if(parameters._encoding && parameters._encoding === 'mlt'){
-            console.log('columnar Fill Bucket initialized');
             return new FillBucket(parameters);
         }else{
             return new FillBucket(parameters);

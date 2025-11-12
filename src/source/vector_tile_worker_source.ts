@@ -7,6 +7,7 @@ import {extend} from '../util/util';
 import {RequestPerformance} from '../util/performance';
 import {VectorTileOverzoomed, sliceVectorTileLayer, toVirtualVectorTile} from './vector_tile_overzoomed';
 import {MLTVectorTile} from './vector_tile_mlt';
+import {decodeTile, type FeatureTable} from '@maplibre/mlt';
 import type {
     WorkerSource,
     WorkerTileParameters,
@@ -20,6 +21,7 @@ import type {StyleLayerIndex} from '../style/style_layer_index';
 export type LoadVectorTileResult = {
     vectorTile: VectorTile;
     rawData: ArrayBufferLike;
+    featureTables?: FeatureTable[]; // Raw columnar data for ColumnarBuckets
     resourceTiming?: Array<PerformanceResourceTiming>;
 } & ExpiryData;
 
@@ -69,15 +71,27 @@ export class VectorTileWorkerSource implements WorkerSource {
     async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
         const response = await getArrayBuffer(params.request, abortController);
         try {
-            const vectorTile = params.encoding !== 'mlt'
-                ? new VectorTile(new Protobuf(response.data))
-                : new MLTVectorTile(response.data);
-            return {
-                vectorTile,
-                rawData: response.data,
-                cacheControl: response.cacheControl,
-                expires: response.expires
-            };
+            if (params.encoding === 'mlt') {
+                // For MLT: decode to get raw FeatureTable[] for ColumnarBuckets
+                const featureTables = decodeTile(new Uint8Array(response.data));
+                // Also create VectorTile wrapper for traditional buckets
+                const vectorTile = new MLTVectorTile(response.data);
+                return {
+                    vectorTile,
+                    featureTables, // Raw columnar data
+                    rawData: response.data,
+                    cacheControl: response.cacheControl,
+                    expires: response.expires
+                };
+            } else {
+                const vectorTile = new VectorTile(new Protobuf(response.data));
+                return {
+                    vectorTile,
+                    rawData: response.data,
+                    cacheControl: response.cacheControl,
+                    expires: response.expires
+                };
+            }
         } catch (ex) {
             const bytes = new Uint8Array(response.data);
             const isGzipped = bytes[0] === 0x1f && bytes[1] === 0x8b;
@@ -137,7 +151,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             }
 
             workerTile.vectorTile = response.vectorTile;
-            const parsePromise = workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity, params.encoding);
+            const parsePromise = workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity, params.encoding, response.featureTables);
             this.loaded[tileUid] = workerTile;
             this.fetching[tileUid] = {rawTileData, cacheControl, resourceTiming};
 

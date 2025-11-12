@@ -11,6 +11,7 @@ import {isZoomExpression, Step} from '@maplibre/maplibre-gl-style-spec';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g';
+import {ColumnarLineBucket} from '../../data/bucket/columnar/columnar_line_bucket';
 
 export class LineFloorwidthProperty extends DataDrivenProperty<number> {
     useIntegerZoom: true;
@@ -80,8 +81,7 @@ export class LineStyleLayer extends StyleLayer {
 
     createBucket(parameters: BucketParameters<any>) {
         if(parameters._encoding && parameters._encoding === 'mlt') {
-            console.log('columnar Line Bucket initialized');
-            return new LineBucket(parameters);
+            return new ColumnarLineBucket(parameters);
         }else{
             return new LineBucket(parameters);
         }
