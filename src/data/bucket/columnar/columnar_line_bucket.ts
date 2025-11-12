@@ -256,7 +256,7 @@ export class ColumnarLineBucket implements Bucket {
             const id = featureTable.idVector.getValue(i) as any;
             //Test style only has constant paint properties -> no feature needed for evaluation
             const feature = {id} as any;
-            // Konvertiere imagePositions zu PaintOptions Format
+            // Convert imagePositions to PaintOptions format
             const paintOptions = {
                 imagePositions: null,
                 canonical
@@ -285,7 +285,7 @@ export class ColumnarLineBucket implements Bucket {
                 const id = featureTable.idVector.getValue(i) as any;
                 //Test style only has constant paint properties -> no feature needed for evaluation
                 const feature = {id} as any;
-                // Konvertiere imagePositions zu PaintOptions Format
+                // Convert imagePositions to PaintOptions format
                 const paintOptions = {
                     imagePositions: null,
                     canonical
@@ -316,7 +316,7 @@ export class ColumnarLineBucket implements Bucket {
                 const id = featureTable.idVector.getValue(i) as any;
                 //Test style only has constant paint properties -> no feature needed for evaluation
                 const feature = {id} as any;
-                // Konvertiere imagePositions zu PaintOptions Format
+                // Convert imagePositions to PaintOptions format
                 const paintOptions = {
                     imagePositions: null,
                     canonical
@@ -351,7 +351,7 @@ export class ColumnarLineBucket implements Bucket {
                     const id = featureTable.idVector.getValue(i) as any;
                     //Test style only has constant paint properties -> no feature needed for evaluation
                     const feature = {id} as any;
-                    // Konvertiere imagePositions zu PaintOptions Format
+                    // Convert imagePositions to PaintOptions format
                     const paintOptions = {
                         imagePositions: null,
                         canonical

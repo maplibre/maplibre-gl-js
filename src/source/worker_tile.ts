@@ -76,10 +76,10 @@ export class WorkerTile {
 
         this.collisionBoxArray = new CollisionBoxArray();
 
-        // Bestimme, ob MLT-Encoding verwendet wird
+        // Determine if MLT encoding is being used
         const isMltEncoding = _encoding === 'mlt' && featureTables !== undefined;
 
-        // Source Layer Coder basierend auf Datentyp
+        // Source layer coder based on data type
         const sourceLayerCoder = isMltEncoding
             ? new DictionaryCoder(featureTables.map(ft => ft.name).sort())
             : new DictionaryCoder(Object.keys(data.layers).sort());
@@ -96,7 +96,7 @@ export class WorkerTile {
             glyphDependencies: {},
             dashDependencies: {},
             availableImages,
-            ...(subdivisionGranularity && {subdivisionGranularity})
+            subdivisionGranularity,
         };
 
         const layerFamilies = layerIndex.familiesBySource[this.source];
@@ -122,7 +122,7 @@ export class WorkerTile {
                 vectorTileLayer = data.layers[featureTableId];
                 if (!vectorTileLayer) continue;
 
-                // Version-Check nur für VectorTile
+                // Version check only for VectorTile
                 if (vectorTileLayer.version === 1) {
                     warnOnce(`Vector tile source "${this.source}" layer "${featureTableId}" ` +
                         'does not use vector tile spec v2 and therefore may have some rendering errors.');
@@ -130,7 +130,7 @@ export class WorkerTile {
                 sourceLayerIndex = sourceLayerCoder.encode(featureTableId);
             }
 
-            // Features vorbereiten (für non-columnar buckets)
+            // Prepare features (for non-columnar buckets)
             const features = [];
             for (let index = 0; index < vectorTileLayer.length; index++) {
                 const feature = vectorTileLayer.feature(index);
@@ -138,7 +138,7 @@ export class WorkerTile {
                 features.push({feature, id, index, sourceLayerIndex});
             }
 
-            // Layer-Familien verarbeiten
+            // Process layer families
             for (const family of layerFamilies[featureTableId]) {
                 const layer = family[0];
 
@@ -146,7 +146,7 @@ export class WorkerTile {
                     warnOnce(`layer.source = ${layer.source} does not equal this.source = ${this.source}`);
                 }
 
-                // Visibility-Check
+                // Visibility check
                 if (isMltEncoding) {
                     if (layer.minzoom && this.zoom < Math.floor(layer.minzoom)) continue;
                     if (layer.maxzoom && this.zoom >= layer.maxzoom) continue;
@@ -157,7 +157,7 @@ export class WorkerTile {
 
                 recalculateLayers(family, this.zoom, availableImages);
 
-                // Bucket-Parameter zusammenstellen
+                // Assemble bucket parameters
                 const bucketParams: BucketParameters<any> = {
                     index: featureIndex.bucketLayerIDs.length,
                     layers: family,
@@ -178,7 +178,6 @@ export class WorkerTile {
 
                 buckets[layer.id] = bucket;
 
-
                 // Choose populate method based on bucket capabilities
                 // If bucket has populateColumnar AND we have raw MLT data, use it
                 if (isMltEncoding && rawFeatureTable && 'populateColumnar' in bucket) {
@@ -194,7 +193,7 @@ export class WorkerTile {
             }
         }
 
-        // Abhängigkeiten sammeln
+        // Collect dependencies
         const stacks: {[_: string]: Array<number>} = mapObject(
             options.glyphDependencies,
             (glyphs) => Object.keys(glyphs).map(Number)
@@ -203,7 +202,7 @@ export class WorkerTile {
         this.inFlightDependencies.forEach((request) => request?.abort());
         this.inFlightDependencies = [];
 
-        // Glyphs laden
+        // Load glyphs
         let getGlyphsPromise = Promise.resolve<GetGlyphsResponse>({});
         if (Object.keys(stacks).length) {
             const abortController = new AbortController();
@@ -214,7 +213,7 @@ export class WorkerTile {
             }, abortController);
         }
 
-        // Icons laden
+        // Load icons
         const icons = Object.keys(options.iconDependencies);
         let getIconsPromise = Promise.resolve<GetImagesResponse>({});
         if (icons.length) {
@@ -226,7 +225,7 @@ export class WorkerTile {
             }, abortController);
         }
 
-        // Patterns laden
+        // Load patterns
         const patterns = Object.keys(options.patternDependencies);
         let getPatternsPromise = Promise.resolve<GetImagesResponse>({});
         if (patterns.length) {
@@ -238,7 +237,7 @@ export class WorkerTile {
             }, abortController);
         }
 
-        // Dashes laden (nur für nicht-MLT)
+        // Load dashes (only for non-MLT)
         let getDashesPromise = Promise.resolve<GetDashesResponse>({} as GetDashesResponse);
         if (!isMltEncoding) {
             const dashes = options.dashDependencies;
@@ -252,7 +251,7 @@ export class WorkerTile {
             }
         }
 
-        // Alle Promises auflösen
+        // Resolve all promises
         const [glyphMap, iconMap, patternMap, dashPositions] = await Promise.all([
             getGlyphsPromise,
             getIconsPromise,
@@ -263,11 +262,11 @@ export class WorkerTile {
         const glyphAtlas = new GlyphAtlas(glyphMap);
         const imageAtlas = new ImageAtlas(iconMap, patternMap);
 
-        // Bucket-Nachverarbeitung
+        // Bucket post-processing
         for (const key in buckets) {
             const bucket = buckets[key];
 
-            // Symbol-Buckets || bucket instanceof ColumnarSymbolBucket
+            // Symbol buckets || bucket instanceof ColumnarSymbolBucket
             if (bucket instanceof SymbolBucket) {
                 recalculateLayers(bucket.layers, this.zoom, availableImages);
                 performSymbolLayout({
@@ -281,14 +280,14 @@ export class WorkerTile {
                     ...(subdivisionGranularity && {subdivisionGranularity})
                 } as any);
             }
-            // Pattern-Buckets
+            // Pattern buckets
             else if (bucket.hasDependencies &&
                 (bucket instanceof FillBucket ||
                     bucket instanceof FillExtrusionBucket ||
                     bucket instanceof LineBucket)) {
                 recalculateLayers(bucket.layers, this.zoom, availableImages);
 
-                // dashPositions nur für nicht-MLT übergeben
+                // Pass dashPositions only for non-MLT
                 if (isMltEncoding) {
                     bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
                 } else {
@@ -306,7 +305,7 @@ export class WorkerTile {
             glyphAtlasImage: glyphAtlas.image,
             imageAtlas,
             ...(!isMltEncoding && {dashPositions}),
-            // Nur für Benchmarking:
+            // Only for benchmarking:
             glyphMap: this.returnDependencies ? glyphMap : null,
             iconMap: this.returnDependencies ? iconMap : null,
             glyphPositions: this.returnDependencies ? glyphAtlas.positions : null
