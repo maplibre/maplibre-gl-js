@@ -5,14 +5,18 @@ import {ErrorEvent, Event, Evented} from '../util/evented';
 import {TileCache} from './tile_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {EXTENT} from '../data/extent';
-import {type Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
 import {now} from '../util/time_control';
 import {OverscaledTileID} from './tile_id';
 import {SourceFeatureState} from '../source/source_state';
 import {getEdgeTiles} from '../util/util';
 import {config} from '../util/config';
+import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
+import {Bounds} from '../geo/bounds';
+import {EXTENT_BOUNDS} from '../data/extent_bounds';
+import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
 
+import type {Context} from '../gl/context';
 import type {Source} from '../source/source';
 import type {Map} from '../ui/map';
 import type {Style} from '../style/style';
@@ -23,9 +27,6 @@ import type {ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-
 import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
-import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
-import {Bounds} from '../geo/bounds';
-import {EXTENT_BOUNDS} from '../data/extent_bounds';
 
 type TileResult = {
     tile: Tile;
@@ -87,8 +88,8 @@ export class TileManager extends Evented {
     _rasterFadeDuration: number;
     _maxFadingAncestorLevels: number;
 
-    static maxUnderzooming: number;
-    static maxOverzooming: number;
+    static maxUnderzooming: number = 10;
+    static maxOverzooming: number = 3;
 
     constructor(id: string, options: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher) {
         super();
@@ -396,29 +397,28 @@ export class TileManager extends Evented {
      * Analogy: imagine two sheets of paper in 3D space:
      *   - one sheet = ideal tiles at varying overscaledZ
      *   - the second sheet = maxCoveringZoom
+     * 
+     * @param retainTileMap - this parameters will be updated with the child tiles to keep
+     * @param idealTilesWithoutData - which of the ideal tiles currently does not have loaded data
+     * @return a set of tiles that need to be loaded
      */
-
-    _retainLoadedChildren(
-        targetTiles: Record<string, OverscaledTileID>,
-        retain: Record<string, OverscaledTileID>
-    ) {
-        const targetTileIDs = Object.values(targetTiles);
-        const loadedDescendents: Record<string, Tile[]> = this._getLoadedDescendents(targetTileIDs);
-        const incomplete: Record<string, OverscaledTileID> = {};
+    _retainLoadedChildren(retainTileMap: Record<string, OverscaledTileID>, idealTilesWithoutData: Set<OverscaledTileID>): Set<OverscaledTileID> {
+        const loadedDescendents: Record<string, Tile[]> = this._getLoadedDescendents(idealTilesWithoutData);
+        const incomplete = new Set<OverscaledTileID>();
 
         // retain the uppermost descendents of target tiles
-        for (const targetID of targetTileIDs) {
+        for (const targetID of idealTilesWithoutData) {
             const descendents = loadedDescendents[targetID.key];
             if (!descendents?.length) {
-                incomplete[targetID.key] = targetID;
+                incomplete.add(targetID);
                 continue;
             }
 
             // find descendents within the max covering zoom range
-            const maxCoveringZoom = targetID.overscaledZ + TileManager.maxUnderzooming;
+            const maxCoveringZoom = targetID.overscaledZ + TileManager.maxOverzooming;
             const candidates = descendents.filter(t => t.tileID.overscaledZ <= maxCoveringZoom);
             if (!candidates.length) {
-                incomplete[targetID.key] = targetID;
+                incomplete.add(targetID);
                 continue;
             }
 
@@ -426,12 +426,12 @@ export class TileManager extends Evented {
             const topZoom = Math.min(...candidates.map(t => t.tileID.overscaledZ));
             const topIDs = candidates.filter(t => t.tileID.overscaledZ === topZoom).map(t => t.tileID);
             for (const tileID of topIDs) {
-                retain[tileID.key] = tileID;
+                retainTileMap[tileID.key] = tileID;
             }
 
             //determine if the retained generation is fully covered
             if (!this._areDescendentsComplete(topIDs, topZoom, targetID.overscaledZ)) {
-                incomplete[targetID.key] = targetID;
+                incomplete.add(targetID);
             }
         }
 
@@ -441,7 +441,7 @@ export class TileManager extends Evented {
     /**
      * Return dictionary of qualified loaded descendents for each provided target tile id
      */
-    _getLoadedDescendents(targetTileIDs: OverscaledTileID[]) {
+    _getLoadedDescendents(targetTileIDs: Set<OverscaledTileID>) {
         const loadedDescendents: Record<string, Tile[]> = {};
 
         // enumerate current tiles and find the loaded descendents of each target tile
@@ -561,7 +561,7 @@ export class TileManager extends Evented {
 
         if (!this.used && !this.usedForTerrain) {
             idealTileIDs = [];
-        } else if (this._source.tileID) {
+        } else if (this._source.tileID) { // image source
             idealTileIDs = transform.getVisibleUnwrappedCoordinates(this._source.tileID)
                 .map((unwrapped) => new OverscaledTileID(unwrapped.canonical.z, unwrapped.wrap, unwrapped.canonical.z, unwrapped.canonical.x, unwrapped.canonical.y));
         } else {
@@ -577,7 +577,7 @@ export class TileManager extends Evented {
                 calculateTileZoom: this._source.calculateTileZoom,
             });
 
-            if (this._source.hasTile) {
+            if (this._source.hasTile) { // tile should be in bounds
                 idealTileIDs = idealTileIDs.filter((coord) => this._source.hasTile(coord));
             }
         }
@@ -687,28 +687,24 @@ export class TileManager extends Evented {
      * If no loaded children are available, fallback to seeking loaded parents as an alternative substitute.
      */
     _updateRetainedTiles(idealTileIDs: Array<OverscaledTileID>, zoom: number): Record<string, OverscaledTileID> {
-        const retain: Record<string, OverscaledTileID> = {};
-        const checked: Record<string, boolean> = {};
-        const minCoveringZoom = Math.max(zoom - TileManager.maxOverzooming, this._source.minzoom);
-
-        let missingIdealTiles = {};
+        const idealTilesWithoutData = new Set<OverscaledTileID>();
         for (const idealID of idealTileIDs) {
             const idealTile = this._addTile(idealID);
 
-            // retain the tile even if it's not loaded because it's an ideal tile.
-            retain[idealID.key] = idealID;
-
             if (!idealTile.hasData()) {
-                missingIdealTiles[idealID.key] = idealID;
+                idealTilesWithoutData.add(idealID);
             }
         }
 
-        missingIdealTiles = this._retainLoadedChildren(missingIdealTiles, retain);
+        // retain the tile even if it's not loaded because it's an ideal tile.
+        const retainTileMap: Record<string, OverscaledTileID> = idealTileIDs.reduce((acc, t) => { acc[t.key] = t; return acc;}, {});
+        const tileIdsWithoutData = this._retainLoadedChildren(retainTileMap, idealTilesWithoutData);
 
         // for remaining missing tiles with incomplete child coverage, seek a loaded parent tile
-        for (const idealKey in missingIdealTiles) {
-            const tileID = missingIdealTiles[idealKey];
-            let tile = this._tiles[idealKey];
+        const checked: Record<string, boolean> = {};
+        const minCoveringZoom = Math.max(zoom - TileManager.maxUnderzooming, this._source.minzoom);
+        for (const tileID of tileIdsWithoutData) {
+            let tile = this._tiles[tileID.key];
 
             // As we ascend up the tile pyramid of the ideal tile, we check whether the parent
             // tile has been previously requested (and errored because we only loop over tiles with no data)
@@ -729,7 +725,7 @@ export class TileManager extends Evented {
                 if (tile) {
                     const hasData = tile.hasData();
                     if (hasData || !this.map?.cancelPendingTileRequestsWhileZooming || parentWasRequested) {
-                        retain[parentId.key] = parentId;
+                        retainTileMap[parentId.key] = parentId;
                     }
                     // Save the current values, since they're the parent of the next iteration
                     // of the parent tile ascent loop.
@@ -739,7 +735,7 @@ export class TileManager extends Evented {
             }
         }
 
-        return retain;
+        return retainTileMap;
     }
 
     /**
@@ -1182,7 +1178,7 @@ export class TileManager extends Evented {
      * Set the value of a particular state for a feature
      */
     setFeatureState(sourceLayer: string, featureId: number | string, state: any) {
-        sourceLayer = sourceLayer || '_geojsonTileLayer';
+        sourceLayer = sourceLayer || GEOJSON_TILE_LAYER_NAME;
         this._state.updateState(sourceLayer, featureId, state);
     }
 
@@ -1190,7 +1186,7 @@ export class TileManager extends Evented {
      * Resets the value of a particular state key for a feature
      */
     removeFeatureState(sourceLayer?: string, featureId?: number | string, key?: string) {
-        sourceLayer = sourceLayer || '_geojsonTileLayer';
+        sourceLayer = sourceLayer || GEOJSON_TILE_LAYER_NAME;
         this._state.removeFeatureState(sourceLayer, featureId, key);
     }
 
@@ -1198,7 +1194,7 @@ export class TileManager extends Evented {
      * Get the entire state object for a feature
      */
     getFeatureState(sourceLayer: string, featureId: number | string) {
-        sourceLayer = sourceLayer || '_geojsonTileLayer';
+        sourceLayer = sourceLayer || GEOJSON_TILE_LAYER_NAME;
         return this._state.getState(sourceLayer, featureId);
     }
 
@@ -1226,9 +1222,6 @@ export class TileManager extends Evented {
         this._cache.filter(tile => !tile.hasDependency(namespaces, keys));
     }
 }
-
-TileManager.maxOverzooming = 10;
-TileManager.maxUnderzooming = 3;
 
 function compareTileId(a: OverscaledTileID, b: OverscaledTileID): number {
     // Different copies of the world are sorted based on their distance to the center.

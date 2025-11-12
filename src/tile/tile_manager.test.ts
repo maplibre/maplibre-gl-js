@@ -1154,14 +1154,14 @@ describe('TileManager._updateRetainedTiles', () => {
             }
 
             const retain: {[key: string]: OverscaledTileID} = {};
-            const missingTiles: {[key: string]: OverscaledTileID} = {};
+            const missingTiles = new Set<OverscaledTileID>();
 
             // mark all ideal tiles as retained and also as missing with no data for child retainment
             for (const idealID of idealTileIDs) {
                 retain[idealID.key] = idealID;
-                missingTiles[idealID.key] = idealID;
+                missingTiles.add(idealID);
             }
-            tileManager._retainLoadedChildren(missingTiles, retain);
+            tileManager._retainLoadedChildren(retain, missingTiles);
 
             expect(Object.keys(retain).sort()).toEqual(idealChildIDs.concat(idealTileIDs).map(id => id.key).sort());
         });
@@ -1174,7 +1174,7 @@ describe('TileManager._updateRetainedTiles', () => {
         };
 
         const idealTileID = new OverscaledTileID(2, 0, 2, 1, 1);
-        const idealTiles: {[key: string]: OverscaledTileID} = {[idealTileID.key]: idealTileID};
+        const idealTiles = new Set<OverscaledTileID>([idealTileID]);
 
         const children = [
             new OverscaledTileID(3, 0, 3, 2, 2),  //keep
@@ -1189,7 +1189,7 @@ describe('TileManager._updateRetainedTiles', () => {
         }
 
         const retain: {[key: string]: OverscaledTileID} = {};
-        tileManager._retainLoadedChildren(idealTiles, retain);
+        tileManager._retainLoadedChildren(retain, idealTiles);
 
         const expectedKeys = children
             .filter(child => child.overscaledZ === 3)
