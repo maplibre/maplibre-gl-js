@@ -8,6 +8,7 @@ import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {OverscaledTileID} from '../tile/tile_id';
 import type {GetResourceResponse, RequestParameters} from './ajax';
 import type {DashEntry} from '../render/line_atlas';
+import {GeoJSONSourceDiff} from '../source/geojson_source_diff';
 
 /**
  * The parameters needed in order to get information about the cluster
@@ -28,6 +29,7 @@ export type GetClusterLeavesParams = ClusterIDAndSource & { limit: number; offse
  */
 export type GeoJSONWorkerSourceLoadDataResult = {
     data?: GeoJSON.GeoJSON;
+    shouldApplyDiff?: boolean;
     resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
     abandoned?: boolean;
 };
