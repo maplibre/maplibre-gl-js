@@ -871,7 +871,7 @@ describe('GeoJSONSource.shouldApplyDiff', () => {
         const initialData: GeoJSON.FeatureCollection = {
             type: 'FeatureCollection',
             features: [
-                {type: 'Feature', id: 0, properties: {foo: false}, geometry: {type: 'Point', coordinates: [0, 0]}},
+                {type: 'Feature', id: 0, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}},
             ]
         };
 
@@ -889,7 +889,7 @@ describe('GeoJSONSource.shouldApplyDiff', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
         const diff: GeoJSONSourceDiff = {
-            update: [{id: 0, addOrUpdateProperties: [{key: 'foo', value: true}]}]
+            update: [{id: 0, newGeometry: {type: 'Point', coordinates: [0, 1]}}]
         };
         source.updateData(diff);
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
@@ -897,7 +897,7 @@ describe('GeoJSONSource.shouldApplyDiff', () => {
         expect(source.serialize().data).toEqual({
             type: 'FeatureCollection',
             features: [
-                {type: 'Feature', id: 0, properties: {foo: true}, geometry: {type: 'Point', coordinates: [0, 0]}},
+                {type: 'Feature', id: 0, properties: {}, geometry: {type: 'Point', coordinates: [0, 1]}},
             ]
         });
     });

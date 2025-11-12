@@ -412,19 +412,19 @@ export class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            if (result.shouldApplyDiff) {
+            if (diff) {
                 const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
-                // This expression should always return `true`. The worker would not pass `shouldApplyDiff: true`
-                // if a diff was not provided or the data is not updateable.
-                if (diff && typeof this._data !== 'string' && !(this._data instanceof globalThis.Map) && isUpdateableGeoJSON(this._data, promoteId)) {
+                // Lazily convert `this._data` to updateable format if it's not already
+                if (typeof this._data !== 'string' && !(this._data instanceof globalThis.Map) && isUpdateableGeoJSON(this._data, promoteId)) {
                     this._data = toUpdateable(this._data, promoteId);
                 }
 
-                if (!(this._data instanceof globalThis.Map)) {
-                    warnOnce('Cannot apply GeoJSONSource#updateData due to internal error');
-                } else {
+                if (this._data instanceof globalThis.Map) {
                     applySourceDiff(this._data, diff, promoteId);
+                } else {
+                    // This should never happen because whe worker would not set `shouldApplyDiff: true` if the source was not updateable.
+                    warnOnce('Cannot apply GeoJSONSource#updateData due to internal error');
                 }
             } else {
                 this._data = result.data;
@@ -561,10 +561,12 @@ export class GeoJSONSource extends Evented implements Source {
     serialize(): GeoJSONSourceSpecification {
         return extend({}, this._options, {
             type: this.type,
-            data: this._data instanceof globalThis.Map ? {
-                type: 'FeatureCollection',
-                features: Array.from(this._data.values())
-            } : this._data
+            data: this._data instanceof globalThis.Map ?
+                {
+                    type: 'FeatureCollection',
+                    features: Array.from(this._data.values())
+                } :
+                this._data
         });
     }
 

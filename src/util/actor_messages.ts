@@ -28,7 +28,6 @@ export type GetClusterLeavesParams = ClusterIDAndSource & { limit: number; offse
  */
 export type GeoJSONWorkerSourceLoadDataResult = {
     data?: GeoJSON.GeoJSON;
-    shouldApplyDiff?: boolean;
     resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
     abandoned?: boolean;
 };
