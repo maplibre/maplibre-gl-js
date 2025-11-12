@@ -249,11 +249,15 @@ export class GeoJSONSource extends Evented implements Source {
      * Sets the GeoJSON data and re-renders the map.
      *
      * @param data - A GeoJSON data object or a URL to one. The latter is preferable in the case of large GeoJSON files.
+     * @param waitForCompletion - If true, the method will return a promise that resolves when set data is complete.
      */
-    setData(data: GeoJSON.GeoJSON | string): this {
+    setData(data: GeoJSON.GeoJSON | string, waitForCompletion: true): Promise<void>;
+    setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: false): this;
+    setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: boolean): this | Promise<void> {
         this._data = typeof data === 'string' ? {url: data} : {geojson: data};
         this._pendingWorkerUpdate = {data};
-        this._updateWorkerData();
+        const updatePromise = this._updateWorkerData();
+        if (waitForCompletion) return updatePromise;
         return this;
     }
 
@@ -270,10 +274,14 @@ export class GeoJSONSource extends Evented implements Source {
      * Updates are applied on a best-effort basis, updating an ID that does not exist will not result in an error.
      *
      * @param diff - The changes that need to be applied.
+     * @param waitForCompletion - If true, the method will return a promise that resolves when the update is complete.
      */
-    updateData(diff: GeoJSONSourceDiff): this {
+    updateData(diff: GeoJSONSourceDiff, waitForCompletion: true): Promise<void>;
+    updateData(diff: GeoJSONSourceDiff, waitForCompletion?: false): this;
+    updateData(diff: GeoJSONSourceDiff, waitForCompletion?: boolean): this | Promise<void> {
         this._pendingWorkerUpdate.diff = mergeSourceDiffs(this._pendingWorkerUpdate.diff, diff);
-        this._updateWorkerData();
+        const updatePromise = this._updateWorkerData();
+        if (waitForCompletion) return updatePromise;
         return this;
     }
 
@@ -419,23 +427,7 @@ export class GeoJSONSource extends Evented implements Source {
             if (!result.shouldApplyDiff) {
                 this._data = {geojson: result.data};
             } else {
-                const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
-
-                // Lazily convert `this._data` to updateable if it's not already
-                if (
-                    !this._data.updateable &&
-                    !this._data.url &&
-                    isUpdateableGeoJSON(this._data.geojson, promoteId)
-                ) {
-                    this._data = {updateable: toUpdateable(this._data.geojson, promoteId)};
-                }
-
-                if (this._data.updateable) {
-                    applySourceDiff(this._data.updateable, diff, promoteId);
-                } else {
-                    // This should never happen because the worker would not set `shouldApplyDiff: true` if the source was not updateable.
-                    warnOnce('Cannot apply GeoJSONSource#updateData due to internal error');
-                }
+                this._applyDiff(diff);
             }
 
             let resourceTiming: PerformanceResourceTiming[] = null;
@@ -464,6 +456,26 @@ export class GeoJSONSource extends Evented implements Source {
             if (this._hasPendingWorkerUpdate()) {
                 this._updateWorkerData();
             }
+        }
+    }
+
+    private _applyDiff(diff: GeoJSONSourceDiff | undefined): void {
+        const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
+
+        // Lazily convert `this._data` to updateable if it's not already
+        if (
+            !this._data.url &&
+            !this._data.updateable &&
+            isUpdateableGeoJSON(this._data.geojson, promoteId)
+        ) {
+            this._data = {updateable: toUpdateable(this._data.geojson, promoteId)};
+        }
+
+        if (diff && this._data.updateable) {
+            applySourceDiff(this._data.updateable, diff, promoteId);
+        } else {
+            // This should never happen because the worker would not set `shouldApplyDiff: true` if the source was not updateable.
+            warnOnce('Cannot apply GeoJSONSource#updateData due to internal error');
         }
     }
 
