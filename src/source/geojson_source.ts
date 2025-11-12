@@ -1,5 +1,5 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import {extend, warnOnce} from '../util/util';
+import {extend, warnOnce, type ExactlyOne} from '../util/util';
 import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
@@ -137,20 +137,11 @@ export class GeoJSONSource extends Evented implements Source {
 
     isTileClipped: boolean;
     reparseOverscaled: boolean;
-    _data: {
+    _data: ExactlyOne<{
         url: string;
-        geojson?: never;
-        updateable?: never;
-    } | {
-        url?: never;
-        geojson?: GeoJSON.GeoJSON;
-        updateable?: never;
-
-    } | {
-        url?: never;
-        geojson?: never;
-        updateable?: globalThis.Map<GeoJSONFeatureId, GeoJSON.Feature>;
-    };
+        geojson: GeoJSON.GeoJSON;
+        updateable: globalThis.Map<GeoJSONFeatureId, GeoJSON.Feature>;
+    }>;
     _options: GeoJSONSourceInternalOptions;
     workerOptions: GeoJSONWorkerOptions;
     map: Map;
