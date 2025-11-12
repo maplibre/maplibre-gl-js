@@ -450,9 +450,11 @@ export class GeoJSONSource extends Evented implements Source {
 
         const prevIds = new Set([...update.map(u => u.id), ...remove]);
 
-        if (prevIds.values().find(id => typeof id !== 'number')) {
-            warnOnce('GeoJSONSource#updateData is slower when using string GeoJSON feature IDs. Consider using numeric IDs for better performance.');
-            return undefined;
+        for (const id of prevIds.values()) {
+            if (typeof id !== 'number') {
+                warnOnce('GeoJSONSource#updateData is slower when using string GeoJSON feature IDs. Consider using numeric IDs for better performance.');
+                return undefined;
+            }
         }
 
         const nextBounds = [
