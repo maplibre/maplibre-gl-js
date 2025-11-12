@@ -415,23 +415,7 @@ export class GeoJSONSource extends Evented implements Source {
             if (!result.shouldApplyDiff) {
                 this._data = result.data;
             } else {
-                const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
-
-                // Lazily convert `this._data` to updateable if it's not already
-                if (
-                    typeof this._data !== 'string' &&
-                    !(this._data instanceof globalThis.Map) &&
-                    isUpdateableGeoJSON(this._data, promoteId)
-                ) {
-                    this._data = toUpdateable(this._data, promoteId);
-                }
-
-                if (this._data instanceof globalThis.Map) {
-                    applySourceDiff(this._data, diff, promoteId);
-                } else {
-                    // This should never happen because the worker would not set `shouldApplyDiff: true` if the source was not updateable.
-                    warnOnce('Cannot apply GeoJSONSource#updateData due to internal error');
-                }
+                this._applyDiff(diff);
             }
 
             let resourceTiming: PerformanceResourceTiming[] = null;
@@ -460,6 +444,26 @@ export class GeoJSONSource extends Evented implements Source {
             if (this._hasPendingWorkerUpdate()) {
                 this._updateWorkerData();
             }
+        }
+    }
+
+    private _applyDiff(diff: GeoJSONSourceDiff | undefined): void {
+        const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
+
+        // Lazily convert `this._data` to updateable if it's not already
+        if (
+            typeof this._data !== 'string' &&
+            !(this._data instanceof globalThis.Map) &&
+            isUpdateableGeoJSON(this._data, promoteId)
+        ) {
+            this._data = toUpdateable(this._data, promoteId);
+        }
+
+        if (diff && this._data instanceof globalThis.Map) {
+            applySourceDiff(this._data, diff, promoteId);
+        } else {
+            // This should never happen because the worker would not set `shouldApplyDiff: true` if the source was not updateable.
+            warnOnce('Cannot apply GeoJSONSource#updateData due to internal error');
         }
     }
 
