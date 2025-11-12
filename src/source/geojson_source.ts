@@ -429,7 +429,7 @@ export class GeoJSONSource extends Evented implements Source {
                 if (this._data instanceof globalThis.Map) {
                     applySourceDiff(this._data, diff, promoteId);
                 } else {
-                    // This should never happen because whe worker would not set `shouldApplyDiff: true` if the source was not updateable.
+                    // This should never happen because the worker would not set `shouldApplyDiff: true` if the source was not updateable.
                     warnOnce('Cannot apply GeoJSONSource#updateData due to internal error');
                 }
             }
