@@ -416,7 +416,16 @@ export class GeoJSONSource extends Evented implements Source {
                 const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
                 // Lazily convert `this._data` to updateable if it's not already
-                if (typeof this._data !== 'string' && !(this._data instanceof globalThis.Map) && isUpdateableGeoJSON(this._data, promoteId)) {
+                if (
+                    // If this._data is a string, it's a still URL.
+                    // This should not happen because the worker must have already loaded and parsed the data before sending this message.
+                    typeof this._data !== 'string' &&
+                    // If this._data is already a Map, it's already updateable.
+                    !(this._data instanceof globalThis.Map) &&
+                    // If this._data is not compatible with updates, we cannot proceed.
+                    // This should not happen because the wroker as already verified it before sending this message.
+                    isUpdateableGeoJSON(this._data, promoteId)
+                ) {
                     this._data = toUpdateable(this._data, promoteId);
                 }
 
