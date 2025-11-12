@@ -890,6 +890,42 @@ describe('GeoJSONSource.load', () => {
     });
 });
 
+describe('GeoJSONSource.shouldApplyDiff', () => {
+    test('applies diff', async () => {
+        const initialData: GeoJSON.FeatureCollection = {
+            type: 'FeatureCollection',
+            features: [
+                {type: 'Feature', id: 0, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}},
+            ]
+        };
+
+        vi.spyOn(mockDispatcher.getActor(), 'sendAsync').mockImplementation(() => {
+            return Promise.resolve({data: initialData});
+        });
+
+        const source = new GeoJSONSource('id', {data: initialData} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.load();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        vi.spyOn(mockDispatcher.getActor(), 'sendAsync').mockImplementation(() => {
+            return Promise.resolve({shouldApplyDiff: true});
+        });
+
+        const diff: GeoJSONSourceDiff = {
+            update: [{id: 0, newGeometry: {type: 'Point', coordinates: [0, 1]}}]
+        };
+        source.updateData(diff);
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        expect(source.serialize().data).toEqual({
+            type: 'FeatureCollection',
+            features: [
+                {type: 'Feature', id: 0, properties: {}, geometry: {type: 'Point', coordinates: [0, 1]}},
+            ]
+        });
+    });
+});
+
 describe('GeoJSONSource.shoudReloadTile', () => {
     let source: GeoJSONSource;
 
