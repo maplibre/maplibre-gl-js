@@ -475,10 +475,19 @@ export class GeoJSONSource extends Evented implements Source {
 
         const prevIds = new Set([...update.map(u => u.id), ...remove]);
 
+        for (const id of prevIds.values()) {
+            if (typeof id !== 'number') {
+                warnOnce(`GeoJSONSource "${this.id}": updateData is slower when using string GeoJSON feature IDs (e.g. "${id}"). Consider using numeric IDs for better performance.`);
+                return undefined;
+            }
+        }
+
         const nextBounds = [
             ...update.map(f => f.newGeometry),
             ...add.map(f => f.geometry)
-        ].map(g => getGeoJSONBounds(g));
+        ]
+            .filter(Boolean)
+            .map(g => getGeoJSONBounds(g));
 
         return {
             nextBounds,
@@ -491,7 +500,9 @@ export class GeoJSONSource extends Evented implements Source {
      * @internal
      */
     shouldReloadTile(tile: Tile, {nextBounds, prevIds}: GeoJSONSourceShouldReloadTileOptions) : boolean {
-        if (!tile.latestFeatureIndex) return false;
+        if (!tile.latestFeatureIndex) {
+            return tile.state !== 'unloaded';
+        }
 
         // Update the tile if it PREVIOUSLY contained an updated feature.
         const layers = tile.latestFeatureIndex.loadVTLayers();
