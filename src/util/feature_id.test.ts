@@ -3,24 +3,30 @@ import {describe, expect, test} from 'vitest';
 import {getFeatureId} from './feature_id';
 
 describe('getFeatureId', () => {
-    test('uses cluster_id when cluster is true and id is undefined', () => {
-        const feature = {
-            properties: {
-                cluster: true,
-                cluster_id: '123',
-                promoteId: 'someProperty',
-                someProperty: undefined
-            },
-            geometry: {
-                type: 'Point',
-                coordinates: [0, 0]
-            },
-            extent: 4096,
-            type: 1,
-            loadGeometry: () => [],
-            toGeoJSON: () => ({})
-        } as unknown as VectorTileFeature;
+    test('returns feature.id', () => {
+        const feature = {id: 42, properties: {}} as unknown as VectorTileFeature;
+        expect(getFeatureId(feature, undefined)).toBe(42);
+    });
 
-        expect(getFeatureId(feature, 'sourceLayer')).toBe(123); // cluster_id converted to number
+    test('returns property when promoteId is string', () => {
+        const feature = {id: 1, properties: {customId: 99}} as unknown as VectorTileFeature;
+        expect(getFeatureId(feature, 'customId')).toBe(99);
+    });
+
+    test('returns property when promoteId is object', () => {
+        const feature = {id: 1, properties: {customId: 99}} as unknown as VectorTileFeature;
+        expect(getFeatureId(feature, {layer1: 'customId'}, 'layer1')).toBe(99);
+    });
+
+    test('converts boolean to number', () => {
+        const feature = {properties: {flag: true}} as unknown as VectorTileFeature;
+        expect(getFeatureId(feature, 'flag')).toBe(1);
+    });
+
+    test('returns cluster_id when promoted id is undefined and cluster is true', () => {
+        const feature = {
+            properties: {cluster: true, cluster_id: '123', customId: undefined}
+        } as unknown as VectorTileFeature;
+        expect(getFeatureId(feature, 'customId')).toBe(123);
     });
 });
