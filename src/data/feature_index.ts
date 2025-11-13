@@ -28,7 +28,7 @@ import {getFeatureId} from '../util/feature_id';
 
 /**
  * This is the default layer name for a geojson source,
- * as this source is not a real vector source, but a vector source needs layers,
+ * as this source is not a real vector source, but a vector source needs layers, 
  * so this is default name for it.
  */
 export const GEOJSON_TILE_LAYER_NAME = '_geojsonTileLayer';
@@ -119,7 +119,7 @@ export class FeatureIndex {
 
     loadVTLayers(): {[_: string]: VectorTileLayer} {
         if (!this.vtLayers) {
-            this.vtLayers = this.encoding !== 'mlt'
+            this.vtLayers = this.encoding !== 'mlt' 
                 ? new VectorTile(new Protobuf(this.rawTileData)).layers
                 : new MLTVectorTile(this.rawTileData).layers;
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : [GEOJSON_TILE_LAYER_NAME]);
