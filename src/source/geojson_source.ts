@@ -402,7 +402,7 @@ export class GeoJSONSource extends Evented implements Source {
                 options.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
                 options.request.collectResourceTiming = this._collectResourceTiming;
             } else {
-                options.data = JSON.stringify(data);
+                options.data = data;
             }
 
             this._pendingWorkerUpdate.data = undefined;

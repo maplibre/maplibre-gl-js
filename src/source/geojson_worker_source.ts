@@ -41,11 +41,11 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
      */
     request?: RequestParameters;
     /**
-     * Literal GeoJSON data in string form.
+     * GeoJSON data to set as the source's data.
      */
-    data?: string;
+    data?: GeoJSON.GeoJSON;
     /**
-     * GeoJSONSourceDiff to apply to the existing GeoJSON data.
+     * GeoJSONSourceDiff to apply to the existing GeoJSON source data.
      */
     dataDiff?: GeoJSONSourceDiff;
 };
@@ -201,9 +201,9 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             // Data is loaded from a fetchable URL
             data = await this.loadGeoJSONFromUrl(params.request, params.promoteId, abortController);
 
-        } else if (typeof params.data === 'string') {
-            // Data is loaded from a string literal
-            data = this._loadGeoJSONFromString(params.data, params.promoteId, params.source);
+        } else if (params.data) {
+            // Data is loaded from a GeoJSON Object
+            data = this._loadGeoJSONFromObject(params.data, params.promoteId);
 
         } else if (params.dataDiff) {
             // Data is loaded from a GeoJSONSourceDiff
@@ -238,10 +238,9 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     /**
      * Loads GeoJSON from a string and sets the sources updateable GeoJSON object.
      */
-    _loadGeoJSONFromString(data: string, promoteId: string, source: string): GeoJSON.FeatureCollection {
-        const parsed = this._parseJSON(data, source);
-        this._dataUpdateable = isUpdateableGeoJSON(parsed, promoteId) ? toUpdateable(parsed, promoteId) : undefined;
-        return parsed;
+    _loadGeoJSONFromObject(data: GeoJSON.GeoJSON, promoteId: string): GeoJSON.GeoJSON {
+        this._dataUpdateable = isUpdateableGeoJSON(data, promoteId) ? toUpdateable(data, promoteId) : undefined;
+        return data;
     }
 
     /**
@@ -271,17 +270,6 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
         const features = (data as any).features.filter(feature => compiled.value.evaluate({zoom: 0}, feature));
         return this._toFeatureCollection(features);
-    }
-
-    /**
-     * Parses a string into a JSON object - throws an error if string is not valid JSON.
-     */
-    _parseJSON(data: string, source: string): GeoJSON.FeatureCollection {
-        try {
-            return JSON.parse(data);
-        } catch {
-            throw new Error(`Input data given to '${source}' is not a valid GeoJSON object.`);
-        }
     }
 
     /**
