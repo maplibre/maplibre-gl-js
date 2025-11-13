@@ -10,7 +10,7 @@ import {createExpression} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error';
 import {toVirtualVectorTile} from './vector_tile_overzoomed';
 import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, type GeoJSONFeatureId} from './geojson_source_diff';
-import type {WorkerTileParameters, WorkerTileResult} from '../source/worker_source';
+import type {WorkerTileParameters, WorkerTileResult} from './worker_source';
 import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {RequestParameters} from '../util/ajax';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
@@ -32,15 +32,21 @@ export type GeoJSONWorkerOptions = {
 };
 
 /**
- * Parameters needed to load a geojson to the worker
+ * Parameters needed to load GeoJSON to the worker - must specify either a `request`, `data` or `dataDiff`.
  */
 export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
     type: 'geojson';
+    /**
+     * Request parameters including a URL to fetch GeoJSON data.
+     */
     request?: RequestParameters;
     /**
-     * Literal GeoJSON data. Must be provided if `request.url` is not.
+     * Literal GeoJSON data in string form.
      */
     data?: string;
+    /**
+     * GeoJSONSourceDiff to apply to the existing GeoJSON data.
+     */
     dataDiff?: GeoJSONSourceDiff;
 };
 
