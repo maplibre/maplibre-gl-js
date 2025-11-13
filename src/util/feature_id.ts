@@ -1,8 +1,8 @@
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-export function getFeatureId<T extends GeoJSON.Feature | VectorTileFeature>(feature: T, promoteId: PromoteIdSpecification | undefined, sourceLayerId?: string): T['id'] {
-    let id: T['id'] = feature.id;
+export function getFeatureId(feature: GeoJSON.Feature | VectorTileFeature, promoteId: PromoteIdSpecification | undefined, sourceLayerId?: string) {
+    let id = feature.id;
     if (promoteId) {
         const propName = typeof promoteId === 'string' ? promoteId : promoteId[sourceLayerId];
         id = feature.properties[propName];
