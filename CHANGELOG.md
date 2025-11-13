@@ -5,6 +5,7 @@
 - GeoJSON Source Diff: improve, abstract, refactor, optimize, and fix regressions. ([#6681](https://github.com/maplibre/maplibre-gl-js/pull/6681)) (by [@wayofthefuture](https://github.com/wayofthefuture))
 - GeoJSONSource setData and updateData waitForCompletion option ([#6688](https://github.com/maplibre/maplibre-gl-js/pull/6688)) (by [@wayofthefuture](https://github.com/wayofthefuture))
 - Improve performance of `GeoJSONSource#updateData` ([#6668](https://github.com/maplibre/maplibre-gl-js/pull/6668) (by [@lucaswoj](https://github.com/lucaswoj)))
+- GeoJSON Worker Refactor ([#6702](https://github.com/maplibre/maplibre-gl-js/pull/6702) (by [@wayofthefuture](https://github.com/wayofthefuture))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
