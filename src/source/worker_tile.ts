@@ -1,4 +1,5 @@
-import {FeatureIndex, getFeatureId} from '../data/feature_index';
+import {FeatureIndex} from '../data/feature_index';
+import {getFeatureId} from '../util/feature_id';
 import {performSymbolLayout} from '../symbol/symbol_layout';
 import {CollisionBoxArray} from '../data/array_types.g';
 import {DictionaryCoder} from '../util/dictionary_coder';

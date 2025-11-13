@@ -1,6 +1,7 @@
 import {uniqueId, parseCacheControl} from '../util/util';
 import {deserialize as deserializeBucket} from '../data/bucket';
-import {GEOJSON_TILE_LAYER_NAME, getFeatureId, type FeatureIndex, type QueryResults} from '../data/feature_index';
+import {GEOJSON_TILE_LAYER_NAME, type FeatureIndex, type QueryResults} from '../data/feature_index';
+import {getFeatureId} from '../util/feature_id';
 import {GeoJSONFeature} from '../util/vectortile_to_geojson';
 import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
 import {SymbolBucket} from '../data/bucket/symbol_bucket';

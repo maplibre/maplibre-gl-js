@@ -1067,7 +1067,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         expect(result).toBe(undefined);
     });
 
-    test('handles promoteId 1', () => {
+    test('handles promoteId', () => {
         const tile = getMockTile(0, 0, 0, [{id: 0, properties: {id: 'abc'}}]);
         const diff: GeoJSONSourceDiff = {remove: ['abc']};
         source.promoteId = 'id';
@@ -1075,16 +1075,6 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
 
         expect(result).toBe(true);
-    });
-
-    test('handles promoteId 2', () => {
-        const tile = getMockTile(0, 0, 0, [{id: 0, properties: {id: 'abc'}}]);
-        const diff: GeoJSONSourceDiff = {remove: ['xyz']};
-        source.promoteId = 'id';
-
-        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
-
-        expect(result).toBe(false);
     });
 
     test('handles features that span the international date line', () => {

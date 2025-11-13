@@ -1,4 +1,4 @@
-import {getFeatureId} from '../data/feature_index';
+import {getFeatureId} from '../util/feature_id';
 
 /**
  * A way to identify a feature, either by string or by number

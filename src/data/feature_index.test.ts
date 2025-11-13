@@ -1,40 +1,16 @@
 import path from 'path';
 import {readFileSync} from 'fs';
 import {describe, expect, test} from 'vitest';
-import {FeatureIndex, GEOJSON_TILE_LAYER_NAME, getFeatureId} from './feature_index';
+import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from './feature_index';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {OverscaledTileID} from '../tile/tile_id';
 import {CircleStyleLayer} from '../style/style_layer/circle_style_layer';
 import Point from '@mapbox/point-geometry';
-import type {VectorTileFeature} from '@mapbox/vector-tile';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../style/evaluation_parameters';
 
 describe('FeatureIndex', () => {
-    describe('getId', () => {
-        test('uses cluster_id when cluster is true and id is undefined', () => {
-            const feature = {
-                properties: {
-                    cluster: true,
-                    cluster_id: '123',
-                    promoteId: 'someProperty',
-                    someProperty: undefined
-                },
-                geometry: {
-                    type: 'Point',
-                    coordinates: [0, 0]
-                },
-                extent: 4096,
-                type: 1,
-                loadGeometry: () => [],
-                toGeoJSON: () => ({})
-            } as unknown as VectorTileFeature;
-
-            expect(getFeatureId(feature, 'sourceLayer')).toBe(123); // cluster_id converted to number
-        });
-    });
-
     describe('query', () => {
         const tileID = new OverscaledTileID(3, 0, 2, 1, 2);
         const transform = new MercatorTransform();
