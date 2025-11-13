@@ -488,7 +488,7 @@ export class GeoJSONSource extends Evented implements Source {
 
         for (const id of prevIds.values()) {
             if (typeof id !== 'number' && this.promoteId == null) {
-                warnOnce(`GeoJSONSource "${this.id}": updateData is slower when using string GeoJSON feature IDs (e.g. "${id}"). Consider using numeric IDs for better performance.`);
+                warnOnce(`GeoJSONSource "${this.id}": updateData is slower when using string GeoJSON feature IDs (e.g. "${id}"). Consider using promoteId or numeric IDs for better performance.`);
                 return undefined;
             }
         }
