@@ -119,7 +119,7 @@ export class FeatureIndex {
 
     loadVTLayers(): {[_: string]: VectorTileLayer} {
         if (!this.vtLayers) {
-            this.vtLayers = this.encoding !== 'mlt'
+            this.vtLayers = this.encoding !== 'mlt' 
                 ? new VectorTile(new Protobuf(this.rawTileData)).layers
                 : new MLTVectorTile(this.rawTileData).layers;
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : [GEOJSON_TILE_LAYER_NAME]);
