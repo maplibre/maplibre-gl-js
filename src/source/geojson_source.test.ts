@@ -1,20 +1,21 @@
-import {describe, test, expect, vi} from 'vitest';
-import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
+import {describe, test, expect, vi, beforeEach} from 'vitest';
+import {Tile} from '../tile/tile';
+import {OverscaledTileID} from '../tile/tile_id';
 import {GeoJSONSource, type GeoJSONSourceOptions} from './geojson_source';
-import {type IReadonlyTransform} from '../geo/transform_interface';
 import {EXTENT} from '../data/extent';
 import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
-import {type Dispatcher} from '../util/dispatcher';
-import {type RequestManager} from '../util/request_manager';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import {type ActorMessage, MessageType} from '../util/actor_messages';
-import {type Actor} from '../util/actor';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {sleep, waitForEvent} from '../util/test/util';
-import {type MapSourceDataEvent} from '../ui/events';
-import {type GeoJSONSourceDiff} from './geojson_source_diff';
+import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
+import {type ActorMessage, MessageType} from '../util/actor_messages';
+import type {IReadonlyTransform} from '../geo/transform_interface';
+import type {Dispatcher} from '../util/dispatcher';
+import type {RequestManager} from '../util/request_manager';
+import type {Actor} from '../util/actor';
+import type {MapSourceDataEvent} from '../ui/events';
+import type {GeoJSONSourceDiff} from './geojson_source_diff';
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -202,6 +203,18 @@ describe('GeoJSONSource.setData', () => {
         await promise;
         expect(source.loaded()).toBeTruthy();
     });
+
+    test('setData with waitForCompletion=true returns promise that resolves to this', async () => {
+        const source = new GeoJSONSource('id', {} as any, wrapDispatcher({
+            sendAsync(_message: ActorMessage<MessageType>) {
+                return new Promise((resolve) => {
+                    setTimeout(() => resolve({abandoned: true}), 0);
+                });
+            }
+        }), undefined);
+        const result = source.setData({} as GeoJSON.GeoJSON, true);
+        expect(result).toBeInstanceOf(Promise);
+    });
 });
 
 describe('GeoJSONSource.onRemove', () => {
@@ -303,16 +316,12 @@ describe('GeoJSONSource.update', () => {
         expect(spy).toHaveBeenCalled();
     });
 
-    test('modifying cluster properties after adding a source', () => {
+    test('modifying cluster properties after adding a source', async () => {
         // test setCluster function on GeoJSONSource
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
-                expect(message.type).toBe(MessageType.loadData);
-                expect(message.data.cluster).toBe(true);
-                expect(message.data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
-                expect(message.data.superclusterOptions.maxZoom).toBe(16);
-                spy();
+                spy(message);
                 return Promise.resolve({});
             }
         });
@@ -325,8 +334,120 @@ describe('GeoJSONSource.update', () => {
             clusterMinPoints: 3,
             generateId: true
         }, mockDispatcher, undefined);
+
+        // Wait for initial data to be loaded
+        source.load();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        spy.mockClear();
+
         source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
-        expect(spy).toHaveBeenCalled();
+
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
+        expect(spy.mock.calls[0][0].data.cluster).toBe(true);
+        expect(spy.mock.calls[0][0].data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
+        expect(spy.mock.calls[0][0].data.superclusterOptions.maxZoom).toBe(16);
+    });
+
+    test('modifying cluster properties with pending data', async () => {
+        const spy = vi.fn();
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message) {
+                spy(message);
+                return Promise.resolve({});
+            }
+        });
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: {} as GeoJSON.GeoJSON,
+            cluster: false,
+            clusterMaxZoom: 8,
+            clusterRadius: 100,
+            clusterMinPoints: 3,
+            generateId: true
+        }, mockDispatcher, undefined);
+
+        // Wait for initial data to be loaded
+        source.load();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        spy.mockClear();
+
+        // Initiate first data update
+        const sourceData1 = {id: 'test-1', type: 'FeatureCollection', features: []} as GeoJSON.GeoJSON;
+        source.setData(sourceData1);
+
+        // Immediately modify data again, and update cluster options
+        const sourceData2 = {id: 'test-2', type: 'FeatureCollection', features: []} as GeoJSON.GeoJSON;
+        source.setData(sourceData2);
+        source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
+
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
+        expect(spy.mock.calls[0][0].data.cluster).toBe(false);
+        expect(spy.mock.calls[0][0].data.data).toBe(JSON.stringify(sourceData1));
+        expect(spy.mock.calls[0][0].data.dataDiff).toBeUndefined();
+        expect(spy.mock.calls[1][0].data.cluster).toBe(true);
+        expect(spy.mock.calls[1][0].data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
+        expect(spy.mock.calls[1][0].data.superclusterOptions.maxZoom).toBe(16);
+        expect(spy.mock.calls[1][0].data.data).toBe(JSON.stringify(sourceData2));
+        expect(spy.mock.calls[1][0].data.dataDiff).toBeUndefined();
+    });
+
+    test('modifying cluster properties after sending a diff', async () => {
+        const spy = vi.fn();
+        const mockDispatcher = wrapDispatcher({
+            sendAsync(message) {
+                spy(message);
+                return Promise.resolve({});
+            }
+        });
+        const geoJsonData = {
+            'type': 'FeatureCollection',
+            'features': [
+                {
+                    'type': 'Feature',
+                    'id': 1,
+                    'properties': {},
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [-122.48369693756104, 37.83381888486939]
+                    }
+                }
+            ]
+        } as GeoJSON.GeoJSON;
+
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: geoJsonData,
+            cluster: false,
+            clusterMaxZoom: 8,
+            clusterRadius: 100,
+            clusterMinPoints: 3,
+            generateId: true
+        }, mockDispatcher, undefined);
+
+        // Wait for initial data to be loaded
+        source.load();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        spy.mockReset();
+
+        const diff = {remove: [1]};
+        source.updateData(diff);
+        source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
+
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy.mock.calls[0][0].data.cluster).toBe(false);
+        expect(spy.mock.calls[0][0].data.dataDiff).toEqual(diff);
+        expect(spy.mock.calls[1][0].data.cluster).toEqual(true);
+        expect(spy.mock.calls[1][0].data.data).not.toBeDefined();
+        expect(spy.mock.calls[1][0].data.dataDiff).not.toBeDefined();
     });
 
     test('forwards Supercluster options with worker request, ignore max zoom of source', () => {
@@ -652,6 +773,18 @@ describe('GeoJSONSource.updateData', () => {
         expect(spy.mock.calls[1][0].data.data).toEqual(JSON.stringify(data2));
         expect(spy.mock.calls[2][0].data.dataDiff).toEqual(update1);
     });
+
+    test('updateData with waitForCompletion=true returns promise that resolves to this', async () => {
+        const source = new GeoJSONSource('id', {} as any, wrapDispatcher({
+            sendAsync(_message: ActorMessage<MessageType>) {
+                return new Promise((resolve) => {
+                    setTimeout(() => resolve({abandoned: true}), 0);
+                });
+            }
+        }), undefined);
+        const result = source.updateData({add: []} as GeoJSONSourceDiff, true);
+        expect(result).toBeInstanceOf(Promise);
+    });
 });
 
 describe('GeoJSONSource.getBounds', () => {
@@ -661,34 +794,16 @@ describe('GeoJSONSource.getBounds', () => {
         }
     } as any;
 
-    test('get bounds from empty geometry', async () => {
+    test('get bounds returns result from getGeoJSONBounds util', async () => {
         const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.getData);
                 return Promise.resolve({
                     type: 'LineString',
-                    coordinates: []
-                });
-            }
-        }), undefined);
-        source.map = mapStub;
-        const bounds = await source.getBounds();
-        expect(bounds.isEmpty()).toBeTruthy();
-    });
-
-    test('get bounds from geomerty collection', async () => {
-        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
-            sendAsync(message) {
-                expect(message.type).toBe(MessageType.getData);
-                return Promise.resolve({
-                    type: 'GeometryCollection',
-                    geometries: [{
-                        type: 'LineString',
-                        coordinates: [
-                            [1.1, 1.2],
-                            [1.3, 1.4]
-                        ]
-                    }]
+                    coordinates: [
+                        [1.1, 1.2],
+                        [1.3, 1.4]
+                    ]
                 });
             }
         }), undefined);
@@ -696,66 +811,6 @@ describe('GeoJSONSource.getBounds', () => {
         const bounds = await source.getBounds();
         expect(bounds.getNorthEast().lat).toBe(1.4);
         expect(bounds.getNorthEast().lng).toBe(1.3);
-        expect(bounds.getSouthWest().lat).toBe(1.2);
-        expect(bounds.getSouthWest().lng).toBe(1.1);
-    });
-
-    test('get bounds from feature', async () => {
-        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
-            sendAsync(message) {
-                expect(message.type).toBe(MessageType.getData);
-                return Promise.resolve({
-                    type: 'Feature',
-                    geometry: {
-                        type: 'LineString',
-                        coordinates: [
-                            [1.1, 1.2],
-                            [1.3, 1.4]
-                        ]
-                    }
-                });
-            }
-        }), undefined);
-        source.map = mapStub;
-        const bounds = await source.getBounds();
-        expect(bounds.getNorthEast().lat).toBe(1.4);
-        expect(bounds.getNorthEast().lng).toBe(1.3);
-        expect(bounds.getSouthWest().lat).toBe(1.2);
-        expect(bounds.getSouthWest().lng).toBe(1.1);
-    });
-
-    test('get bounds from feature collection', async () => {
-        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
-            sendAsync(message) {
-                expect(message.type).toBe(MessageType.getData);
-                return Promise.resolve({
-                    type: 'FeatureCollection',
-                    features: [{
-                        type: 'Feature',
-                        geometry: {
-                            type: 'LineString',
-                            coordinates: [
-                                [1.1, 1.2],
-                                [1.3, 1.8]
-                            ]
-                        }
-                    }, {
-                        type: 'Feature',
-                        geometry: {
-                            type: 'LineString',
-                            coordinates: [
-                                [1.5, 1.6],
-                                [1.7, 1.4]
-                            ]
-                        }
-                    }]
-                });
-            }
-        }), undefined);
-        source.map = mapStub;
-        const bounds = await source.getBounds();
-        expect(bounds.getNorthEast().lat).toBe(1.8);
-        expect(bounds.getNorthEast().lng).toBe(1.7);
         expect(bounds.getSouthWest().lat).toBe(1.2);
         expect(bounds.getSouthWest().lng).toBe(1.1);
     });
@@ -831,6 +886,204 @@ describe('GeoJSONSource.load', () => {
         source.load();
 
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(warnSpy).toHaveBeenCalledWith('No data or diff provided to GeoJSONSource id.');
+        expect(warnSpy).toHaveBeenCalledWith('No pending worker updates for GeoJSONSource id.');
+    });
+});
+
+describe('GeoJSONSource.shouldApplyDiff', () => {
+    test('applies diff', async () => {
+        const initialData: GeoJSON.FeatureCollection = {
+            type: 'FeatureCollection',
+            features: [
+                {type: 'Feature', id: 0, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}},
+            ]
+        };
+
+        vi.spyOn(mockDispatcher.getActor(), 'sendAsync').mockImplementation(() => {
+            return Promise.resolve({data: initialData});
+        });
+
+        const source = new GeoJSONSource('id', {data: initialData} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.load();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        vi.spyOn(mockDispatcher.getActor(), 'sendAsync').mockImplementation(() => {
+            return Promise.resolve({shouldApplyDiff: true});
+        });
+
+        const diff: GeoJSONSourceDiff = {
+            update: [{id: 0, newGeometry: {type: 'Point', coordinates: [0, 1]}}]
+        };
+        source.updateData(diff);
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        expect(source.serialize().data).toEqual({
+            type: 'FeatureCollection',
+            features: [
+                {type: 'Feature', id: 0, properties: {}, geometry: {type: 'Point', coordinates: [0, 1]}},
+            ]
+        });
+    });
+});
+
+describe('GeoJSONSource.shoudReloadTile', () => {
+    let source: GeoJSONSource;
+
+    beforeEach(() => {
+        source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+    });
+
+    function getMockTile(z: number, x: number, y: number, tileFeatures: Array<{id: string | number}>) {
+        const tile = new Tile(new OverscaledTileID(z, 0, z, x, y), source.tileSize);
+        tile.latestFeatureIndex = {
+            featureIndexArray: {
+                length: tileFeatures.length,
+                get: (featureIndex: number) => ({featureIndex})
+            },
+            loadVTLayers: () => ({
+                [GEOJSON_TILE_LAYER_NAME]: {
+                    feature: (i: number) => tileFeatures[i] || {}
+                }
+            })
+        } as any;
+
+        return tile;
+    }
+
+    test('returns true when diff.removeAll is true', () => {
+        const diff: GeoJSONSourceDiff = {removeAll: true};
+
+        const result = source._getShouldReloadTileOptions(diff);
+
+        expect(result).toBe(undefined);
+    });
+
+    test('returns true when tile contains a feature that is being updated', () => {
+        const tile = getMockTile(0, 0, 0, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {
+            update: [{
+                id: 0,
+                newGeometry: {type: 'Point', coordinates: [0, 0]}
+            }]
+        };
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(true);
+    });
+
+    test('returns true when tile contains a feature that is being updated via addOrUpdateProperties', () => {
+        const tile = getMockTile(0, 0, 0, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {
+            update: [{
+                id: 0,
+                addOrUpdateProperties: [{key: 'foo', value: true}]
+            }]
+        };
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(true);
+    });
+
+    test('returns true when tile contains a feature that is being removed', () => {
+        const tile = getMockTile(0, 0, 0, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {remove: [0]};
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(true);
+    });
+
+    test('returns true when updated feature new geometry intersects tile bounds', () => {
+        // Feature update with new geometry at 0,0 should intersect with tile 0/0/0
+        const tile = getMockTile(0, 0, 0, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {
+            update: [{
+                id: 0,
+                newGeometry: {type: 'Point', coordinates: [0, 0]}
+            }]
+        };
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(true);
+    });
+
+    test('returns false when diff has no changes affecting the tile', () => {
+        // Feature far away from tile bounds
+        const tile = getMockTile(10, 500, 500, [{id: 0}]);
+        const diff: GeoJSONSourceDiff = {
+            add: [{
+                id: 1,
+                type: 'Feature',
+                properties: {},
+                geometry: {type: 'Point', coordinates: [-170, -80]}
+            }]
+        };
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(false);
+    });
+
+    test('returns false when diff is empty', () => {
+        const tile = getMockTile(0, 0, 0, []);
+        const diff: GeoJSONSourceDiff = {};
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(false);
+    });
+
+    test('returns false when tile has been unloaded', () => {
+        const tile = getMockTile(0, 0, 0, []);
+        tile.latestFeatureIndex = null;
+        tile.state = 'unloaded';
+
+        const diff: GeoJSONSourceDiff = {};
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(false);
+    });
+
+    test('returns true when tile is still loading', () => {
+        const tile = getMockTile(0, 0, 0, []);
+        tile.latestFeatureIndex = null;
+
+        const diff: GeoJSONSourceDiff = {};
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(true);
+    });
+
+    test('handles string feature ids', () => {
+        const diff: GeoJSONSourceDiff = {remove: ['abc']};
+
+        const result = source._getShouldReloadTileOptions(diff);
+
+        expect(result).toBe(undefined);
+    });
+
+    test('handles features that span the international date line', () => {
+        const diff: GeoJSONSourceDiff = {
+            add: [{
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                    type: 'LineString',
+                    coordinates: [
+                        [-185, 10],
+                        [-175, 10]
+                    ],
+                }
+            }]
+        };
+
+        expect(source.shouldReloadTile(getMockTile(5, 1, 15, []), source._getShouldReloadTileOptions(diff))).toBe(false);
+        expect(source.shouldReloadTile(getMockTile(5, 0, 15, []), source._getShouldReloadTileOptions(diff))).toBe(true);
+        expect(source.shouldReloadTile(getMockTile(5, 31, 15, []), source._getShouldReloadTileOptions(diff))).toBe(true);
     });
 });

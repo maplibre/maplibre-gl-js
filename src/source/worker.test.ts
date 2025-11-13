@@ -3,7 +3,7 @@ import {fakeServer} from 'nise';
 import Worker from './worker';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type WorkerGlobalScopeInterface} from '../util/web_worker';
-import {type CanonicalTileID, type OverscaledTileID} from './tile_id';
+import {type CanonicalTileID, type OverscaledTileID} from '../tile/tile_id';
 import {type WorkerSource, type WorkerTileParameters, type WorkerTileResult} from './worker_source';
 import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
 import {type ActorTarget, type IActor} from '../util/actor';

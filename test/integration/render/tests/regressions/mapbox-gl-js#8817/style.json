@@ -4,9 +4,9 @@
     "test": {
       "width": 64,
       "height": 64,
-      "comment": "The `pauseSource` prevents new tiles from loading and forces the map to use tiles outside of their ideal zoom range.",
+      "comment": "The `pauseTiles` prevents new tiles from loading and forces the map to use tiles outside of their ideal zoom range.",
       "operations": [
-          ["pauseSource", "geojson"],
+          ["pauseTiles", "geojson"],
           ["setZoom", 2],
           ["wait"]
       ]

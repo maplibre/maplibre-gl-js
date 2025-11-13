@@ -8,7 +8,7 @@ import {
     emitValidationErrors
 } from './validate_style';
 import {Evented} from '../util/evented';
-import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue} from './properties';
+import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties';
 
 import type {Bucket, BucketParameters} from '../data/bucket';
 import type Point from '@mapbox/point-geometry';
@@ -25,9 +25,7 @@ import type {Map} from '../ui/map';
 import type {StyleSetterOptions} from './style';
 import {type mat4} from 'gl-matrix';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
-import type {UnwrappedTileID} from '../source/tile_id';
-
-const TRANSITION_SUFFIX = '-transition';
+import type {UnwrappedTileID} from '../tile/tile_id';
 
 export type QueryIntersectsFeatureParams = {
     /**

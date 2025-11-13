@@ -11,7 +11,7 @@ import {StyleLayerIndex} from '../../../src/style/style_layer_index';
 
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorkerTileResult} from '../../../src/source/worker_source';
-import type {OverscaledTileID} from '../../../src/source/tile_id';
+import type {OverscaledTileID} from '../../../src/tile/tile_id';
 import type {TileJSON} from '../../../src/util/util';
 import type {Map} from '../../../src/ui/map';
 import type {IActor} from '../../../src/util/actor';

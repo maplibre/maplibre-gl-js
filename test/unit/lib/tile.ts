@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile, type VectorTileLayer} from '@mapbox/vector-tile';
-import {OverscaledTileID} from '../../../src/source/tile_id';
+import {OverscaledTileID} from '../../../src/tile/tile_id';
 import {FeatureIndex} from '../../../src/data/feature_index';
 import type {IndexedFeature, PopulateParameters} from '../../../src/data/bucket';
 import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings';

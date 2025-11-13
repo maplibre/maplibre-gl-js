@@ -1,4 +1,4 @@
-import {CanonicalTileID} from '../../../src/source/tile_id';
+import {CanonicalTileID} from '../../../src/tile/tile_id';
 import Benchmark from '../lib/benchmark';
 import {EXTENT} from '../../../src/data/extent';
 import {subdividePolygon} from '../../../src/render/subdivision';

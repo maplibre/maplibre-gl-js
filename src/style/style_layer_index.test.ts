@@ -1,6 +1,7 @@
 import {describe, test, expect} from 'vitest';
 import {mapObject} from '../util/util';
 import {StyleLayerIndex} from './style_layer_index';
+import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
 
 describe('StyleLayerIndex', () => {
     test('StyleLayerIndex.replace', () => {
@@ -76,10 +77,10 @@ describe('StyleLayerIndex', () => {
                 'foo': [['4']]
             },
             'geojson': {
-                '_geojsonTileLayer': [['5']]
+                [GEOJSON_TILE_LAYER_NAME]: [['5']]
             },
             '': {
-                '_geojsonTileLayer': [['6']]
+                [GEOJSON_TILE_LAYER_NAME]: [['6']]
             }
         });
 

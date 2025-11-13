@@ -20,7 +20,8 @@
         container: 'map',
         style: 'https://demotiles.maplibre.org/style.json',
         center: [-103.59179687498357, 40.66995747013945],
-        zoom: 3
+        zoom: 3,
+        fadeDuration: 0 // this is in order for the text and circles to move "as-one"
     });
 
     map.on('load', () => {

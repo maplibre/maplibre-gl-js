@@ -4,8 +4,8 @@ import {extend} from '../util/util';
 import {getMockDispatcher, waitForEvent} from '../util/test/util';
 
 import type {Coordinates} from './image_source';
-import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
+import {Tile} from '../tile/tile';
+import {OverscaledTileID} from '../tile/tile_id';
 import {Evented} from '../util/evented';
 import {type IReadonlyTransform} from '../geo/transform_interface';
 import {MercatorTransform} from '../geo/projection/mercator_transform';

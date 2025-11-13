@@ -5,7 +5,7 @@ import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
 import {mat3, mat4, quat, vec2, vec3, type vec4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
-import {type OverscaledTileID} from '../source/tile_id';
+import {type OverscaledTileID} from '../tile/tile_id';
 import type {Event} from './evented';
 
 /**
@@ -1085,6 +1085,13 @@ export type Complete<T> = {
  * A helper to allow require of at least one property
  */
 export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
+
+/**
+* A helper to allow require exactly one one property
+ */
+export type ExactlyOne<T, Keys extends keyof T = keyof T> = {
+    [K in Keys]: Required<Pick<T, K>> & { [P in Exclude<Keys, K>]?: never }
+}[Keys];
 
 export type TileJSON = {
     tilejson: '2.2.0' | '2.1.0' | '2.0.1' | '2.0.0' | '1.0.0';

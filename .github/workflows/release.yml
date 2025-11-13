@@ -120,6 +120,7 @@ jobs:
           artifacts: "dist.zip"
           artifactContentType: "application/zip"
           allowUpdates: false
+          immutableCreate: true
           draft: false
           prerelease: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
 

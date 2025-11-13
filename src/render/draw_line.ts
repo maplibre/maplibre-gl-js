@@ -10,11 +10,11 @@ import {
 } from './program/line_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/source_cache';
+import type {TileManager} from '../tile/tile_manager';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
 import type {LineBucket} from '../data/bucket/line_bucket';
-import type {OverscaledTileID} from '../source/tile_id';
-import type {Tile} from '../source/tile';
+import type {OverscaledTileID} from '../tile/tile_id';
+import type {Tile} from '../tile/tile';
 import type {Context} from '../gl/context';
 import type {ProgramConfiguration} from '../data/program_configuration';
 import {clamp, nextPowerOfTwo} from '../util/util';
@@ -30,7 +30,7 @@ type GradientTexture = {
 
 function updateGradientTexture(
     painter: Painter,
-    sourceCache: SourceCache,
+    tileManager: TileManager,
     context: Context,
     gl: WebGLRenderingContext,
     layer: LineStyleLayer,
@@ -40,7 +40,7 @@ function updateGradientTexture(
 ): Texture {
     let textureResolution = 256;
     if (layer.stepInterpolant) {
-        const sourceMaxZoom = sourceCache.getSource().maxzoom;
+        const sourceMaxZoom = tileManager.getSource().maxzoom;
         const potentialOverzoom = coord.canonical.z === sourceMaxZoom ?
             Math.ceil(1 << (painter.transform.maxZoom - coord.canonical.z)) : 1;
         const lineLength = bucket.maxLineLength / EXTENT;
@@ -95,7 +95,7 @@ function bindDasharrayTextures(
 
 function bindGradientTextures(
     painter: Painter,
-    sourceCache: SourceCache,
+    tileManager: TileManager,
     context: Context,
     gl: WebGLRenderingContext,
     layer: LineStyleLayer,
@@ -105,7 +105,7 @@ function bindGradientTextures(
     const layerGradient = bucket.gradients[layer.id];
     let gradientTexture = layerGradient.texture;
     if (layer.gradientVersion !== layerGradient.version) {
-        gradientTexture = updateGradientTexture(painter, sourceCache, context, gl, layer, bucket, coord, layerGradient);
+        gradientTexture = updateGradientTexture(painter, tileManager, context, gl, layer, bucket, coord, layerGradient);
     }
     context.activeTexture.set(gl.TEXTURE0);
     gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
@@ -113,7 +113,7 @@ function bindGradientTextures(
 
 function bindGradientAndDashTextures(
     painter: Painter,
-    sourceCache: SourceCache,
+    tileManager: TileManager,
     context: Context,
     gl: WebGLRenderingContext,
     layer: LineStyleLayer,
@@ -126,7 +126,7 @@ function bindGradientAndDashTextures(
     const layerGradient = bucket.gradients[layer.id];
     let gradientTexture = layerGradient.texture;
     if (layer.gradientVersion !== layerGradient.version) {
-        gradientTexture = updateGradientTexture(painter, sourceCache, context, gl, layer, bucket, coord, layerGradient);
+        gradientTexture = updateGradientTexture(painter, tileManager, context, gl, layer, bucket, coord, layerGradient);
     }
     context.activeTexture.set(gl.TEXTURE0);
     gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
@@ -138,7 +138,7 @@ function bindGradientAndDashTextures(
     programConfiguration.updatePaintBuffers(crossfade);
 }
 
-export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawLine(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
 
     const {isRenderingToTexture} = renderOptions;
@@ -172,7 +172,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
     let firstTile = true;
 
     for (const coord of coords) {
-        const tile = sourceCache.getTile(coord);
+        const tile = tileManager.getTile(coord);
 
         if (image && !tile.patternsLoaded()) continue;
 
@@ -215,13 +215,13 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             bindImagePatternTextures(context, gl, tile, programConfiguration, crossfade);
         } else if (dasharray && gradient) {
             uniformValues = lineGradientSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, bucket.lineClipsArray.length);
-            bindGradientAndDashTextures(painter, sourceCache, context, gl, layer, bucket, coord, programConfiguration, crossfade);
+            bindGradientAndDashTextures(painter, tileManager, context, gl, layer, bucket, coord, programConfiguration, crossfade);
         } else if (dasharray) {
             uniformValues = lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade);
             bindDasharrayTextures(painter, context, gl, programConfiguration, programChanged, crossfade);
         } else if (gradient) {
             uniformValues = lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length);
-            bindGradientTextures(painter, sourceCache, context, gl, layer, bucket, coord);
+            bindGradientTextures(painter, tileManager, context, gl, layer, bucket, coord);
         } else {
             uniformValues = lineUniformValues(painter, tile, layer, pixelRatio);
         }
