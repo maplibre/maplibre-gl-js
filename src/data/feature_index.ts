@@ -28,7 +28,7 @@ import {getFeatureId} from '../util/feature_id';
 
 /**
  * This is the default layer name for a geojson source,
- * as this source is not a real vector source, but a vector source needs layers,
+ * as this source is not a real vector source, but a vector source needs layers, 
  * so this is default name for it.
  */
 export const GEOJSON_TILE_LAYER_NAME = '_geojsonTileLayer';
