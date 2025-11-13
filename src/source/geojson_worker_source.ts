@@ -278,6 +278,9 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         }
     }
 
+    /**
+     * Converts an array of GeoJSON features into a GeoJSON FeatureCollection.
+     */
     _toFeatureCollection(features: Array<GeoJSON.Feature>): GeoJSON.FeatureCollection {
         return {type: 'FeatureCollection', features};
     }
