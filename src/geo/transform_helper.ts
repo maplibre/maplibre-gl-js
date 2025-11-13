@@ -286,7 +286,7 @@ export class TransformHelper implements ITransformGetters {
 
         this._renderWorldCopies = renderWorldCopies;
     }
-    
+
     get constrain(): TransformConstrainFunction { return this._constrain; }
     setConstrain(constrain?: TransformConstrainFunction | null) {
         if (!constrain) {
@@ -561,7 +561,10 @@ export class TransformHelper implements ITransformGetters {
             this._pixelsToClipSpaceMatrix = m;
             const halfFov = this.fovInRadians / 2;
             this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
+
+            this._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
         }
+
         this._callbacks.calcMatrices();
     }
 

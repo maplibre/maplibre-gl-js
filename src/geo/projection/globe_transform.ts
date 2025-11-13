@@ -7,7 +7,6 @@ import {lerp} from '../../util/util';
 import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../source/tile_id';
 
 import type Point from '@mapbox/point-geometry';
-import {mercatorZfromAltitude} from '../mercator_coordinate';
 import type {MercatorCoordinate} from '../mercator_coordinate';
 import type {LngLatBounds} from '../lng_lat_bounds';
 import type {Frustum} from '../../util/primitives/frustum';
@@ -345,7 +344,6 @@ export class GlobeTransform implements ITransform {
         this._mercatorTransform.apply(this, true, this.isGlobeRendering);
         this._helper._nearZ = this._mercatorTransform.nearZ;
         this._helper._farZ = this._mercatorTransform.farZ;
-        this._helper._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
     }
 
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
