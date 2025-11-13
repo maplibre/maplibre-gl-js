@@ -183,7 +183,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     /**
      * Fetch, parse and process GeoJSON according to the given params.
      *
-     * Defers to {@link GeoJSONWorkerSource._loadGeoJSON} for the fetching and parsing.
+     * Defers to {@link GeoJSONWorkerSource._loadGeoJSONFromString} for the fetching and parsing.
      *
      * @param params - the parameters
      * @param abortController - the abort controller that allows aborting this operation
@@ -194,15 +194,15 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
         // Data is loaded from a fetchable URL
         if (params.request) {
-            data = await this._loadGeoJSONUrl(params, abortController);
+            data = await this._loadGeoJSONFromUrl(params, abortController);
 
         // Data is loaded from a string literal
         } else if (typeof params.data === 'string') {
-            data = this._loadGeoJSON(params.data, params.promoteId, params.source);
+            data = this._loadGeoJSONFromString(params.data, params.promoteId, params.source);
 
         // Data is loaded from a GeoJSONSourceDiff
         } else if (params.dataDiff) {
-            data = this._loadGeoJSONDiff(params.dataDiff, params.promoteId, params.source);
+            data = this._loadGeoJSONFromDiff(params.dataDiff, params.promoteId, params.source);
         }
 
         delete this._pendingRequest;
@@ -224,7 +224,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     /**
      * Loads GeoJSON from a URL and sets the sources updateable GeoJSON object.
      */
-    async _loadGeoJSONUrl(params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
+    async _loadGeoJSONFromUrl(params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
         const {promoteId} = params;
         const response = await getJSON<GeoJSON.GeoJSON>(params.request, abortController);
         this._dataUpdateable = isUpdateableGeoJSON(response.data, promoteId) ? toUpdateable(response.data, promoteId) : undefined;
@@ -234,7 +234,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     /**
      * Loads GeoJSON from a string and sets the sources updateable GeoJSON object.
      */
-    _loadGeoJSON(data: string, promoteId: string, source: string): GeoJSON.FeatureCollection {
+    _loadGeoJSONFromString(data: string, promoteId: string, source: string): GeoJSON.FeatureCollection {
         const parsed = this._parseJSON(data, source);
         this._dataUpdateable = isUpdateableGeoJSON(parsed, promoteId) ? toUpdateable(parsed, promoteId) : undefined;
         return parsed;
@@ -243,7 +243,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     /**
      * Loads GeoJSON from a GeoJSONSourceDiff and applies it to the existing source updateable GeoJSON object.
      */
-    _loadGeoJSONDiff(dataDiff: GeoJSONSourceDiff, promoteId: string, source: string): GeoJSON.FeatureCollection {
+    _loadGeoJSONFromDiff(dataDiff: GeoJSONSourceDiff, promoteId: string, source: string): GeoJSON.FeatureCollection {
         if (!this._dataUpdateable) {
             throw new Error(`Cannot update existing geojson data in ${source}`);
         }

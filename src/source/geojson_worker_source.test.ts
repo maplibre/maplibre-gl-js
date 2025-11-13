@@ -111,7 +111,7 @@ describe('resourceTiming', () => {
 
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
-        source._loadGeoJSON = () => Promise.resolve(geoJson);
+        source._loadGeoJSONFromString = () => Promise.resolve(geoJson);
 
         const result = await source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters);
 
@@ -142,7 +142,7 @@ describe('resourceTiming', () => {
 
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
-        source._loadGeoJSON = () => Promise.resolve(geoJson);
+        source._loadGeoJSONFromString = () => Promise.resolve(geoJson);
 
         const result = await source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters);
 
