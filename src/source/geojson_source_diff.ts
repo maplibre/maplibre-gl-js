@@ -1,3 +1,4 @@
+import {getFeatureId} from '../data/feature_index';
 
 /**
  * A way to identify a feature, either by string or by number
@@ -55,10 +56,6 @@ export type GeoJSONFeatureDiff = {
 };
 
 export type UpdateableGeoJSON = GeoJSON.Feature | GeoJSON.FeatureCollection | undefined;
-
-function getFeatureId(feature: GeoJSON.Feature, promoteId?: string): GeoJSONFeatureId | undefined {
-    return promoteId ? feature.properties[promoteId] : feature.id;
-}
 
 /**
  * Returns true if the data is a valid GeoJSON object that can be updated.

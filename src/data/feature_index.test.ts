@@ -1,7 +1,7 @@
 import path from 'path';
 import {readFileSync} from 'fs';
 import {describe, expect, test} from 'vitest';
-import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from './feature_index';
+import {FeatureIndex, GEOJSON_TILE_LAYER_NAME, getFeatureId} from './feature_index';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {OverscaledTileID} from '../tile/tile_id';
@@ -13,10 +13,7 @@ import type {EvaluationParameters} from '../style/evaluation_parameters';
 
 describe('FeatureIndex', () => {
     describe('getId', () => {
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-
         test('uses cluster_id when cluster is true and id is undefined', () => {
-            const featureIndex = new FeatureIndex(tileID, 'someProperty');
             const feature = {
                 properties: {
                     cluster: true,
@@ -34,7 +31,7 @@ describe('FeatureIndex', () => {
                 toGeoJSON: () => ({})
             } as unknown as VectorTileFeature;
 
-            expect(featureIndex.getId(feature, 'sourceLayer')).toBe(123); // cluster_id converted to number
+            expect(getFeatureId(feature, 'sourceLayer')).toBe(123); // cluster_id converted to number
         });
     });
 

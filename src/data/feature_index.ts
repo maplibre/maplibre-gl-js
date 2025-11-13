@@ -27,7 +27,7 @@ import type {IReadonlyTransform} from '../geo/transform_interface';
 
 /**
  * This is the default layer name for a geojson source,
- * as this source is not a real vector source, but a vector source needs layers, 
+ * as this source is not a real vector source, but a vector source needs layers,
  * so this is default name for it.
  */
 export const GEOJSON_TILE_LAYER_NAME = '_geojsonTileLayer';
@@ -118,7 +118,7 @@ export class FeatureIndex {
 
     loadVTLayers(): {[_: string]: VectorTileLayer} {
         if (!this.vtLayers) {
-            this.vtLayers = this.encoding !== 'mlt' 
+            this.vtLayers = this.encoding !== 'mlt'
                 ? new VectorTile(new Protobuf(this.rawTileData)).layers
                 : new MLTVectorTile(this.rawTileData).layers;
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : [GEOJSON_TILE_LAYER_NAME]);
@@ -239,7 +239,7 @@ export class FeatureIndex {
             return;
         }
 
-        const id = this.getId(feature, sourceLayerName);
+        const id = getFeatureId(feature, this.promoteId, sourceLayerName);
 
         for (let l = 0; l < layerIDs.length; l++) {
             const layerID = layerIDs[l];
@@ -323,21 +323,6 @@ export class FeatureIndex {
 
         return false;
     }
-
-    getId(feature: VectorTileFeature, sourceLayerId: string): string | number {
-        let id: string | number = feature.id;
-        if (this.promoteId) {
-            const propName = typeof this.promoteId === 'string' ? this.promoteId : this.promoteId[sourceLayerId];
-            id = feature.properties[propName] as string | number;
-            if (typeof id === 'boolean') id = Number(id);
-
-            // When cluster is true, the id is the cluster_id even though promoteId is set
-            if (id === undefined && feature.properties?.cluster && this.promoteId) {
-                id = Number(feature.properties.cluster_id);
-            }
-        }
-        return id;
-    }
 }
 
 register(
@@ -355,4 +340,19 @@ function evaluateProperties(serializedProperties, styleLayerProperties, feature,
 
 function topDownFeatureComparator(a, b) {
     return b - a;
+}
+
+export function getFeatureId<T extends GeoJSON.Feature | VectorTileFeature>(feature: T, promoteId: PromoteIdSpecification | undefined, sourceLayerId?: string): T['id'] {
+    let id: T['id'] = feature.id;
+    if (promoteId) {
+        const propName = typeof promoteId === 'string' ? promoteId : promoteId[sourceLayerId];
+        id = feature.properties[propName] as T['id'];
+        if (typeof id === 'boolean') id = Number(id);
+
+        // When cluster is true, the id is the cluster_id even though promoteId is set
+        if (id === undefined && feature.properties?.cluster && promoteId) {
+            id = Number(feature.properties.cluster_id);
+        }
+    }
+    return id;
 }

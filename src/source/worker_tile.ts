@@ -1,4 +1,4 @@
-import {FeatureIndex} from '../data/feature_index';
+import {FeatureIndex, getFeatureId} from '../data/feature_index';
 import {performSymbolLayout} from '../symbol/symbol_layout';
 import {CollisionBoxArray} from '../data/array_types.g';
 import {DictionaryCoder} from '../util/dictionary_coder';
@@ -98,7 +98,7 @@ export class WorkerTile {
             const features = [];
             for (let index = 0; index < sourceLayer.length; index++) {
                 const feature = sourceLayer.feature(index);
-                const id = featureIndex.getId(feature, sourceLayerId);
+                const id = getFeatureId(feature, featureIndex.promoteId, sourceLayerId);
                 features.push({feature, id, index, sourceLayerIndex});
             }
 

@@ -1,6 +1,6 @@
 import {uniqueId, parseCacheControl} from '../util/util';
 import {deserialize as deserializeBucket} from '../data/bucket';
-import {GEOJSON_TILE_LAYER_NAME, type FeatureIndex, type QueryResults} from '../data/feature_index';
+import {GEOJSON_TILE_LAYER_NAME, getFeatureId, type FeatureIndex, type QueryResults} from '../data/feature_index';
 import {GeoJSONFeature} from '../util/vectortile_to_geojson';
 import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
 import {SymbolBucket} from '../data/bucket/symbol_bucket';
@@ -389,7 +389,7 @@ export class Tile {
             } else if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), feature)) {
                 continue;
             }
-            const id = featureIndex.getId(feature, sourceLayer);
+            const id = getFeatureId(feature, featureIndex.promoteId, sourceLayer);
             const geojsonFeature = new GeoJSONFeature(feature, z, x, y, id);
             (geojsonFeature as any).tile = coord;
             result.push(geojsonFeature);

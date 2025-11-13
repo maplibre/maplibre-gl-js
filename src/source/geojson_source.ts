@@ -7,7 +7,7 @@ import {applySourceDiff, isUpdateableGeoJSON, mergeSourceDiffs, toUpdateable} fr
 import {getGeoJSONBounds} from '../util/geojson_bounds';
 import {MessageType} from '../util/actor_messages';
 import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds';
-import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
+import {GEOJSON_TILE_LAYER_NAME, getFeatureId} from '../data/feature_index';
 
 import type {LngLatBounds} from '../geo/lng_lat_bounds';
 import type {Source} from './source';
@@ -487,8 +487,8 @@ export class GeoJSONSource extends Evented implements Source {
         const prevIds = new Set([...update.map(u => u.id), ...remove]);
 
         for (const id of prevIds.values()) {
-            if (typeof id !== 'number') {
-                warnOnce(`GeoJSONSource "${this.id}": updateData is slower when using string GeoJSON feature IDs (e.g. "${id}"). Consider using numeric IDs for better performance.`);
+            if (typeof id !== 'number' && typeof this.promoteId !== 'string') {
+                warnOnce(`GeoJSONSource "${this.id}": updateData is slower when using string GeoJSON feature IDs (e.g. "${id}"). Consider using numeric IDs or promoteId for better performance.`);
                 return undefined;
             }
         }
@@ -520,7 +520,8 @@ export class GeoJSONSource extends Evented implements Source {
         for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
             const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
             const feature = layers[GEOJSON_TILE_LAYER_NAME].feature(featureIndex.featureIndex);
-            if (prevIds.has(feature.id)) {
+            const id = getFeatureId(feature, this.promoteId);
+            if (prevIds.has(id)) {
                 return true;
             }
         }
