@@ -193,7 +193,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
         // Data is loaded from a fetchable URL
         if (params.request) {
-            data = await this._loadGeoJSONFromUrl(params, abortController);
+            data = await this._loadGeoJSONFromUrl(params.request, params.promoteId, abortController);
 
         // Data is loaded from a string literal
         } else if (typeof params.data === 'string') {
@@ -223,9 +223,8 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     /**
      * Loads GeoJSON from a URL and sets the sources updateable GeoJSON object.
      */
-    async _loadGeoJSONFromUrl(params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
-        const {promoteId} = params;
-        const response = await getJSON<GeoJSON.GeoJSON>(params.request, abortController);
+    async _loadGeoJSONFromUrl(request: RequestParameters, promoteId: string, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
+        const response = await getJSON<GeoJSON.GeoJSON>(request, abortController);
         this._dataUpdateable = isUpdateableGeoJSON(response.data, promoteId) ? toUpdateable(response.data, promoteId) : undefined;
         return response.data;
     }
