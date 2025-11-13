@@ -92,10 +92,10 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 
     /**
-     * Fetches (if appropriate), parses, and index geojson data into tiles. This
+     * Fetches (if appropriate), parses and indexes geojson data into tiles. This
      * preparatory method must be called before {@link GeoJSONWorkerSource.loadTile}
      * can correctly serve up tiles. The first call to this method must contain a valid
-     * {@link params.data}, {@link params.request}, or {@link params.dataDiff}. Subsequent
+     * {@link params.data}, {@link params.request} or {@link params.dataDiff}. Subsequent
      * calls may omit these parameters to reprocess the existing data (such as to update
      * clustering options).
      *
@@ -122,8 +122,9 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             this._geoJSONIndex = this._createGeoJSONIndex(data, params);
             this.loaded = {};
 
+            // Let the main thread know whether to apply a diff - or return the full data set.
             const result: GeoJSONWorkerSourceLoadDataResult = params.dataDiff && isUpdateableGeoJSON(data) ?
-                {shouldApplyDiff: true} :
+                {applyDiff: true} :
                 {data};
 
             this._finishPerformance(perf, params, result);
@@ -152,8 +153,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 
     /**
-     * Allows to get the source's actual GeoJSON.
-     *
+     * Get the source's full GeoJSON data source.
      * @returns a promise which is resolved with the source's actual GeoJSON
      */
     async getData(): Promise<GeoJSON.GeoJSON> {
@@ -170,8 +170,8 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     * @returns A promise that resolves when the tile is reloaded
     */
     reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
-        const loaded = this.loaded,
-            uid = params.uid;
+        const loaded = this.loaded;
+        const uid = params.uid;
 
         if (loaded && loaded[uid]) {
             return super.reloadTile(params);
@@ -181,8 +181,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 
     /**
-     * Fetch, parse and process GeoJSON according to the given params.
-     *
+     * Fetch, parse and process GeoJSON according to the given parameters.
      * Defers to {@link GeoJSONWorkerSource._loadGeoJSONFromString} for the fetching and parsing.
      *
      * @param params - the parameters

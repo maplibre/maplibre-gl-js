@@ -890,7 +890,7 @@ describe('GeoJSONSource.load', () => {
     });
 });
 
-describe('GeoJSONSource.shouldApplyDiff', () => {
+describe('GeoJSONSource.applyDiff', () => {
     test('applies diff', async () => {
         const initialData: GeoJSON.FeatureCollection = {
             type: 'FeatureCollection',
@@ -908,7 +908,7 @@ describe('GeoJSONSource.shouldApplyDiff', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
         vi.spyOn(mockDispatcher.getActor(), 'sendAsync').mockImplementation(() => {
-            return Promise.resolve({shouldApplyDiff: true});
+            return Promise.resolve({applyDiff: true});
         });
 
         const diff: GeoJSONSourceDiff = {
