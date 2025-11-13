@@ -8,7 +8,7 @@ import {extend} from '../util/util';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {sleep, waitForEvent} from '../util/test/util';
-import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
+import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
 import {type ActorMessage, MessageType} from '../util/actor_messages';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {Dispatcher} from '../util/dispatcher';
@@ -16,6 +16,7 @@ import type {RequestManager} from '../util/request_manager';
 import type {Actor} from '../util/actor';
 import type {MapSourceDataEvent} from '../ui/events';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
+import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -933,20 +934,18 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
     });
 
-    function getMockTile(z: number, x: number, y: number, tileFeatures: Array<Partial<GeoJSON.Feature>>) {
+    function getMockTile(z: number, x: number, y: number, features: Array<Partial<VectorTileFeature>>) {
         const tile = new Tile(new OverscaledTileID(z, 0, z, x, y), source.tileSize);
-        tile.latestFeatureIndex = {
-            featureIndexArray: {
-                length: tileFeatures.length,
-                get: (featureIndex: number) => ({featureIndex})
-            },
-            loadVTLayers: () => ({
-                [GEOJSON_TILE_LAYER_NAME]: {
-                    feature: (i: number) => tileFeatures[i] || {}
-                }
-            })
-        } as any;
+        tile.latestFeatureIndex = new FeatureIndex(tile.tileID, source.promoteId);
+        tile.latestFeatureIndex.vtLayers = {
+            [GEOJSON_TILE_LAYER_NAME]: {
+                feature: (i: number) => features[i] || {}
+            } as VectorTileLayer
+        };
 
+        for (let i = 0; i < features.length; i++) {
+            tile.latestFeatureIndex.insert(features[i] as VectorTileFeature, [], i, 0, 0, false);
+        }
         return tile;
     }
 
@@ -1068,9 +1067,9 @@ describe('GeoJSONSource.shoudReloadTile', () => {
     });
 
     test('handles promoteId', () => {
+        source.promoteId = 'id';
         const tile = getMockTile(0, 0, 0, [{id: 0, properties: {id: 'abc'}}]);
         const diff: GeoJSONSourceDiff = {remove: ['abc']};
-        source.promoteId = 'id';
 
         const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
 
