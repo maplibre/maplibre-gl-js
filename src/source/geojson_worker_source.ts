@@ -197,16 +197,16 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     async loadAndProcessGeoJSON(params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
         let data;
 
-        // Data is loaded from a fetchable URL
         if (params.request) {
+            // Data is loaded from a fetchable URL
             data = await this._loadGeoJSONFromUrl(params.request, params.promoteId, abortController);
 
-        // Data is loaded from a string literal
         } else if (typeof params.data === 'string') {
+            // Data is loaded from a string literal
             data = this._loadGeoJSONFromString(params.data, params.promoteId, params.source);
 
-        // Data is loaded from a GeoJSONSourceDiff
         } else if (params.dataDiff) {
+            // Data is loaded from a GeoJSONSourceDiff
             data = this._loadGeoJSONFromDiff(params.dataDiff, params.promoteId, params.source);
         }
 
@@ -317,9 +317,8 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONIndex {
     if (params.cluster) {
         return new Supercluster(getSuperclusterOptions(params)).load((data as any).features);
-    } else {
-        return geojsonvt(data, params.geojsonVtOptions);
     }
+    return geojsonvt(data, params.geojsonVtOptions);
 }
 
 function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
