@@ -388,12 +388,12 @@ describe('GeoJSONSource.update', () => {
         expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
         expect(spy.mock.calls[0][0].data.cluster).toBe(false);
-        expect(spy.mock.calls[0][0].data.data).toBe(JSON.stringify(sourceData1));
+        expect(spy.mock.calls[0][0].data.data).toBe(sourceData1);
         expect(spy.mock.calls[0][0].data.dataDiff).toBeUndefined();
         expect(spy.mock.calls[1][0].data.cluster).toBe(true);
         expect(spy.mock.calls[1][0].data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
         expect(spy.mock.calls[1][0].data.superclusterOptions.maxZoom).toBe(16);
-        expect(spy.mock.calls[1][0].data.data).toBe(JSON.stringify(sourceData2));
+        expect(spy.mock.calls[1][0].data.data).toBe(sourceData2);
         expect(spy.mock.calls[1][0].data.dataDiff).toBeUndefined();
     });
 
@@ -688,7 +688,7 @@ describe('GeoJSONSource.updateData', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
         expect(spy).toHaveBeenCalledTimes(2);
-        expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
+        expect(spy.mock.calls[0][0].data.data).toEqual(data1);
         expect(spy.mock.calls[1][0].data.dataDiff).toEqual({
             remove: ['1', '4'],
             add: [{id: '2', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}, {id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
@@ -730,8 +730,8 @@ describe('GeoJSONSource.updateData', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
         expect(spy).toHaveBeenCalledTimes(2);
-        expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
-        expect(spy.mock.calls[1][0].data.data).toEqual(JSON.stringify(data2));
+        expect(spy.mock.calls[0][0].data.data).toEqual(data1);
+        expect(spy.mock.calls[1][0].data.data).toEqual(data2);
     });
 
     test('is queued after setData when data is loading', async () => {
@@ -769,8 +769,8 @@ describe('GeoJSONSource.updateData', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
         expect(spy).toHaveBeenCalledTimes(3);
-        expect(spy.mock.calls[0][0].data.data).toEqual(JSON.stringify(data1));
-        expect(spy.mock.calls[1][0].data.data).toEqual(JSON.stringify(data2));
+        expect(spy.mock.calls[0][0].data.data).toEqual(data1);
+        expect(spy.mock.calls[1][0].data.data).toEqual(data2);
         expect(spy.mock.calls[2][0].data.dataDiff).toEqual(update1);
     });
 
@@ -890,7 +890,7 @@ describe('GeoJSONSource.load', () => {
     });
 });
 
-describe('GeoJSONSource.shouldApplyDiff', () => {
+describe('GeoJSONSource.applyDiff', () => {
     test('applies diff', async () => {
         const initialData: GeoJSON.FeatureCollection = {
             type: 'FeatureCollection',
@@ -908,7 +908,7 @@ describe('GeoJSONSource.shouldApplyDiff', () => {
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
         vi.spyOn(mockDispatcher.getActor(), 'sendAsync').mockImplementation(() => {
-            return Promise.resolve({shouldApplyDiff: true});
+            return Promise.resolve({applyDiff: true});
         });
 
         const diff: GeoJSONSourceDiff = {
