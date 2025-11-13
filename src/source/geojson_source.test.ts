@@ -933,7 +933,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
     });
 
-    function getMockTile(z: number, x: number, y: number, tileFeatures: Array<{id: string | number}>) {
+    function getMockTile(z: number, x: number, y: number, tileFeatures: Array<Partial<GeoJSON.Feature>>) {
         const tile = new Tile(new OverscaledTileID(z, 0, z, x, y), source.tileSize);
         tile.latestFeatureIndex = {
             featureIndexArray: {
@@ -1061,6 +1061,25 @@ describe('GeoJSONSource.shoudReloadTile', () => {
 
     test('handles string feature ids', () => {
         const diff: GeoJSONSourceDiff = {remove: ['abc']};
+
+        const result = source._getShouldReloadTileOptions(diff);
+
+        expect(result).toBe(undefined);
+    });
+
+    test('handles promoteId', () => {
+        const tile = getMockTile(0, 0, 0, [{id: 0, properties: {id: 'abc'}}]);
+        const diff: GeoJSONSourceDiff = {remove: ['abc']};
+        source.promoteId = 'id';
+
+        const result = source.shouldReloadTile(tile, source._getShouldReloadTileOptions(diff));
+
+        expect(result).toBe(true);
+    });
+
+    test('handles cluster', () => {
+        const diff: GeoJSONSourceDiff = {remove: ['abc']};
+        source._options.cluster = true;
 
         const result = source._getShouldReloadTileOptions(diff);
 

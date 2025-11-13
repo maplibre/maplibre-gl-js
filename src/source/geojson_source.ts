@@ -480,14 +480,14 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     _getShouldReloadTileOptions(diff?: GeoJSONSourceDiff): GeoJSONSourceShouldReloadTileOptions | undefined {
-        if (!diff || diff.removeAll) return undefined;
+        if (this._options.cluster || !diff || diff.removeAll) return undefined;
 
         const {add = [], update = [], remove = []} = (diff || {});
 
         const prevIds = new Set([...update.map(u => u.id), ...remove]);
 
         for (const id of prevIds.values()) {
-            if (typeof id !== 'number') {
+            if (typeof id !== 'number' && this.promoteId == null) {
                 warnOnce(`GeoJSONSource "${this.id}": updateData is slower when using string GeoJSON feature IDs (e.g. "${id}"). Consider using numeric IDs for better performance.`);
                 return undefined;
             }
@@ -520,7 +520,8 @@ export class GeoJSONSource extends Evented implements Source {
         for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
             const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
             const feature = layers[GEOJSON_TILE_LAYER_NAME].feature(featureIndex.featureIndex);
-            if (prevIds.has(feature.id)) {
+            const id = tile.latestFeatureIndex.getId(feature, GEOJSON_TILE_LAYER_NAME);
+            if (prevIds.has(id)) {
                 return true;
             }
         }
