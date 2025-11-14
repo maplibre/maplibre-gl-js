@@ -1,16 +1,24 @@
 ## main
 
 ### ✨ Features and improvements
-- Text labels can now include relatively uncommon Chinese, Japanese, Korean, and Vietnamese characters, as well as characters from historical writing systems. When using server-side fonts, the map may request glyph PBFs beyond U+FFFF from the server instead of throwing an error as before. ([#6640](https://github.com/maplibre/maplibre-gl-js/pull/6640)) (by [@1ec5](https://github.com/1ec5))
-- GeoJSON Source Diff: improve, abstract, refactor, optimize, and fix regressions. ([#6681](https://github.com/maplibre/maplibre-gl-js/pull/6681)) (by [@wayofthefuture](https://github.com/wayofthefuture))
-- GeoJSONSource setData and updateData waitForCompletion option ([#6688](https://github.com/maplibre/maplibre-gl-js/pull/6688)) (by [@wayofthefuture](https://github.com/wayofthefuture))
-- Improve performance of `GeoJSONSource#updateData` ([#6668](https://github.com/maplibre/maplibre-gl-js/pull/6668) (by [@lucaswoj](https://github.com/lucaswoj)))
-- GeoJSON Worker Refactor ([#6702](https://github.com/maplibre/maplibre-gl-js/pull/6702) (by [@wayofthefuture](https://github.com/wayofthefuture))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Misc bug fixes related to `GeoJSONSource#updateData` ([#6689](https://github.com/maplibre/maplibre-gl-js/pull/6689), [#6690](https://github.com/maplibre/maplibre-gl-js/pull/6690), [#6704](https://github.com/maplibre/maplibre-gl-js/pull/6704) (by [@lucaswoj](https://github.com/lucaswoj)))
 - _...Add new stuff here..._
+
+## 5.13.0
+
+### ✨ Features and improvements
+
+- Text labels can now include relatively uncommon Chinese, Japanese, Korean, and Vietnamese characters, as well as characters from historical writing systems. When using server-side fonts, the map may request glyph PBFs beyond U+FFFF from the server instead of throwing an error as before. ([#6640](https://github.com/maplibre/maplibre-gl-js/pull/6640)) (by [@1ec5](https://github.com/1ec5))
+- GeoJSON Source Diff: improve, abstract, refactor, optimize, and fix regressions. ([#6681](https://github.com/maplibre/maplibre-gl-js/pull/6681)) (by [@wayofthefuture](https://github.com/wayofthefuture))
+- GeoJSONSource setData and updateData waitForCompletion option ([#6688](https://github.com/maplibre/maplibre-gl-js/pull/6688)) (by [@wayofthefuture](https://github.com/wayofthefuture))
+- Improve performance of `GeoJSONSource#updateData` ([#6668](https://github.com/maplibre/maplibre-gl-js/pull/6668)) (by [@lucaswoj](https://github.com/lucaswoj))
+- GeoJSON Worker Refactor ([#6702](https://github.com/maplibre/maplibre-gl-js/pull/6702)) (by [@wayofthefuture](https://github.com/wayofthefuture))
+
+### 🐞 Bug fixes
+
+- Misc bug fixes related to `GeoJSONSource#updateData` ([#6689](https://github.com/maplibre/maplibre-gl-js/pull/6689), [#6690](https://github.com/maplibre/maplibre-gl-js/pull/6690), [#6704](https://github.com/maplibre/maplibre-gl-js/pull/6704)) (by [@lucaswoj](https://github.com/lucaswoj))
 
 ## 5.12.0
 
@@ -67,14 +75,14 @@
 
 ### 🐞 Bug fixes
 
-- Added `button` role to marker div to fix accessibility issues with the `aria-label` ([#6435](https://github.com/maplibre/maplibre-gl-js/issues/6435))
+- Added `button` role to marker div to fix accessibility issues with the `aria-label` ([#6435](https://github.com/maplibre/maplibre-gl-js/issues/6435)) (by [@cmburcus](https://github.com/cmburcus))
 - Fix a crash on iOS when there are too many symbols to render ([#6526](https://github.com/maplibre/maplibre-gl-js/issues/6526)) (by [@HarelM](https://github.com/HarelM))
 
 ## 5.8.0
 
 ### ✨ Features and improvements
 
-- Enable documentation admonitions in Material for MkDocs. ([#6455](https://github.com/maplibre/maplibre-gl-js/issues/6455))
+- Enable documentation admonitions in Material for MkDocs. ([#6455](https://github.com/maplibre/maplibre-gl-js/issues/6455)) (by [@morehawes](https://github.com/morehawes))
 - Switch MapEventType from type to interface to allow declaration merging ([#6436](https://github.com/maplibre/maplibre-gl-js/pull/6436)) (by [@lhapaipai](https://github.com/lhapaipai))
 - Implement data-driven styling support for `line-dasharray` ([#5812](https://github.com/maplibre/maplibre-gl-js/pull/5812)) (by [@lucaswoj](https://github.com/lucaswoj))
 
@@ -118,7 +126,7 @@
 
 ### ✨ Features and improvements
 
-- Pass document's `lang` to Tiny-SDF to render Simplified and Traditional Chinese characters ([#6223](https://github.com/maplibre/maplibre-gl-js/issues/6223))
+- Pass document's `lang` to Tiny-SDF to render Simplified and Traditional Chinese characters ([#6223](https://github.com/maplibre/maplibre-gl-js/pull/6223)) (by [@mapmeld](https://github.com/mapmeld))
 - Enable `global-state` expressions in layout properties ([#6209](https://github.com/maplibre/maplibre-gl-js/pull/6209)) (by [@melitele](https://github.com/melitele))
 - Align typescript types generation with docs generation and avoid exporting non-exported types ([#6217](https://github.com/maplibre/maplibre-gl-js/pull/6217)) (by [@HarelM](https://github.com/HarelM))
 - Add `coveringTiles` method to the public API of the map object ([#6292](https://github.com/maplibre/maplibre-gl-js/pull/6292)) (by [@HarelM](https://github.com/HarelM))
@@ -134,7 +142,7 @@
 ### 🐞 Bug fixes
 
 - Fix white artifacts when using non-zero elevation ([#6032](https://github.com/maplibre/maplibre-gl-js/pull/6032)) (by [@NathanMOlson](https://github.com/NathanMOlson))
-- Fix geolocate control lock loss on window resize and zoom ([#3504](https://github.com/maplibre/maplibre-gl-js/issues/3504))
+- Fix geolocate control lock loss on window resize and zoom ([#3504](https://github.com/maplibre/maplibre-gl-js/issues/3504)) (by [@tderflinger](https://github.com/tderflinger))
 - Fix a memory leak in `GeoJSONSource` when rapidly updating data ([#6163](https://github.com/maplibre/maplibre-gl-js/pull/6163)) (by [@andrewda](https://github.com/andrewda))
 - Fix `Map.setTransformRequest` parameter type to include `null` ([#6179](https://github.com/maplibre/maplibre-gl-js/issues/6179)) (by [@madoci](https://github.com/madoci))
 - Fix typo `_rotatePitchHandler` in the `navigation_control.ts` file ([#6207](https://github.com/maplibre/maplibre-gl-js/issues/6207)) (by [@daandewaard](https://github.com/daandewaard))
@@ -237,7 +245,7 @@
 ### 🐞 Bug fixes
 
 - Fix how padding is applied when using flyTo() with Globe ([#5406](https://github.com/maplibre/maplibre-gl-js/pull/5406)) (by [@pjamessteven](https://github.com/pjamessteven))
-- Fix URL hash validation to support bearing range -180 to 180 ([#5461](https://github.com/maplibre/maplibre-gl-js/issues/5461))
+- Fix URL hash validation to support bearing range -180 to 180 ([#5461](https://github.com/maplibre/maplibre-gl-js/issues/5461)) (by [@stanislawpuda-tomtom](https://github.com/stanislawpuda-tomtom))
 - Fix variable zoom tile calculation when padding is set ([#5486](https://github.com/maplibre/maplibre-gl-js/issues/5486)) (by [@lucaswoj](https://github.com/lucaswoj))
 - Fix rendering Japanese symbols which are accidentally ignored. ([#5421](https://github.com/maplibre/maplibre-gl-js/pull/5421)) (by [@Kanahiro](https://github.com/Kanahiro))
 
