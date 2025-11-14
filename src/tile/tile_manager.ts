@@ -1081,7 +1081,7 @@ export class TileManager extends Evented {
             pointQueryGeometry;
 
         const project = (point: Point) => transform.screenPointToMercatorCoordinate(point, this.terrain);
-        // TODO I have confirmed that queryGemetry is good.
+        // TODO I have confirmed that queryGemetry is correct.
         const queryGeometry = this.transformBbox(pointQueryGeometry, project, !allowWorldCopies);
         const cameraQueryGeometry = this.transformBbox(cameraPointQueryGeometry, project, !allowWorldCopies);
 
@@ -1115,6 +1115,7 @@ export class TileManager extends Evented {
                 tileSpaceBounds.expandBy(queryPadding);
 
                 if (tileSpaceBounds.intersects(EXTENT_BOUNDS)) {
+                    // TODO I need to confirm that tileSpaceQueryGeometry is correct
                     const tileSpaceQueryGeometry: Array<Point> = queryGeometry.map((c) => tileID.getTilePoint(c));
                     const tileSpaceCameraQueryGeometry = cameraQueryGeometry.map((c) => tileID.getTilePoint(c));
 
