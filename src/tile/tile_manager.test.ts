@@ -178,7 +178,6 @@ describe('TileManager.addTile', () => {
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        tileManager.updateCacheSize(tr);
         tileManager._addTile(tileID);
         tileManager._removeTile(tileID.key);
         tileManager._addTile(tileID);
@@ -198,7 +197,6 @@ describe('TileManager.addTile', () => {
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        tileManager.updateCacheSize(tr);
 
         const tile = tileManager._addTile(tileID);
         const updateFeaturesSpy = vi.spyOn(tile, 'setFeatureState');
@@ -227,7 +225,6 @@ describe('TileManager.addTile', () => {
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        tileManager.updateCacheSize(tr);
 
         const id = tileID.key;
         expect(tileManager._timers[id]).toBeFalsy();
@@ -259,7 +256,6 @@ describe('TileManager.addTile', () => {
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        tileManager.updateCacheSize(tr);
 
         tileManager._addTile(tileID);
         expect(tileManager._cache.get(tileID.key)).toBeFalsy();
@@ -337,7 +333,6 @@ describe('TileManager.removeTile', () => {
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        tileManager.updateCacheSize(tr);
 
         tileManager._addTile(tileID);
         tileManager._removeTile(tileID.key);
@@ -2383,10 +2378,9 @@ describe('TileManager sets max cache size correctly', () => {
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        tileManager.updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 3 * 3 * 5
-        expect(tileManager._cache.getMaxEntries()).toBe(45);
+        expect(tileManager._cache.getMaxSize()).toBe(45);
     });
 
     test('sets cache size based on 256 tiles', () => {
@@ -2396,10 +2390,9 @@ describe('TileManager sets max cache size correctly', () => {
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
-        tileManager.updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 2 * 2 * 5
-        expect(tileManager._cache.getMaxEntries()).toBe(20);
+        expect(tileManager._cache.getMaxSize()).toBe(20);
     });
 
 });

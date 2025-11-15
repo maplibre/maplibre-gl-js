@@ -167,7 +167,8 @@ export class VectorTileWorkerSource implements WorkerSource {
      */
     private _getOverzoomTile(params: WorkerTileParameters, maxZoomVectorTile: VectorTile): LoadVectorTileResult {
         const {tileID, source, overzoomParameters} = params;
-        const {maxZoomTileID} = overzoomParameters;
+        const {maxZoomTileID, maxCacheSize} = overzoomParameters;
+        this.overzoomedTileResultCache.setMaxSize(maxCacheSize);
 
         const cacheKey = `${maxZoomTileID.key}_${tileID.key}`;
         const cachedOverzoomTile = this.overzoomedTileResultCache.get(cacheKey);

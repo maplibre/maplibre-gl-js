@@ -2,7 +2,6 @@ import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
 import {type EvaluationParameters} from '../../style/evaluation_parameters';
 import {Style} from '../../style/style';
-import {config} from '../../util/config';
 
 beforeEach(() => {
     beforeMapTest();
@@ -10,20 +9,20 @@ beforeEach(() => {
 });
 
 describe('mapOptions', () => {
-    test('maxTileCacheZoomLevels: Default value is set', () => {
-        const map = createMap();
-        expect(map._maxTileCacheZoomLevels).toBe(config.MAX_TILE_CACHE_ZOOM_LEVELS);
-    });
-
     test('interactive: tabindex is set accordingly to the interactiveness', () => {
         expect(createMap({interactive: true}).getCanvas().getAttribute('tabindex')).toBe('0');
         expect(createMap({interactive: false}).getCanvas().getAttribute('tabindex')).toBe('-1');
         expect(createMap({locale: {'Map.Title': 'Alt label'}}).getCanvas().getAttribute('aria-label')).toBe('Alt label');
     });
 
-    test('maxTileCacheZoomLevels: Value can be set via map options', () => {
-        const map = createMap({maxTileCacheZoomLevels: 1});
-        expect(map._maxTileCacheZoomLevels).toBe(1);
+    test('maxTileCacheSize: Value can be set via map options', () => {
+        const map = createMap({maxTileCacheSize: 1});
+        expect(map._maxTileCacheSize).toBe(1);
+    });
+
+    test('_maxOverzoomingTileCacheSize: Value can be set via map options', () => {
+        const map = createMap({_maxOverzoomingTileCacheSize: 1});
+        expect(map._maxOverzoomingTileCacheSize).toBe(1);
     });
 
     test('Style validation is enabled by default', () => {

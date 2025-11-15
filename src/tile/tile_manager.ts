@@ -73,8 +73,6 @@ export class TileManager extends Evented {
     _prevLng: number;
     _cache: BoundedLRUCache<string, Tile>;
     _timers: Record<string, ReturnType<typeof setTimeout>>;
-    _maxTileCacheSize: number;
-    _maxTileCacheZoomLevels: number;
     _paused: boolean;
     _shouldReloadOnResume: boolean;
     transform: ITransform;
@@ -115,8 +113,6 @@ export class TileManager extends Evented {
             onRemove: (tile) => this._unloadTile(tile)
         });
         this._timers = {};
-        this._maxTileCacheSize = null;
-        this._maxTileCacheZoomLevels = null;
         this._rasterFadeDuration = 0;
         this._maxFadingAncestorLevels = 5;
 
@@ -127,8 +123,9 @@ export class TileManager extends Evented {
 
     onAdd(map: Map) {
         this.map = map;
-        this._maxTileCacheSize = map ? map._maxTileCacheSize : null;
-        this._maxTileCacheZoomLevels = map ? map._maxTileCacheZoomLevels : null;
+        if (map) {
+            this._cache.setMaxSize(map._maxTileCacheSize);
+        }
         if (this._source && this._source.onAdd) {
             this._source.onAdd(map);
         }
@@ -491,27 +488,6 @@ export class TileManager extends Evented {
         return null;
     }
 
-    /**
-     * Resizes the tile cache based on the current viewport's size
-     * or the maxTileCacheSize option passed during map creation
-     *
-     * Larger viewports use more tiles and need larger caches. Larger viewports
-     * are more likely to be found on devices with more memory and on pages where
-     * the map is more important.
-     */
-    updateCacheSize(transform: IReadonlyTransform) {
-        const widthInTiles = Math.ceil(transform.width / this._source.tileSize) + 1;
-        const heightInTiles = Math.ceil(transform.height / this._source.tileSize) + 1;
-        const approxTilesInView = widthInTiles * heightInTiles;
-        const commonZoomRange = this._maxTileCacheZoomLevels === null ?
-            config.MAX_TILE_CACHE_ZOOM_LEVELS : this._maxTileCacheZoomLevels;
-        const viewDependentMaxSize = Math.floor(approxTilesInView * commonZoomRange);
-        const maxSize = typeof this._maxTileCacheSize === 'number' ?
-            Math.min(this._maxTileCacheSize, viewDependentMaxSize) : viewDependentMaxSize;
-
-        this._cache.setMaxSize(maxSize);
-    }
-
     handleWrapJump(lng: number) {
         // On top of the regular z/x/y values, TileIDs have a `wrap` value that specify
         // which copy of the world the tile belongs to. For example, at `lng: 10` you
@@ -558,7 +534,6 @@ export class TileManager extends Evented {
         this.transform = transform;
         this.terrain = terrain;
 
-        this.updateCacheSize(transform);
         this.handleWrapJump(this.transform.center.lng);
 
         let idealTileIDs: OverscaledTileID[];

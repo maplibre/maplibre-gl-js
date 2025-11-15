@@ -1,6 +1,6 @@
 
 type BoundedLRUOptions<V> = {
-    maxEntries?: number;
+    maxEntries: number;
     onRemove?: (value: V) => void;
 };
 
@@ -9,8 +9,8 @@ export class BoundedLRUCache<K, V> {
     private maxEntries: number;
     private onRemove?: (value: V) => void;
 
-    constructor(options: BoundedLRUOptions<V> = {}) {
-        this.maxEntries = options.maxEntries ?? 1000;
+    constructor(options: BoundedLRUOptions<V>) {
+        this.maxEntries = options.maxEntries;
         this.onRemove = options.onRemove;
         this.map = new Map();
     }
@@ -64,6 +64,7 @@ export class BoundedLRUCache<K, V> {
      * If the new size is smaller than the current number of entries, removes oldest entries until within limit.
      */
     setMaxSize(maxEntries: number) {
+        if (maxEntries === this.maxEntries) return;
         this.maxEntries = maxEntries;
         this.trim();
     }
@@ -134,7 +135,7 @@ export class BoundedLRUCache<K, V> {
     /**
      * Returns the maximum number of entries allowed in the cache.
      */
-    getMaxEntries(): number {
+    getMaxSize(): number {
         return this.maxEntries;
     }
 }
