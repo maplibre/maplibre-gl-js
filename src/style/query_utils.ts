@@ -62,20 +62,49 @@ export function offsetLine(rings: Array<Array<Point>>, offset: number) {
     for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
         const ring = rings[ringIndex];
         const newRing: Array<Point> = [];
+        let refPoint: Point;
+        const zeroPoint = new Point(0, 0);
         for (let index = 0; index < ring.length; index++) {
-            const a = ring[index - 1];
-            const b = ring[index];
-            const c = ring[index + 1];
-            const aToB = index === 0 ? new Point(0, 0) : b.sub(a)._unit()._perp();
-            const bToC = index === ring.length - 1 ? new Point(0, 0) : c.sub(b)._unit()._perp();
-            const extrude = aToB._add(bToC)._unit();
-
-            const cosHalfAngle = extrude.x * bToC.x + extrude.y * bToC.y;
-            if (cosHalfAngle !== 0) {
-                extrude._mult(1 / cosHalfAngle);
+            // perpendicular unit vectors (outward unit normal vector):
+            // these indicate which direction the segments should be offset in
+            let unitNormalAB: Point;
+            let unitNormalBC: Point;
+            let nextPoint: Point;
+            const point = ring[index];
+            if (index === 0) {
+                // first iteration, set refPoint as current point
+                refPoint = point;
+                unitNormalAB = new Point(0, 0);
+            } else if (refPoint.equals(point)) {
+                unitNormalAB = new Point(0, 0);
+            } else {
+                unitNormalAB = point.sub(refPoint)._unit()._perp();
+            }
+            if (index === ring.length - 1) {
+                // final iteration; no next point
+                unitNormalBC = new Point(0, 0);
+            } else {
+                nextPoint = ring[index +1];
+                if (point.equals(nextPoint)) {
+                    unitNormalBC = new Point(0, 0);
+                } else {
+                    unitNormalBC = nextPoint.sub(point)._unit()._perp();
+                }
+            }
+            if (unitNormalAB.equals(zeroPoint) && unitNormalBC.equals(zeroPoint)) {
+                // no change means final point will be a duplicate of the previous; can be excluded
+                continue;
+            } else {
+                // unit bisector direction
+                const bisectorDir = unitNormalAB._add(unitNormalBC)._unit();
+                const cosHalfAngle = bisectorDir.x * unitNormalBC.x + bisectorDir.y * unitNormalBC.y;
+                if (cosHalfAngle !== 0) {
+                    bisectorDir._mult(1 / cosHalfAngle);
+                }
+                newRing.push(bisectorDir._mult(offset)._add(point));
             }
 
-            newRing.push(extrude._mult(offset)._add(b));
+            refPoint = point;
         }
         newRings.push(newRing);
     }

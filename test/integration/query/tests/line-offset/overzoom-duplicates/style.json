@@ -1,0 +1,102 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "width": 512,
+            "height": 512,
+            "debug": true,
+            "queryGeometry": [
+                260,
+                243
+            ]
+        }
+    },
+    "center": [
+        10.390242,
+        55.424994
+    ],
+    "zoom": 14,
+    "sources": {
+        "linestring": {
+            "type": "geojson",
+            "maxzoom": 10,
+            "data": {
+                "type": "Feature",
+                "properties": {
+                    "internalId": 1
+                },
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [
+                            10.390168,
+                            55.425678
+                        ],
+                        [
+                            10.390378,
+                            55.425492
+                        ],
+                        [
+                            10.390378,
+                            55.425492
+                        ],
+                        [
+                            10.390587,
+                            55.425307
+                        ],
+                        [
+                            10.390587,
+                            55.425307
+                        ],
+                        [
+                            10.390797,
+                            55.425121
+                        ],
+                        [
+                            10.390797,
+                            55.425121
+                        ],
+                        [
+                            10.390519,
+                            55.425057
+                        ],
+                        [
+                            10.390519,
+                            55.425057
+                        ],
+                        [
+                            10.390242,
+                            55.424994
+                        ],
+                        [
+                            10.390242,
+                            55.424994
+                        ],
+                        [
+                            10.389964,
+                            55.42493
+                        ]
+                    ]
+                },
+                "id": 2
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "testLine",
+            "type": "line",
+            "source": "linestring",
+            "layout": {
+                "line-join": "round",
+                "line-cap": "round"
+            },
+            "paint": {
+                "line-color": "#ff0000",
+                "line-width": 5,
+                "line-opacity": 1,
+                "line-offset": 3
+            }
+        }
+    ]
+}

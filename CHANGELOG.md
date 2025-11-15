@@ -32,6 +32,7 @@
 
 - Fix missing `constrainOverride` setter in `TransformHelper.apply` ([#6642](https://github.com/maplibre/maplibre-gl-js/pull/6642)) (by [@larsmaxfield](https://github.com/larsmaxfield))
 - Fix blank map after WebGL context restore ([#6242](https://github.com/maplibre/maplibre-gl-js/issues/6242)) (by [@ToHold](https://github.com/ToHold))
+- Fix offsetLine handling of duplicate points to avoid null values in output ([#5431](https://github.com/maplibre/maplibre-gl-js/issues/5431))
 
 ## 5.11.0
 
