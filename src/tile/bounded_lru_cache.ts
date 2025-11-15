@@ -7,10 +7,10 @@ type BoundedLRUOptions<V> = {
 export class BoundedLRUCache<K, V> {
     private map: Map<K, V>;
     private maxEntries: number;
-    private onRemove: (value: V) => void;
+    private onRemove?: (value: V) => void;
 
     constructor(options: BoundedLRUOptions<V> = {}) {
-        this.maxEntries = options.maxEntries || 1000;
+        this.maxEntries = options.maxEntries ?? 1000;
         this.onRemove = options.onRemove;
         this.map = new Map();
     }
@@ -21,9 +21,7 @@ export class BoundedLRUCache<K, V> {
     get(key: K): V | undefined {
         const value = this.map.get(key);
         if (value !== undefined) {
-            // Move key to end (most recently used)
-            this.map.delete(key);
-            this.map.set(key, value);
+            this.moveToEnd(key, value);
         }
         return value;
     }
@@ -33,11 +31,31 @@ export class BoundedLRUCache<K, V> {
      * If adding would exceed the maximum size, it removes the oldest entry before adding.
      */
     set(key: K, value: V) {
-        if (this.map.has(key)) {
-            this.remove(key);
-        } else if (this.map.size >= this.maxEntries) {
-            this.removeOldest();
+        const existing = this.map.get(key);
+
+        // Adding a new entry
+        if (existing === undefined) {
+            this.map.set(key, value);
+            this.trim();
+            return;
         }
+
+        // Updating exact same tile reference - move to the end (most recently used)
+        if (existing === value) {
+            this.moveToEnd(key, value);
+            return;
+        }
+
+        // Updating same key with a new tile - remove old tile and add new one
+        this.remove(key);
+        this.map.set(key, value);
+    }
+
+    /**
+     * Moves a key to the end of the cache without removing it (most recently used).
+     */
+    moveToEnd(key: K, value: V) {
+        this.map.delete(key);
         this.map.set(key, value);
     }
 
@@ -47,19 +65,15 @@ export class BoundedLRUCache<K, V> {
      */
     setMaxSize(maxEntries: number) {
         this.maxEntries = maxEntries;
-        while (this.map.size > this.maxEntries) {
-            this.removeOldest();
-        }
+        this.trim();
     }
 
     /**
-     * Removes entries from the cache that don't satisfy the provided filter function.
+     * Removes entries from the cache until the number of entries is within maxEntries.
      */
-    filter(func: (value: V) => boolean) {
-        for (const [key, value] of this.map.entries()) {
-            if (!func(value)) {
-                this.remove(key);
-            }
+    trim() {
+        while (this.map.size > this.maxEntries) {
+            this.removeOldest();
         }
     }
 
@@ -84,20 +98,30 @@ export class BoundedLRUCache<K, V> {
     }
 
     /**
-     * Removes all entries from the cache. If an onRemove callback is configured,
-     * it will be called for each entry.
+     * Removes entries from the cache that don't satisfy the provided filter function.
+     */
+    filter(func: (value: V) => boolean) {
+        for (const [key, value] of this.map.entries()) {
+            if (!func(value)) {
+                this.remove(key);
+            }
+        }
+    }
+
+    /**
+     * Removes all entries from the cache. If an onRemove callback is configured, it will be called for each entry.
      */
     clear() {
+        // If no onRemove callback is configured, just clear the map directly.
         if (!this.onRemove) {
             this.map.clear();
             return;
         }
 
+        // If an onRemove callback is configured, call it for each entry before clearing the map.
         const values = Array.from(this.map.values());
         this.map.clear();
-        for (const value of values) {
-            this.onRemove(value);
-        }
+        for (const value of values) this.onRemove(value);
     }
 
     /**
