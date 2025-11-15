@@ -2,7 +2,7 @@ import {create as createSource} from '../source/source';
 
 import {Tile, FadingDirections, FadingRoles} from './tile';
 import {ErrorEvent, Event, Evented} from '../util/evented';
-import {TileCache} from './tile_cache';
+import {BoundedLRUCache} from './tile_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {EXTENT} from '../data/extent';
 import Point from '@mapbox/point-geometry';
@@ -71,7 +71,7 @@ export class TileManager extends Evented {
     _sourceErrored: boolean;
     _tiles: Record<string, Tile>;
     _prevLng: number;
-    _cache: TileCache;
+    _cache: BoundedLRUCache<string, Tile>;
     _timers: Record<string, ReturnType<typeof setTimeout>>;
     _maxTileCacheSize: number;
     _maxTileCacheZoomLevels: number;
@@ -110,7 +110,7 @@ export class TileManager extends Evented {
         this._source = createSource(id, options, dispatcher, this);
 
         this._tiles = {};
-        this._cache = new TileCache(0, (tile) => this._unloadTile(tile));
+        this._cache = new BoundedLRUCache(1000, tile => this._unloadTile(tile));
         this._timers = {};
         this._maxTileCacheSize = null;
         this._maxTileCacheZoomLevels = null;
@@ -276,7 +276,8 @@ export class TileManager extends Evented {
             return;
         }
 
-        this._cache.reset();
+        // Clear the tile cache
+        this._cache.clear();
 
         for (const i in this._tiles) {
             if (shouldReloadTileOptions && this._source.shouldReloadTile && !this._source.shouldReloadTile(this._tiles[i], shouldReloadTileOptions)) {
@@ -397,7 +398,7 @@ export class TileManager extends Evented {
      * Analogy: imagine two sheets of paper in 3D space:
      *   - one sheet = ideal tiles at varying overscaledZ
      *   - the second sheet = maxCoveringZoom
-     * 
+     *
      * @param retainTileMap - this parameters will be updated with the child tiles to keep
      * @param idealTilesWithoutData - which of the ideal tiles currently does not have loaded data
      * @return a set of tiles that need to be loaded
@@ -569,7 +570,7 @@ export class TileManager extends Evented {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.type === 'vector' && this.map._zoomLevelsToOverscale !== undefined
-                    ? transform.maxZoom - this.map._zoomLevelsToOverscale 
+                    ? transform.maxZoom - this.map._zoomLevelsToOverscale
                     : this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,
@@ -923,18 +924,8 @@ export class TileManager extends Evented {
         if (tile)
             return tile;
 
-        tile = this._cache.getAndRemove(tileID);
-        if (tile) {
-            //reset fading logic to remove stale fading data from cache
-            tile.resetFadeLogic();
-
-            // set timer for the reloading of the tile upon expiration
-            this._setTileReloadTimer(tileID.key, tile);
-
-            // set the tileID because the cached tile could have had a different wrap value
-            tile.tileID = tileID;
-            this._state.initializeTileState(tile, this.map ? this.map.painter : null);
-        }
+        // Check the cache for the tile first
+        tile = this._getTileFromCache(tileID);
 
         const cached = tile;
 
@@ -950,6 +941,47 @@ export class TileManager extends Evented {
         }
 
         return tile;
+    }
+
+    /**
+     * Get a tile from the cache using a wrapped tileID (wrap = 0), then re-apply
+     * the provided tileID's wrap value to the tile.
+     */
+    _getTileFromCache(tileID: OverscaledTileID): Tile | null {
+        const cacheKey = this._getCacheKey(tileID);
+
+        const tile = this._cache.get(cacheKey);
+        if (!tile) return null;
+
+        // If tile is expired, remove it from the cache
+        if (tile.isExpired()) {
+            this._cache.remove(cacheKey);
+            return null;
+        }
+
+        // Apply the provided wrap to the cached tile (which could have a different wrap)
+        tile.tileID = tileID;
+
+        tile.resetFadeLogic();
+        this._setTileReloadTimer(tileID.key, tile);
+        this._state.initializeTileState(tile, this.map ? this.map.painter : null);
+
+        return tile;
+    }
+
+    /**
+     * Add a tile to the cache using a wrapped tileID (wrap = 0)
+     */
+    _addTileToCache(tile: Tile) {
+        const cacheKey = this._getCacheKey(tile.tileID);
+        this._cache.set(cacheKey, tile);
+    }
+
+    /**
+     * Get the cache key for a tile using a wrapped tileID (wrap = 0)
+     */
+    _getCacheKey(tileID: OverscaledTileID): string {
+        return tileID.wrapped().key;
     }
 
     /**
@@ -1006,18 +1038,17 @@ export class TileManager extends Evented {
      */
     _removeTile(id: string) {
         const tile = this._tiles[id];
-        if (!tile)
-            return;
+        if (!tile) return;
 
         tile.uses--;
         delete this._tiles[id];
         this._clearTileReloadTimer(id);
 
-        if (tile.uses > 0)
-            return;
+        if (tile.uses > 0) return;
 
         if (tile.hasData() && tile.state !== 'reloading') {
-            this._cache.add(tile.tileID, tile, tile.getExpiryTimeout());
+            // Cache the removed tile
+            this._addTileToCache(tile);
         } else {
             tile.aborted = true;
             this._abortTile(tile);
@@ -1059,7 +1090,8 @@ export class TileManager extends Evented {
         for (const id in this._tiles)
             this._removeTile(id);
 
-        this._cache.reset();
+        // Clear the tile cache
+        this._cache.clear();
     }
 
     /**
@@ -1219,6 +1251,7 @@ export class TileManager extends Evented {
                 this._reloadTile(id, 'reloading');
             }
         }
+        // Clean the tile cache
         this._cache.filter(tile => !tile.hasDependency(namespaces, keys));
     }
 }

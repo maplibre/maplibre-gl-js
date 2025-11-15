@@ -464,6 +464,11 @@ export class Tile {
         }
     }
 
+    isExpired() {
+        if (!this.expirationTime) return false;
+        return this.expirationTime <= now();
+    }
+
     setFeatureState(states: LayerFeatureStates, painter: any) {
         if (!this.latestFeatureIndex ||
             !this.latestFeatureIndex.rawTileData ||

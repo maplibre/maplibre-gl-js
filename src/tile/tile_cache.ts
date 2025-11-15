@@ -1,225 +1,23 @@
-import {type OverscaledTileID} from './tile_id';
-import type {Tile} from './tile';
 
 /**
- * @internal
- * A [least-recently-used cache](https://en.wikipedia.org/wiki/Cache_algorithms)
- * with hash lookup made possible by keeping a list of keys in parallel to
- * an array of dictionary of values
- *
- * TileManager offloads currently unused tiles to this cache, and when a tile gets used again,
- * it is also removed from this cache. Thus addition is the only operation that counts as "usage"
- * for the purposes of LRU behaviour.
+ * A bounded Least Recently Used (LRU) cache implementation that automatically evicts
+ * the oldest entries when the maximum size is reached. Items are tracked by access order,
+ * with most recently accessed items moved to the end.
  */
-export class TileCache {
-    max: number;
-    data: {
-        [key: string]: Array<{
-            value: Tile;
-            timeout: ReturnType<typeof setTimeout>;
-        }>;
-    };
-    order: Array<string>;
-    onRemove: (element: Tile) => void;
-    /**
-     * @param max - number of permitted values
-     * @param onRemove - callback called with items when they expire
-     */
-    constructor(max: number, onRemove: (element: Tile) => void) {
-        this.max = max;
-        this.onRemove = onRemove;
-        this.reset();
-    }
-
-    /**
-     * Clear the cache
-     *
-     * @returns this cache
-     */
-    reset() {
-        for (const key in this.data) {
-            for (const removedData of this.data[key]) {
-                if (removedData.timeout) clearTimeout(removedData.timeout);
-                this.onRemove(removedData.value);
-            }
-        }
-
-        this.data = {};
-        this.order = [];
-
-        return this;
-    }
-
-    /**
-     * Add a key, value combination to the cache, trimming its size if this pushes
-     * it over max length.
-     *
-     * @param tileID - lookup key for the item
-     * @param data - tile data
-     *
-     * @returns this cache
-     */
-    add(tileID: OverscaledTileID, data: Tile, expiryTimeout: number | void) {
-        const key = tileID.wrapped().key;
-        if (this.data[key] === undefined) {
-            this.data[key] = [];
-        }
-
-        const dataWrapper = {
-            value: data,
-            timeout: undefined
-        };
-
-        if (expiryTimeout !== undefined) {
-            dataWrapper.timeout = setTimeout(() => {
-                this.remove(tileID, dataWrapper);
-            }, expiryTimeout as number);
-        }
-
-        this.data[key].push(dataWrapper);
-        this.order.push(key);
-
-        if (this.order.length > this.max) {
-            const removedData = this._getAndRemoveByKey(this.order[0]);
-            if (removedData) this.onRemove(removedData);
-        }
-
-        return this;
-    }
-
-    /**
-     * Determine whether the value attached to `key` is present
-     *
-     * @param tileID - the key to be looked-up
-     * @returns whether the cache has this value
-     */
-    has(tileID: OverscaledTileID): boolean {
-        return tileID.wrapped().key in this.data;
-    }
-
-    /**
-     * Get the value attached to a specific key and remove data from cache.
-     * If the key is not found, returns `null`
-     *
-     * @param tileID - the key to look up
-     * @returns the tile data, or null if it isn't found
-     */
-    getAndRemove(tileID: OverscaledTileID): Tile {
-        if (!this.has(tileID)) { return null; }
-        return this._getAndRemoveByKey(tileID.wrapped().key);
-    }
-
-    /*
-     * Get and remove the value with the specified key.
-     */
-    _getAndRemoveByKey(key: string): Tile {
-        const data = this.data[key].shift();
-        if (data.timeout) clearTimeout(data.timeout);
-
-        if (this.data[key].length === 0) {
-            delete this.data[key];
-        }
-        this.order.splice(this.order.indexOf(key), 1);
-
-        return data.value;
-    }
-
-    /*
-     * Get the value with the specified (wrapped tile) key.
-     */
-    getByKey(key: string): Tile {
-        const data = this.data[key];
-        return data ? data[0].value : null;
-    }
-
-    /**
-     * Get the value attached to a specific key without removing data
-     * from the cache. If the key is not found, returns `null`
-     *
-     * @param tileID - the key to look up
-     * @returns the tile data, or null if it isn't found
-     */
-    get(tileID: OverscaledTileID): Tile {
-        if (!this.has(tileID)) { return null; }
-
-        const data = this.data[tileID.wrapped().key][0];
-        return data.value;
-    }
-
-    /**
-     * Remove a key/value combination from the cache.
-     *
-     * @param tileID - the key for the pair to delete
-     * @param value - If a value is provided, remove that exact version of the value.
-     * @returns this cache
-     */
-    remove(tileID: OverscaledTileID, value?: {
-        value: Tile;
-        timeout: ReturnType<typeof setTimeout>;
-    }) {
-        if (!this.has(tileID)) { return this; }
-        const key = tileID.wrapped().key;
-
-        const dataIndex = value === undefined ? 0 : this.data[key].indexOf(value);
-        const data = this.data[key][dataIndex];
-        this.data[key].splice(dataIndex, 1);
-        if (data.timeout) clearTimeout(data.timeout);
-        if (this.data[key].length === 0) {
-            delete this.data[key];
-        }
-        this.onRemove(data.value);
-        this.order.splice(this.order.indexOf(key), 1);
-
-        return this;
-    }
-
-    /**
-     * Change the max size of the cache.
-     *
-     * @param max - the max size of the cache
-     * @returns this cache
-     */
-    setMaxSize(max: number): TileCache {
-        this.max = max;
-
-        while (this.order.length > this.max) {
-            const removedData = this._getAndRemoveByKey(this.order[0]);
-            if (removedData) this.onRemove(removedData);
-        }
-
-        return this;
-    }
-
-    /**
-     * Remove entries that do not pass a filter function. Used for removing
-     * stale tiles from the cache.
-     *
-     * @param filterFn - Determines whether the tile is filtered. If the supplied function returns false, the tile will be filtered out.
-     */
-    filter(filterFn: (tile: Tile) => boolean) {
-        const removed = [];
-        for (const key in this.data) {
-            for (const entry of this.data[key]) {
-                if (!filterFn(entry.value)) {
-                    removed.push(entry);
-                }
-            }
-        }
-        for (const r of removed) {
-            this.remove(r.value.tileID, r);
-        }
-    }
-}
-
 export class BoundedLRUCache<K, V> {
     private maxEntries: number;
+    private onRemove: (value: V) => void;
     private map: Map<K, V>;
 
-    constructor(maxEntries: number) {
+    constructor(maxEntries: number, onRemove?: (value: V) => void) {
         this.maxEntries = maxEntries;
+        this.onRemove = onRemove;
         this.map = new Map();
     }
 
+    /**
+     * Retrieves a value from the cache and marks it as most recently used by moving it to the end.
+     */
     get(key: K): V | undefined {
         const value = this.map.get(key);
         if (value !== undefined) {
@@ -230,18 +28,87 @@ export class BoundedLRUCache<K, V> {
         return value;
     }
 
-    set(key: K, value: V): void {
+    /**
+     * Adds or updates a value in the cache. If the key already exists, it removes the old entry first.
+     * If adding would exceed the maximum size, it removes the oldest entry before adding.
+     */
+    set(key: K, value: V) {
         if (this.map.has(key)) {
-            this.map.delete(key);
+            this.remove(key);
         } else if (this.map.size >= this.maxEntries) {
-            // Delete oldest
-            const oldestKey = this.map.keys().next().value;
-            this.map.delete(oldestKey);
+            this.removeOldest();
         }
         this.map.set(key, value);
     }
 
-    clear(): void {
+    /**
+     * Updates the maximum number of entries allowed in the cache.
+     * If the new size is smaller than the current number of entries, removes oldest entries until within limit.
+     */
+    setMaxSize(maxEntries: number) {
+        this.maxEntries = maxEntries;
+        while (this.map.size > this.maxEntries) {
+            this.removeOldest();
+        }
+    }
+
+    /**
+     * Removes entries from the cache that don't satisfy the provided filter function.
+     */
+    filter(func: (value: V) => boolean) {
+        for (const [key, value] of this.map.entries()) {
+            if (!func(value)) {
+                this.remove(key);
+            }
+        }
+    }
+
+    /**
+     * Removes the least recently used entry from the cache.
+     */
+    removeOldest() {
+        const oldestKey = this.map.keys().next().value;
+        this.remove(oldestKey);
+    }
+
+    /**
+     * Removes a specific entry from the cache and triggers the onRemove callback if configured.
+     */
+    remove(key: K) {
+        const value = this.map.get(key);
+        if (!value) return;
+        this.map.delete(key);
+        this.onRemove?.(value);
+    }
+
+    /**
+     * Removes all entries from the cache. If an onRemove callback is configured,
+     * it will be called for each entry.
+     */
+    clear() {
+        if (!this.onRemove) {
+            this.map.clear();
+            return;
+        }
+
+        const values = Array.from(this.map.values());
         this.map.clear();
+        for (const value of values) {
+            this.onRemove(value);
+        }
+    }
+
+    /**
+     * Returns an array of all keys currently in the cache in their current order.
+     */
+    getKeys(): K[] {
+        return Array.from(this.map.keys());
+    }
+
+    /**
+     * Returns the maximum number of entries allowed in the cache.
+     */
+    getMaxEntries(): number {
+        return this.maxEntries;
     }
 }

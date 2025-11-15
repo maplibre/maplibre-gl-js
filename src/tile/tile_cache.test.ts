@@ -1,131 +1,111 @@
 import {describe, test, expect} from 'vitest';
 import {type Tile} from './tile';
-import {TileCache, BoundedLRUCache} from './tile_cache';
+import {BoundedLRUCache} from './tile_cache';
 import {OverscaledTileID} from './tile_id';
 
-const idA = new OverscaledTileID(10, 0, 10, 0, 1);
-const idB = new OverscaledTileID(10, 0, 10, 0, 2);
-const idC = new OverscaledTileID(10, 0, 10, 0, 3);
-const idD = new OverscaledTileID(10, 0, 10, 0, 4);
-const tileA = {tileID: idA} as Tile;
-const tileA2 = {tileID: idA} as Tile;
-const tileB = {tileID: idB} as Tile;
-const tileC = {tileID: idC} as Tile;
-const tileD = {tileID: idD} as Tile;
+const _idA = new OverscaledTileID(10, 0, 10, 0, 1);
+const _idB = new OverscaledTileID(10, 0, 10, 0, 2);
+const _idC = new OverscaledTileID(10, 0, 10, 0, 3);
+const _idD = new OverscaledTileID(10, 0, 10, 0, 4);
+const idA = _idA.key;
+const idB = _idB.key;
+const idC = _idC.key;
+const idD = _idD.key
+const tileA = {tileID: _idA} as Tile;
+const tileA2 = {tileID: _idA} as Tile;
+const tileB = {tileID: _idB} as Tile;
+const tileC = {tileID: _idC} as Tile;
+const tileD = {tileID: _idD} as Tile;
 
-function keysExpected(cache, ids) {
-    expect(cache.order).toEqual(ids.map((id) => id.key));
+function keysExpected(cache: BoundedLRUCache<string, Tile>, ids: string[]): void {
+    expect(cache.getKeys()).toEqual(ids);
 }
-describe('TileCache', () => {
+describe('BoundedLRUCache', () => {
     test('complex flow', () => {
-        const cache = new TileCache(10, (removed) => {
-            expect(removed).toBe('dc');
+        const cache = new BoundedLRUCache<string, Tile>(10, (removed) => {
+            expect(removed).toBe(tileA);
         });
-        expect(cache.getAndRemove(idC)).toBeNull();
-        expect(cache.add(idA, tileA)).toBe(cache);
+        expect(cache.get(idC)).toBeUndefined();
+        cache.set(idA, tileA);
         keysExpected(cache, [idA]);
-        expect(cache.has(idA)).toBe(true);
-        expect(cache.getAndRemove(idA)).toBe(tileA);
-        expect(cache.getAndRemove(idA)).toBeNull();
-        expect(cache.has(idA)).toBe(false);
+        expect(cache.get(idA)).toBe(tileA);
+        cache.remove(idA);
+        expect(cache.get(idA)).toBeUndefined();
         keysExpected(cache, []);
     });
 
     test('get without removing', () => {
-        const cache = new TileCache(10, () => {
+        const cache = new BoundedLRUCache<string, Tile>(10, () => {
             throw new Error('test "get without removing" failed');
         });
-        expect(cache.add(idA, tileA)).toBe(cache);
+        cache.set(idA, tileA);
         expect(cache.get(idA)).toBe(tileA);
         keysExpected(cache, [idA]);
         expect(cache.get(idA)).toBe(tileA);
     });
 
-    test('duplicate add', () => {
-        const cache = new TileCache(10, () => {
-            throw new Error('test "duplicate add" failed');
-        });
-        cache.add(idA, tileA);
-        cache.add(idA, tileA2);
+    test('duplicate set', () => {
+        const cache = new BoundedLRUCache<string, Tile>(10);
+        cache.set(idA, tileA);
+        cache.set(idA, tileA2);
 
-        keysExpected(cache, [idA, idA]);
-        expect(cache.has(idA)).toBeTruthy();
-        expect(cache.getAndRemove(idA)).toBe(tileA);
-        expect(cache.has(idA)).toBeTruthy();
-        expect(cache.getAndRemove(idA)).toBe(tileA2);
-    });
-
-    test('expiry', () => {
-        const cache = new TileCache(10, (removed) => {
-            expect(cache.has(idB)).toBeTruthy();
-            expect(removed).toBe(tileA2);
-        });
-
-        cache.add(idB, tileB, 0);
-        cache.getAndRemove(idB);
-        // removing clears the expiry timeout
-        cache.add(idB, null);
-
-        cache.add(idA, tileA);
-        cache.add(idA, tileA2, 0); // expires immediately and `onRemove` is called.
+        keysExpected(cache, [idA]);
+        expect(cache.get(idA)).toBe(tileA2);
     });
 
     test('remove', () => {
-        const cache = new TileCache(10, () => {});
+        const cache = new BoundedLRUCache<string, Tile>(10, () => {});
 
-        cache.add(idA, tileA);
-        cache.add(idB, tileB);
-        cache.add(idC, tileC);
+        cache.set(idA, tileA);
+        cache.set(idB, tileB);
+        cache.set(idC, tileC);
 
         keysExpected(cache, [idA, idB, idC]);
-        expect(cache.has(idB)).toBeTruthy();
-
+        expect(cache.get(idB)).toBe(tileB);
         cache.remove(idB);
 
         keysExpected(cache, [idA, idC]);
-        expect(cache.has(idB)).toBeFalsy();
-
-        expect(cache.remove(idB)).toBeTruthy();
-
+        expect(cache.get(idB)).toBeUndefined();
+        expect(() => cache.remove(idB)).not.toThrow();
     });
 
     test('overflow', () => {
-        const cache = new TileCache(1, (removed) => {
+        const cache = new BoundedLRUCache<string, Tile>(1, (removed) => {
             expect(removed).toBe(tileA);
         });
-        cache.add(idA, tileA);
-        cache.add(idB, tileB);
+        cache.set(idA, tileA);
+        cache.set(idB, tileB);
 
-        expect(cache.has(idB)).toBeTruthy();
-        expect(cache.has(idA)).toBeFalsy();
+        expect(cache.get(idB)).toBeTruthy();
+        expect(cache.get(idA)).toBeFalsy();
     });
 
     test('.reset', () => {
         let called;
-        const cache = new TileCache(10, (removed) => {
+        const cache = new BoundedLRUCache<string, Tile>(10, (removed) => {
             expect(removed).toBe(tileA);
             called = true;
         });
-        cache.add(idA, tileA);
-        expect(cache.reset()).toBe(cache);
-        expect(cache.has(idA)).toBe(false);
+        cache.set(idA, tileA);
+        cache.clear();
+        expect(cache.get(idA)).toBeUndefined();
         expect(called).toBeTruthy();
     });
 
     test('.setMaxSize', () => {
         let numRemoved = 0;
-        const cache = new TileCache(10, () => {
+        const cache = new BoundedLRUCache<string, Tile>(10, () => {
             numRemoved++;
         });
-        cache.add(idA, tileA);
-        cache.add(idB, tileB);
-        cache.add(idC, tileC);
+        cache.set(idA, tileA);
+        cache.set(idB, tileB);
+        cache.set(idC, tileC);
         expect(numRemoved).toBe(0);
         cache.setMaxSize(15);
         expect(numRemoved).toBe(0);
         cache.setMaxSize(1);
         expect(numRemoved).toBe(2);
-        cache.add(idD, tileD);
+        cache.set(idD, tileD);
         expect(numRemoved).toBe(3);
     });
 });
