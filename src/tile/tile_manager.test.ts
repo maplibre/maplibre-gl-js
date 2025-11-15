@@ -14,7 +14,7 @@ import {sleep, waitForEvent, beforeMapTest, createMap as globalCreateMap} from '
 import {now} from '../util/time_control';
 
 import {type Map} from '../ui/map';
-import {type TileCache} from './tile_cache';
+import {type BoundedLRUCache} from './bounded_lru_cache';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {GlobeTransform} from '../geo/projection/globe_transform';
 import {coveringTiles} from '../geo/projection/covering_tiles';
@@ -93,7 +93,7 @@ function createTileManager(options?, used?) {
         addTile(tileID: OverscaledTileID): Tile {
             return this._addTile(tileID);
         },
-        getCache(): TileCache {
+        getCache(): BoundedLRUCache<string, Tile> {
             return this._cache;
         },
         getTiles(): { [_: string]: Tile } {
@@ -129,7 +129,7 @@ describe('TileManager.addTile', () => {
         const tileManager = createTileManager();
         const spy = vi.fn();
         tileManager._source.loadTile = spy;
-        
+
         tileManager.onAdd(undefined);
         tileManager._addTile(tileID);
         expect(spy).toHaveBeenCalledTimes(1);
@@ -231,23 +231,38 @@ describe('TileManager.addTile', () => {
 
         const id = tileID.key;
         expect(tileManager._timers[id]).toBeFalsy();
-        expect(tileManager._cache.has(tileID)).toBeFalsy();
+        expect(tileManager._cache.get(tileID.key)).toBeFalsy();
 
         tileManager._addTile(tileID);
 
         expect(tileManager._timers[id]).toBeTruthy();
-        expect(tileManager._cache.has(tileID)).toBeFalsy();
+        expect(tileManager._cache.get(tileID.key)).toBeFalsy();
 
         tileManager._removeTile(tileID.key);
 
         expect(tileManager._timers[id]).toBeFalsy();
-        expect(tileManager._cache.has(tileID)).toBeTruthy();
+        expect(tileManager._cache.get(tileID.key)).toBeTruthy();
 
         tileManager._addTile(tileID);
 
         expect(tileManager._timers[id]).toBeTruthy();
-        expect(tileManager._cache.has(tileID)).toBeFalsy();
+        expect(tileManager._cache.get(tileID.key)).toBeFalsy();
+    });
 
+    test('expired tiles in cache are ignored and removed upon retrieval', () => {
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+            tile.expirationTime = now() - 1000;
+        };
+
+        tileManager._addTile(tileID);
+        tileManager._removeTile(tileID.key);
+        expect(tileManager._cache.get(tileID.key)).toBeTruthy();
+        expect(tileManager._takeTileFromCache(tileID)).toBe(null);
+        expect(tileManager._cache.get(tileID.key)).toBeFalsy();
     });
 
     test('does not reuse wrapped tile', () => {
@@ -680,7 +695,7 @@ describe('TileManager.update', () => {
             hasTile: (coord) => (coord.canonical.x !== 0)
         });
         const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
-                
+
         tileManager.onAdd(undefined);
         await dataPromise;
         tileManager.update(transform);
@@ -2094,16 +2109,16 @@ describe('TileManager.tilesIn', () => {
         transform.resize(512, 512);
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(-179.9, 0.1));
-    
+
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
-    
+
         const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
         tileManager.onAdd(undefined);
         await dataPromise;
-    
+
         tileManager.update(transform);
 
         expect(tileManager.tilesIn([
@@ -2365,7 +2380,7 @@ describe('TileManager sets max cache size correctly', () => {
         tileManager.updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 3 * 3 * 5
-        expect(tileManager._cache.max).toBe(45);
+        expect(tileManager._cache.getMaxEntries()).toBe(45);
     });
 
     test('sets cache size based on 256 tiles', () => {
@@ -2378,7 +2393,7 @@ describe('TileManager sets max cache size correctly', () => {
         tileManager.updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 2 * 2 * 5
-        expect(tileManager._cache.max).toBe(20);
+        expect(tileManager._cache.getMaxEntries()).toBe(20);
     });
 
 });
@@ -2476,7 +2491,7 @@ describe('TileManager.usedForTerrain', () => {
     });
 
 });
-    
+
 describe('TileManager::refreshTiles', () => {
     test('calls reloadTile when tile exists', async () => {
         const coord = new OverscaledTileID(1, 0, 1, 0, 1);
@@ -2493,7 +2508,7 @@ describe('TileManager::refreshTiles', () => {
         expect(spy).toHaveBeenCalledOnce();
         expect(spy.mock.calls[0][1]).toBe('expired');
     });
-    
+
     test('does not call reloadTile when tile does not exist', async () => {
         const coord = new OverscaledTileID(1, 0, 1, 1, 1);
         const tileManager = createTileManager();

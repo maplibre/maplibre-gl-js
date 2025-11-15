@@ -464,6 +464,11 @@ export class Tile {
         }
     }
 
+    isExpired() {
+        if (!this.expirationTime) return false;
+        return this.expirationTime <= now();
+    }
+
     setFeatureState(states: LayerFeatureStates, painter: any) {
         if (!this.latestFeatureIndex ||
             !this.latestFeatureIndex.rawTileData ||
@@ -516,6 +521,7 @@ export class Tile {
     }
 
     hasDependency(namespaces: Array<string>, keys: Array<string>) {
+        if (!keys.length) return false;
         for (const namespace of namespaces) {
             const dependencies = this.dependencies[namespace];
             if (dependencies) {
