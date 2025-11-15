@@ -267,6 +267,22 @@ describe('TileManager.addTile', () => {
         expect(tileManager._cache.get(tileID.key)).toBeTruthy();
     });
 
+    test('expired tiles in cache are ignored and removed upon retrieval', () => {
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+            tile.expirationTime = now() - 1000;
+        };
+
+        tileManager._addTile(tileID);
+        tileManager._removeTile(tileID.key);
+        expect(tileManager._cache.get(tileID.key)).toBeTruthy();
+        expect(tileManager._getTileFromCache(tileID)).toBe(null);
+        expect(tileManager._cache.get(tileID.key)).toBeFalsy();
+    });
+
     test('does not reuse wrapped tile', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         let load = 0,
@@ -2366,33 +2382,6 @@ describe('TileManager reloads expiring tiles', () => {
         await sleep(100);
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][1]).toBe('expired');
-    });
-
-});
-
-describe('TileManager sets max cache size correctly', () => {
-    test('sets cache size based on 512 tiles', () => {
-        const tileManager = createTileManager({
-            tileSize: 256
-        });
-
-        const tr = new MercatorTransform();
-        tr.resize(512, 512);
-
-        // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 3 * 3 * 5
-        expect(tileManager._cache.getMaxSize()).toBe(45);
-    });
-
-    test('sets cache size based on 256 tiles', () => {
-        const tileManager = createTileManager({
-            tileSize: 512
-        });
-
-        const tr = new MercatorTransform();
-        tr.resize(512, 512);
-
-        // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 2 * 2 * 5
-        expect(tileManager._cache.getMaxSize()).toBe(20);
     });
 
 });

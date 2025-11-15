@@ -38,19 +38,72 @@ describe('BoundedLRUCache', () => {
     });
 
     test('get without removing', () => {
+        let removeCount = 0;
         const cache = new BoundedLRUCache<string, Tile>({
             maxEntries: 10,
             onRemove: () => {
-                throw new Error('test "get without removing" failed');
+                removeCount++;
             }
         });
         cache.set(idA, tileA);
         expect(cache.get(idA)).toBe(tileA);
         keysExpected(cache, [idA]);
         expect(cache.get(idA)).toBe(tileA);
+        expect(removeCount).toBe(0);
     });
 
-    test('duplicate set', () => {
+    test('remove tile calls onRemove', () => {
+        let removeCount = 0;
+        const cache = new BoundedLRUCache<string, Tile>({
+            maxEntries: 10,
+            onRemove: () => {
+                removeCount++;
+            }
+        });
+        cache.set(idA, tileA);
+        cache.remove(idA);
+        expect(removeCount).toBe(1);
+    });
+
+    test('set of tile id using the same tile retains tile and moves to end without calling remove', () => {
+        let removeCount = 0;
+        const cache = new BoundedLRUCache<string, Tile>({
+            maxEntries: 10,
+            onRemove: () => {
+                removeCount++;
+            }
+        });
+        cache.set(idA, tileA);
+        cache.set(idB, tileB);
+        keysExpected(cache, [idA, idB]);
+
+        // Set the same tile reference again, but it should not call remove.
+        cache.set(idA, tileA);
+        expect(removeCount).toBe(0);
+        keysExpected(cache, [idB, idA]);
+        expect(cache.get(idA)).toBe(tileA);
+    });
+
+    test('set of same tile id using a new tile remove previous tile reference and calls remove', () => {
+        let removeCount = 0;
+        const cache = new BoundedLRUCache<string, Tile>({
+            maxEntries: 10,
+            onRemove: () => {
+                removeCount++;
+            }
+        });
+        cache.set(idA, tileA);
+        cache.set(idB, tileB);
+        keysExpected(cache, [idA, idB]);
+
+        // Set the same tile id but with new tile, remove should be called
+        cache.set(idA, tileA2);
+        expect(removeCount).toBe(1);
+        keysExpected(cache, [idB, idA]);
+        expect(cache.get(idA)).toBe(tileA2);
+    });
+
+    test('duplicate set of same tile id updates entry to most recently added tile', () => {
         const cache = new BoundedLRUCache<string, Tile>({maxEntries: 10});
         cache.set(idA, tileA);
         cache.set(idA, tileA2);
@@ -59,7 +112,27 @@ describe('BoundedLRUCache', () => {
         expect(cache.get(idA)).toBe(tileA2);
     });
 
-    test('remove', () => {
+    test('set of tile over max entries trims the cache', () => {
+        let removeCount = 0;
+        const cache = new BoundedLRUCache<string, Tile>({
+            maxEntries: 1,
+            onRemove: () => {
+                removeCount++;
+            }
+        });
+        cache.set(idA, tileA);
+        cache.set(idB, tileB);
+        keysExpected(cache, [idB]);
+        expect(cache.get(idB)).toBe(tileB);
+
+        cache.set(idA, tileA2);
+        keysExpected(cache, [idA]);
+        expect(cache.get(idA)).toBe(tileA2);
+
+        expect(removeCount).toBe(2);
+    });
+
+    test('removes tiles', () => {
         const cache = new BoundedLRUCache<string, Tile>({
             maxEntries: 10,
             onRemove: () => {}
@@ -78,21 +151,73 @@ describe('BoundedLRUCache', () => {
         expect(() => cache.remove(idB)).not.toThrow();
     });
 
-    test('overflow', () => {
+    test('removes the oldest entry', () => {
         const cache = new BoundedLRUCache<string, Tile>({
-            maxEntries: 1,
-            onRemove: (removed) => {
-                expect(removed).toBe(tileA);
+            maxEntries: 10,
+            onRemove: () => {}
+        });
+
+        cache.set(idA, tileA);
+        cache.set(idB, tileB);
+        cache.set(idC, tileC);
+
+        cache.removeOldest();
+        keysExpected(cache, [idB, idC]);
+
+        cache.set(idC, tileC);
+        cache.set(idB, tileB);
+        cache.set(idA, tileA);
+
+        cache.removeOldest();
+        keysExpected(cache, [idB, idA]);
+    });
+
+    test('filters tiles using provided function', () => {
+        let removeCount = 0;
+        const cache = new BoundedLRUCache<string, Tile>({
+            maxEntries: 10,
+            onRemove: () => {
+                removeCount++;
             }
         });
         cache.set(idA, tileA);
         cache.set(idB, tileB);
+        cache.set(idC, tileC);
+        cache.set(idD, tileD);
 
-        expect(cache.get(idB)).toBeTruthy();
-        expect(cache.get(idA)).toBeFalsy();
+        cache.filter(tile => tile.tileID.canonical.y === 2 || tile.tileID.canonical.y === 3);
+        keysExpected(cache, [idB, idC]);
+        expect(removeCount).toBe(2);
+
+        removeCount = 0;
+        cache.set(idA, tileA);
+        cache.set(idB, tileB);
+        cache.set(idC, tileC);
+        cache.set(idD, tileD);
+        cache.filter(tile => tile.tileID.canonical.y === 1 || tile.tileID.canonical.y === 4);
+        keysExpected(cache, [idA, idD]);
+        expect(removeCount).toBe(2);
     });
 
-    test('.reset', () => {
+    test('clear tiles call onRemove on all tiles', () => {
+        let removeCount = 0;
+        const cache = new BoundedLRUCache<string, Tile>({
+            maxEntries: 10,
+            onRemove: () => {
+                removeCount++;
+            }
+        });
+
+        cache.set(idA, tileA);
+        cache.set(idB, tileB);
+        cache.set(idC, tileC);
+
+        cache.clear();
+        keysExpected(cache, []);
+        expect(removeCount).toBe(3);
+    });
+
+    test('.clear removes all tiles', () => {
         let called;
         const cache = new BoundedLRUCache<string, Tile>({
             maxEntries: 10,
@@ -107,7 +232,21 @@ describe('BoundedLRUCache', () => {
         expect(called).toBeTruthy();
     });
 
-    test('.setMaxSize', () => {
+    test('overflow automatically evicts', () => {
+        const cache = new BoundedLRUCache<string, Tile>({
+            maxEntries: 1,
+            onRemove: (removed) => {
+                expect(removed).toBe(tileA);
+            }
+        });
+        cache.set(idA, tileA);
+        cache.set(idB, tileB);
+
+        expect(cache.get(idB)).toBeTruthy();
+        expect(cache.get(idA)).toBeFalsy();
+    });
+
+    test('.setMaxSize trims tile count', () => {
         let numRemoved = 0;
         const cache = new BoundedLRUCache<string, Tile>({
             maxEntries: 10,
@@ -123,8 +262,10 @@ describe('BoundedLRUCache', () => {
         expect(numRemoved).toBe(0);
         cache.setMaxSize(1);
         expect(numRemoved).toBe(2);
+        keysExpected(cache, [idC]);
         cache.set(idD, tileD);
         expect(numRemoved).toBe(3);
+        keysExpected(cache, [idD]);
     });
 
     test('evicts least-recently-used item when capacity exceeded', () => {
