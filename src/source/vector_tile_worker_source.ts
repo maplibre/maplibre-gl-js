@@ -2,7 +2,7 @@ import Protobuf from 'pbf';
 import {VectorTile, type VectorTileLayer} from '@mapbox/vector-tile';
 import {type ExpiryData, getArrayBuffer} from '../util/ajax';
 import {WorkerTile} from './worker_tile';
-import {BoundedLRUCache} from '../tile/tile_cache';
+import {BoundedLRUCache} from '../tile/bounded_lru_cache';
 import {extend} from '../util/util';
 import {RequestPerformance} from '../util/performance';
 import {VectorTileOverzoomed, sliceVectorTileLayer, toVirtualVectorTile} from './vector_tile_overzoomed';

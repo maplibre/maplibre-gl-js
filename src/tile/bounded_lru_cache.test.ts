@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {type Tile} from './tile';
-import {BoundedLRUCache} from './tile_cache';
+import {BoundedLRUCache} from './bounded_lru_cache';
 import {OverscaledTileID} from './tile_id';
 
 const _idA = new OverscaledTileID(10, 0, 10, 0, 1);

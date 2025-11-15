@@ -2,7 +2,7 @@ import {create as createSource} from '../source/source';
 
 import {Tile, FadingDirections, FadingRoles} from './tile';
 import {ErrorEvent, Event, Evented} from '../util/evented';
-import {BoundedLRUCache} from './tile_cache';
+import {BoundedLRUCache} from './bounded_lru_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {EXTENT} from '../data/extent';
 import Point from '@mapbox/point-geometry';
