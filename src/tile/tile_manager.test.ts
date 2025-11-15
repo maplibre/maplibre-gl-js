@@ -247,7 +247,28 @@ describe('TileManager.addTile', () => {
 
         expect(tileManager._timers[id]).toBeTruthy();
         expect(tileManager._cache.get(tileID.key)).toBeTruthy();
+    });
 
+    test('tile remains in cache after being retrieved from cache', () => {
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
+        tileManager.updateCacheSize(tr);
+
+        tileManager._addTile(tileID);
+        expect(tileManager._cache.get(tileID.key)).toBeFalsy();
+
+        tileManager._removeTile(tileID.key);
+        expect(tileManager._cache.get(tileID.key)).toBeTruthy();
+
+        tileManager._addTile(tileID);
+        expect(tileManager._cache.get(tileID.key)).toBeTruthy();
     });
 
     test('does not reuse wrapped tile', () => {

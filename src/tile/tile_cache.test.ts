@@ -108,9 +108,7 @@ describe('BoundedLRUCache', () => {
         cache.set(idD, tileD);
         expect(numRemoved).toBe(3);
     });
-});
 
-describe('BoundedLRUCache', () => {
     test('evicts least-recently-used item when capacity exceeded', () => {
         const cache = new BoundedLRUCache<string, number>(2);
 
