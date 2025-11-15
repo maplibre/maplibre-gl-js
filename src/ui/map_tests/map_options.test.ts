@@ -21,7 +21,7 @@ describe('mapOptions', () => {
     });
 
     test('_maxOverzoomingTileCacheSize: Value can be set via map options', () => {
-        const map = createMap({_maxOverzoomingTileCacheSize: 1});
+        const map = createMap({maxOverzoomingTileCacheSize: 1});
         expect(map._maxOverzoomingTileCacheSize).toBe(1);
     });
 
