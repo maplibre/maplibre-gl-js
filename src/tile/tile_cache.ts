@@ -1,17 +1,17 @@
 
-/**
- * A bounded Least Recently Used (LRU) cache implementation that automatically evicts
- * the oldest entries when the maximum size is reached. Items are tracked by access order,
- * with most recently accessed items moved to the end.
- */
+type BoundedLRUOptions<V> = {
+    maxEntries?: number;
+    onRemove?: (value: V) => void;
+};
+
 export class BoundedLRUCache<K, V> {
+    private map: Map<K, V>;
     private maxEntries: number;
     private onRemove: (value: V) => void;
-    private map: Map<K, V>;
 
-    constructor(maxEntries: number, onRemove?: (value: V) => void) {
-        this.maxEntries = maxEntries;
-        this.onRemove = onRemove;
+    constructor(options: BoundedLRUOptions<V> = {}) {
+        this.maxEntries = options.maxEntries || 1000;
+        this.onRemove = options.onRemove;
         this.map = new Map();
     }
 
@@ -65,10 +65,12 @@ export class BoundedLRUCache<K, V> {
 
     /**
      * Removes the least recently used entry from the cache.
+     * The first key is the least recently used since get/set above places entries at the end.
      */
     removeOldest() {
-        const oldestKey = this.map.keys().next().value;
-        this.remove(oldestKey);
+        const iterator = this.map.keys().next();
+        if (iterator.done) return;
+        this.remove(iterator.value);
     }
 
     /**
@@ -76,7 +78,7 @@ export class BoundedLRUCache<K, V> {
      */
     remove(key: K) {
         const value = this.map.get(key);
-        if (!value) return;
+        if (value === undefined) return;
         this.map.delete(key);
         this.onRemove?.(value);
     }

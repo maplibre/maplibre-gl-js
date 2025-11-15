@@ -10,7 +10,7 @@ const _idD = new OverscaledTileID(10, 0, 10, 0, 4);
 const idA = _idA.key;
 const idB = _idB.key;
 const idC = _idC.key;
-const idD = _idD.key
+const idD = _idD.key;
 const tileA = {tileID: _idA} as Tile;
 const tileA2 = {tileID: _idA} as Tile;
 const tileB = {tileID: _idB} as Tile;
@@ -22,8 +22,11 @@ function keysExpected(cache: BoundedLRUCache<string, Tile>, ids: string[]): void
 }
 describe('BoundedLRUCache', () => {
     test('complex flow', () => {
-        const cache = new BoundedLRUCache<string, Tile>(10, (removed) => {
-            expect(removed).toBe(tileA);
+        const cache = new BoundedLRUCache<string, Tile>({
+            maxEntries: 10,
+            onRemove: (removed) => {
+                expect(removed).toBe(tileA);
+            }
         });
         expect(cache.get(idC)).toBeUndefined();
         cache.set(idA, tileA);
@@ -35,8 +38,11 @@ describe('BoundedLRUCache', () => {
     });
 
     test('get without removing', () => {
-        const cache = new BoundedLRUCache<string, Tile>(10, () => {
-            throw new Error('test "get without removing" failed');
+        const cache = new BoundedLRUCache<string, Tile>({
+            maxEntries: 10,
+            onRemove: () => {
+                throw new Error('test "get without removing" failed');
+            }
         });
         cache.set(idA, tileA);
         expect(cache.get(idA)).toBe(tileA);
@@ -45,7 +51,7 @@ describe('BoundedLRUCache', () => {
     });
 
     test('duplicate set', () => {
-        const cache = new BoundedLRUCache<string, Tile>(10);
+        const cache = new BoundedLRUCache<string, Tile>({maxEntries: 10});
         cache.set(idA, tileA);
         cache.set(idA, tileA2);
 
@@ -54,7 +60,10 @@ describe('BoundedLRUCache', () => {
     });
 
     test('remove', () => {
-        const cache = new BoundedLRUCache<string, Tile>(10, () => {});
+        const cache = new BoundedLRUCache<string, Tile>({
+            maxEntries: 10,
+            onRemove: () => {}
+        });
 
         cache.set(idA, tileA);
         cache.set(idB, tileB);
@@ -70,8 +79,11 @@ describe('BoundedLRUCache', () => {
     });
 
     test('overflow', () => {
-        const cache = new BoundedLRUCache<string, Tile>(1, (removed) => {
-            expect(removed).toBe(tileA);
+        const cache = new BoundedLRUCache<string, Tile>({
+            maxEntries: 1,
+            onRemove: (removed) => {
+                expect(removed).toBe(tileA);
+            }
         });
         cache.set(idA, tileA);
         cache.set(idB, tileB);
@@ -82,9 +94,12 @@ describe('BoundedLRUCache', () => {
 
     test('.reset', () => {
         let called;
-        const cache = new BoundedLRUCache<string, Tile>(10, (removed) => {
-            expect(removed).toBe(tileA);
-            called = true;
+        const cache = new BoundedLRUCache<string, Tile>({
+            maxEntries: 10,
+            onRemove: (removed) => {
+                expect(removed).toBe(tileA);
+                called = true;
+            }
         });
         cache.set(idA, tileA);
         cache.clear();
@@ -94,8 +109,11 @@ describe('BoundedLRUCache', () => {
 
     test('.setMaxSize', () => {
         let numRemoved = 0;
-        const cache = new BoundedLRUCache<string, Tile>(10, () => {
-            numRemoved++;
+        const cache = new BoundedLRUCache<string, Tile>({
+            maxEntries: 10,
+            onRemove: () => {
+                numRemoved++;
+            }
         });
         cache.set(idA, tileA);
         cache.set(idB, tileB);
@@ -110,7 +128,7 @@ describe('BoundedLRUCache', () => {
     });
 
     test('evicts least-recently-used item when capacity exceeded', () => {
-        const cache = new BoundedLRUCache<string, number>(2);
+        const cache = new BoundedLRUCache<string, number>({maxEntries: 2});
 
         cache.set('a', 1);
         cache.set('b', 2);
@@ -127,7 +145,7 @@ describe('BoundedLRUCache', () => {
     });
 
     test('setting an existing key updates value and makes it most-recently-used', () => {
-        const cache = new BoundedLRUCache<string, number>(2);
+        const cache = new BoundedLRUCache<string, number>({maxEntries: 2});
 
         cache.set('a', 1);
         cache.set('b', 2);
@@ -143,7 +161,7 @@ describe('BoundedLRUCache', () => {
     });
 
     test('capacity 1 evicts previous entry on new set', () => {
-        const cache = new BoundedLRUCache<string, string>(1);
+        const cache = new BoundedLRUCache<string, string>({maxEntries: 1});
 
         cache.set('x', 'first');
         expect(cache.get('x')).toBe('first');
@@ -154,7 +172,7 @@ describe('BoundedLRUCache', () => {
     });
 
     test('clear removes all entries', () => {
-        const cache = new BoundedLRUCache<number, string>(3);
+        const cache = new BoundedLRUCache<number, string>({maxEntries: 3});
         cache.set(1, 'one');
         cache.set(2, 'two');
 

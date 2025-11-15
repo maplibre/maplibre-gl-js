@@ -60,7 +60,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         this.fetching = {};
         this.loading = {};
         this.loaded = {};
-        this.overzoomedTileResultCache = new BoundedLRUCache<string, LoadVectorTileResult>(1000);
+        this.overzoomedTileResultCache = new BoundedLRUCache<string, LoadVectorTileResult>({maxEntries: 1000});
     }
 
     /**
@@ -69,8 +69,8 @@ export class VectorTileWorkerSource implements WorkerSource {
     async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
         const response = await getArrayBuffer(params.request, abortController);
         try {
-            const vectorTile = params.encoding !== 'mlt' 
-                ? new VectorTile(new Protobuf(response.data)) 
+            const vectorTile = params.encoding !== 'mlt'
+                ? new VectorTile(new Protobuf(response.data))
                 : new MLTVectorTile(response.data);
             return {
                 vectorTile,
@@ -171,7 +171,7 @@ export class VectorTileWorkerSource implements WorkerSource {
 
         const cacheKey = `${maxZoomTileID.key}_${tileID.key}`;
         const cachedOverzoomTile = this.overzoomedTileResultCache.get(cacheKey);
-        
+
         if (cachedOverzoomTile) {
             return cachedOverzoomTile;
         }
