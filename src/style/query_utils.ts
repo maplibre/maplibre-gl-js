@@ -57,8 +57,10 @@ export function translate(queryGeometry: Array<Point>,
     return translated;
 }
 
+/**
+ * Filter out consecutive duplicate points from a line
+ */
 function _stripDuplicates(ring: Array<Point>): Array<Point> {
-    // filter out consecutive duplicate points from a line
     const filteredRing: Array<Point> = [];
     for (let index = 0; index < ring.length; index++) {
         const point = ring[index];
