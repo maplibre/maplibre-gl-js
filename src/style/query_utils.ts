@@ -57,39 +57,43 @@ export function translate(queryGeometry: Array<Point>,
     return translated;
 }
 
+function _stripDuplicates(ring: Array<Point>): Array<Point> {
+    // filter out consecutive duplicate points from a line
+    const filteredRing: Array<Point> = [];
+    for (let index = 0; index < ring.length; index++) {
+        const point = ring[index];
+        const prevPoint = filteredRing.at(-1);
+        if (index === 0 || (prevPoint && !(point.equals(prevPoint)))) {
+            filteredRing.push(point);
+        }
+    }
+    return filteredRing;
+}
+
 export function offsetLine(rings: Array<Array<Point>>, offset: number) {
     const newRings: Array<Array<Point>> = [];
     for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
-        const ring = rings[ringIndex];
+        const ring = _stripDuplicates(rings[ringIndex]);
         const newRing: Array<Point> = [];
-        let refPoint: Point;
         const zeroPoint = new Point(0, 0);
         for (let index = 0; index < ring.length; index++) {
             // perpendicular unit vectors (outward unit normal vector):
             // these indicate which direction the segments should be offset in
             let unitNormalAB: Point;
             let unitNormalBC: Point;
-            let nextPoint: Point;
             const point = ring[index];
             if (index === 0) {
-                // first iteration, set refPoint as current point
-                refPoint = point;
-                unitNormalAB = new Point(0, 0);
-            } else if (refPoint.equals(point)) {
                 unitNormalAB = new Point(0, 0);
             } else {
-                unitNormalAB = point.sub(refPoint)._unit()._perp();
+                const prevPoint: Point = ring[index - 1];
+                unitNormalAB = point.sub(prevPoint)._unit()._perp();
             }
             if (index === ring.length - 1) {
                 // final iteration; no next point
                 unitNormalBC = new Point(0, 0);
             } else {
-                nextPoint = ring[index +1];
-                if (point.equals(nextPoint)) {
-                    unitNormalBC = new Point(0, 0);
-                } else {
-                    unitNormalBC = nextPoint.sub(point)._unit()._perp();
-                }
+                const nextPoint: Point = ring[index +1];
+                unitNormalBC = nextPoint.sub(point)._unit()._perp();
             }
             if (unitNormalAB.equals(zeroPoint) && unitNormalBC.equals(zeroPoint)) {
                 // no change means final point will be a duplicate of the previous; can be excluded
@@ -103,8 +107,6 @@ export function offsetLine(rings: Array<Array<Point>>, offset: number) {
                 }
                 newRing.push(bisectorDir._mult(offset)._add(point));
             }
-
-            refPoint = point;
         }
         newRings.push(newRing);
     }
