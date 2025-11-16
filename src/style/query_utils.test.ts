@@ -77,7 +77,6 @@ describe('offsetLine', () => {
         expect(offsetLine([line], offset)).toEqual([[
             new Point(1, 1),
             new Point(1, 0),
-            new Point(1, 0),
             new Point(1, -1)
         ]]);
     });
@@ -96,7 +95,6 @@ describe('offsetLine', () => {
 
         expect(offsetLine([line], offset)).toEqual([[
             new Point(1, 1),
-            new Point(1, 0),
             new Point(1, 0),
             new Point(1, -1)
         ]]);
