@@ -100,15 +100,14 @@ export function offsetLine(rings: Array<Array<Point>>, offset: number) {
             if (unitNormalAB.equals(zeroPoint) && unitNormalBC.equals(zeroPoint)) {
                 // no change means final point will be a duplicate of the previous; can be excluded
                 continue;
-            } else {
-                // unit bisector direction
-                const bisectorDir = unitNormalAB._add(unitNormalBC)._unit();
-                const cosHalfAngle = bisectorDir.x * unitNormalBC.x + bisectorDir.y * unitNormalBC.y;
-                if (cosHalfAngle !== 0) {
-                    bisectorDir._mult(1 / cosHalfAngle);
-                }
-                newRing.push(bisectorDir._mult(offset)._add(point));
             }
+            // unit bisector direction
+            const bisectorDir = unitNormalAB._add(unitNormalBC)._unit();
+            const cosHalfAngle = bisectorDir.x * unitNormalBC.x + bisectorDir.y * unitNormalBC.y;
+            if (cosHalfAngle !== 0) {
+                bisectorDir._mult(1 / cosHalfAngle);
+            }
+            newRing.push(bisectorDir._mult(offset)._add(point));
         }
         newRings.push(newRing);
     }
