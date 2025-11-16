@@ -27,8 +27,9 @@ export class BoundedLRUCache<K, V> {
     }
 
     /**
-     * Adds or updates a value in the cache. If the key already exists, it removes the old entry first.
-     * If adding would exceed the maximum size, it removes the oldest entry before adding.
+     * Adds or updates a value in the cache. If the key already exists, it removes the old entry only
+     * if the new value is a different object reference, otherwise it moves the existing entry to the end.
+     * If adding exceeds the maximum allowed cache size, it removes the oldest entry before adding.
      */
     set(key: K, value: V) {
         const existing = this.map.get(key);
@@ -52,7 +53,7 @@ export class BoundedLRUCache<K, V> {
     }
 
     /**
-     * Moves a key to the end of the cache without removing it (most recently used).
+     * Moves an entry to the end of the cache without removing it (most recently used).
      */
     moveToEnd(key: K, value: V) {
         this.map.delete(key);
@@ -70,7 +71,7 @@ export class BoundedLRUCache<K, V> {
     }
 
     /**
-     * Removes entries from the cache until the number of entries is within maxEntries.
+     * Removes entries from the cache until the number of entries is within the limit.
      */
     trim() {
         while (this.map.size > this.maxEntries) {
@@ -80,7 +81,7 @@ export class BoundedLRUCache<K, V> {
 
     /**
      * Removes the least recently used entry from the cache.
-     * The first key is the least recently used since get/set above places entries at the end.
+     * The first key is the least recently used since map get/set above places entries at the end.
      */
     removeOldest() {
         const iterator = this.map.keys().next();
@@ -113,13 +114,13 @@ export class BoundedLRUCache<K, V> {
      * Removes all entries from the cache. If an onRemove callback is configured, it will be called for each entry.
      */
     clear() {
-        // If no onRemove callback is configured, just clear the map directly.
+        // If onRemove callback is not configured, just clear the map directly.
         if (!this.onRemove) {
             this.map.clear();
             return;
         }
 
-        // If an onRemove callback is configured, call it for each entry before clearing the map.
+        // If onRemove callback is configured, call it for each entry after clearing the map.
         const values = Array.from(this.map.values());
         this.map.clear();
         for (const value of values) this.onRemove(value);
@@ -130,12 +131,5 @@ export class BoundedLRUCache<K, V> {
      */
     getKeys(): K[] {
         return Array.from(this.map.keys());
-    }
-
-    /**
-     * Returns the maximum number of entries allowed in the cache.
-     */
-    getMaxSize(): number {
-        return this.maxEntries;
     }
 }

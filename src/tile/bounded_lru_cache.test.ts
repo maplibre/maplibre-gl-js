@@ -65,7 +65,7 @@ describe('BoundedLRUCache', () => {
         expect(removeCount).toBe(1);
     });
 
-    test('set of tile id using the same tile retains tile and moves to end without calling remove', () => {
+    test('set of same tile id using the same tile retains tile and moves to end without calling remove', () => {
         let removeCount = 0;
         const cache = new BoundedLRUCache<string, Tile>({
             maxEntries: 10,
@@ -84,7 +84,7 @@ describe('BoundedLRUCache', () => {
         expect(cache.get(idA)).toBe(tileA);
     });
 
-    test('set of same tile id using a new tile remove previous tile reference and calls remove', () => {
+    test('set of same tile id using a new tile removes previous tile reference and calls remove', () => {
         let removeCount = 0;
         const cache = new BoundedLRUCache<string, Tile>({
             maxEntries: 10,
@@ -151,7 +151,7 @@ describe('BoundedLRUCache', () => {
         expect(() => cache.remove(idB)).not.toThrow();
     });
 
-    test('removes the oldest entry', () => {
+    test('removeOldest removes the oldest entry', () => {
         const cache = new BoundedLRUCache<string, Tile>({
             maxEntries: 10,
             onRemove: () => {}
