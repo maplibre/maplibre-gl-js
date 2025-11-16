@@ -54,6 +54,7 @@ export type WorkerTileParameters = TileParameters & {
 export type OverzoomParameters = {
     maxZoomTileID: CanonicalTileID;
     overzoomRequest: RequestParameters;
+    maxCacheSize: number;
 };
 
 /**

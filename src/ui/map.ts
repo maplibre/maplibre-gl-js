@@ -250,15 +250,15 @@ export type MapOptions = {
      */
     renderWorldCopies?: boolean;
     /**
-     * The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport which can be set using `maxTileCacheZoomLevels` constructor options.
-     * @defaultValue null
+     * The maximum number of tiles that can be stored in the tile cache for a given source.
+     * @defaultValue 1000
      */
     maxTileCacheSize?: number | null;
     /**
-     * The maximum number of zoom levels for which to store tiles for a given source. Tile cache dynamic size is calculated by multiplying `maxTileCacheZoomLevels` with the approximate number of tiles in the viewport for a given source.
-     * @defaultValue 5
+     * The maximum number of tiles that can be stored in the overzoomed vector tile cache for a given source past the maximum zoom level of the source.
+     * @defaultValue 1000
      */
-    maxTileCacheZoomLevels?: number;
+    maxOverzoomingTileCacheSize?: number;
     /**
      * A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
      * Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
@@ -378,7 +378,7 @@ export type MapOptions = {
     /**
      * Allows overzooming by splitting vector tiles after max zoom.
      * Defines the number of zoom level that will overscale from map's max zoom and below.
-     * For example if the map's max zoom is 20 and this is set to 3, the zoom levels of 20, 19 and 18 will be overscaled 
+     * For example if the map's max zoom is 20 and this is set to 3, the zoom levels of 20, 19 and 18 will be overscaled
      * and the rest will be split.
      * When undefined, all zoom levels after source's max zoom will be overscaled.
      * This can help in reducing the size of the overscaling and improve performance in high zoom levels.
@@ -461,8 +461,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     roll: 0,
 
     renderWorldCopies: true,
-    maxTileCacheSize: null,
-    maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
+    maxTileCacheSize: 1000,
+    maxOverzoomingTileCacheSize: 1000,
     transformRequest: null,
     transformCameraUpdate: null,
     transformConstrain: null,
@@ -529,8 +529,8 @@ export class Map extends Camera {
     _repaint: boolean;
     _vertices: boolean;
     _canvas: HTMLCanvasElement;
-    _maxTileCacheSize: number | null;
-    _maxTileCacheZoomLevels: number;
+    _maxTileCacheSize: number;
+    _maxOverzoomingTileCacheSize: number;
     _frameRequest: AbortController;
     _styleDirty: boolean;
     _sourcesDirty: boolean;
@@ -700,7 +700,7 @@ export class Map extends Camera {
 
         this._interactive = resolvedOptions.interactive;
         this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;
-        this._maxTileCacheZoomLevels = resolvedOptions.maxTileCacheZoomLevels;
+        this._maxOverzoomingTileCacheSize = resolvedOptions.maxOverzoomingTileCacheSize;
         this._canvasContextAttributes = {...resolvedOptions.canvasContextAttributes};
         this._trackResize = resolvedOptions.trackResize === true;
         this._bearingSnap = resolvedOptions.bearingSnap;
