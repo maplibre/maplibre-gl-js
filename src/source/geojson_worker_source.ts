@@ -131,7 +131,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             // Let the main thread know whether to apply a diff - or return the full data set.
             const result: GeoJSONWorkerSourceLoadDataResult = params.dataDiff && isUpdateableGeoJSON(data) ?
                 {applyDiff: true} :
-                {data};
+                {};
 
             this._finishPerformance(perf, params, result);
             return result;
