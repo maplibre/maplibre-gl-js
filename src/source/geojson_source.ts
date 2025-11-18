@@ -424,7 +424,7 @@ export class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            if (result.applyDiff) {
+            if (diff) {
                 this._applyDiff(diff);
             }
 
@@ -457,23 +457,18 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    private _applyDiff(diff: GeoJSONSourceDiff | undefined): void {
+    private _applyDiff(diff: GeoJSONSourceDiff): void {
         const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
-        // Lazily convert `this._data` to updateable if it's not already
-        if (
-            !this._data.url &&
-            !this._data.updateable &&
-            isUpdateableGeoJSON(this._data.geojson, promoteId)
-        ) {
+        if (!this._data.url && !this._data.updateable) {
+            if (!isUpdateableGeoJSON(this._data.geojson, promoteId)) {
+                throw new Error(`Cannot update existing geojson data in ${this.id}`);
+            }
             this._data = {updateable: toUpdateable(this._data.geojson, promoteId)};
         }
 
-        if (diff && this._data.updateable) {
+        if (this._data.updateable) {
             applySourceDiff(this._data.updateable, diff, promoteId);
-        } else {
-            // This should never happen because the worker would not set `applyDiff: true` if the source was not updateable.
-            warnOnce('Cannot apply GeoJSONSource#updateData due to internal error');
         }
     }
 

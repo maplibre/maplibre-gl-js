@@ -900,17 +900,9 @@ describe('GeoJSONSource.applyDiff', () => {
             ]
         };
 
-        vi.spyOn(mockDispatcher.getActor(), 'sendAsync').mockImplementation(() => {
-            return Promise.resolve({data: initialData});
-        });
-
         const source = new GeoJSONSource('id', {data: initialData} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.load();
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-
-        vi.spyOn(mockDispatcher.getActor(), 'sendAsync').mockImplementation(() => {
-            return Promise.resolve({applyDiff: true});
-        });
 
         const diff: GeoJSONSourceDiff = {
             update: [{id: 0, newGeometry: {type: 'Point', coordinates: [0, 1]}}]
