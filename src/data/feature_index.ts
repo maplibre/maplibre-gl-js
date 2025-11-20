@@ -24,6 +24,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
+import {type Feature, GeoJSONWrapper} from '@maplibre/vt-pbf';
 
 /**
  * This is the default layer name for a geojson source,
@@ -73,6 +74,7 @@ export class FeatureIndex {
     promoteId?: PromoteIdSpecification;
     encoding: string;
     rawTileData: ArrayBuffer;
+    geoJsonFeatureData: Feature[];
     bucketLayerIDs: Array<Array<string>>;
 
     vtLayers: {[_: string]: VectorTileLayer};
@@ -118,9 +120,13 @@ export class FeatureIndex {
 
     loadVTLayers(): {[_: string]: VectorTileLayer} {
         if (!this.vtLayers) {
-            this.vtLayers = this.encoding !== 'mlt' 
-                ? new VectorTile(new Protobuf(this.rawTileData)).layers
-                : new MLTVectorTile(this.rawTileData).layers;
+            if (this.geoJsonFeatureData) {
+                this.vtLayers = new GeoJSONWrapper(this.geoJsonFeatureData, {version: 2, extent: EXTENT}).layers;
+            } else {
+                this.vtLayers = this.encoding !== 'mlt' ?
+                    new VectorTile(new Protobuf(this.rawTileData)).layers :
+                    new MLTVectorTile(this.rawTileData).layers;
+            }
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : [GEOJSON_TILE_LAYER_NAME]);
         }
         return this.vtLayers;

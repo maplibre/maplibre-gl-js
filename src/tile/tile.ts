@@ -218,7 +218,11 @@ export class Tile {
 
         if (data.featureIndex) {
             this.latestFeatureIndex = data.featureIndex;
-            if (data.rawTileData) {
+            if (data.geoJsonFeatures) {
+                // GeoJSON sources provide feature data directly instead of encoded
+                // tile data
+                this.latestFeatureIndex.geoJsonFeatureData = data.geoJsonFeatures;
+            } else if (data.rawTileData) {
                 // Only vector tiles have rawTileData, and they won't update it for
                 // 'reloadTile'
                 this.latestRawTileData = data.rawTileData;

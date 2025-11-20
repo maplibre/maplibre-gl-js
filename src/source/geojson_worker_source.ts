@@ -8,7 +8,6 @@ import geojsonvt, {type Options as GeoJSONVTOptions} from 'geojson-vt';
 import {VectorTileWorkerSource} from './vector_tile_worker_source';
 import {createExpression} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error';
-import {toVirtualVectorTile} from './vector_tile_overzoomed';
 import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, type GeoJSONFeatureId} from './geojson_source_diff';
 import type {WorkerTileParameters, WorkerTileResult} from './worker_source';
 import type {LoadVectorTileResult} from './vector_tile_worker_source';
@@ -94,7 +93,10 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
         const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features, {version: 2, extent: EXTENT});
 
-        return toVirtualVectorTile(geojsonWrapper);
+        return {
+            vectorTile: geojsonWrapper,
+            isGeojson: true
+        };
     }
 
     /**

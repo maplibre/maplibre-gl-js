@@ -24,6 +24,8 @@ import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
 import {type GetDashesResponse, MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import type {Feature} from '@maplibre/vt-pbf';
+
 export class WorkerTile {
     tileID: OverscaledTileID;
     uid: string | number;
@@ -43,6 +45,7 @@ export class WorkerTile {
 
     abort: AbortController;
     vectorTile: VectorTile;
+    geoJsonFeatures?: Feature[];
     inFlightDependencies: AbortController[];
 
     constructor(params: WorkerTileParameters) {
