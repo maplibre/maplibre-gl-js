@@ -77,26 +77,14 @@ export function offsetLine(rings: Array<Array<Point>>, offset: number) {
     for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
         const ring = _stripDuplicates(rings[ringIndex]);
         const newRing: Array<Point> = [];
-        const zeroPoint = new Point(0, 0);
         for (let index = 0; index < ring.length; index++) {
+            const point = ring[index];
+            const prevPoint = ring[index - 1];
+            const nextPoint = ring[index + 1];
             // perpendicular unit vectors (outward unit normal vector):
             // these indicate which direction the segments should be offset in
-            let unitNormalAB: Point;
-            let unitNormalBC: Point;
-            const point = ring[index];
-            if (index === 0) {
-                unitNormalAB = new Point(0, 0);
-            } else {
-                const prevPoint: Point = ring[index - 1];
-                unitNormalAB = point.sub(prevPoint)._unit()._perp();
-            }
-            if (index === ring.length - 1) {
-                // final iteration; no next point
-                unitNormalBC = new Point(0, 0);
-            } else {
-                const nextPoint: Point = ring[index +1];
-                unitNormalBC = nextPoint.sub(point)._unit()._perp();
-            }
+            const unitNormalAB: Point = index === 0 ? new Point(0, 0) : point.sub(prevPoint)._unit()._perp();
+            const unitNormalBC: Point = index === ring.length - 1 ? new Point(0, 0) : nextPoint.sub(point)._unit()._perp();
             // unit bisector direction
             const bisectorDir = unitNormalAB._add(unitNormalBC)._unit();
             const cosHalfAngle = bisectorDir.x * unitNormalBC.x + bisectorDir.y * unitNormalBC.y;
