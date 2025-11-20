@@ -97,10 +97,6 @@ export function offsetLine(rings: Array<Array<Point>>, offset: number) {
                 const nextPoint: Point = ring[index +1];
                 unitNormalBC = nextPoint.sub(point)._unit()._perp();
             }
-            if (unitNormalAB.equals(zeroPoint) && unitNormalBC.equals(zeroPoint)) {
-                // no change means final point will be a duplicate of the previous; can be excluded
-                continue;
-            }
             // unit bisector direction
             const bisectorDir = unitNormalAB._add(unitNormalBC)._unit();
             const cosHalfAngle = bisectorDir.x * unitNormalBC.x + bisectorDir.y * unitNormalBC.y;
