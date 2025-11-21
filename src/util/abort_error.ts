@@ -9,7 +9,7 @@ export const ABORT_ERROR = 'AbortError';
  * @returns - true if the error is an abort error
  */
 export function isAbortError(error: Error): boolean {
-    return error.message === ABORT_ERROR;
+    return error.name === ABORT_ERROR;
 }
 
 /**
@@ -17,5 +17,7 @@ export function isAbortError(error: Error): boolean {
  * @returns An error object with the message "AbortError"
  */
 export function createAbortError(): Error {
-    return new Error(ABORT_ERROR);
+    const abortError = new Error(ABORT_ERROR);
+    abortError.name = ABORT_ERROR;
+    return abortError;
 }

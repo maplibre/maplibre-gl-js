@@ -2,6 +2,7 @@ import {pick, extend, type TileJSON} from '../util/util';
 import {getJSON} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
+import {isAbortError} from '../util/abort_error';
 
 import type {RequestManager} from '../util/request_manager';
 import type {RasterDEMSourceSpecification, RasterSourceSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -24,11 +25,18 @@ export async function loadTileJson(
     abortController: AbortController,
 ): Promise<LoadTileJsonResponse | null> {
     let tileJSON: TileJSON | typeof options = options;
-    if (options.url) {
-        const response = await getJSON<TileJSON>(requestManager.transformRequest(options.url, ResourceType.Source), abortController);
-        tileJSON = response.data;
-    } else {
-        await browser.frameAsync(abortController);
+    try {
+        if (options.url) {
+            const response = await getJSON<TileJSON>(requestManager.transformRequest(options.url, ResourceType.Source), abortController);
+            tileJSON = response.data;
+        } else {
+            await browser.frameAsync(abortController);
+        }
+    } catch (err) {
+        if (isAbortError(err)) {
+            return null;
+        }
+        throw err;
     }
     if (!tileJSON) {
         return null;

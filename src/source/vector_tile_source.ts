@@ -111,8 +111,9 @@ export class VectorTileSource extends Evented implements Source {
             const tileJSON = await loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest);
             this._tileJSONRequest = null;
             this._loaded = true;
-            this.map.style.tileManagers[this.id].clearTiles();
             if (tileJSON) {
+                this.map.style.tileManagers[this.id].clearTiles();
+
                 extend(this, tileJSON);
                 if (tileJSON.bounds) this.tileBounds = new TileBounds(tileJSON.bounds, this.minzoom, this.maxzoom);
 

@@ -5,6 +5,7 @@ import {
     type AJAXError,
     sameOrigin
 } from './ajax';
+import {isAbortError} from './abort_error';
 
 import {fakeServer, type FakeServer} from 'nise';
 
@@ -86,6 +87,23 @@ describe('ajax', () => {
             expect(ajaxError.statusText).toBe('Not Found');
             expect(ajaxError.url).toBe('http://example.com/test.json');
             expect(body).toBe('404 Not Found');
+        }
+    });
+
+    test('getJSON, aborted', async () => {
+        const abortController = new AbortController();
+        server.respondWith(request => {
+            request.respond(404, undefined, '404 Not Found');
+        });
+        const promise = getJSON({url: 'http://example.com/test.json'}, abortController);
+        abortController.abort();
+        server.respond();
+
+        try {
+            await promise;
+        } catch (error) {
+            expect(error.name).toBe('AbortError');
+            expect(isAbortError(error)).toBe(true);
         }
     });
 
