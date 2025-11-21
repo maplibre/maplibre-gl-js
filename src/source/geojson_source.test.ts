@@ -622,7 +622,7 @@ describe('GeoJSONSource.updateData', () => {
             }
         });
 
-        const source = new GeoJSONSource('id', {type: 'geojson', data: null}, mockDispatcher, undefined);
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
 
         // Wait for initial data to be loaded
         source.load();
@@ -708,7 +708,7 @@ describe('GeoJSONSource.updateData', () => {
             }
         });
 
-        const source = new GeoJSONSource('id', {type: 'geojson', data: null}, mockDispatcher, undefined);
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
 
         // Perform an initial setData
         const data1 = {type: 'FeatureCollection', features: []} satisfies GeoJSON.GeoJSON;
@@ -746,7 +746,7 @@ describe('GeoJSONSource.updateData', () => {
             }
         });
 
-        const source = new GeoJSONSource('id', {type: 'geojson', data: null}, mockDispatcher, undefined);
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
 
         // Perform an initial setData
         const data1 = {type: 'FeatureCollection', features: []} satisfies GeoJSON.GeoJSON;
