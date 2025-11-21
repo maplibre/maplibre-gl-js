@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+ - Improve performance of `GeoJSONSource#updateData` ([#6738](https://github.com/maplibre/maplibre-gl-js/pull/6738)) (by [@lucaswoj](https://github.com/lucaswoj))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
