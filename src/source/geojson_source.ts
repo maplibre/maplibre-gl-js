@@ -458,9 +458,10 @@ export class GeoJSONSource extends Evented implements Source {
     private _applyDiff(diff: GeoJSONSourceDiff): void {
         const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
+        // Lazily convert `this._data` to updateable if it's not already
         if (!this._data.url && !this._data.updateable) {
             if (!isUpdateableGeoJSON(this._data.geojson, promoteId)) {
-                throw new Error(`Data in "${this.id}" is not compatible with GeoJSONSource#updateData`);
+                throw new Error(`GeoJSONSource "${this.id}": GeoJSON data is not compatible with updateData`);
             }
             this._data = {updateable: toUpdateable(this._data.geojson, promoteId)};
         }

@@ -15,7 +15,7 @@ import type {Dispatcher} from '../util/dispatcher';
 import type {RequestManager} from '../util/request_manager';
 import type {Actor} from '../util/actor';
 import type {MapSourceDataEvent} from '../ui/events';
-import type {GeoJSONSourceDiff} from './geojson_source_diff';
+import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 
 const wrapDispatcher = (dispatcher) => {
@@ -753,7 +753,7 @@ describe('GeoJSONSource.updateData', () => {
         source.setData(data1);
 
         // Queue a setData
-        const data2 = {type: 'FeatureCollection', features: [{id: '1', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}]} satisfies GeoJSON.GeoJSON;
+        const data2: UpdateableGeoJSON = {type: 'FeatureCollection', features: [{id: '1', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}]};
         source.setData(data2);
 
         // Queue an updateData

@@ -128,7 +128,6 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             this._geoJSONIndex = this._createGeoJSONIndex(data, params);
             this.loaded = {};
 
-            // Let the main thread know whether to apply a diff - or return the full data set.
             const result: GeoJSONWorkerSourceLoadDataResult = {};
 
             this._finishPerformance(perf, params, result);
