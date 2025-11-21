@@ -18,6 +18,8 @@ function readAsText(blob) {
     });
 }
 
+const originalFetch = global.fetch;
+
 describe('ajax', () => {
     let server: FakeServer;
     beforeEach(() => {
@@ -91,6 +93,29 @@ describe('ajax', () => {
     });
 
     test('getJSON, aborted', async () => {
+        const abortController = new AbortController();
+        server.respondWith(request => {
+            request.respond(404, undefined, '404 Not Found');
+        });
+        const promise = getJSON({url: 'http://example.com/test.json'}, abortController);
+        abortController.abort();
+        server.respond();
+
+        try {
+            await promise;
+        } catch (error) {
+            expect(error.name).toBe('AbortError');
+            expect(isAbortError(error)).toBe(true);
+        }
+    });
+
+    test('getJSON with fetch, aborted', async () => {
+        // Mock Request.prototype.signal to simulate environment with fetch and AbortController support
+        Object.defineProperty(Request.prototype, 'signal', {});
+
+        // Re-enable fetch for this test
+        global.fetch = originalFetch;
+
         const abortController = new AbortController();
         server.respondWith(request => {
             request.respond(404, undefined, '404 Not Found');
