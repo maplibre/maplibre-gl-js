@@ -753,7 +753,7 @@ describe('GeoJSONSource.updateData', () => {
         source.setData(data1);
 
         // Queue a setData
-        const data2 = {type: 'FeatureCollection', features: [{type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}]} satisfies GeoJSON.GeoJSON;
+        const data2 = {type: 'FeatureCollection', features: [{id: '1', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}]} satisfies GeoJSON.GeoJSON;
         source.setData(data2);
 
         // Queue an updateData
@@ -767,7 +767,7 @@ describe('GeoJSONSource.updateData', () => {
         // Wait for the calls to be performed
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-        // await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
         expect(spy).toHaveBeenCalledTimes(3);
         expect(spy.mock.calls[0][0].data.data).toEqual(data1);
