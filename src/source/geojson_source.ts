@@ -397,7 +397,7 @@ export class GeoJSONSource extends Evented implements Source {
         const {data, diff} = this._pendingWorkerUpdate;
 
         const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
-        if (data) {
+        if (data !== undefined) {
             if (typeof data === 'string') {
                 options.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
                 options.request.collectResourceTiming = this._collectResourceTiming;
@@ -424,9 +424,7 @@ export class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            if (diff) {
-                this._applyDiff(diff);
-            }
+            if (diff) this._applyDiff(diff);
 
             let resourceTiming: PerformanceResourceTiming[] = null;
             if (result.resourceTiming && result.resourceTiming[this.id]) {
