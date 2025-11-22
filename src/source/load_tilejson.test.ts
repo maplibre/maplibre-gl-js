@@ -159,9 +159,8 @@ describe('loadTileJson', () => {
         const promise = loadTileJson(options, requestManager, abortController);
         abortController.abort();
         server.respond();
-        const result = await promise;
 
-        expect(result).toEqual(null);
+        expect(promise).rejects.toEqual(abortController.signal.reason);
     });
 
     test('throws for AJAX errors', async () => {

@@ -25,18 +25,11 @@ export async function loadTileJson(
     abortController: AbortController,
 ): Promise<LoadTileJsonResponse | null> {
     let tileJSON: TileJSON | typeof options = options;
-    try {
-        if (options.url) {
-            const response = await getJSON<TileJSON>(requestManager.transformRequest(options.url, ResourceType.Source), abortController);
-            tileJSON = response.data;
-        } else {
-            await browser.frameAsync(abortController);
-        }
-    } catch (err) {
-        if (isAbortError(err)) {
-            return null;
-        }
-        throw err;
+    if (options.url) {
+        const response = await getJSON<TileJSON>(requestManager.transformRequest(options.url, ResourceType.Source), abortController);
+        tileJSON = response.data;
+    } else {
+        await browser.frameAsync(abortController);
     }
     if (!tileJSON) {
         return null;
