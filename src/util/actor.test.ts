@@ -2,7 +2,7 @@ import {describe, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor';
 import {type WorkerGlobalScopeInterface, workerFactory} from './web_worker';
 import {sleep} from './test/util';
-import {ABORT_ERROR, createAbortError} from './abort_error';
+import {ABORT_ERROR, AbortError} from './abort_error';
 import {MessageType} from './actor_messages';
 
 describe('Actor', () => {
@@ -128,7 +128,7 @@ describe('Actor', () => {
             return new Promise((resolve, reject) => {
                 handlerAbortController.signal.addEventListener('abort', () => {
                     gotAbortSignal = true;
-                    reject(createAbortError());
+                    reject(new AbortError());
                 });
                 setTimeout(resolve, 200);
             });
@@ -195,9 +195,9 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        worker.worker.actor.registerMessageHandler(MessageType.abortTile, () => Promise.reject(createAbortError()));
+        worker.worker.actor.registerMessageHandler(MessageType.abortTile, () => Promise.reject(new AbortError()));
 
-        await expect(async () => actor.sendAsync({type: MessageType.abortTile, data: {} as any})).rejects.toThrow(ABORT_ERROR);
+        await expect(async () => actor.sendAsync({type: MessageType.abortTile, data: {} as any})).rejects.toThrow(expect.objectContaining({name: ABORT_ERROR}));
     });
 
     test('send a message that must be queued, it should still arrive', async () => {

@@ -44,7 +44,7 @@ describe('vector tile worker source', () => {
 
         expect(source.loading).toEqual({});
         await expect(abortPromise).resolves.toBeFalsy();
-        await expect(loadPromise).rejects.toThrow(ABORT_ERROR);
+        await expect(loadPromise).rejects.toThrow(expect.objectContaining({name: ABORT_ERROR}));
     });
 
     test('VectorTileWorkerSource.removeTile removes loaded tile', async () => {

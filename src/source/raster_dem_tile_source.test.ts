@@ -166,7 +166,7 @@ describe('RasterDEMTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        server.respondWith('http://example.com/10/5/5.png', 
+        server.respondWith('http://example.com/10/5/5.png',
             [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': 'max-age=100'}, '0']
         );
         const source = createSource({url: '/source.json'});
@@ -197,7 +197,7 @@ describe('RasterDEMTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        server.respondWith('http://example.com/10/5/5.png', 
+        server.respondWith('http://example.com/10/5/5.png',
             [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Expires': 'Wed, 21 Oct 2015 07:28:00 GMT'}, '0']
         );
         const source = createSource({url: '/source.json'});
@@ -228,7 +228,7 @@ describe('RasterDEMTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         }));
-        server.respondWith('http://example.com/10/5/5.png', 
+        server.respondWith('http://example.com/10/5/5.png',
             [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': '', 'Expires': 'Wed, 21 Oct 2015 07:28:00 GMT'}, '0']
         );
         const source = createSource({url: '/source.json'});
@@ -249,5 +249,34 @@ describe('RasterDEMTileSource', () => {
         server.respond();
         await tilePromise;
         expect(expiryDataSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not throw when tile is aborted', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+
+        const source = createSource({url: '/source.json'});
+        const promise = waitForMetadataEvent(source);
+
+        server.respond();
+        await promise;
+
+        const tile = {
+            tileID: new OverscaledTileID(5, 0, 5, 31, 5),
+            state: 'loading',
+            loadVectorData() {},
+            setExpiryData() {}
+        } as any as Tile;
+        const loadPromise = source.loadTile(tile);
+
+        tile.abortController.abort();
+        tile.aborted = true;
+
+        await expect(loadPromise).resolves.toBeUndefined();
+        expect(tile.state).toBe('unloaded');
     });
 });

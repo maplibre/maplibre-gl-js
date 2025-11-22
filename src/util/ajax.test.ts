@@ -5,6 +5,7 @@ import {
     type AJAXError,
     sameOrigin
 } from './ajax';
+import {isAbortError} from './abort_error';
 
 import {fakeServer, type FakeServer} from 'nise';
 
@@ -16,6 +17,8 @@ function readAsText(blob) {
         fileReader.readAsText(blob);
     });
 }
+
+const originalFetch = global.fetch;
 
 describe('ajax', () => {
     let server: FakeServer;
@@ -86,6 +89,46 @@ describe('ajax', () => {
             expect(ajaxError.statusText).toBe('Not Found');
             expect(ajaxError.url).toBe('http://example.com/test.json');
             expect(body).toBe('404 Not Found');
+        }
+    });
+
+    test('getJSON, aborted', async () => {
+        const abortController = new AbortController();
+        server.respondWith(request => {
+            request.respond(404, undefined, '404 Not Found');
+        });
+        const promise = getJSON({url: 'http://example.com/test.json'}, abortController);
+        abortController.abort();
+        server.respond();
+
+        try {
+            await promise;
+        } catch (error) {
+            expect(error.name).toBe('AbortError');
+            expect(isAbortError(error)).toBe(true);
+        }
+    });
+
+    test('getJSON with fetch, aborted', async () => {
+        // Mock Request.prototype.signal to simulate environment with fetch and AbortController support
+        Object.defineProperty(Request.prototype, 'signal', {});
+
+        // Re-enable fetch for this test
+        global.fetch = originalFetch;
+
+        const abortController = new AbortController();
+        server.respondWith(request => {
+            request.respond(404, undefined, '404 Not Found');
+        });
+        const promise = getJSON({url: 'http://example.com/test.json'}, abortController);
+        abortController.abort();
+        server.respond();
+
+        try {
+            await promise;
+        } catch (error) {
+            expect(error.name).toBe('AbortError');
+            expect(isAbortError(error)).toBe(true);
         }
     });
 

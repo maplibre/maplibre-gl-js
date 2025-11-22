@@ -2,7 +2,7 @@ import {type RequestParameters, makeRequest, sameOrigin, type GetResourceRespons
 import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
 import {webpSupported} from './webp_supported';
 import {config} from './config';
-import {createAbortError} from './abort_error';
+import {AbortError} from './abort_error';
 import {getProtocol} from '../source/protocol_crud';
 
 type ImageQueueThrottleControlCallback = () => boolean;
@@ -223,7 +223,7 @@ export namespace ImageRequest {
             abortController.signal.addEventListener('abort', () => {
                 // Set src to '' to actually cancel the request
                 image.src = '';
-                reject(createAbortError());
+                reject(new AbortError(abortController.signal.reason));
             });
 
             image.fetchPriority = 'high';

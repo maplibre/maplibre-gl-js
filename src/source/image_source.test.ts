@@ -222,6 +222,21 @@ describe('ImageSource', () => {
         expect(missingImagesource.loaded()).toBe(true);
     });
 
+    test('does not throw when updateImage is called while a request is pending', async () => {
+        const map = new StubMap() as any;
+        const source = createSource({url: '/image.png', eventedParent: map});
+
+        const errorHandler = vi.fn();
+        source.on('error', errorHandler);
+
+        source.onAdd(map);
+        source.updateImage({url: '/image2.png'});
+
+        await sleep(0);
+
+        expect(errorHandler).not.toHaveBeenCalled();
+    });
+
     describe('terrainTileRanges', () => {
         test('sets tile ranges for all zoom levels', () => {
             const source = createSource({url: '/image.png'});

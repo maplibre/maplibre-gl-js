@@ -164,7 +164,7 @@ describe('loadSprite', () => {
         expect((server.requests[0] as any).aborted).toBeTruthy();
         expect((server.requests[1] as any).aborted).toBeTruthy();
 
-        await expect(promise).rejects.toThrow(ABORT_ERROR);
+        await expect(promise).rejects.toThrow(expect.objectContaining({name: ABORT_ERROR}));
         server.respond();
         expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
         expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
