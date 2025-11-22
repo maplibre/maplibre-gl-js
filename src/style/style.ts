@@ -2050,7 +2050,7 @@ export class Style extends Evented {
                 }
                 tileManager._tiles = {};
             }
-            tileManager._cache.reset();
+            tileManager._cache.clear();
             tileManager.onRemove(this.map);
         }
         this.tileManagers = {};
