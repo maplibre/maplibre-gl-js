@@ -2,6 +2,7 @@ import {describe, beforeEach, afterEach, test, expect} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
 import {loadTileJson} from './load_tilejson';
 import {RequestManager} from '../util/request_manager';
+import {ABORT_ERROR} from '../util/abort_error';
 
 import {type RasterSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
@@ -160,7 +161,7 @@ describe('loadTileJson', () => {
         abortController.abort();
         server.respond();
 
-        expect(promise).rejects.toEqual(abortController.signal.reason);
+        expect(promise).rejects.toThrow(expect.objectContaining({name: ABORT_ERROR}));
     });
 
     test('throws for AJAX errors', async () => {

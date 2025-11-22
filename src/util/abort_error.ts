@@ -3,6 +3,17 @@
  */
 export const ABORT_ERROR = 'AbortError';
 
+export class AbortError extends Error {
+    name = ABORT_ERROR;
+
+    constructor(messageOrError: string | Error = ABORT_ERROR) {
+        super(messageOrError instanceof Error ? messageOrError.message : messageOrError);
+        if (messageOrError instanceof Error && messageOrError.stack) {
+            this.stack = messageOrError.stack;
+        }
+    }
+}
+
 /**
  * Check if an error is an abort error
  * @param error - An error object
@@ -10,14 +21,4 @@ export const ABORT_ERROR = 'AbortError';
  */
 export function isAbortError(error: Error): boolean {
     return error.name === ABORT_ERROR;
-}
-
-/**
- * Use this when you need to create an abort error.
- * @returns An error object with the message "AbortError"
- */
-export function createAbortError(): Error {
-    const abortError = new Error(ABORT_ERROR);
-    abortError.name = ABORT_ERROR;
-    return abortError;
 }

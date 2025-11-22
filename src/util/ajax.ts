@@ -1,5 +1,5 @@
 import {extend, isWorker} from './util';
-import {createAbortError, isAbortError} from './abort_error';
+import {AbortError, isAbortError} from './abort_error';
 import {getProtocol} from '../source/protocol_crud';
 import {MessageType} from './actor_messages';
 
@@ -182,9 +182,7 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
         parsePromise = response.text();
     }
     const result = await parsePromise;
-    if (abortController.signal.aborted) {
-        throw createAbortError();
-    }
+    abortController.signal.throwIfAborted();
     return {data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires')};
 }
 
@@ -233,7 +231,7 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
         };
         abortController.signal.addEventListener('abort', () => {
             xhr.abort();
-            reject(createAbortError());
+            reject(new AbortError(abortController.signal.reason));
         });
         xhr.send(requestParameters.body);
     });
