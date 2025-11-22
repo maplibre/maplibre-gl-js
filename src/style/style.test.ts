@@ -1442,6 +1442,20 @@ describe('Style.setSprite', () => {
         expect(inputJson.sprite).toBe(inputSprite);
         expect(inputJsonString).toEqual(JSON.stringify(inputJson));
     });
+
+    test('throws when error loading sprite', async () => {
+        server.respondWith('https://example.com/sprite', [404, {}, '']);
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        const errorPromise = style.once('error');
+        style.setSprite('https://example.com/sprite');
+        server.respond();
+
+        const {error} = await errorPromise;
+        expect(error.message).toBe('AJAXError: Not Found (404): https://example.com/sprite.json');
+    });
 });
 
 describe('Style.setGeoJSONSourceData', () => {
