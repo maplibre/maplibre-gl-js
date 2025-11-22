@@ -313,4 +313,30 @@ describe('RasterTileSource', () => {
         expect(tile.state).toBe('loaded');
         expect(expiryDataSpy).toHaveBeenCalledTimes(1);
     });
+
+    test('does not throw when tile is aborted', async () => {
+        const source = createSource({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            bounds: [-47, -7, -45, -5]
+        });
+
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        const tile = {
+            tileID: new OverscaledTileID(5, 0, 5, 31, 5),
+            state: 'loading',
+            loadVectorData() {},
+            setExpiryData() {}
+        } as any as Tile;
+        const loadPromise = source.loadTile(tile);
+
+        tile.abortController.abort();
+        tile.aborted = true;
+
+        await expect(loadPromise).resolves.toBeUndefined();
+        expect(tile.state).toBe('unloaded');
+    });
 });

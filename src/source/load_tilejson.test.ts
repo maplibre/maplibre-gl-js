@@ -161,7 +161,7 @@ describe('loadTileJson', () => {
         abortController.abort();
         server.respond();
 
-        expect(promise).rejects.toThrow(expect.objectContaining({name: ABORT_ERROR}));
+        await expect(promise).rejects.toThrow(expect.objectContaining({name: ABORT_ERROR}));
     });
 
     test('throws for AJAX errors', async () => {
@@ -177,6 +177,6 @@ describe('loadTileJson', () => {
         const promise = loadTileJson(options, requestManager, new AbortController());
         server.respond();
 
-        expect(promise).rejects.toThrow('AJAXError: Not Found (404): http://example.com/test.json');
+        await expect(promise).rejects.toThrow('AJAXError: Not Found (404): http://example.com/test.json');
     });
 });

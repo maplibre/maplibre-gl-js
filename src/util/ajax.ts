@@ -159,6 +159,7 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
     try {
         response = await fetch(request);
     } catch (e) {
+        // Pass through AbortErrors for upstream handling
         if (isAbortError(e)) {
             throw e;
         }

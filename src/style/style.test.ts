@@ -179,6 +179,20 @@ describe('Style.loadURL', () => {
         expect(error).toBeTruthy();
         expect(error.status).toBe(errorStatus);
     });
+
+    test('does not throw if request is pending when removed', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        const errorHandler = vi.fn();
+        style.on('error', errorHandler);
+
+        style.loadURL('style.json');
+        style._remove();
+
+        expect(errorHandler).not.toHaveBeenCalled();
+    });
 });
 
 describe('Style.loadJSON', () => {
@@ -534,6 +548,26 @@ describe('Style.loadJSON', () => {
         const paint = layer.paint as PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
         expect(paint.get('circle-color').evaluate({} as Feature, {})).toEqual(new Color(1, 0, 0, 1));
         expect(paint.get('circle-radius').evaluate({} as Feature, {})).toEqual(12);
+    });
+
+    test('does not throw if request is pending when removed', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        const errorHandler = vi.fn();
+        style.on('error', errorHandler);
+
+        style.loadJSON(
+            createStyleJSON({
+                sources: {
+                    'source-id': createGeoJSONSource()
+                },
+            })
+        );
+        style._remove();
+
+        expect(errorHandler).not.toHaveBeenCalled();
     });
 });
 
@@ -1305,6 +1339,22 @@ describe('Style.addSprite', () => {
 
         expect(inputJson.sprite).toBe(inputSprite);
         expect(JSON.stringify(inputJson)).toEqual(inputJsonString);
+    });
+
+    test('does not throw if request is pending when removed', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        const errorHandler = vi.fn();
+        style.on('error', errorHandler);
+
+        style.addSprite('test', 'https://example.com/sprite');
+        style._remove();
+
+        await waitForEvent(style, 'data', (event) => event.dataType === 'style');
+
+        expect(errorHandler).not.toHaveBeenCalled();
     });
 });
 

@@ -2,7 +2,6 @@ import {pick, extend, type TileJSON} from '../util/util';
 import {getJSON} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
-import {isAbortError} from '../util/abort_error';
 
 import type {RequestManager} from '../util/request_manager';
 import type {RasterDEMSourceSpecification, RasterSourceSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
