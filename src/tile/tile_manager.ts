@@ -267,7 +267,7 @@ export class TileManager extends Evented {
 
         for (const id of this._inViewTiles.getAllIds()) {
             const tile = this._inViewTiles.getTileById(id);
-            if (shouldReloadTileOptions && this._source.shouldReloadTile && !this._source.shouldReloadTile(tile, shouldReloadTileOptions)) {
+            if (shouldReloadTileOptions && !this._source.shouldReloadTile(tile, shouldReloadTileOptions)) {
                 continue;
             } else if (sourceDataChanged) {
                 this._reloadTile(id, 'expired');
