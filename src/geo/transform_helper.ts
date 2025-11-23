@@ -604,6 +604,7 @@ export class TransformHelper implements ITransformGetters {
         let dMercator: number;
         let iter = 0;
         const maxIter = 10;
+        let previousCenter = this.center;  // Fix @ bottom margin pan towards equator
         do {
             iter += 1;
             if (iter > maxIter) {
@@ -613,6 +614,9 @@ export class TransformHelper implements ITransformGetters {
             const dx = dxNormalized * dMercator;
             const dy = dyNormalized * dMercator;
             centerMercator = new MercatorCoordinate(camMercator.x + dx, camMercator.y + dy);
+            const lat_avg = (centerMercator.toLngLat().lat + previousCenter.lat)/2
+            centerMercator = MercatorCoordinate.fromLngLat([centerMercator.toLngLat().lng, lat_avg])
+            previousCenter = centerMercator.toLngLat()
             metersPerMercUnit = 1 / centerMercator.meterInMercatorCoordinateUnits();
         } while (Math.abs(distanceToCenterMeters - dMercator * metersPerMercUnit) > 1.0e-12);
 
