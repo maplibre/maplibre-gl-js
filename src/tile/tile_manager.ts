@@ -134,8 +134,7 @@ export class TileManager extends Evented {
     }
 
     onRemove(map: Map) {
-        for (const id of this._inViewTiles.getAllIds()) {
-            const tile = this._inViewTiles.getTileById(id);
+        for (const tile of this._inViewTiles.getAllTiles()) {
             tile.unloadVectorData();
         }
         this.clearTiles();
@@ -157,8 +156,7 @@ export class TileManager extends Evented {
         // do not consider as loaded if the update hasn't been called yet (we do not know if we will have any tiles to fetch)
         if (!this._updated) { return false; }
 
-        for (const id of this._inViewTiles.getAllIds()) {
-            const tile = this._inViewTiles.getTileById(id);
+        for (const tile of this._inViewTiles.getAllTiles()) {
             if (tile.state !== 'loaded' && tile.state !== 'errored')
                 return false;
         }
@@ -223,8 +221,7 @@ export class TileManager extends Evented {
         }
 
         this._state.coalesceChanges(this._inViewTiles, this.map ? this.map.painter : null);
-        for (const id of this._inViewTiles.getAllIds()) {
-            const tile = this._inViewTiles.getTileById(id);
+        for (const tile of this._inViewTiles.getAllTiles()) {
             tile.upload(context);
             tile.prepare(this.map.style.imageManager);
         }
@@ -397,10 +394,7 @@ export class TileManager extends Evented {
         const loadedDescendents: Record<string, Tile[]> = {};
 
         // enumerate current tiles and find the loaded descendents of each target tile
-        for (const id of this._inViewTiles.getAllIds()) {
-            const tile = this._inViewTiles.getTileById(id);
-            if (!tile.hasData()) continue;
-
+        for (const tile of this._inViewTiles.getAllTiles().filter(tile => tile.hasData())) {
             // determine if the loaded tile (hasData) is a qualified descendent of any target tile
             for (const targetID of targetTileIDs) {
                 if (tile.tileID.isChildOf(targetID)) {
@@ -822,8 +816,9 @@ export class TileManager extends Evented {
         this._shouldReloadOnResume = false;
         this._paused = false;
 
-        for (const id of this._inViewTiles.getAllIds())
+        for (const id of this._inViewTiles.getAllIds()) {
             this._removeTile(id);
+        }
 
         this._outOfViewCache.reset();
     }
@@ -983,8 +978,7 @@ export class TileManager extends Evented {
     }
 
     areTilesLoaded(): boolean {
-        for (const id of this._inViewTiles.getAllIds()) {
-            const tile = this._inViewTiles.getTileById(id);
+        for (const tile of this._inViewTiles.getAllTiles()) {
             if (!(tile.state === 'loaded' || tile.state === 'errored')) {
                 return false;
             }

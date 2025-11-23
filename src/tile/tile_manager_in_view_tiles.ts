@@ -4,42 +4,46 @@ import {type Tile} from './tile';
 import {compareTileId, type OverscaledTileID} from './tile_id';
 
 export class InViewTiles {
-    private _inViewTiles: Record<string, Tile> = {};
+    private _tiles: Record<string, Tile> = {};
 
     public handleWrapJump(wrapDelta: number) {
         const tiles: Record<string, Tile> = {};
-        for (const id in this._inViewTiles) {
-            const tile = this._inViewTiles[id];
+        for (const id in this._tiles) {
+            const tile = this._tiles[id];
             tile.tileID = tile.tileID.unwrapTo(tile.tileID.wrap + wrapDelta);
             tiles[tile.tileID.key] = tile;
         }
-        this._inViewTiles = tiles;
+        this._tiles = tiles;
     }
 
     public setFeatureState(featuresChanged: LayerFeatureStates, painter: any) {
-        for (const id in this._inViewTiles) {
-            const tile = this._inViewTiles[id];
+        for (const id in this._tiles) {
+            const tile = this._tiles[id];
             tile.setFeatureState(featuresChanged, painter);
         }
     }
 
+    public getAllTiles(): Tile[] {
+        return Object.values(this._tiles);
+    }
+
     public getAllIds(sorted = false): string[] {
-        if (!sorted) {
-            return Object.keys(this._inViewTiles);
+        if (sorted) {
+            return Object.values(this._tiles).map(tile => tile.tileID).sort(compareTileId).map(id => id.key);
         }
-        return Object.values(this._inViewTiles).map(tile => tile.tileID).sort(compareTileId).map(id => id.key);
+        return Object.keys(this._tiles);
     }
 
     public getTileById(key: string): Tile {
-        return this._inViewTiles[key];
+        return this._tiles[key];
     }
 
     public setTile(key: string, tile: Tile) {
-        this._inViewTiles[key] = tile;
+        this._tiles[key] = tile;
     }
 
     public deleteTileById(key: string) {
-        delete this._inViewTiles[key];
+        delete this._tiles[key];
     }
 
     /**

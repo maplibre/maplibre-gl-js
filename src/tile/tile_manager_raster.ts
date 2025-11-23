@@ -211,8 +211,7 @@ export function hasRasterTransition(inViewTiles: InViewTiles, rasterFadeDuration
         return false;
     }
     const currentTime = now();
-    for (const id of inViewTiles.getAllIds()) {
-        const tile = inViewTiles.getTileById(id);
+    for (const tile of inViewTiles.getAllTiles()) {
         if (tile.fadeEndTime >= currentTime) {
             return true;
         }
