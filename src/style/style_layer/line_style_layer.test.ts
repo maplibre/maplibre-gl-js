@@ -48,5 +48,4 @@ describe('LineStyleLayer', () => {
         lineLayer.setPaintProperty('line-gradient', null);
         expect(lineLayer.gradientVersion).toBeGreaterThan(gradientVersion);
     });
-
 });
