@@ -178,6 +178,7 @@ export class CanvasSource extends ImageSource {
 
         if (!this.texture) {
             this.texture = new Texture(context, this.canvas, gl.RGBA, {premultiply: true});
+            this.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
         } else if (resize || this._playing) {
             this.texture.update(this.canvas, {premultiply: true});
         }
