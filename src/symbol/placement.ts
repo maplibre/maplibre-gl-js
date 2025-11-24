@@ -14,12 +14,11 @@ import {type PossiblyEvaluated} from '../style/properties';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
 import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mode';
 
-import type {Tile} from '../source/tile';
-import {type SymbolBucket, type CollisionArrays, type SingleCollisionBox} from '../data/bucket/symbol_bucket';
-
+import type {Tile} from '../tile/tile';
+import type {SymbolBucket, CollisionArrays, SingleCollisionBox, SymbolBuffers} from '../data/bucket/symbol_bucket';
 import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchorOffset} from '../data/array_types.g';
 import type {FeatureIndex} from '../data/feature_index';
-import type {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
+import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id';
 import {type Terrain} from '../render/terrain';
 import {translatePosition, warnOnce} from '../util/util';
 import {type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
@@ -1059,7 +1058,7 @@ export class Placement {
             bucket.deserializeCollisionBoxes(collisionBoxArray);
         }
 
-        const addOpacities = (iconOrText, numVertices: number, opacity: number) => {
+        const addOpacities = (iconOrText: SymbolBuffers, numVertices: number, opacity: number) => {
             for (let i = 0; i < numVertices / 4; i++) {
                 iconOrText.opacityVertexArray.emplaceBack(opacity);
             }

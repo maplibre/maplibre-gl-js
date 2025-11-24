@@ -1,22 +1,24 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
-
-import {extend, warnOnce} from '../util/util';
+import {extend, warnOnce, type ExactlyOne} from '../util/util';
 import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
-import {LngLatBounds} from '../geo/lng_lat_bounds';
-import {mergeSourceDiffs} from './geojson_source_diff';
+import {applySourceDiff, isUpdateableGeoJSON, mergeSourceDiffs, toUpdateable} from './geojson_source_diff';
+import {getGeoJSONBounds} from '../util/geojson_bounds';
+import {MessageType} from '../util/actor_messages';
+import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds';
+import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
 
+import type {LngLatBounds} from '../geo/lng_lat_bounds';
 import type {Source} from './source';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from './tile';
+import type {Tile} from '../tile/tile';
 import type {Actor} from '../util/actor';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {GeoJSONSourceDiff} from './geojson_source_diff';
+import type {GeoJSONFeatureId, GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import type {WorkerTileParameters} from './worker_source';
-import {MessageType} from '../util/actor_messages';
 
 /**
  * Options object for GeoJSONSource.
@@ -34,6 +36,21 @@ export type GeoJSONSourceInternalOptions = {
     clusterRadius?: number;
     clusterMinPoints?: number;
     generateId?: boolean;
+};
+
+/**
+ * @internal
+ */
+export type GeoJSONSourceShouldReloadTileOptions = {
+    /**
+     * Refresh all tiles that WILL contain these bounds.
+     */
+    nextBounds: LngLatBounds[];
+
+    /**
+     * Refresh all tiles that PREVIOUSLY DID contain these feature ids.
+     */
+    prevIds: Set<GeoJSON.Feature['id']>;
 };
 
 /**
@@ -120,7 +137,11 @@ export class GeoJSONSource extends Evented implements Source {
 
     isTileClipped: boolean;
     reparseOverscaled: boolean;
-    _data: GeoJSON.GeoJSON | string | undefined;
+    _data: ExactlyOne<{
+        url: string;
+        geojson: GeoJSON.GeoJSON;
+        updateable: globalThis.Map<GeoJSONFeatureId, GeoJSON.Feature>;
+    }>;
     _options: GeoJSONSourceInternalOptions;
     workerOptions: GeoJSONWorkerOptions;
     map: Map;
@@ -152,7 +173,7 @@ export class GeoJSONSource extends Evented implements Source {
         this.actor = dispatcher.getActor();
         this.setEventedParent(eventedParent);
 
-        this._data = options.data;
+        this._data = typeof options.data === 'string' ? {url: options.data} : {geojson: options.data};
         this._options = extend({}, options);
 
         this._collectResourceTiming = options.collectResourceTiming;
@@ -228,11 +249,15 @@ export class GeoJSONSource extends Evented implements Source {
      * Sets the GeoJSON data and re-renders the map.
      *
      * @param data - A GeoJSON data object or a URL to one. The latter is preferable in the case of large GeoJSON files.
+     * @param waitForCompletion - If true, the method will return a promise that resolves when set data is complete.
      */
-    setData(data: GeoJSON.GeoJSON | string): this {
-        this._data = data;
+    setData(data: GeoJSON.GeoJSON | string, waitForCompletion: true): Promise<void>;
+    setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: false): this;
+    setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: boolean): this | Promise<void> {
+        this._data = typeof data === 'string' ? {url: data} : {geojson: data};
         this._pendingWorkerUpdate = {data};
-        this._updateWorkerData();
+        const updatePromise = this._updateWorkerData();
+        if (waitForCompletion) return updatePromise;
         return this;
     }
 
@@ -249,10 +274,14 @@ export class GeoJSONSource extends Evented implements Source {
      * Updates are applied on a best-effort basis, updating an ID that does not exist will not result in an error.
      *
      * @param diff - The changes that need to be applied.
+     * @param waitForCompletion - If true, the method will return a promise that resolves when the update is complete.
      */
-    updateData(diff: GeoJSONSourceDiff): this {
+    updateData(diff: GeoJSONSourceDiff, waitForCompletion: true): Promise<void>;
+    updateData(diff: GeoJSONSourceDiff, waitForCompletion?: false): this;
+    updateData(diff: GeoJSONSourceDiff, waitForCompletion?: boolean): this | Promise<void> {
         this._pendingWorkerUpdate.diff = mergeSourceDiffs(this._pendingWorkerUpdate.diff, diff);
-        this._updateWorkerData();
+        const updatePromise = this._updateWorkerData();
+        if (waitForCompletion) return updatePromise;
         return this;
     }
 
@@ -266,40 +295,13 @@ export class GeoJSONSource extends Evented implements Source {
         return this.actor.sendAsync({type: MessageType.getData, data: options});
     }
 
-    private getCoordinatesFromGeometry(geometry: GeoJSON.Geometry): number[] {
-        if (geometry.type === 'GeometryCollection') {
-            return geometry.geometries.map((g: Exclude<GeoJSON.Geometry, GeoJSON.GeometryCollection>) => g.coordinates).flat(Infinity) as number[];
-        }
-        return geometry.coordinates.flat(Infinity) as number[];
-    }
-
     /**
      * Allows getting the source's boundaries.
      * If there's a problem with the source's data, it will return an empty {@link LngLatBounds}.
      * @returns a promise which resolves to the source's boundaries
      */
     async getBounds(): Promise<LngLatBounds> {
-        const bounds = new LngLatBounds();
-        const data = await this.getData();
-        let coordinates: number[];
-        switch (data.type) {
-            case 'FeatureCollection':
-                coordinates = data.features.map(f => this.getCoordinatesFromGeometry(f.geometry)).flat(Infinity) as number[];
-                break;
-            case 'Feature':
-                coordinates = this.getCoordinatesFromGeometry(data.geometry);
-                break;
-            default:
-                coordinates = this.getCoordinatesFromGeometry(data);
-                break;
-        }
-        if (coordinates.length == 0) {
-            return bounds;
-        }
-        for (let i = 0; i < coordinates.length - 1; i += 2) {
-            bounds.extend([coordinates[i], coordinates[i+1]]);
-        }
-        return bounds;
+        return getGeoJSONBounds(await this.getData());
     }
 
     /**
@@ -395,12 +397,12 @@ export class GeoJSONSource extends Evented implements Source {
         const {data, diff} = this._pendingWorkerUpdate;
 
         const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
-        if (data) {
+        if (data !== undefined) {
             if (typeof data === 'string') {
                 options.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
                 options.request.collectResourceTiming = this._collectResourceTiming;
             } else {
-                options.data = JSON.stringify(data);
+                options.data = data;
             }
 
             this._pendingWorkerUpdate.data = undefined;
@@ -422,7 +424,7 @@ export class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            this._data = result.data;
+            if (diff) this._applyDiff(diff);
 
             let resourceTiming: PerformanceResourceTiming[] = null;
             if (result.resourceTiming && result.resourceTiming[this.id]) {
@@ -434,10 +436,10 @@ export class GeoJSONSource extends Evented implements Source {
                 extend(eventData, {resourceTiming});
             }
 
-            // although GeoJSON sources contain no metadata, we fire this event to let the SourceCache
+            // although GeoJSON sources contain no metadata, we fire this event to let the TileManager
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content'}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions: this._getShouldReloadTileOptions(diff)}));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -451,6 +453,84 @@ export class GeoJSONSource extends Evented implements Source {
                 this._updateWorkerData();
             }
         }
+    }
+
+    private _applyDiff(diff: GeoJSONSourceDiff): void {
+        const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
+
+        // Lazily convert `this._data` to updateable if it's not already
+        if (!this._data.url && !this._data.updateable) {
+            if (!isUpdateableGeoJSON(this._data.geojson, promoteId)) {
+                throw new Error(`GeoJSONSource "${this.id}": GeoJSON data is not compatible with updateData`);
+            }
+            this._data = {updateable: toUpdateable(this._data.geojson, promoteId)};
+        }
+
+        if (this._data.updateable) {
+            applySourceDiff(this._data.updateable, diff, promoteId);
+        }
+    }
+
+    _getShouldReloadTileOptions(diff?: GeoJSONSourceDiff): GeoJSONSourceShouldReloadTileOptions | undefined {
+        if (this._options.cluster || !diff || diff.removeAll) return undefined;
+
+        const {add = [], update = [], remove = []} = (diff || {});
+
+        const prevIds = new Set([...update.map(u => u.id), ...remove]);
+
+        for (const id of prevIds.values()) {
+            if (typeof id !== 'number' && this.promoteId == null) {
+                warnOnce(`GeoJSONSource "${this.id}": updateData is slower when using string GeoJSON feature IDs. Consider using promoteId or numeric IDs for better performance.`);
+                return undefined;
+            }
+        }
+
+        const nextBounds = [
+            ...update.map(f => f.newGeometry),
+            ...add.map(f => f.geometry)
+        ]
+            .filter(Boolean)
+            .map(g => getGeoJSONBounds(g));
+
+        return {
+            nextBounds,
+            prevIds
+        };
+    }
+
+    /**
+     * Determine whether a tile should be reloaded based on a set of options associated with a {@link MapSourceDataChangedEvent}.
+     * @internal
+     */
+    shouldReloadTile(tile: Tile, {nextBounds, prevIds}: GeoJSONSourceShouldReloadTileOptions) : boolean {
+        if (!tile.latestFeatureIndex) {
+            return tile.state !== 'unloaded';
+        }
+
+        // Update the tile if it PREVIOUSLY contained an updated feature.
+        const layers = tile.latestFeatureIndex.loadVTLayers();
+        for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
+            const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
+            const feature = layers[GEOJSON_TILE_LAYER_NAME].feature(featureIndex.featureIndex);
+            const id = tile.latestFeatureIndex.getId(feature, GEOJSON_TILE_LAYER_NAME);
+            if (prevIds.has(id)) {
+                return true;
+            }
+        }
+
+        // Update the tile if it WILL NOW contain an updated feature.
+        const {buffer, extent} = this.workerOptions.geojsonVtOptions;
+        const tileBounds = tileIdToLngLatBounds(
+            tile.tileID.canonical,
+            buffer / extent
+        );
+        for (const bounds of nextBounds) {
+            if (tileBounds.intersects(bounds)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     loaded(): boolean {
@@ -505,7 +585,12 @@ export class GeoJSONSource extends Evented implements Source {
     serialize(): GeoJSONSourceSpecification {
         return extend({}, this._options, {
             type: this.type,
-            data: this._data
+            data: this._data.updateable ?
+                {
+                    type: 'FeatureCollection',
+                    features: Array.from(this._data.updateable.values())
+                } :
+                this._data.url || this._data.geojson
         });
     }
 

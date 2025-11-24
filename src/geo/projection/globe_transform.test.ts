@@ -3,7 +3,7 @@ import {EXTENT} from '../../data/extent';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
 import {GlobeTransform} from './globe_transform';
-import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';
+import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id';
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 import {expectToBeCloseToArray} from '../../util/test/util';
 import {MercatorCoordinate} from '../mercator_coordinate';

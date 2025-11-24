@@ -1,9 +1,9 @@
 import {describe, beforeEach, afterEach, test, expect, vi, it} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
 import {RasterDEMTileSource} from './raster_dem_tile_source';
-import {OverscaledTileID} from './tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 import {RequestManager} from '../util/request_manager';
-import {type Tile} from './tile';
+import {type Tile} from '../tile/tile';
 import {waitForEvent, waitForMetadataEvent} from '../util/test/util';
 import type {MapSourceDataEvent} from '../ui/events';
 

@@ -1,4 +1,4 @@
-import {OverscaledTileID} from '../../../src/source/tile_id';
+import {OverscaledTileID} from '../../../src/tile/tile_id';
 import Benchmark from '../lib/benchmark';
 import {FeatureIndex} from '../../../src/data/feature_index';
 import {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';

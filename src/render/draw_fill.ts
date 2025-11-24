@@ -10,14 +10,14 @@ import {
 } from './program/fill_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/source_cache';
+import type {TileManager} from '../tile/tile_manager';
 import type {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import type {FillBucket} from '../data/bucket/fill_bucket';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
 
-export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
 
@@ -37,7 +37,7 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
     if (painter.renderPass === pass) {
         const depthMode = painter.getDepthModeForSublayer(
             1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
-        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
+        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
     }
 
     // Draw stroke
@@ -53,13 +53,13 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
         // the (non-antialiased) fill.
         const depthMode = painter.getDepthModeForSublayer(
             layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
-        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
+        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
     }
 }
 
 function drawFillTiles(
     painter: Painter,
-    sourceCache: SourceCache,
+    tileManager: TileManager,
     layer: FillStyleLayer,
     coords: Array<OverscaledTileID>,
     depthMode: Readonly<DepthMode>,
@@ -89,7 +89,7 @@ function drawFillTiles(
     const constantPattern = patternProperty.constantOr(null);
 
     for (const coord of coords) {
-        const tile = sourceCache.getTile(coord);
+        const tile = tileManager.getTile(coord);
         if (image && !tile.patternsLoaded()) continue;
 
         const bucket: FillBucket = (tile.getBucket(layer) as any);

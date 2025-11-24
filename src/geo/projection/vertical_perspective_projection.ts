@@ -1,5 +1,5 @@
 import type {Context} from '../../gl/context';
-import type {CanonicalTileID} from '../../source/tile_id';
+import type {CanonicalTileID} from '../../tile/tile_id';
 import {type Mesh} from '../../render/mesh';
 import {now} from '../../util/time_control';
 import {easeCubicInOut, lerp} from '../../util/util';

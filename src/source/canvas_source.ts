@@ -201,6 +201,8 @@ export class CanvasSource extends ImageSource {
     serialize(): CanvasSourceSpecification {
         return {
             type: 'canvas',
+            animate: this.animate,
+            canvas: this.options.canvas,
             coordinates: this.coordinates
         };
     }

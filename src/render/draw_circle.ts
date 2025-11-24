@@ -4,10 +4,10 @@ import {CullFaceMode} from '../gl/cull_face_mode';
 import {type Program} from './program';
 import {circleUniformValues} from './program/circle_program';
 import {SegmentVector} from '../data/segment';
-import {type OverscaledTileID} from '../source/tile_id';
+import {type OverscaledTileID} from '../tile/tile_id';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/source_cache';
+import type {TileManager} from '../tile/tile_manager';
 import type {CircleStyleLayer} from '../style/style_layer/circle_style_layer';
 import type {CircleBucket} from '../data/bucket/circle_bucket';
 import type {ProgramConfiguration} from '../data/program_configuration';
@@ -35,7 +35,7 @@ type SegmentsTileRenderState = {
     state: TileRenderState;
 };
 
-export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawCircles(painter: Painter, tileManager: TileManager, layer: CircleStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
 
     const {isRenderingToTexture} = renderOptions;
@@ -66,7 +66,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
     for (let i = 0; i < coords.length; i++) {
         const coord = coords[i];
 
-        const tile = sourceCache.getTile(coord);
+        const tile = tileManager.getTile(coord);
         const bucket: CircleBucket<any> = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 

@@ -1,4 +1,4 @@
-import {OverscaledTileID} from '../../source/tile_id';
+import {OverscaledTileID} from '../../tile/tile_id';
 import {vec2, type vec4} from 'gl-matrix';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {degreesToRadians, scaleZoom} from '../../util/util';

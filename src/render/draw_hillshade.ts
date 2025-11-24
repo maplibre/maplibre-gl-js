@@ -9,11 +9,11 @@ import {
 } from './program/hillshade_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/source_cache';
+import type {TileManager} from '../tile/tile_manager';
 import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 
-export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawHillshade(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
 
     const {isRenderingToTexture} = renderOptions;
@@ -26,7 +26,7 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
 
     if (painter.renderPass === 'offscreen') {
         // Prepare tiles
-        prepareHillshade(painter, sourceCache, tileIDs, layer, depthMode, StencilMode.disabled, colorMode);
+        prepareHillshade(painter, tileManager, tileIDs, layer, depthMode, StencilMode.disabled, colorMode);
         context.viewport.set([0, 0, painter.width, painter.height]);
     } else if (painter.renderPass === 'translucent') {
         // Globe (or any projection with subdivision) needs two-pass rendering to avoid artifacts when rendering texture tiles.
@@ -34,19 +34,19 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
         if (useSubdivision) {
             // Two-pass rendering
             const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-            renderHillshade(painter, sourceCache, layer, coords, stencilBorderless, depthMode, colorMode, false, isRenderingToTexture); // draw without borders
-            renderHillshade(painter, sourceCache, layer, coords, stencilBorders, depthMode, colorMode, true, isRenderingToTexture); // draw with borders
+            renderHillshade(painter, tileManager, layer, coords, stencilBorderless, depthMode, colorMode, false, isRenderingToTexture); // draw without borders
+            renderHillshade(painter, tileManager, layer, coords, stencilBorders, depthMode, colorMode, true, isRenderingToTexture); // draw with borders
         } else {
             // Simple rendering
             const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
-            renderHillshade(painter, sourceCache, layer, coords, stencil, depthMode, colorMode, false, isRenderingToTexture);
+            renderHillshade(painter, tileManager, layer, coords, stencil, depthMode, colorMode, false, isRenderingToTexture);
         }
     }
 }
 
 function renderHillshade(
     painter: Painter,
-    sourceCache: SourceCache,
+    tileManager: TileManager,
     layer: HillshadeStyleLayer,
     coords: Array<OverscaledTileID>,
     stencilModes: {[_: number]: Readonly<StencilMode>},
@@ -65,7 +65,7 @@ function renderHillshade(
     const align = !painter.options.moving;
 
     for (const coord of coords) {
-        const tile = sourceCache.getTile(coord);
+        const tile = tileManager.getTile(coord);
         const fbo = tile.fbo;
         if (!fbo) {
             continue;
@@ -93,7 +93,7 @@ function renderHillshade(
 // directions for each pixel, and saves those values to a framebuffer texture in the r and g channels.
 function prepareHillshade(
     painter: Painter,
-    sourceCache: SourceCache,
+    tileManager: TileManager,
     tileIDs: Array<OverscaledTileID>,
     layer: HillshadeStyleLayer,
     depthMode: Readonly<DepthMode>,
@@ -104,7 +104,7 @@ function prepareHillshade(
     const gl = context.gl;
 
     for (const coord of tileIDs) {
-        const tile = sourceCache.getTile(coord);
+        const tile = tileManager.getTile(coord);
         const dem = tile.dem;
 
         if (!dem || !dem.data) {

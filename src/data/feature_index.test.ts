@@ -1,15 +1,13 @@
+import path from 'path';
+import {readFileSync} from 'fs';
 import {describe, expect, test} from 'vitest';
-import {FeatureIndex} from './feature_index';
+import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from './feature_index';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {OverscaledTileID} from '../source/tile_id';
-import {Tile} from '../source/tile';
+import {OverscaledTileID} from '../tile/tile_id';
 import {CircleStyleLayer} from '../style/style_layer/circle_style_layer';
-import type {VectorTileFeature} from '@mapbox/vector-tile';
 import Point from '@mapbox/point-geometry';
-import {CollisionBoxArray} from '../data/array_types.g';
-import {extend} from '../util/util';
-import {serialize, deserialize} from '../util/web_worker_transfer';
+import type {VectorTileFeature} from '@mapbox/vector-tile';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../style/evaluation_parameters';
 
@@ -41,26 +39,21 @@ describe('FeatureIndex', () => {
     });
 
     describe('query', () => {
-        const features = [
-            {
-                type: 1,
-                geometry: [0, 0],
-                tags: {cluster: true}
-            }  as any as Feature
-        ];
         const tileID = new OverscaledTileID(3, 0, 2, 1, 2);
-        const tile = new Tile(tileID, undefined);
-        const geojsonWrapper = new GeoJSONWrapper(features);
-        geojsonWrapper.name = '_geojsonTileLayer';
-        const rawTileData = fromVectorTileJs({layers: {'_geojsonTileLayer': geojsonWrapper}});
-        tile.loadVectorData(
-            createVectorData({rawTileData}),
-            createPainter()
-        );
         const transform = new MercatorTransform();
         transform.resize(500, 500);
 
         test('filter with global-state', () => {
+            const features = [
+                {
+                    type: 1,
+                    geometry: [0, 0],
+                    tags: {cluster: true}
+                }  as any as Feature
+            ];
+            const geojsonWrapper = new GeoJSONWrapper(features);
+            geojsonWrapper.name = GEOJSON_TILE_LAYER_NAME;
+            const rawTileData = fromVectorTileJs({layers: {[GEOJSON_TILE_LAYER_NAME]: geojsonWrapper}});
             const globalState = {isCluster: true};
             const layer = new CircleStyleLayer({source: 'source', paint: {}} as LayerSpecification, globalState);
             layer.recalculate({} as EvaluationParameters, []);
@@ -85,18 +78,29 @@ describe('FeatureIndex', () => {
             }, [], undefined);
             expect(result.layer[0].feature.properties).toEqual(features[0].tags);
         });
+
+        test('query mlt tile', () => {
+            const layer = new CircleStyleLayer({source: 'source', paint: {}} as LayerSpecification, {});
+            layer.recalculate({} as EvaluationParameters, []);
+            const featureIndex = new FeatureIndex(tileID);
+            const mltRawData = readFileSync(path.join(__dirname, '../../test/integration/assets/tiles/mlt/5/17/10.mlt')).buffer.slice(0) as ArrayBuffer;
+            featureIndex.rawTileData = mltRawData;
+            featureIndex.encoding = 'mlt';
+            featureIndex.bucketLayerIDs = [['layer']];
+            featureIndex.insert({} as any, [[new Point(1, 1)]], 0, 0, 0);
+            const result = featureIndex.query({
+                queryPadding: 0,
+                tileSize: 512,
+                scale: 1,
+                queryGeometry: [new Point(0, 0), new Point(0, 2000), new Point(2000, 2000), new Point(2000, 0), new Point(0 ,0)],
+                cameraQueryGeometry: [new Point(0, 0), new Point(10, 10)],
+                params: {},
+                transform
+            } as any, {
+                layer: layer,
+            }, [], undefined);
+            expect(result.layer[0].feature.properties.admin_level).toBeDefined();
+            expect(result.layer[0].feature.geometry.type).toBe('LineString');
+        });
     });
 });
-
-function createVectorData(options?) {
-    const collisionBoxArray = new CollisionBoxArray();
-    return extend({
-        collisionBoxArray: deserialize(serialize(collisionBoxArray)),
-        featureIndex: deserialize(serialize(new FeatureIndex(new OverscaledTileID(1, 0, 1, 1, 1)))),
-        buckets: []
-    }, options);
-}
-
-function createPainter(styleStub = {}) {
-    return {style: styleStub};
-}

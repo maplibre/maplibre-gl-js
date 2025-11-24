@@ -34,12 +34,13 @@ describe('setTerrain', () => {
         map.addSource('terrainrgb', {type: 'raster-dem', url: '/source.json'});
         server.respond();
         map.addLayer({id: 'hillshade', type: 'hillshade', source: 'terrainrgb'});
-        const stub = vi.spyOn(console, 'warn').mockImplementation(() => { });
-        stub.mockReset();
+        const originalWarn = console.warn;
+        console.warn = vi.fn();
         map.setTerrain({
             source: 'terrainrgb'
         });
         expect(console.warn).toHaveBeenCalledTimes(1);
+        console.warn = originalWarn;
     });
 });
 
