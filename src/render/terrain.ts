@@ -18,7 +18,7 @@ import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type LngLat, earthRadius} from '../geo/lng_lat';
 import {Mesh} from './mesh';
-import {isInBoundsForZoomLngLat} from '../util/world_bounds';
+import {isInBoundsForTileZoomXY, isInBoundsForZoomLngLat} from '../util/world_bounds';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision';
 
 /**
@@ -456,6 +456,9 @@ export class Terrain {
 
     getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
+        if (tileID === null) {
+            return 0;
+        }
         return this.getMinMaxElevation(tileID).minElevation ?? 0;
     }
 
@@ -477,13 +480,14 @@ export class Terrain {
         return minMax;
     }
 
-    _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): { tileID: OverscaledTileID; mercatorX: number; mercatorY: number} {
+    _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): { tileID: OverscaledTileID | null; mercatorX: number; mercatorY: number} {
         const mercatorCoordinate = MercatorCoordinate.fromLngLat(lnglat.wrap());
         const worldSize = (1 << zoom) * EXTENT;
         const mercatorX = mercatorCoordinate.x * worldSize;
         const mercatorY = mercatorCoordinate.y * worldSize;
         const tileX = Math.floor(mercatorX / EXTENT), tileY = Math.floor(mercatorY / EXTENT);
-        const tileID = new OverscaledTileID(zoom, 0, zoom, tileX, tileY);
+
+        const tileID = isInBoundsForTileZoomXY(zoom, tileX, tileY) ? new OverscaledTileID(zoom, 0, zoom, tileX, tileY) : null;
         return {
             tileID,
             mercatorX,
