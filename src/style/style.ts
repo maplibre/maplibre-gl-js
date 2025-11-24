@@ -515,7 +515,8 @@ export class Style extends Evented {
     _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined) {
         this.imageManager.setLoaded(false);
 
-        this._spriteRequest = new AbortController();
+        const abortController = new AbortController();
+        this._spriteRequest = abortController;
         let err: Error;
         loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), this._spriteRequest).then((images) => {
             this._spriteRequest = null;
@@ -550,7 +551,9 @@ export class Style extends Evented {
         }).catch((error) => {
             this._spriteRequest = null;
             err = error;
-            this.fire(new ErrorEvent(err));
+            if (!abortController.signal.aborted) { // ignore abort
+                this.fire(new ErrorEvent(err));
+            }
         }).finally(() => {
             this.imageManager.setLoaded(true);
             this._availableImages = this.imageManager.listImages();
