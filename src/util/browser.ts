@@ -4,6 +4,7 @@ import {subscribe} from './util';
 let linkEl;
 
 let reducedMotionQuery: MediaQueryList;
+let reducedMotionOverride: boolean | undefined;
 
 /** */
 export const browser = {
@@ -52,6 +53,7 @@ export const browser = {
     hardwareConcurrency: typeof navigator !== 'undefined' && navigator.hardwareConcurrency || 4,
 
     get prefersReducedMotion(): boolean {
+        if (reducedMotionOverride !== undefined) return reducedMotionOverride;
         // In case your test crashes when checking matchMedia, call setMatchMedia from 'src/util/test/util'
         if (!matchMedia) return false;
         //Lazily initialize media query
@@ -60,4 +62,8 @@ export const browser = {
         }
         return reducedMotionQuery.matches;
     },
+
+    set prefersReducedMotion(value: boolean) {
+        reducedMotionOverride = value;
+    }
 };

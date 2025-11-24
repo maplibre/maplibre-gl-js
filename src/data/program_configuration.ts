@@ -12,7 +12,7 @@ import {type Uniform, Uniform1f, UniformColor, Uniform4f} from '../render/unifor
 
 import type {UniformLocations} from '../render/uniform_binding';
 
-import type {CanonicalTileID} from '../source/tile_id';
+import type {CanonicalTileID} from '../tile/tile_id';
 import type {Context} from '../gl/context';
 import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
 import type {CrossfadeParameters} from '../style/evaluation_parameters';

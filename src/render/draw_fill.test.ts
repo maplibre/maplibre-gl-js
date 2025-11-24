@@ -1,8 +1,8 @@
 import {describe, test, expect, vi, type Mock} from 'vitest';
 import {mat4} from 'gl-matrix';
-import {OverscaledTileID} from '../source/tile_id';
-import {SourceCache} from '../source/source_cache';
-import {Tile} from '../source/tile';
+import {OverscaledTileID} from '../tile/tile_id';
+import {TileManager} from '../tile/tile_manager';
+import {Tile} from '../tile/tile';
 import {Painter, type RenderOptions} from './painter';
 import {Program} from './program';
 import type {ZoomHistory} from '../style/zoom_history';
@@ -19,8 +19,8 @@ import type {ProjectionData} from '../geo/projection/projection_data';
 
 vi.mock('./painter');
 vi.mock('./program');
-vi.mock('../source/source_cache');
-vi.mock('../source/tile');
+vi.mock('../tile/tile_manager');
+vi.mock('../tile/tile');
 
 vi.mock('../data/bucket/symbol_bucket', () => {
     return {
@@ -40,12 +40,12 @@ describe('drawFill', () => {
 
         const mockTile = constructMockTile(layer);
 
-        const sourceCacheMock = new SourceCache(null as any, null as any, null as any);
-        (sourceCacheMock.getTile as Mock).mockReturnValue(mockTile);
-        sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
+        const tileManagerMock = new TileManager(null as any, null as any, null as any);
+        (tileManagerMock.getTile as Mock).mockReturnValue(mockTile);
+        tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
-        drawFill(painterMock, sourceCacheMock, layer, [mockTile.tileID], renderOptions);
+        drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], renderOptions);
 
         // twice: first for fill, second for stroke
         expect(programMock.draw).toHaveBeenCalledTimes(2);

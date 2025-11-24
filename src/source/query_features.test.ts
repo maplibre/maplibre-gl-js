@@ -3,15 +3,15 @@ import {
     queryRenderedFeatures,
     querySourceFeatures
 } from './query_features';
-import {SourceCache} from './source_cache';
+import {TileManager} from '../tile/tile_manager';
 import type Point from '@mapbox/point-geometry';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 describe('QueryFeatures.rendered', () => {
     test('returns empty object if source returns no tiles', () => {
-        const mockSourceCache = {tilesIn () { return []; }} as any as SourceCache;
+        const mockTileManager = {tilesIn () { return []; }} as any as TileManager;
         const transform = new MercatorTransform();
-        const result = queryRenderedFeatures(mockSourceCache, {}, undefined, [] as Point[], undefined, transform, undefined);
+        const result = queryRenderedFeatures(mockTileManager, {}, undefined, [] as Point[], undefined, transform, undefined);
         expect(result).toEqual({});
     });
 
@@ -19,13 +19,13 @@ describe('QueryFeatures.rendered', () => {
 
 describe('QueryFeatures.source', () => {
     test('returns empty result when source has no features', () => {
-        const sourceCache = new SourceCache('test', {
+        const tileManager = new TileManager('test', {
             type: 'geojson',
             data: {type: 'FeatureCollection', features: []}
         }, {
             getActor() {}
         } as any);
-        const result = querySourceFeatures(sourceCache, {});
+        const result = querySourceFeatures(tileManager, {});
         expect(result).toEqual([]);
     });
 

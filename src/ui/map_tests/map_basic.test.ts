@@ -1,8 +1,8 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {Map, type MapOptions} from '../map';
 import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
-import {Tile} from '../../source/tile';
-import {OverscaledTileID} from '../../source/tile_id';
+import {Tile} from '../../tile/tile';
+import {OverscaledTileID} from '../../tile/tile_id';
 import {fixedLngLat} from '../../../test/unit/lib/fixed';
 import {type RequestTransformFunction, ResourceType} from '../../util/request_manager';
 import {type MapSourceDataEvent} from '../events';
@@ -137,9 +137,9 @@ describe('Map', () => {
             await map.once('load');
             const fakeTileId = new OverscaledTileID(0, 0, 0, 0, 0);
             map.addSource('geojson', createStyleSource());
-            map.style.sourceCaches.geojson._tiles[fakeTileId.key] = new Tile(fakeTileId, undefined);
+            map.style.tileManagers.geojson._tiles[fakeTileId.key] = new Tile(fakeTileId, undefined);
             expect(map.areTilesLoaded()).toBe(false);
-            map.style.sourceCaches.geojson._tiles[fakeTileId.key].state = 'loaded';
+            map.style.tileManagers.geojson._tiles[fakeTileId.key].state = 'loaded';
             expect(map.areTilesLoaded()).toBe(true);
         });
     });

@@ -3,7 +3,7 @@ import {Placement} from '../symbol/placement';
 import type {ITransform} from '../geo/transform_interface';
 import type {StyleLayer} from './style_layer';
 import type {SymbolStyleLayer} from './style_layer/symbol_style_layer';
-import type {Tile} from '../source/tile';
+import type {Tile} from '../tile/tile';
 import type {BucketPart} from '../symbol/placement';
 import type {Terrain} from '../render/terrain';
 

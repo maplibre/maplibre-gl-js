@@ -1,6 +1,6 @@
 import {mat4} from 'gl-matrix';
 import type Point from '@mapbox/point-geometry';
-import type {SourceCache} from './source_cache';
+import type {TileManager} from '../tile/tile_manager';
 import type {StyleLayer} from '../style/style_layer';
 import type {CollisionIndex} from '../symbol/collision_index';
 import type {IReadonlyTransform} from '../geo/transform_interface';
@@ -8,7 +8,7 @@ import type {RetainedQueryData} from '../symbol/placement';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {QueryResults, QueryResultsItem} from '../data/feature_index';
-import type {OverscaledTileID} from './tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 
 type RenderedFeatureLayer = {
     wrappedTileID: string;
@@ -115,7 +115,7 @@ function queryIncludes3DLayer(layers: Set<string> | undefined, styleLayers: {[_:
 }
 
 export function queryRenderedFeatures(
-    sourceCache: SourceCache,
+    tileManager: TileManager,
     styleLayers: {[_: string]: StyleLayer},
     serializedLayers: {[_: string]: any},
     queryGeometry: Array<Point>,
@@ -124,9 +124,9 @@ export function queryRenderedFeatures(
     getElevation: undefined | ((id: OverscaledTileID, x: number, y: number) => number)
 ): QueryRenderedFeaturesResults {
 
-    const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, sourceCache.id);
+    const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, tileManager.id);
     const maxPitchScaleFactor = transform.maxPitchScaleFactor();
-    const tilesIn = sourceCache.tilesIn(queryGeometry, maxPitchScaleFactor, has3DLayer);
+    const tilesIn = tileManager.tilesIn(queryGeometry, maxPitchScaleFactor, has3DLayer);
 
     tilesIn.sort(sortTilesIn);
     const renderedFeatureLayers: RenderedFeatureLayer[] = [];
@@ -136,14 +136,14 @@ export function queryRenderedFeatures(
             queryResults: tileIn.tile.queryRenderedFeatures(
                 styleLayers,
                 serializedLayers,
-                sourceCache._state,
+                tileManager.getState(),
                 tileIn.queryGeometry,
                 tileIn.cameraQueryGeometry,
                 tileIn.scale,
                 params,
                 transform,
                 maxPitchScaleFactor,
-                getPixelPosMatrix(sourceCache.transform, tileIn.tileID),
+                getPixelPosMatrix(transform, tileIn.tileID),
                 getElevation ? (x: number, y: number) => getElevation(tileIn.tileID, x, y) : undefined,
             )
         });
@@ -151,12 +151,12 @@ export function queryRenderedFeatures(
 
     const result = mergeRenderedFeatureLayers(renderedFeatureLayers);
 
-    return convertFeaturesToMapFeatures(result, sourceCache);
+    return convertFeaturesToMapFeatures(result, tileManager);
 }
 
 export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     serializedLayers: {[_: string]: StyleLayer},
-    sourceCaches: {[_: string]: SourceCache},
+    tileManagers: {[_: string]: TileManager},
     queryGeometry: Array<Point>,
     params: QueryRenderedFeaturesOptionsStrict,
     collisionIndex: CollisionIndex,
@@ -212,12 +212,12 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
         }
     }
 
-    return convertFeaturesToMapFeaturesMultiple(result, styleLayers, sourceCaches);
+    return convertFeaturesToMapFeaturesMultiple(result, styleLayers, tileManagers);
 }
 
-export function querySourceFeatures(sourceCache: SourceCache, params: QuerySourceFeatureOptionsStrict | undefined): GeoJSONFeature[] {
-    const tiles = sourceCache.getRenderableIds().map((id) => {
-        return sourceCache.getTileByID(id);
+export function querySourceFeatures(tileManager: TileManager, params: QuerySourceFeatureOptionsStrict | undefined): GeoJSONFeature[] {
+    const tiles = tileManager.getRenderableIds().map((id) => {
+        return tileManager.getTileByID(id);
     });
 
     const result: GeoJSONFeature[] = [];
@@ -265,31 +265,31 @@ function mergeRenderedFeatureLayers(tiles: RenderedFeatureLayer[]): QueryResults
     return result;
 }
 
-function convertFeaturesToMapFeatures(result: QueryResults, sourceCache: SourceCache): QueryRenderedFeaturesResults {
-    // Merge state from SourceCache into the results
+function convertFeaturesToMapFeatures(result: QueryResults, tileManager: TileManager): QueryRenderedFeaturesResults {
+    // Merge state from TileManager into the results
     for (const layerID in result) {
         for (const featureWrapper of result[layerID]) {
-            convertFeatureToMapFeature(featureWrapper, sourceCache);
+            convertFeatureToMapFeature(featureWrapper, tileManager);
         };
     }
     return result as QueryRenderedFeaturesResults;
 }
 
-function convertFeaturesToMapFeaturesMultiple(result: QueryResults, styleLayers: {[_: string]: StyleLayer}, sourceCaches: {[_: string]: SourceCache}): QueryRenderedFeaturesResults {
-    // Merge state from SourceCache into the results
+function convertFeaturesToMapFeaturesMultiple(result: QueryResults, styleLayers: {[_: string]: StyleLayer}, tileManagers: {[_: string]: TileManager}): QueryRenderedFeaturesResults {
+    // Merge state from TileManager into the results
     for (const layerName in result) {
         for (const featureWrapper of result[layerName]) {
             const layer = styleLayers[layerName];
-            const sourceCache = sourceCaches[layer.source];
-            convertFeatureToMapFeature(featureWrapper, sourceCache);
+            const tileManager = tileManagers[layer.source];
+            convertFeatureToMapFeature(featureWrapper, tileManager);
         };
     }
     return result as QueryRenderedFeaturesResults;
 }
 
-function convertFeatureToMapFeature(featureWrapper: QueryResultsItem, sourceCache: SourceCache) {
+function convertFeatureToMapFeature(featureWrapper: QueryResultsItem, tileManager: TileManager) {
     const feature = featureWrapper.feature as MapGeoJSONFeature;
-    const state = sourceCache.getFeatureState(feature.layer['source-layer'], feature.id);
+    const state = tileManager.getFeatureState(feature.layer['source-layer'], feature.id);
     feature.source = feature.layer.source;
     if (feature.layer['source-layer']) {
         feature.sourceLayer = feature.layer['source-layer'];

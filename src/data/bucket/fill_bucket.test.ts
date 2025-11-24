@@ -9,7 +9,7 @@ import {type EvaluationParameters} from '../../style/evaluation_parameters';
 import {type ZoomHistory} from '../../style/zoom_history';
 import {type BucketFeature, type BucketParameters} from '../bucket';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {CanonicalTileID} from '../../source/tile_id';
+import {CanonicalTileID} from '../../tile/tile_id';
 import {type VectorTileLayer} from '@mapbox/vector-tile';
 
 function createPolygon(numPoints) {

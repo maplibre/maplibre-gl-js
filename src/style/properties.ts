@@ -9,9 +9,11 @@ import {interpolates, type Color, type StylePropertySpecification, normalizeProp
 import {register} from '../util/web_worker_transfer';
 import {EvaluationParameters} from './evaluation_parameters';
 
-import {type CanonicalTileID} from '../source/tile_id';
+import {type CanonicalTileID} from '../tile/tile_id';
 
 type TimePoint = number;
+
+export const TRANSITION_SUFFIX = '-transition';
 
 /**
  * A from-to type
@@ -182,7 +184,7 @@ export class Transitionable<Props> {
 
             const transition = this.getTransition(property as keyof Props);
             if (transition !== undefined) {
-                result[`${property}-transition`] = transition;
+                result[`${property}${TRANSITION_SUFFIX}`] = transition;
             }
         }
         return result;
