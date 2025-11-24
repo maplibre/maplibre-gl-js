@@ -653,8 +653,6 @@ export class TransformHelper implements ITransformGetters {
             const camPixelX = centerPixelX + dxPixels;
             const camPixelY = centerPixelY + dyPixels;
             const camPixelZ = centerPixelZ + dzPixels;
-        console.log('center', centerPixelX, centerPixelY, centerPixelZ)
-        console.log('cam', camPixelX, camPixelY, camPixelZ)
         // const cameraMercator = new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
 
         // update elevation to the new terrain intercept elevation and recalculate the center point
@@ -690,7 +688,6 @@ export class TransformHelper implements ITransformGetters {
 
             // const center = centerMercator.toLngLat();
             const newCenterMercator = new MercatorCoordinate(xPixel * mercUnitsPerPixel, yPixel * mercUnitsPerPixel, zPixel * mercUnitsPerPixel);
-            console.log(newCenterMercator)
             const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / distanceToCenterMeters / mercUnitsPerMeter / this.tileSize);
 
         // update matrices
