@@ -1,11 +1,7 @@
-import {describe, test, expect, vi, beforeEach} from 'vitest';
+import {describe, test, expect} from 'vitest';
 import {createStyleLayer} from '../create_style_layer';
 import {extend} from '../../util/util';
 import {type LineStyleLayer} from './line_style_layer';
-import {type QueryIntersectsFeatureParams} from '../style_layer';
-import {MercatorTransform} from '../../geo/projection/mercator_transform';
-import Point from '@mapbox/point-geometry';
-import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 describe('LineStyleLayer', () => {
     function createLineLayer(layer?) {
