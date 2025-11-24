@@ -628,20 +628,75 @@ export class TransformHelper implements ITransformGetters {
     recalculateZoomAndCenter(elevation: number): void {
         if (this.elevation - elevation === 0) return;
 
+        // In the pixel coordinate determine the resultant camera position given the center and elevation
+        // then calculate what the center should be given that camera position ?
+
         // Find the current camera position
         const originalPixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
-        const cameraToCenterDistanceMeters = this.cameraToCenterDistance / originalPixelPerMeter;
-        const origCenterMercator = MercatorCoordinate.fromLngLat(this.center, this.elevation);
-        const cameraMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
+        // const cameraToCenterDistanceMeters = this.cameraToCenterDistance / originalPixelPerMeter;
+        const cameraToCenterDistancePixels = this.cameraToCenterDistance;
+    
+        // const origCenterMercator = MercatorCoordinate.fromLngLat(this.center, this.elevation);
+
+        // const cameraMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
+            let originalCenterMercator = MercatorCoordinate.fromLngLat(this.center, this.elevation);
+            const mercUnitsPerMeter = mercatorZfromAltitude(1, this.center.lat);
+            const mercUnitsPerPixel = mercUnitsPerMeter / originalPixelPerMeter;
+            const centerPixelX = originalCenterMercator.x / mercUnitsPerPixel;
+            const centerPixelY = originalCenterMercator.y / mercUnitsPerPixel;
+            const centerPixelZ = originalCenterMercator.z / mercUnitsPerPixel;
+            const dPixels = cameraToCenterDistancePixels;
+            const dzPixels = dPixels * Math.cos(degreesToRadians(this.pitch));
+            const dhPixels = Math.sqrt(dPixels * dPixels - dzPixels * dzPixels);
+            const dxPixels = dhPixels * Math.sin(degreesToRadians(-this.bearing));
+            const dyPixels = dhPixels * Math.cos(degreesToRadians(-this.bearing));
+            const camPixelX = centerPixelX + dxPixels;
+            const camPixelY = centerPixelY + dyPixels;
+            const camPixelZ = centerPixelZ + dzPixels;
+        console.log('center', centerPixelX, centerPixelY, centerPixelZ)
+        console.log('cam', camPixelX, camPixelY, camPixelZ)
+        // const cameraMercator = new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
 
         // update elevation to the new terrain intercept elevation and recalculate the center point
         this._elevation = elevation;
-        const centerInfo = this.calculateCenterFromCameraLngLatAlt(cameraMercator.toLngLat(), altitudeFromMercatorZ(cameraMercator.z, origCenterMercator.y), this.bearing, this.pitch);
+    
+        // const centerInfo = this.calculateCenterFromCameraLngLatAlt(cameraMercator.toLngLat(), altitudeFromMercatorZ(cameraMercator.z, origCenterMercator.y), this.bearing, this.pitch);
+            const cameraBearing = this.bearing;
+            const cameraPitch = this.pitch;
+            
+            const dzNormalized = -Math.cos(degreesToRadians(cameraPitch));
+            const dhNormalized = Math.sin(degreesToRadians(cameraPitch));
+            const dxNormalized = dhNormalized * Math.sin(degreesToRadians(cameraBearing));
+            const dyNormalized = -dhNormalized * Math.cos(degreesToRadians(cameraBearing));
+
+            const alt = (camPixelZ / originalPixelPerMeter);
+            const altitudeAGL = alt - elevation;
+            let distanceToCenterMeters;
+            if (dzNormalized * altitudeAGL >= 0.0 || Math.abs(dzNormalized) < 0.1) {
+                distanceToCenterMeters = 10000;
+                elevation = alt + distanceToCenterMeters * dzNormalized;
+            } else {
+                distanceToCenterMeters = -altitudeAGL / dzNormalized;
+            }
+
+            const distanceToCenterPixels = distanceToCenterMeters * originalPixelPerMeter;
+
+                const dxPixel = dxNormalized * distanceToCenterPixels;
+                const dyPixel = dyNormalized * distanceToCenterPixels;
+
+                const xPixel = camPixelX + dxPixel;
+                const yPixel = camPixelY + dyPixel;
+                const zPixel = elevation * originalPixelPerMeter;
+
+            // const center = centerMercator.toLngLat();
+            const newCenterMercator = new MercatorCoordinate(xPixel * mercUnitsPerPixel, yPixel * mercUnitsPerPixel, zPixel * mercUnitsPerPixel);
+            console.log(newCenterMercator)
+            const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / distanceToCenterMeters / mercUnitsPerMeter / this.tileSize);
 
         // update matrices
-        this._elevation = centerInfo.elevation;
-        this._center = centerInfo.center;
-        this.setZoom(centerInfo.zoom);
+        this._elevation = elevation;
+        this._center = newCenterMercator.toLngLat();
+        this.setZoom(zoom);
     }
 
     getCameraPoint(): Point {
