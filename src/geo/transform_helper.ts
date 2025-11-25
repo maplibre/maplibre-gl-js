@@ -624,11 +624,12 @@ export class TransformHelper implements ITransformGetters {
     recalculateZoomAndCenter(elevation: number): void {
         if (this.elevation - elevation === 0) return;
 
-        // Calculate in pixel coordinates to avoid instability at extreme latitudes with Mercator-LngLat.
+        // Stay in pixel coordinates to avoid instability at extreme latitudes with Mercator-LngLat.
         const mercUnitsPerMeter = mercatorZfromAltitude(1, this.center.lat);
         const pixelsPerMeter = mercUnitsPerMeter * this.worldSize;
         const mercUnitsPerPixel = 1 / this.worldSize;
 
+        // Get camera coordinates
         const originalCenterMercator = MercatorCoordinate.fromLngLat(this.center, this.elevation);
         const originalCenterPixelX = originalCenterMercator.x / mercUnitsPerPixel;
         const originalCenterPixelY = originalCenterMercator.y / mercUnitsPerPixel;
@@ -647,7 +648,7 @@ export class TransformHelper implements ITransformGetters {
         // Update elevation to the new terrain intercept elevation and recalculate the center point
         this._elevation = elevation;
     
-        // calculateCenterFromCameraLngLatAlt, but in pixel coordinates.
+        // Get updated center (like calculateCenterFromCameraLngLatAlt, but in pixel coordinates)
         const cameraBearing = this.bearing;
         const cameraPitch = this.pitch;
         const dzNormalized = -Math.cos(degreesToRadians(cameraPitch));
@@ -674,12 +675,12 @@ export class TransformHelper implements ITransformGetters {
         const yPixel = camPixelY + dyPixel;
         const zPixel = elevation * pixelsPerMeter;
 
-        const newCenterMercator = new MercatorCoordinate(xPixel * mercUnitsPerPixel, yPixel * mercUnitsPerPixel, zPixel * mercUnitsPerPixel);
+        const centerMercator = new MercatorCoordinate(xPixel * mercUnitsPerPixel, yPixel * mercUnitsPerPixel, zPixel * mercUnitsPerPixel);
         const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / distanceToCenterMeters / mercUnitsPerMeter / this.tileSize);
 
         // update matrices
         this._elevation = elevation;
-        this._center = newCenterMercator.toLngLat();
+        this._center = centerMercator.toLngLat();
         this.setZoom(zoom);
     }
 
