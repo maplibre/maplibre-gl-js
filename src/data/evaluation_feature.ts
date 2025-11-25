@@ -1,8 +1,7 @@
 import {loadGeometry} from './load_geometry';
 import type Point from '@mapbox/point-geometry';
-import type {VectorTileFeature} from '@mapbox/vector-tile';
 import type {Feature} from '@maplibre/maplibre-gl-style-spec';
-import {VectorTileFeatureLike} from '@maplibre/vt-pbf';
+import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 type EvaluationFeature = Feature & { geometry: Array<Array<Point>> };
 /**
