@@ -263,6 +263,24 @@ describe('transform', () => {
         expect(transform.zoom).toBe(14);
     });
 
+    test('recalculateZoomAndCenter: small elevation change at extreme latitude does not drastically shift center', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.setElevation(200);
+        transform.setPitch(60);
+        transform.setZoom(3);
+        transform.setCenter(new LngLat(0, 82));
+        transform.resize(512, 512);
+
+        expect(transform.center.lat).toBeCloseTo(82, 10);
+
+        const terrain = {
+            getElevationForLngLatZoom: () => 200 + 1,
+            pointCoordinate: () => null
+        };
+        transform.recalculateZoomAndCenter(terrain as any);
+        expect(transform.center.lat).toBeCloseTo(82, 4);
+    });
+
     test('recalculateZoomAndCenter: elevation increase', () => {
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setElevation(200);
