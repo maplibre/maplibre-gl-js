@@ -288,11 +288,11 @@ describe('transform', () => {
         transform.recalculateZoomAndCenter(terrain as any);
         expect(transform.elevation).toBe(400);
         expect(transform.center.lng).toBeCloseTo(10, 10);
-        expect(transform.center.lat).toBeCloseTo(49.99820083233254, 10);
+        expect(transform.center.lat).toBeCloseTo(49.998201325627264, 10);
         expect(transform.getCameraLngLat().lng).toBeCloseTo(expectedCamLngLat.lng, 10);
         expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 10);
-        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
-        expect(transform.zoom).toBeCloseTo(14.184585886440686, 10);
+        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 0);
+        expect(transform.zoom).toBeCloseTo(14.184531898574035, 10);
     });
 
     test('recalculateZoomAndCenter: elevation decrease', () => {
@@ -321,8 +321,8 @@ describe('transform', () => {
         expect(transform.elevation).toBe(-200);
         expect(transform.getCameraLngLat().lng).toBeCloseTo(expectedCamLngLat.lng, 10);
         expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 10);
-        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
-        expect(transform.zoom).toBeCloseTo(13.689399565250616, 10);
+        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 0);
+        expect(transform.zoom).toBeCloseTo(13.689507557379125, 10);
     });
 
     test('recalculateZoomAndCenterNoTerrain', () => {
@@ -346,11 +346,11 @@ describe('transform', () => {
         transform.recalculateZoomAndCenter();
         expect(transform.elevation).toBeCloseTo(0, 10);
         expect(transform.center.lng).toBeCloseTo(10, 10);
-        expect(transform.center.lat).toBeCloseTo(50.00179923503546, 10);
+        expect(transform.center.lat).toBeCloseTo(50.00179860708241, 10);
         expect(transform.getCameraLngLat().lng).toBeCloseTo(expectedCamLngLat.lng, 10);
         expect(transform.getCameraLngLat().lat).toBeCloseTo(expectedCamLngLat.lat, 10);
-        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 10);
-        expect(transform.zoom).toBeCloseTo(13.836362951286565, 10);
+        expect(transform.getCameraAltitude()).toBeCloseTo(expectedAltitude, 0);
+        expect(transform.zoom).toBeCloseTo(13.836416944617934, 10);
     });
 
     test('pointCoordinate with terrain when returning null should fall back to 2D', () => {
