@@ -15,7 +15,7 @@ import type {Dispatcher} from '../util/dispatcher';
 import type {RequestManager} from '../util/request_manager';
 import type {Actor} from '../util/actor';
 import type {MapSourceDataEvent} from '../ui/events';
-import type {GeoJSONSourceDiff} from './geojson_source_diff';
+import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 
 const wrapDispatcher = (dispatcher) => {
@@ -753,7 +753,7 @@ describe('GeoJSONSource.updateData', () => {
         source.setData(data1);
 
         // Queue a setData
-        const data2 = {type: 'FeatureCollection', features: [{type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}]} satisfies GeoJSON.GeoJSON;
+        const data2: UpdateableGeoJSON = {type: 'FeatureCollection', features: [{id: '1', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}]};
         source.setData(data2);
 
         // Queue an updateData
@@ -785,6 +785,24 @@ describe('GeoJSONSource.updateData', () => {
         }), undefined);
         const result = source.updateData({add: []} as GeoJSONSourceDiff, true);
         expect(result).toBeInstanceOf(Promise);
+    });
+
+    test('throws error when updating data that is not compatible with updateData', async () => {
+        const initialData: GeoJSON.FeatureCollection = {
+            type: 'FeatureCollection',
+            features: [
+                {type: 'Feature', properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}},
+            ]
+        };
+
+        const source = new GeoJSONSource('id', {data: initialData} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.load();
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        const errorPromise = waitForEvent(source, 'error', () => true);
+        source.updateData({add: [{type: 'Feature', id: 1, properties: {}, geometry: {type: 'Point', coordinates: [1, 1]}}]});
+        const error = await errorPromise;
+        expect(error.error.message).toBe('GeoJSONSource "id": GeoJSON data is not compatible with updateData');
     });
 });
 
@@ -900,17 +918,9 @@ describe('GeoJSONSource.applyDiff', () => {
             ]
         };
 
-        vi.spyOn(mockDispatcher.getActor(), 'sendAsync').mockImplementation(() => {
-            return Promise.resolve({data: initialData});
-        });
-
         const source = new GeoJSONSource('id', {data: initialData} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.load();
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-
-        vi.spyOn(mockDispatcher.getActor(), 'sendAsync').mockImplementation(() => {
-            return Promise.resolve({applyDiff: true});
-        });
 
         const diff: GeoJSONSourceDiff = {
             update: [{id: 0, newGeometry: {type: 'Point', coordinates: [0, 1]}}]
