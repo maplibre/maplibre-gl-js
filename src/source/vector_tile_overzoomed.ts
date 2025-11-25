@@ -1,7 +1,7 @@
 import {type VectorTile, VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import Point from '@mapbox/point-geometry';
-import {type VectorTileFeatureLike, VectorTileLayerLike, VectorTileLike, fromVectorTileJs} from '@maplibre/vt-pbf';
+import {type VectorTileFeatureLike, type VectorTileLayerLike, type VectorTileLike, fromVectorTileJs} from '@maplibre/vt-pbf';
 import {clipGeometry} from '../symbol/clip_line';
 import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {CanonicalTileID} from '../tile/tile_id';

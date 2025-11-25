@@ -1,9 +1,9 @@
-import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 import {warnOnce, clamp} from '../util/util';
 
 import {EXTENT} from './extent';
 
 import type Point from '@mapbox/point-geometry';
+import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 // These bounds define the minimum and maximum supported coordinate values.
 // While visible coordinates are within [0, EXTENT], tiles may theoretically
