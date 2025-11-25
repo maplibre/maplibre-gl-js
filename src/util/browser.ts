@@ -1,4 +1,4 @@
-import {createAbortError} from './abort_error';
+import {AbortError} from './abort_error';
 import {subscribe} from './util';
 
 let linkEl;
@@ -17,7 +17,7 @@ export const browser = {
         const {unsubscribe} = subscribe(abortController.signal, 'abort', () => {
             unsubscribe();
             cancelAnimationFrame(frameId);
-            reject(createAbortError());
+            reject(new AbortError(abortController.signal.reason));
         }, false);
     },
 

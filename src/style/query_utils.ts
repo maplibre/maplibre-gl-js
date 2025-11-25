@@ -57,25 +57,41 @@ export function translate(queryGeometry: Array<Point>,
     return translated;
 }
 
+/**
+ * Filter out consecutive duplicate points from a line
+ */
+function _stripDuplicates(ring: Array<Point>): Array<Point> {
+    const filteredRing: Array<Point> = [];
+    for (let index = 0; index < ring.length; index++) {
+        const point = ring[index];
+        const prevPoint = filteredRing.at(-1);
+        if (index === 0 || (prevPoint && !(point.equals(prevPoint)))) {
+            filteredRing.push(point);
+        }
+    }
+    return filteredRing;
+}
+
 export function offsetLine(rings: Array<Array<Point>>, offset: number) {
     const newRings: Array<Array<Point>> = [];
     for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
-        const ring = rings[ringIndex];
+        const ring = _stripDuplicates(rings[ringIndex]);
         const newRing: Array<Point> = [];
         for (let index = 0; index < ring.length; index++) {
-            const a = ring[index - 1];
-            const b = ring[index];
-            const c = ring[index + 1];
-            const aToB = index === 0 ? new Point(0, 0) : b.sub(a)._unit()._perp();
-            const bToC = index === ring.length - 1 ? new Point(0, 0) : c.sub(b)._unit()._perp();
-            const extrude = aToB._add(bToC)._unit();
-
-            const cosHalfAngle = extrude.x * bToC.x + extrude.y * bToC.y;
+            const point = ring[index];
+            const prevPoint = ring[index - 1];
+            const nextPoint = ring[index + 1];
+            // perpendicular unit vectors (outward unit normal vector):
+            // these indicate which direction the segments should be offset in
+            const unitNormalAB: Point = index === 0 ? new Point(0, 0) : point.sub(prevPoint)._unit()._perp();
+            const unitNormalBC: Point = index === ring.length - 1 ? new Point(0, 0) : nextPoint.sub(point)._unit()._perp();
+            // unit bisector direction
+            const bisectorDir = unitNormalAB._add(unitNormalBC)._unit();
+            const cosHalfAngle = bisectorDir.x * unitNormalBC.x + bisectorDir.y * unitNormalBC.y;
             if (cosHalfAngle !== 0) {
-                extrude._mult(1 / cosHalfAngle);
+                bisectorDir._mult(1 / cosHalfAngle);
             }
-
-            newRing.push(extrude._mult(offset)._add(b));
+            newRing.push(bisectorDir._mult(offset)._add(point));
         }
         newRings.push(newRing);
     }
