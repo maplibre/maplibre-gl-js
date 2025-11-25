@@ -1,9 +1,9 @@
+import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 import {warnOnce, clamp} from '../util/util';
 
 import {EXTENT} from './extent';
 
 import type Point from '@mapbox/point-geometry';
-import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 // These bounds define the minimum and maximum supported coordinate values.
 // While visible coordinates are within [0, EXTENT], tiles may theoretically
@@ -18,7 +18,7 @@ const MIN = -MAX - 1;
  * used internally.
  * @param feature - the vector tile feature to load
  */
-export function loadGeometry(feature: VectorTileFeature): Array<Array<Point>> {
+export function loadGeometry(feature: VectorTileFeatureLike): Array<Array<Point>> {
     const scale = EXTENT / feature.extent;
     const geometry = feature.loadGeometry();
     for (let r = 0; r < geometry.length; r++) {

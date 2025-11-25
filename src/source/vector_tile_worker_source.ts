@@ -16,9 +16,10 @@ import type {
 import type {IActor} from '../util/actor';
 import type {StyleLayer} from '../style/style_layer';
 import type {StyleLayerIndex} from '../style/style_layer_index';
+import type {VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
 
 export type LoadVectorTileResult = {
-    vectorTile: VectorTile;
+    vectorTile: VectorTileLike;
     rawData: ArrayBufferLike;
     resourceTiming?: Array<PerformanceResourceTiming>;
 } & ExpiryData;
@@ -165,13 +166,13 @@ export class VectorTileWorkerSource implements WorkerSource {
      * @param maxZoomVectorTile - the original vector tile at the source's max available canonical zoom
      * @returns the overzoomed tile and its raw data
      */
-    private _getOverzoomTile(params: WorkerTileParameters, maxZoomVectorTile: VectorTile): LoadVectorTileResult {
+    private _getOverzoomTile(params: WorkerTileParameters, maxZoomVectorTile: VectorTileLike): LoadVectorTileResult {
         const {tileID, source, overzoomParameters} = params;
         const {maxZoomTileID} = overzoomParameters;
 
         const cacheKey = `${maxZoomTileID.key}_${tileID.key}`;
         const cachedOverzoomTile = this.overzoomedTileResultCache.get(cacheKey);
-        
+
         if (cachedOverzoomTile) {
             return cachedOverzoomTile;
         }
@@ -180,7 +181,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         const layerFamilies: Record<string, StyleLayer[][]> = this.layerIndex.familiesBySource[source];
 
         for (const sourceLayerId in layerFamilies) {
-            const sourceLayer: VectorTileLayer = maxZoomVectorTile.layers[sourceLayerId];
+            const sourceLayer: VectorTileLayerLike = maxZoomVectorTile.layers[sourceLayerId];
             if (!sourceLayer) {
                 continue;
             }

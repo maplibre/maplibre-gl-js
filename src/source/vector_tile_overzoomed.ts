@@ -1,7 +1,7 @@
 import {type VectorTile, VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import Point from '@mapbox/point-geometry';
-import {fromVectorTileJs} from '@maplibre/vt-pbf';
+import {type VectorTileFeatureLike, VectorTileLayerLike, VectorTileLike, fromVectorTileJs} from '@maplibre/vt-pbf';
 import {clipGeometry} from '../symbol/clip_line';
 import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {CanonicalTileID} from '../tile/tile_id';
@@ -60,7 +60,7 @@ export class VectorTileOverzoomed implements VectorTile {
  * @param virtualVectorTile - a syntetically created vector tile, this tile should have the relevant layer and features already added to it.
  * @returns - the encoded vector tile along with the original virtual tile binary data.
  */
-export function toVirtualVectorTile(virtualVectorTile: VectorTile): LoadVectorTileResult {
+export function toVirtualVectorTile(virtualVectorTile: VectorTileLike): LoadVectorTileResult {
     let pbf: Uint8Array = fromVectorTileJs(virtualVectorTile);
     if (pbf.byteOffset !== 0 || pbf.byteLength !== pbf.buffer.byteLength) {
         pbf = new Uint8Array(pbf);  // Compatibility with node Buffer (https://github.com/mapbox/pbf/issues/35)
@@ -78,7 +78,7 @@ export function toVirtualVectorTile(virtualVectorTile: VectorTile): LoadVectorTi
  * @param targetTileID - the target tile ID
  * @returns - the overzoomed tile layer
  */
-export function sliceVectorTileLayer(sourceLayer: VectorTileLayer, maxZoomTileID: CanonicalTileID, targetTileID: CanonicalTileID): VectorTileLayerOverzoomed {
+export function sliceVectorTileLayer(sourceLayer: VectorTileLayerLike, maxZoomTileID: CanonicalTileID, targetTileID: CanonicalTileID): VectorTileLayerOverzoomed {
     const {extent} = sourceLayer;
     const dz = targetTileID.z - maxZoomTileID.z;
     const scale = Math.pow(2, dz);
@@ -90,7 +90,7 @@ export function sliceVectorTileLayer(sourceLayer: VectorTileLayer, maxZoomTileID
 
     const featureWrappers: VectorTileFeatureOverzoomed[] = [];
     for (let index = 0; index < sourceLayer.length; index++) {
-        const feature: VectorTileFeature = sourceLayer.feature(index);
+        const feature: VectorTileFeatureLike = sourceLayer.feature(index);
         let geometry = feature.loadGeometry();
         
         // Transform all coordinates to target tile space

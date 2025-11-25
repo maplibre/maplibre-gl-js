@@ -24,6 +24,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
+import {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 /**
  * This is the default layer name for a geojson source,
@@ -89,7 +90,7 @@ export class FeatureIndex {
         this.promoteId = promoteId;
     }
 
-    insert(feature: VectorTileFeature, geometry: Array<Array<Point>>, featureIndex: number, sourceLayerIndex: number, bucketIndex: number, is3D?: boolean) {
+    insert(feature: VectorTileFeatureLike, geometry: Array<Array<Point>>, featureIndex: number, sourceLayerIndex: number, bucketIndex: number, is3D?: boolean) {
         const key = this.featureIndexArray.length;
         this.featureIndexArray.emplaceBack(featureIndex, sourceLayerIndex, bucketIndex);
 
@@ -216,7 +217,7 @@ export class FeatureIndex {
         serializedLayers: {[_: string]: any},
         sourceFeatureState?: SourceFeatureState,
         intersectionTest?: (
-            feature: VectorTileFeature,
+            feature: VectorTileFeatureLike,
             styleLayer: StyleLayer,
             featureState: any,
             id: string | number | void
@@ -324,7 +325,7 @@ export class FeatureIndex {
         return false;
     }
 
-    getId(feature: VectorTileFeature, sourceLayerId: string): string | number {
+    getId(feature: VectorTileFeatureLike, sourceLayerId: string): string | number {
         let id: string | number = feature.id;
         if (this.promoteId) {
             const propName = typeof this.promoteId === 'string' ? this.promoteId : this.promoteId[sourceLayerId];

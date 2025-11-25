@@ -2,6 +2,7 @@ import {loadGeometry} from './load_geometry';
 import type Point from '@mapbox/point-geometry';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 import type {Feature} from '@maplibre/maplibre-gl-style-spec';
+import {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 type EvaluationFeature = Feature & { geometry: Array<Array<Point>> };
 /**
@@ -10,7 +11,7 @@ type EvaluationFeature = Feature & { geometry: Array<Array<Point>> };
  * @param feature - the feature to evaluate
  * @param needGeometry - if set to true this will load the geometry
  */
-export function toEvaluationFeature(feature: VectorTileFeature, needGeometry: boolean): EvaluationFeature {
+export function toEvaluationFeature(feature: VectorTileFeatureLike, needGeometry: boolean): EvaluationFeature {
     return {type: feature.type,
         id: feature.id,
         properties: feature.properties,

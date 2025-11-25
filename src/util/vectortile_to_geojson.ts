@@ -1,5 +1,6 @@
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 /**
  * A helper for type to omit a property from a type
@@ -31,9 +32,9 @@ export class GeoJSONFeature {
     properties: { [name: string]: any };
     id: number | string | undefined;
 
-    _vectorTileFeature: VectorTileFeature;
+    _vectorTileFeature: VectorTileFeatureLike;
 
-    constructor(vectorTileFeature: VectorTileFeature, z: number, x: number, y: number, id: string | number | undefined) {
+    constructor(vectorTileFeature: VectorTileFeatureLike, z: number, x: number, y: number, id: string | number | undefined) {
         this.type = 'Feature';
 
         this._vectorTileFeature = vectorTileFeature;
