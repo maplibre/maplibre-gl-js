@@ -70,8 +70,8 @@ export class VectorTileWorkerSource implements WorkerSource {
     async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
         const response = await getArrayBuffer(params.request, abortController);
         try {
-            const vectorTile = params.encoding !== 'mlt'
-                ? new VectorTile(new Protobuf(response.data))
+            const vectorTile = params.encoding !== 'mlt' 
+                ? new VectorTile(new Protobuf(response.data)) 
                 : new MLTVectorTile(response.data);
             return {
                 vectorTile,
