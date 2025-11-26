@@ -1,3 +1,5 @@
+import type Point from '@mapbox/point-geometry';
+import {classifyRings} from '@mapbox/vector-tile';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
@@ -30,6 +32,9 @@ export class GeoJSONFeature {
     _geometry: GeoJSON.Geometry;
     properties: { [name: string]: any };
     id: number | string | undefined;
+    x: number;
+    y: number;
+    z: number;
 
     _vectorTileFeature: VectorTileFeatureLike;
 
@@ -37,22 +42,69 @@ export class GeoJSONFeature {
         this.type = 'Feature';
 
         this._vectorTileFeature = vectorTileFeature;
-        (vectorTileFeature as any)._z = z;
-        (vectorTileFeature as any)._x = x;
-        (vectorTileFeature as any)._y = y;
 
         this.properties = vectorTileFeature.properties;
         this.id = id;
+
+        this.x = x;
+        this.y = y;
+        this.z = z;
     }
 
+    // Copied from https://github.com/mapbox/vector-tile-js/blob/f1457ee47d0a261e6246d68c959fbd12bf56aeeb/index.js
     get geometry(): GeoJSON.Geometry {
-        if (this._geometry === undefined) {
-            this._geometry = this._vectorTileFeature.toGeoJSON(
-                (this._vectorTileFeature as any)._x,
-                (this._vectorTileFeature as any)._y,
-                (this._vectorTileFeature as any)._z).geometry;
+        const feature = this._vectorTileFeature;
+
+        const size = feature.extent * Math.pow(2, this.z),
+            x0 = feature.extent * this.x,
+            y0 = feature.extent * this.y,
+            vtCoords = feature.loadGeometry();
+
+        function projectPoint(p: Point) {
+            return [
+                (p.x + x0) * 360 / size - 180,
+                360 / Math.PI * Math.atan(Math.exp((1 - (p.y + y0) * 2 / size) * Math.PI)) - 90
+            ];
         }
-        return this._geometry;
+
+        function projectLine(line: Point[]) {
+            return line.map(projectPoint);
+        }
+
+        let geometry: GeoJSON.Geometry;
+
+        if (feature.type === 1) {
+            const points = [];
+            for (const line of vtCoords) {
+                points.push(line[0]);
+            }
+            const coordinates = projectLine(points);
+            geometry = points.length === 1 ?
+                {type: 'Point', coordinates: coordinates[0]} :
+                {type: 'MultiPoint', coordinates};
+
+        } else if (feature.type === 2) {
+
+            const coordinates = vtCoords.map(projectLine);
+            geometry = coordinates.length === 1 ?
+                {type: 'LineString', coordinates: coordinates[0]} :
+                {type: 'MultiLineString', coordinates};
+
+        } else if (feature.type === 3) {
+            const polygons = classifyRings(vtCoords);
+            const coordinates = [];
+            for (const polygon of polygons) {
+                coordinates.push(polygon.map(projectLine));
+            }
+            geometry = coordinates.length === 1 ?
+                {type: 'Polygon', coordinates: coordinates[0]} :
+                {type: 'MultiPolygon', coordinates};
+        } else {
+
+            throw new Error('unknown feature type');
+        }
+
+        return geometry;
     }
 
     set geometry(g: GeoJSON.Geometry) {

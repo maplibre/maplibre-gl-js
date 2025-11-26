@@ -24,7 +24,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
-import {VectorTileFeatureLike} from '@maplibre/vt-pbf';
+import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 /**
  * This is the default layer name for a geojson source,
