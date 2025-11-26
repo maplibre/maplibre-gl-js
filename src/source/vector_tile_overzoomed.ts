@@ -1,4 +1,3 @@
-import {type VectorTile, VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import Point from '@mapbox/point-geometry';
 import {type VectorTileFeatureLike, type VectorTileLayerLike, type VectorTileLike, fromVectorTileJs} from '@maplibre/vt-pbf';
@@ -6,11 +5,15 @@ import {clipGeometry} from '../symbol/clip_line';
 import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {CanonicalTileID} from '../tile/tile_id';
 
-class VectorTileFeatureOverzoomed extends VectorTileFeature {
+class VectorTileFeatureOverzoomed implements VectorTileFeatureLike {
     pointsArray: Point[][];
 
-    constructor(type: 0 | 1 | 2 | 3, geometry: Point[][], properties: any, id: number, extent: number) {
-        super(new Protobuf(), 0, extent, [], []);
+    type: 0 | 1 | 2 | 3;
+    properties: Record<string, string | number | boolean>;
+    id: number;
+    extent: number;
+
+    constructor(type: 0 | 1 | 2 | 3, geometry: Point[][], properties: Record<string, string | number | boolean>, id: number, extent: number) {
         this.type = type;
         this.properties = properties ? properties : {};
         this.extent = extent;
@@ -26,7 +29,7 @@ class VectorTileFeatureOverzoomed extends VectorTileFeature {
     }
 }
 
-class VectorTileLayerOverzoomed extends VectorTileLayer {
+class VectorTileLayerOverzoomed implements VectorTileLayerLike {
     private _myFeatures: VectorTileFeatureOverzoomed[];
     name: string;
     extent: number;
@@ -34,20 +37,19 @@ class VectorTileLayerOverzoomed extends VectorTileLayer {
     length: number;
 
     constructor(features: VectorTileFeatureOverzoomed[], layerName: string, extent: number) {
-        super(new Protobuf());
         this._myFeatures = features;
         this.name = layerName;
         this.length = features.length;
         this.extent = extent;
     }
 
-    feature(i: number): VectorTileFeature {
+    feature(i: number): VectorTileFeatureLike {
         return this._myFeatures[i];
     }
 }
 
-export class VectorTileOverzoomed implements VectorTile {
-    layers: Record<string, VectorTileLayer> = {};
+export class VectorTileOverzoomed implements VectorTileLike {
+    layers: Record<string, VectorTileLayerLike> = {};
 
     addLayer(layer: VectorTileLayerOverzoomed) {
         this.layers[layer.name] = layer;

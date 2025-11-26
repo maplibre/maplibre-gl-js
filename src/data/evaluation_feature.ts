@@ -5,7 +5,7 @@ import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 type EvaluationFeature = Feature & { geometry: Array<Array<Point>> };
 /**
- * Construct a new feature based on a VectorTileFeature for expression evaluation, the geometry of which
+ * Construct a new feature based on a VectorTileFeatureLike for expression evaluation, the geometry of which
  * will be loaded based on necessity.
  * @param feature - the feature to evaluate
  * @param needGeometry - if set to true this will load the geometry

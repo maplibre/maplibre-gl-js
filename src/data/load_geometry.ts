@@ -14,7 +14,7 @@ const MAX = Math.pow(2, BITS - 1) - 1;
 const MIN = -MAX - 1;
 
 /**
- * Loads a geometry from a VectorTileFeature and scales it to the common extent
+ * Loads a geometry from a VectorTileFeatureLike and scales it to the common extent
  * used internally.
  * @param feature - the vector tile feature to load
  */
