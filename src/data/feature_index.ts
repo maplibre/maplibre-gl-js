@@ -23,15 +23,10 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
+import {type VectorTileFeatureLike, type VectorTileLayerLike, GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 
-/**
- * This is the default layer name for a geojson source,
- * as this source is not a real vector source, but a vector source needs layers, 
- * so this is default name for it.
- */
-export const GEOJSON_TILE_LAYER_NAME = '_geojsonTileLayer';
+export {GEOJSON_TILE_LAYER_NAME};
 
 type QueryParameters = {
     scale: number;
@@ -119,7 +114,7 @@ export class FeatureIndex {
 
     loadVTLayers(): {[_: string]: VectorTileLayerLike} {
         if (!this.vtLayers) {
-            this.vtLayers = this.encoding !== 'mlt' 
+            this.vtLayers = this.encoding !== 'mlt'
                 ? new VectorTile(new Protobuf(this.rawTileData)).layers
                 : new MLTVectorTile(this.rawTileData).layers;
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : [GEOJSON_TILE_LAYER_NAME]);
