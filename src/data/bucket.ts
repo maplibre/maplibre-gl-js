@@ -35,9 +35,9 @@ export type PopulateParameters = {
 
 export type IndexedFeature = {
     feature: VectorTileFeatureLike;
-    id?: number | string;
+    id: number | string;
     index: number;
-    sourceLayerIndex?: number;
+    sourceLayerIndex: number;
 };
 
 export type BucketFeature = {

@@ -24,7 +24,7 @@ export function loadVectorTile(name = 'mbsv5-6-18-23.vector.pbf'): VectorTile {
 export function getFeaturesFromLayer(sourceLayer: VectorTileLayerLike): Array<IndexedFeature> {
     const features = new Array<IndexedFeature>(sourceLayer.length);
     for (let i = 0; i < sourceLayer.length; i++) {
-        features[i] = {feature: sourceLayer.feature(i), index: i};
+        features[i] = {feature: sourceLayer.feature(i), index: i} as unknown as IndexedFeature;
     }
     return features;
 }
