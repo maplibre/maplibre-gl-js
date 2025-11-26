@@ -1,4 +1,3 @@
-import Protobuf from 'pbf';
 import Point from '@mapbox/point-geometry';
 import {type VectorTileFeatureLike, type VectorTileLayerLike, type VectorTileLike, fromVectorTileJs} from '@maplibre/vt-pbf';
 import {clipGeometry} from '../symbol/clip_line';
@@ -7,13 +6,18 @@ import type {CanonicalTileID} from '../tile/tile_id';
 
 class VectorTileFeatureOverzoomed implements VectorTileFeatureLike {
     pointsArray: Point[][];
+    type: VectorTileFeatureLike['type'];
+    properties: VectorTileFeatureLike['properties'];
+    id: VectorTileFeatureLike['id'];
+    extent: VectorTileFeatureLike['extent'];
 
-    type: 0 | 1 | 2 | 3;
-    properties: Record<string, string | number | boolean>;
-    id: number;
-    extent: number;
-
-    constructor(type: 0 | 1 | 2 | 3, geometry: Point[][], properties: Record<string, string | number | boolean>, id: number, extent: number) {
+    constructor(
+        type: VectorTileFeatureLike['type'],
+        geometry: Point[][],
+        properties: VectorTileFeatureLike['properties'],
+        id: VectorTileFeatureLike['id'],
+        extent: VectorTileFeatureLike['extent']
+    ) {
         this.type = type;
         this.properties = properties ? properties : {};
         this.extent = extent;
