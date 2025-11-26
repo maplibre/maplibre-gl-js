@@ -52,7 +52,7 @@ class MLTVectorTileLayer implements VectorTileLayerLike {
     version: number;
     extent: number;
     features: MLTFeature[] = [];
-
+    
     constructor(featureTable: FeatureTable) {
         this.featureTable = featureTable;
         this.name = featureTable.name;
