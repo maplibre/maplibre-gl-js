@@ -52,6 +52,8 @@ export class GeoJSONFeature {
 
     // Copied from https://github.com/mapbox/vector-tile-js/blob/f1457ee47d0a261e6246d68c959fbd12bf56aeeb/index.js
     get geometry(): GeoJSON.Geometry {
+        if (this._geometry) return this._geometry;
+
         const feature = this._vectorTileFeature;
 
         const size = feature.extent * Math.pow(2, this.z),
@@ -70,22 +72,20 @@ export class GeoJSONFeature {
             return line.map(projectPoint);
         }
 
-        let geometry: GeoJSON.Geometry;
-
         if (feature.type === 1) {
             const points = [];
             for (const line of vtCoords) {
                 points.push(line[0]);
             }
             const coordinates = projectLine(points);
-            geometry = points.length === 1 ?
+            this._geometry = points.length === 1 ?
                 {type: 'Point', coordinates: coordinates[0]} :
                 {type: 'MultiPoint', coordinates};
 
         } else if (feature.type === 2) {
 
             const coordinates = vtCoords.map(projectLine);
-            geometry = coordinates.length === 1 ?
+            this._geometry = coordinates.length === 1 ?
                 {type: 'LineString', coordinates: coordinates[0]} :
                 {type: 'MultiLineString', coordinates};
 
@@ -95,7 +95,7 @@ export class GeoJSONFeature {
             for (const polygon of polygons) {
                 coordinates.push(polygon.map(projectLine));
             }
-            geometry = coordinates.length === 1 ?
+            this._geometry = coordinates.length === 1 ?
                 {type: 'Polygon', coordinates: coordinates[0]} :
                 {type: 'MultiPolygon', coordinates};
         } else {
@@ -103,7 +103,7 @@ export class GeoJSONFeature {
             throw new Error('unknown feature type');
         }
 
-        return geometry;
+        return this._geometry;
     }
 
     set geometry(g: GeoJSON.Geometry) {
