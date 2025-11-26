@@ -5,7 +5,6 @@ import {EXTENT} from './extent';
 import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
 import {TransferableGridIndex} from '../util/transferable_grid_index';
 import {DictionaryCoder} from '../util/dictionary_coder';
-import {type VectorTileLayer, type VectorTileFeature, VectorTile} from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import {GeoJSONFeature} from '../util/vectortile_to_geojson';
 import {mapObject, extend} from '../util/util';
@@ -24,7 +23,8 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
+import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
+import {VectorTile} from '@mapbox/vector-tile';
 
 /**
  * This is the default layer name for a geojson source,
@@ -76,7 +76,7 @@ export class FeatureIndex {
     rawTileData: ArrayBuffer;
     bucketLayerIDs: Array<Array<string>>;
 
-    vtLayers: {[_: string]: VectorTileLayer};
+    vtLayers: {[_: string]: VectorTileLayerLike};
     sourceLayerCoder: DictionaryCoder;
 
     constructor(tileID: OverscaledTileID, promoteId?: PromoteIdSpecification | null) {
@@ -117,7 +117,7 @@ export class FeatureIndex {
         }
     }
 
-    loadVTLayers(): {[_: string]: VectorTileLayer} {
+    loadVTLayers(): {[_: string]: VectorTileLayerLike} {
         if (!this.vtLayers) {
             this.vtLayers = this.encoding !== 'mlt' 
                 ? new VectorTile(new Protobuf(this.rawTileData)).layers
@@ -181,7 +181,7 @@ export class FeatureIndex {
                 styleLayers,
                 serializedLayers,
                 sourceFeatureState,
-                (feature: VectorTileFeature, styleLayer: StyleLayer, featureState: FeatureState) => {
+                (feature: VectorTileFeatureLike, styleLayer: StyleLayer, featureState: FeatureState) => {
                     if (!featureGeometry) {
                         featureGeometry = loadGeometry(feature);
                     }

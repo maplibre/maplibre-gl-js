@@ -1,14 +1,13 @@
 import Point from '@mapbox/point-geometry';
-import {type VectorTile, type VectorTileFeature, type VectorTileLayer} from '@mapbox/vector-tile';
 import {type FeatureTable, decodeTile, type Feature as MLTFeature, GEOMETRY_TYPE} from '@maplibre/mlt';
-import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
+import type {VectorTileFeatureLike, VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
 
 class MLTVectorTileFeature implements VectorTileFeatureLike {
     _featureData: MLTFeature;
     properties: {[_: string]: any};
-    type: VectorTileFeature['type'];
-    extent: VectorTileFeature['extent'];
-    id: VectorTileFeature['id'];
+    type: VectorTileFeatureLike['type'];
+    extent: VectorTileFeatureLike['extent'];
+    id: VectorTileFeatureLike['id'];
 
     constructor(feature: MLTFeature, extent: number) {
         this._featureData = feature;
@@ -33,13 +32,6 @@ class MLTVectorTileFeature implements VectorTileFeatureLike {
         this.id = Number(this._featureData.id);
     }
 
-    private projectPoint(p: Point, x0: number, y0: number, size: number): [number, number] {
-        return [
-            (p.x + x0) * 360 / size - 180,
-            360 / Math.PI * Math.atan(Math.exp((1 - (p.y + y0) * 2 / size) * Math.PI)) - 90
-        ];
-    }
-
     loadGeometry(): Point[][] {
         const points: Point[][] = [];
         for (const ring of this._featureData.geometry.coordinates) {
@@ -50,9 +42,6 @@ class MLTVectorTileFeature implements VectorTileFeatureLike {
             points.push(pointRing);
         }
         return points;
-    }
-    bbox(): number[] {
-        return [0, 0, 0, 0];
     }
 }
 
@@ -73,13 +62,13 @@ class MLTVectorTileLayer implements VectorTileLayerLike {
         this.length = this.features.length;
     }
 
-    feature(i: number): VectorTileFeature {
-        return new MLTVectorTileFeature(this.features[i], this.extent) as unknown as VectorTileFeature;
+    feature(i: number): VectorTileFeatureLike {
+        return new MLTVectorTileFeature(this.features[i], this.extent);
     }
 }
 
-export class MLTVectorTile implements VectorTile {
-    layers: Record<string, VectorTileLayer> = {};
+export class MLTVectorTile implements VectorTileLike {
+    layers: Record<string, VectorTileLayerLike> = {};
 
     constructor(buffer: ArrayBuffer) {
         const features = decodeTile(new Uint8Array(buffer));

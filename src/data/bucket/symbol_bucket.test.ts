@@ -56,7 +56,7 @@ describe('SymbolBucket', () => {
     beforeAll(() => {
         // Load point features from fixture tile.
         const sourceLayer = loadVectorTile().layers.place_label;
-        features = [{feature: sourceLayer.feature(10)} as IndexedFeature];
+        features = [{feature: sourceLayer.feature(10), index: 10}];
     });
     test('SymbolBucket', () => {
         const bucketA = bucketSetup();
