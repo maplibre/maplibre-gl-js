@@ -172,7 +172,7 @@ export class VectorTileWorkerSource implements WorkerSource {
 
         const cacheKey = `${maxZoomTileID.key}_${tileID.key}`;
         const cachedOverzoomTile = this.overzoomedTileResultCache.get(cacheKey);
-
+        
         if (cachedOverzoomTile) {
             return cachedOverzoomTile;
         }
