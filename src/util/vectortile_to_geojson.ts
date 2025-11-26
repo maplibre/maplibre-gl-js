@@ -42,13 +42,12 @@ export class GeoJSONFeature {
         this.type = 'Feature';
 
         this._vectorTileFeature = vectorTileFeature;
-
-        this.properties = vectorTileFeature.properties;
-        this.id = id;
-
         this.x = x;
         this.y = y;
         this.z = z;
+
+        this.properties = vectorTileFeature.properties;
+        this.id = id;
     }
 
     // Copied from https://github.com/mapbox/vector-tile-js/blob/f1457ee47d0a261e6246d68c959fbd12bf56aeeb/index.js
