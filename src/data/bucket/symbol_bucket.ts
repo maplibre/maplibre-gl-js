@@ -54,7 +54,7 @@ import type {SymbolQuad} from '../../symbol/quads';
 import type {SizeData} from '../../symbol/symbol_size';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
-import type {VectorTileLayer} from '@mapbox/vector-tile';
+import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 export type SingleCollisionBox = {
     x1: number;
@@ -557,7 +557,7 @@ export class SymbolBucket implements Bucket {
         }
     }
 
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}) {
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}) {
         if (!this.stateDependentLayers.length) return;
         this.text.programConfigurations.updatePaintArrays(states, vtLayer, this.layers, {
             imagePositions
