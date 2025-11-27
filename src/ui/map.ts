@@ -1144,7 +1144,9 @@ export class Map extends Camera {
         minZoom = minZoom === null || minZoom === undefined ? defaultMinZoom : minZoom;
 
         if (minZoom >= defaultMinZoom && minZoom <= this.transform.maxZoom) {
-            this.transform.setMinZoom(minZoom);
+            const tr = this._getTransformForUpdate();
+            tr.setMinZoom(minZoom);
+            this._applyUpdatedTransform(tr);
             this._update();
 
             if (this.getZoom() < minZoom) this.setZoom(minZoom);
@@ -1184,7 +1186,9 @@ export class Map extends Camera {
         maxZoom = maxZoom === null || maxZoom === undefined ? defaultMaxZoom : maxZoom;
 
         if (maxZoom >= this.transform.minZoom) {
-            this.transform.setMaxZoom(maxZoom);
+            const tr = this._getTransformForUpdate();
+            tr.setMaxZoom(maxZoom);
+            this._applyUpdatedTransform(tr);
             this._update();
 
             if (this.getZoom() > maxZoom) this.setZoom(maxZoom);
