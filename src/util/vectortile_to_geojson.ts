@@ -113,11 +113,13 @@ export class GeoJSONFeature {
     }
 
     toJSON() {
-        return {
-            geometry: this.geometry,
-            type: 'Feature',
-            properties: this.properties,
-            id: this.id,
+        const json: any = {
+            geometry: this.geometry
         };
+        for (const i in this) {
+            if (i === '_geometry' || i === '_vectorTileFeature' || i === '_x' || i === '_y' || i === '_z') continue;
+            json[i] = (this)[i];
+        }
+        return json;
     }
 }
