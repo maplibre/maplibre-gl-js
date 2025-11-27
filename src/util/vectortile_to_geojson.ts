@@ -32,19 +32,17 @@ export class GeoJSONFeature {
     _geometry: GeoJSON.Geometry;
     properties: { [name: string]: any };
     id: number | string | undefined;
-    x: number;
-    y: number;
-    z: number;
+    _x: number;
+    _y: number;
+    _z: number;
 
     _vectorTileFeature: VectorTileFeatureLike;
 
     constructor(vectorTileFeature: VectorTileFeatureLike, z: number, x: number, y: number, id: string | number | undefined) {
-        this.type = 'Feature';
-
         this._vectorTileFeature = vectorTileFeature;
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this._x = x;
+        this._y = y;
+        this._z = z;
 
         this.properties = vectorTileFeature.properties;
         this.id = id;
@@ -67,9 +65,9 @@ export class GeoJSONFeature {
         const feature = this._vectorTileFeature;
 
         // Copied from https://github.com/mapbox/vector-tile-js/blob/f1457ee47d0a261e6246d68c959fbd12bf56aeeb/index.js
-        const size = feature.extent * Math.pow(2, this.z);
-        const x0 = feature.extent * this.x;
-        const y0 = feature.extent * this.y;
+        const size = feature.extent * Math.pow(2, this._z);
+        const x0 = feature.extent * this._x;
+        const y0 = feature.extent * this._y;
         const vtCoords = feature.loadGeometry();
 
         switch (feature.type) {
@@ -103,7 +101,7 @@ export class GeoJSONFeature {
                 break;
             }
             default:
-                throw new Error(`unknown feature type: ${this.type}`);
+                throw new Error(`unknown feature type: ${feature.type}`);
         }
 
         return this._geometry;
@@ -114,13 +112,11 @@ export class GeoJSONFeature {
     }
 
     toJSON() {
-        const json: any = {
-            geometry: this.geometry
+        return {
+            type: 'Feature',
+            properties: this.properties,
+            geometry: this.geometry,
+            id: this.id,
         };
-        for (const i in this) {
-            if (i === '_geometry' || i === '_vectorTileFeature') continue;
-            json[i] = (this)[i];
-        }
-        return json;
     }
 }
