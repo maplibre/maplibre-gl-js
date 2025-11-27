@@ -39,6 +39,7 @@ export class GeoJSONFeature {
     _vectorTileFeature: VectorTileFeatureLike;
 
     constructor(vectorTileFeature: VectorTileFeatureLike, z: number, x: number, y: number, id: string | number | undefined) {
+        this.type = 'Feature';
         this._vectorTileFeature = vectorTileFeature;
         this._x = x;
         this._y = y;
@@ -113,9 +114,9 @@ export class GeoJSONFeature {
 
     toJSON() {
         return {
+            geometry: this.geometry,
             type: 'Feature',
             properties: this.properties,
-            geometry: this.geometry,
             id: this.id,
         };
     }
