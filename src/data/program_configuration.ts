@@ -28,8 +28,8 @@ import type {
     FormattedSection
 } from '@maplibre/maplibre-gl-style-spec';
 import type {FeatureStates} from '../source/source_state';
-import type {VectorTileLayer} from '@mapbox/vector-tile';
 import type {DashEntry} from '../render/line_atlas';
+import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 export type BinderUniform = {
     name: string;
@@ -564,7 +564,7 @@ export class ProgramConfiguration {
     updatePaintArrays(
         featureStates: FeatureStates,
         featureMap: FeaturePositionMap,
-        vtLayer: VectorTileLayer,
+        vtLayer: VectorTileLayerLike,
         layer: TypedStyleLayer,
         options: PaintOptions
     ): boolean {
@@ -728,7 +728,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this.needsUpload = true;
     }
 
-    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayer, layers: ReadonlyArray<TypedStyleLayer>, options: PaintOptions) {
+    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayerLike, layers: ReadonlyArray<TypedStyleLayer>, options: PaintOptions) {
         for (const layer of layers) {
             this.needsUpload = this.programConfigurations[layer.id].updatePaintArrays(featureStates, this._featureMap, vtLayer, layer, options) || this.needsUpload;
         }

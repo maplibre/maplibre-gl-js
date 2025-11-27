@@ -1,8 +1,8 @@
 import {OverscaledTileID} from '../../../src/tile/tile_id';
 import Benchmark from '../lib/benchmark';
 import {FeatureIndex} from '../../../src/data/feature_index';
-import {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 import {FeatureFilter} from '@maplibre/maplibre-gl-style-spec';
+import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 export default class LoadMatchingFeature extends Benchmark {
     featureIndex: FeatureIndex;
@@ -24,8 +24,8 @@ export default class LoadMatchingFeature extends Benchmark {
         this.featureIndex.bucketLayerIDs = [layerIds];
         this.featureIndex.vtLayers = {};
         this.featureIndex.vtLayers['0'] = {
-            feature: () => ({} as VectorTileFeature)
-        } as unknown as VectorTileLayer;
+            feature: () => ({} as VectorTileFeatureLike)
+        } as unknown as VectorTileLayerLike;
     }
 
     bench() {
