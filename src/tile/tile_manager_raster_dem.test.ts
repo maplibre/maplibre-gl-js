@@ -3,7 +3,7 @@ import {backfillDEM} from './tile_manager_raster_dem';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {InViewTiles} from './tile_manager_in_view_tiles';
-import {DEMData} from '../data/dem_data';
+import type {DEMData} from '../data/dem_data';
 
 describe('backfillDEM', () => {
 
