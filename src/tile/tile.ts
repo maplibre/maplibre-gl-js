@@ -29,10 +29,10 @@ import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {LayerFeatureStates} from '../source/source_state';
 import type Point from '@mapbox/point-geometry';
 import type {mat4} from 'gl-matrix';
-import type {VectorTileLayer} from '@mapbox/vector-tile';
 import type {ExpiryData} from '../util/ajax';
 import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict} from '../source/query_features';
 import type {DashEntry} from '../render/line_atlas';
+import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 /**
  * The tile's state, can be:
  *
@@ -93,9 +93,9 @@ export class Tile {
     showCollisionBoxes: boolean;
     placementSource: any;
     actor: Actor;
-    vtLayers: {[_: string]: VectorTileLayer};
+    vtLayers: {[_: string]: VectorTileLayerLike};
 
-    neighboringTiles: any;
+    neighboringTiles: Record<string, {backfilled: boolean}>;
     dem: DEMData;
     demMatrix: mat4;
     aborted: boolean;

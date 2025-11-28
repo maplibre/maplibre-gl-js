@@ -1,6 +1,7 @@
 import {extend} from '../util/util';
-import {type Tile} from '../tile/tile';
+import type {Tile} from '../tile/tile';
 import type {FeatureState} from '@maplibre/maplibre-gl-style-spec';
+import type {InViewTiles} from '../tile/tile_manager_in_view_tiles';
 
 export type FeatureStates = {[featureId: string]: FeatureState};
 export type LayerFeatureStates = {[layer: string]: FeatureStates};
@@ -101,9 +102,7 @@ export class SourceFeatureState {
         tile.setFeatureState(this.state, painter);
     }
 
-    coalesceChanges(tiles: {
-        [_ in any]: Tile;
-    }, painter: any) {
+    coalesceChanges(inViewTiles: InViewTiles, painter: any) {
         //track changes with full state objects, but only for features that got modified
         const featuresChanged: LayerFeatureStates = {};
 
@@ -149,9 +148,6 @@ export class SourceFeatureState {
 
         if (Object.keys(featuresChanged).length === 0) return;
 
-        for (const id in tiles) {
-            const tile = tiles[id];
-            tile.setFeatureState(featuresChanged, painter);
-        }
+        inViewTiles.setFeatureState(featuresChanged, painter);
     }
 }

@@ -71,7 +71,7 @@ describe('TerrainTileManager', () => {
         const tileID = new OverscaledTileID(5, 0, 5, 17, 11);
         const tile = new Tile(tileID, 256);
         tile.dem = {} as DEMData;
-        tsc.tileManager._tiles[tileID.key] = tile;
+        tsc.tileManager._inViewTiles.setTile(tileID.key, tile);
         expect(tsc.deltaZoom).toBe(1);
         expect(tsc.getSourceTile(tileID)).toBeFalsy();
         expect(tsc.getSourceTile(tileID.children(12)[0])).toBeTruthy();

@@ -16,7 +16,7 @@ import type {RequestManager} from '../util/request_manager';
 import type {Actor} from '../util/actor';
 import type {MapSourceDataEvent} from '../ui/events';
 import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff';
-import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
+import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -944,17 +944,17 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
     });
 
-    function getMockTile(z: number, x: number, y: number, features: Array<Partial<VectorTileFeature>>) {
+    function getMockTile(z: number, x: number, y: number, features: Array<Partial<VectorTileFeatureLike>>) {
         const tile = new Tile(new OverscaledTileID(z, 0, z, x, y), source.tileSize);
         tile.latestFeatureIndex = new FeatureIndex(tile.tileID, source.promoteId);
         tile.latestFeatureIndex.vtLayers = {
             [GEOJSON_TILE_LAYER_NAME]: {
                 feature: (i: number) => features[i] || {}
-            } as VectorTileLayer
+            } as VectorTileLayerLike
         };
 
         for (let i = 0; i < features.length; i++) {
-            tile.latestFeatureIndex.insert(features[i] as VectorTileFeature, [], i, 0, 0, false);
+            tile.latestFeatureIndex.insert(features[i] as VectorTileFeatureLike, [], i, 0, 0, false);
         }
         return tile;
     }
