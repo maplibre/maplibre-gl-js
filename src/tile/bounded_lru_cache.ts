@@ -18,7 +18,7 @@ export class BoundedLRUCache<K, V> {
     /**
      * Retrieves a value from the cache and marks it as most recently used by moving it to the end.
      */
-    get(key: K): V | undefined {
+    public get(key: K): V | undefined {
         const value = this.map.get(key);
         if (value === undefined) return undefined;
         this.moveToEnd(key, value);
@@ -28,7 +28,7 @@ export class BoundedLRUCache<K, V> {
     /**
      * Retrieves a value from the cache and removes it without triggering the onRemove callback.
      */
-    take(key: K): V | undefined {
+    public take(key: K): V | undefined {
         const value = this.map.get(key);
         if (value === undefined) return undefined;
         this.map.delete(key);
@@ -40,7 +40,7 @@ export class BoundedLRUCache<K, V> {
      * if the new value is a different object reference, otherwise it moves the existing entry to the end.
      * If adding exceeds the maximum allowed cache size, it removes the oldest entry before adding.
      */
-    set(key: K, value: V) {
+    public set(key: K, value: V) {
         const existing = this.map.get(key);
 
         // Adding a new entry
@@ -73,7 +73,7 @@ export class BoundedLRUCache<K, V> {
      * Updates the maximum number of entries allowed in the cache.
      * If the new size is smaller than the current number of entries, removes oldest entries until within limit.
      */
-    setMaxSize(maxEntries: number) {
+    public setMaxSize(maxEntries: number) {
         if (maxEntries === this.maxEntries) return;
         this.maxEntries = maxEntries;
         this.trim();
@@ -101,7 +101,7 @@ export class BoundedLRUCache<K, V> {
     /**
      * Removes a specific entry from the cache and triggers the onRemove callback if configured.
      */
-    remove(key: K) {
+    public remove(key: K) {
         const value = this.map.get(key);
         if (value === undefined) return;
         this.map.delete(key);
@@ -111,7 +111,7 @@ export class BoundedLRUCache<K, V> {
     /**
      * Removes entries from the cache that don't satisfy the provided filter function.
      */
-    filter(func: (value: V) => boolean) {
+    public filter(func: (value: V) => boolean) {
         for (const [key, value] of this.map.entries()) {
             if (func(value)) continue;
             this.remove(key);
@@ -121,7 +121,7 @@ export class BoundedLRUCache<K, V> {
     /**
      * Removes all entries from the cache. If an onRemove callback is configured, it will be called for each entry.
      */
-    clear() {
+    public clear() {
         // If onRemove callback is not configured, just clear the map directly.
         if (!this.onRemove) {
             this.map.clear();
@@ -137,14 +137,14 @@ export class BoundedLRUCache<K, V> {
     /**
      * Returns an array of all keys currently in the cache in their current order.
      */
-    getKeys(): K[] {
+    public getKeys(): K[] {
         return Array.from(this.map.keys());
     }
 
     /**
      * Returns the maximum number of entries allowed in the cache.
      */
-    getMaxEntries(): number {
+    public getMaxEntries(): number {
         return this.maxEntries;
     }
 }
