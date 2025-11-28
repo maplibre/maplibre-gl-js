@@ -18,7 +18,7 @@ const data: GeoJSON.FeatureCollection = {
     }))
 }
 
-export default class GeoJSONDiff extends Benchmark {
+export default class GeoJSONSet extends Benchmark {
     map: Map;
 
     async setup() {

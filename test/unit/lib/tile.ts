@@ -1,11 +1,12 @@
 import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
-import {VectorTile, type VectorTileLayer} from '@mapbox/vector-tile';
+import {VectorTile} from '@mapbox/vector-tile';
 import {OverscaledTileID} from '../../../src/tile/tile_id';
 import {FeatureIndex} from '../../../src/data/feature_index';
 import type {IndexedFeature, PopulateParameters} from '../../../src/data/bucket';
 import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings';
+import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 export type CreateBucketParameters = {
     id: string;
@@ -20,10 +21,10 @@ export function loadVectorTile(name = 'mbsv5-6-18-23.vector.pbf'): VectorTile {
     return vt;
 }
 
-export function getFeaturesFromLayer(sourceLayer: VectorTileLayer): Array<IndexedFeature> {
+export function getFeaturesFromLayer(sourceLayer: VectorTileLayerLike): Array<IndexedFeature> {
     const features = new Array<IndexedFeature>(sourceLayer.length);
     for (let i = 0; i < sourceLayer.length; i++) {
-        features[i] = {feature: sourceLayer.feature(i), index: i} as IndexedFeature;
+        features[i] = {feature: sourceLayer.feature(i), index: i} as unknown as IndexedFeature;
     }
     return features;
 }

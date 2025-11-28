@@ -21,7 +21,7 @@ import type {
     WorkerTileResult,
 } from '../source/worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {VectorTile} from '@mapbox/vector-tile';
+import type {VectorTileLike} from '@maplibre/vt-pbf';
 import {type GetDashesResponse, MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 export class WorkerTile {
@@ -38,11 +38,11 @@ export class WorkerTile {
     returnDependencies: boolean;
 
     status: 'parsing' | 'done';
-    data: VectorTile;
+    data: VectorTileLike;
     collisionBoxArray: CollisionBoxArray;
 
     abort: AbortController;
-    vectorTile: VectorTile;
+    vectorTile: VectorTileLike;
     inFlightDependencies: AbortController[];
 
     constructor(params: WorkerTileParameters) {
@@ -60,7 +60,7 @@ export class WorkerTile {
         this.inFlightDependencies = [];
     }
 
-    async parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
+    async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
         this.status = 'parsing';
         this.data = data;
 

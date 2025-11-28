@@ -24,8 +24,8 @@ import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Map} from '../ui/map';
 import type {StyleSetterOptions} from './style';
 import {type mat4} from 'gl-matrix';
-import type {VectorTileFeature} from '@mapbox/vector-tile';
 import type {UnwrappedTileID} from '../tile/tile_id';
+import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 export type QueryIntersectsFeatureParams = {
     /**
@@ -36,7 +36,7 @@ export type QueryIntersectsFeatureParams = {
     /**
      * The feature to allow expression evaluation.
      */
-    feature: VectorTileFeature;
+    feature: VectorTileFeatureLike;
     /**
      * The feature state to allow expression evaluation.
      */
