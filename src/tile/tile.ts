@@ -95,7 +95,7 @@ export class Tile {
     actor: Actor;
     vtLayers: {[_: string]: VectorTileLayerLike};
 
-    neighboringTiles: any;
+    neighboringTiles: Record<string, {backfilled: boolean}>;
     dem: DEMData;
     demMatrix: mat4;
     aborted: boolean;

@@ -242,5 +242,14 @@ function getQuadkey(z, x, y) {
     return quadkey;
 }
 
+export function compareTileId(a: OverscaledTileID, b: OverscaledTileID): number {
+    // Different copies of the world are sorted based on their distance to the center.
+    // Wrap values are converted to unsigned distances by reserving odd number for copies
+    // with negative wrap and even numbers for copies with positive wrap.
+    const aWrap = Math.abs(a.wrap * 2) - +(a.wrap < 0);
+    const bWrap = Math.abs(b.wrap * 2) - +(b.wrap < 0);
+    return a.overscaledZ - b.overscaledZ || bWrap - aWrap || b.canonical.y - a.canonical.y || b.canonical.x - a.canonical.x;
+}
+
 register('CanonicalTileID', CanonicalTileID);
 register('OverscaledTileID', OverscaledTileID, {omit: ['terrainRttPosMatrix32f']});

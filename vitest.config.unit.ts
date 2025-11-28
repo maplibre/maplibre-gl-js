@@ -19,9 +19,8 @@ export default defineConfig({
         coverage: {
             provider: 'v8',
             reporter: ['json', 'html'],
-            exclude: ['node_modules/', 'dist/', '**/*.test.ts'],
-            all: true,
-            include: ['src'],
+            exclude: ['**/*.test.ts'],
+            include: ['src/**/*.{ts,js}'],
             reportsDirectory: './coverage/vitest/unit',
         },
     },
