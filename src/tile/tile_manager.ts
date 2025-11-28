@@ -111,7 +111,7 @@ export class TileManager extends Evented {
 
         this._source = createSource(id, options, dispatcher, this);
 
-        this._inViewTiles = {};
+        this._inViewTiles = new InViewTiles();
         this._outOfViewCache = new BoundedLRUCache<string, Tile>({
             maxEntries: 1000,
             onRemove: (tile) => this._unloadTile(tile)
