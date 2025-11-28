@@ -2,7 +2,7 @@
 
 ### ✨ Features and improvements
  - Improve performance of `GeoJSONSource#updateData` ([#6738](https://github.com/maplibre/maplibre-gl-js/pull/6738)) (by [@lucaswoj](https://github.com/lucaswoj))
-- _...Add new stuff here..._
+ - Prevent redundant DEM border backfilling by tracking state, moved tile manager logic to helper files ([#6756](https://github.com/maplibre/maplibre-gl-js/pull/6756)) (by [@HarelM](https://github.com/HarelM))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
