@@ -7,11 +7,17 @@ import {type InViewTiles} from './tile_manager_in_view_tiles';
 export function backfillDEM(tile: Tile, inViewTiles: InViewTiles) {
     const renderables = inViewTiles.getRenderableIds();
     for (const borderId of renderables) {
-        if (tile.neighboringTiles && tile.neighboringTiles[borderId]) {
-            const borderTile = inViewTiles.getTileById(borderId);
-            fillBorder(tile, borderTile);
-            fillBorder(borderTile, tile);
+        if (!tile.neighboringTiles || !tile.neighboringTiles[borderId]) {
+            continue;
         }
+        const borderTile = inViewTiles.getTileById(borderId);
+        if (!tile.neighboringTiles[borderId].backfilled) {
+            fillBorder(tile, borderTile);
+        }
+        if (borderTile.neighboringTiles?.[tile.tileID.key]?.backfilled) {
+            continue;
+        }
+        fillBorder(borderTile, tile);
     }
 }
 
@@ -37,7 +43,8 @@ function fillBorder(tile: Tile, borderTile: Tile) {
     }
     if (!borderTile.dem || !tile.dem) return;
     tile.dem.backfillBorder(borderTile.dem, dx, dy);
-    if (tile.neighboringTiles && tile.neighboringTiles[borderId])
+    if (tile.neighboringTiles?.[borderId]) {
         tile.neighboringTiles[borderId].backfilled = true;
+    }
 }
 

@@ -117,7 +117,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         return browser.getImageData(img, 1);
     }
 
-    _getNeighboringTiles(tileID: OverscaledTileID) {
+    _getNeighboringTiles(tileID: OverscaledTileID): Record<string, {backfilled: boolean}> {
         const canonical = tileID.canonical;
         const dim = Math.pow(2, canonical.z);
 
