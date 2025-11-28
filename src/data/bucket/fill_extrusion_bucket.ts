@@ -5,7 +5,7 @@ import {type Segment, SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray} from '../index_array_type';
 import {EXTENT} from '../extent';
-import {type VectorTileLayer, VectorTileFeature} from '@mapbox/vector-tile';
+import {VectorTileFeature} from '@mapbox/vector-tile';
 import {classifyRings} from '@maplibre/maplibre-gl-style-spec';
 const EARCUT_MAX_RINGS = 500;
 import {register} from '../../util/web_worker_transfer';
@@ -33,6 +33,7 @@ import type {ImagePosition} from '../../render/image_atlas';
 import {subdividePolygon, subdivideVertexLine} from '../../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays';
+import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const FACTOR = Math.pow(2, 13);
 
@@ -133,7 +134,7 @@ export class FillExtrusionBucket implements Bucket {
         }
     }
 
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}) {
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}) {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, {
             imagePositions

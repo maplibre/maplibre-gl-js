@@ -397,7 +397,7 @@ export class GeoJSONSource extends Evented implements Source {
         const {data, diff} = this._pendingWorkerUpdate;
 
         const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
-        if (data) {
+        if (data !== undefined) {
             if (typeof data === 'string') {
                 options.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
                 options.request.collectResourceTiming = this._collectResourceTiming;
@@ -424,11 +424,7 @@ export class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            if (result.applyDiff) {
-                this._applyDiff(diff);
-            } else {
-                this._data = {geojson: result.data};
-            }
+            if (diff) this._applyDiff(diff);
 
             let resourceTiming: PerformanceResourceTiming[] = null;
             if (result.resourceTiming && result.resourceTiming[this.id]) {
@@ -459,23 +455,19 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    private _applyDiff(diff: GeoJSONSourceDiff | undefined): void {
+    private _applyDiff(diff: GeoJSONSourceDiff): void {
         const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
         // Lazily convert `this._data` to updateable if it's not already
-        if (
-            !this._data.url &&
-            !this._data.updateable &&
-            isUpdateableGeoJSON(this._data.geojson, promoteId)
-        ) {
+        if (!this._data.url && !this._data.updateable) {
+            if (!isUpdateableGeoJSON(this._data.geojson, promoteId)) {
+                throw new Error(`GeoJSONSource "${this.id}": GeoJSON data is not compatible with updateData`);
+            }
             this._data = {updateable: toUpdateable(this._data.geojson, promoteId)};
         }
 
-        if (diff && this._data.updateable) {
+        if (this._data.updateable) {
             applySourceDiff(this._data.updateable, diff, promoteId);
-        } else {
-            // This should never happen because the worker would not set `applyDiff: true` if the source was not updateable.
-            warnOnce('Cannot apply GeoJSONSource#updateData due to internal error');
         }
     }
 
@@ -488,7 +480,7 @@ export class GeoJSONSource extends Evented implements Source {
 
         for (const id of prevIds.values()) {
             if (typeof id !== 'number' && this.promoteId == null) {
-                warnOnce(`GeoJSONSource "${this.id}": updateData is slower when using string GeoJSON feature IDs (e.g. "${id}"). Consider using promoteId or numeric IDs for better performance.`);
+                warnOnce(`GeoJSONSource "${this.id}": updateData is slower when using string GeoJSON feature IDs. Consider using promoteId or numeric IDs for better performance.`);
                 return undefined;
             }
         }

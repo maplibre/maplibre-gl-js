@@ -1,5 +1,5 @@
 import {extend, isWorker} from './util';
-import {createAbortError} from './abort_error';
+import {AbortError, isAbortError} from './abort_error';
 import {getProtocol} from '../source/protocol_crud';
 import {MessageType} from './actor_messages';
 
@@ -159,6 +159,11 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
     try {
         response = await fetch(request);
     } catch (e) {
+        // Pass through AbortErrors for upstream handling
+        if (isAbortError(e)) {
+            throw e;
+        }
+
         // When the error is due to CORS policy, DNS issue or malformed URL, the fetch call does not resolve but throws a generic TypeError instead.
         // It is preferable to throw an AJAXError so that the Map event "error" can catch it and still have
         // access to the faulty url. In such case, we provide the arbitrary HTTP error code of `0`.
@@ -178,9 +183,7 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
         parsePromise = response.text();
     }
     const result = await parsePromise;
-    if (abortController.signal.aborted) {
-        throw createAbortError();
-    }
+    abortController.signal.throwIfAborted();
     return {data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires')};
 }
 
@@ -229,7 +232,7 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
         };
         abortController.signal.addEventListener('abort', () => {
             xhr.abort();
-            reject(createAbortError());
+            reject(new AbortError(abortController.signal.reason));
         });
         xhr.send(requestParameters.body);
     });

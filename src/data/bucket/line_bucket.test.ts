@@ -9,7 +9,7 @@ import {type ZoomHistory} from '../../../src/style/zoom_history';
 import {type BucketFeature, type BucketParameters} from '../bucket';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile';
-import {type VectorTileLayer} from '@mapbox/vector-tile';
+import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const {noSubdivision} = SubdivisionGranularitySetting;
 
@@ -35,7 +35,7 @@ function createLineBucket({id, layout, paint, globalState, availableImages}: Cre
 }
 
 describe('LineBucket', () => {
-    let sourceLayer: VectorTileLayer;
+    let sourceLayer: VectorTileLayerLike;
     beforeAll(() => {
         // Load line features from fixture tile.
         sourceLayer = loadVectorTile().layers.road;

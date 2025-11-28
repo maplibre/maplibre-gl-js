@@ -4,12 +4,12 @@ import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type EvaluationParameters} from '../evaluation_parameters';
 import {type CanonicalTileID, UnwrappedTileID} from '../../tile/tile_id';
 import Point from '@mapbox/point-geometry';
-import {type VectorTileFeature} from '@mapbox/vector-tile';
 import {GlobeTransform} from '../../geo/projection/globe_transform';
 import {MercatorTransform} from '../../geo/projection/mercator_transform';
+import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 describe('CircleStyleLayer.queryIntersectsFeature', () => {
-    const feature = {} as VectorTileFeature;
+    const feature = {} as VectorTileFeatureLike;
     const featureState = {};
     const geometry = [[new Point(4645, 3729)]];
     const pixelsToTileUnits = 16;
