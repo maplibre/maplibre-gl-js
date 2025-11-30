@@ -2,7 +2,7 @@ import {create as createSource} from '../source/source';
 
 import {Tile} from './tile';
 import {ErrorEvent, Event, Evented} from '../util/evented';
-import {TileCache} from './tile_cache';
+import {BoundedLRUCache} from './bounded_lru_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {EXTENT} from '../data/extent';
 import type Point from '@mapbox/point-geometry';
@@ -73,7 +73,7 @@ export class TileManager extends Evented {
     _sourceErrored: boolean;
     _inViewTiles: InViewTiles;
     _prevLng: number;
-    _outOfViewCache: TileCache;
+    _outOfViewCache: BoundedLRUCache<string, Tile>;
     _timers: Record<string, ReturnType<typeof setTimeout>>;
     _maxTileCacheSize: number;
     _maxTileCacheZoomLevels: number;
@@ -112,7 +112,10 @@ export class TileManager extends Evented {
         this._source = createSource(id, options, dispatcher, this);
 
         this._inViewTiles = new InViewTiles();
-        this._outOfViewCache = new TileCache(0, (tile) => this._unloadTile(tile));
+        this._outOfViewCache = new BoundedLRUCache<string, Tile>({
+            maxEntries: 1000,
+            onRemove: (tile) => this._unloadTile(tile)
+        });
         this._timers = {};
         this._maxTileCacheSize = null;
         this._maxTileCacheZoomLevels = null;
@@ -263,7 +266,8 @@ export class TileManager extends Evented {
             return;
         }
 
-        this._outOfViewCache.reset();
+        // Clear the tile cache
+        this._outOfViewCache.clear();
 
         for (const id of this._inViewTiles.getAllIds()) {
             const tile = this._inViewTiles.getTileById(id);
@@ -346,7 +350,7 @@ export class TileManager extends Evented {
      * Analogy: imagine two sheets of paper in 3D space:
      *   - one sheet = ideal tiles at varying overscaledZ
      *   - the second sheet = maxCoveringZoom
-     * 
+     *
      * @param retainTileMap - this parameters will be updated with the child tiles to keep
      * @param idealTilesWithoutData - which of the ideal tiles currently does not have loaded data
      * @return a set of tiles that need to be loaded
@@ -431,24 +435,21 @@ export class TileManager extends Evented {
     }
 
     /**
-     * Resizes the tile cache based on the current viewport's size
-     * or the maxTileCacheSize option passed during map creation
-     *
-     * Larger viewports use more tiles and need larger caches. Larger viewports
-     * are more likely to be found on devices with more memory and on pages where
-     * the map is more important.
+     * Resizes the tile cache based on the current viewport's size considering the map's maxTileCacheSize option.
      */
     updateCacheSize(transform: IReadonlyTransform) {
         const widthInTiles = Math.ceil(transform.width / this._source.tileSize) + 1;
         const heightInTiles = Math.ceil(transform.height / this._source.tileSize) + 1;
-        const approxTilesInView = widthInTiles * heightInTiles;
-        const commonZoomRange = this._maxTileCacheZoomLevels === null ?
-            config.MAX_TILE_CACHE_ZOOM_LEVELS : this._maxTileCacheZoomLevels;
-        const viewDependentMaxSize = Math.floor(approxTilesInView * commonZoomRange);
-        const maxSize = typeof this._maxTileCacheSize === 'number' ?
-            Math.min(this._maxTileCacheSize, viewDependentMaxSize) : viewDependentMaxSize;
+        const numTilesInView = widthInTiles * heightInTiles;
 
-        this._outOfViewCache.setMaxSize(maxSize);
+        const numZoomLevels = this._maxTileCacheZoomLevels ?? config.MAX_TILE_CACHE_ZOOM_LEVELS;
+        const numTilesAcrossZooms = Math.floor(numTilesInView * numZoomLevels);
+
+        const maxCacheSize = typeof this._maxTileCacheSize === 'number' ?
+            Math.min(this._maxTileCacheSize, numTilesAcrossZooms) :
+            numTilesAcrossZooms;
+
+        this._outOfViewCache.setMaxSize(maxCacheSize);
     }
 
     handleWrapJump(lng: number) {
@@ -505,7 +506,7 @@ export class TileManager extends Evented {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.type === 'vector' && this.map._zoomLevelsToOverscale !== undefined
-                    ? transform.maxZoom - this.map._zoomLevelsToOverscale 
+                    ? transform.maxZoom - this.map._zoomLevelsToOverscale
                     : this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,
@@ -682,18 +683,8 @@ export class TileManager extends Evented {
         if (tile)
             return tile;
 
-        tile = this._outOfViewCache.getAndRemove(tileID);
-        if (tile) {
-            //reset fading logic to remove stale fading data from cache
-            tile.resetFadeLogic();
-
-            // set timer for the reloading of the tile upon expiration
-            this._setTileReloadTimer(tileID.key, tile);
-
-            // set the tileID because the cached tile could have had a different wrap value
-            tile.tileID = tileID;
-            this._state.initializeTileState(tile, this.map ? this.map.painter : null);
-        }
+        // Check the cache for the tile first
+        tile = this._takeTileFromCache(tileID);
 
         const cached = tile;
 
@@ -709,6 +700,47 @@ export class TileManager extends Evented {
         }
 
         return tile;
+    }
+
+    /**
+     * Removes a tile from the cache, without calling onRemove, using a wrapped tileID (wrap = 0).
+     * Re-applies the provided tileID's wrap value to the tile in case the cached tile has different wrap.
+     */
+    _takeTileFromCache(tileID: OverscaledTileID): Tile | null {
+        const cacheKey = this._getCacheKey(tileID);
+
+        const tile = this._outOfViewCache.take(cacheKey);
+        if (!tile) return null;
+
+        // If tile is expired, unload it (same behavior as onRemove inside the cache) and ignore
+        if (tile.isExpired()) {
+            this._unloadTile(tile);
+            return null;
+        }
+
+        // Apply the provided wrap to the cached tile (which could have a different wrap)
+        tile.tileID = tileID;
+
+        tile.resetFadeLogic();
+        this._setTileReloadTimer(tileID.key, tile);
+        this._state.initializeTileState(tile, this.map ? this.map.painter : null);
+
+        return tile;
+    }
+
+    /**
+     * Add a tile to the cache using a wrapped tileID (wrap = 0)
+     */
+    _addTileToCache(tile: Tile) {
+        const cacheKey = this._getCacheKey(tile.tileID);
+        this._outOfViewCache.set(cacheKey, tile);
+    }
+
+    /**
+     * Get the cache key for a tile using a wrapped tileID (wrap = 0)
+     */
+    _getCacheKey(tileID: OverscaledTileID): string {
+        return tileID.wrapped().key;
     }
 
     /**
@@ -777,7 +809,8 @@ export class TileManager extends Evented {
             return;
 
         if (tile.hasData() && tile.state !== 'reloading') {
-            this._outOfViewCache.add(tile.tileID, tile, tile.getExpiryTimeout());
+            // Cache the removed tile
+            this._addTileToCache(tile);
         } else {
             tile.aborted = true;
             this._abortTile(tile);
@@ -820,7 +853,8 @@ export class TileManager extends Evented {
             this._removeTile(id);
         }
 
-        this._outOfViewCache.reset();
+        // Clear the tile cache
+        this._outOfViewCache.clear();
     }
 
     /**
@@ -974,6 +1008,7 @@ export class TileManager extends Evented {
                 this._reloadTile(id, 'reloading');
             }
         }
+        // Clean the tile cache
         this._outOfViewCache.filter(tile => !tile.hasDependency(namespaces, keys));
     }
 
