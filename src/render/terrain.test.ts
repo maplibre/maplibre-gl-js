@@ -187,6 +187,9 @@ describe('Terrain', () => {
             _source: {maxzoom: 12, tileSize: 512},
             _cache: {max: 10},
             getTileByID: () => null,
+            _outOfViewCache: {
+                getByKey: () => null,
+            },
         } as any as TileManager;
         const terrain = new Terrain(
             painter,

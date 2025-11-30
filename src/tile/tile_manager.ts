@@ -323,7 +323,7 @@ export class TileManager extends Evented {
     /**
      * Get a specific tile by id
      */
-    getTileByID(id: string): Tile {
+    getTileByID(id: string): Tile | undefined {
         return this._inViewTiles.getTileById(id);
     }
 

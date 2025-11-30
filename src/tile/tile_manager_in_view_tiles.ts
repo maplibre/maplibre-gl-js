@@ -34,7 +34,7 @@ export class InViewTiles {
         return Object.keys(this._tiles);
     }
 
-    public getTileById(key: string): Tile {
+    public getTileById(key: string): Tile | undefined {
         return this._tiles[key];
     }
 
