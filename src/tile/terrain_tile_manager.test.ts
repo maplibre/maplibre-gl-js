@@ -79,6 +79,17 @@ describe('TerrainTileManager', () => {
         expect(tsc.getSourceTile(tileID.children(12)[0].children(12)[0], true)).toBeTruthy();
     });
 
+    test('getSourceTile should get tile from out of view cache when tile in not in view', () => {
+        const tileID = new OverscaledTileID(6, 0, 6, 0, 0);
+        const underzoomTileID = tileID.scaledTo(tileID.canonical.z - tsc.deltaZoom);
+        const tile = new Tile(underzoomTileID, 256);
+        tile.dem = {} as DEMData;
+        tsc.tileManager._outOfViewCache.setMaxSize(1);
+        tsc.tileManager._outOfViewCache.add(underzoomTileID, tile);
+        expect(tsc.tileManager._inViewTiles.getTileById(underzoomTileID.key)).toBeUndefined();
+        expect(tsc.getSourceTile(tileID, true).tileID.key).toBe(underzoomTileID.key);
+    });
+
     describe('getTerrainCoords', () => {
         describe('tile without custom range', () => {
             test('includes only overlapping tiles', () => {

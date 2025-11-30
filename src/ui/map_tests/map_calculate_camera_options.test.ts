@@ -16,10 +16,10 @@ describe('calculateCameraOptionsFromTo', () => {
     test('pitch 90 with terrain', () => {
         const map = createMap();
 
-        const mockedGetElevation = vi.fn((_lngLat: LngLat, _zoom: number) => 111200);
+        const mockedGetElevation = vi.fn((_lngLat: LngLat) => 111200);
 
         const terrainStub = {} as Terrain;
-        terrainStub.getElevationForLngLatZoom = mockedGetElevation;
+        terrainStub.getElevationForLngLat = mockedGetElevation;
         map.terrain = terrainStub;
 
         // distance between lng x and lng x+1 is 111.2km at same lat
@@ -33,10 +33,10 @@ describe('calculateCameraOptionsFromTo', () => {
     test('pitch 153.435 with terrain', () => {
         const map = createMap();
 
-        const mockedGetElevation = vi.fn((_lngLat: LngLat, _zoom: number) => 111200 * 3);
+        const mockedGetElevation = vi.fn((_lngLat: LngLat) => 111200 * 3);
 
         const terrainStub = {} as Terrain;
-        terrainStub.getElevationForLngLatZoom = mockedGetElevation;
+        terrainStub.getElevationForLngLat = mockedGetElevation;
         map.terrain = terrainStub;
         // distance between lng x and lng x+1 is 111.2km at same lat
         // (elevation difference of cam and center) / 2 = grounddistance =>
@@ -50,10 +50,10 @@ describe('calculateCameraOptionsFromTo', () => {
     test('pitch 63 with terrain', () => {
         const map = createMap();
 
-        const mockedGetElevation = vi.fn((_lngLat: LngLat, _zoom: number) => 111200 / 2);
+        const mockedGetElevation = vi.fn((_lngLat: LngLat) => 111200 / 2);
 
         const terrainStub = {} as Terrain;
-        terrainStub.getElevationForLngLatZoom = mockedGetElevation;
+        terrainStub.getElevationForLngLat = mockedGetElevation;
         map.terrain = terrainStub;
 
         // distance between lng x and lng x+1 is 111.2km at same lat
@@ -68,10 +68,10 @@ describe('calculateCameraOptionsFromTo', () => {
     test('zoom distance 1000', () => {
         const map = createMap();
 
-        const mockedGetElevation = vi.fn((_lngLat: LngLat, _zoom: number) => 1000);
+        const mockedGetElevation = vi.fn((_lngLat: LngLat) => 1000);
 
         const terrainStub = {} as Terrain;
-        terrainStub.getElevationForLngLatZoom = mockedGetElevation;
+        terrainStub.getElevationForLngLat = mockedGetElevation;
         map.terrain = terrainStub;
 
         const expectedZoom = Math.log2(map.transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / map.transform.tileSize);
