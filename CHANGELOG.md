@@ -13,6 +13,7 @@
 - Fix unwanted movement when moving a pitched terrain map at high latitudes; fix freezes when moving a pitched and rotated terrain map at low zoom ([#6775](https://github.com/maplibre/maplibre-gl-js/pull/6775)) (by [@larsmaxfield](https://github.com/larsmaxfield))
 - Fix issue with `static` modifier as part of mlt package ([#6796](https://github.com/maplibre/maplibre-gl-js/pull/6796)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
+- Fix `GeoJSONSource#updateData` for symbol layers ([#6801](https://github.com/maplibre/maplibre-gl-js/pull/6801) (by [@lucaswoj](https://github.com/lucaswoj)))
 
 ## 5.13.0
 
