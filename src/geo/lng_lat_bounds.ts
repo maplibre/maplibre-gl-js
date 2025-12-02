@@ -290,6 +290,9 @@ export class LngLatBounds {
     /**
      * Checks if this bounding box intersects with another bounding box.
      *
+     * Returns true if the bounding boxes share any area, including cases where
+     * they only touch along an edge or at a corner.
+     *
      * This method properly handles cases where either or both bounding boxes cross
      * the antimeridian (date line).
      */
