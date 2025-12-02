@@ -1,6 +1,8 @@
 import {describe, test, expect} from 'vitest';
 import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
+import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds';
+import {CanonicalTileID} from '../tile/tile_id';
 
 describe('LngLatBounds', () => {
     test('constructor', () => {
@@ -421,6 +423,12 @@ describe('LngLatBounds', () => {
             test('wrapping tile bounds at dateline intersects with negative longitude bounds', () => {
                 const tileBounds = new LngLatBounds([170, 0], [-170, 10]);
                 const bounds = new LngLatBounds([-180, 5], [-175, 10]);
+                expect(tileBounds.intersects(bounds)).toBe(true);
+            });
+
+            test('entire worlds tile should return true', () => {
+                const tileBounds = tileIdToLngLatBounds(new CanonicalTileID(0, 0, 0));
+                const bounds = new LngLatBounds([0, 0], [0, 0]);
                 expect(tileBounds.intersects(bounds)).toBe(true);
             });
         });
