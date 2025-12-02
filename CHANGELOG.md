@@ -11,6 +11,7 @@
 - Fix canvas sources with power-of-2 dimensions rendering as black squares ([#6607](https://github.com/maplibre/maplibre-gl-js/issues/6607))
 - Fix `queryTerrainElevation` to use higher zoom level tiles when possible ([#6791](https://github.com/maplibre/maplibre-gl-js/issues/6791)) (by [@HarelM](https://github.com/HarelM))
 - Fix unwanted movement when moving a pitched terrain map at high latitudes; fix freezes when moving a pitched and rotated terrain map at low zoom ([#6775](https://github.com/maplibre/maplibre-gl-js/pull/6775)) (by [@larsmaxfield](https://github.com/larsmaxfield))
+- Fix issue with `static` modifier as part of mlt package ([#6796](https://github.com/maplibre/maplibre-gl-js/pull/6796)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 5.13.0
