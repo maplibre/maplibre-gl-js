@@ -241,7 +241,7 @@ describe('applySourceDiff', () => {
         type: 'Feature',
         geometry: {
             type: 'Point',
-            coordinates: [0, 0],
+            coordinates: [1, 1],
         },
         properties: {
             promoteId: 'point2'
@@ -261,11 +261,12 @@ describe('applySourceDiff', () => {
     test('adds a feature using the feature id', () => {
         const updateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
 
-        applySourceDiff(updateable, {
+        const affectedGeometries = applySourceDiff(updateable, {
             add: [point]
         });
         expect(updateable.size).toBe(1);
         expect(updateable.has('point')).toBeTruthy();
+        expect(affectedGeometries).toStrictEqual([point.geometry]);
     });
 
     test('adds a feature using the promoteId', () => {
@@ -279,32 +280,34 @@ describe('applySourceDiff', () => {
 
     test('removes a feature by its id', () => {
         const updateable = new Map([['point', point], ['point2', point2]]);
-        applySourceDiff(updateable, {
+        const affectedGeometries = applySourceDiff(updateable, {
             remove: ['point2'],
         });
         expect(updateable.size).toBe(1);
         expect(updateable.has('point2')).toBeFalsy();
+        expect(affectedGeometries).toStrictEqual([point2.geometry]);
     });
 
     test('updates a feature geometry', () => {
         const updateable = new Map([['point', point]]);
-        // update -> new geometry
-        applySourceDiff(updateable, {
+        const newGeometry: GeoJSON.Point = {
+            type: 'Point',
+            coordinates: [1, 0]
+        };
+        const affectedGeometries = applySourceDiff(updateable, {
             update: [{
                 id: 'point',
-                newGeometry: {
-                    type: 'Point',
-                    coordinates: [1, 0]
-                }
+                newGeometry: newGeometry,
             }]
         });
         expect(updateable.size).toBe(1);
         expect((updateable.get('point')?.geometry as GeoJSON.Point).coordinates[0]).toBe(1);
+        expect(affectedGeometries).toStrictEqual([point.geometry, newGeometry]);
     });
 
     test('adds properties', () => {
         const updateable = new Map([['point', point]]);
-        applySourceDiff(updateable, {
+        const affectedGeometries = applySourceDiff(updateable, {
             update: [{
                 id: 'point',
                 addOrUpdateProperties: [
@@ -318,11 +321,12 @@ describe('applySourceDiff', () => {
         expect(Object.keys(properties)).toHaveLength(2);
         expect(properties.prop).toBe('value');
         expect(properties.prop2).toBe('value2');
+        expect(affectedGeometries).toStrictEqual([point.geometry]);
     });
 
     test('updates properties', () => {
         const updateable = new Map([['point', {...point, properties: {prop: 'value', prop2: 'value2'}}]]);
-        applySourceDiff(updateable, {
+        const affectedGeometries = applySourceDiff(updateable, {
             update: [{
                 id: 'point',
                 addOrUpdateProperties: [
@@ -335,11 +339,12 @@ describe('applySourceDiff', () => {
         expect(Object.keys(properties2)).toHaveLength(2);
         expect(properties2.prop).toBe('value');
         expect(properties2.prop2).toBe('value3');
+        expect(affectedGeometries).toStrictEqual([point.geometry]);
     });
 
     test('removes properties', () => {
         const updateable = new Map([['point', {...point, properties: {prop: 'value', prop2: 'value2'}}]]);
-        applySourceDiff(updateable, {
+        const affectedGeometries = applySourceDiff(updateable, {
             update: [{
                 id: 'point',
                 removeProperties: ['prop2']
@@ -349,11 +354,12 @@ describe('applySourceDiff', () => {
         const properties3 = updateable.get('point')?.properties!;
         expect(Object.keys(properties3)).toHaveLength(1);
         expect(properties3.prop).toBe('value');
+        expect(affectedGeometries).toStrictEqual([point.geometry]);
     });
 
     test('removes all properties', () => {
         const updateable = new Map([['point', {...point, properties: {prop: 'value', prop2: 'value2'}}]]);
-        applySourceDiff(updateable, {
+        const affectedGeometries = applySourceDiff(updateable, {
             update: [{
                 id: 'point',
                 removeAllProperties: true,
@@ -361,6 +367,7 @@ describe('applySourceDiff', () => {
         });
         expect(updateable.size).toBe(1);
         expect(Object.keys(updateable.get('point')?.properties!)).toHaveLength(0);
+        expect(affectedGeometries).toStrictEqual([point.geometry]);
     });
 
     test('adds a feature with properties, removes the feature, then adds it back with different geometry and properties', () => {

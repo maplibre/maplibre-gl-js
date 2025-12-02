@@ -423,6 +423,12 @@ describe('LngLatBounds', () => {
                 const bounds = new LngLatBounds([-180, 5], [-175, 10]);
                 expect(tileBounds.intersects(bounds)).toBe(true);
             });
+
+            test('entire worlds tile should return true', () => {
+                const tileBounds = new LngLatBounds([270, -88.97061836630758], [-270, 88.97061836630758]);
+                const bounds = new LngLatBounds([0, 0], [10, 10]);
+                expect(tileBounds.intersects(bounds)).toBe(true);
+            });
         });
     });
 });

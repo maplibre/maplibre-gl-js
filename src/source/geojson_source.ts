@@ -485,10 +485,12 @@ export class GeoJSONSource extends Evented implements Source {
      * @internal
      */
     shouldReloadTile(tile: Tile, {affectedBounds}: GeoJSONSourceShouldReloadTileOptions) : boolean {
-        if (!tile.latestFeatureIndex) {
-            return tile.state !== 'unloaded';
+        if (tile.state === 'loading') {
+            return true;
         }
-
+        if (tile.state === 'unloaded') {
+            return false;
+        }
         // Update the tile if it WILL NOW contain an updated feature.
         const {buffer, extent} = this.workerOptions.geojsonVtOptions;
         const tileBounds = tileIdToLngLatBounds(
