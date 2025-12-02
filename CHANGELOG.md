@@ -1,9 +1,17 @@
 ## main
 
 ### ✨ Features and improvements
+- Prevent redundant DEM border backfilling by tracking state, moved tile manager logic to helper files ([#6756](https://github.com/maplibre/maplibre-gl-js/pull/6756)) (by [@HarelM](https://github.com/HarelM))
+- Improve performance of GeoJSON `updateData`, `setData`, and overzoomed tiles ([#6738](https://github.com/maplibre/maplibre-gl-js/pull/6738), [#6772](https://github.com/maplibre/maplibre-gl-js/pull/6772)) (by [@lucaswoj](https://github.com/lucaswoj))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Handle consecutive duplicate points in offsetLine to avoid null values in the output. Fixes [#5431](https://github.com/maplibre/maplibre-gl-js/issues/5431) (by [mmc1718](https://github.com/mmc1718))
+- ⚠️ Gracefully handle internal AbortErrors (e.g., when a TileJSON URL is updated while a request in flight). Previously, such aborted requests would throw an AbortError in an unhandled rejection that was not easily caught in user code. Since aborted requests are fully handled internally, these unhandled rejections were superfluous and resulted in unhelpful client errors. ([#6747](https://github.com/maplibre/maplibre-gl-js/pull/6747)) (by [@andrewda](https://github.com/andrewda))
+- Fix canvas sources with power-of-2 dimensions rendering as black squares ([#6607](https://github.com/maplibre/maplibre-gl-js/issues/6607))
+- Fix `queryTerrainElevation` to use higher zoom level tiles when possible ([#6791](https://github.com/maplibre/maplibre-gl-js/issues/6791)) (by [@HarelM](https://github.com/HarelM))
+- Fix unwanted movement when moving a pitched terrain map at high latitudes; fix freezes when moving a pitched and rotated terrain map at low zoom ([#6775](https://github.com/maplibre/maplibre-gl-js/pull/6775)) (by [@larsmaxfield](https://github.com/larsmaxfield))
+- Fix issue with `static` modifier as part of mlt package ([#6796](https://github.com/maplibre/maplibre-gl-js/pull/6796)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 5.13.0

@@ -1,5 +1,5 @@
 import Protobuf from 'pbf';
-import {VectorTile, type VectorTileLayer} from '@mapbox/vector-tile';
+import {VectorTile} from '@mapbox/vector-tile';
 import {type ExpiryData, getArrayBuffer} from '../util/ajax';
 import {WorkerTile} from './worker_tile';
 import {BoundedLRUCache} from '../tile/tile_cache';
@@ -16,11 +16,11 @@ import type {
 import type {IActor} from '../util/actor';
 import type {StyleLayer} from '../style/style_layer';
 import type {StyleLayerIndex} from '../style/style_layer_index';
-import type {GeoJSONWrapper} from '@maplibre/vt-pbf';
+import {type VectorTileLayerLike, type VectorTileLike, GeoJSONWrapper} from '@maplibre/vt-pbf';
 
 export type LoadVectorTileResult = {
     isGeojson?: boolean;
-    vectorTile: VectorTile;
+    vectorTile: VectorTileLike;
     rawData?: ArrayBufferLike;
     resourceTiming?: Array<PerformanceResourceTiming>;
 } & ExpiryData;
@@ -172,7 +172,7 @@ export class VectorTileWorkerSource implements WorkerSource {
      * @param maxZoomVectorTile - the original vector tile at the source's max available canonical zoom
      * @returns the overzoomed tile and its raw data
      */
-    private _getOverzoomTile(params: WorkerTileParameters, maxZoomVectorTile: VectorTile): LoadVectorTileResult {
+    private _getOverzoomTile(params: WorkerTileParameters, maxZoomVectorTile: VectorTileLike): LoadVectorTileResult {
         const {tileID, source, overzoomParameters} = params;
         const {maxZoomTileID} = overzoomParameters;
 
@@ -187,7 +187,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         const layerFamilies: Record<string, StyleLayer[][]> = this.layerIndex.familiesBySource[source];
 
         for (const sourceLayerId in layerFamilies) {
-            const sourceLayer: VectorTileLayer = maxZoomVectorTile.layers[sourceLayerId];
+            const sourceLayer: VectorTileLayerLike = maxZoomVectorTile.layers[sourceLayerId];
             if (!sourceLayer) {
                 continue;
             }

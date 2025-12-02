@@ -5,7 +5,6 @@ import {EXTENT} from './extent';
 import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
 import {TransferableGridIndex} from '../util/transferable_grid_index';
 import {DictionaryCoder} from '../util/dictionary_coder';
-import {type VectorTileLayer, type VectorTileFeature, VectorTile} from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import {GeoJSONFeature} from '../util/vectortile_to_geojson';
 import {mapObject, extend} from '../util/util';
@@ -24,14 +23,10 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
-import {type Feature, GeoJSONWrapper} from '@maplibre/vt-pbf';
+import {type VectorTileFeatureLike, type VectorTileLayerLike, type Feature, GeoJSONWrapper, GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
+import {VectorTile} from '@mapbox/vector-tile';
 
-/**
- * This is the default layer name for a geojson source,
- * as this source is not a real vector source, but a vector source needs layers, 
- * so this is default name for it.
- */
-export const GEOJSON_TILE_LAYER_NAME = '_geojsonTileLayer';
+export {GEOJSON_TILE_LAYER_NAME};
 
 type QueryParameters = {
     scale: number;
@@ -77,7 +72,7 @@ export class FeatureIndex {
     geoJsonFeatureData: Feature[];
     bucketLayerIDs: Array<Array<string>>;
 
-    vtLayers: {[_: string]: VectorTileLayer};
+    vtLayers: {[_: string]: VectorTileLayerLike};
     sourceLayerCoder: DictionaryCoder;
 
     constructor(tileID: OverscaledTileID, promoteId?: PromoteIdSpecification | null) {
@@ -91,7 +86,7 @@ export class FeatureIndex {
         this.promoteId = promoteId;
     }
 
-    insert(feature: VectorTileFeature, geometry: Array<Array<Point>>, featureIndex: number, sourceLayerIndex: number, bucketIndex: number, is3D?: boolean) {
+    insert(feature: VectorTileFeatureLike, geometry: Array<Array<Point>>, featureIndex: number, sourceLayerIndex: number, bucketIndex: number, is3D?: boolean) {
         const key = this.featureIndexArray.length;
         this.featureIndexArray.emplaceBack(featureIndex, sourceLayerIndex, bucketIndex);
 
@@ -118,7 +113,7 @@ export class FeatureIndex {
         }
     }
 
-    loadVTLayers(): {[_: string]: VectorTileLayer} {
+    loadVTLayers(): {[_: string]: VectorTileLayerLike} {
         if (!this.vtLayers) {
             if (this.geoJsonFeatureData) {
                 this.vtLayers = new GeoJSONWrapper(this.geoJsonFeatureData, {version: 2, extent: EXTENT}).layers;
@@ -186,7 +181,7 @@ export class FeatureIndex {
                 styleLayers,
                 serializedLayers,
                 sourceFeatureState,
-                (feature: VectorTileFeature, styleLayer: StyleLayer, featureState: FeatureState) => {
+                (feature: VectorTileFeatureLike, styleLayer: StyleLayer, featureState: FeatureState) => {
                     if (!featureGeometry) {
                         featureGeometry = loadGeometry(feature);
                     }
@@ -222,7 +217,7 @@ export class FeatureIndex {
         serializedLayers: {[_: string]: any},
         sourceFeatureState?: SourceFeatureState,
         intersectionTest?: (
-            feature: VectorTileFeature,
+            feature: VectorTileFeatureLike,
             styleLayer: StyleLayer,
             featureState: any,
             id: string | number | void
@@ -330,7 +325,7 @@ export class FeatureIndex {
         return false;
     }
 
-    getId(feature: VectorTileFeature, sourceLayerId: string): string | number {
+    getId(feature: VectorTileFeatureLike, sourceLayerId: string): string | number {
         let id: string | number = feature.id;
         if (this.promoteId) {
             const propName = typeof this.promoteId === 'string' ? this.promoteId : this.promoteId[sourceLayerId];
