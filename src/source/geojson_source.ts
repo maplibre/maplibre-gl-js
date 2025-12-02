@@ -462,22 +462,22 @@ export class GeoJSONSource extends Evented implements Source {
             this._data = {updateable: toUpdateable(this._data.geojson, promoteId)};
         }
 
-        if (this._data.updateable) {
-            const affectedGeometries = applySourceDiff(this._data.updateable, diff, promoteId);
-
-            if (this._options.cluster || diff.removeAll) {
-                return undefined;
-            }
-                
-            const affectedBounds = affectedGeometries
-                .filter(Boolean)
-                .map(g => getGeoJSONBounds(g));
-
-            return {
-                affectedBounds,
-            };
+        if (!this._data.updateable) {
+            return undefined;
         }
-        return undefined;
+        const affectedGeometries = applySourceDiff(this._data.updateable, diff, promoteId);
+
+        if (this._options.cluster || diff.removeAll) {
+            return undefined;
+        }
+            
+        const affectedBounds = affectedGeometries
+            .filter(Boolean)
+            .map(g => getGeoJSONBounds(g));
+
+        return {
+            affectedBounds,
+        };
     }
 
     /**
