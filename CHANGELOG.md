@@ -4,7 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+- `LngLatBounds#intersects` now returns `true` when bounds touch along an edge or at a corner ([#6802](https://github.com/maplibre/maplibre-gl-js/pull/6802)) (by [@lucaswoj](https://github.com/lucaswoj))
 
 ## 5.13.0
 
