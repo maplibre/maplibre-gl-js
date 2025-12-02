@@ -509,12 +509,13 @@ export class GeoJSONSource extends Evented implements Source {
 
         // Update the tile if it PREVIOUSLY contained an updated feature.
         const layers = tile.latestFeatureIndex.loadVTLayers();
-        for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
-            const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
-            const feature = layers[GEOJSON_TILE_LAYER_NAME].feature(featureIndex.featureIndex);
-            const id = tile.latestFeatureIndex.getId(feature, GEOJSON_TILE_LAYER_NAME);
-            if (prevIds.has(id)) {
-                return true;
+        if (layers[GEOJSON_TILE_LAYER_NAME]) {
+            for (let i = 0; i < layers[GEOJSON_TILE_LAYER_NAME].length; i++) {
+                const feature = layers[GEOJSON_TILE_LAYER_NAME].feature(i);
+                const id = tile.latestFeatureIndex.getId(feature, GEOJSON_TILE_LAYER_NAME);
+                if (prevIds.has(id)) {
+                    return true;
+                }
             }
         }
 

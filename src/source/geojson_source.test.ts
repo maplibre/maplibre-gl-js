@@ -949,13 +949,10 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         tile.latestFeatureIndex = new FeatureIndex(tile.tileID, source.promoteId);
         tile.latestFeatureIndex.vtLayers = {
             [GEOJSON_TILE_LAYER_NAME]: {
-                feature: (i: number) => features[i] || {}
+                feature: (i: number) => features[i] || {},
+                length: features.length
             } as VectorTileLayerLike
         };
-
-        for (let i = 0; i < features.length; i++) {
-            tile.latestFeatureIndex.insert(features[i] as VectorTileFeatureLike, [], i, 0, 0, false);
-        }
         return tile;
     }
 
