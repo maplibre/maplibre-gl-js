@@ -925,9 +925,11 @@ describe('GeoJSONSource.shoudReloadTile', () => {
     beforeEach(() => {
         source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
         tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+        tile.state = 'loaded';
     });
 
     test('returns true when tile is still loading', () => {
+        tile.state = "loading";
         const result = source.shouldReloadTile(tile, {} as GeoJSONSourceShouldReloadTileOptions);
 
         expect(result).toBe(true);
@@ -942,7 +944,6 @@ describe('GeoJSONSource.shoudReloadTile', () => {
     });
 
     test('fires undefined when diff.removeAll is true', async () => {
-        tile.state = 'loaded';
         const diff: GeoJSONSourceDiff = {removeAll: true};
 
         let shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions = undefined;
@@ -957,7 +958,6 @@ describe('GeoJSONSource.shoudReloadTile', () => {
     });
 
     test('returns true when tile contains a feature that is being updated', async () => {
-        tile.state = 'loaded';
         const diff: GeoJSONSourceDiff = {
             update: [{
                 id: 0,
@@ -979,7 +979,6 @@ describe('GeoJSONSource.shoudReloadTile', () => {
     });
     
     test('returns false when tile contains a feature that is being removed but was never added', async () => {
-        tile.state = 'loaded';
         const diff: GeoJSONSourceDiff = {remove: [0]};
         let shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions = undefined;
         source.on('data', (e) => {
@@ -1018,7 +1017,6 @@ describe('GeoJSONSource.shoudReloadTile', () => {
     });
     
     test('returns false when diff is empty', async () => {
-        tile.state = 'loaded';
         const diff: GeoJSONSourceDiff = {};
 
         let shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions = undefined;
