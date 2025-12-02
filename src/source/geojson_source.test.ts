@@ -929,7 +929,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
     });
 
     test('returns true when tile is still loading', () => {
-        tile.state = "loading";
+        tile.state = 'loading';
         const result = source.shouldReloadTile(tile, {} as GeoJSONSourceShouldReloadTileOptions);
 
         expect(result).toBe(true);
