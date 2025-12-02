@@ -91,11 +91,8 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             return null;
         }
 
-        const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features, {version: 2, extent: EXTENT});
-
         return {
-            vectorTile: geojsonWrapper,
-            isGeojson: true
+            vectorTile: new GeoJSONWrapper(geoJSONTile.features, {version: 2, extent: EXTENT})
         };
     }
 

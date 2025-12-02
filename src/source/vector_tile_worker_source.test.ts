@@ -12,7 +12,6 @@ import {setPerformance, sleep} from '../util/test/util';
 import {ABORT_ERROR} from '../util/abort_error';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import {VectorTile} from '@mapbox/vector-tile';
-import {VectorTileLike} from '@maplibre/vt-pbf';
 import Point from '@mapbox/point-geometry';
 
 describe('vector tile worker source', () => {

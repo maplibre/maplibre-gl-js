@@ -19,7 +19,6 @@ import type {StyleLayerIndex} from '../style/style_layer_index';
 import {type VectorTileLayerLike, type VectorTileLike, GeoJSONWrapper} from '@maplibre/vt-pbf';
 
 export type LoadVectorTileResult = {
-    isGeojson?: boolean;
     vectorTile: VectorTileLike;
     rawData?: ArrayBufferLike;
     resourceTiming?: Array<PerformanceResourceTiming>;
@@ -141,7 +140,6 @@ export class VectorTileWorkerSource implements WorkerSource {
             }
 
             workerTile.vectorTile = response.vectorTile;
-            workerTile.geoJsonFeatures = response.isGeojson ? (response.vectorTile as GeoJSONWrapper).features : null;
             const parsePromise = workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
             this.loaded[tileUid] = workerTile;
             // keep the original fetching state so that reload tile can pick it up if the original parse is cancelled by reloads' parse
@@ -152,7 +150,7 @@ export class VectorTileWorkerSource implements WorkerSource {
                 // Transferring a copy of rawTileData because the worker needs to retain its copy.
                 return extend({
                     rawTileData: rawTileData?.slice(0),
-                    geoJsonFeatures: workerTile.geoJsonFeatures,
+                    geoJsonFeatures: workerTile.vectorTile instanceof GeoJSONWrapper ? (workerTile.vectorTile as GeoJSONWrapper).features : null,
                     encoding: params.encoding
                 }, result, cacheControl, resourceTiming);
             } finally {
@@ -222,7 +220,7 @@ export class VectorTileWorkerSource implements WorkerSource {
                 delete this.fetching[uid];
                 parseResult = extend({
                     rawTileData: rawTileData?.slice(0),
-                    geoJsonFeatures: workerTile.geoJsonFeatures,
+                    geoJsonFeatures: workerTile.vectorTile instanceof GeoJSONWrapper ? (workerTile.vectorTile as GeoJSONWrapper).features : null,
                     encoding: params.encoding
                 }, result, cacheControl, resourceTiming);
             } else {
@@ -235,7 +233,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         if (workerTile.status === 'done' && workerTile.vectorTile) {
             // this seems like a missing case where cache control is lost? see #3309
             return extend({
-                geoJsonFeatures: workerTile.geoJsonFeatures
+                geoJsonFeatures: workerTile.vectorTile instanceof GeoJSONWrapper ? (workerTile.vectorTile as GeoJSONWrapper).features : null,
             }, await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity));
         }
     }

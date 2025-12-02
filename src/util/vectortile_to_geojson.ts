@@ -75,7 +75,9 @@ export class GeoJSONFeature {
             case 1: {
                 const points = [];
                 for (const line of vtCoords) {
-                    points.push(line[0]);
+                    for (const point of line) {
+                        points.push(point);
+                    }
                 }
                 const coordinates = this.projectLine(points, x0, y0, size);
                 this._geometry = points.length === 1 ?
