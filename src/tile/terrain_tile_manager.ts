@@ -264,19 +264,29 @@ export class TerrainTileManager extends Evented {
      * @param searchForDEM - Optional parameter to search for (parent) source tiles with loaded dem.
      * @returns the tile
      */
-    getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile {
+    getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile | undefined {
         const source = this.tileManager._source;
         let z = tileID.overscaledZ - this.deltaZoom;
         if (z > source.maxzoom) z = source.maxzoom;
-        if (z < source.minzoom) return null;
+        if (z < source.minzoom) return undefined;
         // cache for tileID to terrain-tileID
         if (!this._sourceTileCache[tileID.key])
             this._sourceTileCache[tileID.key] = tileID.scaledTo(z).key;
-        let tile = this.tileManager.getTileByID(this._sourceTileCache[tileID.key]);
+        let tile = this.findTileInCaches(this._sourceTileCache[tileID.key]);
         // during tile-loading phase look if parent tiles (with loaded dem) are available.
-        if (!(tile && tile.dem) && searchForDEM)
-            while (z >= source.minzoom && !(tile && tile.dem))
-                tile = this.tileManager.getTileByID(tileID.scaledTo(z--).key);
+        if (!tile?.dem && searchForDEM) {
+            while (z >= source.minzoom && !tile?.dem)
+                tile = this.findTileInCaches(tileID.scaledTo(z--).key);
+        }
+        return tile;
+    }
+
+    findTileInCaches(key: string): Tile | undefined {
+        let tile = this.tileManager.getTileByID(key);
+        if (tile) {
+            return tile;
+        }
+        tile = this.tileManager._outOfViewCache.getByKey(key);
         return tile;
     }
 

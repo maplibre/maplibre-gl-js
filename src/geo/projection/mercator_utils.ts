@@ -88,9 +88,19 @@ export function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, el
     const centerMercator = MercatorCoordinate.fromLngLat(center, elevation);
     const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
     const dMercator = distance * mercUnitsPerMeter;
-    const dzMercator = dMercator * Math.cos(degreesToRadians(pitch));
-    const dhMercator = Math.sqrt(dMercator * dMercator - dzMercator * dzMercator);
-    const dxMercator = dhMercator * Math.sin(degreesToRadians(-bearing));
-    const dyMercator = dhMercator * Math.cos(degreesToRadians(-bearing));
+    const {x, y, z} = cameraDirectionFromPitchBearing(pitch, bearing);
+    const dxMercator = dMercator * -x;
+    const dyMercator = dMercator * -y;
+    const dzMercator = dMercator * -z;
     return new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
+}
+
+export function cameraDirectionFromPitchBearing(pitch: number, bearing: number): {x: number; y: number; z: number} {
+    const pitchRadians = degreesToRadians(pitch);
+    const bearingRadians = degreesToRadians(bearing);
+    const z = Math.cos(-pitchRadians);
+    const h = Math.sin(pitchRadians);
+    const x = h * Math.sin(bearingRadians);
+    const y = -h * Math.cos(bearingRadians);
+    return {x, y, z};
 }

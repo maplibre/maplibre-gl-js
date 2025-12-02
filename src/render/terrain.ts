@@ -182,13 +182,23 @@ export class Terrain {
     /**
      * Get the elevation for given {@link LngLat} in respect of exaggeration.
      * @param lnglat - the location
-     * @param zoom - the zoom
+     * @param zoom - the zoom, use {@link getElevationForLngLat} if you don't want a specific zoom level, but more accurate results.
      * @returns the elevation
      */
     getElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
         if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
         const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
+    }
+
+    /**
+     * Get the elevation for given {@link LngLat} in respect of exaggeration.
+     * This will traverse up the zoom levels to find the first tile with data to return.
+     * @param lnglat - the location
+     * @returns the elevation
+     */
+    getElevationForLngLat(lnglat: LngLat) {
+        return this.getElevationForLngLatZoom(lnglat, this.tileManager.maxzoom);
     }
 
     /**
@@ -455,6 +465,7 @@ export class Terrain {
     }
 
     getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getMinMaxElevation(tileID).minElevation ?? 0;
     }

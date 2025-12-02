@@ -17,6 +17,7 @@ import type {
 import type Point from '@mapbox/point-geometry';
 import {MAX_TILE_ZOOM} from '../util/util';
 import {Bounds} from '../geo/bounds';
+import {isAbortError} from '../util/abort_error';
 
 /**
  * Four geographical coordinates,
@@ -157,7 +158,9 @@ export class ImageSource extends Evented implements Source {
         } catch (err) {
             this._request = null;
             this._loaded = true;
-            this.fire(new ErrorEvent(err));
+            if (!isAbortError(err)) {
+                this.fire(new ErrorEvent(err));
+            }
         }
     }
 

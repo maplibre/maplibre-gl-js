@@ -1,10 +1,10 @@
 import {describe, test, expect, beforeAll} from 'vitest';
 import {loadGeometry} from './load_geometry';
 import {loadVectorTile} from '../../test/unit/lib/tile';
-import {type VectorTileLayer} from '@mapbox/vector-tile';
+import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 describe('loadGeometry', () => {
-    let sourceLayer: VectorTileLayer;
+    let sourceLayer: VectorTileLayerLike;
     beforeAll(() => {
         // Load line features from fixture tile.
         sourceLayer = loadVectorTile().layers.road;

@@ -64,6 +64,42 @@ describe('offsetLine', () => {
         ]]);
     });
 
+    test('line with duplicate points', () => {
+        const line = [
+            new Point(0, 1),
+            new Point(0, 0),
+            new Point(0, 0),
+            new Point(0, -1),
+            new Point(0, -1)
+        ];
+        const offset = 1;
+
+        expect(offsetLine([line], offset)).toEqual([[
+            new Point(1, 1),
+            new Point(1, 0),
+            new Point(1, -1)
+        ]]);
+    });
+
+    test('line with more than two consecutive duplicate points', () => {
+        const line = [
+            new Point(0, 1),
+            new Point(0, 1),
+            new Point(0, 1),
+            new Point(0, 0),
+            new Point(0, 0),
+            new Point(0, -1),
+            new Point(0, -1)
+        ];
+        const offset = 1;
+
+        expect(offsetLine([line], offset)).toEqual([[
+            new Point(1, 1),
+            new Point(1, 0),
+            new Point(1, -1)
+        ]]);
+    });
+
     test('line three points north east', () => {
         const line = [
             new Point(-1, 1),

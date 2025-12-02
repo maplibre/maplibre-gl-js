@@ -178,15 +178,33 @@ describe('RasterTileSource', () => {
         expect((server.lastRequest as any).aborted).toBe(true);
     });
 
-    test('supports url property updates', () => {
+    test('supports url property updates', async () => {
+        server.respondWith('http://localhost:2900/source2.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            bounds: [-47, -7, -45, -5]
+        }));
+
         const source = createSource({
             url: 'http://localhost:2900/source.json'
         });
+        const errorHandler = vi.fn();
+        source.on('error', errorHandler);
         source.setUrl('http://localhost:2900/source2.json');
+
+        server.respond();
+
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        expect(server.requests.length).toBe(2);
+        expect(server.requests[0].aborted).toBe(true);
         expect(source.serialize()).toEqual({
             type: 'raster',
             url: 'http://localhost:2900/source2.json'
         });
+        expect(errorHandler).not.toHaveBeenCalled();
     });
 
     it('serializes options', () => {
@@ -294,5 +312,31 @@ describe('RasterTileSource', () => {
         await tilePromise;
         expect(tile.state).toBe('loaded');
         expect(expiryDataSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not throw when tile is aborted', async () => {
+        const source = createSource({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            bounds: [-47, -7, -45, -5]
+        });
+
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        const tile = {
+            tileID: new OverscaledTileID(5, 0, 5, 31, 5),
+            state: 'loading',
+            loadVectorData() {},
+            setExpiryData() {}
+        } as any as Tile;
+        const loadPromise = source.loadTile(tile);
+
+        tile.abortController.abort();
+        tile.aborted = true;
+
+        await expect(loadPromise).resolves.toBeUndefined();
+        expect(tile.state).toBe('unloaded');
     });
 });

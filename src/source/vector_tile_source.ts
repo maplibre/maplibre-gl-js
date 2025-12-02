@@ -4,6 +4,8 @@ import {extend, pick} from '../util/util';
 import {loadTileJson} from './load_tilejson';
 import {TileBounds} from '../tile/tile_bounds';
 import {ResourceType} from '../util/request_manager';
+import {MessageType} from '../util/actor_messages';
+import {isAbortError} from '../util/abort_error';
 
 import type {Source} from './source';
 import type {OverscaledTileID} from '../tile/tile_id';
@@ -12,7 +14,6 @@ import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from '../tile/tile';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult} from './worker_source';
-import {MessageType} from '../util/actor_messages';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
@@ -125,7 +126,11 @@ export class VectorTileSource extends Evented implements Source {
         } catch (err) {
             this._tileJSONRequest = null;
             this._loaded = true; // let's pretend it's loaded so the source will be ignored
-            this.fire(new ErrorEvent(err));
+
+            // only fire error event if it is not due to aborting the request
+            if (!isAbortError(err)) {
+                this.fire(new ErrorEvent(err));
+            }
         }
     }
 

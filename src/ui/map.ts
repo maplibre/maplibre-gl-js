@@ -964,7 +964,7 @@ export class Map extends Camera {
 
     calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number): CameraOptions {
         if (altitudeTo == null && this.terrain) {
-            altitudeTo = this.terrain.getElevationForLngLatZoom(to, this.transform.tileZoom);
+            altitudeTo = this.terrain.getElevationForLngLat(to);
         }
         return super.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
     }
@@ -2264,13 +2264,10 @@ export class Map extends Camera {
      * ```
      */
     areTilesLoaded(): boolean {
-        const sources = this.style && this.style.tileManagers;
-        for (const id in sources) {
-            const source = sources[id];
-            const tiles = source._tiles;
-            for (const t in tiles) {
-                const tile = tiles[t];
-                if (!(tile.state === 'loaded' || tile.state === 'errored')) return false;
+        const tileManagers = this.style && this.style.tileManagers;
+        for (const tileManager of Object.values(tileManagers)) {
+            if (!tileManager.areTilesLoaded()) {
+                return false;
             }
         }
         return true;
