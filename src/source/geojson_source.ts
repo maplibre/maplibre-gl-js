@@ -7,7 +7,6 @@ import {applySourceDiff, isUpdateableGeoJSON, mergeSourceDiffs, toUpdateable} fr
 import {getGeoJSONBounds} from '../util/geojson_bounds';
 import {MessageType} from '../util/actor_messages';
 import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds';
-import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
 
 import type {LngLatBounds} from '../geo/lng_lat_bounds';
 import type {Source} from './source';

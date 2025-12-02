@@ -1,4 +1,4 @@
-import {describe, test, expect, vi, beforeEach} from 'vitest';
+import {describe, test, expect, vi, /*beforeEach*/} from 'vitest';
 import {Tile} from '../tile/tile';
 import {OverscaledTileID} from '../tile/tile_id';
 import {GeoJSONSource, type GeoJSONSourceOptions} from './geojson_source';
@@ -8,7 +8,7 @@ import {extend} from '../util/util';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {sleep, waitForEvent} from '../util/test/util';
-import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
+//import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
 import {type ActorMessage, MessageType} from '../util/actor_messages';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {Dispatcher} from '../util/dispatcher';
@@ -16,7 +16,7 @@ import type {RequestManager} from '../util/request_manager';
 import type {Actor} from '../util/actor';
 import type {MapSourceDataEvent} from '../ui/events';
 import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff';
-import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
+//import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -936,7 +936,7 @@ describe('GeoJSONSource.applyDiff', () => {
         });
     });
 });
-    /*
+/*
 describe('GeoJSONSource.shoudReloadTile', () => {
     let source: GeoJSONSource;
 
@@ -958,7 +958,6 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         }
         return tile;
     }
-
 
     test('returns true when diff.removeAll is true', () => {
         const diff: GeoJSONSourceDiff = {removeAll: true};
