@@ -465,6 +465,7 @@ export class Terrain {
     }
 
     getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getMinMaxElevation(tileID).minElevation ?? 0;
     }

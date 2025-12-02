@@ -10,6 +10,7 @@
 - ⚠️ Gracefully handle internal AbortErrors (e.g., when a TileJSON URL is updated while a request in flight). Previously, such aborted requests would throw an AbortError in an unhandled rejection that was not easily caught in user code. Since aborted requests are fully handled internally, these unhandled rejections were superfluous and resulted in unhelpful client errors. ([#6747](https://github.com/maplibre/maplibre-gl-js/pull/6747)) (by [@andrewda](https://github.com/andrewda))
 - Fix canvas sources with power-of-2 dimensions rendering as black squares ([#6607](https://github.com/maplibre/maplibre-gl-js/issues/6607))
 - Fix `queryTerrainElevation` to use higher zoom level tiles when possible ([#6791](https://github.com/maplibre/maplibre-gl-js/issues/6791)) (by [@HarelM](https://github.com/HarelM))
+- Fix unwanted movement when moving a pitched terrain map at high latitudes; fix freezes when moving a pitched and rotated terrain map at low zoom ([#6775](https://github.com/maplibre/maplibre-gl-js/pull/6775)) (by [@larsmaxfield](https://github.com/larsmaxfield))
 - _...Add new stuff here..._
 
 ## 5.13.0
