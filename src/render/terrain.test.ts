@@ -1,17 +1,17 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
+import {mat4} from 'gl-matrix';
 import {Terrain} from './terrain';
 import {Context} from '../gl/context';
 import {RGBAImage} from '../util/image';
-import type {TileManager} from '../tile/tile_manager';
 import {OverscaledTileID} from '../tile/tile_id';
-import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {DEMData} from '../data/dem_data';
 import {Tile} from '../tile/tile';
-import {type Painter} from './painter';
-import {mat4} from 'gl-matrix';
 import {LngLat} from '../geo/lng_lat';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
+import type {TileManager} from '../tile/tile_manager';
+import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {DEMData} from '../data/dem_data';
+import type {Painter} from './painter';
 
 describe('Terrain', () => {
     let gl: WebGLRenderingContext;
@@ -187,6 +187,9 @@ describe('Terrain', () => {
             _source: {maxzoom: 12, tileSize: 512},
             _cache: {max: 10},
             getTileByID: () => null,
+            _outOfViewCache: {
+                getByKey: () => null,
+            },
         } as any as TileManager;
         const terrain = new Terrain(
             painter,
@@ -288,20 +291,29 @@ describe('Terrain', () => {
         expect(mockTerrain.getDEMElevation(null, 0.4, 0.2)).toBeCloseTo(42);
     });
 
+    test('getElevationForLngLat uses source max zoom', () => {
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
+
+        const spy = vi.fn();
+        terrain.getElevation = spy;
+        terrain.getElevationForLngLat(new LngLat(0, 0));
+
+        expect(spy).toHaveBeenCalled();
+        expect((spy.mock.calls[0][0] as OverscaledTileID).canonical.z).toBe(terrain.tileManager.maxzoom);
+    });
+
     test('getElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
         const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
 
-        const OVERSCALETILEID_DOES_NOT_THROW = 4;
-        terrain.getElevation = () => OVERSCALETILEID_DOES_NOT_THROW;
-        expect(terrain.getElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(OVERSCALETILEID_DOES_NOT_THROW);
+        terrain.getElevation = () => 1;
+        expect(terrain.getElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(1);
     });
 
     test('getMinTileElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
         const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
 
-        const OVERSCALETILEID_DOES_NOT_THROW = 4;
-        terrain.getMinMaxElevation = () => ({minElevation: OVERSCALETILEID_DOES_NOT_THROW, maxElevation: 42});
-        expect(terrain.getMinTileElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(OVERSCALETILEID_DOES_NOT_THROW);
+        terrain.getMinMaxElevation = () => ({minElevation: 1, maxElevation: 42});
+        expect(terrain.getMinTileElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(1);
     });
 
     describe('getElevationForLngLatZoom returns 0 for out of bounds', () => {
