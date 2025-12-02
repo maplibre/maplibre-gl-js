@@ -45,12 +45,7 @@ export type GeoJSONSourceShouldReloadTileOptions = {
     /**
      * Refresh all tiles that WILL contain these bounds.
      */
-    nextBounds: LngLatBounds[];
-
-    /**
-     * Refresh all tiles that PREVIOUSLY DID contain these feature ids.
-     */
-    prevIds: Set<GeoJSON.Feature['id']>;
+    affectedBounds: LngLatBounds[];
 };
 
 /**
@@ -423,8 +418,10 @@ export class GeoJSONSource extends Evented implements Source {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
                 return;
             }
-
-            if (diff) this._applyDiff(diff);
+            let shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions | undefined;
+            if (diff) {
+                shouldReloadTileOptions = this._applyDiff(diff);
+            }
 
             let resourceTiming: PerformanceResourceTiming[] = null;
             if (result.resourceTiming && result.resourceTiming[this.id]) {
@@ -439,7 +436,7 @@ export class GeoJSONSource extends Evented implements Source {
             // although GeoJSON sources contain no metadata, we fire this event to let the TileManager
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions: this._getShouldReloadTileOptions(diff)}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions}));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -455,7 +452,7 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    private _applyDiff(diff: GeoJSONSourceDiff): void {
+    private _applyDiff(diff: GeoJSONSourceDiff): GeoJSONSourceShouldReloadTileOptions {
         const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
         // Lazily convert `this._data` to updateable if it's not already
@@ -467,55 +464,30 @@ export class GeoJSONSource extends Evented implements Source {
         }
 
         if (this._data.updateable) {
-            applySourceDiff(this._data.updateable, diff, promoteId);
-        }
-    }
+            const affectedGeometries = applySourceDiff(this._data.updateable, diff, promoteId);
 
-    _getShouldReloadTileOptions(diff?: GeoJSONSourceDiff): GeoJSONSourceShouldReloadTileOptions | undefined {
-        if (this._options.cluster || !diff || diff.removeAll) return undefined;
-
-        const {add = [], update = [], remove = []} = (diff || {});
-
-        const prevIds = new Set([...update.map(u => u.id), ...remove]);
-
-        for (const id of prevIds.values()) {
-            if (typeof id !== 'number' && this.promoteId == null) {
-                warnOnce(`GeoJSONSource "${this.id}": updateData is slower when using string GeoJSON feature IDs. Consider using promoteId or numeric IDs for better performance.`);
+            if (this._options.cluster || diff.removeAll) {
                 return undefined;
             }
+                
+            const affectedBounds = affectedGeometries
+                .filter(Boolean)
+                .map(g => getGeoJSONBounds(g));
+
+            return {
+                affectedBounds,
+            };
         }
-
-        const nextBounds = [
-            ...update.map(f => f.newGeometry),
-            ...add.map(f => f.geometry)
-        ]
-            .filter(Boolean)
-            .map(g => getGeoJSONBounds(g));
-
-        return {
-            nextBounds,
-            prevIds
-        };
+        return undefined;
     }
 
     /**
      * Determine whether a tile should be reloaded based on a set of options associated with a {@link MapSourceDataChangedEvent}.
      * @internal
      */
-    shouldReloadTile(tile: Tile, {nextBounds, prevIds}: GeoJSONSourceShouldReloadTileOptions) : boolean {
+    shouldReloadTile(tile: Tile, {affectedBounds}: GeoJSONSourceShouldReloadTileOptions) : boolean {
         if (!tile.latestFeatureIndex) {
             return tile.state !== 'unloaded';
-        }
-
-        // Update the tile if it PREVIOUSLY contained an updated feature.
-        const layers = tile.latestFeatureIndex.loadVTLayers();
-        for (let i = 0; i < tile.latestFeatureIndex.featureIndexArray.length; i++) {
-            const featureIndex = tile.latestFeatureIndex.featureIndexArray.get(i);
-            const feature = layers[GEOJSON_TILE_LAYER_NAME].feature(featureIndex.featureIndex);
-            const id = tile.latestFeatureIndex.getId(feature, GEOJSON_TILE_LAYER_NAME);
-            if (prevIds.has(id)) {
-                return true;
-            }
         }
 
         // Update the tile if it WILL NOW contain an updated feature.
@@ -524,12 +496,12 @@ export class GeoJSONSource extends Evented implements Source {
             tile.tileID.canonical,
             buffer / extent
         );
-        for (const bounds of nextBounds) {
+        for (const bounds of affectedBounds) {
             if (tileBounds.intersects(bounds)) {
                 return true;
             }
         }
-
+        console.log('shouldReloadTile false for tile: ', tile.tileID.canonical.toString());
         return false;
     }
 

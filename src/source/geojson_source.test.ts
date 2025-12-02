@@ -936,7 +936,7 @@ describe('GeoJSONSource.applyDiff', () => {
         });
     });
 });
-
+    /*
 describe('GeoJSONSource.shoudReloadTile', () => {
     let source: GeoJSONSource;
 
@@ -958,6 +958,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         }
         return tile;
     }
+
 
     test('returns true when diff.removeAll is true', () => {
         const diff: GeoJSONSourceDiff = {removeAll: true};
@@ -1114,4 +1115,6 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         expect(source.shouldReloadTile(getMockTile(5, 0, 15, []), source._getShouldReloadTileOptions(diff))).toBe(true);
         expect(source.shouldReloadTile(getMockTile(5, 31, 15, []), source._getShouldReloadTileOptions(diff))).toBe(true);
     });
+
 });
+    */

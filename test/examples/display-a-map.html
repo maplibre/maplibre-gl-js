@@ -1,27 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Display a map</title>
     <meta property="og:description" content="Initialize a map in an HTML element with MapLibre GL JS." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
     <script src='../../dist/maplibre-gl-dev.js'></script>
     <style>
-        body { margin: 0; padding: 0; }
-        html, body, #map { height: 100%; }
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
     </style>
 </head>
+
 <body>
-<div id="map"></div>
-<script>
-    const map = new maplibregl.Map({
-        container: 'map', // container id
-        style: 'https://demotiles.maplibre.org/style.json', // style URL
-        center: [0, 0], // starting position [lng, lat]
-        zoom: 1, // starting zoom
-        maplibreLogo: true
-    });
-</script>
+    <div id="map"></div>
+
+    <div class="absolute top-4 left-4 z-10 bg-white p-4 rounded shadow-lg flex flex-col gap-2">
+        <h1 class="font-bold text-lg mb-2">Map Control</h1>
+        <button id="myButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition">
+            Hide
+        </button>
+    </div>
+
+    <script>
+
+        const map = new maplibregl.Map({
+            container: 'map',
+            center: [50, 13],
+            zoom: 8,
+            "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+            style: 'https://demotiles.maplibre.org/style.json',
+        });
+
+        map.on('load', () => {
+
+            map.addSource('shape-source', {
+                type: 'geojson',
+                promoteId: 'id',
+                data: {
+                    type: 'FeatureCollection',
+                    features: [
+                        {
+                            type: 'Feature',
+                            properties: {
+                                id: 'rect-1',
+                                label: 'Target Area'
+                            },
+                            geometry: {
+                                type: 'Polygon',
+                                coordinates: [[
+                                    [49.5, 12.5],
+                                    [50.5, 12.5],
+                                    [50.5, 13.5],
+                                    [49.5, 13.5],
+                                    [49.5, 12.5]
+                                ]]
+                            }
+                        }
+                    ]
+                }
+            });
+
+            map.addSource('text-source', {
+                type: 'geojson',
+                promoteId: 'id',
+                data: {
+                    type: 'FeatureCollection',
+                    features: [{
+                        type: 'Feature',
+                        properties: {
+                            label: 'Zone Alpha',
+                            id: 'text-1',
+                        },
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [50, 13]
+                        }
+                    }
+                    ]
+                }
+            });
+
+            map.addLayer({
+                id: 'rect-fill-layer',
+                type: 'fill',
+                source: 'shape-source',
+                paint: {
+                    'fill-color': 'blue',
+                    'fill-opacity': 0.5,
+                    'fill-outline-color': 'darkblue'
+                }
+            });
+
+            map.addLayer({
+                id: 'label-layer',
+                type: 'symbol',
+                source: 'text-source',
+                layout: {
+                    'text-field': ['get', 'label'],
+                    'text-size': 24,
+                    'text-anchor': 'center',
+                },
+                paint: {
+                    'text-color': '#ffffff',
+                    'text-halo-color': '#000000',
+                    'text-halo-width': 2
+                }
+            });
+        });
+
+        const btn = document.getElementById('myButton');
+        const statusDiv = document.getElementById('status');
+
+        btn.addEventListener('click', () => {
+            const source = map.getSource('text-source');
+            source.getData().then(async (data) => {
+                source.updateData({
+                    removeAll: true //: ['text-1']
+                })
+            });
+
+            const shapeSource = map.getSource('shape-source');
+            shapeSource.getData().then(async (data) => {
+                shapeSource.updateData({
+                    remove: ['rect-1']
+                })
+            });
+        });
+    </script>
 </body>
+
 </html>
