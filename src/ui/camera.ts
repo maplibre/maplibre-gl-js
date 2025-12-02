@@ -1638,6 +1638,6 @@ export abstract class Camera extends Evented {
         if (!this.terrain) {
             return null;
         }
-        return this.terrain.getElevationForLngLatZoom(LngLat.convert(lngLatLike), this.transform.tileZoom);
+        return this.terrain.getElevationForLngLat(LngLat.convert(lngLatLike));
     }
 }
