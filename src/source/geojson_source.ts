@@ -500,7 +500,6 @@ export class GeoJSONSource extends Evented implements Source {
                 return true;
             }
         }
-        console.log('shouldReloadTile false for tile: ', tile.tileID.canonical.toString());
         return false;
     }
 
