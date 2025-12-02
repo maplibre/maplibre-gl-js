@@ -305,13 +305,6 @@ export class LngLatBounds {
 
         if (!latIntersects) return false;
 
-        // Check if either bounds spans the full world (360 degrees or more)
-        const thisSpansWorld = this.getEast() - this.getWest() >= 360;
-        const otherSpansWorld = other.getEast() - other.getWest() >= 360;
-
-        // If either spans the full world, they intersect
-        if (thisSpansWorld || otherSpansWorld) return true;
-
         // Normalize longitudes to [-180, 180] range
         const thisWest = wrap(this.getWest(), -180, 180);
         const thisEast = wrap(this.getEast(), -180, 180);
@@ -319,8 +312,8 @@ export class LngLatBounds {
         const otherEast = wrap(other.getEast(), -180, 180);
 
         // Check if either bounds wraps around the antimeridian
-        const thisWraps = thisWest > thisEast;
-        const otherWraps = otherWest > otherEast;
+        const thisWraps = thisWest >= thisEast;
+        const otherWraps = otherWest >= otherEast;
 
         // Both wrap: they always intersect
         if (thisWraps && otherWraps) {
