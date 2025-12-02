@@ -1015,7 +1015,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
 
         expect(result).toBe(false);
     });
-    
+
     test('returns false when diff is empty', async () => {
         const diff: GeoJSONSourceDiff = {};
 
