@@ -12,7 +12,7 @@ import type {Page, Browser} from 'puppeteer';
 
 import {localizeURLs} from '../lib/localize-urls';
 import {launchPuppeteer} from '../lib/puppeteer_config';
-import type {default as MapLibreGL, Map as MaplibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import type {default as MapLibreGL, Map as MaplibreMap, CanvasSource, GeoJSONSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let maplibregl: typeof MapLibreGL;
@@ -677,6 +677,11 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                     case 'pauseTiles':
                         map.style.tileManagers[operation[1]].pause();
                         break;
+                    case 'updateData': {
+                        const source = map.getSource<GeoJSONSource>(operation[1]);
+                        await source.updateData(operation[2], true);
+                        break;
+                    }
                     default:
                         if (typeof map[operation[0]] === 'function') {
                             map[operation[0]](...operation.slice(1));

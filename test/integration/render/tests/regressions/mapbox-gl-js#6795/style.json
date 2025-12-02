@@ -1,0 +1,48 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64,
+      "operations": [
+        ["wait"],
+        ["updateData", "geojson", {"remove": [0]}],
+        ["wait"]
+      ]
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [{
+          "type": "Feature",
+          "id": 0,
+          "geometry": {
+            "type": "Point",
+            "coordinates": [0, 0]
+          },
+          "properties": {
+            "label": "Test"
+          }
+        }]
+      }
+    }
+  },
+  "sprite": "local://sprites/sprite",
+  "layers": [
+    {
+      "id": "symbol",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "text-field": ["get", "label"],
+        "text-size": 24
+      },
+      "paint": {
+        "text-color": "#ffffff"
+      }
+    }
+  ]
+}
