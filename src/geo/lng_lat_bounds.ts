@@ -290,16 +290,18 @@ export class LngLatBounds {
     /**
      * Checks if this bounding box intersects with another bounding box.
      *
+     * Returns true if the bounding boxes share any area, including cases where
+     * they only touch along an edge or at a corner.
+     *
      * This method properly handles cases where either or both bounding boxes cross
      * the antimeridian (date line).
      */
     intersects(other: LngLatBoundsLike): boolean {
         other = LngLatBounds.convert(other);
 
-        const latIntersects = !(
-            other.getNorth() < this.getSouth() ||
-            other.getSouth() > this.getNorth()
-        );
+        const latIntersects =
+            other.getNorth() >= this.getSouth() &&
+            other.getSouth() <= this.getNorth();
 
         if (!latIntersects) return false;
 
@@ -310,8 +312,8 @@ export class LngLatBounds {
         const otherEast = wrap(other.getEast(), -180, 180);
 
         // Check if either bounds wraps around the antimeridian
-        const thisWraps = thisWest > thisEast;
-        const otherWraps = otherWest > otherEast;
+        const thisWraps = thisWest >= thisEast;
+        const otherWraps = otherWest >= otherEast;
 
         // Both wrap: they always intersect
         if (thisWraps && otherWraps) {
@@ -329,10 +331,7 @@ export class LngLatBounds {
         }
 
         // Neither wraps: standard intersection check
-        return !(
-            otherWest > thisEast ||
-            otherEast < thisWest
-        );
+        return otherWest <= thisEast && otherEast >= thisWest;
     }
 
     /**
