@@ -1,9 +1,16 @@
 ## main
 
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 5.14.0
+
+### ✨ Features and improvements
 - Prevent redundant DEM border backfilling by tracking state, moved tile manager logic to helper files ([#6756](https://github.com/maplibre/maplibre-gl-js/pull/6756)) (by [@HarelM](https://github.com/HarelM))
 - Improve performance of GeoJSON `updateData`, `setData`, and overzoomed tiles ([#6738](https://github.com/maplibre/maplibre-gl-js/pull/6738), [#6772](https://github.com/maplibre/maplibre-gl-js/pull/6772)) (by [@lucaswoj](https://github.com/lucaswoj))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Handle consecutive duplicate points in offsetLine to avoid null values in the output. Fixes [#5431](https://github.com/maplibre/maplibre-gl-js/issues/5431) (by [mmc1718](https://github.com/mmc1718))
@@ -13,7 +20,6 @@
 - Fix unwanted movement when moving a pitched terrain map at high latitudes; fix freezes when moving a pitched and rotated terrain map at low zoom ([#6775](https://github.com/maplibre/maplibre-gl-js/pull/6775)) (by [@larsmaxfield](https://github.com/larsmaxfield))
 - Fix issue with `static` modifier as part of mlt package ([#6796](https://github.com/maplibre/maplibre-gl-js/pull/6796)) (by [@HarelM](https://github.com/HarelM))
 - `LngLatBounds#intersects` now returns `true` when bounds touch along an edge or at a corner ([#6802](https://github.com/maplibre/maplibre-gl-js/pull/6802)) (by [@lucaswoj](https://github.com/lucaswoj))
-- _...Add new stuff here..._
 
 ## 5.13.0
 
