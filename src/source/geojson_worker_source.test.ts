@@ -157,6 +157,7 @@ describe('resourceTiming', () => {
 
         const result = await source.loadData({source: 'testSource', data: geoJson} as LoadGeoJSONParameters);
         expect(result.resourceTiming).toBeUndefined();
+        expect(result.data).toBeUndefined();
     });
 
 });
@@ -296,7 +297,8 @@ describe('loadData', () => {
         const load1Promise = worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters);
         server.respond();
 
-        await load1Promise;
+        const result = await load1Promise;
+        expect(result.data).toStrictEqual(updateableGeoJson);
         await expect(worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters)).resolves.toBeDefined();
     });
 
@@ -320,14 +322,16 @@ describe('loadData', () => {
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
         await worker.loadData({source: 'source1', data: updateableGeoJson} as LoadGeoJSONParameters);
-        await expect(worker.loadData({source: 'source1', dataDiff: {
+        const result = await worker.loadData({source: 'source1', dataDiff: {
             add: [{
                 type: 'Feature',
                 id: 'update_point',
                 geometry: {type: 'Point', coordinates: [0, 0]},
                 properties: {}
             }]
-        }} as LoadGeoJSONParameters)).resolves.toBeDefined();
+        }} as LoadGeoJSONParameters);
+        expect(result).toBeDefined();
+        expect(result.data).toBeUndefined();
     });
 
     test('loadData should reject as first call with no data', async () => {
