@@ -417,10 +417,7 @@ export class GeoJSONSource extends Evented implements Source {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
                 return;
             }
-            let shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions | undefined;
-            if (diff) {
-                shouldReloadTileOptions = this._applyDiff(diff);
-            }
+            const affectedGeometries = this._applyDiffIfNeeded(diff);
 
             let resourceTiming: PerformanceResourceTiming[] = null;
             if (result.resourceTiming && result.resourceTiming[this.id]) {
@@ -435,7 +432,7 @@ export class GeoJSONSource extends Evented implements Source {
             // although GeoJSON sources contain no metadata, we fire this event to let the TileManager
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions: affectedGeometries !== undefined ? {affectedGeometries} : undefined}));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -451,7 +448,15 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    private _applyDiff(diff: GeoJSONSourceDiff): GeoJSONSourceShouldReloadTileOptions {
+    /**
+     * Apply a diff to the source data and return the bounds of the affected geometries.
+     * @param diff The diff to apply.
+     * @returns The bounds of the affected geometries, undefined if the diff is not applicable or all geometries are affected.
+     */
+    private _applyDiffIfNeeded(diff: GeoJSONSourceDiff): LngLatBounds[] | undefined {
+        if (!diff) {
+            return undefined;
+        }
         const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
         // Lazily convert `this._data` to updateable if it's not already
@@ -471,13 +476,9 @@ export class GeoJSONSource extends Evented implements Source {
             return undefined;
         }
             
-        const affectedBounds = affectedGeometries
+        return affectedGeometries
             .filter(Boolean)
             .map(g => getGeoJSONBounds(g));
-
-        return {
-            affectedBounds,
-        };
     }
 
     /**

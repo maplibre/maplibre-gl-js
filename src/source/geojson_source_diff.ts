@@ -134,8 +134,10 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
     }
     else if (diff.remove) {
         for (const id of diff.remove) {
-            affectedGeometries.push(updateable.get(id)?.geometry);
-            updateable.delete(id);
+            if (updateable.has(id)) {
+                affectedGeometries.push(updateable.get(id).geometry);
+                updateable.delete(id);
+            }
         }
     }
 

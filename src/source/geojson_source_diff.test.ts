@@ -288,6 +288,16 @@ describe('applySourceDiff', () => {
         expect(affectedGeometries).toStrictEqual([point2.geometry]);
     });
 
+    test('removes a feature by its id and dont return undefined geometries', () => {
+        const updateable = new Map([['point', point], ['point2', point2]]);
+        const affectedGeometries = applySourceDiff(updateable, {
+            remove: ['point2', 'point3'],
+        });
+        expect(updateable.size).toBe(1);
+        expect(updateable.has('point2')).toBeFalsy();
+        expect(affectedGeometries).toStrictEqual([point2.geometry]);
+    });
+
     test('updates a feature geometry', () => {
         const updateable = new Map([['point', point]]);
         const newGeometry: GeoJSON.Point = {
