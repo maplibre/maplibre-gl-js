@@ -33,7 +33,7 @@ export default class GeoJSONSourceSetData extends Benchmark {
                 sources: {
                     points: {
                         type: 'geojson',
-                        data: null
+                        data
                     }
                 },
                 layers: [{

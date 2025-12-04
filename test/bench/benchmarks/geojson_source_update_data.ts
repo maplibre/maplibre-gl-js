@@ -54,7 +54,7 @@ export default class GeoJSONSourceUpdateData extends Benchmark {
     async bench() {
         const source = this.map.getSource('points') as GeoJSONSource;
 
-        await source.updateData({
+        source.updateData({
             update: [{
                 id: 0,
                 newGeometry: {
@@ -65,11 +65,7 @@ export default class GeoJSONSourceUpdateData extends Benchmark {
         });
 
         await new Promise(resolve => {
-            if (this.map.loaded()) {
-                resolve(null);
-            } else {
-                this.map.once('idle', resolve);
-            }
+            this.map.once('idle', resolve);
         });
     }
 
