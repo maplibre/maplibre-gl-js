@@ -484,7 +484,7 @@ export class GeoJSONSource extends Evented implements Source {
     /**
      * Get options for use in determining whether to reload a tile based on the modified features.
      * @param affectedGeometries - The feature geometries affected by the update.
-     * @returns A GeoJSONSourceShouldReloadTileOptions object which contains an array of affected bounds by the update.
+     * @returns A {@link GeoJSONSourceShouldReloadTileOptions} object which contains an array of affected bounds caused by the update.
      */
     private _getShouldReloadTileOptions(affectedGeometries: GeoJSON.Geometry[]): GeoJSONSourceShouldReloadTileOptions | undefined {
         if (!affectedGeometries) return undefined;
