@@ -417,7 +417,7 @@ export class GeoJSONSource extends Evented implements Source {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
                 return;
             }
-            const affectedGeometries = this._applyDiffIfNeeded(diff);
+            const affectedBounds = this._applyDiffIfNeeded(diff);
 
             let resourceTiming: PerformanceResourceTiming[] = null;
             if (result.resourceTiming && result.resourceTiming[this.id]) {
@@ -432,7 +432,7 @@ export class GeoJSONSource extends Evented implements Source {
             // although GeoJSON sources contain no metadata, we fire this event to let the TileManager
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions: affectedGeometries !== undefined ? {affectedGeometries} : undefined}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions: affectedBounds !== undefined ? {affectedBounds} : undefined}));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -450,7 +450,7 @@ export class GeoJSONSource extends Evented implements Source {
 
     /**
      * Apply a diff to the source data and return the bounds of the affected geometries.
-     * @param diff The diff to apply.
+     * @param diff - The diff to apply.
      * @returns The bounds of the affected geometries, undefined if the diff is not applicable or all geometries are affected.
      */
     private _applyDiffIfNeeded(diff: GeoJSONSourceDiff): LngLatBounds[] | undefined {
