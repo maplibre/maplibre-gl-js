@@ -1031,7 +1031,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         expect(result).toBe(false);
     });
 
-    test('handles string feature ids and returns no shouldReloadTileOptions since feature does not exist', async () => {
+    test('handles string feature ids and returns no bounds since feature does not exist', async () => {
         const diff: GeoJSONSourceDiff = {remove: ['abc']};
 
         let shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions = undefined;
@@ -1042,7 +1042,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         });
         await source.updateData(diff, true);
 
-        expect(shouldReloadTileOptions).toBeUndefined();
+        expect(shouldReloadTileOptions.affectedBounds).toHaveLength(0);
     });
 
     test('handles cluster', async () => {

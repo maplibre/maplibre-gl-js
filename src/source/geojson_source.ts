@@ -417,7 +417,8 @@ export class GeoJSONSource extends Evented implements Source {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
                 return;
             }
-            const shouldReloadTileOptions = this._getShouldReloadTileOptions(diff);
+            const affectedGeometries = this._applyDiffToSource(diff);
+            const shouldReloadTileOptions = this._getShouldReloadTileOptions(affectedGeometries);
 
             let resourceTiming: PerformanceResourceTiming[] = null;
             if (result.resourceTiming && result.resourceTiming[this.id]) {
@@ -449,11 +450,11 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     /**
-     * Get options for use in determining whether to reload a tile based on the changed features.
+     * Apply a diff to the source data and return the affected feature geometries.
      * @param diff - The GeoJSONSourceDiff to apply.
-     * @returns A GeoJSONSourceShouldReloadTileOptions object which contains an array of affected bounds by the update.
+     * @returns The bounds of the affected geometries, undefined if the diff is not applicable or all geometries are affected.
      */
-    private _getShouldReloadTileOptions(diff: GeoJSONSourceDiff): GeoJSONSourceShouldReloadTileOptions | undefined {
+    private _applyDiffToSource(diff: GeoJSONSourceDiff): GeoJSON.Geometry[] | undefined {
         if (!diff) return undefined;
 
         const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
@@ -475,10 +476,20 @@ export class GeoJSONSource extends Evented implements Source {
             return undefined;
         }
 
+        return affectedGeometries;
+    }
+
+    /**
+     * Get options for use in determining whether to reload a tile based on the modified features.
+     * @param affectedGeometries - The feature geometries affected by the update.
+     * @returns A GeoJSONSourceShouldReloadTileOptions object which contains an array of affected bounds by the update.
+     */
+    private _getShouldReloadTileOptions(affectedGeometries: GeoJSON.Geometry[]): GeoJSONSourceShouldReloadTileOptions | undefined {
+        if (!affectedGeometries) return undefined;
+
         const affectedBounds = affectedGeometries
             .filter(Boolean)
             .map(g => getGeoJSONBounds(g));
-        if (!affectedBounds.length) return undefined;
 
         return {affectedBounds};
     }
@@ -488,9 +499,12 @@ export class GeoJSONSource extends Evented implements Source {
      * @internal
      */
     shouldReloadTile(tile: Tile, shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions) : boolean {
-        if (!shouldReloadTileOptions) return false;
-        if (tile.state === 'loading') return true;
-        if (tile.state === 'unloaded') return false;
+        if (tile.state === 'loading') {
+            return true;
+        }
+        if (tile.state === 'unloaded') {
+            return false;
+        }
 
         // Update the tile if it WILL NOW contain an updated feature.
         const {buffer, extent} = this.workerOptions.geojsonVtOptions;
