@@ -506,7 +506,7 @@ export class GeoJSONSource extends Evented implements Source {
             return false;
         }
 
-        // Update the tile if it WILL NOW contain an updated feature.
+        // Update the tile if contained or will contain an updated feature.
         const {buffer, extent} = this.workerOptions.geojsonVtOptions;
         const tileBounds = tileIdToLngLatBounds(
             tile.tileID.canonical,
@@ -517,6 +517,7 @@ export class GeoJSONSource extends Evented implements Source {
                 return true;
             }
         }
+
         return false;
     }
 
