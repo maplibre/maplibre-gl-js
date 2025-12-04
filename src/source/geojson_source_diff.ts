@@ -125,36 +125,42 @@ export function toUpdateable(data: UpdateableGeoJSON, promoteId?: string) {
  * 1. Remove operations (removeAll, remove)
  * 2. Add operations (add)
  * 3. Update operations (update)
- * @returns an array of geometries that were affected by the diff
+ * @returns an array of geometries that were affected by the diff - with the exception of removeAll which does not return any affected geometries.
  */
 export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Feature>, diff: GeoJSONSourceDiff, promoteId?: string): GeoJSON.Geometry[] {
     const affectedGeometries: GeoJSON.Geometry[] = [];
+
     if (diff.removeAll) {
         updateable.clear();
     }
     else if (diff.remove) {
         for (const id of diff.remove) {
-            if (updateable.has(id)) {
-                affectedGeometries.push(updateable.get(id).geometry);
-                updateable.delete(id);
-            }
+            const existing = updateable.get(id);
+            if (!existing) continue;
+
+            affectedGeometries.push(existing.geometry);
+            updateable.delete(id);
         }
     }
 
     if (diff.add) {
         for (const feature of diff.add) {
             const id = getFeatureId(feature, promoteId);
-            if (id != null) {
-                affectedGeometries.push(feature.geometry);
-                updateable.set(id, feature);
-            }
+            if (id == null) continue;
+
+            // we are allowed to replace duplicate features with the same id, so need to check for existing
+            const existing = updateable.get(id);
+            if (existing) affectedGeometries.push(existing.geometry);
+
+            affectedGeometries.push(feature.geometry);
+            updateable.set(id, feature);
         }
     }
 
     if (diff.update) {
         for (const update of diff.update) {
-            let feature = updateable.get(update.id);
-            if (!feature) continue;
+            const existing = updateable.get(update.id);
+            if (!existing) continue;
 
             const changeGeometry = !!update.newGeometry;
 
@@ -167,7 +173,7 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
             if (!changeGeometry && !changeProps) continue;
 
             // clone once since we'll mutate
-            feature = {...feature};
+            const feature = {...existing};
             updateable.set(update.id, feature);
             affectedGeometries.push(feature.geometry);
 

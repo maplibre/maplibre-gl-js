@@ -417,7 +417,7 @@ export class GeoJSONSource extends Evented implements Source {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
                 return;
             }
-            const affectedBounds = this._applyDiffIfNeeded(diff);
+            const shouldReloadTileOptions = this._getShouldReloadTileOptions(diff);
 
             let resourceTiming: PerformanceResourceTiming[] = null;
             if (result.resourceTiming && result.resourceTiming[this.id]) {
@@ -432,7 +432,7 @@ export class GeoJSONSource extends Evented implements Source {
             // although GeoJSON sources contain no metadata, we fire this event to let the TileManager
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions: affectedBounds !== undefined ? {affectedBounds} : undefined}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions}));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -449,14 +449,13 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     /**
-     * Apply a diff to the source data and return the bounds of the affected geometries.
-     * @param diff - The diff to apply.
-     * @returns The bounds of the affected geometries, undefined if the diff is not applicable or all geometries are affected.
+     * Get options for use in determining whether to reload a tile based on the changed features.
+     * @param diff - The GeoJSONSourceDiff to apply.
+     * @returns A GeoJSONSourceShouldReloadTileOptions object which contains an array of affected bounds by the update.
      */
-    private _applyDiffIfNeeded(diff: GeoJSONSourceDiff): LngLatBounds[] | undefined {
-        if (!diff) {
-            return undefined;
-        }
+    private _getShouldReloadTileOptions(diff: GeoJSONSourceDiff): GeoJSONSourceShouldReloadTileOptions | undefined {
+        if (!diff) return undefined;
+
         const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
         // Lazily convert `this._data` to updateable if it's not already
@@ -472,33 +471,34 @@ export class GeoJSONSource extends Evented implements Source {
         }
         const affectedGeometries = applySourceDiff(this._data.updateable, diff, promoteId);
 
-        if (this._options.cluster || diff.removeAll) {
+        if (diff.removeAll || this._options.cluster) {
             return undefined;
         }
-            
-        return affectedGeometries
+
+        const affectedBounds = affectedGeometries
             .filter(Boolean)
             .map(g => getGeoJSONBounds(g));
+        if (!affectedBounds.length) return undefined;
+
+        return {affectedBounds};
     }
 
     /**
      * Determine whether a tile should be reloaded based on a set of options associated with a {@link MapSourceDataChangedEvent}.
      * @internal
      */
-    shouldReloadTile(tile: Tile, {affectedBounds}: GeoJSONSourceShouldReloadTileOptions) : boolean {
-        if (tile.state === 'loading') {
-            return true;
-        }
-        if (tile.state === 'unloaded') {
-            return false;
-        }
+    shouldReloadTile(tile: Tile, shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions) : boolean {
+        if (!shouldReloadTileOptions) return false;
+        if (tile.state === 'loading') return true;
+        if (tile.state === 'unloaded') return false;
+
         // Update the tile if it WILL NOW contain an updated feature.
         const {buffer, extent} = this.workerOptions.geojsonVtOptions;
         const tileBounds = tileIdToLngLatBounds(
             tile.tileID.canonical,
             buffer / extent
         );
-        for (const bounds of affectedBounds) {
+        for (const bounds of shouldReloadTileOptions.affectedBounds) {
             if (tileBounds.intersects(bounds)) {
                 return true;
             }
