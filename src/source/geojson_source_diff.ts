@@ -121,11 +121,11 @@ export function toUpdateable(data: UpdateableGeoJSON, promoteId?: string) {
 }
 
 /**
- * Mutates updateable and applies a GeoJSONSourceDiff. Operations are processed in a specific order to ensure predictable behavior:
+ * Mutates updateable and applies a {@link GeoJSONSourceDiff}. Operations are processed in a specific order to ensure predictable behavior:
  * 1. Remove operations (removeAll, remove)
  * 2. Add operations (add)
  * 3. Update operations (update)
- * @returns an array of geometries that were affected by the diff - with the exception of removeAll which does not return any affected geometries.
+ * @returns an array of geometries that were affected by the diff - with the exception of removeAll which does not track any affected geometries.
  */
 export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Feature>, diff: GeoJSONSourceDiff, promoteId?: string): GeoJSON.Geometry[] {
     const affectedGeometries: GeoJSON.Geometry[] = [];
