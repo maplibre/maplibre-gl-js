@@ -450,12 +450,14 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     /**
-     * Apply a diff to the source data and return the affected feature geometries.
-     * @param diff - The GeoJSONSourceDiff to apply.
-     * @returns The bounds of the affected geometries, undefined if the diff is not applicable or all geometries are affected.
+     * Apply a diff to this source's data and return the affected feature geometries.
+     * @param diff - The {@link GeoJSONSourceDiff} to apply.
+     * @returns The affected geometries, or undefined if the diff is not applicable or all geometries are affected.
      */
     private _applyDiffToSource(diff: GeoJSONSourceDiff): GeoJSON.Geometry[] | undefined {
-        if (!diff) return undefined;
+        if (!diff) {
+            return undefined;
+        }
 
         const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
