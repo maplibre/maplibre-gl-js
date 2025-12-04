@@ -65,7 +65,11 @@ export default class GeoJSONSourceUpdateData extends Benchmark {
         });
 
         await new Promise(resolve => {
-            this.map.once('idle', resolve);
+            if (this.map.loaded()) {
+                resolve(null);
+            } else {
+                this.map.once('idle', resolve);
+            }
         });
     }
 
