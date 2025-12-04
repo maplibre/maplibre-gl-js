@@ -60,7 +60,7 @@ export default class GeoJSONSourceSetData extends Benchmark {
     async bench() {
         const source = this.map.getSource('points') as GeoJSONSource;
 
-        await source.setData(data);
+        source.setData(data);
 
         await new Promise(resolve => {
             if (this.map.loaded()) {
