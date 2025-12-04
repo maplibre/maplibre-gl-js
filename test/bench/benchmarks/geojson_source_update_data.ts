@@ -3,22 +3,7 @@ import createMap from '../lib/create_map';
 import type {Map} from '../../../src/ui/map';
 import type {GeoJSONSource} from '../../../src/source/geojson_source';
 
-const data: GeoJSON.FeatureCollection = {
-    type: 'FeatureCollection',
-    features: new Array(10_000).fill(0).map(() => ({
-        type: 'Feature',
-        properties: {},
-        geometry: {
-            type: 'Point',
-            coordinates: [
-                Math.random() * 360 - 180,
-                Math.random() * 180 - 90
-            ],
-        }
-    }))
-}
-
-export default class GeoJSONSet extends Benchmark {
+export default class GeoJSONSourceUpdateData extends Benchmark {
     map: Map;
 
     async setup() {
@@ -33,7 +18,20 @@ export default class GeoJSONSet extends Benchmark {
                 sources: {
                     points: {
                         type: 'geojson',
-                        data
+                        data: {
+                            type: 'FeatureCollection',
+                            features: new Array(100_000).fill(0).map((_, id) => ({
+                                type: 'Feature',
+                                id,
+                                geometry: {
+                                    type: 'Point',
+                                    coordinates: id === 0 ? [95, 45] : [
+                                        Math.random() * 360 - 180,
+                                        Math.random() * 180 - 90
+                                    ],
+                                }
+                            }))
+                        }
                     }
                 },
                 layers: [{
@@ -49,18 +47,22 @@ export default class GeoJSONSet extends Benchmark {
         });
 
         await new Promise(resolve => {
-            if (this.map.loaded()) {
-                resolve(null);
-            } else {
-                this.map.once('idle', resolve);
-            }
+            this.map.once('idle', resolve);
         });
     }
 
     async bench() {
         const source = this.map.getSource('points') as GeoJSONSource;
 
-        await source.setData(data);
+        await source.updateData({
+            update: [{
+                id: 0,
+                newGeometry: {
+                    type: 'Point',
+                    coordinates: [85, 45],
+                }
+            }]
+        });
 
         await new Promise(resolve => {
             this.map.once('idle', resolve);

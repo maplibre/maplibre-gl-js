@@ -3,9 +3,22 @@ import createMap from '../lib/create_map';
 import type {Map} from '../../../src/ui/map';
 import type {GeoJSONSource} from '../../../src/source/geojson_source';
 
-let pointCount = 10_000;
+const data: GeoJSON.FeatureCollection = {
+    type: 'FeatureCollection',
+    features: new Array(100_000).fill(0).map(() => ({
+        type: 'Feature',
+        properties: {},
+        geometry: {
+            type: 'Point',
+            coordinates: [
+                Math.random() * 360 - 180,
+                Math.random() * 180 - 90
+            ],
+        }
+    }))
+}
 
-export default class GeoJSONDiff extends Benchmark {
+export default class GeoJSONSourceSetData extends Benchmark {
     map: Map;
 
     async setup() {
@@ -20,20 +33,7 @@ export default class GeoJSONDiff extends Benchmark {
                 sources: {
                     points: {
                         type: 'geojson',
-                        data: {
-                            type: 'FeatureCollection',
-                            features: new Array(pointCount).fill(0).map((_, id) => ({
-                                type: 'Feature',
-                                id,
-                                geometry: {
-                                    type: 'Point',
-                                    coordinates: id === 0 ? [95, 45] : [
-                                        Math.random() * 360 - 180,
-                                        Math.random() * 180 - 90
-                                    ],
-                                }
-                            }))
-                        }
+                        data: null
                     }
                 },
                 layers: [{
@@ -60,15 +60,7 @@ export default class GeoJSONDiff extends Benchmark {
     async bench() {
         const source = this.map.getSource('points') as GeoJSONSource;
 
-        await source.updateData({
-            update: [{
-                id: 0,
-                newGeometry: {
-                    type: 'Point',
-                    coordinates: [85, 45],
-                }
-            }]
-        });
+        await source.setData(data);
 
         await new Promise(resolve => {
             this.map.once('idle', resolve);
