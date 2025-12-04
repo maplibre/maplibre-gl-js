@@ -29,10 +29,7 @@ export type GetClusterLeavesParams = ClusterIDAndSource & { limit: number; offse
 export type GeoJSONWorkerSourceLoadDataResult = {
     resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
     abandoned?: boolean;
-
-    // This is used ONLY when the GeoJSON is loaded from a URL and therefore
-    // the main thread doesn't have a copy of the data at all.
-    data?: GeoJSON.FeatureCollection;
+    data?: GeoJSON.GeoJSON;
 };
 
 /**
