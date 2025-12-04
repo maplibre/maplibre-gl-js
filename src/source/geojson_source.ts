@@ -498,7 +498,7 @@ export class GeoJSONSource extends Evented implements Source {
      * Determine whether a tile should be reloaded based on a set of options associated with a {@link MapSourceDataChangedEvent}.
      * @internal
      */
-    shouldReloadTile(tile: Tile, shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions) : boolean {
+    shouldReloadTile(tile: Tile, {affectedBounds}: GeoJSONSourceShouldReloadTileOptions) : boolean {
         if (tile.state === 'loading') {
             return true;
         }
@@ -512,7 +512,7 @@ export class GeoJSONSource extends Evented implements Source {
             tile.tileID.canonical,
             buffer / extent
         );
-        for (const bounds of shouldReloadTileOptions.affectedBounds) {
+        for (const bounds of affectedBounds) {
             if (tileBounds.intersects(bounds)) {
                 return true;
             }
