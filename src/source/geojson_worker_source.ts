@@ -129,6 +129,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             this.loaded = {};
 
             const result: GeoJSONWorkerSourceLoadDataResult = {};
+            if (para)
 
             this._finishPerformance(perf, params, result);
             return result;
