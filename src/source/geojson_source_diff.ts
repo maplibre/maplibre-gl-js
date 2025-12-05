@@ -153,7 +153,6 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
             const id = getFeatureId(feature, promoteId);
             if (id == null) continue;
 
-            // we are allowed to replace duplicate features with the same id, so need to check for existing
             const existing = updateable.get(id);
             if (existing) affectedGeometries.push(existing.geometry);
 
