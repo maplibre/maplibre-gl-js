@@ -198,7 +198,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * @returns a promise that is resolved with the processes GeoJSON
      */
     async loadAndProcessGeoJSON(params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
-        let data;
+        let data: GeoJSON.GeoJSON;
 
         if (params.request) {
             // Data is loaded from a fetchable URL
