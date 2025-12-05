@@ -281,14 +281,14 @@ describe('applySourceDiff', () => {
     test('adds a feature that exist and change its geometry', () => {
         const updateable = new Map([[point.id, point]]);
         const updatedPoint1: GeoJSON.Feature = {
-                type: 'Feature',
-                id: point.id,
-                geometry: {
-                    type: 'Point',
-                    coordinates: [1, 1],
-                },
-                properties: {}
-            }
+            type: 'Feature',
+            id: point.id,
+            geometry: {
+                type: 'Point',
+                coordinates: [1, 1],
+            },
+            properties: {}
+        };
         const affectedGeometries = applySourceDiff(updateable, {
             add: [updatedPoint1]
         });
