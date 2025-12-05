@@ -23,7 +23,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
-import {type VectorTileFeatureLike, type VectorTileLayerLike, GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
+import {type VectorTileFeatureLike, type VectorTileLayerLike, type Feature, GeoJSONWrapper, GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 
 export {GEOJSON_TILE_LAYER_NAME};
@@ -69,6 +69,7 @@ export class FeatureIndex {
     promoteId?: PromoteIdSpecification;
     encoding: string;
     rawTileData: ArrayBuffer;
+    geoJsonFeatureData: Feature[];
     bucketLayerIDs: Array<Array<string>>;
 
     vtLayers: {[_: string]: VectorTileLayerLike};
@@ -114,9 +115,13 @@ export class FeatureIndex {
 
     loadVTLayers(): {[_: string]: VectorTileLayerLike} {
         if (!this.vtLayers) {
-            this.vtLayers = this.encoding !== 'mlt' 
-                ? new VectorTile(new Protobuf(this.rawTileData)).layers
-                : new MLTVectorTile(this.rawTileData).layers;
+            if (this.geoJsonFeatureData) {
+                this.vtLayers = new GeoJSONWrapper(this.geoJsonFeatureData, {version: 2, extent: EXTENT}).layers;
+            } else {
+                this.vtLayers = this.encoding !== 'mlt' ?
+                    new VectorTile(new Protobuf(this.rawTileData)).layers :
+                    new MLTVectorTile(this.rawTileData).layers;
+            }
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : [GEOJSON_TILE_LAYER_NAME]);
         }
         return this.vtLayers;

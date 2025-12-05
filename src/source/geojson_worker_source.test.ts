@@ -32,6 +32,11 @@ describe('reloadTile', () => {
             'geometry': {
                 'type': 'Point',
                 'coordinates': [0, 0]
+            },
+            'properties': {
+                'property1': 10,
+                'property2': undefined,
+                'property3': false
             }
         };
         const tileParams = {
@@ -41,27 +46,36 @@ describe('reloadTile', () => {
             maxZoom: 10
         };
 
-        await source.loadData({source: 'sourceId', data: geoJson} as LoadGeoJSONParameters);
+        await source.loadData({type: 'geojson', source: 'sourceId', data: geoJson} as LoadGeoJSONParameters);
 
         // first call should load vector data from geojson
         const firstData = await source.reloadTile(tileParams as any as WorkerTileParameters);
         expect(spy).toHaveBeenCalledTimes(1);
 
-        // second call won't give us new rawTileData
+        // geojson shouldn't encode any tile data, just provide features
+        expect(firstData.rawTileData).toBeUndefined();
+
+        // geojson should support undefined properties
+        expect(firstData.geoJsonFeatures[0].tags).toStrictEqual({
+            'property1': 10,
+            'property2': undefined,
+            'property3': false
+        });
+
+        // second data should return the same features
         let data = await source.reloadTile(tileParams as any as WorkerTileParameters);
         expect('rawTileData' in data).toBeFalsy();
-        data.rawTileData = firstData.rawTileData;
         expect(data).toEqual(firstData);
 
         // also shouldn't call loadVectorData again
         expect(spy).toHaveBeenCalledTimes(1);
 
         // replace geojson data
-        await source.loadData({source: 'sourceId', data: geoJson} as LoadGeoJSONParameters);
+        await source.loadData({type: 'geojson', source: 'sourceId', data: geoJson} as LoadGeoJSONParameters);
 
         // should call loadVectorData again after changing geojson data
         data = await source.reloadTile(tileParams as any as WorkerTileParameters);
-        expect('rawTileData' in data).toBeTruthy();
+        expect(data.geoJsonFeatures).toBeTruthy();
         expect(data).toEqual(firstData);
         expect(spy).toHaveBeenCalledTimes(2);
     });

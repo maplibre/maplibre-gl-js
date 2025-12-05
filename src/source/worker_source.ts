@@ -15,6 +15,7 @@ import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import type {DashEntry} from '../render/line_atlas';
+import type {Feature} from '@maplibre/vt-pbf';
 
 /**
  * Parameters to identify a tile
@@ -79,6 +80,7 @@ export type WorkerTileResult = ExpiryData & {
     featureIndex: FeatureIndex;
     collisionBoxArray: CollisionBoxArray;
     rawTileData?: ArrayBuffer;
+    geoJsonFeatures?: Feature[];
     encoding?: string;
     resourceTiming?: Array<PerformanceResourceTiming>;
     // Only used for benchmarking:

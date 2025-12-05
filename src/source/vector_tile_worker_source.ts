@@ -16,11 +16,11 @@ import type {
 import type {IActor} from '../util/actor';
 import type {StyleLayer} from '../style/style_layer';
 import type {StyleLayerIndex} from '../style/style_layer_index';
-import type {VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
+import {type VectorTileLayerLike, type VectorTileLike, GeoJSONWrapper} from '@maplibre/vt-pbf';
 
 export type LoadVectorTileResult = {
     vectorTile: VectorTileLike;
-    rawData: ArrayBufferLike;
+    rawData?: ArrayBufferLike;
     resourceTiming?: Array<PerformanceResourceTiming>;
 } & ExpiryData;
 
@@ -148,7 +148,11 @@ export class VectorTileWorkerSource implements WorkerSource {
             try {
                 const result = await parsePromise;
                 // Transferring a copy of rawTileData because the worker needs to retain its copy.
-                return extend({rawTileData: rawTileData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
+                return extend({
+                    rawTileData: rawTileData?.slice(0),
+                    geoJsonFeatures: workerTile.vectorTile instanceof GeoJSONWrapper ? (workerTile.vectorTile as GeoJSONWrapper).features : null,
+                    encoding: params.encoding
+                }, result, cacheControl, resourceTiming);
             } finally {
                 delete this.fetching[tileUid];
             }
@@ -214,7 +218,11 @@ export class VectorTileWorkerSource implements WorkerSource {
             if (this.fetching[uid]) {
                 const {rawTileData, cacheControl, resourceTiming} = this.fetching[uid];
                 delete this.fetching[uid];
-                parseResult = extend({rawTileData: rawTileData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
+                parseResult = extend({
+                    rawTileData: rawTileData?.slice(0),
+                    geoJsonFeatures: workerTile.vectorTile instanceof GeoJSONWrapper ? (workerTile.vectorTile as GeoJSONWrapper).features : null,
+                    encoding: params.encoding
+                }, result, cacheControl, resourceTiming);
             } else {
                 parseResult = result;
             }
@@ -224,7 +232,9 @@ export class VectorTileWorkerSource implements WorkerSource {
         // if there was no vector tile data on the initial load, don't try and re-parse tile
         if (workerTile.status === 'done' && workerTile.vectorTile) {
             // this seems like a missing case where cache control is lost? see #3309
-            return workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
+            return extend({
+                geoJsonFeatures: workerTile.vectorTile instanceof GeoJSONWrapper ? (workerTile.vectorTile as GeoJSONWrapper).features : null,
+            }, await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity));
         }
     }
 
