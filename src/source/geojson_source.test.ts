@@ -506,7 +506,7 @@ describe('GeoJSONSource.update', () => {
         source.load();
         await promise;
 
-        expect((source as any)._data.geojson).toStrictEqual(hawkHill);
+        expect(source.serialize()).toStrictEqual({type: 'geojson', data: hawkHill});
     });
 
     test('fires event when metadata loads', async () =>  {

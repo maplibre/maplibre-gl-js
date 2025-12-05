@@ -424,7 +424,7 @@ export class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            if (result.data) this._data.geojson = result.data;
+            if (result.data) this._data = {geojson: result.data};
             else if (diff) this._applyDiff(diff);
 
             let resourceTiming: PerformanceResourceTiming[] = null;
