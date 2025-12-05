@@ -3,7 +3,7 @@ import {extend, warnOnce, type ExactlyOne} from '../util/util';
 import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
-import {applySourceDiff, isUpdateableGeoJSON, mergeSourceDiffs, toUpdateable} from './geojson_source_diff';
+import {applySourceDiff, mergeSourceDiffs, toUpdateable} from './geojson_source_diff';
 import {getGeoJSONBounds} from '../util/geojson_bounds';
 import {MessageType} from '../util/actor_messages';
 import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds';
@@ -464,10 +464,9 @@ export class GeoJSONSource extends Evented implements Source {
 
         // Lazily convert `this._data` to updateable if it's not already
         if (!this._data.url && !this._data.updateable) {
-            if (!isUpdateableGeoJSON(this._data.geojson, promoteId)) {
-                throw new Error(`GeoJSONSource "${this.id}": GeoJSON data is not compatible with updateData`);
-            }
-            this._data = {updateable: toUpdateable(this._data.geojson, promoteId)};
+            const updateable = toUpdateable(this._data.geojson, promoteId);
+            if (!updateable) throw new Error(`GeoJSONSource "${this.id}": GeoJSON data is not compatible with updateData`);
+            this._data = {updateable};
         }
 
         if (!this._data.updateable) {

@@ -1,27 +1,27 @@
 import {describe, beforeEach, test, expect} from 'vitest';
 import {setPerformance} from '../util/test/util';
-import {type GeoJSONFeatureId, type GeoJSONSourceDiff, isUpdateableGeoJSON, toUpdateable, applySourceDiff, mergeSourceDiffs} from './geojson_source_diff';
+import {type GeoJSONFeatureId, type GeoJSONSourceDiff, toUpdateable, applySourceDiff, mergeSourceDiffs} from './geojson_source_diff';
 
 beforeEach(() => {
     setPerformance();
 });
 
-describe('isUpdateableGeoJSON', () => {
+describe('toUpdateable', () => {
     test('feature without id is not updateable', () => {
         // no feature id -> false
-        expect(isUpdateableGeoJSON({
+        expect(toUpdateable({
             type: 'Feature',
             geometry: {
                 type: 'Point',
                 coordinates: [0, 0]
             },
             properties: {},
-        })).toBe(false);
+        })).toBeUndefined();
     });
 
     test('feature with id is updateable', () => {
         // has a feature id -> true
-        expect(isUpdateableGeoJSON({
+        expect(toUpdateable({
             type: 'Feature',
             id: 'feature_id',
             geometry: {
@@ -29,11 +29,11 @@ describe('isUpdateableGeoJSON', () => {
                 coordinates: [0, 0]
             },
             properties: {},
-        })).toBe(true);
+        })).toBeDefined();
     });
 
     test('promoteId missing is not updateable', () => {
-        expect(isUpdateableGeoJSON({
+        expect(toUpdateable({
             type: 'Feature',
             id: 'feature_id',
             geometry: {
@@ -41,11 +41,11 @@ describe('isUpdateableGeoJSON', () => {
                 coordinates: [0, 0]
             },
             properties: {},
-        }, 'propId')).toBe(false);
+        }, 'propId')).toBeUndefined();
     });
 
     test('promoteId present is updateable', () => {
-        expect(isUpdateableGeoJSON({
+        expect(toUpdateable({
             type: 'Feature',
             geometry: {
                 type: 'Point',
@@ -54,11 +54,11 @@ describe('isUpdateableGeoJSON', () => {
             properties: {
                 propId: 'feature_id',
             },
-        }, 'propId')).toBe(true);
+        }, 'propId')).toBeDefined();
     });
 
     test('feature collection with unique ids is updateable', () => {
-        expect(isUpdateableGeoJSON({
+        expect(toUpdateable({
             type: 'FeatureCollection',
             features: [{
                 type: 'Feature',
@@ -77,11 +77,11 @@ describe('isUpdateableGeoJSON', () => {
                 },
                 properties: {},
             }]
-        })).toBe(true);
+        })).toBeDefined();
     });
 
     test('feature collection with unique promoteIds is updateable', () => {
-        expect(isUpdateableGeoJSON({
+        expect(toUpdateable({
             type: 'FeatureCollection',
             features: [{
                 type: 'Feature',
@@ -102,11 +102,11 @@ describe('isUpdateableGeoJSON', () => {
                     propId: 'feature_id_2',
                 },
             }]
-        }, 'propId')).toBe(true);
+        }, 'propId')).toBeDefined();
     });
 
     test('feature collection without unique ids is not updateable', () => {
-        expect(isUpdateableGeoJSON({
+        expect(toUpdateable({
             type: 'FeatureCollection',
             features: [{
                 type: 'Feature',
@@ -116,11 +116,11 @@ describe('isUpdateableGeoJSON', () => {
                 },
                 properties: {},
             }]
-        })).toBe(false);
+        })).toBeUndefined();
     });
 
     test('feature collection with duplicate feature ids is not updateable', () => {
-        expect(isUpdateableGeoJSON({
+        expect(toUpdateable({
             type: 'FeatureCollection',
             features: [{
                 type: 'Feature',
@@ -139,15 +139,13 @@ describe('isUpdateableGeoJSON', () => {
                 },
                 properties: {},
             }]
-        })).toBe(false);
+        })).toBeUndefined();
     });
 
     test('geometries are not updateable', () => {
-        expect(isUpdateableGeoJSON({type: 'Point', coordinates: [0, 0]})).toBe(false);
+        expect(toUpdateable({type: 'Point', coordinates: [0, 0]})).toBeUndefined();
     });
-});
 
-describe('toUpdateable', () => {
     test('works with a single feature - feature id', () => {
         const updateable = toUpdateable({
             type: 'Feature',

@@ -60,69 +60,55 @@ function getFeatureId(feature: GeoJSON.Feature, promoteId?: string): GeoJSONFeat
 }
 
 /**
- * Returns true if the data is a valid GeoJSON object that can be updated.
+ * Converts a GeoJSON object into a map of feature IDs to GeoJSON features.
+ * @param data - The GeoJSON object to convert.
+ * @param promoteId - If set, the feature id will be set to the promoteId property value.
+ * @returns A map of feature IDs to GeoJSON features, or `undefined` if the GeoJSON object is not a valid updateable object.
  *
  * Features must have unique identifiers to be updateable. IDs can come from:
  * - The feature's `id` property (standard GeoJSON)
  * - A promoted property specified by `promoteId` (e.g., a "name" property)
  */
-export function isUpdateableGeoJSON(data: GeoJSON.GeoJSON | undefined, promoteId?: string): data is UpdateableGeoJSON {
-    // null can be updated
+export function toUpdateable(data: GeoJSON.GeoJSON | undefined, promoteId?: string): Map<GeoJSONFeatureId, GeoJSON.Feature> | undefined {
+    const updateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
+
+    // null can be updated - empty updateable
     if (data == null) {
-        return true;
+        return updateable;
     }
 
-    // {} can be updated
+    // {} can be updated - empty updateable
     if (data.type == null) {
-        return true;
+        return updateable;
     }
 
     // a single feature with an id can be updated, need to explicitly check against null because 0 is a valid feature id that is falsy
     if (data.type === 'Feature') {
-        return getFeatureId(data, promoteId) != null;
+        const id = getFeatureId(data, promoteId);
+        if (id == null) return undefined;
+
+        updateable.set(id, data);
+        return updateable;
     }
 
-    // a feature collection can be updated if every feature has an id, and the ids are all unique
-    // this prevents us from silently dropping features if ids get reused
+    // a feature collection can be updated if every feature has a unique id, which prevents the silent dropping of features
     if (data.type === 'FeatureCollection') {
         const seenIds = new Set<GeoJSONFeatureId>();
+
         for (const feature of data.features) {
             const id = getFeatureId(feature, promoteId);
-            if (id == null) {
-                return false;
-            }
+            if (id == null) return undefined;
 
-            if (seenIds.has(id)) {
-                return false;
-            }
-
+            if (seenIds.has(id)) return undefined;
             seenIds.add(id);
+
+            updateable.set(id, feature);
         }
 
-        return true;
-    }
-
-    return false;
-}
-
-export function toUpdateable(data: UpdateableGeoJSON, promoteId?: string) {
-    const updateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
-
-    // empty updateable
-    if (data == null || data.type == null) {
         return updateable;
     }
 
-    if (data.type === 'Feature') {
-        updateable.set(getFeatureId(data, promoteId)!, data);
-        return updateable;
-    }
-
-    for (const feature of data.features) {
-        updateable.set(getFeatureId(feature, promoteId)!, feature);
-    }
-
-    return updateable;
+    return undefined;
 }
 
 /**
