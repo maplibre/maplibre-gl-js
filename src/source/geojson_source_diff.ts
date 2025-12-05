@@ -177,9 +177,9 @@ export function applySourceDiff(updateable: Map<GeoJSONFeatureId, GeoJSON.Featur
             if (!changeGeometry && !changeProps) continue;
 
             // clone once since we'll mutate
+            affectedGeometries.push(existing.geometry);
             const feature = {...existing};
             updateable.set(update.id, feature);
-            affectedGeometries.push(feature.geometry);
 
             if (changeGeometry) {
                 affectedGeometries.push(update.newGeometry);
