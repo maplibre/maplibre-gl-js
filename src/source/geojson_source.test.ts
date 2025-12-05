@@ -495,6 +495,20 @@ describe('GeoJSONSource.update', () => {
         expect(transformSpy).toHaveBeenCalledTimes(1);
         expect(transformSpy.mock.calls[0][0]).toBe('https://example.com/data.geojson');
     });
+
+    test('updates _data.geojson when worker returns data from URL load', async () => {
+        const source = new GeoJSONSource('id', {data: 'https://example.com/data.geojson'} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() { return Promise.resolve({data: hawkHill}); }
+        }), undefined);
+        source.map = {_requestManager: {transformRequest: (url) => ({url})}} as any;
+
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        source.load();
+        await promise;
+
+        expect(source.serialize()).toStrictEqual({type: 'geojson', data: hawkHill});
+    });
+
     test('fires event when metadata loads', async () =>  {
         const mockDispatcher = wrapDispatcher({
             sendAsync(_message: ActorMessage<MessageType>) {

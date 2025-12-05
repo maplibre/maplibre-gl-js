@@ -130,6 +130,12 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
             const result: GeoJSONWorkerSourceLoadDataResult = {};
 
+            // Sending a large GeoJSON payload from the worker thread to the main thread
+            // is SLOW so we only do it if absolutely nescessary.
+            // The main thread already has a copy of this data UNLESS it was loaded
+            // from a URL.
+            if (params.request) result.data = data;
+
             this._finishPerformance(perf, params, result);
             return result;
         } catch (err) {
