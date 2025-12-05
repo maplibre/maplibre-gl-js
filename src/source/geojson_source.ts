@@ -417,7 +417,8 @@ export class GeoJSONSource extends Evented implements Source {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
                 return;
             }
-            const affectedBounds = this._applyDiffIfNeeded(diff);
+            const affectedGeometries = this._applyDiffToSource(diff);
+            const shouldReloadTileOptions = this._getShouldReloadTileOptions(affectedGeometries);
 
             let resourceTiming: PerformanceResourceTiming[] = null;
             if (result.resourceTiming && result.resourceTiming[this.id]) {
@@ -432,7 +433,7 @@ export class GeoJSONSource extends Evented implements Source {
             // although GeoJSON sources contain no metadata, we fire this event to let the TileManager
             // know its ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions: affectedBounds !== undefined ? {affectedBounds} : undefined}));
+            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions}));
         } catch (err) {
             this._isUpdatingWorker = false;
             if (this._removed) {
@@ -449,14 +450,15 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     /**
-     * Apply a diff to the source data and return the bounds of the affected geometries.
-     * @param diff - The diff to apply.
-     * @returns The bounds of the affected geometries, undefined if the diff is not applicable or all geometries are affected.
+     * Apply a diff to this source's data and return the affected feature geometries.
+     * @param diff - The {@link GeoJSONSourceDiff} to apply.
+     * @returns The affected geometries, or undefined if the diff is not applicable or all geometries are affected.
      */
-    private _applyDiffIfNeeded(diff: GeoJSONSourceDiff): LngLatBounds[] | undefined {
+    private _applyDiffToSource(diff: GeoJSONSourceDiff): GeoJSON.Geometry[] | undefined {
         if (!diff) {
             return undefined;
         }
+
         const promoteId = typeof this.promoteId === 'string' ? this.promoteId : undefined;
 
         // Lazily convert `this._data` to updateable if it's not already
@@ -472,13 +474,26 @@ export class GeoJSONSource extends Evented implements Source {
         }
         const affectedGeometries = applySourceDiff(this._data.updateable, diff, promoteId);
 
-        if (this._options.cluster || diff.removeAll) {
+        if (diff.removeAll || this._options.cluster) {
             return undefined;
         }
-            
-        return affectedGeometries
+
+        return affectedGeometries;
+    }
+
+    /**
+     * Get options for use in determining whether to reload a tile based on the modified features.
+     * @param affectedGeometries - The feature geometries affected by the update.
+     * @returns A {@link GeoJSONSourceShouldReloadTileOptions} object which contains an array of affected bounds caused by the update.
+     */
+    private _getShouldReloadTileOptions(affectedGeometries: GeoJSON.Geometry[]): GeoJSONSourceShouldReloadTileOptions | undefined {
+        if (!affectedGeometries) return undefined;
+
+        const affectedBounds = affectedGeometries
             .filter(Boolean)
             .map(g => getGeoJSONBounds(g));
+
+        return {affectedBounds};
     }
 
     /**
@@ -492,7 +507,8 @@ export class GeoJSONSource extends Evented implements Source {
         if (tile.state === 'unloaded') {
             return false;
         }
-        // Update the tile if it WILL NOW contain an updated feature.
+
+        // Update the tile if contained or will contain an updated feature.
         const {buffer, extent} = this.workerOptions.geojsonVtOptions;
         const tileBounds = tileIdToLngLatBounds(
             tile.tileID.canonical,
@@ -503,6 +519,7 @@ export class GeoJSONSource extends Evented implements Source {
                 return true;
             }
         }
+
         return false;
     }
 
