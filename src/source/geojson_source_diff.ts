@@ -106,23 +106,23 @@ export function isUpdateableGeoJSON(data: GeoJSON.GeoJSON | undefined, promoteId
 }
 
 export function toUpdateable(data: UpdateableGeoJSON, promoteId?: string) {
-    const result = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
+    const updateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
 
-    // empty result
+    // empty updateable
     if (data == null || data.type == null) {
-        return result;
+        return updateable;
     }
 
     if (data.type === 'Feature') {
-        result.set(getFeatureId(data, promoteId)!, data);
-        return result;
+        updateable.set(getFeatureId(data, promoteId)!, data);
+        return updateable;
     }
 
     for (const feature of data.features) {
-        result.set(getFeatureId(feature, promoteId)!, feature);
+        updateable.set(getFeatureId(feature, promoteId)!, feature);
     }
 
-    return result;
+    return updateable;
 }
 
 /**
