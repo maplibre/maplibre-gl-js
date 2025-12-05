@@ -417,6 +417,7 @@ export class GeoJSONSource extends Evented implements Source {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
                 return;
             }
+            if (result.data) this._data = {geojson: result.data};
             const affectedGeometries = this._applyDiffToSource(diff);
             const shouldReloadTileOptions = this._getShouldReloadTileOptions(affectedGeometries);
 

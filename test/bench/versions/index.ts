@@ -27,8 +27,8 @@ import Subdivide from '../benchmarks/subdivide';
 import LoadMatchingFeature from '../benchmarks/feature_index';
 import CoveringTilesGlobe from '../benchmarks/covering_tiles_globe';
 import CoveringTilesMercator from '../benchmarks/covering_tiles_mercator';
-import GeoJSONDiff from '../benchmarks/geojson_diff';
-import GeoJSONSet from '../benchmarks/geojson_set';
+import GeoJSONSourceUpdateData from '../benchmarks/geojson_source_update_data';
+import GeoJSONSourceSetData from '../benchmarks/geojson_source_set_data';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as GeoJSON.Feature<GeoJSON.Point>[]).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
@@ -49,8 +49,8 @@ const locations = zooms.map(zoom => ({center, zoom}));
 register('Paint', new Paint(style, locations));
 register('QueryPoint', new QueryPoint(style, locations));
 register('QueryBox', new QueryBox(style, locations));
-register('GeoJSONDiff', new GeoJSONDiff());
-register('GeoJSONSet', new GeoJSONSet());
+register('GeoJSONSourceUpdateData', new GeoJSONSourceUpdateData());
+register('GeoJSONSourceSetData', new GeoJSONSourceSetData());
 register('Layout', new Layout(style));
 register('Placement', new Placement(style, locations));
 register('Validate', new Validate(style));
