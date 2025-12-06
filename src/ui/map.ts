@@ -1769,7 +1769,7 @@ export class Map extends Camera {
      * Returns an array of MapGeoJSONFeature objects
      * representing visible features that satisfy the query parameters.
      *
-     * @param geometryOrOptions - (optional) The geometry of the query region in pixel points within the viewport of the map viewport:
+     * @param geometryOrOptions - (optional) The geometry of the query region in pixel points within the map viewport:
      * Either a single pixel point or a pair of top-left and bottom-right pixel points describing a bounding box.
      * The origin of the pixel points is at the top-left of the map viewport.
      * Omitting this parameter (i.e. calling {@link Map.queryRenderedFeatures} with zero arguments,
