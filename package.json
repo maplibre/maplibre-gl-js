@@ -113,7 +113,7 @@
     "pretty-bytes": "^7.1.0",
     "puppeteer": "^24.31.0",
     "react": "^19.1.1",
-    "react-dom": "^19.2.0",
+    "react-dom": "^19.2.1",
     "regenerate": "^1.4.2",
     "rollup": "^4.53.3",
     "rollup-plugin-sourcemaps2": "^0.5.4",
