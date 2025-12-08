@@ -200,8 +200,12 @@ export class Terrain {
      */
     getElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform) {
         const terrainCoveringTiles = coveringTiles(transform, {maxzoom: this.tileManager.maxzoom, minzoom: this.tileManager.minzoom, tileSize: 512, terrain: this});
-        terrainCoveringTiles.sort((a, b) => b.canonical.z - a.canonical.z);
-        const zoom = Math.min(terrainCoveringTiles[0].canonical.z, this.tileManager.maxzoom);
+        let zoom = 0;
+        for (const tile of terrainCoveringTiles) {
+            if (tile.canonical.z > zoom) {
+                zoom = Math.min(tile.canonical.z, this.tileManager.maxzoom);
+            }
+        }
         return this.getElevationForLngLatZoom(lnglat, zoom);
     }
 
