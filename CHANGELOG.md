@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix getting the right zoom for getElevationForLngLat ([#6825](https://github.com/maplibre/maplibre-gl-js/pull/6825)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 5.14.0

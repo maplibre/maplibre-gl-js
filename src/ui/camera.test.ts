@@ -2492,7 +2492,8 @@ describe('queryTerrainElevation', () => {
         camera.queryTerrainElevation([1, 2]);
 
         expect(camera.terrain.getElevationForLngLat).toHaveBeenCalledWith(
-            expect.objectContaining({lng: 1, lat: 2,})
+            expect.objectContaining({lng: 1, lat: 2,}),
+            camera.transform
         );
     });
 });

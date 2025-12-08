@@ -8,6 +8,7 @@ import {OverscaledTileID} from '../tile/tile_id';
 import {Tile} from '../tile/tile';
 import {LngLat} from '../geo/lng_lat';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 import type {TileManager} from '../tile/tile_manager';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {DEMData} from '../data/dem_data';
@@ -291,15 +292,36 @@ describe('Terrain', () => {
         expect(mockTerrain.getDEMElevation(null, 0.4, 0.2)).toBeCloseTo(42);
     });
 
-    test('getElevationForLngLat uses source max zoom', () => {
-        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
+    test('getElevationForLngLat uses covering tiles to get the right zoom', () => {
+        const zoom = 10;
+        const painter = {
+            context: new Context(gl),
+            width: 1,
+            height: 1,
+            getTileTexture: () => null
+        } as any as Painter;
+        const tileManager = {
+            _source: {minzoom: 3, maxzoom: 22, tileSize: 512},
+            _cache: {max: 10},
+            getTileByID: () => {
+                return new Tile(new OverscaledTileID(zoom, 0, 0, 0, 0), 256);
+            },
+        } as any as TileManager;
+        const terrain = new Terrain(
+            painter,
+            tileManager,
+            {exaggeration: 2} as any as TerrainSpecification,
+        );
 
         const spy = vi.fn();
         terrain.getElevation = spy;
-        terrain.getElevationForLngLat(new LngLat(0, 0));
+        const transform = new MercatorTransform({minZoom: 3, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(200, 200);
+        transform.setZoom(zoom);
+        terrain.getElevationForLngLat(new LngLat(0, 0), transform);
 
         expect(spy).toHaveBeenCalled();
-        expect((spy.mock.calls[0][0] as OverscaledTileID).canonical.z).toBe(terrain.tileManager.maxzoom);
+        expect((spy.mock.calls[0][0] as OverscaledTileID).canonical.z).toBe(zoom);
     });
 
     test('getElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
