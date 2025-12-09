@@ -1149,8 +1149,6 @@ export class Map extends Camera {
             this._applyUpdatedTransform(tr);
             this._update();
 
-            if (this.getZoom() < minZoom) this.setZoom(minZoom);
-
             return this;
 
         } else throw new Error(`minZoom must be between ${defaultMinZoom} and the current maxZoom, inclusive`);
@@ -1190,8 +1188,6 @@ export class Map extends Camera {
             tr.setMaxZoom(maxZoom);
             this._applyUpdatedTransform(tr);
             this._update();
-
-            if (this.getZoom() > maxZoom) this.setZoom(maxZoom);
 
             return this;
 

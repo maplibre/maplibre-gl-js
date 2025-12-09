@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Fix getting the right zoom for getElevationForLngLat ([#6825](https://github.com/maplibre/maplibre-gl-js/pull/6825)) (by [@HarelM](https://github.com/HarelM))
+- Fix issue [#6766](https://github.com/maplibre/maplibre-gl-js/issues/6766) where stale transform state was being applied after changing `minZoom` or `maxZoom` due to old copies from `transformCameraUpdate` taking precedence. `transformCameraUpdate` is now called from `setMinZoom` and `setMaxZoom` to allow user to control subsequent changes to `zoom`.
 - _...Add new stuff here..._
 
 ## 5.14.0
