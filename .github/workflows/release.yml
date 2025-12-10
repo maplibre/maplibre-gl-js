@@ -81,8 +81,6 @@ jobs:
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
         run: |
           npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
 
       - name: Publish NPM package (pre-release)
         if: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
