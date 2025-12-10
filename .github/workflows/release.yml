@@ -1,5 +1,9 @@
 name: Release
 
+permissions:
+  id-token: write  # Required for trusted publishing
+  contents: write
+
 on:
   push:
     branches: [main]
@@ -84,8 +88,6 @@ jobs:
         if: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
         run: |
           npm publish --tag next
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
 
       - name: Tag commit and push
         id: tag_version
