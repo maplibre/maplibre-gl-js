@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/maplibre/maplibre-gl-js.git"
+    "url": "https://github.com/maplibre/maplibre-gl-js"
   },
   "types": "dist/maplibre-gl.d.ts",
   "type": "module",
