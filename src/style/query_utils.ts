@@ -141,7 +141,7 @@ export function circleIntersection({
         ? (pitchScale === 'map' ? intersectionTestMapMap : intersectionTestMapViewport)
         : (pitchScale === 'map' ? intersectionTestViewportMap : intersectionTestViewportViewport);
 
-    const param = {queryGeometry, size, transform, unwrappedTileID, getElevation} as CircleIntersectionTestParams;
+    const param: CircleIntersectionTestParams = {queryGeometry, size, transform, unwrappedTileID, getElevation};
     for (const ring of geometry) {
         for (const point of ring) {
             if (intersectionTest(param, point)) {
