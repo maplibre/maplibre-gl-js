@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Support global state expression for layer visibility ([#6495](https://github.com/maplibre/maplibre-gl-js/pull/6495)) (by [@melitele](https://github.com/melitele))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
@@ -752,7 +753,7 @@
 
 ### ✨ Features and improvements
 
-- ⚠️ Change attribution to be on by default, change `MapOptions.attributionControl` to be the type that the control handles, removed `MapOptions.customAttribution` ([#3618](https://github.com/maplibre/maplibre-gl-js/pull/3618)). Note: showing the logo of MapLibre is not required for using MapLibre. (by [@HarelM](https://github.com/HarelM)) 
+- ⚠️ Change attribution to be on by default, change `MapOptions.attributionControl` to be the type that the control handles, removed `MapOptions.customAttribution` ([#3618](https://github.com/maplibre/maplibre-gl-js/pull/3618)). Note: showing the logo of MapLibre is not required for using MapLibre. (by [@HarelM](https://github.com/HarelM))
 - ⚠️ Changed cooperative gesture config and removed the strings from it in favor of the locale variable ([#3621](https://github.com/maplibre/maplibre-gl-js/pull/3621)) (by [@HarelM](https://github.com/HarelM))
 - ⚠️ Changed the terrain enable disable locale key to match the other keys' styles, updated the typings to allow using locale with more ease ([#3621](https://github.com/maplibre/maplibre-gl-js/pull/3621)) (by [@HarelM](https://github.com/HarelM))
 - Add "opacity" option and "setOpacity" method to Marker ([#3620](https://github.com/maplibre/maplibre-gl-js/pull/3620)) (by [@sbachinin](https://github.com/sbachinin))
