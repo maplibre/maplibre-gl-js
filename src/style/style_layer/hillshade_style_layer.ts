@@ -40,6 +40,6 @@ export class HillshadeStyleLayer extends StyleLayer {
     }
 
     hasOffscreenPass() {
-        return this.paint.get('hillshade-exaggeration') !== 0 && this.visibility !== 'none';
+        return this.paint.get('hillshade-exaggeration') !== 0 && !this.isHidden();
     }
 }
