@@ -281,6 +281,18 @@ describe('StyleLayer.getLayoutAffectingGlobalStateRefs', () => {
 
         expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new Set<string>(['textSize', 'textTransform']));
     });
+
+    test('returns global-state references from visibility', () => {
+        const layer = createStyleLayer({
+            id: 'background',
+            type: 'background',
+            layout: {
+                'visibility': ['global-state', 'visibility']
+            }
+        } as LayerSpecification, {});
+
+        expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new Set<string>(['visibility']));
+    });
 });
 
 describe('StyleLayer.getPaintAffectingGlobalStateRefs', () => {
@@ -486,5 +498,23 @@ describe('StyleLayer.globalState', () => {
 
         expect(layer.paint.get('circle-color').evaluate(undefined, {})).toEqual(new Color(1, 0, 0, 1));
         expect(layer.paint.get('circle-radius').evaluate(undefined, {})).toBe(15);
+    });
+
+    test('uses layer global state when recalculating visiblity', () => {
+        const globalState = {visibility: 'none'};
+        const layer = createStyleLayer({
+            id: 'background',
+            type: 'background',
+            layout: {
+                'visibility': ['global-state', 'visibility']
+            }
+        } as LayerSpecification, globalState) as BackgroundStyleLayer;
+
+        expect(layer.isHidden()).toBe(true);
+
+        globalState.visibility = 'visible';
+        layer.recalculateVisibility();
+
+        expect(layer.isHidden()).toBe(false);
     });
 });
