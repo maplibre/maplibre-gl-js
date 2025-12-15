@@ -305,6 +305,15 @@ export class LngLatBounds {
 
         if (!latIntersects) return false;
 
+        // Check if either bound covers the full world (|span| >= 360°)
+        // This must be done before wrapping to preserve the span information
+        const thisSpan = Math.abs(this.getEast() - this.getWest());
+        const otherSpan = Math.abs(other.getEast() - other.getWest());
+
+        if (thisSpan >= 360 || otherSpan >= 360) {
+            return true;
+        }
+
         // Normalize longitudes to [-180, 180] range
         const thisWest = wrap(this.getWest(), -180, 180);
         const thisEast = wrap(this.getEast(), -180, 180);
