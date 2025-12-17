@@ -1,3 +1,5 @@
+name: Release
+
 permissions:
   id-token: write  # Required for trusted publishing
   contents: write
