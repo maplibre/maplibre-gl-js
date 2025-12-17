@@ -17,3 +17,9 @@ jobs:
       build-command: npm ci && npm run build-dist
       docs-output-dir: site
       docs-gh-pages-dir: docs
+
+  upload_benchmarks:
+    needs: release
+    uses: ./.github/workflows/upload-benchmarks.yml
+    with:
+      ref: ${{ github.ref }}
