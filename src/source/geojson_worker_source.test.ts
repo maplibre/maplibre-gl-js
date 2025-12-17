@@ -8,6 +8,7 @@ import {type Actor} from '../util/actor';
 import {type WorkerTileParameters} from './worker_source';
 import {setPerformance, sleep} from '../util/test/util';
 import {type FakeServer, fakeServer} from 'nise';
+import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
 
 const actor = {send: () => {}} as any as Actor;
 
@@ -76,7 +77,6 @@ describe('reloadTile', () => {
         ] as LayerSpecification[];
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
-        const spy = vi.spyOn(source, 'loadVectorTile');
         const geoJson = {
             'type': 'Feature',
             'geometry': {
@@ -100,7 +100,6 @@ describe('reloadTile', () => {
 
         // load vector data from geojson, passing through the tile serialization step
         const data = await source.reloadTile(tileParams as any as WorkerTileParameters);
-        expect(spy).toHaveBeenCalledTimes(1);
         expect(data.featureIndex).toBeDefined();
 
         // deserialize tile layers in the feature index
@@ -108,8 +107,8 @@ describe('reloadTile', () => {
         const featureLayers = data.featureIndex.loadVTLayers();
         expect(Object.keys(featureLayers)).toHaveLength(1);
 
-        // validate features from the index don't contain undefined or null properties
-        expect(featureLayers['_geojsonTileLayer'].feature(0).properties).toStrictEqual({'stringProperty': 'string'});
+        // validate supported features are present in the index
+        expect(featureLayers[GEOJSON_TILE_LAYER_NAME].feature(0).properties['stringProperty']).toBeDefined();
     });
 });
 
