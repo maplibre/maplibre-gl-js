@@ -4,7 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+- Diffed changes when json is passed to `setStyle` emit a style.load event. fixes [#2587](https://github.com/maplibre/maplibre-gl-js/issues/2587) [#4757](https://github.com/maplibre/maplibre-gl-js/issues/4757) (by [@lesbaa](https://github.com/lesbaa))
 
 ## 5.14.0
 
