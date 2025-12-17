@@ -83,7 +83,7 @@ describe('reloadTile', () => {
                 'type': 'Point',
                 'coordinates': [0, 0]
             },
-           'properties': {
+            'properties': {
                 'nullProperty': null,
                 'undefinedProperty': undefined,
                 'stringProperty': 'string'
