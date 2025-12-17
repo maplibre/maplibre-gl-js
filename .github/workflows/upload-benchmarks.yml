@@ -57,4 +57,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: tmp
           destination_dir: benchmarks/${{ inputs.tag || 'main' }}
+          commit_message: 'deploy: ${{ inputs.tag || github.sha }}'
 
