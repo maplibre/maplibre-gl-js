@@ -66,6 +66,51 @@ describe('reloadTile', () => {
         expect(spy).toHaveBeenCalledTimes(2);
     });
 
+    test('handles null and undefined properties during tile serialization', async () => {
+        const layers = [
+            {
+                id: 'mylayer',
+                source: 'sourceId',
+                type: 'symbol',
+            }
+        ] as LayerSpecification[];
+        const layerIndex = new StyleLayerIndex(layers);
+        const source = new GeoJSONWorkerSource(actor, layerIndex, []);
+        const spy = vi.spyOn(source, 'loadVectorTile');
+        const geoJson = {
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                'coordinates': [0, 0]
+            },
+           'properties': {
+                'nullProperty': null,
+                'undefinedProperty': undefined,
+                'stringProperty': 'string'
+            }
+        };
+        const tileParams = {
+            source: 'sourceId',
+            uid: 0,
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            maxZoom: 10
+        };
+
+        await source.loadData({type: 'geojson', source: 'sourceId', data: geoJson} as LoadGeoJSONParameters);
+
+        // load vector data from geojson, passing through the tile serialization step
+        const data = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(data.featureIndex).toBeDefined();
+
+        // deserialize tile layers in the feature index
+        data.featureIndex.rawTileData = data.rawTileData;
+        const featureLayers = data.featureIndex.loadVTLayers();
+        expect(Object.keys(featureLayers)).toHaveLength(1);
+
+        // validate features from the index don't contain undefined or null properties
+        expect(featureLayers['_geojsonTileLayer'].feature(0).properties).toStrictEqual({'stringProperty': 'string'});
+    });
 });
 
 describe('resourceTiming', () => {
