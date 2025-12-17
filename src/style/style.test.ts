@@ -880,6 +880,28 @@ describe('Style.setState', () => {
         }
     });
 
+    test('fire style.load event when JSON style is diffed', async () => {
+        const style = createStyle();
+        const styleJson = createStyleJSON();
+        style.loadJSON(styleJson);
+
+        const newStyleJSON: StyleSpecification = {
+            ...styleJson,
+            layers: [
+                {
+                    id: 'layerId2',
+                    type: 'background',
+                },
+                ...styleJson.layers,
+            ]
+        };
+
+        await style.once('style.load');
+        const spy = vi.spyOn(style, 'fire');
+        style.setState(newStyleJSON);
+        expect(spy).toHaveBeenCalledWith(new Event('style.load', {style: style}));
+    });
+
     test('change transition doesn\'t change the style, but is considered a change', async () => {
         const style = createStyle();
         const styleJson = createStyleJSON();
