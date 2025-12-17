@@ -18,8 +18,23 @@ jobs:
       docs-output-dir: site
       docs-gh-pages-dir: docs
 
-  upload_benchmarks:
+  get_tag:
     needs: release
+    runs-on: ubuntu-latest
+    outputs:
+      latest_tag: ${{ steps.set-tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0 # Necessary to see all tags
+      - id: set-tag
+        run: |
+          # Get the most recent tag reachable from the current commit
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+  upload_benchmarks:
+    needs: get_tag
     uses: ./.github/workflows/upload-benchmarks.yml
     with:
-      ref: ${{ github.ref }}
+      tag: ${{ needs.get_tag.outputs.latest_tag }}
