@@ -1,15 +1,24 @@
 ## main
 
 ### ✨ Features and improvements
-- Support global state expression for layer visibility ([#6495](https://github.com/maplibre/maplibre-gl-js/pull/6495)) (by [@melitele](https://github.com/melitele))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 5.15.0
+
+### ✨ Features and improvements
+
+- Support global state expression for layer visibility ([#6659](https://github.com/maplibre/maplibre-gl-js/pull/6659)) (by [melitele](https://github.com/melitele))
+- Update Node.js version to 24.11 for development ([#6851](https://github.com/maplibre/maplibre-gl-js/pull/6851)) (by [HarelM](https://github.com/HarelM))
+
+### 🐞 Bug fixes
+
 - Fix `LngLatBounds#intersects` returning `false` for bounds spanning 360° or more ([#6863](https://github.com/maplibre/maplibre-gl-js/pull/6863)) (by [@lucaswoj](https://github.com/lucaswoj))
 - Fix getting the right zoom for getElevationForLngLat ([#6825](https://github.com/maplibre/maplibre-gl-js/pull/6825)) (by [@HarelM](https://github.com/HarelM))
 - Fix stale transform state being applied after changing `minZoom` or `maxZoom` due to old copies from `transformCameraUpdate` taking precedence. `transformCameraUpdate` is now called from `setMinZoom` and `setMaxZoom` to allow user to control subsequent changes to `zoom` [#6766](https://github.com/maplibre/maplibre-gl-js/issues/6766) (by [@Auspicus](https://github.com/Auspicus))
 - Fix GeoJSON source throwing with undefined properties [#6730](https://github.com/maplibre/maplibre-gl-js/issues/6730) (by [@wayofthefuture](https://github.com/wayofthefuture))
-- _...Add new stuff here..._
 
 ## 5.14.0
 
