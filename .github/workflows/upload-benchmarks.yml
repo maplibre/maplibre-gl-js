@@ -36,6 +36,13 @@ jobs:
           cp test/bench/versions/benchmarks_generated.js tmp
           cp test/bench/versions/benchmarks_generated.js.map tmp
 
+      - name: Extract tag name
+        if: inputs.ref != ''
+        id: tag
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_REF: ${{ inputs.ref }}
+
       - name: Upload to GitHub Pages (main)
         if: inputs.ref == ''
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
@@ -43,13 +50,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: tmp
           destination_dir: benchmarks/main
-
-      - name: Extract tag name
-        if: inputs.ref != ''
-        id: tag
-        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-        env:
-          GITHUB_REF: ${{ inputs.ref }}
 
       - name: Upload to GitHub Pages (tag)
         if: inputs.ref != ''
