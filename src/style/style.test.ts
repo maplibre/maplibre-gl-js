@@ -880,6 +880,28 @@ describe('Style.setState', () => {
         }
     });
 
+    test('fire style.load event when JSON style is diffed', async () => {
+        const style = createStyle();
+        const styleJson = createStyleJSON();
+        style.loadJSON(styleJson);
+
+        const newStyleJSON: StyleSpecification = {
+            ...styleJson,
+            layers: [
+                {
+                    id: 'layerId2',
+                    type: 'background',
+                },
+                ...styleJson.layers,
+            ]
+        };
+
+        await style.once('style.load');
+        const spy = vi.spyOn(style, 'fire');
+        style.setState(newStyleJSON);
+        expect(spy).toHaveBeenCalledWith(new Event('style.load', {style: style}));
+    });
+
     test('change transition doesn\'t change the style, but is considered a change', async () => {
         const style = createStyle();
         const styleJson = createStyleJSON();
@@ -1865,34 +1887,6 @@ describe('Style.setGlobalStateProperty', () => {
         style.tileManagers['circle-source-id'].reload = vi.fn();
 
         style.setGlobalStateProperty('circleColor', 'red');
-        style.update({} as EvaluationParameters);
-
-        expect(style.tileManagers['circle-source-id'].resume).toHaveBeenCalled();
-        expect(style.tileManagers['circle-source-id'].reload).toHaveBeenCalled();
-    });
-
-    test('reloads sources when state property is used in visibility', async() => {
-        const style = new Style(getStubMap());
-        style.loadJSON(createStyleJSON({
-            sources: {
-                'circle-source-id': createGeoJSONSource()
-            },
-            layers: [{
-                id: 'layer-id',
-                type: 'circle',
-                source: 'circle-source-id',
-                layout: {
-                    'visibility': ['case', ['global-state', 'visibility'], 'visible', 'none']
-                }
-            }]
-        }));
-
-        await style.once('style.load');
-
-        style.tileManagers['circle-source-id'].resume = vi.fn();
-        style.tileManagers['circle-source-id'].reload = vi.fn();
-
-        style.setGlobalStateProperty('visibility', true);
         style.update({} as EvaluationParameters);
 
         expect(style.tileManagers['circle-source-id'].resume).toHaveBeenCalled();

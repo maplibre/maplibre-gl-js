@@ -392,7 +392,6 @@ export class Style extends Evented {
                 const layer = this._layers[layerId];
                 const layoutAffectingGlobalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
                 const paintAffectingGlobalStateRefs = layer.getPaintAffectingGlobalStateRefs();
-                const visibilityAffectingGlobalStateRefs = layer.getVisibilityAffectingGlobalStateRefs();
 
                 if (layoutAffectingGlobalStateRefs.has(ref)) {
                     sourceIdsToReload.add(layer.source);
@@ -401,10 +400,6 @@ export class Style extends Evented {
                     for (const {name, value} of paintAffectingGlobalStateRefs.get(ref)) {
                         this._updatePaintProperty(layer, name, value);
                     }
-                }
-                if (visibilityAffectingGlobalStateRefs?.has(ref)) {
-                    layer.recalculateVisibility();
-                    this._updateLayer(layer);
                 }
             }
         }
@@ -882,6 +877,8 @@ export class Style extends Evented {
 
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
+
+        this.fire(new Event('style.load', {style: this}));
 
         return true;
     }
