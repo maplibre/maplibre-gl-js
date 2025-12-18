@@ -914,37 +914,38 @@ describe('popup', () => {
             expect(updateSpy).toHaveBeenCalled();
         });
 
-        test('padding affects popup positioning near edges', () => {
+        test('popup without padding has anchor near edges', () => {
             const map = createMap();
 
             // Position popup near the top-left corner to trigger anchor selection
             const nearCornerLngLat = map.unproject([50, 50]);
 
-            // Create popup without padding
-            const popupNoPadding = new Popup()
+            const popup = new Popup()
                 .setText('Test popup without padding')
                 .setLngLat(nearCornerLngLat)
                 .addTo(map);
 
-            // Get the anchor class to verify positioning
-            const elementNoPadding = popupNoPadding.getElement();
-            const initialAnchor = Array.from(elementNoPadding.classList).find(cls => cls.includes('anchor'));
+            const element = popup.getElement();
+            const anchor = Array.from(element.classList).find(cls => cls.includes('anchor'));
 
-            popupNoPadding.remove();
+            expect(anchor).toBeDefined();
+        });
 
-            // Create popup with padding
-            const popupWithPadding = new Popup({popupPadding: {top: 50, right: 50, bottom: 50, left: 50}})
+        test('popup with padding has anchor near edges', () => {
+            const map = createMap();
+
+            // Position popup near the top-left corner to trigger anchor selection
+            const nearCornerLngLat = map.unproject([50, 50]);
+
+            const popup = new Popup({popupPadding: {top: 50, right: 50, bottom: 50, left: 50}})
                 .setText('Test popup with padding')
                 .setLngLat(nearCornerLngLat)
                 .addTo(map);
 
-            const elementWithPadding = popupWithPadding.getElement();
-            const paddedAnchor = Array.from(elementWithPadding.classList).find(cls => cls.includes('anchor'));
+            const element = popup.getElement();
+            const anchor = Array.from(element.classList).find(cls => cls.includes('anchor'));
 
-            // The anchor class might be different when padding is applied
-            // This is a more reliable check than transform strings
-            expect(paddedAnchor).toBeDefined();
-            expect(initialAnchor).toBeDefined();
+            expect(anchor).toBeDefined();
         });
 
         test('setPopupPadding accepts partial object padding value', () => {
