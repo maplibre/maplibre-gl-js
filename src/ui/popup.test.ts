@@ -1023,31 +1023,48 @@ describe('popup', () => {
             // The fact that it renders without error confirms offset handling is intact
         });
 
-        test('edge cases - negative, zero, extreme values', () => {
+        test('edge case - zero padding', () => {
             const map = createMap();
+            const popup = new Popup({padding: {top: 0, right: 0, bottom: 0, left: 0}})
+                .setText('Zero padding')
+                .setLngLat([0, 0])
+                .addTo(map);
 
-            const edgeCases = [
-                {top: 0, right: 0, bottom: 0, left: 0},           // zero
-                {top: -10, right: -10, bottom: -10, left: -10},   // negative
-                {top: 1000000, right: 1000000, bottom: 1000000, left: 1000000}, // extremely large
-                {top: -50, right: 0, bottom: 100, left: 50},      // mixed values
-            ];
+            expect(popup.getElement()).toBeDefined();
+            popup.remove();
+        });
 
-            edgeCases.forEach((padding, index) => {
-                try {
-                    const popup = new Popup({padding: padding})
-                        .setText(`Edge case ${index}`)
-                        .setLngLat([0, 0])
-                        .addTo(map);
+        test('edge case - negative padding', () => {
+            const map = createMap();
+            const popup = new Popup({padding: {top: -10, right: -10, bottom: -10, left: -10}})
+                .setText('Negative padding')
+                .setLngLat([0, 0])
+                .addTo(map);
 
-                    // Should not crash
-                    expect(popup.getElement()).toBeDefined();
-                    popup.remove();
-                } catch (error) {
-                    // If it crashes, we have a problem
-                    throw new Error(`Edge case ${index} (${JSON.stringify(padding)}) caused crash: ${error}`);
-                }
-            });
+            expect(popup.getElement()).toBeDefined();
+            popup.remove();
+        });
+
+        test('edge case - extremely large padding', () => {
+            const map = createMap();
+            const popup = new Popup({padding: {top: 1000000, right: 1000000, bottom: 1000000, left: 1000000}})
+                .setText('Extremely large padding')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            expect(popup.getElement()).toBeDefined();
+            popup.remove();
+        });
+
+        test('edge case - mixed padding values', () => {
+            const map = createMap();
+            const popup = new Popup({padding: {top: -50, right: 0, bottom: 100, left: 50}})
+                .setText('Mixed padding values')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            expect(popup.getElement()).toBeDefined();
+            popup.remove();
         });
 
         test('trackPointer compatibility', () => {
