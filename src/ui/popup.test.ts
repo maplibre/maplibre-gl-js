@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
-import {Popup, type Offset, normalizePopupPadding} from './popup';
+import {Popup, type Offset} from './popup';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
@@ -951,30 +951,52 @@ describe('popup', () => {
             expect(initialAnchor).toBeDefined();
         });
 
-        test('normalizePopupPadding handles different input types', () => {
-            // Test with null/undefined
-            expect(normalizePopupPadding(null)).toEqual({top: 0, right: 0, bottom: 0, left: 0});
-            expect(normalizePopupPadding(undefined)).toEqual({top: 0, right: 0, bottom: 0, left: 0});
-            
-            // Test with number
-            expect(normalizePopupPadding(10)).toEqual({top: 10, right: 10, bottom: 10, left: 10});
-            
-            // Test with Point
-            expect(normalizePopupPadding(new Point(5, 8))).toEqual({top: 8, right: 5, bottom: 8, left: 5});
-            
-            // Test with 2-element array
-            expect(normalizePopupPadding([10, 20])).toEqual({top: 20, right: 10, bottom: 20, left: 10});
-            
-            // Test with 4-element array
-            expect(normalizePopupPadding([10, 20, 30, 40] as [number, number, number, number])).toEqual({top: 10, right: 20, bottom: 30, left: 40});
-            
-            // Test with object
-            expect(normalizePopupPadding({top: 5, right: 10, bottom: 15, left: 20}))
-                .toEqual({top: 5, right: 10, bottom: 15, left: 20});
-            
-            // Test with partial object
-            expect(normalizePopupPadding({top: 5, right: 10}))
-                .toEqual({top: 5, right: 10, bottom: 0, left: 0});
+        test('setPopupPadding accepts Point padding value', () => {
+            const map = createMap();
+            const popup = new Popup()
+                .setText('Test')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            popup.setPopupPadding(new Point(5, 8));
+            expect(popup.options.popupPadding).toEqual(new Point(5, 8));
+        });
+
+        test('setPopupPadding accepts 2-element array padding value', () => {
+            const map = createMap();
+            const popup = new Popup()
+                .setText('Test')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            popup.setPopupPadding([10, 20]);
+            expect(popup.options.popupPadding).toEqual([10, 20]);
+        });
+
+        test('setPopupPadding accepts partial object padding value', () => {
+            const map = createMap();
+            const popup = new Popup()
+                .setText('Test')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            popup.setPopupPadding({top: 5, right: 10});
+            expect(popup.options.popupPadding).toEqual({top: 5, right: 10});
+        });
+
+        test('setPopupPadding accepts null/undefined to clear padding', () => {
+            const map = createMap();
+            const popup = new Popup({popupPadding: 20})
+                .setText('Test')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            popup.setPopupPadding(null);
+            expect(popup.options.popupPadding).toBeNull();
+
+            popup.setPopupPadding(20);
+            popup.setPopupPadding(undefined);
+            expect(popup.options.popupPadding).toBeUndefined();
         });
 
         test('CRITICAL: backward compatibility - no padding behaves exactly like before', () => {

@@ -782,7 +782,7 @@ function normalizeOffset(offset?: Offset | null) {
     }
 }
 
-export function normalizePopupPadding(padding?: PopupPadding | null): {top: number; right: number; bottom: number; left: number} {
+function normalizePopupPadding(padding?: PopupPadding | null): {top: number; right: number; bottom: number; left: number} {
     if (!padding) {
         return {top: 0, right: 0, bottom: 0, left: 0};
     }
