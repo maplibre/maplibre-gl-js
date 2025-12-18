@@ -125,6 +125,7 @@ export abstract class StyleLayer extends Evented {
         this.type = layer.type;
         this._globalState = globalState;
         this._featureFilter = {filter: () => true, needGeometry: false, getGlobalStateRefs: () => new Set<string>()};
+        this._visibilityExpression = createVisibilityExpression(this.visibility, globalState);
 
         if (layer.type === 'custom') return;
 
@@ -133,8 +134,6 @@ export abstract class StyleLayer extends Evented {
         this.metadata = layer.metadata;
         this.minzoom = layer.minzoom;
         this.maxzoom = layer.maxzoom;
-
-        this._visibilityExpression = createVisibilityExpression(this.visibility, globalState);
 
         if (layer.type !== 'background') {
             this.source = layer.source;
