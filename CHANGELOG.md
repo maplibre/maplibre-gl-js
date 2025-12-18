@@ -5,6 +5,8 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
+- Fix setting visibility on custom layer ([#6883](https://github.com/maplibre/maplibre-gl-js/issues/6883) (by [melitele](https://github.com/melitele))
 - _...Add new stuff here..._
 
 ## 5.15.0
