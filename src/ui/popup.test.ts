@@ -870,7 +870,6 @@ describe('popup', () => {
         map.setCenter([180, 0]);
         expect(popup.getElement().style.opacity).toBe('0.2');
     });
-
     test('Popup resets opacity when no longer behind globe', async () => {
         const map = createMap();
 
@@ -890,30 +889,9 @@ describe('popup', () => {
     });
 
     describe('popupPadding', () => {
-        test('accepts numeric padding value', () => {
-            const map = createMap();
-            const popup = new Popup({popupPadding: 20})
-                .setText('Test')
-                .setLngLat([0, 0])
-                .addTo(map);
-
-            expect(popup.options.popupPadding).toBe(20);
-        });
-
         test('accepts object padding value', () => {
             const map = createMap();
             const padding = {top: 10, right: 20, bottom: 30, left: 40};
-            const popup = new Popup({popupPadding: padding})
-                .setText('Test')
-                .setLngLat([0, 0])
-                .addTo(map);
-
-            expect(popup.options.popupPadding).toEqual(padding);
-        });
-
-        test('accepts array padding value', () => {
-            const map = createMap();
-            const padding: [number, number, number, number] = [10, 20, 30, 40];
             const popup = new Popup({popupPadding: padding})
                 .setText('Test')
                 .setLngLat([0, 0])
@@ -930,9 +908,9 @@ describe('popup', () => {
                 .addTo(map);
 
             const updateSpy = vi.spyOn(popup, '_update');
-            popup.setPopupPadding(15);
+            popup.setPopupPadding({top: 15, bottom: 15, left: 15, right: 15});
 
-            expect(popup.options.popupPadding).toBe(15);
+            expect(popup.options.popupPadding).toEqual({top: 15, bottom: 15, left: 15, right: 15});
             expect(updateSpy).toHaveBeenCalled();
         });
 
@@ -955,7 +933,7 @@ describe('popup', () => {
             popupNoPadding.remove();
 
             // Create popup with padding
-            const popupWithPadding = new Popup({popupPadding: 50})
+            const popupWithPadding = new Popup({popupPadding: {top: 50, right: 50, bottom: 50, left: 50}})
                 .setText('Test popup with padding')
                 .setLngLat(nearCornerLngLat)
                 .addTo(map);
@@ -967,28 +945,6 @@ describe('popup', () => {
             // This is a more reliable check than transform strings
             expect(paddedAnchor).toBeDefined();
             expect(initialAnchor).toBeDefined();
-        });
-
-        test('setPopupPadding accepts Point padding value', () => {
-            const map = createMap();
-            const popup = new Popup()
-                .setText('Test')
-                .setLngLat([0, 0])
-                .addTo(map);
-
-            popup.setPopupPadding(new Point(5, 8));
-            expect(popup.options.popupPadding).toEqual(new Point(5, 8));
-        });
-
-        test('setPopupPadding accepts 2-element array padding value', () => {
-            const map = createMap();
-            const popup = new Popup()
-                .setText('Test')
-                .setLngLat([0, 0])
-                .addTo(map);
-
-            popup.setPopupPadding([10, 20]);
-            expect(popup.options.popupPadding).toEqual([10, 20]);
         });
 
         test('setPopupPadding accepts partial object padding value', () => {
@@ -1004,7 +960,7 @@ describe('popup', () => {
 
         test('setPopupPadding accepts null/undefined to clear padding', () => {
             const map = createMap();
-            const popup = new Popup({popupPadding: 20})
+            const popup = new Popup({popupPadding: {top: 20}})
                 .setText('Test')
                 .setLngLat([0, 0])
                 .addTo(map);
@@ -1012,7 +968,7 @@ describe('popup', () => {
             popup.setPopupPadding(null);
             expect(popup.options.popupPadding).toBeNull();
 
-            popup.setPopupPadding(20);
+            popup.setPopupPadding({top: 20});
             popup.setPopupPadding(undefined);
             expect(popup.options.popupPadding).toBeUndefined();
         });
@@ -1039,7 +995,7 @@ describe('popup', () => {
                     .setLngLat([lng, lat])
                     .addTo(map);
 
-                const popupWithZero = new Popup({popupPadding: 0})
+                const popupWithZero = new Popup({popupPadding: {top: 0, right: 0, bottom: 0, left: 0}})
                     .setText('Test')
                     .setLngLat([lng, lat])
                     .addTo(map);
@@ -1069,7 +1025,7 @@ describe('popup', () => {
                     .setLngLat([0, 0])
                     .addTo(map);
 
-                const popupWithPadding = new Popup({anchor, popupPadding: 100})
+                const popupWithPadding = new Popup({anchor, popupPadding: {top: 100, right: 100, bottom: 100, left: 100}})
                     .setText('Test')
                     .setLngLat([0, 0])
                     .addTo(map);
@@ -1094,7 +1050,7 @@ describe('popup', () => {
             const offset = {top: [0, -20], bottom: [0, 20], left: [20, 0], right: [-20, 0]} as any;
 
             // Test that offset is still applied correctly when padding is present
-            const popup = new Popup({offset, popupPadding: 10})
+            const popup = new Popup({offset, popupPadding: {top: 10, right: 10, bottom: 10, left: 10}})
                 .setText('Test with offset and padding')
                 .setLngLat([0, 0])
                 .addTo(map);
@@ -1107,18 +1063,15 @@ describe('popup', () => {
             const map = createMap();
 
             const edgeCases = [
-                0,                              // zero
-                -10,                            // negative
-                Infinity,                       // infinite
-                NaN,                           // NaN
-                1000000,                       // extremely large
-                {top: -50, right: 0, bottom: Infinity, left: NaN}, // mixed problematic values
-                [0, -10, 20, -30],             // mixed negative array
+                {top: 0, right: 0, bottom: 0, left: 0},           // zero
+                {top: -10, right: -10, bottom: -10, left: -10},   // negative
+                {top: 1000000, right: 1000000, bottom: 1000000, left: 1000000}, // extremely large
+                {top: -50, right: 0, bottom: 100, left: 50},      // mixed values
             ];
 
             edgeCases.forEach((padding, index) => {
                 try {
-                    const popup = new Popup({popupPadding: padding as any})
+                    const popup = new Popup({popupPadding: padding})
                         .setText(`Edge case ${index}`)
                         .setLngLat([0, 0])
                         .addTo(map);
@@ -1136,7 +1089,7 @@ describe('popup', () => {
         test('CRITICAL: trackPointer compatibility', () => {
             const map = createMap();
 
-            const popup = new Popup({popupPadding: 20})
+            const popup = new Popup({popupPadding: {top: 20, right: 20, bottom: 20, left: 20}})
                 .setText('Track pointer test')
                 .trackPointer()
                 .addTo(map);
@@ -1166,7 +1119,7 @@ describe('popup', () => {
 
             const startWithPadding = performance.now();
             for (let i = 0; i < iterations; i++) {
-                const popup = new Popup({popupPadding: 20})
+                const popup = new Popup({popupPadding: {top: 20, right: 20, bottom: 20, left: 20}})
                     .setText('Test')
                     .setLngLat([Math.random() * 360 - 180, Math.random() * 180 - 90])
                     .addTo(map);

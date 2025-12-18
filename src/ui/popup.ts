@@ -11,6 +11,7 @@ import type {PositionAnchor} from './anchor';
 import type {Map} from './map';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {PointLike} from './camera';
+import type {PaddingOptions} from '../geo/edge_insets';
 
 const defaultOptions = {
     closeButton: true,
@@ -34,24 +35,6 @@ const defaultOptions = {
  */
 export type Offset = number | PointLike | {
     [_ in PositionAnchor]: PointLike;
-};
-
-/**
- * A pixel padding specified as:
- *
- * - A single number specifying equal padding on all sides
- * - A {@link PointLike} specifying padding for [horizontal, vertical]
- * - A four-element array specifying [top, right, bottom, left] padding
- * - An object specifying padding for each side
- *
- * Padding creates a buffer zone around the edges of the map container
- * where the popup will avoid being positioned.
- */
-export type PopupPadding = number | PointLike | [number, number, number, number] | {
-    top?: number;
-    right?: number;
-    bottom?: number;
-    left?: number;
 };
 
 /**
@@ -120,7 +103,7 @@ export type PopupOptions = {
      * from the edges of the map container.
      * @defaultValue undefined
      */
-    popupPadding?: PopupPadding;
+    popupPadding?: PaddingOptions;
 };
 
 const focusQuerySelector = [
@@ -596,23 +579,13 @@ export class Popup extends Evented {
     /**
      * Sets the popup's padding constraints for positioning.
      *
-     * @param padding - The padding to apply. Can be a number (all sides), array, or object.
+     * @param padding - The padding to apply as a {@link PaddingOptions} object.
      * @example
      * ```ts
-     * // Equal padding on all sides
-     * popup.setPopupPadding(20);
-     * 
-     * // Different padding per side
      * popup.setPopupPadding({ top: 10, right: 20, bottom: 30, left: 40 });
-     * 
-     * // Horizontal and vertical padding
-     * popup.setPopupPadding([20, 10]); // [horizontal, vertical]
-     * 
-     * // CSS-style padding
-     * popup.setPopupPadding([10, 20, 30, 40]); // [top, right, bottom, left]
      * ```
      */
-    setPopupPadding(padding?: PopupPadding): this {
+    setPopupPadding(padding?: PaddingOptions): this {
         this.options.popupPadding = padding;
         this._update();
         return this;
@@ -782,53 +755,15 @@ function normalizeOffset(offset?: Offset | null) {
     }
 }
 
-function normalizePopupPadding(padding?: PopupPadding | null): {top: number; right: number; bottom: number; left: number} {
+function normalizePopupPadding(padding?: PaddingOptions | null): {top: number; right: number; bottom: number; left: number} {
     if (!padding) {
         return {top: 0, right: 0, bottom: 0, left: 0};
     }
 
-    if (typeof padding === 'number') {
-        // Single number applies to all sides - handle NaN/Infinity safely
-        const safePadding = isFinite(padding) ? padding : 0;
-        return {top: safePadding, right: safePadding, bottom: safePadding, left: safePadding};
-    }
-
-    if (Array.isArray(padding)) {
-        if (padding.length === 2) {
-            // [horizontal, vertical]
-            const [horizontal, vertical] = padding;
-            const safeH = isFinite(horizontal) ? horizontal : 0;
-            const safeV = isFinite(vertical) ? vertical : 0;
-            return {top: safeV, right: safeH, bottom: safeV, left: safeH};
-        } else if (padding.length === 4) {
-            // [top, right, bottom, left]
-            const [top, right, bottom, left] = padding;
-            return {
-                top: isFinite(top) ? top : 0,
-                right: isFinite(right) ? right : 0,
-                bottom: isFinite(bottom) ? bottom : 0,
-                left: isFinite(left) ? left : 0
-            };
-        }
-    }
-
-    if (typeof padding === 'object' && !Array.isArray(padding) && !(padding instanceof Point)) {
-        // Object with explicit properties (not a Point)
-        return {
-            top: isFinite(padding.top) ? padding.top : 0,
-            right: isFinite(padding.right) ? padding.right : 0,
-            bottom: isFinite(padding.bottom) ? padding.bottom : 0,
-            left: isFinite(padding.left) ? padding.left : 0
-        };
-    }
-
-    if (padding instanceof Point) {
-        // Handle Point as [horizontal, vertical]
-        const safeX = isFinite(padding.x) ? padding.x : 0;
-        const safeY = isFinite(padding.y) ? padding.y : 0;
-        return {top: safeY, right: safeX, bottom: safeY, left: safeX};
-    }
-
-    // Fallback to no padding
-    return {top: 0, right: 0, bottom: 0, left: 0};
+    return {
+        top: padding.top ?? 0,
+        right: padding.right ?? 0,
+        bottom: padding.bottom ?? 0,
+        left: padding.left ?? 0
+    };
 }
