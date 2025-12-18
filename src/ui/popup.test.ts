@@ -1067,7 +1067,7 @@ describe('popup', () => {
             popup.remove();
         });
 
-        test('trackPointer compatibility', () => {
+        test('trackPointer with padding should not crash and should have track-pointer class', () => {
             const map = createMap();
 
             const popup = new Popup({padding: {top: 20, right: 20, bottom: 20, left: 20}})
@@ -1075,7 +1075,6 @@ describe('popup', () => {
                 .trackPointer()
                 .addTo(map);
 
-            // Should not crash and should have track-pointer class
             expect(popup.getElement().classList.contains('maplibregl-popup-track-pointer')).toBeTruthy();
             expect(map._canvasContainer.classList.contains('maplibregl-track-pointer')).toBeTruthy();
 
