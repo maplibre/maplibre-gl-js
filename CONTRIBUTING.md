@@ -165,8 +165,14 @@ To create a standalone build, run
 npm run build-prod
 npm run build-css
 ```
-
 Once those commands finish, you will have a standalone build at `dist/maplibre-gl.js` and `dist/maplibre-gl.css`
+
+## Analyze your Standalone Build
+
+MapLibre seeks to keep production bundle sizes small. If your changes involve substantial additions or changes to dependencies, the effects on bundle size can be visualized by running
+```bash
+npm run bundle-stats
+```
 
 ## Testing changes and Writing Documentation
 

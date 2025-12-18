@@ -3,7 +3,7 @@ import {LngLat, type LngLatLike} from '../lng_lat';
 import {cameraForBoxAndBearing, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, type UpdateRotationArgs} from './camera_helper';
 import {normalizeCenter} from '../transform_helper';
 import {rollPitchBearingEqual, scaleZoom, zoomScale} from '../../util/util';
-import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
+import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import type {IReadonlyTransform, ITransform} from '../transform_interface';
@@ -21,8 +21,14 @@ export class MercatorCameraHelper implements ICameraHelper {
         easingCenter: LngLat;
         easingOffset: Point;
     } {
+        // Reduce the offset so that it never goes past the horizon. If it goes past
+        // the horizon, the pan direction is opposite of the intended direction.
+        const offsetLength = pan.mag();
+        const pixelsToHorizon = Math.abs(getMercatorHorizon(transform));
+        const horizonFactor = 0.75; // Must be < 1 to prevent the offset from crossing the horizon
+        const offsetAsPoint = pan.mult(Math.min(pixelsToHorizon * horizonFactor / offsetLength, 1.0));
         return {
-            easingOffset: pan,
+            easingOffset: offsetAsPoint,
             easingCenter: transform.center,
         };
     }
@@ -81,7 +87,7 @@ export class MercatorCameraHelper implements ICameraHelper {
 
         let pointAtOffset = tr.centerPoint.add(options.offsetAsPoint);
         const locationAtOffset = tr.screenPointToLocation(pointAtOffset);
-        const {center, zoom: endZoom} = tr.getConstrained(
+        const {center, zoom: endZoom} = tr.applyConstrain(
             LngLat.convert(options.center || locationAtOffset),
             zoom ?? startZoom
         );
@@ -107,7 +113,7 @@ export class MercatorCameraHelper implements ICameraHelper {
             }
             if (doPadding) {
                 tr.interpolatePadding(startPadding, options.padding, k);
-                // When padding is being applied, Transform#centerPoint is changing continuously,
+                // When padding is being applied, Transform.centerPoint is changing continuously,
                 // thus we need to recalculate offsetPoint every frame
                 pointAtOffset = tr.centerPoint.add(options.offsetAsPoint);
             }
@@ -138,7 +144,7 @@ export class MercatorCameraHelper implements ICameraHelper {
         const startZoom = tr.zoom;
 
         // Obtain target center and zoom
-        const constrained = tr.getConstrained(
+        const constrained = tr.applyConstrain(
             LngLat.convert(options.center || options.locationAtOffset),
             optionsZoom ? +options.zoom : startZoom
         );
@@ -160,7 +166,7 @@ export class MercatorCameraHelper implements ICameraHelper {
 
         if (optionsMinZoom) {
             const minZoomPreConstrain = Math.min(+options.minZoom, startZoom, targetZoom);
-            const minZoom = tr.getConstrained(targetCenter, minZoomPreConstrain).zoom;
+            const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
             scaleOfMinZoom = zoomScale(minZoom - startZoom);
         }
 

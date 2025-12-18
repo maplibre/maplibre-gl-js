@@ -14,12 +14,11 @@ import {type PossiblyEvaluated} from '../style/properties';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
 import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mode';
 
-import type {Tile} from '../source/tile';
-import {type SymbolBucket, type CollisionArrays, type SingleCollisionBox} from '../data/bucket/symbol_bucket';
-
+import type {Tile} from '../tile/tile';
+import type {SymbolBucket, CollisionArrays, SingleCollisionBox, SymbolBuffers} from '../data/bucket/symbol_bucket';
 import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchorOffset} from '../data/array_types.g';
 import type {FeatureIndex} from '../data/feature_index';
-import type {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
+import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id';
 import {type Terrain} from '../render/terrain';
 import {translatePosition, warnOnce} from '../util/util';
 import {type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
@@ -294,7 +293,7 @@ export class Placement {
             pitchedLabelPlaneMatrix,
             scale,
             textPixelRatio,
-            holdingForFade: tile.holdingForFade(),
+            holdingForFade: tile.holdingForSymbolFade(),
             collisionBoxArray,
             partiallyEvaluatedTextSize: symbolSize.evaluateSizeForZoom(symbolBucket.textSizeData, this.transform.zoom),
             collisionGroup: this.collisionGroups.get(symbolBucket.sourceID)
@@ -336,9 +335,9 @@ export class Placement {
         getElevation?: (x: number, y: number) => number,
         simpleProjectionMatrix?: mat4,
     ): {
-            shift: Point;
-            placedGlyphBoxes: PlacedBox;
-        } {
+        shift: Point;
+        placedGlyphBoxes: PlacedBox;
+    } {
 
         const anchor = TextAnchorEnum[textAnchorOffset.textAnchor] as TextAnchor;
         const textOffset = [textAnchorOffset.textOffset0, textAnchorOffset.textOffset1] as [number, number];
@@ -683,7 +682,7 @@ export class Placement {
             placeText = placedGlyphBoxes && placedGlyphBoxes.placeable;
             offscreen = placedGlyphBoxes && placedGlyphBoxes.offscreen;
 
-            if (symbolInstance.useRuntimeCollisionCircles) {
+            if (symbolInstance.useRuntimeCollisionCircles && symbolInstance.centerJustifiedTextSymbolIndex >= 0) {
                 const placedSymbol = bucket.text.placedSymbolArray.get(symbolInstance.centerJustifiedTextSymbolIndex);
                 const fontSize = symbolSize.evaluateSizeForFeature(bucket.textSizeData, partiallyEvaluatedTextSize, placedSymbol);
 
@@ -1059,7 +1058,7 @@ export class Placement {
             bucket.deserializeCollisionBoxes(collisionBoxArray);
         }
 
-        const addOpacities = (iconOrText, numVertices: number, opacity: number) => {
+        const addOpacities = (iconOrText: SymbolBuffers, numVertices: number, opacity: number) => {
             for (let i = 0; i < numVertices / 4; i++) {
                 iconOrText.opacityVertexArray.emplaceBack(opacity);
             }

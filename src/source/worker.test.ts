@@ -3,7 +3,7 @@ import {fakeServer} from 'nise';
 import Worker from './worker';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type WorkerGlobalScopeInterface} from '../util/web_worker';
-import {type CanonicalTileID, type OverscaledTileID} from './tile_id';
+import {type CanonicalTileID, type OverscaledTileID} from '../tile/tile_id';
 import {type WorkerSource, type WorkerTileParameters, type WorkerTileResult} from './worker_source';
 import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
 import {type ActorTarget, type IActor} from '../util/actor';
@@ -89,7 +89,7 @@ describe('Worker generic testing', () => {
 
         worker.actor.messageHandlers[MessageType.setLayers]('1', [
             {id: 'one', type: 'circle'} as LayerSpecification,
-            {id: 'two', type: 'circle'} as LayerSpecification,
+            {id: 'two', type: 'circle'} as LayerSpecification
         ]);
 
         expect(worker.layerIndexes[0]).not.toBe(worker.layerIndexes[1]);
@@ -139,5 +139,12 @@ describe('Worker generic testing', () => {
         expect(worker.layerIndexes['0']).toBeDefined();
         worker.actor.messageHandlers[MessageType.removeMap]('0', undefined);
         expect(worker.layerIndexes['0']).toBeUndefined();
+    });
+
+    test('propagates global state', () => {
+        const globalState = {key: 'value'};
+        worker.actor.messageHandlers[MessageType.updateGlobalState]('0', globalState);
+        expect(worker.globalStates.get('0')).not.toBe(globalState);
+        expect(worker.globalStates.get('0')).toEqual(globalState);
     });
 });

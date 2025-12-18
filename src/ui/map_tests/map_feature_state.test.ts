@@ -6,7 +6,7 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-describe('#setFeatureState', () => {
+describe('setFeatureState', () => {
     test('sets state', async () => {
         const map = createMap({
             style: {
@@ -129,7 +129,7 @@ describe('#setFeatureState', () => {
     });
 });
 
-describe('#removeFeatureState', () => {
+describe('removeFeatureState', () => {
 
     test('accepts "0" id', async () => {
         const map = createMap({

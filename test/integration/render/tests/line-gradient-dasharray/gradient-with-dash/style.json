@@ -1,0 +1,73 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64
+    }
+  },
+  "zoom": 2,
+  "sources": {
+    "gradient": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [0, 6],
+            [4.5, 4.5],
+            [6, 0],
+            [4.5, -4.5],
+            [0, -6],
+            [-4.5, -4.5],
+            [-6, 0],
+            [-4.5, 4.5],
+            [0, 3.5],
+            [2.5, 2.5],
+            [3.5, 0],
+            [2.5, -2.5],
+            [0, -3.5],
+            [-2.5, -2.5],
+            [-3.5, 0],
+            [-2.5, 2.5],
+            [0, 1],
+            [0.7, 0.7],
+            [1, 0],
+            [0, 0]
+          ]
+        }
+      },
+      "lineMetrics": true
+    }
+  },
+  "layers": [
+    {
+      "id": "line",
+      "type": "line",
+      "source": "gradient",
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-width": 6,
+        "line-gradient": [
+          "interpolate",
+          ["exponential", 2],
+          ["line-progress"],
+          0,
+          "rgba(255, 41, 41, 1)",
+          0.15,
+          "rgba(255, 173, 173, 1)",
+          0.85,
+          "rgba(0, 44, 133, 1)",
+          1,
+          "rgba(0, 85, 255, 1)"
+        ],
+        "line-dasharray": [5, 2.4]
+      }
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import {beforeEach, test, expect} from 'vitest';
+import {beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest, createTerrain} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 
@@ -7,7 +7,7 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-test('#setMinZoom', () => {
+test('setMinZoom', () => {
     const map = createMap({zoom: 5});
     map.setMinZoom(3.5);
     map.setZoom(1);
@@ -21,7 +21,7 @@ test('unset minZoom', () => {
     expect(map.getZoom()).toBe(1);
 });
 
-test('#getMinZoom', () => {
+test('getMinZoom', () => {
     const map = createMap({zoom: 0});
     expect(map.getMinZoom()).toBe(-2);
     map.setMinZoom(10);
@@ -37,7 +37,7 @@ test('ignore minZooms over maxZoom', () => {
     expect(map.getZoom()).toBe(0);
 });
 
-test('#setMaxZoom', () => {
+test('setMaxZoom', () => {
     const map = createMap({zoom: 0});
     map.setMaxZoom(3.5);
     map.setZoom(4);
@@ -51,7 +51,7 @@ test('unset maxZoom', () => {
     expect(map.getZoom()).toBe(6);
 });
 
-test('#getMaxZoom', () => {
+test('getMaxZoom', () => {
     const map = createMap({zoom: 0});
     expect(map.getMaxZoom()).toBe(22);
     map.setMaxZoom(10);
@@ -91,4 +91,48 @@ test('recalculate zoom is done on the camera update transform', async () => {
     simulate.dragWithMove(canvas, {x: 100, y: 100}, {x: 100, y: 150});
     map._renderTaskQueue.run();
     expect(map.getZoom()).toBeCloseTo(0.20007702699730118, 10);
+});
+
+test('transformCameraUpdate is called after changing min or max zoom', async () => {
+    const map = createMap({
+        interactive: true,
+        clickTolerance: 4,
+    });
+    map.setMinZoom(5);
+    map.setMaxZoom(18);
+    map.setZoom(18);
+    await map.once('style.load');
+    expect(map.getZoom()).toEqual(18);
+    expect(map.getMinZoom()).toEqual(5);
+    expect(map.getMaxZoom()).toEqual(18);
+    const transformCameraUpdate = vi.fn(t => t);
+    map.transformCameraUpdate = transformCameraUpdate;
+
+    map.setMaxZoom(16);
+    expect(map.getZoom()).toEqual(16);
+    expect(map.getMinZoom()).toEqual(5);
+    expect(map.getMaxZoom()).toEqual(16);
+    expect(transformCameraUpdate.mock.calls[0][0]).toMatchObject({
+        zoom: 16,
+        minZoom: 5,
+        maxZoom: 16,
+    });
+
+    map.setZoom(5);
+    expect(transformCameraUpdate.mock.calls[1][0]).toMatchObject({
+        zoom: 5,
+        minZoom: 5,
+        maxZoom: 16,
+    });
+
+    map.setMinZoom(6);
+    map.transformCameraUpdate = transformCameraUpdate;
+    expect(map.getZoom()).toEqual(6);
+    expect(map.getMinZoom()).toEqual(6);
+    expect(map.getMaxZoom()).toEqual(16);
+    expect(transformCameraUpdate.mock.calls[2][0]).toMatchObject({
+        zoom: 6,
+        minZoom: 6,
+        maxZoom: 16,
+    });
 });

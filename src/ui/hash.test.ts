@@ -31,7 +31,7 @@ describe('hash', () => {
         window.location.hash = '';
     });
 
-    test('#addTo', () => {
+    test('addTo', () => {
         const hash = createHash();
 
         expect(hash._map).toBeFalsy();
@@ -41,7 +41,7 @@ describe('hash', () => {
         expect(hash._map).toBeTruthy();
     });
 
-    test('#remove', () => {
+    test('remove', () => {
         const hash = createHash()
             .addTo(map);
 
@@ -52,7 +52,7 @@ describe('hash', () => {
         expect(hash._map).toBeFalsy();
     });
 
-    test('#_onHashChange', () => {
+    test('_onHashChange', () => {
         const hash = createHash()
             .addTo(map);
 
@@ -113,7 +113,7 @@ describe('hash', () => {
         expect(hash._onHashChange()).toBeFalsy();
     });
 
-    test('#_onHashChange empty', () => {
+    test('_onHashChange empty', () => {
         const hash = createHash()
             .addTo(map);
 
@@ -138,7 +138,7 @@ describe('hash', () => {
         expect(map.getPitch()).toBe(0);
     });
 
-    test('#_onHashChange named', () => {
+    test('_onHashChange named', () => {
         const hash = createHash('map')
             .addTo(map);
 
@@ -165,7 +165,7 @@ describe('hash', () => {
         expect(hash._onHashChange()).toBeFalsy();
     });
 
-    test('#_getCurrentHash', () => {
+    test('_getCurrentHash', () => {
         const hash = createHash()
             .addTo(map);
 
@@ -178,7 +178,7 @@ describe('hash', () => {
         expect(currentHash[2]).toBe('-1.00');
     });
 
-    test('#_getCurrentHash named', () => {
+    test('_getCurrentHash named', () => {
         const hash = createHash('map')
             .addTo(map);
 
@@ -199,7 +199,7 @@ describe('hash', () => {
         expect(currentHash[2]).toBe('-1.00');
     });
 
-    test('#_updateHash', () => {
+    test('_updateHash', () => {
         function getHash() {
             return window.location.hash.split('/');
         }
@@ -244,7 +244,7 @@ describe('hash', () => {
         expect(newHash[4]).toBe('60');
     });
 
-    test('#_updateHash named', () => {
+    test('_updateHash named', () => {
         createHash('map')
             .addTo(map);
 
@@ -279,7 +279,7 @@ describe('hash', () => {
         expect(window.location.hash).toBe('#baz&map=7/1/2/135/60&foo=bar');
     });
 
-    test('#_removeHash', () => {
+    test('_removeHash', () => {
         const hash = createHash()
             .addTo(map);
 
@@ -299,7 +299,7 @@ describe('hash', () => {
         expect(window.location.hash).toBe('#foo=bar');
     });
 
-    test('#_removeHash named', () => {
+    test('_removeHash named', () => {
         const hash = createHash('map')
             .addTo(map);
 
@@ -325,7 +325,7 @@ describe('hash', () => {
         expect(window.location.hash).toBe('#baz&foo=bar');
     });
 
-    describe('#_isValidHash', () => {
+    describe('_isValidHash', () => {
         let hash: Hash;
 
         beforeEach(() => {
@@ -453,7 +453,7 @@ describe('hash', () => {
         expect(window.location.href).toBe('http://localhost/#4/1/2');
     });
 
-    test('map#remove', () => {
+    test('map.remove', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 512});
         Object.defineProperty(container, 'clientHeight', {value: 512});

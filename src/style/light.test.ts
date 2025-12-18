@@ -42,7 +42,7 @@ test('Light with stops function', () => {
     expect(light.properties.get('intensity')).toBe(0.5);
 });
 
-test('Light#getLight', () => {
+test('Light.getLight', () => {
     const defaults = {};
     for (const key in spec) {
         defaults[key] = spec[key].default;
@@ -51,7 +51,7 @@ test('Light#getLight', () => {
     expect(new Light(defaults).getLight()).toEqual(defaults);
 });
 
-describe('Light#setLight', () => {
+describe('Light.setLight', () => {
     test('sets light', () => {
         const light = new Light({});
         light.setLight({color: 'red', 'color-transition': {duration: 3000}} as LightSpecification);

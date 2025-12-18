@@ -3,7 +3,7 @@ import {ITransform} from '../../../src/geo/transform_interface';
 import {CollisionIndex} from '../../../src/symbol/collision_index';
 import Benchmark from '../lib/benchmark';
 import {OverlapMode} from '../../../src/style/style_layer/overlap_mode';
-import {OverscaledTileID, UnwrappedTileID} from '../../../src/source/tile_id';
+import {OverscaledTileID, UnwrappedTileID} from '../../../src/tile/tile_id';
 import {SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
 import {EXTENT} from '../../../src/data/extent';
 import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
@@ -56,7 +56,7 @@ export default class SymbolCollisionBox extends Benchmark {
                 calculatePosMatrix: (_tileID: UnwrappedTileID) => { return undefined; },
             };
         } else {
-            const tr = new MercatorTransform(0, 22, 0, 60, true);
+            const tr = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
             return {
                 transform: tr,
                 calculatePosMatrix: (tileID: UnwrappedTileID) => { return tr.calculatePosMatrix(tileID, false); },

@@ -26,7 +26,7 @@ describe('LineStyleLayer', () => {
     }
 
     test('updating with valid line-gradient updates this.gradientVersion', () => {
-        const lineLayer = createStyleLayer(createLineLayer()) as LineStyleLayer;
+        const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
         const gradientVersion = lineLayer.gradientVersion;
 
         lineLayer.setPaintProperty('line-gradient', [
@@ -42,7 +42,7 @@ describe('LineStyleLayer', () => {
     });
 
     test('updating with invalid line-gradient updates this.gradientVersion', () => {
-        const lineLayer = createStyleLayer(createLineLayer()) as LineStyleLayer;
+        const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
         const gradientVersion = lineLayer.gradientVersion;
 
         lineLayer.setPaintProperty('line-gradient', null);

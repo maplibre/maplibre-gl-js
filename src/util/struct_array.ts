@@ -196,7 +196,7 @@ abstract class StructArray {
 /**
  * Given a list of member fields, create a full StructArrayLayout, in
  * particular calculating the correct byte offset for each field.  This data
- * is used at build time to generate StructArrayLayout_*#emplaceBack() and
+ * is used at build time to generate StructArrayLayout_*.emplaceBack() and
  * other accessors, and at runtime for binding vertex buffer attributes.
  */
 function createLayout(

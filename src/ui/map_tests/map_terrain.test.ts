@@ -20,7 +20,7 @@ afterEach(() => {
     server.restore();
 });
 
-describe('#setTerrain', () => {
+describe('setTerrain', () => {
     test('warn when terrain and hillshade source identical', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 5,
@@ -34,16 +34,17 @@ describe('#setTerrain', () => {
         map.addSource('terrainrgb', {type: 'raster-dem', url: '/source.json'});
         server.respond();
         map.addLayer({id: 'hillshade', type: 'hillshade', source: 'terrainrgb'});
-        const stub = vi.spyOn(console, 'warn').mockImplementation(() => { });
-        stub.mockReset();
+        const originalWarn = console.warn;
+        console.warn = vi.fn();
         map.setTerrain({
             source: 'terrainrgb'
         });
         expect(console.warn).toHaveBeenCalledTimes(1);
+        console.warn = originalWarn;
     });
 });
 
-describe('#getTerrain', () => {
+describe('getTerrain', () => {
     test('returns null when not set', () => {
         const map = createMap();
         expect(map.getTerrain()).toBeNull();
@@ -57,7 +58,7 @@ describe('getCameraTargetElevation', () => {
         const terrainStub = {} as Terrain;
         map.terrain = terrainStub;
 
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setElevation(200);
         transform.setCenter(new LngLat(10.0, 50.0));
         transform.setZoom(14);

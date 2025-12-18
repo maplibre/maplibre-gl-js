@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Draw polygon with mapbox-gl-draw</title>
+    <meta property="og:description" content="Use mapbox-gl-draw to draw a polygon and Turf.js to calculate its area in square meters." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    .calculation-box {
+        height: 75px;
+        width: 150px;
+        position: absolute;
+        bottom: 40px;
+        left: 10px;
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 15px;
+        text-align: center;
+    }
+
+    p {
+        font-family: 'Open Sans';
+        margin: 0;
+        font-size: 13px;
+    }
+</style>
+    <script src="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.5.0/dist/mapbox-gl-draw.js"></script>
+    <link
+        rel="stylesheet"
+        href="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.5.0/dist/mapbox-gl-draw.css"
+    />
+    <div id="map"></div>
+    <div class="calculation-box">
+        <p>Draw a polygon using the draw tools.</p>
+        <div id="calculated-area"></div>
+    </div>
+
+    <script type="module">
+
+
+    import * as turf from 'https://esm.sh/@turf/turf@7.1.0';
+
+    MapboxDraw.constants.classes.CANVAS  = 'maplibregl-canvas';
+    MapboxDraw.constants.classes.CONTROL_BASE  = 'maplibregl-ctrl';
+    MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
+    MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group';
+    MapboxDraw.constants.classes.ATTRIBUTION = 'maplibregl-ctrl-attrib';
+
+    const map = new maplibregl.Map({
+        container: 'map', // container id
+        style: 'https://tiles.openfreemap.org/styles/bright', // style URL
+        center: [-91.874, 42.76], // starting position
+        zoom: 12 // starting zoom
+    });
+
+    // https://github.com/mapbox/mapbox-gl-draw/issues/1357
+    // https://github.com/mapbox/mapbox-gl-draw/pull/1078 - reverted
+    const styles = [{'id': 'gl-draw-polygon-fill-inactive','type': 'fill','filter': ['all',['==', 'active', 'false'],['==', '$type', 'Polygon'],['!=', 'mode', 'static']],'paint': {'fill-color': '#3bb2d0','fill-outline-color': '#3bb2d0','fill-opacity': 0.1}},{'id': 'gl-draw-polygon-fill-active','type': 'fill','filter': ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']],'paint': {'fill-color': '#fbb03b','fill-outline-color': '#fbb03b','fill-opacity': 0.1}},{'id': 'gl-draw-polygon-midpoint','type': 'circle','filter': ['all',['==', '$type', 'Point'],['==', 'meta', 'midpoint']],'paint': {'circle-radius': 3,'circle-color': '#fbb03b'}},{'id': 'gl-draw-polygon-stroke-inactive','type': 'line','filter': ['all',['==', 'active', 'false'],['==', '$type', 'Polygon'],['!=', 'mode', 'static']],'layout': {'line-cap': 'round','line-join': 'round'},'paint': {'line-color': '#3bb2d0','line-width': 2}},{'id': 'gl-draw-polygon-stroke-active','type': 'line','filter': ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']],'layout': {'line-cap': 'round','line-join': 'round'},'paint': {'line-color': '#fbb03b','line-dasharray': [0.2, 2],'line-width': 2}},{'id': 'gl-draw-line-inactive','type': 'line','filter': ['all',['==', 'active', 'false'],['==', '$type', 'LineString'],['!=', 'mode', 'static']],'layout': {'line-cap': 'round','line-join': 'round'},'paint': {'line-color': '#3bb2d0','line-width': 2}},{'id': 'gl-draw-line-active','type': 'line','filter': ['all',['==', '$type', 'LineString'],['==', 'active', 'true']],'layout': {'line-cap': 'round','line-join': 'round'},'paint': {'line-color': '#fbb03b','line-dasharray': [0.2, 2],'line-width': 2}},{'id': 'gl-draw-polygon-and-line-vertex-stroke-inactive','type': 'circle','filter': ['all',['==', 'meta', 'vertex'],['==', '$type', 'Point'],['!=', 'mode', 'static']],'paint': {'circle-radius': 5,'circle-color': '#fff'}},{'id': 'gl-draw-polygon-and-line-vertex-inactive','type': 'circle','filter': ['all',['==', 'meta', 'vertex'],['==', '$type', 'Point'],['!=', 'mode', 'static']],'paint': {'circle-radius': 3,'circle-color': '#fbb03b'}},{'id': 'gl-draw-point-point-stroke-inactive','type': 'circle','filter': ['all',['==', 'active', 'false'],['==', '$type', 'Point'],['==', 'meta', 'feature'],['!=', 'mode', 'static']],'paint': {'circle-radius': 5,'circle-opacity': 1,'circle-color': '#fff'}},{'id': 'gl-draw-point-inactive','type': 'circle','filter': ['all',['==', 'active', 'false'],['==', '$type', 'Point'],['==', 'meta', 'feature'],['!=', 'mode', 'static']],'paint': {'circle-radius': 3,'circle-color': '#3bb2d0'}},{'id': 'gl-draw-point-stroke-active','type': 'circle','filter': ['all',['==', '$type', 'Point'],['==', 'active', 'true'],['!=', 'meta', 'midpoint']],'paint': {'circle-radius': 7,'circle-color': '#fff'}},{'id': 'gl-draw-point-active','type': 'circle','filter': ['all',['==', '$type', 'Point'],['!=', 'meta', 'midpoint'],['==', 'active', 'true']],'paint': {'circle-radius': 5,'circle-color': '#fbb03b'}},{'id': 'gl-draw-polygon-fill-static','type': 'fill','filter': ['all', ['==', 'mode', 'static'], ['==', '$type', 'Polygon']],'paint': {'fill-color': '#404040','fill-outline-color': '#404040','fill-opacity': 0.1}},{'id': 'gl-draw-polygon-stroke-static','type': 'line','filter': ['all', ['==', 'mode', 'static'], ['==', '$type', 'Polygon']],'layout': {'line-cap': 'round','line-join': 'round'},'paint': {'line-color': '#404040','line-width': 2}},{'id': 'gl-draw-line-static','type': 'line','filter': ['all', ['==', 'mode', 'static'], ['==', '$type', 'LineString']],'layout': {'line-cap': 'round','line-join': 'round'},'paint': {'line-color': '#404040','line-width': 2}},{'id': 'gl-draw-point-static','type': 'circle','filter': ['all', ['==', 'mode', 'static'], ['==', '$type', 'Point']],'paint': {'circle-radius': 5,'circle-color': '#404040'}}];
+
+    const draw = new MapboxDraw({
+        displayControlsDefault: false,
+        controls: {
+            polygon: true,
+            trash: true
+        },
+        styles
+    });
+    map.addControl(draw);
+
+    map.on('draw.create', updateArea);
+    map.on('draw.delete', updateArea);
+    map.on('draw.update', updateArea);
+
+    function updateArea(e) {
+        const data = draw.getAll();
+        const answer = document.getElementById('calculated-area');
+        if (data.features.length > 0) {
+            const area = turf.area(data);
+            // restrict to area to 2 decimal points
+            const roundedArea = Math.round(area * 100) / 100;
+            answer.innerHTML =
+                `<p><strong>${
+                    roundedArea
+                }</strong></p><p>square meters</p>`;
+        } else {
+            answer.innerHTML = '';
+            if (e.type !== 'draw.delete')
+                alert('Use the draw tools to draw a polygon!');
+        }
+    }
+</script>
+</body>
+</html>

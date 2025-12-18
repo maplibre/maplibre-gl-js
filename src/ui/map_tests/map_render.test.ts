@@ -80,7 +80,7 @@ test('no render before style loaded', async () => {
     expect(loaded).toBeTruthy();
 });
 
-test('#redraw', async () => {
+test('redraw', async () => {
     const map = createMap();
 
     await map.once('idle');

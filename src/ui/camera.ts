@@ -1,6 +1,7 @@
 import {extend, wrap, defaultEasing, pick, scaleZoom} from '../util/util';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
@@ -30,7 +31,7 @@ import type {ICameraHelper} from '../geo/projection/camera_helper';
 export type PointLike = Point | [number, number];
 
 /**
- * Options common to {@link Map#jumpTo}, {@link Map#easeTo}, and {@link Map#flyTo}, controlling the desired location,
+ * Options common to {@link Map.jumpTo}, {@link Map.easeTo}, and {@link Map.flyTo}, controlling the desired location,
  * zoom, bearing, pitch, and roll of the camera. All properties are optional, and when a property is omitted, the current
  * camera value for that property will remain unchanged.
  *
@@ -46,10 +47,10 @@ export type PointLike = Point | [number, number];
  *   zoom: 10
  * });
  * ```
- * @see [Set pitch and bearing](https://maplibre.org/maplibre-gl-js/docs/examples/set-perspective/)
- * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js/docs/examples/jump-to/)
- * @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto/)
- * @see [Display buildings in 3D](https://maplibre.org/maplibre-gl-js/docs/examples/3d-buildings/)
+ * @see [Set pitch and bearing](https://maplibre.org/maplibre-gl-js/docs/examples/set-pitch-and-bearing/)
+ * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js/docs/examples/jump-to-a-series-of-locations/)
+ * @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/fly-to-a-location/)
+ * @see [Display buildings in 3D](https://maplibre.org/maplibre-gl-js/docs/examples/display-buildings-in-3d/)
  */
 export type CameraOptions = CenterZoomBearing & {
     /**
@@ -89,7 +90,7 @@ export type CenterZoomBearing = {
 };
 
 /**
- * The options object related to the {@link Map#jumpTo} method
+ * The options object related to the {@link Map.jumpTo} method
  */
 export type JumpToOptions = CameraOptions & {
     /**
@@ -99,7 +100,7 @@ export type JumpToOptions = CameraOptions & {
 };
 
 /**
- * A options object for the {@link Map#cameraForBounds} method
+ * A options object for the {@link Map.cameraForBounds} method
  */
 export type CameraForBoundsOptions = CameraOptions & {
     /**
@@ -118,13 +119,13 @@ export type CameraForBoundsOptions = CameraOptions & {
 };
 
 /**
- * The {@link Map#flyTo} options object
+ * The {@link Map.flyTo} options object
  */
 export type FlyToOptions = AnimationOptions & CameraOptions & {
     /**
      * The zooming "curve" that will occur along the
      * flight path. A high value maximizes zooming for an exaggerated animation, while a low
-     * value minimizes zooming for an effect closer to {@link Map#easeTo}. 1.42 is the average
+     * value minimizes zooming for an effect closer to {@link Map.easeTo}. 1.42 is the average
      * value selected by participants in the user study discussed in
      * [van Wijk (2003)](https://www.win.tue.nl/~vanwijk/zoompan.pdf). A value of
      * `Math.pow(6, 0.25)` would be equivalent to the root mean squared average velocity. A
@@ -162,7 +163,7 @@ export type FlyToOptions = AnimationOptions & CameraOptions & {
 };
 
 /**
- * The {@link Map#easeTo} options object
+ * The {@link Map.easeTo} options object
  */
 export type EaseToOptions = AnimationOptions & CameraOptions & {
     delayEndEvents?: number;
@@ -176,11 +177,11 @@ export type EaseToOptions = AnimationOptions & CameraOptions & {
 };
 
 /**
- * Options for {@link Map#fitBounds} method
+ * Options for {@link Map.fitBounds} method
  */
 export type FitBoundsOptions = FlyToOptions & {
     /**
-     * If `true`, the map transitions using {@link Map#easeTo}. If `false`, the map transitions using {@link Map#flyTo}.
+     * If `true`, the map transitions using {@link Map.easeTo}. If `false`, the map transitions using {@link Map.flyTo}.
      * See those functions and {@link AnimationOptions} for information about options available.
      * @defaultValue false
      */
@@ -197,8 +198,8 @@ export type FitBoundsOptions = FlyToOptions & {
 };
 
 /**
- * Options common to map movement methods that involve animation, such as {@link Map#panBy} and
- * {@link Map#easeTo}, controlling the duration and easing function of the animation. All properties
+ * Options common to map movement methods that involve animation, such as {@link Map.panBy} and
+ * {@link Map.easeTo}, controlling the duration and easing function of the animation. All properties
  * are optional.
  *
  */
@@ -430,7 +431,7 @@ export abstract class Camera extends Evented {
      * @param offset - `x` and `y` coordinates by which to pan the map.
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
+     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigate-the-map-with-game-like-controls/)
      */
     panBy(offset: PointLike, options?: EaseToOptions, eventData?: any): this {
         offset = Point.convert(offset).mult(-1);
@@ -451,7 +452,7 @@ export abstract class Camera extends Evented {
      * // Specify that the panTo animation should last 5000 milliseconds.
      * map.panTo([-74, 38], {duration: 5000});
      * ```
-     * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/live-update-feature/)
+     * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/update-a-feature-in-realtime/)
      */
     panTo(lnglat: LngLatLike, options?: EaseToOptions, eventData?: any): this {
         return this.easeTo(extend({
@@ -590,7 +591,7 @@ export abstract class Camera extends Evented {
      * of 90° orients the map so that east is up.
      *
      * @returns The map's current bearing.
-     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
+     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigate-the-map-with-game-like-controls/)
      */
     getBearing(): number { return this.transform.bearing; }
 
@@ -747,7 +748,7 @@ export abstract class Camera extends Evented {
 
     /**
      * @param bounds - Calculate the center for these bounds in the viewport and use
-     * the highest zoom level up to and including `Map#getMaxZoom()` that fits
+     * the highest zoom level up to and including {@link Map.getMaxZoom} that fits
      * in the viewport. LngLatBounds represent a box that is always axis-aligned with bearing 0.
      * Bounds will be taken in [sw, ne] order. Southwest point will always be to the left of the northeast point.
      * @param options - Options object
@@ -771,7 +772,7 @@ export abstract class Camera extends Evented {
     /**
      * @internal
      * Calculate the center of these two points in the viewport and use
-     * the highest zoom level up to and including `Map#getMaxZoom()` that fits
+     * the highest zoom level up to and including {@link Map.getMaxZoom} that fits
      * the AABB defined by these points in the viewport at the specified bearing.
      * @param p0 - First point
      * @param p1 - Second point
@@ -827,7 +828,7 @@ export abstract class Camera extends Evented {
      * Triggers the following events: `movestart` and `moveend`.
      *
      * @param bounds - Center these bounds in the viewport and use the highest
-     * zoom level up to and including `Map#getMaxZoom()` that fits them in the viewport.
+     * zoom level up to and including {@link Map.getMaxZoom} that fits them in the viewport.
      * Bounds will be taken in [sw, ne] order. Southwest point will always be to the left of the northeast point.
      * @param options - Options supports all properties from {@link AnimationOptions} and {@link CameraOptions} in addition to the fields below.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
@@ -838,7 +839,7 @@ export abstract class Camera extends Evented {
      *   padding: {top: 10, bottom:25, left: 15, right: 5}
      * });
      * ```
-     * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fitbounds/)
+     * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fit-a-map-to-a-bounding-box/)
      */
     fitBounds(bounds: LngLatBoundsLike, options?: FitBoundsOptions, eventData?: any): this {
         return this._fitInternal(
@@ -915,8 +916,8 @@ export abstract class Camera extends Evented {
      *   bearing: 90
      * });
      * ```
-     * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js/docs/examples/jump-to/)
-     * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/live-update-feature/)
+     * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js/docs/examples/jump-to-a-series-of-locations/)
+     * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/update-a-feature-in-realtime/)
      */
     jumpTo(options: JumpToOptions, eventData?: any): this {
         this.stop();
@@ -1069,9 +1070,10 @@ export abstract class Camera extends Evented {
      * between old and new values. The map will retain its current values for any
      * details not specified in `options`.
      *
-     * Note: The transition will happen instantly if the user has enabled
-     * the `reduced motion` accessibility feature enabled in their operating system,
-     * unless `options` includes `essential: true`.
+     * !!! note "Reduced Motion"
+     *     The transition will happen instantly if the user has enabled
+     *     the `reduced motion` accessibility feature enabled in their operating system,
+     *     unless `options` includes `essential: true`.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `pitchstart`,
      * `pitch`, `pitchend`, `rollstart`, `roll`, `rollend`, and `rotate`.
@@ -1079,7 +1081,7 @@ export abstract class Camera extends Evented {
      * @param options - Options describing the destination and animation of the transition.
      * Accepts {@link CameraOptions} and {@link AnimationOptions}.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
+     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigate-the-map-with-game-like-controls/)
      */
     easeTo(options: EaseToOptions, eventData?: any): this {
         this._stop(false, options.easeId);
@@ -1187,6 +1189,11 @@ export abstract class Camera extends Evented {
     }
 
     _updateElevation(k: number) {
+
+        if (this._elevationStart === undefined || this._elevationCenter === undefined) {
+            this._prepareElevation(this.transform.center);
+        }
+
         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom));
         const elevation = this.terrain.getElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
         // target terrain updated during flight, slowly move camera to new height
@@ -1346,9 +1353,10 @@ export abstract class Camera extends Evented {
      * evokes flight. The animation seamlessly incorporates zooming and panning to help
      * the user maintain her bearings even after traversing a great distance.
      *
-     * Note: The animation will be skipped, and this will behave equivalently to `jumpTo`
-     * if the user has the `reduced motion` accessibility feature enabled in their operating system,
-     * unless 'options' includes `essential: true`.
+     * !!! note "Reduced Motion"
+     *     The animation will be skipped, and this will behave equivalently to `jumpTo`
+     *     if the user has the `reduced motion` accessibility feature enabled in their operating system,
+     *     unless 'options' includes `essential: true`.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `pitchstart`,
      * `pitch`, `pitchend`, `rollstart`, `roll`, `rollend`, and `rotate`.
@@ -1372,14 +1380,14 @@ export abstract class Camera extends Evented {
      *   }
      * });
      * ```
-     * @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto/)
-     * @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto-options/)
-     * @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/scroll-fly-to/)
+     * @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/fly-to-a-location/)
+     * @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/slowly-fly-to-a-location/)
+     * @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/fly-to-a-location-based-on-scroll-position/)
      */
     flyTo(options: FlyToOptions, eventData?: any): this {
         // Fall through to jumpTo if user has set prefers-reduced-motion
         if (!options.essential && browser.prefersReducedMotion) {
-            const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'roll', 'elevation']) as CameraOptions;
+            const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'roll', 'elevation', 'padding']) as JumpToOptions;
             return this.jumpTo(coercedOptions, eventData);
         }
 
@@ -1527,7 +1535,7 @@ export abstract class Camera extends Evented {
             }
             if (this._padding) {
                 tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
-                // When padding is being applied, Transform#centerPoint is changing continuously,
+                // When padding is being applied, Transform.centerPoint is changing continuously,
                 // thus we need to recalculate offsetPoint every frame
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             }
@@ -1588,7 +1596,7 @@ export abstract class Camera extends Evented {
             frame(1);
             finish();
         } else {
-            this._easeStart = browser.now();
+            this._easeStart = now();
             this._easeOptions = options;
             this._onEaseFrame = frame;
             this._onEaseEnd = finish;
@@ -1598,7 +1606,7 @@ export abstract class Camera extends Evented {
 
     // Callback for map._requestRenderFrame
     _renderFrameCallback = () => {
-        const t = Math.min((browser.now() - this._easeStart) / this._easeOptions.duration, 1);
+        const t = Math.min((now() - this._easeStart) / this._easeOptions.duration, 1);
         this._onEaseFrame(this._easeOptions.easing(t));
 
         // if _stop is called during _onEaseFrame from _fireMoveEvents we should avoid a new _requestRenderFrame, checking it by ensuring _easeFrameId was not deleted
@@ -1622,7 +1630,7 @@ export abstract class Camera extends Evented {
      * Gets the elevation at a given location, in meters above sea level.
      * Returns null if terrain is not enabled.
      * If terrain is enabled with some exaggeration value, the value returned here will be reflective of (multiplied by) that exaggeration value.
-     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model-with-terrain/)
+     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/adding-3d-models-using-threejs-on-terrain/)
      * @param lngLatLike - [x,y] or LngLat coordinates of the location
      * @returns elevation in meters
      */
@@ -1630,6 +1638,6 @@ export abstract class Camera extends Evented {
         if (!this.terrain) {
             return null;
         }
-        return this.terrain.getElevationForLngLatZoom(LngLat.convert(lngLatLike), this.transform.tileZoom);
+        return this.terrain.getElevationForLngLat(LngLat.convert(lngLatLike), this.transform);
     }
 }

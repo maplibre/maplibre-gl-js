@@ -1,6 +1,7 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {Camera, type CameraOptions, type PointLike} from '../ui/camera';
 import {TaskQueue, type TaskID} from '../util/task_queue';
+import * as timeControl from '../util/time_control';
 import {browser} from '../util/browser';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {setMatchMedia} from '../util/test/util';
@@ -12,6 +13,8 @@ import {GlobeTransform} from '../geo/projection/globe_transform';
 import {getZoomAdjustment} from '../geo/projection/globe_utils';
 import {GlobeCameraHelper} from '../geo/projection/globe_camera_helper';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+import {getMercatorHorizon} from '../geo/projection/mercator_utils';
+import Point from '@mapbox/point-geometry';
 
 import type {GlobeProjection} from '../geo/projection/globe_projection';
 import type {Terrain} from '../render/terrain';
@@ -75,7 +78,7 @@ function createCameraGlobeZoomed() {
     });
 }
 
-describe('#calculateCameraOptionsFromTo', () => {
+describe('calculateCameraOptionsFromTo', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
     const camera = createCamera({zoom: 1});
 
@@ -144,7 +147,7 @@ describe('#calculateCameraOptionsFromTo', () => {
     });
 });
 
-describe('#calculateCameraOptionsFromCameraLngLatAltRotation', () => {
+describe('calculateCameraOptionsFromCameraLngLatAltRotation', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
     const camera = createCamera({zoom: 1, maxPitch: 180});
 
@@ -203,7 +206,7 @@ describe('#calculateCameraOptionsFromCameraLngLatAltRotation', () => {
     });
 });
 
-describe('#jumpTo', () => {
+describe('jumpTo', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
     const camera = createCamera({zoom: 1});
 
@@ -389,7 +392,7 @@ describe('#jumpTo', () => {
     });
 });
 
-describe('#setCenter', () => {
+describe('setCenter', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
     const camera = createCamera({zoom: 1});
 
@@ -426,7 +429,7 @@ describe('#setCenter', () => {
     });
 });
 
-describe('#setZoom', () => {
+describe('setZoom', () => {
     const camera = createCamera();
 
     test('sets zoom', () => {
@@ -462,7 +465,7 @@ describe('#setZoom', () => {
     });
 });
 
-describe('#setBearing', () => {
+describe('setBearing', () => {
     const camera = createCamera();
 
     test('sets bearing', () => {
@@ -498,7 +501,7 @@ describe('#setBearing', () => {
     });
 });
 
-describe('#setRoll', () => {
+describe('setRoll', () => {
     const camera = createCamera();
 
     test('sets roll', () => {
@@ -534,7 +537,7 @@ describe('#setRoll', () => {
     });
 });
 
-describe('#setPadding', () => {
+describe('setPadding', () => {
     test('sets padding', () => {
         const camera = createCamera();
         const padding = {left: 300, top: 100, right: 50, bottom: 10};
@@ -568,7 +571,7 @@ describe('#setPadding', () => {
     });
 });
 
-describe('#panBy', () => {
+describe('panBy', () => {
     test('pans by specified amount', () => {
         const camera = createCamera();
         camera.panBy([100, 0], {duration: 0});
@@ -614,7 +617,7 @@ describe('#panBy', () => {
     });
 });
 
-describe('#panTo', () => {
+describe('panTo', () => {
     test('pans to specified location', () => {
         const camera = createCamera();
         camera.panTo([100, 0], {duration: 0});
@@ -674,7 +677,7 @@ describe('#panTo', () => {
     });
 });
 
-describe('#zoomTo', () => {
+describe('zoomTo', () => {
     test('zooms to specified level', () => {
         const camera = createCamera();
         camera.zoomTo(3.2, {duration: 0});
@@ -729,7 +732,7 @@ describe('#zoomTo', () => {
     });
 });
 
-describe('#rotateTo', () => {
+describe('rotateTo', () => {
     test('rotates to specified bearing', () => {
         const camera = createCamera();
         camera.rotateTo(90, {duration: 0});
@@ -797,7 +800,7 @@ describe('#rotateTo', () => {
     });
 });
 
-describe('#easeTo', () => {
+describe('easeTo', () => {
     test('pans to specified location', () => {
         const camera = createCamera();
         camera.easeTo({center: [100, 0], duration: 0});
@@ -906,6 +909,24 @@ describe('#easeTo', () => {
         const camera = createCamera({bearing: 180});
         camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 170.3125, lat: 0});
+    });
+
+    test('offset computed from inertia (small) does not cross horizon when pitched', () => {
+        const camera = createCamera({pitch: 85, zoom: 10});
+        const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 100), camera.transform);
+        expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.transform)));
+    });
+
+    test('offset computed from inertia (large) does not cross horizon when pitched', () => {
+        const camera = createCamera({pitch: 85, zoom: 10});
+        const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 500), camera.transform);
+        expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.transform)));
+    });
+
+    test('offset computed from inertia (large) does not cross horizon when pitched and rotated', () => {
+        const camera = createCamera({pitch: 85, bearing: 135, zoom: 10});
+        const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 500), camera.transform);
+        expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.transform)));
     });
 
     test('zooms with specified offset', () => {
@@ -1022,7 +1043,7 @@ describe('#easeTo', () => {
 
     test('can be called from within a moveend event handler', async () => {
         const camera = createCamera();
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         stub.mockImplementation(() => 0);
         camera.easeTo({center: [100, 0], duration: 10});
@@ -1059,7 +1080,7 @@ describe('#easeTo', () => {
 
     test('pans eastward across the antimeridian', async () => {
         const camera = createCamera();
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         camera.setCenter([170, 0]);
         let crossedAntimeridian;
@@ -1102,7 +1123,7 @@ describe('#easeTo', () => {
 
     test('pans westward across the antimeridian', async () => {
         const camera = createCamera();
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         camera.setCenter([-170, 0]);
         let crossedAntimeridian;
@@ -1146,7 +1167,7 @@ describe('#easeTo', () => {
     test('animation occurs when prefers-reduced-motion: reduce is set but overridden by essential: true', async () => {
         const camera = createCamera();
         Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
-        const stubNow = vi.spyOn(browser, 'now');
+        const stubNow = vi.spyOn(timeControl, 'now');
 
         // camera transition expected to take in this range when prefersReducedMotion is set and essential: true,
         // when a duration of 200 is requested
@@ -1154,7 +1175,7 @@ describe('#easeTo', () => {
         const max = 300;
 
         let startTime;
-        camera.on('movestart', () => { startTime = browser.now(); });
+        camera.on('movestart', () => { startTime = timeControl.now(); });
         const promise = camera.once('moveend');
 
         setTimeout(() => {
@@ -1170,7 +1191,7 @@ describe('#easeTo', () => {
         }, 0);
 
         await promise;
-        const endTime = browser.now();
+        const endTime = timeControl.now();
         const timeDiff = endTime - startTime;
         expect(timeDiff >= min && timeDiff < max).toBeTruthy();
     });
@@ -1258,9 +1279,30 @@ describe('#easeTo', () => {
 
         expect(spy.mock.calls.find(c => 'done' in c[0])).toBeTruthy();
     });
+
+    test('terrain set during easeTo', () => {
+        const camera = createCamera();
+        const stubNow = vi.spyOn(timeControl, 'now');
+
+        stubNow.mockImplementation(() => 0);
+
+        camera.easeTo({bearing: 97, duration: 500});
+
+        stubNow.mockImplementation(() => 100);
+        camera.simulateFrame();
+
+        const terrain = {getMinTileElevationForLngLatZoom: () => 0,
+            getElevationForLngLatZoom: () => 0};
+        camera.terrain = terrain as any;
+
+        stubNow.mockImplementation(() => 500);
+        camera.simulateFrame();
+
+        expect(camera.getBearing()).toEqual(97);
+    });
 });
 
-describe('#flyTo', () => {
+describe('flyTo', () => {
     test('pans to specified location', () => {
         const camera = createCamera();
         camera.flyTo({center: [100, 0], animate: false});
@@ -1280,7 +1322,7 @@ describe('#flyTo', () => {
     });
 
     test('does not throw when cameras current zoom is above maxzoom and an offset creates infinite zoom out factor', () => {
-        const transform = new MercatorTransform(0, 20.9999, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 20.9999, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(512, 512);
         const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any))
             .jumpTo({zoom: 21, center: [0, 0]});
@@ -1303,7 +1345,7 @@ describe('#flyTo', () => {
     test('Zoom out from the same position to the same position with animation', async () => {
         const pos = {lng: 0, lat: 0};
         const camera = createCamera({zoom: 20, center: pos});
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         const promise = camera.once('moveend');
 
@@ -1497,7 +1539,7 @@ describe('#flyTo', () => {
         camera.on('pitchend', (d) => { pitchended = d.data; });
         const promise = camera.once('moveend');
 
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
         stub.mockImplementation(() => 0);
 
         camera.flyTo({center: [100, 0], duration: 10}, eventData);
@@ -1538,7 +1580,7 @@ describe('#flyTo', () => {
     });
 
     test('no roll when motion is interrupted', () => {
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         const camera = createCamera();
         stub.mockImplementation(() => 0);
@@ -1550,7 +1592,7 @@ describe('#flyTo', () => {
     });
 
     test('no roll when motion is interrupted: globe', () => {
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         const camera = createCameraGlobe();
         stub.mockImplementation(() => 0);
@@ -1562,7 +1604,7 @@ describe('#flyTo', () => {
     });
 
     test('angles when motion is interrupted', () => {
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         const camera = createCamera();
         stub.mockImplementation(() => 0);
@@ -1576,7 +1618,7 @@ describe('#flyTo', () => {
     });
 
     test('angles when motion is interrupted: globe', () => {
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         const camera = createCameraGlobe();
         stub.mockImplementation(() => 0);
@@ -1591,7 +1633,7 @@ describe('#flyTo', () => {
 
     test('can be called from within a moveend event handler', async () => {
         const camera = createCamera();
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
         stub.mockImplementation(() => 0);
 
         camera.flyTo({center: [100, 0], duration: 10});
@@ -1632,7 +1674,7 @@ describe('#flyTo', () => {
 
         const promise = camera.once('moveend');
 
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
         stub.mockImplementation(() => 0);
 
         camera.flyTo({center: [100, 0], zoom: 18, duration: 10});
@@ -1652,7 +1694,7 @@ describe('#flyTo', () => {
 
     test('pans eastward across the prime meridian', async () => {
         const camera = createCamera();
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         camera.setCenter([-10, 0]);
         let crossedPrimeMeridian;
@@ -1684,7 +1726,7 @@ describe('#flyTo', () => {
 
     test('pans westward across the prime meridian', async () => {
         const camera = createCamera();
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         camera.setCenter([10, 0]);
         let crossedPrimeMeridian;
@@ -1716,7 +1758,7 @@ describe('#flyTo', () => {
 
     test('pans eastward across the antimeridian', async () => {
         const camera = createCamera();
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         camera.setCenter([170, 0]);
         let crossedAntimeridian;
@@ -1747,7 +1789,7 @@ describe('#flyTo', () => {
 
     test('pans westward across the antimeridian', async () => {
         const camera = createCamera();
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         camera.setCenter([-170, 0]);
         let crossedAntimeridian;
@@ -1778,7 +1820,7 @@ describe('#flyTo', () => {
 
     test('does not pan eastward across the antimeridian if no world copies', async () => {
         const camera = createCamera({renderWorldCopies: false});
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         camera.setCenter([170, 0]);
         let crossedAntimeridian;
@@ -1810,7 +1852,7 @@ describe('#flyTo', () => {
 
     test('does not pan westward across the antimeridian if no world copies', async () => {
         const camera = createCamera({renderWorldCopies: false});
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         camera.setCenter([-170, 0]);
         let crossedAntimeridian;
@@ -1842,7 +1884,7 @@ describe('#flyTo', () => {
 
     test('jumps back to world 0 when crossing the antimeridian', async () => {
         const camera = createCamera();
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         camera.setCenter([-170, 0]);
 
@@ -1873,7 +1915,7 @@ describe('#flyTo', () => {
 
     test('peaks at the specified zoom level', async () => {
         const camera = createCamera({zoom: 20});
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         const minZoom = 1;
         let zoomed = false;
@@ -1909,7 +1951,7 @@ describe('#flyTo', () => {
     });
 
     test('respects transform\'s maxZoom', async () => {
-        const transform = new MercatorTransform(2, 10, 0, 60, false);
+        const transform = new MercatorTransform({minZoom: 2, maxZoom: 10, minPitch: 0, maxPitch: 60, renderWorldCopies: false});
         transform.resize(512, 512);
 
         const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any));
@@ -1917,7 +1959,7 @@ describe('#flyTo', () => {
 
         const promise = camera.once('moveend');
 
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
         stub.mockImplementation(() => 0);
         camera.flyTo({center: [12, 34], zoom: 30, duration: 10});
 
@@ -1934,7 +1976,7 @@ describe('#flyTo', () => {
     });
 
     test('respects transform\'s minZoom', async () => {
-        const transform = new MercatorTransform(2, 10, 0, 60, false);
+        const transform = new MercatorTransform({minZoom: 2, maxZoom: 10, minPitch: 0, maxPitch: 60, renderWorldCopies: false});
         transform.resize(512, 512);
 
         const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any));
@@ -1942,7 +1984,7 @@ describe('#flyTo', () => {
 
         const promise = camera.once('moveend');
 
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
         stub.mockImplementation(() => 0);
         camera.flyTo({center: [12, 34], zoom: 1, duration: 10});
 
@@ -1988,9 +2030,18 @@ describe('#flyTo', () => {
         expect(timeDiff >= 0 && timeDiff < 10).toBeTruthy();
     });
 
+    test('applies the padding option when prefers-reduce-motion:reduce is set', async () => {
+        const camera = createCamera();
+        Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
+
+        camera.flyTo({padding: {top: 50, right: 30}});
+
+        expect(camera.getPadding()).toEqual({top: 50, bottom: 0, left: 0, right: 30});
+    });
+
     test('check elevation events freezeElevation=false', async () => {
         const camera = createCamera();
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
         camera.terrain = {} as Terrain;
@@ -2014,7 +2065,7 @@ describe('#flyTo', () => {
 
     test('check elevation events freezeElevation=true', async() => {
         const camera = createCamera();
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
 
         const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
         camera.terrain = {} as Terrain;
@@ -2065,7 +2116,7 @@ describe('#flyTo', () => {
     });
 });
 
-describe('#isEasing', () => {
+describe('isEasing', () => {
     test('returns false when not easing', () => {
         const camera = createCamera();
         expect(!camera.isEasing()).toBeTruthy();
@@ -2080,7 +2131,7 @@ describe('#isEasing', () => {
     test('returns false when done panning', async () => {
         const camera = createCamera();
         const promise = camera.once('moveend');
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
         stub.mockImplementation(() => 0);
         camera.panTo([100, 0], {duration: 1});
         setTimeout(() => {
@@ -2102,7 +2153,7 @@ describe('#isEasing', () => {
     test('returns false when done zooming', async () => {
         const camera = createCamera();
         const promise = camera.once('moveend');
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
         stub.mockImplementation(() => 0);
         camera.zoomTo(3.2, {duration: 1});
         setTimeout(() => {
@@ -2123,7 +2174,7 @@ describe('#isEasing', () => {
     test('returns false when done rotating', async () => {
         const camera = createCamera();
         const promise = camera.once('moveend');
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
         stub.mockImplementation(() => 0);
         camera.rotateTo(90, {duration: 1});
         setTimeout(() => {
@@ -2136,7 +2187,7 @@ describe('#isEasing', () => {
     });
 });
 
-describe('#stop', () => {
+describe('stop', () => {
     test('resets camera._zooming', () => {
         const camera = createCamera();
         camera.zoomTo(3.2);
@@ -2198,7 +2249,7 @@ describe('#stop', () => {
         const spy = vi.fn();
         camera.on('moveend', spy);
 
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
         stub.mockImplementation(() => 0);
         camera.panTo([100, 0], {duration: 1}, eventData);
 
@@ -2215,7 +2266,7 @@ describe('#stop', () => {
     });
 });
 
-describe('#cameraForBounds', () => {
+describe('cameraForBounds', () => {
     test('no options passed', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
@@ -2303,7 +2354,7 @@ describe('#cameraForBounds', () => {
     });
 
     test('asymmetrical transform using LngLatBounds instance', () => {
-        const transform = new MercatorTransform(2, 10, 0, 60, false);
+        const transform = new MercatorTransform({minZoom: 2, maxZoom: 10, minPitch: 0, maxPitch: 60, renderWorldCopies: false});
         transform.resize(2048, 512);
 
         const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any));
@@ -2321,7 +2372,7 @@ describe('#cameraForBounds', () => {
     });
 });
 
-describe('#fitBounds', () => {
+describe('fitBounds', () => {
     test('no padding passed', () => {
         const camera = createCamera();
         const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
@@ -2382,7 +2433,7 @@ describe('#fitBounds', () => {
 
 });
 
-describe('#fitScreenCoordinates', () => {
+describe('fitScreenCoordinates', () => {
     test('bearing 225', () => {
         const camera = createCamera();
         const p0 = [128, 128] as PointLike;
@@ -2434,20 +2485,20 @@ describe('queryTerrainElevation', () => {
     });
 
     test('Calls getElevationForLngLatZoom with correct arguments', () => {
-        const getElevationForLngLatZoom = vi.fn();
-        camera.terrain = {getElevationForLngLatZoom} as any as Terrain;
-        camera.transform = new MercatorTransform(0, 22, 0, 60, true);
+        const getElevationForLngLat = vi.fn();
+        camera.terrain = {getElevationForLngLat} as any as Terrain;
+        camera.transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
 
         camera.queryTerrainElevation([1, 2]);
 
-        expect(camera.terrain.getElevationForLngLatZoom).toHaveBeenCalledWith(
+        expect(camera.terrain.getElevationForLngLat).toHaveBeenCalledWith(
             expect.objectContaining({lng: 1, lat: 2,}),
-            camera.transform.tileZoom
+            camera.transform
         );
     });
 });
 
-describe('#transformCameraUpdate', () => {
+describe('transformCameraUpdate', () => {
 
     test('invoke transformCameraUpdate callback during jumpTo', async () => {
         const camera = createCamera();
@@ -2473,7 +2524,7 @@ describe('#transformCameraUpdate', () => {
 
     test('invoke transformCameraUpdate callback during easeTo', async () => {
         const camera = createCamera();
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
         stub.mockImplementation(() => 0);
 
         let callbackCount = 0;
@@ -2507,7 +2558,7 @@ describe('#transformCameraUpdate', () => {
 
     test('invoke transformCameraUpdate callback during flyTo', async () => {
         const camera = createCamera();
-        const stub = vi.spyOn(browser, 'now');
+        const stub = vi.spyOn(timeControl, 'now');
         stub.mockImplementation(() => 0);
 
         let callbackCount = 0;
@@ -2560,7 +2611,7 @@ test('createCameraGlobe returns a globe camera', () => {
     expect(camera.cameraHelper.useGlobeControls).toBeTruthy();
 });
 
-describe('#jumpTo globe projection', () => {
+describe('jumpTo globe projection', () => {
     describe('globe specific behavior', () => {
         let camera;
 
@@ -2719,7 +2770,7 @@ describe('#jumpTo globe projection', () => {
     });
 });
 
-describe('#easeTo globe projection', () => {
+describe('easeTo globe projection', () => {
     describe('globe specific behavior', () => {
         let camera;
 
@@ -2817,7 +2868,7 @@ describe('#easeTo globe projection', () => {
 
         test('smoothly sets given padding with duration > 0', async () => {
             const camera = createCameraGlobe();
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
             const promise = camera.once('moveend');
 
             stub.mockImplementation(() => 0);
@@ -2896,6 +2947,24 @@ describe('#easeTo globe projection', () => {
             expect(fixedLngLat(camera.getCenter())).toEqual({lng: -175.50457909, lat: 0});
         });
 
+        test('offset computed from inertia (small) does not cross horizon when pitched', () => {
+            const camera = createCameraGlobe({pitch: 85, zoom: 10});
+            const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 100), camera.transform);
+            expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.transform)));
+        });
+
+        test('offset computed from inertia (large) does not cross horizon when pitched', () => {
+            const camera = createCameraGlobe({pitch: 85, zoom: 10});
+            const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 500), camera.transform);
+            expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.transform)));
+        });
+
+        test('offset computed from inertia (large) does not cross horizon when pitched and rotated', () => {
+            const camera = createCameraGlobe({pitch: 85, bearing: 135, zoom: 10});
+            const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 500), camera.transform);
+            expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.transform)));
+        });
+
         test('zooms with specified offset', () => {
             const camera = createCameraGlobe();
             camera.easeTo({zoom: 3.2, offset: [100, 0], duration: 0});
@@ -2961,7 +3030,7 @@ describe('#easeTo globe projection', () => {
 
         test('pans eastward across the antimeridian', async () => {
             const camera = createCameraGlobe();
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
 
             camera.setCenter([170, 0]);
             let crossedAntimeridian;
@@ -3003,7 +3072,7 @@ describe('#easeTo globe projection', () => {
 
         test('pans westward across the antimeridian', async () => {
             const camera = createCameraGlobe();
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
 
             camera.setCenter([-170, 0]);
             let crossedAntimeridian;
@@ -3045,7 +3114,7 @@ describe('#easeTo globe projection', () => {
     });
 });
 
-describe('#flyTo globe projection', () => {
+describe('flyTo globe projection', () => {
     describe('globe specific behavior', () => {
         let camera;
 
@@ -3103,7 +3172,7 @@ describe('#flyTo globe projection', () => {
         test('Zoom out from the same position to the same position with animation', async () => {
             const pos = {lng: 0, lat: 0};
             const camera = createCameraGlobe({zoom: 20, center: pos});
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
 
             const promise = camera.once('zoomend');
 
@@ -3182,7 +3251,7 @@ describe('#flyTo globe projection', () => {
 
         test('smoothly sets given padding with duration > 0', async () => {
             const camera = createCameraGlobe();
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
             const promise = camera.once('moveend');
 
             stub.mockImplementation(() => 0);
@@ -3349,7 +3418,7 @@ describe('#flyTo globe projection', () => {
             camera.on('pitchend', (d) => { pitchended = d.data; });
             const promise = camera.once('moveend');
 
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
             stub.mockImplementation(() => 0);
 
             camera.flyTo({center: [100, 0], duration: 10}, eventData);
@@ -3396,7 +3465,7 @@ describe('#flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
             stub.mockImplementation(() => 0);
 
             camera.flyTo({center: [100, 0], zoom: 18, duration: 10});
@@ -3417,7 +3486,7 @@ describe('#flyTo globe projection', () => {
 
         test('pans eastward across the prime meridian', async () => {
             const camera = createCameraGlobe();
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
 
             camera.setCenter([-10, 0]);
             let crossedPrimeMeridian;
@@ -3449,7 +3518,7 @@ describe('#flyTo globe projection', () => {
 
         test('pans westward across the prime meridian', async () => {
             const camera = createCameraGlobe();
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
 
             camera.setCenter([10, 0]);
             let crossedPrimeMeridian;
@@ -3481,7 +3550,7 @@ describe('#flyTo globe projection', () => {
 
         test('pans eastward across the antimeridian', async () => {
             const camera = createCameraGlobe();
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
 
             camera.setCenter([170, 0]);
             let crossedAntimeridian;
@@ -3513,7 +3582,7 @@ describe('#flyTo globe projection', () => {
 
         test('pans westward across the antimeridian', async () => {
             const camera = createCameraGlobe();
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
 
             camera.setCenter([-170, 0]);
             let crossedAntimeridian;
@@ -3545,7 +3614,7 @@ describe('#flyTo globe projection', () => {
 
         test('pans eastward across the antimeridian even if renderWorldCopies: false', async () => {
             const camera = createCameraGlobe({renderWorldCopies: false});
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
 
             camera.setCenter([170, 0]);
             let crossedAntimeridian;
@@ -3577,7 +3646,7 @@ describe('#flyTo globe projection', () => {
 
         test('pans westward across the antimeridian even if renderWorldCopies: false', async () => {
             const camera = createCameraGlobe({renderWorldCopies: false});
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
 
             camera.setCenter([-170, 0]);
             let crossedAntimeridian;
@@ -3609,7 +3678,7 @@ describe('#flyTo globe projection', () => {
 
         test('jumps back to world 0 when crossing the antimeridian', async () => {
             const camera = createCameraGlobe();
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
 
             camera.setCenter([-170, 0]);
 
@@ -3640,7 +3709,7 @@ describe('#flyTo globe projection', () => {
 
         test('peaks at the specified zoom level', async () => {
             const camera = createCameraGlobe({zoom: 20});
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
 
             const minZoom = 1;
             let zoomed = false;
@@ -3684,7 +3753,7 @@ describe('#flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
             stub.mockImplementation(() => 0);
             camera.flyTo({center: [12, 34], zoom: 30, duration: 10});
 
@@ -3713,7 +3782,7 @@ describe('#flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
-            const stub = vi.spyOn(browser, 'now');
+            const stub = vi.spyOn(timeControl, 'now');
             stub.mockImplementation(() => 0);
             camera.flyTo({center: target, zoom: 1, duration: 10});
 
@@ -3748,7 +3817,7 @@ describe('#flyTo globe projection', () => {
     });
 });
 
-describe('#fitBounds globe projection', () => {
+describe('fitBounds globe projection', () => {
     test('no padding passed', () => {
         const camera = createCameraGlobe();
         const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
@@ -3790,7 +3859,7 @@ describe('#fitBounds globe projection', () => {
     });
 });
 
-describe('#fitScreenCoordinates globe projection', () => {
+describe('fitScreenCoordinates globe projection', () => {
     test('bearing 225', () => {
         const camera = createCameraGlobeZoomed();
         const p0 = [128, 128] as PointLike;

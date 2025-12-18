@@ -82,13 +82,13 @@ describe('TaskQueue', () => {
         expect(cb).toHaveBeenCalledTimes(1);
     });
 
-    test('TaskQueue#run() throws on attempted re-entrance', () => {
+    test('TaskQueue.run() throws on attempted re-entrance', () => {
         const q = new TaskQueue();
         q.add(() => q.run());
         expect(() => q.run()).toThrow();
     });
 
-    test('TaskQueue#clear() prevents queued task from being executed', () => {
+    test('TaskQueue.clear() prevents queued task from being executed', () => {
         const q = new TaskQueue();
         const before = vi.fn();
         const after = vi.fn();
@@ -100,7 +100,7 @@ describe('TaskQueue', () => {
         expect(after).toHaveBeenCalledTimes(1);
     });
 
-    test('TaskQueue#clear() interrupts currently-running queue', () => {
+    test('TaskQueue.clear() interrupts currently-running queue', () => {
         const q = new TaskQueue();
         const before = vi.fn();
         const after = vi.fn();

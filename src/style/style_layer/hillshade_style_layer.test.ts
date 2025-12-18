@@ -16,9 +16,9 @@ describe('HillshadeStyleLayer', () => {
 
     test('default', () => {
         const layerSpec = createLayerSpec();
-        const layer = createStyleLayer(layerSpec);
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(HillshadeStyleLayer);
-        
+
         const illumination = (layer as HillshadeStyleLayer).getIlluminationProperties();
         expect(illumination.directionRadians).toEqual([degreesToRadians(335)]);
         expect(illumination.altitudeRadians).toEqual([degreesToRadians(45)]);
@@ -35,10 +35,10 @@ describe('HillshadeStyleLayer', () => {
                 'hillshade-shadow-color': '#FFFFFF',
             }
         });
-        
-        const layer = createStyleLayer(layerSpec);
+
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(HillshadeStyleLayer);
-        
+
         const illumination = (layer as HillshadeStyleLayer).getIlluminationProperties();
         expect(illumination.directionRadians).toEqual([degreesToRadians(3)]);
         expect(illumination.altitudeRadians).toEqual([degreesToRadians(4)]);
@@ -55,10 +55,10 @@ describe('HillshadeStyleLayer', () => {
                 'hillshade-shadow-color': ['#FF0000', '#FFFFFF'],
             }
         });
-        
-        const layer = createStyleLayer(layerSpec);
+
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(HillshadeStyleLayer);
-        
+
         const illumination = (layer as HillshadeStyleLayer).getIlluminationProperties();
         expect(illumination.directionRadians).toEqual([degreesToRadians(6), degreesToRadians(7)]);
         expect(illumination.altitudeRadians).toEqual([degreesToRadians(8), degreesToRadians(9)]);
@@ -75,10 +75,10 @@ describe('HillshadeStyleLayer', () => {
                 'hillshade-shadow-color': '#000000',
             }
         });
-        
-        const layer = createStyleLayer(layerSpec);
+
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(HillshadeStyleLayer);
-        
+
         const illumination = (layer as HillshadeStyleLayer).getIlluminationProperties();
         expect(illumination.directionRadians).toEqual([degreesToRadians(6), degreesToRadians(7)]);
         expect(illumination.altitudeRadians).toEqual([degreesToRadians(23), degreesToRadians(23)]);
@@ -94,10 +94,10 @@ describe('HillshadeStyleLayer', () => {
                 'hillshade-shadow-color': ['#000000', '#FFFFFF'],
             }
         });
-        
-        const layer = createStyleLayer(layerSpec);
+
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(HillshadeStyleLayer);
-        
+
         const illumination = (layer as HillshadeStyleLayer).getIlluminationProperties();
         expect(illumination.directionRadians).toEqual([degreesToRadians(335), degreesToRadians(335)]);
         expect(illumination.altitudeRadians).toEqual([degreesToRadians(23), degreesToRadians(23)]);

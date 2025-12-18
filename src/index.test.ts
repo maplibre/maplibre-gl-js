@@ -36,7 +36,7 @@ describe('maplibre', () => {
         expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
     });
 
-    test('#addProtocol - getJSON', async () => {
+    test('addProtocol - getJSON', async () => {
         let protocolCallbackCalled = false;
         addProtocol('custom', () => {
             protocolCallbackCalled = true;
@@ -47,7 +47,7 @@ describe('maplibre', () => {
         expect(protocolCallbackCalled).toBeTruthy();
     });
 
-    test('#addProtocol - getArrayBuffer', async () => {
+    test('addProtocol - getArrayBuffer', async () => {
         let protocolCallbackCalled = false;
         addProtocol('custom', () => {
             protocolCallbackCalled = true;
@@ -60,7 +60,7 @@ describe('maplibre', () => {
         expect(protocolCallbackCalled).toBeTruthy();
     });
 
-    test('#addProtocol - returning ImageBitmap for getImage', async () => {
+    test('addProtocol - returning ImageBitmap for getImage', async () => {
         let protocolCallbackCalled = false;
         addProtocol('custom', () => {
             protocolCallbackCalled = true;
@@ -72,7 +72,7 @@ describe('maplibre', () => {
         expect(protocolCallbackCalled).toBeTruthy();
     });
 
-    test('#addProtocol - returning HTMLImageElement for getImage', async () => {
+    test('addProtocol - returning HTMLImageElement for getImage', async () => {
         let protocolCallbackCalled = false;
         addProtocol('custom', () => {
             protocolCallbackCalled = true;
@@ -83,7 +83,7 @@ describe('maplibre', () => {
         expect(protocolCallbackCalled).toBeTruthy();
     });
 
-    test('#addProtocol - error', () => {
+    test('addProtocol - error', () => {
         addProtocol('custom', () => Promise.reject(new Error('test error')));
 
         getJSON({url: 'custom://test/url/json'}, new AbortController()).catch((error) => {
@@ -91,7 +91,7 @@ describe('maplibre', () => {
         });
     });
 
-    test('#addProtocol - Cancel request', async () => {
+    test('addProtocol - Cancel request', async () => {
         let cancelCalled = false;
         addProtocol('custom', (_req, abortController) => {
             abortController.signal.addEventListener('abort', () => {

@@ -7,7 +7,7 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-test('#listImages', async () => {
+test('listImages', async () => {
     const map = createMap();
 
     await map.once('load');
@@ -20,7 +20,7 @@ test('#listImages', async () => {
     expect(images[0]).toBe('img');  
 });
 
-test('#listImages throws an error if called before "load"', () => {
+test('listImages throws an error if called before "load"', () => {
     const map = createMap();
     expect(() => {
         map.listImages();

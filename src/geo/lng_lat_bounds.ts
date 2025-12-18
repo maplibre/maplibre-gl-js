@@ -1,5 +1,6 @@
 import {LngLat} from './lng_lat';
 import type {LngLatLike} from './lng_lat';
+import {wrap} from '../util/util';
 
 /**
  * A {@link LngLatBounds} object, an array of {@link LngLatLike} objects in [sw, ne] order,
@@ -287,11 +288,67 @@ export class LngLatBounds {
     }
 
     /**
+     * Checks if this bounding box intersects with another bounding box.
+     *
+     * Returns true if the bounding boxes share any area, including cases where
+     * they only touch along an edge or at a corner.
+     *
+     * This method properly handles cases where either or both bounding boxes cross
+     * the antimeridian (date line).
+     */
+    intersects(other: LngLatBoundsLike): boolean {
+        other = LngLatBounds.convert(other);
+
+        const latIntersects =
+            other.getNorth() >= this.getSouth() &&
+            other.getSouth() <= this.getNorth();
+
+        if (!latIntersects) return false;
+
+        // Check if either bound covers the full world (|span| >= 360°)
+        // This must be done before wrapping to preserve the span information
+        const thisSpan = Math.abs(this.getEast() - this.getWest());
+        const otherSpan = Math.abs(other.getEast() - other.getWest());
+
+        if (thisSpan >= 360 || otherSpan >= 360) {
+            return true;
+        }
+
+        // Normalize longitudes to [-180, 180] range
+        const thisWest = wrap(this.getWest(), -180, 180);
+        const thisEast = wrap(this.getEast(), -180, 180);
+        const otherWest = wrap(other.getWest(), -180, 180);
+        const otherEast = wrap(other.getEast(), -180, 180);
+
+        // Check if either bounds wraps around the antimeridian
+        const thisWraps = thisWest >= thisEast;
+        const otherWraps = otherWest >= otherEast;
+
+        // Both wrap: they always intersect
+        if (thisWraps && otherWraps) {
+            return true;
+        }
+
+        // Only this wraps: intersects if other is outside the gap
+        if (thisWraps) {
+            return otherEast >= thisWest || otherWest <= thisEast;
+        }
+
+        if (otherWraps) {
+            // Only other wraps: intersects if this is outside the gap
+            return thisEast >= otherWest || thisWest <= otherEast;
+        }
+
+        // Neither wraps: standard intersection check
+        return otherWest <= thisEast && otherEast >= thisWest;
+    }
+
+    /**
      * Converts an array to a `LngLatBounds` object.
      *
      * If a `LngLatBounds` object is passed in, the function returns it unchanged.
      *
-     * Internally, the function calls `LngLat#convert` to convert arrays to `LngLat` values.
+     * Internally, the function calls {@link LngLat.convert} to convert arrays to `LngLat` values.
      *
      * @param input - An array of two coordinates to convert, or a `LngLatBounds` object to return.
      * @returns A new `LngLatBounds` object, if a conversion occurred, or the original `LngLatBounds` object.

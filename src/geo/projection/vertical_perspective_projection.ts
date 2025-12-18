@@ -1,7 +1,7 @@
 import type {Context} from '../../gl/context';
-import type {CanonicalTileID} from '../../source/tile_id';
+import type {CanonicalTileID} from '../../tile/tile_id';
 import {type Mesh} from '../../render/mesh';
-import {browser} from '../../util/browser';
+import {now} from '../../util/time_control';
 import {easeCubicInOut, lerp} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
 import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
@@ -103,15 +103,15 @@ export class VerticalPerspectiveProjection implements Projection {
         const expectedResult = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
         const newValue = this._errorMeasurement.updateErrorLoop(mercatorY, expectedResult);
 
-        const now = browser.now();
+        const currentTime = now();
 
         if (newValue !== this._errorMeasurementLastValue) {
             this._errorCorrectionPreviousValue = this._errorCorrectionUsable; // store the interpolated value
             this._errorMeasurementLastValue = newValue;
-            this._errorMeasurementLastChangeTime = now;
+            this._errorMeasurementLastChangeTime = currentTime;
         }
 
-        const sinceUpdateSeconds = (now - this._errorMeasurementLastChangeTime) / 1000.0;
+        const sinceUpdateSeconds = (currentTime - this._errorMeasurementLastChangeTime) / 1000.0;
         const mix = Math.min(Math.max(sinceUpdateSeconds / globeConstants.errorTransitionTimeSeconds, 0.0), 1.0);
         const newCorrection = -this._errorMeasurementLastValue; // Note the negation
         this._errorCorrectionUsable = lerp(this._errorCorrectionPreviousValue, newCorrection, easeCubicInOut(mix));
@@ -152,10 +152,10 @@ export class VerticalPerspectiveProjection implements Projection {
     }
 
     hasTransition(): boolean {
-        const now = browser.now();
+        const currentTime = now();
         let dirty = false;
         // Error correction transition
-        dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (globeConstants.errorTransitionTimeSeconds + 0.2);
+        dirty = dirty || (currentTime - this._errorMeasurementLastChangeTime) / 1000.0 < (globeConstants.errorTransitionTimeSeconds + 0.2);
         // Error correction query in flight
         dirty = dirty || (this._errorMeasurement && this._errorMeasurement.awaitingQuery);
         return dirty;

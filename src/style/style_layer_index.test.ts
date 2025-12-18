@@ -1,9 +1,10 @@
 import {describe, test, expect} from 'vitest';
 import {mapObject} from '../util/util';
 import {StyleLayerIndex} from './style_layer_index';
+import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
 
 describe('StyleLayerIndex', () => {
-    test('StyleLayerIndex#replace', () => {
+    test('StyleLayerIndex.replace', () => {
         const index = new StyleLayerIndex([
             {id: '1', type: 'fill', source: 'source', 'source-layer': 'layer', paint: {'fill-color': 'red'}},
             {id: '2', type: 'circle', source: 'source', 'source-layer': 'layer', paint: {'circle-color': 'green'}},
@@ -23,7 +24,7 @@ describe('StyleLayerIndex', () => {
 
     });
 
-    test('StyleLayerIndex#update', () => {
+    test('StyleLayerIndex.update', () => {
         const index = new StyleLayerIndex([
             {id: '1', type: 'fill', source: 'foo', 'source-layer': 'layer', paint: {'fill-color': 'red'}},
             {id: '2', type: 'circle', source: 'foo', 'source-layer': 'layer', paint: {'circle-color': 'green'}},
@@ -48,7 +49,7 @@ describe('StyleLayerIndex', () => {
 
     });
 
-    test('StyleLayerIndex#familiesBySource', () => {
+    test('StyleLayerIndex.familiesBySource', () => {
         const index = new StyleLayerIndex([
             {id: '0', type: 'fill', 'source': 'A', 'source-layer': 'foo'},
             {id: '1', type: 'fill', 'source': 'A', 'source-layer': 'foo'},
@@ -76,10 +77,10 @@ describe('StyleLayerIndex', () => {
                 'foo': [['4']]
             },
             'geojson': {
-                '_geojsonTileLayer': [['5']]
+                [GEOJSON_TILE_LAYER_NAME]: [['5']]
             },
             '': {
-                '_geojsonTileLayer': [['6']]
+                [GEOJSON_TILE_LAYER_NAME]: [['6']]
             }
         });
 

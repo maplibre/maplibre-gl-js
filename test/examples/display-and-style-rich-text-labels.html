@@ -13,7 +13,8 @@
     </style>
 </head>
 <body>
-<div id="map"></div>
+<!-- The lang attribute is read from the map container if present, otherwise from the HTML document -->
+<div id="map" lang="zh-HK"></div>
 <script>
     maplibregl.setRTLTextPlugin(
         'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js'
@@ -21,9 +22,8 @@
 
     const map = new maplibregl.Map({
         container: 'map', // container id
-        style:
-            'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL', // stylesheet location
-        center: [9.49, 49.01], // starting position [lng, lat]
+        style: 'https://tiles.openfreemap.org/styles/bright', // style URL
+        center: [17.49, 40.01], // starting position [lng, lat]
         zoom: 4 // starting zoom
     });
 
@@ -39,7 +39,7 @@
                 'font-scale': 0.8,
                 'text-font': [
                     'literal',
-                    ['DIN Offc Pro Italic', 'Arial Unicode MS Regular']
+                    ['Noto Sans Regular']
                 ]
             }
         ]);

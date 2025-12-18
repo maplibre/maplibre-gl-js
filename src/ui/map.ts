@@ -1,5 +1,6 @@
 import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util';
 import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' with {type: 'json'};
 import {type GetResourceResponse, getJSON} from '../util/ajax';
@@ -29,6 +30,12 @@ import {Terrain} from '../render/terrain';
 import {RenderToTexture} from '../render/render_to_texture';
 import {config} from '../util/config';
 import {defaultLocale} from './default_locale';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
+import {isAbortError} from '../util/abort_error';
+import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
+import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
+import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id';
 
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
@@ -60,19 +67,13 @@ import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {type ITransform} from '../geo/transform_interface';
-import {type ICameraHelper} from '../geo/projection/camera_helper';
-import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
-import {isAbortError} from '../util/abort_error';
-import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
-import {createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
-import {CanonicalTileID} from '../source/tile_id';
+import type {ITransform, TransformConstrainFunction} from '../geo/transform_interface';
+import type {ICameraHelper} from '../geo/projection/camera_helper';
 
 const version = packageJSON.version;
 
-type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined;
-type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
+export type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined;
+export type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
 
 /**
  * The {@link Map} options object.
@@ -106,7 +107,8 @@ export type MapOptions = {
     /**
      * If set, an {@link AttributionControl} will be added to the map with the provided options.
      * To disable the attribution control, pass `false`.
-     * Note: showing the logo of MapLibre is not required for using MapLibre.
+     * !!! note
+     *     Showing the logo of MapLibre is not required for using MapLibre.
      * @defaultValue compact: true, customAttribution: "MapLibre ...".
      */
     attributionControl?: false | AttributionControlOptions;
@@ -136,7 +138,7 @@ export type MapOptions = {
      */
     maxBounds?: LngLatBoundsLike;
     /**
-     * If `true`, the "scroll to zoom" interaction is enabled. {@link AroundCenterOptions} are passed as options to {@link ScrollZoomHandler#enable}.
+     * If `true`, the "scroll to zoom" interaction is enabled. {@link AroundCenterOptions} are passed as options to {@link ScrollZoomHandler.enable}.
      * @defaultValue true
      */
     scrollZoom?: boolean | AroundCenterOptions;
@@ -171,7 +173,7 @@ export type MapOptions = {
      */
     dragRotate?: boolean;
     /**
-     * If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to {@link DragPanHandler#enable}.
+     * If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to {@link DragPanHandler.enable}.
      * @defaultValue true
      */
     dragPan?: boolean | DragPanOptions;
@@ -186,12 +188,12 @@ export type MapOptions = {
      */
     doubleClickZoom?: boolean;
     /**
-     * If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchZoomRotateHandler#enable}.
+     * If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchZoomRotateHandler.enable}.
      * @defaultValue true
      */
     touchZoomRotate?: boolean | AroundCenterOptions;
     /**
-     * If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchPitchHandler#enable}.
+     * If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchPitchHandler.enable}.
      * @defaultValue true
      */
     touchPitch?: boolean | AroundCenterOptions;
@@ -206,7 +208,9 @@ export type MapOptions = {
      */
     trackResize?: boolean;
     /**
-     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
+     * The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]`
+     * !!! note
+     *     MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
      * @defaultValue [0, 0]
      */
     center?: LngLatLike;
@@ -268,10 +272,19 @@ export type MapOptions = {
      */
     transformCameraUpdate?: CameraUpdateTransformFunction | null;
     /**
-     * A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
+     * A callback that overrides how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
+     * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
+     * Expected to return an object containing center and zoom.
      * @defaultValue null
      */
-    locale?: any;
+    transformConstrain?: TransformConstrainFunction | null;
+    /**
+     * A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
+     * For an example, see https://maplibre.org/maplibre-gl-js/docs/examples/locale-switching/
+     * Alternatively, search the official plugins page for plugins related to localization.
+     * @defaultValue null
+     */
+    locale?: Record<string, string>;
     /**
      * Controls the duration of the fade-in/fade-out animation for label collisions after initial map load, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.
      * @defaultValue 300
@@ -305,7 +318,8 @@ export type MapOptions = {
      * font-family for locally overriding generation of Chinese, Japanese, and Korean characters.
      * For these characters, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
      * Set to `false`, to enable font settings from the map's style for these glyph ranges.
-     * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/local-ideographs).)
+     * The purpose of this option is to avoid bandwidth-intensive glyph server requests.
+     * @see [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/use-locally-generated-ideographs/)
      * @defaultValue 'sans-serif'
      */
     localIdeographFontFamily?: string | false;
@@ -313,7 +327,7 @@ export type MapOptions = {
      * The map's MapLibre style. This must be a JSON object conforming to
      * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/),
      * or a URL to such JSON.
-     * When the style is not specified, calling {@link Map#setStyle} is required to render the map.
+     * When the style is not specified, calling {@link Map.setStyle} is required to render the map.
      */
     style?: StyleSpecification | string;
     /**
@@ -326,6 +340,11 @@ export type MapOptions = {
      * @defaultValue false
      */
     rollEnabled?: boolean;
+    /**
+     * If `true`, gesture inertia (such as panning) is disabled. If not provided, gesture inertia defaults to the user's device settings.
+     * @defaultValue undefined
+     */
+    reduceMotion?: boolean | undefined;
     /**
      * The pixel ratio.
      * The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
@@ -356,6 +375,18 @@ export type MapOptions = {
      * keep the camera above ground when pitch \> 90 degrees.
      */
     centerClampedToGround?: boolean;
+    /**
+     * Allows overzooming by splitting vector tiles after max zoom.
+     * Defines the number of zoom level that will overscale from map's max zoom and below.
+     * For example if the map's max zoom is 20 and this is set to 3, the zoom levels of 20, 19 and 18 will be overscaled 
+     * and the rest will be split.
+     * When undefined, all zoom levels after source's max zoom will be overscaled.
+     * This can help in reducing the size of the overscaling and improve performance in high zoom levels.
+     * The drawback is that it changes rendering for polygon centered labels and changes the results of query rendered features.
+     * @defaultValue undefined
+     * @experimental
+     */
+    experimentalZoomLevelsToOverscale?: number;
 };
 
 export type AddImageOptions = {
@@ -372,6 +403,11 @@ type DelegatedListener = {
 };
 
 type Delegate<E extends Event = Event> = (e: E) => void;
+
+type LostContextStyle = {
+    style: StyleSpecification | null;
+    images: {[_: string]: StyleImage} | null;
+};
 
 const defaultMinZoom = -2;
 const defaultMaxZoom = 22;
@@ -429,17 +465,20 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
     transformRequest: null,
     transformCameraUpdate: null,
+    transformConstrain: null,
     fadeDuration: 300,
     crossSourceCollisions: true,
     clickTolerance: 3,
     localIdeographFontFamily: 'sans-serif',
     pitchWithRotate: true,
     rollEnabled: false,
+    reduceMotion: undefined,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
-    centerClampedToGround: true
+    centerClampedToGround: true,
+    experimentalZoomLevelsToOverscale: undefined
 };
 
 /**
@@ -471,7 +510,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
  *   }
  * });
  * ```
- * @see [Display a map](https://maplibre.org/maplibre-gl-js/docs/examples/simple-map/)
+ * @see [Display a map](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-map/)
  */
 export class Map extends Camera {
     style: Style;
@@ -481,7 +520,7 @@ export class Map extends Camera {
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
     _controlContainer: HTMLElement;
-    _controlPositions: Record<string, HTMLElement>;
+    _controlPositions: Partial<Record<ControlPosition, HTMLElement>>;
     _interactive: boolean;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
@@ -517,18 +556,28 @@ export class Map extends Camera {
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
     _requestManager: RequestManager;
-    _locale: typeof defaultLocale;
+    _locale: Record<string, string>;
     _removed: boolean;
     _clickTolerance: number;
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
-
+    /** @internal */
+    _zoomLevelsToOverscale: number | undefined;
     /**
      * @internal
      * image queue throttling handle. To be used later when clean up
      */
     _imageQueueHandle: number;
+
+    /**
+     * @internal
+     * Used to store the previous style and images when a context loss occurs, so they can be restored.
+     */
+    _lostContextStyle: LostContextStyle = {
+        style: null,
+        images: null
+    };
 
     /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
@@ -593,6 +642,12 @@ export class Map extends Camera {
      */
     cancelPendingTileRequestsWhileZooming: boolean;
 
+    /**
+     * The map transform's callback that overrides the default constrain function.
+     * @defaultValue null
+     */
+    transformConstrain: TransformConstrainFunction | null;
+
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
@@ -637,6 +692,9 @@ export class Map extends Camera {
         if (resolvedOptions.renderWorldCopies !== undefined) {
             transform.setRenderWorldCopies(resolvedOptions.renderWorldCopies);
         }
+        if (resolvedOptions.transformConstrain !== null) {
+            transform.setConstrainOverride(resolvedOptions.transformConstrain);
+        }
 
         super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
 
@@ -655,8 +713,14 @@ export class Map extends Camera {
         this._clickTolerance = resolvedOptions.clickTolerance;
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
+        this._zoomLevelsToOverscale = resolvedOptions.experimentalZoomLevelsToOverscale;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
+        this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
+
+        if (resolvedOptions.reduceMotion !== undefined) {
+            browser.prefersReducedMotion = resolvedOptions.reduceMotion;
+        }
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
@@ -780,8 +844,6 @@ export class Map extends Camera {
      * Sets a global state property that can be retrieved with the [`global-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#global-state).
      * If the value is null, it resets the property to its default value defined in the [`state` style property](https://maplibre.org/maplibre-style-spec/root/#state).
      *
-     * Note that changing `global-state` values defined in layout properties is not supported, and will be ignored.
-     *
      * @param propertyName - The name of the state property to set.
      * @param value - The value of the state property to set.
      */
@@ -812,7 +874,7 @@ export class Map extends Camera {
      * ```ts
      * map.addControl(new NavigationControl());
      * ```
-     * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
+     * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/display-map-navigation-controls/)
      */
     addControl(control: IControl, position?: ControlPosition): Map {
         if (position === undefined) {
@@ -884,9 +946,25 @@ export class Map extends Camera {
         return this._controls.indexOf(control) > -1;
     }
 
+    /**
+    * Returns an array of `OverscaledTileID` objects that cover the current viewport for a given tile size.
+    * This method is useful for determining which tiles are visible in the current viewport.
+    *
+    * @param options - Options for calculating the covering tiles.
+    * @returns An array of `OverscaledTileID` objects.
+    * @example
+    * ```ts
+    * // Get the tiles to cover the view for a 512x512px tile source
+    * const tiles = map.coveringTiles({tileSize: 512});
+    * ```
+    */
+    coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
+        return coveringTiles(this.transform, options);
+    }
+
     calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number): CameraOptions {
         if (altitudeTo == null && this.terrain) {
-            altitudeTo = this.terrain.getElevationForLngLatZoom(to, this.transform.tileZoom);
+            altitudeTo = this.terrain.getElevationForLngLat(to, this.transform);
         }
         return super.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
     }
@@ -1066,10 +1144,10 @@ export class Map extends Camera {
         minZoom = minZoom === null || minZoom === undefined ? defaultMinZoom : minZoom;
 
         if (minZoom >= defaultMinZoom && minZoom <= this.transform.maxZoom) {
-            this.transform.setMinZoom(minZoom);
+            const tr = this._getTransformForUpdate();
+            tr.setMinZoom(minZoom);
+            this._applyUpdatedTransform(tr);
             this._update();
-
-            if (this.getZoom() < minZoom) this.setZoom(minZoom);
 
             return this;
 
@@ -1106,10 +1184,10 @@ export class Map extends Camera {
         maxZoom = maxZoom === null || maxZoom === undefined ? defaultMaxZoom : maxZoom;
 
         if (maxZoom >= this.transform.minZoom) {
-            this.transform.setMaxZoom(maxZoom);
+            const tr = this._getTransformForUpdate();
+            tr.setMaxZoom(maxZoom);
+            this._applyUpdatedTransform(tr);
             this._update();
-
-            if (this.getZoom() > maxZoom) this.setZoom(maxZoom);
 
             return this;
 
@@ -1234,6 +1312,25 @@ export class Map extends Camera {
      */
     setRenderWorldCopies(renderWorldCopies?: boolean | null): Map {
         this.transform.setRenderWorldCopies(renderWorldCopies);
+        return this._update();
+    }
+
+    /** Sets or clears the callback overriding how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
+     *
+     * @param constrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
+     *
+     * `null` clears the callback and reverts the constrain to the map transform's default constrain function.
+     * @example
+     * ```ts
+     * function customTransformConstrain(lngLat, zoom) {
+     *   return {center: lngLat, zoom: zoom ?? 0};
+     * };
+     * map.setTransformConstrain(customTransformConstrain);
+     * ```
+     * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
+     */
+    setTransformConstrain(constrain?: TransformConstrainFunction | null): Map {
+        this.transform.setConstrainOverride(constrain);
         return this._update();
     }
 
@@ -1486,10 +1583,10 @@ export class Map extends Camera {
      *     .addTo(map);
      * });
      * ```
-     * @see [Display popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/)
-     * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-on-symbol/)
-     * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
-     * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+     * @see [Display popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-popup-on-click/)
+     * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-the-map-on-a-clicked-symbol/)
+     * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/)
+     * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
      */
     on<T extends keyof MapLayerEventType>(
         type: T,
@@ -1618,7 +1715,7 @@ export class Map extends Camera {
     }
 
     /**
-     * Removes an event listener for events previously added with `Map#on`.
+     * Removes an event listener for events previously added with `{@link Map.on}`.
      *
      * @event
      * @param type - The event type previously used to install the listener.
@@ -1672,9 +1769,10 @@ export class Map extends Camera {
      * Returns an array of MapGeoJSONFeature objects
      * representing visible features that satisfy the query parameters.
      *
-     * @param geometryOrOptions - (optional) The geometry of the query region:
-     * either a single point or southwest and northeast points describing a bounding box.
-     * Omitting this parameter (i.e. calling {@link Map#queryRenderedFeatures} with zero arguments,
+     * @param geometryOrOptions - (optional) The geometry of the query region in pixel points within the map viewport:
+     * either a single pixel point or a pair of top-left and bottom-right pixel points describing a bounding box.
+     * The origin of the pixel points is at the top-left of the map viewport.
+     * Omitting this parameter (i.e. calling {@link Map.queryRenderedFeatures} with zero arguments,
      * or with only a `options` argument) is equivalent to passing a bounding box encompassing the entire
      * map viewport.
      * The geometryOrOptions can receive a {@link QueryRenderedFeaturesOptions} only to support a situation where the function receives only one parameter which is the options parameter.
@@ -1745,7 +1843,7 @@ export class Map extends Camera {
      * ```ts
      * let features = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
      * ```
-     * @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/queryrenderedfeatures/)
+     * @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/get-features-under-the-mouse-pointer/)
      */
     queryRenderedFeatures(geometryOrOptions?: PointLike | [PointLike, PointLike] | QueryRenderedFeaturesOptions, options?: QueryRenderedFeaturesOptions): MapGeoJSONFeature[] {
         if (!this.style) {
@@ -1775,7 +1873,7 @@ export class Map extends Camera {
      * @param parameters - The options object.
      * @returns An array of MapGeoJSONFeature objects.
      *
-     * In contrast to {@link Map#queryRenderedFeatures}, this function returns all features matching the query parameters,
+     * In contrast to {@link Map.queryRenderedFeatures}, this function returns all features matching the query parameters,
      * whether or not they are rendered by the current style (i.e. visible). The domain of the query includes all currently-loaded
      * vector tiles and GeoJSON source tiles: this function does not check tiles outside the currently
      * visible viewport.
@@ -1875,7 +1973,7 @@ export class Map extends Camera {
      * map.setTransformRequest((url: string, resourceType: string) => {});
      * ```
      */
-    setTransformRequest(transformRequest: RequestTransformFunction): this {
+    setTransformRequest(transformRequest: RequestTransformFunction | null): this {
         this._requestManager.setTransformRequest(transformRequest);
         return this;
     }
@@ -1978,6 +2076,21 @@ export class Map extends Camera {
     }
 
     /**
+     * @internal
+     * Returns the map's style and cloned images to restore context.
+     * @returns An object containing the style and images.
+     */
+    _getStyleAndImages(): LostContextStyle {
+        if (this.style) {
+            return {
+                style: this.style.serialize(),
+                images: this.style.imageManager.cloneImages()
+            };
+        }
+        return {style: null, images: {}};
+    }
+
+    /**
      * Returns a Boolean indicating whether the map's style is fully loaded.
      *
      * @returns A Boolean indicating whether the style is fully loaded.
@@ -2027,7 +2140,7 @@ export class Map extends Camera {
      *   }
      * });
      * ```
-     * @see GeoJSON source: [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
+     * @see GeoJSON source: [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/add-live-realtime-data/)
      */
     addSource(id: string, source: SourceSpecification | CanvasSourceSpecification): this {
         this._lazyInitEmptyStyle();
@@ -2049,12 +2162,12 @@ export class Map extends Camera {
      * ```
      */
     isSourceLoaded(id: string): boolean {
-        const source = this.style && this.style.sourceCaches[id];
-        if (source === undefined) {
-            this.fire(new ErrorEvent(new Error(`There is no source with ID '${id}'`)));
+        const tileManager = this.style && this.style.tileManagers[id];
+        if (tileManager === undefined) {
+            this.fire(new ErrorEvent(new Error(`There is no tile manager with ID '${id}'`)));
             return;
         }
-        return source.loaded();
+        return tileManager.loaded();
     }
 
     /**
@@ -2076,7 +2189,7 @@ export class Map extends Camera {
 
         if (!options) {
             // remove terrain
-            if (this.terrain) this.terrain.sourceCache.destruct();
+            if (this.terrain) this.terrain.tileManager.destruct();
             this.terrain = null;
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
@@ -2086,10 +2199,10 @@ export class Map extends Camera {
             }
         } else {
             // add terrain
-            const sourceCache = this.style.sourceCaches[options.source];
-            if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
+            const tileManager = this.style.tileManagers[options.source];
+            if (!tileManager) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
             // Update terrain tiles when adding new terrain
-            if (this.terrain === null) sourceCache.reload();
+            if (this.terrain === null) tileManager.reload();
             // Warn once if user is using the same source for hillshade/color-relief and terrain
             for (const index in this.style._layers) {
                 const thisLayer = this.style._layers[index];
@@ -2100,13 +2213,13 @@ export class Map extends Camera {
                     warnOnce('You are using the same source for a color-relief layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
                 }
             }
-            this.terrain = new Terrain(this.painter, sourceCache, options);
+            this.terrain = new Terrain(this.painter, tileManager, options);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this._terrainDataCallback = e => {
                 if (e.dataType === 'style') {
-                    this.terrain.sourceCache.freeRtt();
+                    this.terrain.tileManager.freeRtt();
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
@@ -2116,9 +2229,9 @@ export class Map extends Camera {
                     }
 
                     if (e.source?.type === 'image') {
-                        this.terrain.sourceCache.freeRtt();
+                        this.terrain.tileManager.freeRtt();
                     } else {
-                        this.terrain.sourceCache.freeRtt(e.tile.tileID);
+                        this.terrain.tileManager.freeRtt(e.tile.tileID);
                     }
                 }
             };
@@ -2152,13 +2265,10 @@ export class Map extends Camera {
      * ```
      */
     areTilesLoaded(): boolean {
-        const sources = this.style && this.style.sourceCaches;
-        for (const id in sources) {
-            const source = sources[id];
-            const tiles = source._tiles;
-            for (const t in tiles) {
-                const tile = tiles[t];
-                if (!(tile.state === 'loaded' || tile.state === 'errored')) return false;
+        const tileManagers = this.style && this.style.tileManagers;
+        for (const tileManager of Object.values(tileManagers)) {
+            if (!tileManager.areTilesLoaded()) {
+                return false;
             }
         }
         return true;
@@ -2196,21 +2306,21 @@ export class Map extends Camera {
      * ```ts
      * let sourceObject = map.getSource('points');
      * ```
-     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-     * @see [Animate a point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-point-along-line/)
-     * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
+     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
+     * @see [Animate a point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-a-point/)
+     * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/add-live-realtime-data/)
      */
     getSource<TSource extends Source>(id: string): TSource | undefined {
         return this.style.getSource(id) as TSource;
     }
 
     /**
-     * Change the tile Level of Detail behavior of the specified source. These parameters have no effect when 
+     * Change the tile Level of Detail behavior of the specified source. These parameters have no effect when
      * pitch == 0, and the largest effect when the horizon is visible on screen.
      *
      * @param maxZoomLevelsOnScreen - The maximum number of distinct zoom levels allowed on screen at a time.
      * There will generally be fewer zoom levels on the screen, the maximum can only be reached when the horizon
-     * is at the top of the screen. Increasing the maximum number of zoom levels causes the zoom level to decay 
+     * is at the top of the screen. Increasing the maximum number of zoom levels causes the zoom level to decay
      * faster toward the horizon.
      * @param tileCountMaxMinRatio - The ratio of the maximum number of tiles loaded (at high pitch) to the minimum
      * number of tiles loaded. Increasing this ratio allows more tiles to be loaded at high pitch angles. If the ratio
@@ -2221,7 +2331,7 @@ export class Map extends Camera {
      * ```ts
      * map.setSourceTileLodParams(4.0, 3.0, 'terrain');
      * ```
-     * @see [Modify Level of Detail behavior](https://maplibre.org/maplibre-gl-js/docs/examples/lod-control/)
+     * @see [Modify Level of Detail behavior](https://maplibre.org/maplibre-gl-js/docs/examples/level-of-detail-control/)
 
      */
     setSourceTileLodParams(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number, sourceId?: string) : this {
@@ -2232,8 +2342,8 @@ export class Map extends Camera {
             }
             source.calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
         } else {
-            for (const id in this.style.sourceCaches) {
-                this.style.sourceCaches[id].getSource().calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
+            for (const id in this.style.tileManagers) {
+                this.style.tileManagers[id].getSource().calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
             }
         }
         this._update(true);
@@ -2251,14 +2361,14 @@ export class Map extends Camera {
      * ```
      */
     refreshTiles(sourceId: string, tileIds?: Array<{x: number; y: number; z: number}>) {
-        const sourceCache = this.style.sourceCaches[sourceId];
-        if(!sourceCache) {
-            throw new Error(`There is no source cache with ID "${sourceId}", cannot refresh tile`);
+        const tileManager = this.style.tileManagers[sourceId];
+        if(!tileManager) {
+            throw new Error(`There is no tile manager with ID "${sourceId}", cannot refresh tile`);
         }
         if (tileIds === undefined) {
-            sourceCache.reload(true);
+            tileManager.reload(true);
         } else {
-            sourceCache.refreshTiles(tileIds.map((tileId) => {return new CanonicalTileID(tileId.z, tileId.x, tileId.y);}));
+            tileManager.refreshTiles(tileIds.map((tileId) => {return new CanonicalTileID(tileId.z, tileId.x, tileId.y);}));
         }
     }
 
@@ -2293,8 +2403,8 @@ export class Map extends Camera {
      *     stretchY: [[16, 384]], // stretch everything vertically except the 16px border
      * });
      * ```
-     * @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
-     * @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-generated/)
+     * @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-icon-to-the-map/)
+     * @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-generated-icon-to-the-map/)
      */
     addImage(id: string,
         image: HTMLImageElement | ImageBitmap | ImageData | {
@@ -2404,7 +2514,7 @@ export class Map extends Camera {
     /**
      * Returns an image, specified by ID, currently available in the map.
      * This includes both images from the style's original sprite
-     * and any images that have been added at runtime using {@link Map#addImage}.
+     * and any images that have been added at runtime using {@link Map.addImage}.
      *
      * @param id - The ID of the image.
      * @returns An image in the map with the specified ID.
@@ -2421,7 +2531,7 @@ export class Map extends Camera {
     /**
      * Check whether or not an image with a specific ID exists in the style. This checks both images
      * in the style's original sprite and any images
-     * that have been added at runtime using {@link Map#addImage}.
+     * that have been added at runtime using {@link Map.addImage}.
      *
      * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
@@ -2446,7 +2556,7 @@ export class Map extends Camera {
     /**
      * Remove an image from a style. This can be an image from the style's original
      * sprite or any images
-     * that have been added at runtime using {@link Map#addImage}.
+     * that have been added at runtime using {@link Map.addImage}.
      *
      * @param id - The ID of the image.
      *
@@ -2462,7 +2572,7 @@ export class Map extends Camera {
     }
 
     /**
-     * Load an image from an external URL to be used with {@link Map#addImage}. External
+     * Load an image from an external URL to be used with {@link Map.addImage}. External
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
      * @param url - The URL of the image file. Image file must be in png, webp, or jpg format.
@@ -2475,7 +2585,7 @@ export class Map extends Camera {
      * // Add the loaded image to the style's sprite with the ID 'photo'.
      * map.addImage('photo', response.data);
      * ```
-     * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
+     * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-icon-to-the-map/)
      */
     loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
         return ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
@@ -2484,7 +2594,7 @@ export class Map extends Camera {
     /**
      * Returns an Array of strings containing the IDs of all images currently available in the map.
      * This includes both images from the style's original sprite
-     * and any images that have been added at runtime using {@link Map#addImage}.
+     * and any images that have been added at runtime using {@link Map.addImage}.
      *
      * @returns An Array of strings containing the names of all sprites/images currently available in the map.
      *
@@ -2572,9 +2682,9 @@ export class Map extends Camera {
      * // Add the layer before the existing `cities` layer
      * }, 'cities');
      * ```
-     * @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/cluster/)
-     * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/vector-source/)
-     * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/wms/)
+     * @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/create-and-style-clusters/)
+     * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-vector-tile-source/)
+     * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-wms-source/)
      */
     addLayer(layer: AddLayerObject, beforeId?: string) {
         this._lazyInitEmptyStyle();
@@ -2628,8 +2738,8 @@ export class Map extends Camera {
      * ```ts
      * let stateDataLayer = map.getLayer('state-data');
      * ```
-     * @see [Filter symbols by toggling a list](https://maplibre.org/maplibre-gl-js/docs/examples/filter-markers/)
-     * @see [Filter symbols by text input](https://maplibre.org/maplibre-gl-js/docs/examples/filter-markers-by-input/)
+     * @see [Filter symbols by toggling a list](https://maplibre.org/maplibre-gl-js/docs/examples/filter-symbols-by-toggling-a-list/)
+     * @see [Filter symbols by text input](https://maplibre.org/maplibre-gl-js/docs/examples/filter-symbols-by-text-input/)
      */
     getLayer(id: string): StyleLayer | undefined {
         return this.style.getLayer(id);
@@ -2655,10 +2765,11 @@ export class Map extends Camera {
      * and [maximum zoom level](https://maplibre.org/maplibre-style-spec/layers/#maxzoom))
      * at which the layer will be rendered.
      *
-     * Note: For style layers using vector sources, style layers cannot be rendered at zoom levels lower than the
-     * minimum zoom level of the _source layer_ because the data does not exist at those zoom levels. If the minimum
-     * zoom level of the source layer is higher than the minimum zoom level defined in the style layer, the style
-     * layer will not be rendered at all zoom levels in the zoom range.
+     * !!! note
+     *     For style layers using vector sources, style layers cannot be rendered at zoom levels lower than the
+     *     minimum zoom level of the _source layer_ because the data does not exist at those zoom levels. If the minimum
+     *     zoom level of the source layer is higher than the minimum zoom level defined in the style layer, the style
+     *     layer will not be rendered at all zoom levels in the zoom range.
      *
      * @param layerId - The ID of the layer to which the zoom extent will be applied.
      * @param minzoom - The minimum zoom to set (0-24).
@@ -2705,7 +2816,7 @@ export class Map extends Camera {
      * ```ts
      * map.setFilter('bike-docks', null);
      * ```
-     * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
+     * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-time-slider/)
      */
     setFilter(layerId: string, filter?: FilterSpecification | null, options: StyleSetterOptions = {}) {
         this.style.setFilter(layerId, filter, options);
@@ -2735,8 +2846,8 @@ export class Map extends Camera {
      * ```ts
      * map.setPaintProperty('my-layer', 'fill-color', '#faafee');
      * ```
-     * @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/color-switcher/)
-     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+     * @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/change-a-layers-color-with-buttons/)
+     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
      */
     setPaintProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}): this {
         this.style.setPaintProperty(layerId, name, value, options);
@@ -2941,10 +3052,11 @@ export class Map extends Camera {
      * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#promoteid) option at the time the source is defined.
      * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#generateid) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
      *
-     * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
+     * !!! note
+     *     You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling.
      *
      * @param feature - Feature identifier. Feature objects returned from
-     * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+     * {@link Map.queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @param state - A set of key-value pairs. The values should be valid JSON types.
      *
      * @example
@@ -2963,7 +3075,7 @@ export class Map extends Camera {
      *   }
      * });
      * ```
-     * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
+     * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/)
      */
     setFeatureState(feature: FeatureIdentifier, state: any): this {
         this.style.setFeatureState(feature, state);
@@ -2978,7 +3090,7 @@ export class Map extends Camera {
      * Features are identified by their `feature.id` attribute, which can be any number or string.
      *
      * @param target - Identifier of where to remove state. It can be a source, a feature, or a specific key of feature.
-     * Feature objects returned from {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+     * Feature objects returned from {@link Map.queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @param key - (optional) The key in the feature state to reset.
      * @example
      * Reset the entire state object for all features in the `my-source` source
@@ -3026,10 +3138,11 @@ export class Map extends Camera {
      * A feature's `state` is a set of user-defined key-value pairs that are assigned to a feature at runtime.
      * Features are identified by their `feature.id` attribute, which can be any number or string.
      *
-     * _Note: To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state)._
+     * !!! note
+     *     To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state).
      *
      * @param feature - Feature identifier. Feature objects returned from
-     * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
+     * {@link Map.queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @returns The state of the feature: a set of key-value pairs that was assigned to the feature at runtime.
      *
      * @example
@@ -3070,7 +3183,7 @@ export class Map extends Camera {
      * map controls.
      *
      * @returns The container of the map's `<canvas>`.
-     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
      */
     getCanvasContainer(): HTMLElement {
         return this._canvasContainer;
@@ -3080,9 +3193,9 @@ export class Map extends Camera {
      * Returns the map's `<canvas>` element.
      *
      * @returns The map's `<canvas>` element.
-     * @see [Measure distances](https://maplibre.org/maplibre-gl-js/docs/examples/measure/)
-     * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
-     * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-on-symbol/)
+     * @see [Measure distances](https://maplibre.org/maplibre-gl-js/docs/examples/measure-distances/)
+     * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-popup-on-hover/)
+     * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-the-map-on-a-clicked-symbol/)
      */
     getCanvas(): HTMLCanvasElement {
         return this._canvas;
@@ -3196,10 +3309,36 @@ export class Map extends Camera {
             this._frameRequest.abort();
             this._frameRequest = null;
         }
+        this.painter.destroy();
+
+        // check if style contains custom layers to warn user that they can't be restored automatically
+        for (const layer of Object.values(this.style._layers)) {
+            if (layer.type === 'custom') {
+                console.warn(`Custom layer with id '${layer.id}' cannot be restored after WebGL context loss. You will need to re-add it manually after context restoration.`);
+            }
+
+            if (layer._listeners) {
+                for (const [event] of Object.entries(layer._listeners)) {
+                    console.warn(`Custom layer with id '${layer.id}' had event listeners for event '${event}' which cannot be restored after WebGL context loss. You will need to re-add them manually after context restoration.`);
+                }
+            }
+        }
+
+        this._lostContextStyle = this._getStyleAndImages();
+        this.style.destroy();
+        this.style = null;
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
 
     _contextRestored = (event: any) => {
+        if (this._lostContextStyle.style) {
+            this.setStyle(this._lostContextStyle.style, {diff: false});
+        }
+
+        if (this._lostContextStyle.images) {
+            this.style.imageManager.images = this._lostContextStyle.images;
+        }
+
         this._setupPainter();
         this.resize();
         this._update();
@@ -3294,15 +3433,14 @@ export class Map extends Camera {
             this._styleDirty = false;
 
             const zoom = this.transform.zoom;
-            const now = browser.now();
-            this.style.zoomHistory.update(zoom, now);
+            const currentTime = now();
+            this.style.zoomHistory.update(zoom, currentTime);
 
             const parameters = new EvaluationParameters(zoom, {
-                now,
+                now: currentTime,
                 fadeDuration,
                 zoomHistory: this.style.zoomHistory,
-                transition: this.style.getTransition(),
-                globalState: this.style.getGlobalState()
+                transition: this.style.getTransition()
             });
 
             const factor = parameters.crossFadingFactor();
@@ -3319,7 +3457,7 @@ export class Map extends Camera {
         this.transform.setTransitionState(this.style.projection?.transitionState, this.style.projection?.latitudeErrorCorrectionRadians);
 
         // If we are in _render for any reason other than an in-progress paint
-        // transition, update source caches to check for and load any tiles we
+        // transition, update tile managers to check for and load any tiles we
         // need for the current transform
         if (this.style && (this._sourcesDirty || globeRenderingChanged)) {
             this._sourcesDirty = false;
@@ -3328,7 +3466,7 @@ export class Map extends Camera {
 
         // update terrain stuff
         if (this.terrain) {
-            this.terrain.sourceCache.update(this.transform, this.terrain);
+            this.terrain.tileManager.update(this.transform, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             if (!this._elevationFreeze && this._centerClampedToGround) {
                 this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
@@ -3368,15 +3506,15 @@ export class Map extends Camera {
         if (this.style && !this._placementDirty) {
             // Since no fade operations are in progress, we can release
             // all tiles held for fading. If we didn't do this, the tiles
-            // would just sit in the SourceCaches until the next render
+            // would just sit in the TileManagers until the next render
             this.style._releaseSymbolFadeTiles();
         }
 
         // Schedule another render frame if it's needed.
         //
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
-        // method, synchronous events fired during Style#update or
-        // Style#_updateSources could have caused them to be set again.
+        // method, synchronous events fired during Style.update or
+        // Style._updateSources could have caused them to be set again.
         const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
@@ -3465,8 +3603,8 @@ export class Map extends Camera {
      * ```ts
      * map.triggerRepaint();
      * ```
-     * @see [Add a 3D model](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model/)
-     * @see [Add an animated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-animated/)
+     * @see [Add a 3D model](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/)
+     * @see [Add an animated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-animated-icon-to-the-map/)
      */
     triggerRepaint() {
         if (this.style && !this._frameRequest) {

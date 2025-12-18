@@ -213,7 +213,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         // Special zoom & center handling for globe:
         // Globe constrained center isn't dependent on zoom level
         const startingLat = tr.center.lat;
-        const constrainedCenter = tr.getConstrained(options.center ? LngLat.convert(options.center) : tr.center, tr.zoom).center;
+        const constrainedCenter = tr.applyConstrain(options.center ? LngLat.convert(options.center) : tr.center, tr.zoom).center;
         tr.setCenter(constrainedCenter.wrap());
 
         // Make sure to compute correct target zoom level if no zoom is specified
@@ -245,7 +245,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         const preConstrainCenter = options.center ?
             LngLat.convert(options.center) :
             startCenter;
-        const constrainedCenter = tr.getConstrained(
+        const constrainedCenter = tr.applyConstrain(
             preConstrainCenter,
             startZoom // zoom can be whatever at this stage, it should not affect anything if globe is enabled
         ).center;
@@ -334,7 +334,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         const doPadding = !tr.isPaddingEqual(options.padding);
 
         // Obtain target center and zoom
-        const constrainedCenter = tr.getConstrained(
+        const constrainedCenter = tr.applyConstrain(
             LngLat.convert(options.center || options.locationAtOffset),
             startZoom
         ).center;
@@ -369,7 +369,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
             const normalizedOptionsMinZoom = +options.minZoom + getZoomAdjustment(targetCenter.lat, 0);
             const normalizedMinZoomPreConstrain = Math.min(normalizedOptionsMinZoom, normalizedStartZoom, normalizedTargetZoom);
             const minZoomPreConstrain = normalizedMinZoomPreConstrain + getZoomAdjustment(0, targetCenter.lat);
-            const minZoom = tr.getConstrained(targetCenter, minZoomPreConstrain).zoom;
+            const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
             const normalizedMinZoom = minZoom + getZoomAdjustment(targetCenter.lat, 0);
             scaleOfMinZoom = zoomScale(normalizedMinZoom - normalizedStartZoom);
         }

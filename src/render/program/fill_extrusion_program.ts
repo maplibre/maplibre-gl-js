@@ -11,10 +11,10 @@ import {extend} from '../../util/util';
 
 import type {Context} from '../../gl/context';
 import type {Painter} from '../painter';
-import type {OverscaledTileID} from '../../source/tile_id';
+import type {OverscaledTileID} from '../../tile/tile_id';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
-import type {Tile} from '../../source/tile';
+import type {Tile} from '../../tile/tile';
 
 export type FillExtrusionUniformsType = {
     'u_lightpos': Uniform3f;

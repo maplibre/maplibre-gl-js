@@ -2,18 +2,21 @@ import {describe, expect, test} from 'vitest';
 import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import {TransformHelper} from './transform_helper';
-import {OverscaledTileID} from '../source/tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 import {expectToBeCloseToArray} from '../util/test/util';
 import {EXTENT} from '../data/extent';
 
 const emptyCallbacks = {
     calcMatrices: () => {},
-    getConstrained: (center, zoom) => { return {center, zoom}; },
+    defaultConstrain: (center, zoom) => { return {center, zoom}; },
 };
 
 describe('TransformHelper', () => {
     test('apply', () => {
         const original = new TransformHelper(emptyCallbacks);
+        original.setConstrainOverride((lngLat, zoom) => {
+            return {center: lngLat, zoom: zoom ?? 0};
+        });
         original.setBearing(12);
         original.setCenter(new LngLat(3, 4));
         original.setElevation(5);
@@ -39,6 +42,7 @@ describe('TransformHelper', () => {
         cloned.apply(original);
 
         // Check all getters from the ITransformGetters interface
+        expect(cloned.constrainOverride).toEqual(original.constrainOverride);
         expect(cloned.tileSize).toEqual(original.tileSize);
         expect(cloned.tileZoom).toEqual(original.tileZoom);
         expect(cloned.scale).toEqual(original.scale);

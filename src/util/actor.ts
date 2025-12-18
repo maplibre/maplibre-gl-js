@@ -5,7 +5,8 @@ import {ThrottledInvoker} from './throttled_invoker';
 import {
     type MessageType,
     type ActorMessage,
-    type RequestResponseMessageMap} from './actor_messages';
+    type RequestResponseMessageMap,
+} from './actor_messages';
 
 /**
  * An interface to be sent to the actor in order for it to allow communication between the worker and the main thread
@@ -87,6 +88,10 @@ export class Actor implements IActor {
         this.messageHandlers[type] = handler;
     }
 
+    unregisterMessageHandler<T extends MessageType>(type: T) {
+        delete this.messageHandlers[type];
+    }
+
     /**
      * Sends a message from a main-thread map to a Worker or from a Worker back to
      * a main-thread map instance.
@@ -121,7 +126,7 @@ export class Actor implements IActor {
                     subscription?.unsubscribe();
                     resolve(value);
                 },
-                reject: (reason)=> {
+                reject: (reason) => {
                     subscription?.unsubscribe();
                     reject(reason);
                 }

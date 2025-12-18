@@ -5,8 +5,7 @@ import {type Segment, SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray} from '../index_array_type';
 import {EXTENT} from '../extent';
-import mvt from '@mapbox/vector-tile';
-const vectorTileFeatureTypes = mvt.VectorTileFeature.types;
+import {VectorTileFeature} from '@mapbox/vector-tile';
 import {classifyRings} from '@maplibre/maplibre-gl-style-spec';
 const EARCUT_MAX_RINGS = 500;
 import {register} from '../../util/web_worker_transfer';
@@ -15,7 +14,7 @@ import {loadGeometry} from '../load_geometry';
 import {toEvaluationFeature} from '../evaluation_feature';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 
-import type {CanonicalTileID} from '../../source/tile_id';
+import type {CanonicalTileID} from '../../tile/tile_id';
 import type {
     Bucket,
     BucketParameters,
@@ -31,10 +30,10 @@ import type {VertexBuffer} from '../../gl/vertex_buffer';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
-import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {subdividePolygon, subdivideVertexLine} from '../../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays';
+import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const FACTOR = Math.pow(2, 13);
 
@@ -61,7 +60,6 @@ type CentroidAccumulator = {
 export class FillExtrusionBucket implements Bucket {
     index: number;
     zoom: number;
-    globalState: Record<string, any>;
     overscaling: number;
     layers: Array<FillExtrusionStyleLayer>;
     layerIds: Array<string>;
@@ -77,7 +75,7 @@ export class FillExtrusionBucket implements Bucket {
     indexArray: TriangleIndexArray;
     indexBuffer: IndexBuffer;
 
-    hasPattern: boolean;
+    hasDependencies: boolean;
     programConfigurations: ProgramConfigurationSet<FillExtrusionStyleLayer>;
     segments: SegmentVector;
     uploaded: boolean;
@@ -85,12 +83,11 @@ export class FillExtrusionBucket implements Bucket {
 
     constructor(options: BucketParameters<FillExtrusionStyleLayer>) {
         this.zoom = options.zoom;
-        this.globalState = options.globalState;
         this.overscaling = options.overscaling;
         this.layers = options.layers;
         this.layerIds = this.layers.map(layer => layer.id);
         this.index = options.index;
-        this.hasPattern = false;
+        this.hasDependencies = false;
 
         this.layoutVertexArray = new FillExtrusionLayoutArray();
         this.centroidVertexArray = new PosArray();
@@ -102,13 +99,13 @@ export class FillExtrusionBucket implements Bucket {
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
         this.features = [];
-        this.hasPattern = hasPattern('fill-extrusion', this.layers, options);
+        this.hasDependencies = hasPattern('fill-extrusion', this.layers, options);
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
             const needGeometry = this.layers[0]._featureFilter.needGeometry;
             const evaluationFeature = toEvaluationFeature(feature, needGeometry);
 
-            if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom, {globalState: this.globalState}), evaluationFeature, canonical)) continue;
+            if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
 
             const bucketFeature: BucketFeature = {
                 id,
@@ -120,8 +117,8 @@ export class FillExtrusionBucket implements Bucket {
                 patterns: {}
             };
 
-            if (this.hasPattern) {
-                this.features.push(addPatternDependencies('fill-extrusion', this.layers, bucketFeature, this.zoom, options));
+            if (this.hasDependencies) {
+                this.features.push(addPatternDependencies('fill-extrusion', this.layers, bucketFeature, {zoom: this.zoom}, options));
             } else {
                 this.addFeature(bucketFeature, bucketFeature.geometry, index, canonical, {}, options.subdivisionGranularity);
             }
@@ -137,9 +134,11 @@ export class FillExtrusionBucket implements Bucket {
         }
     }
 
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}) {
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}) {
         if (!this.stateDependentLayers.length) return;
-        this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, imagePositions);
+        this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, {
+            imagePositions
+        });
     }
 
     isEmpty() {
@@ -189,7 +188,7 @@ export class FillExtrusionBucket implements Bucket {
             }
         }
 
-        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
+        this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, canonical});
     }
 
     private processPolygon(
@@ -221,7 +220,7 @@ export class FillExtrusionBucket implements Bucket {
             segment: this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray)
         };
         const granularity = subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z);
-        const isPolygon = vectorTileFeatureTypes[feature.type] === 'Polygon';
+        const isPolygon = VectorTileFeature.types[feature.type] === 'Polygon';
 
         for (const ring of polygon) {
             if (ring.length === 0) {

@@ -1,6 +1,6 @@
-import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import {mat4} from 'gl-matrix';
-import {SourceCache} from '../source/source_cache';
+import {TileManager} from '../tile/tile_manager';
 import {EXTENT} from '../data/extent';
 import {SegmentVector} from '../data/segment';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
@@ -31,7 +31,7 @@ import {drawBackground} from './draw_background';
 import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug';
 import {drawCustom} from './draw_custom';
 import {drawDepth, drawCoords} from './draw_terrain';
-import {type OverscaledTileID} from '../source/tile_id';
+import {type OverscaledTileID} from '../tile/tile_id';
 import {drawSky, drawAtmosphere} from './draw_sky';
 import {Mesh} from './mesh';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection';
@@ -145,7 +145,7 @@ export class Painter {
 
         // Within each layer there are multiple distinct z-planes that can be drawn to.
         // This is implemented using the WebGL depth buffer.
-        this.numSublayers = SourceCache.maxUnderzooming + SourceCache.maxOverzooming + 1;
+        this.numSublayers = TileManager.maxOverzooming + TileManager.maxUnderzooming + 1;
         this.depthEpsilon = 1 / Math.pow(2, 16);
 
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
@@ -484,27 +484,27 @@ export class Painter {
         this.imageManager = style.imageManager;
         this.glyphManager = style.glyphManager;
 
-        this.symbolFadeChange = style.placement.symbolFadeChange(browser.now());
+        this.symbolFadeChange = style.placement.symbolFadeChange(now());
 
         this.imageManager.beginFrame();
 
         const layerIds = this.style._order;
-        const sourceCaches = this.style.sourceCaches;
+        const tileManagers = this.style.tileManagers;
 
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection?.transitionState > 0};
 
-        for (const id in sourceCaches) {
-            const sourceCache = sourceCaches[id];
-            if (sourceCache.used) {
-                sourceCache.prepare(this.context);
+        for (const id in tileManagers) {
+            const tileManager = tileManagers[id];
+            if (tileManager.used) {
+                tileManager.prepare(this.context);
             }
 
-            coordsAscending[id] = sourceCache.getVisibleCoordinates(false);
+            coordsAscending[id] = tileManager.getVisibleCoordinates(false);
             coordsDescending[id] = coordsAscending[id].slice().reverse();
-            coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
+            coordsDescendingSymbol[id] = tileManager.getVisibleCoordinates(true).reverse();
         }
 
         this.opaquePassCutoff = Infinity;
@@ -537,7 +537,7 @@ export class Painter {
             const coords = coordsDescending[layer.source];
             if (layer.type !== 'custom' && !coords.length) continue;
 
-            this.renderLayer(this, sourceCaches[layer.source], layer, coords, renderOptions);
+            this.renderLayer(this, tileManagers[layer.source], layer, coords, renderOptions);
         }
 
         // Execute offscreen GPU tasks of the projection manager
@@ -567,11 +567,11 @@ export class Painter {
 
             for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
                 const layer = this.style._layers[layerIds[this.currentLayer]];
-                const sourceCache = sourceCaches[layer.source];
+                const tileManager = tileManagers[layer.source];
                 const coords = coordsAscending[layer.source];
 
                 this._renderTileClippingMasks(layer, coords, false);
-                this.renderLayer(this, sourceCache, layer, coords, renderOptions);
+                this.renderLayer(this, tileManager, layer, coords, renderOptions);
             }
         }
 
@@ -583,7 +583,7 @@ export class Painter {
 
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
-            const sourceCache = sourceCaches[layer.source];
+            const tileManager = tileManagers[layer.source];
 
             if (this.renderToTexture && this.renderToTexture.renderLayer(layer, renderOptions)) continue;
 
@@ -602,7 +602,7 @@ export class Painter {
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
-            this.renderLayer(this, sourceCache, layer, coords, renderOptions);
+            this.renderLayer(this, tileManager, layer, coords, renderOptions);
         }
 
         // Render atmosphere, only for Globe projection
@@ -641,7 +641,7 @@ export class Painter {
         // Update coords/depth-framebuffer on camera movement, or tile reloading
         let doUpdate = this.terrainFacilitator.dirty;
         doUpdate ||= requireExact ? !mat4.exactEquals(prevMatrix, currMatrix) : !mat4.equals(prevMatrix, currMatrix);
-        doUpdate ||= this.style.map.terrain.sourceCache.anyTilesAfterTime(this.terrainFacilitator.renderTime);
+        doUpdate ||= this.style.map.terrain.tileManager.anyTilesAfterTime(this.terrainFacilitator.renderTime);
 
         if (!doUpdate) {
             return;
@@ -654,33 +654,33 @@ export class Painter {
         drawCoords(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
         if (isSymbolStyleLayer(layer)) {
-            drawSymbols(painter, sourceCache, layer, coords, this.style.placement.variableOffsets, renderOptions);
+            drawSymbols(painter, tileManager, layer, coords, this.style.placement.variableOffsets, renderOptions);
         } else if (isCircleStyleLayer(layer)) {
-            drawCircles(painter, sourceCache, layer, coords, renderOptions);
+            drawCircles(painter, tileManager, layer, coords, renderOptions);
         } else if (isHeatmapStyleLayer(layer)) {
-            drawHeatmap(painter, sourceCache, layer, coords, renderOptions);
+            drawHeatmap(painter, tileManager, layer, coords, renderOptions);
         } else if (isLineStyleLayer(layer)) {
-            drawLine(painter, sourceCache, layer, coords, renderOptions);
+            drawLine(painter, tileManager, layer, coords, renderOptions);
         } else if (isFillStyleLayer(layer)) {
-            drawFill(painter, sourceCache, layer, coords, renderOptions);
+            drawFill(painter, tileManager, layer, coords, renderOptions);
         } else if (isFillExtrusionStyleLayer(layer)) {
-            drawFillExtrusion(painter, sourceCache, layer, coords, renderOptions);
+            drawFillExtrusion(painter, tileManager, layer, coords, renderOptions);
         } else if (isHillshadeStyleLayer(layer)) {
-            drawHillshade(painter, sourceCache, layer, coords, renderOptions);
+            drawHillshade(painter, tileManager, layer, coords, renderOptions);
         } else if (isColorReliefStyleLayer(layer)) {
-            drawColorRelief(painter, sourceCache, layer, coords, renderOptions);
+            drawColorRelief(painter, tileManager, layer, coords, renderOptions);
         } else if (isRasterStyleLayer(layer)) {
-            drawRaster(painter, sourceCache, layer, coords, renderOptions);
+            drawRaster(painter, tileManager, layer, coords, renderOptions);
         } else if (isBackgroundStyleLayer(layer)) {
-            drawBackground(painter, sourceCache, layer, coords, renderOptions);
+            drawBackground(painter, tileManager, layer, coords, renderOptions);
         } else if (isCustomStyleLayer(layer)) {
-            drawCustom(painter, sourceCache, layer, renderOptions);
+            drawCustom(painter, tileManager, layer, renderOptions);
         }
     }
 
@@ -793,8 +793,44 @@ export class Painter {
     }
 
     destroy() {
+        if (this._tileTextures) {
+            for (const size in this._tileTextures) {
+                const textures = this._tileTextures[size];
+                if (textures) {
+                    for (const texture of textures) {
+                        texture.destroy();
+                    }
+                }
+            }
+            this._tileTextures = {};
+        }
+
+        if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
+        if (this.debugBuffer) this.debugBuffer.destroy();
+        if (this.rasterBoundsBuffer) this.rasterBoundsBuffer.destroy();
+        if (this.rasterBoundsBufferPosOnly) this.rasterBoundsBufferPosOnly.destroy();
+        if (this.viewportBuffer) this.viewportBuffer.destroy();
+        if (this.tileBorderIndexBuffer) this.tileBorderIndexBuffer.destroy();
+        if (this.quadTriangleIndexBuffer) this.quadTriangleIndexBuffer.destroy();
+        if (this.tileExtentMesh) this.tileExtentMesh.vertexBuffer?.destroy();
+        if (this.tileExtentMesh) this.tileExtentMesh.indexBuffer?.destroy();
+
         if (this.debugOverlayTexture) {
             this.debugOverlayTexture.destroy();
+        }
+
+        if (this.cache) {
+            for (const key in this.cache) {
+                const program = this.cache[key];
+                if (program && program.program) {
+                    this.context.gl.deleteProgram(program.program);
+                }
+            }
+            this.cache = {};
+        }
+
+        if (this.context) {
+            this.context.setDefault();
         }
     }
 

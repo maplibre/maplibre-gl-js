@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <title>Customize the map transform constrain</title>
+    <meta property='og:description' content='Customize the constrain callback of the map transform. For example, to allow users to underzoom and overpan the bounds.' />
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: repeating-conic-gradient(#000 0 25%, #444 0 50%) 50% / 32px 32px;
+        }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id='map'></div>
+<script>
+    function customTransformConstrain(lngLat, zoom) {
+        return {center: lngLat, zoom: zoom ?? 0}
+    };
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        renderWorldCopies: false,
+        transformConstrain: customTransformConstrain,
+        zoom: -2,
+        center: [360, 0],
+        style: {
+            version: 8,
+            sources: {
+                rgb: {
+                    type: 'raster',
+                    tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tileSize: 256,
+                    attribution: '&copy; OpenStreetMap Contributors',
+                    maxzoom: 19
+                },
+            },
+            layers: [{id: 'rgb', type: 'raster', source: 'rgb'}]
+        },
+    });
+</script>
+</body>
+</html>

@@ -133,7 +133,7 @@ function testDEMBackfill(dem0: DEMData, dem1: DEMData) {
     };
 }
 
-describe('DEMData#backfillBorder with encoding', () => {
+describe('DEMData.backfillBorder with encoding', () => {
     describe('mapbox encoding', () => {
         const dem0 = new DEMData('0', createMockImage(4, 4), 'mapbox');
         const dem1 = new DEMData('1', createMockImage(4, 4), 'mapbox');
@@ -226,7 +226,7 @@ function testGetPixels(dem: DEMData, imageData: RGBAImage) {
     };
 }
 
-describe('DEMData#getImage', () => {
+describe('DEMData.getImage', () => {
     const imageData = createMockImage(4, 4);
     const mapboxDEM = new DEMData('0', imageData, 'terrarium');
     const terrariumDEM = new DEMData('0', imageData, 'terrarium');

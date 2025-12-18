@@ -5,7 +5,7 @@ import type {Context} from '../gl/context';
 /**
  * A dash entry
  */
-type DashEntry = {
+export type DashEntry = {
     y: number;
     height: number;
     width: number;
@@ -15,7 +15,7 @@ type DashEntry = {
  * @internal
  * A LineAtlas lets us reuse rendered dashed lines
  * by writing many of them to a texture and then fetching their positions
- * using {@link LineAtlas#getDash}.
+ * using {@link LineAtlas.getDash}.
  *
  * @param width - the width
  * @param height - the height
@@ -180,8 +180,8 @@ export class LineAtlas {
         }
 
         const dashEntry = {
-            y: (this.nextRow + n + 0.5) / this.height,
-            height: 2 * n / this.height,
+            y: this.nextRow + n,
+            height: 2 * n,
             width: length
         };
 

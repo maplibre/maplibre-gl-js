@@ -2,7 +2,7 @@ import {describe, test, expect} from 'vitest';
 import {EdgeInsets} from '../geo/edge_insets';
 
 describe('EdgeInsets', () => {
-    describe('#constructor', () => {
+    describe('constructor', () => {
         test('creates an object with default values', () => {
             expect(new EdgeInsets() instanceof EdgeInsets).toBeTruthy();
         });
@@ -31,7 +31,7 @@ describe('EdgeInsets', () => {
         });
     });
 
-    describe('#getCenter', () => {
+    describe('getCenter', () => {
         test('valid input', () => {
             const inset = new EdgeInsets(10, 15, 50, 10);
             const center = inset.getCenter(600, 400);
@@ -49,7 +49,7 @@ describe('EdgeInsets', () => {
         });
     });
 
-    describe('#interpolate', () => {
+    describe('interpolate', () => {
         test('it works', () => {
             const inset1 = new EdgeInsets(10, 15, 50, 10);
             const inset2 = new EdgeInsets(20, 30, 100, 10);
@@ -66,7 +66,7 @@ describe('EdgeInsets', () => {
 
     });
 
-    test('#equals', () => {
+    test('equals', () => {
         const inset1 = new EdgeInsets(10, 15, 50, 10);
         const inset2 = new EdgeInsets(10, 15, 50, 10);
         const inset3 = new EdgeInsets(10, 15, 50, 11);
@@ -74,7 +74,7 @@ describe('EdgeInsets', () => {
         expect(inset2.equals(inset3)).toBeFalsy();
     });
 
-    test('#clone', () => {
+    test('clone', () => {
         const inset1 = new EdgeInsets(10, 15, 50, 10);
         const inset2 = inset1.clone();
         expect(inset2 === inset1).toBeFalsy();

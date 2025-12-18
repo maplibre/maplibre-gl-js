@@ -1,18 +1,15 @@
-import {type StyleLayer} from './style_layer';
 import {createStyleLayer} from './create_style_layer';
-
 import {featureFilter, groupByLayout} from '@maplibre/maplibre-gl-style-spec';
-
-import type {TypedStyleLayer} from './style_layer/typed_style_layer';
+import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
+import type {StyleLayer} from './style_layer';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type LayerConfigs = {[_: string]: LayerSpecification};
-export type Family<Layer extends TypedStyleLayer> = Array<Layer>;
 
 export class StyleLayerIndex {
     familiesBySource: {
         [source: string]: {
-            [sourceLayer: string]: Array<Family<any>>;
+            [sourceLayer: string]: Array<Array<StyleLayer>>;
         };
     };
     keyCache: {[source: string]: string};
@@ -20,25 +17,25 @@ export class StyleLayerIndex {
     _layerConfigs: LayerConfigs;
     _layers: {[_: string]: StyleLayer};
 
-    constructor(layerConfigs?: Array<LayerSpecification> | null) {
+    constructor(layerConfigs?: Array<LayerSpecification> | null, globalState?: Record<string, any>) {
         this.keyCache = {};
         if (layerConfigs) {
-            this.replace(layerConfigs);
+            this.replace(layerConfigs, globalState);
         }
     }
 
-    replace(layerConfigs: Array<LayerSpecification>) {
+    replace(layerConfigs: Array<LayerSpecification>, globalState?: Record<string, any>) {
         this._layerConfigs = {};
         this._layers = {};
-        this.update(layerConfigs, []);
+        this.update(layerConfigs, [], globalState);
     }
 
-    update(layerConfigs: Array<LayerSpecification>, removedIds: Array<string>) {
+    update(layerConfigs: Array<LayerSpecification>, removedIds: Array<string>, globalState?: Record<string, any>) {
         for (const layerConfig of layerConfigs) {
             this._layerConfigs[layerConfig.id] = layerConfig;
 
-            const layer = this._layers[layerConfig.id] = createStyleLayer(layerConfig);
-            layer._featureFilter = featureFilter(layer.filter);
+            const layer = this._layers[layerConfig.id] = createStyleLayer(layerConfig, globalState);
+            layer._featureFilter = featureFilter(layer.filter, globalState);
             if (this.keyCache[layerConfig.id])
                 delete this.keyCache[layerConfig.id];
         }
@@ -56,7 +53,7 @@ export class StyleLayerIndex {
             const layers = layerConfigs.map((layerConfig) => this._layers[layerConfig.id]);
 
             const layer = layers[0];
-            if (layer.visibility === 'none') {
+            if (layer.isHidden()) {
                 continue;
             }
 
@@ -66,7 +63,7 @@ export class StyleLayerIndex {
                 sourceGroup = this.familiesBySource[sourceId] = {};
             }
 
-            const sourceLayerId = layer.sourceLayer || '_geojsonTileLayer';
+            const sourceLayerId = layer.sourceLayer || GEOJSON_TILE_LAYER_NAME;
             let sourceLayerFamilies = sourceGroup[sourceLayerId];
             if (!sourceLayerFamilies) {
                 sourceLayerFamilies = sourceGroup[sourceLayerId] = [];

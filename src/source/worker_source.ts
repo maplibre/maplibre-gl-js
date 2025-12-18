@@ -2,7 +2,7 @@ import type {ExpiryData, RequestParameters} from '../util/ajax';
 import type {RGBAImage, AlphaImage} from '../util/image';
 import type {GlyphPositions} from '../render/glyph_atlas';
 import type {ImageAtlas} from '../render/image_atlas';
-import type {OverscaledTileID} from './tile_id';
+import type {CanonicalTileID, OverscaledTileID} from '../tile/tile_id';
 import type {Bucket} from '../data/bucket';
 import type {FeatureIndex} from '../data/feature_index';
 import type {CollisionBoxArray} from '../data/array_types.g';
@@ -14,6 +14,7 @@ import type {RemoveSourceParams} from '../util/actor_messages';
 import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import type {DashEntry} from '../render/line_atlas';
 
 /**
  * Parameters to identify a tile
@@ -39,7 +40,20 @@ export type WorkerTileParameters = TileParameters & {
     collectResourceTiming?: boolean;
     returnDependencies?: boolean;
     subdivisionGranularity: SubdivisionGranularitySetting;
-    globalState: Record<string, any>;
+    encoding?: string;
+    /**
+     * Provide this property when the requested tile has a higher canonical Z than source maxzoom.
+     * This allows the worker to know that it needs to overzoom from a source tile.
+     */
+    overzoomParameters?: OverzoomParameters;
+};
+
+/**
+ * Parameters needed in order to load a tile that is overzoomed from a source tile
+ */
+export type OverzoomParameters = {
+    maxZoomTileID: CanonicalTileID;
+    overzoomRequest: RequestParameters;
 };
 
 /**
@@ -60,10 +74,12 @@ export type WorkerDEMTileParameters = TileParameters & {
 export type WorkerTileResult = ExpiryData & {
     buckets: Array<Bucket>;
     imageAtlas: ImageAtlas;
+    dashPositions: Record<string, DashEntry>;
     glyphAtlasImage: AlphaImage;
     featureIndex: FeatureIndex;
     collisionBoxArray: CollisionBoxArray;
     rawTileData?: ArrayBuffer;
+    encoding?: string;
     resourceTiming?: Array<PerformanceResourceTiming>;
     // Only used for benchmarking:
     glyphMap?: {
@@ -87,7 +103,7 @@ export interface WorkerSourceConstructor {
 /**
  * `WorkerSource` should be implemented by custom source types to provide code that can be run on the WebWorkers.
  * Each of the methods has a relevant event that triggers it from the main thread with the relevant parameters.
- * @see {@link Map#addSourceType}
+ * @see {@link Map.addSourceType}
  */
 export interface WorkerSource {
     availableImages: Array<string>;
@@ -100,7 +116,7 @@ export interface WorkerSource {
     loadTile(params: WorkerTileParameters): Promise<WorkerTileResult>;
     /**
      * Re-parses a tile that has already been loaded.  Yields the same data as
-     * {@link WorkerSource#loadTile}.
+     * {@link WorkerSource.loadTile}.
      */
     reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult>;
     /**
