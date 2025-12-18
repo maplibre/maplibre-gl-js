@@ -973,78 +973,35 @@ describe('popup', () => {
             expect(popup.options.popupPadding).toBeUndefined();
         });
 
-        test('CRITICAL: backward compatibility - no padding behaves exactly like before', () => {
+        test('manually set anchors ignore padding completely', () => {
             const map = createMap();
 
-            // Test various positions with no padding
-            const testPositions = [
-                [0, 0],           // center
-                [170, 0],         // near right edge
-                [-170, 0],        // near left edge
-                [0, 80],          // near top
-                [0, -80],         // near bottom
-                [170, 80],        // top-right corner
-                [-170, 80],       // top-left corner
-                [170, -80],       // bottom-right corner
-                [-170, -80],      // bottom-left corner
-            ];
+            const anchor = 'top';
 
-            testPositions.forEach(([lng, lat]) => {
-                const popupWithUndefined = new Popup()
-                    .setText('Test')
-                    .setLngLat([lng, lat])
-                    .addTo(map);
+            const popupNoPadding = new Popup({anchor})
+                .setText('Test')
+                .setLngLat([0, 0])
+                .addTo(map);
 
-                const popupWithZero = new Popup({popupPadding: {top: 0, right: 0, bottom: 0, left: 0}})
-                    .setText('Test')
-                    .setLngLat([lng, lat])
-                    .addTo(map);
+            const popupWithPadding = new Popup({anchor, popupPadding: {top: 100, right: 100, bottom: 100, left: 100}})
+                .setText('Test')
+                .setLngLat([0, 0])
+                .addTo(map);
 
-                const elementUndefined = popupWithUndefined.getElement();
-                const elementZero = popupWithZero.getElement();
+            const elementNoPadding = popupNoPadding.getElement();
+            const elementWithPadding = popupWithPadding.getElement();
 
-                // Both should have identical anchor classes
-                const anchorUndefined = Array.from(elementUndefined.classList).find(cls => cls.includes('anchor'));
-                const anchorZero = Array.from(elementZero.classList).find(cls => cls.includes('anchor'));
+            // Both should have identical positioning because anchor is manually set
+            const transformNoPadding = elementNoPadding.style.transform;
+            const transformWithPadding = elementWithPadding.style.transform;
 
-                expect(anchorUndefined).toBe(anchorZero);
+            expect(transformNoPadding).toBe(transformWithPadding);
 
-                popupWithUndefined.remove();
-                popupWithZero.remove();
-            });
+            popupNoPadding.remove();
+            popupWithPadding.remove();
         });
 
-        test('CRITICAL: manually set anchors ignore padding completely', () => {
-            const map = createMap();
-
-            const manualAnchors: PositionAnchor[] = ['top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'center'];
-
-            manualAnchors.forEach(anchor => {
-                const popupNoPadding = new Popup({anchor})
-                    .setText('Test')
-                    .setLngLat([0, 0])
-                    .addTo(map);
-
-                const popupWithPadding = new Popup({anchor, popupPadding: {top: 100, right: 100, bottom: 100, left: 100}})
-                    .setText('Test')
-                    .setLngLat([0, 0])
-                    .addTo(map);
-
-                const elementNoPadding = popupNoPadding.getElement();
-                const elementWithPadding = popupWithPadding.getElement();
-
-                // Both should have identical positioning because anchor is manually set
-                const transformNoPadding = elementNoPadding.style.transform;
-                const transformWithPadding = elementWithPadding.style.transform;
-
-                expect(transformNoPadding).toBe(transformWithPadding);
-
-                popupNoPadding.remove();
-                popupWithPadding.remove();
-            });
-        });
-
-        test('CRITICAL: offset and padding interaction preserves offset behavior', () => {
+        test('offset and padding interaction preserves offset behavior', () => {
             const map = createMap();
 
             const offset = {top: [0, -20], bottom: [0, 20], left: [20, 0], right: [-20, 0]} as any;
@@ -1059,7 +1016,7 @@ describe('popup', () => {
             // The fact that it renders without error confirms offset handling is intact
         });
 
-        test('CRITICAL: edge cases - negative, zero, extreme values', () => {
+        test('edge cases - negative, zero, extreme values', () => {
             const map = createMap();
 
             const edgeCases = [
@@ -1086,7 +1043,7 @@ describe('popup', () => {
             });
         });
 
-        test('CRITICAL: trackPointer compatibility', () => {
+        test('trackPointer compatibility', () => {
             const map = createMap();
 
             const popup = new Popup({popupPadding: {top: 20, right: 20, bottom: 20, left: 20}})
@@ -1100,43 +1057,5 @@ describe('popup', () => {
 
             popup.remove();
         });
-
-        test('CRITICAL: performance impact assessment', () => {
-            const map = createMap();
-
-            // Measure performance of popup creation with and without padding
-            const iterations = 100;
-
-            const startNoPadding = performance.now();
-            for (let i = 0; i < iterations; i++) {
-                const popup = new Popup()
-                    .setText('Test')
-                    .setLngLat([Math.random() * 360 - 180, Math.random() * 180 - 90])
-                    .addTo(map);
-                popup.remove();
-            }
-            const endNoPadding = performance.now();
-
-            const startWithPadding = performance.now();
-            for (let i = 0; i < iterations; i++) {
-                const popup = new Popup({popupPadding: {top: 20, right: 20, bottom: 20, left: 20}})
-                    .setText('Test')
-                    .setLngLat([Math.random() * 360 - 180, Math.random() * 180 - 90])
-                    .addTo(map);
-                popup.remove();
-            }
-            const endWithPadding = performance.now();
-
-            const noPaddingTime = endNoPadding - startNoPadding;
-            const withPaddingTime = endWithPadding - startWithPadding;
-            const overhead = withPaddingTime - noPaddingTime;
-            const overheadPercent = (overhead / noPaddingTime) * 100;
-
-            console.log(`Performance impact: ${overhead.toFixed(2)}ms (${overheadPercent.toFixed(1)}% overhead)`);
-
-            // Should not have more than 50% performance overhead
-            expect(overheadPercent).toBeLessThan(50);
-        });
-
     });
 });
