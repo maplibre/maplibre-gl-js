@@ -21,7 +21,7 @@ const defaultOptions = {
     maxWidth: '240px',
     subpixelPositioning: false,
     locationOccludedOpacity: undefined,
-    popupPadding: undefined,
+    padding: undefined,
 };
 
 /**
