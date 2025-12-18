@@ -585,10 +585,9 @@ export class Popup extends Evented {
      * popup.setPopupPadding({ top: 10, right: 20, bottom: 30, left: 40 });
      * ```
      */
-    setPopupPadding(padding?: PaddingOptions): this {
+    setPopupPadding(padding?: PaddingOptions) {
         this.options.popupPadding = padding;
         this._update();
-        return this;
     }
 
     _createCloseButton() {
