@@ -908,7 +908,7 @@ describe('popup', () => {
                 .addTo(map);
 
             const updateSpy = vi.spyOn(popup, '_update');
-            popup.setPopupPadding({top: 15, bottom: 15, left: 15, right: 15});
+            popup.setPadding({top: 15, bottom: 15, left: 15, right: 15});
 
             expect(popup.options.popupPadding).toEqual({top: 15, bottom: 15, left: 15, right: 15});
             expect(updateSpy).toHaveBeenCalled();
@@ -954,7 +954,7 @@ describe('popup', () => {
                 .setLngLat([0, 0])
                 .addTo(map);
 
-            popup.setPopupPadding({top: 5, right: 10});
+            popup.setPadding({top: 5, right: 10});
             expect(popup.options.popupPadding).toEqual({top: 5, right: 10});
         });
 
@@ -965,11 +965,11 @@ describe('popup', () => {
                 .setLngLat([0, 0])
                 .addTo(map);
 
-            popup.setPopupPadding(null);
+            popup.setPadding(null);
             expect(popup.options.popupPadding).toBeNull();
 
-            popup.setPopupPadding({top: 20});
-            popup.setPopupPadding(undefined);
+            popup.setPadding({top: 20});
+            popup.setPadding(undefined);
             expect(popup.options.popupPadding).toBeUndefined();
         });
 

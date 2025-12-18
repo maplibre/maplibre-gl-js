@@ -582,10 +582,10 @@ export class Popup extends Evented {
      * @param padding - The padding to apply as a {@link PaddingOptions} object.
      * @example
      * ```ts
-     * popup.setPopupPadding({ top: 10, right: 20, bottom: 30, left: 40 });
+     * popup.setPadding({ top: 10, right: 20, bottom: 30, left: 40 });
      * ```
      */
-    setPopupPadding(padding?: PaddingOptions) {
+    setPadding(padding?: PaddingOptions) {
         this.options.popupPadding = padding;
         this._update();
     }
