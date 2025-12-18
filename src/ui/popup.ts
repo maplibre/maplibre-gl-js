@@ -103,7 +103,7 @@ export type PopupOptions = {
      * from the edges of the map container.
      * @defaultValue undefined
      */
-    popupPadding?: PaddingOptions;
+    padding?: PaddingOptions;
 };
 
 const focusQuerySelector = [
@@ -586,7 +586,7 @@ export class Popup extends Evented {
      * ```
      */
     setPadding(padding?: PaddingOptions) {
-        this.options.popupPadding = padding;
+        this.options.padding = padding;
         this._update();
     }
 
@@ -655,7 +655,7 @@ export class Popup extends Evented {
         if (!anchor) {
             const width = this._container.offsetWidth;
             const height = this._container.offsetHeight;
-            const padding = normalizePopupPadding(this.options.popupPadding);
+            const padding = normalizePopupPadding(this.options.padding);
             let anchorComponents;
 
             if (pos.y + offset.bottom.y < height + padding.top) {

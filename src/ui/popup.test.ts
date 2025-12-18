@@ -892,15 +892,15 @@ describe('popup', () => {
         test('accepts object padding value', () => {
             const map = createMap();
             const padding = {top: 10, right: 20, bottom: 30, left: 40};
-            const popup = new Popup({popupPadding: padding})
+            const popup = new Popup({padding: padding})
                 .setText('Test')
                 .setLngLat([0, 0])
                 .addTo(map);
 
-            expect(popup.options.popupPadding).toEqual(padding);
+            expect(popup.options.padding).toEqual(padding);
         });
 
-        test('setPopupPadding updates options and triggers update', () => {
+        test('setPadding updates options and triggers update', () => {
             const map = createMap();
             const popup = new Popup()
                 .setText('Test')
@@ -910,7 +910,7 @@ describe('popup', () => {
             const updateSpy = vi.spyOn(popup, '_update');
             popup.setPadding({top: 15, bottom: 15, left: 15, right: 15});
 
-            expect(popup.options.popupPadding).toEqual({top: 15, bottom: 15, left: 15, right: 15});
+            expect(popup.options.padding).toEqual({top: 15, bottom: 15, left: 15, right: 15});
             expect(updateSpy).toHaveBeenCalled();
         });
 
@@ -937,7 +937,7 @@ describe('popup', () => {
             // Position popup near the top-left corner to trigger anchor selection
             const nearCornerLngLat = map.unproject([50, 50]);
 
-            const popup = new Popup({popupPadding: {top: 50, right: 50, bottom: 50, left: 50}})
+            const popup = new Popup({padding: {top: 50, right: 50, bottom: 50, left: 50}})
                 .setText('Test popup with padding')
                 .setLngLat(nearCornerLngLat)
                 .addTo(map);
@@ -948,7 +948,7 @@ describe('popup', () => {
             expect(anchor).toBeDefined();
         });
 
-        test('setPopupPadding accepts partial object padding value', () => {
+        test('setPadding accepts partial object padding value', () => {
             const map = createMap();
             const popup = new Popup()
                 .setText('Test')
@@ -956,29 +956,29 @@ describe('popup', () => {
                 .addTo(map);
 
             popup.setPadding({top: 5, right: 10});
-            expect(popup.options.popupPadding).toEqual({top: 5, right: 10});
+            expect(popup.options.padding).toEqual({top: 5, right: 10});
         });
 
         test('setPadding accepts null to clear padding', () => {
             const map = createMap();
-            const popup = new Popup({popupPadding: {top: 20}})
+            const popup = new Popup({padding: {top: 20}})
                 .setText('Test')
                 .setLngLat([0, 0])
                 .addTo(map);
 
             popup.setPadding(null);
-            expect(popup.options.popupPadding).toBeNull();
+            expect(popup.options.padding).toBeNull();
         });
 
         test('setPadding accepts undefined to clear padding', () => {
             const map = createMap();
-            const popup = new Popup({popupPadding: {top: 20}})
+            const popup = new Popup({padding: {top: 20}})
                 .setText('Test')
                 .setLngLat([0, 0])
                 .addTo(map);
 
             popup.setPadding(undefined);
-            expect(popup.options.popupPadding).toBeUndefined();
+            expect(popup.options.padding).toBeUndefined();
         });
 
         test('manually set anchors ignore padding completely', () => {
@@ -991,7 +991,7 @@ describe('popup', () => {
                 .setLngLat([0, 0])
                 .addTo(map);
 
-            const popupWithPadding = new Popup({anchor, popupPadding: {top: 100, right: 100, bottom: 100, left: 100}})
+            const popupWithPadding = new Popup({anchor, padding: {top: 100, right: 100, bottom: 100, left: 100}})
                 .setText('Test')
                 .setLngLat([0, 0])
                 .addTo(map);
@@ -1015,7 +1015,7 @@ describe('popup', () => {
             const offset = {top: [0, -20], bottom: [0, 20], left: [20, 0], right: [-20, 0]} as any;
 
             // Test that offset is still applied correctly when padding is present
-            const popup = new Popup({offset, popupPadding: {top: 10, right: 10, bottom: 10, left: 10}})
+            const popup = new Popup({offset, padding: {top: 10, right: 10, bottom: 10, left: 10}})
                 .setText('Test with offset and padding')
                 .setLngLat([0, 0])
                 .addTo(map);
@@ -1036,7 +1036,7 @@ describe('popup', () => {
 
             edgeCases.forEach((padding, index) => {
                 try {
-                    const popup = new Popup({popupPadding: padding})
+                    const popup = new Popup({padding: padding})
                         .setText(`Edge case ${index}`)
                         .setLngLat([0, 0])
                         .addTo(map);
@@ -1054,7 +1054,7 @@ describe('popup', () => {
         test('trackPointer compatibility', () => {
             const map = createMap();
 
-            const popup = new Popup({popupPadding: {top: 20, right: 20, bottom: 20, left: 20}})
+            const popup = new Popup({padding: {top: 20, right: 20, bottom: 20, left: 20}})
                 .setText('Track pointer test')
                 .trackPointer()
                 .addTo(map);
