@@ -1014,7 +1014,6 @@ describe('popup', () => {
 
             const offset = {top: [0, -20], bottom: [0, 20], left: [20, 0], right: [-20, 0]} as any;
 
-            // Test that offset is still applied correctly when padding is present
             const popup = new Popup({offset, padding: {top: 10, right: 10, bottom: 10, left: 10}})
                 .setText('Test with offset and padding')
                 .setLngLat([0, 0])
