@@ -655,7 +655,7 @@ export class Popup extends Evented {
         if (!anchor) {
             const width = this._container.offsetWidth;
             const height = this._container.offsetHeight;
-            const padding = normalizePopupPadding(this.options.padding);
+            const padding = normalizePadding(this.options.padding);
             let anchorComponents;
 
             if (pos.y + offset.bottom.y < height + padding.top) {
@@ -754,7 +754,7 @@ function normalizeOffset(offset?: Offset | null) {
     }
 }
 
-function normalizePopupPadding(padding?: PaddingOptions | null): {top: number; right: number; bottom: number; left: number} {
+function normalizePadding(padding?: PaddingOptions | null): {top: number; right: number; bottom: number; left: number} {
     if (!padding) {
         return {top: 0, right: 0, bottom: 0, left: 0};
     }

@@ -888,7 +888,7 @@ describe('popup', () => {
         expect(popup.getElement().style.opacity).toBe('');
     });
 
-    describe('popupPadding', () => {
+    describe('padding', () => {
         test('accepts object padding value', () => {
             const map = createMap();
             const padding = {top: 10, right: 20, bottom: 30, left: 40};
