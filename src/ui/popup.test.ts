@@ -959,7 +959,7 @@ describe('popup', () => {
             expect(popup.options.popupPadding).toEqual({top: 5, right: 10});
         });
 
-        test('setPopupPadding accepts null/undefined to clear padding', () => {
+        test('setPadding accepts null to clear padding', () => {
             const map = createMap();
             const popup = new Popup({popupPadding: {top: 20}})
                 .setText('Test')
@@ -968,8 +968,15 @@ describe('popup', () => {
 
             popup.setPadding(null);
             expect(popup.options.popupPadding).toBeNull();
+        });
 
-            popup.setPadding({top: 20});
+        test('setPadding accepts undefined to clear padding', () => {
+            const map = createMap();
+            const popup = new Popup({popupPadding: {top: 20}})
+                .setText('Test')
+                .setLngLat([0, 0])
+                .addTo(map);
+
             popup.setPadding(undefined);
             expect(popup.options.popupPadding).toBeUndefined();
         });
