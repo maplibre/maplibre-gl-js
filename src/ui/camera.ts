@@ -528,7 +528,7 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomIn(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this.getZoom() + 1, options, eventData);
+        this.zoomTo(Math.round(this.getZoom()) + 1, options, eventData);
         return this;
     }
 
@@ -546,7 +546,7 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomOut(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this.getZoom() - 1, options, eventData);
+        this.zoomTo(Math.round(this.getZoom()) - 1, options, eventData);
         return this;
     }
 
