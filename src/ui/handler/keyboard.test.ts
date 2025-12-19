@@ -233,4 +233,40 @@ describe('keyboard', () => {
         expect(spy.mock.calls[3][0].zoom).toBe(8);
 
     });
+
+    test('KeyboardHandler rounds fractional zoom before incrementing', () => {
+        // This verifies the rounding behavior that zoom buttons should match
+        const testZoom = 14.6;
+        const map = createMap({zoom: testZoom, center: [0, 0]});
+        const spy = vi.spyOn(map, 'easeTo');
+
+        // Zoom in: Math.round(14.6) + 1 = 15 + 1 = 16
+        simulate.keydown(map.getCanvas(), {keyCode: 187, key: 'Equal'});
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls[0][0].zoom).toBe(16);
+
+        // Zoom out: Math.round(14.6) - 1 = 15 - 1 = 14
+        map.setZoom(testZoom);
+        simulate.keydown(map.getCanvas(), {keyCode: 189, key: 'Minus'});
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy.mock.calls[1][0].zoom).toBe(14);
+
+        // Also test a value that rounds down: 14.4
+        map.setZoom(14.4);
+        simulate.keydown(map.getCanvas(), {keyCode: 187, key: 'Equal'});
+        expect(spy).toHaveBeenCalledTimes(3);
+        expect(spy.mock.calls[2][0].zoom).toBe(15);  // Math.round(14.4) + 1 = 14 + 1 = 15
+
+        // Shift + zoom in: Math.round(14.6) + 2 = 15 + 2 = 17
+        map.setZoom(testZoom);
+        simulate.keydown(map.getCanvas(), {keyCode: 187, key: 'Equal', shiftKey: true});
+        expect(spy).toHaveBeenCalledTimes(4);
+        expect(spy.mock.calls[3][0].zoom).toBe(17);
+
+        // Shift + zoom out: Math.round(14.6) - 2 = 15 - 2 = 13
+        map.setZoom(testZoom);
+        simulate.keydown(map.getCanvas(), {keyCode: 189, key: 'Minus', shiftKey: true});
+        expect(spy).toHaveBeenCalledTimes(5);
+        expect(spy.mock.calls[4][0].zoom).toBe(13);
+    });
 });
