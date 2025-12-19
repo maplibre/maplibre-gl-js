@@ -236,4 +236,28 @@ describe('NavigationControl', () => {
         expect(spySetPitch).toHaveBeenCalled();
         expect(spySetBearing).toHaveBeenCalled();
     });
+
+    test('zoom buttons round fractional zoom like keyboard shortcuts', () => {
+        // Keyboard shortcuts round zoom before incrementing
+        // See keyboard.test.ts for matching test of keyboard shortcuts
+        const testZoom = 14.6;
+        const expectedZoomIn = Math.round(testZoom) + 1;   // 15 + 1 = 16
+        const expectedZoomOut = Math.round(testZoom) - 1;  // 15 - 1 = 14
+
+        map.addControl(new NavigationControl());
+        const zoomToSpy = vi.spyOn(map, 'zoomTo');
+
+        // Test zoom in button
+        map.setZoom(testZoom);
+        const zoomInButton = map.getContainer().querySelector('.maplibregl-ctrl-zoom-in');
+        simulate.click(zoomInButton);
+        expect(zoomToSpy.mock.calls[0][0]).toBe(expectedZoomIn);
+
+        // Test zoom out button
+        zoomToSpy.mockClear();
+        map.setZoom(testZoom);
+        const zoomOutButton = map.getContainer().querySelector('.maplibregl-ctrl-zoom-out');
+        simulate.click(zoomOutButton);
+        expect(zoomToSpy.mock.calls[0][0]).toBe(expectedZoomOut);
+    });
 });
