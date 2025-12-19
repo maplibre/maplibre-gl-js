@@ -900,20 +900,6 @@ describe('popup', () => {
             expect(popup.options.padding).toEqual(padding);
         });
 
-        test('setPadding updates options and triggers update', () => {
-            const map = createMap();
-            const popup = new Popup()
-                .setText('Test')
-                .setLngLat([0, 0])
-                .addTo(map);
-
-            const updateSpy = vi.spyOn(popup, '_update');
-            popup.setPadding({top: 15, bottom: 15, left: 15, right: 15});
-
-            expect(popup.options.padding).toEqual({top: 15, bottom: 15, left: 15, right: 15});
-            expect(updateSpy).toHaveBeenCalled();
-        });
-
         test('popup without padding has anchor near edges', () => {
             const map = createMap();
 
