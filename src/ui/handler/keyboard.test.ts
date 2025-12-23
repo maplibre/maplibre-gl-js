@@ -234,10 +234,10 @@ describe('keyboard', () => {
 
     });
 
-    test('KeyboardHandler rounds fractional zoom before incrementing', () => {
+    test('KeyboardHandler rounds fractional zoom before incrementing when legacyZoom is false', () => {
         // This verifies the rounding behavior that matches the zoom button control
         let testZoom = 14.6;
-        const map = createMap({zoom: testZoom, center: [0, 0]});
+        const map = createMap({zoom: testZoom, center: [0, 0], legacyZoom: false});
         const spy = vi.spyOn(map, 'easeTo');
 
         // Zoom in: 14.6 rounds to 16
@@ -275,5 +275,13 @@ describe('keyboard', () => {
         simulate.keydown(map.getCanvas(), {keyCode: 189, key: 'Minus', shiftKey: true});
         expect(spy).toHaveBeenCalledTimes(6);
         expect(spy.mock.calls[5][0].zoom).toBe(12);
+    });
+
+    test('KeyboardHandler uses standard rounding when legacyZoom is true (default)', () => {
+        const map = createMap({zoom: 14.5, center: [0, 0]}); // legacyZoom defaults to true
+        const spy = vi.spyOn(map, 'easeTo');
+
+        simulate.keydown(map.getCanvas(), {keyCode: 187, key: 'Equal'});
+        expect(spy.mock.calls[0][0].zoom).toBe(16); // Math.round(14.5) + 1 = 15 + 1 = 16
     });
 });
