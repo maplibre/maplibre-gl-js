@@ -238,11 +238,11 @@ describe('NavigationControl', () => {
     });
 
     test('zoom buttons round fractional zoom like keyboard shortcuts', () => {
-        // Keyboard shortcuts round zoom before incrementing
+        // Keyboard shortcuts round zoom before incrementing with a 0.6 threshold
         // See keyboard.test.ts for matching test of keyboard shortcuts
-        const testZoom = 14.6;
-        const expectedZoomIn = Math.round(testZoom) + 1;   // 15 + 1 = 16
-        const expectedZoomOut = Math.round(testZoom) - 1;  // 15 - 1 = 14
+        const testZoom = 14.5;
+        const expectedZoomIn = 15;
+        const expectedZoomOut = 13;
 
         map.addControl(new NavigationControl());
         const zoomToSpy = vi.spyOn(map, 'zoomTo');
