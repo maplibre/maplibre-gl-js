@@ -20,9 +20,7 @@ const defaultOptions = {
  *
  * If `MapOptions.legacyZoom` is `false`, the zoom level is rounded using a threshold
  * before incrementing/decrementing, aligning it with the zoom control UI buttons.
-*
- * the zoom level is rounded using a threshold
- * before incrementing/decrementing, aligning it with the zoom buttons.
+ *
  * - Arrow keys: Pan by 100 pixels.
  * - `Shift+⇢`: Increase the rotation by 15 degrees.
  * - `Shift+⇠`: Decrease the rotation by 15 degrees.
