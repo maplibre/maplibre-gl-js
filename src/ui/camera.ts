@@ -517,7 +517,10 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Incrementally increases the map's zoom level to the nearest integer, adds 1 if the increment is <= 0.6.
+     * Increases the map's zoom level by 1.
+     *
+     * If {@link MapOptions.legacyZoom} is `false`, the zoom level is first rounded to the nearest integer
+     * before incrementing, with a threshold of 0.6 (i.e. it rounds up only if the fractional part is \> 0.6).
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
@@ -530,12 +533,18 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomIn(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(Math.round(this.getZoom() - 0.1) + 1, options, eventData);
+        const zoom = this._legacyZoom ?
+            this.getZoom() + 1 :
+            Math.round(this.getZoom() - 0.1) + 1;
+        this.zoomTo(zoom, options, eventData);
         return this;
     }
 
     /**
-     * Incrementally decreases the map's zoom level to the nearest integer, subtracts 1 if the increment is < 0.6.
+     * Decreases the map's zoom level by 1.
+     *
+     * If {@link MapOptions.legacyZoom} is `false`, the zoom level is first rounded to the nearest integer
+     * before decrementing, with a threshold of 0.6 (i.e. it rounds down if the fractional part is \< 0.6).
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
@@ -548,7 +557,10 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomOut(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(Math.round(this.getZoom() - 0.1) - 1, options, eventData);
+        const zoom = this._legacyZoom ?
+            this.getZoom() - 1 :
+            Math.round(this.getZoom() - 0.1) - 1;
+        this.zoomTo(zoom, options, eventData);
         return this;
     }
 
