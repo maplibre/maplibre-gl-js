@@ -265,6 +265,7 @@ export abstract class Camera extends Evented {
     _pitching: boolean;
     _rolling: boolean;
     _padding: boolean;
+    _legacyZoom: boolean;
 
     _bearingSnap: number;
     _easeStart: number;
@@ -330,6 +331,7 @@ export abstract class Camera extends Evented {
         super();
         this._moving = false;
         this._zooming = false;
+        this._legacyZoom = true;
         this.transform = transform;
         this._bearingSnap = options.bearingSnap;
         this.cameraHelper = cameraHelper;

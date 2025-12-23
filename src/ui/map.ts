@@ -153,6 +153,13 @@ export type MapOptions = {
      */
     maxZoom?: number | null;
     /**
+     * If `false`, zoom buttons and keyboard shortcuts align using threshold-based
+     * rounding. If `true` (default), preserves original behavior where buttons
+     * don't round and keyboard uses standard rounding.
+     * @defaultValue true
+     */
+    legacyZoom?: boolean;
+    /**
      * The minimum pitch of the map (0-180).
      * @defaultValue 0
      */
@@ -378,7 +385,7 @@ export type MapOptions = {
     /**
      * Allows overzooming by splitting vector tiles after max zoom.
      * Defines the number of zoom level that will overscale from map's max zoom and below.
-     * For example if the map's max zoom is 20 and this is set to 3, the zoom levels of 20, 19 and 18 will be overscaled 
+     * For example if the map's max zoom is 20 and this is set to 3, the zoom levels of 20, 19 and 18 will be overscaled
      * and the rest will be split.
      * When undefined, all zoom levels after source's max zoom will be overscaled.
      * This can help in reducing the size of the overscaling and improve performance in high zoom levels.
@@ -439,6 +446,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     scrollZoom: true,
     minZoom: defaultMinZoom,
     maxZoom: defaultMaxZoom,
+    legacyZoom: true,
     minPitch: defaultMinPitch,
     maxPitch: defaultMaxPitch,
 
@@ -561,6 +569,7 @@ export class Map extends Camera {
     _clickTolerance: number;
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
+    _legacyZoom: boolean;
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
     /** @internal */
     _zoomLevelsToOverscale: number | undefined;
@@ -713,6 +722,7 @@ export class Map extends Camera {
         this._clickTolerance = resolvedOptions.clickTolerance;
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
+        this._legacyZoom = resolvedOptions.legacyZoom;
         this._zoomLevelsToOverscale = resolvedOptions.experimentalZoomLevelsToOverscale;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.transformConstrain = resolvedOptions.transformConstrain;
