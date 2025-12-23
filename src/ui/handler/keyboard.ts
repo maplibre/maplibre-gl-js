@@ -12,10 +12,17 @@ const defaultOptions = {
  * The `KeyboardHandler` allows the user to zoom, rotate, and pan the map using
  * the following keyboard shortcuts:
  *
- * - `=` / `+`: Incrementally increases the zoom level to the nearest integer, adds 1 if the increment is <= 0.6.
- * - `Shift-=` / `Shift-+`: Incrementally increases the zoom level to the nearest integer, adds 2 if the increment is <= 0.6.
- * - `-`: Incrementally decreases the zoom level to the nearest integer, subtracts 1 if the increment is < 0.6.
- * - `Shift--`: Incrementally decreases the zoom level to the nearest integer, subtracts 2 if the increment is < 0.6.
+ * If `MapOptions.legacyZoom` is `true`:
+ * - `=` / `+`: Rounds the zoom level to the nearest integer and increases it by 1.
+ * - `Shift-=` / `Shift-+`: Rounds the zoom level to the nearest integer and increases it by 2.
+ * - `-`: Rounds the zoom level to the nearest integer and decreases it by 1.
+ * - `Shift--`: Rounds the zoom level to the nearest integer and decreases it by 2.
+ *
+ * If `MapOptions.legacyZoom` is `false`, the zoom level is rounded using a threshold
+ * before incrementing/decrementing, aligning it with the zoom control UI buttons.
+*
+ * the zoom level is rounded using a threshold
+ * before incrementing/decrementing, aligning it with the zoom buttons.
  * - Arrow keys: Pan by 100 pixels.
  * - `Shift+⇢`: Increase the rotation by 15 degrees.
  * - `Shift+⇠`: Decrease the rotation by 15 degrees.
@@ -123,7 +130,11 @@ export class KeyboardHandler implements Handler {
                     easeId: 'keyboardHandler',
                     easing: easeOut,
 
-                    zoom: zoomDir ? Math.round(tr.zoom - 0.1) + zoomDir * (e.shiftKey ? 2 : 1) : tr.zoom,
+                    zoom: zoomDir ? (
+                        map._legacyZoom
+                            ? Math.round(tr.zoom) + zoomDir * (e.shiftKey ? 2 : 1)
+                            : Math.round(tr.zoom - 0.1) + zoomDir * (e.shiftKey ? 2 : 1)
+                    ) : tr.zoom,
                     bearing: tr.bearing + bearingDir * this._bearingStep,
                     pitch: tr.pitch + pitchDir * this._pitchStep,
                     offset: [-xDir * this._panStep, -yDir * this._panStep],
