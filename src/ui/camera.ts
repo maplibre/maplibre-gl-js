@@ -515,7 +515,7 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Increases the map's zoom level by 1.
+     * Rounds to the nearest integer and then increases the map's zoom level by 1.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
@@ -533,7 +533,7 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Decreases the map's zoom level by 1.
+     * Rounds to the nearest integer and then decreases the map's zoom level by 1.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *

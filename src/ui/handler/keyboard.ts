@@ -12,10 +12,10 @@ const defaultOptions = {
  * The `KeyboardHandler` allows the user to zoom, rotate, and pan the map using
  * the following keyboard shortcuts:
  *
- * - `=` / `+`: Increase the zoom level by 1.
- * - `Shift-=` / `Shift-+`: Increase the zoom level by 2.
- * - `-`: Decrease the zoom level by 1.
- * - `Shift--`: Decrease the zoom level by 2.
+ * - `=` / `+`: Round to the nearest integer and then increase the zoom level by 1.
+ * - `Shift-=` / `Shift-+`: Round to the nearest integer and then increase the zoom level by 2.
+ * - `-`: Round to the nearest integer and then decrease the zoom level by 1.
+ * - `Shift--`: Round to the nearest integer and then decrease the zoom level by 2.
  * - Arrow keys: Pan by 100 pixels.
  * - `Shift+⇢`: Increase the rotation by 15 degrees.
  * - `Shift+⇠`: Decrease the rotation by 15 degrees.
