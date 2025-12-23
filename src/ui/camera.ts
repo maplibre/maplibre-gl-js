@@ -515,7 +515,7 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Increases the map's zoom level by 1.
+     * Incrementally increases the map's zoom level to the nearest integer, adds 1 if the increment is <= 0.6.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
@@ -528,12 +528,12 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomIn(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this.getZoom() + 1, options, eventData);
+        this.zoomTo(Math.round(this.getZoom() - 0.1) + 1, options, eventData);
         return this;
     }
 
     /**
-     * Decreases the map's zoom level by 1.
+     * Incrementally decreases the map's zoom level to the nearest integer, subtracts 1 if the increment is < 0.6.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
@@ -546,7 +546,7 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomOut(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this.getZoom() - 1, options, eventData);
+        this.zoomTo(Math.round(this.getZoom() - 0.1) - 1, options, eventData);
         return this;
     }
 
