@@ -33,7 +33,9 @@
       "types": [
         "node"
       ]
-    }
+    },
+    "logError": true,
+    "pretty": true
   },
   "include": [
     "rollup.config.*",

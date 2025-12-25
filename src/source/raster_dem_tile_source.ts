@@ -4,7 +4,7 @@ import {extend, isImageBitmap, readImageUsingVideoFrame} from '../util/util';
 import {type Evented} from '../util/evented';
 import {browser} from '../util/browser';
 import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported';
-import {OverscaledTileID} from './tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 import {RasterTileSource} from './raster_tile_source';
 // ensure DEMData is registered for worker transfer on main thread:
 import '../data/dem_data';
@@ -12,7 +12,7 @@ import type {DEMEncoding} from '../data/dem_data';
 
 import type {Source} from './source';
 import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from './tile';
+import type {Tile} from '../tile/tile';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted';
 import {RGBAImage} from '../util/image';
@@ -117,7 +117,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         return browser.getImageData(img, 1);
     }
 
-    _getNeighboringTiles(tileID: OverscaledTileID) {
+    _getNeighboringTiles(tileID: OverscaledTileID): Record<string, {backfilled: boolean}> {
         const canonical = tileID.canonical;
         const dim = Math.pow(2, canonical.z);
 
@@ -126,7 +126,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         const nx = (canonical.x + 1 + dim) % dim;
         const nxw = canonical.x + 1 === dim ? tileID.wrap + 1 : tileID.wrap;
 
-        const neighboringTiles = {};
+        const neighboringTiles: Record<string, {backfilled: boolean}> = {};
         // add adjacent tiles
         neighboringTiles[new OverscaledTileID(tileID.overscaledZ, pxw, canonical.z, px, canonical.y).key] = {backfilled: false};
         neighboringTiles[new OverscaledTileID(tileID.overscaledZ, nxw, canonical.z, nx, canonical.y).key] = {backfilled: false};

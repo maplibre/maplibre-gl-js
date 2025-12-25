@@ -11,7 +11,7 @@ import type {Painter} from '../painter';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {Context} from '../../gl/context';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
-import type {Tile} from '../../source/tile';
+import type {Tile} from '../../tile/tile';
 
 export type FillUniformsType = {
     'u_fill_translate': Uniform2f;

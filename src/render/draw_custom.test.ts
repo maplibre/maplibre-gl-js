@@ -1,7 +1,7 @@
 import {describe, test, expect, vi, type Mock} from 'vitest';
-import {OverscaledTileID} from '../source/tile_id';
-import {SourceCache} from '../source/source_cache';
-import {Tile} from '../source/tile';
+import {OverscaledTileID} from '../tile/tile_id';
+import {TileManager} from '../tile/tile_manager';
+import {Tile} from '../tile/tile';
 import {Painter, type RenderOptions} from './painter';
 import type {Map} from '../ui/map';
 import {drawCustom} from './draw_custom';
@@ -11,8 +11,8 @@ import {MercatorProjection} from '../geo/projection/mercator_projection';
 
 vi.mock('./painter');
 vi.mock('./program');
-vi.mock('../source/source_cache');
-vi.mock('../source/tile');
+vi.mock('../tile/tile_manager');
+vi.mock('../tile/tile');
 vi.mock('../data/bucket/symbol_bucket', () => {
     return {
         SymbolBucket: vi.fn()
@@ -23,7 +23,7 @@ vi.mock('../symbol/projection');
 describe('drawCustom', () => {
     test('should return custom render method inputs', () => {
         // same transform setup as in transform.test.ts 'creates a transform', so matrices of transform should be the same
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(500, 500);
         transform.setMinPitch(10);
         transform.setMaxPitch(10);
@@ -50,9 +50,9 @@ describe('drawCustom', () => {
         tile.imageAtlasTexture = {
             bind: () => { }
         } as any;
-        const sourceCacheMock = new SourceCache(null, null, null);
-        (sourceCacheMock.getTile as Mock).mockReturnValue(tile);
-        sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
+        const tileManagerMock = new TileManager(null, null, null);
+        (tileManagerMock.getTile as Mock).mockReturnValue(tile);
+        tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
         let result;
         const mockLayer = new CustomStyleLayer({
@@ -64,9 +64,9 @@ describe('drawCustom', () => {
                     args
                 };
             },
-        });
+        }, {});
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
-        drawCustom(mockPainter, sourceCacheMock, mockLayer, renderOptions);
+        drawCustom(mockPainter, tileManagerMock, mockLayer, renderOptions);
         expect(result.gl).toBeDefined();
         expect(result.args.farZ).toBeCloseTo(804.8028169246645, 6);
         expect(result.args.farZ).toBe(mockPainter.transform.farZ);

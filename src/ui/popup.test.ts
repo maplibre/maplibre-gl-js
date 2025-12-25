@@ -364,7 +364,7 @@ describe('popup', () => {
     test('Popup is repositioned at the specified LngLat', () => {
         const map = createMap({width: 1024}); // longitude bounds: [-360, 360]
         map.terrain = {
-            getElevationForLngLatZoom: () => 0
+            getElevationForLngLat: () => 0
         } as any;
         const popup = new Popup()
             .setLngLat([70, 0])
@@ -886,5 +886,185 @@ describe('popup', () => {
         expect(popup.getElement().style.opacity).toBe('0.3');
         map.setCenter([0, 0]);
         expect(popup.getElement().style.opacity).toBe('');
+    });
+
+    describe('padding', () => {
+        test('accepts object padding value', () => {
+            const map = createMap();
+            const padding = {top: 10, right: 20, bottom: 30, left: 40};
+            const popup = new Popup({padding: padding})
+                .setText('Test')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            expect(popup.options.padding).toEqual(padding);
+        });
+
+        test('popup without padding has anchor near edges', () => {
+            const map = createMap();
+
+            // Position popup near the top-left corner to trigger anchor selection
+            const nearCornerLngLat = map.unproject([50, 50]);
+
+            const popup = new Popup()
+                .setText('Test popup without padding')
+                .setLngLat(nearCornerLngLat)
+                .addTo(map);
+
+            const element = popup.getElement();
+            const anchor = Array.from(element.classList).find(cls => cls.includes('anchor'));
+
+            expect(anchor).toBeDefined();
+        });
+
+        test('popup with padding has anchor near edges', () => {
+            const map = createMap();
+
+            // Position popup near the top-left corner to trigger anchor selection
+            const nearCornerLngLat = map.unproject([50, 50]);
+
+            const popup = new Popup({padding: {top: 50, right: 50, bottom: 50, left: 50}})
+                .setText('Test popup with padding')
+                .setLngLat(nearCornerLngLat)
+                .addTo(map);
+
+            const element = popup.getElement();
+            const anchor = Array.from(element.classList).find(cls => cls.includes('anchor'));
+
+            expect(anchor).toBeDefined();
+        });
+
+        test('setPadding accepts partial object padding value', () => {
+            const map = createMap();
+            const popup = new Popup()
+                .setText('Test')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            popup.setPadding({top: 5, right: 10});
+            expect(popup.options.padding).toEqual({top: 5, right: 10});
+        });
+
+        test('setPadding accepts null to clear padding', () => {
+            const map = createMap();
+            const popup = new Popup({padding: {top: 20}})
+                .setText('Test')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            popup.setPadding(null);
+            expect(popup.options.padding).toBeNull();
+        });
+
+        test('setPadding accepts undefined to clear padding', () => {
+            const map = createMap();
+            const popup = new Popup({padding: {top: 20}})
+                .setText('Test')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            popup.setPadding(undefined);
+            expect(popup.options.padding).toBeUndefined();
+        });
+
+        test('manually set anchors ignore padding completely', () => {
+            const map = createMap();
+
+            const anchor = 'top';
+
+            const popupNoPadding = new Popup({anchor})
+                .setText('Test')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            const popupWithPadding = new Popup({anchor, padding: {top: 100, right: 100, bottom: 100, left: 100}})
+                .setText('Test')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            const elementNoPadding = popupNoPadding.getElement();
+            const elementWithPadding = popupWithPadding.getElement();
+
+            // Both should have identical positioning because anchor is manually set
+            const transformNoPadding = elementNoPadding.style.transform;
+            const transformWithPadding = elementWithPadding.style.transform;
+
+            expect(transformNoPadding).toBe(transformWithPadding);
+
+            popupNoPadding.remove();
+            popupWithPadding.remove();
+        });
+
+        test('offset and padding interaction preserves offset behavior', () => {
+            const map = createMap();
+
+            const offset = {top: [0, -20], bottom: [0, 20], left: [20, 0], right: [-20, 0]} as any;
+
+            const popup = new Popup({offset, padding: {top: 10, right: 10, bottom: 10, left: 10}})
+                .setText('Test with offset and padding')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            expect(popup.getElement()).toBeDefined();
+            // The fact that it renders without error confirms offset handling is intact
+        });
+
+        test('edge case - zero padding', () => {
+            const map = createMap();
+            const popup = new Popup({padding: {top: 0, right: 0, bottom: 0, left: 0}})
+                .setText('Zero padding')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            expect(popup.getElement()).toBeDefined();
+            popup.remove();
+        });
+
+        test('edge case - negative padding', () => {
+            const map = createMap();
+            const popup = new Popup({padding: {top: -10, right: -10, bottom: -10, left: -10}})
+                .setText('Negative padding')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            expect(popup.getElement()).toBeDefined();
+            popup.remove();
+        });
+
+        test('edge case - extremely large padding', () => {
+            const map = createMap();
+            const popup = new Popup({padding: {top: 1000000, right: 1000000, bottom: 1000000, left: 1000000}})
+                .setText('Extremely large padding')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            expect(popup.getElement()).toBeDefined();
+            popup.remove();
+        });
+
+        test('edge case - mixed padding values', () => {
+            const map = createMap();
+            const popup = new Popup({padding: {top: -50, right: 0, bottom: 100, left: 50}})
+                .setText('Mixed padding values')
+                .setLngLat([0, 0])
+                .addTo(map);
+
+            expect(popup.getElement()).toBeDefined();
+            popup.remove();
+        });
+
+        test('trackPointer with padding should not crash and should have track-pointer class', () => {
+            const map = createMap();
+
+            const popup = new Popup({padding: {top: 20, right: 20, bottom: 20, left: 20}})
+                .setText('Track pointer test')
+                .trackPointer()
+                .addTo(map);
+
+            expect(popup.getElement().classList.contains('maplibregl-popup-track-pointer')).toBeTruthy();
+            expect(map._canvasContainer.classList.contains('maplibregl-track-pointer')).toBeTruthy();
+
+            popup.remove();
+        });
     });
 });

@@ -17,8 +17,7 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://tiles.openfreemap.org/styles/bright',
         zoom: 13,
         center: [-122.447303, 37.753574]
     });
@@ -30,7 +29,7 @@
                 'https://api.maptiler.com/tiles/contours/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
         });
         map.addLayer({
-            'id': 'terrain-data',
+            'id': 'contour-lines',
             'type': 'line',
             'source': 'contours',
             'source-layer': 'contour',
@@ -41,6 +40,21 @@
             'paint': {
                 'line-color': '#ff69b4',
                 'line-width': 1
+            }
+        });
+
+        map.addLayer({
+            'id': 'contour-labels',
+            'type': 'symbol',
+            'source': 'contours',
+            'source-layer': 'contour',
+            "layout": {
+              "text-field": "{height}",
+              "symbol-placement": "line",
+              "text-font": ["Noto Sans Regular"],
+            },
+            'paint': {
+                'text-color': '#ff69b4',
             }
         });
     });

@@ -1,10 +1,10 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {Map, type MapOptions} from '../map';
 import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
-import {Tile} from '../../source/tile';
-import {OverscaledTileID} from '../../source/tile_id';
+import {Tile} from '../../tile/tile';
+import {OverscaledTileID} from '../../tile/tile_id';
 import {fixedLngLat} from '../../../test/unit/lib/fixed';
-import {type RequestTransformFunction} from '../../util/request_manager';
+import {type RequestTransformFunction, ResourceType} from '../../util/request_manager';
 import {type MapSourceDataEvent} from '../events';
 import {MessageType} from '../../util/actor_messages';
 
@@ -69,6 +69,16 @@ describe('Map', () => {
             map.setTransformRequest(transformRequest);
             map.setTransformRequest(transformRequest);
         });
+
+        test('removes function when called with null', () => {
+            const map = createMap();
+
+            const transformRequest = vi.fn();
+            map.setTransformRequest(transformRequest);
+            map.setTransformRequest(null);
+            map._requestManager.transformRequest('', ResourceType.Unknown);
+            expect(transformRequest).not.toHaveBeenCalled();
+        });
     });
 
     describe('is_Loaded', () => {
@@ -117,7 +127,7 @@ describe('Map', () => {
 
             expect(map.isStyleLoaded()).toBe(false);
             await map.once('load');
-            expect(map.isStyleLoaded()).toBe(true);  
+            expect(map.isStyleLoaded()).toBe(true);
         });
 
         test('Map.areTilesLoaded', async () => {
@@ -127,10 +137,10 @@ describe('Map', () => {
             await map.once('load');
             const fakeTileId = new OverscaledTileID(0, 0, 0, 0, 0);
             map.addSource('geojson', createStyleSource());
-            map.style.sourceCaches.geojson._tiles[fakeTileId.key] = new Tile(fakeTileId, undefined);
+            map.style.tileManagers.geojson._inViewTiles.setTile(fakeTileId.key, new Tile(fakeTileId, undefined));
             expect(map.areTilesLoaded()).toBe(false);
-            map.style.sourceCaches.geojson._tiles[fakeTileId.key].state = 'loaded';
-            expect(map.areTilesLoaded()).toBe(true);  
+            map.style.tileManagers.geojson._inViewTiles.getTileById(fakeTileId.key).state = 'loaded';
+            expect(map.areTilesLoaded()).toBe(true);
         });
     });
 

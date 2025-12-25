@@ -1,7 +1,7 @@
-import {type CoveringTilesOptions} from '../../geo/projection/covering_tiles';
+import {type CoveringTilesOptionsInternal} from '../../geo/projection/covering_tiles';
 import {type IBoundingVolume} from './bounding_volume';
 
-type BoundingVolumeFactory<T extends IBoundingVolume> = (tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions) => T;
+type BoundingVolumeFactory<T extends IBoundingVolume> = (tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal) => T;
 
 export class BoundingVolumeCache<T extends IBoundingVolume> {
     private _cachePrevious: Map<string, T> = new Map();
@@ -33,7 +33,7 @@ export class BoundingVolumeCache<T extends IBoundingVolume> {
      * Returns the bounding volume of the specified tile, fetching it from cache or creating it using the factory function if needed.
      * @param tileID - Tile x, y and z for zoom.
      */
-    getTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptions): T {
+    getTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal): T {
         const key = `${tileID.z}_${tileID.x}_${tileID.y}_${options?.terrain ? 't' : ''}`;
         const cached = this._cache.get(key);
         if (cached) {

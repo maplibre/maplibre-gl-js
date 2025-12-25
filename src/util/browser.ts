@@ -1,22 +1,13 @@
-import {createAbortError} from './abort_error';
+import {AbortError} from './abort_error';
 import {subscribe} from './util';
-
-const now = typeof performance !== 'undefined' && performance && performance.now ?
-    performance.now.bind(performance) :
-    Date.now.bind(Date);
 
 let linkEl;
 
 let reducedMotionQuery: MediaQueryList;
+let reducedMotionOverride: boolean | undefined;
 
 /** */
 export const browser = {
-    /**
-     * Provides a function that outputs milliseconds: either performance.now()
-     * or a fallback to Date.now()
-     */
-    now,
-
     frame(abortController: AbortController, fn: (paintStartTimestamp: number) => void, reject: (error: Error) => void): void {
         const frameId = requestAnimationFrame((paintStartTimestamp)=>{
             unsubscribe();
@@ -26,7 +17,7 @@ export const browser = {
         const {unsubscribe} = subscribe(abortController.signal, 'abort', () => {
             unsubscribe();
             cancelAnimationFrame(frameId);
-            reject(createAbortError());
+            reject(new AbortError(abortController.signal.reason));
         }, false);
     },
 
@@ -62,6 +53,7 @@ export const browser = {
     hardwareConcurrency: typeof navigator !== 'undefined' && navigator.hardwareConcurrency || 4,
 
     get prefersReducedMotion(): boolean {
+        if (reducedMotionOverride !== undefined) return reducedMotionOverride;
         // In case your test crashes when checking matchMedia, call setMatchMedia from 'src/util/test/util'
         if (!matchMedia) return false;
         //Lazily initialize media query
@@ -70,4 +62,8 @@ export const browser = {
         }
         return reducedMotionQuery.matches;
     },
+
+    set prefersReducedMotion(value: boolean) {
+        reducedMotionOverride = value;
+    }
 };

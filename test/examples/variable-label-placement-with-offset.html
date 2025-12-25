@@ -101,7 +101,7 @@
 
     const map = new maplibregl.Map({
         container: 'map',
-        style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://tiles.openfreemap.org/styles/bright',
         center: [-77.04, 38.907],
         zoom: 11.15
     });
@@ -119,9 +119,10 @@
             'source': 'places',
             'layout': {
                 'text-field': ['get', 'description'],
+                'text-font': ['Noto Sans Regular'],
                 'text-variable-anchor-offset': ['top', [0, 1], 'bottom', [0, -2], 'left', [1, 0], 'right', [-2, 0]],
                 'text-justify': 'auto',
-                'icon-image': ['concat', ['get', 'icon'], '_15']
+                'icon-image': ['get', 'icon']
             }
         });
 

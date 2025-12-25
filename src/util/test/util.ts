@@ -99,11 +99,11 @@ export function setMatchMedia() {
 }
 
 function setResizeObserver() {
-    global.ResizeObserver = vi.fn().mockImplementation(() => ({
-        observe: vi.fn(),
-        unobserve: vi.fn(),
-        disconnect: vi.fn(),
-    }));
+    global.ResizeObserver = vi.fn(class {
+        observe = vi.fn();
+        unobserve = vi.fn();
+        disconnect = vi.fn();
+    });
 }
 
 export function beforeMapTest() {
@@ -228,11 +228,12 @@ export function createTerrain(): Terrain {
     return {
         pointCoordinate: () => null,
         getElevationForLngLatZoom: () => 1000,
+        getElevationForLngLat: () => 1000,
         getMinTileElevationForLngLatZoom: () => 0,
         getFramebuffer: () => ({}),
         getCoordsTexture: () => ({}),
         depthAtPoint: () => .9,
-        sourceCache: {
+        tileManager: {
             update: () => {},
             getRenderableTiles: () => [],
             anyTilesAfterTime: () => false
@@ -278,4 +279,4 @@ export function createTestCameraFrustum(fovy: number, aspectRatio: number, zNear
     mat4.invert(invProj, proj);
 
     return Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
-};
+}

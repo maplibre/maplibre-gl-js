@@ -5,14 +5,15 @@ import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {loadTileJson} from './load_tilejson';
-import {TileBounds} from './tile_bounds';
+import {TileBounds} from '../tile/tile_bounds';
 import {Texture} from '../render/texture';
+import {isAbortError} from '../util/abort_error';
 
 import type {Source} from './source';
-import type {OverscaledTileID} from './tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from './tile';
+import type {Tile} from '../tile/tile';
 import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification
@@ -46,8 +47,8 @@ import type {
  * });
  * ```
  * @see [Add a raster tile source](https://maplibre.org/maplibre-gl-js/docs/examples/map-tiles/)
- * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/wms/)
- * @see [Display a satellite map](https://maplibre.org/maplibre-gl-js/docs/examples/satellite-map/)
+ * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-wms-source/)
+ * @see [Display a satellite map](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-satellite-map/)
  */
 export class RasterTileSource extends Evented implements Source {
     type: 'raster' | 'raster-dem';
@@ -107,7 +108,12 @@ export class RasterTileSource extends Evented implements Source {
             }
         } catch (err) {
             this._tileJSONRequest = null;
-            this.fire(new ErrorEvent(err));
+            this._loaded = true; // let's pretend it's loaded so the source will be ignored
+
+            // only fire error event if it is not due to aborting the request
+            if (!isAbortError(err)) {
+                this.fire(new ErrorEvent(err));
+            }
         }
     }
 

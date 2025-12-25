@@ -204,7 +204,7 @@
 
     const map = new maplibregl.Map({
         container: 'map',
-        style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://demotiles.maplibre.org/style.json',
         center: [-95, 40],
         zoom: 3
     });
@@ -223,11 +223,19 @@
             'type': 'symbol',
             'source': 'center',
             'layout': {
-                'icon-image': 'marker_15',
                 'text-field': 'Center: [-94, 40]',
-                'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+                'text-font': ['Noto Sans Regular'],
                 'text-offset': [0, 0.6],
                 'text-anchor': 'top'
+            }
+        });
+        map.addLayer({
+            'id': 'center-circle',
+            'type': 'circle',
+            'source': 'center',
+            'paint': {
+                'circle-radius': 6,
+                'circle-color': '#007cbf'
             }
         });
 

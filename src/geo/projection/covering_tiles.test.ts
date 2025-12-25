@@ -1,8 +1,8 @@
 import {beforeEach, describe, expect, test} from 'vitest';
 import {GlobeTransform} from './globe_transform';
 import {LngLat} from '../lng_lat';
-import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringZoomOptions} from './covering_tiles';
-import {OverscaledTileID} from '../../source/tile_id';
+import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringTilesOptions} from './covering_tiles';
+import {OverscaledTileID} from '../../tile/tile_id';
 import {MercatorTransform} from './mercator_transform';
 import {globeConstants} from './vertical_perspective_projection';
 
@@ -260,6 +260,26 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(11, 0, 11, 688, 1024)
             ]);
         });
+
+        test('nonzero center elevation', () => {
+            const options = {
+                minzoom: 1,
+                maxzoom: 15,
+                tileSize: 512,
+                reparseOverscaled: true
+            };
+        
+            const transform = new GlobeTransform();
+            transform.resize(128, 128);
+            transform.setZoom(11);
+            transform.setCenter(new LngLat(0.021, 0.0915));
+            transform.setElevation(20000);
+
+            expect(coveringTiles(transform, options)).toEqual([
+                new OverscaledTileID(11, 0, 11, 1024, 1023),
+                new OverscaledTileID(11, 0, 11, 1023, 1023)
+            ]);
+        });
     });
 
     describe('mercator', () => {
@@ -269,7 +289,7 @@ describe('coveringTiles', () => {
             tileSize: 512
         };
     
-        const transform = new MercatorTransform(0, 22, 0, 85, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         transform.resize(200, 200);
     
         test('general', () => {
@@ -511,7 +531,7 @@ describe('coveringTiles', () => {
                 reparseOverscaled: true
             };
         
-            const transform = new MercatorTransform(0, 10, 0, 85, true);
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 10, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
             transform.resize(10, 400);
             // make slightly off center so that sort order is not subject to precision issues
             transform.setCenter(new LngLat(-0.01, 0.01));
@@ -532,7 +552,7 @@ describe('coveringTiles', () => {
                 tileSize: 512
             };
         
-            const transform = new MercatorTransform(0, 0, 0, 60, true);
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 0, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
             transform.resize(200, 200);
             transform.setCenter(new LngLat(0.01, 0.01));
             transform.setZoom(8);
@@ -549,7 +569,7 @@ describe('coveringTiles', () => {
                 reparseOverscaled: true
             };
         
-            const transform = new MercatorTransform(0, 15, 0, 85, true);
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
             transform.resize(128, 128);
             transform.setZoom(11);
             transform.setCenter(new LngLat(-179.73, -0.087));
@@ -567,7 +587,7 @@ describe('coveringTiles', () => {
                 reparseOverscaled: true
             };
         
-            const transform = new MercatorTransform(0, 15, 0, 85, true);
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
             transform.resize(128, 128);
             transform.setZoom(11);
             transform.setCenter(new LngLat(-179.73, 60.02));
@@ -585,7 +605,7 @@ describe('coveringTiles', () => {
                 reparseOverscaled: true
             };
         
-            const transform = new MercatorTransform(0, 15, 0, 85, true);
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
             transform.resize(128, 128);
             transform.setZoom(11);
             transform.setCenter(new LngLat(-179.73, 85.028));
@@ -603,7 +623,7 @@ describe('coveringTiles', () => {
                 reparseOverscaled: true
             };
         
-            const transform = new MercatorTransform(0, 15, 0, 85, true);
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
             transform.resize(128, 128);
             transform.setZoom(11);
             transform.setCenter(new LngLat(-58.97, 60.02));
@@ -621,7 +641,7 @@ describe('coveringTiles', () => {
                 reparseOverscaled: true
             };
         
-            const transform = new MercatorTransform(0, 15, 0, 85, true);
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
             transform.resize(128, 128);
             transform.setZoom(11);
             transform.setCenter(new LngLat(-58.97, -0.087));
@@ -630,16 +650,36 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(11, 0, 11, 688, 1024)
             ]);
         });
+
+        test('nonzero center elevation', () => {
+            const options = {
+                minzoom: 1,
+                maxzoom: 15,
+                tileSize: 512,
+                reparseOverscaled: true
+            };
+        
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+            transform.resize(128, 128);
+            transform.setZoom(11);
+            transform.setCenter(new LngLat(0.03, 0.0915));
+            transform.setElevation(20000);
+
+            expect(coveringTiles(transform, options)).toEqual([
+                new OverscaledTileID(11, 0, 11, 1024, 1023),
+                new OverscaledTileID(11, 0, 11, 1023, 1023)
+            ]);
+        });
     
     });
 });
 
 describe('coveringZoomLevel', () => {
     let transform: MercatorTransform;
-    let options: CoveringZoomOptions;
+    let options: CoveringTilesOptions;
 
     beforeEach(() => {
-        transform = new MercatorTransform(0, 22, 0, 60, true);
+        transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         options = {
             tileSize: 512,
             roundZoom: false,

@@ -17,8 +17,7 @@
 <script>
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/positron/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://demotiles.maplibre.org/style.json',
         center: [0, 0],
         zoom: 1
     });
@@ -166,10 +165,7 @@
                 'icon-image': 'custom-marker',
                 // get the year from the source's "year" property
                 'text-field': ['get', 'year'],
-                'text-font': [
-                    'Open Sans Semibold',
-                    'Arial Unicode MS Bold'
-                ],
+                'text-font': [ 'Noto Sans Regular' ],
                 'text-offset': [0, 1.25],
                 'text-anchor': 'top'
             }

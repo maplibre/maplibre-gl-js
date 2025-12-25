@@ -1,4 +1,4 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {ColorReliefStyleLayer} from './color_relief_style_layer';
 import {Color, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {createStyleLayer} from '../create_style_layer';
@@ -17,7 +17,7 @@ describe('ColorReliefStyleLayer', () => {
 
     test('default', () => {
         const layerSpec = createColorReliefLayerSpec();
-        const layer = createStyleLayer(layerSpec);
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
         expect(colorReliefStyleLayer.paint.get('color-relief-opacity')).toEqual(1);
@@ -39,7 +39,7 @@ describe('ColorReliefStyleLayer', () => {
                 ]
             }
         });
-        const layer = createStyleLayer(layerSpec);
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
         const colorRamp = colorReliefStyleLayer._createColorRamp(256);
@@ -61,7 +61,7 @@ describe('ColorReliefStyleLayer', () => {
                 ]
             }
         });
-        const layer = createStyleLayer(layerSpec);
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
         const colorRamp = colorReliefStyleLayer._createColorRamp(256);
@@ -83,7 +83,7 @@ describe('ColorReliefStyleLayer', () => {
                 ]
             }
         });
-        const layer = createStyleLayer(layerSpec);
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
 
@@ -108,13 +108,17 @@ describe('ColorReliefStyleLayer', () => {
                 ]
             }
         });
-        const layer = createStyleLayer(layerSpec);
+        const layer = createStyleLayer(layerSpec, {});
         expect(layer).toBeInstanceOf(ColorReliefStyleLayer);
         const colorReliefStyleLayer = layer as ColorReliefStyleLayer;
+        const originalWarn = console.warn;
+        console.warn = vi.fn();
 
         const colorRamp = colorReliefStyleLayer._createColorRamp(4);
 
         expect(colorRamp.elevationStops).toEqual([0, 1000, 3000, 4000]);
         expect(colorRamp.colorStops).toEqual([Color.black, Color.red, Color.black, Color.red]);
+        expect(console.warn).toHaveBeenCalled();
+        console.warn = originalWarn;
     });
 });

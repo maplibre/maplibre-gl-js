@@ -15,9 +15,8 @@
 <body>
 <div id="map"></div>
 <script>
-  const MAPTILER_KEY = 'get_your_own_OpIi9ZULNHzrESv6T2vL';
   const map = new maplibregl.Map({
-      style: `https://api.maptiler.com/maps/basic-v2/style.json?key=${MAPTILER_KEY}`,
+      style: `https://tiles.openfreemap.org/styles/bright`,
       center: [-74.0066, 40.7135],
       zoom: 15.5,
       pitch: 45,
@@ -40,15 +39,15 @@
           }
       }
 
-      map.addSource('openmaptiles', {
-          url: `https://api.maptiler.com/tiles/v3/tiles.json?key=${MAPTILER_KEY}`,
+      map.addSource('openfreemap', {
+          url: `https://tiles.openfreemap.org/planet`,
           type: 'vector',
       });
 
       map.addLayer(
           {
               'id': '3d-buildings',
-              'source': 'openmaptiles',
+              'source': 'openfreemap',
               'source-layer': 'building',
               'type': 'fill-extrusion',
               'minzoom': 15,

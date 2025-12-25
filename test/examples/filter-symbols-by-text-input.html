@@ -124,8 +124,7 @@
     const filterInput = document.getElementById('filter-input');
     const map = new maplibregl.Map({
         container: 'map',
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        style: 'https://tiles.openfreemap.org/styles/bright',
         center: [-77.04, 38.907],
         zoom: 11.15
     });
@@ -148,13 +147,10 @@
                     'type': 'symbol',
                     'source': 'places',
                     'layout': {
-                        'icon-image': `${symbol}_15`,
+                        'icon-image': `${symbol}_11`,
                         'icon-overlap': 'always',
                         'text-field': symbol,
-                        'text-font': [
-                            'Open Sans Bold',
-                            'Arial Unicode MS Bold'
-                        ],
+                        'text-font': ['Noto Sans Regular'],
                         'text-size': 11,
                         'text-transform': 'uppercase',
                         'text-letter-spacing': 0.05,
@@ -165,7 +161,7 @@
                         'text-halo-color': '#fff',
                         'text-halo-width': 2
                     },
-                    'filter': ['==', 'icon', symbol]
+                    'filter': ['==', ['get', 'icon'], symbol]
                 });
 
                 layerIDs.push(layerID);

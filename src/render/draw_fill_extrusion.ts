@@ -8,15 +8,15 @@ import {
 } from './program/fill_extrusion_program';
 
 import type {Painter, RenderOptions} from './painter';
-import type {SourceCache} from '../source/source_cache';
+import type {TileManager} from '../tile/tile_manager';
 import type {FillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer';
 import type {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
 
-export function drawFillExtrusion(painter: Painter, source: SourceCache, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawFillExtrusion(painter: Painter, tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const opacity = layer.paint.get('fill-extrusion-opacity');
     if (opacity === 0) {
         return;
@@ -28,19 +28,19 @@ export function drawFillExtrusion(painter: Painter, source: SourceCache, layer: 
 
         if (opacity === 1 && !layer.paint.get('fill-extrusion-pattern').constantOr(1 as any)) {
             const colorMode = painter.colorModeForRenderPass();
-            drawExtrusionTiles(painter, source, layer, coords, depthMode, StencilMode.disabled, colorMode, isRenderingToTexture);
+            drawExtrusionTiles(painter, tileManager, layer, coords, depthMode, StencilMode.disabled, colorMode, isRenderingToTexture);
 
         } else {
             // Draw transparent buildings in two passes so that only the closest surface is drawn.
             // First draw all the extrusions into only the depth buffer. No colors are drawn.
-            drawExtrusionTiles(painter, source, layer, coords, depthMode,
+            drawExtrusionTiles(painter, tileManager, layer, coords, depthMode,
                 StencilMode.disabled,
                 ColorMode.disabled, isRenderingToTexture);
 
             // Then draw all the extrusions a second type, only coloring fragments if they have the
             // same depth value as the closest fragment in the previous pass. Use the stencil buffer
             // to prevent the second draw in cases where we have coincident polygons.
-            drawExtrusionTiles(painter, source, layer, coords, depthMode,
+            drawExtrusionTiles(painter, tileManager, layer, coords, depthMode,
                 painter.stencilModeFor3D(),
                 painter.colorModeForRenderPass(), isRenderingToTexture);
         }
@@ -49,7 +49,7 @@ export function drawFillExtrusion(painter: Painter, source: SourceCache, layer: 
 
 function drawExtrusionTiles(
     painter: Painter,
-    source: SourceCache,
+    tileManager: TileManager,
     layer: FillExtrusionStyleLayer,
     coords: OverscaledTileID[],
     depthMode: DepthMode,
@@ -67,7 +67,7 @@ function drawExtrusionTiles(
     const transform = painter.transform;
 
     for (const coord of coords) {
-        const tile = source.getTile(coord);
+        const tile = tileManager.getTile(coord);
         const bucket: FillExtrusionBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 

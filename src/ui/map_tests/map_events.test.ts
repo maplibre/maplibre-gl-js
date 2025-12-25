@@ -1081,6 +1081,8 @@ describe('map events', () => {
                 ]
             };
             const map = createMap();
+            const originalWarn = console.warn;
+            console.warn = vi.fn();
             map.setStyle(style);
 
             const errorHandler = vi.fn();
@@ -1090,8 +1092,36 @@ describe('map events', () => {
             await sleep(100);
 
             expect(errorHandler).toHaveBeenCalledTimes(1);
-          
+            console.warn = originalWarn;
         });
+    });
+
+    test('emits load event when source TileJSON fails to load', async () => {
+        const style: StyleSpecification = {
+            ...createStyle(),
+            sources: {
+                'source': {
+                    type: 'vector',
+                    url: 'maplibre://nonexistent'
+                }
+            },
+            layers: [
+                {
+                    id: 'layer',
+                    source: 'source',
+                    type: 'fill',
+                    'source-layer': 'test'
+                }
+            ]
+        };
+        const map = createMap();
+        map.setStyle(style);
+
+        await map.once('load');
+        expect(map.isStyleLoaded()).toBe(true);
+
+        map.triggerRepaint();
+        await map.once('idle');
     });
 
     describe('projectiontransition event', () => {

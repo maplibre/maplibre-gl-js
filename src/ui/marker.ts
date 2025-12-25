@@ -15,12 +15,12 @@ import type {PointLike} from './camera';
 /**
  * Alignment options of rotation and pitch
  */
-type Alignment = 'map' | 'viewport' | 'auto';
+export type Alignment = 'map' | 'viewport' | 'auto';
 
 /**
  * The {@link Marker} options object
  */
-type MarkerOptions = {
+export type MarkerOptions = {
     /**
      * DOM element to use as a marker. The default is a light blue, droplet-shaped SVG marker.
      */
@@ -320,6 +320,12 @@ export class Marker extends Evented {
             this._element.setAttribute('aria-label', map._getUIString('Marker.Title'));
         }
 
+        // aria-label is set either by user or above default, so set role
+        // since div is interactive and cannot have aria-label without a role
+        if (!this._element.hasAttribute('role')) {
+            this._element.setAttribute('role', 'button');
+        }
+
         map.getCanvasContainer().appendChild(this._element);
         map.on('move', this._update);
         map.on('moveend', this._update);
@@ -573,7 +579,7 @@ export class Marker extends Evented {
         // Read depth framebuffer, getting position of terrain in line of sight to marker
         const terrainDistance = map.terrain.depthAtPoint(this._pos);
         // Transform marker position to clip space
-        const elevation = map.terrain.getElevationForLngLatZoom(this._lngLat, map.transform.tileZoom);
+        const elevation = map.terrain.getElevationForLngLat(this._lngLat, map.transform);
         const markerDistance = map.transform.lngLatToCameraDepth(this._lngLat, elevation);
         const forgiveness = .006;
         if (markerDistance - terrainDistance < forgiveness) {

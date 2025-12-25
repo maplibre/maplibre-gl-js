@@ -11,7 +11,7 @@ import {
 import type {StylePropertySpecification, LightSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from './evaluation_parameters';
 import type {StyleSetterOptions} from '../style/style';
-import {Properties, Transitionable, type Transitioning, type PossiblyEvaluated, DataConstantProperty} from './properties';
+import {Properties, Transitionable, type Transitioning, type PossiblyEvaluated, DataConstantProperty, TRANSITION_SUFFIX} from './properties';
 
 import type {
     Property,
@@ -62,8 +62,6 @@ type LightPropsPossiblyEvaluated = {
     'intensity': number;
 };
 
-const TRANSITION_SUFFIX = '-transition';
-
 let lightProperties: Properties<LightProps>;
 
 /*
@@ -82,7 +80,7 @@ export class Light extends Evented {
             'color': new DataConstantProperty(styleSpec.light.color as StylePropertySpecification),
             'intensity': new DataConstantProperty(styleSpec.light.intensity as StylePropertySpecification),
         });
-        this._transitionable = new Transitionable(lightProperties);
+        this._transitionable = new Transitionable(lightProperties, undefined);
         this.setLight(lightOptions);
         this._transitioning = this._transitionable.untransitioned();
     }

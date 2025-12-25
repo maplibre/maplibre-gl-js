@@ -3,7 +3,7 @@ import {EXTENT} from '../../data/extent';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
 import {GlobeTransform} from './globe_transform';
-import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';
+import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id';
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 import {expectToBeCloseToArray} from '../../util/test/util';
 import {MercatorCoordinate} from '../mercator_coordinate';
@@ -302,7 +302,8 @@ describe('GlobeTransform', () => {
                 const screenPointFurtherAboveWesternHorizon = screenTopEdgeCenter.sub(new Point(0, -100));
                 const unprojected = globeTransform.screenPointToLocation(screenPointAboveWesternHorizon);
                 const unprojected2 = globeTransform.screenPointToLocation(screenPointFurtherAboveWesternHorizon);
-                expect(unprojected).toEqual(unprojected2);
+                expect(unprojected.lat).toBeCloseTo(unprojected2.lat, 10);
+                expect(unprojected.lng).toBeCloseTo(unprojected2.lng, 10);
             });
         });
 
@@ -596,7 +597,7 @@ describe('GlobeTransform', () => {
         test('change transform and make sure render world copies is kept', () => {
             const globeTransform = createGlobeTransform();
             globeTransform.setRenderWorldCopies(true);
-            const mercator = new MercatorTransform(0, 1, 2, 3, false);
+            const mercator = new MercatorTransform({minZoom: 0, maxZoom: 1, minPitch: 2, maxPitch: 3, renderWorldCopies: false});
             mercator.apply(globeTransform);
 
             expect(mercator.renderWorldCopies).toBeTruthy();

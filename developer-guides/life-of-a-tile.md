@@ -45,7 +45,7 @@ sequenceDiagram
 sequenceDiagram
   %%{init: { 'sequence': {'messageAlign': 'left', 'boxTextMargin': 5} }}%%
   participant map
-  participant source_cache
+  participant tile_manager
   participant source
   participant ajax
   participant glyph manager
@@ -57,9 +57,9 @@ sequenceDiagram
     participant worker_ajax
   end
 
-  map->>source_cache: update(transform)
-  source_cache->>source_cache: compute covering<br> tiles
-  source_cache->>source: loadTile() for each<br>missing tile
+  map->>tile_manager: update(transform)
+  tile_manager->>tile_manager: compute covering<br> tiles
+  tile_manager->>source: loadTile() for each<br>missing tile
   alt raster_tile_source
     source->>ajax: getImage
     else image_source
@@ -105,18 +105,18 @@ sequenceDiagram
     worker_tile-->>source: callback(bucket, featureIndex, collision boxes, GlyphAtlas, ImageAtlas)
     source->>source: loadVectorData()<br/>decode response
   end
-  source-->>source_cache: Tile
-  source_cache-->>source_cache: _backfillDEM()<br/>copy 1px buffer<br/>from neighboring tiles
+  tile-->>tile_manager: Tile
+  tile_manager-->>tile_manager: _backfillDEM()<br/>copy 1px buffer<br/>from neighboring tiles
   source->>source: fire('data', {<br/>dataType: 'source'<br>})
-  source->>source_cache:<br>
-  source_cache->map:<br>
+  tile->>tile_manager:<br>
+  tile_manager->map:<br>
   map->map: fire('sourcedata')
   map->map: render new frame
 ```
 
 [Map#\_render()](../src/ui/map.ts#L2480) works in 2 different modes based on the value of `Map._sourcesDirty`. When `Map._sourcesDirty === true`, it starts by asking each source if it needs to load any new data:
 
-- Call [SourceCache#update(transform)](../src/source/source_cache.ts#L479) on each map data source. This computes the ideal tiles that cover the current viewport and requests missing ones. When a tile is missing, searches child/parent tiles to find the best alternative to show while the ideal tile is loading.
+- Call [TileManager#update(transform)](../src/tile/tile_manager.ts#L479) on each map data source. This computes the ideal tiles that cover the current viewport and requests missing ones. When a tile is missing, searches child/parent tiles to find the best alternative to show while the ideal tile is loading.
 - Call `Source#loadTile(tile, callback)` on each source to load the missing tile. Each source implements this differently:
   - [RasterTileSource#loadTile](../src/source/raster_tile_source.ts#L110) just kicks off a getImage request using [src/util/image_request](../src/util/image_request.ts) which keeps a queue of pending requests and limits the number of in-progress requests.
   - [RasterDEMTileSource#loadTile](../src/source/raster_dem_tile_source.ts#L39) starts off the same to fetch the image, but then it sends the bytes in a `loadDEMTile` message to a worker to process before returning the results. Getting pixels from the image response requires drawing it to a canvas and reading the pixels back. This can be expensive, so when the browser supports `OffscreenCanvas`, do that in a worker, otherwise do it here before sending.
@@ -145,9 +145,9 @@ sequenceDiagram
   - [GeojsonSource#loadTile()](../src/source/geojson_source.ts) also sends a loadTile or reloadTile message to a worker. The handling is almost exactly the same as a vector tile, except [GeojsonWorkerSource](../src/source/geojson_worker_source.ts) extends [VectorTileWorkerSource](../src/source/vector_tile_worker_source.ts) and overrides `loadVectorTile` so that instead of making a network request and parsing the PBF, it loads the initial geojson data into [geojson-vt](https://github.com/mapbox/geojson-vt) and calls the [getTile](https://github.com/mapbox/geojson-vt/blob/35f4ad75feed64e80ff2cd02994976c6335859cd/src/index.js#L161) method to get vector tile data from the geojson for each tile the main thread needs.
   - [ImageSource#loadTile()](../src/source/image_source.ts#L246) computes the most-zoomed-in tile that contains the entire bounds of the image being rendered and only returns success if the main thread is requesting that tile (the image was already requested when layer was added to the map)
 - When the vector sources (geojson/vector tile) responses get back to the main thread, it calls [Tile#loadVectorData](../src/source/tile.ts#L140) with the result which deserializes and stores the buckets for each style layer, image/glyph atlases, and lazy-loads the RTL text plugin if this is the first tile to contain RTL text.
-- Back up in [SourceCache](../src/source/source_cache.ts), now that it has the loaded tile:
-  - [SourceCache#\_backfillDEM](../src/source/source_cache.ts#L275) copies the edge pixels to and from all neighboring tiles so that there are no rendering artifacts when each tile computes the slope up to the very edge of the tile.
-  - Fire a `data {dataType: 'source'}` event on the source, which bubbles up to [SourceCache](../src/source/source_cache.ts), [Style](../src/style/style.ts), and [Map](../src/ui/map.ts), which translates it to a `sourcedata` event and also calls [Map#\_update()](../src/ui/map.ts#L2443) which calls [Map#triggerRepaint()](../src/ui/map.ts#L2664) then [Map#\_render()](../src/ui/map.ts#L2480) which renders a new frame just like when user interaction triggers transform change.
+- Back up in [TileManager](../src/tile/tile_manager.ts), now that it has the loaded tile:
+  - [TileManager#\_backfillDEM](../src/tile/tile_manager.ts#L275) copies the edge pixels to and from all neighboring tiles so that there are no rendering artifacts when each tile computes the slope up to the very edge of the tile.
+  - Fire a `data {dataType: 'source'}` event on the source, which bubbles up to [TileManager](../src/tile/tile_manager.ts), [Style](../src/style/style.ts), and [Map](../src/ui/map.ts), which translates it to a `sourcedata` event and also calls [Map#\_update()](../src/ui/map.ts#L2443) which calls [Map#triggerRepaint()](../src/ui/map.ts#L2664) then [Map#\_render()](../src/ui/map.ts#L2480) which renders a new frame just like when user interaction triggers transform change.
 
 ## Render loop
 
@@ -157,20 +157,20 @@ sequenceDiagram
     participant style
     participant painter
     participant layer
-    participant source_cache
+    participant tile_manager
     participant GPU
     actor user
 
     map->>style: update(transform)
     style->>layer: recalculate()
     layer->>layer: recompute<br>paint properties
-    map->>source_cache: update(transform)
-    source_cache->>source_cache: fetch new tiles
+    map->>tile_manager: update(transform)
+    tile_manager->>tile_manager: fetch new tiles
     map->>painter: render(style)
-    painter->>source_cache: prepare(context)
+    painter->>tile_manager: prepare(context)
     loop for each tile
-        source_cache->>GPU: upload vertices
-        source_cache->>GPU: upload image textures
+        tile_manager->>GPU: upload vertices
+        tile_manager->>GPU: upload image textures
     end
     loop for each layer
         painter->>layer: renderLayer(pass=offscreen)
@@ -189,9 +189,9 @@ sequenceDiagram
 When `map._sourcesDirty === false`, [map#\_render()](../src/ui/map.ts#L2480) just renders a new frame entirely within the main UI thread:
 
 - Recompute "paint properties" based on the current zoom and current transition status by calling [Style#update()](../src/style/style.ts) with the new transform. This calls `recalculate()` on each style layer to compute the new paint properties.
-- Fetch new tiles by calling [SourceCache#update(transform)](../src/source/source_cache.ts#L479) (see above)
+- Fetch new tiles by calling [TileManager#update(transform)](../src/tile/tile_manager.ts#L479) (see above)
 - Call [Painter#render(style)](../src/render/painter.ts#L359) with the current style
-  - Calls [SourceCache#prepare(context)](../src/source/source_cache.ts#L170) on each source
+  - Calls [TileManager#prepare(context)](../src/tile/tile_manager.ts#L170) on each source
   - Then for each tile in the source:
     - Call [Tile#upload(context)](../src/source/tile.ts#L241) which calls [Bucket#upload(context)](../src/data/bucket.ts) on the bucket for each layer in the tile, which uploads all of the vertex attributes needed for rendering to the GPU.
     - Call [Tile#prepare(imageManager)](../src/source/tile.ts#L261) uploads image textures (patterns, icons) for this tile to the GPU.

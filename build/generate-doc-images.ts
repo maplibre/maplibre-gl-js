@@ -7,7 +7,7 @@ const exampleName = process.argv[2];
 const useLocalhost = (process.argv.length > 3) && (process.argv[3] === 'serve');
 const examplePath = path.resolve('test', 'examples');
 
-const browser = await puppeteer.launch({headless: true});
+const browser = await puppeteer.launch({headless: exampleName === 'all'});
 
 const page = await browser.newPage();
 // set viewport and double deviceScaleFactor to get a closer shot of the map
@@ -29,7 +29,9 @@ async function createImage(exampleName) {
 
     // Wait for map to load, then wait two more seconds for images, etc. to load.
     try {
-        await page.waitForFunction('map.loaded()');
+        // @ts-ignore
+        await page.evaluate(() => document.querySelector('.maplibregl-ctrl-attrib').style.display = 'none');
+        await page.waitForFunction('map.loaded()', {timeout: 10000});
         // Wait for 5 seconds on 3d model examples, since this takes longer to load.
         const waitTime = (exampleName.includes('3d-model') || exampleName.includes('globe')) ? 5000 : 1500;
         console.log(`waiting for ${waitTime} ms`);
@@ -61,7 +63,7 @@ if (exampleName === 'all') {
     const allFiles = fs.readdirSync(examplePath).filter(f => f.endsWith('html'));
     console.log(`Generating ${allFiles.length} images.`);
     for (const file of allFiles) {
-        await createImage(file);
+        await createImage(file.replace('.html', ''));
     }
 } else if (exampleName) {
     await createImage(exampleName);

@@ -1,9 +1,9 @@
-import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import {Placement} from '../symbol/placement';
 import type {ITransform} from '../geo/transform_interface';
 import type {StyleLayer} from './style_layer';
 import type {SymbolStyleLayer} from './style_layer/symbol_style_layer';
-import type {Tile} from '../source/tile';
+import type {Tile} from '../tile/tile';
 import type {BucketPart} from '../symbol/placement';
 import type {Terrain} from '../render/terrain';
 
@@ -92,10 +92,10 @@ export class PauseablePlacement {
         layers: {[_: string]: StyleLayer},
         layerTiles: {[_: string]: Array<Tile>}
     ) {
-        const startTime = browser.now();
+        const startTime = now();
 
         const shouldPausePlacement = () => {
-            return this._forceFullPlacement ? false : (browser.now() - startTime) > 2;
+            return this._forceFullPlacement ? false : (now() - startTime) > 2;
         };
 
         while (this._currentPlacementIndex >= 0) {

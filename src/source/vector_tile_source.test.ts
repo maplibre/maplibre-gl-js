@@ -2,8 +2,8 @@ import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
 import {type Source} from './source';
 import {VectorTileSource} from './vector_tile_source';
-import {type Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
+import {type Tile} from '../tile/tile';
+import {OverscaledTileID} from '../tile/tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
@@ -12,6 +12,7 @@ import {type Map} from '../ui/map';
 import {type WorkerTileParameters} from './worker_source';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import {type ActorMessage, MessageType} from '../util/actor_messages';
+import {type MapSourceDataEvent} from '../ui/events';
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
@@ -20,7 +21,7 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
         style: {
-            sourceCaches: {id: {clearTiles}},
+            tileManagers: {id: {clearTiles}},
             projection: {
                 get subdivisionGranularity() {
                     return SubdivisionGranularitySetting.noSubdivision;
@@ -109,6 +110,17 @@ describe('VectorTileSource', () => {
 
         await promise;
         expect(dataloadingFired).toBeTruthy();
+    });
+
+    test('fires "error" event if TileJSON request fails', async () => {
+        server.respondWith('/source.json', [404, {}, '']);
+
+        const source = createSource({url: '/source.json'});
+        const errorEvent = waitForEvent(source, 'error', (e) => e.error.status === 404);
+        server.respond();
+
+        await expect(errorEvent).resolves.toBeDefined();
+        expect(source.loaded()).toBe(true);
     });
 
     test('serialize URL', () => {
@@ -370,15 +382,32 @@ describe('VectorTileSource', () => {
         expect((server.lastRequest as any).aborted).toBe(true);
     });
 
-    test('supports url property updates', () => {
+    test('supports url property updates', async () => {
+        server.respondWith('http://localhost:2900/source2.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.mvt'],
+        }));
+
         const source = createSource({
             url: 'http://localhost:2900/source.json'
         });
+        const errorHandler = vi.fn();
+        source.on('error', errorHandler);
         source.setUrl('http://localhost:2900/source2.json');
+
+        server.respond();
+
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        expect(server.requests.length).toBe(2);
+        expect(server.requests[0].aborted).toBe(true);
         expect(source.serialize()).toEqual({
             type: 'vector',
             url: 'http://localhost:2900/source2.json'
         });
+        expect(errorHandler).not.toHaveBeenCalled();
     });
 
     test('supports tiles property updates', () => {

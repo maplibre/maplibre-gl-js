@@ -1,4 +1,4 @@
-import {CanonicalTileID} from './tile_id';
+import {CanonicalTileID} from '../tile/tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
@@ -9,7 +9,7 @@ import type {Source} from './source';
 import type {CanvasSourceSpecification} from './canvas_source';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from './tile';
+import type {Tile} from '../tile/tile';
 import type {
     ImageSourceSpecification,
     VideoSourceSpecification
@@ -17,6 +17,7 @@ import type {
 import type Point from '@mapbox/point-geometry';
 import {MAX_TILE_ZOOM} from '../util/util';
 import {Bounds} from '../geo/bounds';
+import {isAbortError} from '../util/abort_error';
 
 /**
  * Four geographical coordinates,
@@ -164,7 +165,9 @@ export class ImageSource extends Evented implements Source {
         } catch (err) {
             this._request = null;
             this._loaded = true;
-            this.fire(new ErrorEvent(err));
+            if (!isAbortError(err)) {
+                this.fire(new ErrorEvent(err));
+            }
         }
     }
 
@@ -239,7 +242,7 @@ export class ImageSource extends Evented implements Source {
         this.terrainTileRanges = this._getOverlappingTileRanges(cornerCoords);
 
         // Constrain min/max zoom to our tile's zoom level in order to force
-        // SourceCache to request this tile (no matter what the map's zoom
+        // TileManager to request this tile (no matter what the map's zoom
         // level)
         this.minzoom = this.maxzoom = this.tileID.z;
 

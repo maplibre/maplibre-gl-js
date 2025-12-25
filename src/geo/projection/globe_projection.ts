@@ -8,7 +8,7 @@ import {type Projection, type ProjectionGPUContext, type TileMeshUsage} from './
 import {type PreparedShader} from '../../shaders/shaders';
 import {type SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {type Context} from '../../gl/context';
-import {type CanonicalTileID} from '../../source/tile_id';
+import {type CanonicalTileID} from '../../tile/tile_id';
 import {type Mesh} from '../../render/mesh';
 
 type ProjectionProps = {
@@ -33,7 +33,7 @@ export class GlobeProjection extends Evented implements Projection {
 
     constructor(projection?: ProjectionSpecification) {
         super();
-        this._transitionable = new Transitionable(properties);
+        this._transitionable = new Transitionable(properties, undefined);
         this.setProjection(projection);
         this._transitioning = this._transitionable.untransitioned();
         this.recalculate(new EvaluationParameters(0));
@@ -132,7 +132,7 @@ export class GlobeProjection extends Evented implements Projection {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
-    setErrorQueryLatitudeDegrees(value: number) { 
+    setErrorQueryLatitudeDegrees(value: number) {
         this._verticalPerspectiveProjection.setErrorQueryLatitudeDegrees(value);
         this._mercatorProjection.setErrorQueryLatitudeDegrees(value);
     }

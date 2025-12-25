@@ -10,11 +10,12 @@ import type {SymbolBucket} from '../data/bucket/symbol_bucket';
 import type {
     GlyphOffsetArray,
     SymbolLineVertexArray,
-    SymbolDynamicLayoutArray
+    SymbolDynamicLayoutArray,
+    PlacedSymbol,
 } from '../data/array_types.g';
 import {WritingMode} from '../symbol/shaping';
 import {findLineIntersection} from '../util/util';
-import {type UnwrappedTileID} from '../source/tile_id';
+import {type UnwrappedTileID} from '../tile/tile_id';
 import {type StructArray} from '../util/struct_array';
 
 /**
@@ -344,7 +345,7 @@ export function placeFirstAndLastGlyph(
     lineOffsetX: number,
     lineOffsetY: number,
     flip: boolean,
-    symbol: any,
+    symbol: PlacedSymbol,
     rotateToLine: boolean,
     projectionContext: SymbolProjectionContext): FirstAndLastGlyphPlacement {
     const glyphEndIndex = symbol.glyphStartIndex + symbol.numGlyphs;
@@ -404,7 +405,7 @@ type GlyphLinePlacementResult = OrientationChangeType & {
 type GlyphLinePlacementArgs = {
     projectionContext: SymbolProjectionContext;
     pitchedLabelPlaneMatrixInverse: mat4;
-    symbol: any; // PlacedSymbolStruct
+    symbol: PlacedSymbol;
     fontSize: number;
     flip: boolean;
     keepUpright: boolean;

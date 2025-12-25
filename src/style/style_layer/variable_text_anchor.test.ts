@@ -42,7 +42,7 @@ describe('evaluateVariableOffset', () => {
 });
 
 function createSymbolLayer(layerProperties) {
-    const layer = new SymbolStyleLayer(layerProperties);
+    const layer = new SymbolStyleLayer(layerProperties, {});
     layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
     return layer;
 }
