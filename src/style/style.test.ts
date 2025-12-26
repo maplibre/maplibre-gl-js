@@ -1278,6 +1278,34 @@ describe('Style.setGlyphs', () => {
         expect(inputJson.glyphs).toBe(inputGlyphs);
         expect(inputJsonString).toEqual(JSON.stringify(inputJson));
     });
+
+    test('allows glyphs to be unset via null and undefined', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+        style.update({zoom: 1} as EvaluationParameters);
+
+        // Set to a valid URL first
+        style.setGlyphs('https://foo.maplibre.org/font/{fontstack}/{range}.pbf');
+        expect(style.getGlyphsUrl()).toBe('https://foo.maplibre.org/font/{fontstack}/{range}.pbf');
+        expect(style.glyphManager.url).toBe('https://foo.maplibre.org/font/{fontstack}/{range}.pbf');
+
+        // Mutate entries to ensure they get cleared
+        style.glyphManager.entries['TEST'] = {glyphs: {}, requests: {}, ranges: {}} as any;
+        expect(Object.keys(style.glyphManager.entries).length).toBeGreaterThan(0);
+
+        // Unset with null
+        style.setGlyphs(null);
+        expect(style.getGlyphsUrl()).toBeNull();
+        expect(style.glyphManager.url).toBeNull();
+        expect(style.glyphManager.entries).toEqual({});
+
+        // Set again and unset with undefined
+        style.setGlyphs('https://foo.maplibre.org/font/{fontstack}/{range}.pbf');
+        style.setGlyphs(undefined);
+        expect(style.getGlyphsUrl()).toBeNull();
+        expect(style.glyphManager.url).toBeNull();
+    });
 });
 
 describe('Style.addSprite', () => {
