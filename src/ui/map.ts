@@ -2894,7 +2894,8 @@ export class Map extends Camera {
     }
 
     /**
-     * Sets the value of the style's glyphs property.
+    * Sets the value of the style's glyphs property. Pass a falsy value (null or undefined)
+    * to unset glyphs.
      *
      * @param glyphsUrl - Glyph URL to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/glyphs/).
      * @param options - Options object.
@@ -2903,7 +2904,7 @@ export class Map extends Camera {
      * map.setGlyphs('https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf');
      * ```
      */
-    setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}): this {
+    setGlyphs(glyphsUrl: string | null | undefined, options: StyleSetterOptions = {}): this {
         this._lazyInitEmptyStyle();
         this.style.setGlyphs(glyphsUrl, options);
         return this._update(true);
@@ -2912,7 +2913,7 @@ export class Map extends Camera {
     /**
      * Returns the value of the style's glyphs URL
      *
-     * @returns glyphs Style's glyphs url
+     * @returns glyphs Style's glyphs url, or `null` if glyphs are unset.
      */
     getGlyphs(): string | null {
         return this.style.getGlyphsUrl();

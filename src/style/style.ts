@@ -1913,20 +1913,25 @@ export class Style extends Evented {
         return glyphs;
     }
 
-    getGlyphsUrl() {
+    getGlyphsUrl(): string | null {
         return this.stylesheet.glyphs || null;
     }
 
-    setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}) {
+    setGlyphs(glyphsUrl: string | null | undefined, options: StyleSetterOptions = {}) {
         this._checkLoaded();
-        if (glyphsUrl && this._validate(validateStyle.glyphs, 'glyphs', glyphsUrl, null, options)) {
+
+        // Normalize falsy/undefined values to explicit `null` so the stylesheet
+        // and glyphManager consistently represent "unset" as `null`.
+        const url: string | null = glyphsUrl ?? null;
+
+        if (url && this._validate(validateStyle.glyphs, 'glyphs', url, null, options)) {
             return;
         }
 
         this._glyphsDidChange = true;
-        this.stylesheet.glyphs = glyphsUrl;
+        this.stylesheet.glyphs = url;
         this.glyphManager.entries = {};
-        this.glyphManager.setURL(glyphsUrl);
+        this.glyphManager.setURL(url);
     }
 
     async getDashes(mapId: string | number, params: GetDashesParameters): Promise<GetDashesResponse> {
