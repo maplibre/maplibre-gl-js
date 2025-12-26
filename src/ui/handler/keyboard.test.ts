@@ -233,4 +233,55 @@ describe('keyboard', () => {
         expect(spy.mock.calls[3][0].zoom).toBe(8);
 
     });
+
+    test('KeyboardHandler rounds fractional zoom before incrementing when legacyZoom is false', () => {
+        // This verifies the rounding behavior that matches the zoom button control
+        let testZoom = 14.6;
+        const map = createMap({zoom: testZoom, center: [0, 0], legacyZoom: false});
+        const spy = vi.spyOn(map, 'easeTo');
+
+        // Zoom in: 14.6 rounds to 16
+        simulate.keydown(map.getCanvas(), {keyCode: 187, key: 'Equal'});
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls[0][0].zoom).toBe(16);
+
+        // Zoom out: 14.6 rounds to 14
+        map.setZoom(testZoom);
+        simulate.keydown(map.getCanvas(), {keyCode: 189, key: 'Minus'});
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy.mock.calls[1][0].zoom).toBe(14);
+
+        // Zoom in: 14.3 rounds to 15
+        testZoom = 14.3;
+        map.setZoom(testZoom);
+        simulate.keydown(map.getCanvas(), {keyCode: 187, key: 'Equal'});
+        expect(spy).toHaveBeenCalledTimes(3);
+        expect(spy.mock.calls[2][0].zoom).toBe(15);
+
+        // Zoom out: 14.3 rounds to 13
+        map.setZoom(testZoom);
+        simulate.keydown(map.getCanvas(), {keyCode: 189, key: 'Minus'});
+        expect(spy).toHaveBeenCalledTimes(4);
+        expect(spy.mock.calls[3][0].zoom).toBe(13);
+
+        // Shift + zoom in: 14.3 rounds to 16
+        map.setZoom(testZoom);
+        simulate.keydown(map.getCanvas(), {keyCode: 187, key: 'Equal', shiftKey: true});
+        expect(spy).toHaveBeenCalledTimes(5);
+        expect(spy.mock.calls[4][0].zoom).toBe(16);
+
+        // Shift + zoom out: 14.3 rounds down to 12
+        map.setZoom(testZoom);
+        simulate.keydown(map.getCanvas(), {keyCode: 189, key: 'Minus', shiftKey: true});
+        expect(spy).toHaveBeenCalledTimes(6);
+        expect(spy.mock.calls[5][0].zoom).toBe(12);
+    });
+
+    test('KeyboardHandler uses standard rounding when legacyZoom is true (default)', () => {
+        const map = createMap({zoom: 14.5, center: [0, 0]}); // legacyZoom defaults to true
+        const spy = vi.spyOn(map, 'easeTo');
+
+        simulate.keydown(map.getCanvas(), {keyCode: 187, key: 'Equal'});
+        expect(spy.mock.calls[0][0].zoom).toBe(16); // Math.round(14.5) + 1 = 15 + 1 = 16
+    });
 });

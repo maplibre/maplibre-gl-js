@@ -265,6 +265,7 @@ export abstract class Camera extends Evented {
     _pitching: boolean;
     _rolling: boolean;
     _padding: boolean;
+    _legacyZoom: boolean;
 
     _bearingSnap: number;
     _easeStart: number;
@@ -330,6 +331,7 @@ export abstract class Camera extends Evented {
         super();
         this._moving = false;
         this._zooming = false;
+        this._legacyZoom = true;
         this.transform = transform;
         this._bearingSnap = options.bearingSnap;
         this.cameraHelper = cameraHelper;
@@ -517,6 +519,9 @@ export abstract class Camera extends Evented {
     /**
      * Increases the map's zoom level by 1.
      *
+     * If {@link MapOptions.legacyZoom} is `false`, the zoom level is first rounded to the nearest integer
+     * before incrementing, with a threshold of 0.6 (i.e. it rounds up only if the fractional part is \> 0.6).
+     *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
      * @param options - Options object
@@ -528,12 +533,18 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomIn(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this.getZoom() + 1, options, eventData);
+        const zoom = this._legacyZoom ?
+            this.getZoom() + 1 :
+            Math.round(this.getZoom() - 0.1) + 1;
+        this.zoomTo(zoom, options, eventData);
         return this;
     }
 
     /**
      * Decreases the map's zoom level by 1.
+     *
+     * If {@link MapOptions.legacyZoom} is `false`, the zoom level is first rounded to the nearest integer
+     * before decrementing, with a threshold of 0.6 (i.e. it rounds down if the fractional part is \< 0.6).
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
@@ -546,7 +557,10 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomOut(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this.getZoom() - 1, options, eventData);
+        const zoom = this._legacyZoom ?
+            this.getZoom() - 1 :
+            Math.round(this.getZoom() - 0.1) - 1;
+        this.zoomTo(zoom, options, eventData);
         return this;
     }
 

@@ -732,6 +732,44 @@ describe('zoomTo', () => {
     });
 });
 
+describe('zoomIn', () => {
+    test('zoomIn increases zoom by 1 when legacyZoom is true (default)', () => {
+        const camera = createCamera({zoom: 14.5});
+        camera.zoomIn({duration: 0});
+        expect(camera.getZoom()).toBe(15.5);
+    });
+
+    test('zoomIn rounds zoom before incrementing when legacyZoom is false', () => {
+        const camera = createCamera({zoom: 14.5});
+        camera._legacyZoom = false;
+        camera.zoomIn({duration: 0});
+        expect(camera.getZoom()).toBe(15);
+
+        camera.jumpTo({zoom: 14.7});
+        camera.zoomIn({duration: 0});
+        expect(camera.getZoom()).toBe(16);
+    });
+});
+
+describe('zoomOut', () => {
+    test('zoomOut decreases zoom by 1 when legacyZoom is true (default)', () => {
+        const camera = createCamera({zoom: 14.5});
+        camera.zoomOut({duration: 0});
+        expect(camera.getZoom()).toBe(13.5);
+    });
+
+    test('zoomOut rounds zoom before decrementing when legacyZoom is false', () => {
+        const camera = createCamera({zoom: 14.5});
+        camera._legacyZoom = false;
+        camera.zoomOut({duration: 0});
+        expect(camera.getZoom()).toBe(13);
+
+        camera.jumpTo({zoom: 14.7});
+        camera.zoomOut({duration: 0});
+        expect(camera.getZoom()).toBe(14);
+    });
+});
+
 describe('rotateTo', () => {
     test('rotates to specified bearing', () => {
         const camera = createCamera();

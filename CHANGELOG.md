@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Add `legacyZoom` option (default: `true`) to optionally align zoom button and keyboard shortcut behavior using threshold-based rounding ([#6872](https://github.com/maplibre/maplibre-gl-js/issues/6872))
 - Add `padding` option to `Popup` class to prevent popups from being positioned too close to map container edges ([#5978](https://github.com/maplibre/maplibre-gl-js/issues/5978))
 - _...Add new stuff here..._
 
