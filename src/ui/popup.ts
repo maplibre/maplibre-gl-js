@@ -319,7 +319,6 @@ export class Popup extends Evented {
     setLngLat(lnglat: LngLatLike): this {
         this._lngLat = LngLat.convert(lnglat);
         this._pos = null;
-        this._flatPos = null;
 
         this._trackPointer = false;
 
