@@ -2,7 +2,7 @@ import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import {type ExpiryData, getArrayBuffer} from '../util/ajax';
 import {WorkerTile} from './worker_tile';
-import {BoundedLRUCache} from '../tile/tile_cache';
+import {BoundedLRUCache} from '../tile/bounded_lru_cache';
 import {extend} from '../util/util';
 import {RequestPerformance} from '../util/performance';
 import {VectorTileOverzoomed, sliceVectorTileLayer, toVirtualVectorTile} from './vector_tile_overzoomed';
@@ -61,7 +61,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         this.fetching = {};
         this.loading = {};
         this.loaded = {};
-        this.overzoomedTileResultCache = new BoundedLRUCache<string, LoadVectorTileResult>(1000);
+        this.overzoomedTileResultCache = new BoundedLRUCache<string, LoadVectorTileResult>({maxEntries: 1000});
     }
 
     /**
@@ -70,8 +70,8 @@ export class VectorTileWorkerSource implements WorkerSource {
     async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
         const response = await getArrayBuffer(params.request, abortController);
         try {
-            const vectorTile = params.encoding !== 'mlt' 
-                ? new VectorTile(new Protobuf(response.data)) 
+            const vectorTile = params.encoding !== 'mlt'
+                ? new VectorTile(new Protobuf(response.data))
                 : new MLTVectorTile(response.data);
             return {
                 vectorTile,
@@ -172,7 +172,7 @@ export class VectorTileWorkerSource implements WorkerSource {
 
         const cacheKey = `${maxZoomTileID.key}_${tileID.key}`;
         const cachedOverzoomTile = this.overzoomedTileResultCache.get(cacheKey);
-        
+
         if (cachedOverzoomTile) {
             return cachedOverzoomTile;
         }
