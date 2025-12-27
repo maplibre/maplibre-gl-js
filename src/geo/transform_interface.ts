@@ -106,7 +106,11 @@ export interface ITransformGetters {
 interface ITransformMutators {
     clone(): ITransform;
 
-    apply(that: IReadonlyTransform): void;
+    /**
+     * Applies a transform to the current transform.
+     * Optionally constrains the transform's properties to within their respective valid ranges.
+     */
+    apply(that: IReadonlyTransform, constrain?: boolean): void;
 
     /**
      * Sets the transform's minimal allowed zoom level.
