@@ -106,14 +106,14 @@ export function cameraBoundsWarning() {
 export interface ICameraHelper {
     get useGlobeControls(): boolean;
 
-    handlePanInertia(pan: Point, transform: IReadonlyTransform): {
+    handlePanInertia(around: Point, pan: Point, tr: ITransform): {
         easingCenter: LngLat;
         easingOffset: Point;
     };
 
     handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void;
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void;
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat, fixedBearing?: boolean): void;
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
 

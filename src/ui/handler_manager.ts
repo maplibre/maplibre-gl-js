@@ -539,6 +539,11 @@ export class HandlerManager {
             around,
         };
 
+        let fixedBearing = false;
+        if (typeof this._map.dragPan._inertiaOptions !== "boolean") {
+            fixedBearing = this._map.dragPan._inertiaOptions.fixedBearing;
+        }
+
         // Pre-zoom location under the mouse cursor is required for accurate mercator panning and zooming
         if (this._map.cameraHelper.useGlobeControls && !tr.isPointOnMapSurface(around)) {
             around = tr.centerPoint;
