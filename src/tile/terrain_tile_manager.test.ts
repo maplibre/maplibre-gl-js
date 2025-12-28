@@ -150,7 +150,11 @@ describe('TerrainTileManager', () => {
                         minTileX: 2,
                         maxTileX: 4,
                         minTileY: 1,
-                        maxTileY: 3
+                        maxTileY: 3,
+                        minTileXWrapped: 2,
+                        maxTileXWrapped: 4,
+                        minWrap: 0,
+                        maxWrap: 0
                     }
                 };
                 const resultOverlapping = tsc.getTerrainCoords(testTileOverlapping, terrainTileRanges);
@@ -170,7 +174,11 @@ describe('TerrainTileManager', () => {
                         minTileX: 4,
                         maxTileX: 6,
                         minTileY: 1,
-                        maxTileY: 3
+                        maxTileY: 3,
+                        minTileXWrapped: 4,
+                        maxTileXWrapped: 6,
+                        minWrap: 0,
+                        maxWrap: 0
                     }
                 };
                 const resultOverlapping = tsc.getTerrainCoords(testTileOverlapping, terrainTileRanges);
@@ -193,7 +201,11 @@ describe('TerrainTileManager', () => {
                         minTileX: 2,
                         maxTileX: 4,
                         minTileY: 1,
-                        maxTileY: 3
+                        maxTileY: 3,
+                        minTileXWrapped: 2,
+                        maxTileXWrapped: 4,
+                        minWrap: 0,
+                        maxWrap: 0
                     }
                 };
                 const result = tsc.getTerrainCoords(testTile, terrainTileRanges);
