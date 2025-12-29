@@ -10,6 +10,7 @@
 - Hide leading and trailing control characters in `format` expressions ([#6907](https://github.com/maplibre/maplibre-gl-js/pull/6907)) (by [1ec5](https://github.com/1ec5))
 - Fix image sources being clipped at -180 and 180 longitude when terrain is enabled ([#4088](https://github.com/maplibre/maplibre-gl-js/issues/4088)) (by [pstaszek](https://github.com/pstaszek))
 - _...Add new stuff here..._
+- Fix `style.load` event not being fired when a new JSON style spec is diffed.
 
 ## 5.15.0
 
