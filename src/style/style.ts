@@ -1920,18 +1920,14 @@ export class Style extends Evented {
     setGlyphs(glyphsUrl: string | null | undefined, options: StyleSetterOptions = {}) {
         this._checkLoaded();
 
-        // Normalize falsy/undefined values to explicit `null` so the stylesheet
-        // and glyphManager consistently represent "unset" as `null`.
-        const url: string | null = glyphsUrl ?? null;
-
-        if (url && this._validate(validateStyle.glyphs, 'glyphs', url, null, options)) {
+        if (glyphsUrl && this._validate(validateStyle.glyphs, 'glyphs', glyphsUrl, null, options)) {
             return;
         }
 
         this._glyphsDidChange = true;
-        this.stylesheet.glyphs = url;
+        this.stylesheet.glyphs = glyphsUrl;
         this.glyphManager.entries = {};
-        this.glyphManager.setURL(url);
+        this.glyphManager.setURL(glyphsUrl);
     }
 
     async getDashes(mapId: string | number, params: GetDashesParameters): Promise<GetDashesResponse> {
