@@ -191,15 +191,18 @@ export class GlyphManager {
 
         const leftAdjustment = 0.5;
 
+        // By definition, control characters are invisible and nonspacing.
+        const isControl = /^\p{gc=Cf}+$/u.test(String.fromCodePoint(id));
+
         return {
             id,
             bitmap: new AlphaImage({width: char.width || 30 * textureScale, height: char.height || 30 * textureScale}, char.data),
             metrics: {
-                width: char.glyphWidth / textureScale || 24,
+                width: isControl ? 0 : (char.glyphWidth / textureScale || 24),
                 height: char.glyphHeight / textureScale || 24,
                 left: (char.glyphLeft / textureScale + leftAdjustment) || 0,
                 top: char.glyphTop / textureScale - topAdjustment || -8,
-                advance: char.glyphAdvance / textureScale || 24,
+                advance: isControl ? 0 : (char.glyphAdvance / textureScale || 24),
                 isDoubleResolution: true
             }
         };

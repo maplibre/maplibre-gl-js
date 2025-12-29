@@ -11,6 +11,7 @@ import type {PositionAnchor} from './anchor';
 import type {Map} from './map';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {PointLike} from './camera';
+import type {PaddingOptions} from '../geo/edge_insets';
 
 const defaultOptions = {
     closeButton: true,
@@ -20,6 +21,7 @@ const defaultOptions = {
     maxWidth: '240px',
     subpixelPositioning: false,
     locationOccludedOpacity: undefined,
+    padding: undefined,
 };
 
 /**
@@ -95,6 +97,13 @@ export type PopupOptions = {
      * @defaultValue undefined
      */
     locationOccludedOpacity?: number | string;
+    /**
+     * A pixel padding applied to the popup's positioning constraints.
+     * The popup will be positioned to avoid being placed within this padding area
+     * from the edges of the map container.
+     * @defaultValue undefined
+     */
+    padding?: PaddingOptions;
 };
 
 const focusQuerySelector = [
@@ -567,6 +576,20 @@ export class Popup extends Evented {
         this.options.subpixelPositioning = value;
     }
 
+    /**
+     * Sets the popup's padding constraints for positioning.
+     *
+     * @param padding - The padding to apply as a {@link PaddingOptions} object.
+     * @example
+     * ```ts
+     * popup.setPadding({ top: 10, right: 20, bottom: 30, left: 40 });
+     * ```
+     */
+    setPadding(padding?: PaddingOptions) {
+        this.options.padding = padding;
+        this._update();
+    }
+
     _createCloseButton() {
         if (this.options.closeButton) {
             this._closeButton = DOM.create('button', 'maplibregl-popup-close-button', this._content);
@@ -632,19 +655,20 @@ export class Popup extends Evented {
         if (!anchor) {
             const width = this._container.offsetWidth;
             const height = this._container.offsetHeight;
+            const padding = normalizePadding(this.options.padding);
             let anchorComponents;
 
-            if (pos.y + offset.bottom.y < height) {
+            if (pos.y + offset.bottom.y < height + padding.top) {
                 anchorComponents = ['top'];
-            } else if (pos.y > this._map.transform.height - height) {
+            } else if (pos.y > this._map.transform.height - height - padding.bottom) {
                 anchorComponents = ['bottom'];
             } else {
                 anchorComponents = [];
             }
 
-            if (pos.x < width / 2) {
+            if (pos.x < width / 2 + padding.left) {
                 anchorComponents.push('left');
-            } else if (pos.x > this._map.transform.width - width / 2) {
+            } else if (pos.x > this._map.transform.width - width / 2 - padding.right) {
                 anchorComponents.push('right');
             }
 
@@ -728,4 +752,17 @@ function normalizeOffset(offset?: Offset | null) {
             'right': Point.convert(offset['right'] || [0, 0])
         };
     }
+}
+
+function normalizePadding(padding?: PaddingOptions | null): {top: number; right: number; bottom: number; left: number} {
+    if (!padding) {
+        return {top: 0, right: 0, bottom: 0, left: 0};
+    }
+
+    return {
+        top: padding.top ?? 0,
+        right: padding.right ?? 0,
+        bottom: padding.bottom ?? 0,
+        left: padding.left ?? 0
+    };
 }

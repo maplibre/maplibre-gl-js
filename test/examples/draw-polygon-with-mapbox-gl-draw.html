@@ -42,9 +42,39 @@
         <div id="calculated-area"></div>
     </div>
 
+    <!-- Fix Mapbox Draw cursors: CSS classes to point to MapLibre GL classes -->
+    <style>
+        .maplibregl-map.mouse-pointer .maplibregl-canvas-container.maplibregl-interactive {
+            cursor: pointer;
+        }
+        .maplibregl-map.mouse-move .maplibregl-canvas-container.maplibregl-interactive {
+            cursor: move;
+        }
+        .maplibregl-map.mouse-add .maplibregl-canvas-container.maplibregl-interactive {
+            cursor: crosshair;
+        }
+        .maplibregl-map.mouse-move.mode-direct_select .maplibregl-canvas-container.maplibregl-interactive {
+            cursor: grab;
+            cursor: -moz-grab;
+            cursor: -webkit-grab;
+        }
+        .maplibregl-map.mode-direct_select.feature-vertex.mouse-move .maplibregl-canvas-container.maplibregl-interactive {
+            cursor: move;
+        }
+        .maplibregl-map.mode-direct_select.feature-midpoint.mouse-pointer .maplibregl-canvas-container.maplibregl-interactive {
+            cursor: cell;
+        }
+        .maplibregl-map.mode-direct_select.feature-feature.mouse-move .maplibregl-canvas-container.maplibregl-interactive {
+            cursor: move;
+        }
+        .maplibregl-map.mode-static.mouse-pointer  .maplibregl-canvas-container.maplibregl-interactive {
+            cursor: grab;
+            cursor: -moz-grab;
+            cursor: -webkit-grab;
+        }
+    </style>
+
     <script type="module">
-
-
     import * as turf from 'https://esm.sh/@turf/turf@7.1.0';
 
     MapboxDraw.constants.classes.CANVAS  = 'maplibregl-canvas';
@@ -95,6 +125,6 @@
                 alert('Use the draw tools to draw a polygon!');
         }
     }
-</script>
+    </script>
 </body>
 </html>

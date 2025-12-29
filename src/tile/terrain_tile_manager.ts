@@ -223,14 +223,16 @@ export class TerrainTileManager extends Evented {
             const coord = tileID.clone();
             const mat = createMat4f64();
             if (terrainTileID.canonical.z === tileID.canonical.z) {
-                const dx = tileID.canonical.x - terrainTileID.canonical.x;
+                const dx = tileID.canonical.x - terrainTileID.canonical.x
+                    + tileID.wrap * (1 << tileID.canonical.z); // include wrap shift
                 const dy = tileID.canonical.y - terrainTileID.canonical.y;
                 mat4.ortho(mat, 0, EXTENT, EXTENT, 0, 0, 1);
                 mat4.translate(mat, mat, [dx * EXTENT, dy * EXTENT, 0]);
             } else if (terrainTileID.canonical.z > tileID.canonical.z) {
                 const dz = terrainTileID.canonical.z - tileID.canonical.z;
                 // this translation is needed to project tileID to terrainTileID zoom level
-                const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
+                const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz)
+                    + tileID.wrap * (1 << terrainTileID.canonical.z); // include wrap shift
                 const dy = terrainTileID.canonical.y - (terrainTileID.canonical.y >> dz << dz);
                 // this translation is needed if terrainTileID is not a parent of tileID
                 const dx2 = tileID.canonical.x - (terrainTileID.canonical.x >> dz);
@@ -242,7 +244,8 @@ export class TerrainTileManager extends Evented {
             } else { // terrainTileID.canonical.z < tileID.canonical.z
                 const dz = tileID.canonical.z - terrainTileID.canonical.z;
                 // this translation is needed to project tileID to terrainTileID zoom level
-                const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+                const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz)
+                    + tileID.wrap * (1 << tileID.canonical.z); // include wrap shift
                 const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
                 // this translation is needed if terrainTileID is not a parent of tileID
                 const dx2 = (tileID.canonical.x >> dz) - terrainTileID.canonical.x;
@@ -309,10 +312,14 @@ export class TerrainTileManager extends Evented {
         tileID: OverscaledTileID,
         canonicalTileRanges: {[zoom: string]: CanonicalTileRange}
     ): boolean {
-        return canonicalTileRanges[tileID.canonical.z] &&
-            tileID.canonical.x >= canonicalTileRanges[tileID.canonical.z].minTileX &&
-            tileID.canonical.x <= canonicalTileRanges[tileID.canonical.z].maxTileX &&
-            tileID.canonical.y >= canonicalTileRanges[tileID.canonical.z].minTileY &&
-            tileID.canonical.y <= canonicalTileRanges[tileID.canonical.z].maxTileY;
+        const range = canonicalTileRanges[tileID.canonical.z];
+
+        return !!range && (
+            tileID.wrap > range.minWrap || tileID.wrap < range.maxWrap ||
+            tileID.canonical.x >= range.minTileXWrapped &&
+            tileID.canonical.x <= range.maxTileXWrapped &&
+            tileID.canonical.y >= range.minTileY &&
+            tileID.canonical.y <= range.maxTileY
+        );
     }
 }
