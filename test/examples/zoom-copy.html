@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <link href="../../dist/maplibre-gl.css" rel="stylesheet" />
+        <style>
+            html,
+            body,
+            #app,
+            #map {
+                margin: 0;
+                width: 100vw;
+                height: 100vh;
+            }
+
+            .maplibregl-control-container {
+                display: none;
+            }
+
+            #change-zoom {
+                position: absolute;
+                top: 1rem;
+                left: 1rem;
+                z-index: 100;
+            }
+
+            #current-zoom {
+                position: absolute;
+                z-index: 100;
+                font-size: 0.8rem;
+                background-color: white;
+                padding: 0.25rem;
+                bottom: 1rem;
+                left: 1rem;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app">
+            <button id="change-zoom">Change Zoom</button>
+            <div id="map"></div>
+            <div id="current-zoom"></div>
+        </div>
+        <script type="module">
+            import "../../dist/maplibre-gl-dev.js";
+
+            const map = new maplibregl.Map({
+                container: "map",
+                style: "https://demotiles.maplibre.org/style.json",
+                center: [151.18068748043615, -33.96434511002358],
+                zoom: 5,
+                minZoom: 4,
+                maxZoom: 20,
+                transformCameraUpdate: (t) => t,
+            });
+
+            const marker = new maplibregl.Marker({
+                color: "#F00",
+            })
+                .setLngLat([151.2057, -33.8727])
+                .addTo(map);
+
+            map.on("render", (e) => {
+                const minZoom = e.target.getMinZoom();
+                const maxZoom = e.target.getMaxZoom();
+                const zoom = e.target.getZoom();
+                document.querySelector("#current-zoom").innerHTML =
+                    `${minZoom} - ${maxZoom} (${zoom})`;
+            });
+
+            document
+                .querySelector("#change-zoom")
+                .addEventListener("click", () => {
+                    const currentMinZoom = map.getMinZoom();
+                    map.setMinZoom(currentMinZoom === 5 ? 4 : 5);
+                    map.setMaxZoom(currentMinZoom === 5 ? 18 : 20);
+                });
+        </script>
+    </body>
+</html>
