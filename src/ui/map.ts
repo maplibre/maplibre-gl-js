@@ -1258,10 +1258,13 @@ export class Map extends Camera {
         }
 
         if (minPitch >= defaultMinPitch && minPitch <= this.transform.maxPitch) {
-            this.transform.setMinPitch(minPitch);
+            const tr = this._getTransformForUpdate();
+            tr.setMinPitch(minPitch);
+            this._applyUpdatedTransform(tr);
             this._update();
-
-            if (this.getPitch() < minPitch) this.setPitch(minPitch);
+            this.fire(new Event('pitchstart'))
+                .fire(new Event('pitch'))
+                .fire(new Event('pitchend'));
 
             return this;
 
@@ -1294,10 +1297,13 @@ export class Map extends Camera {
         }
 
         if (maxPitch >= this.transform.minPitch) {
-            this.transform.setMaxPitch(maxPitch);
+            const tr = this._getTransformForUpdate();
+            tr.setMaxPitch(maxPitch);
+            this._applyUpdatedTransform(tr);
             this._update();
-
-            if (this.getPitch() > maxPitch) this.setPitch(maxPitch);
+            this.fire(new Event('pitchstart'))
+                .fire(new Event('pitch'))
+                .fire(new Event('pitchend'));
 
             return this;
 
