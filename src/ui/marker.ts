@@ -329,6 +329,8 @@ export class Marker extends Evented {
         map.getCanvasContainer().appendChild(this._element);
         map.on('move', this._update);
         map.on('moveend', this._update);
+        map.on('zoomend', this._update);
+        map.on('pitchend', this._update);
         map.on('terrain', this._update);
         map.on('projectiontransition', this._update);
 

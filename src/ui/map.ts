@@ -1168,6 +1168,9 @@ export class Map extends Camera {
             tr.setMinZoom(minZoom);
             this._applyUpdatedTransform(tr);
             this._update();
+            this.fire(new Event('zoomstart'))
+                .fire(new Event('zoom'))
+                .fire(new Event('zoomend'));
 
             return this;
 
@@ -1208,6 +1211,9 @@ export class Map extends Camera {
             tr.setMaxZoom(maxZoom);
             this._applyUpdatedTransform(tr);
             this._update();
+            this.fire(new Event('zoomstart'))
+                .fire(new Event('zoom'))
+                .fire(new Event('zoomend'));
 
             return this;
 
