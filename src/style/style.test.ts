@@ -1278,6 +1278,31 @@ describe('Style.setGlyphs', () => {
         expect(inputJson.glyphs).toBe(inputGlyphs);
         expect(inputJsonString).toEqual(JSON.stringify(inputJson));
     });
+
+    test('allows glyphs to be unset via null and undefined', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+        style.update({zoom: 1} as EvaluationParameters);
+
+        const glyphsUrl = 'https://foo.maplibre.org/font/{fontstack}/{range}.pbf';
+
+        // Set glyphs
+        style.setGlyphs(glyphsUrl);
+        expect(style.getGlyphsUrl()).toBe(glyphsUrl);
+
+        // Unset via null
+        style.setGlyphs(null);
+        expect(style.getGlyphsUrl()).toBeNull();
+
+        // Set again
+        style.setGlyphs(glyphsUrl);
+        expect(style.getGlyphsUrl()).toBe(glyphsUrl);
+
+        // Unset via undefined
+        style.setGlyphs(undefined);
+        expect(style.getGlyphsUrl()).toBeNull();
+    });
 });
 
 describe('Style.addSprite', () => {
