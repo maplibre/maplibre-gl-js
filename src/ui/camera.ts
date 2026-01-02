@@ -346,7 +346,7 @@ export abstract class Camera extends Evented {
      * When the style's projection is changed (or first set), this function should be called.
      */
     migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
-        newTransform.apply(this.transform);
+        newTransform.apply(this.transform, true);
         this.transform = newTransform;
         this.cameraHelper = newCameraHelper;
     }

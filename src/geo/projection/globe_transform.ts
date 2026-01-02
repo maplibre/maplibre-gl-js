@@ -271,10 +271,10 @@ export class GlobeTransform implements ITransform {
         return clone;
     }
 
-    public apply(that: IReadonlyTransform): void {
-        this._helper.apply(that);
+    public apply(that: IReadonlyTransform, constrain?: boolean): void {
+        this._helper.apply(that, constrain);
         this._mercatorTransform.apply(this);
-        this._verticalPerspectiveTransform.apply(this, this._globeLatitudeErrorCorrectionRadians);
+        this._verticalPerspectiveTransform.apply(this, false, this._globeLatitudeErrorCorrectionRadians);
     }
 
     public get projectionMatrix(): mat4 { return this.currentTransform.projectionMatrix; }
@@ -332,7 +332,7 @@ export class GlobeTransform implements ITransform {
         // - if autoCalculateNearFarZ is true then it computes globe Z values
         // - if autoCalculateNearFarZ is false then it inherits our Z values
         // In either case, its Z values are consistent with out settings and we want to copy its Z values to our helper.
-        this._verticalPerspectiveTransform.apply(this, this._globeLatitudeErrorCorrectionRadians);
+        this._verticalPerspectiveTransform.apply(this, false, this._globeLatitudeErrorCorrectionRadians);
         this._helper._nearZ = this._verticalPerspectiveTransform.nearZ;
         this._helper._farZ = this._verticalPerspectiveTransform.farZ;
 

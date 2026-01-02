@@ -272,9 +272,9 @@ export class VerticalPerspectiveTransform implements ITransform {
         return clone;
     }
 
-    public apply(that: IReadonlyTransform, globeLatitudeErrorCorrectionRadians?: number): void {
+    public apply(that: IReadonlyTransform, constrain?: boolean, globeLatitudeErrorCorrectionRadians?: number): void {
         this._globeLatitudeErrorCorrectionRadians = globeLatitudeErrorCorrectionRadians || 0;
-        this._helper.apply(that);
+        this._helper.apply(that, constrain);
     }
 
     public get projectionMatrix(): mat4 { return this._projectionMatrix; }
