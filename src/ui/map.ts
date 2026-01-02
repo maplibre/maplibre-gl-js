@@ -3296,8 +3296,8 @@ export class Map extends Camera {
         webpSupported.testSupport(gl);
     }
 
-    override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper, constrain?: boolean) {
-        super.migrateProjection(newTransform, newCameraHelper, constrain);
+    override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
+        super.migrateProjection(newTransform, newCameraHelper);
         this.painter.transform = newTransform;
         this.fire(new Event('projectiontransition', {
             newProjection: this.style.projection.name,
