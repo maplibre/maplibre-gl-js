@@ -643,13 +643,28 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
-        // Globe: TODO: respect _lngRange, _latRange
-        // It is possible to implement exact constrain for globe, but I don't think it is worth the effort.
-        const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
+        const latRange = this.latRange;
+        const lngRange = this.lngRange;
+
+        let constrainedLat = lngLat.lat;
+        let constrainedLng = lngLat.lng;
+
+        if (latRange) {
+            const minLat = Math.max(-MAX_VALID_LATITUDE, latRange[0]);
+            const maxLat = Math.min(MAX_VALID_LATITUDE, latRange[1]);
+            constrainedLat = clamp(constrainedLat, minLat, maxLat);
+        } else {
+            constrainedLat = clamp(constrainedLat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
+        }
+
+        if (lngRange) {
+            constrainedLng = clamp(constrainedLng, lngRange[0], lngRange[1]);
+        }
+
         const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(0, constrainedLat), this.maxZoom);
         return {
             center: new LngLat(
-                lngLat.lng,
+                constrainedLng,
                 constrainedLat
             ),
             zoom: constrainedZoom
