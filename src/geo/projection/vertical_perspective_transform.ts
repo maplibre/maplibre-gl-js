@@ -1,7 +1,7 @@
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat';
-import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce} from '../../util/util';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, scaleZoom, warnOnce, zoomScale} from '../../util/util';
 import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../mercator_coordinate';
@@ -662,12 +662,36 @@ export class VerticalPerspectiveTransform implements ITransform {
         }
 
         const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(0, constrainedLat), this.maxZoom);
+
+        let finalZoom = constrainedZoom;
+        if (this.lngRange && this.latRange) {
+            const boundsLng = this.lngRange[1] - this.lngRange[0];
+            const boundsLat = this.latRange[1] - this.latRange[0];
+
+            // Calculate current world bounds in pixels
+            const worldSize = this.tileSize * zoomScale(constrainedZoom);
+            // Circumference at the center latitude
+            const circumferenceAtLat = worldSize * Math.cos(constrainedLat * Math.PI / 180);
+
+            const boundsWidthPx = (boundsLng / 360) * circumferenceAtLat;
+            const boundsHeightPx = (boundsLat / 360) * worldSize; // vertical degrees map to pixels approximately linearly on sphere circumference logic
+
+            let scaleX = 0, scaleY = 0;
+            if (boundsWidthPx < this.width) scaleX = this.width / Math.max(boundsWidthPx, 1);
+            if (boundsHeightPx < this.height) scaleY = this.height / Math.max(boundsHeightPx, 1);
+
+            const scale = Math.max(scaleX, scaleY);
+            if (scale > 1) {
+                finalZoom += scaleZoom(scale);
+            }
+        }
+
         return {
             center: new LngLat(
                 constrainedLng,
                 constrainedLat
             ),
-            zoom: constrainedZoom
+            zoom: finalZoom
         };
     };
 
