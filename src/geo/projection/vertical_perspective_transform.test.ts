@@ -31,6 +31,30 @@ describe('VerticalPerspectiveTransform', () => {
         expect(center.lat).toBeGreaterThanOrEqual(-5);
         expect(center.lat).toBeLessThanOrEqual(5);
     });
+
+
+
+    test('maxBounds constrain zoom to cover viewport', () => {
+        const transform = new VerticalPerspectiveTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(1000, 1000);
+
+        // Set maxBounds to a small area (e.g. 10x10 degrees)
+        const bounds = new LngLatBounds([-5, -5, 5, 5]);
+        transform.setMaxBounds(bounds);
+
+        // Try to set zoom to 0 (which would show the whole world, violating the constraint of filling viewport with bounds)
+        transform.setZoom(0);
+
+        // The circumference at lat 0 is equal to worldSize (512 * scale).
+        // Bounds width is 10 degrees = 10/360 * circumference.
+        // We want bounds width to be at least viewport width (1000px).
+        // (10/360) * (512 * scale) >= 1000
+        // scale >= (1000 * 360) / (10 * 512) = 360000 / 5120 ≈ 70.3
+        // zoom = log2(70.3) ≈ 6.13
+        
+        // So we expect zoom to be constrained to something > 6.
+        expect(transform.zoom).toBeGreaterThan(6);
+        expect(transform.zoom).toBeLessThan(7); // Tight bound check
+    });
 });
 
-// Trigger CI
