@@ -1293,9 +1293,9 @@ export abstract class Camera extends Evented {
             if (roll !== undefined) nextTransform.setRoll(roll);
             if (pitch !== undefined) nextTransform.setPitch(pitch);
             if (bearing !== undefined) nextTransform.setBearing(bearing);
-            finalTransform.apply(nextTransform);
+            finalTransform.apply(nextTransform, false);
         }
-        this.transform.apply(finalTransform);
+        this.transform.apply(finalTransform, false);
     }
 
     _fireMoveEvents(eventData?: any) {

@@ -267,13 +267,13 @@ export class GlobeTransform implements ITransform {
         const clone = new GlobeTransform();
         clone._globeness = this._globeness;
         clone._globeLatitudeErrorCorrectionRadians = this._globeLatitudeErrorCorrectionRadians;
-        clone.apply(this);
+        clone.apply(this, false);
         return clone;
     }
 
-    public apply(that: IReadonlyTransform, constrain?: boolean): void {
+    public apply(that: IReadonlyTransform, constrain: boolean): void {
         this._helper.apply(that, constrain);
-        this._mercatorTransform.apply(this);
+        this._mercatorTransform.apply(this, false);
         this._verticalPerspectiveTransform.apply(this, false, this._globeLatitudeErrorCorrectionRadians);
     }
 
@@ -418,11 +418,11 @@ export class GlobeTransform implements ITransform {
     setLocationAtPoint(lnglat: LngLat, point: Point): void {
         if (!this.isGlobeRendering) {
             this._mercatorTransform.setLocationAtPoint(lnglat, point);
-            this.apply(this._mercatorTransform);
+            this.apply(this._mercatorTransform, false);
             return;
         }
         this._verticalPerspectiveTransform.setLocationAtPoint(lnglat, point);
-        this.apply(this._verticalPerspectiveTransform);
+        this.apply(this._verticalPerspectiveTransform, false);
         return;
     }
 

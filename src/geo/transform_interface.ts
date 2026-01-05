@@ -110,7 +110,7 @@ interface ITransformMutators {
      * Applies a transform to the current transform.
      * Optionally constrains the transform's properties to within their respective valid ranges.
      */
-    apply(that: IReadonlyTransform, constrain?: boolean): void;
+    apply(that: IReadonlyTransform, constrain: boolean): void;
 
     /**
      * Sets the transform's minimal allowed zoom level.
