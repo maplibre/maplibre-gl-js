@@ -32,3 +32,5 @@ describe('VerticalPerspectiveTransform', () => {
         expect(center.lat).toBeLessThanOrEqual(5);
     });
 });
+
+// Trigger CI
