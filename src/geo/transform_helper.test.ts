@@ -39,7 +39,7 @@ describe('TransformHelper', () => {
         original.setZoom(2.3);
 
         const cloned = new TransformHelper(emptyCallbacks);
-        cloned.apply(original);
+        cloned.apply(original, false);
 
         // Check all getters from the ITransformGetters interface
         expect(cloned.constrainOverride).toEqual(original.constrainOverride);

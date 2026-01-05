@@ -106,7 +106,12 @@ export interface ITransformGetters {
 interface ITransformMutators {
     clone(): ITransform;
 
-    apply(that: IReadonlyTransform): void;
+    /**
+     * Applies a transform to the current transform.
+     * @param that - The transform to apply to the current transform.
+     * @param constrain - Whether to constrain the transform's center and zoom and recompute internal matricies once applied.
+     */
+    apply(that: IReadonlyTransform, constrain: boolean): void;
 
     /**
      * Sets the transform's minimal allowed zoom level.
