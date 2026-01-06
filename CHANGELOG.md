@@ -5,11 +5,11 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-
 - Fix setting visibility on custom layer ([#6883](https://github.com/maplibre/maplibre-gl-js/issues/6883) (by [melitele](https://github.com/melitele))
 - Hide leading and trailing control characters in `format` expressions ([#6907](https://github.com/maplibre/maplibre-gl-js/pull/6907)) (by [1ec5](https://github.com/1ec5))
 - Fix image sources being clipped at -180 and 180 longitude when terrain is enabled ([#4088](https://github.com/maplibre/maplibre-gl-js/issues/4088)) (by [pstaszek](https://github.com/pstaszek))
 - Fix map not immediately constraining to a valid zoom and center when changing projections ([#6892](https://github.com/maplibre/maplibre-gl-js/issues/6892)) (by [larsmaxfield](https://github.com/larsmaxfield))
+- Diffed changes when json is passed to `setStyle` emit a style.load event. fixes [#2587](https://github.com/maplibre/maplibre-gl-js/issues/2587) [#4757](https://github.com/maplibre/maplibre-gl-js/issues/4757) (by [@lesbaa](https://github.com/lesbaa))
 - _...Add new stuff here..._
 
 ## 5.15.0
