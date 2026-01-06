@@ -886,7 +886,6 @@ describe('Style.setState', () => {
         style.loadJSON(styleJson);
         
         await style.once('style.load');
-        // console.log('styleJson', style);
 
         const newStyleJSON: StyleSpecification = {
             ...styleJson,
