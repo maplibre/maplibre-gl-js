@@ -73,7 +73,7 @@ describe('Browser tests', () => {
                 map.getCanvas().dispatchEvent(new MouseEvent('mouseup', {bubbles: true, button: 2, clientX: 10, clientY: 10}));
             });
         });
-        expect(contextMenuEventFired).toBe('contextmenu');       
+        expect(contextMenuEventFired).toBe('contextmenu');
     });
 
     test('Mousemove events are fired during scrollzoom', {retry: 3, timeout: 20000}, async () => {
@@ -515,13 +515,13 @@ describe('Browser tests', () => {
 
             return Array.from(rgba);
         });
-        
+
         expect(pixel[0]).toBeGreaterThan(0);
         expect(pixel[1]).toBeGreaterThan(0);
         expect(pixel[2]).toBeGreaterThan(0);
         expect(pixel[3]).toBeGreaterThan(0);
     });
-        
+
     test('Map does not log invalid WebGL warnings on context loss/restore', async () => {
         const warnings: string[] = [];
         page.on('console', msg => {
