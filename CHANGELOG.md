@@ -10,6 +10,7 @@
 - Hide leading and trailing control characters in `format` expressions ([#6907](https://github.com/maplibre/maplibre-gl-js/pull/6907)) (by [1ec5](https://github.com/1ec5))
 - Fix image sources being clipped at -180 and 180 longitude when terrain is enabled ([#4088](https://github.com/maplibre/maplibre-gl-js/issues/4088)) (by [pstaszek](https://github.com/pstaszek))
 - Fix map not immediately constraining to a valid zoom and center when changing projections ([#6892](https://github.com/maplibre/maplibre-gl-js/issues/6892)) (by [larsmaxfield](https://github.com/larsmaxfield))
+- Fix a blank map when a resize event is triggered before a WebGL context restoration ([#6935](https://github.com/maplibre/maplibre-gl-js/pull/6935)) (by [ToHold](https://github.com/ToHold))
 - _...Add new stuff here..._
 
 ## 5.15.0
