@@ -1,10 +1,29 @@
 ## main
 
 ### ✨ Features and improvements
+- Add `padding` option to `Popup` class to prevent popups from being positioned too close to map container edges ([#5978](https://github.com/maplibre/maplibre-gl-js/issues/5978))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix setting visibility on custom layer ([#6883](https://github.com/maplibre/maplibre-gl-js/issues/6883) (by [melitele](https://github.com/melitele))
+- Hide leading and trailing control characters in `format` expressions ([#6907](https://github.com/maplibre/maplibre-gl-js/pull/6907)) (by [1ec5](https://github.com/1ec5))
+- Fix image sources being clipped at -180 and 180 longitude when terrain is enabled ([#4088](https://github.com/maplibre/maplibre-gl-js/issues/4088)) (by [pstaszek](https://github.com/pstaszek))
+- Fix map not immediately constraining to a valid zoom and center when changing projections ([#6892](https://github.com/maplibre/maplibre-gl-js/issues/6892)) (by [larsmaxfield](https://github.com/larsmaxfield))
 - Diffed changes when json is passed to `setStyle` emit a style.load event. fixes [#2587](https://github.com/maplibre/maplibre-gl-js/issues/2587) [#4757](https://github.com/maplibre/maplibre-gl-js/issues/4757) (by [@lesbaa](https://github.com/lesbaa))
+
+## 5.15.0
+
+### ✨ Features and improvements
+
+- Support global state expression for layer visibility ([#6659](https://github.com/maplibre/maplibre-gl-js/pull/6659)) (by [melitele](https://github.com/melitele))
+- Update Node.js version to 24.11 for development ([#6851](https://github.com/maplibre/maplibre-gl-js/pull/6851)) (by [HarelM](https://github.com/HarelM))
+
+### 🐞 Bug fixes
+
+- Fix `LngLatBounds#intersects` returning `false` for bounds spanning 360° or more ([#6863](https://github.com/maplibre/maplibre-gl-js/pull/6863)) (by [@lucaswoj](https://github.com/lucaswoj))
+- Fix getting the right zoom for getElevationForLngLat ([#6825](https://github.com/maplibre/maplibre-gl-js/pull/6825)) (by [@HarelM](https://github.com/HarelM))
+- Fix stale transform state being applied after changing `minZoom` or `maxZoom` due to old copies from `transformCameraUpdate` taking precedence. `transformCameraUpdate` is now called from `setMinZoom` and `setMaxZoom` to allow user to control subsequent changes to `zoom` [#6766](https://github.com/maplibre/maplibre-gl-js/issues/6766) (by [@Auspicus](https://github.com/Auspicus))
+- Fix GeoJSON source throwing with undefined properties [#6730](https://github.com/maplibre/maplibre-gl-js/issues/6730) (by [@wayofthefuture](https://github.com/wayofthefuture))
 
 ## 5.14.0
 
@@ -750,7 +769,7 @@
 
 ### ✨ Features and improvements
 
-- ⚠️ Change attribution to be on by default, change `MapOptions.attributionControl` to be the type that the control handles, removed `MapOptions.customAttribution` ([#3618](https://github.com/maplibre/maplibre-gl-js/pull/3618)). Note: showing the logo of MapLibre is not required for using MapLibre. (by [@HarelM](https://github.com/HarelM)) 
+- ⚠️ Change attribution to be on by default, change `MapOptions.attributionControl` to be the type that the control handles, removed `MapOptions.customAttribution` ([#3618](https://github.com/maplibre/maplibre-gl-js/pull/3618)). Note: showing the logo of MapLibre is not required for using MapLibre. (by [@HarelM](https://github.com/HarelM))
 - ⚠️ Changed cooperative gesture config and removed the strings from it in favor of the locale variable ([#3621](https://github.com/maplibre/maplibre-gl-js/pull/3621)) (by [@HarelM](https://github.com/HarelM))
 - ⚠️ Changed the terrain enable disable locale key to match the other keys' styles, updated the typings to allow using locale with more ease ([#3621](https://github.com/maplibre/maplibre-gl-js/pull/3621)) (by [@HarelM](https://github.com/HarelM))
 - Add "opacity" option and "setOpacity" method to Marker ([#3620](https://github.com/maplibre/maplibre-gl-js/pull/3620)) (by [@sbachinin](https://github.com/sbachinin))

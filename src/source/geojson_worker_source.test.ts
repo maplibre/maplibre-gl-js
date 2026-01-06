@@ -8,6 +8,7 @@ import {type Actor} from '../util/actor';
 import {type WorkerTileParameters} from './worker_source';
 import {setPerformance, sleep} from '../util/test/util';
 import {type FakeServer, fakeServer} from 'nise';
+import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
 
 const actor = {send: () => {}} as any as Actor;
 
@@ -66,6 +67,49 @@ describe('reloadTile', () => {
         expect(spy).toHaveBeenCalledTimes(2);
     });
 
+    test('handles null and undefined properties during tile serialization', async () => {
+        const layers = [
+            {
+                id: 'mylayer',
+                source: 'sourceId',
+                type: 'symbol',
+            }
+        ] as LayerSpecification[];
+        const layerIndex = new StyleLayerIndex(layers);
+        const source = new GeoJSONWorkerSource(actor, layerIndex, []);
+        const geoJson = {
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                'coordinates': [0, 0]
+            },
+            'properties': {
+                'nullProperty': null,
+                'undefinedProperty': undefined,
+                'stringProperty': 'string'
+            }
+        };
+        const tileParams = {
+            source: 'sourceId',
+            uid: 0,
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            maxZoom: 10
+        };
+
+        await source.loadData({type: 'geojson', source: 'sourceId', data: geoJson} as LoadGeoJSONParameters);
+
+        // load vector data from geojson, passing through the tile serialization step
+        const data = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        expect(data.featureIndex).toBeDefined();
+
+        // deserialize tile layers in the feature index
+        data.featureIndex.rawTileData = data.rawTileData;
+        const featureLayers = data.featureIndex.loadVTLayers();
+        expect(Object.keys(featureLayers)).toHaveLength(1);
+
+        // validate supported features are present in the index
+        expect(featureLayers[GEOJSON_TILE_LAYER_NAME].feature(0).properties['stringProperty']).toBeDefined();
+    });
 });
 
 describe('resourceTiming', () => {
