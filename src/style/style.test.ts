@@ -884,6 +884,9 @@ describe('Style.setState', () => {
         const style = createStyle();
         const styleJson = createStyleJSON();
         style.loadJSON(styleJson);
+        
+        await style.once('style.load');
+        // console.log('styleJson', style);
 
         const newStyleJSON: StyleSpecification = {
             ...styleJson,
@@ -896,10 +899,12 @@ describe('Style.setState', () => {
             ]
         };
 
-        await style.once('style.load');
-        const spy = vi.spyOn(style, 'fire');
+        const spy = vi.fn();
+
+        await style.once('style.load', spy);
+
         style.setState(newStyleJSON);
-        expect(spy).toHaveBeenCalledWith(new Event('style.load', {style: style}));
+        expect(spy).toHaveBeenCalledWith(expect.objectContaining({style: style, type: 'style.load'}));
     });
 
     test('change transition doesn\'t change the style, but is considered a change', async () => {
