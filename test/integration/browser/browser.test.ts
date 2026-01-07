@@ -73,7 +73,7 @@ describe('Browser tests', () => {
                 map.getCanvas().dispatchEvent(new MouseEvent('mouseup', {bubbles: true, button: 2, clientX: 10, clientY: 10}));
             });
         });
-        expect(contextMenuEventFired).toBe('contextmenu');       
+        expect(contextMenuEventFired).toBe('contextmenu');
     });
 
     test('Mousemove events are fired during scrollzoom', {retry: 3, timeout: 20000}, async () => {
@@ -515,13 +515,13 @@ describe('Browser tests', () => {
 
             return Array.from(rgba);
         });
-        
+
         expect(pixel[0]).toBeGreaterThan(0);
         expect(pixel[1]).toBeGreaterThan(0);
         expect(pixel[2]).toBeGreaterThan(0);
         expect(pixel[3]).toBeGreaterThan(0);
     });
-        
+
     test('Map does not log invalid WebGL warnings on context loss/restore', async () => {
         const warnings: string[] = [];
         page.on('console', msg => {
@@ -548,5 +548,49 @@ describe('Browser tests', () => {
         expect(webglWarnings).to.not.contain('WebGL: INVALID_OPERATION: deleteVertexArray: object does not belong to this context');
         expect(webglWarnings).to.not.contain('WebGL: INVALID_OPERATION: bindBuffer: object does not belong to this context');
         expect(webglWarnings).to.not.contain('[.WebGL-0x3e1400107800] GL_INVALID_OPERATION: glDrawElements: Must have element array buffer bound.');
+    });
+
+    test('Map canvas is not blank after context lost, resize map and context restored', {retry: 3, timeout: 20000}, async () => {
+        await page.evaluate(async () => {
+            const canvas = map.getCanvas();
+            const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+            const ext = gl && gl.getExtension('WEBGL_lose_context');
+            (window as any).ext = ext;
+            ext.loseContext();
+        });
+
+        await page.setViewport({width: 500, height: 500, deviceScaleFactor: 2});
+        await page.setViewport({width: testWidth, height: testHeight, deviceScaleFactor: 2});
+
+        const pixel = await page.evaluate(async () => {
+            const canvas = map.getCanvas();
+            const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+            const ext = (window as any).ext;
+            ext.restoreContext();
+
+            await new Promise(res => map.once('idle', res));
+
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.finish();
+
+            // Read central pixel from the WebGL framebuffer
+            const dpr = window.devicePixelRatio || 1;
+            const width = canvas.width / dpr;
+            const height = canvas.height / dpr;
+
+            const x = Math.floor(width / 2);
+            const y = Math.floor(height / 2);
+            const readY = height - y - 1;
+            const rgba = new Uint8Array(4);
+            gl.readPixels(x, readY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+
+            return Array.from(rgba);
+        });
+
+        // pixel values when style is not well rendered
+        expect(pixel[0]).toBeGreaterThan(0);
+        expect(pixel[1]).toBeGreaterThan(0);
+        expect(pixel[2]).toBeGreaterThan(0);
+        expect(pixel[3]).toBeGreaterThan(0);
     });
 });

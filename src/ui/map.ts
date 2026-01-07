@@ -378,7 +378,7 @@ export type MapOptions = {
     /**
      * Allows overzooming by splitting vector tiles after max zoom.
      * Defines the number of zoom level that will overscale from map's max zoom and below.
-     * For example if the map's max zoom is 20 and this is set to 3, the zoom levels of 20, 19 and 18 will be overscaled 
+     * For example if the map's max zoom is 20 and this is set to 3, the zoom levels of 20, 19 and 18 will be overscaled
      * and the rest will be split.
      * When undefined, all zoom levels after source's max zoom will be overscaled.
      * This can help in reducing the size of the overscaling and improve performance in high zoom levels.
@@ -990,6 +990,39 @@ export class Map extends Camera {
      * ```
      */
     resize(eventData?: any, constrainTransform = true): Map {
+        // Early out if the context is lost
+        // causes a blank map otherwise
+        const isContextLost = this._lostContextStyle.style !== null;
+        if (isContextLost) return this;
+        this._resizeInternal(constrainTransform);
+
+        const fireMoving = !this._moving;
+        if (fireMoving) {
+            this.stop();
+            this.fire(new Event('movestart', eventData))
+                .fire(new Event('move', eventData));
+        }
+
+        this.fire(new Event('resize', eventData));
+
+        if (fireMoving) this.fire(new Event('moveend', eventData));
+
+        return this;
+    }
+
+    /**
+     * Resizes the map according to the dimensions of its
+     * `container` element.
+     *
+     * It does not trigger any events, and does not check for context loss.
+     *
+     * It is used internally and by {@link Map.resize}.
+     *
+     * @internal
+     *
+     * @param constrainTransform - whether to constrain the transform after resizing.
+     */
+    _resizeInternal(constrainTransform = true) {
         const [width, height] = this._containerDimensions();
 
         const clampedPixelRatio = this._getClampedPixelRatio(width, height);
@@ -1007,19 +1040,6 @@ export class Map extends Camera {
         }
 
         this._resizeTransform(constrainTransform);
-
-        const fireMoving = !this._moving;
-        if (fireMoving) {
-            this.stop();
-            this.fire(new Event('movestart', eventData))
-                .fire(new Event('move', eventData));
-        }
-
-        this.fire(new Event('resize', eventData));
-
-        if (fireMoving) this.fire(new Event('moveend', eventData));
-
-        return this;
     }
 
     _resizeTransform(constrainTransform = true) {
@@ -3340,9 +3360,12 @@ export class Map extends Camera {
             this.style.imageManager.images = this._lostContextStyle.images;
         }
 
+        this._lostContextStyle = {style: null, images: null};
+
         this._setupPainter();
         this.resize();
         this._update();
+        this._resizeInternal();
         this.fire(new Event('webglcontextrestored', {originalEvent: event}));
     };
 
