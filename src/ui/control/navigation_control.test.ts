@@ -236,4 +236,17 @@ describe('NavigationControl', () => {
         expect(spySetPitch).toHaveBeenCalled();
         expect(spySetBearing).toHaveBeenCalled();
     });
+
+    test('zoom buttons respect zoomSnap', () => {
+        map.setZoomSnap(1.0);
+        map.setZoom(9.7);
+        map.addControl(new NavigationControl());
+
+        const zoomInButton = map.getContainer().querySelector('.maplibregl-ctrl-zoom-in');
+        simulate.click(zoomInButton);
+        map._renderTaskQueue.run();
+
+        // 9.7 + 1.0 = 10.7 -> snap to 11.0
+        expect(map.getZoom()).toBe(11.0);
+    });
 });

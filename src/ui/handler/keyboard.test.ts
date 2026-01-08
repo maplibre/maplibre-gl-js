@@ -208,6 +208,21 @@ describe('keyboard', () => {
 
     });
 
+    test('KeyboardHandler respects zoomSnap', () => {
+        const map = createMap({zoom: 9.2, zoomSnap: 1.0});
+        const spy = vi.spyOn(map, 'easeTo');
+
+        simulate.keydown(map.getCanvas(), {keyCode: 187, key: 'Equal'}); // "+" key
+        // 9.2 + 1.0 = 10.2 -> snap to 10.0
+        expect(spy.mock.calls[0][0].zoom).toBe(10.0);
+
+        map.setZoomSnap(0.5);
+        map.setZoom(9.4);
+        simulate.keydown(map.getCanvas(), {keyCode: 187, key: 'Equal'});
+        // 9.4 + 1.0 = 10.4 -> snap to 10.5
+        expect(spy.mock.calls[1][0].zoom).toBe(10.5);
+    });
+
     test('KeyboardHandler zooms map in response to -/+ keys when disableRotation has been called', () => {
         const map = createMap({zoom: 10, center: [0, 0]});
         const spy = vi.spyOn(map, 'easeTo');

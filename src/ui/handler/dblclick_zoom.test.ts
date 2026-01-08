@@ -55,6 +55,47 @@ describe('dbclick_zoom', () => {
         map.remove();
     });
 
+    test('DoubleClickZoomHandler respects zoomSnap', () => {
+        const map = new Map({
+            container: window.document.createElement('div'),
+            zoomSnap: 1.0,
+            zoom: 9.7
+        } as any);
+        const spy = vi.spyOn(map, 'easeTo');
+
+        simulate.dblclick(map.getCanvas());
+        map._renderTaskQueue.run();
+
+        // 9.7 + 1.0 = 10.7 -> snap to 11.0
+        expect(spy).toHaveBeenCalled();
+        expect(spy.mock.calls[0][0].zoom).toBe(11.0);
+        map.remove();
+    });
+
+    test('DoubleClickZoomHandler double-tap respects zoomSnap', async () => {
+        const map = new Map({
+            container: window.document.createElement('div'),
+            zoomSnap: 1.0,
+            zoom: 9.7
+        } as any);
+        const spy = vi.spyOn(map, 'easeTo');
+
+        const canvas = map.getCanvas();
+        simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
+        simulate.touchend(canvas);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
+        simulate.touchend(canvas);
+
+        // MapLibre's TapZoomHandler uses a 0ms timeout to reset state
+        await new Promise(resolve => setTimeout(resolve, 10));
+
+        // 9.7 + 1.0 = 10.7 -> snap to 11.0
+        expect(spy).toHaveBeenCalled();
+        expect(spy.mock.calls[0][0].zoom).toBe(11.0);
+        map.remove();
+    });
+
     test('DoubleClickZoomHandler zooms on double tap if touchstart events are < 300ms apart', async () => {
         const map = createMap();
 
