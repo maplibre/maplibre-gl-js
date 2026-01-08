@@ -5,14 +5,15 @@ import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {setPerformance, beforeMapTest, createTerrain} from '../../util/test/util';
 
-function createMap() {
+function createMap(options: any = {}) {
     return new Map({
         container: DOM.create('div', '', window.document.body),
         style: {
             'version': 8,
             'sources': {},
             'layers': []
-        }
+        },
+        ...options
     });
 }
 
@@ -667,5 +668,121 @@ describe('ScrollZoomHandler', () => {
         expect(map.getZoom()).toBeCloseTo(0, 2);
 
         map.remove();
+    });
+
+    describe('zoomSnap', () => {
+        test('Mouse wheel settles on a snapped zoom level', async () => {
+            vi.useFakeTimers();
+            const timeControlNow = vi.spyOn(timeControl, 'now');
+            let now = 1555555555555;
+            timeControlNow.mockReturnValue(now);
+            setPerformance();
+
+            const map = createMap({zoomSnap: 1.0});
+            map.setZoom(10);
+
+            // Initial render
+            map._renderTaskQueue.run();
+
+            // 1. Simulate wheel event
+            simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+            map._renderTaskQueue.run();
+
+            // 2. Advance time to finish the internal ScrollZoomHandler easing (200ms)
+            // We need to run enough frames to let it finish.
+            for (let i = 0; i < 20; i++) {
+                now += 20;
+                timeControlNow.mockReturnValue(now);
+                vi.advanceTimersByTime(20);
+                map._renderTaskQueue.run();
+            }
+
+            // 3. Advance time to finish the snapping easeTo (100ms)
+            for (let i = 0; i < 10; i++) {
+                now += 20;
+                timeControlNow.mockReturnValue(now);
+                vi.advanceTimersByTime(20);
+                map._renderTaskQueue.run();
+            }
+
+            expect(map.getZoom()).toBe(11.0);
+            map.remove();
+            vi.useRealTimers();
+        });
+
+        test('Trackpad scroll settles on a snapped zoom level', async () => {
+            vi.useFakeTimers();
+            const timeControlNow = vi.spyOn(timeControl, 'now');
+            let now = 1555555555555;
+            timeControlNow.mockReturnValue(now);
+            setPerformance();
+
+            const map = createMap({zoomSnap: 0.5});
+            map.setZoom(10);
+            map._renderTaskQueue.run();
+
+            // Simulate trackpad scroll (no easing in ScrollZoomHandler)
+            simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -1, ctrlKey: false});
+            map._renderTaskQueue.run();
+
+            // ScrollZoomHandler has a 200ms finishTimeout
+            for (let i = 0; i < 20; i++) {
+                now += 20;
+                timeControlNow.mockReturnValue(now);
+                vi.advanceTimersByTime(20);
+                map._renderTaskQueue.run();
+            }
+
+            // Now snapping animation should be playing
+            for (let i = 0; i < 20; i++) {
+                now += 20;
+                timeControlNow.mockReturnValue(now);
+                vi.advanceTimersByTime(20);
+                map._renderTaskQueue.run();
+            }
+
+            const zoom = map.getZoom();
+            expect(zoom % 0.5).toBeCloseTo(0, 10);
+            map.remove();
+            vi.useRealTimers();
+        });
+
+        test('Snapping animation is interrupted by new scroll', async () => {
+            vi.useFakeTimers();
+            const timeControlNow = vi.spyOn(timeControl, 'now');
+            let now = 1555555555555;
+            timeControlNow.mockReturnValue(now);
+            setPerformance();
+
+            const map = createMap({zoomSnap: 1.0});
+            map.setZoom(10);
+            map._renderTaskQueue.run();
+
+            // 1. Trigger a wheel event
+            simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+            map._renderTaskQueue.run();
+
+            // 2. Advance to the end of the wheel scroll
+            for (let i = 0; i < 15; i++) {
+                now += 20;
+                timeControlNow.mockReturnValue(now);
+                vi.advanceTimersByTime(20);
+                map._renderTaskQueue.run();
+            }
+
+            const zoomBeforeInterrupt = map.getZoom();
+            expect(zoomBeforeInterrupt).toBeGreaterThan(10.0);
+
+            // 3. Immediately start a new scroll while the snapping animation is likely starting
+            simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+            map._renderTaskQueue.run();
+
+            // The zoom should be moving again from where it was
+            expect(map.getZoom()).toBeGreaterThan(zoomBeforeInterrupt);
+            expect(map.getZoom()).toBeLessThan(12.0);
+
+            map.remove();
+            vi.useRealTimers();
+        });
     });
 });

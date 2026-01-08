@@ -158,6 +158,7 @@ export class HandlerManager {
     _terrainMovement: boolean;
     _zoom: {handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
+    _zoomStart: number;
     _listeners: Array<[Window | Document | HTMLElement, string, {
         passive?: boolean;
         capture?: boolean;
@@ -618,6 +619,9 @@ export class HandlerManager {
             const {originalEvent} = newEventsInProgress[eventName];
             if (!this._eventsInProgress[eventName]) {
                 startEvents[`${eventName}start`] = originalEvent;
+                if (eventName === 'zoom') {
+                    this._zoomStart = this._map.getZoom();
+                }
             }
             this._eventsInProgress[eventName] = newEventsInProgress[eventName];
         }
@@ -683,6 +687,34 @@ export class HandlerManager {
                 this._map.fire(new Event('moveend', {originalEvent: originalEndEvent}));
                 if (shouldSnapToNorth(this._map.getBearing())) {
                     this._map.resetNorth();
+                }
+
+                if (endEvents['zoomend'] && this._map.getZoomSnap() > 0) {
+                    const zoom = this._map.getZoom();
+                    const snap = this._map.getZoomSnap();
+                    let snappedZoom;
+
+                    const deltaSinceStart = zoom - this._zoomStart;
+                    const threshold = 0.01; // Small threshold to detect intentional movement
+
+                    if (deltaSinceStart > threshold) {
+                        // Moved in: snap to the next higher increment (magnetic)
+                        snappedZoom = Math.ceil(zoom / snap - 1e-5) * snap;
+                    } else if (deltaSinceStart < -threshold) {
+                        // Moved out: snap to the next lower increment
+                        snappedZoom = Math.floor(zoom / snap + 1e-5) * snap;
+                    } else {
+                        // Very small movement: snap to nearest (usually the start point)
+                        snappedZoom = (this._map as any)._snapZoom(zoom);
+                    }
+
+                    if (Math.abs(zoom - snappedZoom) > 1e-10) {
+                        this._map.easeTo({
+                            zoom: snappedZoom,
+                            around: this._map.getCenter(),
+                            essential: true
+                        }, {originalEvent: originalEndEvent});
+                    }
                 }
             }
             this._updatingCamera = false;

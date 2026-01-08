@@ -297,7 +297,21 @@ export class ScrollZoomHandler implements Handler {
             }
 
             const fromScale = typeof this._targetZoom !== 'number' ? tr.scale : zoomScale(this._targetZoom);
-            this._targetZoom = tr.applyConstrain(tr.getCameraLngLat(), scaleZoom(fromScale * scale)).zoom;
+            const target = tr.applyConstrain(tr.getCameraLngLat(), scaleZoom(fromScale * scale)).zoom;
+
+            if (this._type === 'wheel' && this._map.getZoomSnap() > 0) {
+                const snap = this._map.getZoomSnap();
+                const currentZoom = tr.zoom;
+                if (this._delta > 0) {
+                    // Zooming in: snap to the next higher increment
+                    this._targetZoom = Math.ceil(target / snap) * snap;
+                } else if (this._delta < 0) {
+                    // Zooming out: snap to the next lower increment
+                    this._targetZoom = Math.floor(target / snap) * snap;
+                }
+            } else {
+                this._targetZoom = target;
+            }
 
             // if this is a mouse wheel, refresh the starting zoom and easing
             // function we're using to smooth out the zooming between wheel
