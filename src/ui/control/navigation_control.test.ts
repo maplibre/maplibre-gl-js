@@ -237,7 +237,7 @@ describe('NavigationControl', () => {
         expect(spySetBearing).toHaveBeenCalled();
     });
 
-    test('zoom buttons respect zoomSnap', () => {
+    test('zoom buttons round to nearest zoomSnap if defined', () => {
         map.setZoomSnap(1.0);
         map.setZoom(9.7);
         map.addControl(new NavigationControl());
@@ -246,7 +246,6 @@ describe('NavigationControl', () => {
         const zoomInButton = map.getContainer().querySelector('.maplibregl-ctrl-zoom-in');
         simulate.click(zoomInButton);
 
-        // 9.7 + 1.0 = 10.7 -> snap to 11.0
         expect(spy).toHaveBeenCalledWith(11.0, expect.anything(), expect.anything());
     });
 });

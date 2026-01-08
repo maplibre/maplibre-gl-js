@@ -86,12 +86,12 @@ describe('dbclick_zoom', () => {
         const canvas = map.getCanvas();
         simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
         simulate.touchend(canvas);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await sleep(100);
         simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
         simulate.touchend(canvas);
 
         // MapLibre's TapZoomHandler uses a 0ms timeout to reset state
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await sleep(10);
 
         // 9.7 + 1.0 = 10.7 -> snap to 11.0
         expect(spy).toHaveBeenCalled();
