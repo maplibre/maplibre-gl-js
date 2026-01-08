@@ -3901,19 +3901,19 @@ describe('fitScreenCoordinates globe projection', () => {
 });
 
 describe('zoomSnap', () => {
-    test('_snapZoom logic', () => {
+    test('snapZoom logic', () => {
         const camera = createCamera({zoomSnap: 0.5});
-        expect(camera._snapZoom(9.1)).toBe(9.0);
-        expect(camera._snapZoom(9.4)).toBe(9.5);
-        expect(camera._snapZoom(9.7)).toBe(9.5);
-        expect(camera._snapZoom(9.8)).toBe(10.0);
+        expect(camera.snapZoom(9.1)).toBe(9.0);
+        expect(camera.snapZoom(9.4)).toBe(9.5);
+        expect(camera.snapZoom(9.7)).toBe(9.5);
+        expect(camera.snapZoom(9.8)).toBe(10.0);
 
         camera.setZoomSnap(1.0);
-        expect(camera._snapZoom(9.4)).toBe(9.0);
-        expect(camera._snapZoom(9.6)).toBe(10.0);
+        expect(camera.snapZoom(9.4)).toBe(9.0);
+        expect(camera.snapZoom(9.6)).toBe(10.0);
 
         camera.setZoomSnap(0);
-        expect(camera._snapZoom(9.63)).toBe(9.63);
+        expect(camera.snapZoom(9.63)).toBe(9.63);
     });
 
     test('zoomIn() discrete snap', () => {

@@ -531,7 +531,7 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomIn(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this._snapZoom(this.getZoom() + 1), options, eventData);
+        this.zoomTo(this.snapZoom(this.getZoom() + 1), options, eventData);
         return this;
     }
 
@@ -549,7 +549,7 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomOut(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this._snapZoom(this.getZoom() - 1), options, eventData);
+        this.zoomTo(this.snapZoom(this.getZoom() - 1), options, eventData);
         return this;
     }
 
@@ -1184,14 +1184,13 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * @internal
      * Snaps the provided zoom level to the nearest `zoomSnap` increment.
      * If `zoomSnap` is 0 or less, the zoom level is returned unchanged.
      *
      * @param zoom - The zoom level to snap.
      * @returns The snapped zoom level.
      */
-    _snapZoom(zoom: number): number {
+    snapZoom(zoom: number): number {
         const snap = this._zoomSnap;
         if (snap <= 0) return zoom;
 

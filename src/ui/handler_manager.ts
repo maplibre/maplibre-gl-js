@@ -705,7 +705,7 @@ export class HandlerManager {
                         snappedZoom = Math.floor(zoom / snap + 1e-5) * snap;
                     } else {
                         // Very small movement: snap to nearest (usually the start point)
-                        snappedZoom = (this._map as any)._snapZoom(zoom);
+                        snappedZoom = this._map.snapZoom(zoom);
                     }
 
                     if (Math.abs(zoom - snappedZoom) > 1e-10) {

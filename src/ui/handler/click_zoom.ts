@@ -29,7 +29,7 @@ export class ClickZoomHandler implements Handler {
             cameraAnimation: (map: Map) => {
                 map.easeTo({
                     duration: 300,
-                    zoom: map._snapZoom(this._tr.zoom + (e.shiftKey ? -1 : 1)),
+                    zoom: map.snapZoom(this._tr.zoom + (e.shiftKey ? -1 : 1)),
                     around: this._tr.unproject(point)
                 }, {originalEvent: e});
             }
