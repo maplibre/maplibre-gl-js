@@ -242,11 +242,11 @@ describe('NavigationControl', () => {
         map.setZoom(9.7);
         map.addControl(new NavigationControl());
 
+        const spy = vi.spyOn(map, 'zoomTo');
         const zoomInButton = map.getContainer().querySelector('.maplibregl-ctrl-zoom-in');
         simulate.click(zoomInButton);
-        map._renderTaskQueue.run();
 
         // 9.7 + 1.0 = 10.7 -> snap to 11.0
-        expect(map.getZoom()).toBe(11.0);
+        expect(spy).toHaveBeenCalledWith(11.0, expect.anything(), expect.anything());
     });
 });
