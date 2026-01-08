@@ -106,7 +106,8 @@ export type MapOptions = {
     bearingSnap?: number;
     /**
      * The step increment the zoom level will snap to.
-     * For example, if `zoomSnap` is 1, the map will snap to whole integers.
+     * For example, if `zoomSnap` is 1, the map will snap to whole integers during discrete zoom operations.
+     * If set to 0, zooming is continuous.
      * @defaultValue 0
      */
     zoomSnap?: number;

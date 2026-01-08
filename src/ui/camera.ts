@@ -518,7 +518,7 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Increases the map's zoom level by 1.
+     * Incrementally increases the map's zoom level by 1, first snapping to the nearest `zoomSnap` increment.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
@@ -536,7 +536,7 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Decreases the map's zoom level by 1.
+     * Decreases the map's zoom level by 1, first snapping to the nearest `zoomSnap` increment.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
@@ -1183,11 +1183,20 @@ export abstract class Camera extends Evented {
         return this;
     }
 
+    /**
+     * @internal
+     * Snaps the provided zoom level to the nearest `zoomSnap` increment.
+     * If `zoomSnap` is 0 or less, the zoom level is returned unchanged.
+     *
+     * @param zoom - The zoom level to snap.
+     * @returns The snapped zoom level.
+     */
     _snapZoom(zoom: number): number {
         const snap = this._zoomSnap;
         if (snap <= 0) return zoom;
 
-        return Math.round(zoom / snap) * snap;
+        const inv = 1 / snap;
+        return Math.round(zoom * inv) / inv;
     }
 
     _prepareEase(eventData: any, noMoveStart: boolean,
