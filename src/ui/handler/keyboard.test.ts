@@ -248,4 +248,16 @@ describe('keyboard', () => {
         expect(spy.mock.calls[3][0].zoom).toBe(8);
 
     });
+
+    test('KeyboardHandler respects zoomSnap with shift key', () => {
+        const map = createMap({zoom: 9.4, zoomSnap: 0.5});
+        const spy = vi.spyOn(map, 'easeTo');
+
+        // Simulate pressing '+' with Shift key (zoom by 2)
+        // 9.4 + 2.0 = 11.4 -> snap(11.4, 0.5) = 11.5
+        simulate.keydown(map.getCanvas(), {keyCode: 187, key: 'Equal', shiftKey: true});
+        expect(spy).toHaveBeenCalled();
+        expect(spy.mock.calls[0][0].zoom).toBe(11.5);
+        map.remove();
+    });
 });
