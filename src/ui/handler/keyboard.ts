@@ -123,7 +123,7 @@ export class KeyboardHandler implements Handler {
                     easeId: 'keyboardHandler',
                     easing: easeOut,
 
-                    zoom: zoomDir ? Math.round(tr.zoom) + zoomDir * (e.shiftKey ? 2 : 1) : tr.zoom,
+                    zoom: zoomDir ? map._snapZoom(tr.zoom + zoomDir * (e.shiftKey ? 2 : 1)) : tr.zoom,
                     bearing: tr.bearing + bearingDir * this._bearingStep,
                     pitch: tr.pitch + pitchDir * this._pitchStep,
                     offset: [-xDir * this._panStep, -yDir * this._panStep],
