@@ -267,6 +267,7 @@ export abstract class Camera extends Evented {
     _padding: boolean;
 
     _bearingSnap: number;
+    _zoomSnap: number;
     _easeStart: number;
     _easeOptions: {
         duration?: number;
@@ -326,12 +327,14 @@ export abstract class Camera extends Evented {
 
     constructor(transform: ITransform, cameraHelper: ICameraHelper, options: {
         bearingSnap: number;
+        zoomSnap: number;
     }) {
         super();
         this._moving = false;
         this._zooming = false;
         this.transform = transform;
         this._bearingSnap = options.bearingSnap;
+        this._zoomSnap = options.zoomSnap;
         this.cameraHelper = cameraHelper;
 
         this.on('moveend', () => {
@@ -594,6 +597,25 @@ export abstract class Camera extends Evented {
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigate-the-map-with-game-like-controls/)
      */
     getBearing(): number { return this.transform.bearing; }
+
+    /**
+     * Sets the map's zoom snap level.
+     *
+     * @param snap - The zoom snap level to set.
+     */
+    setZoomSnap(snap: number): this {
+        this._zoomSnap = snap;
+        return this;
+    }
+
+    /**
+     * Returns the map's current zoom snap level.
+     *
+     * @returns The map's current zoom snap level.
+     */
+    getZoomSnap(): number {
+        return this._zoomSnap;
+    }
 
     /**
      * Sets the map's bearing (rotation). The bearing is the compass direction that is "up"; for example, a bearing
@@ -1159,6 +1181,10 @@ export abstract class Camera extends Evented {
         }, options as any);
 
         return this;
+    }
+
+    _snapZoom(zoom: number): number {
+        return zoom;
     }
 
     _prepareEase(eventData: any, noMoveStart: boolean,
