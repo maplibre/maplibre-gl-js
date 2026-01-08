@@ -531,7 +531,7 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomIn(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this.getZoom() + 1, options, eventData);
+        this.zoomTo(this._snapZoom(this.getZoom() + 1), options, eventData);
         return this;
     }
 
@@ -549,7 +549,7 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomOut(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this.getZoom() - 1, options, eventData);
+        this.zoomTo(this._snapZoom(this.getZoom() - 1), options, eventData);
         return this;
     }
 
@@ -1184,7 +1184,10 @@ export abstract class Camera extends Evented {
     }
 
     _snapZoom(zoom: number): number {
-        return zoom;
+        const snap = this._zoomSnap;
+        if (snap <= 0) return zoom;
+
+        return Math.round(zoom / snap) * snap;
     }
 
     _prepareEase(eventData: any, noMoveStart: boolean,
