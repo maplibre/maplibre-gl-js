@@ -392,6 +392,7 @@ export class Style extends Evented {
                 const layer = this._layers[layerId];
                 const layoutAffectingGlobalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
                 const paintAffectingGlobalStateRefs = layer.getPaintAffectingGlobalStateRefs();
+                const visibilityAffectingGlobalStateRefs = layer.getVisibilityAffectingGlobalStateRefs();
 
                 if (layoutAffectingGlobalStateRefs.has(ref)) {
                     sourceIdsToReload.add(layer.source);
@@ -400,6 +401,10 @@ export class Style extends Evented {
                     for (const {name, value} of paintAffectingGlobalStateRefs.get(ref)) {
                         this._updatePaintProperty(layer, name, value);
                     }
+                }
+                if (visibilityAffectingGlobalStateRefs?.has(ref)) {
+                    layer.recalculateVisibility();
+                    this._updateLayer(layer);
                 }
             }
         }
@@ -515,7 +520,8 @@ export class Style extends Evented {
     _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined) {
         this.imageManager.setLoaded(false);
 
-        this._spriteRequest = new AbortController();
+        const abortController = new AbortController();
+        this._spriteRequest = abortController;
         let err: Error;
         loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), this._spriteRequest).then((images) => {
             this._spriteRequest = null;
@@ -550,7 +556,9 @@ export class Style extends Evented {
         }).catch((error) => {
             this._spriteRequest = null;
             err = error;
-            this.fire(new ErrorEvent(err));
+            if (!abortController.signal.aborted) { // ignore abort
+                this.fire(new ErrorEvent(err));
+            }
         }).finally(() => {
             this.imageManager.setLoaded(true);
             this._availableImages = this.imageManager.listImages();
@@ -874,6 +882,8 @@ export class Style extends Evented {
 
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
+
+        this.fire(new Event('style.load', {style: this}));
 
         return true;
     }
@@ -1905,12 +1915,13 @@ export class Style extends Evented {
         return glyphs;
     }
 
-    getGlyphsUrl() {
+    getGlyphsUrl(): string | null {
         return this.stylesheet.glyphs || null;
     }
 
-    setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}) {
+    setGlyphs(glyphsUrl: string | null | undefined, options: StyleSetterOptions = {}) {
         this._checkLoaded();
+
         if (glyphsUrl && this._validate(validateStyle.glyphs, 'glyphs', glyphsUrl, null, options)) {
             return;
         }
@@ -2042,15 +2053,6 @@ export class Style extends Evented {
         for (const id in this.tileManagers) {
             const tileManager = this.tileManagers[id];
             tileManager.setEventedParent(null);
-
-            if (tileManager._tiles) {
-                for (const tileId in tileManager._tiles) {
-                    const tile = tileManager._tiles[tileId];
-                    tile.unloadVectorData();
-                }
-                tileManager._tiles = {};
-            }
-            tileManager._cache.reset();
             tileManager.onRemove(this.map);
         }
         this.tileManagers = {};

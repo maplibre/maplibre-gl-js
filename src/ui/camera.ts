@@ -346,7 +346,7 @@ export abstract class Camera extends Evented {
      * When the style's projection is changed (or first set), this function should be called.
      */
     migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
-        newTransform.apply(this.transform);
+        newTransform.apply(this.transform, true);
         this.transform = newTransform;
         this.cameraHelper = newCameraHelper;
     }
@@ -1293,9 +1293,9 @@ export abstract class Camera extends Evented {
             if (roll !== undefined) nextTransform.setRoll(roll);
             if (pitch !== undefined) nextTransform.setPitch(pitch);
             if (bearing !== undefined) nextTransform.setBearing(bearing);
-            finalTransform.apply(nextTransform);
+            finalTransform.apply(nextTransform, false);
         }
-        this.transform.apply(finalTransform);
+        this.transform.apply(finalTransform, false);
     }
 
     _fireMoveEvents(eventData?: any) {
@@ -1638,6 +1638,6 @@ export abstract class Camera extends Evented {
         if (!this.terrain) {
             return null;
         }
-        return this.terrain.getElevationForLngLatZoom(LngLat.convert(lngLatLike), this.transform.tileZoom);
+        return this.terrain.getElevationForLngLat(LngLat.convert(lngLatLike), this.transform);
     }
 }

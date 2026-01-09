@@ -1,6 +1,8 @@
 import {describe, test, expect} from 'vitest';
 import fs from 'fs';
+import path from 'path';
 import packageJson from '../../package.json' assert {type: 'json'};
+import bundleSize from './bundle_size.json' assert {type: 'json'};
 
 const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
 
@@ -37,10 +39,14 @@ describe('test min build', () => {
         // need to make sure not a big bug that resulted in a big loss.
         const decreaseQuota = 4096;
 
-        // feel free to update this value after you've checked that it has changed on purpose :-)
-        const expectedBytes = 1014309;
+        let expectedBytes = bundleSize;
 
-        expect(actualBytes, `Consider changing expectedBytes to: ${actualBytes}`).toBeLessThan(expectedBytes + increaseQuota);
+        if (process.env.UPDATE) {
+            expectedBytes = actualBytes;
+            fs.writeFileSync(path.resolve(__dirname, './bundle_size.json'), `${expectedBytes}\n`);
+        }
+
+        expect(actualBytes, `Consider changing bundle_size.json to ${actualBytes}: UPDATE=true npm run test-build -- min.test.ts`).toBeLessThan(expectedBytes + increaseQuota);
         expect(actualBytes).toBeGreaterThan(expectedBytes - decreaseQuota);
     });
 });

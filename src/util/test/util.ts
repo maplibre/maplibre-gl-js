@@ -37,7 +37,7 @@ export class StubMap extends Evented {
     getTerrain() { return this._terrain; }
 
     migrateProjection(newTransform: ITransform) {
-        newTransform.apply(this.transform);
+        newTransform.apply(this.transform, true);
         this.transform = newTransform;
     }
 }
@@ -228,6 +228,7 @@ export function createTerrain(): Terrain {
     return {
         pointCoordinate: () => null,
         getElevationForLngLatZoom: () => 1000,
+        getElevationForLngLat: () => 1000,
         getMinTileElevationForLngLatZoom: () => 0,
         getFramebuffer: () => ({}),
         getCoordsTexture: () => ({}),

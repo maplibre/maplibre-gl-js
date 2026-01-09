@@ -1,153 +1,40 @@
 name: Release
 
+permissions:
+  id-token: write  # Required for trusted publishing
+  contents: write
+  attestations: write
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
 jobs:
-  release-check:
-    name: Check if version changed
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          fetch-depth: 0
-          ref: main
-
-      - name: Use Node.js from nvmrc
-        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v4
-        with:
-          node-version-file: '.nvmrc'
-
-      - name: Check if version has been updated
-        id: check
-        uses: EndBug/version-check@d17247dd94ca7b39d0b0691399be8d7c510622c9 # v2
-          
-    outputs:
-      publish: ${{ steps.check.outputs.changed }}
-
   release:
-    name: Release
-    needs: release-check
-    if: ${{ needs.release-check.outputs.publish == 'true' }}
+    uses: maplibre/reusable-workflows/.github/workflows/npm-publish.yml@main
+    with:
+      build-command: npm ci && npm run build-dist
+      docs-output-dir: site
+      docs-gh-pages-dir: docs
+
+  get_tag:
+    needs: release
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
-    defaults:
-      run:
-        shell: bash
+    outputs:
+      latest_tag: ${{ steps.set-tag.outputs.tag }}
     steps:
-
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
-          fetch-depth: 0
-          ref: main
-
-      - name: Use Node.js from nvmrc
-        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v4
-        with:
-          node-version-file: '.nvmrc'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Get version
-        id: package-version
-        uses: martinbeentjes/npm-get-version-action@3cf273023a0dda27efcd3164bdfb51908dd46a5b # v1.3.1
-
-      - name: Install
-        run: npm ci
-
-      - name: Prepare release
-        id: prepare_release
+          fetch-depth: 0 # Necessary to see all tags
+      - id: set-tag
         run: |
-          RELEASE_TYPE=$(node -e "console.log(require('semver').prerelease('${{ steps.package-version.outputs.current-version }}') ? 'prerelease' : 'regular')")
-          echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
+          # Get the most recent tag reachable from the current commit
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
-      - name: Build
-        run: |
-          npm run build-dist
-          npm run build-benchmarks
-
-      - name: Publish NPM package (regular)
-        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
-        run: |
-          npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
-
-      - name: Publish NPM package (pre-release)
-        if: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
-        run: |
-          npm publish --tag next
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
-
-      - name: Tag commit and push
-        id: tag_version
-        uses: mathieudutour/github-tag-action@a22cf08638b34d5badda920f9daf6e72c477b07b # v6.2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          custom_tag: ${{ steps.package-version.outputs.current-version }}
-
-      - name: Create Archive
-        run: |
-          zip -r dist dist
-
-      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
-        with:
-          subject-path: dist.zip
-
-      - name: Build Release Notes
-        id: release_notes
-        run: |
-          RELEASE_NOTES_PATH="${PWD}/release_notes.txt"
-          ./build/release-notes.js > ${RELEASE_NOTES_PATH}
-          echo "release_notes=${RELEASE_NOTES_PATH}" >> $GITHUB_OUTPUT
-
-      - name: Create GitHub Release
-        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag: ${{ steps.tag_version.outputs.new_tag }}
-          name: ${{ steps.tag_version.outputs.new_tag }}
-          bodyFile: ${{ steps.release_notes.outputs.release_notes }}
-          artifacts: "dist.zip"
-          artifactContentType: "application/zip"
-          allowUpdates: false
-          immutableCreate: true
-          draft: false
-          prerelease: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
-
-      - name: Copy benchmarks_generated.js
-        run: |
-          mkdir tmp
-          cp test/bench/versions/benchmarks_generated.js tmp
-          cp test/bench/versions/benchmarks_generated.js.map tmp
-
-      - name: Upload Benchmarks to GitHub Pages
-        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: tmp
-          destination_dir: benchmarks/${{ steps.tag_version.outputs.new_tag }}
-          commit_message: 'deploy: ${{ steps.tag_version.outputs.new_tag }}'
-
-      - name: Build the Docs
-        run: |
-          npm run generate-docs
-          docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build
-
-      - name: Publish the docs
-        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
-        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: site
-          destination_dir: docs
-          commit_message: 'deploy docs: ${{ steps.tag_version.outputs.new_tag }}'
+  upload_benchmarks:
+    needs: get_tag
+    uses: ./.github/workflows/upload-benchmarks.yml
+    with:
+      tag: ${{ needs.get_tag.outputs.latest_tag }}

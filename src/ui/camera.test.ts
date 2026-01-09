@@ -2485,15 +2485,15 @@ describe('queryTerrainElevation', () => {
     });
 
     test('Calls getElevationForLngLatZoom with correct arguments', () => {
-        const getElevationForLngLatZoom = vi.fn();
-        camera.terrain = {getElevationForLngLatZoom} as any as Terrain;
+        const getElevationForLngLat = vi.fn();
+        camera.terrain = {getElevationForLngLat} as any as Terrain;
         camera.transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
 
         camera.queryTerrainElevation([1, 2]);
 
-        expect(camera.terrain.getElevationForLngLatZoom).toHaveBeenCalledWith(
+        expect(camera.terrain.getElevationForLngLat).toHaveBeenCalledWith(
             expect.objectContaining({lng: 1, lat: 2,}),
-            camera.transform.tileZoom
+            camera.transform
         );
     });
 });

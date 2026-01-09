@@ -179,6 +179,20 @@ describe('Style.loadURL', () => {
         expect(error).toBeTruthy();
         expect(error.status).toBe(errorStatus);
     });
+
+    test('does not throw if request is pending when removed', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        const errorHandler = vi.fn();
+        style.on('error', errorHandler);
+
+        style.loadURL('style.json');
+        style._remove();
+
+        expect(errorHandler).not.toHaveBeenCalled();
+    });
 });
 
 describe('Style.loadJSON', () => {
@@ -535,6 +549,26 @@ describe('Style.loadJSON', () => {
         expect(paint.get('circle-color').evaluate({} as Feature, {})).toEqual(new Color(1, 0, 0, 1));
         expect(paint.get('circle-radius').evaluate({} as Feature, {})).toEqual(12);
     });
+
+    test('does not throw if request is pending when removed', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        const errorHandler = vi.fn();
+        style.on('error', errorHandler);
+
+        style.loadJSON(
+            createStyleJSON({
+                sources: {
+                    'source-id': createGeoJSONSource()
+                },
+            })
+        );
+        style._remove();
+
+        expect(errorHandler).not.toHaveBeenCalled();
+    });
 });
 
 describe('Style._load', () => {
@@ -844,6 +878,32 @@ describe('Style.setState', () => {
         for (const spy of spys) {
             expect(spy).toHaveBeenCalled();
         }
+    });
+
+    test('fire style.load event when JSON style is diffed', async () => {
+        const style = createStyle();
+        const styleJson = createStyleJSON();
+        style.loadJSON(styleJson);
+        
+        await style.once('style.load');
+
+        const newStyleJSON: StyleSpecification = {
+            ...styleJson,
+            layers: [
+                {
+                    id: 'layerId2',
+                    type: 'background',
+                },
+                ...styleJson.layers,
+            ]
+        };
+
+        const spy = vi.fn();
+
+        await style.once('style.load', spy);
+
+        style.setState(newStyleJSON);
+        expect(spy).toHaveBeenCalledWith(expect.objectContaining({style: style, type: 'style.load'}));
     });
 
     test('change transition doesn\'t change the style, but is considered a change', async () => {
@@ -1244,6 +1304,31 @@ describe('Style.setGlyphs', () => {
         expect(inputJson.glyphs).toBe(inputGlyphs);
         expect(inputJsonString).toEqual(JSON.stringify(inputJson));
     });
+
+    test('allows glyphs to be unset via null and undefined', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+        style.update({zoom: 1} as EvaluationParameters);
+
+        const glyphsUrl = 'https://foo.maplibre.org/font/{fontstack}/{range}.pbf';
+
+        // Set glyphs
+        style.setGlyphs(glyphsUrl);
+        expect(style.getGlyphsUrl()).toBe(glyphsUrl);
+
+        // Unset via null
+        style.setGlyphs(null);
+        expect(style.getGlyphsUrl()).toBeNull();
+
+        // Set again
+        style.setGlyphs(glyphsUrl);
+        expect(style.getGlyphsUrl()).toBe(glyphsUrl);
+
+        // Unset via undefined
+        style.setGlyphs(undefined);
+        expect(style.getGlyphsUrl()).toBeNull();
+    });
 });
 
 describe('Style.addSprite', () => {
@@ -1305,6 +1390,22 @@ describe('Style.addSprite', () => {
 
         expect(inputJson.sprite).toBe(inputSprite);
         expect(JSON.stringify(inputJson)).toEqual(inputJsonString);
+    });
+
+    test('does not throw if request is pending when removed', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        const errorHandler = vi.fn();
+        style.on('error', errorHandler);
+
+        style.addSprite('test', 'https://example.com/sprite');
+        style._remove();
+
+        await waitForEvent(style, 'data', (event) => event.dataType === 'style');
+
+        expect(errorHandler).not.toHaveBeenCalled();
     });
 });
 
@@ -1391,6 +1492,20 @@ describe('Style.setSprite', () => {
 
         expect(inputJson.sprite).toBe(inputSprite);
         expect(inputJsonString).toEqual(JSON.stringify(inputJson));
+    });
+
+    test('throws when error loading sprite', async () => {
+        server.respondWith('https://example.com/sprite', [404, {}, '']);
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        const errorPromise = style.once('error');
+        style.setSprite('https://example.com/sprite');
+        server.respond();
+
+        const {error} = await errorPromise;
+        expect(error.message).toBe('AJAXError: Not Found (404): https://example.com/sprite.json');
     });
 });
 
@@ -1801,6 +1916,34 @@ describe('Style.setGlobalStateProperty', () => {
         style.tileManagers['circle-source-id'].reload = vi.fn();
 
         style.setGlobalStateProperty('circleColor', 'red');
+        style.update({} as EvaluationParameters);
+
+        expect(style.tileManagers['circle-source-id'].resume).toHaveBeenCalled();
+        expect(style.tileManagers['circle-source-id'].reload).toHaveBeenCalled();
+    });
+
+    test('reloads sources when state property is used in visibility', async() => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sources: {
+                'circle-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'layer-id',
+                type: 'circle',
+                source: 'circle-source-id',
+                layout: {
+                    'visibility': ['case', ['global-state', 'visibility'], 'visible', 'none']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.tileManagers['circle-source-id'].resume = vi.fn();
+        style.tileManagers['circle-source-id'].reload = vi.fn();
+
+        style.setGlobalStateProperty('visibility', true);
         style.update({} as EvaluationParameters);
 
         expect(style.tileManagers['circle-source-id'].resume).toHaveBeenCalled();

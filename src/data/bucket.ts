@@ -6,11 +6,11 @@ import type {Context} from '../gl/context';
 import type {FeatureStates} from '../source/source_state';
 import type {ImagePosition} from '../render/image_atlas';
 import type {CanonicalTileID} from '../tile/tile_id';
-import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 import type Point from '@mapbox/point-geometry';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import type {DashEntry} from '../render/line_atlas';
 import type {Feature as StyleFeature} from '@maplibre/maplibre-gl-style-spec';
+import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -34,7 +34,7 @@ export type PopulateParameters = {
 };
 
 export type IndexedFeature = {
-    feature: VectorTileFeature;
+    feature: VectorTileFeatureLike;
     id: number | string;
     index: number;
     sourceLayerIndex: number;
@@ -87,7 +87,7 @@ export interface Bucket {
     readonly stateDependentLayers: Array<any>;
     readonly stateDependentLayerIds: Array<string>;
     populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID): void;
-    update(states: FeatureStates, vtLayer: VectorTileLayer, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>): void;
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>): void;
     isEmpty(): boolean;
     upload(context: Context): void;
     uploadPending(): boolean;

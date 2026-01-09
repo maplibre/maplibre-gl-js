@@ -1,6 +1,6 @@
 import {uniqueId, parseCacheControl} from '../util/util';
 import {deserialize as deserializeBucket} from '../data/bucket';
-import '../data/feature_index';
+import {GEOJSON_TILE_LAYER_NAME, type FeatureIndex, type QueryResults} from '../data/feature_index';
 import {GeoJSONFeature} from '../util/vectortile_to_geojson';
 import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
 import {SymbolBucket} from '../data/bucket/symbol_bucket';
@@ -9,11 +9,11 @@ import {Texture} from '../render/texture';
 import {now} from '../util/time_control';
 import {toEvaluationFeature} from '../data/evaluation_feature';
 import {EvaluationParameters} from '../style/evaluation_parameters';
-import {type SourceFeatureState} from '../source/source_state';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
+import type {SourceFeatureState} from '../source/source_state';
 import type {Bucket} from '../data/bucket';
 import type {StyleLayer} from '../style/style_layer';
 import type {WorkerTileResult} from '../source/worker_source';
@@ -29,11 +29,10 @@ import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {LayerFeatureStates} from '../source/source_state';
 import type Point from '@mapbox/point-geometry';
 import type {mat4} from 'gl-matrix';
-import type {VectorTileLayer} from '@mapbox/vector-tile';
 import type {ExpiryData} from '../util/ajax';
 import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict} from '../source/query_features';
-import type {FeatureIndex, QueryResults} from '../data/feature_index';
 import type {DashEntry} from '../render/line_atlas';
+import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 /**
  * The tile's state, can be:
  *
@@ -94,9 +93,9 @@ export class Tile {
     showCollisionBoxes: boolean;
     placementSource: any;
     actor: Actor;
-    vtLayers: {[_: string]: VectorTileLayer};
+    vtLayers: {[_: string]: VectorTileLayerLike};
 
-    neighboringTiles: any;
+    neighboringTiles: Record<string, {backfilled: boolean}>;
     dem: DEMData;
     demMatrix: mat4;
     aborted: boolean;
@@ -374,7 +373,7 @@ export class Tile {
         const vtLayers = featureIndex.loadVTLayers();
 
         const sourceLayer = params && params.sourceLayer ? params.sourceLayer : '';
-        const layer = vtLayers._geojsonTileLayer || vtLayers[sourceLayer];
+        const layer = vtLayers[GEOJSON_TILE_LAYER_NAME] || vtLayers[sourceLayer];
 
         if (!layer) return;
 
@@ -479,7 +478,7 @@ export class Tile {
 
             const bucket = this.buckets[id];
             // Buckets are grouped by common source-layer
-            const sourceLayerId = bucket.layers[0]['sourceLayer'] || '_geojsonTileLayer';
+            const sourceLayerId = bucket.layers[0]['sourceLayer'] || GEOJSON_TILE_LAYER_NAME;
             const sourceLayer = vtLayers[sourceLayerId];
             const sourceLayerStates = states[sourceLayerId];
             if (!sourceLayer || !sourceLayerStates || Object.keys(sourceLayerStates).length === 0) continue;

@@ -4,15 +4,36 @@ on:
   push:
     branches:
       - main
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Tagged commit to upload (e.g., v1.2.3). Leave empty for main branch.'
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tagged commit to upload (e.g., v1.2.3). Leave empty for main branch.'
+        required: false
+        type: string
 
 jobs:
   upload_benchmarks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Determine ref
+        if: inputs.tag != ''
+        id: ref
+        run: |
+          TAG="${{ inputs.tag }}"
+          echo "ref=refs/tags/${TAG}" >> $GITHUB_OUTPUT
+
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          ref: ${{ steps.ref.outputs.ref || 'refs/heads/main' }}
 
       - name: Use Node.js from nvmrc
-        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v4
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v4
         with:
           node-version-file: '.nvmrc'
 
@@ -30,10 +51,11 @@ jobs:
           cp test/bench/versions/benchmarks_generated.js tmp
           cp test/bench/versions/benchmarks_generated.js.map tmp
 
-      - name: Upload to GitHub Pages (main)
-        if: startsWith(github.ref, 'refs/heads/main')
+      - name: Upload to GitHub Pages
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: tmp
-          destination_dir: benchmarks/main
+          destination_dir: benchmarks/${{ inputs.tag || 'main' }}
+          commit_message: 'deploy: ${{ inputs.tag }}'
+

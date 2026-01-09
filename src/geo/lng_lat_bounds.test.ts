@@ -1,6 +1,9 @@
 import {describe, test, expect} from 'vitest';
 import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
+import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds';
+import {CanonicalTileID} from '../tile/tile_id';
+import {EXTENT} from '../data/extent';
 
 describe('LngLatBounds', () => {
     test('constructor', () => {
@@ -423,6 +426,13 @@ describe('LngLatBounds', () => {
                 const bounds = new LngLatBounds([-180, 5], [-175, 10]);
                 expect(tileBounds.intersects(bounds)).toBe(true);
             });
+
+            test('entire worlds tile should return true', () => {
+                const tileBounds = tileIdToLngLatBounds(new CanonicalTileID(0, 0, 0), 2048 / EXTENT);
+                const bounds = new LngLatBounds([[-8.290589217651302, 44.47966524518165], [20.566067150212803, 50.98693819014929]]);
+                expect(tileBounds.intersects(bounds)).toBe(true);
+            });
         });
     });
 });
+

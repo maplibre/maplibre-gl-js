@@ -50,7 +50,3 @@ Generates `data/array_types.ts`, which consists of:
 Generates the various `style/style_layer/[layer type]_style_layer_properties.ts` code files based on the content of `v8.json`. These files provide the type signatures for the paint and layout properties for each type of style layer.
 
 <hr>
-
-### Generate Release Nodes
-
-`release-notes.js` Used to generate release notes when releasing a new version

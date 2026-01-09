@@ -94,6 +94,6 @@ Note too that if the CSS isn't available by the first render, as soon as the CSS
 MapLibre GL JS is also distributed via UNPKG. Our latest version can installed by adding below tags this in the html `<head>`. Further instructions on how to select specific versions and semver ranges can be found on at [unpkg.com](https://unpkg.com).
 
 ```html
-<script src="https://unpkg.com/maplibre-gl@^5.6.2/dist/maplibre-gl.js"></script>
-<link href="https://unpkg.com/maplibre-gl@^5.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://unpkg.com/maplibre-gl@^5.14.0/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@^5.14.0/dist/maplibre-gl.css" rel="stylesheet" />
 ```

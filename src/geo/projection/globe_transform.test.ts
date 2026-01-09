@@ -598,7 +598,7 @@ describe('GlobeTransform', () => {
             const globeTransform = createGlobeTransform();
             globeTransform.setRenderWorldCopies(true);
             const mercator = new MercatorTransform({minZoom: 0, maxZoom: 1, minPitch: 2, maxPitch: 3, renderWorldCopies: false});
-            mercator.apply(globeTransform);
+            mercator.apply(globeTransform, false);
 
             expect(mercator.renderWorldCopies).toBeTruthy();
         });

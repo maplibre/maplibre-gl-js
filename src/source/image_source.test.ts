@@ -222,6 +222,21 @@ describe('ImageSource', () => {
         expect(missingImagesource.loaded()).toBe(true);
     });
 
+    test('does not throw when updateImage is called while a request is pending', async () => {
+        const map = new StubMap() as any;
+        const source = createSource({url: '/image.png', eventedParent: map});
+
+        const errorHandler = vi.fn();
+        source.on('error', errorHandler);
+
+        source.onAdd(map);
+        source.updateImage({url: '/image2.png'});
+
+        await sleep(0);
+
+        expect(errorHandler).not.toHaveBeenCalled();
+    });
+
     describe('terrainTileRanges', () => {
         test('sets tile ranges for all zoom levels', () => {
             const source = createSource({url: '/image.png'});
@@ -241,10 +256,86 @@ describe('ImageSource', () => {
             source.onAdd(map);
             server.respond();
             source.setCoordinates([[11.39585,47.30074],[11.46585,47.30074],[11.46585,47.25074],[11.39585,47.25074]]);
-            expect(source.terrainTileRanges[9]).toEqual({minTileX: 272, minTileY: 179, maxTileX: 272, maxTileY: 179});
-            expect(source.terrainTileRanges[10]).toEqual({minTileX: 544, minTileY: 358, maxTileX: 544, maxTileY: 359});
-            expect(source.terrainTileRanges[11]).toEqual({minTileX: 1088, minTileY: 717, maxTileX: 1089, maxTileY: 718});
-            expect(source.terrainTileRanges[12]).toEqual({minTileX: 2177, minTileY: 1435, maxTileX: 2178, maxTileY: 1436});
+            expect(source.terrainTileRanges[9]).toEqual({
+                minWrap: 0,
+                maxWrap: 0,
+                minTileXWrapped: 272,
+                maxTileXWrapped: 272,
+                minTileY: 179,
+                maxTileY: 179
+            });
+            expect(source.terrainTileRanges[10]).toEqual({
+                minWrap: 0,
+                maxWrap: 0,
+                minTileXWrapped: 544,
+                maxTileXWrapped: 544,
+                minTileY: 358,
+                maxTileY: 359
+            });
+            expect(source.terrainTileRanges[11]).toEqual({
+                minWrap: 0,
+                maxWrap: 0,
+                minTileXWrapped: 1088,
+                maxTileXWrapped: 1089,
+                minTileY: 717,
+                maxTileY: 718
+            });
+            expect(source.terrainTileRanges[12]).toEqual({
+                minWrap: 0,
+                maxWrap: 0,
+                minTileXWrapped: 2177,
+                maxTileXWrapped: 2178,
+                minTileY: 1435,
+                maxTileY: 1436
+            });
+        });
+
+        test('calculates tile ranges for an image exceeds the world bounds - east', () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            source.onAdd(map);
+            server.respond();
+            source.setCoordinates([[-180, 60], [270, 60], [270, -60], [-180, -60]]);
+            expect(source.terrainTileRanges[0]).toEqual({
+                minWrap: 0,
+                maxWrap: 1,
+                minTileXWrapped: 0,
+                maxTileXWrapped: 0,
+                minTileY: 0,
+                maxTileY: 0
+            });
+            expect(source.terrainTileRanges[1]).toEqual({
+                minWrap: 0,
+                maxWrap: 1,
+                minTileXWrapped: 0,
+                maxTileXWrapped: 0,
+                minTileY: 0,
+                maxTileY: 1
+            });
+        });
+
+        test('calculates tile ranges for an image exceeds the world bounds - west', () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            source.onAdd(map);
+            server.respond();
+            source.setCoordinates([[120, 60], [-270, 60], [-270, -60], [120, -60]]);
+            expect(source.terrainTileRanges[0]).toEqual({
+                minWrap: -1,
+                maxWrap: 0,
+                minTileXWrapped: 0,
+                maxTileXWrapped: 0,
+                minTileY: 0,
+                maxTileY: 0
+            });
+            expect(source.terrainTileRanges[1]).toEqual({
+                minWrap: -1,
+                maxWrap: 0,
+                minTileXWrapped: 1,
+                maxTileXWrapped: 1,
+                minTileY: 0,
+                maxTileY: 1
+            });
         });
     });
 });

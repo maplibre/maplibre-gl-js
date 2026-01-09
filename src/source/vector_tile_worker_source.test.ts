@@ -12,6 +12,7 @@ import {setPerformance, sleep} from '../util/test/util';
 import {ABORT_ERROR} from '../util/abort_error';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import {VectorTile} from '@mapbox/vector-tile';
+import Point from '@mapbox/point-geometry';
 
 describe('vector tile worker source', () => {
     const actor = {sendAsync: () => Promise.resolve({})} as IActor;
@@ -44,7 +45,7 @@ describe('vector tile worker source', () => {
 
         expect(source.loading).toEqual({});
         await expect(abortPromise).resolves.toBeFalsy();
-        await expect(loadPromise).rejects.toThrow(ABORT_ERROR);
+        await expect(loadPromise).rejects.toThrow(expect.objectContaining({name: ABORT_ERROR}));
     });
 
     test('VectorTileWorkerSource.removeTile removes loaded tile', async () => {
@@ -99,12 +100,12 @@ describe('vector tile worker source', () => {
                                     name: 'test'
                                 },
                                 loadGeometry () {
-                                    return [[{x: 0, y: 0}]];
+                                    return [[new Point(0, 0)]];
                                 }
                             })
                         }
                     }
-                } as any as VectorTile,
+                },
                 rawData: rawTileData
             };
         };

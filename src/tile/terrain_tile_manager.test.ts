@@ -71,12 +71,23 @@ describe('TerrainTileManager', () => {
         const tileID = new OverscaledTileID(5, 0, 5, 17, 11);
         const tile = new Tile(tileID, 256);
         tile.dem = {} as DEMData;
-        tsc.tileManager._tiles[tileID.key] = tile;
+        tsc.tileManager._inViewTiles.setTile(tileID.key, tile);
         expect(tsc.deltaZoom).toBe(1);
         expect(tsc.getSourceTile(tileID)).toBeFalsy();
         expect(tsc.getSourceTile(tileID.children(12)[0])).toBeTruthy();
         expect(tsc.getSourceTile(tileID.children(12)[0].children(12)[0])).toBeFalsy();
         expect(tsc.getSourceTile(tileID.children(12)[0].children(12)[0], true)).toBeTruthy();
+    });
+
+    test('getSourceTile should get tile from out of view cache when tile in not in view', () => {
+        const tileID = new OverscaledTileID(6, 0, 6, 0, 0);
+        const underzoomTileID = tileID.scaledTo(tileID.canonical.z - tsc.deltaZoom);
+        const tile = new Tile(underzoomTileID, 256);
+        tile.dem = {} as DEMData;
+        tsc.tileManager._outOfViewCache.setMaxSize(1);
+        tsc.tileManager._outOfViewCache.add(underzoomTileID, tile);
+        expect(tsc.tileManager._inViewTiles.getTileById(underzoomTileID.key)).toBeUndefined();
+        expect(tsc.getSourceTile(tileID, true).tileID.key).toBe(underzoomTileID.key);
     });
 
     describe('getTerrainCoords', () => {
@@ -139,7 +150,11 @@ describe('TerrainTileManager', () => {
                         minTileX: 2,
                         maxTileX: 4,
                         minTileY: 1,
-                        maxTileY: 3
+                        maxTileY: 3,
+                        minTileXWrapped: 2,
+                        maxTileXWrapped: 4,
+                        minWrap: 0,
+                        maxWrap: 0
                     }
                 };
                 const resultOverlapping = tsc.getTerrainCoords(testTileOverlapping, terrainTileRanges);
@@ -159,7 +174,11 @@ describe('TerrainTileManager', () => {
                         minTileX: 4,
                         maxTileX: 6,
                         minTileY: 1,
-                        maxTileY: 3
+                        maxTileY: 3,
+                        minTileXWrapped: 4,
+                        maxTileXWrapped: 6,
+                        minWrap: 0,
+                        maxWrap: 0
                     }
                 };
                 const resultOverlapping = tsc.getTerrainCoords(testTileOverlapping, terrainTileRanges);
@@ -182,7 +201,11 @@ describe('TerrainTileManager', () => {
                         minTileX: 2,
                         maxTileX: 4,
                         minTileY: 1,
-                        maxTileY: 3
+                        maxTileY: 3,
+                        minTileXWrapped: 2,
+                        maxTileXWrapped: 4,
+                        minWrap: 0,
+                        maxWrap: 0
                     }
                 };
                 const result = tsc.getTerrainCoords(testTile, terrainTileRanges);

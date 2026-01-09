@@ -145,7 +145,7 @@ export class Painter {
 
         // Within each layer there are multiple distinct z-planes that can be drawn to.
         // This is implemented using the WebGL depth buffer.
-        this.numSublayers = TileManager.maxUnderzooming + TileManager.maxOverzooming + 1;
+        this.numSublayers = TileManager.maxOverzooming + TileManager.maxUnderzooming + 1;
         this.depthEpsilon = 1 / Math.pow(2, 16);
 
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();

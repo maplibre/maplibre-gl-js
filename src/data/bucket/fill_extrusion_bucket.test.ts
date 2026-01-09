@@ -6,7 +6,7 @@ import {type EvaluationParameters} from '../../style/evaluation_parameters';
 import {type ZoomHistory} from '../../style/zoom_history';
 import {type BucketParameters} from '../bucket';
 import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile';
-import {type VectorTileLayer} from '@mapbox/vector-tile';
+import {type VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 function createFillExtrusionBucket({id, layout, paint, globalState, availableImages}: CreateBucketParameters): FillExtrusionBucket {
     const layer = new FillExtrusionStyleLayer({
@@ -22,7 +22,7 @@ function createFillExtrusionBucket({id, layout, paint, globalState, availableIma
 }
 
 describe('FillExtrusionBucket', () => {
-    let sourceLayer: VectorTileLayer;
+    let sourceLayer: VectorTileLayerLike;
     beforeAll(() => {
         // Load fill extrusion features from fixture tile.
         sourceLayer = loadVectorTile().layers.water;

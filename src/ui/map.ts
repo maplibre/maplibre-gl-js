@@ -378,7 +378,7 @@ export type MapOptions = {
     /**
      * Allows overzooming by splitting vector tiles after max zoom.
      * Defines the number of zoom level that will overscale from map's max zoom and below.
-     * For example if the map's max zoom is 20 and this is set to 3, the zoom levels of 20, 19 and 18 will be overscaled 
+     * For example if the map's max zoom is 20 and this is set to 3, the zoom levels of 20, 19 and 18 will be overscaled
      * and the rest will be split.
      * When undefined, all zoom levels after source's max zoom will be overscaled.
      * This can help in reducing the size of the overscaling and improve performance in high zoom levels.
@@ -964,7 +964,7 @@ export class Map extends Camera {
 
     calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number): CameraOptions {
         if (altitudeTo == null && this.terrain) {
-            altitudeTo = this.terrain.getElevationForLngLatZoom(to, this.transform.tileZoom);
+            altitudeTo = this.terrain.getElevationForLngLat(to, this.transform);
         }
         return super.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
     }
@@ -990,6 +990,39 @@ export class Map extends Camera {
      * ```
      */
     resize(eventData?: any, constrainTransform = true): Map {
+        // Early out if the context is lost
+        // causes a blank map otherwise
+        const isContextLost = this._lostContextStyle.style !== null;
+        if (isContextLost) return this;
+        this._resizeInternal(constrainTransform);
+
+        const fireMoving = !this._moving;
+        if (fireMoving) {
+            this.stop();
+            this.fire(new Event('movestart', eventData))
+                .fire(new Event('move', eventData));
+        }
+
+        this.fire(new Event('resize', eventData));
+
+        if (fireMoving) this.fire(new Event('moveend', eventData));
+
+        return this;
+    }
+
+    /**
+     * Resizes the map according to the dimensions of its
+     * `container` element.
+     *
+     * It does not trigger any events, and does not check for context loss.
+     *
+     * It is used internally and by {@link Map.resize}.
+     *
+     * @internal
+     *
+     * @param constrainTransform - whether to constrain the transform after resizing.
+     */
+    _resizeInternal(constrainTransform = true) {
         const [width, height] = this._containerDimensions();
 
         const clampedPixelRatio = this._getClampedPixelRatio(width, height);
@@ -1007,19 +1040,6 @@ export class Map extends Camera {
         }
 
         this._resizeTransform(constrainTransform);
-
-        const fireMoving = !this._moving;
-        if (fireMoving) {
-            this.stop();
-            this.fire(new Event('movestart', eventData))
-                .fire(new Event('move', eventData));
-        }
-
-        this.fire(new Event('resize', eventData));
-
-        if (fireMoving) this.fire(new Event('moveend', eventData));
-
-        return this;
     }
 
     _resizeTransform(constrainTransform = true) {
@@ -1144,10 +1164,10 @@ export class Map extends Camera {
         minZoom = minZoom === null || minZoom === undefined ? defaultMinZoom : minZoom;
 
         if (minZoom >= defaultMinZoom && minZoom <= this.transform.maxZoom) {
-            this.transform.setMinZoom(minZoom);
+            const tr = this._getTransformForUpdate();
+            tr.setMinZoom(minZoom);
+            this._applyUpdatedTransform(tr);
             this._update();
-
-            if (this.getZoom() < minZoom) this.setZoom(minZoom);
 
             return this;
 
@@ -1184,10 +1204,10 @@ export class Map extends Camera {
         maxZoom = maxZoom === null || maxZoom === undefined ? defaultMaxZoom : maxZoom;
 
         if (maxZoom >= this.transform.minZoom) {
-            this.transform.setMaxZoom(maxZoom);
+            const tr = this._getTransformForUpdate();
+            tr.setMaxZoom(maxZoom);
+            this._applyUpdatedTransform(tr);
             this._update();
-
-            if (this.getZoom() > maxZoom) this.setZoom(maxZoom);
 
             return this;
 
@@ -1769,8 +1789,9 @@ export class Map extends Camera {
      * Returns an array of MapGeoJSONFeature objects
      * representing visible features that satisfy the query parameters.
      *
-     * @param geometryOrOptions - (optional) The geometry of the query region:
-     * either a single point or southwest and northeast points describing a bounding box.
+     * @param geometryOrOptions - (optional) The geometry of the query region in pixel points within the map viewport:
+     * either a single pixel point or a pair of top-left and bottom-right pixel points describing a bounding box.
+     * The origin of the pixel points is at the top-left of the map viewport.
      * Omitting this parameter (i.e. calling {@link Map.queryRenderedFeatures} with zero arguments,
      * or with only a `options` argument) is equivalent to passing a bounding box encompassing the entire
      * map viewport.
@@ -2264,13 +2285,10 @@ export class Map extends Camera {
      * ```
      */
     areTilesLoaded(): boolean {
-        const sources = this.style && this.style.tileManagers;
-        for (const id in sources) {
-            const source = sources[id];
-            const tiles = source._tiles;
-            for (const t in tiles) {
-                const tile = tiles[t];
-                if (!(tile.state === 'loaded' || tile.state === 'errored')) return false;
+        const tileManagers = this.style && this.style.tileManagers;
+        for (const tileManager of Object.values(tileManagers)) {
+            if (!tileManager.areTilesLoaded()) {
+                return false;
             }
         }
         return true;
@@ -2896,7 +2914,8 @@ export class Map extends Camera {
     }
 
     /**
-     * Sets the value of the style's glyphs property.
+    * Sets the value of the style's glyphs property. Pass a falsy value (null or undefined)
+    * to unset glyphs.
      *
      * @param glyphsUrl - Glyph URL to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/glyphs/).
      * @param options - Options object.
@@ -2905,7 +2924,7 @@ export class Map extends Camera {
      * map.setGlyphs('https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf');
      * ```
      */
-    setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}): this {
+    setGlyphs(glyphsUrl: string | null | undefined, options: StyleSetterOptions = {}): this {
         this._lazyInitEmptyStyle();
         this.style.setGlyphs(glyphsUrl, options);
         return this._update(true);
@@ -2914,7 +2933,7 @@ export class Map extends Camera {
     /**
      * Returns the value of the style's glyphs URL
      *
-     * @returns glyphs Style's glyphs url
+     * @returns glyphs Style's glyphs url, or `null` if glyphs are unset.
      */
     getGlyphs(): string | null {
         return this.style.getGlyphsUrl();
@@ -3341,9 +3360,12 @@ export class Map extends Camera {
             this.style.imageManager.images = this._lostContextStyle.images;
         }
 
+        this._lostContextStyle = {style: null, images: null};
+
         this._setupPainter();
         this.resize();
         this._update();
+        this._resizeInternal();
         this.fire(new Event('webglcontextrestored', {originalEvent: event}));
     };
 

@@ -231,22 +231,22 @@ describe('TileManager.addTile', () => {
 
         const id = tileID.key;
         expect(tileManager._timers[id]).toBeFalsy();
-        expect(tileManager._cache.has(tileID)).toBeFalsy();
+        expect(tileManager._outOfViewCache.has(tileID)).toBeFalsy();
 
         tileManager._addTile(tileID);
 
         expect(tileManager._timers[id]).toBeTruthy();
-        expect(tileManager._cache.has(tileID)).toBeFalsy();
+        expect(tileManager._outOfViewCache.has(tileID)).toBeFalsy();
 
         tileManager._removeTile(tileID.key);
 
         expect(tileManager._timers[id]).toBeFalsy();
-        expect(tileManager._cache.has(tileID)).toBeTruthy();
+        expect(tileManager._outOfViewCache.has(tileID)).toBeTruthy();
 
         tileManager._addTile(tileID);
 
         expect(tileManager._timers[id]).toBeTruthy();
-        expect(tileManager._cache.has(tileID)).toBeFalsy();
+        expect(tileManager._outOfViewCache.has(tileID)).toBeFalsy();
 
     });
 
@@ -289,8 +289,8 @@ describe('TileManager.addTile', () => {
             const id = tileIDs[i];
             const key = id.key;
 
-            expect(tileManager._tiles[key]).toBeTruthy();
-            expect(tileManager._tiles[key].tileID).toEqual(id);
+            expect(tileManager._inViewTiles.getTileById(key)).toBeTruthy();
+            expect(tileManager._inViewTiles.getTileById(key).tileID).toEqual(id);
         }
 
     });
@@ -303,7 +303,7 @@ describe('TileManager.removeTile', () => {
         tileManager._addTile(tileID);
         await tileManager.once('data');
         tileManager._removeTile(tileID.key);
-        expect(tileManager._tiles[tileID.key]).toBeFalsy();
+        expect(tileManager._inViewTiles.getTileById(tileID.key)).toBeFalsy();
     });
 
     test('caches (does not unload) loaded tile', () => {
@@ -560,7 +560,7 @@ describe('TileManager / Source lifecycle', () => {
         });
         tileManager.onAdd(undefined);
         // we expect the tile manager to have five tiles, but only to have reloaded one
-        expect(Object.keys(tileManager._tiles)).toHaveLength(5);
+        expect(tileManager._inViewTiles.getAllIds()).toHaveLength(5);
         expect(reloadTileSpy).toHaveBeenCalledTimes(1);
 
     });
@@ -587,7 +587,7 @@ describe('TileManager / Source lifecycle', () => {
         tileManager.onAdd(undefined);
         // We expect the tile manager to have five tiles, and for all of them
         // to be reloaded
-        expect(Object.keys(tileManager._tiles)).toHaveLength(5);
+        expect(tileManager._inViewTiles.getAllIds()).toHaveLength(5);
         expect(reloadTileSpy).toHaveBeenCalledTimes(5);
 
     });
@@ -656,19 +656,20 @@ describe('TileManager.update', () => {
 
         const style = map.style;
         const tileManager = style.tileManagers['rasterSource'];
-        const spy = vi.spyOn(tileManager, '_updateFadingTiles');
+        
         tileManager._loadTile = async () => {};
 
         const fakeTile = new Tile(new OverscaledTileID(3, 0, 3, 1, 2), undefined);
+        fakeTile.resetFadeLogic = vi.fn();
         (fakeTile as any).texture = {bind: () => {}, size: [256, 256]};
         fakeTile.state = 'loaded';
-        tileManager._tiles[fakeTile.tileID.key] = fakeTile;
+        tileManager._inViewTiles.setTile(fakeTile.tileID.key, fakeTile);
 
         await map.once('render');
         map.setZoom(3);
         await map.once('render');
 
-        expect(spy).not.toHaveBeenCalled();
+        expect(fakeTile.resetFadeLogic).not.toHaveBeenCalled();
     });
 
     test('respects Source.hasTile method if it is present', async () => {
@@ -1063,8 +1064,8 @@ describe('TileManager._updateRetainedTiles', () => {
         };
 
         const idealTile = new OverscaledTileID(3, 0, 3, 1, 2);
-        tileManager._tiles[idealTile.key] = new Tile(idealTile, undefined);
-        tileManager._tiles[idealTile.key].state = 'errored';
+        tileManager._inViewTiles.setTile(idealTile.key, new Tile(idealTile, undefined));
+        tileManager._inViewTiles.getTileById(idealTile.key).state = 'errored';
 
         const loadedTiles = [
             // loaded children - topmost zoom partially covered
@@ -1082,8 +1083,8 @@ describe('TileManager._updateRetainedTiles', () => {
             new OverscaledTileID(1, 0, 1, 0, 0)
         ];
         for (const t of loadedTiles) {
-            tileManager._tiles[t.key] = new Tile(t, undefined);
-            tileManager._tiles[t.key].state = 'loaded';
+            tileManager._inViewTiles.setTile(t.key, new Tile(t, undefined));
+            tileManager._inViewTiles.getTileById(t.key).state = 'loaded';
         }
 
         const expectedTiles = [
@@ -1105,8 +1106,8 @@ describe('TileManager._updateRetainedTiles', () => {
         };
 
         const idealTile = new OverscaledTileID(3, 0, 3, 1, 2);
-        tileManager._tiles[idealTile.key] = new Tile(idealTile, undefined);
-        tileManager._tiles[idealTile.key].state = 'errored';
+        tileManager._inViewTiles.setTile(idealTile.key, new Tile(idealTile, undefined));
+        tileManager._inViewTiles.getTileById(idealTile.key).state = 'errored';
 
         const secondGeneration = idealTile
             .children(10)
@@ -1114,8 +1115,8 @@ describe('TileManager._updateRetainedTiles', () => {
         expect(secondGeneration.length).toEqual(16);
 
         for (const id of secondGeneration) {
-            tileManager._tiles[id.key] = new Tile(id, undefined);
-            tileManager._tiles[id.key].state = 'loaded';
+            tileManager._inViewTiles.setTile(id.key, new Tile(id, undefined));
+            tileManager._inViewTiles.getTileById(id.key).state = 'loaded';
         }
         const expectedTiles = [...secondGeneration, idealTile];
 
@@ -1150,18 +1151,18 @@ describe('TileManager._updateRetainedTiles', () => {
             for (const idealID of idealChildIDs) {
                 const tile = new Tile(idealID, undefined);
                 tile.state = 'loaded';  //all children are loaded to be retained for missing ideal tiles
-                tileManager._tiles[idealID.key] = tile;
+                tileManager._inViewTiles.setTile(idealID.key, tile);
             }
 
             const retain: {[key: string]: OverscaledTileID} = {};
-            const missingTiles: {[key: string]: OverscaledTileID} = {};
+            const missingTiles = new Set<OverscaledTileID>();
 
             // mark all ideal tiles as retained and also as missing with no data for child retainment
             for (const idealID of idealTileIDs) {
                 retain[idealID.key] = idealID;
-                missingTiles[idealID.key] = idealID;
+                missingTiles.add(idealID);
             }
-            tileManager._retainLoadedChildren(missingTiles, retain);
+            tileManager._retainLoadedChildren(retain, missingTiles);
 
             expect(Object.keys(retain).sort()).toEqual(idealChildIDs.concat(idealTileIDs).map(id => id.key).sort());
         });
@@ -1174,7 +1175,7 @@ describe('TileManager._updateRetainedTiles', () => {
         };
 
         const idealTileID = new OverscaledTileID(2, 0, 2, 1, 1);
-        const idealTiles: {[key: string]: OverscaledTileID} = {[idealTileID.key]: idealTileID};
+        const idealTiles = new Set<OverscaledTileID>([idealTileID]);
 
         const children = [
             new OverscaledTileID(3, 0, 3, 2, 2),  //keep
@@ -1185,11 +1186,11 @@ describe('TileManager._updateRetainedTiles', () => {
         for (const child of children) {
             const tile = new Tile(child, undefined);
             tile.state = 'loaded';
-            tileManager._tiles[child.key] = tile;
+            tileManager._inViewTiles.setTile(child.key, tile);
         }
 
         const retain: {[key: string]: OverscaledTileID} = {};
-        tileManager._retainLoadedChildren(idealTiles, retain);
+        tileManager._retainLoadedChildren(retain, idealTiles);
 
         const expectedKeys = children
             .filter(child => child.overscaledZ === 3)
@@ -1206,16 +1207,16 @@ describe('TileManager._updateRetainedTiles', () => {
         };
 
         const idealTile = new OverscaledTileID(3, 0, 3, 1, 2);
-        tileManager._tiles[idealTile.key] = new Tile(idealTile, undefined);
-        tileManager._tiles[idealTile.key].state = 'errored';
+        tileManager._inViewTiles.setTile(idealTile.key, new Tile(idealTile, undefined));
+        tileManager._inViewTiles.getTileById(idealTile.key).state = 'errored';
 
         const loadedChildren = [
             new OverscaledTileID(4, 0, 3, 1, 2)
         ];
 
         for (const t of loadedChildren) {
-            tileManager._tiles[t.key] = new Tile(t, undefined);
-            tileManager._tiles[t.key].state = 'loaded';
+            tileManager._inViewTiles.setTile(t.key, new Tile(t, undefined));
+            tileManager._inViewTiles.getTileById(t.key).state = 'loaded';
         }
 
         const retained = tileManager._updateRetainedTiles([idealTile], 2);
@@ -1291,11 +1292,12 @@ describe('TileManager._updateRetainedTiles', () => {
         };
 
         const idealTile = new OverscaledTileID(2, 0, 2, 0, 0);
-        tileManager._tiles[idealTile.key] = new Tile(idealTile, undefined);
-        tileManager._tiles[idealTile.key].state = 'errored';
+        tileManager._inViewTiles.setTile(idealTile.key, new Tile(idealTile, undefined));
+        tileManager._inViewTiles.getTileById(idealTile.key).state = 'errored';
 
-        tileManager._tiles[new OverscaledTileID(1, 0, 1, 1, 0).key] = new Tile(new OverscaledTileID(1, 0, 1, 1, 0), undefined);
-        tileManager._tiles[new OverscaledTileID(1, 0, 1, 1, 0).key].state = 'loaded';
+        const nonIdealTile = new OverscaledTileID(1, 0, 1, 1, 0);
+        tileManager._inViewTiles.setTile(nonIdealTile.key, new Tile(nonIdealTile, undefined));
+        tileManager._inViewTiles.getTileById(nonIdealTile.key).state = 'loaded';
 
         const addTileSpy = vi.spyOn(tileManager, '_addTile');
         const getTileSpy = vi.spyOn(tileManager, 'getTile');
@@ -1323,10 +1325,10 @@ describe('TileManager._updateRetainedTiles', () => {
         };
         const idealTile = new OverscaledTileID(1, 0, 1, 0, 1);
         const parentTile = new OverscaledTileID(0, 0, 0, 0, 0);
-        tileManager._tiles[idealTile.key] = new Tile(idealTile, undefined);
-        tileManager._tiles[idealTile.key].state = 'loading';
-        tileManager._tiles[parentTile.key] = new Tile(parentTile, undefined);
-        tileManager._tiles[parentTile.key].state = 'loaded';
+        tileManager._inViewTiles.setTile(idealTile.key, new Tile(idealTile, undefined));
+        tileManager._inViewTiles.getTileById(idealTile.key).state = 'loading';
+        tileManager._inViewTiles.setTile(parentTile.key, new Tile(parentTile, undefined));
+        tileManager._inViewTiles.getTileById(parentTile.key).state = 'loaded';
 
         const addTileSpy = vi.spyOn(tileManager, '_addTile');
         const getTileSpy = vi.spyOn(tileManager, 'getTile');
@@ -1349,7 +1351,7 @@ describe('TileManager._updateRetainedTiles', () => {
         getTileSpy.mockClear();
 
         // now make sure we don't retain the parent tile when the ideal tile is loaded
-        tileManager._tiles[idealTile.key].state = 'loaded';
+        tileManager._inViewTiles.getTileById(idealTile.key).state = 'loaded';
         const retainedLoaded = tileManager._updateRetainedTiles([idealTile], 1);
 
         expect(getTileSpy).not.toHaveBeenCalled();
@@ -1367,10 +1369,10 @@ describe('TileManager._updateRetainedTiles', () => {
 
         const idealTile = new OverscaledTileID(2, 0, 2, 1, 1);
         const loadedTiles = [new OverscaledTileID(3, 0, 3, 2, 2), new OverscaledTileID(3, 0, 3, 3, 2), new OverscaledTileID(3, 0, 3, 2, 3), new OverscaledTileID(3, 0, 3, 3, 3)];
-        loadedTiles.forEach(t => {
-            tileManager._tiles[t.key] = new Tile(t, undefined);
-            tileManager._tiles[t.key].state = 'loaded';
-        });
+        for (const t of loadedTiles) {
+            tileManager._inViewTiles.setTile(t.key, new Tile(t, undefined));
+            tileManager._inViewTiles.getTileById(t.key).state = 'loaded';
+        }
 
         const getTileSpy = vi.spyOn(tileManager, 'getTile');
         const retained = tileManager._updateRetainedTiles([idealTile], 2);
@@ -1386,10 +1388,10 @@ describe('TileManager._updateRetainedTiles', () => {
         };
         const idealTile = new OverscaledTileID(1, 0, 1, 0, 0);
         const loadedTiles = [new OverscaledTileID(0, 0, 0, 0, 0), new OverscaledTileID(2, 0, 2, 0, 0)];
-        loadedTiles.forEach(t => {
-            tileManager._tiles[t.key] = new Tile(t, undefined);
-            tileManager._tiles[t.key].state = 'loaded';
-        });
+        for (const t of loadedTiles) {
+            tileManager._inViewTiles.setTile(t.key, new Tile(t, undefined));
+            tileManager._inViewTiles.getTileById(t.key).state = 'loaded';
+        }
 
         const getTileSpy = vi.spyOn(tileManager, 'getTile');
         let retained = tileManager._updateRetainedTiles([idealTile], 1);
@@ -1410,7 +1412,7 @@ describe('TileManager._updateRetainedTiles', () => {
 
         getTileSpy.mockClear();
         // remove child tile and check that it only uses parent tile
-        delete tileManager._tiles['022'];
+        tileManager._inViewTiles.deleteTileById('022');
         retained = tileManager._updateRetainedTiles([idealTile], 1);
 
         expect(retained).toEqual({
@@ -1430,10 +1432,10 @@ describe('TileManager._updateRetainedTiles', () => {
         };
         const idealTile = new OverscaledTileID(2, 0, 2, 0, 0);
         const loadedTiles = [new OverscaledTileID(1, 0, 1, 0, 0)];
-        loadedTiles.forEach(t => {
-            tileManager._tiles[t.key] = new Tile(t, undefined);
-            tileManager._tiles[t.key].state = 'loaded';
-        });
+        for (const t of loadedTiles) {
+            tileManager._inViewTiles.setTile(t.key, new Tile(t, undefined));
+            tileManager._inViewTiles.getTileById(t.key).state = 'loaded';
+        }
 
         const getTileSpy = vi.spyOn(tileManager, 'getTile');
         const retained = tileManager._updateRetainedTiles([idealTile], 2);
@@ -1461,10 +1463,10 @@ describe('TileManager._updateRetainedTiles', () => {
             new OverscaledTileID(1, 0, 1, 0, 0),  // parent
             new OverscaledTileID(0, 0, 0, 0, 0)   // parent
         ];
-        loadedTiles.forEach(t => {
-            tileManager._tiles[t.key] = new Tile(t, undefined);
-            tileManager._tiles[t.key].state = 'loaded';
-        });
+        for (const t of loadedTiles) {
+            tileManager._inViewTiles.setTile(t.key, new Tile(t, undefined));
+            tileManager._inViewTiles.getTileById(t.key).state = 'loaded';
+        }
 
         const retained = tileManager._updateRetainedTiles([idealTile], 2);
 
@@ -1498,10 +1500,10 @@ describe('TileManager._updateRetainedTiles', () => {
         getTileSpy.mockClear();
 
         const loadedTiles = [new OverscaledTileID(4, 0, 4, 0, 0)];
-        loadedTiles.forEach(t => {
-            tileManager._tiles[t.key] = new Tile(t, undefined);
-            tileManager._tiles[t.key].state = 'loaded';
-        });
+        for (const t of loadedTiles) {
+            tileManager._inViewTiles.setTile(t.key, new Tile(t, undefined));
+            tileManager._inViewTiles.getTileById(t.key).state = 'loaded';
+        }
 
         tileManager._updateRetainedTiles(idealTiles, 8);
         expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
@@ -1580,10 +1582,10 @@ describe('TileManager._updateRetainedTiles', () => {
         map.cancelPendingTileRequestsWhileZooming = true;
 
         const loadedTiles = idealTiles;
-        loadedTiles.forEach(t => {
-            tileManager._tiles[t.key] = new Tile(t, undefined);
-            tileManager._tiles[t.key].state = 'loaded';
-        });
+        for (const t of loadedTiles) {
+            tileManager._inViewTiles.setTile(t.key, new Tile(t, undefined));
+            tileManager._inViewTiles.getTileById(t.key).state = 'loaded';
+        }
 
         idealTiles = [new OverscaledTileID(11, 0, 11, 0, 0), new OverscaledTileID(11, 0, 11, 1, 0)];
         retained = tileManager._updateRetainedTiles(idealTiles, 11);
@@ -1617,10 +1619,10 @@ describe('TileManager._updateRetainedTiles', () => {
         );
 
         const loadedTiles = idealTiles;
-        loadedTiles.forEach(t => {
-            tileManager._tiles[t.key] = new Tile(t, undefined);
-            tileManager._tiles[t.key].state = 'loaded';
-        });
+        for (const t of loadedTiles) {
+            tileManager._inViewTiles.setTile(t.key, new Tile(t, undefined));
+            tileManager._inViewTiles.getTileById(t.key).state = 'loaded';
+        }
 
         idealTiles = [new OverscaledTileID(5, 0, 5, 0, 0), new OverscaledTileID(5, 0, 5, 1, 0)];
         retained = tileManager._updateRetainedTiles(idealTiles, 5);
@@ -1639,10 +1641,10 @@ describe('TileManager._updateRetainedTiles', () => {
             tile.state = 'loading';
         };
         const loadedTiles = [new OverscaledTileID(7, 0, 7, 0, 0), new OverscaledTileID(7, 0, 7, 1, 0)];
-        loadedTiles.forEach(t => {
-            tileManager._tiles[t.key] = new Tile(t, undefined);
-            tileManager._tiles[t.key].state = 'loaded';
-        });
+        for (const t of loadedTiles) {
+            tileManager._inViewTiles.setTile(t.key, new Tile(t, undefined));
+            tileManager._inViewTiles.getTileById(t.key).state = 'loaded';
+        }
 
         const idealTiles = [new OverscaledTileID(8, 0, 7, 0, 0), new OverscaledTileID(8, 0, 7, 1, 0)];
         const retained = tileManager._updateRetainedTiles(idealTiles, 8);
@@ -2311,7 +2313,7 @@ describe('tile manager get ids', () => {
         const tileManager = createTileManager({});
         tileManager.transform = new MercatorTransform();
         for (let i = 0; i < ids.length; i++) {
-            tileManager._tiles[ids[i].key] = {tileID: ids[i]} as any as Tile;
+            tileManager._inViewTiles.setTile(ids[i].key, {tileID: ids[i]} as any as Tile);
         }
         expect(tileManager.getIds()).toEqual([
             new OverscaledTileID(0, 0, 0, 0, 0).key,
@@ -2365,7 +2367,7 @@ describe('TileManager sets max cache size correctly', () => {
         tileManager.updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 3 * 3 * 5
-        expect(tileManager._cache.max).toBe(45);
+        expect(tileManager._outOfViewCache.max).toBe(45);
     });
 
     test('sets cache size based on 256 tiles', () => {
@@ -2378,7 +2380,7 @@ describe('TileManager sets max cache size correctly', () => {
         tileManager.updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 2 * 2 * 5
-        expect(tileManager._cache.max).toBe(20);
+        expect(tileManager._outOfViewCache.max).toBe(20);
     });
 
 });
@@ -2419,7 +2421,7 @@ describe('TileManager.usedForTerrain', () => {
         tileManager.onAdd(undefined);
         await dataPromise;
         tileManager.update(transform);
-        expect(Object.values(tileManager._tiles).map(t => t.tileID.key)).toEqual(
+        expect(tileManager._inViewTiles.getAllIds()).toEqual(
             ['2tc099', '2tbz99', '2sxs99', '2sxr99', 'pds88', 'eo55', 'pdr88', 'en55', 'p6o88', 'ds55', 'p6n88', 'dr55']
         );
     });
@@ -2436,7 +2438,7 @@ describe('TileManager.usedForTerrain', () => {
         tileManager.onAdd(undefined);
         await dataPromise;
         tileManager.update(transform);
-        expect(Object.values(tileManager._tiles).map(t => t.tileID.key)).toEqual(
+        expect(tileManager._inViewTiles.getAllIds()).toEqual(
             ['2tc099', '2tbz99', '2sxs99', '2sxr99', 'pds88', 'pdr88', 'p6o88', 'p6n88']
         );
     });
@@ -2453,7 +2455,7 @@ describe('TileManager.usedForTerrain', () => {
         tileManager.onAdd(undefined);
         await dataPromise;
         tileManager.update(transform);
-        expect(Object.values(tileManager._tiles).map(t => t.tileID.key)).toEqual(
+        expect(tileManager._inViewTiles.getAllIds()).toEqual(
             ['1033', '3s44', '3r44', '3c44', '3b44', 'z33', 's33', 'r33']
         );
     });
@@ -2470,9 +2472,7 @@ describe('TileManager.usedForTerrain', () => {
         tileManager.onAdd(undefined);
         await dataPromise;
         tileManager.update(transform);
-        expect(Object.values(tileManager._tiles).map(t => t.tileID.key)).toEqual(
-            ['3s44', '3r44', '3c44', '3b44']
-        );
+        expect(tileManager._inViewTiles.getAllIds()).toEqual(['3s44', '3r44', '3c44', '3b44']);
     });
 
 });
