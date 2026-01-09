@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - Add `padding` option to `Popup` class to prevent popups from being positioned too close to map container edges ([#5978](https://github.com/maplibre/maplibre-gl-js/issues/5978)) (by [@yuiseki](https://github.com/yuiseki) and [@lucaswoj](https://github.com/lucaswoj))
+- Speed up the cross tile symbol index in certain circumstances ([#6641](https://github.com/maplibre/maplibre-gl-js/pull/6641)) (by [@bradymadden97](https://github.com/bradymadden97))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
