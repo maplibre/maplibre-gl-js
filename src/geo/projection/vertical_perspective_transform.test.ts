@@ -13,15 +13,10 @@ describe('VerticalPerspectiveTransform', () => {
 
         transform.setMaxBounds(new LngLatBounds([-5, -5, 5, 5]));
 
-        // Before the fix, these assertions might fail or show unconstrained behavior if I were asserting strictly.
-        // But here I'm writing the *desired* behavior to verify the fix.
-        // If I run this NOW, it should fail if the logic is missing.
 
         transform.setCenter(new LngLat(-50, -30));
         
         // With bounds [-5, -5, 5, 5], setting center to (-50, -30) should be clamped.
-        // The exact clamped value depends on the implementation, but it definitely shouldn't be (-50, -30).
-        // Since globe implementation of `defaultConstrain` currently ignores bounds, it will likely remain (-50, -30).
         
         const center = transform.center;
         
@@ -55,6 +50,23 @@ describe('VerticalPerspectiveTransform', () => {
         // So we expect zoom to be constrained to something > 6.
         expect(transform.zoom).toBeGreaterThan(6);
         expect(transform.zoom).toBeLessThan(7); // Tight bound check
+    });
+
+    test('maxBounds do not increase zoom if bounds already cover viewport', () => {
+        const transform = new VerticalPerspectiveTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(500, 500);
+        
+        // Large bounds
+        transform.setMaxBounds(new LngLatBounds([-50, -50, 50, 50]));
+
+        // Set zoom to something reasonable
+        transform.setZoom(5);
+        const originalZoom = transform.zoom;
+
+        // Re-applying the same max bounds shouldn't force zoom change if it's already satisfied
+        const constrained = transform.defaultConstrain(transform.center, transform.zoom);
+        
+        expect(constrained.zoom).toBeCloseTo(originalZoom, 4);
     });
 });
 
