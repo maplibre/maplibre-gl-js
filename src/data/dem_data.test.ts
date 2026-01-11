@@ -170,6 +170,7 @@ function testSerialization(dem0: DEMData, redFactor: number, greenFactor: number
             $name: 'DEMData',
             uid: '0',
             dim: 4,
+            encoding: dem0.encoding,
             stride: 6,
             data: dem0.data,
             redFactor,

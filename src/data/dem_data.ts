@@ -4,6 +4,14 @@ import {warnOnce} from '../util/util';
 import {register} from '../util/web_worker_transfer';
 
 /**
+ * The value -32768 is the result of the Terrarium encoding formula:
+ * (Red * 256 + Green + Blue / 256) - 32768
+ * when all RGB values are 0 (pure black).
+ * This typically represents no data or invalid data in Terrarium format.
+ */
+export const TERRAIN_TERRARIUM_NODATA = -32768;
+
+/**
  * The possible DEM encoding types
  */
 export type DEMEncoding = 'mapbox' | 'terrarium' | 'custom';
@@ -30,6 +38,7 @@ export class DEMData {
     greenFactor: number;
     blueFactor: number;
     baseShift: number;
+    encoding: DEMEncoding;
 
     /**
      * Constructs a `DEMData` object
@@ -49,6 +58,7 @@ export class DEMData {
             warnOnce(`"${encoding}" is not a valid encoding type. Valid types include "mapbox", "terrarium" and "custom".`);
             return;
         }
+        this.encoding = encoding;
         this.stride = data.height;
         const dim = this.dim = data.height - 2;
         this.data = new Uint32Array(data.data.buffer);

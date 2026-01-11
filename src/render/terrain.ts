@@ -20,6 +20,7 @@ import type {Tile} from '../tile/tile';
 import type {Framebuffer} from '../gl/framebuffer';
 import type {TileManager} from '../tile/tile_manager';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {DEMEncoding, TERRAIN_TERRARIUM_NODATA} from '../data/dem_data';
 import type {Painter} from './painter';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 
@@ -172,12 +173,32 @@ export class Terrain {
             cy = Math.floor(coord[1]),
             tx = coord[0] - cx,
             ty = coord[1] - cy;
-        return (
+
+        const elevation = (
             dem.get(cx, cy) * (1 - tx) * (1 - ty) +
             dem.get(cx + 1, cy) * (tx) * (1 - ty) +
             dem.get(cx, cy + 1) * (1 - tx) * (ty) +
             dem.get(cx + 1, cy + 1) * (tx) * (ty)
         );
+
+        if (!this.isDEMElevationValid(dem.encoding, elevation)) {
+            return 0;
+        }
+
+        return elevation;
+    }
+
+    /**
+     * Check if the elevation is not result of empty dem data.
+     * @param encoding - the encoding of the dem
+     * @param elevation - the elevation to check
+     * @returns true if the elevation is valid
+     */
+    isDEMElevationValid(encoding: DEMEncoding, elevation: number) {
+        if (encoding === 'terrarium' && elevation === TERRAIN_TERRARIUM_NODATA) {
+            return false;
+        }
+        return true;
     }
 
     /**
