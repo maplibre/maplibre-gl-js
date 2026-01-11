@@ -1164,13 +1164,16 @@ export class Map extends Camera {
         minZoom = minZoom === null || minZoom === undefined ? defaultMinZoom : minZoom;
 
         if (minZoom >= defaultMinZoom && minZoom <= this.transform.maxZoom) {
+            const zoomMustChange = this.transform.zoom < minZoom;
             const tr = this._getTransformForUpdate();
             tr.setMinZoom(minZoom);
             this._applyUpdatedTransform(tr);
             this._update();
-            this.fire(new Event('zoomstart'))
-                .fire(new Event('zoom'))
-                .fire(new Event('zoomend'));
+            if (zoomMustChange) {
+                this.fire(new Event('zoomstart'))
+                    .fire(new Event('zoom'))
+                    .fire(new Event('zoomend'));
+            }
 
             return this;
 
@@ -1207,13 +1210,16 @@ export class Map extends Camera {
         maxZoom = maxZoom === null || maxZoom === undefined ? defaultMaxZoom : maxZoom;
 
         if (maxZoom >= this.transform.minZoom) {
+            const zoomMustChange = this.transform.zoom > maxZoom;
             const tr = this._getTransformForUpdate();
             tr.setMaxZoom(maxZoom);
             this._applyUpdatedTransform(tr);
             this._update();
-            this.fire(new Event('zoomstart'))
-                .fire(new Event('zoom'))
-                .fire(new Event('zoomend'));
+            if (zoomMustChange) {
+                this.fire(new Event('zoomstart'))
+                    .fire(new Event('zoom'))
+                    .fire(new Event('zoomend'));
+            }
 
             return this;
 
@@ -1250,13 +1256,16 @@ export class Map extends Camera {
         }
 
         if (minPitch >= defaultMinPitch && minPitch <= this.transform.maxPitch) {
+            const pitchMustChange = this.transform.pitch < minPitch;
             const tr = this._getTransformForUpdate();
             tr.setMinPitch(minPitch);
             this._applyUpdatedTransform(tr);
             this._update();
-            this.fire(new Event('pitchstart'))
-                .fire(new Event('pitch'))
-                .fire(new Event('pitchend'));
+            if (pitchMustChange) {
+                this.fire(new Event('pitchstart'))
+                    .fire(new Event('pitch'))
+                    .fire(new Event('pitchend'));
+            }
 
             return this;
 
@@ -1289,13 +1298,16 @@ export class Map extends Camera {
         }
 
         if (maxPitch >= this.transform.minPitch) {
+            const pitchMustChange = this.transform.pitch > maxPitch;
             const tr = this._getTransformForUpdate();
             tr.setMaxPitch(maxPitch);
             this._applyUpdatedTransform(tr);
             this._update();
-            this.fire(new Event('pitchstart'))
-                .fire(new Event('pitch'))
-                .fire(new Event('pitchend'));
+            if (pitchMustChange) {
+                this.fire(new Event('pitchstart'))
+                    .fire(new Event('pitch'))
+                    .fire(new Event('pitchend'));
+            }
 
             return this;
 
