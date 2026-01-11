@@ -37,7 +37,7 @@ export class StubMap extends Evented {
     getTerrain() { return this._terrain; }
 
     migrateProjection(newTransform: ITransform) {
-        newTransform.apply(this.transform);
+        newTransform.apply(this.transform, true);
         this.transform = newTransform;
     }
 }

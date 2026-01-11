@@ -1,30 +1,33 @@
 ## main
 
 ### ✨ Features and improvements
-- Add `padding` option to `Popup` class to prevent popups from being positioned too close to map container edges ([#5978](https://github.com/maplibre/maplibre-gl-js/issues/5978))
+- Add `padding` option to `Popup` class to prevent popups from being positioned too close to map container edges ([#5978](https://github.com/maplibre/maplibre-gl-js/issues/5978)) (by [@yuiseki](https://github.com/yuiseki) and [@lucaswoj](https://github.com/lucaswoj))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-
-- Fix setting visibility on custom layer ([#6883](https://github.com/maplibre/maplibre-gl-js/issues/6883) (by [melitele](https://github.com/melitele))
+- Fix setting visibility on custom layer ([#6883](https://github.com/maplibre/maplibre-gl-js/issues/6883)) (by [melitele](https://github.com/melitele))
 - Hide leading and trailing control characters in `format` expressions ([#6907](https://github.com/maplibre/maplibre-gl-js/pull/6907)) (by [1ec5](https://github.com/1ec5))
 - Fix image sources being clipped at -180 and 180 longitude when terrain is enabled ([#4088](https://github.com/maplibre/maplibre-gl-js/issues/4088)) (by [pstaszek](https://github.com/pstaszek))
-- Fix globe not respecting maxBounds ([#6930](https://github.com/maplibre/maplibre-gl-js/pull/6930))
+- Fix globe not respecting maxBounds ([#6930](https://github.com/maplibre/maplibre-gl-js/pull/6930)) (by [@biplavbarua](https://github.com/biplavbarua))
+- Fix map not immediately constraining to a valid zoom and center when changing projections ([#6892](https://github.com/maplibre/maplibre-gl-js/issues/6892)) (by [larsmaxfield](https://github.com/larsmaxfield))
+- Fix a blank map when a resize event is triggered before a WebGL context restoration ([#6935](https://github.com/maplibre/maplibre-gl-js/pull/6935)) (by [ToHold](https://github.com/ToHold))
+- Diffed changes when json is passed to `setStyle` emit a style.load event. ([#2587](https://github.com/maplibre/maplibre-gl-js/issues/2587), [#4757](https://github.com/maplibre/maplibre-gl-js/issues/4757)) (by [@lesbaa](https://github.com/lesbaa))
+- Fix a precision issue in the atomsphere shader in globe projection. ([#6916](https://github.com/maplibre/maplibre-gl-js/issues/6916)) (by [tavimori](https://github.com/tavimori))
 - _...Add new stuff here..._
 
 ## 5.15.0
 
 ### ✨ Features and improvements
 
-- Support global state expression for layer visibility ([#6659](https://github.com/maplibre/maplibre-gl-js/pull/6659)) (by [melitele](https://github.com/melitele))
-- Update Node.js version to 24.11 for development ([#6851](https://github.com/maplibre/maplibre-gl-js/pull/6851)) (by [HarelM](https://github.com/HarelM))
+- Support global state expression for layer visibility ([#6659](https://github.com/maplibre/maplibre-gl-js/pull/6659)) (by [@melitele](https://github.com/melitele))
+- Update Node.js version to 24.11 for development ([#6851](https://github.com/maplibre/maplibre-gl-js/pull/6851)) (by [@HarelM](https://github.com/HarelM))
 
 ### 🐞 Bug fixes
 
 - Fix `LngLatBounds#intersects` returning `false` for bounds spanning 360° or more ([#6863](https://github.com/maplibre/maplibre-gl-js/pull/6863)) (by [@lucaswoj](https://github.com/lucaswoj))
 - Fix getting the right zoom for getElevationForLngLat ([#6825](https://github.com/maplibre/maplibre-gl-js/pull/6825)) (by [@HarelM](https://github.com/HarelM))
-- Fix stale transform state being applied after changing `minZoom` or `maxZoom` due to old copies from `transformCameraUpdate` taking precedence. `transformCameraUpdate` is now called from `setMinZoom` and `setMaxZoom` to allow user to control subsequent changes to `zoom` [#6766](https://github.com/maplibre/maplibre-gl-js/issues/6766) (by [@Auspicus](https://github.com/Auspicus))
-- Fix GeoJSON source throwing with undefined properties [#6730](https://github.com/maplibre/maplibre-gl-js/issues/6730) (by [@wayofthefuture](https://github.com/wayofthefuture))
+- Fix stale transform state being applied after changing `minZoom` or `maxZoom` due to old copies from `transformCameraUpdate` taking precedence. `transformCameraUpdate` is now called from `setMinZoom` and `setMaxZoom` to allow user to control subsequent changes to `zoom` ([#6766](https://github.com/maplibre/maplibre-gl-js/issues/6766)) (by [@Auspicus](https://github.com/Auspicus))
+- Fix GeoJSON source throwing with undefined properties ([#6730](https://github.com/maplibre/maplibre-gl-js/issues/6730)) (by [@wayofthefuture](https://github.com/wayofthefuture))
 
 ## 5.14.0
 
@@ -35,9 +38,9 @@
 
 ### 🐞 Bug fixes
 
-- Handle consecutive duplicate points in offsetLine to avoid null values in the output. Fixes [#5431](https://github.com/maplibre/maplibre-gl-js/issues/5431) (by [mmc1718](https://github.com/mmc1718))
+- Handle consecutive duplicate points in offsetLine to avoid null values in the output. ([#5431](https://github.com/maplibre/maplibre-gl-js/issues/5431)) (by [@mmc1718](https://github.com/mmc1718))
 - ⚠️ Gracefully handle internal AbortErrors (e.g., when a TileJSON URL is updated while a request in flight). Previously, such aborted requests would throw an AbortError in an unhandled rejection that was not easily caught in user code. Since aborted requests are fully handled internally, these unhandled rejections were superfluous and resulted in unhelpful client errors. ([#6747](https://github.com/maplibre/maplibre-gl-js/pull/6747)) (by [@andrewda](https://github.com/andrewda))
-- Fix canvas sources with power-of-2 dimensions rendering as black squares ([#6607](https://github.com/maplibre/maplibre-gl-js/issues/6607)) (by [Omkarthipparthi](https://github.com/Omkarthipparthi))
+- Fix canvas sources with power-of-2 dimensions rendering as black squares ([#6607](https://github.com/maplibre/maplibre-gl-js/issues/6607)) (by [@Omkarthipparthi](https://github.com/Omkarthipparthi))
 - Fix `queryTerrainElevation` to use higher zoom level tiles when possible ([#6791](https://github.com/maplibre/maplibre-gl-js/pull/6791)) (by [@HarelM](https://github.com/HarelM))
 - Fix unwanted movement when moving a pitched terrain map at high latitudes; fix freezes when moving a pitched and rotated terrain map at low zoom ([#6775](https://github.com/maplibre/maplibre-gl-js/pull/6775)) (by [@larsmaxfield](https://github.com/larsmaxfield))
 - Fix issue with `static` modifier as part of mlt package ([#6796](https://github.com/maplibre/maplibre-gl-js/pull/6796)) (by [@HarelM](https://github.com/HarelM))

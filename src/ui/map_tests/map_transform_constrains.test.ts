@@ -84,6 +84,16 @@ test('Creating a map with style defining globe projection uses Globe transform c
     expect(fixedNum(map.getZoom(), 3)).toBe(-2);
 });
 
+test('Changing a map projection to Mercator constrains the zoom and center to valid values', async () => {
+    const map = createMap( {zoom: -2, center: [0, 90], style: {version: 8, sources: {}, layers: [], projection: {type: 'globe'}}});
+
+    await map.once('style.load');
+    map.setProjection({type: 'mercator'});
+
+    expect(fixedNum(map.getZoom(), 3)).toBe(-1.356);
+    expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: 0, lat: 0});
+});
+
 describe('transformConstrain', () => {
 
     test('Creating a single-copy map with an identity transform constrain allows the map to underzoom and overpan', () => {

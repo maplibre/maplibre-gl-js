@@ -253,11 +253,11 @@ export class MercatorTransform implements ITransform {
 
     public clone(): ITransform {
         const clone = new MercatorTransform();
-        clone.apply(this);
+        clone.apply(this, false);
         return clone;
     }
 
-    public apply(that: IReadonlyTransform, constrain?: boolean, forceOverrideZ?: boolean): void {
+    public apply(that: IReadonlyTransform, constrain: boolean, forceOverrideZ?: boolean): void {
         this._helper.apply(that, constrain, forceOverrideZ);
     }
 

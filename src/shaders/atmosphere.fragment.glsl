@@ -1,3 +1,7 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
 in vec3 view_direction;
 
 uniform vec3 u_sun_pos;

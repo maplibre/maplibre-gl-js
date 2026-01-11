@@ -184,7 +184,7 @@ export class TransformHelper implements ITransformGetters {
         this._autoCalculateNearFarZ = true;
     }
 
-    public apply(thatI: ITransformGetters, constrain?: boolean, forceOverrideZ?: boolean): void {
+    public apply(thatI: ITransformGetters, constrain: boolean, forceOverrideZ?: boolean): void {
         this._constrainOverride = thatI.constrainOverride;
         this._latRange = thatI.latRange;
         this._lngRange = thatI.lngRange;
