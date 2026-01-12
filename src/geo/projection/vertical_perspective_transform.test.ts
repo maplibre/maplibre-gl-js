@@ -41,7 +41,7 @@ describe('VerticalPerspectiveTransform', () => {
         expect(transform.center.lng).toBeCloseTo(175);
     });
 
-    test('does NOT constrain zoom to cover viewport when maxBounds is set', () => {
+    test('constrains zoom to cover viewport when maxBounds is set', () => {
         const transform = new VerticalPerspectiveTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(1000, 1000);
 
@@ -52,8 +52,11 @@ describe('VerticalPerspectiveTransform', () => {
         // Try to set zoom to 0
         transform.setZoom(0);
 
-        // Expected behavior: map does NOT zoom in to fill the viewport
-        expect(transform.zoom).toBeLessThan(1);
+        // Expected behavior: map ZOOMS IN to fit the bounds into the viewport (approximately)
+        // With 10 degrees span and 1000px width, zoom should be around:
+        // log2(1000 * 360 / (512 * 10)) = log2(360000 / 5120) = log2(70.3) ~= 6.13
+        expect(transform.zoom).toBeGreaterThan(5);
+
     });
 
     test('preserves zoom if maxBounds already cover viewport', () => {

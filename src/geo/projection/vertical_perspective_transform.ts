@@ -674,8 +674,37 @@ export class VerticalPerspectiveTransform implements ITransform {
             }
         }
 
-        const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(0, constrainedLat), this.maxZoom);
+        // Logic to force the map to zoom in if the bounds are smaller than the viewport size.
+        // We calculate a stable minZoom based on the bounds size and viewport size to prevent
+        // the map from drifting away (unconstrained zoom) while ensuring it doesn't cause jitter
+        // by depending on dynamic state like current center latitude.
+        // Typically, we want the visible world width (at the current zoom) to be at most the bounds width.
+        // 512 * 2^z * (lngSpan / 360) >= width
+        // => 2^z >= (width * 360) / (512 * lngSpan)
+        let minZoomForBounds = this.minZoom;
+        if (lngRange && this.width > 0) {
+            const lngSpan = lngRange[0] > lngRange[1] ?
+                360 - (lngRange[0] - lngRange[1]) :
+                lngRange[1] - lngRange[0];
+            
+            if (lngSpan > 0) {
+                const calculatedMinZoom = Math.log2((this.width * 360) / (512 * lngSpan));
+                minZoomForBounds = Math.max(minZoomForBounds, calculatedMinZoom);
+            }
+        }
 
+        // We also check height constraint roughly to avoid seeing too much black vertical space
+        if (latRange && this.height > 0) {
+             const latSpan = latRange[1] - latRange[0];
+             if (latSpan > 0) {
+                 // 180 is approximate "height" of world in degrees
+                 const calculatedMinZoomY = Math.log2((this.height * 180) / (512 * latSpan));
+                 minZoomForBounds = Math.max(minZoomForBounds, calculatedMinZoomY);
+             }
+        }
+        
+        const constrainedZoom = clamp(+zoom, minZoomForBounds + getZoomAdjustment(0, constrainedLat), this.maxZoom);
+        
         // Logic to force the map to zoom in if the bounds are smaller than the viewport size is removed
         // as it causes unwanted zooming when panning near poles (where longitude circumference is small).
         // See https://github.com/maplibre/maplibre-gl-js/pull/6930#issuecomment-3735164910
