@@ -4,24 +4,16 @@
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
-
-- fix(shader): add precision qualifier to the atmosphere shader ([#6939](https://github.com/maplibre/maplibre-gl-js/pull/6939)) (by [tavimori](https://github.com/tavimori))
-- Emit style.load event on style diff ([#6880](https://github.com/maplibre/maplibre-gl-js/pull/6880)) (by [lesbaa](https://github.com/lesbaa))
-- Add constrain parameter to ITransform.apply(); constrain when migrating projections ([#6917](https://github.com/maplibre/maplibre-gl-js/pull/6917)) (by [larsmaxfield](https://github.com/larsmaxfield))
-- Clarify nullability of Map.getGlyphs() and allow unsetting glyphs in setGlyphs() ([#6915](https://github.com/maplibre/maplibre-gl-js/pull/6915)) (by [shreeharshshinde](https://github.com/shreeharshshinde))
-- Fix image sources being clipped at -180 and 180 longitude when terrain is enabled ([#5989](https://github.com/maplibre/maplibre-gl-js/pull/5989)) (by [pstaszek](https://github.com/pstaszek))
-- Add padding option to Popup class  ([#6885](https://github.com/maplibre/maplibre-gl-js/pull/6885)) (by [lucaswoj](https://github.com/lucaswoj))
-- fix setting visibility property on custom layer ([#6886](https://github.com/maplibre/maplibre-gl-js/pull/6886)) (by [melitele](https://github.com/melitele))
-- Update upload-benchmarks.yml ([#6878](https://github.com/maplibre/maplibre-gl-js/pull/6878)) (by [HarelM](https://github.com/HarelM))
-- Fix upload benchmark commit message ([#6877](https://github.com/maplibre/maplibre-gl-js/pull/6877)) (by [HarelM](https://github.com/HarelM))
-- Allow manual run of benchmark upload in case of missing uploads. ([#6876](https://github.com/maplibre/maplibre-gl-js/pull/6876)) (by [HarelM](https://github.com/HarelM))
-- Add back release action name, fix benchmark upload ([#6874](https://github.com/maplibre/maplibre-gl-js/pull/6874)) (by [HarelM](https://github.com/HarelM))
+- 
 ## 5.16.0
 
 ### ✨ Features and improvements
+
 - Add `padding` option to `Popup` class to prevent popups from being positioned too close to map container edges ([#5978](https://github.com/maplibre/maplibre-gl-js/issues/5978)) (by [@yuiseki](https://github.com/yuiseki) and [@lucaswoj](https://github.com/lucaswoj))
+- Emit `style.load` event on style diff ([#6880](https://github.com/maplibre/maplibre-gl-js/pull/6880)) (by [lesbaa](https://github.com/lesbaa))
 
 ### 🐞 Bug fixes
+
 - Fix setting visibility on custom layer ([#6883](https://github.com/maplibre/maplibre-gl-js/issues/6883)) (by [melitele](https://github.com/melitele))
 - Hide leading and trailing control characters in `format` expressions ([#6907](https://github.com/maplibre/maplibre-gl-js/pull/6907)) (by [1ec5](https://github.com/1ec5))
 - Fix image sources being clipped at -180 and 180 longitude when terrain is enabled ([#4088](https://github.com/maplibre/maplibre-gl-js/issues/4088)) (by [pstaszek](https://github.com/pstaszek))
