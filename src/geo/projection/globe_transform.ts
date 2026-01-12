@@ -53,9 +53,13 @@ export class GlobeTransform implements ITransform {
         return this._helper.pixelsPerMeter;
     }
     setMinZoom(zoom: number): void {
+        this._mercatorTransform.setMinZoom(zoom);
+        this._verticalPerspectiveTransform.setMinZoom(zoom);
         this._helper.setMinZoom(zoom);
     }
     setMaxZoom(zoom: number): void {
+        this._mercatorTransform.setMaxZoom(zoom);
+        this._verticalPerspectiveTransform.setMaxZoom(zoom);
         this._helper.setMaxZoom(zoom);
     }
     setMinPitch(pitch: number): void {
@@ -107,6 +111,8 @@ export class GlobeTransform implements ITransform {
         return this._helper.getMaxBounds();
     }
     setMaxBounds(bounds?: LngLatBounds): void {
+        this._mercatorTransform.setMaxBounds(bounds);
+        this._verticalPerspectiveTransform.setMaxBounds(bounds);
         this._helper.setMaxBounds(bounds);
     }
     setConstrainOverride(constrain?: TransformConstrainFunction | null): void {

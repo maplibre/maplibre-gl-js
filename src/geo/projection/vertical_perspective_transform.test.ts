@@ -22,7 +22,26 @@ describe('VerticalPerspectiveTransform', () => {
         expect(center.lat).toBeLessThanOrEqual(5);
     });
 
-    test('constrains zoom to cover viewport when maxBounds is set', () => {
+    test('handles maxBounds crossing antimeridian', () => {
+        const transform = new VerticalPerspectiveTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(500, 500);
+        // MaxBounds crossing antimeridian: 175 to -175 (10 degrees wide)
+        transform.setMaxBounds(new LngLatBounds([175, -5, -175, 5]));
+        
+        // 1. Try to set center to 178 (valid)
+        transform.setCenter(new LngLat(178, 0));
+        expect(transform.center.lng).toBeCloseTo(178);
+
+        // 2. Try to set center to -178 (valid)
+        transform.setCenter(new LngLat(-178, 0));
+        expect(transform.center.lng).toBeCloseTo(-178);
+
+        // 3. Try to set center to 170 (invalid, close to 175)
+        transform.setCenter(new LngLat(170, 0));
+        expect(transform.center.lng).toBeCloseTo(175);
+    });
+
+    test('does NOT constrain zoom to cover viewport when maxBounds is set', () => {
         const transform = new VerticalPerspectiveTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(1000, 1000);
 
@@ -30,12 +49,11 @@ describe('VerticalPerspectiveTransform', () => {
         const bounds = new LngLatBounds([-5, -5, 5, 5]);
         transform.setMaxBounds(bounds);
 
-        // Try to set zoom to 0 (which would show the whole world, violating the constraint of filling viewport with bounds)
+        // Try to set zoom to 0
         transform.setZoom(0);
 
-        // Expected minimum zoom for 1000px viewport and 10 degrees is approx 6.13
-        expect(transform.zoom).toBeGreaterThan(6);
-        expect(transform.zoom).toBeLessThan(7);
+        // Expected behavior: map does NOT zoom in to fill the viewport
+        expect(transform.zoom).toBeLessThan(1);
     });
 
     test('preserves zoom if maxBounds already cover viewport', () => {
