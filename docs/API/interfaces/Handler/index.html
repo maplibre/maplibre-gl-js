@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -9903,7 +9903,7 @@
 
 
 <h1 id="handler">Handler</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b457ca945cf746a75ecb5412a2165142faa159c0/src/ui/handler_manager.ts#L43">src/ui/handler_manager.ts:43</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b8f34428adc052583c7197daaf11b5e6deb54343/src/ui/handler_manager.ts#L43">src/ui/handler_manager.ts:43</a></p>
 <p>Handlers interpret dom events and return camera changes that should be
 applied to the map (<code>HandlerResult</code>s). The camera changes are all deltas.
 The handler itself should have no knowledge of the map's current state.
@@ -9915,7 +9915,7 @@ would return a <code>panDelta</code> on the mousemove.</p>
 <blockquote>
 <p><strong>isActive</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b457ca945cf746a75ecb5412a2165142faa159c0/src/ui/handler_manager.ts#L52">src/ui/handler_manager.ts:52</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b8f34428adc052583c7197daaf11b5e6deb54343/src/ui/handler_manager.ts#L52">src/ui/handler_manager.ts:52</a></p>
 <p>This is used to indicate if the handler is currently active or not.
 In case a handler is active, it will block other handlers from getting the relevant events.
 There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.</p>
@@ -9926,7 +9926,7 @@ There is an allow list of handlers that can be active at the same time, which is
 <blockquote>
 <p><strong>reset</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b457ca945cf746a75ecb5412a2165142faa159c0/src/ui/handler_manager.ts#L56">src/ui/handler_manager.ts:56</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b8f34428adc052583c7197daaf11b5e6deb54343/src/ui/handler_manager.ts#L56">src/ui/handler_manager.ts:56</a></p>
 <p><code>reset</code> can be called by the manager at any time and must reset everything to it's original state</p>
 <h4 id="returns_1">Returns</h4>
 <p><code>void</code></p>
@@ -9935,7 +9935,7 @@ There is an allow list of handlers that can be active at the same time, which is
 <blockquote>
 <p><code>readonly</code> <code>optional</code> <strong>renderFrame</strong>: () =&gt; <code>void</code> | <a href="../../type-aliases/HandlerResult/"><code>HandlerResult</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b457ca945cf746a75ecb5412a2165142faa159c0/src/ui/handler_manager.ts#L78">src/ui/handler_manager.ts:78</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b8f34428adc052583c7197daaf11b5e6deb54343/src/ui/handler_manager.ts#L78">src/ui/handler_manager.ts:78</a></p>
 <p><code>renderFrame</code> is the only non-dom event. It is called during render
 frames and can be used to smooth camera changes (see scroll handler).</p>
 <h4 id="returns_2">Returns</h4>
@@ -10068,10 +10068,10 @@ frames and can be used to smooth camera changes (see scroll handler).</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

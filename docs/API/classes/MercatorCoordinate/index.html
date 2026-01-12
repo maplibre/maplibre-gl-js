@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -10013,7 +10013,7 @@
 
 
 <h1 id="mercatorcoordinate">MercatorCoordinate</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b457ca945cf746a75ecb5412a2165142faa159c0/src/geo/mercator_coordinate.ts#L78">src/geo/mercator_coordinate.ts:78</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b8f34428adc052583c7197daaf11b5e6deb54343/src/geo/mercator_coordinate.ts#L78">src/geo/mercator_coordinate.ts:78</a></p>
 <p>A <code>MercatorCoordinate</code> object represents a projected three dimensional position.</p>
 <p><code>MercatorCoordinate</code> uses the web mercator projection (<a href="https://epsg.io/3857">EPSG:3857</a>) with slightly different units:</p>
 <ul>
@@ -10039,7 +10039,7 @@ of the coordinate space as the <code>0/0/0</code> tile with an extent of <code>1
 <blockquote>
 <p><strong>new MercatorCoordinate</strong>(<code>x</code>: <code>number</code>, <code>y</code>: <code>number</code>, <code>z</code>: <code>number</code>): <code>MercatorCoordinate</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b457ca945cf746a75ecb5412a2165142faa159c0/src/geo/mercator_coordinate.ts#L88">src/geo/mercator_coordinate.ts:88</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b8f34428adc052583c7197daaf11b5e6deb54343/src/geo/mercator_coordinate.ts#L88">src/geo/mercator_coordinate.ts:88</a></p>
 <h4 id="parameters">Parameters</h4>
 <table>
 <thead>
@@ -10078,7 +10078,7 @@ of the coordinate space as the <code>0/0/0</code> tile with an extent of <code>1
 <blockquote>
 <p><strong>meterInMercatorCoordinateUnits</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b457ca945cf746a75ecb5412a2165142faa159c0/src/geo/mercator_coordinate.ts#L153">src/geo/mercator_coordinate.ts:153</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b8f34428adc052583c7197daaf11b5e6deb54343/src/geo/mercator_coordinate.ts#L153">src/geo/mercator_coordinate.ts:153</a></p>
 <p>Returns the distance of 1 meter in <code>MercatorCoordinate</code> units at this latitude.</p>
 <p>For coordinates in real world units using meters, this naturally provides the scale
 to transform into <code>MercatorCoordinate</code>s.</p>
@@ -10092,7 +10092,7 @@ to transform into <code>MercatorCoordinate</code>s.</p>
 <blockquote>
 <p><strong>toAltitude</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b457ca945cf746a75ecb5412a2165142faa159c0/src/geo/mercator_coordinate.ts#L141">src/geo/mercator_coordinate.ts:141</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b8f34428adc052583c7197daaf11b5e6deb54343/src/geo/mercator_coordinate.ts#L141">src/geo/mercator_coordinate.ts:141</a></p>
 <p>Returns the altitude in meters of the coordinate.</p>
 <h4 id="returns_2">Returns</h4>
 <p><code>number</code></p>
@@ -10108,7 +10108,7 @@ to transform into <code>MercatorCoordinate</code>s.</p>
 <blockquote>
 <p><strong>toLngLat</strong>(): <a href="../LngLat/"><code>LngLat</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b457ca945cf746a75ecb5412a2165142faa159c0/src/geo/mercator_coordinate.ts#L125">src/geo/mercator_coordinate.ts:125</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b8f34428adc052583c7197daaf11b5e6deb54343/src/geo/mercator_coordinate.ts#L125">src/geo/mercator_coordinate.ts:125</a></p>
 <p>Returns the <code>LngLat</code> for the coordinate.</p>
 <h4 id="returns_3">Returns</h4>
 <p><a href="../LngLat/"><code>LngLat</code></a></p>
@@ -10124,7 +10124,7 @@ to transform into <code>MercatorCoordinate</code>s.</p>
 <blockquote>
 <p><code>static</code> <strong>fromLngLat</strong>(<code>lngLatLike</code>: <a href="../../type-aliases/LngLatLike/"><code>LngLatLike</code></a>, <code>altitude</code>: <code>number</code>): <code>MercatorCoordinate</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b457ca945cf746a75ecb5412a2165142faa159c0/src/geo/mercator_coordinate.ts#L106">src/geo/mercator_coordinate.ts:106</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/b8f34428adc052583c7197daaf11b5e6deb54343/src/geo/mercator_coordinate.ts#L106">src/geo/mercator_coordinate.ts:106</a></p>
 <p>Project a <code>LngLat</code> to a <code>MercatorCoordinate</code>.</p>
 <h4 id="parameters_1">Parameters</h4>
 <table>
@@ -10286,10 +10286,10 @@ to transform into <code>MercatorCoordinate</code>s.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
