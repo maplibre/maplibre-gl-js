@@ -3,8 +3,9 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix incorrect shader selection for inline images in text labels ([#6956](https://github.com/maplibre/maplibre-gl-js/pull/6956)) (by [@ciscorn](https://github.com/ciscorn))
 - _...Add new stuff here..._
-- 
+
 ## 5.16.0
 
 ### ✨ Features and improvements
