@@ -17,7 +17,7 @@ import {DragPanHandler} from './handler/shim/drag_pan';
 import {DragRotateHandler} from './handler/shim/drag_rotate';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
 import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
-import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} from '../util/util';
+import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType, snapToZoom} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 import {type MapControlsDeltas} from '../geo/projection/camera_helper';
@@ -705,7 +705,7 @@ export class HandlerManager {
                         snappedZoom = Math.floor(zoom / snap + 1e-5) * snap;
                     } else {
                         // Very small movement: snap to nearest (usually the start point)
-                        snappedZoom = this._map.snapZoom(zoom);
+                        snappedZoom = snapToZoom(zoom, snap);
                     }
 
                     if (Math.abs(zoom - snappedZoom) > 1e-10) {

@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, getEdgeTiles, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, getEdgeTiles, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance, snapToZoom} from './util';
 import {Canvas} from 'canvas';
 import {OverscaledTileID} from '../tile/tile_id';
 import {expectToBeCloseToArray} from './test/util';
@@ -604,6 +604,21 @@ describe('util scaleZoom and zoomScale relation', () => {
         expect(scaleZoom(10)).toBe(3.3219280948873626);
         expect(zoomScale(3.3219280948873626)).toBeCloseTo(10, 10);
         expect(scaleZoom(zoomScale(5))).toBe(5);
+    });
+});
+
+describe('snapToZoom', () => {
+    test('snapToZoom logic', () => {
+        expect(snapToZoom(9.1, 0.5)).toBe(9.0);
+        expect(snapToZoom(9.4, 0.5)).toBe(9.5);
+        expect(snapToZoom(9.7, 0.5)).toBe(9.5);
+        expect(snapToZoom(9.8, 0.5)).toBe(10.0);
+
+        expect(snapToZoom(9.4, 1.0)).toBe(9.0);
+        expect(snapToZoom(9.5, 1.0)).toBe(10.0);
+        expect(snapToZoom(9.6, 1.0)).toBe(10.0);
+
+        expect(snapToZoom(9.63, 0)).toBe(9.63);
     });
 });
 

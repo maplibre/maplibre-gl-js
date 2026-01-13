@@ -1,4 +1,4 @@
-import {extend, wrap, defaultEasing, pick, scaleZoom} from '../util/util';
+import {extend, wrap, defaultEasing, pick, scaleZoom, snapToZoom} from '../util/util';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser';
 import {now} from '../util/time_control';
@@ -531,7 +531,7 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomIn(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this.snapZoom(this.getZoom() + 1), options, eventData);
+        this.zoomTo(this._snapZoom(this.getZoom() + 1), options, eventData);
         return this;
     }
 
@@ -549,7 +549,7 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomOut(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this.snapZoom(this.getZoom() - 1), options, eventData);
+        this.zoomTo(this._snapZoom(this.getZoom() - 1), options, eventData);
         return this;
     }
 
@@ -1184,18 +1184,14 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Snaps the provided zoom level to the nearest `zoomSnap` increment.
-     * If `zoomSnap` is 0 or less, the zoom level is returned unchanged.
+     * @internal
+     * Internal helper to snap a zoom level using the camera's `zoomSnap` setting.
      *
      * @param zoom - The zoom level to snap.
      * @returns The snapped zoom level.
      */
-    snapZoom(zoom: number): number {
-        const snap = this._zoomSnap;
-        if (snap <= 0) return zoom;
-
-        const inv = 1 / snap;
-        return Math.round(zoom * inv) / inv;
+    _snapZoom(zoom: number): number {
+        return snapToZoom(zoom, this._zoomSnap);
     }
 
     _prepareEase(eventData: any, noMoveStart: boolean,

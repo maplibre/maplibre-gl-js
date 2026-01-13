@@ -498,6 +498,18 @@ export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
 export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
 /**
+ * Snaps a zoom level to the nearest increment defined by zoomSnap.
+ * @param zoom - The zoom level to snap.
+ * @param zoomSnap - The snap increment.
+ * @returns The snapped zoom level.
+ */
+export function snapToZoom(zoom: number, zoomSnap: number): number {
+    if (zoomSnap <= 0) return zoom;
+    const inv = 1 / zoomSnap;
+    return Math.round(zoom * inv) / inv;
+}
+
+/**
  * Create an object by mapping all the values of an existing object while
  * preserving their keys.
  */
