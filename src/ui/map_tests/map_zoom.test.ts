@@ -136,22 +136,3 @@ test('transformCameraUpdate is called after changing min or max zoom', async () 
         maxZoom: 16,
     });
 });
-
-test('setZoomSnap and getZoomSnap', () => {
-    const map = createMap();
-    expect(map.getZoomSnap()).toBe(0);
-
-    map.setZoomSnap(0.5);
-    expect(map.getZoomSnap()).toBe(0.5);
-
-    map.setZoomSnap(0);
-    expect(map.getZoomSnap()).toBe(0);
-
-    map.setZoomSnap(1.0);
-    map.setZoom(9.1);
-    const spy = vi.spyOn(map, 'zoomTo');
-    map.zoomIn();
-    // 9.1 + 1.0 = 10.1 -> snap to 10.0
-    expect(spy).toHaveBeenCalledWith(10.0, undefined, undefined);
-    map.remove();
-});

@@ -498,10 +498,10 @@ export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
 export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
 /**
- * Snaps a zoom level to the nearest increment defined by zoomSnap.
- * @param zoom - The zoom level to snap.
- * @param zoomSnap - The snap increment.
- * @returns The snapped zoom level.
+ * Snaps a zoom level to the grid defined by zoomSnap. If zoomSnap is 0 or less, the zoom level is returned unchanged.
+ * @param zoom - The input zoom level
+ * @param zoomSnap - The grid interval to snap to, e.g. 1.0 for 1.0 zoom levels, 0.5 for 0.5 zoom levels, etc.
+ * @returns The zoom level snapped to the nearest grid interval
  */
 export function snapToZoom(zoom: number, zoomSnap: number): number {
     if (zoomSnap <= 0) return zoom;

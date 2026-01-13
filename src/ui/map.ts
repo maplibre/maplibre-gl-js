@@ -3785,23 +3785,4 @@ export class Map extends Camera {
         this.style.setProjection(projection);
         return this._update(true);
     }
-
-    /**
-     * Sets the map's zoom snap level.
-     *
-     * @param snap - The zoom snap level to set.
-     */
-    setZoomSnap(snap: number): this {
-        super.setZoomSnap(snap);
-        return this;
-    }
-
-    /**
-     * Returns the map's current zoom snap level.
-     *
-     * @returns The map's current zoom snap level.
-     */
-    getZoomSnap(): number {
-        return super.getZoomSnap();
-    }
 }

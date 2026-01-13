@@ -3901,27 +3901,24 @@ describe('fitScreenCoordinates globe projection', () => {
 });
 
 describe('zoomSnap', () => {
-    test('zoomIn() discrete snap', () => {
+    test('zoomIn() with zoomSnap set to 1.0', () => {
         const camera = createCamera({zoomSnap: 1.0});
         camera.setZoom(9.7);
         camera.zoomIn({duration: 0});
-        // 9.7 + 1.0 = 10.7 -> snap to 11.0
         expect(camera.getZoom()).toBe(11.0);
     });
 
-    test('zoomOut() discrete snap', () => {
+    test('zoomOut() with zoomSnap set to 1.0', () => {
         const camera = createCamera({zoomSnap: 1.0});
         camera.setZoom(10.3);
         camera.zoomOut({duration: 0});
-        // 10.3 - 1.0 = 9.3 -> snap to 9.0
         expect(camera.getZoom()).toBe(9.0);
     });
 
-    test('zoomIn() with fractional snap', () => {
+    test('zoomIn() with zoomSnap set to 0.5', () => {
         const camera = createCamera({zoomSnap: 0.5});
         camera.setZoom(9.1);
         camera.zoomIn({duration: 0});
-        // 9.1 + 1.0 = 10.1 -> snap to 10.0
         expect(camera.getZoom()).toBe(10.0);
     });
 });

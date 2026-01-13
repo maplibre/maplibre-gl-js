@@ -58,7 +58,7 @@ describe('dbclick_zoom', () => {
         map.remove();
     });
 
-    test('DoubleClickZoomHandler respects zoomSnap', () => {
+    test('DoubleClickZoomHandler snaps to nearest zoomSnap', () => {
         const map = new Map({
             container: window.document.createElement('div'),
             zoomSnap: 1.0,
@@ -69,13 +69,12 @@ describe('dbclick_zoom', () => {
         simulate.dblclick(map.getCanvas());
         map._renderTaskQueue.run();
 
-        // 9.7 + 1.0 = 10.7 -> snap to 11.0
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][0].zoom).toBe(11.0);
         map.remove();
     });
 
-    test('DoubleClickZoomHandler double-tap respects zoomSnap', async () => {
+    test('DoubleClickZoomHandler double-tap snaps to nearest zoomSnap', async () => {
         const map = new Map({
             container: window.document.createElement('div'),
             zoomSnap: 1.0,
@@ -90,10 +89,8 @@ describe('dbclick_zoom', () => {
         simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
         simulate.touchend(canvas);
 
-        // MapLibre's TapZoomHandler uses a 0ms timeout to reset state
         await sleep(10);
 
-        // 9.7 + 1.0 = 10.7 -> snap to 11.0
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][0].zoom).toBe(11.0);
         map.remove();
@@ -194,26 +191,24 @@ describe('dbclick_zoom', () => {
         expect(zoom).not.toHaveBeenCalled();
     });
 
-    test('DoubleClickZoomHandler respects zoomSnap', () => {
+    test('DoubleClickZoomHandler snaps to nearest zoomSnap', () => {
         const map = createMap({zoom: 9.7, zoomSnap: 1.0});
         const spy = vi.spyOn(map, 'easeTo');
 
         simulate.dblclick(map.getCanvas());
         map._renderTaskQueue.run();
 
-        // 9.7 + 1.0 = 10.7 -> snap to 11.0
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][0].zoom).toBe(11.0);
         map.remove();
     });
 
-    test('DoubleClickZoomHandler double-tap respects zoomSnap', async () => {
+    test('DoubleClickZoomHandler double-tap snaps to nearest zoomSnap', async () => {
         const map = createMap({zoom: 9.7, zoomSnap: 1.0});
         const spy = vi.spyOn(map, 'easeTo');
 
         await simulateDoubleTap(map, 100);
 
-        // 9.7 + 1.0 = 10.7 -> snap to 11.0
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][0].zoom).toBe(11.0);
         map.remove();
