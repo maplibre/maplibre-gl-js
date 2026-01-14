@@ -78,6 +78,7 @@ export class Tile {
     dashPositions: {[_: string]: DashEntry};
     glyphAtlasImage: AlphaImage;
     glyphAtlasTexture: Texture;
+    etag?: string;
     expirationTime: any;
     expiredRequestCount: number;
     state: TileState;
