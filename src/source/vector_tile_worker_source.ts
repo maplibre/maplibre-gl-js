@@ -17,7 +17,6 @@ import type {IActor} from '../util/actor';
 import type {StyleLayer} from '../style/style_layer';
 import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
-import {type PerformanceResourceTiming} from 'node:perf_hooks';
 
 /**
  * LoadVectorTileResult with a freshly loaded tile, not a tile from cache.
