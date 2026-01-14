@@ -158,7 +158,6 @@ export class HandlerManager {
     _terrainMovement: boolean;
     _zoom: {handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
-    _zoomStart: number;
     _listeners: Array<[Window | Document | HTMLElement, string, {
         passive?: boolean;
         capture?: boolean;
@@ -619,9 +618,6 @@ export class HandlerManager {
             const {originalEvent} = newEventsInProgress[eventName];
             if (!this._eventsInProgress[eventName]) {
                 startEvents[`${eventName}start`] = originalEvent;
-                if (eventName === 'zoom') {
-                    this._zoomStart = this._map.getZoom();
-                }
             }
             this._eventsInProgress[eventName] = newEventsInProgress[eventName];
         }
