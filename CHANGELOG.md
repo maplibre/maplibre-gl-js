@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix correct bounds calculation for GeoJSON with elevation
 - _...Add new stuff here..._
 
 ## 5.18.0
@@ -41,6 +42,7 @@
 ## 5.16.0
 
 ### ✨ Features and improvements
+
 - Add `padding` option to `Popup` class to prevent popups from being positioned too close to map container edges ([#5978](https://github.com/maplibre/maplibre-gl-js/issues/5978)) (by [@yuiseki](https://github.com/yuiseki) and [@lucaswoj](https://github.com/lucaswoj))
 - Emit `style.load` event on style diff ([#6880](https://github.com/maplibre/maplibre-gl-js/pull/6880)) (by [lesbaa](https://github.com/lesbaa))
 
