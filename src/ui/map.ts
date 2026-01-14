@@ -393,7 +393,7 @@ export type MapOptions = {
      * rotation started above or below the center. If set to false the horizontal
      * rotation direction will be the same for above and below the center.
      */
-	aroundCenter?: boolean;
+    aroundCenter?: boolean;
 };
 
 export type AddImageOptions = {
