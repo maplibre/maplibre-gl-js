@@ -1,6 +1,6 @@
 import {DOM} from '../../util/dom';
 
-import {defaultEasing, bezier, zoomScale, scaleZoom} from '../../util/util';
+import {defaultEasing, bezier, zoomScale, scaleZoom, snapToZoom} from '../../util/util';
 import {now} from '../../util/time_control';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat} from '../../geo/lng_lat';
@@ -289,7 +289,7 @@ export class ScrollZoomHandler implements Handler {
         if (this._delta !== 0) {
             // For trackpad events and single mouse wheel ticks, use the default zoom rate
             const zoomRate = (this._type === 'wheel' && Math.abs(this._delta) > wheelZoomDelta) ? this._wheelZoomRate : this._defaultZoomRate;
-            // Scale by sigmoid of scroll wheel delta.
+            // Scale by sigmoid of scroll wheel delta so the map responds to small scrolls and compresses large scrolls
             let scale = maxScalePerFrame / (1 + Math.exp(-Math.abs(this._delta * zoomRate)));
 
             if (this._delta < 0 && scale !== 0) {
@@ -298,16 +298,17 @@ export class ScrollZoomHandler implements Handler {
 
             const fromScale = typeof this._targetZoom !== 'number' ? tr.scale : zoomScale(this._targetZoom);
             const target = tr.applyConstrain(tr.getCameraLngLat(), scaleZoom(fromScale * scale)).zoom;
+            const zoomSnap = this._map.getZoomSnap();
 
-            if (this._type === 'wheel' && this._map.getZoomSnap() > 0) {
-                const snap = this._map.getZoomSnap();
-                const currentZoom = tr.zoom;
-                if (this._delta > 0) {
-                    // Zooming in: snap to the next higher increment
-                    this._targetZoom = Math.ceil(target / snap) * snap;
-                } else if (this._delta < 0) {
-                    // Zooming out: snap to the next lower increment
-                    this._targetZoom = Math.floor(target / snap) * snap;
+            if (this._type === 'wheel' && zoomSnap > 0) {
+                const currentSnapped = Math.round(tr.zoom / zoomSnap) * zoomSnap;
+
+                if (target > currentSnapped) {
+                    this._targetZoom = Math.ceil(target / zoomSnap - 1e-9) * zoomSnap;
+                } else if (target < currentSnapped) {
+                    this._targetZoom = Math.floor(target / zoomSnap + 1e-9) * zoomSnap;
+                } else {
+                    this._targetZoom = currentSnapped;
                 }
             } else {
                 this._targetZoom = target;
