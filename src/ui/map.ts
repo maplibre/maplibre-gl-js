@@ -387,6 +387,13 @@ export type MapOptions = {
      * @experimental
      */
     experimentalZoomLevelsToOverscale?: number;
+    /**
+     * Determines the map rotation horizontal direction. If set to true,
+     * the horizontal rotation direction has two directions, depending if
+     * rotation started above or below the center. If set to false the horizontal
+     * rotation direction will be the same for above and below the center.
+     */
+	aroundCenter?: boolean;
 };
 
 export type AddImageOptions = {
