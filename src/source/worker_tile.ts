@@ -192,6 +192,7 @@ export class WorkerTile {
 
         this.status = 'done';
         return {
+            type: 'processed',
             buckets: Object.values(buckets).filter(b => !b.isEmpty()),
             featureIndex,
             collisionBoxArray: this.collisionBoxArray,

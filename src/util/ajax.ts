@@ -11,7 +11,7 @@ export const GLOBAL_DISPATCHER_ID = 'global-dispatcher';
 /**
  * A type used to store the tile's expiration date and cache control definition
  */
-export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
+export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null; etag?: string};
 
 /**
  * A `RequestParameters` object to be returned from Map.options.transformRequest callbacks.

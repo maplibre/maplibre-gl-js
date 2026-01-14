@@ -46,6 +46,7 @@ export type WorkerTileParameters = TileParameters & {
      * This allows the worker to know that it needs to overzoom from a source tile.
      */
     overzoomParameters?: OverzoomParameters;
+    etag?: string;
 };
 
 /**
@@ -71,7 +72,8 @@ export type WorkerDEMTileParameters = TileParameters & {
 /**
  * The worker tile's result type
  */
-export type WorkerTileResult = ExpiryData & {
+export type WorkerTileResult = ExpiryData & { resourceTiming?: Array<PerformanceResourceTiming>} & ({ type: 'unchanged' } | {
+    type: 'processed';
     buckets: Array<Bucket>;
     imageAtlas: ImageAtlas;
     dashPositions: Record<string, DashEntry>;
@@ -80,7 +82,6 @@ export type WorkerTileResult = ExpiryData & {
     collisionBoxArray: CollisionBoxArray;
     rawTileData?: ArrayBuffer;
     encoding?: string;
-    resourceTiming?: Array<PerformanceResourceTiming>;
     // Only used for benchmarking:
     glyphMap?: {
         [_: string]: {
@@ -91,7 +92,7 @@ export type WorkerTileResult = ExpiryData & {
         [_: string]: StyleImage;
     } | null;
     glyphPositions?: GlyphPositions | null;
-};
+});
 
 /**
  * This is how the @see {@link WorkerSource} constructor should look like.

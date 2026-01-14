@@ -17,12 +17,27 @@ import type {IActor} from '../util/actor';
 import type {StyleLayer} from '../style/style_layer';
 import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
+import {type PerformanceResourceTiming} from 'node:perf_hooks';
 
-export type LoadVectorTileResult = {
+/**
+ * LoadVectorTileResult with a freshly loaded tile, not a tile from cache.
+ */
+export type LoadVectorTileFullResult = ExpiryData & {
+    type: 'full';
     vectorTile: VectorTileLike;
-    rawData: ArrayBufferLike;
     resourceTiming?: Array<PerformanceResourceTiming>;
-} & ExpiryData;
+    rawData: ArrayBufferLike;
+};
+
+/**
+ * A vector tile that has been fetched from cache and is unchanged.
+ */
+type LoadVectorTileUnchangedResult = ExpiryData & {
+    type: 'unchanged';
+    resourceTiming?: Array<PerformanceResourceTiming>;
+};
+
+export type LoadVectorTileResult = LoadVectorTileFullResult | LoadVectorTileUnchangedResult;
 
 type FetchingState = {
     rawTileData: ArrayBufferLike;
@@ -46,7 +61,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     fetching: {[_: string]: FetchingState };
     loading: {[_: string]: WorkerTile};
     loaded: {[_: string]: WorkerTile};
-    overzoomedTileResultCache: BoundedLRUCache<string, LoadVectorTileResult>;
+    overzoomedTileResultCache: BoundedLRUCache<string, LoadVectorTileFullResult>;
 
     /**
      * @param loadVectorData - Optional method for custom loading of a VectorTile
@@ -61,7 +76,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         this.fetching = {};
         this.loading = {};
         this.loaded = {};
-        this.overzoomedTileResultCache = new BoundedLRUCache<string, LoadVectorTileResult>(1000);
+        this.overzoomedTileResultCache = new BoundedLRUCache<string, LoadVectorTileFullResult>(1000);
     }
 
     /**
@@ -70,12 +85,23 @@ export class VectorTileWorkerSource implements WorkerSource {
     async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
         const response = await getArrayBuffer(params.request, abortController);
         try {
-            const vectorTile = params.encoding !== 'mlt' 
-                ? new VectorTile(new Protobuf(response.data)) 
+            if (params.etag && response.etag && params.etag === response.etag) {
+                return {
+                    type: 'unchanged',
+                    etag: response.etag,
+                    cacheControl: response.cacheControl,
+                    expires: response.expires
+                };
+            }
+
+            const vectorTile = params.encoding !== 'mlt'
+                ? new VectorTile(new Protobuf(response.data))
                 : new MLTVectorTile(response.data);
             return {
+                type: 'full',
                 vectorTile,
                 rawData: response.data,
+                etag: response.etag,
                 cacheControl: response.cacheControl,
                 expires: response.expires
             };
@@ -119,16 +145,16 @@ export class VectorTileWorkerSource implements WorkerSource {
                 return null;
             }
 
-            if (overzoomParameters) {
+            if (overzoomParameters && response.type === 'full') {
                 const overzoomTile = this._getOverzoomTile(params, response.vectorTile);
                 response.rawData = overzoomTile.rawData;
                 response.vectorTile = overzoomTile.vectorTile;
             }
 
-            const rawTileData = response.rawData;
             const cacheControl = {} as ExpiryData;
             if (response.expires) cacheControl.expires = response.expires;
             if (response.cacheControl) cacheControl.cacheControl = response.cacheControl;
+            if (response.etag) cacheControl.etag = response.etag;
 
             const resourceTiming = {} as {resourceTiming: any};
             if (perf) {
@@ -139,6 +165,14 @@ export class VectorTileWorkerSource implements WorkerSource {
                     resourceTiming.resourceTiming = JSON.parse(JSON.stringify(resourceTimingData));
             }
 
+            if (response.type === 'unchanged') {
+                this.loaded[tileUid] = workerTile;
+                const result: WorkerTileResult = extend({type: 'unchanged' as const}, cacheControl, resourceTiming);
+                return result;
+            }
+
+            const rawTileData = response.rawData;
+
             workerTile.vectorTile = response.vectorTile;
             const parsePromise = workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
             this.loaded[tileUid] = workerTile;
@@ -148,7 +182,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             try {
                 const result = await parsePromise;
                 // Transferring a copy of rawTileData because the worker needs to retain its copy.
-                return extend({rawTileData: rawTileData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
+                return extend({type: 'processed', rawTileData: rawTileData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
             } finally {
                 delete this.fetching[tileUid];
             }
@@ -166,13 +200,13 @@ export class VectorTileWorkerSource implements WorkerSource {
      * @param maxZoomVectorTile - the original vector tile at the source's max available canonical zoom
      * @returns the overzoomed tile and its raw data
      */
-    private _getOverzoomTile(params: WorkerTileParameters, maxZoomVectorTile: VectorTileLike): LoadVectorTileResult {
+    private _getOverzoomTile(params: WorkerTileParameters, maxZoomVectorTile: VectorTileLike): LoadVectorTileFullResult {
         const {tileID, source, overzoomParameters} = params;
         const {maxZoomTileID} = overzoomParameters;
 
         const cacheKey = `${maxZoomTileID.key}_${tileID.key}`;
         const cachedOverzoomTile = this.overzoomedTileResultCache.get(cacheKey);
-        
+
         if (cachedOverzoomTile) {
             return cachedOverzoomTile;
         }
@@ -224,7 +258,9 @@ export class VectorTileWorkerSource implements WorkerSource {
         // if there was no vector tile data on the initial load, don't try and re-parse tile
         if (workerTile.status === 'done' && workerTile.vectorTile) {
             // this seems like a missing case where cache control is lost? see #3309
-            return workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
+            const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
+            result.type = 'processed';
+            return result;
         }
     }
 
