@@ -17,7 +17,7 @@ import {DragPanHandler} from './handler/shim/drag_pan';
 import {DragRotateHandler} from './handler/shim/drag_rotate';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
 import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
-import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType, snapToZoom} from '../util/util';
+import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 import {type MapControlsDeltas} from '../geo/projection/camera_helper';
@@ -687,34 +687,6 @@ export class HandlerManager {
                 this._map.fire(new Event('moveend', {originalEvent: originalEndEvent}));
                 if (shouldSnapToNorth(this._map.getBearing())) {
                     this._map.resetNorth();
-                }
-
-                if (endEvents['zoomend'] && this._map.getZoomSnap() > 0) {
-                    const zoom = this._map.getZoom();
-                    const snap = this._map.getZoomSnap();
-                    let snappedZoom;
-
-                    const deltaSinceStart = zoom - this._zoomStart;
-                    const threshold = 0.01; // Small threshold to detect intentional movement
-
-                    if (deltaSinceStart > threshold) {
-                        // Moved in: snap to the next higher increment (magnetic)
-                        snappedZoom = Math.ceil(zoom / snap - 1e-5) * snap;
-                    } else if (deltaSinceStart < -threshold) {
-                        // Moved out: snap to the next lower increment
-                        snappedZoom = Math.floor(zoom / snap + 1e-5) * snap;
-                    } else {
-                        // Very small movement: snap to nearest (usually the start point)
-                        snappedZoom = snapToZoom(zoom, snap);
-                    }
-
-                    if (Math.abs(zoom - snappedZoom) > 1e-10) {
-                        this._map.easeTo({
-                            zoom: snappedZoom,
-                            around: this._map.getCenter(),
-                            essential: true
-                        }, {originalEvent: originalEndEvent});
-                    }
                 }
             }
             this._updatingCamera = false;

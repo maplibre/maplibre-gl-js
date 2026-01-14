@@ -3,7 +3,7 @@ import type Point from '@mapbox/point-geometry';
 import type {Map} from '../map';
 import {TransformProvider} from './transform-provider';
 import {type Handler} from '../handler_manager';
-import {snapToZoom} from '../util/util';
+import {snapToZoom} from '../../util/util';
 
 /**
  * A `TapZoomHandler` allows the user to zoom the map at a point by double tapping

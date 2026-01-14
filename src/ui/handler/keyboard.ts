@@ -1,7 +1,7 @@
 import {type Handler} from '../handler_manager';
 import type {Map} from '../map';
 import {TransformProvider} from './transform-provider';
-import {snapToZoom} from '../util/util';
+import {snapToZoom} from '../../util/util';
 
 const defaultOptions = {
     panStep: 100,
