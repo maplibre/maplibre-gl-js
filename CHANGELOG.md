@@ -13,6 +13,7 @@
 - Fix a blank map when a resize event is triggered before a WebGL context restoration ([#6935](https://github.com/maplibre/maplibre-gl-js/pull/6935)) (by [ToHold](https://github.com/ToHold))
 - Diffed changes when json is passed to `setStyle` emit a style.load event. ([#2587](https://github.com/maplibre/maplibre-gl-js/issues/2587), [#4757](https://github.com/maplibre/maplibre-gl-js/issues/4757)) (by [@lesbaa](https://github.com/lesbaa))
 - Fix a precision issue in the atomsphere shader in globe projection. ([#6916](https://github.com/maplibre/maplibre-gl-js/issues/6916)) (by [tavimori](https://github.com/tavimori))
+- Fix missing tiles and unconstrained zoom in globe projection caused by incorrect zoom drift calculation. ([#6930](https://github.com/maplibre/maplibre-gl-js/pull/6930)) (by [@biplavbarua](https://github.com/biplavbarua))
 - _...Add new stuff here..._
 
 ## 5.15.0

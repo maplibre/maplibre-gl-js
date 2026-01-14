@@ -1,7 +1,7 @@
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat';
-import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, scaleZoom, warnOnce, zoomScale, wrap} from '../../util/util';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce, wrap} from '../../util/util';
 import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../mercator_coordinate';
@@ -695,12 +695,12 @@ export class VerticalPerspectiveTransform implements ITransform {
 
         // We also check height constraint roughly to avoid seeing too much black vertical space
         if (latRange && this.height > 0) {
-             const latSpan = latRange[1] - latRange[0];
-             if (latSpan > 0) {
-                 // 180 is approximate "height" of world in degrees
-                 const calculatedMinZoomY = Math.log2((this.height * 180) / (512 * latSpan));
-                 minZoomForBounds = Math.max(minZoomForBounds, calculatedMinZoomY);
-             }
+            const latSpan = latRange[1] - latRange[0];
+            if (latSpan > 0) {
+                // MAX_VALID_LATITUDE * 2 is the "height" of world in degrees in Mercator
+                const calculatedMinZoomY = Math.log2((this.height * MAX_VALID_LATITUDE * 2) / (512 * latSpan));
+                minZoomForBounds = Math.max(minZoomForBounds, calculatedMinZoomY);
+            }
         }
         
         const constrainedZoom = clamp(+zoom, minZoomForBounds + getZoomAdjustment(0, constrainedLat), this.maxZoom);
