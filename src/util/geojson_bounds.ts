@@ -1,6 +1,8 @@
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 
-function extractCoordinates(coords: any[]): number[][] {
+type DeepCoordinates = GeoJSON.Position | DeepCoordinates[];
+
+function extractCoordinates(coords: DeepCoordinates): number[][] {
     if (!coords || coords.length === 0) return [];
 
     if (typeof coords[0] === 'number') {
