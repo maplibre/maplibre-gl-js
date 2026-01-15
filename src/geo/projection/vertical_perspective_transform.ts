@@ -642,6 +642,11 @@ export class VerticalPerspectiveTransform implements ITransform {
         return new LngLatBounds(boundsArray);
     }
 
+    /**
+     * Constrains the center and zoom of the map to fit within the maxBounds.
+     * This method handles both latitude and longitude constraints, including special handling
+     * for the antimeridian when the bounds cross it.
+     */
     defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         const latRange = this.latRange;
         const lngRange = this.lngRange;
@@ -649,6 +654,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         let constrainedLat = lngLat.lat;
         let constrainedLng = lngLat.lng;
 
+        // 1. Constrain Latitude
         if (latRange) {
             const minLat = Math.max(-MAX_VALID_LATITUDE, latRange[0]);
             const maxLat = Math.min(MAX_VALID_LATITUDE, latRange[1]);
@@ -657,31 +663,35 @@ export class VerticalPerspectiveTransform implements ITransform {
             constrainedLat = clamp(constrainedLat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
         }
 
+        // 2. Constrain Longitude
         if (lngRange) {
+            // Check if bounds cross the antimeridian (e.g., [170, -170])
             if (lngRange[0] > lngRange[1]) {
-                // Handle antimeridian crossing: range is [lngRange[0], 180] U [-180, lngRange[1]]
                 const lng = wrap(constrainedLng, -180, 180);
-                if (lng >= lngRange[0] || lng <= lngRange[1]) {
-                    constrainedLng = lng;
-                } else {
-                    // In forbidden region: clamp to closest boundary
-                    const d1 = Math.abs(lng - lngRange[0]);
-                    const d2 = Math.abs(lng - lngRange[1]);
+                // If distinct from "inside" region (which is effectively Outside the forbidden zone in the middle)
+                // The valid region is [lngRange[0], 180] U [-180, lngRange[1]]
+                const inWestBand = lng >= lngRange[0] && lng <= 180;
+                const inEastBand = lng >= -180 && lng <= lngRange[1];
+
+                if (!inWestBand && !inEastBand) {
+                    // It's in the forbidden gap. Clamp to the closest boundary.
+                    const d1 = Math.abs(wrap(lng - lngRange[0], -180, 180));
+                    const d2 = Math.abs(wrap(lng - lngRange[1], -180, 180));
                     constrainedLng = d1 < d2 ? lngRange[0] : lngRange[1];
+                } else {
+                     // Inside valid region, keep as is (but wrapped)
+                     constrainedLng = lng;
                 }
             } else {
+                // Standard case: min < max
                 constrainedLng = clamp(constrainedLng, lngRange[0], lngRange[1]);
             }
         }
 
-        // Logic to force the map to zoom in if the bounds are smaller than the viewport size.
-        // We calculate a stable minZoom based on the bounds size and viewport size to prevent
-        // the map from drifting away (unconstrained zoom) while ensuring it doesn't cause jitter
-        // by depending on dynamic state like current center latitude.
-        // Typically, we want the visible world width (at the current zoom) to be at most the bounds width.
-        // 512 * 2^z * (lngSpan / 360) >= width
-        // => 2^z >= (width * 360) / (512 * lngSpan)
+        // 3. Constrain Zoom to fit bounds
         let minZoomForBounds = this.minZoom;
+        
+        // Calculate min zoom for longitude
         if (lngRange && this.width > 0) {
             const lngSpan = lngRange[0] > lngRange[1] ?
                 360 - (lngRange[0] - lngRange[1]) :
@@ -693,29 +703,23 @@ export class VerticalPerspectiveTransform implements ITransform {
             }
         }
 
-        // We also check height constraint roughly to avoid seeing too much black vertical space
+        // Calculate min zoom for latitude
         if (latRange && this.height > 0) {
             const latSpan = latRange[1] - latRange[0];
             if (latSpan > 0) {
-                // MAX_VALID_LATITUDE * 2 is the "height" of world in degrees in Mercator
                 const calculatedMinZoomY = Math.log2((this.height * MAX_VALID_LATITUDE * 2) / (512 * latSpan));
                 minZoomForBounds = Math.max(minZoomForBounds, calculatedMinZoomY);
             }
         }
         
         const constrainedZoom = clamp(+zoom, minZoomForBounds + getZoomAdjustment(0, constrainedLat), this.maxZoom);
-        
-        // Logic to force the map to zoom in if the bounds are smaller than the viewport size is removed
-        // as it causes unwanted zooming when panning near poles (where longitude circumference is small).
-        // See https://github.com/maplibre/maplibre-gl-js/pull/6930#issuecomment-3735164910
-        const finalZoom = constrainedZoom;
 
         return {
             center: new LngLat(
                 constrainedLng,
                 constrainedLat
             ),
-            zoom: finalZoom
+            zoom: constrainedZoom
         };
     };
 
