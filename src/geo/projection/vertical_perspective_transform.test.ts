@@ -80,4 +80,26 @@ describe('VerticalPerspectiveTransform', () => {
         
         expect(transform.center.lat).toBeLessThanOrEqual(85.051129); // MAX_VALID_LATITUDE approx
     });
+
+    test('High Latitude: should require higher zoom to fit bounds at high latitude', () => {
+        const transform = new VerticalPerspectiveTransform({minZoom: 0, maxZoom: 22});
+        transform.resize(500, 500);
+
+        // Longitude Span: 180 degrees.
+        // At Lat 60, circumference is 0.5. So 180 deg is physically half as wide.
+        // To fit 512px (approx 500), we need 2x magnification => Zoom 2.
+        
+        // Latitude Span: 160 degrees (-80 to 80).
+        // Vertical fit requires Zoom ~0.1 (very low).
+        const bounds = new LngLatBounds([0, -80, 180, 80]); 
+        transform.setMaxBounds(bounds);
+        
+        // Center at Lat 60
+        transform.setCenter(new LngLat(90, 60));
+        
+        // Try to zoom out to 0
+        transform.setZoom(0);
+        
+        expect(transform.zoom).toBeGreaterThan(1.5);
+    });
 });

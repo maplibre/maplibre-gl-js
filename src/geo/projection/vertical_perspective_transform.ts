@@ -703,6 +703,8 @@ export class VerticalPerspectiveTransform implements ITransform {
             }
         }
 
+
+
         // Calculate min zoom for latitude
         if (latRange && this.height > 0) {
             const latSpan = latRange[1] - latRange[0];
@@ -712,7 +714,7 @@ export class VerticalPerspectiveTransform implements ITransform {
             }
         }
         
-        const constrainedZoom = clamp(+zoom, minZoomForBounds + getZoomAdjustment(0, constrainedLat), this.maxZoom);
+        const constrainedZoom = clamp(+zoom, minZoomForBounds + getZoomAdjustment(constrainedLat, 0), this.maxZoom);
 
         return {
             center: new LngLat(
