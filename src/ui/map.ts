@@ -388,10 +388,12 @@ export type MapOptions = {
      */
     experimentalZoomLevelsToOverscale?: number;
     /**
-     * Determines the map rotation horizontal direction. If set to true,
-     * the horizontal rotation direction has two directions, depending if
-     * rotation started above or below the center. If set to false the horizontal
-     * rotation direction will be the same for above and below the center.
+     * Determines the rotation interaction model:
+     * - When true: Uses "Orbital" logic where rotation is relative to the pivot center. 
+     *   Dragging right at the top rotates clockwise, while dragging right at the bottom
+     *   rotates counter-clockwise (like spinning a physical globe).
+     * - When false: Uses "Linear" logic where horizontal mouse movement translates directly
+     *   to bearing change regardless of cursor position.
      */
     aroundCenter?: boolean;
 };
