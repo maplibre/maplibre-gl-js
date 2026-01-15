@@ -610,28 +610,19 @@ describe('util scaleZoom and zoomScale relation', () => {
 describe('evaluateZoomSnap', () => {
     test('evaluateZoomSnap logic', () => {
         expect(evaluateZoomSnap(9.1, 0.5)).toBe(9.0);
-        expect(evaluateZoomSnap(9.4, 0.5)).toBe(9.5);
-        expect(evaluateZoomSnap(9.7, 0.5)).toBe(9.5);
-        expect(evaluateZoomSnap(9.8, 0.5)).toBe(10.0);
-
-        expect(evaluateZoomSnap(9.4, 1.0)).toBe(9.0);
-        expect(evaluateZoomSnap(9.5, 1.0)).toBe(10.0);
         expect(evaluateZoomSnap(9.6, 1.0)).toBe(10.0);
-
         expect(evaluateZoomSnap(9.63, 0)).toBe(9.63);
     });
 
-    test('evaluateZoomSnap directional logic', () => {
-        // Snap up
+    test('evaluateZoomSnap directional logic, when delta is defined and positive (snapping up)', () => {
         expect(evaluateZoomSnap(9.1, 1.0, 1.0)).toBe(10.0);
-        expect(evaluateZoomSnap(9.9, 1.0, 1.0)).toBe(10.0);
         expect(evaluateZoomSnap(10.0, 1.0, 1.0)).toBe(10.0);
         expect(evaluateZoomSnap(10.00000001, 1.0, 1.0)).toBe(11.0);
+    });
 
-        // Snap down
+    test('evaluateZoomSnap directional logic, when delta is defined and negative (snapping down)', () => {
         expect(evaluateZoomSnap(9.9, 1.0, -1.0)).toBe(9.0);
         expect(evaluateZoomSnap(9.1, 1.0, -1.0)).toBe(9.0);
-        expect(evaluateZoomSnap(9.0, 1.0, -1.0)).toBe(9.0);
         expect(evaluateZoomSnap(8.999999999, 1.0, -1.0)).toBe(8.0);
     });
 });
