@@ -6,7 +6,7 @@ import {type LoadVectorData, VectorTileWorkerSource} from '../source/vector_tile
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {fakeServer, type FakeServer} from 'nise';
 import {type IActor} from '../util/actor';
-import {type TileParameters, type WorkerTileParameters, type WorkerTileResult} from './worker_source';
+import {type WorkerTileProcessedResult, type TileParameters, type WorkerTileParameters, type WorkerTileResult} from './worker_source';
 import {WorkerTile} from './worker_tile';
 import {setPerformance, sleep} from '../util/test/util';
 import {ABORT_ERROR} from '../util/abort_error';
@@ -85,6 +85,7 @@ describe('vector tile worker source', () => {
         const rawTileData = new ArrayBuffer(0);
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
+                type: 'full',
                 vectorTile: {
                     layers: {
                         test: {
@@ -157,14 +158,16 @@ describe('vector tile worker source', () => {
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
         } as any as WorkerTileParameters);
         expect(res).toBeDefined();
-        expect(res.rawTileData).toBeDefined();
-        expect(res.rawTileData).toStrictEqual(rawTileData);
+        expect(res.type).toBe('processed');
+        expect((res as WorkerTileProcessedResult).rawTileData).toBeDefined();
+        expect((res as WorkerTileProcessedResult).rawTileData).toStrictEqual(rawTileData);
     });
 
     test('VectorTileWorkerSource.loadTile reparses tile if reloadTile is called during reparsing', async () => {
         const rawTileData = new ArrayBuffer(0);
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
+                type: 'full',
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData
             };
@@ -185,7 +188,7 @@ describe('vector tile worker source', () => {
             .mockImplementation(function(_data, _layerIndex, _availableImages, _actor) {
                 this.status = 'parsing';
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({} as WorkerTileResult), 20);
+                    setTimeout(() => resolve({} as WorkerTileProcessedResult), 20);
                 });
             });
 
@@ -291,6 +294,7 @@ describe('vector tile worker source', () => {
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
+                type: 'full',
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
@@ -347,6 +351,7 @@ describe('vector tile worker source', () => {
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
+                type: 'full',
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,

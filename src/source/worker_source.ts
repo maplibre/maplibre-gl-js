@@ -69,10 +69,8 @@ export type WorkerDEMTileParameters = TileParameters & {
     baseShift: number;
 };
 
-/**
- * The worker tile's result type
- */
-export type WorkerTileResult = ExpiryData & { resourceTiming?: Array<PerformanceResourceTiming>} & ({ type: 'unchanged' } | {
+type WorkerTileUnchangedResult = ExpiryData & { resourceTiming?: Array<PerformanceResourceTiming>} & { type: 'unchanged' };
+export type WorkerTileProcessedResult = ExpiryData & { resourceTiming?: Array<PerformanceResourceTiming>} & {
     type: 'processed';
     buckets: Array<Bucket>;
     imageAtlas: ImageAtlas;
@@ -92,7 +90,12 @@ export type WorkerTileResult = ExpiryData & { resourceTiming?: Array<Performance
         [_: string]: StyleImage;
     } | null;
     glyphPositions?: GlyphPositions | null;
-});
+};
+
+/**
+ * The worker tile's result type. Unchanged if tile was loaded from browser cache, processed if there is fresh data in the tile.
+ */
+export type WorkerTileResult = WorkerTileUnchangedResult | WorkerTileProcessedResult;
 
 /**
  * This is how the @see {@link WorkerSource} constructor should look like.
