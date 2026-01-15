@@ -699,7 +699,7 @@ export class VerticalPerspectiveTransform implements ITransform {
             
             if (lngSpan > 0) {
                 const calculatedMinZoom = Math.log2((this.width * 360) / (512 * lngSpan));
-                minZoomForBounds = Math.max(minZoomForBounds, calculatedMinZoom);
+                minZoomForBounds = Math.max(minZoomForBounds, calculatedMinZoom + getZoomAdjustment(constrainedLat, 0));
             }
         }
 
@@ -712,7 +712,7 @@ export class VerticalPerspectiveTransform implements ITransform {
             }
         }
         
-        const constrainedZoom = clamp(+zoom, minZoomForBounds + getZoomAdjustment(constrainedLat, 0), this.maxZoom);
+        const constrainedZoom = clamp(+zoom, minZoomForBounds, this.maxZoom);
 
         return {
             center: new LngLat(

@@ -106,8 +106,8 @@ export class GlobeTransform implements ITransform {
     }
 
     resize(width: number, height: number, constrainTransform: boolean = true): void {
-        this._mercatorTransform.resize(width, height, false);
-        this._verticalPerspectiveTransform.resize(width, height, false);
+        this._mercatorTransform.resize(width, height, constrainTransform);
+        this._verticalPerspectiveTransform.resize(width, height, constrainTransform);
         this._helper.resize(width, height, constrainTransform);
     }
     getMaxBounds(): LngLatBounds {
