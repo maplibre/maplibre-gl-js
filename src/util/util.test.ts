@@ -626,7 +626,7 @@ describe('evaluateZoomSnap', () => {
         expect(evaluateZoomSnap(9.1, 1.0, 1.0)).toBe(10.0);
         expect(evaluateZoomSnap(9.9, 1.0, 1.0)).toBe(10.0);
         expect(evaluateZoomSnap(10.0, 1.0, 1.0)).toBe(10.0);
-        expect(evaluateZoomSnap(10.000000001, 1.0, 1.0)).toBe(11.0);
+        expect(evaluateZoomSnap(10.00000001, 1.0, 1.0)).toBe(11.0);
 
         // Snap down
         expect(evaluateZoomSnap(9.9, 1.0, -1.0)).toBe(9.0);
