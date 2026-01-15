@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, getEdgeTiles, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance, snapToZoom} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, getEdgeTiles, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance, evaluateZoomSnap} from './util';
 import {Canvas} from 'canvas';
 import {OverscaledTileID} from '../tile/tile_id';
 import {expectToBeCloseToArray} from './test/util';
@@ -607,18 +607,32 @@ describe('util scaleZoom and zoomScale relation', () => {
     });
 });
 
-describe('snapToZoom', () => {
-    test('snapToZoom logic', () => {
-        expect(snapToZoom(9.1, 0.5)).toBe(9.0);
-        expect(snapToZoom(9.4, 0.5)).toBe(9.5);
-        expect(snapToZoom(9.7, 0.5)).toBe(9.5);
-        expect(snapToZoom(9.8, 0.5)).toBe(10.0);
+describe('evaluateZoomSnap', () => {
+    test('evaluateZoomSnap logic', () => {
+        expect(evaluateZoomSnap(9.1, 0.5)).toBe(9.0);
+        expect(evaluateZoomSnap(9.4, 0.5)).toBe(9.5);
+        expect(evaluateZoomSnap(9.7, 0.5)).toBe(9.5);
+        expect(evaluateZoomSnap(9.8, 0.5)).toBe(10.0);
 
-        expect(snapToZoom(9.4, 1.0)).toBe(9.0);
-        expect(snapToZoom(9.5, 1.0)).toBe(10.0);
-        expect(snapToZoom(9.6, 1.0)).toBe(10.0);
+        expect(evaluateZoomSnap(9.4, 1.0)).toBe(9.0);
+        expect(evaluateZoomSnap(9.5, 1.0)).toBe(10.0);
+        expect(evaluateZoomSnap(9.6, 1.0)).toBe(10.0);
 
-        expect(snapToZoom(9.63, 0)).toBe(9.63);
+        expect(evaluateZoomSnap(9.63, 0)).toBe(9.63);
+    });
+
+    test('evaluateZoomSnap directional logic', () => {
+        // Snap up
+        expect(evaluateZoomSnap(9.1, 1.0, 1.0)).toBe(10.0);
+        expect(evaluateZoomSnap(9.9, 1.0, 1.0)).toBe(10.0);
+        expect(evaluateZoomSnap(10.0, 1.0, 1.0)).toBe(10.0);
+        expect(evaluateZoomSnap(10.000000001, 1.0, 1.0)).toBe(11.0);
+
+        // Snap down
+        expect(evaluateZoomSnap(9.9, 1.0, -1.0)).toBe(9.0);
+        expect(evaluateZoomSnap(9.1, 1.0, -1.0)).toBe(9.0);
+        expect(evaluateZoomSnap(9.0, 1.0, -1.0)).toBe(9.0);
+        expect(evaluateZoomSnap(8.999999999, 1.0, -1.0)).toBe(8.0);
     });
 });
 

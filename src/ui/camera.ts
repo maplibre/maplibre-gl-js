@@ -1,4 +1,4 @@
-import {extend, wrap, defaultEasing, pick, scaleZoom, snapToZoom} from '../util/util';
+import {extend, wrap, defaultEasing, pick, scaleZoom, evaluateZoomSnap} from '../util/util';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser';
 import {now} from '../util/time_control';
@@ -531,7 +531,7 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomIn(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this._snapZoom(this.getZoom() + 1), options, eventData);
+        this.zoomTo(evaluateZoomSnap(this.getZoom() + 1, this._zoomSnap), options, eventData);
         return this;
     }
 
@@ -549,7 +549,7 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomOut(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this._snapZoom(this.getZoom() - 1), options, eventData);
+        this.zoomTo(evaluateZoomSnap(this.getZoom() - 1, this._zoomSnap), options, eventData);
         return this;
     }
 
@@ -1181,17 +1181,6 @@ export abstract class Camera extends Evented {
         }, options as any);
 
         return this;
-    }
-
-    /**
-     * @internal
-     * Internal helper to snap a zoom level using the camera's `zoomSnap` setting.
-     *
-     * @param zoom - The zoom level to snap.
-     * @returns The snapped zoom level.
-     */
-    _snapZoom(zoom: number): number {
-        return snapToZoom(zoom, this._zoomSnap);
     }
 
     _prepareEase(eventData: any, noMoveStart: boolean,

@@ -1,6 +1,6 @@
 import {DOM} from '../../util/dom';
 
-import {defaultEasing, bezier, zoomScale, scaleZoom, snapToZoom} from '../../util/util';
+import {defaultEasing, bezier, zoomScale, scaleZoom, evaluateZoomSnap} from '../../util/util';
 import {now} from '../../util/time_control';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat} from '../../geo/lng_lat';
@@ -301,15 +301,8 @@ export class ScrollZoomHandler implements Handler {
             const zoomSnap = this._map.getZoomSnap();
 
             if (this._type === 'wheel' && zoomSnap > 0) {
-                const currentSnapped = Math.round(tr.zoom / zoomSnap) * zoomSnap;
-
-                if (target > currentSnapped) {
-                    this._targetZoom = Math.ceil(target / zoomSnap - 1e-9) * zoomSnap;
-                } else if (target < currentSnapped) {
-                    this._targetZoom = Math.floor(target / zoomSnap + 1e-9) * zoomSnap;
-                } else {
-                    this._targetZoom = currentSnapped;
-                }
+                const currentSnapped = evaluateZoomSnap(tr.zoom, zoomSnap);
+                this._targetZoom = evaluateZoomSnap(target, zoomSnap, target - currentSnapped);
             } else {
                 this._targetZoom = target;
             }

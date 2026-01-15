@@ -2,7 +2,7 @@ import type Point from '@mapbox/point-geometry';
 import type {Map} from '../map';
 import {TransformProvider} from './transform-provider';
 import {type Handler} from '../handler_manager';
-import {snapToZoom} from '../../util/util';
+import {evaluateZoomSnap} from '../../util/util';
 
 /**
  * The `ClickZoomHandler` allows the user to zoom the map at a point by double clicking
@@ -30,7 +30,7 @@ export class ClickZoomHandler implements Handler {
             cameraAnimation: (map: Map) => {
                 map.easeTo({
                     duration: 300,
-                    zoom: snapToZoom(this._tr.zoom + (e.shiftKey ? -1 : 1), map.getZoomSnap()),
+                    zoom: evaluateZoomSnap(this._tr.zoom + (e.shiftKey ? -1 : 1), map.getZoomSnap()),
                     around: this._tr.unproject(point)
                 }, {originalEvent: e});
             }
