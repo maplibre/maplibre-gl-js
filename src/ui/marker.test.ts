@@ -1208,10 +1208,10 @@ describe('marker', () => {
     });
 
     test('should update marker transform when zoom is changed due to min or max zoom change', async () => {
-        const map = createMap({ width: 1024 });
+        const map = createMap({width: 1024});
         await map.once('load');
         map.setZoom(0);
-        map.jumpTo({ center: { lat: 1, lng: 1 } });
+        map.jumpTo({center: {lat: 1, lng: 1}});
         const marker = new Marker()
             .setLngLat([0, 0])
             .setSubpixelPositioning(true)
@@ -1246,10 +1246,10 @@ describe('marker', () => {
     });
 
     test('should update marker transform when pitch is changed due to min or max pitch change', async () => {
-        const map = createMap({ width: 1024 });
+        const map = createMap({width: 1024});
         await map.once('load');
         map.setZoom(0);
-        map.jumpTo({ center: { lat: 1, lng: 1 } });
+        map.jumpTo({center: {lat: 1, lng: 1}});
         const marker = new Marker()
             .setLngLat([0, 0])
             .setSubpixelPositioning(true)
