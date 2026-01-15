@@ -119,8 +119,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
     }
-    resize(width: number, height: number): void {
-        this._helper.resize(width, height);
+    resize(width: number, height: number, constrain: boolean = true): void {
+        this._helper.resize(width, height, constrain);
     }
     getMaxBounds(): LngLatBounds {
         return this._helper.getMaxBounds();
@@ -679,8 +679,8 @@ export class VerticalPerspectiveTransform implements ITransform {
                     const d2 = Math.abs(wrap(lng - lngRange[1], -180, 180));
                     constrainedLng = d1 < d2 ? lngRange[0] : lngRange[1];
                 } else {
-                     // Inside valid region, keep as is (but wrapped)
-                     constrainedLng = lng;
+                    // Inside valid region, keep as is (but wrapped)
+                    constrainedLng = lng;
                 }
             } else {
                 // Standard case: min < max
@@ -702,8 +702,6 @@ export class VerticalPerspectiveTransform implements ITransform {
                 minZoomForBounds = Math.max(minZoomForBounds, calculatedMinZoom);
             }
         }
-
-
 
         // Calculate min zoom for latitude
         if (latRange && this.height > 0) {
