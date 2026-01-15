@@ -22,13 +22,14 @@ export async function loadTileJson(
     options: RasterSourceSpecification | RasterDEMSourceSpecification | VectorSourceSpecification,
     requestManager: RequestManager,
     abortController: AbortController,
+    targetWindow?: Window,
 ): Promise<LoadTileJsonResponse | null> {
     let tileJSON: TileJSON | typeof options = options;
     if (options.url) {
         const response = await getJSON<TileJSON>(requestManager.transformRequest(options.url, ResourceType.Source), abortController);
         tileJSON = response.data;
     } else {
-        await browser.frameAsync(abortController);
+        await browser.frameAsync(abortController, targetWindow);
     }
     if (!tileJSON) {
         return null;

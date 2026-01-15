@@ -562,6 +562,13 @@ export class Map extends Camera {
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
+    /**
+     * @internal
+     * The window that owns the map container element.
+     * Used for cross-window support to ensure `requestAnimationFrame` and `ResizeObserver`
+     * work correctly when the map is rendered in a popup window or iframe.
+     */
+    _ownerWindow: Window;
     /** @internal */
     _zoomLevelsToOverscale: number | undefined;
     /**
@@ -733,9 +740,25 @@ export class Map extends Camera {
             }
         } else if (resolvedOptions.container instanceof HTMLElement) {
             this._container = resolvedOptions.container;
+        } else if (
+            // Cross-window support: `instanceof HTMLElement` fails when the element comes
+            // from a different window (e.g., popup window or iframe) because each window
+            // has its own HTMLElement constructor. Use nodeType === 1 (ELEMENT_NODE) check
+            // as a fallback, which is equivalent to checking for an HTMLElement.
+            resolvedOptions.container &&
+            typeof resolvedOptions.container === 'object' &&
+            'nodeType' in resolvedOptions.container &&
+            (resolvedOptions.container as unknown as Node).nodeType === 1
+        ) {
+            this._container = resolvedOptions.container as unknown as HTMLElement;
         } else {
             throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
         }
+
+        // Cross-window support: store reference to the owning window.
+        // This ensures requestAnimationFrame and ResizeObserver work correctly
+        // when the map is rendered in a popup window or iframe.
+        this._ownerWindow = this._container.ownerDocument?.defaultView || window;
 
         if (resolvedOptions.maxBounds) {
             this.setMaxBounds(resolvedOptions.maxBounds);
@@ -754,7 +777,7 @@ export class Map extends Camera {
         this.once('idle', () => { this._idleTriggered = true; });
 
         if (typeof window !== 'undefined') {
-            addEventListener('online', this._onWindowOnline, false);
+            this._ownerWindow.addEventListener('online', this._onWindowOnline, false);
             let initialResizeEventCaptured = false;
             const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
                 if (this._trackResize && !this._removed) {
@@ -762,7 +785,10 @@ export class Map extends Camera {
                     this.redraw();
                 }
             }, 50);
-            this._resizeObserver = new ResizeObserver((entries) => {
+            // Cross-window support: use the owning window's ResizeObserver.
+            // The global ResizeObserver may not properly observe elements in other windows.
+            const ResizeObserverClass = (this._ownerWindow as typeof window).ResizeObserver || ResizeObserver;
+            this._resizeObserver = new ResizeObserverClass((entries: ResizeObserverEntry[]) => {
                 if (!initialResizeEventCaptured) {
                     initialResizeEventCaptured = true;
                     return;
@@ -3598,7 +3624,8 @@ export class Map extends Camera {
         delete this.handlers;
         this.setStyle(null);
         if (typeof window !== 'undefined') {
-            removeEventListener('online', this._onWindowOnline, false);
+            // Cross-window support: use the owning window's removeEventListener
+            this._ownerWindow.removeEventListener('online', this._onWindowOnline, false);
         }
 
         ImageRequest.removeThrottleControl(this._imageQueueHandle);
@@ -3646,7 +3673,10 @@ export class Map extends Camera {
                         }
                     }
                 },
-                () => {}
+                () => {},
+                // Cross-window support: pass the owning window to ensure requestAnimationFrame
+                // works correctly when the map is in a popup window or iframe.
+                this._ownerWindow
             );
         }
     }
