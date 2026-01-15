@@ -1167,8 +1167,23 @@ export function isTouchableEvent(event: Event, eventType: string): event is Touc
     return touchableEvents[eventType] && 'touches' in event;
 }
 
+/**
+ * Checks if an event is a pointable event (mouse or wheel event).
+ * Uses the event target's window context to get the correct constructor for instanceof checks,
+ * supporting cross-window scenarios (popup window or iframe) where each window has its own
+ * set of DOM constructor functions.
+ */
 export function isPointableEvent(event: Event, eventType: string): event is MouseEvent {
-    return pointableEvents[eventType] && (event instanceof MouseEvent || event instanceof WheelEvent);
+    if (!pointableEvents[eventType]) return false;
+
+    // Get the window context from the event target to use the correct constructor.
+    // Note: The Event type here is the custom Event from evented.ts, but at runtime
+    // it's actually a DOM Event (MouseEvent/WheelEvent) from addEventListener.
+    // Use optional chaining for safety in case a non-DOM event is passed.
+    const domEvent = event as globalThis.Event;
+    const target = domEvent?.target as Element | null;
+    const targetWindow = target?.ownerDocument?.defaultView || window;
+    return domEvent instanceof targetWindow.MouseEvent || domEvent instanceof targetWindow.WheelEvent;
 }
 
 export function isTouchableOrPointableType(eventType: string): boolean {
