@@ -168,7 +168,7 @@ describe('marker', () => {
             .setLngLat([0,0])
             .setPopup(popup)
             .addTo(map);
-        
+
         // open popup
         marker.togglePopup();
         const spy = vi.fn();
@@ -1205,5 +1205,81 @@ describe('marker', () => {
         const adjustedTransform = marker.getElement().style.transform;
         expect(adjustedTransform)
             .toContain('translate(262.4px, 235.5934100987358px)');
+    });
+
+    test('should update marker transform when zoom is changed due to min or max zoom change', async () => {
+        const map = createMap({ width: 1024 });
+        await map.once('load');
+        map.setZoom(0);
+        map.jumpTo({ center: { lat: 1, lng: 1 } });
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .setSubpixelPositioning(true)
+            .addTo(map);
+
+        const beforeZoom = marker.getElement().style.transform;
+
+        map.setZoom(5);
+        const afterZoom = marker.getElement().style.transform;
+        expect(afterZoom)
+            .not.toEqual(beforeZoom);
+
+        map.setMinZoom(18);
+        const afterMinZoom = marker.getElement().style.transform;
+        expect(afterMinZoom)
+            .not.toEqual(afterZoom);
+
+        map.setMinZoom(0);
+        const afterResetMinZoom = marker.getElement().style.transform;
+        expect(afterResetMinZoom)
+            .toEqual(afterMinZoom);
+
+        map.setMaxZoom(5);
+        const afterMaxZoom = marker.getElement().style.transform;
+        expect(afterMaxZoom)
+            .not.toEqual(afterResetMinZoom);
+
+        map.setMaxZoom(22);
+        const afterResetMaxZoom = marker.getElement().style.transform;
+        expect(afterResetMaxZoom)
+            .toEqual(afterMaxZoom);
+    });
+
+    test('should update marker transform when pitch is changed due to min or max pitch change', async () => {
+        const map = createMap({ width: 1024 });
+        await map.once('load');
+        map.setZoom(0);
+        map.jumpTo({ center: { lat: 1, lng: 1 } });
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .setSubpixelPositioning(true)
+            .addTo(map);
+
+        const beforePitch = marker.getElement().style.transform;
+
+        map.setPitch(60);
+        const afterPitch = marker.getElement().style.transform;
+        expect(beforePitch)
+            .not.toEqual(afterPitch);
+
+        map.setMaxPitch(30);
+        const afterMaxPitch = marker.getElement().style.transform;
+        expect(afterPitch)
+            .not.toEqual(afterMaxPitch);
+
+        map.setMaxPitch(60);
+        const afterResetMaxPitch = marker.getElement().style.transform;
+        expect(afterMaxPitch)
+            .toEqual(afterResetMaxPitch);
+
+        map.setMinPitch(59);
+        const afterMinPitch = marker.getElement().style.transform;
+        expect(afterMinPitch)
+            .not.toEqual(afterResetMaxPitch);
+
+        map.setMinPitch(0);
+        const afterResetMinPitch = marker.getElement().style.transform;
+        expect(afterMinPitch)
+            .toEqual(afterResetMinPitch);
     });
 });
