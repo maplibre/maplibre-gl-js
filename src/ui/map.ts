@@ -1143,7 +1143,8 @@ export class Map extends Camera {
     /**
      * Sets or clears the map's minimum zoom level.
      * If the map's current zoom level is lower than the new minimum,
-     * the map will zoom to the new minimum.
+     * the map will zoom to the new minimum and trigger the following events:
+     * `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
      * It is not always possible to zoom out and reach the set `minZoom`.
      * Other factors such as map height may restrict zooming. For example,
@@ -1197,7 +1198,8 @@ export class Map extends Camera {
     /**
      * Sets or clears the map's maximum zoom level.
      * If the map's current zoom level is higher than the new maximum,
-     * the map will zoom to the new maximum.
+     * the map will zoom to the new maximum and trigger the following events:
+     * `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
      * A {@link ErrorEvent} event will be fired if minZoom is out of bounds.
      *
@@ -1246,7 +1248,8 @@ export class Map extends Camera {
     /**
      * Sets or clears the map's minimum pitch.
      * If the map's current pitch is lower than the new minimum,
-     * the map will pitch to the new minimum.
+     * the map will pitch to the new minimum and trigger the following events:
+     * `movestart`, `move`, `moveend`, `pitchstart`, `pitch`, and `pitchend`.
      *
      * A {@link ErrorEvent} event will be fired if minPitch is out of bounds.
      *
@@ -1291,7 +1294,8 @@ export class Map extends Camera {
     /**
      * Sets or clears the map's maximum pitch.
      * If the map's current pitch is higher than the new maximum,
-     * the map will pitch to the new maximum.
+     * the map will pitch to the new maximum and trigger the following events:
+     * `movestart`, `move`, `moveend`, `pitchstart`, `pitch`, and `pitchend`.
      *
      * A {@link ErrorEvent} event will be fired if maxPitch is out of bounds.
      *
