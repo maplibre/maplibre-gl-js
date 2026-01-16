@@ -299,7 +299,7 @@ describe('VectorTileSource', () => {
         expect(tile.state).toBe('loading');
         await source.loadTile(tile);
         expect(events).toEqual([MessageType.loadTile, 'tileLoaded', MessageType.reloadTile, 'tileLoaded']);
-        await expect(initialLoadPromise).resolves.toBeUndefined();
+        await expect(initialLoadPromise).resolves.toBe(false);
     });
 
     test('respects TileJSON.bounds', async () => {

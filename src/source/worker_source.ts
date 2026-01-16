@@ -46,6 +46,7 @@ export type WorkerTileParameters = TileParameters & {
      * This allows the worker to know that it needs to overzoom from a source tile.
      */
     overzoomParameters?: OverzoomParameters;
+    etag?: string;
 };
 
 /**
@@ -68,10 +69,9 @@ export type WorkerDEMTileParameters = TileParameters & {
     baseShift: number;
 };
 
-/**
- * The worker tile's result type
- */
-export type WorkerTileResult = ExpiryData & {
+type WorkerTileUnchangedResult = ExpiryData & { resourceTiming?: Array<PerformanceResourceTiming>} & { type: 'unchanged' };
+export type WorkerTileProcessedResult = ExpiryData & { resourceTiming?: Array<PerformanceResourceTiming>} & {
+    type: 'processed';
     buckets: Array<Bucket>;
     imageAtlas: ImageAtlas;
     dashPositions: Record<string, DashEntry>;
@@ -80,7 +80,6 @@ export type WorkerTileResult = ExpiryData & {
     collisionBoxArray: CollisionBoxArray;
     rawTileData?: ArrayBuffer;
     encoding?: string;
-    resourceTiming?: Array<PerformanceResourceTiming>;
     // Only used for benchmarking:
     glyphMap?: {
         [_: string]: {
@@ -92,6 +91,11 @@ export type WorkerTileResult = ExpiryData & {
     } | null;
     glyphPositions?: GlyphPositions | null;
 };
+
+/**
+ * The worker tile's result type. Unchanged if tile was loaded from browser cache, processed if there is fresh data in the tile.
+ */
+export type WorkerTileResult = WorkerTileUnchangedResult | WorkerTileProcessedResult;
 
 /**
  * This is how the @see {@link WorkerSource} constructor should look like.
