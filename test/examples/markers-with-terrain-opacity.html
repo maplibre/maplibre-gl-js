@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Marker opacity when covered by globe and terrain</title>
+    <meta property="og:description" content="Step through test states showing marker opacity changes when covered by globe and terrain." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    body {
+        background: blue;
+    }
+    .map-overlay {
+        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        position: absolute;
+        width: 400px;
+        top: 0;
+        left: 0;
+        padding: 10px;
+    }
+
+    .map-overlay .map-overlay-inner {
+        background-color: #fff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        border-radius: 3px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .map-overlay-inner fieldset {
+        border: none;
+        padding: 0;
+        margin: 0 0 10px;
+    }
+
+    .map-overlay-inner fieldset:last-child {
+        margin: 0;
+    }
+
+    .map-overlay-inner label {
+        display: block;
+        font-weight: bold;
+        margin: 0 0 5px;
+    }
+
+    .controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .controls button {
+        padding: 5px 15px;
+        border: 1px solid #ccc;
+        background: #fff;
+        cursor: pointer;
+        border-radius: 3px;
+    }
+
+    .controls button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .controls button:hover:not(:disabled) {
+        background: #f0f0f0;
+    }
+
+    .step-info {
+        font-size: 11px;
+        color: #666;
+    }
+
+    .expected {
+        background: #f0f0f0;
+        padding: 5px;
+        border-radius: 3px;
+        margin-top: 5px;
+        font-size: 11px;
+    }
+
+    .expected .value {
+        font-weight: bold;
+        color: #253494;
+    }
+
+    .status {
+        margin-top: 5px;
+        font-size: 11px;
+    }
+
+    .pass {
+        color: #28a745;
+        font-weight: bold;
+    }
+
+    .fail {
+        color: #dc3545;
+        font-weight: bold;
+    }
+</style>
+
+<div id="map"></div>
+<div class="map-overlay top">
+    <div class="map-overlay-inner">
+        <fieldset>
+            <label>Test: Marker opacity when covered by globe/terrain</label>
+            <div class="step-info" id="step-description"></div>
+            <div class="expected" id="expected-value"></div>
+            <div class="status" id="status"></div>
+        </fieldset>
+        <fieldset>
+            <div class="controls">
+                <button id="prev-btn">&lt;&lt; Previous</button>
+                <span id="step-counter"></span>
+                <button id="next-btn">Next &gt;&gt;</button>
+            </div>
+        </fieldset>
+    </div>
+</div>
+
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        interactive: false,
+        attributionControl: false,
+        maplibreLogo: false,
+        trackResize: true,
+        style: {
+            'version': 8,
+            'sources': {},
+            'layers': []
+        },
+        center: [0, 0],
+        zoom: 0,
+        renderWorldCopies: true
+    });
+
+    // Override container size to match test (width: 1024 from test options)
+    // Object.defineProperty(map.getContainer(), 'clientWidth', {value: 1024, configurable: true});
+    // Object.defineProperty(map.getContainer(), 'clientHeight', {value: 512, configurable: true});
+
+    let marker;
+    let currentStep = 0;
+
+    const steps = [
+        {
+            description: 'Initial state: Marker created at [180, 0] with opacity 0.7 and opacityWhenCovered 0.3',
+            action: async () => {
+                marker = new maplibregl.Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
+                    .setLngLat([180, 0])
+                    .addTo(map);
+                await sleep(100);
+            },
+            expectedOpacity: '0.7',
+            explanation: 'Marker is visible, no globe projection yet'
+        },
+        {
+            description: 'Enable globe projection',
+            action: async () => {
+                map.setProjection({type: 'globe'});
+                await sleep(100);
+            },
+            expectedOpacity: '0.3',
+            explanation: 'Marker at [180, 0] is behind the globe, should use opacityWhenCovered'
+        },
+        {
+            description: 'Move marker to [0, 0] (front of globe)',
+            action: async () => {
+                marker.setLngLat([0, 0]);
+                await sleep(100);
+            },
+            expectedOpacity: '0.7',
+            explanation: 'Marker is at the front of the globe, should use normal opacity'
+        },
+        {
+            description: 'Enable terrain',
+            action: async () => {
+                map.terrain = {
+                    pointCoordinate: () => null,
+                    getElevationForLngLatZoom: () => 1000,
+                    getMinTileElevationForLngLatZoom: () => 0,
+                    getFramebuffer: () => ({}),
+                    getCoordsTexture: () => ({}),
+                    depthAtPoint: () => .9,
+                    tileManager: {
+                        update: () => {},
+                        getRenderableTiles: () => [],
+                        anyTilesAfterTime: () => false
+                    }
+                };
+                await sleep(100);
+                map.fire('terrain');
+            },
+            expectedOpacity: '0.7',
+            explanation: 'Marker still at front, terrain enabled but marker visible'
+        },
+        {
+            description: 'Move marker to [180, 0] (behind globe with terrain)',
+            action: async () => {
+                marker.setLngLat([180, 0]);
+                await sleep(100);
+            },
+            expectedOpacity: '0.3',
+            explanation: 'Marker is behind the globe with terrain enabled, should use opacityWhenCovered'
+        },
+        {
+            description: 'Move marker back to [0, 0] (front of globe with terrain)',
+            action: async () => {
+                marker.setLngLat([0, 0]);
+                await sleep(100);
+            },
+            expectedOpacity: '0.7',
+            explanation: 'Marker is at the front of the globe with terrain, should use normal opacity'
+        }
+    ];
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function checkExpectation() {
+        const actualOpacity = marker.getElement().style.opacity;
+        const expectedOpacity = steps[currentStep].expectedOpacity;
+        const statusEl = document.getElementById('status');
+
+        if (actualOpacity === expectedOpacity) {
+            statusEl.innerHTML = `<span class="pass"> PASS</span> - Actual opacity: ${actualOpacity}`;
+        } else {
+            statusEl.innerHTML = `<span class="fail"> FAIL</span> - Expected: ${expectedOpacity}, Actual: ${actualOpacity}`;
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('step-counter').textContent = `Step ${currentStep + 1} of ${steps.length}`;
+        document.getElementById('step-description').textContent = steps[currentStep].description;
+        document.getElementById('expected-value').innerHTML =
+            `Expected opacity: <span class="value">${steps[currentStep].expectedOpacity}</span><br>` +
+            `<span style="font-style: italic;">${steps[currentStep].explanation}</span>`;
+
+        document.getElementById('prev-btn').disabled = currentStep === 0;
+        document.getElementById('next-btn').disabled = currentStep === steps.length - 1;
+
+        if (marker) {
+            checkExpectation();
+        } else {
+            document.getElementById('status').innerHTML = '';
+        }
+    }
+
+    async function goToStep(stepIndex) {
+        if (stepIndex < 0 || stepIndex >= steps.length) return;
+
+        if (stepIndex < currentStep) {
+            // Going backwards - restart from beginning
+            if (marker) {
+                marker.remove();
+                marker = null;
+            }
+            map.setProjection({type: 'mercator'});
+            map.terrain = null;
+            currentStep = 0;
+
+            // Execute all steps up to target
+            for (let i = 0; i <= stepIndex; i++) {
+                await steps[i].action();
+                currentStep = i;
+            }
+        } else {
+            // Going forwards
+            while (currentStep < stepIndex) {
+                currentStep++;
+                await steps[currentStep].action();
+            }
+        }
+
+        updateUI();
+    }
+
+    document.getElementById('prev-btn').addEventListener('click', () => {
+        goToStep(currentStep - 1);
+    });
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+        goToStep(currentStep + 1);
+    });
+
+    // Initialize
+    map.on('load', async () => {
+        updateUI();
+        // Execute first step
+        await steps[0].action();
+        updateUI();
+    });
+</script>
+</body>
+</html>
