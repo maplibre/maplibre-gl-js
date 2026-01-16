@@ -91,8 +91,8 @@ test('Changing a map projection to Mercator constrains the zoom and center to va
     await map.once('style.load');
     map.setProjection({type: 'mercator'});
 
-    expect(fixedNum(map.getZoom(), 3)).toBe(0);
-    expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: 0, lat: 73.2267});
+    expect(fixedNum(map.getZoom(), 3)).toBe(-1.356);
+    expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: 0, lat: 0});
 });
 
 describe('transformConstrain', () => {
