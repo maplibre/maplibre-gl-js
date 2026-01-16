@@ -162,18 +162,22 @@ export class HandlerManager {
         passive?: boolean;
         capture?: boolean;
     } | undefined]>;
+
     /**
      * @internal
-     * The document that contains the map container element.
-     * Used for cross-window support when the map is in a popup window or iframe.
+     * The document that contains the map container element, for cross-window support.
      */
-    _ownerDocument: Document;
+    get _ownerDocument(): Document {
+        return this._el?.ownerDocument || document;
+    }
+
     /**
      * @internal
-     * The window that contains the map container element.
-     * Used for cross-window support when the map is in a popup window or iframe.
+     * The window that contains the map container element, for cross-window support.
      */
-    _ownerWindow: Window;
+    get _ownerWindow(): Window {
+        return this._el?.ownerDocument?.defaultView || window;
+    }
 
     constructor(map: Map, options: CompleteMapOptions) {
         this._map = map;
@@ -188,9 +192,6 @@ export class HandlerManager {
 
         // Track whether map is currently moving, to compute start/move/end events
         this._eventsInProgress = {};
-
-        this._ownerDocument = this._el.ownerDocument;
-        this._ownerWindow = this._ownerDocument.defaultView || window;
 
         this._addDefaultHandlers(options);
 

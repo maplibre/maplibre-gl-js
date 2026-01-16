@@ -579,15 +579,17 @@ export class Map extends Camera {
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
-    /**
-     * @internal
-     * The window that owns the map container element.
-     * Used for cross-window support to ensure `requestAnimationFrame` and `ResizeObserver`
-     * work correctly when the map is rendered in a popup window or iframe.
-     */
-    _ownerWindow: Window;
     /** @internal */
     _zoomLevelsToOverscale: number | undefined;
+
+    /**
+     * @internal
+     * The window that owns the map container element, for cross-window support.
+     */
+    get _ownerWindow(): Window {
+        return this._container?.ownerDocument?.defaultView || window;
+    }
+
     /**
      * @internal
      * image queue throttling handle. To be used later when clean up
@@ -772,8 +774,6 @@ export class Map extends Camera {
             throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
         }
 
-        this._ownerWindow = this._container.ownerDocument?.defaultView || window;
-
         if (resolvedOptions.maxBounds) {
             this.setMaxBounds(resolvedOptions.maxBounds);
         }
@@ -799,7 +799,9 @@ export class Map extends Camera {
                     this.redraw();
                 }
             }, 50);
-            const ResizeObserverClass = (this._ownerWindow as any).ResizeObserver ?? ResizeObserver;
+            // Cross-window support: use the owning window's ResizeObserver.
+            // The global ResizeObserver may not properly observe elements in other windows.
+            const ResizeObserverClass = (this._ownerWindow as typeof window).ResizeObserver ?? ResizeObserver;
             this._resizeObserver = new ResizeObserverClass((entries: ResizeObserverEntry[]) => {
                 if (!initialResizeEventCaptured) {
                     initialResizeEventCaptured = true;
