@@ -1,4 +1,4 @@
-import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect} from 'vitest';
 import {Map} from '../map';
 import {beforeMapTest} from '../../util/test/util';
 

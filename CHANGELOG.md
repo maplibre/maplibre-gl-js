@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add support for container elements from different windows (e.g., popup or iframe) ([#6969](https://github.com/maplibre/maplibre-gl-js/pull/6969)) (by [@Syncret](https://github.com/Syncret))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
