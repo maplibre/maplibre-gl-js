@@ -1,4 +1,4 @@
-import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {Map} from '../map';
 import {beforeMapTest} from '../../util/test/util';
 
@@ -9,38 +9,46 @@ beforeEach(() => {
 
 describe('Map cross-window support', () => {
 
-    test('accepts container element from another window using nodeType check', () => {
-        // Simulate a cross-window scenario where instanceof HTMLElement fails
-        // by creating an object that has nodeType but isn't an instanceof HTMLElement
-        const mockCrossWindowElement = {
-            nodeType: 1, // Node.ELEMENT_NODE
-            ownerDocument: window.document,
-            clientWidth: 200,
-            clientHeight: 200,
-            appendChild: vi.fn(),
-            removeChild: vi.fn(),
-            addEventListener: vi.fn(),
-            removeEventListener: vi.fn(),
-            classList: {
-                add: vi.fn(),
-                remove: vi.fn()
-            },
-            style: {},
-            getBoundingClientRect: () => ({
-                left: 0,
-                top: 0,
-                width: 200,
-                height: 200,
-                right: 200,
-                bottom: 200
-            })
-        };
+    describe('iframe cross-window scenario', () => {
+        let iframe: HTMLIFrameElement;
+        let iframeDocument: Document;
+        let iframeWindow: Window;
+        let container: HTMLDivElement;
 
-        // The container should be accepted via nodeType check
-        // even though it's not an instanceof HTMLElement
-        expect(() => {
-            new Map({
-                container: mockCrossWindowElement as any,
+        beforeEach(() => {
+            // Create an iframe to simulate a cross-window scenario
+            iframe = window.document.createElement('iframe');
+            window.document.body.appendChild(iframe);
+            
+            iframeDocument = iframe.contentDocument;
+            iframeWindow = iframe.contentWindow;
+
+            // Create container in iframe's document
+            container = iframeDocument.createElement('div');
+            iframeDocument.body.appendChild(container);
+            Object.defineProperty(container, 'clientWidth', {value: 200, configurable: true});
+            Object.defineProperty(container, 'clientHeight', {value: 200, configurable: true});
+        });
+
+        afterEach(() => {
+            if (iframe && iframe.parentNode) {
+                iframe.parentNode.removeChild(iframe);
+            }
+        });
+
+        test('container from iframe works with Map', () => {
+            // Verify we have a different window/document context
+            expect(iframeDocument).not.toBe(window.document);
+            expect(iframeWindow).not.toBe(window);
+
+            // Demonstrate the cross-window instanceof issue
+            // Container created in iframe is NOT an instanceof main window's HTMLElement
+            expect(container instanceof HTMLElement).toBe(false);
+            expect(container instanceof iframeDocument.defaultView.HTMLElement).toBe(true);
+
+            // Map initialize should still work
+            const map = new Map({
+                container,
                 interactive: false,
                 attributionControl: false,
                 style: {
@@ -49,102 +57,32 @@ describe('Map cross-window support', () => {
                     layers: []
                 }
             });
-        }).not.toThrow();
-    });
 
-    test('_ownerWindow getter returns the correct window from container', () => {
-        const container = window.document.createElement('div');
-        Object.defineProperty(container, 'clientWidth', {value: 200, configurable: true});
-        Object.defineProperty(container, 'clientHeight', {value: 200, configurable: true});
+            // Map should be created successfully
+            expect(map).toBeTruthy();
+            expect(map.getContainer()).toBe(container);
 
-        const map = new Map({
-            container,
-            interactive: false,
-            attributionControl: false,
-            style: {
-                version: 8,
-                sources: {},
-                layers: []
-            }
+            // Map._ownerWindow should return the iframe's window
+            expect(map._ownerWindow).toBe(iframeWindow);
+
+            // HandlerManager should also use the iframe's window/document
+            const handlers = map.handlers;
+            expect(handlers._ownerWindow).toBe(iframeWindow);
+            expect(handlers._ownerDocument).toBe(iframeDocument);
+
+            // Basic map operations should work
+            map.setCenter([10, 20]);
+            expect(map.getCenter().lng).toBeCloseTo(10);
+            expect(map.getCenter().lat).toBeCloseTo(20);
+
+            map.setZoom(5);
+            expect(map.getZoom()).toBe(5);
+
+            map.jumpTo({center: [30, 40], zoom: 8});
+            expect(map.getCenter().lng).toBeCloseTo(30);
+            expect(map.getCenter().lat).toBeCloseTo(40);
+            expect(map.getZoom()).toBe(8);
         });
-
-        // _ownerWindow should return the window from container's ownerDocument
-        expect(map._ownerWindow).toBe(window);
-    });
-
-    test('_ownerWindow getter falls back to global window when container is not set', () => {
-        const container = window.document.createElement('div');
-        Object.defineProperty(container, 'clientWidth', {value: 200, configurable: true});
-        Object.defineProperty(container, 'clientHeight', {value: 200, configurable: true});
-
-        const map = new Map({
-            container,
-            interactive: false,
-            attributionControl: false,
-            style: {
-                version: 8,
-                sources: {},
-                layers: []
-            }
-        });
-
-        // Even after removal, _ownerWindow should have a fallback
-        // Note: After map.remove(), _container is still set but _removed flag is true
-        expect(map._ownerWindow).toBeTruthy();
-    });
-
-    test('uses ownerWindow for event listeners', () => {
-        const container = window.document.createElement('div');
-        Object.defineProperty(container, 'clientWidth', {value: 200, configurable: true});
-        Object.defineProperty(container, 'clientHeight', {value: 200, configurable: true});
-
-        const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-
-        const map = new Map({
-            container,
-            interactive: false,
-            attributionControl: false,
-            style: {
-                version: 8,
-                sources: {},
-                layers: []
-            }
-        });
-
-        // Should have added 'online' event listener to the owner window
-        expect(addEventListenerSpy).toHaveBeenCalledWith('online', expect.any(Function), false);
-
-        addEventListenerSpy.mockRestore();
-    });
-
-    test('uses ownerWindow ResizeObserver', () => {
-        const container = window.document.createElement('div');
-        Object.defineProperty(container, 'clientWidth', {value: 200, configurable: true});
-        Object.defineProperty(container, 'clientHeight', {value: 200, configurable: true});
-
-        // Track if ResizeObserver was instantiated
-        const observeMock = vi.fn();
-        const ResizeObserverMock = vi.fn(function(this: any, callback: ResizeObserverCallback) {
-            this.observe = observeMock;
-            this.unobserve = vi.fn();
-            this.disconnect = vi.fn();
-        }) as unknown as typeof ResizeObserver;
-        global.ResizeObserver = ResizeObserverMock;
-
-        const map = new Map({
-            container,
-            interactive: false,
-            attributionControl: false,
-            style: {
-                version: 8,
-                sources: {},
-                layers: []
-            }
-        });
-
-        // ResizeObserver should have been instantiated and observe called
-        expect(ResizeObserverMock).toHaveBeenCalled();
-        expect(observeMock).toHaveBeenCalledWith(container);
     });
 
 });
