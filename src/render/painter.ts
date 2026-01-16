@@ -371,6 +371,37 @@ export class Painter {
         return new StencilMode({func: gl.EQUAL, mask: 0xFF}, this._tileClippingMaskIDs[tileID.key], 0x00, gl.KEEP, gl.KEEP, gl.REPLACE);
     }
 
+    /**
+     * Returns a stencil mode for clipping that also prevents overdraw.
+     */
+    stencilModeForClippingWithOverdrawPrevention(tileID: OverscaledTileID): StencilMode {
+        const gl = this.context.gl;
+        const clipId = this._tileClippingMaskIDs[tileID.key];
+        // Test EQUAL to respect clipping mask, but write 0 to prevent subsequent draws
+        // at the same pixel (since 0 != clipId, subsequent EQUAL tests will fail)
+        return new StencilMode({func: gl.EQUAL, mask: 0xFF}, clipId, 0xFF, gl.KEEP, gl.KEEP, gl.ZERO);
+    }
+
+    /**
+     * Re-renders clipping masks for antimeridian tiles (x=0 or x=2^z-1) to restore
+     * their stencil values after they were modified by overdraw prevention.
+     */
+    restoreAntimeridianClippingMasks(tileIDs: Array<OverscaledTileID>, renderToTexture: boolean) {
+        const antimeridianTiles = tileIDs.filter(tileID =>
+            tileID.canonical.x === 0 ||
+            tileID.canonical.x === (1 << tileID.canonical.z) - 1
+        );
+
+        if (antimeridianTiles.length === 0) return;
+
+        const context = this.context;
+        context.setColorMode(ColorMode.disabled);
+        context.setDepthMode(DepthMode.disabled);
+
+        this._renderTileMasks(this._tileClippingMaskIDs, antimeridianTiles, renderToTexture, true);
+        this._renderTileMasks(this._tileClippingMaskIDs, antimeridianTiles, renderToTexture, false);
+    }
+
     /*
      * Sort coordinates by Z as drawing tiles is done in Z-descending order.
      * All children with the same Z write the same stencil value.  Children
