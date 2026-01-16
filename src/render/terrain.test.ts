@@ -264,9 +264,8 @@ describe('Terrain', () => {
         expect(actualVertexArray).toStrictEqual([0, 0, 0, 2048, 0, 0, 4096, 0, 0, 6144, 0, 0, 8192, 0, 0, 0, 2048, 0, 2048, 2048, 0, 4096, 2048, 0, 6144, 2048, 0, 8192, 2048, 0, 0, 4096, 0, 2048, 4096, 0, 4096, 4096, 0, 6144, 4096, 0, 8192, 4096, 0, 0, 6144, 0, 2048, 6144, 0, 4096, 6144, 0, 6144, 6144, 0, 8192, 6144, 0, 0, 8192, 0, 2048, 8192, 0, 4096, 8192, 0, 6144, 8192, 0, 8192, 8192, 0, 0, 0, 1, 2048, 0, 1, 4096, 0, 1, 6144, 0, 1, 8192, 0, 1, 0, 8192, 1, 2048, 8192, 1, 4096, 8192, 1, 6144, 8192, 1, 8192, 8192, 1, 0, 0, 0, 0, 0, 1, 0, 2048, 0, 0, 2048, 1, 0, 4096, 0, 0, 4096, 1, 0, 6144, 0, 0, 6144, 1, 0, 8192, 0, 0, 8192, 1, 8192, 0, 0, 8192, 0, 1, 8192, 2048, 0, 8192, 2048, 1, 8192, 4096, 0, 8192, 4096, 1, 8192, 6144, 0, 8192, 6144, 1, 8192, 8192, 0, 8192, 8192, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     });
 
-    test('getDEMElevation returns 0 for terrarium DEM value RGB 0,0,0', () => {
+    test('getDEMElevation returns 0 for invalid DEM data', () => {
         const mockTerrain = {
-            isDEMElevationValid: Terrain.prototype.isDEMElevationValid,
             getDEMElevation: Terrain.prototype.getDEMElevation,
             getTerrainData() {
                 return {
@@ -274,8 +273,8 @@ describe('Terrain', () => {
                     tile: {
                         dem: {
                             dim: 1,
-                            encoding: 'terrarium',
-                            get: vi.fn().mockReturnValue(TERRAIN_TERRARIUM_NODATA)
+                            isValid: vi.fn().mockReturnValue(false),
+                            get: vi.fn()
                         }
                     }
                 };
@@ -286,7 +285,6 @@ describe('Terrain', () => {
 
     test('interpolation works', () => {
         const mockTerrain = {
-            isDEMElevationValid: Terrain.prototype.isDEMElevationValid,
             getDEMElevation: Terrain.prototype.getDEMElevation,
             getTerrainData() {
                 return {
@@ -298,7 +296,8 @@ describe('Terrain', () => {
                                 expect(x % 1).toBe(0);
                                 expect(y % 1).toBe(0);
                                 return 100 * x + 10 * y;
-                            }
+                            },
+                            isValid: vi.fn().mockReturnValue(true)
                         }
                     }
                 };

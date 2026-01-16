@@ -163,6 +163,7 @@ export class Terrain {
         if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return 0;
         const terrain = this.getTerrainData(tileID);
         const dem = terrain.tile?.dem;
+        
         if (!dem) return 0;
 
         const pos = vec2.transformMat4([] as any, [x / extent * EXTENT, y / extent * EXTENT], terrain.u_terrain_matrix);
@@ -174,6 +175,13 @@ export class Terrain {
             tx = coord[0] - cx,
             ty = coord[1] - cy;
 
+        if (!dem.isValid([
+            {x: cx, y: cy},
+            {x: cx + 1, y: cy},
+            {x: cx, y: cy + 1},
+            {x: cx + 1, y: cy + 1}
+        ])) return 0;
+
         const elevation = (
             dem.get(cx, cy) * (1 - tx) * (1 - ty) +
             dem.get(cx + 1, cy) * (tx) * (1 - ty) +
@@ -181,25 +189,8 @@ export class Terrain {
             dem.get(cx + 1, cy + 1) * (tx) * (ty)
         );
 
-        if (!this.isDEMElevationValid(dem.encoding, elevation)) {
-            return 0;
-        }
-
         return elevation;
-    }
-
-    /**
-     * Check if the elevation is not result of empty dem data.
-     * @param encoding - the encoding of the dem
-     * @param elevation - the elevation to check
-     * @returns true if the elevation is valid
-     */
-    isDEMElevationValid(encoding: DEMEncoding, elevation: number) {
-        if (encoding === 'terrarium' && elevation === TERRAIN_TERRARIUM_NODATA) {
-            return false;
-        }
-        return true;
-    }
+    }  
 
     /**
      * Get the elevation for given {@link LngLat} in respect of exaggeration.

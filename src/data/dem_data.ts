@@ -119,6 +119,18 @@ export class DEMData {
         }
     }
 
+    isValid(points: {x: number; y: number}[]): boolean {
+        if (this.encoding !== 'terrarium') return true;
+        const pixels = new Uint8Array(this.data.buffer);
+        for (const point of points) {
+            const index = this._idx(point.x, point.y) * 4;
+            if (pixels[index] === 0 && pixels[index + 1] === 0 && pixels[index + 2] === 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     get(x: number, y: number) {
         const pixels = new Uint8Array(this.data.buffer);
         const index = this._idx(x, y) * 4;

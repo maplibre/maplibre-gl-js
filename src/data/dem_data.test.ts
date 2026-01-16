@@ -3,18 +3,24 @@ import {DEMData} from './dem_data';
 import {RGBAImage} from '../util/image';
 import {serialize, deserialize} from '../util/web_worker_transfer';
 
-function createMockImage(height, width) {
+function createMockImage(height: number, width: number, value?: number) {
     // RGBAImage passed to constructor has uniform 1px padding on all sides.
     height += 2;
     width += 2;
     const pixels = new Uint8Array(height * width * 4);
-    for (let i = 0; i < pixels.length; i++) {
-        pixels[i] = (i + 1) % 4 === 0 ? 1 : Math.floor(Math.random() * 256);
+    if (value === undefined) {
+        for (let i = 0; i < pixels.length; i++) {
+            pixels[i] = (i + 1) % 4 === 0 ? 1 : Math.floor(Math.random() * 256);
+        }
+    } else {
+        for (let i = 0; i < pixels.length; i++) {
+            pixels[i] = value;
+        }
     }
     return new RGBAImage({height, width}, pixels);
 }
 
-function createMockClampImage(height, width) {
+function createMockClampImage(height: number, width: number) {
     const pixels = new Uint8ClampedArray(height * width * 4);
     for (let i = 0; i < pixels.length; i++) {
         pixels[i] = (i + 1) % 4 === 0 ? 1 : Math.floor(Math.random() * 256);
@@ -236,6 +242,29 @@ describe('DEMData.getImage', () => {
     test('Image is correctly returned - mapbox', testGetPixels(mapboxDEM, imageData));
     test('Image is correctly returned - terrarium', testGetPixels(terrariumDEM, imageData));
     test('Image is correctly returned - custom', testGetPixels(customDEM, imageData));
+});
+
+describe('DEMData.isValid', () => {
+    const imageData = createMockImage(4, 4);
+    const mapboxDEM = new DEMData('0', imageData, 'mapbox');
+    const terrariumDEM = new DEMData('0', imageData, 'terrarium');
+    const customDEM = new DEMData('0', imageData, 'custom');
+    const emptyData = createMockImage(4, 4, 0);
+    const emptyMapboxDEM = new DEMData('0', emptyData, 'mapbox');
+    const emptyTerrariumDEM = new DEMData('0', emptyData, 'terrarium');
+    const emptyCustomDEM = new DEMData('0', emptyData, 'custom');
+
+    test('DEMData.isValid returns true for valid DEM data', () => {
+        expect(mapboxDEM.isValid([{x: 0, y: 0}])).toBeTruthy();
+        expect(terrariumDEM.isValid([{x: 0, y: 0}])).toBeTruthy();
+        expect(customDEM.isValid([{x: 0, y: 0}])).toBeTruthy();
+        expect(emptyMapboxDEM.isValid([{x: 0, y: 0}])).toBeTruthy();
+        expect(emptyCustomDEM.isValid([{x: 0, y: 0}])).toBeTruthy();
+    });
+
+    test('DEMData.isValid returns false for empty terrarium DEM data', () => {
+        expect(emptyTerrariumDEM.isValid([{x: 0, y: 0}])).toBeFalsy();
+    });
 });
 
 describe('DEMData pack and unpack', () => {
