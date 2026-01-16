@@ -189,9 +189,6 @@ export class HandlerManager {
         // Track whether map is currently moving, to compute start/move/end events
         this._eventsInProgress = {};
 
-        // Cross-window support: get the document/window from the container element.
-        // This ensures events are bound to the correct window context when the map is
-        // rendered in a popup window (window.open) or iframe with a different document.
         this._ownerDocument = this._el.ownerDocument;
         this._ownerWindow = this._ownerDocument.defaultView || window;
 
@@ -221,7 +218,6 @@ export class HandlerManager {
             // window-level event listeners give us the best shot at capturing events that
             // fall outside the map canvas element. Use `{capture: true}` for the move event
             // to prevent map move events from being fired during a drag.
-            // Cross-window support: use ownerDocument to handle popup window scenarios.
             [this._ownerDocument, 'mousemove', {capture: true}],
             [this._ownerDocument, 'mouseup', undefined],
 
@@ -236,7 +232,6 @@ export class HandlerManager {
             [el, 'wheel', {passive: false}],
             [el, 'contextmenu', undefined],
 
-            // Cross-window support: use ownerWindow for popup window scenarios.
             [this._ownerWindow, 'blur', undefined]
         ];
 
