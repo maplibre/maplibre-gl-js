@@ -20,7 +20,6 @@ import type {Tile} from '../tile/tile';
 import type {Framebuffer} from '../gl/framebuffer';
 import type {TileManager} from '../tile/tile_manager';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {DEMEncoding, TERRAIN_TERRARIUM_NODATA} from '../data/dem_data';
 import type {Painter} from './painter';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 

@@ -11,7 +11,7 @@ import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import type {TileManager} from '../tile/tile_manager';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {TERRAIN_TERRARIUM_NODATA, type DEMData} from '../data/dem_data';
+import {type DEMData} from '../data/dem_data';
 import type {Painter} from './painter';
 
 describe('Terrain', () => {
