@@ -1316,9 +1316,17 @@ export class Style extends Evented {
             return;
         }
 
-        if (deepEqual(layer.getLayoutProperty(name), value)) return;
-
-        layer.setLayoutProperty(name, value, options);
+        try {
+            if (deepEqual(layer.getLayoutProperty(name), value)) return;
+            layer.setLayoutProperty(name, value, options);
+        } catch (error) {
+            const paintProperty = layer.getPaintProperty(name);
+            if (paintProperty) {
+                this.fire(new ErrorEvent(new Error(`"${name}" is a paint property, not a layout property. Did you mean to use setPaintProperty?`)));
+                return;
+            }
+            throw error;
+        }
         this._updateLayer(layer);
     }
 
@@ -1347,7 +1355,17 @@ export class Style extends Evented {
             return;
         }
 
-        if (deepEqual(layer.getPaintProperty(name), value)) return;
+        try {
+            if (deepEqual(layer.getPaintProperty(name), value)) return;
+            layer.setPaintProperty(name, value, options);
+        } catch (error) {
+            const layoutProperty = layer.getLayoutProperty(name);
+            if (layoutProperty) {
+                this.fire(new ErrorEvent(new Error(`"${name}" is a layout property, not a paint property. Did you mean to use setLayoutProperty?`)));
+                return;
+            }
+            throw error;
+        }
 
         this._updatePaintProperty(layer, name, value, options);
     }
