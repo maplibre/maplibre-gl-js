@@ -444,7 +444,7 @@ export class Style extends Evented {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
         this._frameRequest = new AbortController();
-        browser.frameAsync(this._frameRequest).then(() => {
+        browser.frameAsync(this._frameRequest, this.map._ownerWindow).then(() => {
             this._frameRequest = null;
             options.validate = options.validate !== false;
             this._load(json, options, previousStyle);
