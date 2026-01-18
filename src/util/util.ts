@@ -498,6 +498,23 @@ export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
 export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
 /**
+ * Evaluates the snapped zoom level based on zoomSnap. If zoomSnap is 0 or less, the zoom level is returned unchanged.
+ * If delta is provided, it performs directional snapping (ceil for zoom-in, floor for zoom-out).
+ * @param zoom - The input zoom level
+ * @param zoomSnap - The grid interval to snap to, e.g. 1.0 for 1.0 zoom levels, 0.5 for 0.5 zoom levels, etc.
+ * @param delta - Optional scroll delta or direction. If positive, snaps up; if negative, snaps down.
+ * @returns The snapped zoom level
+ */
+export function evaluateZoomSnap(zoom: number, zoomSnap: number, delta?: number): number {
+    if (zoomSnap <= 0) return zoom;
+    const inv = 1 / zoomSnap;
+    if (delta === undefined || Math.abs(delta) < 1e-10) {
+        return Math.round(zoom * inv) / inv;
+    }
+    return (delta > 0 ? Math.ceil(zoom * inv - 1e-9) : Math.floor(zoom * inv + 1e-10)) / inv;
+}
+
+/**
  * Create an object by mapping all the values of an existing object while
  * preserving their keys.
  */

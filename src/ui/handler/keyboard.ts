@@ -1,6 +1,7 @@
 import {type Handler} from '../handler_manager';
 import type {Map} from '../map';
 import {TransformProvider} from './transform-provider';
+import {evaluateZoomSnap} from '../../util/util';
 
 const defaultOptions = {
     panStep: 100,
@@ -123,7 +124,7 @@ export class KeyboardHandler implements Handler {
                     easeId: 'keyboardHandler',
                     easing: easeOut,
 
-                    zoom: zoomDir ? Math.round(tr.zoom) + zoomDir * (e.shiftKey ? 2 : 1) : tr.zoom,
+                    zoom: zoomDir ? evaluateZoomSnap(tr.zoom + zoomDir * (e.shiftKey ? 2 : 1), map.getZoomSnap()) : tr.zoom,
                     bearing: tr.bearing + bearingDir * this._bearingStep,
                     pitch: tr.pitch + pitchDir * this._pitchStep,
                     offset: [-xDir * this._panStep, -yDir * this._panStep],

@@ -3,6 +3,7 @@ import type Point from '@mapbox/point-geometry';
 import type {Map} from '../map';
 import {TransformProvider} from './transform-provider';
 import {type Handler} from '../handler_manager';
+import {evaluateZoomSnap} from '../../util/util';
 
 /**
  * A `TapZoomHandler` allows the user to zoom the map at a point by double tapping
@@ -57,7 +58,7 @@ export class TapZoomHandler implements Handler {
             return {
                 cameraAnimation: (map: Map) => map.easeTo({
                     duration: 300,
-                    zoom: tr.zoom + 1,
+                    zoom: evaluateZoomSnap(tr.zoom + 1, map.getZoomSnap()),
                     around: tr.unproject(zoomInPoint)
                 }, {originalEvent: e})
             };
@@ -68,7 +69,7 @@ export class TapZoomHandler implements Handler {
             return {
                 cameraAnimation: (map: Map) => map.easeTo({
                     duration: 300,
-                    zoom: tr.zoom - 1,
+                    zoom: evaluateZoomSnap(tr.zoom - 1, map.getZoomSnap()),
                     around: tr.unproject(zoomOutPoint)
                 }, {originalEvent: e})
             };
