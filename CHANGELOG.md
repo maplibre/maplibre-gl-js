@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Add `zoomSnap` option to `Map` to allow snapping zoom levels to a grid when zooming in and out; aligns the behavior across all UI patterns (keyboard, scroll wheel, on-screen buttons, double-click, double-tap ([#6941](https://github.com/maplibre/maplibre-gl-js/pull/6941)) (by [@mizmay](https://github.com/mizmay))
+- ⚠️ Add `zoomSnap` option to `Map` to allow snapping zoom levels to a grid when zooming in and out; aligns the behavior across all UI patterns (keyboard, scroll wheel, on-screen buttons, double-click, double-tap. Previously, pressing +/- on the keyboard zoomed to rounded whole integers, now by default all zoom handlers zoom in or out by exactly one zoom, unless a value > 0 for `zoomSnap` is specified ([#6941](https://github.com/maplibre/maplibre-gl-js/pull/6941)) (by [@mizmay](https://github.com/mizmay))
 
 ### 🐞 Bug fixes
 - Fix incorrect shader selection for text labels with inline images ([#6956](https://github.com/maplibre/maplibre-gl-js/pull/6956)) (by [@ciscorn](https://github.com/ciscorn))
