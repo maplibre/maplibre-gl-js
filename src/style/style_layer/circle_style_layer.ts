@@ -66,13 +66,17 @@ export class CircleStyleLayer extends StyleLayer {
         let transformedPolygon: Array<Point>;
         let transformedSize: number;
         if (pitchAlignment === 'map') {
+            // TODO I have confirmed that this codepath is correct
             transformedPolygon = translatedPolygon;
             transformedSize = size * pixelsToTileUnits;
         } else {
+            // TODO I suspect this codepath is INCORRECT or BROKEN.
+            // TODO Investigate the "cannot calculate elevation if elevation maxzoom > source.maxzoom" warnings
             transformedPolygon = projectQueryGeometry(translatedPolygon, transform, unwrappedTileID, getElevation);
             transformedSize = size;
         }
 
+        // TODO I have confirmed that circleIntersection is correct.
         return circleIntersection({
             queryGeometry: transformedPolygon,
             size: transformedSize,
