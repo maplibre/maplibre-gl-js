@@ -30,6 +30,7 @@ export class DEMData {
     greenFactor: number;
     blueFactor: number;
     baseShift: number;
+    encoding: DEMEncoding;
 
     /**
      * Constructs a `DEMData` object
@@ -49,6 +50,7 @@ export class DEMData {
             warnOnce(`"${encoding}" is not a valid encoding type. Valid types include "mapbox", "terrarium" and "custom".`);
             return;
         }
+        this.encoding = encoding;
         this.stride = data.height;
         const dim = this.dim = data.height - 2;
         this.data = new Uint32Array(data.data.buffer);
@@ -107,6 +109,18 @@ export class DEMData {
                 if (ele < this.min) this.min = ele;
             }
         }
+    }
+
+    isValid(points: {x: number; y: number}[]): boolean {
+        if (this.encoding !== 'terrarium') return true;
+        const pixels = new Uint8Array(this.data.buffer);
+        for (const point of points) {
+            const index = this._idx(point.x, point.y) * 4;
+            if (pixels[index] === 0 && pixels[index + 1] === 0 && pixels[index + 2] === 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     get(x: number, y: number) {

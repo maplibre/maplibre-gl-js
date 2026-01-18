@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Handle no data values in terrain DEMs with terrarium encoding ([#6587](https://github.com/maplibre/maplibre-gl-js/issues/6587)) (by [@pstaszek](https://github.com/pstaszek))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
