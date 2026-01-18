@@ -1,7 +1,7 @@
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat';
-import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce} from '../../util/util';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce, wrap} from '../../util/util';
 import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../mercator_coordinate';
@@ -119,8 +119,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
     }
-    resize(width: number, height: number): void {
-        this._helper.resize(width, height);
+    resize(width: number, height: number, constrain: boolean = true): void {
+        this._helper.resize(width, height, constrain);
     }
     getMaxBounds(): LngLatBounds {
         return this._helper.getMaxBounds();
@@ -642,14 +642,88 @@ export class VerticalPerspectiveTransform implements ITransform {
         return new LngLatBounds(boundsArray);
     }
 
+    /**
+     * Constrains the center and zoom of the map to fit within the maxBounds.
+     * This method handles both latitude and longitude constraints, including special handling
+     * for the antimeridian when the bounds cross it.
+     */
     defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
-        // Globe: TODO: respect _lngRange, _latRange
-        // It is possible to implement exact constrain for globe, but I don't think it is worth the effort.
-        const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
-        const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(0, constrainedLat), this.maxZoom);
+        const latRange = this.latRange;
+        const lngRange = this.lngRange;
+
+        let constrainedLat = lngLat.lat;
+        let constrainedLng = lngLat.lng;
+
+        // 1. Constrain Latitude
+        if (latRange) {
+            const minLat = Math.max(-MAX_VALID_LATITUDE, latRange[0]);
+            const maxLat = Math.min(MAX_VALID_LATITUDE, latRange[1]);
+            constrainedLat = clamp(constrainedLat, minLat, maxLat);
+        } else {
+            constrainedLat = clamp(constrainedLat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
+        }
+
+        // 2. Constrain Longitude
+        if (lngRange) {
+            // Check if bounds cross the antimeridian (e.g., [170, -170])
+            if (lngRange[0] > lngRange[1]) {
+                const lng = wrap(constrainedLng, -180, 180);
+                // If distinct from "inside" region (which is effectively Outside the forbidden zone in the middle)
+                // The valid region is [lngRange[0], 180] U [-180, lngRange[1]]
+                const inWestBand = lng >= lngRange[0] && lng <= 180;
+                const inEastBand = lng >= -180 && lng <= lngRange[1];
+
+                if (!inWestBand && !inEastBand) {
+                    // It's in the forbidden gap. Clamp to the closest boundary.
+                    const d1 = Math.abs(wrap(lng - lngRange[0], -180, 180));
+                    const d2 = Math.abs(wrap(lng - lngRange[1], -180, 180));
+                    constrainedLng = d1 < d2 ? lngRange[0] : lngRange[1];
+                } else {
+                    // Inside valid region, keep as is (but wrapped)
+                    constrainedLng = lng;
+                }
+            } else {
+                // Standard case: min < max
+                constrainedLng = clamp(constrainedLng, lngRange[0], lngRange[1]);
+            }
+        }
+
+        // 3. Constrain Zoom to fit bounds
+        let minZoomForBounds = this.minZoom;
+        let applyDefaultAdjustment = true;
+
+        // Calculate min zoom for longitude
+        if (lngRange && this.width > 0) {
+            const lngSpan = lngRange[0] > lngRange[1] ?
+                360 - (lngRange[0] - lngRange[1]) :
+                lngRange[1] - lngRange[0];
+            
+            if (lngSpan > 0) {
+                const calculatedMinZoom = Math.log2((this.width * 360) / (512 * lngSpan));
+                minZoomForBounds = Math.max(minZoomForBounds, calculatedMinZoom + getZoomAdjustment(constrainedLat, 0));
+                applyDefaultAdjustment = false;
+            }
+        }
+
+        // Calculate min zoom for latitude
+        if (latRange && this.height > 0) {
+            const latSpan = latRange[1] - latRange[0];
+            if (latSpan > 0) {
+                const calculatedMinZoomY = Math.log2((this.height * MAX_VALID_LATITUDE * 2) / (512 * latSpan));
+                minZoomForBounds = Math.max(minZoomForBounds, calculatedMinZoomY);
+            }
+        }
+        
+        let finalMinZoom = minZoomForBounds;
+        if (applyDefaultAdjustment) {
+            finalMinZoom += getZoomAdjustment(0, constrainedLat);
+        }
+        
+        const constrainedZoom = clamp(+zoom, finalMinZoom, this.maxZoom);
+
         return {
             center: new LngLat(
-                lngLat.lng,
+                constrainedLng,
                 constrainedLat
             ),
             zoom: constrainedZoom

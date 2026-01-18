@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import {beforeEach, test, expect, describe} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed';
@@ -78,14 +79,14 @@ test('Creating a map with style defining globe projection uses Globe transform c
     Object.defineProperty(container, 'offsetWidth', {value: 512});
     Object.defineProperty(container, 'offsetHeight', {value: 512});
 
-    const map = createMap({container, center: [65.7, -38.2], zoom: -2, style: {version: 8, sources: {}, layers: [], projection: {type: 'globe'}}});
+    const map = createMap({container, center: [65.7, -38.2], zoom: -2, minZoom: -2, style: {version: 8, sources: {}, layers: [], projection: {type: 'globe'}}});
 
     expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: 65.7, lat: -38.2});
     expect(fixedNum(map.getZoom(), 3)).toBe(-2);
 });
 
 test('Changing a map projection to Mercator constrains the zoom and center to valid values', async () => {
-    const map = createMap( {zoom: -2, center: [0, 90], style: {version: 8, sources: {}, layers: [], projection: {type: 'globe'}}});
+    const map = createMap( {zoom: -2, minZoom: -2, center: [0, 90], style: {version: 8, sources: {}, layers: [], projection: {type: 'globe'}}});
 
     await map.once('style.load');
     map.setProjection({type: 'mercator'});

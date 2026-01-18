@@ -275,9 +275,10 @@ describe('coveringTiles', () => {
             transform.setCenter(new LngLat(0.021, 0.0915));
             transform.setElevation(20000);
 
+            // Expect mixed zoom levels due to elevation/projection characteristics at high altitude
             expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 1024, 1023),
-                new OverscaledTileID(11, 0, 11, 1023, 1023)
+                new OverscaledTileID(10, 0, 10, 511, 511)
             ]);
         });
     });

@@ -30,9 +30,9 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
     if (tileCornerToPointX < 0) {
         // Point is left of tile
         distanceX = Math.min(-tileCornerToPointX, 1.0 + tileCornerToPointX - tileSize);
-    } else if (tileCornerToPointX > 1) {
+    } else if (tileCornerToPointX > tileSize) {
         // Point is right of tile
-        distanceX = Math.min(Math.max(tileCornerToPointX - tileSize, 0), 1.0 - tileCornerToPointX);
+        distanceX = Math.min(tileCornerToPointX - tileSize, 1.0 - tileCornerToPointX);
     } else {
         // Point is inside tile in the X axis.
         distanceX = 0;
