@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Refactor geojson_worker_source and test ([#6988](https://github.com/maplibre/maplibre-gl-js/pull/6988)) (by [@wayofthefuture](https://github.com/wayofthefuture))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
