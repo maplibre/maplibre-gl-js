@@ -391,18 +391,22 @@ export class GeoJSONSource extends Evented implements Source {
 
         const {data, diff} = this._pendingWorkerUpdate;
 
-        //create worker options and add `request` for a remote url, `data` for a geojson object, or `dataDiff` for an update.
+        // Create the options object that will be sent to the worker thread.
         const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
-        if (data !== undefined) {
-            if (typeof data === 'string') {
-                options.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
-                options.request.collectResourceTiming = this._collectResourceTiming;
-            } else {
-                options.data = data;
-            }
+
+        if (typeof data === 'string') {
+            // Data comes from a remote url - set the `request` option
+            options.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
+            options.request.collectResourceTiming = this._collectResourceTiming;
             this._pendingWorkerUpdate.data = undefined;
-        }
-        else if (diff) {
+
+        } else if (data !== undefined) {
+            // Data is a geojson object
+            options.data = data;
+            this._pendingWorkerUpdate.data = undefined;
+
+        } else if (diff) {
+            // Data is a differential update
             options.dataDiff = diff;
             this._pendingWorkerUpdate.diff = undefined;
         }
@@ -418,11 +422,10 @@ export class GeoJSONSource extends Evented implements Source {
      * Send the worker update data from the main thread to the worker
      */
     private async _dispatchWorkerUpdate(options: LoadGeoJSONParameters) {
-        this._isUpdatingWorker = true;
-        this.fire(new Event('dataloading', {dataType: 'source'}));
-
         try {
             // Send the update to the worker and wait for the response.
+            this._isUpdatingWorker = true;
+            this.fire(new Event('dataloading', {dataType: 'source'}));
             const result = await this.actor.sendAsync({type: MessageType.loadData, data: options});
             this._isUpdatingWorker = false;
 
@@ -431,7 +434,7 @@ export class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            // Update the copy of the data in this source with the result of the worker update. (only sent for url based geojson data)
+            // Update the copy of the data in this source with the worker result. (only sent for url based geojson data)
             if (result.data) {
                 this._data = {geojson: result.data};
             }
@@ -443,7 +446,7 @@ export class GeoJSONSource extends Evented implements Source {
             const eventData = {dataType: 'source'};
             this._applyResourceTiming(eventData, result);
 
-            // Although GeoJSON sources contain no metadata, fire this event to let TileManager know its ok to start requesting tiles.
+            // Fire the metadata event to let the TileManager know it's ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
             this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions}));
         } catch (err) {
@@ -456,7 +459,7 @@ export class GeoJSONSource extends Evented implements Source {
 
             this.fire(new ErrorEvent(err));
         } finally {
-            // If there is more pending data, update worker again.
+            // If there is more pending data, update the worker again.
             if (this._hasPendingWorkerUpdate()) {
                 this._updateWorkerData();
             }
@@ -464,7 +467,7 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     /**
-     * Apply resource timing data to the eventData object.
+     * Apply resource timing data to the event object.
      */
     private _applyResourceTiming(eventData: Object, result: GeoJSONWorkerSourceLoadDataResult) {
         if (!this._collectResourceTiming) return;
