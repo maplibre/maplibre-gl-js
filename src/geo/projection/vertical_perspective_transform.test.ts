@@ -59,6 +59,36 @@ describe('VerticalPerspectiveTransform', () => {
         expect(transform.center.lng).toBeCloseTo(179);
     });
 
+    test('should maintain stable zoom when panning near bounds', () => {
+        transform.resize(1000, 1000);
+        // Bounds: Small area around Lat 45
+        transform.setMaxBounds(new LngLatBounds([0, 40, 10, 50]));
+        
+        // Find the min zoom for these bounds at the center
+        transform.setCenter(new LngLat(5, 45));
+        transform.setZoom(0); // Force constraint logic to kick in
+        const initialZoom = transform.zoom;
+        
+        // Pan slightly North (Lat increase)
+        transform.setCenter(new LngLat(5, 45.1));
+        transform.setZoom(0);
+        const zoomNorth = transform.zoom;
+
+        // Pan slightly South (Lat decrease)
+        transform.setCenter(new LngLat(5, 44.9));
+        transform.setZoom(0);
+        const zoomSouth = transform.zoom;
+
+        // Difference should be smooth/proportional, not "Jittery"
+        const delta = Math.abs(zoomNorth - zoomSouth);
+        expect(delta).toBeLessThan(0.1); 
+        
+        // Idempotency check
+        const constrainedOnce = transform.defaultConstrain(transform.center, transform.zoom);
+        const constrainedTwice = transform.defaultConstrain(constrainedOnce.center, constrainedOnce.zoom);
+        expect(constrainedTwice.zoom).toBe(constrainedOnce.zoom);
+    });
+
     test('should zoom in to fit bounds when maxBounds is smaller than viewport', () => {
         transform.resize(1000, 1000);
         const bounds = new LngLatBounds([-5, -5, 5, 5]);
