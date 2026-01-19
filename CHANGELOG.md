@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Refactor _updateWorkerData ([#6983](https://github.com/maplibre/maplibre-gl-js/pull/6983)) (by [@wayofthefuture](https://github.com/wayofthefuture))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
