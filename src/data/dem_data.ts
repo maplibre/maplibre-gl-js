@@ -9,6 +9,11 @@ import {register} from '../util/web_worker_transfer';
 export type DEMEncoding = 'mapbox' | 'terrarium' | 'custom';
 
 /**
+ * The no data value for terrarium encoding
+ */
+const TERRARIUM_NO_DATA = -32768.0;
+
+/**
  * DEMData is a data structure for decoding, backfilling, and storing elevation data for processing in the hillshade shaders
  * data can be populated either from a png raw image tile or from serialized data sent back from a worker. When data is initially
  * loaded from a image tile, we decode the pixel values using the appropriate decoding formula, but we store the
@@ -111,22 +116,16 @@ export class DEMData {
         }
     }
 
-    isValid(points: {x: number; y: number}[]): boolean {
-        if (this.encoding !== 'terrarium') return true;
-        const pixels = new Uint8Array(this.data.buffer);
-        for (const point of points) {
-            const index = this._idx(point.x, point.y) * 4;
-            if (pixels[index] === 0 && pixels[index + 1] === 0 && pixels[index + 2] === 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     get(x: number, y: number) {
         const pixels = new Uint8Array(this.data.buffer);
         const index = this._idx(x, y) * 4;
-        return this.unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
+        const value = this.unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
+
+        if (this.encoding === 'terrarium' && value === TERRARIUM_NO_DATA) {
+            return 0;
+        }
+
+        return value;
     }
 
     getUnpackVector() {

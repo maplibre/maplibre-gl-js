@@ -174,21 +174,12 @@ export class Terrain {
             tx = coord[0] - cx,
             ty = coord[1] - cy;
 
-        if (!dem.isValid([
-            {x: cx, y: cy},
-            {x: cx + 1, y: cy},
-            {x: cx, y: cy + 1},
-            {x: cx + 1, y: cy + 1}
-        ])) return 0;
-
-        const elevation = (
+        return (
             dem.get(cx, cy) * (1 - tx) * (1 - ty) +
             dem.get(cx + 1, cy) * (tx) * (1 - ty) +
             dem.get(cx, cy + 1) * (1 - tx) * (ty) +
             dem.get(cx + 1, cy + 1) * (tx) * (ty)
         );
-
-        return elevation;
     }  
 
     /**
