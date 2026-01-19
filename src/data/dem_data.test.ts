@@ -1,4 +1,4 @@
-import {describe, test, expect, vi, beforeAll, afterAll} from 'vitest';
+import {describe, test, expect, vi, afterAll} from 'vitest';
 import {DEMData} from './dem_data';
 import {RGBAImage} from '../util/image';
 import {serialize, deserialize} from '../util/web_worker_transfer';
