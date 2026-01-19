@@ -1,6 +1,6 @@
 import {now} from '../util/time_control';
 import type {Map} from './map';
-import {bezier, clamp, extend} from '../util/util';
+import {bezier, clamp, extend, evaluateZoomSnap} from '../util/util';
 import Point from '@mapbox/point-geometry';
 import type {DragPanOptions} from './handler/shim/drag_pan';
 import {type EaseToOptions} from './camera';
@@ -114,7 +114,8 @@ export class HandlerInertia {
 
         if (deltas.zoom) {
             const result = calculateEasing(deltas.zoom, duration, defaultZoomInertiaOptions);
-            easeOptions.zoom = this._map.transform.zoom + result.amount;
+            const zoom = evaluateZoomSnap(this._map.transform.zoom + result.amount, this._map.getZoomSnap(), result.amount);
+            easeOptions.zoom = zoom;
             extendDuration(easeOptions, result);
         }
 

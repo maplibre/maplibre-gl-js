@@ -105,6 +105,13 @@ export type MapOptions = {
      */
     bearingSnap?: number;
     /**
+     * The step increment the zoom level will snap to.
+     * For example, if `zoomSnap` is 1, the map will snap to whole integers during discrete zoom operations.
+     * If set to 0, zooming is continuous.
+     * @defaultValue 0
+     */
+    zoomSnap?: number;
+    /**
      * If set, an {@link AttributionControl} will be added to the map with the provided options.
      * To disable the attribution control, pass `false`.
      * !!! note
@@ -432,6 +439,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     hash: false,
     interactive: true,
     bearingSnap: 7,
+    zoomSnap: 0,
     attributionControl: defaultAttributionControlOptions,
     maplibreLogo: false,
     refreshExpiredTiles: true,
@@ -705,7 +713,10 @@ export class Map extends Camera {
             transform.setConstrainOverride(resolvedOptions.transformConstrain);
         }
 
-        super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
+        super(transform, cameraHelper, {
+            bearingSnap: resolvedOptions.bearingSnap,
+            zoomSnap: resolvedOptions.zoomSnap
+        });
 
         this._interactive = resolvedOptions.interactive;
         this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;
@@ -713,6 +724,7 @@ export class Map extends Camera {
         this._canvasContextAttributes = {...resolvedOptions.canvasContextAttributes};
         this._trackResize = resolvedOptions.trackResize === true;
         this._bearingSnap = resolvedOptions.bearingSnap;
+        this._zoomSnap = resolvedOptions.zoomSnap;
         this._centerClampedToGround = resolvedOptions.centerClampedToGround;
         this._refreshExpiredTiles = resolvedOptions.refreshExpiredTiles === true;
         this._fadeDuration = resolvedOptions.fadeDuration;

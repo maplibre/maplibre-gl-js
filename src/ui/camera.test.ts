@@ -54,7 +54,10 @@ function createCamera(options?): Camera & { simulateFrame: () => void } {
     transform.setRenderWorldCopies(options.renderWorldCopies);
     transform.resize(512, 512);
 
-    const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any));
+    const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {
+        bearingSnap: options.bearingSnap || 0,
+        zoomSnap: options.zoomSnap || 0
+    }));
     if (options.globe) {
         camera.cameraHelper = new GlobeCameraHelper({useGlobeRendering: true} as GlobeProjection);
     }
@@ -3894,5 +3897,28 @@ describe('fitScreenCoordinates globe projection', () => {
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -5.9948, lat: 5.8987});
         expect(fixedNum(camera.getZoom(), 3)).toBe(4.936);
         expect(camera.getBearing()).toBeCloseTo(0);
+    });
+});
+
+describe('zoomSnap', () => {
+    test('zoomIn() with zoomSnap set to 1.0', () => {
+        const camera = createCamera({zoomSnap: 1.0});
+        camera.setZoom(9.7);
+        camera.zoomIn({duration: 0});
+        expect(camera.getZoom()).toBe(11.0);
+    });
+
+    test('zoomOut() with zoomSnap set to 1.0', () => {
+        const camera = createCamera({zoomSnap: 1.0});
+        camera.setZoom(10.3);
+        camera.zoomOut({duration: 0});
+        expect(camera.getZoom()).toBe(9.0);
+    });
+
+    test('zoomIn() with zoomSnap set to 0.5', () => {
+        const camera = createCamera({zoomSnap: 0.5});
+        camera.setZoom(9.1);
+        camera.zoomIn({duration: 0});
+        expect(camera.getZoom()).toBe(10.0);
     });
 });
