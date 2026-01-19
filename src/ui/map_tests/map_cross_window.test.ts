@@ -16,14 +16,12 @@ describe('Map cross-window support', () => {
         let container: HTMLDivElement;
 
         beforeEach(() => {
-            // Create an iframe to simulate a cross-window scenario
             iframe = window.document.createElement('iframe');
             window.document.body.appendChild(iframe);
             
             iframeDocument = iframe.contentDocument;
             iframeWindow = iframe.contentWindow;
 
-            // Create container in iframe's document
             container = iframeDocument.createElement('div');
             iframeDocument.body.appendChild(container);
             Object.defineProperty(container, 'clientWidth', {value: 200, configurable: true});
@@ -37,16 +35,13 @@ describe('Map cross-window support', () => {
         });
 
         test('container from iframe works with Map', () => {
-            // Verify we have a different window/document context
             expect(iframeDocument).not.toBe(window.document);
             expect(iframeWindow).not.toBe(window);
 
-            // Demonstrate the cross-window instanceof issue
-            // Container created in iframe is NOT an instanceof main window's HTMLElement
+            // Cross-window instanceof issue: container is NOT instanceof main window's HTMLElement
             expect(container instanceof HTMLElement).toBe(false);
             expect(container instanceof iframeDocument.defaultView.HTMLElement).toBe(true);
 
-            // Map initialize should still work
             const map = new Map({
                 container,
                 interactive: false,
@@ -58,14 +53,10 @@ describe('Map cross-window support', () => {
                 }
             });
 
-            // Map should be created successfully
             expect(map).toBeTruthy();
             expect(map.getContainer()).toBe(container);
-
-            // Map._ownerWindow should return the iframe's window
             expect(map._ownerWindow).toBe(iframeWindow);
 
-            // HandlerManager should also use the iframe's window/document
             const handlers = map.handlers;
             expect(handlers._ownerWindow).toBe(iframeWindow);
             expect(handlers._ownerDocument).toBe(iframeDocument);

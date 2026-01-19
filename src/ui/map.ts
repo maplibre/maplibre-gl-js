@@ -756,23 +756,7 @@ export class Map extends Camera {
 
         this._requestManager = new RequestManager(resolvedOptions.transformRequest);
 
-        if (typeof resolvedOptions.container === 'string') {
-            this._container = document.getElementById(resolvedOptions.container);
-            if (!this._container) {
-                throw new Error(`Container '${resolvedOptions.container}' not found.`);
-            }
-        } else if (resolvedOptions.container instanceof HTMLElement) {
-            this._container = resolvedOptions.container;
-        } else if (
-            // Cross-window support: use nodeType check as instanceof fails across windows
-            resolvedOptions.container &&
-            typeof resolvedOptions.container === 'object' &&
-            (resolvedOptions.container as Node).nodeType === 1
-        ) {
-            this._container = resolvedOptions.container as HTMLElement;
-        } else {
-            throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
-        }
+        this._container = this._resolveContainer(resolvedOptions.container);
 
         if (resolvedOptions.maxBounds) {
             this.setMaxBounds(resolvedOptions.maxBounds);
@@ -3272,6 +3256,29 @@ export class Map extends Camera {
         }
 
         return [width, height];
+    }
+
+    /**
+     * @internal
+     * Resolves the container option to an HTMLElement.
+     * Supports string ID, HTMLElement, or cross-window elements (using nodeType check).
+     */
+    private _resolveContainer(container: string | HTMLElement): HTMLElement {
+        if (typeof container === 'string') {
+            const element = document.getElementById(container);
+            if (!element) {
+                throw new Error(`Container '${container}' not found.`);
+            }
+            return element;
+        }
+        if (container instanceof HTMLElement) {
+            return container;
+        }
+        // Cross-window support: use nodeType check as instanceof fails across windows
+        if (container && typeof container === 'object' && (container as Node).nodeType === 1) {
+            return container as HTMLElement;
+        }
+        throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
     }
 
     _setupContainer() {
