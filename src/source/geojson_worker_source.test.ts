@@ -393,7 +393,7 @@ describe('loadData', () => {
 
     test('loadData should process cluster change with no data', async () => {
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
-        const spy = vi.spyOn(worker, 'createGeoJSONIndex');
+        const spy = vi.spyOn(worker, '_createGeoJSONIndex');
 
         await worker.loadData({source: 'source1', data: updateableFeatureCollection, cluster: false} as LoadGeoJSONParameters);
         expect(spy.mock.calls[0][1].cluster).toBe(false);

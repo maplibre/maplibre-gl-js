@@ -117,7 +117,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             }
 
             const data = await this._pendingData;
-            this._geoJSONIndex = this.createGeoJSONIndex(data, params);
+            this._geoJSONIndex = this._createGeoJSONIndex(data, params);
             this.loaded = {};
 
             const result: GeoJSONWorkerSourceLoadDataResult = {};
@@ -296,14 +296,14 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         return (this._geoJSONIndex as Supercluster).getLeaves(params.clusterId, params.limit, params.offset);
     }
 
-    createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONIndex {
+    _createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONIndex {
         if (params.cluster) {
-            return new Supercluster(this.getSuperclusterOptions(params)).load((data as any).features);
+            return new Supercluster(this._getSuperclusterOptions(params)).load((data as any).features);
         }
         return geojsonvt(data, params.geojsonVtOptions);
     }
 
-    getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
+    _getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
         if (!clusterProperties || !superclusterOptions) return superclusterOptions;
 
         const mapExpressions = {};
