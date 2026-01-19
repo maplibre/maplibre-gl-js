@@ -161,8 +161,7 @@ export class Terrain {
     getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
         if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return 0;
         const terrain = this.getTerrainData(tileID);
-        const dem = terrain.tile?.dem;
-        
+        const dem = terrain.tile?.dem;        
         if (!dem) return 0;
 
         const pos = vec2.transformMat4([] as any, [x / extent * EXTENT, y / extent * EXTENT], terrain.u_terrain_matrix);
@@ -173,14 +172,13 @@ export class Terrain {
             cy = Math.floor(coord[1]),
             tx = coord[0] - cx,
             ty = coord[1] - cy;
-
         return (
             dem.get(cx, cy) * (1 - tx) * (1 - ty) +
             dem.get(cx + 1, cy) * (tx) * (1 - ty) +
             dem.get(cx, cy + 1) * (1 - tx) * (ty) +
             dem.get(cx + 1, cy + 1) * (tx) * (ty)
         );
-    }  
+    }
 
     /**
      * Get the elevation for given {@link LngLat} in respect of exaggeration.
