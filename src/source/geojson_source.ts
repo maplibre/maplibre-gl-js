@@ -389,33 +389,44 @@ export class GeoJSONSource extends Evented implements Source {
             return;
         }
 
+        // Create the parameters object to be sent to the worker
         const {data, diff} = this._pendingWorkerUpdate;
+        const params = this._getLoadGeoJSONParameters(data, diff);
 
-        // Create the options object that will be sent to the worker thread.
-        const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
-
-        if (typeof data === 'string') {
-            // Data comes from a remote url - set the `request` option
-            options.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
-            options.request.collectResourceTiming = this._collectResourceTiming;
+        if (data !== undefined) {
             this._pendingWorkerUpdate.data = undefined;
-
-        } else if (data !== undefined) {
-            // Data is a geojson object
-            options.data = data;
-            this._pendingWorkerUpdate.data = undefined;
-
         } else if (diff) {
-            // Data is a differential update
-            options.dataDiff = diff;
             this._pendingWorkerUpdate.diff = undefined;
         }
 
         // Reset the flag since this update is using the latest options
         this._pendingWorkerUpdate.optionsChanged = undefined;
 
-        // Send the update to the worker
-        await this._dispatchWorkerUpdate(options);
+        // Send the update from the main thread to the worker thread
+        await this._dispatchWorkerUpdate(params);
+    }
+
+    /**
+     * Create the parameters object that will be sent to the worker and used to load GeoJSON.
+     */
+    private _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff): LoadGeoJSONParameters {
+        const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
+
+        if (typeof data === 'string') {
+            // Data comes from a remote url - set the `request` option
+            params.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
+            params.request.collectResourceTiming = this._collectResourceTiming;
+
+        } else if (data !== undefined) {
+            // Data is a geojson object
+            params.data = data;
+
+        } else if (diff) {
+            // Data is a differential update
+            params.dataDiff = diff;
+        }
+
+        return params;
     }
 
     /**
