@@ -433,10 +433,11 @@ export class GeoJSONSource extends Evented implements Source {
      * Send the worker update data from the main thread to the worker
      */
     private async _dispatchWorkerUpdate(options: LoadGeoJSONParameters) {
+        this._isUpdatingWorker = true;
+        this.fire(new Event('dataloading', {dataType: 'source'}));
+
         try {
             // Send the update to the worker and wait for the response.
-            this._isUpdatingWorker = true;
-            this.fire(new Event('dataloading', {dataType: 'source'}));
             const result = await this.actor.sendAsync({type: MessageType.loadData, data: options});
             this._isUpdatingWorker = false;
 
