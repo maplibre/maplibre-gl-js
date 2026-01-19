@@ -26,29 +26,37 @@ describe('VerticalPerspectiveTransform', () => {
         expect(center.lat).toBeLessThanOrEqual(5);
     });
 
-    test('should handle maxBounds crossing the antimeridian (valid center)', () => {
-        // MaxBounds crossing antimeridian: 175 to -175 (10 degrees wide)
+    test('should handle maxBounds crossing the antimeridian', () => {
         transform.setMaxBounds(new LngLatBounds([175, -5, -175, 5]));
         
-        // 1. Try to set center to 178 (valid, East side)
         transform.setCenter(new LngLat(178, 0));
         expect(transform.center.lng).toBeCloseTo(178);
 
-        // 2. Try to set center to -178 (valid, West side)
         transform.setCenter(new LngLat(-178, 0));
         expect(transform.center.lng).toBeCloseTo(-178);
-    });
 
-    test('should handle maxBounds crossing the antimeridian (invalid center)', () => {
-        transform.setMaxBounds(new LngLatBounds([175, -5, -175, 5]));
-
-        // Try to set center to 170 (invalid, in the gap, closer to 175)
+        // Test the "gap"
         transform.setCenter(new LngLat(170, 0));
         expect(transform.center.lng).toBeCloseTo(175);
 
-        // Try to set center to -170 (invalid, in the gap, closer to -175)
         transform.setCenter(new LngLat(-170, 0));
         expect(transform.center.lng).toBeCloseTo(-175);
+    });
+
+    test('should not stick at antimeridian when wrapping', () => {
+        transform.setMaxBounds(new LngLatBounds([170, -10, -170, 10]));
+        
+        // Start East, move West across/near 180
+        transform.setCenter(new LngLat(179, 0));
+        expect(transform.center.lng).toBeCloseTo(179);
+
+        // Move to -179 (crossing 180)
+        transform.setCenter(new LngLat(-179, 0));
+        expect(transform.center.lng).toBeCloseTo(-179);
+        
+        // Move back
+        transform.setCenter(new LngLat(179, 0));
+        expect(transform.center.lng).toBeCloseTo(179);
     });
 
     test('should zoom in to fit bounds when maxBounds is smaller than viewport', () => {
