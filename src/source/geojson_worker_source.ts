@@ -14,8 +14,6 @@ import type {WorkerTileParameters, WorkerTileResult} from './worker_source';
 import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {RequestParameters} from '../util/ajax';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
-import type {IActor} from '../util/actor';
-import type {StyleLayerIndex} from '../style/style_layer_index';
 
 /**
  * The geojson worker options that can be passed to the worker
@@ -70,12 +68,6 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONIndex;
     _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
-    _createGeoJSONIndex: typeof createGeoJSONIndex;
-
-    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>, createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
-        super(actor, layerIndex, availableImages);
-        this._createGeoJSONIndex = createGeoJSONIndexFunc;
-    }
 
     /**
      * Retrieves and sends loaded vector tiles to the main thread.
@@ -125,7 +117,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             }
 
             const data = await this._pendingData;
-            this._geoJSONIndex = this._createGeoJSONIndex(data, params);
+            this._geoJSONIndex = this.createGeoJSONIndex(data, params);
             this.loaded = {};
 
             const result: GeoJSONWorkerSourceLoadDataResult = {};
@@ -303,50 +295,50 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }): Array<GeoJSON.Feature> {
         return (this._geoJSONIndex as Supercluster).getLeaves(params.clusterId, params.limit, params.offset);
     }
-}
 
-export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONIndex {
-    if (params.cluster) {
-        return new Supercluster(getSuperclusterOptions(params)).load((data as any).features);
-    }
-    return geojsonvt(data, params.geojsonVtOptions);
-}
-
-function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
-    if (!clusterProperties || !superclusterOptions) return superclusterOptions;
-
-    const mapExpressions = {};
-    const reduceExpressions = {};
-    const globals = {accumulated: null, zoom: 0};
-    const feature = {properties: null};
-    const propertyNames = Object.keys(clusterProperties);
-
-    for (const key of propertyNames) {
-        const [operator, mapExpression] = clusterProperties[key];
-
-        const mapExpressionParsed = createExpression(mapExpression);
-        const reduceExpressionParsed = createExpression(
-            typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator);
-
-        mapExpressions[key] = mapExpressionParsed.value;
-        reduceExpressions[key] = reduceExpressionParsed.value;
+    createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONIndex {
+        if (params.cluster) {
+            return new Supercluster(this.getSuperclusterOptions(params)).load((data as any).features);
+        }
+        return geojsonvt(data, params.geojsonVtOptions);
     }
 
-    superclusterOptions.map = (pointProperties) => {
-        feature.properties = pointProperties;
-        const properties = {};
-        for (const key of propertyNames) {
-            properties[key] = mapExpressions[key].evaluate(globals, feature);
-        }
-        return properties;
-    };
-    superclusterOptions.reduce = (accumulated, clusterProperties) => {
-        feature.properties = clusterProperties;
-        for (const key of propertyNames) {
-            globals.accumulated = accumulated[key];
-            accumulated[key] = reduceExpressions[key].evaluate(globals, feature);
-        }
-    };
+    getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
+        if (!clusterProperties || !superclusterOptions) return superclusterOptions;
 
-    return superclusterOptions;
+        const mapExpressions = {};
+        const reduceExpressions = {};
+        const globals = {accumulated: null, zoom: 0};
+        const feature = {properties: null};
+        const propertyNames = Object.keys(clusterProperties);
+
+        for (const key of propertyNames) {
+            const [operator, mapExpression] = clusterProperties[key];
+
+            const mapExpressionParsed = createExpression(mapExpression);
+            const reduceExpressionParsed = createExpression(
+                typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator);
+
+            mapExpressions[key] = mapExpressionParsed.value;
+            reduceExpressions[key] = reduceExpressionParsed.value;
+        }
+
+        superclusterOptions.map = (pointProperties) => {
+            feature.properties = pointProperties;
+            const properties = {};
+            for (const key of propertyNames) {
+                properties[key] = mapExpressions[key].evaluate(globals, feature);
+            }
+            return properties;
+        };
+        superclusterOptions.reduce = (accumulated, clusterProperties) => {
+            feature.properties = clusterProperties;
+            for (const key of propertyNames) {
+                globals.accumulated = accumulated[key];
+                accumulated[key] = reduceExpressions[key].evaluate(globals, feature);
+            }
+        };
+
+        return superclusterOptions;
+    }
 }
