@@ -389,7 +389,6 @@ export class GeoJSONSource extends Evented implements Source {
             return;
         }
 
-        // Create the parameters object to be sent to the worker
         const {data, diff} = this._pendingWorkerUpdate;
         const params = this._getLoadGeoJSONParameters(data, diff);
 
@@ -402,7 +401,6 @@ export class GeoJSONSource extends Evented implements Source {
         // Reset the flag since this update is using the latest options
         this._pendingWorkerUpdate.optionsChanged = undefined;
 
-        // Send the update from the main thread to the worker thread
         await this._dispatchWorkerUpdate(params);
     }
 
@@ -412,18 +410,23 @@ export class GeoJSONSource extends Evented implements Source {
     private _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff): LoadGeoJSONParameters {
         const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
 
+        // Data comes from a remote url
         if (typeof data === 'string') {
-            // Data comes from a remote url - set the `request` option
             params.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
             params.request.collectResourceTiming = this._collectResourceTiming;
+            return params;
+        }
 
-        } else if (data !== undefined) {
-            // Data is a geojson object
+        // Data is a geojson object
+        if (data !== undefined) {
             params.data = data;
+            return params;
+        }
 
-        } else if (diff) {
-            // Data is a differential update
+        // Data is a differential update
+        if (diff) {
             params.dataDiff = diff;
+            return params;
         }
 
         return params;
@@ -437,7 +440,6 @@ export class GeoJSONSource extends Evented implements Source {
         this.fire(new Event('dataloading', {dataType: 'source'}));
 
         try {
-            // Send the update to the worker and wait for the response.
             const result = await this.actor.sendAsync({type: MessageType.loadData, data: options});
             this._isUpdatingWorker = false;
 
@@ -451,7 +453,6 @@ export class GeoJSONSource extends Evented implements Source {
                 this._data = {geojson: result.data};
             }
 
-            // Collect the affected geometries for differential updates and get options for TileManager to reload affected tiles.
             const affectedGeometries = this._applyDiffToSource(options.dataDiff);
             const shouldReloadTileOptions = this._getShouldReloadTileOptions(affectedGeometries);
 
