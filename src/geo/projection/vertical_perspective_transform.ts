@@ -1,7 +1,7 @@
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat';
-import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce} from '../../util/util';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce, wrap} from '../../util/util';
 import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../mercator_coordinate';
@@ -119,8 +119,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
     }
-    resize(width: number, height: number): void {
-        this._helper.resize(width, height);
+    resize(width: number, height: number, constrain: boolean = true): void {
+        this._helper.resize(width, height, constrain);
     }
     getMaxBounds(): LngLatBounds {
         return this._helper.getMaxBounds();
@@ -643,18 +643,84 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
-        // Globe: TODO: respect _lngRange, _latRange
-        // It is possible to implement exact constrain for globe, but I don't think it is worth the effort.
-        const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
-        const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(0, constrainedLat), this.maxZoom);
+        const latRange = this.latRange;
+        const lngRange = this.lngRange;
+
+        const constrainedLat = this._constrainLat(lngLat.lat, latRange);
+        const constrainedLng = this._constrainLng(lngLat.lng, lngRange);
+        const constrainedZoom = this._constrainZoom(zoom, constrainedLat, lngRange, latRange);
+
         return {
-            center: new LngLat(
-                lngLat.lng,
-                constrainedLat
-            ),
+            center: new LngLat(constrainedLng, constrainedLat),
             zoom: constrainedZoom
         };
     };
+
+    private _constrainLat(lat: number, range: [number, number]): number {
+        if (!range) {
+            return clamp(lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
+        }
+        const minLat = Math.max(-MAX_VALID_LATITUDE, range[0]);
+        const maxLat = Math.min(MAX_VALID_LATITUDE, range[1]);
+        return clamp(lat, minLat, maxLat);
+    }
+
+    private _constrainLng(lng: number, range: [number, number]): number {
+        if (!range) {
+            return lng;
+        }
+
+        // Check if bounds cross the antimeridian (e.g., [170, -170])
+        if (range[0] <= range[1]) {
+            return clamp(lng, range[0], range[1]);
+        }
+
+        const wrappedLng = wrap(lng, -180, 180);
+        // The valid region is [range[0], 180] U [-180, range[1]]
+        // If outside valid region (meaning inside the restricted gap)
+        const inWestBand = wrappedLng >= range[0] && wrappedLng <= 180;
+        const inEastBand = wrappedLng >= -180 && wrappedLng <= range[1];
+
+        if (inWestBand || inEastBand) {
+            return wrappedLng;
+        }
+
+        // It's in the forbidden gap. Clamp to the closest boundary.
+        const d1 = Math.abs(wrap(wrappedLng - range[0], -180, 180));
+        const d2 = Math.abs(wrap(wrappedLng - range[1], -180, 180));
+        return d1 < d2 ? range[0] : range[1];
+    }
+
+    private _constrainZoom(zoom: number, lat: number, lngRange: [number, number], latRange: [number, number]): number {
+        let minZoomForBounds = this.minZoom;
+        let applyDefaultAdjustment = true;
+
+        if (lngRange && this.width > 0) {
+            const lngSpan = lngRange[0] > lngRange[1] ?
+                360 - (lngRange[0] - lngRange[1]) :
+                lngRange[1] - lngRange[0];
+            
+            if (lngSpan > 0) {
+                const calculatedMinZoom = Math.log2((this.width * 360) / (512 * lngSpan));
+                minZoomForBounds = Math.max(minZoomForBounds, calculatedMinZoom + getZoomAdjustment(lat, 0));
+                applyDefaultAdjustment = false;
+            }
+        }
+
+        if (latRange && this.height > 0) {
+            const latSpan = latRange[1] - latRange[0];
+            if (latSpan > 0) {
+                const calculatedMinZoomY = Math.log2((this.height * MAX_VALID_LATITUDE * 2) / (512 * latSpan));
+                minZoomForBounds = Math.max(minZoomForBounds, calculatedMinZoomY);
+            }
+        }
+        
+        if (applyDefaultAdjustment) {
+            minZoomForBounds += getZoomAdjustment(0, lat);
+        }
+        
+        return clamp(+zoom, minZoomForBounds, this.maxZoom);
+    }
 
     applyConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         return this._helper.applyConstrain(lngLat, zoom);
