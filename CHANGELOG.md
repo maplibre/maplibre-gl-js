@@ -2,6 +2,7 @@
 ### ✨ Features and improvements
 - Handle no data values in terrain DEMs with terrarium encoding ([#6587](https://github.com/maplibre/maplibre-gl-js/issues/6587)) (by [@pstaszek](https://github.com/pstaszek))
 - ⚠️ Add `zoomSnap` option to `Map` to allow snapping zoom levels to a grid when zooming in and out; aligns the behavior across all UI patterns (keyboard, scroll wheel, on-screen zoom buttons, double-click, double-tap). Previously, pressing +/- on the keyboard zoomed to rounded whole integers, more or less than 1 zoom level when starting from a fractional zoom. Now any number can be specified for `zoomSnap`; a value of 1.0 produces the rounded whole integer behavior across all UI patterns. ([#6941](https://github.com/maplibre/maplibre-gl-js/pull/6941)) (by [@mizmay](https://github.com/mizmay))
+- Add support for container elements from different windows (e.g., popup or iframe) ([#6969](https://github.com/maplibre/maplibre-gl-js/pull/6969)) (by [@Syncret](https://github.com/Syncret))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
