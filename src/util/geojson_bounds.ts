@@ -1,10 +1,23 @@
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 
-function getCoordinatesFromGeometry(geometry: GeoJSON.Geometry): number[] {
-    if (geometry.type === 'GeometryCollection') {
-        return geometry.geometries.map((g: Exclude<GeoJSON.Geometry, GeoJSON.GeometryCollection>) => g.coordinates).flat(Infinity) as number[];
+type DeepCoordinates = GeoJSON.Position | DeepCoordinates[];
+
+function extractCoordinates(coords: DeepCoordinates): number[][] {
+    if (!coords || coords.length === 0) return [];
+
+    if (typeof coords[0] === 'number') {
+        return [coords as number[]];
     }
-    return geometry.coordinates.flat(Infinity) as number[];
+
+    return coords.flatMap(c => extractCoordinates(c));
+}
+
+function getCoordinatesFromGeometry(geometry: GeoJSON.Geometry): number[][] {
+    if (geometry.type === 'GeometryCollection') {
+        return geometry.geometries.flatMap(g => getCoordinatesFromGeometry(g));
+    }
+
+    return extractCoordinates(geometry.coordinates);
 }
 
 /**
@@ -14,10 +27,11 @@ function getCoordinatesFromGeometry(geometry: GeoJSON.Geometry): number[] {
  */
 export function getGeoJSONBounds(data: GeoJSON.GeoJSON): LngLatBounds {
     const bounds = new LngLatBounds();
-    let coordinates: number[];
+    let coordinates: number[][];
+
     switch (data.type) {
         case 'FeatureCollection':
-            coordinates = data.features.map(f => getCoordinatesFromGeometry(f.geometry)).flat(Infinity) as number[];
+            coordinates = data.features.flatMap(f => getCoordinatesFromGeometry(f.geometry));
             break;
         case 'Feature':
             coordinates = getCoordinatesFromGeometry(data.geometry);
@@ -26,11 +40,15 @@ export function getGeoJSONBounds(data: GeoJSON.GeoJSON): LngLatBounds {
             coordinates = getCoordinatesFromGeometry(data);
             break;
     }
-    if (coordinates.length == 0) {
+
+    if (coordinates.length === 0) {
         return bounds;
     }
-    for (let i = 0; i < coordinates.length - 1; i += 2) {
-        bounds.extend([coordinates[i], coordinates[i+1]]);
+
+    for (let i = 0; i < coordinates.length; i++) {
+        const [lng, lat] = coordinates[i];
+
+        bounds.extend([lng, lat]);
     }
     return bounds;
 }
