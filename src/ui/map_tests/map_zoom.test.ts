@@ -136,3 +136,33 @@ test('transformCameraUpdate is called after changing min or max zoom', async () 
         maxZoom: 16,
     });
 });
+
+test('fire move and zoom events when zoom is changed due to minZoom change', () => {
+    const map = createMap({minZoom: 0, zoom: 10});
+    const handleEvent = vi.fn();
+    map.on('movestart', handleEvent);
+    map.on('move', handleEvent);
+    map.on('moveend', handleEvent);
+    map.on('zoomstart', handleEvent);
+    map.on('zoom', handleEvent);
+    map.on('zoomend', handleEvent);
+    map.setMinZoom(11);
+    expect(map.getZoom()).toEqual(11);
+    expect(map.getMinZoom()).toEqual(11);
+    expect(handleEvent).toHaveBeenCalledTimes(6);
+});
+
+test('fire move and zoom events when zoom is changed due to maxZoom change', () => {
+    const map = createMap({maxZoom: 20, zoom: 20});
+    const handleEvent = vi.fn();
+    map.on('movestart', handleEvent);
+    map.on('move', handleEvent);
+    map.on('moveend', handleEvent);
+    map.on('zoomstart', handleEvent);
+    map.on('zoom', handleEvent);
+    map.on('zoomend', handleEvent);
+    map.setMaxZoom(10);
+    expect(map.getZoom()).toEqual(10);
+    expect(map.getMaxZoom()).toEqual(10);
+    expect(handleEvent).toHaveBeenCalledTimes(6);
+});
