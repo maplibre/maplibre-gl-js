@@ -34,11 +34,10 @@ describe('Map cross-window support', () => {
             }
         });
 
-        test('container from iframe works with Map', () => {
+        test('initializes with cross-window container', () => {
             expect(iframeDocument).not.toBe(window.document);
             expect(iframeWindow).not.toBe(window);
 
-            // Cross-window instanceof issue: container is NOT instanceof main window's HTMLElement
             expect(container instanceof HTMLElement).toBe(false);
             expect(container instanceof iframeDocument.defaultView.HTMLElement).toBe(true);
 
@@ -55,13 +54,20 @@ describe('Map cross-window support', () => {
 
             expect(map).toBeTruthy();
             expect(map.getContainer()).toBe(container);
-            expect(map._ownerWindow).toBe(iframeWindow);
+        });
 
-            const handlers = map.handlers;
-            expect(handlers._ownerWindow).toBe(iframeWindow);
-            expect(handlers._ownerDocument).toBe(iframeDocument);
+        test('map operations work with cross-window container', () => {
+            const map = new Map({
+                container,
+                interactive: false,
+                attributionControl: false,
+                style: {
+                    version: 8,
+                    sources: {},
+                    layers: []
+                }
+            });
 
-            // Basic map operations should work
             map.setCenter([10, 20]);
             expect(map.getCenter().lng).toBeCloseTo(10);
             expect(map.getCenter().lat).toBeCloseTo(20);

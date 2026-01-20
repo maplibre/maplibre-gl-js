@@ -585,8 +585,9 @@ export class Map extends Camera {
     /**
      * @internal
      * The window that owns the map container element, for cross-window support.
+     * Returns `typeof window` to include global constructors like ResizeObserver.
      */
-    get _ownerWindow(): Window {
+    get _ownerWindow(): typeof window {
         return this._container?.ownerDocument?.defaultView || window;
     }
 
@@ -776,24 +777,7 @@ export class Map extends Camera {
 
         if (typeof window !== 'undefined') {
             this._ownerWindow.addEventListener('online', this._onWindowOnline, false);
-            let initialResizeEventCaptured = false;
-            const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
-                if (this._trackResize && !this._removed) {
-                    this.resize(entries);
-                    this.redraw();
-                }
-            }, 50);
-            // Cross-window support: use the owning window's ResizeObserver.
-            // The global ResizeObserver may not properly observe elements in other windows.
-            const ResizeObserverClass = (this._ownerWindow as typeof window).ResizeObserver ?? ResizeObserver;
-            this._resizeObserver = new ResizeObserverClass((entries: ResizeObserverEntry[]) => {
-                if (!initialResizeEventCaptured) {
-                    initialResizeEventCaptured = true;
-                    return;
-                }
-                throttledResizeCallback(entries);
-            });
-            this._resizeObserver.observe(this._container);
+            this._setupResizeObserver();
         }
 
         this.handlers = new HandlerManager(this, resolvedOptions);
@@ -3256,6 +3240,31 @@ export class Map extends Camera {
         }
 
         return [width, height];
+    }
+
+    /**
+     * @internal
+     * Sets up the ResizeObserver to track container size changes.
+     * Uses the owning window's ResizeObserver for cross-window support.
+     */
+    private _setupResizeObserver() {
+        let initialResizeEventCaptured = false;
+        const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
+            if (this._trackResize && !this._removed) {
+                this.resize(entries);
+                this.redraw();
+            }
+        }, 50);
+        // Use owning window's ResizeObserver for cross-window support
+        const ResizeObserverClass = this._ownerWindow.ResizeObserver ?? ResizeObserver;
+        this._resizeObserver = new ResizeObserverClass((entries: ResizeObserverEntry[]) => {
+            if (!initialResizeEventCaptured) {
+                initialResizeEventCaptured = true;
+                return;
+            }
+            throttledResizeCallback(entries);
+        });
+        this._resizeObserver.observe(this._container);
     }
 
     /**
