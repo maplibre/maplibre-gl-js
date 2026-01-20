@@ -105,6 +105,13 @@ export type MapOptions = {
      */
     bearingSnap?: number;
     /**
+     * The step increment the zoom level will snap to.
+     * For example, if `zoomSnap` is 1, the map will snap to whole integers during discrete zoom operations.
+     * If set to 0, zooming is continuous.
+     * @defaultValue 0
+     */
+    zoomSnap?: number;
+    /**
      * If set, an {@link AttributionControl} will be added to the map with the provided options.
      * To disable the attribution control, pass `false`.
      * !!! note
@@ -387,6 +394,15 @@ export type MapOptions = {
      * @experimental
      */
     experimentalZoomLevelsToOverscale?: number;
+    /**
+     * Determines the rotation interaction model:
+     * - When true: Uses "Orbital" logic where rotation is relative to the pivot center. 
+     *   Dragging right at the top rotates clockwise, while dragging right at the bottom
+     *   rotates counter-clockwise (like spinning a physical globe).
+     * - When false: Uses "Linear" logic where horizontal mouse movement translates directly
+     *   to bearing change regardless of cursor position.
+     */
+    aroundCenter?: boolean;
 };
 
 export type AddImageOptions = {
@@ -423,6 +439,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     hash: false,
     interactive: true,
     bearingSnap: 7,
+    zoomSnap: 0,
     attributionControl: defaultAttributionControlOptions,
     maplibreLogo: false,
     refreshExpiredTiles: true,
@@ -564,6 +581,16 @@ export class Map extends Camera {
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
     /** @internal */
     _zoomLevelsToOverscale: number | undefined;
+
+    /**
+     * @internal
+     * The window that owns the map container element, for cross-window support.
+     * Returns `typeof window` to include global constructors like ResizeObserver.
+     */
+    get _ownerWindow(): typeof window {
+        return this._container?.ownerDocument?.defaultView || window;
+    }
+
     /**
      * @internal
      * image queue throttling handle. To be used later when clean up
@@ -696,7 +723,10 @@ export class Map extends Camera {
             transform.setConstrainOverride(resolvedOptions.transformConstrain);
         }
 
-        super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
+        super(transform, cameraHelper, {
+            bearingSnap: resolvedOptions.bearingSnap,
+            zoomSnap: resolvedOptions.zoomSnap
+        });
 
         this._interactive = resolvedOptions.interactive;
         this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;
@@ -704,6 +734,7 @@ export class Map extends Camera {
         this._canvasContextAttributes = {...resolvedOptions.canvasContextAttributes};
         this._trackResize = resolvedOptions.trackResize === true;
         this._bearingSnap = resolvedOptions.bearingSnap;
+        this._zoomSnap = resolvedOptions.zoomSnap;
         this._centerClampedToGround = resolvedOptions.centerClampedToGround;
         this._refreshExpiredTiles = resolvedOptions.refreshExpiredTiles === true;
         this._fadeDuration = resolvedOptions.fadeDuration;
@@ -726,16 +757,7 @@ export class Map extends Camera {
 
         this._requestManager = new RequestManager(resolvedOptions.transformRequest);
 
-        if (typeof resolvedOptions.container === 'string') {
-            this._container = document.getElementById(resolvedOptions.container);
-            if (!this._container) {
-                throw new Error(`Container '${resolvedOptions.container}' not found.`);
-            }
-        } else if (resolvedOptions.container instanceof HTMLElement) {
-            this._container = resolvedOptions.container;
-        } else {
-            throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
-        }
+        this._container = this._resolveContainer(resolvedOptions.container);
 
         if (resolvedOptions.maxBounds) {
             this.setMaxBounds(resolvedOptions.maxBounds);
@@ -754,22 +776,8 @@ export class Map extends Camera {
         this.once('idle', () => { this._idleTriggered = true; });
 
         if (typeof window !== 'undefined') {
-            addEventListener('online', this._onWindowOnline, false);
-            let initialResizeEventCaptured = false;
-            const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
-                if (this._trackResize && !this._removed) {
-                    this.resize(entries);
-                    this.redraw();
-                }
-            }, 50);
-            this._resizeObserver = new ResizeObserver((entries) => {
-                if (!initialResizeEventCaptured) {
-                    initialResizeEventCaptured = true;
-                    return;
-                }
-                throttledResizeCallback(entries);
-            });
-            this._resizeObserver.observe(this._container);
+            this._ownerWindow.addEventListener('online', this._onWindowOnline, false);
+            this._setupResizeObserver();
         }
 
         this.handlers = new HandlerManager(this, resolvedOptions);
@@ -1143,7 +1151,8 @@ export class Map extends Camera {
     /**
      * Sets or clears the map's minimum zoom level.
      * If the map's current zoom level is lower than the new minimum,
-     * the map will zoom to the new minimum.
+     * the map will zoom to the new minimum and trigger the following events:
+     * `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
      * It is not always possible to zoom out and reach the set `minZoom`.
      * Other factors such as map height may restrict zooming. For example,
@@ -1164,10 +1173,19 @@ export class Map extends Camera {
         minZoom = minZoom === null || minZoom === undefined ? defaultMinZoom : minZoom;
 
         if (minZoom >= defaultMinZoom && minZoom <= this.transform.maxZoom) {
+            const zoomBefore = this.transform.zoom;
             const tr = this._getTransformForUpdate();
             tr.setMinZoom(minZoom);
             this._applyUpdatedTransform(tr);
             this._update();
+            if (zoomBefore !== this.transform.zoom) {
+                this.fire(new Event('zoomstart'))
+                    .fire(new Event('zoom'))
+                    .fire(new Event('zoomend'))
+                    .fire(new Event('movestart'))
+                    .fire(new Event('move'))
+                    .fire(new Event('moveend'));
+            }
 
             return this;
 
@@ -1188,7 +1206,8 @@ export class Map extends Camera {
     /**
      * Sets or clears the map's maximum zoom level.
      * If the map's current zoom level is higher than the new maximum,
-     * the map will zoom to the new maximum.
+     * the map will zoom to the new maximum and trigger the following events:
+     * `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
      * A {@link ErrorEvent} event will be fired if minZoom is out of bounds.
      *
@@ -1204,10 +1223,19 @@ export class Map extends Camera {
         maxZoom = maxZoom === null || maxZoom === undefined ? defaultMaxZoom : maxZoom;
 
         if (maxZoom >= this.transform.minZoom) {
+            const zoomBefore = this.transform.zoom;
             const tr = this._getTransformForUpdate();
             tr.setMaxZoom(maxZoom);
             this._applyUpdatedTransform(tr);
             this._update();
+            if (zoomBefore !== this.transform.zoom) {
+                this.fire(new Event('zoomstart'))
+                    .fire(new Event('zoom'))
+                    .fire(new Event('zoomend'))
+                    .fire(new Event('movestart'))
+                    .fire(new Event('move'))
+                    .fire(new Event('moveend'));
+            }
 
             return this;
 
@@ -1228,7 +1256,8 @@ export class Map extends Camera {
     /**
      * Sets or clears the map's minimum pitch.
      * If the map's current pitch is lower than the new minimum,
-     * the map will pitch to the new minimum.
+     * the map will pitch to the new minimum and trigger the following events:
+     * `movestart`, `move`, `moveend`, `pitchstart`, `pitch`, and `pitchend`.
      *
      * A {@link ErrorEvent} event will be fired if minPitch is out of bounds.
      *
@@ -1244,10 +1273,19 @@ export class Map extends Camera {
         }
 
         if (minPitch >= defaultMinPitch && minPitch <= this.transform.maxPitch) {
-            this.transform.setMinPitch(minPitch);
+            const pitchBefore = this.transform.pitch;
+            const tr = this._getTransformForUpdate();
+            tr.setMinPitch(minPitch);
+            this._applyUpdatedTransform(tr);
             this._update();
-
-            if (this.getPitch() < minPitch) this.setPitch(minPitch);
+            if (pitchBefore !== this.transform.pitch) {
+                this.fire(new Event('pitchstart'))
+                    .fire(new Event('pitch'))
+                    .fire(new Event('pitchend'))
+                    .fire(new Event('movestart'))
+                    .fire(new Event('move'))
+                    .fire(new Event('moveend'));
+            }
 
             return this;
 
@@ -1264,7 +1302,8 @@ export class Map extends Camera {
     /**
      * Sets or clears the map's maximum pitch.
      * If the map's current pitch is higher than the new maximum,
-     * the map will pitch to the new maximum.
+     * the map will pitch to the new maximum and trigger the following events:
+     * `movestart`, `move`, `moveend`, `pitchstart`, `pitch`, and `pitchend`.
      *
      * A {@link ErrorEvent} event will be fired if maxPitch is out of bounds.
      *
@@ -1280,10 +1319,19 @@ export class Map extends Camera {
         }
 
         if (maxPitch >= this.transform.minPitch) {
-            this.transform.setMaxPitch(maxPitch);
+            const pitchBefore = this.transform.pitch;
+            const tr = this._getTransformForUpdate();
+            tr.setMaxPitch(maxPitch);
+            this._applyUpdatedTransform(tr);
             this._update();
-
-            if (this.getPitch() > maxPitch) this.setPitch(maxPitch);
+            if (pitchBefore !== this.transform.pitch) {
+                this.fire(new Event('pitchstart'))
+                    .fire(new Event('pitch'))
+                    .fire(new Event('pitchend'))
+                    .fire(new Event('movestart'))
+                    .fire(new Event('move'))
+                    .fire(new Event('moveend'));
+            }
 
             return this;
 
@@ -3234,6 +3282,54 @@ export class Map extends Camera {
         return [width, height];
     }
 
+    /**
+     * @internal
+     * Sets up the ResizeObserver to track container size changes.
+     * Uses the owning window's ResizeObserver for cross-window support.
+     */
+    private _setupResizeObserver() {
+        let initialResizeEventCaptured = false;
+        const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
+            if (this._trackResize && !this._removed) {
+                this.resize(entries);
+                this.redraw();
+            }
+        }, 50);
+        // Use owning window's ResizeObserver for cross-window support
+        const ResizeObserverClass = this._ownerWindow.ResizeObserver ?? ResizeObserver;
+        this._resizeObserver = new ResizeObserverClass((entries: ResizeObserverEntry[]) => {
+            if (!initialResizeEventCaptured) {
+                initialResizeEventCaptured = true;
+                return;
+            }
+            throttledResizeCallback(entries);
+        });
+        this._resizeObserver.observe(this._container);
+    }
+
+    /**
+     * @internal
+     * Resolves the container option to an HTMLElement.
+     * Supports string ID, HTMLElement, or cross-window elements (using nodeType check).
+     */
+    private _resolveContainer(container: string | HTMLElement): HTMLElement {
+        if (typeof container === 'string') {
+            const element = document.getElementById(container);
+            if (!element) {
+                throw new Error(`Container '${container}' not found.`);
+            }
+            return element;
+        }
+        if (container instanceof HTMLElement) {
+            return container;
+        }
+        // Cross-window support: use nodeType check as instanceof fails across windows
+        if (container && typeof container === 'object' && (container as Node).nodeType === 1) {
+            return container as HTMLElement;
+        }
+        throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
+    }
+
     _setupContainer() {
         const container = this._container;
         container.classList.add('maplibregl-map');
@@ -3598,7 +3694,7 @@ export class Map extends Camera {
         delete this.handlers;
         this.setStyle(null);
         if (typeof window !== 'undefined') {
-            removeEventListener('online', this._onWindowOnline, false);
+            this._ownerWindow.removeEventListener('online', this._onWindowOnline, false);
         }
 
         ImageRequest.removeThrottleControl(this._imageQueueHandle);
@@ -3646,7 +3742,8 @@ export class Map extends Camera {
                         }
                     }
                 },
-                () => {}
+                () => {},
+                this._ownerWindow
             );
         }
     }

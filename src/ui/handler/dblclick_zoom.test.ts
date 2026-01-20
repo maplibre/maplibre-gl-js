@@ -3,8 +3,11 @@ import simulate from '../../../test/unit/lib/simulate_interaction';
 import {beforeMapTest, sleep} from '../../util/test/util';
 import {Map, type MapOptions} from '../map';
 
-function createMap() {
-    return new Map({container: window.document.createElement('div')} as any as MapOptions);
+function createMap(options: any = {}) {
+    return new Map({
+        container: window.document.createElement('div'),
+        ...options
+    } as any as MapOptions);
 }
 
 async function simulateDoubleTap(map, delay = 100) {
@@ -52,6 +55,44 @@ describe('dbclick_zoom', () => {
 
         expect(zoom).not.toHaveBeenCalled();
 
+        map.remove();
+    });
+
+    test('DoubleClickZoomHandler snaps to nearest zoomSnap', () => {
+        const map = new Map({
+            container: window.document.createElement('div'),
+            zoomSnap: 1.0,
+            zoom: 9.7
+        } as any);
+        const spy = vi.spyOn(map, 'easeTo');
+
+        simulate.dblclick(map.getCanvas());
+        map._renderTaskQueue.run();
+
+        expect(spy).toHaveBeenCalled();
+        expect(spy.mock.calls[0][0].zoom).toBe(11.0);
+        map.remove();
+    });
+
+    test('DoubleClickZoomHandler double-tap snaps to nearest zoomSnap', async () => {
+        const map = new Map({
+            container: window.document.createElement('div'),
+            zoomSnap: 1.0,
+            zoom: 9.7
+        } as any);
+        const spy = vi.spyOn(map, 'easeTo');
+
+        const canvas = map.getCanvas();
+        simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
+        simulate.touchend(canvas);
+        await sleep(100);
+        simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
+        simulate.touchend(canvas);
+
+        await sleep(10);
+
+        expect(spy).toHaveBeenCalled();
+        expect(spy.mock.calls[0][0].zoom).toBe(11.0);
         map.remove();
     });
 
@@ -148,5 +189,28 @@ describe('dbclick_zoom', () => {
         simulate.touchend(canvas);
         map._renderTaskQueue.run();
         expect(zoom).not.toHaveBeenCalled();
+    });
+
+    test('DoubleClickZoomHandler snaps to nearest zoomSnap', () => {
+        const map = createMap({zoom: 9.7, zoomSnap: 1.0});
+        const spy = vi.spyOn(map, 'easeTo');
+
+        simulate.dblclick(map.getCanvas());
+        map._renderTaskQueue.run();
+
+        expect(spy).toHaveBeenCalled();
+        expect(spy.mock.calls[0][0].zoom).toBe(11.0);
+        map.remove();
+    });
+
+    test('DoubleClickZoomHandler double-tap snaps to nearest zoomSnap', async () => {
+        const map = createMap({zoom: 9.7, zoomSnap: 1.0});
+        const spy = vi.spyOn(map, 'easeTo');
+
+        await simulateDoubleTap(map, 100);
+
+        expect(spy).toHaveBeenCalled();
+        expect(spy.mock.calls[0][0].zoom).toBe(11.0);
+        map.remove();
     });
 });
