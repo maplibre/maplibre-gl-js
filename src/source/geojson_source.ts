@@ -482,7 +482,7 @@ export class GeoJSONSource extends Evented implements Source {
     /**
      * Apply resource timing data to the event object.
      */
-    private _applyResourceTiming(eventData: Object, result: GeoJSONWorkerSourceLoadDataResult) {
+    private _applyResourceTiming(eventData: {dataType: string}, result: GeoJSONWorkerSourceLoadDataResult) {
         if (!this._collectResourceTiming) return;
 
         const timingData = result.resourceTiming?.[this.id];
