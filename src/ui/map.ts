@@ -581,6 +581,16 @@ export class Map extends Camera {
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
     /** @internal */
     _zoomLevelsToOverscale: number | undefined;
+
+    /**
+     * @internal
+     * The window that owns the map container element, for cross-window support.
+     * Returns `typeof window` to include global constructors like ResizeObserver.
+     */
+    get _ownerWindow(): typeof window {
+        return this._container?.ownerDocument?.defaultView || window;
+    }
+
     /**
      * @internal
      * image queue throttling handle. To be used later when clean up
@@ -747,16 +757,7 @@ export class Map extends Camera {
 
         this._requestManager = new RequestManager(resolvedOptions.transformRequest);
 
-        if (typeof resolvedOptions.container === 'string') {
-            this._container = document.getElementById(resolvedOptions.container);
-            if (!this._container) {
-                throw new Error(`Container '${resolvedOptions.container}' not found.`);
-            }
-        } else if (resolvedOptions.container instanceof HTMLElement) {
-            this._container = resolvedOptions.container;
-        } else {
-            throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
-        }
+        this._container = this._resolveContainer(resolvedOptions.container);
 
         if (resolvedOptions.maxBounds) {
             this.setMaxBounds(resolvedOptions.maxBounds);
@@ -775,22 +776,8 @@ export class Map extends Camera {
         this.once('idle', () => { this._idleTriggered = true; });
 
         if (typeof window !== 'undefined') {
-            addEventListener('online', this._onWindowOnline, false);
-            let initialResizeEventCaptured = false;
-            const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
-                if (this._trackResize && !this._removed) {
-                    this.resize(entries);
-                    this.redraw();
-                }
-            }, 50);
-            this._resizeObserver = new ResizeObserver((entries) => {
-                if (!initialResizeEventCaptured) {
-                    initialResizeEventCaptured = true;
-                    return;
-                }
-                throttledResizeCallback(entries);
-            });
-            this._resizeObserver.observe(this._container);
+            this._ownerWindow.addEventListener('online', this._onWindowOnline, false);
+            this._setupResizeObserver();
         }
 
         this.handlers = new HandlerManager(this, resolvedOptions);
@@ -3255,6 +3242,54 @@ export class Map extends Camera {
         return [width, height];
     }
 
+    /**
+     * @internal
+     * Sets up the ResizeObserver to track container size changes.
+     * Uses the owning window's ResizeObserver for cross-window support.
+     */
+    private _setupResizeObserver() {
+        let initialResizeEventCaptured = false;
+        const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
+            if (this._trackResize && !this._removed) {
+                this.resize(entries);
+                this.redraw();
+            }
+        }, 50);
+        // Use owning window's ResizeObserver for cross-window support
+        const ResizeObserverClass = this._ownerWindow.ResizeObserver ?? ResizeObserver;
+        this._resizeObserver = new ResizeObserverClass((entries: ResizeObserverEntry[]) => {
+            if (!initialResizeEventCaptured) {
+                initialResizeEventCaptured = true;
+                return;
+            }
+            throttledResizeCallback(entries);
+        });
+        this._resizeObserver.observe(this._container);
+    }
+
+    /**
+     * @internal
+     * Resolves the container option to an HTMLElement.
+     * Supports string ID, HTMLElement, or cross-window elements (using nodeType check).
+     */
+    private _resolveContainer(container: string | HTMLElement): HTMLElement {
+        if (typeof container === 'string') {
+            const element = document.getElementById(container);
+            if (!element) {
+                throw new Error(`Container '${container}' not found.`);
+            }
+            return element;
+        }
+        if (container instanceof HTMLElement) {
+            return container;
+        }
+        // Cross-window support: use nodeType check as instanceof fails across windows
+        if (container && typeof container === 'object' && (container as Node).nodeType === 1) {
+            return container as HTMLElement;
+        }
+        throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
+    }
+
     _setupContainer() {
         const container = this._container;
         container.classList.add('maplibregl-map');
@@ -3619,7 +3654,7 @@ export class Map extends Camera {
         delete this.handlers;
         this.setStyle(null);
         if (typeof window !== 'undefined') {
-            removeEventListener('online', this._onWindowOnline, false);
+            this._ownerWindow.removeEventListener('online', this._onWindowOnline, false);
         }
 
         ImageRequest.removeThrottleControl(this._imageQueueHandle);
@@ -3667,7 +3702,8 @@ export class Map extends Camera {
                         }
                     }
                 },
-                () => {}
+                () => {},
+                this._ownerWindow
             );
         }
     }
