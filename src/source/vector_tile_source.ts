@@ -233,7 +233,7 @@ export class VectorTileSource extends Evented implements Source {
             }
             this._afterTileLoadWorkerResponse(tile, data);
 
-            return data && data.type === 'unchanged';
+            return data?.type === 'unchanged';
         } catch (err) {
             delete tile.abortController;
 
@@ -272,7 +272,7 @@ export class VectorTileSource extends Evented implements Source {
             tile.resourceTiming = data.resourceTiming;
         }
 
-        if (data && data.etag) {
+        if (data?.etag) {
             tile.etag = data.etag;
         }
 
