@@ -163,6 +163,22 @@ export class HandlerManager {
         capture?: boolean;
     } | undefined]>;
 
+    /**
+     * @internal
+     * The document that contains the map container element, for cross-window support.
+     */
+    get _ownerDocument(): Document {
+        return this._el?.ownerDocument || document;
+    }
+
+    /**
+     * @internal
+     * The window that contains the map container element, for cross-window support.
+     */
+    get _ownerWindow(): Window {
+        return this._el?.ownerDocument?.defaultView || window;
+    }
+
     constructor(map: Map, options: CompleteMapOptions) {
         this._map = map;
         this._el = this._map.getCanvasContainer();
@@ -203,8 +219,8 @@ export class HandlerManager {
             // window-level event listeners give us the best shot at capturing events that
             // fall outside the map canvas element. Use `{capture: true}` for the move event
             // to prevent map move events from being fired during a drag.
-            [document, 'mousemove', {capture: true}],
-            [document, 'mouseup', undefined],
+            [this._ownerDocument, 'mousemove', {capture: true}],
+            [this._ownerDocument, 'mouseup', undefined],
 
             [el, 'mouseover', undefined],
             [el, 'mouseout', undefined],
@@ -217,17 +233,17 @@ export class HandlerManager {
             [el, 'wheel', {passive: false}],
             [el, 'contextmenu', undefined],
 
-            [window, 'blur', undefined]
+            [this._ownerWindow, 'blur', undefined]
         ];
 
         for (const [target, type, listenerOptions] of this._listeners) {
-            DOM.addEventListener(target, type, target === document ? this.handleWindowEvent : this.handleEvent, listenerOptions);
+            DOM.addEventListener(target, type, target === this._ownerDocument ? this.handleWindowEvent : this.handleEvent, listenerOptions);
         }
     }
 
     destroy() {
         for (const [target, type, listenerOptions] of this._listeners) {
-            DOM.removeEventListener(target, type, target === document ? this.handleWindowEvent : this.handleEvent, listenerOptions);
+            DOM.removeEventListener(target, type, target === this._ownerDocument ? this.handleWindowEvent : this.handleEvent, listenerOptions);
         }
     }
 
