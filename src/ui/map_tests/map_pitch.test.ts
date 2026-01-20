@@ -1,4 +1,4 @@
-import {beforeEach, test, expect} from 'vitest';
+import {beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 
 beforeEach(() => {
@@ -88,4 +88,34 @@ test('throw on minPitch less than valid minPitch at init', () => {
     expect(() => {
         createMap({minPitch: -10});
     }).toThrow(new Error('minPitch must be greater than or equal to 0'));
+});
+
+test('fire move and pitch events when pitch is changed due to minPitch change', () => {
+    const map = createMap({minPitch: 0, pitch: 10});
+    const handleEvent = vi.fn();
+    map.on('movestart', handleEvent);
+    map.on('move', handleEvent);
+    map.on('moveend', handleEvent);
+    map.on('pitchstart', handleEvent);
+    map.on('pitch', handleEvent);
+    map.on('pitchend', handleEvent);
+    map.setMinPitch(11);
+    expect(map.getPitch()).toEqual(11);
+    expect(map.getMinPitch()).toEqual(11);
+    expect(handleEvent).toHaveBeenCalledTimes(6);
+});
+
+test('fire move and pitch events when pitch is changed due to maxPitch change', () => {
+    const map = createMap({maxPitch: 20, pitch: 20});
+    const handleEvent = vi.fn();
+    map.on('movestart', handleEvent);
+    map.on('move', handleEvent);
+    map.on('moveend', handleEvent);
+    map.on('pitchstart', handleEvent);
+    map.on('pitch', handleEvent);
+    map.on('pitchend', handleEvent);
+    map.setMaxPitch(10);
+    expect(map.getPitch()).toEqual(10);
+    expect(map.getMaxPitch()).toEqual(10);
+    expect(handleEvent).toHaveBeenCalledTimes(6);
 });
