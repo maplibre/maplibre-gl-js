@@ -14,6 +14,7 @@ import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from '../tile/tile';
 import type {Actor} from '../util/actor';
+import type {GeoJSONWorkerSourceLoadDataResult} from '../util/actor_messages';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONFeatureId, GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
@@ -389,65 +390,108 @@ export class GeoJSONSource extends Evented implements Source {
         }
 
         const {data, diff} = this._pendingWorkerUpdate;
+        const params = this._getLoadGeoJSONParameters(data, diff);
 
-        const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
         if (data !== undefined) {
-            if (typeof data === 'string') {
-                options.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
-                options.request.collectResourceTiming = this._collectResourceTiming;
-            } else {
-                options.data = data;
-            }
-
             this._pendingWorkerUpdate.data = undefined;
         } else if (diff) {
-            options.dataDiff = diff;
             this._pendingWorkerUpdate.diff = undefined;
         }
 
         // Reset the flag since this update is using the latest options
         this._pendingWorkerUpdate.optionsChanged = undefined;
 
+        await this._dispatchWorkerUpdate(params);
+    }
+
+    /**
+     * Create the parameters object that will be sent to the worker and used to load GeoJSON.
+     */
+    private _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff): LoadGeoJSONParameters {
+        const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
+
+        // Data comes from a remote url
+        if (typeof data === 'string') {
+            params.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
+            params.request.collectResourceTiming = this._collectResourceTiming;
+            return params;
+        }
+
+        // Data is a geojson object
+        if (data !== undefined) {
+            params.data = data;
+            return params;
+        }
+
+        // Data is a differential update
+        if (diff) {
+            params.dataDiff = diff;
+            return params;
+        }
+
+        return params;
+    }
+
+    /**
+     * Send the worker update data from the main thread to the worker
+     */
+    private async _dispatchWorkerUpdate(options: LoadGeoJSONParameters) {
         this._isUpdatingWorker = true;
         this.fire(new Event('dataloading', {dataType: 'source'}));
+
         try {
             const result = await this.actor.sendAsync({type: MessageType.loadData, data: options});
             this._isUpdatingWorker = false;
+
             if (this._removed || result.abandoned) {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
                 return;
             }
-            if (result.data) this._data = {geojson: result.data};
-            const affectedGeometries = this._applyDiffToSource(diff);
+
+            // Update the copy of the data in this source with the worker result. (only sent for url based geojson data)
+            if (result.data) {
+                this._data = {geojson: result.data};
+            }
+
+            const affectedGeometries = this._applyDiffToSource(options.dataDiff);
             const shouldReloadTileOptions = this._getShouldReloadTileOptions(affectedGeometries);
 
-            let resourceTiming: PerformanceResourceTiming[] = null;
-            if (result.resourceTiming && result.resourceTiming[this.id]) {
-                resourceTiming = result.resourceTiming[this.id].slice(0);
-            }
+            const eventData = {dataType: 'source'};
+            this._applyResourceTiming(eventData, result);
 
-            const eventData: any = {dataType: 'source'};
-            if (this._collectResourceTiming && resourceTiming && resourceTiming.length > 0) {
-                extend(eventData, {resourceTiming});
-            }
-
-            // although GeoJSON sources contain no metadata, we fire this event to let the TileManager
-            // know its ok to start requesting tiles.
+            // Fire the metadata event to let the TileManager know it's ok to start requesting tiles.
             this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
             this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions}));
         } catch (err) {
             this._isUpdatingWorker = false;
+
             if (this._removed) {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
                 return;
             }
+
             this.fire(new ErrorEvent(err));
         } finally {
-            // If there is more pending data, update worker again.
+            // If there is more pending data, update the worker again.
             if (this._hasPendingWorkerUpdate()) {
                 this._updateWorkerData();
             }
         }
+    }
+
+    /**
+     * Apply resource timing data to the event object.
+     */
+    private _applyResourceTiming(eventData: {dataType: string}, result: GeoJSONWorkerSourceLoadDataResult) {
+        if (!this._collectResourceTiming) return;
+
+        const timingData = result.resourceTiming?.[this.id];
+        if (!timingData) return;
+
+        const resourceTiming = timingData.slice(0);
+        if (!resourceTiming?.length) return;
+
+        extend(eventData, {resourceTiming});
     }
 
     /**
