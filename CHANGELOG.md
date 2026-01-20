@@ -8,6 +8,7 @@
 
 ### 🐞 Bug fixes
 - Fix incorrect shader selection for text labels with inline images ([#6956](https://github.com/maplibre/maplibre-gl-js/pull/6956)) (by [@ciscorn](https://github.com/ciscorn))
+- Fix marker positions not updating when zoom or pitch are changed following a change in constraints ([#6925](https://github.com/maplibre/maplibre-gl-js/issues/6925)) (by [auspicus](https://github.com/auspicus))
 - _...Add new stuff here..._
 
 ## 5.16.0
