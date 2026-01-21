@@ -498,6 +498,23 @@ export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
 export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
 /**
+ * Evaluates the snapped zoom level based on zoomSnap. If zoomSnap is 0 or less, the zoom level is returned unchanged.
+ * If delta is provided, it performs directional snapping (ceil for zoom-in, floor for zoom-out).
+ * @param zoom - The input zoom level
+ * @param zoomSnap - The grid interval to snap to, e.g. 1.0 for 1.0 zoom levels, 0.5 for 0.5 zoom levels, etc.
+ * @param delta - Optional scroll delta or direction. If positive, snaps up; if negative, snaps down.
+ * @returns The snapped zoom level
+ */
+export function evaluateZoomSnap(zoom: number, zoomSnap: number, delta?: number): number {
+    if (zoomSnap <= 0) return zoom;
+    const inv = 1 / zoomSnap;
+    if (delta === undefined || Math.abs(delta) < 1e-10) {
+        return Math.round(zoom * inv) / inv;
+    }
+    return (delta > 0 ? Math.ceil(zoom * inv - 1e-9) : Math.floor(zoom * inv + 1e-10)) / inv;
+}
+
+/**
  * Create an object by mapping all the values of an existing object while
  * preserving their keys.
  */
@@ -1150,8 +1167,18 @@ export function isTouchableEvent(event: Event, eventType: string): event is Touc
     return touchableEvents[eventType] && 'touches' in event;
 }
 
+/**
+ * Checks if an event is a pointable event (mouse or wheel event).
+ * Uses the event target's window context for cross-window support.
+ */
 export function isPointableEvent(event: Event, eventType: string): event is MouseEvent {
-    return pointableEvents[eventType] && (event instanceof MouseEvent || event instanceof WheelEvent);
+    if (!pointableEvents[eventType]) return false;
+
+    // Get the window context from the event target to use the correct constructor.
+    const domEvent = event as globalThis.Event;
+    const target = domEvent?.target as Element | null;
+    const targetWindow = target?.ownerDocument?.defaultView || window;
+    return domEvent instanceof targetWindow.MouseEvent || domEvent instanceof targetWindow.WheelEvent;
 }
 
 export function isTouchableOrPointableType(eventType: string): boolean {
