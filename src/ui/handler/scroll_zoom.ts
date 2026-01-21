@@ -1,6 +1,6 @@
 import {DOM} from '../../util/dom';
 
-import {defaultEasing, bezier, zoomScale, scaleZoom} from '../../util/util';
+import {defaultEasing, bezier, zoomScale, scaleZoom, evaluateZoomSnap} from '../../util/util';
 import {now} from '../../util/time_control';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat} from '../../geo/lng_lat';
@@ -289,7 +289,7 @@ export class ScrollZoomHandler implements Handler {
         if (this._delta !== 0) {
             // For trackpad events and single mouse wheel ticks, use the default zoom rate
             const zoomRate = (this._type === 'wheel' && Math.abs(this._delta) > wheelZoomDelta) ? this._wheelZoomRate : this._defaultZoomRate;
-            // Scale by sigmoid of scroll wheel delta.
+            // Scale by sigmoid of scroll wheel delta so the map responds to small scrolls and compresses large scrolls
             let scale = maxScalePerFrame / (1 + Math.exp(-Math.abs(this._delta * zoomRate)));
 
             if (this._delta < 0 && scale !== 0) {
@@ -297,7 +297,15 @@ export class ScrollZoomHandler implements Handler {
             }
 
             const fromScale = typeof this._targetZoom !== 'number' ? tr.scale : zoomScale(this._targetZoom);
-            this._targetZoom = tr.applyConstrain(tr.getCameraLngLat(), scaleZoom(fromScale * scale)).zoom;
+            const target = tr.applyConstrain(tr.getCameraLngLat(), scaleZoom(fromScale * scale)).zoom;
+            const zoomSnap = this._map.getZoomSnap();
+
+            if (this._type === 'wheel' && zoomSnap > 0) {
+                const currentSnapped = evaluateZoomSnap(tr.zoom, zoomSnap);
+                this._targetZoom = evaluateZoomSnap(target, zoomSnap, target - currentSnapped);
+            } else {
+                this._targetZoom = target;
+            }
 
             // if this is a mouse wheel, refresh the starting zoom and easing
             // function we're using to smooth out the zooming between wheel

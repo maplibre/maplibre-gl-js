@@ -1,4 +1,4 @@
-import {extend, wrap, defaultEasing, pick, scaleZoom} from '../util/util';
+import {extend, wrap, defaultEasing, pick, scaleZoom, evaluateZoomSnap} from '../util/util';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser';
 import {now} from '../util/time_control';
@@ -267,6 +267,7 @@ export abstract class Camera extends Evented {
     _padding: boolean;
 
     _bearingSnap: number;
+    _zoomSnap: number;
     _easeStart: number;
     _easeOptions: {
         duration?: number;
@@ -326,12 +327,14 @@ export abstract class Camera extends Evented {
 
     constructor(transform: ITransform, cameraHelper: ICameraHelper, options: {
         bearingSnap: number;
+        zoomSnap: number;
     }) {
         super();
         this._moving = false;
         this._zooming = false;
         this.transform = transform;
         this._bearingSnap = options.bearingSnap;
+        this._zoomSnap = options.zoomSnap;
         this.cameraHelper = cameraHelper;
 
         this.on('moveend', () => {
@@ -515,7 +518,7 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Increases the map's zoom level by 1.
+     * Incrementally increases the map's zoom level by 1, first snapping to the nearest `zoomSnap` increment.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
@@ -528,12 +531,12 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomIn(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this.getZoom() + 1, options, eventData);
+        this.zoomTo(evaluateZoomSnap(this.getZoom() + 1, this._zoomSnap), options, eventData);
         return this;
     }
 
     /**
-     * Decreases the map's zoom level by 1.
+     * Decreases the map's zoom level by 1, first snapping to the nearest `zoomSnap` increment.
      *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
@@ -546,7 +549,7 @@ export abstract class Camera extends Evented {
      * ```
      */
     zoomOut(options?: AnimationOptions, eventData?: any): this {
-        this.zoomTo(this.getZoom() - 1, options, eventData);
+        this.zoomTo(evaluateZoomSnap(this.getZoom() - 1, this._zoomSnap), options, eventData);
         return this;
     }
 
@@ -594,6 +597,25 @@ export abstract class Camera extends Evented {
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigate-the-map-with-game-like-controls/)
      */
     getBearing(): number { return this.transform.bearing; }
+
+    /**
+     * Sets the map's zoom snap level.
+     *
+     * @param snap - The zoom snap level to set.
+     */
+    setZoomSnap(snap: number): this {
+        this._zoomSnap = snap;
+        return this;
+    }
+
+    /**
+     * Returns the map's current zoom snap level.
+     *
+     * @returns The map's current zoom snap level.
+     */
+    getZoomSnap(): number {
+        return this._zoomSnap;
+    }
 
     /**
      * Sets the map's bearing (rotation). The bearing is the compass direction that is "up"; for example, a bearing
