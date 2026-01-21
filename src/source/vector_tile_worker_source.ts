@@ -22,7 +22,7 @@ export type LoadVectorTileResult = {
     vectorTile: VectorTileLike;
     rawData: ArrayBufferLike;
     resourceTiming?: Array<PerformanceResourceTiming>;
-    encoding: "mlt" | "mvt" | "harel";
+    encoding: 'mlt' | 'mvt' | 'harel';
 } & ExpiryData;
 
 type FetchingState = {

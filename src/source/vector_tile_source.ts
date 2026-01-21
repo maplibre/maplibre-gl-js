@@ -62,7 +62,7 @@ export class VectorTileSource extends Evented implements Source {
     maxzoom: number;
     url: string;
     scheme: string;
-    encoding: "mlt" | "mvt" | "harel";
+    encoding: 'mlt' | 'mvt' | 'harel';
     tileSize: number;
     promoteId: PromoteIdSpecification;
 

@@ -68,7 +68,7 @@ export class FeatureIndex {
     grid3D: TransferableGridIndex;
     featureIndexArray: FeatureIndexArray;
     promoteId?: PromoteIdSpecification;
-    encoding: "mlt" | "mvt" | "harel";
+    encoding: 'mlt' | 'mvt' | 'harel';
     rawTileData: ArrayBuffer;
     bucketLayerIDs: Array<Array<string>>;
 
@@ -275,7 +275,7 @@ export class FeatureIndex {
             }
 
             const geojsonFeature = new GeoJSONFeature(feature, this.z, this.x, this.y, id) as MapGeoJSONFeature;
-            console.log("matching feature: ", feature.loadGeometry(), feature.type);
+            console.log('matching feature: ', feature.loadGeometry(), feature.type);
             geojsonFeature.layer = serializedLayer;
             let layerResult = result[layerID];
             if (layerResult === undefined) {

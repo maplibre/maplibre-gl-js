@@ -1,5 +1,5 @@
-import Point from "@mapbox/point-geometry";
-import { type VectorTileLayerLike, type VectorTileLike, type VectorTileFeatureLike, GEOJSON_TILE_LAYER_NAME } from "@maplibre/vt-pbf";
+import Point from '@mapbox/point-geometry';
+import type {VectorTileLayerLike, VectorTileLike, VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 const TYPE_UNDEFINED = 0;
 const TYPE_NULL = 1;
@@ -8,7 +8,6 @@ const TYPE_NUMBER = 3;
 const TYPE_STRING = 4;
 const TYPE_ARRAY = 5;
 const TYPE_OBJECT = 6;
-
 
 type SerializableValue = undefined | null | boolean | number | string | SerializableValue[] | { [key: string]: SerializableValue };
 /**
@@ -310,7 +309,7 @@ class FastTileDeserializer {
                 return obj;
             }
             default:
-                throw new Error('Unknown type: ' + type);
+                throw new Error(`Unknown type: ${type}`);
         }
     }
 
@@ -380,7 +379,7 @@ class FastTileDeserializer {
             version,
             extent,
             feature: (i) => {
-                return features[i]
+                return features[i];
             }
         };
     }

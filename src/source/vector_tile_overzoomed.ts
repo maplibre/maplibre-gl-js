@@ -72,7 +72,7 @@ export function toVirtualVectorTile(virtualVectorTile: VectorTileLike): LoadVect
     return {
         vectorTile: virtualVectorTile,
         rawData: pbf.buffer,
-        encoding: "harel"
+        encoding: 'harel'
     };
 }
 
