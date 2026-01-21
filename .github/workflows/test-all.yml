@@ -176,7 +176,6 @@ jobs:
       - run: npm ci
       - run: npm run build-dist
       - run: npm run test-build-ci
-
   merge-and-report:
     name: Merge coverage and report
     runs-on: ubuntu-latest

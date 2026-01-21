@@ -1317,8 +1317,9 @@ export class Style extends Evented {
         }
 
         try {
-            if (deepEqual(layer.getLayoutProperty(name), value)) return;
-            layer.setLayoutProperty(name, value, options);
+            if (!deepEqual(layer.getLayoutProperty(name), value)) {
+                layer.setLayoutProperty(name, value, options);
+            }
         } catch (error) {
             const paintProperty = layer.getPaintProperty(name);
             if (paintProperty) {
@@ -1356,8 +1357,9 @@ export class Style extends Evented {
         }
 
         try {
-            if (deepEqual(layer.getPaintProperty(name), value)) return;
-            layer.setPaintProperty(name, value, options);
+            if (!deepEqual(layer.getPaintProperty(name), value)) {
+                layer.setPaintProperty(name, value, options);
+            }
         } catch (error) {
             const layoutProperty = layer.getLayoutProperty(name);
             if (layoutProperty) {
