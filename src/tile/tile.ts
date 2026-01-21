@@ -72,7 +72,7 @@ export class Tile {
     buckets: {[_: string]: Bucket};
     latestFeatureIndex: FeatureIndex | null;
     latestRawTileData: ArrayBuffer;
-    latestEncoding: string;
+    latestEncoding: "mlt" | "mvt" | "harel";
     imageAtlas: ImageAtlas;
     imageAtlasTexture: Texture;
     dashPositions: {[_: string]: DashEntry};

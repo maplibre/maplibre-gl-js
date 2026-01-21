@@ -1,8 +1,9 @@
 import Point from '@mapbox/point-geometry';
-import {type VectorTileFeatureLike, type VectorTileLayerLike, type VectorTileLike, fromVectorTileJs} from '@maplibre/vt-pbf';
+import {serializeTile} from '../util/fast_tile_serializer';
 import {clipGeometry} from '../symbol/clip_line';
 import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {CanonicalTileID} from '../tile/tile_id';
+import type {VectorTileFeatureLike, VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
 
 class VectorTileFeatureOverzoomed implements VectorTileFeatureLike {
     pointsArray: Point[][];
@@ -67,13 +68,11 @@ export class VectorTileOverzoomed implements VectorTileLike {
  * @returns - the encoded vector tile along with the original virtual tile binary data.
  */
 export function toVirtualVectorTile(virtualVectorTile: VectorTileLike): LoadVectorTileResult {
-    let pbf: Uint8Array = fromVectorTileJs(virtualVectorTile);
-    if (pbf.byteOffset !== 0 || pbf.byteLength !== pbf.buffer.byteLength) {
-        pbf = new Uint8Array(pbf);  // Compatibility with node Buffer (https://github.com/mapbox/pbf/issues/35)
-    }
+    const pbf = serializeTile(virtualVectorTile);
     return {
         vectorTile: virtualVectorTile,
-        rawData: pbf.buffer
+        rawData: pbf.buffer,
+        encoding: "harel"
     };
 }
 
