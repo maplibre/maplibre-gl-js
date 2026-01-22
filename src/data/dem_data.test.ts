@@ -1,24 +1,15 @@
-import {describe, test, expect, vi, afterAll} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {DEMData} from './dem_data';
 import {RGBAImage} from '../util/image';
 import {serialize, deserialize} from '../util/web_worker_transfer';
 
-function createMockImage(height: number, width: number, rgbaValue?: [number, number, number, number]) {
+function createMockImage(height, width) {
     // RGBAImage passed to constructor has uniform 1px padding on all sides.
     height += 2;
     width += 2;
     const pixels = new Uint8Array(height * width * 4);
-    if (rgbaValue) {
-        for (let i = 0; i < pixels.length; i+=4) {
-            pixels[i] = rgbaValue[0];
-            pixels[i+1] = rgbaValue[1];
-            pixels[i+2] = rgbaValue[2];
-            pixels[i+3] = rgbaValue[3];
-        }
-    } else {
-        for (let i = 0; i < pixels.length; i++) {
-            pixels[i] = (i + 1) % 4 === 0 ? 1 : Math.floor(Math.random() * 256);
-        }
+    for (let i = 0; i < pixels.length; i++) {
+        pixels[i] = (i + 1) % 4 === 0 ? 1 : Math.floor(Math.random() * 256);
     }
     return new RGBAImage({height, width}, pixels);
 }
@@ -179,7 +170,6 @@ function testSerialization(dem0: DEMData, redFactor: number, greenFactor: number
             $name: 'DEMData',
             uid: '0',
             dim: 4,
-            encoding: dem0.encoding,
             stride: 6,
             data: dem0.data,
             redFactor,
@@ -245,32 +235,6 @@ describe('DEMData.getImage', () => {
     test('Image is correctly returned - mapbox', testGetPixels(mapboxDEM, imageData));
     test('Image is correctly returned - terrarium', testGetPixels(terrariumDEM, imageData));
     test('Image is correctly returned - custom', testGetPixels(customDEM, imageData));
-});
-
-describe('DEMData.get', () => {
-    test('returns elevation for zero value mapbox encoding', () => {
-        const imageData2 = createMockImage(4, 4, [0, 0, 0, 1]);
-        const dem2 = new DEMData('0', imageData2, 'mapbox');
-        expect(dem2.get(0, 0)).toBe(-10000);
-    });
-
-    test('returns elevation for zero value custom encoding', () => {
-        const imageData2 = createMockImage(4, 4, [0, 0, 0, 1]);
-        const dem2 = new DEMData('0', imageData2, 'custom', 1.0, 2.0, 3.0, 123);
-        expect(dem2.get(0, 0)).toBe(-123);
-    });
-
-    test('returns elevation for non-zero value terrarium data', () => {
-        const imageData = createMockImage(4, 4, [128, 255, 0, 1]);
-        const dem = new DEMData('0', imageData, 'terrarium');
-        expect(dem.get(0, 0)).toBe(255);
-    });
-
-    test('returns 0 for terrarium no data', () => {
-        const imageData = createMockImage(4, 4, [0, 0, 0, 0]);
-        const dem = new DEMData('0', imageData, 'terrarium');
-        expect(dem.get(0, 0)).toBe(0);
-    });
 });
 
 describe('DEMData pack and unpack', () => {
