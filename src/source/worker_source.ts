@@ -69,7 +69,13 @@ export type WorkerDEMTileParameters = TileParameters & {
     baseShift: number;
 };
 
+/**
+ * The worker tile's result when the tile has not changed since it was last requested, and instead was loaded from browser cache. This indicates that further processing and repainting is not necessary.
+ */
 type WorkerTileUnchangedResult = ExpiryData & { resourceTiming?: Array<PerformanceResourceTiming>} & { type: 'unchanged' };
+/**
+ * The worker tile's result when the tile has changed since it was last requested, and further processing and repainting are necessary.
+ */
 export type WorkerTileProcessedResult = ExpiryData & { resourceTiming?: Array<PerformanceResourceTiming>} & {
     type: 'processed';
     buckets: Array<Bucket>;
