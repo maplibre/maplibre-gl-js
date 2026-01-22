@@ -4,7 +4,7 @@ import rewind from '@mapbox/geojson-rewind';
 import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent';
 import Supercluster, {type Options as SuperclusterOptions, type ClusterProperties} from 'supercluster';
-import geojsonvt, {type Options as GeoJSONVTOptions} from 'geojson-vt';
+import geojsonvt, {type GeoJSONVTOptions, type GeoJSONVT} from '@maplibre/geojson-vt';
 import {VectorTileWorkerSource} from './vector_tile_worker_source';
 import {createExpression} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error';
@@ -50,7 +50,7 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
     dataDiff?: GeoJSONSourceDiff;
 };
 
-type GeoJSONIndex = ReturnType<typeof geojsonvt> | Supercluster;
+type GeoJSONIndex = GeoJSONVT | Supercluster;
 
 /**
  * The {@link WorkerSource} implementation that supports {@link GeoJSONSource}.
