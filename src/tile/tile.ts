@@ -205,7 +205,7 @@ export class Tile {
      * @param justReloaded - `true` to just reload
      */
     loadVectorData(data: WorkerTileResult, painter: any, justReloaded?: boolean | null) {
-        if (this.hasData() && (!data || data.type === 'processed')) {
+        if (this.hasData() && data?.type !== 'unchanged') {
             // If the tile has loaded fresh data, unload the old data
             this.unloadVectorData();
         }
