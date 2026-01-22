@@ -22,6 +22,7 @@ export type LoadVectorTileResult = {
     vectorTile: VectorTileLike;
     rawData: ArrayBufferLike;
     resourceTiming?: Array<PerformanceResourceTiming>;
+    encoding: 'mlt' | 'mvt' | 'harel';
 } & ExpiryData;
 
 type FetchingState = {
@@ -77,7 +78,8 @@ export class VectorTileWorkerSource implements WorkerSource {
                 vectorTile,
                 rawData: response.data,
                 cacheControl: response.cacheControl,
-                expires: response.expires
+                expires: response.expires,
+                encoding: params.encoding
             };
         } catch (ex) {
             const bytes = new Uint8Array(response.data);
@@ -123,6 +125,7 @@ export class VectorTileWorkerSource implements WorkerSource {
                 const overzoomTile = this._getOverzoomTile(params, response.vectorTile);
                 response.rawData = overzoomTile.rawData;
                 response.vectorTile = overzoomTile.vectorTile;
+                response.encoding = overzoomTile.encoding;
             }
 
             const rawTileData = response.rawData;
@@ -148,7 +151,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             try {
                 const result = await parsePromise;
                 // Transferring a copy of rawTileData because the worker needs to retain its copy.
-                return extend({rawTileData: rawTileData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
+                return extend({rawTileData: rawTileData.slice(0), encoding: response.encoding}, result, cacheControl, resourceTiming);
             } finally {
                 delete this.fetching[tileUid];
             }

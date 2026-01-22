@@ -16,6 +16,8 @@ import {FeatureIndexArray} from './array_types.g';
 
 import {MLTVectorTile} from '../source/vector_tile_mlt';
 import {Bounds} from '../geo/bounds';
+import {VectorTile} from '@mapbox/vector-tile';
+import {deserializeTile} from '../util/fast_tile_serializer';
 import type {OverscaledTileID} from '../tile/tile_id';
 import type {SourceFeatureState} from '../source/source_state';
 import type {mat4} from 'gl-matrix';
@@ -24,7 +26,6 @@ import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import {type VectorTileFeatureLike, type VectorTileLayerLike, GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
-import {VectorTile} from '@mapbox/vector-tile';
 
 export {GEOJSON_TILE_LAYER_NAME};
 
@@ -67,7 +68,7 @@ export class FeatureIndex {
     grid3D: TransferableGridIndex;
     featureIndexArray: FeatureIndexArray;
     promoteId?: PromoteIdSpecification;
-    encoding: string;
+    encoding: 'mlt' | 'mvt' | 'harel';
     rawTileData: ArrayBuffer;
     bucketLayerIDs: Array<Array<string>>;
 
@@ -114,9 +115,17 @@ export class FeatureIndex {
 
     loadVTLayers(): {[_: string]: VectorTileLayerLike} {
         if (!this.vtLayers) {
-            this.vtLayers = this.encoding !== 'mlt' 
-                ? new VectorTile(new Protobuf(this.rawTileData)).layers
-                : new MLTVectorTile(this.rawTileData).layers;
+            switch (this.encoding) {
+                case 'mlt':
+                    this.vtLayers = new MLTVectorTile(this.rawTileData).layers;
+                    break;
+                case 'harel':
+                    this.vtLayers = deserializeTile(new Uint8Array(this.rawTileData)).layers;
+                    break;
+                case 'mvt':
+                default:
+                    this.vtLayers = new VectorTile(new Protobuf(this.rawTileData)).layers;
+            }
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : [GEOJSON_TILE_LAYER_NAME]);
         }
         return this.vtLayers;
@@ -266,6 +275,7 @@ export class FeatureIndex {
             }
 
             const geojsonFeature = new GeoJSONFeature(feature, this.z, this.x, this.y, id) as MapGeoJSONFeature;
+            console.log('matching feature: ', feature.loadGeometry(), feature.type);
             geojsonFeature.layer = serializedLayer;
             let layerResult = result[layerID];
             if (layerResult === undefined) {

@@ -106,7 +106,8 @@ describe('vector tile worker source', () => {
                         }
                     }
                 },
-                rawData: rawTileData
+                rawData: rawTileData,
+                encoding: 'mvt'
             };
         };
 
@@ -166,7 +167,8 @@ describe('vector tile worker source', () => {
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
-                rawData: rawTileData
+                rawData: rawTileData,
+                encoding: 'mvt'
             };
         };
 
@@ -294,7 +296,8 @@ describe('vector tile worker source', () => {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
-                expires: null
+                expires: null,
+                encoding: 'mvt'
             };
         };
 
@@ -350,7 +353,8 @@ describe('vector tile worker source', () => {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
-                expires: null
+                expires: null,
+                encoding: 'mvt'
             };
         };
 

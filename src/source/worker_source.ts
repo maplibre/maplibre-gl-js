@@ -40,7 +40,7 @@ export type WorkerTileParameters = TileParameters & {
     collectResourceTiming?: boolean;
     returnDependencies?: boolean;
     subdivisionGranularity: SubdivisionGranularitySetting;
-    encoding?: string;
+    encoding?: 'mlt' | 'mvt' | 'harel';
     /**
      * Provide this property when the requested tile has a higher canonical Z than source maxzoom.
      * This allows the worker to know that it needs to overzoom from a source tile.
@@ -79,7 +79,7 @@ export type WorkerTileResult = ExpiryData & {
     featureIndex: FeatureIndex;
     collisionBoxArray: CollisionBoxArray;
     rawTileData?: ArrayBuffer;
-    encoding?: string;
+    encoding?: 'mlt' | 'mvt' | 'harel';
     resourceTiming?: Array<PerformanceResourceTiming>;
     // Only used for benchmarking:
     glyphMap?: {
