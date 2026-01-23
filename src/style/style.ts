@@ -936,7 +936,7 @@ export class Style extends Evented {
                     operations.push(() => this.setSprite.apply(this, op.args));
                     break;
                 case 'setTerrain':
-                    operations.push(() => this.map.setTerrain.apply(this, op.args));
+                    operations.push(() => this.map.setTerrain.apply(this.map, op.args));
                     break;
                 case 'setSky':
                     operations.push(() => this.setSky.apply(this, op.args));
