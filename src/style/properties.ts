@@ -467,6 +467,9 @@ export class DataConstantProperty<T> implements Property<T, T> {
     }
 
     interpolate(a: T, b: T, t: number): T {
+        if (Array.isArray(a) && Array.isArray(b) && a.length !== b.length) {
+            return t < 0.5 ? a : b;
+        }
         const interpolationType = this.specification.type as keyof typeof interpolates;
         const interpolationFn = interpolates[interpolationType] as ((from: T, to: T, t: number) => T) | undefined;
         if (interpolationFn) {
