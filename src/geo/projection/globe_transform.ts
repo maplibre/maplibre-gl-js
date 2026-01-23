@@ -218,14 +218,14 @@ export class GlobeTransform implements ITransform {
     get constrainOverride(): TransformConstrainFunction {
         return this._helper.constrainOverride;
     }
-    public get nearZ(): number { 
-        return this._helper.nearZ; 
+    public get nearZ(): number {
+        return this._helper.nearZ;
     }
-    public get farZ(): number { 
-        return this._helper.farZ; 
+    public get farZ(): number {
+        return this._helper.farZ;
     }
-    public get autoCalculateNearFarZ(): boolean { 
-        return this._helper.autoCalculateNearFarZ; 
+    public get autoCalculateNearFarZ(): boolean {
+        return this._helper.autoCalculateNearFarZ;
     }
     //
     // Implementation of globe transform
@@ -349,7 +349,7 @@ export class GlobeTransform implements ITransform {
         // For this reason we first update vertical perspective and then sync our Z values to its result.
         // Now if globe rendering, we always want to force mercator transform to adapt our Z values.
         // If not, it will either compute its own (autoCalculateNearFarZ=false) or adapt our (autoCalculateNearFarZ=true).
-        // In either case we want to (again) sync our Z values, this time with
+        // In either case we want to (again) sync our Z values, this time with the result of mercator calc matrices.
         this._mercatorTransform.apply(this, true, this.isGlobeRendering);
         this._helper._nearZ = this._mercatorTransform.nearZ;
         this._helper._farZ = this._mercatorTransform.farZ;

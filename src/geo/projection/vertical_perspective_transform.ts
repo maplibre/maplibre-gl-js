@@ -225,14 +225,14 @@ export class VerticalPerspectiveTransform implements ITransform {
     get constrainOverride(): TransformConstrainFunction {
         return this._helper.constrainOverride;
     }
-    public get nearZ(): number { 
-        return this._helper.nearZ; 
+    public get nearZ(): number {
+        return this._helper.nearZ;
     }
-    public get farZ(): number { 
-        return this._helper.farZ; 
+    public get farZ(): number {
+        return this._helper.farZ;
     }
-    public get autoCalculateNearFarZ(): boolean { 
-        return this._helper.autoCalculateNearFarZ; 
+    public get autoCalculateNearFarZ(): boolean {
+        return this._helper.autoCalculateNearFarZ;
     }
     setTransitionState(_value: number): void {
         // Do nothing
@@ -656,6 +656,11 @@ export class VerticalPerspectiveTransform implements ITransform {
         };
     };
 
+    /**
+     * Constrains a latitude value to the valid range.
+     * @param lat - The latitude to constrain.
+     * @param range - The optional [min, max] latitude range.
+     */
     private _constrainLat(lat: number, range: [number, number]): number {
         if (!range) {
             return clamp(lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
@@ -665,6 +670,11 @@ export class VerticalPerspectiveTransform implements ITransform {
         return clamp(lat, minLat, maxLat);
     }
 
+    /**
+     * Constrains a longitude value to the valid range, handling antimeridian crossing.
+     * @param lng - The longitude to constrain.
+     * @param range - The optional [west, east] longitude range.
+     */
     private _constrainLng(lng: number, range: [number, number]): number {
         if (!range) {
             return lng;
@@ -691,6 +701,13 @@ export class VerticalPerspectiveTransform implements ITransform {
         return d1 < d2 ? range[0] : range[1];
     }
 
+    /**
+     * Constrains the zoom level based on the bounds and map dimensions.
+     * @param zoom - The target zoom level.
+     * @param lat - The target latitude.
+     * @param lngRange - The longitude range of the bounds.
+     * @param latRange - The latitude range of the bounds.
+     */
     private _constrainZoom(zoom: number, lat: number, lngRange: [number, number], latRange: [number, number]): number {
         let minZoomForBounds = this.minZoom;
         let applyDefaultAdjustment = true;
@@ -699,9 +716,11 @@ export class VerticalPerspectiveTransform implements ITransform {
             const lngSpan = lngRange[0] > lngRange[1] ?
                 360 - (lngRange[0] - lngRange[1]) :
                 lngRange[1] - lngRange[0];
-            
+
             if (lngSpan > 0) {
+                // 512 is the tile size at zoom 0. width * 360 / (512 * lngSpan) roughly gives the scale factor to fit the span.
                 const calculatedMinZoom = Math.log2((this.width * 360) / (512 * lngSpan));
+                // Adjust for latitude if we are fitting a longitude span
                 minZoomForBounds = Math.max(minZoomForBounds, calculatedMinZoom + getZoomAdjustment(lat, 0));
                 applyDefaultAdjustment = false;
             }
@@ -710,15 +729,18 @@ export class VerticalPerspectiveTransform implements ITransform {
         if (latRange && this.height > 0) {
             const latSpan = latRange[1] - latRange[0];
             if (latSpan > 0) {
+                // Fit the latitude span into the height
                 const calculatedMinZoomY = Math.log2((this.height * MAX_VALID_LATITUDE * 2) / (512 * latSpan));
                 minZoomForBounds = Math.max(minZoomForBounds, calculatedMinZoomY);
             }
         }
-        
+
+        // If we didn't calculate a specific longitude-based zoom, apply the default latitude-based adjustment
+        // to ensure the camera doesn't get too close/far based on projection distortion.
         if (applyDefaultAdjustment) {
             minZoomForBounds += getZoomAdjustment(0, lat);
         }
-        
+
         return clamp(+zoom, minZoomForBounds, this.maxZoom);
     }
 
