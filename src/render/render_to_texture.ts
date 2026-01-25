@@ -63,11 +63,16 @@ export class RenderToTexture {
      * a list of all layer-ids which should be rendered
      */
     _renderableLayerIds: Array<string>;
+    /**
+     * map of source-id to source-revision
+     */
+    _sourceRevisions: Record<string, number>;
 
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
         this.pool = new RenderPool(painter.context, 30, terrain.tileManager.tileSize * terrain.qualityFactor);
+        this._sourceRevisions = {};
     }
 
     destruct() {
@@ -96,6 +101,17 @@ export class RenderToTexture {
                 for (const key in keys) {
                     if (!this._coordsAscending[id][key]) this._coordsAscending[id][key] = [];
                     this._coordsAscending[id][key].push(keys[key]);
+                }
+            }
+            
+            // check for feature-state updates
+            const sourceFeatureState = style.tileManagers[id].getState();
+            if (this._sourceRevisions[id] !== sourceFeatureState.revision) {
+                this._sourceRevisions[id] = sourceFeatureState.revision;
+                for (const tile of this._renderableTiles) {
+                     if (this._coordsAscending[id][tile.tileID.key]) {
+                        tile.rtt = [];
+                     }
                 }
             }
         }
