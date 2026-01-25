@@ -228,7 +228,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * @returns a promise which is resolved with the source's actual GeoJSON
      */
     async getData(): Promise<GeoJSON.GeoJSON> {
-        //TO DO: move getData and use data located in the worker thread
+        //TO DO: move getData and use data located in the main thread
         return this._pendingData;
     }
 
