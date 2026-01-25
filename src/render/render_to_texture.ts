@@ -110,9 +110,9 @@ export class RenderToTexture {
                 this._sourceRevisions[id] = sourceFeatureState.revision;
                 for (const tile of this._renderableTiles) {
                     // if tile has logic for this source, clear cache
-                     if (this._coordsAscending[id][tile.tileID.key]) {
+                    if (this._coordsAscending[id][tile.tileID.key]) {
                         tile.rtt = [];
-                     }
+                    }
                 }
             }
         }

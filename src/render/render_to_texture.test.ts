@@ -1,4 +1,4 @@
-import {describe, test, expect, vi, Mock} from 'vitest';
+import {describe, test, expect, vi, type Mock} from 'vitest';
 import {RenderToTexture} from './render_to_texture';
 import type {Painter} from './painter';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
