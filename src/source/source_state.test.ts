@@ -13,11 +13,9 @@ describe('SourceFeatureState', () => {
         } as unknown as InViewTiles;
         const painterMock = {};
 
-        // 1. No changes, revision should remain 0
         sourceState.coalesceChanges(inViewTilesMock, painterMock);
         expect(sourceState.revision).toBe(0);
 
-        // 2. Add a change, revision should increase
         sourceState.updateState('layer1', 'feature1', {prop: true});
         sourceState.coalesceChanges(inViewTilesMock, painterMock);
         expect(sourceState.revision).toBe(1);
