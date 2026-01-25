@@ -1,4 +1,4 @@
-import {describe, test, expect, vi} from 'vitest';
+import {describe, test, expect, vi, Mock} from 'vitest';
 import {RenderToTexture} from './render_to_texture';
 import type {Painter} from './painter';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
@@ -83,7 +83,13 @@ describe('render to texture', () => {
     } as TileManager;
 
     const style = {
-        tileManagers: {'maine': {getVisibleCoordinates: () => [tile.tileID], getSource: () => ({})}},
+        tileManagers: {
+            'maine': {
+                getVisibleCoordinates: () => [tile.tileID],
+                getSource: () => ({}),
+                getState: vi.fn().mockReturnValue({revision: 0})
+            }
+        },
         _order: ['maine-fill', 'maine-symbol'],
         _layers: {
             'maine-background': backgroundLayer,
@@ -173,5 +179,19 @@ describe('render to texture', () => {
         expect(rtt.renderLayer(lineLayer, renderOptions)).toBeTruthy();
         expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
         expect(layersDrawn).toBe(3);
+    });
+
+    test('should clear tile cache on source state update', () => {
+        const state = {revision: 0};
+        (style.tileManagers['maine'].getState as Mock).mockReturnValue(state);
+
+        tile.rtt = [{id: 1, stamp: 123}];
+
+        rtt.prepareForRender(style, 0);
+        expect(tile.rtt.length).toBe(1);
+
+        state.revision = 1;
+        rtt.prepareForRender(style, 0);
+        expect(tile.rtt.length).toBe(0);
     });
 });
