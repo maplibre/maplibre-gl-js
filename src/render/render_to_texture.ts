@@ -109,6 +109,7 @@ export class RenderToTexture {
             if (this._sourceRevisions[id] !== sourceFeatureState.revision) {
                 this._sourceRevisions[id] = sourceFeatureState.revision;
                 for (const tile of this._renderableTiles) {
+                    // if tile has logic for this source, clear cache
                      if (this._coordsAscending[id][tile.tileID.key]) {
                         tile.rtt = [];
                      }
