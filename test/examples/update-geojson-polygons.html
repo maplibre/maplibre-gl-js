@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add a GeoJSON polygon</title>
+    <meta property="og:description" content="Style a polygon with the fill layer type." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [-68.13734351262877, 45.137451890638886],
+        zoom: 5,
+        experimentalUpdateableGeoJSONVT: true
+    });
+    map.showTileBoundaries = true;
+
+    const rectangles = [];
+    for (let i = 0; i < 5; i++) {
+        rectangles.push({
+            id: i,
+            x: -68.13 + (Math.random() - 0.5) * 5,
+            y: 45.13 + (Math.random() - 0.5) * 5,
+            vx: (Math.random() - 0.5) * 0.05,
+            vy: (Math.random() - 0.5) * 0.05,
+            w: 0.5 + Math.random(),
+            h: 0.5 + Math.random(),
+            rotation: Math.random() * 2 * Math.PI,
+            rotationSpeed: (Math.random() - 0.5) * 0.1,
+            color: '#008888',
+            every: Math.round(Math.random() * 100 + 200)
+        });
+    }
+
+    function getRandomColor() {
+        return '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+    }
+
+    function getRectangleGeometry(rect) {
+        const c = Math.cos(rect.rotation);
+        const s = Math.sin(rect.rotation);
+        const hw = rect.w / 2;
+        const hh = rect.h / 2;
+
+        // Define corners relative to center
+        const corners = [
+            [-hw, -hh],
+            [hw, -hh],
+            [hw, hh],
+            [-hw, hh]
+        ];
+
+        // Rotate and translate corners
+        const coordinates = corners.map(([dx, dy]) => {
+            return [
+                rect.x + (dx * c - dy * s),
+                rect.y + (dx * s + dy * c)
+            ];
+        });
+
+        // Close the ring
+        coordinates.push(coordinates[0]);
+
+        return {
+            type: 'Polygon',
+            coordinates: [coordinates]
+        };
+    }
+
+    map.on('load', () => {
+        const features = [];
+        rectangles.forEach(rect => {
+            // Feature for the rectangle shape
+            features.push({
+                'type': 'Feature',
+                'id': rect.id,
+                'properties': { 'color': rect.color },
+                'geometry': getRectangleGeometry(rect)
+            });
+            // Feature for the text label (stable center point)
+            features.push({
+                'type': 'Feature',
+                'id': `${rect.id}_label`,
+                'properties': {
+                    'label': `Zoom: ${Math.round(map.getZoom())}`
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [rect.x, rect.y]
+                }
+            });
+        });
+
+        map.addSource('rectangles', {
+            'type': 'geojson',
+            'data': {
+                'type': 'FeatureCollection',
+                'features': features
+            }
+        });
+
+        map.addLayer({
+            'id': 'rectangles',
+            'type': 'fill',
+            'source': 'rectangles',
+            'layout': {},
+            'paint': {
+                'fill-color': ['get', 'color'],
+                'fill-opacity': 0.8
+            },
+            'filter': ['==', '$type', 'Polygon'] // Only render the polygons
+        });
+
+        map.addLayer({
+            'id': 'rectangles-label',
+            'type': 'symbol',
+            'source': 'rectangles',
+            'layout': {
+                'text-field': ['get', 'label'],
+                'text-size': 14,
+                'text-allow-overlap': true,
+                'text-ignore-placement': true
+            },
+            'paint': {
+                'text-color': '#ffffff'
+            },
+            'filter': ['==', '$type', 'Point'] // Only render the label points
+        });
+
+        let count = 0;
+
+        function animate() {
+            const zoom = map.getZoom().toFixed(1);
+            const updates = [];
+            count++;
+
+            rectangles.forEach(rect => {
+                rect.x += rect.vx;
+                rect.y += rect.vy;
+                rect.rotation += rect.rotationSpeed;
+
+                if (rect.x < -75 || rect.x > -60) rect.vx *= -1;
+                if (rect.y < 40 || rect.y > 50) rect.vy *= -1;
+
+                // Change color every X frames
+                if (count % rect.every === 0) {
+                    rect.color = getRandomColor();
+                }
+
+                // Update the rectangle shape
+                updates.push({
+                    id: rect.id,
+                    newGeometry: getRectangleGeometry(rect),
+                    addOrUpdateProperties: [
+                        { key: 'color', value: rect.color }
+                    ]
+                });
+
+                // Update the label position and text
+                updates.push({
+                    id: `${rect.id}_label`,
+                    newGeometry: {
+                        'type': 'Point',
+                        'coordinates': [rect.x, rect.y]
+                    },
+                    addOrUpdateProperties: [
+                        { key: 'label', value: zoom }
+                    ]
+                });
+            });
+
+            const source = map.getSource('rectangles');
+            if (source) {
+                source.updateData({
+                    update: updates
+                });
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    });
+</script>
+</body>
+</html>

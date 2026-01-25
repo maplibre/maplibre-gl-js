@@ -1,5 +1,6 @@
 import {getJSON} from '../util/ajax';
 import {RequestPerformance} from '../util/performance';
+import {extend} from '../util/util';
 import rewind from '@mapbox/geojson-rewind';
 import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent';
@@ -29,6 +30,8 @@ export type GeoJSONWorkerOptions = {
     filter?: Array<unknown>;
     promoteId?: string;
     collectResourceTiming?: boolean;
+    // Experimental updateable geojsonvt option - see map.ts experimentalUpdateableGeoJSONVT
+    experimentalUpdateable?: boolean;
 };
 
 /**
@@ -114,6 +117,9 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * @returns a promise that resolves when the data is loaded and parsed into a GeoJSON object
      */
     async loadData(params: LoadGeoJSONParameters): Promise<GeoJSONWorkerSourceLoadDataResult> {
+        if (params.experimentalUpdateable) {
+            return this.experimentalLoadData(params);
+        }
         this._pendingRequest?.abort();
 
         const perf = this._startPerformance(params);
@@ -145,6 +151,62 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         }
     }
 
+    // Experimental updateable geojsonvt option - see map.ts experimentalUpdateableGeoJSONVT
+    async experimentalLoadData(params: LoadGeoJSONParameters): Promise<GeoJSONWorkerSourceLoadDataResult> {
+        this._pendingRequest?.abort();
+        this._pendingRequest = new AbortController();
+        const perf = this._startPerformance(params);
+
+        try {
+            const result = await this._experimentalLoadAndProcessGeoJSON(params, this._pendingRequest);
+            delete this._pendingRequest;
+            this.loaded = {};
+
+            this._finishPerformance(perf, params, result);
+            return result;
+        } catch (err) {
+            delete this._pendingRequest;
+            if (!isAbortError(err)) throw err;
+            return {abandoned: true};
+        }
+    }
+
+    /**
+     * Experimental updateable geojsonvt option - see map.ts experimentalUpdateableGeoJSONVT
+     * - Load and process the GeoJSON data into the GeoJSON index.
+     */
+    async _experimentalLoadAndProcessGeoJSON(params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSONWorkerSourceLoadDataResult> {
+        const workerResult: GeoJSONWorkerSourceLoadDataResult = {};
+
+        // Once experimentalUpdateableGeoJSONVT is removed maybe initialize this in constructor???
+        if (!this._geoJSONIndex) {
+            const emptyCollection = this._toFeatureCollection([]);
+            this._geoJSONIndex = this._createGeoJSONIndex(emptyCollection, params);
+        }
+
+        // Data is loaded from a fetchable URL - download it before processing data
+        if (params.request) {
+            const response = await getJSON<GeoJSON.GeoJSON>(params.request, abortController);
+            params.data = response.data;
+        }
+
+        // Create the GeoJSON index using the full `data` or update the index using a `dataDiff`
+        if (params.data) {
+            this._geoJSONIndex = this._createGeoJSONIndex(params.data, params);
+        }
+        else if (params.dataDiff) {
+            (this._geoJSONIndex as GeoJSONVT).updateData(params.dataDiff);
+        }
+
+        // Filter the GeoJSON index if the filter parameter was provided
+        if (params.filter) {
+            //TO DO: add filterData to geojsonvt - possible using a predicate (suggested by Harel)
+            // (this._geoJSONIndex as GeoJSONVT).filterData(params.filter);
+        }
+
+        return workerResult;
+    }
+
     _startPerformance(params: LoadGeoJSONParameters): RequestPerformance | undefined {
         if (!params?.request?.collectResourceTiming) return;
         return new RequestPerformance(params.request);
@@ -166,6 +228,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * @returns a promise which is resolved with the source's actual GeoJSON
      */
     async getData(): Promise<GeoJSON.GeoJSON> {
+        //TO DO: move getData and use data located in the worker thread
         return this._pendingData;
     }
 
@@ -309,6 +372,14 @@ export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONPar
     if (params.cluster) {
         return new Supercluster(getSuperclusterOptions(params)).load((data as any).features);
     }
+
+    // Experimental updateable geojsonvt option - see map.ts experimentalUpdateableGeoJSONVT
+    // to do: remove this once experimentalUpdateableGeoJSONVT is removed and set `updateable: true`
+    // in default geojsonVtOptions in geojson_source.ts about line 191
+    if (params.experimentalUpdateable) {
+        params.geojsonVtOptions = extend(params.geojsonVtOptions || {}, {updateable: true});
+    }
+
     return geojsonvt(data, params.geojsonVtOptions);
 }
 

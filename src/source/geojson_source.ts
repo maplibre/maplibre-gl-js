@@ -408,7 +408,9 @@ export class GeoJSONSource extends Evented implements Source {
      * Create the parameters object that will be sent to the worker and used to load GeoJSON.
      */
     private _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff): LoadGeoJSONParameters {
-        const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
+        // experimentalUpdateable property: when _experimentalUpdateableGeoJSONVT is removed, this property should be removed
+        // from here and `updateble: true` should be added to the geojsonVtOptions above (about line 191).
+        const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions, {experimentalUpdateable: this.map?._experimentalUpdateableGeoJSONVT});
 
         // Data comes from a remote url
         if (typeof data === 'string') {
