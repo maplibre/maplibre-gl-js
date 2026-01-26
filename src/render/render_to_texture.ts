@@ -40,7 +40,7 @@ export class RenderToTexture {
      * for a given render-to-texture tile. Used to detect changes and trigger re-rendering.
      * Format: "sorted_tile_keys#revision"
      */
-    _rttFingerprint: {[sourceId: string]: {[rttTileKey: string]: string}};
+    _rttFingerprints: {[sourceId: string]: {[rttTileKey: string]: string}};
     /**
      * store for render-stacks
      * a render stack is a set of layers which should be rendered into one texture
@@ -101,25 +101,25 @@ export class RenderToTexture {
             
         }
 
-        this._rttFingerprint = {};
+        this._rttFingerprints = {};
         for (const id of style._order) {
             const layer = style._layers[id], source = layer.source;
             if (LAYERS[layer.type]) {
-                if (!this._rttFingerprint[source]) {
-                    this._rttFingerprint[source] = {};
-                    const revision = style.tileManagers[source] ? style.tileManagers[source].getState().revision : 0;
+                if (!this._rttFingerprints[source]) {
+                    this._rttFingerprints[source] = {};
+                    const revision = style.tileManagers[source]?.getState().revision ?? 0;
                     for (const key in this._coordsAscending[source])
-                        this._rttFingerprint[source][key] = `${this._coordsAscending[source][key].map(c => c.key).sort().join()}#${revision}`;
+                        this._rttFingerprints[source][key] = `${this._coordsAscending[source][key].map(c => c.key).sort().join()}#${revision}`;
                 }
             }
         }
 
         // check tiles to render
         for (const tile of this._renderableTiles) {
-            for (const source in this._rttFingerprint) {
+            for (const source in this._rttFingerprints) {
                 // rerender if there are different coords to render than in the last rendering
                 // or if the source revision has changed
-                const fingerprint = this._rttFingerprint[source][tile.tileID.key];
+                const fingerprint = this._rttFingerprints[source][tile.tileID.key];
                 if (fingerprint && fingerprint !== tile.rttFingerprint[source]) tile.rtt = [];
             }
         }
@@ -190,7 +190,7 @@ export class RenderToTexture {
                     painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords, true);
                     painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
-                    if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprint[layer.source][tile.tileID.key];
+                    if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
                 }
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles, options);
