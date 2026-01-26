@@ -1364,7 +1364,6 @@ export class Style extends Evented {
             return;
         }
 
-
         let paintProperty: any;
         try {
             paintProperty = layer.getPaintProperty(name);
