@@ -109,7 +109,7 @@ export class RenderToTexture {
                     this._rttFingerprint[source] = {};
                     const revision = style.tileManagers[source] ? style.tileManagers[source].getState().revision : 0;
                     for (const key in this._coordsAscending[source])
-                        this._rttFingerprint[source][key] = this._coordsAscending[source][key].map(c => c.key).sort().join() + '#' + revision;
+                        this._rttFingerprint[source][key] = `${this._coordsAscending[source][key].map(c => c.key).sort().join()}#${revision}`;
                 }
             }
         }
