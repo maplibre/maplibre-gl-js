@@ -5,7 +5,6 @@
 - Add support for container elements from different windows (e.g., popup or iframe) ([#6969](https://github.com/maplibre/maplibre-gl-js/pull/6969)) (by [@Syncret](https://github.com/Syncret))
 - Clarified error message language so that if layout and paint properties are confused (eg. a paint property is set with setLayoutProperty or vice versa), the error in console will suggest switching to use the correct method.
 - Migrate to @maplibre/geojson-vt ([#6995](https://github.com/maplibre/maplibre-gl-js/pull/6995)) (by [@HarelM](https://github.com/HarelM))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix incorrect shader selection for text labels with inline images ([#6956](https://github.com/maplibre/maplibre-gl-js/pull/6956)) (by [@ciscorn](https://github.com/ciscorn))
