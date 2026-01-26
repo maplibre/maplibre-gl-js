@@ -151,17 +151,20 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         }
     }
 
-    // Experimental updateable geojsonvt option - see map.ts experimentalUpdateableGeoJSONVT
+    /**
+     * Experimental updateable geojsonvt option - see map.ts experimentalUpdateableGeoJSONVT
+     */
     async experimentalLoadData(params: LoadGeoJSONParameters): Promise<GeoJSONWorkerSourceLoadDataResult> {
         this._pendingRequest?.abort();
         this._pendingRequest = new AbortController();
         const perf = this._startPerformance(params);
 
         try {
-            const result = await this._experimentalLoadAndProcessGeoJSON(params, this._pendingRequest);
+            await this._experimentalLoadAndProcessGeoJSON(params, this._pendingRequest);
             delete this._pendingRequest;
             this.loaded = {};
 
+            const result: GeoJSONWorkerSourceLoadDataResult = {};
             this._finishPerformance(perf, params, result);
             return result;
         } catch (err) {
@@ -173,38 +176,33 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
     /**
      * Experimental updateable geojsonvt option - see map.ts experimentalUpdateableGeoJSONVT
-     * - Load and process the GeoJSON data into the GeoJSON index.
      */
-    async _experimentalLoadAndProcessGeoJSON(params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSONWorkerSourceLoadDataResult> {
-        const workerResult: GeoJSONWorkerSourceLoadDataResult = {};
-
-        // Once experimentalUpdateableGeoJSONVT is removed maybe initialize this in constructor???
-        if (!this._geoJSONIndex) {
-            const emptyCollection = this._toFeatureCollection([]);
-            this._geoJSONIndex = this._createGeoJSONIndex(emptyCollection, params);
-        }
-
+    async _experimentalLoadAndProcessGeoJSON(params: LoadGeoJSONParameters, abortController: AbortController) {
         // Data is loaded from a fetchable URL - download it before processing data
         if (params.request) {
             const response = await getJSON<GeoJSON.GeoJSON>(params.request, abortController);
             params.data = response.data;
         }
 
-        // Create the GeoJSON index using the full `data` or update the index using a `dataDiff`
+        // Create a new GeoJSON index using the full `data`
         if (params.data) {
             this._geoJSONIndex = this._createGeoJSONIndex(params.data, params);
+            this._experimentalFilterGeoJSONIndex(params);
+            return;
         }
-        else if (params.dataDiff) {
+
+        // Update the GeoJSON index using the `dataDiff` (or create a new index if none exists)
+        if (params.dataDiff) {
+            this._geoJSONIndex ??= this._createGeoJSONIndex(this._toFeatureCollection([]), params);
             (this._geoJSONIndex as GeoJSONVT).updateData(params.dataDiff);
+            this._experimentalFilterGeoJSONIndex(params);
         }
+    }
 
-        // Filter the GeoJSON index if the filter parameter was provided
-        if (params.filter) {
-            //TO DO: add filterData to geojsonvt - possible using a predicate (suggested by Harel)
-            // (this._geoJSONIndex as GeoJSONVT).filterData(params.filter);
-        }
-
-        return workerResult;
+    _experimentalFilterGeoJSONIndex(params: LoadGeoJSONParameters) {
+        if (!params.filter?.length) return;
+        //TO DO: add filterData to geojsonvt - possibly using a predicate (suggested by Harel)
+        // (this._geoJSONIndex as GeoJSONVT).filterData(params.filter);
     }
 
     _startPerformance(params: LoadGeoJSONParameters): RequestPerformance | undefined {
