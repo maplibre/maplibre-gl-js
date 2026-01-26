@@ -2335,10 +2335,9 @@ describe('TileManager.reload', () => {
 
     });
 
-    test('skips work if tile is loaded from cache hit', async () => {
+    test('skips appropriate work if tile is loaded from cache hit', async () => {
         const tileManager = createTileManager();
 
-        const spyTileLoaded = vi.spyOn(tileManager, '_tileLoaded');
         const spyFireEvent = vi.spyOn(tileManager._source, 'fire');
 
         const tileID = new OverscaledTileID(1, 0, 1, 0, 1);
@@ -2351,17 +2350,17 @@ describe('TileManager.reload', () => {
         };
         const tile = await tileManager._addTile(tileID);
 
-        expect(spyTileLoaded).toHaveBeenCalled();
         expect(spyFireEvent).toHaveBeenCalled();
 
         const spyReload = vi.spyOn(tileManager, 'reload');
         tileManager._source.loadTile = async () => {
+            tile.timeAdded = undefined;
             return true;
         };
         await tileManager.reload();
 
-        // Cache hit should trigger tile loaded
-        expect(spyTileLoaded).toHaveBeenLastCalledWith(tile, tile.tileID.key, 'reloading', true);
+        // Cache hit should trigger tile loaded to make updates to timing-related fields
+        expect(tile.timeAdded).toBeDefined();
 
         // Cache hit should not trigger an event
         expect(spyFireEvent).not.toHaveBeenCalledAfter(spyReload);
