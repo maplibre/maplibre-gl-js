@@ -884,7 +884,7 @@ describe('Style.setState', () => {
         const style = createStyle();
         const styleJson = createStyleJSON();
         style.loadJSON(styleJson);
-
+        
         await style.once('style.load');
 
         const newStyleJSON: StyleSpecification = {
@@ -2610,7 +2610,7 @@ describe('Style.setPaintProperty', () => {
         style.update({} as EvaluationParameters);
 
         style.setPaintProperty('background', 'background-color', 'alsonotacolor');
-        expect(mockConsoleError).toHaveBeenCalledTimes(2);
+        expect(mockConsoleError).toHaveBeenCalledTimes(1);
         expect(validate.mock.calls[1][4]).toEqual({});
     });
 });

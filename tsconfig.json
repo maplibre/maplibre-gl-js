@@ -1,55 +1,55 @@
 {
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "checkJs": true,
+    "isolatedModules": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "importHelpers": false,
+    "jsx": "react",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "skipLibCheck": false,
+    "strict": false,
+    "target": "ES2016",
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "geojson",
+      "offscreencanvas"
+    ]
+  },
+  "ts-node": {
+    "experimentalSpecifierResolution": "node",
+    "esm": true,
     "compilerOptions": {
-      "forceConsistentCasingInFileNames": true,
-      "allowJs": true,
-      "allowSyntheticDefaultImports": true,
-      "checkJs": true,
-      "isolatedModules": false,
-      "noEmit": true,
-      "esModuleInterop": true,
-      "importHelpers": false,
-      "jsx": "react",
-      "module": "ESNext",
-      "moduleResolution": "Bundler",
-      "resolveJsonModule": true,
-      "skipLibCheck": false,
-      "strict": false,
-      "target": "ES2016",
-      "lib": [
-        "ESNext",
-        "DOM",
-        "DOM.Iterable"
-      ],
+      "target": "es2019",
       "types": [
-        "geojson",
-        "offscreencanvas"
+        "node"
       ]
     },
-    "ts-node": {
-      "experimentalSpecifierResolution": "node",
-      "esm": true,
-      "compilerOptions": {
-        "target": "es2019",
-        "types": [
-          "node"
-        ]
-      },
-      "logError": true,
-      "pretty": true
-    },
-    "include": [
-      "rollup.config.*",
-      "src/**/*",
-      "test/bench/**/*",
-      "test/integration/**/*"
-    ],
-    "exclude": [
-      "node_modules",
-      "dist",
-      "build/rollup",
-      "test/bench/rollup",
-      "test/bench/run-benchmarks.ts",
-      "test/bench/gl-stats.ts"  ,
-      "test/bench/**/*generated*"
-    ]
-  }
+    "logError": true,
+    "pretty": true
+  },
+  "include": [
+    "rollup.config.*",
+    "src/**/*",
+    "test/bench/**/*",
+    "test/integration/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build/rollup",
+    "test/bench/rollup",
+    "test/bench/run-benchmarks.ts",
+    "test/bench/gl-stats.ts"  ,
+    "test/bench/**/*generated*"
+  ]
+}
