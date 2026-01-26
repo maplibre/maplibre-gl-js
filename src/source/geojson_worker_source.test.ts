@@ -53,8 +53,12 @@ describe('reloadTile', () => {
         let data = await source.reloadTile(tileParams as any as WorkerTileParameters);
         expect('rawTileData' in data).toBeFalsy();
         expect(data.type).toBe('processed');
-        (data as WorkerTileProcessedResult).rawTileData = (firstData as WorkerTileProcessedResult).rawTileData;
-        expect(data).toEqual(firstData);
+
+        const processedData = data as WorkerTileProcessedResult;
+        const firstProcessedData = firstData as WorkerTileProcessedResult;
+
+        processedData.rawTileData = firstProcessedData.rawTileData;
+        expect(processedData).toEqual(firstProcessedData);
 
         // also shouldn't call loadVectorData again
         expect(spy).toHaveBeenCalledTimes(1);
@@ -103,11 +107,12 @@ describe('reloadTile', () => {
         // load vector data from geojson, passing through the tile serialization step
         const data = await source.reloadTile(tileParams as any as WorkerTileParameters);
         expect(data.type).toBe('processed');
-        expect((data as WorkerTileProcessedResult).featureIndex).toBeDefined();
+        const processedData = data as WorkerTileProcessedResult;
+        expect(processedData.featureIndex).toBeDefined();
 
         // deserialize tile layers in the feature index
-        (data as WorkerTileProcessedResult).featureIndex.rawTileData = (data as WorkerTileProcessedResult).rawTileData;
-        const featureLayers = (data as WorkerTileProcessedResult).featureIndex.loadVTLayers();
+        processedData.featureIndex.rawTileData = processedData.rawTileData;
+        const featureLayers = processedData.featureIndex.loadVTLayers();
         expect(Object.keys(featureLayers)).toHaveLength(1);
 
         // validate supported features are present in the index

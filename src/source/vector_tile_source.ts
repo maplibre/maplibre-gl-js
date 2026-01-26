@@ -229,7 +229,7 @@ export class VectorTileSource extends Evented implements Source {
             delete tile.abortController;
 
             if (tile.aborted) {
-                return;
+                return false;
             }
             this._afterTileLoadWorkerResponse(tile, data);
 
@@ -238,7 +238,7 @@ export class VectorTileSource extends Evented implements Source {
             delete tile.abortController;
 
             if (tile.aborted) {
-                return;
+                return false;
             }
             if (err && err.status !== 404) {
                 throw err;

@@ -144,12 +144,6 @@ export class VectorTileWorkerSource implements WorkerSource {
                 return null;
             }
 
-            if (overzoomParameters && response.type === 'full') {
-                const overzoomTile = this._getOverzoomTile(params, response.vectorTile);
-                response.rawData = overzoomTile.rawData;
-                response.vectorTile = overzoomTile.vectorTile;
-            }
-
             const cacheControl = {} as ExpiryData;
             if (response.expires) cacheControl.expires = response.expires;
             if (response.cacheControl) cacheControl.cacheControl = response.cacheControl;
@@ -168,6 +162,12 @@ export class VectorTileWorkerSource implements WorkerSource {
                 this.loaded[tileUid] = workerTile;
                 const result: WorkerTileResult = extend({type: 'unchanged' as const}, cacheControl, resourceTiming);
                 return result;
+            }
+
+            if (overzoomParameters) {
+                const overzoomTile = this._getOverzoomTile(params, response.vectorTile);
+                response.rawData = overzoomTile.rawData;
+                response.vectorTile = overzoomTile.vectorTile;
             }
 
             const rawTileData = response.rawData;
