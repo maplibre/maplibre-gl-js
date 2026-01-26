@@ -36,10 +36,11 @@ export class RenderToTexture {
      */
     _coordsAscending: {[_: string]: {[_:string]: Array<OverscaledTileID>}};
     /**
-     * create a string representation of all to tiles rendered to render-to-texture tiles
-     * this string representation is used to check if tile should be re-rendered.
+     * fingerprint string representing the unique state of source tiles and revision
+     * for a given render-to-texture tile. Used to detect changes and trigger re-rendering.
+     * Format: "sorted_tile_keys#revision"
      */
-    _coordsAscendingStr: {[_: string]: {[_:string]: string}};
+    _rttFingerprint: {[sourceId: string]: {[rttTileKey: string]: string}};
     /**
      * store for render-stacks
      * a render stack is a set of layers which should be rendered into one texture
@@ -63,16 +64,10 @@ export class RenderToTexture {
      * a list of all layer-ids which should be rendered
      */
     _renderableLayerIds: Array<string>;
-    /**
-     * map of source-id to source-revision
-     */
-    _sourceRevisions: Record<string, number>;
-
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
         this.pool = new RenderPool(painter.context, 30, terrain.tileManager.tileSize * terrain.qualityFactor);
-        this._sourceRevisions = {};
     }
 
     destruct() {
@@ -104,37 +99,28 @@ export class RenderToTexture {
                 }
             }
             
-            // check for feature-state updates
-            const sourceFeatureState = style.tileManagers[id].getState();
-            if (this._sourceRevisions[id] !== sourceFeatureState.revision) {
-                this._sourceRevisions[id] = sourceFeatureState.revision;
-                for (const tile of this._renderableTiles) {
-                    // if tile has logic for this source, clear cache
-                    if (this._coordsAscending[id][tile.tileID.key]) {
-                        tile.rtt = [];
-                    }
-                }
-            }
         }
 
-        this._coordsAscendingStr = {};
+        this._rttFingerprint = {};
         for (const id of style._order) {
             const layer = style._layers[id], source = layer.source;
             if (LAYERS[layer.type]) {
-                if (!this._coordsAscendingStr[source]) {
-                    this._coordsAscendingStr[source] = {};
+                if (!this._rttFingerprint[source]) {
+                    this._rttFingerprint[source] = {};
+                    const revision = style.tileManagers[source] ? style.tileManagers[source].getState().revision : 0;
                     for (const key in this._coordsAscending[source])
-                        this._coordsAscendingStr[source][key] = this._coordsAscending[source][key].map(c => c.key).sort().join();
+                        this._rttFingerprint[source][key] = this._coordsAscending[source][key].map(c => c.key).sort().join() + '#' + revision;
                 }
             }
         }
 
         // check tiles to render
         for (const tile of this._renderableTiles) {
-            for (const source in this._coordsAscendingStr) {
-                // rerender if there are more coords to render than in the last rendering
-                const coords = this._coordsAscendingStr[source][tile.tileID.key];
-                if (coords && coords !== tile.rttCoords[source]) tile.rtt = [];
+            for (const source in this._rttFingerprint) {
+                // rerender if there are different coords to render than in the last rendering
+                // or if the source revision has changed
+                const fingerprint = this._rttFingerprint[source][tile.tileID.key];
+                if (fingerprint && fingerprint !== tile.rttFingerprint[source]) tile.rtt = [];
             }
         }
     }
@@ -204,7 +190,7 @@ export class RenderToTexture {
                     painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords, true);
                     painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
-                    if (layer.source) tile.rttCoords[layer.source] = this._coordsAscendingStr[layer.source][tile.tileID.key];
+                    if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprint[layer.source][tile.tileID.key];
                 }
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles, options);

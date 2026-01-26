@@ -136,7 +136,7 @@ describe('render to texture', () => {
                 ]
             }
         });
-        expect(rtt._coordsAscendingStr).toStrictEqual({maine: {'923': '923'}});
+        expect(rtt._rttFingerprint).toStrictEqual({maine: {'923': '923#0'}});
     });
 
     test('should render text after a line by not adding the text to the stack', () => {
