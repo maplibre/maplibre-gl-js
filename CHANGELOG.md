@@ -1,15 +1,23 @@
 ## main
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 5.17.0
+
+### ✨ Features and improvements
+
 - Refactor _updateWorkerData ([#6983](https://github.com/maplibre/maplibre-gl-js/pull/6983)) (by [@wayofthefuture](https://github.com/wayofthefuture))
 - ⚠️ Add `zoomSnap` option to `Map` to allow snapping zoom levels to a grid when zooming in and out; aligns the behavior across all UI patterns (keyboard, scroll wheel, on-screen zoom buttons, double-click, double-tap). Previously, pressing +/- on the keyboard zoomed to rounded whole integers, more or less than 1 zoom level when starting from a fractional zoom. Now any number can be specified for `zoomSnap`; a value of 1.0 produces the rounded whole integer behavior across all UI patterns. ([#6941](https://github.com/maplibre/maplibre-gl-js/pull/6941)) (by [@mizmay](https://github.com/mizmay))
 - Add support for container elements from different windows (e.g., popup or iframe) ([#6969](https://github.com/maplibre/maplibre-gl-js/pull/6969)) (by [@Syncret](https://github.com/Syncret))
 - Migrate to @maplibre/geojson-vt ([#6995](https://github.com/maplibre/maplibre-gl-js/pull/6995)) (by [@HarelM](https://github.com/HarelM))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
 - Fix incorrect shader selection for text labels with inline images ([#6956](https://github.com/maplibre/maplibre-gl-js/pull/6956)) (by [@ciscorn](https://github.com/ciscorn))
 - Fix marker positions not updating when zoom or pitch are changed following a change in constraints ([#6925](https://github.com/maplibre/maplibre-gl-js/issues/6925)) (by [auspicus](https://github.com/auspicus))
-- _...Add new stuff here..._
 
 ## 5.16.0
 
