@@ -245,6 +245,7 @@ export class VectorTileSource extends Evented implements Source {
             }
             this._afterTileLoadWorkerResponse(tile, null);
         }
+        return false;
     }
 
     /**

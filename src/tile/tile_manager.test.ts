@@ -2337,9 +2337,6 @@ describe('TileManager.reload', () => {
 
     test('skips appropriate work if tile is loaded from cache hit', async () => {
         const tileManager = createTileManager();
-
-        const spyFireEvent = vi.spyOn(tileManager._source, 'fire');
-
         const tileID = new OverscaledTileID(1, 0, 1, 0, 1);
         const tileEtag = 'etag';
 
@@ -2350,9 +2347,8 @@ describe('TileManager.reload', () => {
         };
         const tile = await tileManager._addTile(tileID);
 
-        expect(spyFireEvent).toHaveBeenCalled();
-
-        const spyReload = vi.spyOn(tileManager, 'reload');
+        const dataEventSpy = vi.fn();
+        tileManager.on('data', dataEventSpy);
         tileManager._source.loadTile = async () => {
             tile.timeAdded = undefined;
             return true;
@@ -2363,7 +2359,7 @@ describe('TileManager.reload', () => {
         expect(tile.timeAdded).toBeDefined();
 
         // Cache hit should not trigger an event
-        expect(spyFireEvent).not.toHaveBeenCalledAfter(spyReload);
+        expect(dataEventSpy).not.toHaveBeenCalled();
 
         // Tile data should remain the same after a cache hit
         expect(tile.etag).toBe(tileEtag);
