@@ -5,7 +5,7 @@ import {OverscaledTileID} from '../tile/tile_id';
 import perf from '../util/performance';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type Actor} from '../util/actor';
-import {type WorkerTileParameters} from './worker_source';
+import {type WorkerTileProcessedResult, type WorkerTileParameters} from './worker_source';
 import {setPerformance, sleep} from '../util/test/util';
 import {type FakeServer, fakeServer} from 'nise';
 import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
@@ -46,13 +46,19 @@ describe('reloadTile', () => {
 
         // first call should load vector data from geojson
         const firstData = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        expect(firstData.type).toBe('processed');
         expect(spy).toHaveBeenCalledTimes(1);
 
         // second call won't give us new rawTileData
         let data = await source.reloadTile(tileParams as any as WorkerTileParameters);
         expect('rawTileData' in data).toBeFalsy();
-        data.rawTileData = firstData.rawTileData;
-        expect(data).toEqual(firstData);
+        expect(data.type).toBe('processed');
+
+        const processedData = data as WorkerTileProcessedResult;
+        const firstProcessedData = firstData as WorkerTileProcessedResult;
+
+        processedData.rawTileData = firstProcessedData.rawTileData;
+        expect(processedData).toEqual(firstProcessedData);
 
         // also shouldn't call loadVectorData again
         expect(spy).toHaveBeenCalledTimes(1);
@@ -100,11 +106,13 @@ describe('reloadTile', () => {
 
         // load vector data from geojson, passing through the tile serialization step
         const data = await source.reloadTile(tileParams as any as WorkerTileParameters);
-        expect(data.featureIndex).toBeDefined();
+        expect(data.type).toBe('processed');
+        const processedData = data as WorkerTileProcessedResult;
+        expect(processedData.featureIndex).toBeDefined();
 
         // deserialize tile layers in the feature index
-        data.featureIndex.rawTileData = data.rawTileData;
-        const featureLayers = data.featureIndex.loadVTLayers();
+        processedData.featureIndex.rawTileData = processedData.rawTileData;
+        const featureLayers = processedData.featureIndex.loadVTLayers();
         expect(Object.keys(featureLayers)).toHaveLength(1);
 
         // validate supported features are present in the index

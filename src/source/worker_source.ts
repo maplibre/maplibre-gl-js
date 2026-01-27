@@ -46,6 +46,7 @@ export type WorkerTileParameters = TileParameters & {
      * This allows the worker to know that it needs to overzoom from a source tile.
      */
     overzoomParameters?: OverzoomParameters;
+    etag?: string;
 };
 
 /**
@@ -69,9 +70,14 @@ export type WorkerDEMTileParameters = TileParameters & {
 };
 
 /**
- * The worker tile's result type
+ * The worker tile's result when the tile has not changed since it was last requested, and instead was loaded from browser cache. This indicates that further processing and repainting is not necessary.
  */
-export type WorkerTileResult = ExpiryData & {
+type WorkerTileUnchangedResult = ExpiryData & { resourceTiming?: Array<PerformanceResourceTiming>} & { type: 'unchanged' };
+/**
+ * The worker tile's result when the tile has changed since it was last requested, and further processing and repainting are necessary.
+ */
+export type WorkerTileProcessedResult = ExpiryData & { resourceTiming?: Array<PerformanceResourceTiming>} & {
+    type: 'processed';
     buckets: Array<Bucket>;
     imageAtlas: ImageAtlas;
     dashPositions: Record<string, DashEntry>;
@@ -80,7 +86,6 @@ export type WorkerTileResult = ExpiryData & {
     collisionBoxArray: CollisionBoxArray;
     rawTileData?: ArrayBuffer;
     encoding?: string;
-    resourceTiming?: Array<PerformanceResourceTiming>;
     // Only used for benchmarking:
     glyphMap?: {
         [_: string]: {
@@ -92,6 +97,11 @@ export type WorkerTileResult = ExpiryData & {
     } | null;
     glyphPositions?: GlyphPositions | null;
 };
+
+/**
+ * The worker tile's result type. Unchanged if tile was loaded from browser cache, processed if there is fresh data in the tile.
+ */
+export type WorkerTileResult = WorkerTileUnchangedResult | WorkerTileProcessedResult;
 
 /**
  * This is how the @see {@link WorkerSource} constructor should look like.
