@@ -1,11 +1,17 @@
-import {clone, extend, easeCubicInOut} from '../util/util';
-import {interpolates, type Color, type StylePropertySpecification, normalizePropertyExpression,
+import {clone, extend, easeCubicInOut, warnOnce} from '../util/util';
+import {
+    interpolates,
+    type Color,
+    type StylePropertySpecification,
+    normalizePropertyExpression,
     type Feature,
     type FeatureState,
     type StylePropertyExpression,
     type SourceExpression,
-    type CompositeExpression, type TransitionSpecification,
-    type PropertyValueSpecification} from '@maplibre/maplibre-gl-style-spec';
+    type CompositeExpression,
+    type TransitionSpecification,
+    type PropertyValueSpecification,
+} from '@maplibre/maplibre-gl-style-spec';
 import {register} from '../util/web_worker_transfer';
 import {EvaluationParameters} from './evaluation_parameters';
 
@@ -46,7 +52,7 @@ export interface Property<T, R> {
         value: PropertyValue<T, R>,
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: Array<string>,
     ): R;
     interpolate(a: R, b: R, t: number): R;
 }
@@ -74,14 +80,25 @@ export class PropertyValue<T, R> {
     value: PropertyValueSpecification<T> | void;
     expression: StylePropertyExpression;
 
-    constructor(property: Property<T, R>, value: PropertyValueSpecification<T> | void, globalState: Record<string, any>) {
+    constructor(
+        property: Property<T, R>,
+        value: PropertyValueSpecification<T> | void,
+        globalState: Record<string, any>,
+    ) {
         this.property = property;
         this.value = value;
-        this.expression = normalizePropertyExpression(value === undefined ? property.specification.default : value, property.specification, globalState);
+        this.expression = normalizePropertyExpression(
+            value === undefined ? property.specification.default : value,
+            property.specification,
+            globalState,
+        );
     }
 
     isDataDriven(): boolean {
-        return this.expression.kind === 'source' || this.expression.kind === 'composite';
+        return (
+            this.expression.kind === 'source' ||
+            this.expression.kind === 'composite'
+        );
     }
 
     getGlobalStateRefs(): Set<string> {
@@ -91,9 +108,14 @@ export class PropertyValue<T, R> {
     possiblyEvaluate(
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: Array<string>,
     ): R {
-        return this.property.possiblyEvaluate(this, parameters, canonical, availableImages);
+        return this.property.possiblyEvaluate(
+            this,
+            parameters,
+            canonical,
+            availableImages,
+        );
     }
 }
 
@@ -123,13 +145,27 @@ class TransitionablePropertyValue<T, R> {
         this.value = new PropertyValue(property, undefined, globalState);
     }
 
-    transitioned(parameters: TransitionParameters, prior: TransitioningPropertyValue<T, R>): TransitioningPropertyValue<T, R> {
-        return new TransitioningPropertyValue(this.property, this.value, prior,
-            extend({}, parameters.transition, this.transition), parameters.now);
+    transitioned(
+        parameters: TransitionParameters,
+        prior: TransitioningPropertyValue<T, R>,
+    ): TransitioningPropertyValue<T, R> {
+        return new TransitioningPropertyValue(
+            this.property,
+            this.value,
+            prior,
+            extend({}, parameters.transition, this.transition),
+            parameters.now,
+        );
     }
 
     untransitioned(): TransitioningPropertyValue<T, R> {
-        return new TransitioningPropertyValue(this.property, this.value, null, {}, 0);
+        return new TransitioningPropertyValue(
+            this.property,
+            this.value,
+            null,
+            {},
+            0,
+        );
     }
 }
 
@@ -141,35 +177,60 @@ class TransitionablePropertyValue<T, R> {
  */
 export class Transitionable<Props> {
     _properties: Properties<Props>;
-    _values: {[K in keyof Props]: TransitionablePropertyValue<any, unknown>};
+    _values: { [K in keyof Props]: TransitionablePropertyValue<any, unknown> };
     private _globalState: Record<string, any>;
 
-    constructor(properties: Properties<Props>, globalState: Record<string, any>) {
+    constructor(
+        properties: Properties<Props>,
+        globalState: Record<string, any>,
+    ) {
         this._properties = properties;
-        this._values = (Object.create(properties.defaultTransitionablePropertyValues) as any);
+        this._values = Object.create(
+            properties.defaultTransitionablePropertyValues,
+        ) as any;
         this._globalState = globalState;
     }
 
-    getValue<S extends keyof Props, T>(name: S): PropertyValueSpecification<T> | void {
+    getValue<S extends keyof Props, T>(
+        name: S,
+    ): PropertyValueSpecification<T> | void {
         return clone(this._values[name].value.value);
     }
 
-    setValue<S extends keyof Props, T>(name: S, value: PropertyValueSpecification<T> | void) {
+    setValue<S extends keyof Props, T>(
+        name: S,
+        value: PropertyValueSpecification<T> | void,
+    ) {
         if (!Object.prototype.hasOwnProperty.call(this._values, name)) {
-            this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._globalState);
+            this._values[name] = new TransitionablePropertyValue(
+                this._values[name].property,
+                this._globalState,
+            );
         }
         // Note that we do not _remove_ an own property in the case where a value is being reset
         // to the default: the transition might still be non-default.
-        this._values[name].value = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value), this._globalState);
+        this._values[name].value = new PropertyValue(
+            this._values[name].property,
+            value === null ? undefined : clone(value),
+            this._globalState,
+        );
     }
 
-    getTransition<S extends keyof Props>(name: S): TransitionSpecification | void {
+    getTransition<S extends keyof Props>(
+        name: S,
+    ): TransitionSpecification | void {
         return clone(this._values[name].transition);
     }
 
-    setTransition<S extends keyof Props>(name: S, value: TransitionSpecification | void) {
+    setTransition<S extends keyof Props>(
+        name: S,
+        value: TransitionSpecification | void,
+    ) {
         if (!Object.prototype.hasOwnProperty.call(this._values, name)) {
-            this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._globalState);
+            this._values[name] = new TransitionablePropertyValue(
+                this._values[name].property,
+                this._globalState,
+            );
         }
         this._values[name].transition = clone(value) || undefined;
     }
@@ -190,10 +251,16 @@ export class Transitionable<Props> {
         return result;
     }
 
-    transitioned(parameters: TransitionParameters, prior: Transitioning<Props>): Transitioning<Props> {
+    transitioned(
+        parameters: TransitionParameters,
+        prior: Transitioning<Props>,
+    ): Transitioning<Props> {
         const result = new Transitioning(this._properties);
         for (const property of Object.keys(this._values)) {
-            result._values[property] = this._values[property].transitioned(parameters, prior._values[property]);
+            result._values[property] = this._values[property].transitioned(
+                parameters,
+                prior._values[property],
+            );
         }
         return result;
     }
@@ -222,16 +289,21 @@ class TransitioningPropertyValue<T, R> {
     begin: TimePoint;
     end: TimePoint;
 
-    constructor(property: Property<T, R>,
+    constructor(
+        property: Property<T, R>,
         value: PropertyValue<T, R>,
         prior: TransitioningPropertyValue<T, R>,
         transition: TransitionSpecification,
-        now: TimePoint) {
+        now: TimePoint,
+    ) {
         this.property = property;
         this.value = value;
         this.begin = now + transition.delay || 0;
         this.end = this.begin + transition.duration || 0;
-        if (property.specification.transition && (transition.delay || transition.duration)) {
+        if (
+            property.specification.transition &&
+            (transition.delay || transition.duration)
+        ) {
             this.prior = prior;
         }
     }
@@ -239,10 +311,14 @@ class TransitioningPropertyValue<T, R> {
     possiblyEvaluate(
         parameters: EvaluationParameters,
         canonical: CanonicalTileID,
-        availableImages: Array<string>
+        availableImages: Array<string>,
     ): R {
         const now = parameters.now || 0;
-        const finalValue = this.value.possiblyEvaluate(parameters, canonical, availableImages);
+        const finalValue = this.value.possiblyEvaluate(
+            parameters,
+            canonical,
+            availableImages,
+        );
         const prior = this.prior;
         if (!prior) {
             // No prior value.
@@ -259,11 +335,19 @@ class TransitioningPropertyValue<T, R> {
             return finalValue;
         } else if (now < this.begin) {
             // Transition hasn't started yet.
-            return prior.possiblyEvaluate(parameters, canonical, availableImages);
+            return prior.possiblyEvaluate(
+                parameters,
+                canonical,
+                availableImages,
+            );
         } else {
             // Interpolate between recursively-calculated prior value and final.
             const t = (now - this.begin) / (this.end - this.begin);
-            return this.property.interpolate(prior.possiblyEvaluate(parameters, canonical, availableImages), finalValue, easeCubicInOut(t));
+            return this.property.interpolate(
+                prior.possiblyEvaluate(parameters, canonical, availableImages),
+                finalValue,
+                easeCubicInOut(t),
+            );
         }
     }
 }
@@ -276,21 +360,27 @@ class TransitioningPropertyValue<T, R> {
  */
 export class Transitioning<Props> {
     _properties: Properties<Props>;
-    _values: {[K in keyof Props]: PossiblyEvaluatedPropertyValue<unknown>};
+    _values: { [K in keyof Props]: PossiblyEvaluatedPropertyValue<unknown> };
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
-        this._values = (Object.create(properties.defaultTransitioningPropertyValues) as any);
+        this._values = Object.create(
+            properties.defaultTransitioningPropertyValues,
+        ) as any;
     }
 
     possiblyEvaluate(
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: Array<string>,
     ): PossiblyEvaluated<Props, any> {
         const result = new PossiblyEvaluated(this._properties);
         for (const property of Object.keys(this._values)) {
-            result._values[property] = this._values[property].possiblyEvaluate(parameters, canonical, availableImages);
+            result._values[property] = this._values[property].possiblyEvaluate(
+                parameters,
+                canonical,
+                availableImages,
+            );
         }
         return result;
     }
@@ -318,12 +408,20 @@ export class Transitioning<Props> {
  */
 export class Layout<Props> {
     _properties: Properties<Props>;
-    _values: {[K in keyof Props]: PropertyValue<any, PossiblyEvaluatedPropertyValue<any>>};
+    _values: {
+        [K in keyof Props]: PropertyValue<
+            any,
+            PossiblyEvaluatedPropertyValue<any>
+        >;
+    };
     private _globalState: Record<string, any>; // reference to global state
 
-    constructor(properties: Properties<Props>, globalState: Record<string, any>) {
+    constructor(
+        properties: Properties<Props>,
+        globalState: Record<string, any>,
+    ) {
         this._properties = properties;
-        this._values = (Object.create(properties.defaultPropertyValues) as any);
+        this._values = Object.create(properties.defaultPropertyValues) as any;
         this._globalState = globalState;
     }
 
@@ -336,7 +434,11 @@ export class Layout<Props> {
     }
 
     setValue<S extends keyof Props>(name: S, value: any) {
-        this._values[name] = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value), this._globalState) as any;
+        this._values[name] = new PropertyValue(
+            this._values[name].property,
+            value === null ? undefined : clone(value),
+            this._globalState,
+        ) as any;
     }
 
     serialize() {
@@ -353,11 +455,15 @@ export class Layout<Props> {
     possiblyEvaluate(
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: Array<string>,
     ): PossiblyEvaluated<Props, any> {
         const result = new PossiblyEvaluated(this._properties);
         for (const property of Object.keys(this._values)) {
-            result._values[property] = this._values[property].possiblyEvaluate(parameters, canonical, availableImages);
+            result._values[property] = this._values[property].possiblyEvaluate(
+                parameters,
+                canonical,
+                availableImages,
+            );
         }
         return result;
     }
@@ -384,10 +490,13 @@ export class Layout<Props> {
  * do not allow data-driven values. For such properties, we know that the "possibly evaluated" result is always a constant
  * scalar value. See below.
  */
-type PossiblyEvaluatedValue<T> = {
-    kind: 'constant';
-    value: T;
-} | SourceExpression | CompositeExpression;
+type PossiblyEvaluatedValue<T> =
+    | {
+        kind: 'constant';
+        value: T;
+    }
+    | SourceExpression
+    | CompositeExpression;
 
 /**
  * @internal
@@ -401,7 +510,11 @@ export class PossiblyEvaluatedPropertyValue<T> {
     value: PossiblyEvaluatedValue<T>;
     parameters: EvaluationParameters;
 
-    constructor(property: DataDrivenProperty<T>, value: PossiblyEvaluatedValue<T>, parameters: EvaluationParameters) {
+    constructor(
+        property: DataDrivenProperty<T>,
+        value: PossiblyEvaluatedValue<T>,
+        parameters: EvaluationParameters,
+    ) {
         this.property = property;
         this.value = value;
         this.parameters = parameters;
@@ -423,9 +536,16 @@ export class PossiblyEvaluatedPropertyValue<T> {
         feature: Feature,
         featureState: FeatureState,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: Array<string>,
     ): T {
-        return this.property.evaluate(this.value, this.parameters, feature, featureState, canonical, availableImages);
+        return this.property.evaluate(
+            this.value,
+            this.parameters,
+            feature,
+            featureState,
+            canonical,
+            availableImages,
+        );
     }
 }
 
@@ -443,7 +563,9 @@ export class PossiblyEvaluated<Props, PossibleEvaluatedProps> {
         this._values = Object.create(properties.defaultPossiblyEvaluatedValues);
     }
 
-    get<S extends keyof PossibleEvaluatedProps>(name: S): PossibleEvaluatedProps[S] {
+    get<S extends keyof PossibleEvaluatedProps>(
+        name: S,
+    ): PossibleEvaluatedProps[S] {
         return this._values[name];
     }
 }
@@ -461,17 +583,41 @@ export class DataConstantProperty<T> implements Property<T, T> {
         this.specification = specification;
     }
 
-    possiblyEvaluate(value: PropertyValue<T, T>, parameters: EvaluationParameters): T {
-        if (value.isDataDriven()) throw new Error('Value should not be data driven');
+    possiblyEvaluate(
+        value: PropertyValue<T, T>,
+        parameters: EvaluationParameters,
+    ): T {
+        if (value.isDataDriven())
+            throw new Error('Value should not be data driven');
         return value.expression.evaluate(parameters);
     }
 
     interpolate(a: T, b: T, t: number): T {
-        const interpolationType = this.specification.type as keyof typeof interpolates;
-        const interpolationFn = interpolates[interpolationType] as ((from: T, to: T, t: number) => T) | undefined;
+        const interpolationType = this.specification
+            .type as keyof typeof interpolates;
+        const interpolationFn = interpolates[interpolationType] as
+            | ((from: T, to: T, t: number) => T)
+            | undefined;
         if (interpolationFn) {
             if (Array.isArray(a) && Array.isArray(b) && a.length !== b.length) {
-                return a;
+                warnOnce(
+                    `Array interpolation requires arrays of the same length. Arrays have different lengths: ${a.length} vs ${b.length}.`,
+                );
+                const len = Math.min(a.length, b.length);
+                const result = [];
+                const itemType = (this.specification as any).value || 'number';
+                const itemInterpolationFn = interpolates[itemType] as
+                    | ((from: any, to: any, t: number) => any)
+                    | undefined;
+
+                for (let i = 0; i < len; i++) {
+                    if (itemInterpolationFn) {
+                        result.push(itemInterpolationFn(a[i], b[i], t));
+                    } else {
+                        result.push(a[i]);
+                    }
+                }
+                return result as any as T;
             }
             return interpolationFn(a, b, t);
         } else {
@@ -486,7 +632,10 @@ export class DataConstantProperty<T> implements Property<T, T> {
  * The result of possibly evaluating this kind of property is `PossiblyEvaluatedPropertyValue<T>`; obtaining
  * a scalar value `T` requires further evaluation on a per-feature basis.
  */
-export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPropertyValue<T>> {
+export class DataDrivenProperty<T> implements Property<
+    T,
+    PossiblyEvaluatedPropertyValue<T>
+> {
     specification: StylePropertySpecification;
     overrides: any;
 
@@ -499,19 +648,39 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
         value: PropertyValue<T, PossiblyEvaluatedPropertyValue<T>>,
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: Array<string>,
     ): PossiblyEvaluatedPropertyValue<T> {
-        if (value.expression.kind === 'constant' || value.expression.kind === 'camera') {
-            return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: value.expression.evaluate(parameters, null, {}, canonical, availableImages)}, parameters);
+        if (
+            value.expression.kind === 'constant' ||
+            value.expression.kind === 'camera'
+        ) {
+            return new PossiblyEvaluatedPropertyValue(
+                this,
+                {
+                    kind: 'constant',
+                    value: value.expression.evaluate(
+                        parameters,
+                        null,
+                        {},
+                        canonical,
+                        availableImages,
+                    ),
+                },
+                parameters,
+            );
         } else {
-            return new PossiblyEvaluatedPropertyValue(this, value.expression, parameters);
+            return new PossiblyEvaluatedPropertyValue(
+                this,
+                value.expression,
+                parameters,
+            );
         }
     }
 
     interpolate(
         a: PossiblyEvaluatedPropertyValue<T>,
         b: PossiblyEvaluatedPropertyValue<T>,
-        t: number
+        t: number,
     ): PossiblyEvaluatedPropertyValue<T> {
         // If either possibly-evaluated value is non-constant, give up: we aren't able to interpolate data-driven values.
         if (a.value.kind !== 'constant' || b.value.kind !== 'constant') {
@@ -526,17 +695,66 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
         // `Properties.defaultPossiblyEvaluatedValues`, which serves as the prototype of
         // `PossiblyEvaluated._values`.
         if (a.value.value === undefined || b.value.value === undefined) {
-            return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, a.parameters);
+            return new PossiblyEvaluatedPropertyValue(
+                this,
+                {kind: 'constant', value: undefined},
+                a.parameters,
+            );
         }
 
-        const interpolationType = this.specification.type as keyof typeof interpolates;
-        const interpolationFn = interpolates[interpolationType] as ((from: T, to: T, t: number) => T) | undefined;
+        const interpolationType = this.specification
+            .type as keyof typeof interpolates;
+        const interpolationFn = interpolates[interpolationType] as
+            | ((from: T, to: T, t: number) => T)
+            | undefined;
         if (interpolationFn) {
-            if (Array.isArray(a.value.value) && Array.isArray(b.value.value) && a.value.value.length !== b.value.value.length) {
-                return a;
+            if (
+                Array.isArray(a.value.value) &&
+                Array.isArray(b.value.value) &&
+                a.value.value.length !== b.value.value.length
+            ) {
+                warnOnce(
+                    `Array interpolation requires arrays of the same length. Arrays have different lengths: ${a.value.value.length} vs ${b.value.value.length}.`,
+                );
+                const len = Math.min(
+                    a.value.value.length,
+                    b.value.value.length,
+                );
+                const result = [];
+                const itemType = (this.specification as any).value || 'number';
+                const itemInterpolationFn = interpolates[itemType] as
+                    | ((from: any, to: any, t: number) => any)
+                    | undefined;
+
+                for (let i = 0; i < len; i++) {
+                    if (itemInterpolationFn) {
+                        result.push(
+                            itemInterpolationFn(
+                                a.value.value[i],
+                                b.value.value[i],
+                                t,
+                            ),
+                        );
+                    } else {
+                        result.push(a.value.value[i]);
+                    }
+                }
+                return new PossiblyEvaluatedPropertyValue(
+                    this,
+                    {kind: 'constant', value: result as any as T},
+                    a.parameters,
+                );
             }
-            const interpolatedValue = interpolationFn(a.value.value, b.value.value, t);
-            return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: interpolatedValue}, a.parameters);
+            const interpolatedValue = interpolationFn(
+                a.value.value,
+                b.value.value,
+                t,
+            );
+            return new PossiblyEvaluatedPropertyValue(
+                this,
+                {kind: 'constant', value: interpolatedValue},
+                a.parameters,
+            );
         } else {
             return a;
         }
@@ -548,12 +766,18 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
         feature: Feature,
         featureState: FeatureState,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: Array<string>,
     ): T {
         if (value.kind === 'constant') {
             return value.value;
         } else {
-            return value.evaluate(parameters, feature, featureState, canonical, availableImages);
+            return value.evaluate(
+                parameters,
+                feature,
+                featureState,
+                canonical,
+                availableImages,
+            );
         }
     }
 }
@@ -564,32 +788,68 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
  * rather than interpolation.
  */
 
-export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFaded<T>> {
-
+export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<
+    CrossFaded<T>
+> {
     possiblyEvaluate(
-        value: PropertyValue<CrossFaded<T>, PossiblyEvaluatedPropertyValue<CrossFaded<T>>>,
+        value: PropertyValue<
+            CrossFaded<T>,
+            PossiblyEvaluatedPropertyValue<CrossFaded<T>>
+        >,
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: Array<string>,
     ): PossiblyEvaluatedPropertyValue<CrossFaded<T>> {
         if (value.value === undefined) {
-            return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, parameters);
+            return new PossiblyEvaluatedPropertyValue(
+                this,
+                {kind: 'constant', value: undefined},
+                parameters,
+            );
         } else if (value.expression.kind === 'constant') {
-            const evaluatedValue = value.expression.evaluate(parameters, null, {}, canonical, availableImages);
-            const isImageExpression = value.property.specification.type as any === 'resolvedImage';
-            const constantValue = isImageExpression && typeof evaluatedValue !== 'string' ? evaluatedValue.name : evaluatedValue;
-            const constant = this._calculate(constantValue, constantValue, constantValue, parameters);
-            return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: constant}, parameters);
+            const evaluatedValue = value.expression.evaluate(
+                parameters,
+                null,
+                {},
+                canonical,
+                availableImages,
+            );
+            const isImageExpression =
+                (value.property.specification.type as any) === 'resolvedImage';
+            const constantValue =
+                isImageExpression && typeof evaluatedValue !== 'string'
+                    ? evaluatedValue.name
+                    : evaluatedValue;
+            const constant = this._calculate(
+                constantValue,
+                constantValue,
+                constantValue,
+                parameters,
+            );
+            return new PossiblyEvaluatedPropertyValue(
+                this,
+                {kind: 'constant', value: constant},
+                parameters,
+            );
         } else if (value.expression.kind === 'camera') {
             const cameraVal = this._calculate(
                 value.expression.evaluate({zoom: parameters.zoom - 1.0}),
                 value.expression.evaluate({zoom: parameters.zoom}),
                 value.expression.evaluate({zoom: parameters.zoom + 1.0}),
-                parameters);
-            return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: cameraVal}, parameters);
+                parameters,
+            );
+            return new PossiblyEvaluatedPropertyValue(
+                this,
+                {kind: 'constant', value: cameraVal},
+                parameters,
+            );
         } else {
             // source or composite expression
-            return new PossiblyEvaluatedPropertyValue(this, value.expression, parameters);
+            return new PossiblyEvaluatedPropertyValue(
+                this,
+                value.expression,
+                parameters,
+            );
         }
     }
 
@@ -599,28 +859,56 @@ export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFad
         feature: Feature,
         featureState: FeatureState,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: Array<string>,
     ): CrossFaded<T> {
         if (value.kind === 'source') {
-            const constant = value.evaluate(globals, feature, featureState, canonical, availableImages);
+            const constant = value.evaluate(
+                globals,
+                feature,
+                featureState,
+                canonical,
+                availableImages,
+            );
             return this._calculate(constant, constant, constant, globals);
         } else if (value.kind === 'composite') {
             return this._calculate(
-                value.evaluate({zoom: Math.floor(globals.zoom) - 1.0}, feature, featureState),
-                value.evaluate({zoom: Math.floor(globals.zoom)}, feature, featureState),
-                value.evaluate({zoom: Math.floor(globals.zoom) + 1.0}, feature, featureState),
-                globals);
+                value.evaluate(
+                    {zoom: Math.floor(globals.zoom) - 1.0},
+                    feature,
+                    featureState,
+                ),
+                value.evaluate(
+                    {zoom: Math.floor(globals.zoom)},
+                    feature,
+                    featureState,
+                ),
+                value.evaluate(
+                    {zoom: Math.floor(globals.zoom) + 1.0},
+                    feature,
+                    featureState,
+                ),
+                globals,
+            );
         } else {
             return value.value;
         }
     }
 
-    _calculate(min: T, mid: T, max: T, parameters: EvaluationParameters): CrossFaded<T> {
+    _calculate(
+        min: T,
+        mid: T,
+        max: T,
+        parameters: EvaluationParameters,
+    ): CrossFaded<T> {
         const z = parameters.zoom;
-        return z > parameters.zoomHistory.lastIntegerZoom ? {from: min, to: mid} : {from: max, to: mid};
+        return z > parameters.zoomHistory.lastIntegerZoom
+            ? {from: min, to: mid}
+            : {from: max, to: mid};
     }
 
-    interpolate(a: PossiblyEvaluatedPropertyValue<CrossFaded<T>>): PossiblyEvaluatedPropertyValue<CrossFaded<T>> {
+    interpolate(
+        a: PossiblyEvaluatedPropertyValue<CrossFaded<T>>,
+    ): PossiblyEvaluatedPropertyValue<CrossFaded<T>> {
         return a;
     }
 }
@@ -640,25 +928,54 @@ export class CrossFadedProperty<T> implements Property<T, CrossFaded<T>> {
         value: PropertyValue<T, CrossFaded<T>>,
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: Array<string>,
     ): CrossFaded<T> {
         if (value.value === undefined) {
             return undefined;
         } else if (value.expression.kind === 'constant') {
-            const constant = value.expression.evaluate(parameters, null, {}, canonical, availableImages);
+            const constant = value.expression.evaluate(
+                parameters,
+                null,
+                {},
+                canonical,
+                availableImages,
+            );
             return this._calculate(constant, constant, constant, parameters);
         } else {
             return this._calculate(
-                value.expression.evaluate(new EvaluationParameters(Math.floor(parameters.zoom - 1.0), parameters)),
-                value.expression.evaluate(new EvaluationParameters(Math.floor(parameters.zoom), parameters)),
-                value.expression.evaluate(new EvaluationParameters(Math.floor(parameters.zoom + 1.0), parameters)),
-                parameters);
+                value.expression.evaluate(
+                    new EvaluationParameters(
+                        Math.floor(parameters.zoom - 1.0),
+                        parameters,
+                    ),
+                ),
+                value.expression.evaluate(
+                    new EvaluationParameters(
+                        Math.floor(parameters.zoom),
+                        parameters,
+                    ),
+                ),
+                value.expression.evaluate(
+                    new EvaluationParameters(
+                        Math.floor(parameters.zoom + 1.0),
+                        parameters,
+                    ),
+                ),
+                parameters,
+            );
         }
     }
 
-    _calculate(min: T, mid: T, max: T, parameters: EvaluationParameters): CrossFaded<T> {
+    _calculate(
+        min: T,
+        mid: T,
+        max: T,
+        parameters: EvaluationParameters,
+    ): CrossFaded<T> {
         const z = parameters.zoom;
-        return z > parameters.zoomHistory.lastIntegerZoom ? {from: min, to: mid} : {from: max, to: mid};
+        return z > parameters.zoomHistory.lastIntegerZoom
+            ? {from: min, to: mid}
+            : {from: max, to: mid};
     }
 
     interpolate(a?: CrossFaded<T> | null): CrossFaded<T> {
@@ -684,12 +1001,20 @@ export class ColorRampProperty implements Property<Color, boolean> {
         value: PropertyValue<Color, boolean>,
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: Array<string>,
     ): boolean {
-        return !!value.expression.evaluate(parameters, null, {}, canonical, availableImages);
+        return !!value.expression.evaluate(
+            parameters,
+            null,
+            {},
+            canonical,
+            availableImages,
+        );
     }
 
-    interpolate(): boolean { return false; }
+    interpolate(): boolean {
+        return false;
+    }
 }
 
 /**
@@ -704,29 +1029,36 @@ export class ColorRampProperty implements Property<Color, boolean> {
  */
 export class Properties<Props> {
     properties: Props;
-    defaultPropertyValues: {[K in keyof Props]: PropertyValue<unknown, any>};
-    defaultTransitionablePropertyValues: {[K in keyof Props]: TransitionablePropertyValue<unknown, unknown>};
-    defaultTransitioningPropertyValues: {[K in keyof Props]: TransitioningPropertyValue<unknown, unknown>};
-    defaultPossiblyEvaluatedValues: {[K in keyof Props]: PossiblyEvaluatedPropertyValue<unknown>};
+    defaultPropertyValues: { [K in keyof Props]: PropertyValue<unknown, any> };
+    defaultTransitionablePropertyValues: {
+        [K in keyof Props]: TransitionablePropertyValue<unknown, unknown>;
+    };
+    defaultTransitioningPropertyValues: {
+        [K in keyof Props]: TransitioningPropertyValue<unknown, unknown>;
+    };
+    defaultPossiblyEvaluatedValues: {
+        [K in keyof Props]: PossiblyEvaluatedPropertyValue<unknown>;
+    };
     overridableProperties: Array<string>;
 
     constructor(properties: Props) {
         this.properties = properties;
-        this.defaultPropertyValues = ({} as any);
-        this.defaultTransitionablePropertyValues = ({} as any);
-        this.defaultTransitioningPropertyValues = ({} as any);
-        this.defaultPossiblyEvaluatedValues = ({} as any);
-        this.overridableProperties = ([] as any);
+        this.defaultPropertyValues = {} as any;
+        this.defaultTransitionablePropertyValues = {} as any;
+        this.defaultTransitioningPropertyValues = {} as any;
+        this.defaultPossiblyEvaluatedValues = {} as any;
+        this.overridableProperties = [] as any;
 
         for (const property in properties) {
             const prop = properties[property] as any;
             if (prop.specification.overridable) {
                 this.overridableProperties.push(property);
             }
-            const defaultPropertyValue = this.defaultPropertyValues[property] =
-                new PropertyValue(prop, undefined, undefined);
-            const defaultTransitionablePropertyValue = this.defaultTransitionablePropertyValues[property] =
-                new TransitionablePropertyValue(prop, undefined);
+            const defaultPropertyValue = (this.defaultPropertyValues[property] =
+                new PropertyValue(prop, undefined, undefined));
+            const defaultTransitionablePropertyValue =
+                (this.defaultTransitionablePropertyValues[property] =
+                    new TransitionablePropertyValue(prop, undefined));
             this.defaultTransitioningPropertyValues[property] =
                 defaultTransitionablePropertyValue.untransitioned();
             this.defaultPossiblyEvaluatedValues[property] =
