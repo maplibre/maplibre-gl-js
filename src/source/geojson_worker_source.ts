@@ -289,7 +289,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         }
 
         if (params.updateCluster) {
-            // (this._geoJSONIndex as GeoJSONVT).updateClusterOptions(getSuperclusterOptions(params));
+            (this._geoJSONIndex as GeoJSONVT).updateClusterOptions(params.cluster, getSuperclusterOptions(params));
         }
     }
 
