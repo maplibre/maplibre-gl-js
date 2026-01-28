@@ -13,7 +13,7 @@ import {ImageSource} from '../source/image_source';
 /**
  * lookup table which layers should rendered to texture
  */
-const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
+const LAYERS_TO_TEXTURES: { [keyof in StyleLayer['type']]?: boolean } = {
     background: true,
     fill: true,
     line: true,
@@ -103,14 +103,15 @@ export class RenderToTexture {
 
         this._rttFingerprints = {};
         for (const id of style._order) {
-            const layer = style._layers[id], source = layer.source;
-            if (LAYERS[layer.type]) {
-                if (!this._rttFingerprints[source]) {
-                    this._rttFingerprints[source] = {};
-                    const revision = style.tileManagers[source]?.getState().revision ?? 0;
-                    for (const key in this._coordsAscending[source])
-                        this._rttFingerprints[source][key] = `${this._coordsAscending[source][key].map(c => c.key).sort().join()}#${revision}`;
-                }
+            const layer = style._layers[id];
+            const source = layer.source;
+            const shouldRenderToTexture = LAYERS_TO_TEXTURES[layer.type];
+
+            if (shouldRenderToTexture && !this._rttFingerprints[source]) {
+                this._rttFingerprints[source] = {};
+                const revision = style.tileManagers[source]?.getState().revision ?? 0;
+                for (const key in this._coordsAscending[source])
+                    this._rttFingerprints[source][key] = `${this._coordsAscending[source][key].map(c => c.key).sort().join()}#${revision}`;
             }
         }
 
@@ -145,9 +146,9 @@ export class RenderToTexture {
         const isLastLayer = this._renderableLayerIds[this._renderableLayerIds.length - 1] === layer.id;
 
         // remember background, fill, line & raster layer to render into a stack
-        if (LAYERS[type]) {
+        if (LAYERS_TO_TEXTURES[type]) {
             // create a new stack if previous layer was not rendered to texture (f.e. symbols)
-            if (!this._prevType || !LAYERS[this._prevType]) this._stacks.push([]);
+            if (!this._prevType || !LAYERS_TO_TEXTURES[this._prevType]) this._stacks.push([]);
             // push current render-to-texture layer to render-stack
             this._prevType = type;
             this._stacks[this._stacks.length - 1].push(layer.id);
@@ -156,7 +157,7 @@ export class RenderToTexture {
         }
 
         // in case a stack is finished render all collected stack-layers into a texture
-        if (LAYERS[this._prevType] || (LAYERS[type] && isLastLayer)) {
+        if (LAYERS_TO_TEXTURES[this._prevType] || (LAYERS_TO_TEXTURES[type] && isLastLayer)) {
             this._prevType = type;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
             for (const tile of this._renderableTiles) {
@@ -197,7 +198,7 @@ export class RenderToTexture {
             this._rttTiles = [];
             this.pool.freeAllObjects();
 
-            return LAYERS[type];
+            return LAYERS_TO_TEXTURES[type];
         }
 
         return false;
