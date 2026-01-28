@@ -186,6 +186,19 @@ describe('StyleLayer.setPaintProperty', () => {
         expect(layer.getPaintProperty('background-color-transition')).toBeUndefined();
     });
 
+    test('error prompts user to try setPaintProperty instead of setLayoutProperty', async() => {
+        const layer = createStyleLayer({
+            'id': 'symbol',
+            'type': 'symbol',
+            'layout': {
+                'text-transform': 'uppercase'
+            }
+        } as LayerSpecification, {});
+
+        const errorPromise = layer.once('error');
+        layer.setPaintProperty('visibility', 'visible');
+        await expect(errorPromise).resolves.toBeDefined();
+    });
 });
 
 describe('StyleLayer.setLayoutProperty', () => {
@@ -240,6 +253,19 @@ describe('StyleLayer.setLayoutProperty', () => {
 
         expect(layer.layout.get('text-transform').value).toEqual({kind: 'constant', value: 'none'});
         expect(layer.getLayoutProperty('text-transform')).toBeUndefined();
+    });
+    test('error prompts user to try setPaintProperty instead of setLayoutProperty', async() => {
+        const layer = createStyleLayer({
+            'id': 'symbol',
+            'type': 'symbol',
+            'paint': {
+                'text-color': 'blue'
+            }
+        } as LayerSpecification, {});
+
+        const errorPromise = layer.once('error');
+        layer.setLayoutProperty('text-color', 'blue');
+        await expect(errorPromise).resolves.toBeDefined();
     });
 });
 
