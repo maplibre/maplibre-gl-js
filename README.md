@@ -78,7 +78,7 @@ If you depend on a free software alternative to `mapbox-gl-js`, please consider 
 
 We offer Bounties for some tasks in the MapLibre GL JS repo. Read more about the Bounties in our step-by-step guide:
 
-https://maplibre.org/roadmap/step-by-step-bounties-guide/
+https://maplibre.org/jobs/step-by-step-bounties-guide/
 
 And find all currently published Bounties in MapLibre GL JS [here](https://github.com/maplibre/maplibre-gl-js/issues?q=is%3Aissue+is%3Aopen+label%3A%22%F0%9F%92%B0+bounty+L%22%2C%22%F0%9F%92%B0+bounty+S%22%2C%22%F0%9F%92%B0+bounty+M%22%2C%22%F0%9F%92%B0+bounty+XL%22%2C%22%F0%9F%92%B0+bounty+XXL%22+).
 
