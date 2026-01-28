@@ -123,6 +123,8 @@ export type MarkerOptions = {
  * **Event** `drag` of type {@link Event} will be fired while dragging.
  *
  * **Event** `dragend` of type {@link Event} will be fired when the marker is finished being dragged.
+ *
+ * **Event** `click` of type {@link Event} will be fired when the marker is clicked.
  */
 export class Marker extends Evented {
     _map: Map;
@@ -291,6 +293,7 @@ export class Marker extends Evented {
             // prevent focusing on click
             e.preventDefault();
         });
+        this._element.addEventListener('click', this._onClick);
         applyAnchorClass(this._element, this._anchor, 'marker');
 
         if (options && options.className) {
@@ -492,6 +495,10 @@ export class Marker extends Evented {
         this._subpixelPositioning = value;
         return this;
     }
+
+    _onClick = (e: MouseEvent) => {
+        this.fire(new Event('click', {originalEvent: e}));
+    };
 
     _onKeyPress = (e: KeyboardEvent) => {
         const code = e.code;
