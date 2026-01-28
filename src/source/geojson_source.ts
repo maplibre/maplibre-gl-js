@@ -142,7 +142,11 @@ export class GeoJSONSource extends Evented implements Source {
     map: Map;
     actor: Actor;
     _isUpdatingWorker: boolean;
-    _pendingWorkerUpdate: { data?: GeoJSON.GeoJSON | string; diff?: GeoJSONSourceDiff; optionsChanged?: boolean };
+    _pendingWorkerUpdate: {
+        data?: GeoJSON.GeoJSON | string;
+        diff?: GeoJSONSourceDiff;
+        updateCluster?: boolean;
+    };
     _collectResourceTiming: boolean;
     _removed: boolean;
 
@@ -216,7 +220,7 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     private _hasPendingWorkerUpdate(): boolean {
-        return this._pendingWorkerUpdate.data !== undefined || this._pendingWorkerUpdate.diff !== undefined || this._pendingWorkerUpdate.optionsChanged;
+        return this._pendingWorkerUpdate.data !== undefined || this._pendingWorkerUpdate.diff !== undefined || this._pendingWorkerUpdate.updateCluster;
     }
 
     private _pixelsToTileUnits(pixelValue: number): number {
@@ -316,7 +320,7 @@ export class GeoJSONSource extends Evented implements Source {
         if (options.clusterMaxZoom !== undefined) {
             this.workerOptions.superclusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
         }
-        this._pendingWorkerUpdate.optionsChanged = true;
+        this._pendingWorkerUpdate.updateCluster = true;
         this._updateWorkerData();
         return this;
     }
@@ -389,17 +393,16 @@ export class GeoJSONSource extends Evented implements Source {
             return;
         }
 
-        const {data, diff} = this._pendingWorkerUpdate;
-        const params = this._getLoadGeoJSONParameters(data, diff);
+        const {data, diff, updateCluster} = this._pendingWorkerUpdate;
+        const params = this._getLoadGeoJSONParameters(data, diff, updateCluster);
 
         if (data !== undefined) {
             this._pendingWorkerUpdate.data = undefined;
         } else if (diff) {
             this._pendingWorkerUpdate.diff = undefined;
+        } else if (updateCluster) {
+            this._pendingWorkerUpdate.updateCluster = undefined;
         }
-
-        // Reset the flag since this update is using the latest options
-        this._pendingWorkerUpdate.optionsChanged = undefined;
 
         await this._dispatchWorkerUpdate(params);
     }
@@ -407,7 +410,7 @@ export class GeoJSONSource extends Evented implements Source {
     /**
      * Create the parameters object that will be sent to the worker and used to load GeoJSON.
      */
-    private _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff): LoadGeoJSONParameters {
+    private _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): LoadGeoJSONParameters | undefined {
         // experimentalUpdateable property: when _experimentalUpdateableGeoJSONVT is removed, this property should be removed
         // from here and `updateble: true` should be added to the geojsonVtOptions above (about line 191).
         const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions, {experimentalUpdateable: this.map?._experimentalUpdateableGeoJSONVT});
@@ -431,7 +434,11 @@ export class GeoJSONSource extends Evented implements Source {
             return params;
         }
 
-        return params;
+        // Update supercluster with the latest worker cluster options
+        if (updateCluster) {
+            params.updateCluster = true;
+            return params;
+        }
     }
 
     /**

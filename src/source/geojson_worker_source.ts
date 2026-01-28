@@ -51,6 +51,10 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
      * GeoJSONSourceDiff to apply to the existing GeoJSON source data.
      */
     dataDiff?: GeoJSONSourceDiff;
+    /**
+     * Update the supercluster using the latest worker cluster options.
+     */
+    updateCluster?: boolean;
 };
 
 type GeoJSONIndex = GeoJSONVT | Supercluster;
@@ -174,37 +178,6 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         }
     }
 
-    /**
-     * Experimental updateable geojsonvt option - see map.ts experimentalUpdateableGeoJSONVT
-     */
-    async _experimentalLoadAndProcessGeoJSON(params: LoadGeoJSONParameters, abortController: AbortController) {
-        // Data is loaded from a fetchable URL - download it before processing data
-        if (params.request) {
-            const response = await getJSON<GeoJSON.GeoJSON>(params.request, abortController);
-            params.data = response.data;
-        }
-
-        // Create a new GeoJSON index using the full `data`
-        if (params.data) {
-            this._geoJSONIndex = this._createGeoJSONIndex(params.data, params);
-            this._experimentalFilterGeoJSONIndex(params);
-            return;
-        }
-
-        // Update the GeoJSON index using the `dataDiff` (or create a new index if none exists)
-        if (params.dataDiff) {
-            this._geoJSONIndex ??= this._createGeoJSONIndex(this._toFeatureCollection([]), params);
-            (this._geoJSONIndex as GeoJSONVT).updateData(params.dataDiff);
-            this._experimentalFilterGeoJSONIndex(params);
-        }
-    }
-
-    _experimentalFilterGeoJSONIndex(params: LoadGeoJSONParameters) {
-        if (!params.filter?.length) return;
-        //TO DO: add filterData to geojsonvt - possibly using a predicate (suggested by Harel)
-        // (this._geoJSONIndex as GeoJSONVT).filterData(params.filter);
-    }
-
     _startPerformance(params: LoadGeoJSONParameters): RequestPerformance | undefined {
         if (!params?.request?.collectResourceTiming) return;
         return new RequestPerformance(params.request);
@@ -291,6 +264,36 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 
     /**
+     * Experimental updateable geojsonvt option - see map.ts experimentalUpdateableGeoJSONVT
+     */
+    async _experimentalLoadAndProcessGeoJSON(params: LoadGeoJSONParameters, abortController: AbortController) {
+        // Data is loaded from a fetchable URL - download it before processing data
+        if (params.request) {
+            const response = await getJSON<GeoJSON.GeoJSON>(params.request, abortController);
+            params.data = response.data;
+        }
+
+        // Create a new GeoJSON index using the full `data`
+        if (params.data) {
+            this._geoJSONIndex = this._createGeoJSONIndex(params.data, params);
+            this._experimentalFilterGeoJSONIndex(params);
+            return;
+        }
+
+        // Update the GeoJSON index using the `dataDiff` (or create a new index if none exists)
+        if (params.dataDiff) {
+            this._geoJSONIndex ??= this._createGeoJSONIndex(this._toFeatureCollection([]), params);
+            (this._geoJSONIndex as GeoJSONVT).updateData(params.dataDiff);
+            this._experimentalFilterGeoJSONIndex(params);
+            return;
+        }
+
+        if (params.updateCluster) {
+            // (this._geoJSONIndex as GeoJSONVT).updateClusterOptions(getSuperclusterOptions(params));
+        }
+    }
+
+    /**
      * Loads GeoJSON from a URL and sets the sources updateable GeoJSON object.
      */
     async loadGeoJSONFromUrl(request: RequestParameters, promoteId: string, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
@@ -334,6 +337,12 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
         const features = (data as any).features.filter(feature => compiled.value.evaluate({zoom: 0}, feature));
         return this._toFeatureCollection(features);
+    }
+
+    _experimentalFilterGeoJSONIndex(params: LoadGeoJSONParameters) {
+        if (!params.filter?.length) return;
+        //TO DO: add filterData to geojsonvt - possibly using a predicate (suggested by Harel)
+        // (this._geoJSONIndex as GeoJSONVT).filterData(params.filter);
     }
 
     /**
