@@ -78,6 +78,10 @@ export type QueryIntersectsFeatureParams = {
     getElevation: undefined | ((x: number, y: number) => number);
 };
 
+// Error message constants for property type mismatches
+const ERR_PAINT_NOT_LAYOUT = (name: string) => `"${name}" is a paint property, not a layout property. Use getPaintProperty?`;
+const ERR_LAYOUT_NOT_PAINT = (name: string) => `"${name}" is a layout property, not a paint property. Use getLayoutProperty?`;
+
 /**
  * A base class for style layers
  */
@@ -171,6 +175,24 @@ export abstract class StyleLayer extends Evented {
         return this._crossfadeParameters;
     }
 
+    /**
+     * Helper to check if a property name exists in paint properties and throw appropriate error
+     */
+    private _checkPaintPropertyExists(name: string): void {
+        if (this._transitionablePaint && name in this._transitionablePaint._values) {
+            throw new Error(ERR_PAINT_NOT_LAYOUT(name));
+        }
+    }
+
+    /**
+     * Helper to check if a property name exists in layout properties and throw appropriate error
+     */
+    private _checkLayoutPropertyExists(name: string): void {
+        if (this._unevaluatedLayout && name in this._unevaluatedLayout._values) {
+            throw new Error(ERR_LAYOUT_NOT_PAINT(name));
+        }
+    }
+
     getLayoutProperty(name: string) {
         if (name === 'visibility') {
             return this.visibility;
@@ -178,10 +200,7 @@ export abstract class StyleLayer extends Evented {
         try{
             return this._unevaluatedLayout.getValue(name);
         }catch(error){
-            // Check if the requested property is actually a paint property
-            if (this._transitionablePaint && name in this._transitionablePaint._values) {
-                throw new Error(`"${name}" is a PAINT property, NOT a layout property. Did you mean to use access the paint property?`);
-            }
+            this._checkPaintPropertyExists(name);
             throw error;
         }
     }
@@ -269,22 +288,15 @@ export abstract class StyleLayer extends Evented {
             try{
                 return this._transitionablePaint.getTransition(name.slice(0, -TRANSITION_SUFFIX.length));
             }catch(error){
-                // Check if the requested property is actually a layout property
-                if (this._unevaluatedLayout && name in this._unevaluatedLayout._values) {
-                    throw new Error(`"${name}" is a LAYOUT property, NOT a paint property. Did you mean to use access the layout property?`);
-                }
+                this._checkLayoutPropertyExists(name);
                 throw error;
             }
         } else {
             try{
                 return this._transitionablePaint.getValue(name);
             }catch(error){
-                // Check if the requested property is actually a layout property
-                if (this._unevaluatedLayout && name in this._unevaluatedLayout._values) {
-                    throw new Error(`"${name}" is a layout property, not a paint property. Did you mean to use access the layout property?`);
-                }
+                this._checkLayoutPropertyExists(name);
                 throw error;
-                //return false;
             }
         }
     }
