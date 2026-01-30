@@ -2,7 +2,7 @@ import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
 import {type Source} from './source';
 import {VectorTileSource} from './vector_tile_source';
-import {type Tile} from '../tile/tile';
+import {Tile} from '../tile/tile';
 import {OverscaledTileID} from '../tile/tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
@@ -299,7 +299,48 @@ describe('VectorTileSource', () => {
         expect(tile.state).toBe('loading');
         await source.loadTile(tile);
         expect(events).toEqual([MessageType.loadTile, 'tileLoaded', MessageType.reloadTile, 'tileLoaded']);
-        await expect(initialLoadPromise).resolves.toBeUndefined();
+        await expect(initialLoadPromise).resolves.toBe(false);
+    });
+
+    test('returns true if the data type from the worker is unchanged', async () => {
+        const source = createSource({});
+        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync() {
+                return Promise.resolve({type: 'unchanged'});
+            }
+        });
+
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), undefined);
+
+        const result = await source.loadTile(tile);
+
+        expect(result).toBe(true);
+    });
+
+    test('updates fields properly for an unchanged data type', async () => {
+        const source = createSource({});
+        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
+        source.map._refreshExpiredTiles = true;
+
+        const expiryData = {cacheControl: 'max-age=5', etag: 'etag'};
+        const resourceTiming = [{} as PerformanceResourceTiming];
+
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync() {
+                return Promise.resolve({type: 'unchanged', ...expiryData, resourceTiming});
+            }
+        });
+
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), undefined);
+
+        const result = await source.loadTile(tile);
+
+        expect(result).toBe(true);
+        expect(tile.resourceTiming).toBe(resourceTiming);
+        expect(tile.etag).toBe(expiryData.etag);
+        expect(tile.state).toBe('loaded');
+        expect(tile.expirationTime).toBe(Date.now() + (5*1000));
     });
 
     test('respects TileJSON.bounds', async () => {

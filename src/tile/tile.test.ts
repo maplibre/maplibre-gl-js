@@ -7,6 +7,7 @@ import path from 'path';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
 import {CollisionBoxArray} from '../data/array_types.g';
+import * as Bucket from '../data/bucket';
 import {extend} from '../util/util';
 import {serialize, deserialize} from '../util/web_worker_transfer';
 
@@ -122,6 +123,28 @@ describe('querySourceFeatures', () => {
         tile.loadVectorData(null, painter);
 
         expect(spy).toHaveBeenCalledWith();
+    });
+
+    test('loadVectorData does not unload existing data if the data type is unchanged', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
+
+        const spy = vi.spyOn(tile, 'unloadVectorData');
+
+        tile.loadVectorData({type: 'unchanged'}, {});
+
+        expect(tile.state).toBe('loaded');
+        expect(spy).not.toHaveBeenCalled();
+    });
+
+    test('loadVectorData does not process any data if the data type is unchanged', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
+
+        // deserializeBucket is an example of the type of processing that would normally happen
+        const spy = vi.spyOn(Bucket, 'deserialize');
+        tile.loadVectorData({type: 'unchanged'}, {});
+
+        expect(tile.state).toBe('loaded');
+        expect(spy).not.toHaveBeenCalled;
     });
 
     test('loadVectorData preserves the most recent rawTileData', () => {

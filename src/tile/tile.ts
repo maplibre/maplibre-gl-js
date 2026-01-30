@@ -78,6 +78,7 @@ export class Tile {
     dashPositions: {[_: string]: DashEntry};
     glyphAtlasImage: AlphaImage;
     glyphAtlasTexture: Texture;
+    etag?: string;
     expirationTime: any;
     expiredRequestCount: number;
     state: TileState;
@@ -204,7 +205,8 @@ export class Tile {
      * @param justReloaded - `true` to just reload
      */
     loadVectorData(data: WorkerTileResult, painter: any, justReloaded?: boolean | null) {
-        if (this.hasData()) {
+        if (this.hasData() && data?.type !== 'unchanged') {
+            // If the tile has loaded fresh data, unload the old data
             this.unloadVectorData();
         }
 
@@ -213,6 +215,11 @@ export class Tile {
         // empty GeoJSON tile
         if (!data) {
             this.collisionBoxArray = new CollisionBoxArray();
+            return;
+        }
+
+        if (data.type === 'unchanged') {
+            // The tile is already loaded and hasn't changed, don't need to process anything
             return;
         }
 

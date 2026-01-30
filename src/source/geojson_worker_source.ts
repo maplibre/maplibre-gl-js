@@ -11,7 +11,7 @@ import {isAbortError} from '../util/abort_error';
 import {toVirtualVectorTile} from './vector_tile_overzoomed';
 import {type GeoJSONSourceDiff, applySourceDiff, toUpdateable, type GeoJSONFeatureId} from './geojson_source_diff';
 import type {WorkerTileParameters, WorkerTileResult} from './worker_source';
-import type {LoadVectorTileResult} from './vector_tile_worker_source';
+import type {LoadVectorTileFullResult} from './vector_tile_worker_source';
 import type {RequestParameters} from '../util/ajax';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
 import type {IActor} from '../util/actor';
@@ -80,7 +80,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     /**
      * Retrieves and sends loaded vector tiles to the main thread.
      */
-    override async loadVectorTile(params: WorkerTileParameters, _abortController: AbortController): Promise<LoadVectorTileResult | null> {
+    override async loadVectorTile(params: WorkerTileParameters, _abortController: AbortController): Promise<LoadVectorTileFullResult | null> {
         const canonical = params.tileID.canonical;
 
         if (!this._geoJSONIndex) {
