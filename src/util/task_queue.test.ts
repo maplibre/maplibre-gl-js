@@ -112,4 +112,15 @@ describe('TaskQueue', () => {
         q.run();
         expect(after).not.toHaveBeenCalled();
     });
+
+    test('Resets _currentlyRunning when a task throws an error', () => {
+        const q = new TaskQueue();
+        q.add(() => { throw new Error('Task error'); });
+        expect(() => q.run()).toThrow('Task error');
+        // Should be able to run again - _currentlyRunning should be false
+        const afterError = vi.fn();
+        q.add(afterError);
+        q.run();
+        expect(afterError).toHaveBeenCalledTimes(1);
+    });
 });

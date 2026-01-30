@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+- fix error during task execution blocking any further task execution ([#7031](https://github.com/maplibre/maplibre-gl-js/pull/7031))
 
 ## 5.17.0
 
