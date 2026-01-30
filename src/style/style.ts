@@ -1308,34 +1308,18 @@ export class Style extends Evented {
     }
 
     setLayoutProperty(layerId: string, name: string, value: any,  options: StyleSetterOptions = {}) {
-
         this._checkLoaded();
 
         const layer = this.getLayer(layerId);
-
         if (!layer) {
             this.fire(new ErrorEvent(new Error(`Cannot style non-existing layer "${layerId}".`)));
             return;
         }
-        try {
-            if (deepEqual(layer.getLayoutProperty(name), value)) {
-                console.warn(`Layout property ${name} is already set to ${value} in layer ${layerId}`);
-                // return;
-            }else{
-                layer.setLayoutProperty(name, value, options);
-                this._updateLayer(layer);
-            }
-        } catch (error) {
-            const paintProperty = layer.getPaintProperty(name);
-            if (paintProperty) {
-                this.fire(new ErrorEvent(new Error(`"${name}" is a paint property, not a layout property. Did you mean to use setPaintProperty?`)));
-                return;
-            }
-            this.fire(new ErrorEvent(new Error(`Invalid layout property ${name} for layer ${layerId}`)));
 
-            throw error;
-        }
+        if (deepEqual(layer.getLayoutProperty(name), value)) return;
 
+        layer.setLayoutProperty(name, value, options);
+        this._updateLayer(layer);
     }
 
     /**
@@ -1357,29 +1341,15 @@ export class Style extends Evented {
     setPaintProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}) {
         this._checkLoaded();
 
-        //Check the layer exists
         const layer = this.getLayer(layerId);
         if (!layer) {
             this.fire(new ErrorEvent(new Error(`Cannot style non-existing layer "${layerId}".`)));
             return;
         }
 
-        let paintProperty: any;
-        try {
-            paintProperty = layer.getPaintProperty(name);
-        } catch (error) {
-            this.fire(new ErrorEvent(new Error(`Invalid paint property ${name} for layer ${layerId} or layout property ${name} is not set`)));
-            layer.getLayoutProperty(name);//This will fail if it's not a layout property... I think....
-            this.fire(new ErrorEvent(new Error(`"${name}" is a layout property, not a paint property. Did you mean to use setLayoutProperty?`)));
-            throw error;
-        }
-        if (deepEqual(paintProperty, value)) {
-            console.warn(`Paint property ${name} is already set to ${value} in layer ${layerId}`);
-            return;
-        }
+        if (deepEqual(layer.getPaintProperty(name), value)) return;
 
         this._updatePaintProperty(layer, name, value, options);
-
     }
 
     _updatePaintProperty(layer: StyleLayer, name: string, value: any, options: StyleSetterOptions = {}) {

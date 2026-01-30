@@ -79,8 +79,8 @@ export type QueryIntersectsFeatureParams = {
 };
 
 // Error message constants for property type mismatches
-const ERR_PAINT_NOT_LAYOUT = (n: string) => `${n} is a PAINT prop. Use getPaintProperty?`;
-const ERR_LAYOUT_NOT_PAINT = (n: string) => `${n} is a LAYOUT prop. Use getLayoutProperty?`;
+const ERR_PAINT_NOT_LAYOUT = (n: string) => `${n} is a PAINT property not a LAYOUT property. Use get/setPaintProperty instead?`;
+const ERR_LAYOUT_NOT_PAINT = (n: string) => `${n} is a LAYOUT property not a PAINT property. Use get/setLayoutProperty instead?`;
 
 /**
  * A base class for style layers
@@ -179,14 +179,10 @@ export abstract class StyleLayer extends Evented {
         if (name === 'visibility') {
             return this.visibility;
         }
-        try{
-            return this._unevaluatedLayout.getValue(name);
-        }catch(error){
-            if (this._transitionablePaint && name in this._transitionablePaint._values) {
-                throw new Error(ERR_PAINT_NOT_LAYOUT(name));
-            }
-            throw error;
+        if (this._transitionablePaint && name in this._transitionablePaint._properties.defaultTransitionablePropertyValues) {
+            throw new Error(ERR_PAINT_NOT_LAYOUT(name));
         }
+        return this._unevaluatedLayout.getValue(name);
     }
 
     /**
@@ -269,23 +265,16 @@ export abstract class StyleLayer extends Evented {
 
     getPaintProperty(name: string) {
         if (name.endsWith(TRANSITION_SUFFIX)) {
-            try{
-                return this._transitionablePaint.getTransition(name.slice(0, -TRANSITION_SUFFIX.length));
-            }catch(error){
-                if (this._unevaluatedLayout && name in this._unevaluatedLayout._values) {
-                    throw new Error(ERR_LAYOUT_NOT_PAINT(name));
-                }
-                throw error;
+            const baseName = name.slice(0, -TRANSITION_SUFFIX.length);
+            if(baseName === 'visibility' || baseName in this._unevaluatedLayout._properties.properties){
+                throw new Error(ERR_LAYOUT_NOT_PAINT(name));
             }
+            return this._transitionablePaint.getTransition(baseName);
         } else {
-            try{
-                return this._transitionablePaint.getValue(name);
-            }catch(error){
-                if (this._unevaluatedLayout && name in this._unevaluatedLayout._values) {
-                    throw new Error(ERR_LAYOUT_NOT_PAINT(name));
-                }
-                throw error;
+            if(name === 'visibility' || name in this._unevaluatedLayout._properties.properties){
+                throw new Error(ERR_LAYOUT_NOT_PAINT(name));
             }
+            return this._transitionablePaint.getValue(name);
         }
     }
 
