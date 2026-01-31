@@ -7,7 +7,7 @@ import {EXTENT} from '../data/extent';
 import Supercluster, {type Options as SuperclusterOptions, type ClusterProperties} from 'supercluster';
 import geojsonvt, {type GeoJSONVTOptions, type GeoJSONVT} from '@maplibre/geojson-vt';
 import {VectorTileWorkerSource} from './vector_tile_worker_source';
-import {createExpression} from '@maplibre/maplibre-gl-style-spec';
+import {createExpression, Expression} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error';
 import {toVirtualVectorTile} from './vector_tile_overzoomed';
 import {type GeoJSONSourceDiff, applySourceDiff, toUpdateable, type GeoJSONFeatureId} from './geojson_source_diff';
@@ -275,16 +275,15 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
         // Create a new GeoJSON index using the full `data`
         if (params.data) {
+            params.data = this._filterGeoJSON(params.data, params.filter);
             this._geoJSONIndex = this._createGeoJSONIndex(params.data, params);
-            this._experimentalFilterGeoJSONIndex(params);
             return;
         }
 
         // Update the GeoJSON index using the `dataDiff` (or create a new index if none exists)
         if (params.dataDiff) {
             this._geoJSONIndex ??= this._createGeoJSONIndex(this._toFeatureCollection([]), params);
-            (this._geoJSONIndex as GeoJSONVT).updateData(params.dataDiff);
-            this._experimentalFilterGeoJSONIndex(params);
+            (this._geoJSONIndex as GeoJSONVT).updateData(params.dataDiff, this._getFilterPredicate(params.filter));
             return;
         }
 
@@ -329,20 +328,34 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * Applies a filter to a GeoJSON object.
      */
     _filterGeoJSON(data: GeoJSON.GeoJSON, filter: Array<unknown>): GeoJSON.FeatureCollection {
+        if (!filter?.length) return data as GeoJSON.FeatureCollection;
+
+        const compiled = this._getCompiledExpression(filter);
+        const features = (data as any).features.filter(feature => compiled.value.evaluate({zoom: 0}, feature));
+
+        return this._toFeatureCollection(features);
+    }
+
+    /**
+     * Gets a predicate function that can be used to filter GeoJSON features.
+     */
+    _getFilterPredicate(filter: Array<unknown>): (feature: GeoJSON.Feature) => boolean {
+        if (!filter?.length) return undefined;
+
+        const compiled = this._getCompiledExpression(filter);
+        const predicate = (feature: GeoJSON.Feature) => compiled.value.evaluate({zoom: 0}, feature as any);
+
+        return predicate;
+    }
+
+    _getCompiledExpression(filter: Array<unknown>)  {
         const compiled = createExpression(filter, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
 
         if (compiled.result === 'error') {
             throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
         }
 
-        const features = (data as any).features.filter(feature => compiled.value.evaluate({zoom: 0}, feature));
-        return this._toFeatureCollection(features);
-    }
-
-    _experimentalFilterGeoJSONIndex(params: LoadGeoJSONParameters) {
-        if (!params.filter?.length) return;
-        //TO DO: add filterData to geojsonvt - possibly using a predicate (suggested by Harel)
-        // (this._geoJSONIndex as GeoJSONVT).filterData(params.filter);
+        return compiled;
     }
 
     /**
