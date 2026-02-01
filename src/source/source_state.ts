@@ -19,11 +19,13 @@ export class SourceFeatureState {
     state: LayerFeatureStates;
     stateChanges: LayerFeatureStates;
     deletedStates: {};
+    revision: number;
 
     constructor() {
         this.state = {};
         this.stateChanges = {};
         this.deletedStates = {};
+        this.revision = 0;
     }
 
     updateState(sourceLayer: string, featureId: number | string, newState: any) {
@@ -147,6 +149,8 @@ export class SourceFeatureState {
         this.deletedStates = {};
 
         if (Object.keys(featuresChanged).length === 0) return;
+
+        this.revision++;
 
         inViewTiles.setFeatureState(featuresChanged, painter);
     }
