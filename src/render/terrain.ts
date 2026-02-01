@@ -152,14 +152,42 @@ export class Terrain {
 
     /**
      * get the elevation-value from original dem-data for a given tile-coordinate
-     * @param tileID - the tile to get elevation for
-     * @param x - between 0 .. EXTENT
-     * @param y - between 0 .. EXTENT
+     * @param tileID - the tile that the x/y coordinates are relative to
+     * @param x - x coordinate within the tile's coordinate system
+     * @param y - y coordinate within the tile's coordinate system
      * @param extent - optional, default 8192
      * @returns the elevation
      */
     getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
-        if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return 0;
+        if (!(x >= 0 && x < extent && y >= 0 && y < extent)) {
+            const tileOffsetX = Math.floor(x / extent);
+            const tileOffsetY = Math.floor(y / extent);
+            const newX = x - tileOffsetX * extent;
+            const newY = y - tileOffsetY * extent;
+
+            const z = tileID.canonical.z;
+            const dim = 1 << z;
+            const newCanonicalY = tileID.canonical.y + tileOffsetY;
+
+            // Y (latitude) does not wrap - return 0 at poles
+            if (newCanonicalY < 0 || newCanonicalY >= dim) return 0;
+
+            // X (longitude) wraps around the world
+            let newCanonicalX = tileID.canonical.x + tileOffsetX;
+            let newWrap = tileID.wrap;
+            if (newCanonicalX < 0) {
+                newWrap -= Math.ceil(-newCanonicalX / dim);
+                newCanonicalX = ((newCanonicalX % dim) + dim) % dim;
+            } else if (newCanonicalX >= dim) {
+                newWrap += Math.floor(newCanonicalX / dim);
+                newCanonicalX = newCanonicalX % dim;
+            }
+
+            const neighborTileID = new OverscaledTileID(
+                tileID.overscaledZ, newWrap, z, newCanonicalX, newCanonicalY
+            );
+            return this.getDEMElevation(neighborTileID, newX, newY, extent);
+        }
         const terrain = this.getTerrainData(tileID);
         const dem = terrain.tile?.dem;
         if (!dem) return 0;
