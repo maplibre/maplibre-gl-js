@@ -13,7 +13,7 @@ import {ImageSource} from '../source/image_source';
 /**
  * lookup table which layers should rendered to texture
  */
-const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
+const LAYERS_TO_TEXTURES: { [keyof in StyleLayer['type']]?: boolean } = {
     background: true,
     fill: true,
     line: true,
@@ -36,10 +36,11 @@ export class RenderToTexture {
      */
     _coordsAscending: {[_: string]: {[_:string]: Array<OverscaledTileID>}};
     /**
-     * create a string representation of all to tiles rendered to render-to-texture tiles
-     * this string representation is used to check if tile should be re-rendered.
+     * fingerprint string representing the unique state of source tiles and revision
+     * for a given render-to-texture tile. Used to detect changes and trigger re-rendering.
+     * Format: "sorted_tile_keys#revision"
      */
-    _coordsAscendingStr: {[_: string]: {[_:string]: string}};
+    _rttFingerprints: {[sourceId: string]: {[rttTileKey: string]: string}};
     /**
      * store for render-stacks
      * a render stack is a set of layers which should be rendered into one texture
@@ -63,7 +64,6 @@ export class RenderToTexture {
      * a list of all layer-ids which should be rendered
      */
     _renderableLayerIds: Array<string>;
-
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
@@ -98,26 +98,30 @@ export class RenderToTexture {
                     this._coordsAscending[id][key].push(keys[key]);
                 }
             }
+            
         }
 
-        this._coordsAscendingStr = {};
+        this._rttFingerprints = {};
         for (const id of style._order) {
-            const layer = style._layers[id], source = layer.source;
-            if (LAYERS[layer.type]) {
-                if (!this._coordsAscendingStr[source]) {
-                    this._coordsAscendingStr[source] = {};
-                    for (const key in this._coordsAscending[source])
-                        this._coordsAscendingStr[source][key] = this._coordsAscending[source][key].map(c => c.key).sort().join();
-                }
+            const layer = style._layers[id];
+            const source = layer.source;
+            const shouldRenderToTexture = LAYERS_TO_TEXTURES[layer.type];
+
+            if (shouldRenderToTexture && !this._rttFingerprints[source]) {
+                this._rttFingerprints[source] = {};
+                const revision = style.tileManagers[source]?.getState().revision ?? 0;
+                for (const key in this._coordsAscending[source])
+                    this._rttFingerprints[source][key] = `${this._coordsAscending[source][key].map(c => c.key).sort().join()}#${revision}`;
             }
         }
 
         // check tiles to render
         for (const tile of this._renderableTiles) {
-            for (const source in this._coordsAscendingStr) {
-                // rerender if there are more coords to render than in the last rendering
-                const coords = this._coordsAscendingStr[source][tile.tileID.key];
-                if (coords && coords !== tile.rttCoords[source]) tile.rtt = [];
+            for (const source in this._rttFingerprints) {
+                // rerender if there are different coords to render than in the last rendering
+                // or if the source revision has changed
+                const fingerprint = this._rttFingerprints[source][tile.tileID.key];
+                if (fingerprint && fingerprint !== tile.rttFingerprint[source]) tile.rtt = [];
             }
         }
     }
@@ -142,9 +146,9 @@ export class RenderToTexture {
         const isLastLayer = this._renderableLayerIds[this._renderableLayerIds.length - 1] === layer.id;
 
         // remember background, fill, line & raster layer to render into a stack
-        if (LAYERS[type]) {
+        if (LAYERS_TO_TEXTURES[type]) {
             // create a new stack if previous layer was not rendered to texture (f.e. symbols)
-            if (!this._prevType || !LAYERS[this._prevType]) this._stacks.push([]);
+            if (!this._prevType || !LAYERS_TO_TEXTURES[this._prevType]) this._stacks.push([]);
             // push current render-to-texture layer to render-stack
             this._prevType = type;
             this._stacks[this._stacks.length - 1].push(layer.id);
@@ -153,7 +157,7 @@ export class RenderToTexture {
         }
 
         // in case a stack is finished render all collected stack-layers into a texture
-        if (LAYERS[this._prevType] || (LAYERS[type] && isLastLayer)) {
+        if (LAYERS_TO_TEXTURES[this._prevType] || (LAYERS_TO_TEXTURES[type] && isLastLayer)) {
             this._prevType = type;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
             for (const tile of this._renderableTiles) {
@@ -187,14 +191,14 @@ export class RenderToTexture {
                     painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords, true);
                     painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
-                    if (layer.source) tile.rttCoords[layer.source] = this._coordsAscendingStr[layer.source][tile.tileID.key];
+                    if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
                 }
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles, options);
             this._rttTiles = [];
             this.pool.freeAllObjects();
 
-            return LAYERS[type];
+            return LAYERS_TO_TEXTURES[type];
         }
 
         return false;
