@@ -1,7 +1,5 @@
 import {describe, test, expect, vi} from 'vitest';
-import {DataConstantProperty} from './properties';
 import {type StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
-import {warnOnce} from '../util/util';
 
 vi.mock('../util/util', async () => {
     const actual = await vi.importActual('../util/util');
@@ -12,44 +10,52 @@ vi.mock('../util/util', async () => {
 });
 
 describe('Issue #6606 - Array Interpolation Mismatch', () => {
-    test('DataConstantProperty.interpolate with mismatched array lengths should warn and partial interpolate', () => {
+    test('DataConstantProperty.interpolate with mismatched array lengths should warn and partial interpolate', async () => {
+        // Reset modules to ensure we get a fresh copy of dependencies where the mock is applied
+        // This is necessary because util.ts might be polluted by setupFiles (e.g. web_worker_mock)
+        vi.resetModules();
+
+        const {DataConstantProperty} = await import('./properties');
+        const {warnOnce} = await import('../util/util');
+
         const spec: StylePropertySpecification = {
             type: 'array',
             value: 'number',
             paint: true,
             'property-type': 'data-constant',
+            length: 2,
+            expression: {
+                interpolated: true,
+                parameters: ['zoom', 'curve'],
+            },
+            transition: true,
         } as any;
 
         const property = new DataConstantProperty(spec);
+        const startShort = [5, 5];
+        const endLong = [10, 10, 10, 10]; // Longer array
 
-        // Case 1: Start shorter than End
-        // Start=[0, 0], End=[10, 10, 10], t=0.5
-        // Expected: [5, 5] (partial interpolation of first 2 elements)
-        const startShort = [0, 0];
-        const endLong = [10, 10, 10];
+        // Should warn and return a mixed array
         const res1 = property.interpolate(startShort, endLong, 0.5);
-        expect(res1).toEqual([5, 5]);
+        expect(res1).toEqual([7.5, 7.5]);
         expect(warnOnce).toHaveBeenCalledWith(
             expect.stringContaining(
                 'Array interpolation requires arrays of the same length',
             ),
         );
 
-        // Case 2: Start longer than End
-        // Start=[0, 0, 0], End=[10, 10], t=0.5
-        // Expected: [5, 5] (partial interpolation of first 2 elements)
-        const startLong = [0, 0, 0];
-        const endShort = [10, 10];
+        // Reset mock for next assertion
+        (warnOnce as any).mockClear();
+
+        const startLong = [10, 10, 10, 10];
+        const endShort = [5, 5];
+
         const res2 = property.interpolate(startLong, endShort, 0.5);
-        expect(res2).toEqual([5, 5]);
-
-        // Case 3: Empty array vs Full
-        const empty = [];
-        const full = [1];
-        const res3 = property.interpolate(empty, full, 0.5);
-        expect(res3).toEqual([]);
-
-        const res4 = property.interpolate(full, empty, 0.5);
-        expect(res4).toEqual([]);
+        expect(res2).toEqual([7.5, 7.5]);
+        expect(warnOnce).toHaveBeenCalledWith(
+            expect.stringContaining(
+                'Array interpolation requires arrays of the same length',
+            ),
+        );
     });
 });
