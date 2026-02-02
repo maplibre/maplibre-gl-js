@@ -294,6 +294,7 @@ export class Marker extends Evented {
             e.preventDefault();
         });
         applyAnchorClass(this._element, this._anchor, 'marker');
+        this._element.addEventListener('click', this._onClick);
 
         if (options && options.className) {
             for (const name of options.className.split(' ')) {
@@ -341,7 +342,6 @@ export class Marker extends Evented {
         // would close once the event propagated to `map` due to the
         // `Popup._onClickClose` listener.
         this._map.on('click', this._onMapClick);
-        this._element.addEventListener('click', this._onClick);
 
         return this;
     }
@@ -373,7 +373,6 @@ export class Marker extends Evented {
             this._map.off('touchmove', this._onMove);
             delete this._map;
         }
-        this._element.removeEventListener('click', this._onClick);
         DOM.remove(this._element);
         if (this._popup) this._popup.remove();
         return this;
