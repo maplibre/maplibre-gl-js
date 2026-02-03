@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add touch long-press support for `contextmenu` event ([#373](https://github.com/maplibre/maplibre-gl-js/issues/373)) (by [@niveshdandyan](https://github.com/niveshdandyan))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

@@ -1,7 +1,10 @@
 import {MapMouseEvent, MapTouchEvent, MapWheelEvent} from '../events';
 import {type Handler} from '../handler_manager';
 import type {Map} from '../map';
-import type Point from '@mapbox/point-geometry';
+import Point from '@mapbox/point-geometry';
+
+const LONG_PRESS_DURATION = 500;
+const MAX_DIST = 30;
 
 export class MapEventHandler implements Handler {
 
@@ -106,15 +109,31 @@ export class BlockableMapEventHandler {
     _delayContextMenu: boolean;
     _ignoreContextMenu: boolean;
     _contextMenuEvent: MouseEvent;
+    _longPressTimer: ReturnType<typeof setTimeout> | null;
+    _touchStartPoint: Point | null;
+    _touchId: number | null;
 
     constructor(map: Map) {
         this._map = map;
+        this._longPressTimer = null;
+        this._touchStartPoint = null;
+        this._touchId = null;
     }
 
     reset() {
         this._delayContextMenu = false;
         this._ignoreContextMenu = true;
         delete this._contextMenuEvent;
+        this._clearLongPress();
+    }
+
+    _clearLongPress() {
+        if (this._longPressTimer) {
+            clearTimeout(this._longPressTimer);
+            this._longPressTimer = null;
+        }
+        this._touchStartPoint = null;
+        this._touchId = null;
     }
 
     mousemove(e: MouseEvent) {
@@ -147,6 +166,70 @@ export class BlockableMapEventHandler {
         if (this._map.listens('contextmenu')) {
             e.preventDefault();
         }
+    }
+
+    touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+        // Only handle single-finger touch for long press
+        if (mapTouches.length !== 1) {
+            this._clearLongPress();
+            return;
+        }
+
+        const touch = mapTouches[0];
+        this._touchId = touch.identifier;
+        this._touchStartPoint = points[0];
+        this._ignoreContextMenu = false;
+
+        this._longPressTimer = setTimeout(() => {
+            if (this._touchStartPoint && !this._ignoreContextMenu) {
+                // Create a synthetic mouse event for the contextmenu
+                const canvas = this._map.getCanvas();
+                const rect = canvas.getBoundingClientRect();
+                const clientX = rect.left + this._touchStartPoint.x;
+                const clientY = rect.top + this._touchStartPoint.y;
+
+                const simulatedMouseEvent = new MouseEvent('contextmenu', {
+                    bubbles: true,
+                    cancelable: true,
+                    clientX,
+                    clientY,
+                    screenX: clientX,
+                    screenY: clientY
+                });
+
+                this._map.fire(new MapMouseEvent('contextmenu', this._map, simulatedMouseEvent));
+
+                // Prevent browser context menu
+                if (this._map.listens('contextmenu')) {
+                    e.preventDefault();
+                }
+            }
+            this._clearLongPress();
+        }, LONG_PRESS_DURATION);
+    }
+
+    touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+        if (!this._longPressTimer || !this._touchStartPoint) return;
+
+        const touch = mapTouches.find(t => t.identifier === this._touchId);
+        if (!touch) {
+            this._clearLongPress();
+            return;
+        }
+
+        const touchIndex = mapTouches.indexOf(touch);
+        const movePoint = points[touchIndex];
+        if (movePoint && this._touchStartPoint.dist(movePoint) > MAX_DIST) {
+            this._clearLongPress();
+        }
+    }
+
+    touchend() {
+        this._clearLongPress();
+    }
+
+    touchcancel() {
+        this._clearLongPress();
     }
 
     isEnabled() {
