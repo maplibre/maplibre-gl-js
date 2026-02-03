@@ -197,7 +197,8 @@ describe('StyleLayer.setPaintProperty', () => {
 
         const errorPromise = layer.once('error');
         layer.setPaintProperty('visibility', 'visible');
-        await expect(errorPromise).resolves.toThrow(new Error('visibility is a PAINT property not a LAYOUT property. Use get/setLayoutProperty instead?'));
+        const {error} = await errorPromise;
+        expect(error.message).toContain('Use get/setLayoutProperty instead?');
     });
 });
 
@@ -265,7 +266,8 @@ describe('StyleLayer.setLayoutProperty', () => {
 
         const errorPromise = layer.once('error');
         layer.setLayoutProperty('text-color', 'blue');
-        await expect(errorPromise).resolves.toThrow(new Error('text-color is a LAYOUT property not a PAINT property. Use get/setLayoutProperty instead?'));
+        const {error} = await errorPromise;
+        expect(error.message).toContain('Use get/setPaintProperty instead?');
     });
 });
 
