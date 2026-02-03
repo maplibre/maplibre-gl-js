@@ -289,7 +289,6 @@ export abstract class StyleLayer extends Evented {
 
         if ((value !== null && value !== undefined)&&(this._validate(validatePaintProperty, `layers.${this.id}.paint.${name}`, name, value, options)))return false;
 
-
         if (name.endsWith(TRANSITION_SUFFIX)) {
             this._transitionablePaint.setTransition(name.slice(0, -TRANSITION_SUFFIX.length), (value as any) || undefined);
             return false;
