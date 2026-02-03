@@ -1,7 +1,7 @@
 import {MapMouseEvent, MapTouchEvent, MapWheelEvent} from '../events';
 import {type Handler} from '../handler_manager';
 import type {Map} from '../map';
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 
 const LONG_PRESS_DURATION = 500;
 const MAX_DIST = 30;
