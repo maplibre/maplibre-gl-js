@@ -10,6 +10,7 @@ import {isAbortError} from '../util/abort_error';
 import {toVirtualVectorTile} from './vector_tile_overzoomed';
 import {type GeoJSONSourceDiff, applySourceDiff, toUpdateable, type GeoJSONFeatureId} from './geojson_source_diff';
 import {WorkerTile} from './worker_tile';
+import {WorkerTileState} from './worker_tile_state';
 import {extend} from '../util/util';
 
 import type {WorkerSource, WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source';
@@ -54,10 +55,6 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
 
 type GeoJSONIndex = GeoJSONVT | Supercluster;
 
-type FetchingState = {
-    rawData: ArrayBufferLike;
-};
-
 /**
  * The {@link WorkerSource} implementation that supports {@link GeoJSONSource}.
  * This class is designed to be easily reused to support custom source types
@@ -70,9 +67,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
     actor: IActor;
     layerIndex: StyleLayerIndex;
     availableImages: Array<string>;
-    fetching: {[_: string]: FetchingState };
-    loading: {[_: string]: WorkerTile};
-    loaded: {[_: string]: WorkerTile};
+    tileState: WorkerTileState;
 
     /**
      * The actual GeoJSON takes some time to load (as there may be a need to parse a diff, or to apply filters, or the
@@ -89,11 +84,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         this.actor = actor;
         this.layerIndex = layerIndex;
         this.availableImages = availableImages;
-
-        this.fetching = {};
-        this.loading = {};
-        this.loaded = {};
-
+        this.tileState = new WorkerTileState();
         this._createGeoJSONIndex = createGeoJSONIndexFunc;
     }
 
@@ -124,21 +115,21 @@ export class GeoJSONWorkerSource implements WorkerSource {
         const {uid} = params;
 
         const workerTile = new WorkerTile(params);
-        this.loading[uid] = workerTile;
+        this.tileState.startLoading(uid, workerTile);
 
         const abortController = new AbortController();
         workerTile.abort = abortController;
 
         try {
             const response = await this.loadVectorTile(params, abortController);
-            delete this.loading[uid];
+            this.tileState.finishLoading(uid);
             if (!response) return null;
 
             const {vectorTile, rawData} = response;
 
             workerTile.vectorTile = vectorTile;
-            this.loaded[uid] = workerTile;
-            this.fetching[uid] = {rawData};  // Keep data so reloadTile can access if parse is canceled.
+            this.tileState.markLoaded(uid, workerTile);
+            this.tileState.setFetching(uid, {rawTileData: rawData});  // Keep data so reloadTile can access if parse is canceled.
 
             try {
                 const result = await workerTile.parse(vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
@@ -146,12 +137,12 @@ export class GeoJSONWorkerSource implements WorkerSource {
                 // Transferring a copy of rawData because the worker needs to retain its copy.
                 return extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result);
             } finally {
-                delete this.fetching[uid];
+                this.tileState.clearFetching(uid);
             }
         } catch (err) {
-            delete this.loading[uid];
+            this.tileState.finishLoading(uid);
             workerTile.status = 'done';
-            this.loaded[uid] = workerTile;
+            this.tileState.markLoaded(uid, workerTile);
             throw err;
         }
     }
@@ -159,7 +150,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
     private async _reloadLoadedTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
         const uid = params.uid;
 
-        const workerTile = this.getLoadedTile(uid);
+        const workerTile = this.tileState.getLoaded(uid);
         if (!workerTile) throw new Error('Should not be trying to reload a tile that was never loaded or has been removed');
 
         workerTile.showCollisionBoxes = params.showCollisionBoxes;
@@ -168,12 +159,11 @@ export class GeoJSONWorkerSource implements WorkerSource {
             const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 
             // If we have canceled the original parse, make sure to pass the rawData from the original fetch.
-            if (this.fetching[uid]) {
-                const {rawData} = this.fetching[uid];
-                delete this.fetching[uid];
-
+            const fetchingState = this.tileState.consumeFetching(uid);
+            if (fetchingState) {
+                const {rawTileData} = fetchingState;
                 // Transferring a copy of rawData because the worker needs to retain its copy.
-                return extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result);
+                return extend({rawTileData: rawTileData.slice(0), encoding: params.encoding}, result);
             }
 
             return result;
@@ -186,55 +176,17 @@ export class GeoJSONWorkerSource implements WorkerSource {
     }
 
     /**
-     * Implements {@link WorkerSource.reloadTile}.
-     *
-     * If the tile is loaded, reload by re-parsing the already available tile data.
-     * Otherwise, such as after a setData() call, we load the tile fresh.
-     *
-     * @param params - the parameters
-     * @returns A promise that resolves when the tile is reloaded
-     */
-    reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
-        const tile = this.getLoadedTile(params.uid);
-
-        if (tile) {
-            return this._reloadLoadedTile(params);
-        }
-
-        return this.loadTile(params);
-    }
-
-    /**
      * Implements {@link WorkerSource.abortTile}.
      */
     async abortTile(params: TileParameters): Promise<void> {
-        const tile = this.getLoadingTile(params.uid);
-        if (!tile) return;
-
-        tile.abort.abort();
-        delete this.loading[params.uid];
+        this.tileState.abort(params.uid);
     }
 
     /**
      * Implements {@link WorkerSource.removeTile}.
      */
     async removeTile(params: TileParameters): Promise<void> {
-        const tile = this.getLoadedTile(params.uid);
-        if (!tile) return;
-
-        delete this.loaded[params.uid];
-    }
-
-    getLoadedTile(uid: string | number): WorkerTile | undefined {
-        const tile = this.loaded?.[uid];
-        if (!tile) return undefined;
-        return tile;
-    }
-
-    getLoadingTile(uid: string | number): WorkerTile | undefined {
-        const tile = this.loading?.[uid];
-        if (!tile?.abort) return undefined;
-        return tile;
+        this.tileState.removeLoaded(params.uid);
     }
 
     /**
@@ -266,7 +218,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
 
             const data = await this._pendingData;
             this._geoJSONIndex = this._createGeoJSONIndex(data, params);
-            this.loaded = {};
+            this.tileState.clearLoaded();
 
             const result: GeoJSONWorkerSourceLoadDataResult = {};
 
@@ -307,6 +259,25 @@ export class GeoJSONWorkerSource implements WorkerSource {
      */
     async getData(): Promise<GeoJSON.GeoJSON> {
         return this._pendingData;
+    }
+
+    /**
+     * Implements {@link WorkerSource.reloadTile}.
+     *
+     * If the tile is loaded, reload by re-parsing the already available tile data.
+     * Otherwise, such as after a setData() call, we load the tile fresh.
+     *
+     * @param params - the parameters
+     * @returns A promise that resolves when the tile is reloaded
+     */
+    reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
+        const tile = this.tileState.getLoaded(params.uid);
+
+        if (tile) {
+            return this._reloadLoadedTile(params);
+        }
+
+        return this.loadTile(params);
     }
 
     /**

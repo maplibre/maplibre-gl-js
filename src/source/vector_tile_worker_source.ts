@@ -7,6 +7,7 @@ import {extend} from '../util/util';
 import {RequestPerformance} from '../util/performance';
 import {VectorTileOverzoomed, sliceVectorTileLayer, toVirtualVectorTile} from './vector_tile_overzoomed';
 import {MLTVectorTile} from './vector_tile_mlt';
+import {WorkerTileState} from './worker_tile_state';
 import type {
     WorkerSource,
     WorkerTileParameters,
@@ -24,12 +25,6 @@ export type LoadVectorTileResult = {
     resourceTiming?: Array<PerformanceResourceTiming>;
 } & ExpiryData;
 
-type FetchingState = {
-    rawTileData: ArrayBufferLike;
-    cacheControl: ExpiryData;
-    resourceTiming: any;
-};
-
 export type AbortVectorData = () => void;
 export type LoadVectorData = (params: WorkerTileParameters, abortController: AbortController) => Promise<LoadVectorTileResult | null>;
 
@@ -43,9 +38,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     actor: IActor;
     layerIndex: StyleLayerIndex;
     availableImages: Array<string>;
-    fetching: {[_: string]: FetchingState };
-    loading: {[_: string]: WorkerTile};
-    loaded: {[_: string]: WorkerTile};
+    tileState: WorkerTileState;
     overzoomedTileResultCache: BoundedLRUCache<string, LoadVectorTileResult>;
 
     /**
@@ -58,9 +51,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         this.actor = actor;
         this.layerIndex = layerIndex;
         this.availableImages = availableImages;
-        this.fetching = {};
-        this.loading = {};
-        this.loaded = {};
+        this.tileState = new WorkerTileState();
         this.overzoomedTileResultCache = new BoundedLRUCache<string, LoadVectorTileResult>(1000);
     }
 
@@ -70,8 +61,8 @@ export class VectorTileWorkerSource implements WorkerSource {
     async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
         const response = await getArrayBuffer(params.request, abortController);
         try {
-            const vectorTile = params.encoding !== 'mlt' 
-                ? new VectorTile(new Protobuf(response.data)) 
+            const vectorTile = params.encoding !== 'mlt'
+                ? new VectorTile(new Protobuf(response.data))
                 : new MLTVectorTile(response.data);
             return {
                 vectorTile,
@@ -108,13 +99,13 @@ export class VectorTileWorkerSource implements WorkerSource {
             new RequestPerformance(params.request) : false;
 
         const workerTile = new WorkerTile(params);
-        this.loading[tileUid] = workerTile;
+        this.tileState.startLoading(tileUid, workerTile);
 
         const abortController = new AbortController();
         workerTile.abort = abortController;
         try {
             const response = await this.loadVectorTile(params, abortController);
-            delete this.loading[tileUid];
+            this.tileState.finishLoading(tileUid);
             if (!response) {
                 return null;
             }
@@ -141,21 +132,22 @@ export class VectorTileWorkerSource implements WorkerSource {
 
             workerTile.vectorTile = response.vectorTile;
             const parsePromise = workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-            this.loaded[tileUid] = workerTile;
+
+            this.tileState.markLoaded(tileUid, workerTile);
             // keep the original fetching state so that reload tile can pick it up if the original parse is cancelled by reloads' parse
-            this.fetching[tileUid] = {rawTileData, cacheControl, resourceTiming};
+            this.tileState.setFetching(tileUid, {rawTileData, cacheControl, resourceTiming});
 
             try {
                 const result = await parsePromise;
                 // Transferring a copy of rawTileData because the worker needs to retain its copy.
                 return extend({rawTileData: rawTileData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
             } finally {
-                delete this.fetching[tileUid];
+                this.tileState.clearFetching(tileUid);
             }
         } catch (err) {
-            delete this.loading[tileUid];
+            this.tileState.finishLoading(tileUid);
             workerTile.status = 'done';
-            this.loaded[tileUid] = workerTile;
+            this.tileState.markLoaded(tileUid, workerTile);
             throw err;
         }
     }
@@ -172,7 +164,7 @@ export class VectorTileWorkerSource implements WorkerSource {
 
         const cacheKey = `${maxZoomTileID.key}_${tileID.key}`;
         const cachedOverzoomTile = this.overzoomedTileResultCache.get(cacheKey);
-        
+
         if (cachedOverzoomTile) {
             return cachedOverzoomTile;
         }
@@ -202,50 +194,43 @@ export class VectorTileWorkerSource implements WorkerSource {
      */
     async reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
         const uid = params.uid;
-        if (!this.loaded || !this.loaded[uid]) {
-            throw new Error('Should not be trying to reload a tile that was never loaded or has been removed');
-        }
-        const workerTile = this.loaded[uid];
+
+        const workerTile = this.tileState.getLoaded(uid);
+        if (!workerTile) throw new Error('Should not be trying to reload a tile that was never loaded or has been removed');
+
         workerTile.showCollisionBoxes = params.showCollisionBoxes;
+
         if (workerTile.status === 'parsing') {
             const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-            // if we have cancelled the original parse, make sure to pass the rawTileData from the original fetch
-            let parseResult: WorkerTileResult;
-            if (this.fetching[uid]) {
-                const {rawTileData, cacheControl, resourceTiming} = this.fetching[uid];
-                delete this.fetching[uid];
-                parseResult = extend({rawTileData: rawTileData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
-            } else {
-                parseResult = result;
-            }
-            return parseResult;
 
+            // if we have cancelled the original parse, make sure to pass the rawTileData from the original fetch
+            const fetchingState = this.tileState.consumeFetching(uid);
+            if (fetchingState) {
+                const {rawTileData, cacheControl, resourceTiming} = fetchingState;
+                return extend({rawTileData: rawTileData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
+            }
+
+            return result;
         }
-        // if there was no vector tile data on the initial load, don't try and re-parse tile
-        if (workerTile.status === 'done' && workerTile.vectorTile) {
-            // this seems like a missing case where cache control is lost? see #3309
-            return workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-        }
+
+        // If there was no vector tile data on the initial load, don't try and reparse the tile.
+        if (workerTile.status !== 'done' || !workerTile.vectorTile) return undefined;
+
+        // this seems like a missing case where cache control is lost? see #3309
+        return workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
     }
 
     /**
      * Implements {@link WorkerSource.abortTile}.
      */
     async abortTile(params: TileParameters): Promise<void> {
-        const loading = this.loading;
-        const uid = params.uid;
-        if (loading && loading[uid] && loading[uid].abort) {
-            loading[uid].abort.abort();
-            delete loading[uid];
-        }
+        this.tileState.abort(params.uid);
     }
 
     /**
      * Implements {@link WorkerSource.removeTile}.
      */
     async removeTile(params: TileParameters): Promise<void> {
-        if (this.loaded && this.loaded[params.uid]) {
-            delete this.loaded[params.uid];
-        }
+        this.tileState.removeLoaded(params.uid);
     }
 }

@@ -43,7 +43,7 @@ describe('vector tile worker source', () => {
             uid: 0
         } as any as TileParameters);
 
-        expect(source.loading).toEqual({});
+        expect(source.tileState.loading).toEqual({});
         await expect(abortPromise).resolves.toBeFalsy();
         await expect(loadPromise).rejects.toThrow(expect.objectContaining({name: ABORT_ERROR}));
     });
@@ -51,7 +51,7 @@ describe('vector tile worker source', () => {
     test('VectorTileWorkerSource.removeTile removes loaded tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
 
-        source.loaded = {
+        source.tileState.loaded = {
             '0': {} as WorkerTile
         };
 
@@ -61,14 +61,14 @@ describe('vector tile worker source', () => {
         } as any as TileParameters);
         expect(res).toBeUndefined();
 
-        expect(source.loaded).toEqual({});
+        expect(source.tileState.loaded).toEqual({});
     });
 
     test('VectorTileWorkerSource.reloadTile reloads a previously-loaded tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = vi.fn().mockReturnValue(Promise.resolve({} as WorkerTileResult));
 
-        source.loaded = {
+        source.tileState.loaded = {
             '0': {
                 status: 'done',
                 vectorTile: {},
@@ -213,7 +213,7 @@ describe('vector tile worker source', () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = vi.fn();
 
-        source.loaded = {
+        source.tileState.loaded = {
             '0': {
                 status: 'done',
                 parse
