@@ -186,6 +186,20 @@ describe('StyleLayer.setPaintProperty', () => {
         expect(layer.getPaintProperty('background-color-transition')).toBeUndefined();
     });
 
+    test('error prompts user to try setPaintProperty instead of setLayoutProperty', async() => {
+        const layer = createStyleLayer({
+            'id': 'symbol',
+            'type': 'symbol',
+            'layout': {
+                'text-transform': 'uppercase'
+            }
+        } as LayerSpecification, {});
+
+        const errorPromise = layer.once('error');
+        layer.setPaintProperty('visibility', 'visible');
+        const {error} = await errorPromise;
+        expect(error.message).toContain('Use get/setLayoutProperty instead?');
+    });
 });
 
 describe('StyleLayer.setLayoutProperty', () => {
@@ -240,6 +254,20 @@ describe('StyleLayer.setLayoutProperty', () => {
 
         expect(layer.layout.get('text-transform').value).toEqual({kind: 'constant', value: 'none'});
         expect(layer.getLayoutProperty('text-transform')).toBeUndefined();
+    });
+    test('error prompts user to try setPaintProperty instead of setLayoutProperty', async() => {
+        const layer = createStyleLayer({
+            'id': 'symbol',
+            'type': 'symbol',
+            'paint': {
+                'text-color': 'blue'
+            }
+        } as LayerSpecification, {});
+
+        const errorPromise = layer.once('error');
+        layer.setLayoutProperty('text-color', 'blue');
+        const {error} = await errorPromise;
+        expect(error.message).toContain('Use get/setPaintProperty instead?');
     });
 });
 

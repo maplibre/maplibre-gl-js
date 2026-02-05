@@ -7,7 +7,7 @@ import {
     validatePaintProperty,
     emitValidationErrors
 } from './validate_style';
-import {Evented} from '../util/evented';
+import {Evented, ErrorEvent} from '../util/evented';
 import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties';
 
 import type {Bucket, BucketParameters} from '../data/bucket';
@@ -77,6 +77,10 @@ export type QueryIntersectsFeatureParams = {
      */
     getElevation: undefined | ((x: number, y: number) => number);
 };
+
+// Error message constants for property type mismatches
+const ERR_PAINT_NOT_LAYOUT = (n: string) => `${n} is a PAINT property not a LAYOUT property. Use get/setPaintProperty instead?`;
+const ERR_LAYOUT_NOT_PAINT = (n: string) => `${n} is a LAYOUT property not a PAINT property. Use get/setLayoutProperty instead?`;
 
 /**
  * A base class for style layers
@@ -175,7 +179,12 @@ export abstract class StyleLayer extends Evented {
         if (name === 'visibility') {
             return this.visibility;
         }
-
+        if (this._transitionablePaint && name in this._transitionablePaint._properties.defaultTransitionablePropertyValues) {
+            throw new Error(ERR_PAINT_NOT_LAYOUT(name));
+        }
+        if (!this._unevaluatedLayout) {
+            throw new Error(`Cannot get layout property "${name}" on layer type "${this.type}" which has no layout properties.`);
+        }
         return this._unevaluatedLayout.getValue(name);
     }
 
@@ -240,13 +249,6 @@ export abstract class StyleLayer extends Evented {
     }
 
     setLayoutProperty(name: string, value: any, options: StyleSetterOptions = {}) {
-        if (value !== null && value !== undefined) {
-            const key = `layers.${this.id}.layout.${name}`;
-            if (this._validate(validateLayoutProperty, key, name, value, options)) {
-                return;
-            }
-        }
-
         if (name === 'visibility') {
             this.visibility = value;
             this._visibilityExpression.setValue(value);
@@ -254,24 +256,38 @@ export abstract class StyleLayer extends Evented {
             return;
         }
 
+        if (this._transitionablePaint && name in this._transitionablePaint._properties.defaultTransitionablePropertyValues) {
+            this.fire(new ErrorEvent(new Error(ERR_PAINT_NOT_LAYOUT(name))));
+            return;
+        }
+
+        if ((value !== null && value !== undefined)&&(this._validate(validateLayoutProperty, `layers.${this.id}.layout.${name}`, name, value, options)))  return;
+
         this._unevaluatedLayout.setValue(name, value);
     }
 
     getPaintProperty(name: string) {
         if (name.endsWith(TRANSITION_SUFFIX)) {
-            return this._transitionablePaint.getTransition(name.slice(0, -TRANSITION_SUFFIX.length));
+            const baseName = name.slice(0, -TRANSITION_SUFFIX.length);
+            if (baseName === 'visibility' || (this._unevaluatedLayout && baseName in this._unevaluatedLayout._properties.properties)) {
+                throw new Error(ERR_LAYOUT_NOT_PAINT(name));
+            }
+            return this._transitionablePaint.getTransition(baseName);
         } else {
+            if (name === 'visibility' || (this._unevaluatedLayout && name in this._unevaluatedLayout._properties.properties)) {
+                throw new Error(ERR_LAYOUT_NOT_PAINT(name));
+            }
             return this._transitionablePaint.getValue(name);
         }
     }
 
     setPaintProperty(name: string, value: unknown, options: StyleSetterOptions = {}) {
-        if (value !== null && value !== undefined) {
-            const key = `layers.${this.id}.paint.${name}`;
-            if (this._validate(validatePaintProperty, key, name, value, options)) {
-                return false;
-            }
+        if (name === 'visibility' || (this._unevaluatedLayout && name in this._unevaluatedLayout._properties.properties)) {
+            this.fire(new ErrorEvent(new Error(ERR_LAYOUT_NOT_PAINT(name))));
+            return false;
         }
+
+        if ((value !== null && value !== undefined)&&(this._validate(validatePaintProperty, `layers.${this.id}.paint.${name}`, name, value, options)))return false;
 
         if (name.endsWith(TRANSITION_SUFFIX)) {
             this._transitionablePaint.setTransition(name.slice(0, -TRANSITION_SUFFIX.length), (value as any) || undefined);
