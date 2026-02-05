@@ -160,11 +160,10 @@ export class GeoJSONWorkerSource implements WorkerSource {
 
     private async _reloadLoadedTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
         const uid = params.uid;
-        if (!this.loaded || !this.loaded[uid]) {
-            throw new Error('Should not be trying to reload a tile that was never loaded or has been removed');
-        }
 
-        const workerTile = this.loaded[uid];
+        const workerTile = this.loaded?.[uid];
+        if (!workerTile) throw new Error('Should not be trying to reload a tile that was never loaded or has been removed');
+
         workerTile.showCollisionBoxes = params.showCollisionBoxes;
 
         if (workerTile.status === 'parsing') {
