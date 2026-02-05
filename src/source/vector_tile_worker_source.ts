@@ -212,10 +212,10 @@ export class VectorTileWorkerSource implements WorkerSource {
         if (workerTile.status === 'parsing') {
             const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 
-            // if we have cancelled the original parse, make sure to pass the rawTileData from the original fetch
-            const fetchingState = this.tileState.consumeParsing(uid);
-            if (fetchingState) {
-                const {rawData, cacheControl, resourceTiming} = fetchingState;
+            // if we have cancelled the original parse, make sure to pass the rawTileData from the original parse
+            const parsingState = this.tileState.consumeParsing(uid);
+            if (parsingState) {
+                const {rawData, cacheControl, resourceTiming} = parsingState;
                 return extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
             }
 

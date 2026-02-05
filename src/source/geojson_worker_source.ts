@@ -108,24 +108,29 @@ export class GeoJSONWorkerSource implements WorkerSource {
     async loadTile(params: WorkerTileParameters): Promise<WorkerTileResult | null> {
         const {uid} = params;
 
-        const loadResult = this.loadVectorTile(params);
-        if (!loadResult) return null;
-
-        const {vectorTile, rawData} = loadResult;
-
         const workerTile = new WorkerTile(params);
-        workerTile.vectorTile = vectorTile;
-        this.tileState.markLoaded(uid, workerTile);
-
-        this.tileState.setParsing(uid, {rawData});  // Keep data so reloadTile can access if parse is canceled.
         workerTile.abort = new AbortController();
         try {
-            const result = await workerTile.parse(vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-            // Transferring a copy of rawData because the worker needs to retain its copy.
-            return extend({rawTileData: rawData.slice(0)}, result);
-        } finally {
-            delete workerTile.abort;
-            this.tileState.clearParsing(uid);
+            const loadResult = this.loadVectorTile(params);
+            if (!loadResult) return null;
+
+            const {vectorTile, rawData} = loadResult;
+
+            workerTile.vectorTile = vectorTile;
+            this.tileState.markLoaded(uid, workerTile);
+
+            this.tileState.setParsing(uid, {rawData});  // Keep data so reloadTile can access if parse is canceled.
+            try {
+                const result = await workerTile.parse(vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
+                // Transferring a copy of rawData because the worker needs to retain its copy.
+                return extend({rawTileData: rawData.slice(0)}, result);
+            } finally {
+                this.tileState.clearParsing(uid);
+            }
+        } catch (err) {
+            workerTile.status = 'done';
+            this.tileState.markLoaded(uid, workerTile);
+            throw err;
         }
     }
 
