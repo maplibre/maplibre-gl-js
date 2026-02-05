@@ -91,20 +91,14 @@ export class GeoJSONWorkerSource implements WorkerSource {
     /**
      * Retrieves and sends loaded vector tiles to the main thread.
      */
-    async loadVectorTile(params: WorkerTileParameters, _abortController: AbortController): Promise<LoadVectorTileResult | null> {
-        const canonical = params.tileID.canonical;
+    loadVectorTile(params: WorkerTileParameters): LoadVectorTileResult | null {
+        if (!this._geoJSONIndex) throw new Error('Unable to parse the data into a cluster or geojson');
 
-        if (!this._geoJSONIndex) {
-            throw new Error('Unable to parse the data into a cluster or geojson');
-        }
-
-        const geoJSONTile = this._geoJSONIndex.getTile(canonical.z, canonical.x, canonical.y);
-        if (!geoJSONTile) {
-            return null;
-        }
+        const {z, x, y} = params.tileID.canonical;
+        const geoJSONTile = this._geoJSONIndex.getTile(z, x, y);
+        if (!geoJSONTile) return null;
 
         const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features, {version: 2, extent: EXTENT});
-
         return toVirtualVectorTile(geojsonWrapper);
     }
 
@@ -114,35 +108,24 @@ export class GeoJSONWorkerSource implements WorkerSource {
     async loadTile(params: WorkerTileParameters): Promise<WorkerTileResult | null> {
         const {uid} = params;
 
+        const loadResult = this.loadVectorTile(params);
+        if (!loadResult) return null;
+
+        const {vectorTile, rawData} = loadResult;
+
         const workerTile = new WorkerTile(params);
-        this.tileState.startLoading(uid, workerTile);
+        workerTile.vectorTile = vectorTile;
+        this.tileState.markLoaded(uid, workerTile);
 
-        const abortController = new AbortController();
-        workerTile.abort = abortController;
-
+        this.tileState.setParsing(uid, {rawData});  // Keep data so reloadTile can access if parse is canceled.
+        workerTile.abort = new AbortController();
         try {
-            const response = await this.loadVectorTile(params, abortController);
-            this.tileState.finishLoading(uid);
-            if (!response) return null;
-
-            const {vectorTile, rawData} = response;
-
-            workerTile.vectorTile = vectorTile;
-            this.tileState.markLoaded(uid, workerTile);
-            this.tileState.setFetching(uid, {rawData});  // Keep data so reloadTile can access if parse is canceled.
-
-            try {
-                const result = await workerTile.parse(vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-                // Transferring a copy of rawData because the worker needs to retain its copy.
-                return extend({rawTileData: rawData.slice(0)}, result);
-            } finally {
-                this.tileState.clearFetching(uid);
-            }
-        } catch (err) {
-            this.tileState.finishLoading(uid);
-            workerTile.status = 'done';
-            this.tileState.markLoaded(uid, workerTile);
-            throw err;
+            const result = await workerTile.parse(vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
+            // Transferring a copy of rawData because the worker needs to retain its copy.
+            return extend({rawTileData: rawData.slice(0)}, result);
+        } finally {
+            delete workerTile.abort;
+            this.tileState.clearParsing(uid);
         }
     }
 
@@ -157,12 +140,12 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (workerTile.status === 'parsing') {
             const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 
-            // If we have canceled the original parse, make sure to pass the rawData from the original fetch.
-            const fetchingState = this.tileState.consumeFetching(uid);
-            if (fetchingState) {
-                const {rawData} = fetchingState;
+            // If we have canceled the original parse, make sure to pass the rawData from the original parse.
+            const parsingState = this.tileState.consumeParsing(uid);
+            if (parsingState) {
+                const {rawData} = parsingState;
                 // Transferring a copy of rawData because the worker needs to retain its copy.
-                return extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result);
+                return extend({rawTileData: rawData.slice(0)}, result);
             }
 
             return result;
@@ -207,7 +190,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
     async loadData(params: LoadGeoJSONParameters): Promise<GeoJSONWorkerSourceLoadDataResult> {
         this._pendingRequest?.abort();
 
-        const perf = this._startPerformance(params);
+        const timing = this._startRequestTiming(params);
         this._pendingRequest = new AbortController();
         try {
             // Load and process the GeoJSON data if it hasn't been loaded yet or if the data is changed.
@@ -227,7 +210,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
             // from a URL.
             if (params.request) result.data = data;
 
-            this._finishPerformance(perf, params, result);
+            this._finishRequestTiming(timing, params, result);
             return result;
         } catch (err) {
             delete this._pendingRequest;
@@ -236,20 +219,20 @@ export class GeoJSONWorkerSource implements WorkerSource {
         }
     }
 
-    _startPerformance(params: LoadGeoJSONParameters): RequestPerformance | undefined {
+    _startRequestTiming(params: LoadGeoJSONParameters): RequestPerformance | undefined {
         if (!params.request?.collectResourceTiming) return;
         return new RequestPerformance(params.request);
     }
 
-    _finishPerformance(perf: RequestPerformance, params: LoadGeoJSONParameters, result: GeoJSONWorkerSourceLoadDataResult): void {
-        if (!perf) return;
+    _finishRequestTiming(timing: RequestPerformance, params: LoadGeoJSONParameters, result: GeoJSONWorkerSourceLoadDataResult): void {
+        if (!timing) return;
 
-        const resourceTimingData = perf.finish();
-        if (!resourceTimingData) return;
+        const timingData = timing.finish();
+        if (!timingData) return;
 
         // it's necessary to eval the result of getEntriesByName() here via parse/stringify
         // late evaluation in the main thread causes TypeError: illegal invocation
-        result.resourceTiming = {[params.source]: JSON.parse(JSON.stringify(resourceTimingData))};
+        result.resourceTiming = {[params.source]: JSON.parse(JSON.stringify(timingData))};
     }
 
     /**

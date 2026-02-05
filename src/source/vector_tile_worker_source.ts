@@ -94,43 +94,36 @@ export class VectorTileWorkerSource implements WorkerSource {
         if (overzoomParameters) {
             params.request = overzoomParameters.overzoomRequest;
         }
-        const perf = this._startPerformance(params);
 
         const workerTile = new WorkerTile(params);
-        this.tileState.startLoading(uid, workerTile);
+        const timing = this._startRequestTiming(params);
 
+        this.tileState.startLoading(uid, workerTile);
         const abortController = new AbortController();
         workerTile.abort = abortController;
-
         try {
             const response = await this.loadVectorTile(params, abortController);
             this.tileState.finishLoading(uid);
             if (!response) return null;
 
+            let {vectorTile, rawData} = response;
             if (overzoomParameters) {
-                const overzoomTile = this._getOverzoomTile(params, response.vectorTile);
-                response.rawData = overzoomTile.rawData;
-                response.vectorTile = overzoomTile.vectorTile;
+                ({vectorTile, rawData} = this._getOverzoomTile(params, response.vectorTile));
             }
 
-            const {vectorTile, rawData} = response;
-
             const cacheControl = this._getExpiryData(response);
-            const resourceTiming = this._finishPerformance(perf);
+            const resourceTiming = this._finishRequestTiming(timing);
 
             workerTile.vectorTile = vectorTile;
-            const parsePromise = workerTile.parse(vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-
             this.tileState.markLoaded(uid, workerTile);
-            // keep the original fetching state so that reload tile can pick it up if the original parse is cancelled by reloads' parse
-            this.tileState.setFetching(uid, {rawData, cacheControl, resourceTiming});
 
+            this.tileState.setParsing(uid, {rawData, cacheControl, resourceTiming});  // Keep data so reloadTile can access if parse is canceled.
             try {
-                const result = await parsePromise;
+                const result = await workerTile.parse(vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
                 // Transferring a copy of rawTileData because the worker needs to retain its copy.
                 return extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
             } finally {
-                this.tileState.clearFetching(uid);
+                this.tileState.clearParsing(uid);
             }
         } catch (err) {
             this.tileState.finishLoading(uid);
@@ -150,21 +143,21 @@ export class VectorTileWorkerSource implements WorkerSource {
         return data;
     }
 
-    _startPerformance(params: WorkerTileParameters): RequestPerformance | undefined {
+    _startRequestTiming(params: WorkerTileParameters): RequestPerformance | undefined {
         if (!params.request?.collectResourceTiming) return;
         return new RequestPerformance(params.request);
     }
 
-    _finishPerformance(perf: RequestPerformance): {resourceTiming: any} {
+    _finishRequestTiming(timing: RequestPerformance): {resourceTiming: any} {
         const result = {} as {resourceTiming: any};
-        if (!perf) return result;
+        if (!timing) return result;
 
-        const resourceTimingData = perf.finish();
-        if (!resourceTimingData) return result;
+        const timingData = timing.finish();
+        if (!timingData) return result;
 
         // it's necessary to eval the result of getEntriesByName() here via parse/stringify
         // late evaluation in the main thread causes TypeError: illegal invocation
-        result.resourceTiming = JSON.parse(JSON.stringify(resourceTimingData));
+        result.resourceTiming = JSON.parse(JSON.stringify(timingData));
         return result;
     }
 
@@ -220,7 +213,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 
             // if we have cancelled the original parse, make sure to pass the rawTileData from the original fetch
-            const fetchingState = this.tileState.consumeFetching(uid);
+            const fetchingState = this.tileState.consumeParsing(uid);
             if (fetchingState) {
                 const {rawData, cacheControl, resourceTiming} = fetchingState;
                 return extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);

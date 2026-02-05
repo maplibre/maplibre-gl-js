@@ -1,16 +1,16 @@
 import type {WorkerTile} from './worker_tile';
 import {type ExpiryData} from '../util/ajax';
 
-export type FetchingState = {
+export type ParsingState = {
     rawData: ArrayBufferLike;
     cacheControl?: ExpiryData;
     resourceTiming?: any;
 };
 
 export class WorkerTileState {
-    fetching: Record<string, FetchingState> = {};
     loading: Record<string, WorkerTile> = {};
     loaded: Record<string, WorkerTile> = {};
+    parsing: Record<string, ParsingState> = {};
 
     startLoading(uid: string | number, tile: WorkerTile): void {
         this.loading[uid] = tile;
@@ -27,19 +27,19 @@ export class WorkerTileState {
         delete this.loading[uid];
     }
 
-    setFetching(uid: string | number, state: FetchingState): void {
-        this.fetching[uid] = state;
+    setParsing(uid: string | number, state: ParsingState): void {
+        this.parsing[uid] = state;
     }
 
-    consumeFetching(uid: string | number): FetchingState | undefined {
-        const state = this.fetching[uid];
+    consumeParsing(uid: string | number): ParsingState | undefined {
+        const state = this.parsing[uid];
         if (!state) return undefined;
-        delete this.fetching[uid];
+        delete this.parsing[uid];
         return state;
     }
 
-    clearFetching(uid: string | number): void {
-        delete this.fetching[uid];
+    clearParsing(uid: string | number): void {
+        delete this.parsing[uid];
     }
 
     markLoaded(uid: string | number, tile: WorkerTile): void {
