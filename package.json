@@ -26,7 +26,7 @@
     "@mapbox/whoots-js": "^3.1.0",
     "@maplibre/geojson-vt": "^5.0.4",
     "@maplibre/maplibre-gl-style-spec": "^24.4.1",
-    "@maplibre/mlt": "^1.1.5",
+    "@maplibre/mlt": "^1.1.6",
     "@maplibre/vt-pbf": "^4.2.1",
     "@types/geojson": "^7946.0.16",
     "@types/supercluster": "^7.1.3",
