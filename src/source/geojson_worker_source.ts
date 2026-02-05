@@ -129,13 +129,12 @@ export class GeoJSONWorkerSource implements WorkerSource {
 
             workerTile.vectorTile = vectorTile;
             this.tileState.markLoaded(uid, workerTile);
-            this.tileState.setFetching(uid, {rawTileData: rawData});  // Keep data so reloadTile can access if parse is canceled.
+            this.tileState.setFetching(uid, {rawData});  // Keep data so reloadTile can access if parse is canceled.
 
             try {
                 const result = await workerTile.parse(vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-
                 // Transferring a copy of rawData because the worker needs to retain its copy.
-                return extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result);
+                return extend({rawTileData: rawData.slice(0)}, result);
             } finally {
                 this.tileState.clearFetching(uid);
             }
@@ -161,9 +160,9 @@ export class GeoJSONWorkerSource implements WorkerSource {
             // If we have canceled the original parse, make sure to pass the rawData from the original fetch.
             const fetchingState = this.tileState.consumeFetching(uid);
             if (fetchingState) {
-                const {rawTileData} = fetchingState;
+                const {rawData} = fetchingState;
                 // Transferring a copy of rawData because the worker needs to retain its copy.
-                return extend({rawTileData: rawTileData.slice(0), encoding: params.encoding}, result);
+                return extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result);
             }
 
             return result;
@@ -238,7 +237,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
     }
 
     _startPerformance(params: LoadGeoJSONParameters): RequestPerformance | undefined {
-        if (!params?.request?.collectResourceTiming) return;
+        if (!params.request?.collectResourceTiming) return;
         return new RequestPerformance(params.request);
     }
 

@@ -2,7 +2,7 @@ import type {WorkerTile} from './worker_tile';
 import {type ExpiryData} from '../util/ajax';
 
 export type FetchingState = {
-    rawTileData: ArrayBufferLike;
+    rawData: ArrayBufferLike;
     cacheControl?: ExpiryData;
     resourceTiming?: any;
 };

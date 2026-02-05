@@ -89,26 +89,23 @@ export class VectorTileWorkerSource implements WorkerSource {
      * a `params.url` property) for fetching and producing a VectorTile object.
      */
     async loadTile(params: WorkerTileParameters): Promise<WorkerTileResult | null> {
-        const {uid: tileUid, overzoomParameters} = params;
+        const {uid, overzoomParameters} = params;
 
         if (overzoomParameters) {
             params.request = overzoomParameters.overzoomRequest;
         }
-
-        const perf = (params && params.request && params.request.collectResourceTiming) ?
-            new RequestPerformance(params.request) : false;
+        const perf = this._startPerformance(params);
 
         const workerTile = new WorkerTile(params);
-        this.tileState.startLoading(tileUid, workerTile);
+        this.tileState.startLoading(uid, workerTile);
 
         const abortController = new AbortController();
         workerTile.abort = abortController;
+
         try {
             const response = await this.loadVectorTile(params, abortController);
-            this.tileState.finishLoading(tileUid);
-            if (!response) {
-                return null;
-            }
+            this.tileState.finishLoading(uid);
+            if (!response) return null;
 
             if (overzoomParameters) {
                 const overzoomTile = this._getOverzoomTile(params, response.vectorTile);
@@ -116,40 +113,59 @@ export class VectorTileWorkerSource implements WorkerSource {
                 response.vectorTile = overzoomTile.vectorTile;
             }
 
-            const rawTileData = response.rawData;
-            const cacheControl = {} as ExpiryData;
-            if (response.expires) cacheControl.expires = response.expires;
-            if (response.cacheControl) cacheControl.cacheControl = response.cacheControl;
+            const {vectorTile, rawData} = response;
 
-            const resourceTiming = {} as {resourceTiming: any};
-            if (perf) {
-                const resourceTimingData = perf.finish();
-                // it's necessary to eval the result of getEntriesByName() here via parse/stringify
-                // late evaluation in the main thread causes TypeError: illegal invocation
-                if (resourceTimingData)
-                    resourceTiming.resourceTiming = JSON.parse(JSON.stringify(resourceTimingData));
-            }
+            const cacheControl = this._getExpiryData(response);
+            const resourceTiming = this._finishPerformance(perf);
 
-            workerTile.vectorTile = response.vectorTile;
-            const parsePromise = workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
+            workerTile.vectorTile = vectorTile;
+            const parsePromise = workerTile.parse(vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 
-            this.tileState.markLoaded(tileUid, workerTile);
+            this.tileState.markLoaded(uid, workerTile);
             // keep the original fetching state so that reload tile can pick it up if the original parse is cancelled by reloads' parse
-            this.tileState.setFetching(tileUid, {rawTileData, cacheControl, resourceTiming});
+            this.tileState.setFetching(uid, {rawData, cacheControl, resourceTiming});
 
             try {
                 const result = await parsePromise;
                 // Transferring a copy of rawTileData because the worker needs to retain its copy.
-                return extend({rawTileData: rawTileData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
+                return extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
             } finally {
-                this.tileState.clearFetching(tileUid);
+                this.tileState.clearFetching(uid);
             }
         } catch (err) {
-            this.tileState.finishLoading(tileUid);
+            this.tileState.finishLoading(uid);
             workerTile.status = 'done';
-            this.tileState.markLoaded(tileUid, workerTile);
+            this.tileState.markLoaded(uid, workerTile);
             throw err;
         }
+    }
+
+    _getExpiryData(response: LoadVectorTileResult): ExpiryData {
+        const {expires, cacheControl} = response;
+
+        const data: ExpiryData = {};
+        if (expires) data.expires = expires;
+        if (cacheControl) data.cacheControl = cacheControl;
+
+        return data;
+    }
+
+    _startPerformance(params: WorkerTileParameters): RequestPerformance | undefined {
+        if (!params.request?.collectResourceTiming) return;
+        return new RequestPerformance(params.request);
+    }
+
+    _finishPerformance(perf: RequestPerformance): {resourceTiming: any} {
+        const result = {} as {resourceTiming: any};
+        if (!perf) return result;
+
+        const resourceTimingData = perf.finish();
+        if (!resourceTimingData) return result;
+
+        // it's necessary to eval the result of getEntriesByName() here via parse/stringify
+        // late evaluation in the main thread causes TypeError: illegal invocation
+        result.resourceTiming = JSON.parse(JSON.stringify(resourceTimingData));
+        return result;
     }
 
     /**
@@ -206,8 +222,8 @@ export class VectorTileWorkerSource implements WorkerSource {
             // if we have cancelled the original parse, make sure to pass the rawTileData from the original fetch
             const fetchingState = this.tileState.consumeFetching(uid);
             if (fetchingState) {
-                const {rawTileData, cacheControl, resourceTiming} = fetchingState;
-                return extend({rawTileData: rawTileData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
+                const {rawData, cacheControl, resourceTiming} = fetchingState;
+                return extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
             }
 
             return result;
