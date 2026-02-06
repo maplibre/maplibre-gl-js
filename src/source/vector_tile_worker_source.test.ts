@@ -11,6 +11,7 @@ import {WorkerTile} from './worker_tile';
 import {setPerformance, sleep} from '../util/test/util';
 import {ABORT_ERROR} from '../util/abort_error';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import {OverscaledTileID, CanonicalTileID} from '../tile/tile_id';
 import {VectorTile} from '@mapbox/vector-tile';
 import Point from '@mapbox/point-geometry';
 
@@ -207,6 +208,34 @@ describe('vector tile worker source', () => {
         expect(res).toBeDefined();
         expect(parseWorkerTileMock).toHaveBeenCalledTimes(2);
         await expect(loadPromise).resolves.toBeTruthy();
+    });
+
+    test('VectorTileWorkerSource loadTile uses _getOverzoomTile when overzoomParameters is provided', async () => {
+        const source = new VectorTileWorkerSource({} as any, new StyleLayerIndex(), []);
+
+        const mockVectorTile = {layers: {}};
+        source.loadVectorTile = vi.fn().mockResolvedValue({
+            vectorTile: mockVectorTile,
+            rawData: new ArrayBuffer(0)
+        });
+
+        const getOverzoomTileSpy = vi.spyOn(source as any, '_getOverzoomTile').mockReturnValue({
+            vectorTile: mockVectorTile,
+            rawData: new ArrayBuffer(0)
+        });
+
+        const params = {
+            uid: '1',
+            tileID: new OverscaledTileID(16, 0, 16, 100, 100),
+            source: 'test',
+            overzoomParameters: {
+                maxZoomTileID: new CanonicalTileID(14, 25, 25),
+                overzoomRequest: {url: ''}
+            }
+        } as WorkerTileParameters;
+
+        await source.loadTile(params);
+        expect(getOverzoomTileSpy).toHaveBeenCalledWith(params, mockVectorTile);
     });
 
     test('VectorTileWorkerSource.reloadTile does not reparse tiles with no vectorTile data but does call callback', async () => {
