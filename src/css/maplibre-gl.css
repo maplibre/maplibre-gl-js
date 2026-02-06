@@ -310,7 +310,6 @@
 
 @svg-load ctrl-terrain-enabled url("svg/maplibregl-ctrl-terrain.svg") {
     fill: #33b5e5;
-
 }
 
 .maplibregl-ctrl button.maplibregl-ctrl-terrain .maplibregl-ctrl-icon {
