@@ -38,6 +38,13 @@ export type GeolocateControlOptions = {
      * @defaultValue true
      */
     showUserLocation?: boolean;
+    /**
+     * If `true`, the control attempts to use the native `<geolocation>` HTML element if supported by the browser.
+     * This element provides a built-in UI for geolocation permissions.
+     * If the element is not supported, the control falls back to the standard button.
+     * @defaultValue false
+     */
+    useGeolocationElement?: boolean;
 };
 
 const defaultOptions: GeolocateControlOptions = {
@@ -51,7 +58,8 @@ const defaultOptions: GeolocateControlOptions = {
     },
     trackUserLocation: false,
     showAccuracyCircle: true,
-    showUserLocation: true
+    showUserLocation: true,
+    useGeolocationElement: false
 };
 
 let numberOfWatches = 0;
@@ -243,7 +251,7 @@ export class GeolocateControl extends Evented implements IControl {
     _container: HTMLElement;
     _dotElement: HTMLElement;
     _circleElement: HTMLElement;
-    _geolocateButton: HTMLButtonElement;
+    _geolocateButton: HTMLElement;
     _geolocationWatchID: number;
     _timeoutId: ReturnType<typeof setTimeout>;
     /* Geolocate Control Watch States
@@ -268,6 +276,7 @@ export class GeolocateControl extends Evented implements IControl {
     _accuracyCircleMarker: Marker;
     _accuracy: number;
     _setup: boolean; // set to true once the control has been setup
+    _usingGeolocationElement: boolean;
 
     /**
      * @param options - the control's options
@@ -499,7 +508,9 @@ export class GeolocateControl extends Evented implements IControl {
             this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active-error');
             this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-background');
             this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-background-error');
-            this._geolocateButton.disabled = true;
+            this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-background');
+            this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-background-error');
+            if (!this._usingGeolocationElement) (this._geolocateButton as HTMLButtonElement).disabled = true;
             const title = this._map._getUIString('GeolocateControl.LocationNotAvailable');
             this._geolocateButton.title = title;
             this._geolocateButton.setAttribute('aria-label', title);
@@ -538,10 +549,26 @@ export class GeolocateControl extends Evented implements IControl {
         }
 
         this._container.addEventListener('contextmenu', (e: MouseEvent) => e.preventDefault());
-        this._geolocateButton = DOM.create('button', 'maplibregl-ctrl-geolocate', this._container);
-        DOM.create('span', 'maplibregl-ctrl-icon', this._geolocateButton).setAttribute('aria-hidden', 'true');
-        this._geolocateButton.type = 'button';
-        this._geolocateButton.disabled = true;
+
+        if (this.options.useGeolocationElement && typeof window !== 'undefined' && 'HTMLGeolocationElement' in window) {
+            this._usingGeolocationElement = true;
+            this._geolocateButton = DOM.create('geolocation' as any, 'maplibregl-ctrl-geolocate', this._container);
+
+            // The geolocation element handles its own click and state, but we need to listen to its events
+            this._geolocateButton.addEventListener('geolocate', (e: any) => {
+                if (e.position) this._onSuccess(e.position);
+            });
+            this._geolocateButton.addEventListener('error', (e: any) => {
+                if (e.error) this._onError(e.error);
+            });
+
+        } else {
+            this._usingGeolocationElement = false;
+            this._geolocateButton = DOM.create('button', 'maplibregl-ctrl-geolocate', this._container);
+            DOM.create('span', 'maplibregl-ctrl-icon', this._geolocateButton).setAttribute('aria-hidden', 'true');
+            (this._geolocateButton as HTMLButtonElement).type = 'button';
+            (this._geolocateButton as HTMLButtonElement).disabled = true;
+        }
     };
 
     _finishSetupUI = (supported: boolean) => {
@@ -554,12 +581,12 @@ export class GeolocateControl extends Evented implements IControl {
         if (supported === false) {
             warnOnce('Geolocation support is not available so the GeolocateControl will be disabled.');
             const title = this._map._getUIString('GeolocateControl.LocationNotAvailable');
-            this._geolocateButton.disabled = true;
+            if (!this._usingGeolocationElement) (this._geolocateButton as HTMLButtonElement).disabled = true;
             this._geolocateButton.title = title;
             this._geolocateButton.setAttribute('aria-label', title);
         } else {
             const title = this._map._getUIString('GeolocateControl.FindMyLocation');
-            this._geolocateButton.disabled = false;
+            if (!this._usingGeolocationElement) (this._geolocateButton as HTMLButtonElement).disabled = false;
             this._geolocateButton.title = title;
             this._geolocateButton.setAttribute('aria-label', title);
         }
@@ -630,6 +657,10 @@ export class GeolocateControl extends Evented implements IControl {
     trigger(): boolean {
         if (!this._setup) {
             warnOnce('Geolocate control triggered before added to a map');
+            return false;
+        }
+        if (this.options.useGeolocationElement && this._usingGeolocationElement) {
+            warnOnce('GeolocateControl.trigger() is not supported when using useGeolocationElement.');
             return false;
         }
         if (this.options.trackUserLocation) {

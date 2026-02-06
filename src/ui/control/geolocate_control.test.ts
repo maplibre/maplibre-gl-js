@@ -75,7 +75,7 @@ describe('GeolocateControl with no options', () => {
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         map.addControl(geolocate);
         await sleep(0);
-        expect(geolocate._geolocateButton.disabled).toBeTruthy();
+        expect((geolocate._geolocateButton as HTMLButtonElement).disabled).toBeTruthy();
         spy.mockRestore();
     });
 
@@ -83,7 +83,7 @@ describe('GeolocateControl with no options', () => {
         const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
         await sleep(0);
-        expect(geolocate._geolocateButton.disabled).toBeFalsy();
+        expect((geolocate._geolocateButton as HTMLButtonElement).disabled).toBeFalsy();
     });
 
     test('is disabled when permission is denied and tracking is off', async () => {
@@ -95,7 +95,7 @@ describe('GeolocateControl with no options', () => {
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.sendError({code: 1, message: 'permission was denied'});
 
-        expect(geolocate._geolocateButton.disabled).toBeTruthy();
+        expect((geolocate._geolocateButton as HTMLButtonElement).disabled).toBeTruthy();
     });
 
     test('has permissions', async () => {
@@ -108,7 +108,7 @@ describe('GeolocateControl with no options', () => {
         map.addControl(geolocate);
 
         await sleep(0);
-        expect(geolocate._geolocateButton.disabled).toBeFalsy();
+        expect((geolocate._geolocateButton as HTMLButtonElement).disabled).toBeFalsy();
     });
 
     test('error event in waiting active state', async () => {
@@ -892,5 +892,79 @@ describe('GeolocateControl with no options', () => {
 
         const geolocateUIelem = await geolocateControl._container.getElementsByClassName('maplibregl-ctrl-geolocate');
         expect(geolocateUIelem).toHaveLength(1);
+    });
+
+    describe('GeolocateControl with geolocation element', () => {
+        let map;
+
+        beforeEach(() => {
+            beforeMapTest();
+            map = createMap();
+            (checkGeolocationSupport as unknown as MockInstance).mockImplementation(() => Promise.resolve(true));
+        });
+
+        afterEach(() => {
+            map.remove();
+            delete (window as any).HTMLGeolocationElement;
+        });
+
+        test('creates geolocation element when supported', async () => {
+            (window as any).HTMLGeolocationElement = class {};
+            const geolocate = new GeolocateControl({useGeolocationElement: true});
+            map.addControl(geolocate);
+            await sleep(0);
+            expect(geolocate._geolocateButton.tagName).toBe('GEOLOCATION');
+        });
+
+        test('falls back to button when not supported', async () => {
+            const geolocate = new GeolocateControl({useGeolocationElement: true});
+            map.addControl(geolocate);
+            await sleep(0);
+            expect(geolocate._geolocateButton.tagName).toBe('BUTTON');
+        });
+
+        test('trigger warns when using geolocation element', async () => {
+            (window as any).HTMLGeolocationElement = class {};
+            const geolocate = new GeolocateControl({useGeolocationElement: true});
+            map.addControl(geolocate);
+            await sleep(0);
+
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            geolocate.trigger();
+            expect(warnSpy).toHaveBeenCalledWith('GeolocateControl.trigger() is not supported when using useGeolocationElement.');
+            warnSpy.mockRestore();
+        });
+
+        test('geolocate event triggers onSuccess', async () => {
+            (window as any).HTMLGeolocationElement = class {};
+            const geolocate = new GeolocateControl({useGeolocationElement: true});
+            map.addControl(geolocate);
+            await sleep(0);
+
+            const spy = vi.spyOn(geolocate as any, '_onSuccess');
+            const position = {coords: {latitude: 0, longitude: 0, accuracy: 10}, timestamp: 123};
+
+            const event = new Event('geolocate');
+            (event as any).position = position;
+            geolocate._geolocateButton.dispatchEvent(event);
+
+            expect(spy).toHaveBeenCalledWith(position);
+        });
+
+        test('error event triggers onError', async () => {
+            (window as any).HTMLGeolocationElement = class {};
+            const geolocate = new GeolocateControl({useGeolocationElement: true});
+            map.addControl(geolocate);
+            await sleep(0);
+
+            const spy = vi.spyOn(geolocate as any, '_onError');
+            const error = {code: 1, message: 'denied'};
+
+            const event = new Event('error');
+            (event as any).error = error;
+            geolocate._geolocateButton.dispatchEvent(event);
+
+            expect(spy).toHaveBeenCalledWith(error);
+        });
     });
 });
