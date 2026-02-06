@@ -2,12 +2,12 @@ import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import {type ExpiryData, getArrayBuffer} from '../util/ajax';
 import {WorkerTile} from './worker_tile';
+import {WorkerTileState, type ParsingState} from './worker_tile_state';
 import {BoundedLRUCache} from '../tile/tile_cache';
 import {extend} from '../util/util';
 import {RequestPerformance} from '../util/performance';
 import {VectorTileOverzoomed, sliceVectorTileLayer, toVirtualVectorTile} from './vector_tile_overzoomed';
 import {MLTVectorTile} from './vector_tile_mlt';
-import {WorkerTileState} from './worker_tile_state';
 import type {
     WorkerSource,
     WorkerTileParameters,
@@ -117,11 +117,10 @@ export class VectorTileWorkerSource implements WorkerSource {
             workerTile.vectorTile = vectorTile;
             this.tileState.markLoaded(uid, workerTile);
 
-            this.tileState.setParsing(uid, {rawData, cacheControl, resourceTiming});  // Keep data so reloadTile can access if parse is canceled.
+            const parseState = {rawData, cacheControl, resourceTiming};  // Keep data so reloadTile can access if parse is canceled.
+            this.tileState.setParsing(uid, parseState);
             try {
-                const result = await workerTile.parse(vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-                // Transferring a copy of rawTileData because the worker needs to retain its copy.
-                return extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
+                return await this._getWorkerTileResult(workerTile, params, parseState);
             } finally {
                 this.tileState.clearParsing(uid);
             }
@@ -131,6 +130,16 @@ export class VectorTileWorkerSource implements WorkerSource {
             this.tileState.markLoaded(uid, workerTile);
             throw err;
         }
+    }
+
+    async _getWorkerTileResult(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
+        const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
+        if (!parseState) return result;
+
+        const {rawData, cacheControl, resourceTiming} = parseState;
+
+        // Transferring a copy of rawTileData because the worker needs to retain its copy.
+        return extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
     }
 
     _getExpiryData(response: LoadVectorTileResult): ExpiryData {
@@ -206,23 +215,16 @@ export class VectorTileWorkerSource implements WorkerSource {
         workerTile.showCollisionBoxes = params.showCollisionBoxes;
 
         if (workerTile.status === 'parsing') {
-            const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-
-            // if we have cancelled the original parse, make sure to pass the rawTileData from the original parse
-            const parsingState = this.tileState.consumeParsing(uid);
-            if (parsingState) {
-                const {rawData, cacheControl, resourceTiming} = parsingState;
-                return extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
-            }
-
-            return result;
+            // if we are cancelling the original parse, make sure to pass the rawTileData from the original parse
+            const parseState = this.tileState.consumeParsing(uid);
+            return await this._getWorkerTileResult(workerTile, params, parseState);
         }
 
         // If there was no vector tile data on the initial load, don't try and reparse the tile.
-        if (workerTile.status !== 'done' || !workerTile.vectorTile) return undefined;
-
         // this seems like a missing case where cache control is lost? see #3309
-        return workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
+        if (workerTile.status === 'done' && workerTile.vectorTile) {
+            return await this._getWorkerTileResult(workerTile, params);
+        }
     }
 
     /**

@@ -10,7 +10,7 @@ import {isAbortError} from '../util/abort_error';
 import {toVirtualVectorTile} from './vector_tile_overzoomed';
 import {type GeoJSONSourceDiff, applySourceDiff, toUpdateable, type GeoJSONFeatureId} from './geojson_source_diff';
 import {WorkerTile} from './worker_tile';
-import {WorkerTileState} from './worker_tile_state';
+import {WorkerTileState, type ParsingState} from './worker_tile_state';
 import {extend} from '../util/util';
 
 import type {WorkerSource, WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source';
@@ -119,11 +119,10 @@ export class GeoJSONWorkerSource implements WorkerSource {
             workerTile.vectorTile = vectorTile;
             this.tileState.markLoaded(uid, workerTile);
 
-            this.tileState.setParsing(uid, {rawData});  // Keep data so reloadTile can access if parse is canceled.
+            const parseState = {rawData};
+            this.tileState.setParsing(uid, parseState);  // Keep data so reloadTile can access if parse is canceled.
             try {
-                const result = await workerTile.parse(vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-                // Transferring a copy of rawData because the worker needs to retain its copy.
-                return extend({rawTileData: rawData.slice(0)}, result);
+                return await this._getWorkerTileResult(workerTile, params, parseState);
             } finally {
                 this.tileState.clearParsing(uid);
             }
@@ -143,23 +142,25 @@ export class GeoJSONWorkerSource implements WorkerSource {
         workerTile.showCollisionBoxes = params.showCollisionBoxes;
 
         if (workerTile.status === 'parsing') {
-            const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-
-            // If we have canceled the original parse, make sure to pass the rawData from the original parse.
-            const parsingState = this.tileState.consumeParsing(uid);
-            if (parsingState) {
-                const {rawData} = parsingState;
-                // Transferring a copy of rawData because the worker needs to retain its copy.
-                return extend({rawTileData: rawData.slice(0)}, result);
-            }
-
-            return result;
+            // If we are cancelling the original parse, make sure to pass the rawData from the original parse.
+            const parseState = this.tileState.consumeParsing(uid);
+            return await this._getWorkerTileResult(workerTile, params, parseState);
         }
 
         // If there was no vector tile data on the initial load, don't try and reparse the tile.
-        if (workerTile.status !== 'done' || !workerTile.vectorTile) return undefined;
+        if (workerTile.status === 'done' && workerTile.vectorTile) {
+            return await this._getWorkerTileResult(workerTile, params);
+        }
+    }
 
-        return workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
+    async _getWorkerTileResult(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
+        const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
+        if (!parseState) return result;
+
+        const {rawData} = parseState;
+
+        // Transferring a copy of rawTileData because the worker needs to retain its copy.
+        return extend({rawTileData: rawData.slice(0)}, result);
     }
 
     /**
