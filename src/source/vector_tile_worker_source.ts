@@ -95,8 +95,8 @@ export class VectorTileWorkerSource implements WorkerSource {
             params.request = overzoomParameters.overzoomRequest;
         }
 
-        const workerTile = new WorkerTile(params);
         const timing = this._startRequestTiming(params);
+        const workerTile = new WorkerTile(params);
 
         this.tileState.startLoading(uid, workerTile);
         const abortController = new AbortController();
