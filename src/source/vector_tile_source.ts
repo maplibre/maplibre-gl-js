@@ -195,7 +195,7 @@ export class VectorTileSource extends Evented implements Source {
         return extend({}, this._options);
     }
 
-    async loadTile(tile: Tile): Promise<void> {
+    async loadTile(tile: Tile): Promise<WorkerTileResult | void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const params: WorkerTileParameters = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
@@ -211,6 +211,7 @@ export class VectorTileSource extends Evented implements Source {
             subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
             encoding: this.encoding,
             overzoomParameters: this._getOverzoomParameters(tile),
+            etag: tile.etag
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
@@ -224,13 +225,15 @@ export class VectorTileSource extends Evented implements Source {
         }
         tile.abortController = new AbortController();
         try {
-            const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
+            const result = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
             delete tile.abortController;
 
             if (tile.aborted) {
                 return;
             }
-            this._afterTileLoadWorkerResponse(tile, data);
+            this._afterTileLoadWorkerResponse(tile, result);
+
+            return result;
         } catch (err) {
             delete tile.abortController;
 
@@ -272,6 +275,11 @@ export class VectorTileSource extends Evented implements Source {
         if (data && this.map._refreshExpiredTiles) {
             tile.setExpiryData(data);
         }
+
+        if (data && data.etag) {
+            tile.etag = data.etag;
+        }
+
         tile.loadVectorData(data, this.map.painter);
 
         if (tile.reloadPromise) {

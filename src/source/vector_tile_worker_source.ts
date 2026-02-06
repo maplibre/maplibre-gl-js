@@ -26,7 +26,7 @@ export type LoadVectorTileResult = {
 } & ExpiryData;
 
 export type AbortVectorData = () => void;
-export type LoadVectorData = (params: WorkerTileParameters, abortController: AbortController) => Promise<LoadVectorTileResult | null>;
+export type LoadVectorData = (params: WorkerTileParameters, response: {data: ArrayBuffer} & ExpiryData) => LoadVectorTileResult;
 
 /**
  * The {@link WorkerSource} implementation that supports {@link VectorTileSource}.
@@ -58,8 +58,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     /**
      * Loads a vector tile
      */
-    async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
-        const response = await getArrayBuffer(params.request, abortController);
+    loadVectorTile(params: WorkerTileParameters, response: {data: ArrayBuffer} & ExpiryData): LoadVectorTileResult {
         try {
             const vectorTile = params.encoding !== 'mlt'
                 ? new VectorTile(new Protobuf(response.data))
@@ -102,7 +101,16 @@ export class VectorTileWorkerSource implements WorkerSource {
         const abortController = new AbortController();
         workerTile.abort = abortController;
         try {
-            const response = await this.loadVectorTile(params, abortController);
+            // Download the tile data from the network.
+            const tileResponse = await getArrayBuffer(params.request, abortController);
+
+            // Tile data hasn't changed (etag support) - return an unmodified result
+            if (params.etag && params.etag === tileResponse.etag) {
+                this.tileState.finishLoading(uid);
+                return this._getEtagUnmodifiedResult(tileResponse, timing);
+            }
+
+            const response = this.loadVectorTile(params, tileResponse);
             this.tileState.finishLoading(uid);
             if (!response) return null;
 
@@ -132,6 +140,12 @@ export class VectorTileWorkerSource implements WorkerSource {
         }
     }
 
+    _getEtagUnmodifiedResult(response: ExpiryData, timing: RequestPerformance): WorkerTileResult {
+        const cacheControl = this._getExpiryData(response);
+        const resourceTiming = this._finishRequestTiming(timing);
+        return extend({etagUnmodified: true as const}, cacheControl, resourceTiming);
+    }
+
     async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
         let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 
@@ -144,13 +158,10 @@ export class VectorTileWorkerSource implements WorkerSource {
         return result;
     }
 
-    _getExpiryData(response: LoadVectorTileResult): ExpiryData {
-        const {expires, cacheControl} = response;
-
+    _getExpiryData({expires, cacheControl}: ExpiryData): ExpiryData {
         const data: ExpiryData = {};
         if (expires) data.expires = expires;
         if (cacheControl) data.cacheControl = cacheControl;
-
         return data;
     }
 
