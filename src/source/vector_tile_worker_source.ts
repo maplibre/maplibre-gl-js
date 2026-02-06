@@ -148,17 +148,13 @@ export class VectorTileWorkerSource implements WorkerSource {
         return new RequestPerformance(params.request);
     }
 
-    _finishRequestTiming(timing: RequestPerformance): {resourceTiming: any} {
-        const result = {} as {resourceTiming: any};
-        if (!timing) return result;
-
-        const timingData = timing.finish();
-        if (!timingData) return result;
+    _finishRequestTiming(timing: RequestPerformance): {resourceTiming?: any} {
+        const timingData = timing?.finish();
+        if (!timingData) return {};
 
         // it's necessary to eval the result of getEntriesByName() here via parse/stringify
         // late evaluation in the main thread causes TypeError: illegal invocation
-        result.resourceTiming = JSON.parse(JSON.stringify(timingData));
-        return result;
+        return {resourceTiming: JSON.parse(JSON.stringify(timingData))};
     }
 
     /**

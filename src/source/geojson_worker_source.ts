@@ -230,9 +230,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
     }
 
     _finishRequestTiming(timing: RequestPerformance, params: LoadGeoJSONParameters, result: GeoJSONWorkerSourceLoadDataResult): void {
-        if (!timing) return;
-
-        const timingData = timing.finish();
+        const timingData = timing?.finish();
         if (!timingData) return;
 
         // it's necessary to eval the result of getEntriesByName() here via parse/stringify
