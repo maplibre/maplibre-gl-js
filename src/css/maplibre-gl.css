@@ -305,7 +305,6 @@
 
 @svg-load ctrl-terrain url("svg/maplibregl-ctrl-terrain.svg") {
     fill: #333;
-
 }
 
 @svg-load ctrl-terrain-enabled url("svg/maplibregl-ctrl-terrain.svg") {
