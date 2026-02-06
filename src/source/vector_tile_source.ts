@@ -195,7 +195,7 @@ export class VectorTileSource extends Evented implements Source {
         return extend({}, this._options);
     }
 
-    async loadTile(tile: Tile): Promise<void> {
+    async loadTile(tile: Tile): Promise<boolean | void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const params: WorkerTileParameters = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
@@ -211,6 +211,7 @@ export class VectorTileSource extends Evented implements Source {
             subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
             encoding: this.encoding,
             overzoomParameters: this._getOverzoomParameters(tile),
+            etag: tile.etag,
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
@@ -228,20 +229,23 @@ export class VectorTileSource extends Evented implements Source {
             delete tile.abortController;
 
             if (tile.aborted) {
-                return;
+                return false;
             }
             this._afterTileLoadWorkerResponse(tile, data);
+
+            return data?.type === 'unchanged';
         } catch (err) {
             delete tile.abortController;
 
             if (tile.aborted) {
-                return;
+                return false;
             }
             if (err && err.status !== 404) {
                 throw err;
             }
             this._afterTileLoadWorkerResponse(tile, null);
         }
+        return false;
     }
 
     /**
@@ -267,6 +271,10 @@ export class VectorTileSource extends Evented implements Source {
     private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {
         if (data && data.resourceTiming) {
             tile.resourceTiming = data.resourceTiming;
+        }
+
+        if (data?.etag) {
+            tile.etag = data.etag;
         }
 
         if (data && this.map._refreshExpiredTiles) {

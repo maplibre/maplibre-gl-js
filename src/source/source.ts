@@ -89,9 +89,10 @@ export interface Source {
     /**
      * This method does the heavy lifting of loading a tile.
      * In most cases it will defer the work to the relevant worker source.
+     * @returns `true` if tile was loaded from browser cache and parsing was skipped. Further processing and repainting of the tile is not necessary in this case. `false` otherwise.
      * @param tile - The tile to load
      */
-    loadTile(tile: Tile): Promise<void>;
+    loadTile(tile: Tile): Promise<boolean | void>;
     /**
      * True is the tile is part of the source, false otherwise.
      * @param tileID - The tile ID

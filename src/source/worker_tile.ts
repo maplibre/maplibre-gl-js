@@ -18,7 +18,7 @@ import type {StyleLayer} from '../style/style_layer';
 import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {
     WorkerTileParameters,
-    WorkerTileResult,
+    WorkerTileProcessedResult,
 } from '../source/worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileLike} from '@maplibre/vt-pbf';
@@ -60,7 +60,7 @@ export class WorkerTile {
         this.inFlightDependencies = [];
     }
 
-    async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
+    async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileProcessedResult> {
         this.status = 'parsing';
         this.data = data;
 
@@ -192,6 +192,7 @@ export class WorkerTile {
 
         this.status = 'done';
         return {
+            type: 'processed',
             buckets: Object.values(buckets).filter(b => !b.isEmpty()),
             featureIndex,
             collisionBoxArray: this.collisionBoxArray,

@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {type VectorTileFeatureLike, type VectorTileLayerLike, type VectorTileLike, fromVectorTileJs} from '@maplibre/vt-pbf';
 import {clipGeometry} from '../symbol/clip_line';
-import type {LoadVectorTileResult} from './vector_tile_worker_source';
+import type {LoadVectorTileFullResult} from './vector_tile_worker_source';
 import type {CanonicalTileID} from '../tile/tile_id';
 
 class VectorTileFeatureOverzoomed implements VectorTileFeatureLike {
@@ -27,7 +27,7 @@ class VectorTileFeatureOverzoomed implements VectorTileFeatureLike {
 
     loadGeometry() {
         // Clone the geometry and ensure all points are Point instances
-        return this.pointsArray.map(ring => 
+        return this.pointsArray.map(ring =>
             ring.map(point => new Point(point.x, point.y))
         );
     }
@@ -66,12 +66,13 @@ export class VectorTileOverzoomed implements VectorTileLike {
  * @param virtualVectorTile - a syntetically created vector tile, this tile should have the relevant layer and features already added to it.
  * @returns - the encoded vector tile along with the original virtual tile binary data.
  */
-export function toVirtualVectorTile(virtualVectorTile: VectorTileLike): LoadVectorTileResult {
+export function toVirtualVectorTile(virtualVectorTile: VectorTileLike): LoadVectorTileFullResult {
     let pbf: Uint8Array = fromVectorTileJs(virtualVectorTile);
     if (pbf.byteOffset !== 0 || pbf.byteLength !== pbf.buffer.byteLength) {
         pbf = new Uint8Array(pbf);  // Compatibility with node Buffer (https://github.com/mapbox/pbf/issues/35)
     }
     return {
+        type: 'full',
         vectorTile: virtualVectorTile,
         rawData: pbf.buffer
     };
@@ -88,7 +89,7 @@ export function sliceVectorTileLayer(sourceLayer: VectorTileLayerLike, maxZoomTi
     const {extent} = sourceLayer;
     const dz = targetTileID.z - maxZoomTileID.z;
     const scale = Math.pow(2, dz);
-    
+
     // Calculate the target tile's position within the source tile in target coordinate space
     // This ensures all tiles share the same coordinate system
     const offsetX = (targetTileID.x - maxZoomTileID.x * scale) * extent;
@@ -98,7 +99,7 @@ export function sliceVectorTileLayer(sourceLayer: VectorTileLayerLike, maxZoomTi
     for (let index = 0; index < sourceLayer.length; index++) {
         const feature: VectorTileFeatureLike = sourceLayer.feature(index);
         let geometry = feature.loadGeometry();
-        
+
         // Transform all coordinates to target tile space
         for (const ring of geometry) {
             for (const point of ring) {
@@ -106,13 +107,13 @@ export function sliceVectorTileLayer(sourceLayer: VectorTileLayerLike, maxZoomTi
                 point.y = point.y * scale - offsetY;
             }
         }
-        
+
         const buffer = 128;
         geometry = clipGeometry(geometry, feature.type, -buffer, -buffer, extent + buffer, extent + buffer);
         if (geometry.length === 0) {
             continue;
         }
-        
+
         featureWrappers.push(new VectorTileFeatureOverzoomed(
             feature.type,
             geometry,

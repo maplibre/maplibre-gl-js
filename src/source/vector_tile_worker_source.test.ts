@@ -6,7 +6,7 @@ import {type LoadVectorData, VectorTileWorkerSource} from '../source/vector_tile
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {fakeServer, type FakeServer} from 'nise';
 import {type IActor} from '../util/actor';
-import {type TileParameters, type WorkerTileParameters, type WorkerTileResult} from './worker_source';
+import {type WorkerTileProcessedResult, type TileParameters, type WorkerTileParameters, type WorkerTileResult} from './worker_source';
 import {WorkerTile} from './worker_tile';
 import {setPerformance, sleep} from '../util/test/util';
 import {ABORT_ERROR} from '../util/abort_error';
@@ -85,6 +85,7 @@ describe('vector tile worker source', () => {
         const rawTileData = new ArrayBuffer(0);
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
+                type: 'full',
                 vectorTile: {
                     layers: {
                         test: {
@@ -157,14 +158,16 @@ describe('vector tile worker source', () => {
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
         } as any as WorkerTileParameters);
         expect(res).toBeDefined();
-        expect(res.rawTileData).toBeDefined();
-        expect(res.rawTileData).toStrictEqual(rawTileData);
+        expect(res.type).toBe('processed');
+        expect((res as WorkerTileProcessedResult).rawTileData).toBeDefined();
+        expect((res as WorkerTileProcessedResult).rawTileData).toStrictEqual(rawTileData);
     });
 
     test('VectorTileWorkerSource.loadTile reparses tile if reloadTile is called during reparsing', async () => {
         const rawTileData = new ArrayBuffer(0);
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
+                type: 'full',
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData
             };
@@ -185,7 +188,7 @@ describe('vector tile worker source', () => {
             .mockImplementation(function(_data, _layerIndex, _availableImages, _actor) {
                 this.status = 'parsing';
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({} as WorkerTileResult), 20);
+                    setTimeout(() => resolve({} as WorkerTileProcessedResult), 20);
                 });
             });
 
@@ -246,6 +249,114 @@ describe('vector tile worker source', () => {
         expect(await promise).toBeNull();
     });
 
+    test('VectorTileWorkerSource.loadTile processes tile when loadVectorTile returns full result', async () => {
+        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
+        const oldEtag = '"old-etag"';
+        const newEtag = '"new-etag"';
+        const cacheControl = 'max-age=3600';
+
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
+        source.loadVectorTile = vi.fn(async (_params, _abortController) => {
+            return {
+                type: 'full' as const,
+                vectorTile: new VectorTile(new Protobuf(rawTileData.buffer.slice(0) as ArrayBuffer)),
+                rawData: rawTileData.buffer.slice(0) as ArrayBuffer,
+                cacheControl: cacheControl,
+                etag: newEtag,
+            };
+        });
+
+        const parseWorkerTileMock = vi
+            .spyOn(WorkerTile.prototype, 'parse')
+            .mockImplementation(function() {
+                this.status = 'done';
+                return Promise.resolve({} as WorkerTileProcessedResult);
+            });
+
+        const loadPromise = source.loadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            request: {url: 'http://localhost:2900/faketile.pbf'},
+            etag: oldEtag
+        } as any as WorkerTileParameters);
+
+        const result = await loadPromise;
+
+        expect(result.type).toBe('processed');
+        expect(result.etag).toBe(newEtag);
+        expect(parseWorkerTileMock).toHaveBeenCalledTimes(1);
+        expect(result.cacheControl).toBe(cacheControl);
+        expect('rawTileData' in result).toBe(true);
+    });
+
+    test('VectorTileWorkerSource.loadVectorTile returns full type when etag does not match', async () => {
+        const oldEtag = '"old-etag"';
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
+        const loadTileParams = {
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            request: {url: 'http://localhost:2900/faketile.pbf'},
+            etag: oldEtag
+        } as unknown as WorkerTileParameters;
+
+        const newEtag = '"new-etag"';
+        const newCacheControl = 'max-age=7200';
+        server.respondWith(request => {
+            request.respond(200, {
+                'Content-Type': 'application/pbf',
+                'ETag': newEtag,
+                'Cache-Control': newCacheControl
+            }, null);
+        });
+
+        const loadVectorTileSpy = vi.spyOn(source, 'loadVectorTile');
+        const loadPromise = source.loadTile(loadTileParams);
+        server.respond();
+        const result = await loadPromise;
+        const loadVectorTileResult = await loadVectorTileSpy.mock.results[0].value;
+
+        expect(loadVectorTileResult.type).toBe('full');
+        expect(loadVectorTileResult.vectorTile).toBeDefined();
+        expect(loadVectorTileResult.rawData).toBeDefined();
+        expect(loadVectorTileResult.cacheControl).toBe(newCacheControl);
+        expect(loadVectorTileResult.etag).toBe(newEtag);
+
+        expect(result.type).toBe('processed');
+        expect(result.etag).toBe(newEtag);
+        expect(result.cacheControl).toBe(newCacheControl);
+    });
+
+    test('VectorTileWorkerSource.loadTile and loadVectorTile returns unchanged type when etag matches', async () => {
+        const existingEtag = '"abc123"';
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
+
+        const parseWorkerTileMock = vi.spyOn(WorkerTile.prototype, 'parse');
+
+        server.respondWith(request => {
+            request.respond(200, {
+                'ETag': existingEtag,
+                'Cache-Control': 'max-age=3600'
+            }, '');
+        });
+
+        const loadPromise = source.loadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            request: {url: 'http://localhost:2900/faketile.pbf'},
+            etag: existingEtag
+        } as any as WorkerTileParameters);
+
+        server.respond();
+        const result = await loadPromise;
+
+        expect(result.type).toBe('unchanged');
+        expect(result.etag).toBe(existingEtag);
+        expect(parseWorkerTileMock).not.toHaveBeenCalled();
+    });
+
     test('VectorTileWorkerSource.returns a good error message when failing to parse a tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = vi.fn();
@@ -291,6 +402,7 @@ describe('vector tile worker source', () => {
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
+                type: 'full',
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
@@ -347,6 +459,7 @@ describe('vector tile worker source', () => {
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
             return {
+                type: 'full',
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,

@@ -186,8 +186,8 @@ export class TileManager extends Evented {
 
     async _loadTile(tile: Tile, id: string, state: TileState): Promise<void> {
         try {
-            await this._source.loadTile(tile);
-            this._tileLoaded(tile, id, state);
+            const isTileLoadedFromCacheHit = await this._source.loadTile(tile);
+            this._tileLoaded(tile, id, state, isTileLoadedFromCacheHit === true);
         } catch (err) {
             tile.state = 'errored';
             if ((err as any).status !== 404) {
@@ -295,15 +295,21 @@ export class TileManager extends Evented {
         await this._loadTile(tile, id, state);
     }
 
-    _tileLoaded(tile: Tile, id: string, previousState: TileState) {
+    _tileLoaded(tile: Tile, id: string, previousState: TileState, isTileLoadedFromCacheHit: boolean) {
         tile.timeAdded = now();
         // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
-        if (tile.selfFading) {
+        if (!isTileLoadedFromCacheHit && tile.selfFading) {
             tile.fadeEndTime = tile.timeAdded + this._rasterFadeDuration;
         }
 
         if (previousState === 'expired') tile.refreshedUponExpiration = true;
         this._setTileReloadTimer(id, tile);
+
+        if (isTileLoadedFromCacheHit) {
+            // No data event or further processing is needed because the tile is unchanged.
+            return;
+        }
+
         if (this.getSource().type === 'raster-dem' && tile.dem) {
             backfillDEM(tile, this._inViewTiles);
         }
@@ -346,7 +352,7 @@ export class TileManager extends Evented {
      * Analogy: imagine two sheets of paper in 3D space:
      *   - one sheet = ideal tiles at varying overscaledZ
      *   - the second sheet = maxCoveringZoom
-     * 
+     *
      * @param retainTileMap - this parameters will be updated with the child tiles to keep
      * @param idealTilesWithoutData - which of the ideal tiles currently does not have loaded data
      * @return a set of tiles that need to be loaded
@@ -505,7 +511,7 @@ export class TileManager extends Evented {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.type === 'vector' && this.map._zoomLevelsToOverscale !== undefined
-                    ? transform.maxZoom - this.map._zoomLevelsToOverscale 
+                    ? transform.maxZoom - this.map._zoomLevelsToOverscale
                     : this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,
