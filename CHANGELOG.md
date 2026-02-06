@@ -6,6 +6,7 @@
 ### 🐞 Bug fixes
 - Fix updating terrain tiles on feature state changes ([#6231](https://github.com/maplibre/maplibre-gl-js/issues/6231)) (by [@pstaszek](https://github.com/pstaszek))
 - Fix LngLatBounds.intersects for zero-width bounds (by [@lucaswoj](https://github.com/lucaswoj))
+- When the `prefers-reduced-motion` media query is active, we now no longer display the pulsing GeoLocation animation ([#7066](https://github.com/maplibre/maplibre-gl-js/pull/7066)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 
 ## 5.17.0
