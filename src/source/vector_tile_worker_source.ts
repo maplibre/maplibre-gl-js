@@ -133,13 +133,15 @@ export class VectorTileWorkerSource implements WorkerSource {
     }
 
     async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
-        const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-        if (!parseState) return result;
+        let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 
-        const {rawData, cacheControl, resourceTiming} = parseState;
+        if (parseState) {
+            const {rawData, cacheControl, resourceTiming} = parseState;
+            // Transferring a copy of rawTileData because the worker needs to retain its copy.
+            result = extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
+        }
 
-        // Transferring a copy of rawTileData because the worker needs to retain its copy.
-        return extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
+        return result;
     }
 
     _getExpiryData(response: LoadVectorTileResult): ExpiryData {

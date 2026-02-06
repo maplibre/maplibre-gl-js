@@ -154,13 +154,15 @@ export class GeoJSONWorkerSource implements WorkerSource {
     }
 
     async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
-        const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-        if (!parseState) return result;
+        let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 
-        const {rawData} = parseState;
+        if (parseState) {
+            const {rawData} = parseState;
+            // Transferring a copy of rawTileData because the worker needs to retain its copy.
+            result = extend({rawTileData: rawData.slice(0)}, result);
+        }
 
-        // Transferring a copy of rawTileData because the worker needs to retain its copy.
-        return extend({rawTileData: rawData.slice(0)}, result);
+        return result;
     }
 
     /**
