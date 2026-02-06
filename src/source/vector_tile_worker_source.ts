@@ -120,7 +120,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             const parseState = {rawData, cacheControl, resourceTiming};  // Keep data so reloadTile can access if parse is canceled.
             this.tileState.setParsing(uid, parseState);
             try {
-                return await this._getWorkerTileResult(workerTile, params, parseState);
+                return await this._parseWorkerTile(workerTile, params, parseState);
             } finally {
                 this.tileState.clearParsing(uid);
             }
@@ -132,7 +132,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         }
     }
 
-    async _getWorkerTileResult(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
+    async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
         const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
         if (!parseState) return result;
 
@@ -217,13 +217,13 @@ export class VectorTileWorkerSource implements WorkerSource {
         if (workerTile.status === 'parsing') {
             // if we are cancelling the original parse, make sure to pass the rawTileData from the original parse
             const parseState = this.tileState.consumeParsing(uid);
-            return await this._getWorkerTileResult(workerTile, params, parseState);
+            return await this._parseWorkerTile(workerTile, params, parseState);
         }
 
         // If there was no vector tile data on the initial load, don't try and reparse the tile.
         // this seems like a missing case where cache control is lost? see #3309
         if (workerTile.status === 'done' && workerTile.vectorTile) {
-            return await this._getWorkerTileResult(workerTile, params);
+            return await this._parseWorkerTile(workerTile, params);
         }
     }
 

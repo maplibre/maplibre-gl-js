@@ -122,7 +122,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
             const parseState = {rawData};
             this.tileState.setParsing(uid, parseState);  // Keep data so reloadTile can access if parse is canceled.
             try {
-                return await this._getWorkerTileResult(workerTile, params, parseState);
+                return await this._parseWorkerTile(workerTile, params, parseState);
             } finally {
                 this.tileState.clearParsing(uid);
             }
@@ -144,16 +144,16 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (workerTile.status === 'parsing') {
             // If we are cancelling the original parse, make sure to pass the rawData from the original parse.
             const parseState = this.tileState.consumeParsing(uid);
-            return await this._getWorkerTileResult(workerTile, params, parseState);
+            return await this._parseWorkerTile(workerTile, params, parseState);
         }
 
         // If there was no vector tile data on the initial load, don't try and reparse the tile.
         if (workerTile.status === 'done' && workerTile.vectorTile) {
-            return await this._getWorkerTileResult(workerTile, params);
+            return await this._parseWorkerTile(workerTile, params);
         }
     }
 
-    async _getWorkerTileResult(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
+    async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
         const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
         if (!parseState) return result;
 
