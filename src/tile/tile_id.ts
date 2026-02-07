@@ -242,6 +242,41 @@ function getQuadkey(z, x, y) {
     return quadkey;
 }
 
+export function normalizeTileCoordinates(
+    tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT
+): {tileID: OverscaledTileID; x: number; y: number} | null {
+    if (x >= 0 && x < extent && y >= 0 && y < extent) {
+        return {tileID, x, y};
+    }
+
+    const tileOffsetX = Math.floor(x / extent);
+    const tileOffsetY = Math.floor(y / extent);
+    const newX = x - tileOffsetX * extent;
+    const newY = y - tileOffsetY * extent;
+
+    const z = tileID.canonical.z;
+    const dim = 1 << z;
+    const newCanonicalY = tileID.canonical.y + tileOffsetY;
+
+    if (newCanonicalY < 0 || newCanonicalY >= dim) return null;
+
+    let newCanonicalX = tileID.canonical.x + tileOffsetX;
+    let newWrap = tileID.wrap;
+    if (newCanonicalX < 0) {
+        newWrap -= Math.ceil(-newCanonicalX / dim);
+        newCanonicalX = ((newCanonicalX % dim) + dim) % dim;
+    } else if (newCanonicalX >= dim) {
+        newWrap += Math.floor(newCanonicalX / dim);
+        newCanonicalX = newCanonicalX % dim;
+    }
+
+    return {
+        tileID: new OverscaledTileID(tileID.overscaledZ, newWrap, z, newCanonicalX, newCanonicalY),
+        x: newX,
+        y: newY,
+    };
+}
+
 export function compareTileId(a: OverscaledTileID, b: OverscaledTileID): number {
     // Different copies of the world are sorted based on their distance to the center.
     // Wrap values are converted to unsigned distances by reserving odd number for copies

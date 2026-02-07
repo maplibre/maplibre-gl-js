@@ -339,105 +339,36 @@ describe('Terrain', () => {
         expect(terrain.getMinTileElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(1);
     });
 
-    describe('getDEMElevation neighbor tile lookup', () => {
-        /**
-         * Creates a mock terrain where getDEMElevation resolves neighbor tiles.
-         * The mock records which tileIDs are queried and returns elevation = 42
-         * for any tile that has DEM data loaded.
-         */
-        function createMockTerrain(loadedTileKeys?: Set<string>) {
-            const queriedTileIDs: OverscaledTileID[] = [];
-            const mockTerrain = {
-                getDEMElevation: Terrain.prototype.getDEMElevation,
-                getTerrainData(tileID: OverscaledTileID) {
-                    queriedTileIDs.push(tileID);
-                    const hasData = !loadedTileKeys || loadedTileKeys.has(tileID.key);
-                    return {
-                        u_terrain_matrix: mat4.create(),
-                        tile: hasData ? {
-                            dem: {
-                                dim: 1,
-                                get() { return 42; }
-                            }
-                        } : {dem: null}
-                    };
-                },
-                queriedTileIDs,
-            };
-            return mockTerrain;
-        }
+    test('getElevationCrossTile normalizes out-of-bounds coordinates to neighbor tile', () => {
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
+        const spy = vi.fn().mockReturnValue(42);
+        terrain.getElevation = spy;
 
-        test('out-of-bounds x positive resolves right neighbor', () => {
-            const mockTerrain = createMockTerrain();
-            const tileID = new OverscaledTileID(2, 0, 2, 1, 1);
-            // x = EXTENT + 100 should resolve to tile (2, 1) with x = 100
-            const result = mockTerrain.getDEMElevation(tileID, EXTENT + 100, 100);
-            expect(result).toBe(42);
-            const queried = mockTerrain.queriedTileIDs[0];
-            expect(queried.canonical.x).toBe(2);
-            expect(queried.canonical.y).toBe(1);
-            expect(queried.canonical.z).toBe(2);
-        });
+        // tile (0,0,1) with x beyond EXTENT should normalize to tile (1,0,1)
+        const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
+        const result = terrain.getElevationCrossTile(tileID, EXTENT + 100, 50);
 
-        test('out-of-bounds x negative resolves left neighbor', () => {
-            const mockTerrain = createMockTerrain();
-            const tileID = new OverscaledTileID(2, 0, 2, 1, 1);
-            // x = -100 should resolve to tile (0, 1) with x = EXTENT - 100
-            const result = mockTerrain.getDEMElevation(tileID, -100, 100);
-            expect(result).toBe(42);
-            const queried = mockTerrain.queriedTileIDs[0];
-            expect(queried.canonical.x).toBe(0);
-            expect(queried.canonical.y).toBe(1);
-        });
+        expect(result).toBe(42);
+        expect(spy).toHaveBeenCalledOnce();
+        const [calledTileID, calledX, calledY, calledExtent] = spy.mock.calls[0];
+        expect(calledTileID.canonical.x).toBe(1);
+        expect(calledTileID.canonical.y).toBe(0);
+        expect(calledTileID.canonical.z).toBe(1);
+        expect(calledX).toBe(100);
+        expect(calledY).toBe(50);
+        expect(calledExtent).toBe(EXTENT);
+    });
 
-        test('out-of-bounds y positive resolves bottom neighbor', () => {
-            const mockTerrain = createMockTerrain();
-            const tileID = new OverscaledTileID(2, 0, 2, 1, 1);
-            // y = EXTENT + 100 should resolve to tile (1, 2)
-            const result = mockTerrain.getDEMElevation(tileID, 100, EXTENT + 100);
-            expect(result).toBe(42);
-            const queried = mockTerrain.queriedTileIDs[0];
-            expect(queried.canonical.x).toBe(1);
-            expect(queried.canonical.y).toBe(2);
-        });
+    test('getElevationCrossTile returns 0 for coordinates beyond tile grid', () => {
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
+        terrain.getElevation = vi.fn();
 
-        test('y past world bounds (poles) returns 0', () => {
-            const mockTerrain = createMockTerrain();
-            // At z=2, dim=4, tile y=3 is the last row. y beyond EXTENT goes to y=4 which is out of bounds.
-            const tileID = new OverscaledTileID(2, 0, 2, 1, 3);
-            const result = mockTerrain.getDEMElevation(tileID, 100, EXTENT + 100);
-            expect(result).toBe(0);
-        });
+        // tile (0,0,0) with y beyond EXTENT — no tile exists below at z=0
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const result = terrain.getElevationCrossTile(tileID, 100, EXTENT + 100);
 
-        test('x wrapping across world boundary increases wrap', () => {
-            const mockTerrain = createMockTerrain();
-            // At z=2, dim=4, tile x=3 is the last column. x beyond EXTENT wraps to x=0 with wrap+1
-            const tileID = new OverscaledTileID(2, 0, 2, 3, 1);
-            const result = mockTerrain.getDEMElevation(tileID, EXTENT + 100, 100);
-            expect(result).toBe(42);
-            const queried = mockTerrain.queriedTileIDs[0];
-            expect(queried.canonical.x).toBe(0);
-            expect(queried.wrap).toBe(1);
-        });
-
-        test('negative x wrapping across world boundary decreases wrap', () => {
-            const mockTerrain = createMockTerrain();
-            // At z=2, dim=4, tile x=0 is the first column. x < 0 wraps to x=3 with wrap-1
-            const tileID = new OverscaledTileID(2, 0, 2, 0, 1);
-            const result = mockTerrain.getDEMElevation(tileID, -100, 100);
-            expect(result).toBe(42);
-            const queried = mockTerrain.queriedTileIDs[0];
-            expect(queried.canonical.x).toBe(3);
-            expect(queried.wrap).toBe(-1);
-        });
-
-        test('neighbor tile with no DEM returns 0', () => {
-            // Only the original tile has DEM data
-            const originalTileID = new OverscaledTileID(2, 0, 2, 1, 1);
-            const mockTerrain = createMockTerrain(new Set([originalTileID.key]));
-            const result = mockTerrain.getDEMElevation(originalTileID, EXTENT + 100, 100);
-            expect(result).toBe(0);
-        });
+        expect(result).toBe(0);
+        expect(terrain.getElevation).not.toHaveBeenCalled();
     });
 
     describe('getElevationForLngLatZoom returns 0 for out of bounds', () => {

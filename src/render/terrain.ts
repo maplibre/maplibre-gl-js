@@ -1,6 +1,6 @@
 
 import {mat4, vec2} from 'gl-matrix';
-import {OverscaledTileID} from '../tile/tile_id';
+import {OverscaledTileID, normalizeTileCoordinates} from '../tile/tile_id';
 import {RGBAImage} from '../util/image';
 import {warnOnce} from '../util/util';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
@@ -152,42 +152,14 @@ export class Terrain {
 
     /**
      * get the elevation-value from original dem-data for a given tile-coordinate
-     * @param tileID - the tile that the x/y coordinates are relative to
-     * @param x - x coordinate within the tile's coordinate system
-     * @param y - y coordinate within the tile's coordinate system
+     * @param tileID - the tile to get the elevation for
+     * @param x - between 0 .. EXTENT
+     * @param y - between 0 .. EXTENT
      * @param extent - optional, default 8192
      * @returns the elevation
      */
     getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
-        if (!(x >= 0 && x < extent && y >= 0 && y < extent)) {
-            const tileOffsetX = Math.floor(x / extent);
-            const tileOffsetY = Math.floor(y / extent);
-            const newX = x - tileOffsetX * extent;
-            const newY = y - tileOffsetY * extent;
-
-            const z = tileID.canonical.z;
-            const dim = 1 << z;
-            const newCanonicalY = tileID.canonical.y + tileOffsetY;
-
-            // Y (latitude) does not wrap - return 0 at poles
-            if (newCanonicalY < 0 || newCanonicalY >= dim) return 0;
-
-            // X (longitude) wraps around the world
-            let newCanonicalX = tileID.canonical.x + tileOffsetX;
-            let newWrap = tileID.wrap;
-            if (newCanonicalX < 0) {
-                newWrap -= Math.ceil(-newCanonicalX / dim);
-                newCanonicalX = ((newCanonicalX % dim) + dim) % dim;
-            } else if (newCanonicalX >= dim) {
-                newWrap += Math.floor(newCanonicalX / dim);
-                newCanonicalX = newCanonicalX % dim;
-            }
-
-            const neighborTileID = new OverscaledTileID(
-                tileID.overscaledZ, newWrap, z, newCanonicalX, newCanonicalY
-            );
-            return this.getDEMElevation(neighborTileID, newX, newY, extent);
-        }
+        if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return 0;
         const terrain = this.getTerrainData(tileID);
         const dem = terrain.tile?.dem;
         if (!dem) return 0;
@@ -206,6 +178,21 @@ export class Terrain {
             dem.get(cx, cy + 1) * (1 - tx) * (ty) +
             dem.get(cx + 1, cy + 1) * (tx) * (ty)
         );
+    }
+
+    /**
+     * Get elevation for coordinates that may be outside the tile bounds [0, EXTENT).
+     * Normalizes coordinates to the appropriate neighbor tile before lookup.
+     * @param tileID - the tile the coordinates are relative to
+     * @param x - x coordinate, may be outside [0, EXTENT)
+     * @param y - y coordinate, may be outside [0, EXTENT)
+     * @param extent - optional, default 8192
+     * @returns the elevation
+     */
+    getElevationCrossTile(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
+        const normalized = normalizeTileCoordinates(tileID, x, y, extent);
+        if (!normalized) return 0;
+        return this.getElevation(normalized.tileID, normalized.x, normalized.y, extent);
     }
 
     /**
