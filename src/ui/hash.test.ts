@@ -396,7 +396,7 @@ describe('hash', () => {
             expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
         });
         
-        test('invalidate hash, only one values', () => {
+        test('invalidate hash, only one value', () => {
             window.location.hash = '#24';
 
             expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
