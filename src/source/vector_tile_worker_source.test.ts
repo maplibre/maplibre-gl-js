@@ -84,7 +84,7 @@ describe('vector tile worker source', () => {
 
     test('VectorTileWorkerSource.loadTile reparses tile if the reloadTile has been called during parsing', async () => {
         const rawTileData = new ArrayBuffer(0);
-        const loadVectorData: LoadVectorData = (_params, _response) => {
+        const loadVectorData: LoadVectorData = (_params, _rawData) => {
             return {
                 vectorTile: {
                     layers: {
@@ -171,7 +171,7 @@ describe('vector tile worker source', () => {
 
     test('VectorTileWorkerSource.loadTile reparses tile if reloadTile is called during reparsing', async () => {
         const rawTileData = new ArrayBuffer(0);
-        const loadVectorData: LoadVectorData = (_params, _response) => {
+        const loadVectorData: LoadVectorData = (_params, _rawData) => {
             return {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData
@@ -275,7 +275,7 @@ describe('vector tile worker source', () => {
 
     test('VectorTileWorkerSource.loadTile returns null for an empty tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        source.loadVectorTile = (_params, _response) => null;
+        source.loadVectorTile = (_params, _rawData) => null;
         const parse = vi.fn();
 
         server.respondWith(request => {
@@ -338,7 +338,7 @@ describe('vector tile worker source', () => {
     test('VectorTileWorkerSource provides resource timing information', async () => {
         const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0) as ArrayBuffer;
 
-        const loadVectorData: LoadVectorData = (_params, _response) => {
+        const loadVectorData: LoadVectorData = (_params, _rawData) => {
             return {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
@@ -401,7 +401,7 @@ describe('vector tile worker source', () => {
     test('VectorTileWorkerSource provides resource timing information (fallback method)', async () => {
         const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0) as ArrayBuffer;
 
-        const loadVectorData: LoadVectorData = (_params, _response) => {
+        const loadVectorData: LoadVectorData = (_params, _rawData) => {
             return {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,

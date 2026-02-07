@@ -26,7 +26,7 @@ export type LoadVectorTileResult = {
 } & ExpiryData;
 
 export type AbortVectorData = () => void;
-export type LoadVectorData = (params: WorkerTileParameters, response: {data: ArrayBuffer} & ExpiryData) => LoadVectorTileResult;
+export type LoadVectorData = (params: WorkerTileParameters, rawData: ArrayBuffer) => LoadVectorTileResult;
 
 /**
  * The {@link WorkerSource} implementation that supports {@link VectorTileSource}.
@@ -58,19 +58,15 @@ export class VectorTileWorkerSource implements WorkerSource {
     /**
      * Loads a vector tile
      */
-    loadVectorTile(params: WorkerTileParameters, response: {data: ArrayBuffer} & ExpiryData): LoadVectorTileResult {
+    loadVectorTile(params: WorkerTileParameters, rawData: ArrayBuffer): LoadVectorTileResult {
         try {
             const vectorTile = params.encoding !== 'mlt'
-                ? new VectorTile(new Protobuf(response.data))
-                : new MLTVectorTile(response.data);
-            return {
-                vectorTile,
-                rawData: response.data,
-                cacheControl: response.cacheControl,
-                expires: response.expires
-            };
+                ? new VectorTile(new Protobuf(rawData))
+                : new MLTVectorTile(rawData);
+
+            return {vectorTile, rawData};
         } catch (ex) {
-            const bytes = new Uint8Array(response.data);
+            const bytes = new Uint8Array(rawData);
             const isGzipped = bytes[0] === 0x1f && bytes[1] === 0x8b;
             let errorMessage = `Unable to parse the tile at ${params.request.url}, `;
             if (isGzipped) {
@@ -110,16 +106,16 @@ export class VectorTileWorkerSource implements WorkerSource {
                 return this._getEtagUnmodifiedResult(tileResponse, timing);
             }
 
-            const response = this.loadVectorTile(params, tileResponse);
+            const tileResult = this.loadVectorTile(params, tileResponse.data);
             this.tileState.finishLoading(uid);
-            if (!response) return null;
+            if (!tileResult) return null;
 
-            let {vectorTile, rawData} = response;
+            let {vectorTile, rawData} = tileResult;
             if (overzoomParameters) {
-                ({vectorTile, rawData} = this._getOverzoomTile(params, response.vectorTile));
+                ({vectorTile, rawData} = this._getOverzoomTile(params, vectorTile));
             }
 
-            const cacheControl = this._getExpiryData(response);
+            const cacheControl = this._getExpiryData(tileResponse);
             const resourceTiming = this._finishRequestTiming(timing);
 
             workerTile.vectorTile = vectorTile;
