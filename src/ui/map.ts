@@ -23,7 +23,7 @@ import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSource
 import {TaskQueue} from '../util/task_queue';
 import {throttle} from '../util/throttle';
 import {webpSupported} from '../util/webp_supported';
-import {type PerformanceMetrics, PerformanceMarkers, PerformanceMonitor} from '../util/performance';
+import {type PerformanceMetrics, PerformanceMonitor} from '../util/performance';
 import {type Source} from '../source/source';
 import {type StyleLayer} from '../style/style_layer';
 import {Terrain} from '../render/terrain';
@@ -686,7 +686,7 @@ export class Map extends Camera {
 
     constructor(options: MapOptions) {
         const performanceMonitor: PerformanceMonitor | undefined = options.collectPerformanceMetrics ? new PerformanceMonitor() : undefined;
-        performanceMonitor?.mark(PerformanceMarkers.create);
+        performanceMonitor?.mark('create');
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
             ...options.canvasContextAttributes
@@ -3625,7 +3625,7 @@ export class Map extends Camera {
 
         if (this.loaded() && !this._loaded) {
             this._loaded = true;
-            this._performanceMonitor?.mark(PerformanceMarkers.load);
+            this._performanceMonitor?.mark('load');
             this.fire(new Event('load'));
         }
 
@@ -3654,7 +3654,7 @@ export class Map extends Camera {
 
         if (this._loaded && !this._fullyLoaded && !somethingDirty) {
             this._fullyLoaded = true;
-            this._performanceMonitor?.mark(PerformanceMarkers.fullLoad);
+            this._performanceMonitor?.mark('fullLoad');
         }
 
         return this;
