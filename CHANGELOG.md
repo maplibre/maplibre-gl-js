@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- ESM bundle ([#6254](https://github.com/maplibre/maplibre-gl-js/pull/6254))
 - _...Add new stuff here..._
 - Add support for click events on Marker ([#7028](https://github.com/maplibre/maplibre-gl-js/pull/7028)) (by [@ganesh8068](https://github.com/ganesh8068))
 
