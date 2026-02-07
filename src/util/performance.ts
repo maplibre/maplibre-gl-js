@@ -1,16 +1,31 @@
 import type {RequestParameters} from '../util/ajax';
 
+/**
+ * Represents a collection of performance metrics for the map.
+ */
 export type PerformanceMetrics = {
+    /** Time taken to load the initial map view, measured from the map's creation until its initial style and sources are loaded. */
     loadTime: number;
+    /** Time taken for the map to fully load all its resources, measured from the map's creation until all tiles, sprites, and other assets are loaded. */
     fullLoadTime: number;
+    /** Frames per second. */
     fps: number;
+    /** Percentage of frames that fell below the target framerate. */
     percentDroppedFrames: number;
+    /** Total number of frames recorded. */
     totalFrames: number;
 };
 
+/**
+ * Defines key performance markers for tracking various stages of map loading and rendering.
+ * These markers are used with the Performance API to measure durations.
+ */
 export enum PerformanceMarkers {
+    /** Marks the instantiation of the Map object. */
     create = 'create',
+    /** Marks when the map's initial style and all its necessary sources have been loaded. This does not necessarily mean all tiles are loaded. */
     load = 'load',
+    /** Marks when all resources (tiles, sprites, icons, etc.) required for the current view have been fully loaded and rendered. */
     fullLoad = 'fullLoad'
 }
 
@@ -23,10 +38,24 @@ const frameTimeTarget = 1000 / minFramerateTarget;
 const loadTimeKey = 'loadTime';
 const fullLoadTimeKey = 'fullLoadTime';
 
+/**
+ * @internal
+ * Provides utility methods for measuring and reporting map performance metrics.
+ */
 export const PerformanceUtils = {
+    /**
+     * @internal
+     * Records a performance marker at the current time.
+     * @param marker - The specific performance marker to record.
+     */
     mark(marker: PerformanceMarkers) {
         performance.mark(marker);
     },
+    /**
+     * @internal
+     * Records the time of a new animation frame. Used internally for FPS calculation.
+     * @param timestamp - The current timestamp provided by requestAnimationFrame.
+     */
     frame(timestamp: number) {
         const currTimestamp = timestamp;
         if (lastFrameTime != null) {
@@ -35,6 +64,10 @@ export const PerformanceUtils = {
         }
         lastFrameTime = currTimestamp;
     },
+    /**
+     * @internal
+     * Clears all recorded performance metrics and markers.
+     */
     clearMetrics() {
         lastFrameTime = null;
         frameTimes = [];
@@ -46,6 +79,10 @@ export const PerformanceUtils = {
         }
     },
 
+    /**
+     * Calculates and returns the current performance metrics.
+     * @returns An object containing various performance metrics.
+     */
     getPerformanceMetrics(): PerformanceMetrics {
         performance.measure(loadTimeKey, PerformanceMarkers.create, PerformanceMarkers.load);
         performance.measure(fullLoadTimeKey, PerformanceMarkers.create, PerformanceMarkers.fullLoad);
