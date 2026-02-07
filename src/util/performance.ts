@@ -8,6 +8,8 @@ export type PerformanceMetrics = {
     loadTimeMs?: number;
     /** Time taken for the map to fully load all its resources, measured from the map's creation until all tiles, sprites, and other assets are loaded. */
     fullLoadTimeMs?: number;
+    /** Time taken for the last frame to render, measured from the last frame's frame-rendering start until the next frames rendering starts. */
+    lastFrameTimeMs?: number;
     /** Average frames per second. */
     averageFramesPerSecond: number;
     /** Number of frames that fell below 60 fps. */
@@ -27,7 +29,7 @@ type PerformanceMarker = 'create' | 'load' | 'fullLoad';
 export class PerformanceMonitor {
     private static _nextId = 0; // Static counter for unique IDs
     private _id: number;
-    private _lastFrameTime: number | null = null;
+    private _lastFrameTime?: number;
     private _totalFrameTime = 0;
     private _totalFrameCount = 0;
     private _totalDroppedFrameCount = 0;
@@ -74,12 +76,11 @@ export class PerformanceMonitor {
 
     /**
      * Records the time of a new animation frame. Used internally for FPS calculation.
-     * @param timestamp - The current timestamp provided by requestAnimationFrame.
+     * @param currentTimestamp - The current timestamp provided by requestAnimationFrame.
      */
-    frame(timestamp: number) {
-        const currTimestamp = timestamp;
-        if (this._lastFrameTime != null) {
-            const frameTime = currTimestamp - this._lastFrameTime;
+    frame(currentTimestamp: number) {
+        if (this._lastFrameTime !== undefined) {
+            const frameTime = currentTimestamp - this._lastFrameTime;
             this._totalFrameTime += frameTime;
 
             // Track lifetime metrics
@@ -88,14 +89,14 @@ export class PerformanceMonitor {
                 this._totalDroppedFrameCount++;
             }
         }
-        this._lastFrameTime = currTimestamp;
+        this._lastFrameTime = currentTimestamp;
     }
 
     /**
      * Clears all recorded performance metrics and markers for this monitor instance.
      */
     clearMetrics() {
-        this._lastFrameTime = null;
+        this._lastFrameTime = undefined;
         this._totalFrameTime = 0;
         this._totalFrameCount = 0;
         this._totalDroppedFrameCount = 0;
@@ -118,6 +119,7 @@ export class PerformanceMonitor {
         return {
             loadTimeMs: this._loadTimeMs,
             fullLoadTimeMs: this._fullLoadTimeMs,
+            lastFrameTimeMs: this._lastFrameTime,
             averageFramesPerSecond,
             droppedFramesCount: this._totalDroppedFrameCount,
             totalFramesCount: this._totalFrameCount
