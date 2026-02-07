@@ -29,9 +29,6 @@ export enum PerformanceMarkers {
     fullLoad = 'fullLoad'
 }
 
-let lastFrameTime = null;
-let frameTimes = [];
-
 const minFramerateTarget = 60;
 const frameTimeTarget = 1000 / minFramerateTarget;
 
@@ -39,67 +36,106 @@ const loadTimeKey = 'loadTime';
 const fullLoadTimeKey = 'fullLoadTime';
 
 /**
- * @internal
- * Provides utility methods for measuring and reporting map performance metrics.
+ * Monitors and reports map performance metrics
  */
-export const PerformanceUtils = {
+export class PerformanceMonitor {
+    private static _nextId = 0; // Static counter for unique IDs
+    _lastFrameTime: number | null = null;
+    _frameTimes: number[] = [];
+
+    // Unique markers for this instance to avoid global collision
+    _createMarker: string;
+    _loadMarker: string;
+    _fullLoadMarker: string;
+    _loadTimeMeasure: string;
+    _fullLoadTimeMeasure: string;
+
+    constructor() {
+        const _id = PerformanceMonitor._nextId++;
+        this._createMarker = `${PerformanceMarkers.create}-${_id}`;
+        this._loadMarker = `${PerformanceMarkers.load}-${_id}`;
+        this._fullLoadMarker = `${PerformanceMarkers.fullLoad}-${_id}`;
+        this._loadTimeMeasure = `${loadTimeKey}-${_id}`;
+        this._fullLoadTimeMeasure = `${fullLoadTimeKey}-${_id}`;
+
+        // Clear any lingering global performance marks related to these keys to avoid interference.
+        performance.clearMarks(this._createMarker);
+        performance.clearMarks(this._loadMarker);
+        performance.clearMarks(this._fullLoadMarker);
+        performance.clearMeasures(this._fullLoadTimeMeasure);
+        performance.clearMeasures(this._loadTimeMeasure);
+    }
+
     /**
-     * @internal
      * Records a performance marker at the current time.
      * @param marker - The specific performance marker to record.
      */
     mark(marker: PerformanceMarkers) {
-        performance.mark(marker);
-    },
+        switch (marker) {
+            case PerformanceMarkers.create:
+                performance.mark(this._createMarker);
+                break;
+            case PerformanceMarkers.load:
+                performance.mark(this._loadMarker);
+                break;
+            case PerformanceMarkers.fullLoad:
+                performance.mark(this._fullLoadMarker);
+                break;
+        }
+    }
+
     /**
-     * @internal
      * Records the time of a new animation frame. Used internally for FPS calculation.
      * @param timestamp - The current timestamp provided by requestAnimationFrame.
      */
     frame(timestamp: number) {
         const currTimestamp = timestamp;
-        if (lastFrameTime != null) {
-            const frameTime = currTimestamp - lastFrameTime;
-            frameTimes.push(frameTime);
+        if (this._lastFrameTime != null) {
+            const frameTime = currTimestamp - this._lastFrameTime;
+            this._frameTimes.push(frameTime);
         }
-        lastFrameTime = currTimestamp;
-    },
+        this._lastFrameTime = currTimestamp;
+    }
+
     /**
-     * @internal
-     * Clears all recorded performance metrics and markers.
+     * Clears all recorded performance metrics and markers for this monitor instance.
      */
     clearMetrics() {
-        lastFrameTime = null;
-        frameTimes = [];
-        performance.clearMeasures(loadTimeKey);
-        performance.clearMeasures(fullLoadTimeKey);
-
-        for (const marker in PerformanceMarkers) {
-            performance.clearMarks(PerformanceMarkers[marker]);
-        }
-    },
+        this._lastFrameTime = null;
+        this._frameTimes = [];
+        // Clear browser performance entries associated with this monitor
+        performance.clearMarks(this._createMarker);
+        performance.clearMarks(this._loadMarker);
+        performance.clearMarks(this._fullLoadMarker);
+        performance.clearMeasures(this._fullLoadTimeMeasure);
+        performance.clearMeasures(this._loadTimeMeasure);
+    }
 
     /**
-     * Calculates and returns the current performance metrics.
+     * Calculates and returns the current performance metrics for this monitor instance.
      * @returns An object containing various performance metrics.
      */
     getPerformanceMetrics(): PerformanceMetrics {
-        performance.measure(loadTimeKey, PerformanceMarkers.create, PerformanceMarkers.load);
-        performance.measure(fullLoadTimeKey, PerformanceMarkers.create, PerformanceMarkers.fullLoad);
-        const loadTime = performance.getEntriesByName(loadTimeKey)[0].duration;
-        const fullLoadTime = performance.getEntriesByName(fullLoadTimeKey)[0].duration;
-        const totalFrames = frameTimes.length;
+        // Ensure measures are taken before querying
+        performance.measure(this._loadTimeMeasure, this._createMarker, this._loadMarker);
+        performance.measure(this._fullLoadTimeMeasure, this._createMarker, this._fullLoadMarker);
 
-        const avgFrameTime = frameTimes.reduce((prev, curr) => prev + curr, 0) / totalFrames / 1000;
-        const fps = 1 / avgFrameTime;
+        const loadTime = performance.getEntriesByName(this._loadTimeMeasure)[0]?.duration || 0;
+        const fullLoadTime = performance.getEntriesByName(this._fullLoadTimeMeasure)[0]?.duration || 0;
+        const totalFrames = this._frameTimes.length;
+
+        let avgFrameTime = 0;
+        if (totalFrames > 0) {
+            avgFrameTime = this._frameTimes.reduce((prev, curr) => prev + curr, 0) / totalFrames;
+        }
+        const fps = avgFrameTime > 0 ? 1000 / avgFrameTime : 0; // Convert ms to FPS
 
         // count frames that missed our framerate target
-        const droppedFrames = frameTimes
+        const droppedFramesCount = this._frameTimes
             .filter((frameTime) => frameTime > frameTimeTarget)
-            .reduce((acc, curr) => {
-                return acc + (curr -  frameTimeTarget) / frameTimeTarget;
-            }, 0);
-        const percentDroppedFrames = (droppedFrames / (totalFrames + droppedFrames)) * 100;
+            .length;
+
+        const percentDroppedFrames = (totalFrames > 0) ? (droppedFramesCount / totalFrames) * 100 : 0;
 
         return {
             loadTime,
@@ -109,7 +145,7 @@ export const PerformanceUtils = {
             totalFrames
         };
     }
-};
+}
 
 /**
  * @internal

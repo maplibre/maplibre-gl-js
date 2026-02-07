@@ -23,7 +23,7 @@ import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSource
 import {TaskQueue} from '../util/task_queue';
 import {throttle} from '../util/throttle';
 import {webpSupported} from '../util/webp_supported';
-import {PerformanceMetrics, PerformanceMarkers, PerformanceUtils} from '../util/performance';
+import {type PerformanceMetrics, PerformanceMarkers, PerformanceMonitor} from '../util/performance';
 import {type Source} from '../source/source';
 import {type StyleLayer} from '../style/style_layer';
 import {Terrain} from '../render/terrain';
@@ -358,7 +358,14 @@ export type MapOptions = {
      */
     pixelRatio?: number;
     /**
-     * If false, style validation will be skipped. Useful in production environment.
+     * If `true`, performance metrics will be collected and can be accessed via `map.performanceMetrics`.
+     * Similar to validateStyle this setting exists for better tree-shaking.
+     * @defaultValue false
+     */
+    collectPerformanceMetrics?: boolean;
+    /**
+     * If false, style validation will be skipped.
+     * Useful in production environment due to enabling tree-shaking of the validation code and minor performance improvements.
      * @defaultValue true
      */
     validateStyle?: boolean;
@@ -396,7 +403,7 @@ export type MapOptions = {
     experimentalZoomLevelsToOverscale?: number;
     /**
      * Determines the rotation interaction model:
-     * - When true: Uses "Orbital" logic where rotation is relative to the pivot center. 
+     * - When true: Uses "Orbital" logic where rotation is relative to the pivot center.
      *   Dragging right at the top rotates clockwise, while dragging right at the bottom
      *   rotates counter-clockwise (like spinning a physical globe).
      * - When false: Uses "Linear" logic where horizontal mouse movement translates directly
@@ -490,6 +497,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     pitchWithRotate: true,
     rollEnabled: false,
     reduceMotion: undefined,
+    collectPerformanceMetrics: false,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
@@ -571,6 +579,7 @@ export class Map extends Camera {
     _controls: Array<IControl> = [];
     _mapId = uniqueId();
     _localIdeographFontFamily: string | false;
+    _performanceMonitor: PerformanceMonitor;
     _validateStyle: boolean;
     _requestManager: RequestManager;
     _locale: Record<string, string>;
@@ -676,8 +685,8 @@ export class Map extends Camera {
     transformConstrain: TransformConstrainFunction | null;
 
     constructor(options: MapOptions) {
-        PerformanceUtils.mark(PerformanceMarkers.create);
-
+        const performanceMonitor: PerformanceMonitor | undefined = options.collectPerformanceMetrics ? new PerformanceMonitor() : undefined;
+        performanceMonitor?.mark(PerformanceMarkers.create);
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
             ...options.canvasContextAttributes
@@ -808,6 +817,7 @@ export class Map extends Camera {
         this.resize(null, shouldConstrainUsingMercatorTransform);
 
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
+        this._performanceMonitor = performanceMonitor;
         this._validateStyle = resolvedOptions.validateStyle;
 
         if (resolvedOptions.style) this.setStyle(resolvedOptions.style, {localIdeographFontFamily: resolvedOptions.localIdeographFontFamily});
@@ -3615,7 +3625,7 @@ export class Map extends Camera {
 
         if (this.loaded() && !this._loaded) {
             this._loaded = true;
-            PerformanceUtils.mark(PerformanceMarkers.load);
+            this._performanceMonitor?.mark(PerformanceMarkers.load);
             this.fire(new Event('load'));
         }
 
@@ -3644,7 +3654,7 @@ export class Map extends Camera {
 
         if (this._loaded && !this._fullyLoaded && !somethingDirty) {
             this._fullyLoaded = true;
-            PerformanceUtils.mark(PerformanceMarkers.fullLoad);
+            this._performanceMonitor?.mark(PerformanceMarkers.fullLoad);
         }
 
         return this;
@@ -3709,7 +3719,7 @@ export class Map extends Camera {
         this._container.removeEventListener('scroll', this._onMapScroll, false);
         this._container.classList.remove('maplibregl-map');
 
-        PerformanceUtils.clearMetrics();
+        this._performanceMonitor?.clearMetrics();
 
         this._removed = true;
         this.fire(new Event('remove'));
@@ -3732,7 +3742,7 @@ export class Map extends Camera {
             browser.frame(
                 this._frameRequest,
                 (paintStartTimeStamp) => {
-                    PerformanceUtils.frame(paintStartTimeStamp);
+                    this._performanceMonitor?.frame(paintStartTimeStamp);
                     this._frameRequest = null;
                     try {
                         this._render(paintStartTimeStamp);
@@ -3834,10 +3844,10 @@ export class Map extends Camera {
 
     /**
      * Calculates and returns the current performance metrics of the map.
-     * @returns {PerformanceMetrics} An object containing various performance metrics.
+     * @returns An object containing various performance metrics.
      */
-    getPerformanceMetrics(): PerformanceMetrics {
-        return PerformanceUtils.getPerformanceMetrics();
+    get performanceMetrics(): PerformanceMetrics | undefined {
+        return this._performanceMonitor?.getPerformanceMetrics();
     }
 
     /**
