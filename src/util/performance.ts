@@ -5,9 +5,9 @@ import type {RequestParameters} from '../util/ajax';
  */
 export type PerformanceMetrics = {
     /** Time taken to load the initial map view, measured from the map's creation until its initial style and sources are loaded. */
-    loadTimeMs: number;
+    loadTimeMs?: number;
     /** Time taken for the map to fully load all its resources, measured from the map's creation until all tiles, sprites, and other assets are loaded. */
-    fullLoadTimeMs: number;
+    fullLoadTimeMs?: number;
     /** Average frames per second. */
     averageFramesPerSecond: number;
     /** Number of frames that fell below 60 fps. */
