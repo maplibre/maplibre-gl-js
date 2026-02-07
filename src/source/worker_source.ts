@@ -92,6 +92,7 @@ export type WorkerTileWithData = ExpiryData & {
         [_: string]: StyleImage;
     } | null;
     glyphPositions?: GlyphPositions | null;
+    etagUnmodified?: false;
 };
 
 export type WorkerTileWithoutData = ExpiryData & {

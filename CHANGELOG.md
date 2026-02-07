@@ -2,6 +2,7 @@
 ### ✨ Features and improvements
 - Add support for click events on Marker ([#7028](https://github.com/maplibre/maplibre-gl-js/pull/7028)) (by [@ganesh8068](https://github.com/ganesh8068))
 - Simplify and abstract the GeoJSON Worker ([#7058](https://github.com/maplibre/maplibre-gl-js/pull/7058)) (by [@wayofthefuture](https://github.com/wayofthefuture))
+- Add Etag support to the coming vector/geojson worker refactor ([#7074](https://github.com/maplibre/maplibre-gl-js/pull/7074)) (by [@wayofthefuture](https://github.com/wayofthefuture))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
