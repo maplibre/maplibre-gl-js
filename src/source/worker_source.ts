@@ -95,7 +95,7 @@ export type WorkerTileWithData = ExpiryData & {
 };
 
 export type WorkerTileWithoutData = ExpiryData & {
-    etagUnmodified: true;
+    etagUnmodified: true;  // Strict for type narrowing
     resourceTiming?: Array<PerformanceResourceTiming>;
 };
 

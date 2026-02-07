@@ -29,7 +29,7 @@ import type {ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-
 import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
-import type {WorkerTileResult} from '../source/worker_source';
+import type {LoadTileResult} from '../source/vector_tile_source';
 
 type TileResult = {
     tile: Tile;
@@ -187,11 +187,18 @@ export class TileManager extends Evented {
 
     async _loadTile(tile: Tile, id: string, state: TileState): Promise<void> {
         try {
-            const result = await this._source.loadTile(tile) as WorkerTileResult;
-            if (result?.etagUnmodified) return;
+            const result = await this._source.loadTile(tile) as LoadTileResult;
+
+            // Tile data has not changed - reset the reload timer and skip loading the tile.
+            if (result?.etagUnmodified) {
+                this._setTileReloadTimer(id, tile);
+                return;
+            }
+
             this._tileLoaded(tile, id, state);
         } catch (err) {
             tile.state = 'errored';
+
             if ((err as any).status !== 404) {
                 this._source.fire(new ErrorEvent(err, {tile}));
             } else {

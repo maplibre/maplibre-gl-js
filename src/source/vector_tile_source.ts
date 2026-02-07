@@ -20,6 +20,10 @@ export type VectorTileSourceOptions = VectorSourceSpecification & {
     tileSize?: number;
 };
 
+export type LoadTileResult = {
+    etagUnmodified?: boolean;
+};
+
 /**
  * A source containing vector tiles in [Maplibre Vector Tile format](https://maplibre.org/maplibre-tile-spec/) or [Mapbox Vector Tile format](https://docs.mapbox.com/vector-tiles/reference/).
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
@@ -195,7 +199,7 @@ export class VectorTileSource extends Evented implements Source {
         return extend({}, this._options);
     }
 
-    async loadTile(tile: Tile): Promise<WorkerTileResult | void> {
+    async loadTile(tile: Tile): Promise<LoadTileResult | void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const params: WorkerTileParameters = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
@@ -225,14 +229,16 @@ export class VectorTileSource extends Evented implements Source {
         }
         tile.abortController = new AbortController();
         try {
-            const result = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
+            const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
             delete tile.abortController;
 
             if (tile.aborted) {
                 return;
             }
-            this._afterTileLoadWorkerResponse(tile, result);
+            this._afterTileLoadWorkerResponse(tile, data);
 
+            const result: LoadTileResult = {};
+            if (data?.etagUnmodified) result.etagUnmodified = true;
             return result;
         } catch (err) {
             delete tile.abortController;
