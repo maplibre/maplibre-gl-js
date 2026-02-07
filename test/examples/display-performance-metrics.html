@@ -52,11 +52,11 @@
                 if (metrics) {
                     metricsElement.innerHTML = `
                         <h3>Map Performance Metrics</h3>
-                        <p><strong>Load Time:</strong> ${metrics.loadTime.toFixed(2)} ms</p>
-                        <p><strong>Full Load Time:</strong> ${metrics.fullLoadTime.toFixed(2)} ms</p>
+                        <p><strong>Load Time:</strong> ${metrics.loadTimeMs.toFixed(2)} ms</p>
+                        <p><strong>Full Load Time:</strong> ${metrics.fullLoadTimeMs.toFixed(2)} ms</p>
                         <p><strong>FPS:</strong> ${metrics.fps.toFixed(2)}</p>
-                        <p><strong>% Dropped Frames:</strong> ${(metrics.droppedFrames / metrics.totalFrames * 100).toFixed(2)} %</p>
-                        <p><strong>Total Frames:</strong> ${metrics.totalFrames}</p>
+                        <p><strong>% Dropped Frames:</strong> ${(metrics.droppedFramesCount / metrics.totalFramesCount * 100).toFixed(2)} %</p>
+                        <p><strong>Total Frames:</strong> ${metrics.totalFramesCount}</p>
                     `;
                 } else {
                     metricsElement.innerHTML = "Performance metrics not collected (opt-in disabled).";

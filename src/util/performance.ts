@@ -5,15 +5,15 @@ import type {RequestParameters} from '../util/ajax';
  */
 export type PerformanceMetrics = {
     /** Time taken to load the initial map view, measured from the map's creation until its initial style and sources are loaded. */
-    loadTime: number;
+    loadTimeMs: number;
     /** Time taken for the map to fully load all its resources, measured from the map's creation until all tiles, sprites, and other assets are loaded. */
-    fullLoadTime: number;
-    /** Frames per second. */
-    fps: number;
+    fullLoadTimeMs: number;
+    /** Average frames per second. */
+    averageFramesPerSecond: number;
     /** Number of frames that fell below 60 fps. */
-    droppedFrames: number;
+    droppedFramesCount: number;
     /** Total number of frames recorded. */
-    totalFrames: number;
+    totalFramesCount: number;
 };
 
 /**
@@ -138,14 +138,14 @@ export class PerformanceMonitor {
         const fullLoadTime = performance.getEntriesByName(this._fullLoadTimeMeasure)[0]?.duration || 0;
 
         const avgFrameTimeMs = this._totalFrameTime / this._totalFrameCount;
-        const fps = 1000 / avgFrameTimeMs; // Convert ms to FPS
+        const averageFramesPerSecond = 1000 / avgFrameTimeMs; // Convert ms to FPS
 
         return {
             loadTime,
             fullLoadTime,
-            fps,
-            droppedFrames: this._totalDroppedFrameCount,
-            totalFrames: this._totalFrameCount
+            averageFramesPerSecond,
+            droppedFramesCount: this._totalDroppedFrameCount,
+            totalFramesCount: this._totalFrameCount
         };
     }
 }
