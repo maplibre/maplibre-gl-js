@@ -10,8 +10,8 @@ export type PerformanceMetrics = {
     fullLoadTime: number;
     /** Frames per second. */
     fps: number;
-    /** Percentage of frames that fell below the target framerate. */
-    percentDroppedFrames: number;
+    /** Number of frames that fell below 60 fps. */
+    droppedFrames: number;
     /** Total number of frames recorded. */
     totalFrames: number;
 };
@@ -41,7 +41,9 @@ const fullLoadTimeKey = 'fullLoadTime';
 export class PerformanceMonitor {
     private static _nextId = 0; // Static counter for unique IDs
     _lastFrameTime: number | null = null;
-    _frameTimes: number[] = [];
+    _totalFrameTime = 0;
+    _totalFrameCount = 0;
+    _totalDroppedFrameCount = 0;
 
     // Unique markers for this instance to avoid global collision
     _createMarker: string;
@@ -92,7 +94,17 @@ export class PerformanceMonitor {
         const currTimestamp = timestamp;
         if (this._lastFrameTime != null) {
             const frameTime = currTimestamp - this._lastFrameTime;
-            this._frameTimes.push(frameTime);
+
+            // Add new frame time to circular buffer
+            this._totalFrameTime += frameTime;
+
+            // Track lifetime metrics
+            this._totalFrameCount++;
+            if (frameTime > frameTimeTarget) {
+                this._totalDroppedFrameCount++;
+            }
+
+            this._frameIndex++;
         }
         this._lastFrameTime = currTimestamp;
     }
@@ -102,7 +114,9 @@ export class PerformanceMonitor {
      */
     clearMetrics() {
         this._lastFrameTime = null;
-        this._frameTimes = [];
+        this._totalFrameTime = 0;
+        this._totalFrameCount = 0;
+        this._totalDroppedFrameCount = 0;
         // Clear browser performance entries associated with this monitor
         performance.clearMarks(this._createMarker);
         performance.clearMarks(this._loadMarker);
@@ -122,27 +136,16 @@ export class PerformanceMonitor {
 
         const loadTime = performance.getEntriesByName(this._loadTimeMeasure)[0]?.duration || 0;
         const fullLoadTime = performance.getEntriesByName(this._fullLoadTimeMeasure)[0]?.duration || 0;
-        const totalFrames = this._frameTimes.length;
 
-        let avgFrameTime = 0;
-        if (totalFrames > 0) {
-            avgFrameTime = this._frameTimes.reduce((prev, curr) => prev + curr, 0) / totalFrames;
-        }
-        const fps = avgFrameTime > 0 ? 1000 / avgFrameTime : 0; // Convert ms to FPS
-
-        // count frames that missed our framerate target
-        const droppedFramesCount = this._frameTimes
-            .filter((frameTime) => frameTime > frameTimeTarget)
-            .length;
-
-        const percentDroppedFrames = (totalFrames > 0) ? (droppedFramesCount / totalFrames) * 100 : 0;
+        const avgFrameTimeMs = this._totalFrameTime / this._totalFrameCount;
+        const fps = 1000 / avgFrameTimeMs; // Convert ms to FPS
 
         return {
             loadTime,
             fullLoadTime,
             fps,
-            percentDroppedFrames,
-            totalFrames
+            droppedFrames: this._totalDroppedFrameCount,
+            totalFrames: this._totalFrameCount
         };
     }
 }

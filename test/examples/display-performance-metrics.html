@@ -55,7 +55,7 @@
                         <p><strong>Load Time:</strong> ${metrics.loadTime.toFixed(2)} ms</p>
                         <p><strong>Full Load Time:</strong> ${metrics.fullLoadTime.toFixed(2)} ms</p>
                         <p><strong>FPS:</strong> ${metrics.fps.toFixed(2)}</p>
-                        <p><strong>% Dropped Frames:</strong> ${metrics.percentDroppedFrames.toFixed(2)} %</p>
+                        <p><strong>% Dropped Frames:</strong> ${(metrics.droppedFrames / metrics.totalFrames * 100).toFixed(2)} %</p>
                         <p><strong>Total Frames:</strong> ${metrics.totalFrames}</p>
                     `;
                 } else {
