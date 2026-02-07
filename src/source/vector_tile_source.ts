@@ -21,6 +21,9 @@ export type VectorTileSourceOptions = VectorSourceSpecification & {
 };
 
 export type LoadTileResult = {
+    /**
+     * Indicates that the tile request was validated via ETag and it was unmodified.
+     */
     etagUnmodified?: boolean;
 };
 
