@@ -884,7 +884,7 @@ describe('Style.setState', () => {
         const style = createStyle();
         const styleJson = createStyleJSON();
         style.loadJSON(styleJson);
-        
+
         await style.once('style.load');
 
         const newStyleJSON: StyleSpecification = {
@@ -3416,6 +3416,21 @@ describe('Style.serialize', () => {
 
         expect(style.serialize().projection).toBeDefined();
         expect(style.serialize().projection.type).toBe('globe');
+    });
+
+    test('include projection property when projection is set to mercator', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        expect(style.getProjection()).toBeUndefined();
+
+        style.setProjection({type: 'mercator'});
+
+        expect(style.getProjection()).toBeDefined();
+        expect(style.getProjection().type).toBe('mercator');
+        expect(style.serialize().projection).toBeDefined();
+        expect(style.serialize().projection.type).toBe('mercator');
     });
 
     test('include sky property when map has sky', async () => {
