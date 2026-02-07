@@ -63,4 +63,37 @@ describe('GlobeControl', () => {
         await new Promise(resolve => setTimeout(resolve, 0));
         expect(map.style.projection.name).toBe('mercator');
     });
+
+    test('updates control state when Map.setProjection() is called', async () => {
+        await new Promise(resolve => map.on('load', resolve));
+
+        map.addControl(new GlobeControl());
+
+        // Initially should be mercator (not enabled)
+        let button = map.getContainer().querySelector('.maplibregl-ctrl-globe');
+        expect(map.style.projection.name).toBe('mercator');
+        expect(button.classList.contains('maplibregl-ctrl-globe')).toBe(true);
+        expect(button.classList.contains('maplibregl-ctrl-globe-enabled')).toBe(false);
+
+        // Call setProjection to globe
+        map.setProjection({type: 'globe'});
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        // Control should update to enabled state
+        button = map.getContainer().querySelector('.maplibregl-ctrl-globe-enabled');
+        expect(map.style.projection.name).toBe('globe');
+        expect(button).not.toBeNull();
+        expect(button.classList.contains('maplibregl-ctrl-globe-enabled')).toBe(true);
+        expect(button.classList.contains('maplibregl-ctrl-globe')).toBe(false);
+
+        // Call setProjection back to mercator
+        map.setProjection({type: 'mercator'});
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        // Control should update back to disabled state
+        button = map.getContainer().querySelector('.maplibregl-ctrl-globe');
+        expect(map.style.projection.name).toBe('mercator');
+        expect(button.classList.contains('maplibregl-ctrl-globe')).toBe(true);
+        expect(button.classList.contains('maplibregl-ctrl-globe-enabled')).toBe(false);
+    });
 });
