@@ -356,6 +356,7 @@ export {
     type GeoJSONFeature,
     type CoveringTilesOptions,
     type DashEntry,
+    type PerformanceMetrics,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,

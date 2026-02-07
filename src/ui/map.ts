@@ -23,7 +23,7 @@ import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSource
 import {TaskQueue} from '../util/task_queue';
 import {throttle} from '../util/throttle';
 import {webpSupported} from '../util/webp_supported';
-import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
+import {PerformanceMetrics, PerformanceMarkers, PerformanceUtils} from '../util/performance';
 import {type Source} from '../source/source';
 import {type StyleLayer} from '../style/style_layer';
 import {Terrain} from '../render/terrain';
@@ -3831,6 +3831,14 @@ export class Map extends Camera {
     // show vertices
     get vertices(): boolean { return !!this._vertices; }
     set vertices(value: boolean) { this._vertices = value; this._update(); }
+
+    /**
+     * Calculates and returns the current performance metrics of the map.
+     * @returns {PerformanceMetrics} An object containing various performance metrics.
+     */
+    getPerformanceMetrics(): PerformanceMetrics {
+        return PerformanceUtils.getPerformanceMetrics();
+    }
 
     /**
      * Returns the package version of the library
