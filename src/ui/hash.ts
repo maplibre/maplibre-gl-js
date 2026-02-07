@@ -81,7 +81,7 @@ export class Hash {
     _buildHashString = (params: URLSearchParams) => {
         const entries = Array.from(params.entries());
         if (entries.length === 0) return '';
-        return entries.map(([key, value]) => `${key}=${value}`).join('&');
+        return entries.map(([key, value]) => value ? `${key}=${value}` : key).join('&');
     };
 
     _getCurrentHash = () => {
