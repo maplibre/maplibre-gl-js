@@ -313,7 +313,7 @@ describe('hash', () => {
 
         map.setCenter([2.0, 1.0]);
 
-        expect(window.location.hash).toBe('#baz&map=7/1/2/135/60&foo=bar');
+        expect(window.location.hash).toBe('#baz=&map=7/1/2/135/60&foo=bar');
     });
 
     test('_removeHash', () => {
@@ -359,7 +359,7 @@ describe('hash', () => {
 
         hash._removeHash();
 
-        expect(window.location.hash).toBe('#baz&foo=bar');
+        expect(window.location.hash).toBe('#baz=&foo=bar');
     });
 
     describe('_isValidHash', () => {
@@ -519,13 +519,13 @@ describe('hash', () => {
             .addTo(map);
 
         // Set up hash with URL in another parameter
-        window.location.hash = '#map=10/3/-1&returnUrl=https://example.com&filter=a&b';
+        window.location.hash = '#map=10/3/-1&returnUrl=https://example.com&filter=a&b=';
 
         map.setZoom(5);
         map.setCenter([1.0, 2.0]);
 
         // Map parameter should update, other parameters preserved
-        expect(window.location.hash).toBe('#map=5/2/1&returnUrl=https://example.com&filter=a&b');
+        expect(window.location.hash).toBe('#map=5/2/1&returnUrl=https://example.com&filter=a&b=');
 
         // Verify reading still works
         window.location.hash = '#search=foo&map=7/4/2&redirect=/path?query=value';

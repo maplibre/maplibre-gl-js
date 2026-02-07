@@ -67,8 +67,7 @@ export class Hash {
         if (this._hashName) {
             const params = this._getHashParams();
             params.set(this._hashName, hash);
-            // Manually build the string to avoid URL encoding the hash value
-            return `#${this._buildHashString(params)}`;
+            return `#${decodeURIComponent(params.toString())}`;
         }
 
         return `#${hash}`;
@@ -76,12 +75,6 @@ export class Hash {
 
     _getHashParams = () => {
         return new URLSearchParams(window.location.hash.replace('#', ''));
-    };
-
-    _buildHashString = (params: URLSearchParams) => {
-        const entries = Array.from(params.entries());
-        if (entries.length === 0) return '';
-        return entries.map(([key, value]) => value ? `${key}=${value}` : key).join('&');
     };
 
     _getCurrentHash = () => {
@@ -131,7 +124,7 @@ export class Hash {
         }
 
         // Manually build the string to avoid URL encoding
-        const newHash = this._buildHashString(params);
+        const newHash = decodeURIComponent(params.toString());
         const location = window.location.href.replace(/(#.*)?$/, newHash ? `#${newHash}` : '');
         window.history.replaceState(window.history.state, null, location);
     };
