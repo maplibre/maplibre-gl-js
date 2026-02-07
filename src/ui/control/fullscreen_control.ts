@@ -120,11 +120,10 @@ export class FullscreenControl extends Evented implements IControl {
     }
 
     _onFullscreenChange = () => {
+        // WebKit due to https://caniuse.com/mdn-api_document_fullscreenelement
         let fullscreenElement =
             window.document.fullscreenElement ||
-            (window.document as any).mozFullScreenElement ||
-            (window.document as any).webkitFullscreenElement ||
-            (window.document as any).msFullscreenElement;
+            (window.document as any).webkitFullscreenElement;
 
         while (fullscreenElement?.shadowRoot?.fullscreenElement) {
             fullscreenElement = fullscreenElement.shadowRoot.fullscreenElement;
@@ -166,11 +165,8 @@ export class FullscreenControl extends Evented implements IControl {
             this._togglePseudoFullScreen();
         } else if (window.document.exitFullscreen) {
             (window.document as any).exitFullscreen();
-        } else if ((window.document as any).mozCancelFullScreen) {
-            (window.document as any).mozCancelFullScreen();
-        } else if ((window.document as any).msExitFullscreen) {
-            (window.document as any).msExitFullscreen();
         } else if ((window.document as any).webkitCancelFullScreen) {
+            // due to https://caniuse.com/mdn-api_document_exitfullscreen
             (window.document as any).webkitCancelFullScreen();
         } else {
             this._togglePseudoFullScreen();
@@ -182,11 +178,8 @@ export class FullscreenControl extends Evented implements IControl {
             this._togglePseudoFullScreen();
         } else if (this._container.requestFullscreen) {
             this._container.requestFullscreen();
-        } else if ((this._container as any).mozRequestFullScreen) {
-            (this._container as any).mozRequestFullScreen();
-        } else if ((this._container as any).msRequestFullscreen) {
-            (this._container as any).msRequestFullscreen();
         } else if ((this._container as any).webkitRequestFullscreen) {
+            // due to https://caniuse.com/mdn-api_element_requestfullscreen
             (this._container as any).webkitRequestFullscreen();
         } else {
             this._togglePseudoFullScreen();
