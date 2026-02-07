@@ -222,6 +222,7 @@ export class Tile {
                 // Only vector tiles have rawTileData, and they won't update it for
                 // 'reloadTile'
                 this.latestRawTileData = data.rawTileData;
+                this.latestEncoding = data.encoding;
                 this.latestFeatureIndex.rawTileData = data.rawTileData;
                 this.latestFeatureIndex.encoding = data.encoding;
             } else if (this.latestRawTileData) {
