@@ -537,6 +537,26 @@ describe('hash', () => {
         expect(map.getCenter().lng).toBe(2);
     });
 
+    test('hash with URL-encoded values', () => {
+        const hash = createHash('map')
+            .addTo(map);
+
+        // Pre-encoded hash value (slashes encoded as %2F)
+        window.location.hash = '#map=10%2F3.00%2F-1.00&foo=bar';
+
+        hash._onHashChange();
+
+        // Should decode and parse correctly
+        expect(map.getZoom()).toBe(10);
+        expect(map.getCenter().lat).toBe(3);
+        expect(map.getCenter().lng).toBe(-1);
+
+        // Update and verify encoding is preserved where needed
+        map.setZoom(8);
+
+        expect(window.location.hash).toBe('#map=8/3/-1&foo=bar');
+    });
+
     test('hash with malformed parameter separators', () => {
         const hash = createHash('map')
             .addTo(map);
