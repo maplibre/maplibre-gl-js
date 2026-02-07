@@ -14,6 +14,12 @@ export type FullscreenControlOptions = {
      * `container` is the [compatible DOM element](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullScreen#Compatible_elements) which should be made full screen. By default, the map container element will be made full screen.
      */
     container?: HTMLElement;
+    /**
+     * If `true`, the fullscreen control will always use pseudo fullscreen mode (CSS-based, expanding to browser viewport) instead of native fullscreen API.
+     * This can be useful for faster transitions and to allow multiple maps to be "fullscreen" simultaneously in different browser windows.
+     * @defaultValue false
+     */
+    pseudo?: boolean;
 };
 
 /**
@@ -45,6 +51,7 @@ export class FullscreenControl extends Evented implements IControl {
     _fullscreenButton: HTMLButtonElement;
     _container: HTMLElement;
     _prevCooperativeGesturesEnabled: boolean;
+    _pseudo: boolean;
 
     /**
      * @param options - the control's options
@@ -52,6 +59,7 @@ export class FullscreenControl extends Evented implements IControl {
     constructor(options: FullscreenControlOptions = {}) {
         super();
         this._fullscreen = false;
+        this._pseudo = options.pseudo ?? false;
 
         if (options && options.container) {
             if (options.container instanceof HTMLElement) {
@@ -154,7 +162,9 @@ export class FullscreenControl extends Evented implements IControl {
     };
 
     _exitFullscreen() {
-        if (window.document.exitFullscreen) {
+        if (this._pseudo) {
+            this._togglePseudoFullScreen();
+        } else if (window.document.exitFullscreen) {
             (window.document as any).exitFullscreen();
         } else if ((window.document as any).mozCancelFullScreen) {
             (window.document as any).mozCancelFullScreen();
@@ -168,7 +178,9 @@ export class FullscreenControl extends Evented implements IControl {
     }
 
     _requestFullscreen() {
-        if (this._container.requestFullscreen) {
+        if (this._pseudo) {
+            this._togglePseudoFullScreen();
+        } else if (this._container.requestFullscreen) {
             this._container.requestFullscreen();
         } else if ((this._container as any).mozRequestFullScreen) {
             (this._container as any).mozRequestFullScreen();
