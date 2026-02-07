@@ -65,41 +65,32 @@ export class Hash {
         if (pitch) hash += (`/${Math.round(pitch)}`);
 
         if (this._hashName) {
-            const hashName = this._hashName;
-            let found = false;
-            const parts = window.location.hash.slice(1).split('&').map(part => {
-                const key = part.split('=')[0];
-                if (key === hashName) {
-                    found = true;
-                    return `${key}=${hash}`;
-                }
-                return part;
-            }).filter(a => a);
-            if (!found) {
-                parts.push(`${hashName}=${hash}`);
-            }
-            return `#${parts.join('&')}`;
+            const params = this._getHashParams();
+            params.set(this._hashName, hash);
+            // Manually build the string to avoid URL encoding the hash value
+            return `#${this._buildHashString(params)}`;
         }
 
         return `#${hash}`;
     }
 
+    _getHashParams = () => {
+        return new URLSearchParams(window.location.hash.replace('#', ''));
+    };
+
+    _buildHashString = (params: URLSearchParams) => {
+        const entries = Array.from(params.entries());
+        if (entries.length === 0) return '';
+        return entries.map(([key, value]) => value ? `${key}=${value}` : key).join('&');
+    };
+
     _getCurrentHash = () => {
         // Get the current hash from location, stripped from its number sign
-        const hash = window.location.hash.replace('#', '');
         if (this._hashName) {
-            // Split the parameter-styled hash into parts and find the value we need
-            let keyval;
-            hash.split('&').map(
-                part => part.split('=')
-            ).forEach(part => {
-                if (part[0] === this._hashName) {
-                    keyval = part;
-                }
-            });
-            return (keyval ? keyval[1] || '' : '').split('/');
+            const params = this._getHashParams();
+            return (params.get(this._hashName) || '').split('/');
         }
-        return hash.split('/');
+        return window.location.hash.replace('#', '').split('/');
     };
 
     _onHashChange = () => {
@@ -127,26 +118,21 @@ export class Hash {
     };
 
     _removeHash = () => {
-        const currentHash = this._getCurrentHash();
-        if (currentHash.length === 0) {
-            return;
-        }
-        const baseHash = currentHash.join('/');
-        let targetHash = baseHash;
-        if (targetHash.split('&').length > 0) {
-            targetHash = targetHash.split('&')[0]; // #3/1/2&foo=bar -> #3/1/2
-        }
+        const params = this._getHashParams();
+
         if (this._hashName) {
-            targetHash = `${this._hashName}=${baseHash}`;
+            params.delete(this._hashName);
+        } else {
+            // For unnamed hash (#zoom/lat/lng&other=params), remove first entry
+            const entries = Array.from(params.entries());
+            if (entries.length > 0) {
+                params.delete(entries[0][0]);
+            }
         }
-        let replaceString = window.location.hash.replace(targetHash, '');
-        if (replaceString.startsWith('#&')) {
-            replaceString = replaceString.slice(0, 1) + replaceString.slice(2);
-        } else if (replaceString === '#') {
-            replaceString = '';
-        }
-        let location = window.location.href.replace(/(#.+)?$/, replaceString);
-        location = location.replace('&&', '&');
+
+        // Manually build the string to avoid URL encoding
+        const newHash = this._buildHashString(params);
+        const location = window.location.href.replace(/(#.*)?$/, newHash ? `#${newHash}` : '');
         window.history.replaceState(window.history.state, null, location);
     };
 
@@ -155,8 +141,8 @@ export class Hash {
      */
     _updateHash: () => ReturnType<typeof setTimeout> = throttle(this._updateHashUnthrottled, 30 * 1000 / 100);
 
-    _isValidHash(hash: number[]) {
-        if (hash.length < 3 || hash.some(isNaN)) {
+    _isValidHash(hash: string[]) {
+        if (hash.length < 3 || hash.some(h => isNaN(+h))) {
             return false;
         }
 
