@@ -202,20 +202,20 @@ export class MercatorTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-    get cameraToCenterDistance(): number { 
+    get cameraToCenterDistance(): number {
         return this._helper.cameraToCenterDistance;
     }
     get constrainOverride(): TransformConstrainFunction {
         return this._helper.constrainOverride;
     }
-    public get nearZ(): number { 
-        return this._helper.nearZ; 
+    public get nearZ(): number {
+        return this._helper.nearZ;
     }
-    public get farZ(): number { 
-        return this._helper.farZ; 
+    public get farZ(): number {
+        return this._helper.farZ;
     }
-    public get autoCalculateNearFarZ(): boolean { 
-        return this._helper.autoCalculateNearFarZ; 
+    public get autoCalculateNearFarZ(): boolean {
+        return this._helper.autoCalculateNearFarZ;
     }
     setTransitionState(_value: number, _error: number): void {
         // Do nothing
@@ -598,7 +598,6 @@ export class MercatorTransform implements ITransform {
         const offset = this.centerOffset;
         const point = projectToWorldCoordinates(this.worldSize, this.center);
         const x = point.x, y = point.y;
-        this._helper._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
 
         // Calculate the camera to sea-level distance in pixel in respect of terrain
         const limitedPitchRadians = degreesToRadians(Math.min(this.pitch, maxMercatorHorizonAngle));
@@ -730,7 +729,7 @@ export class MercatorTransform implements ITransform {
         const {overscaledTileID, aligned, applyTerrainMatrix} = params;
         const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);
         const tilePosMatrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID, aligned, true) : null;
-        
+
         let mainMatrix: mat4;
         if (overscaledTileID && overscaledTileID.terrainRttPosMatrix32f && applyTerrainMatrix) {
             mainMatrix = overscaledTileID.terrainRttPosMatrix32f;
