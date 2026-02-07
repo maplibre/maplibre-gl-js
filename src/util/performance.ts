@@ -103,8 +103,6 @@ export class PerformanceMonitor {
             if (frameTime > frameTimeTarget) {
                 this._totalDroppedFrameCount++;
             }
-
-            this._frameIndex++;
         }
         this._lastFrameTime = currTimestamp;
     }
@@ -134,15 +132,15 @@ export class PerformanceMonitor {
         performance.measure(this._loadTimeMeasure, this._createMarker, this._loadMarker);
         performance.measure(this._fullLoadTimeMeasure, this._createMarker, this._fullLoadMarker);
 
-        const loadTime = performance.getEntriesByName(this._loadTimeMeasure)[0]?.duration || 0;
-        const fullLoadTime = performance.getEntriesByName(this._fullLoadTimeMeasure)[0]?.duration || 0;
+        const loadTimeMs = performance.getEntriesByName(this._loadTimeMeasure)[0]?.duration || 0;
+        const fullLoadTimeMs = performance.getEntriesByName(this._fullLoadTimeMeasure)[0]?.duration || 0;
 
         const avgFrameTimeMs = this._totalFrameTime / this._totalFrameCount;
         const averageFramesPerSecond = 1000 / avgFrameTimeMs; // Convert ms to FPS
 
         return {
-            loadTime,
-            fullLoadTime,
+            loadTimeMs,
+            fullLoadTimeMs,
             averageFramesPerSecond,
             droppedFramesCount: this._totalDroppedFrameCount,
             totalFramesCount: this._totalFrameCount
