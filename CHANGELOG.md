@@ -5,7 +5,8 @@
 - Add support for `<geolocation>` HTML element in `GeolocateControl` (by [@ganesh8068](https://github.com/ganesh8068))
 
 ### 🐞 Bug fixes
-- Fix updating terrain tiles on feature state changes ([#6231](https://github.com/maplibre/maplibre-gl-js/issues/6231)) (by [pstaszek](https://github.com/pstaszek))
+- Fix updating terrain tiles on feature state changes ([#6231](https://github.com/maplibre/maplibre-gl-js/issues/6231)) (by [@pstaszek](https://github.com/pstaszek))
+- Fix LngLatBounds.intersects for zero-width bounds (by [@lucaswoj](https://github.com/lucaswoj))
 - _...Add new stuff here..._
 
 ## 5.17.0
