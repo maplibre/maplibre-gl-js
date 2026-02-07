@@ -151,10 +151,7 @@ describe('FullscreenControl', () => {
 
         control._onClickFullscreen();
 
-        // Verify native fullscreen was NOT called
         expect(requestFullscreenSpy).not.toHaveBeenCalled();
-
-        // Verify pseudo fullscreen was used instead
         expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(true);
     });
 
