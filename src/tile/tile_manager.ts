@@ -29,6 +29,7 @@ import type {ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-
 import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
+import {GeoJSONSource} from '../source/geojson_source';
 
 type TileResult = {
     tile: Tile;
@@ -346,7 +347,7 @@ export class TileManager extends Evented {
      * Analogy: imagine two sheets of paper in 3D space:
      *   - one sheet = ideal tiles at varying overscaledZ
      *   - the second sheet = maxCoveringZoom
-     * 
+     *
      * @param retainTileMap - this parameters will be updated with the child tiles to keep
      * @param idealTilesWithoutData - which of the ideal tiles currently does not have loaded data
      * @return a set of tiles that need to be loaded
@@ -505,7 +506,7 @@ export class TileManager extends Evented {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.type === 'vector' && this.map._zoomLevelsToOverscale !== undefined
-                    ? transform.maxZoom - this.map._zoomLevelsToOverscale 
+                    ? transform.maxZoom - this.map._zoomLevelsToOverscale
                     : this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,
@@ -836,13 +837,23 @@ export class TileManager extends Evented {
         if (!transform) return tileResults;
         const allowWorldCopies = transform.getCoveringTilesDetailsProvider().allowWorldCopies();
 
-        const cameraPointQueryGeometry = has3DLayer ?
+        const cameraPointQueryGeometry = true ?
             transform.getCameraQueryGeometry(pointQueryGeometry) :
             pointQueryGeometry;
 
         const project = (point: Point) => transform.screenPointToMercatorCoordinate(point, this.terrain);
+        // TODO I have confirmed that queryGemetry is correct.
         const queryGeometry = this.transformBbox(pointQueryGeometry, project, !allowWorldCopies);
         const cameraQueryGeometry = this.transformBbox(cameraPointQueryGeometry, project, !allowWorldCopies);
+
+        const features: GeoJSON.Feature[] = [{
+            type: 'Feature',
+            properties: {},
+            geometry: {
+                type: 'Polygon',
+                coordinates: [queryGeometry.map(p => p.toLngLat().toArray())]
+            }
+        }];
 
         const ids = this.getIds();
 
@@ -865,7 +876,7 @@ export class TileManager extends Evented {
                 tileSpaceBounds.expandBy(queryPadding);
 
                 if (tileSpaceBounds.intersects(EXTENT_BOUNDS)) {
-
+                    // TODO I need to confirm that tileSpaceQueryGeometry is correct
                     const tileSpaceQueryGeometry: Array<Point> = queryGeometry.map((c) => tileID.getTilePoint(c));
                     const tileSpaceCameraQueryGeometry = cameraQueryGeometry.map((c) => tileID.getTilePoint(c));
 
@@ -879,6 +890,11 @@ export class TileManager extends Evented {
                 }
             }
         }
+
+        (this.map.getSource('bbox') as GeoJSONSource).setData({
+            type: 'FeatureCollection',
+            features
+        });
 
         return tileResults;
     }
