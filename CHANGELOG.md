@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - Fix updating terrain tiles on feature state changes ([#6231](https://github.com/maplibre/maplibre-gl-js/issues/6231)) (by [pstaszek](https://github.com/pstaszek))
+- Fix incorrect text placement along line in 3D mode ([#7039](https://github.com/maplibre/maplibre-gl-js/issues/7039)) (by [@russellporter](https://github.com/russellporter))
 - _...Add new stuff here..._
 
 ## 5.17.0
