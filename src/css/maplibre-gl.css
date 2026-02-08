@@ -305,12 +305,10 @@
 
 @svg-load ctrl-terrain url("svg/maplibregl-ctrl-terrain.svg") {
     fill: #333;
-    
 }
 
 @svg-load ctrl-terrain-enabled url("svg/maplibregl-ctrl-terrain.svg") {
     fill: #33b5e5;
-    
 }
 
 .maplibregl-ctrl button.maplibregl-ctrl-terrain .maplibregl-ctrl-icon {
@@ -790,6 +788,12 @@ a.maplibregl-ctrl-logo.maplibregl-compact {
     width: 19px;
     box-sizing: border-box;
     box-shadow: 0 0 3px rgb(0, 0, 0, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .maplibregl-user-location-dot::before {
+        animation: none;
+    }
 }
 
 @keyframes maplibregl-user-location-dot-pulse {
