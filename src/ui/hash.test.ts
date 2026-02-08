@@ -594,7 +594,7 @@ describe('hash', () => {
                 .addTo(map);
         });
 
-        test('Near south pole, dateline (map may clamp to Mercator limits)', () => {
+        test('Near south pole, dateline', () => {
             window.location.hash = '#10/-85.05/-180';
             hash._onHashChange();
             expect(map.getZoom()).toBe(10);
