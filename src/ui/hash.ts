@@ -105,8 +105,8 @@ export class Hash {
     };
 
     _updateHashUnthrottled = () => {
-        window.location.hash = this.getHashString();
-        window.history.replaceState(window.history.state, null, window.location.href);
+        const location = window.location.href.replace(/(#.*)?$/, this.getHashString());
+        window.history.replaceState(window.history.state, null, location);
     };
 
     _removeHash = () => {
