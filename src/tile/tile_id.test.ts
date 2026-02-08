@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {CanonicalTileID, OverscaledTileID, normalizeTileCoordinates} from './tile_id';
+import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {EXTENT} from '../data/extent';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
 
@@ -137,20 +137,18 @@ describe('OverscaledTileID', () => {
         const tileB = new OverscaledTileID(4, 0, 4, 5, 2);
         expect(tileA.isChildOf(tileB)).toBe(false);
     });
-});
 
-describe('normalizeTileCoordinates', () => {
-    test('in-bounds returns original tileID', () => {
+    test('.normalizeCoordinates - in-bounds returns original tileID', () => {
         const tileID = new OverscaledTileID(2, 0, 2, 1, 1);
-        const result = normalizeTileCoordinates(tileID, 100, 100);
+        const result = tileID.normalizeCoordinates(100, 100);
         expect(result.tileID).toBe(tileID);
         expect(result.x).toBe(100);
         expect(result.y).toBe(100);
     });
 
-    test('out-of-bounds x positive resolves right neighbor', () => {
+    test('.normalizeCoordinates - out-of-bounds x positive resolves right neighbor', () => {
         const tileID = new OverscaledTileID(2, 0, 2, 1, 1);
-        const result = normalizeTileCoordinates(tileID, EXTENT + 100, 100);
+        const result = tileID.normalizeCoordinates(EXTENT + 100, 100);
         expect(result.tileID.canonical.x).toBe(2);
         expect(result.tileID.canonical.y).toBe(1);
         expect(result.tileID.canonical.z).toBe(2);
@@ -158,45 +156,45 @@ describe('normalizeTileCoordinates', () => {
         expect(result.y).toBe(100);
     });
 
-    test('out-of-bounds x negative resolves left neighbor', () => {
+    test('.normalizeCoordinates - out-of-bounds x negative resolves left neighbor', () => {
         const tileID = new OverscaledTileID(2, 0, 2, 1, 1);
-        const result = normalizeTileCoordinates(tileID, -100, 100);
+        const result = tileID.normalizeCoordinates(-100, 100);
         expect(result.tileID.canonical.x).toBe(0);
         expect(result.tileID.canonical.y).toBe(1);
         expect(result.x).toBe(EXTENT - 100);
         expect(result.y).toBe(100);
     });
 
-    test('out-of-bounds y positive resolves bottom neighbor', () => {
+    test('.normalizeCoordinates - out-of-bounds y positive resolves bottom neighbor', () => {
         const tileID = new OverscaledTileID(2, 0, 2, 1, 1);
-        const result = normalizeTileCoordinates(tileID, 100, EXTENT + 100);
+        const result = tileID.normalizeCoordinates(100, EXTENT + 100);
         expect(result.tileID.canonical.x).toBe(1);
         expect(result.tileID.canonical.y).toBe(2);
         expect(result.x).toBe(100);
         expect(result.y).toBe(100);
     });
 
-    test('y past world bounds (poles) returns null', () => {
+    test('.normalizeCoordinates - y past world bounds (poles) returns null', () => {
         // At z=2, dim=4, tile y=3 is the last row. y beyond EXTENT goes to y=4 which is out of bounds.
         const tileID = new OverscaledTileID(2, 0, 2, 1, 3);
-        const result = normalizeTileCoordinates(tileID, 100, EXTENT + 100);
+        const result = tileID.normalizeCoordinates(100, EXTENT + 100);
         expect(result).toBeNull();
     });
 
-    test('x wrapping across world boundary increases wrap', () => {
+    test('.normalizeCoordinates - x wrapping across world boundary increases wrap', () => {
         // At z=2, dim=4, tile x=3 is the last column. x beyond EXTENT wraps to x=0 with wrap+1
         const tileID = new OverscaledTileID(2, 0, 2, 3, 1);
-        const result = normalizeTileCoordinates(tileID, EXTENT + 100, 100);
+        const result = tileID.normalizeCoordinates(EXTENT + 100, 100);
         expect(result.tileID.canonical.x).toBe(0);
         expect(result.tileID.wrap).toBe(1);
         expect(result.x).toBe(100);
         expect(result.y).toBe(100);
     });
 
-    test('negative x wrapping across world boundary decreases wrap', () => {
+    test('.normalizeCoordinates - negative x wrapping across world boundary decreases wrap', () => {
         // At z=2, dim=4, tile x=0 is the first column. x < 0 wraps to x=3 with wrap-1
         const tileID = new OverscaledTileID(2, 0, 2, 0, 1);
-        const result = normalizeTileCoordinates(tileID, -100, 100);
+        const result = tileID.normalizeCoordinates(-100, 100);
         expect(result.tileID.canonical.x).toBe(3);
         expect(result.tileID.wrap).toBe(-1);
         expect(result.x).toBe(EXTENT - 100);

@@ -239,7 +239,7 @@ export class Placement {
     private _getTerrainElevationFunc(tileID: OverscaledTileID) {
         const terrain = this.terrain;
         if (!terrain) return null;
-        return (x: number, y: number) => terrain.getElevationCrossTile(tileID, x, y);
+        return (x: number, y: number) => terrain.getElevation(tileID, x, y);
     }
 
     getBucketParts(results: Array<BucketPart>, styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean) {

@@ -1,6 +1,6 @@
 
 import {mat4, vec2} from 'gl-matrix';
-import {OverscaledTileID, normalizeTileCoordinates} from '../tile/tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 import {RGBAImage} from '../util/image';
 import {warnOnce} from '../util/util';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
@@ -151,20 +151,24 @@ export class Terrain {
     }
 
     /**
-     * get the elevation-value from original dem-data for a given tile-coordinate
+     * Get the elevation-value from original dem-data for a given tile-coordinate.
+     * Coordinates that fall outside `[0, extent)` are normalized to the
+     * appropriate neighbor tile before lookup.
      * @param tileID - the tile to get the elevation for
-     * @param x - between 0 .. EXTENT
-     * @param y - between 0 .. EXTENT
+     * @param x - x coordinate relative to the tile, may be outside `[0, extent)`
+     * @param y - y coordinate relative to the tile, may be outside `[0, extent)`
      * @param extent - optional, default 8192
      * @returns the elevation
      */
     getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
-        if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return 0;
-        const terrain = this.getTerrainData(tileID);
+        const normalized = tileID.normalizeCoordinates(x, y, extent);
+        if (!normalized) return 0;
+
+        const terrain = this.getTerrainData(normalized.tileID);
         const dem = terrain.tile?.dem;
         if (!dem) return 0;
 
-        const pos = vec2.transformMat4([] as any, [x / extent * EXTENT, y / extent * EXTENT], terrain.u_terrain_matrix);
+        const pos = vec2.transformMat4([] as any, [normalized.x / extent * EXTENT, normalized.y / extent * EXTENT], terrain.u_terrain_matrix);
         const coord = [pos[0] * dem.dim, pos[1] * dem.dim];
 
         // bilinear interpolation
@@ -178,21 +182,6 @@ export class Terrain {
             dem.get(cx, cy + 1) * (1 - tx) * (ty) +
             dem.get(cx + 1, cy + 1) * (tx) * (ty)
         );
-    }
-
-    /**
-     * Get elevation for coordinates that may be outside the tile bounds [0, EXTENT).
-     * Normalizes coordinates to the appropriate neighbor tile before lookup.
-     * @param tileID - the tile the coordinates are relative to
-     * @param x - x coordinate, may be outside [0, EXTENT)
-     * @param y - y coordinate, may be outside [0, EXTENT)
-     * @param extent - optional, default 8192
-     * @returns the elevation
-     */
-    getElevationCrossTile(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
-        const normalized = normalizeTileCoordinates(tileID, x, y, extent);
-        if (!normalized) return 0;
-        return this.getElevation(normalized.tileID, normalized.x, normalized.y, extent);
     }
 
     /**
@@ -227,8 +216,8 @@ export class Terrain {
     /**
      * Get the elevation for given coordinate in respect of exaggeration.
      * @param tileID - the tile id
-     * @param x - between 0 .. EXTENT
-     * @param y - between 0 .. EXTENT
+     * @param x - x coordinate relative to the tile, may be outside `[0, extent)`
+     * @param y - y coordinate relative to the tile, may be outside `[0, extent)`
      * @param extent - optional, default 8192
      * @returns the elevation
      */

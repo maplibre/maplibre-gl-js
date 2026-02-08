@@ -49,13 +49,7 @@ describe('Terrain', () => {
                 return null as any as Tile;
             }
             return {
-                tileID: {
-                    canonical: {
-                        x: 0,
-                        y: 0,
-                        z: 0
-                    }
-                }
+                tileID: new OverscaledTileID(0, 0, 0, 0, 0),
             } as any as Tile;
         };
         const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
@@ -284,13 +278,14 @@ describe('Terrain', () => {
                 };
             }
         };
-        expect(mockTerrain.getDEMElevation(null, 0, 0)).toBeCloseTo(0);
-        expect(mockTerrain.getDEMElevation(null, 1, 1)).toBeCloseTo(110);
-        expect(mockTerrain.getDEMElevation(null, 0, 0.5)).toBeCloseTo(5);
-        expect(mockTerrain.getDEMElevation(null, 1, 0.5)).toBeCloseTo(105);
-        expect(mockTerrain.getDEMElevation(null, 0.5, 0)).toBeCloseTo(50);
-        expect(mockTerrain.getDEMElevation(null, 0.5, 1)).toBeCloseTo(60);
-        expect(mockTerrain.getDEMElevation(null, 0.4, 0.2)).toBeCloseTo(42);
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        expect(mockTerrain.getDEMElevation(tileID, 0, 0)).toBeCloseTo(0);
+        expect(mockTerrain.getDEMElevation(tileID, 1, 1)).toBeCloseTo(110);
+        expect(mockTerrain.getDEMElevation(tileID, 0, 0.5)).toBeCloseTo(5);
+        expect(mockTerrain.getDEMElevation(tileID, 1, 0.5)).toBeCloseTo(105);
+        expect(mockTerrain.getDEMElevation(tileID, 0.5, 0)).toBeCloseTo(50);
+        expect(mockTerrain.getDEMElevation(tileID, 0.5, 1)).toBeCloseTo(60);
+        expect(mockTerrain.getDEMElevation(tileID, 0.4, 0.2)).toBeCloseTo(42);
     });
 
     test('getElevationForLngLat uses covering tiles to get the right zoom', () => {
@@ -339,36 +334,33 @@ describe('Terrain', () => {
         expect(terrain.getMinTileElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(1);
     });
 
-    test('getElevationCrossTile normalizes out-of-bounds coordinates to neighbor tile', () => {
+    test('getDEMElevation normalizes out-of-bounds coordinates to neighbor tile', () => {
         const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
-        const spy = vi.fn().mockReturnValue(42);
-        terrain.getElevation = spy;
+        const spy = vi.fn().mockReturnValue({tile: null});
+        terrain.getTerrainData = spy;
 
         // tile (0,0,1) with x beyond EXTENT should normalize to tile (1,0,1)
         const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
-        const result = terrain.getElevationCrossTile(tileID, EXTENT + 100, 50);
+        terrain.getDEMElevation(tileID, EXTENT + 100, 50);
 
-        expect(result).toBe(42);
         expect(spy).toHaveBeenCalledOnce();
-        const [calledTileID, calledX, calledY, calledExtent] = spy.mock.calls[0];
+        const [calledTileID] = spy.mock.calls[0];
         expect(calledTileID.canonical.x).toBe(1);
         expect(calledTileID.canonical.y).toBe(0);
         expect(calledTileID.canonical.z).toBe(1);
-        expect(calledX).toBe(100);
-        expect(calledY).toBe(50);
-        expect(calledExtent).toBe(EXTENT);
     });
 
-    test('getElevationCrossTile returns 0 for coordinates beyond tile grid', () => {
+    test('getDEMElevation returns 0 for coordinates beyond tile grid', () => {
         const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {} as any);
-        terrain.getElevation = vi.fn();
+        const spy = vi.fn();
+        terrain.getTerrainData = spy;
 
         // tile (0,0,0) with y beyond EXTENT — no tile exists below at z=0
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const result = terrain.getElevationCrossTile(tileID, 100, EXTENT + 100);
+        const result = terrain.getDEMElevation(tileID, 100, EXTENT + 100);
 
         expect(result).toBe(0);
-        expect(terrain.getElevation).not.toHaveBeenCalled();
+        expect(spy).not.toHaveBeenCalled();
     });
 
     describe('getElevationForLngLatZoom returns 0 for out of bounds', () => {
