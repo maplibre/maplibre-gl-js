@@ -395,19 +395,19 @@ describe('hash', () => {
 
             expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
         });
-        
+
         test('invalidate hash, only one value', () => {
             window.location.hash = '#24';
 
             expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
         });
-        
+
         test('invalidate hash, only two values', () => {
             window.location.hash = '#24/3.00';
 
             expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
         });
-        
+
         test('invalidate hash, zoom greater than maxZoom', () => {
             window.location.hash = '#24/3.00/-1.00';
 
@@ -557,88 +557,104 @@ describe('hash', () => {
         expect(window.location.hash).toBe('#map=8/3/-1&foo=bar');
     });
 
-    test('hash with malformed parameter separators', () => {
+    test('hash with trailing ampersand', () => {
         const hash = createHash('map')
             .addTo(map);
 
-        // Trailing ampersand
         window.location.hash = '#map=10/3/-1&foo=bar&';
         hash._onHashChange();
         map.setZoom(11);
-        expect(window.location.hash).toContain('map=11/3/-1');
-        expect(window.location.hash).toContain('foo=bar');
+        expect(window.location.hash).toBe('map=11/3/-1');
 
-        // Double ampersand
-        window.location.hash = '#map=10/3/-1&&foo=bar';
-        hash._onHashChange();
-        map.setZoom(12);
-        expect(window.location.hash).toContain('map=12/3/-1');
-        expect(window.location.hash).toContain('foo=bar');
-
-        // Leading ampersand
-        window.location.hash = '#&map=10/3/-1&foo=bar';
-        hash._onHashChange();
-        map.setZoom(13);
-        expect(window.location.hash).toContain('map=13/3/-1');
-        expect(window.location.hash).toContain('foo=bar');
     });
 
-    test('hash with empty parameter values', () => {
+    test('hash with double ampersand', () => {
         const hash = createHash('map')
             .addTo(map);
 
-        // Empty map value should be invalid
+        window.location.hash = '#map=10/3/-1&&foo=bar';
+        hash._onHashChange();
+        map.setZoom(12);
+        expect(window.location.hash).toBe('map=12/3/-1');
+
+    });
+
+    test('hash with leading ampersand', () => {
+        const hash = createHash('map')
+            .addTo(map);
+
+        window.location.hash = '#&map=10/3/-1&foo=bar';
+        hash._onHashChange();
+        map.setZoom(13);
+        expect(window.location.hash).toBe('map=13/3/-1');
+    });
+
+    test('hash with empty parameter values should be invalid', () => {
+        const hash = createHash('map')
+            .addTo(map);
+
         window.location.hash = '#map=&foo=bar';
         expect(hash._onHashChange()).toBeFalsy();
 
-        // Set valid hash
+    });
+
+    test('update to hash with empty parameter values is kept as-is', () => {
+        const hash = createHash('map')
+            .addTo(map);
+
         window.location.hash = '#map=10/3/-1&empty=';
         hash._onHashChange();
         expect(map.getZoom()).toBe(10);
 
-        // Update and ensure empty param is handled
-        // URLSearchParams will output 'empty' without '=' for empty values
         map.setZoom(5);
-        expect(window.location.hash).toContain('map=5/3/-1');
-        expect(window.location.hash).toMatch(/empty[&]?/);
+        expect(window.location.hash).toBe('map=5/3/-1');
     });
 
-    test('geographic boundary values', () => {
-        const hash = createHash()
-            .addTo(map);
+    describe('geographic boundary values', () => {
+        let hash;
 
-        // Near south pole, dateline (map may clamp to Mercator limits)
-        window.location.hash = '#10/-85.05/-180';
-        hash._onHashChange();
-        expect(map.getZoom()).toBe(10);
-        // Mercator projection clamps latitude to ~±85.051129
-        expect(Math.abs(map.getCenter().lat)).toBeCloseTo(85.05, 1);
-        expect(Math.abs(map.getCenter().lng)).toBeCloseTo(180, 2);
+        beforeEach(() => {
+            hash = createHash()
+                .addTo(map);
+        });
 
-        // Near north pole, positive dateline
-        window.location.hash = '#10/85.05/180';
-        hash._onHashChange();
-        expect(map.getZoom()).toBe(10);
-        expect(map.getCenter().lat).toBeCloseTo(85.05, 1);
-        expect(map.getCenter().lng).toBeCloseTo(180, 2);
+        test('Near south pole, dateline (map may clamp to Mercator limits)', () => {
+            window.location.hash = '#10/-85.05/-180';
+            hash._onHashChange();
+            expect(map.getZoom()).toBe(10);
 
-        // Bearing at exact ±180° boundary
-        window.location.hash = '#10/0/-180/180/60';
-        hash._onHashChange();
-        expect(Math.abs(map.getCenter().lng)).toBeCloseTo(180, 2);
-        expect(map.getPitch()).toBe(60);
+            expect(Math.abs(map.getCenter().lat)).toBeCloseTo(85.05, 1);
+            expect(Math.abs(map.getCenter().lng)).toBeCloseTo(180, 2);
+        });
 
-        // Bearing at -180
-        map.dragRotate.enable();
-        map.touchZoomRotate.enable();
-        window.location.hash = '#10/0/0/-180';
-        hash._onHashChange();
-        expect(map.getBearing()).toBe(180);
+        test('Near north pole, positive dateline', () => {
+            window.location.hash = '#10/85.05/180';
+            hash._onHashChange();
+            expect(map.getZoom()).toBe(10);
+            expect(map.getCenter().lat).toBeCloseTo(85.05, 1);
+            expect(map.getCenter().lng).toBeCloseTo(180, 2);
+        });
 
-        // Zero zoom (at minimum)
-        window.location.hash = '#0/0/0';
-        hash._onHashChange();
-        expect(map.getZoom()).toBe(0);
+        test('Bearing at exact ±180° boundary', () => {
+            window.location.hash = '#10/0/-180/180/60';
+            hash._onHashChange();
+            expect(Math.abs(map.getCenter().lng)).toBeCloseTo(180, 2);
+            expect(map.getPitch()).toBe(60);
+        });
+
+        test('Bearing at exact -180° boundary', () => {
+            map.dragRotate.enable();
+            map.touchZoomRotate.enable();
+            window.location.hash = '#10/0/0/-180';
+            hash._onHashChange();
+            expect(map.getBearing()).toBe(180);
+        });
+
+        test('Zero zoom', () => {
+            window.location.hash = '#0/0/0';
+            hash._onHashChange();
+            expect(map.getZoom()).toBe(0);
+        });
     });
 
     test('special characters in hash name', () => {
