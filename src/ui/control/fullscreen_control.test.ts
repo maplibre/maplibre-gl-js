@@ -29,12 +29,11 @@ describe('FullscreenControl', () => {
         const container = window.document.querySelector('body')!;
         const fullscreen = new FullscreenControl({container});
         map.addControl(fullscreen);
-        const control = map._controls.find((ctrl) => {
-            return Object.prototype.hasOwnProperty.call(ctrl, '_fullscreen');
-        }) as FullscreenControl;
-        control._onClickFullscreen();
 
-        expect(control._container.tagName).toBe('BODY');
+        const click = new window.Event('click');
+        fullscreen._fullscreenButton.dispatchEvent(click);
+
+        expect(fullscreen._container.tagName).toBe('BODY');
     });
 
     test('uses pseudo fullscreen when fullscreen is not supported', () => {
@@ -43,14 +42,17 @@ describe('FullscreenControl', () => {
 
         const fullscreen = new FullscreenControl({});
         map.addControl(fullscreen);
-        const control = map._controls.find((ctrl) => {
-            return Object.prototype.hasOwnProperty.call(ctrl, '_fullscreen');
-        }) as FullscreenControl;
+
+        const click = new window.Event('click');
 
         expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(false);
-        control._onClickFullscreen();
+
+        fullscreen._fullscreenButton.dispatchEvent(click);
+
         expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(true);
-        control._onClickFullscreen();
+
+        fullscreen._fullscreenButton.dispatchEvent(click);
+
         expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(false);
     });
 
@@ -111,5 +113,64 @@ describe('FullscreenControl', () => {
         // Second simulated click would exit fullscreen mode
         fullscreen._fullscreenButton.dispatchEvent(click);
         expect(map.cooperativeGestures.isEnabled()).toBeFalsy();
+    });
+
+    test('uses pseudo fullscreen when pseudo option is true', () => {
+        Object.defineProperty(window.document, 'fullscreenEnabled', {
+            value: true,
+            writable: true,
+        });
+
+        const map = createMap();
+        const mapContainer = map.getContainer();
+
+        const fullscreen = new FullscreenControl({pseudo: true});
+        map.addControl(fullscreen);
+
+        const click = new window.Event('click');
+
+        expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(false);
+        fullscreen._fullscreenButton.dispatchEvent(click);
+        expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(true);
+        fullscreen._fullscreenButton.dispatchEvent(click);
+        expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(false);
+    });
+
+    test('pseudo option forces pseudo fullscreen even when native fullscreen is available', () => {
+        const map = createMap();
+        const mapContainer = map.getContainer();
+
+        // Mock requestFullscreen to verify it's NOT called when pseudo is true
+        const requestFullscreenSpy = vi.fn();
+        mapContainer.requestFullscreen = requestFullscreenSpy;
+
+        const fullscreen = new FullscreenControl({pseudo: true});
+        map.addControl(fullscreen);
+
+        const click = new window.Event('click');
+        fullscreen._fullscreenButton.dispatchEvent(click);
+
+        expect(requestFullscreenSpy).not.toHaveBeenCalled();
+        expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(true);
+    });
+
+    test('pseudo fullscreen can be used on custom container', () => {
+        const map = createMap();
+        const container = window.document.querySelector('body')!;
+
+        // Ensure container is clean before test
+        container.classList.remove('maplibregl-pseudo-fullscreen');
+
+        const fullscreen = new FullscreenControl({container, pseudo: true});
+        map.addControl(fullscreen);
+
+        const click = new window.Event('click');
+
+        expect(container.classList.contains('maplibregl-pseudo-fullscreen')).toBe(false);
+        fullscreen._fullscreenButton.dispatchEvent(click);
+        expect(container.classList.contains('maplibregl-pseudo-fullscreen')).toBe(true);
+        expect(fullscreen._container.tagName).toBe('BODY');
+        fullscreen._fullscreenButton.dispatchEvent(click);
+        expect(container.classList.contains('maplibregl-pseudo-fullscreen')).toBe(false);
     });
 });

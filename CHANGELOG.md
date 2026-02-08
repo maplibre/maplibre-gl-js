@@ -2,6 +2,7 @@
 ### ✨ Features and improvements
 - Add support for click events on Marker ([#7028](https://github.com/maplibre/maplibre-gl-js/pull/7028)) (by [@ganesh8068](https://github.com/ganesh8068))
 - Simplify and abstract the GeoJSON Worker ([#7058](https://github.com/maplibre/maplibre-gl-js/pull/7058)) (by [@wayofthefuture](https://github.com/wayofthefuture))
+- Add `pseudo` option to `FullscreenControl` to force CSS-based fullscreen mode instead of native fullscreen API. Users might want this because this is faster on some devices ([#7076](https://github.com/maplibre/maplibre-gl-js/pull/7076)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
