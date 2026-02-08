@@ -512,24 +512,38 @@ describe('hash', () => {
         expect(map).toBeTruthy();
     });
 
-    test('hash with special characters in other parameters', () => {
+    test('hash with URL in other parameter does not change', () => {
         const hash = createHash('map')
             .addTo(map);
 
         // Set up hash with URL in another parameter
         window.location.hash = '#map=10/3/-1&returnUrl=https://example.com&filter=a&b=';
-
         map.setZoom(5);
         map.setCenter([1.0, 2.0]);
 
-        // Map parameter should update, other parameters preserved
         expect(window.location.hash).toBe('#map=5/2/1&returnUrl=https://example.com&filter=a&b=');
 
-        // Verify reading still works
         window.location.hash = '#search=foo&map=7/4/2&redirect=/path?query=value';
-
         hash._onHashChange();
+        expect(map.getZoom()).toBe(7);
+        expect(map.getCenter().lat).toBe(4);
+        expect(map.getCenter().lng).toBe(2);
+    });
 
+
+    test('hash with URL+path in other parameter does not change', () => {
+        const hash = createHash('map')
+            .addTo(map);
+
+        // Set up hash with URL in another parameter
+        window.location.hash = '#map=10/3/-1&returnUrl=https://example.com/abcd/ef&filter=a&b=';
+        map.setZoom(5);
+        map.setCenter([1.0, 2.0]);
+
+        expect(window.location.hash).toBe('#map=5/2/1&returnUrl=https://example.com/abcd/ef&filter=a&b=');
+
+        window.location.hash = '#search=foo&map=7/4/2&redirect=/path?query=value';
+        hash._onHashChange();
         expect(map.getZoom()).toBe(7);
         expect(map.getCenter().lat).toBe(4);
         expect(map.getCenter().lng).toBe(2);
@@ -635,30 +649,38 @@ describe('hash', () => {
         });
     });
 
-    test('special characters in hash name', () => {
-        const hashWithHyphen = createHash('main-map')
-            .addTo(map);
+    describe('special characters in hash name', () => {
+        test('hyphen', () => {
+            const hashWithHyphen = createHash('main-map')
+                .addTo(map);
 
-        map.setZoom(5);
-        map.setCenter([1.0, 2.0]);
+            map.setZoom(5);
+            map.setCenter([1.0, 2.0]);
 
-        expect(window.location.hash).toContain('main-map=5/2/1');
+            expect(window.location.hash).toBe('#main-map=5/2/1');
 
-        window.location.hash = '#main-map=10/3/-1&foo=bar';
-        hashWithHyphen._onHashChange();
-        expect(map.getZoom()).toBe(10);
+            window.location.hash = '#main-map=10/3/-1&foo=bar';
+            hashWithHyphen._onHashChange();
+            expect(map.getZoom()).toBe(10);
 
-        hashWithHyphen.remove();
+            hashWithHyphen.remove();
+        });
 
-        const hashWithUnderscore = createHash('map_view')
-            .addTo(map);
+        test('underscore', () => {
+            const hashWithUnderscore = createHash('main_map')
+                .addTo(map);
 
-        map.setZoom(7);
-        map.setCenter([2.0, 3.0]);
+            map.setZoom(7);
+            map.setCenter([2.0, 3.0]);
 
-        expect(window.location.hash).toContain('map_view=7/3/2');
+            expect(window.location.hash).toBe('#main_map=7/3/2');
 
-        hashWithUnderscore.remove();
+            window.location.hash = '#main_map=10/3/-1&foo=bar';
+            hashWithUnderscore._onHashChange();
+            expect(map.getZoom()).toBe(10);
+
+            hashWithUnderscore.remove();
+        });
     });
 
     test('multiple hash instances on same page', () => {
@@ -679,14 +701,13 @@ describe('hash', () => {
         map1.setZoom(5);
         map1.setCenter([1.0, 2.0]);
 
-        expect(window.location.hash).toContain('map1=5/2/1');
+        expect(window.location.hash).toBe('#map1=5/2/1');
 
         // Update second map
         map2.setZoom(10);
         map2.setCenter([3.0, 4.0]);
 
-        expect(window.location.hash).toContain('map1=5/2/1');
-        expect(window.location.hash).toContain('map2=10/4/3');
+        expect(window.location.hash).toBe('#map1=5/2/1&map2=10/4/3');
 
         // Update hash externally and verify both maps respond
         window.location.hash = '#map1=7/5/6&map2=12/7/8';
