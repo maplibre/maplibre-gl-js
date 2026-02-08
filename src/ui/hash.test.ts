@@ -515,7 +515,6 @@ describe('hash', () => {
         expect(map.getCenter().lng).toBe(2);
     });
 
-
     test('hash with URL+path in other parameter does not change', () => {
         const hash = createHash('map')
             .addTo(map);
