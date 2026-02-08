@@ -78,6 +78,7 @@ export class Tile {
     dashPositions: {[_: string]: DashEntry};
     glyphAtlasImage: AlphaImage;
     glyphAtlasTexture: Texture;
+    etag?: string;
     expirationTime: any;
     expiredRequestCount: number;
     state: TileState;
@@ -204,6 +205,8 @@ export class Tile {
      * @param justReloaded - `true` to just reload
      */
     loadVectorData(data: WorkerTileResult, painter: any, justReloaded?: boolean | null) {
+        if (data?.etagUnmodified === true) return;
+
         if (this.hasData()) {
             this.unloadVectorData();
         }

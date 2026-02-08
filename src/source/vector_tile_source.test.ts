@@ -299,7 +299,7 @@ describe('VectorTileSource', () => {
         expect(tile.state).toBe('loading');
         await source.loadTile(tile);
         expect(events).toEqual([MessageType.loadTile, 'tileLoaded', MessageType.reloadTile, 'tileLoaded']);
-        await expect(initialLoadPromise).resolves.toBeUndefined();
+        await expect(initialLoadPromise).resolves.toStrictEqual({});
     });
 
     test('respects TileJSON.bounds', async () => {
@@ -435,5 +435,58 @@ describe('VectorTileSource', () => {
         await sleep(0);
         await source.once('data');
         expect(clearTiles.mock.calls).toHaveLength(1);
+    });
+
+    test('returns early after worker response if tile was aborted', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        await waitForMetadataEvent(source);
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            aborted: false,
+            etag: undefined,
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message, _abortController) {
+                tile.aborted = true;
+                return Promise.resolve({etag: 'test'} as any);
+            }
+        });
+
+        const result = await source.loadTile(tile);
+        expect(result).toBeUndefined();
+        expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
+        expect(tile.etag).toBeUndefined();
+    });
+
+    test('stores worker etag on tile when present', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message) {
+                return Promise.resolve({etag: 'test'} as any);
+            }
+        });
+        await waitForMetadataEvent(source);
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            aborted: false,
+            etag: undefined,
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+
+        await source.loadTile(tile);
+        expect(tile.etag).toBe('test');
     });
 });

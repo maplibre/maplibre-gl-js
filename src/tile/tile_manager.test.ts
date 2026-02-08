@@ -129,7 +129,7 @@ describe('TileManager.addTile', () => {
         const tileManager = createTileManager();
         const spy = vi.fn();
         tileManager._source.loadTile = spy;
-        
+
         tileManager.onAdd(undefined);
         tileManager._addTile(tileID);
         expect(spy).toHaveBeenCalledTimes(1);
@@ -656,7 +656,7 @@ describe('TileManager.update', () => {
 
         const style = map.style;
         const tileManager = style.tileManagers['rasterSource'];
-        
+
         tileManager._loadTile = async () => {};
 
         const fakeTile = new Tile(new OverscaledTileID(3, 0, 3, 1, 2), undefined);
@@ -681,7 +681,7 @@ describe('TileManager.update', () => {
             hasTile: (coord) => (coord.canonical.x !== 0)
         });
         const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
-                
+
         tileManager.onAdd(undefined);
         await dataPromise;
         tileManager.update(transform);
@@ -2096,16 +2096,16 @@ describe('TileManager.tilesIn', () => {
         transform.resize(512, 512);
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(-179.9, 0.1));
-    
+
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
-    
+
         const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
         tileManager.onAdd(undefined);
         await dataPromise;
-    
+
         tileManager.update(transform);
 
         expect(tileManager.tilesIn([
@@ -2476,7 +2476,7 @@ describe('TileManager.usedForTerrain', () => {
     });
 
 });
-    
+
 describe('TileManager::refreshTiles', () => {
     test('calls reloadTile when tile exists', async () => {
         const coord = new OverscaledTileID(1, 0, 1, 0, 1);
@@ -2493,7 +2493,7 @@ describe('TileManager::refreshTiles', () => {
         expect(spy).toHaveBeenCalledOnce();
         expect(spy.mock.calls[0][1]).toBe('expired');
     });
-    
+
     test('does not call reloadTile when tile does not exist', async () => {
         const coord = new OverscaledTileID(1, 0, 1, 1, 1);
         const tileManager = createTileManager();
@@ -2560,5 +2560,24 @@ describe('TileManager::refreshTiles', () => {
         expect(spy.mock.calls[1][1]).toBe('expired');
         expect(spy.mock.calls[2][1]).toBe('expired');
         expect(spy.mock.calls[3][1]).toBe('expired');
+    });
+});
+
+describe('TileManager / etag', () => {
+    test('skips _tileLoaded when Source.loadTile returns etagUnmodified', async () => {
+        const tileManager = createTileManager();
+        tileManager.onAdd(undefined);
+
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const tile = new Tile(tileID, 512);
+
+        const tileLoadedSpy = vi.spyOn(tileManager as any, '_tileLoaded');
+
+        tileManager._source.loadTile = vi.fn().mockResolvedValue({etagUnmodified: true});
+
+        await (tileManager as any)._loadTile(tile, tileID.key, tile.state);
+
+        expect(tileManager._source.loadTile).toHaveBeenCalledTimes(1);
+        expect(tileLoadedSpy).not.toHaveBeenCalled();
     });
 });

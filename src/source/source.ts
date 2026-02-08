@@ -12,6 +12,7 @@ import type {Event, Evented} from '../util/evented';
 import type {Map} from '../ui/map';
 import type {Tile} from '../tile/tile';
 import type {OverscaledTileID, CanonicalTileID} from '../tile/tile_id';
+import type {LoadTileResult} from '../source/vector_tile_source';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import {type CalculateTileZoomFunction} from '../geo/projection/covering_tiles';
 
@@ -91,7 +92,7 @@ export interface Source {
      * In most cases it will defer the work to the relevant worker source.
      * @param tile - The tile to load
      */
-    loadTile(tile: Tile): Promise<void>;
+    loadTile(tile: Tile): Promise<LoadTileResult | void>;
     /**
      * True is the tile is part of the source, false otherwise.
      * @param tileID - The tile ID
