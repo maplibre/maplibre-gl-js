@@ -49,7 +49,7 @@ describe('GlobeControl', () => {
     });
 
     test('toggles projection when clicked', async () => {
-        await new Promise(resolve => map.on('load', resolve));
+        await map.once('load');
 
         map.addControl(new GlobeControl());
         expect(map.style.projection.name).toBe('mercator');
@@ -65,7 +65,7 @@ describe('GlobeControl', () => {
     });
 
     test('updates control state when Map.setProjection() is called', async () => {
-        await new Promise(resolve => map.on('load', resolve));
+        await map.once('load');
 
         map.addControl(new GlobeControl());
 
