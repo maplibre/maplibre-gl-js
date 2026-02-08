@@ -2,7 +2,7 @@ import {now} from '../util/time_control';
 import {Placement} from '../symbol/placement';
 import type {ITransform} from '../geo/transform_interface';
 import type {StyleLayer} from './style_layer';
-import type {SymbolStyleLayer} from './style_layer/symbol_style_layer';
+import {isSymbolStyleLayer, type SymbolStyleLayer} from './style_layer/symbol_style_layer';
 import type {Tile} from '../tile/tile';
 import type {BucketPart} from '../symbol/placement';
 import type {Terrain} from '../render/terrain';
@@ -102,12 +102,13 @@ export class PauseablePlacement {
             const layerId = order[this._currentPlacementIndex];
             const layer = layers[layerId];
             const placementZoom = this.placement.collisionIndex.transform.zoom;
-            if (layer.type === 'symbol' &&
+            if (isSymbolStyleLayer(layer) &&
+                layer.layout &&
                 (!layer.minzoom || layer.minzoom <= placementZoom) &&
                 (!layer.maxzoom || layer.maxzoom > placementZoom)) {
 
                 if (!this._inProgressLayer) {
-                    this._inProgressLayer = new LayerPlacement(layer as any as SymbolStyleLayer);
+                    this._inProgressLayer = new LayerPlacement(layer);
                 }
 
                 const pausePlacement = this._inProgressLayer.continuePlacement(layerTiles[layer.source], this.placement, this._showCollisionBoxes, layer, shouldPausePlacement);
