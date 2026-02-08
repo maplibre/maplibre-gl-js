@@ -105,9 +105,8 @@ export class Hash {
     };
 
     _updateHashUnthrottled = () => {
-        // Replace if already present, else append the updated hash string
-        const location = window.location.href.replace(/(#.*)?$/, this.getHashString());
-        window.history.replaceState(window.history.state, null, location);
+        window.location.hash = this.getHashString();
+        window.history.replaceState(window.history.state, null, window.location.href);
     };
 
     _removeHash = () => {
@@ -124,8 +123,8 @@ export class Hash {
         }
 
         const newHash = decodeURIComponent(params.toString());
-        const location = window.location.href.replace(/(#.*)?$/, newHash ? `#${newHash}` : '');
-        window.history.replaceState(window.history.state, null, location);
+        window.location.hash = newHash ? `#${newHash}` : '';
+        window.history.replaceState(window.history.state, null, window.location.href);
     };
 
     /**
