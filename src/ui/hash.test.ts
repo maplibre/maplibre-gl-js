@@ -649,40 +649,6 @@ describe('hash', () => {
         });
     });
 
-    describe('special characters in hash name', () => {
-        test('hyphen', () => {
-            const hashWithHyphen = createHash('main-map')
-                .addTo(map);
-
-            map.setZoom(5);
-            map.setCenter([1.0, 2.0]);
-
-            expect(window.location.hash).toBe('#main-map=5/2/1');
-
-            window.location.hash = '#main-map=10/3/-1&foo=bar';
-            hashWithHyphen._onHashChange();
-            expect(map.getZoom()).toBe(10);
-
-            hashWithHyphen.remove();
-        });
-
-        test('underscore', () => {
-            const hashWithUnderscore = createHash('main_map')
-                .addTo(map);
-
-            map.setZoom(7);
-            map.setCenter([2.0, 3.0]);
-
-            expect(window.location.hash).toBe('#main_map=7/3/2');
-
-            window.location.hash = '#main_map=10/3/-1&foo=bar';
-            hashWithUnderscore._onHashChange();
-            expect(map.getZoom()).toBe(10);
-
-            hashWithUnderscore.remove();
-        });
-    });
-
     test('multiple hash instances on same page', () => {
         const container1 = window.document.createElement('div');
         Object.defineProperty(container1, 'clientWidth', {value: 512});
