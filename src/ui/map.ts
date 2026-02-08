@@ -3844,15 +3844,18 @@ export class Map extends Camera {
 
     /**
      * Calculates and returns the current performance metrics of the map.
-     * @returns An object containing various performance metrics.
+     * 
+     * @returns An object containing various performance metrics or undefined if `collectPerformanceMetrics` is enabled. Otherwise `undefined`.
      */
     get performanceMetrics(): PerformanceMetrics | undefined {
         return this._performanceMonitor?.getPerformanceMetrics();
     }
 
     /**
-     * Resets all recorded performance metrics for this monitor instance.
-     * This is useful for analyzing performance only in a certain animation or timeframe.
+     * Resets all runtime performance metrics of the map.
+     * 
+     * This is useful for analyzing performance of a certain animation or timeframe.
+     * The Performance metrics are available via the `performanceMetrics` property.
      */
     resetRuntimeMetrics() {
         this._performanceMonitor?.resetRuntimeMetrics();
