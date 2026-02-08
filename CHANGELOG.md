@@ -7,6 +7,7 @@
 ### 🐞 Bug fixes
 - Fix updating terrain tiles on feature state changes ([#6231](https://github.com/maplibre/maplibre-gl-js/issues/6231)) (by [@pstaszek](https://github.com/pstaszek))
 - Fix LngLatBounds.intersects for zero-width bounds (by [@lucaswoj](https://github.com/lucaswoj))
+- Fix `map.getProjection()` returning `undefined` after calling `map.setProjection()` with the default `"mercator"` projection ([#7072](https://github.com/maplibre/maplibre-gl-js/pull/7072))
 - Fix incorrect text placement along line in 3D mode ([#7039](https://github.com/maplibre/maplibre-gl-js/issues/7039)) (by [@russellporter](https://github.com/russellporter))
 - When the `prefers-reduced-motion` media query is active, we now no longer display the pulsing GeoLocation animation ([#7066](https://github.com/maplibre/maplibre-gl-js/pull/7066)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
