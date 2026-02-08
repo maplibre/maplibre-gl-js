@@ -224,6 +224,56 @@ export class OverscaledTileID {
     getTilePoint(coord: MercatorCoordinate) {
         return this.canonical.getTilePoint(new MercatorCoordinate(coord.x - this.wrap, coord.y));
     }
+
+    /**
+     * Maps tile-local coordinates that may fall outside the `[0, extent)` range
+     * to the correct neighbor tile and the corresponding in-tile position.
+     *
+     * Coordinates can exceed tile bounds when geometry (e.g. symbol labels along
+     * lines) extends across tile edges. This method resolves such coordinates to
+     * the appropriate adjacent tile, wrapping horizontally across world boundaries
+     * and returning `null` when the target falls beyond the polar tile-grid limits.
+     *
+     * When the coordinates are already in bounds, the original tile ID is returned.
+     *
+     * @param x - x coordinate relative to this tile, may be outside `[0, extent)`
+     * @param y - y coordinate relative to this tile, may be outside `[0, extent)`
+     * @param extent - tile coordinate extent, default {@link EXTENT}
+     * @returns the resolved tile ID and in-tile coordinates, or `null` if the
+     *          target is beyond the tile grid (e.g. past the poles)
+     */
+    normalizeCoordinates(x: number, y: number, extent: number = EXTENT): {tileID: OverscaledTileID; x: number; y: number} | null {
+        if (x >= 0 && x < extent && y >= 0 && y < extent) {
+            return {tileID: this, x, y};
+        }
+
+        const tileOffsetX = Math.floor(x / extent);
+        const tileOffsetY = Math.floor(y / extent);
+        const newX = x - tileOffsetX * extent;
+        const newY = y - tileOffsetY * extent;
+
+        const z = this.canonical.z;
+        const dim = 1 << z;
+        const newCanonicalY = this.canonical.y + tileOffsetY;
+
+        if (newCanonicalY < 0 || newCanonicalY >= dim) return null;
+
+        let newCanonicalX = this.canonical.x + tileOffsetX;
+        let newWrap = this.wrap;
+        if (newCanonicalX < 0) {
+            newWrap -= Math.ceil(-newCanonicalX / dim);
+            newCanonicalX = ((newCanonicalX % dim) + dim) % dim;
+        } else if (newCanonicalX >= dim) {
+            newWrap += Math.floor(newCanonicalX / dim);
+            newCanonicalX = newCanonicalX % dim;
+        }
+
+        return {
+            tileID: new OverscaledTileID(this.overscaledZ, newWrap, z, newCanonicalX, newCanonicalY),
+            x: newX,
+            y: newY,
+        };
+    }
 }
 
 export function calculateTileKey(wrap: number, overscaledZ: number, z: number, x: number, y: number): string {
