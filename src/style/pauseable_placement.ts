@@ -103,6 +103,7 @@ export class PauseablePlacement {
             const layer = layers[layerId];
             const placementZoom = this.placement.collisionIndex.transform.zoom;
             if (layer.type === 'symbol' &&
+                (layer as any as SymbolStyleLayer).layout &&
                 (!layer.minzoom || layer.minzoom <= placementZoom) &&
                 (!layer.maxzoom || layer.maxzoom > placementZoom)) {
 
