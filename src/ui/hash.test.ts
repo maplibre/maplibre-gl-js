@@ -555,7 +555,7 @@ describe('hash', () => {
 
     });
 
-    test('hash with leading ampersand', () => {
+    test('hash with leading ampersand removes leading ampersand', () => {
         const hash = createHash('map')
             .addTo(map);
 
