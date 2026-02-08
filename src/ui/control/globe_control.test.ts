@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {GlobeControl} from './globe_control';
-import {createMap as globalCreateMap, beforeMapTest, sleep} from '../../util/test/util';
+import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
 
 function createMap() {
     return globalCreateMap({
@@ -56,11 +56,9 @@ describe('GlobeControl', () => {
         const button = map.getContainer().querySelector('.maplibregl-ctrl-globe');
 
         button.click();
-        await sleep(0);
         expect(map.style.projection.name).toBe('globe');
 
         button.click();
-        await sleep(0);
         expect(map.style.projection.name).toBe('mercator');
     });
 
@@ -77,7 +75,6 @@ describe('GlobeControl', () => {
 
         // Call setProjection to globe
         map.setProjection({type: 'globe'});
-        await sleep(0);
 
         // Control should update to enabled state
         button = map.getContainer().querySelector('.maplibregl-ctrl-globe-enabled');
@@ -88,7 +85,6 @@ describe('GlobeControl', () => {
 
         // Call setProjection back to mercator
         map.setProjection({type: 'mercator'});
-        await sleep(0);
 
         // Control should update back to disabled state
         button = map.getContainer().querySelector('.maplibregl-ctrl-globe');
