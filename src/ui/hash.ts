@@ -123,7 +123,6 @@ export class Hash {
             }
         }
 
-        // Manually build the string to avoid URL encoding
         const newHash = decodeURIComponent(params.toString());
         const location = window.location.href.replace(/(#.*)?$/, newHash ? `#${newHash}` : '');
         window.history.replaceState(window.history.state, null, location);
