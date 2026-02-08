@@ -9,7 +9,7 @@ export type PerformanceMetrics = {
     /** Time taken for the map to fully load all its resources, measured from the map's creation until all tiles, sprites, and other assets are loaded. */
     fullLoadTimeMs?: number;
     /** Time taken for the last frame to render, measured from the last frame's frame-rendering start until the next frames rendering starts. */
-    lastFrameTimeMs?: number;
+    lastFrameDurationMs?: number;
     /** Average frames per second. */
     averageFramesPerSecond: number;
     /** Number of frames that fell below 60 fps. */
@@ -30,6 +30,7 @@ export class PerformanceMonitor {
     private static _nextId = 0; // Static counter for unique IDs
     private _id: number;
     private _lastFrameTime?: number;
+    private _lastFrameDuration: number;
     private _totalFrameTime = 0;
     private _totalFrameCount = 0;
     private _totalDroppedFrameCount = 0;
@@ -50,13 +51,6 @@ export class PerformanceMonitor {
         this._fullLoadMarker = `fullLoad-${this._id}`;
         this._loadTimeMeasure = `load-${this._id}`;
         this._fullLoadTimeMeasure = `fullLoad-${this._id}`;
-
-        // Clear any lingering global performance marks related to these keys to avoid interference.
-        performance.clearMarks(this._createMarker);
-        performance.clearMarks(this._loadMarker);
-        performance.clearMarks(this._fullLoadMarker);
-        performance.clearMeasures(this._fullLoadTimeMeasure);
-        performance.clearMeasures(this._loadTimeMeasure);
     }
 
     /**
@@ -75,17 +69,18 @@ export class PerformanceMonitor {
     }
 
     /**
-     * Records the time of a new animation frame. Used internally for FPS calculation.
+     * Records the time of a new animation frame.
+     * Used internally for FPS calculation.
      * @param currentTimestamp - The current timestamp provided by requestAnimationFrame.
      */
-    frame(currentTimestamp: number) {
+    startOfFrameAt(currentTimestamp: number) {
         if (this._lastFrameTime !== undefined) {
-            const frameTime = currentTimestamp - this._lastFrameTime;
-            this._totalFrameTime += frameTime;
-
-            // Track lifetime metrics
             this._totalFrameCount++;
-            if (frameTime > frameTimeTarget) {
+
+            const frameDuration = currentTimestamp - this._lastFrameTime;
+            this._totalFrameTime += frameDuration;
+            this._lastFrameDuration = frameDuration;
+            if (frameDuration > frameTimeTarget) {
                 this._totalDroppedFrameCount++;
             }
         }
@@ -97,6 +92,7 @@ export class PerformanceMonitor {
     */
     resetRuntimeMetrics() {
         this._lastFrameTime = undefined;
+        this._lastFrameDuration = undefined;
         this._totalFrameTime = 0;
         this._totalFrameCount = 0;
         this._totalDroppedFrameCount = 0;
@@ -132,7 +128,7 @@ export class PerformanceMonitor {
         return {
             loadTimeMs: this._loadTimeMs,
             fullLoadTimeMs: this._fullLoadTimeMs,
-            lastFrameTimeMs: this._lastFrameTime,
+            lastFrameDurationMs: this._lastFrameDuration,
             averageFramesPerSecond,
             droppedFramesCount: this._totalDroppedFrameCount,
             totalFramesCount: this._totalFrameCount
@@ -145,7 +141,7 @@ export class PerformanceMonitor {
  * Safe wrapper for the performance resource timing API in web workers with graceful degradation
  */
 export class RequestPerformance {
-    _marks: {
+    private _marks: {
         start: string;
         end: string;
         measure: string;
@@ -179,5 +175,3 @@ export class RequestPerformance {
         return resourceTimingData;
     }
 }
-
-export default performance;
