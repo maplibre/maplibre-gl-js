@@ -58,6 +58,15 @@
             "source": "repeat"
         },
         {
+            "id": "line",
+            "type": "line",
+            "source": "geometry",
+            "paint": {
+                "line-color": "#ff0000",
+                "line-width": 2
+            }
+        },
+        {
             "id": "geometry",
             "type": "symbol",
             "source": "geometry",
