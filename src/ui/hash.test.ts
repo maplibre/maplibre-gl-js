@@ -494,7 +494,6 @@ describe('hash', () => {
 
         map.remove();
 
-        expect(map).toBeTruthy();
     });
 
     test('hash with URL in other parameter does not change', () => {
