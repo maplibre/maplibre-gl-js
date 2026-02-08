@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Display Map Performance Metrics</title>
+        <meta property="og:description" content="Display the performance metrics of a MapLibre GL JS map, including load times, FPS, and dropped frames." />
+        <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+        <script src="../../dist/maplibre-gl.js"></script>
+        <link href="../../dist/maplibre-gl.css" rel="stylesheet" />
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            #map {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                width: 100%;
+            }
+            #metrics {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                background: white;
+                padding: 10px;
+                border-radius: 5px;
+                font-family: sans-serif;
+                font-size: 14px;
+                z-index: 100;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <div id="metrics">Loading performance metrics...</div>
+
+        <script>
+            const map = new maplibregl.Map({
+                container: "map",
+                style: "https://demotiles.maplibre.org/style.json", // A basic style
+                center: [0, 0],
+                zoom: 1,
+                collectPerformanceMetrics: true, // Enable performance metric collection
+            });
+
+            const metricsElement = document.getElementById("metrics");
+
+            function updateMetricsDisplay() {
+                const metrics = map.performanceMetrics;
+
+                if (metrics) {
+                    metricsElement.innerHTML = `
+                        <h3>Map Performance Metrics</h3>
+                        <p><strong>Load Time:</strong> ${metrics.loadTimeMs?.toFixed(2)} ms</p>
+                        <p><strong>Full Load Time:</strong> ${metrics.fullLoadTimeMs?.toFixed(2)} ms</p>
+                        <p><strong>FPS:</strong> ${metrics.fps.toFixed(2)}</p>
+                        <p><strong>% Dropped Frames:</strong> ${(metrics.droppedFramesCount / metrics.totalFramesCount * 100).toFixed(2)} %</p>
+                        <p><strong>Total Frames:</strong> ${metrics.totalFramesCount}</p>
+                    `;
+                } else {
+                    metricsElement.innerHTML = "Performance metrics not collected (opt-in disabled).";
+                }
+            }
+
+            // Initial update after the map is idle
+            map.on('idle', updateMetricsDisplay);
+
+            // Continuous updates using setInterval
+            const intervalId = setInterval(updateMetricsDisplay, 1000); // Update every 1 second
+
+            map.on("remove", () => {
+                clearInterval(intervalId); // Clear the interval when the map is removed
+            });
+
+            map.on("error", (e) => {
+                console.error("Map error:", e.error);
+                metricsElement.innerHTML = `Error loading map: ${e.error.message}`;
+                clearInterval(intervalId); // Also clear on error
+            });
+        </script>
+    </body>
+</html>
