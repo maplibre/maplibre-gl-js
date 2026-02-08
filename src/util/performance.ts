@@ -68,7 +68,7 @@ export class PerformanceMonitor {
             // Ensure measures are taken before querying
             performance.measure(this._loadTimeMeasure, this._createMarker, this._loadMarker);
             performance.measure(this._fullLoadTimeMeasure, this._createMarker, this._fullLoadMarker);
-    
+
             this._loadTimeMs = performance.getEntriesByName(this._loadTimeMeasure)[0]?.duration || 0;
             this._fullLoadTimeMs = performance.getEntriesByName(this._fullLoadTimeMeasure)[0]?.duration || 0;
         }
@@ -93,19 +93,32 @@ export class PerformanceMonitor {
     }
 
     /**
-     * Clears all recorded performance metrics and markers for this monitor instance.
-     */
-    clearMetrics() {
+    * Resets all recorded performance metrics and markers for this monitor instance.
+    */
+    resetRuntimeMetrics() {
         this._lastFrameTime = undefined;
         this._totalFrameTime = 0;
         this._totalFrameCount = 0;
         this._totalDroppedFrameCount = 0;
-        // Clear browser performance entries associated with this monitor
+    }
+
+    /**
+    * Clear browser performance entries associated with this monitor
+    */
+    private clearInitialisationMetrics() {
         performance.clearMarks(this._createMarker);
         performance.clearMarks(this._loadMarker);
         performance.clearMarks(this._fullLoadMarker);
         performance.clearMeasures(this._fullLoadTimeMeasure);
         performance.clearMeasures(this._loadTimeMeasure);
+    }
+
+    /**
+     * Clears both the runtime and intalisation metrics
+     */
+    remove() {
+        this.resetRuntimeMetrics();
+        this.clearInitialisationMetrics();
     }
 
     /**

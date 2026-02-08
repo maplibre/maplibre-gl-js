@@ -3719,7 +3719,7 @@ export class Map extends Camera {
         this._container.removeEventListener('scroll', this._onMapScroll, false);
         this._container.classList.remove('maplibregl-map');
 
-        this._performanceMonitor?.clearMetrics();
+        this._performanceMonitor?.remove();
 
         this._removed = true;
         this.fire(new Event('remove'));
@@ -3848,6 +3848,14 @@ export class Map extends Camera {
      */
     get performanceMetrics(): PerformanceMetrics | undefined {
         return this._performanceMonitor?.getPerformanceMetrics();
+    }
+
+    /**
+     * Resets all recorded performance metrics for this monitor instance.
+     * This is useful for analyzing performance only in a certain animation or timeframe.
+     */
+    resetRuntimeMetrics() {
+        this._performanceMonitor?.resetRuntimeMetrics();
     }
 
     /**
