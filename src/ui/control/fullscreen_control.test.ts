@@ -42,14 +42,17 @@ describe('FullscreenControl', () => {
 
         const fullscreen = new FullscreenControl({});
         map.addControl(fullscreen);
-        const control = map._controls.find((ctrl) => {
-            return Object.prototype.hasOwnProperty.call(ctrl, '_fullscreen');
-        }) as FullscreenControl;
+
+        const click = new window.Event('click');
 
         expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(false);
-        control._onClickFullscreen();
+
+        fullscreen._fullscreenButton.dispatchEvent(click);
+
         expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(true);
-        control._onClickFullscreen();
+
+        fullscreen._fullscreenButton.dispatchEvent(click);
+
         expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(false);
     });
 
@@ -143,11 +146,9 @@ describe('FullscreenControl', () => {
 
         const fullscreen = new FullscreenControl({pseudo: true});
         map.addControl(fullscreen);
-        const control = map._controls.find((ctrl) => {
-            return Object.prototype.hasOwnProperty.call(ctrl, '_fullscreen');
-        }) as FullscreenControl;
 
-        control._onClickFullscreen();
+        const click = new window.Event('click');
+        fullscreen._fullscreenButton.dispatchEvent(click);
 
         expect(requestFullscreenSpy).not.toHaveBeenCalled();
         expect(mapContainer.classList.contains('maplibregl-pseudo-fullscreen')).toBe(true);
