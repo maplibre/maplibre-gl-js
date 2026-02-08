@@ -170,12 +170,7 @@ describe('hash', () => {
             .addTo(map);
 
         window.location.hash = '#10/3.00/-1.00';
-
-        const currentHash = hash._getCurrentHash();
-
-        expect(currentHash[0]).toBe('10');
-        expect(currentHash[1]).toBe('3.00');
-        expect(currentHash[2]).toBe('-1.00');
+        expect(hash._getCurrentHash()).toStrictEqual(['10', '3.00', '-1.00']);
     });
 
     test('_getCurrentHash named', () => {
@@ -183,20 +178,10 @@ describe('hash', () => {
             .addTo(map);
 
         window.location.hash = '#map=10/3.00/-1.00&foo=bar';
-
-        let currentHash = hash._getCurrentHash();
-
-        expect(currentHash[0]).toBe('10');
-        expect(currentHash[1]).toBe('3.00');
-        expect(currentHash[2]).toBe('-1.00');
+        expect(hash._getCurrentHash()).toStrictEqual(['10', '3.00', '-1.00']);
 
         window.location.hash = '#baz&map=10/3.00/-1.00';
-
-        currentHash = hash._getCurrentHash();
-
-        expect(currentHash[0]).toBe('10');
-        expect(currentHash[1]).toBe('3.00');
-        expect(currentHash[2]).toBe('-1.00');
+        expect(hash._getCurrentHash()).toStrictEqual(['10', '3.00', '-1.00']);
     });
 
     describe('getHashString', () => {
