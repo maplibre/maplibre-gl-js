@@ -151,20 +151,24 @@ export class Terrain {
     }
 
     /**
-     * get the elevation-value from original dem-data for a given tile-coordinate
-     * @param tileID - the tile to get elevation for
-     * @param x - between 0 .. EXTENT
-     * @param y - between 0 .. EXTENT
+     * Get the elevation-value from original dem-data for a given tile-coordinate.
+     * Coordinates that fall outside `[0, extent)` are normalized to the
+     * appropriate neighbor tile before lookup.
+     * @param tileID - the tile to get the elevation for
+     * @param x - x coordinate relative to the tile, may be outside `[0, extent)`
+     * @param y - y coordinate relative to the tile, may be outside `[0, extent)`
      * @param extent - optional, default 8192
      * @returns the elevation
      */
     getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
-        if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return 0;
-        const terrain = this.getTerrainData(tileID);
+        const normalized = tileID.normalizeCoordinates(x, y, extent);
+        if (!normalized) return 0;
+
+        const terrain = this.getTerrainData(normalized.tileID);
         const dem = terrain.tile?.dem;
         if (!dem) return 0;
 
-        const pos = vec2.transformMat4([] as any, [x / extent * EXTENT, y / extent * EXTENT], terrain.u_terrain_matrix);
+        const pos = vec2.transformMat4([] as any, [normalized.x / extent * EXTENT, normalized.y / extent * EXTENT], terrain.u_terrain_matrix);
         const coord = [pos[0] * dem.dim, pos[1] * dem.dim];
 
         // bilinear interpolation
@@ -212,8 +216,8 @@ export class Terrain {
     /**
      * Get the elevation for given coordinate in respect of exaggeration.
      * @param tileID - the tile id
-     * @param x - between 0 .. EXTENT
-     * @param y - between 0 .. EXTENT
+     * @param x - x coordinate relative to the tile, may be outside `[0, extent)`
+     * @param y - y coordinate relative to the tile, may be outside `[0, extent)`
      * @param extent - optional, default 8192
      * @returns the elevation
      */

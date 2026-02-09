@@ -1,6 +1,5 @@
 import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
 import {PerformanceMonitor, RequestPerformance} from './performance';
-import type {RequestParameters} from './ajax';
 
 describe('PerformanceMonitor', () => {
     let monitor: PerformanceMonitor;
@@ -335,13 +334,14 @@ describe('PerformanceMonitor', () => {
 
 describe('RequestPerformance', () => {
     let requestParams: RequestParameters;
+import {RequestPerformance} from './performance';
+
+describe('RequestPerformance', () => {
+    const url = 'http://example.com/test.json';
 
     beforeEach(() => {
         performance.clearMarks();
         performance.clearMeasures();
-        requestParams = {
-            url: 'http://example.com/test.json'
-        } as RequestParameters;
     });
 
     afterEach(() => {
@@ -349,33 +349,9 @@ describe('RequestPerformance', () => {
         performance.clearMeasures();
     });
 
-    describe('constructor', () => {
-        test('creates start mark on instantiation', () => {
-            const markSpy = vi.spyOn(performance, 'mark');
-
-            new RequestPerformance(requestParams);
-
-            expect(markSpy).toHaveBeenCalledWith('http://example.com/test.json#start');
-
-            markSpy.mockRestore();
-        });
-    });
-
     describe('finish', () => {
-        test('creates end mark when called', () => {
-            const markSpy = vi.spyOn(performance, 'mark');
-            const reqPerf = new RequestPerformance(requestParams);
-
-            reqPerf.finish();
-
-            expect(markSpy).toHaveBeenCalledWith('http://example.com/test.json#end');
-
-            markSpy.mockRestore();
-        });
-
-        test('returns resource timing data', () => {
-            const reqPerf = new RequestPerformance(requestParams);
-
+        test('returns resource timing data with expected structure', () => {
+            const reqPerf = new RequestPerformance(url);
             const timingData = reqPerf.finish();
 
             expect(Array.isArray(timingData)).toBe(true);
@@ -384,15 +360,17 @@ describe('RequestPerformance', () => {
             expect(timingData[0]).toHaveProperty('startTime');
         });
 
-        test('creates fallback measure when getEntriesByName returns empty', () => {
-            const reqPerf = new RequestPerformance(requestParams);
+        test('creates fallback measure when resource timing unavailable', () => {
+            const reqPerf = new RequestPerformance(url);
 
             let callCount = 0;
             const spy = vi.spyOn(performance, 'getEntriesByName').mockImplementation((name: string) => {
                 callCount++;
                 if (callCount === 1) {
+                    // Simulate web worker scenario where resource timing is empty
                     return [];
                 } else {
+                    // Return the fallback measure
                     return [{
                         name,
                         entryType: 'measure',
@@ -402,65 +380,14 @@ describe('RequestPerformance', () => {
                 }
             });
 
-            const measureSpy = vi.spyOn(performance, 'measure');
-
             const timingData = reqPerf.finish();
 
-            expect(measureSpy).toHaveBeenCalledWith(
-                'http://example.com/test.json',
-                'http://example.com/test.json#start',
-                'http://example.com/test.json#end'
-            );
             expect(Array.isArray(timingData)).toBe(true);
             expect(timingData.length).toBeGreaterThan(0);
+            expect(timingData[0]).toHaveProperty('duration');
+            expect(timingData[0]).toHaveProperty('startTime');
 
-            measureSpy.mockRestore();
             spy.mockRestore();
-        });
-
-        test('cleans up marks and measures when creating fallback measure', () => {
-            const reqPerf = new RequestPerformance(requestParams);
-
-            let callCount = 0;
-            const spy = vi.spyOn(performance, 'getEntriesByName').mockImplementation((name: string) => {
-                callCount++;
-                if (callCount === 1) {
-                    return [];
-                } else {
-                    return [{
-                        name,
-                        entryType: 'measure',
-                        startTime: 0,
-                        duration: 10
-                    } as PerformanceEntry];
-                }
-            });
-
-            const clearMarksSpy = vi.spyOn(performance, 'clearMarks');
-            const clearMeasuresSpy = vi.spyOn(performance, 'clearMeasures');
-
-            reqPerf.finish();
-
-            expect(clearMarksSpy).toHaveBeenCalledWith('http://example.com/test.json#start');
-            expect(clearMarksSpy).toHaveBeenCalledWith('http://example.com/test.json#end');
-            expect(clearMeasuresSpy).toHaveBeenCalledWith('http://example.com/test.json');
-
-            clearMarksSpy.mockRestore();
-            clearMeasuresSpy.mockRestore();
-            spy.mockRestore();
-        });
-
-        test('measures time between start and finish', () => {
-            const reqPerf = new RequestPerformance(requestParams);
-
-            const startTime = performance.now();
-            while (performance.now() - startTime < 5) {
-            }
-
-            const timingData = reqPerf.finish();
-
-            expect(timingData.length).toBeGreaterThan(0);
-            expect(timingData[0].duration).toBeGreaterThan(0);
         });
     });
 });

@@ -1,6 +1,8 @@
 # Introduction
 
-MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser. The customization of the map comply with the [MapLibre Style Spec](https://maplibre.org/maplibre-style-spec). It is part of the [MapLibre ecosystem](https://github.com/maplibre), with a counterpart for Android, iOS and other platforms called [MapLibre Native](https://github.com/maplibre/maplibre-native).
+MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser.
+The map’s appearance is controlled by a style document whose structure and properties are defined by the [MapLibre Style Spec](https://maplibre.org/maplibre-style-spec).
+It is part of the MapLibre ecosystem, with a counterpart for Android, iOS and other platforms called [MapLibre Native](https://github.com/maplibre/maplibre-native).
 
 ## Quickstart
 
