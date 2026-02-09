@@ -1,3 +1,6 @@
+/**
+ * Represents a collection of performance metrics for the map.
+ */
 export type PerformanceMetrics = {
     loadTime: number;
     fullLoadTime: number;
@@ -21,10 +24,21 @@ const frameTimeTarget = 1000 / minFramerateTarget;
 const loadTimeKey = 'loadTime';
 const fullLoadTimeKey = 'fullLoadTime';
 
+/**
+ * Monitors and reports map performance metrics
+ */
 export const PerformanceUtils = {
+    /**
+    * Marks point in time of the map lifecycle.
+    */
     mark(marker: PerformanceMarkers) {
         performance.mark(marker);
     },
+    /**
+    * Records the time of a new animation frame.
+    * Used internally for FPS calculation.
+    * @param currentTimestamp - The current timestamp provided by requestAnimationFrame.
+    */
     frame(timestamp: number) {
         const currTimestamp = timestamp;
         if (lastFrameTime != null) {
@@ -43,7 +57,10 @@ export const PerformanceUtils = {
             performance.clearMarks(PerformanceMarkers[marker]);
         }
     },
-
+    /**
+    * Calculates and returns the current performance metrics for this monitor instance.
+    * @returns An object containing various performance metrics.
+    */
     getPerformanceMetrics(): PerformanceMetrics {
         performance.measure(loadTimeKey, PerformanceMarkers.create, PerformanceMarkers.load);
         performance.measure(fullLoadTimeKey, PerformanceMarkers.create, PerformanceMarkers.fullLoad);
