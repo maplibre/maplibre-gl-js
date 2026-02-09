@@ -78,12 +78,14 @@ export class Hash {
     };
 
     _getCurrentHash = () => {
-        // Get the current hash from location, stripped from its number sign
+        const params = this._getHashParams();
         if (this._hashName) {
-            const params = this._getHashParams();
             return (params.get(this._hashName) || '').split('/');
         }
-        return window.location.hash.replace('#', '').split('/');
+        // For unnamed hashes, get the first key
+        const keys = Array.from(params.keys());
+        const hash = keys.length > 0 ? keys[0] : '';
+        return hash.split('/');
     };
 
     _onHashChange = () => {
@@ -116,9 +118,9 @@ export class Hash {
             params.delete(this._hashName);
         } else {
             // For unnamed hash (#zoom/lat/lng&other=params), remove first entry
-            const entries = Array.from(params.entries());
-            if (entries.length > 0) {
-                params.delete(entries[0][0]);
+            const keys = Array.from(params.keys());
+            if (keys.length > 0) {
+                params.delete(keys[0]);
             }
         }
 

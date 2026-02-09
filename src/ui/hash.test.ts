@@ -389,6 +389,12 @@ describe('hash', () => {
             expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
         });
 
+        test('invalidate hash that has the coord as the second value, but should be first or use named params', () => {
+            window.location.hash = '#foo=bar&10/3.00/-1.00';
+
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
+        });
+
         test('invalidate hash, only one value', () => {
             window.location.hash = '#24';
 
