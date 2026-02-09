@@ -359,13 +359,25 @@ describe('hash', () => {
             expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
         });
 
-        test('validate hash with negative bearing', () => {
+        test('validate hash with negative bearing and positive pitch', () => {
             window.location.hash = '#5/1.00/0.50/-30/60';
 
             expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
         });
 
+        test('validate hash with positive bearing and negative pitch', () => {
+            window.location.hash = '#5/1.00/0.50/-30/60';
+
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
+        });
+        
         test('validate hash with bearing only', () => {
+            window.location.hash = '#5/1.00/0.50/30';
+
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
+        });
+        
+        test('validate hash with negative bearing only', () => {
             window.location.hash = '#5/1.00/0.50/30';
 
             expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
