@@ -6,6 +6,7 @@ import {debugUniforms} from './debug_program';
 import {heatmapUniforms, heatmapTextureUniforms} from './heatmap_program';
 import {hillshadeUniforms, hillshadePrepareUniforms} from './hillshade_program';
 import {colorReliefUniforms} from './color_relief_program';
+import {slopeUniforms} from './slope_program';
 import {lineUniforms, lineGradientUniforms, linePatternUniforms, lineSDFUniforms, lineGradientSDFUniforms} from './line_program';
 import {rasterUniforms} from './raster_program';
 import {symbolIconUniforms, symbolSDFUniforms, symbolTextAndIconUniforms} from './symbol_program';
@@ -35,6 +36,7 @@ export const programUniforms = {
     hillshade: hillshadeUniforms,
     hillshadePrepare: hillshadePrepareUniforms,
     colorRelief: colorReliefUniforms,
+    slope: slopeUniforms,
     line: lineUniforms,
     lineGradient: lineGradientUniforms,
     linePattern: linePatternUniforms,
