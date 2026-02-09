@@ -3732,7 +3732,7 @@ export class Map extends Camera {
             browser.frame(
                 this._frameRequest,
                 (paintStartTimeStamp) => {
-                    PerformanceUtils.frame(paintStartTimeStamp);
+                    PerformanceUtils.recordStartOfFrameAt(paintStartTimeStamp);
                     this._frameRequest = null;
                     try {
                         this._render(paintStartTimeStamp);

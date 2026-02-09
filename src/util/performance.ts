@@ -2,11 +2,16 @@
  * Represents a collection of performance metrics for the map.
  */
 export type PerformanceMetrics = {
-    loadTime: number;
-    fullLoadTime: number;
-    fps: number;
-    percentDroppedFrames: number;
-    totalFrames: number;
+    /** Time taken to load the initial map view, measured from the map's creation until its initial style and sources are loaded. */
+    loadTimeMs: number;
+    /** Time taken for the map to fully load all its resources, measured from the map's creation until all tiles, sprites, and other assets are loaded. */
+    fullLoadTimeMs: number;
+    /** Average frames per second. */
+    averageFramesPerSecond: number;
+    /** The total number of "ideal frames" that could have fit into the time lost by slow frames */
+    virtualDroppedFramesCount: number;
+    /** Total number of frames rendered. */
+    totalFramesCount: number;
 };
 
 export enum PerformanceMarkers {
@@ -39,13 +44,12 @@ export const PerformanceUtils = {
     * Used internally for FPS calculation.
     * @param currentTimestamp - The current timestamp provided by requestAnimationFrame.
     */
-    frame(timestamp: number) {
-        const currTimestamp = timestamp;
+    recordStartOfFrameAt(currentTimestamp: number) {
         if (lastFrameTime != null) {
-            const frameTime = currTimestamp - lastFrameTime;
+            const frameTime = currentTimestamp - lastFrameTime;
             frameTimes.push(frameTime);
         }
-        lastFrameTime = currTimestamp;
+        lastFrameTime = currentTimestamp;
     },
     clearMetrics() {
         lastFrameTime = null;
@@ -64,27 +68,26 @@ export const PerformanceUtils = {
     getPerformanceMetrics(): PerformanceMetrics {
         performance.measure(loadTimeKey, PerformanceMarkers.create, PerformanceMarkers.load);
         performance.measure(fullLoadTimeKey, PerformanceMarkers.create, PerformanceMarkers.fullLoad);
-        const loadTime = performance.getEntriesByName(loadTimeKey)[0].duration;
-        const fullLoadTime = performance.getEntriesByName(fullLoadTimeKey)[0].duration;
-        const totalFrames = frameTimes.length;
+        const loadTimeMs = performance.getEntriesByName(loadTimeKey)[0].duration;
+        const fullLoadTimeMs = performance.getEntriesByName(fullLoadTimeKey)[0].duration;
+        const totalFramesCount = frameTimes.length;
 
-        const avgFrameTime = frameTimes.reduce((prev, curr) => prev + curr, 0) / totalFrames / 1000;
-        const fps = 1 / avgFrameTime;
+        const avgFrameTime = frameTimes.reduce((prev, curr) => prev + curr, 0) / totalFramesCount / 1000;
+        const averageFramesPerSecond = 1 / avgFrameTime;
 
         // count frames that missed our framerate target
-        const droppedFrames = frameTimes
+        const virtualDroppedFramesCount = frameTimes
             .filter((frameTime) => frameTime > frameTimeTarget)
             .reduce((acc, curr) => {
                 return acc + (curr -  frameTimeTarget) / frameTimeTarget;
             }, 0);
-        const percentDroppedFrames = (droppedFrames / (totalFrames + droppedFrames)) * 100;
 
         return {
-            loadTime,
-            fullLoadTime,
-            fps,
-            percentDroppedFrames,
-            totalFrames
+            loadTimeMs,
+            fullLoadTimeMs,
+            averageFramesPerSecond,
+            virtualDroppedFramesCount,
+            totalFramesCount
         };
     }
 };
