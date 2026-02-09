@@ -71,7 +71,7 @@ export const PerformanceUtils = {
     },
 
     /**
-     * Clears both the runtime and intalisation metrics
+     * Clears both the runtime and initialisation metrics
      */
     remove() {
         this.resetRuntimeMetrics();
