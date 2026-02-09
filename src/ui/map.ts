@@ -3709,7 +3709,7 @@ export class Map extends Camera {
         this._container.removeEventListener('scroll', this._onMapScroll, false);
         this._container.classList.remove('maplibregl-map');
 
-        PerformanceUtils.clearMetrics();
+        PerformanceUtils.remove();
 
         this._removed = true;
         this.fire(new Event('remove'));

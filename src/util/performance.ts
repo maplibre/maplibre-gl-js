@@ -51,9 +51,17 @@ export const PerformanceUtils = {
         }
         lastFrameTime = currentTimestamp;
     },
-    clearMetrics() {
+
+    resetRuntimeMetrics() {
         lastFrameTime = null;
         frameTimes = [];
+    },
+
+    /**
+    * @internal
+    * Clear browser performance entries associated with this monitor
+    */
+    clearInitialisationMetrics() {
         performance.clearMeasures(loadTimeKey);
         performance.clearMeasures(fullLoadTimeKey);
 
@@ -61,6 +69,15 @@ export const PerformanceUtils = {
             performance.clearMarks(PerformanceMarkers[marker]);
         }
     },
+
+    /**
+     * Clears both the runtime and intalisation metrics
+     */
+    remove() {
+        this.resetRuntimeMetrics();
+        this.clearInitialisationMetrics();
+    },
+
     /**
     * Calculates and returns the current performance metrics for this monitor instance.
     * @returns An object containing various performance metrics.
