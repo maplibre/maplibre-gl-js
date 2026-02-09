@@ -358,7 +358,8 @@ export type MapOptions = {
      */
     pixelRatio?: number;
     /**
-     * If false, style validation will be skipped. Useful in production environment.
+     * If false, style validation will be skipped.
+     * Useful in production environments due to enabling tree-shaking of the validation code and minor performance improvements.
      * @defaultValue true
      */
     validateStyle?: boolean;
