@@ -84,9 +84,9 @@ describe('PerformanceMonitor', () => {
         });
     });
 
-    describe('startOfFrameAt', () => {
+    describe('recordStartOfFrameAt', () => {
         test('first frame does not record duration', () => {
-            monitor.startOfFrameAt(1000);
+            monitor.recordStartOfFrameAt(1000);
 
             const metrics = monitor.getPerformanceMetrics();
 
@@ -95,8 +95,8 @@ describe('PerformanceMonitor', () => {
         });
 
         test('tracks frame time between consecutive frames', () => {
-            monitor.startOfFrameAt(1000);
-            monitor.startOfFrameAt(1016.67); // ~60 FPS
+            monitor.recordStartOfFrameAt(1000);
+            monitor.recordStartOfFrameAt(1016.67); // ~60 FPS
 
             const metrics = monitor.getPerformanceMetrics();
 
@@ -105,10 +105,10 @@ describe('PerformanceMonitor', () => {
         });
 
         test('calculates average frames per second', () => {
-            monitor.startOfFrameAt(1000);
-            monitor.startOfFrameAt(1016.67);
-            monitor.startOfFrameAt(1033.33);
-            monitor.startOfFrameAt(1050);
+            monitor.recordStartOfFrameAt(1000);
+            monitor.recordStartOfFrameAt(1016.67);
+            monitor.recordStartOfFrameAt(1033.33);
+            monitor.recordStartOfFrameAt(1050);
 
             const metrics = monitor.getPerformanceMetrics();
 
@@ -121,31 +121,31 @@ describe('PerformanceMonitor', () => {
             expect(monitor.getPerformanceMetrics().totalFramesCount).toBe(0);
 
             // the n is to account for floating point precision errors
-            monitor.startOfFrameAt(0 * 1000 / 60 - 0);
+            monitor.recordStartOfFrameAt(0 * 1000 / 60 - 0);
 
             expect(monitor.getPerformanceMetrics().droppedFramesCount).toBe(0);
             expect(monitor.getPerformanceMetrics().totalFramesCount).toBe(0);
 
-            monitor.startOfFrameAt(1 * 1000 / 60 - 1);
+            monitor.recordStartOfFrameAt(1 * 1000 / 60 - 1);
 
             expect(monitor.getPerformanceMetrics().droppedFramesCount).toBe(0);
             expect(monitor.getPerformanceMetrics().totalFramesCount).toBe(1);
 
-            monitor.startOfFrameAt(3 * 1000 / 60 - 2);
+            monitor.recordStartOfFrameAt(3 * 1000 / 60 - 2);
 
             expect(monitor.getPerformanceMetrics().droppedFramesCount).toBe(1);
             expect(monitor.getPerformanceMetrics().totalFramesCount).toBe(2);
 
-            monitor.startOfFrameAt(4 * 1000 / 60 - 3);
+            monitor.recordStartOfFrameAt(4 * 1000 / 60 - 3);
 
             expect(monitor.getPerformanceMetrics().droppedFramesCount).toBe(1);
             expect(monitor.getPerformanceMetrics().totalFramesCount).toBe(3);
         });
 
         test('does not count frames faster than 60 fps as dropped', () => {
-            monitor.startOfFrameAt(0 * 1000 / 120);
-            monitor.startOfFrameAt(1 * 1000 / 120);
-            monitor.startOfFrameAt(2 * 1000 / 120);
+            monitor.recordStartOfFrameAt(0 * 1000 / 120);
+            monitor.recordStartOfFrameAt(1 * 1000 / 120);
+            monitor.recordStartOfFrameAt(2 * 1000 / 120);
 
             const metrics = monitor.getPerformanceMetrics();
 
@@ -154,11 +154,11 @@ describe('PerformanceMonitor', () => {
         });
 
         test('handles varying frame times', () => {
-            monitor.startOfFrameAt(1000);
-            monitor.startOfFrameAt(1010);
-            monitor.startOfFrameAt(1030);
-            monitor.startOfFrameAt(1045);
-            monitor.startOfFrameAt(1095);
+            monitor.recordStartOfFrameAt(1000);
+            monitor.recordStartOfFrameAt(1010);
+            monitor.recordStartOfFrameAt(1030);
+            monitor.recordStartOfFrameAt(1045);
+            monitor.recordStartOfFrameAt(1095);
 
             const metrics = monitor.getPerformanceMetrics();
 
@@ -167,10 +167,10 @@ describe('PerformanceMonitor', () => {
         });
 
         test('accumulates frame time correctly', () => {
-            monitor.startOfFrameAt(1000);
-            monitor.startOfFrameAt(1020);
-            monitor.startOfFrameAt(1040);
-            monitor.startOfFrameAt(1060);
+            monitor.recordStartOfFrameAt(1000);
+            monitor.recordStartOfFrameAt(1020);
+            monitor.recordStartOfFrameAt(1040);
+            monitor.recordStartOfFrameAt(1060);
 
             const metrics = monitor.getPerformanceMetrics();
 
@@ -180,9 +180,9 @@ describe('PerformanceMonitor', () => {
 
     describe('resetRuntimeMetrics', () => {
         test('resets all frame metrics', () => {
-            monitor.startOfFrameAt(1000);
-            monitor.startOfFrameAt(1016.67);
-            monitor.startOfFrameAt(1033.33);
+            monitor.recordStartOfFrameAt(1000);
+            monitor.recordStartOfFrameAt(1016.67);
+            monitor.recordStartOfFrameAt(1033.33);
 
             monitor.resetRuntimeMetrics();
 
@@ -194,13 +194,13 @@ describe('PerformanceMonitor', () => {
         });
 
         test('allows metrics to be recorded again after resetting', () => {
-            monitor.startOfFrameAt(1000);
-            monitor.startOfFrameAt(1020);
+            monitor.recordStartOfFrameAt(1000);
+            monitor.recordStartOfFrameAt(1020);
 
             monitor.resetRuntimeMetrics();
 
-            monitor.startOfFrameAt(2000);
-            monitor.startOfFrameAt(2016.67);
+            monitor.recordStartOfFrameAt(2000);
+            monitor.recordStartOfFrameAt(2016.67);
 
             const metrics = monitor.getPerformanceMetrics();
 
@@ -216,8 +216,8 @@ describe('PerformanceMonitor', () => {
 
             monitor.mark('create');
             monitor.mark('load');
-            monitor.startOfFrameAt(1000);
-            monitor.startOfFrameAt(1020);
+            monitor.recordStartOfFrameAt(1000);
+            monitor.recordStartOfFrameAt(1020);
 
             monitor.remove();
 
@@ -238,8 +238,8 @@ describe('PerformanceMonitor', () => {
             monitor.mark('create');
             monitor.mark('load');
             monitor.mark('fullLoad');
-            monitor.startOfFrameAt(1000);
-            monitor.startOfFrameAt(1016.67);
+            monitor.recordStartOfFrameAt(1000);
+            monitor.recordStartOfFrameAt(1016.67);
 
             const metrics = monitor.getPerformanceMetrics();
 
@@ -268,10 +268,10 @@ describe('PerformanceMonitor', () => {
 
         test('calculates correct average FPS with multiple frames', () => {
             let currentTimestamp = 1000;
-            monitor.startOfFrameAt(currentTimestamp);
+            monitor.recordStartOfFrameAt(currentTimestamp);
             for (let i = 0; i < 10; i++) {
                 currentTimestamp += 16.67;
-                monitor.startOfFrameAt(currentTimestamp);
+                monitor.recordStartOfFrameAt(currentTimestamp);
             }
 
             const metrics = monitor.getPerformanceMetrics();
@@ -281,8 +281,8 @@ describe('PerformanceMonitor', () => {
         });
 
         test('does not modify internal state when called', () => {
-            monitor.startOfFrameAt(1000);
-            monitor.startOfFrameAt(1016.67);
+            monitor.recordStartOfFrameAt(1000);
+            monitor.recordStartOfFrameAt(1016.67);
 
             const metrics1 = monitor.getPerformanceMetrics();
             const metrics2 = monitor.getPerformanceMetrics();
@@ -297,11 +297,11 @@ describe('PerformanceMonitor', () => {
             const monitor1 = new PerformanceMonitor();
             const monitor2 = new PerformanceMonitor();
 
-            monitor1.startOfFrameAt(1000);
-            monitor1.startOfFrameAt(1016.67);
+            monitor1.recordStartOfFrameAt(1000);
+            monitor1.recordStartOfFrameAt(1016.67);
 
-            monitor2.startOfFrameAt(2000);
-            monitor2.startOfFrameAt(2033.33);
+            monitor2.recordStartOfFrameAt(2000);
+            monitor2.recordStartOfFrameAt(2033.33);
 
             const metrics1 = monitor1.getPerformanceMetrics();
             const metrics2 = monitor2.getPerformanceMetrics();
@@ -316,11 +316,11 @@ describe('PerformanceMonitor', () => {
             const monitor1 = new PerformanceMonitor();
             const monitor2 = new PerformanceMonitor();
 
-            monitor1.startOfFrameAt(1000);
-            monitor1.startOfFrameAt(1020);
+            monitor1.recordStartOfFrameAt(1000);
+            monitor1.recordStartOfFrameAt(1020);
 
-            monitor2.startOfFrameAt(2000);
-            monitor2.startOfFrameAt(2020);
+            monitor2.recordStartOfFrameAt(2000);
+            monitor2.recordStartOfFrameAt(2020);
 
             monitor1.resetRuntimeMetrics();
 

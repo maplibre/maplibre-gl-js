@@ -73,7 +73,7 @@ export class PerformanceMonitor {
      * Used internally for FPS calculation.
      * @param currentTimestamp - The current timestamp provided by requestAnimationFrame.
      */
-    startOfFrameAt(currentTimestamp: number) {
+    recordStartOfFrameAt(currentTimestamp: number) {
         if (this._lastFrameTime !== undefined) {
             this._totalFrameCount++;
 
