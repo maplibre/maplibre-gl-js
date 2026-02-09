@@ -3430,23 +3430,26 @@ export class Map extends Camera {
 
         this._lostContextStyle = this._getStyleAndImages();
 
-        if (this.style) {
-            // check if style contains custom layers to warn user that they can't be restored automatically
-            for (const layer of Object.values(this.style._layers)) {
-                if (layer.type === 'custom') {
-                    console.warn(`Custom layer with id '${layer.id}' cannot be restored after WebGL context loss. You will need to re-add it manually after context restoration.`);
-                }
+        if (!this.style) {
+            this.fire(new Event('webglcontextlost', {originalEvent: event}));
+            return;
+        }
 
-                if (layer._listeners) {
-                    for (const [event] of Object.entries(layer._listeners)) {
-                        console.warn(`Custom layer with id '${layer.id}' had event listeners for event '${event}' which cannot be restored after WebGL context loss. You will need to re-add them manually after context restoration.`);
-                    }
-                }
+        // check if style contains custom layers to warn user that they can't be restored automatically
+        for (const layer of Object.values(this.style._layers)) {
+            if (layer.type === 'custom') {
+                console.warn(`Custom layer with id '${layer.id}' cannot be restored after WebGL context loss. You will need to re-add it manually after context restoration.`);
             }
 
-            this.style.destroy();
-            this.style = null;
+            if (layer._listeners) {
+                for (const [event] of Object.entries(layer._listeners)) {
+                    console.warn(`Custom layer with id '${layer.id}' had event listeners for event '${event}' which cannot be restored after WebGL context loss. You will need to re-add them manually after context restoration.`);
+                }
+            }
         }
+
+        this.style.destroy();
+        this.style = null;
 
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
