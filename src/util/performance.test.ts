@@ -333,10 +333,6 @@ describe('PerformanceMonitor', () => {
 });
 
 describe('RequestPerformance', () => {
-    let requestParams: RequestParameters;
-import {RequestPerformance} from './performance';
-
-describe('RequestPerformance', () => {
     const url = 'http://example.com/test.json';
 
     beforeEach(() => {
