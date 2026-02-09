@@ -2564,7 +2564,7 @@ describe('TileManager::refreshTiles', () => {
 });
 
 describe('TileManager / etag', () => {
-    test('skips _tileLoaded when Source.loadTile returns etagUnmodified', async () => {
+    test('skips _tileLoaded when Source.loadTile returns unmodified', async () => {
         const tileManager = createTileManager();
         tileManager.onAdd(undefined);
 
@@ -2572,9 +2572,7 @@ describe('TileManager / etag', () => {
         const tile = new Tile(tileID, 512);
 
         const tileLoadedSpy = vi.spyOn(tileManager, '_tileLoaded');
-
-        tileManager._source.loadTile = vi.fn().mockResolvedValue({etagUnmodified: true});
-
+        tileManager._source.loadTile = vi.fn().mockResolvedValue({unmodified: true});
         await tileManager._loadTile(tile, tileID.key, tile.state);
 
         expect(tileManager._source.loadTile).toHaveBeenCalledTimes(1);
