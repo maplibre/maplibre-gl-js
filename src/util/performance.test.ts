@@ -359,8 +359,6 @@ describe('RequestPerformance', () => {
 
             markSpy.mockRestore();
         });
-
-
     });
 
     describe('finish', () => {
@@ -465,6 +463,4 @@ describe('RequestPerformance', () => {
             expect(timingData[0].duration).toBeGreaterThan(0);
         });
     });
-
-
 });
