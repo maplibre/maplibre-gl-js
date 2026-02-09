@@ -156,7 +156,7 @@ export class VectorTileWorkerSource implements WorkerSource {
 
     _startRequestTiming(params: WorkerTileParameters): RequestPerformance | undefined {
         if (!params.request?.collectResourceTiming) return;
-        return new RequestPerformance(params.request);
+        return new RequestPerformance(params.request.url);
     }
 
     _finishRequestTiming(timing: RequestPerformance): {resourceTiming?: any} {
