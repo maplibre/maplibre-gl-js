@@ -189,8 +189,7 @@ export class TileManager extends Evented {
         try {
             const result = await this._source.loadTile(tile) as LoadTileResult;
 
-            // Tile data has not changed - reset the reload timer and skip loading the tile.
-            if (result?.etagUnmodified) {
+            if (result?.unmodified) {
                 this._setTileReloadTimer(id, tile);
                 return;
             }

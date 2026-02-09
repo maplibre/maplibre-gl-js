@@ -22,9 +22,9 @@ export type VectorTileSourceOptions = VectorSourceSpecification & {
 
 export type LoadTileResult = {
     /**
-     * Indicates that the tile request was validated via ETag and it was unmodified.
+     * Indicates that the tile requested was not modified.
      */
-    etagUnmodified?: boolean;
+    unmodified?: boolean;
 };
 
 /**
@@ -241,7 +241,7 @@ export class VectorTileSource extends Evented implements Source {
             this._afterTileLoadWorkerResponse(tile, data);
 
             const result: LoadTileResult = {};
-            if (data?.etagUnmodified) result.etagUnmodified = true;
+            if (data?.etagUnmodified) result.unmodified = true;
             return result;
         } catch (err) {
             delete tile.abortController;
@@ -277,7 +277,7 @@ export class VectorTileSource extends Evented implements Source {
     }
 
     private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {
-        if (data && data.resourceTiming) {
+        if (data?.resourceTiming) {
             tile.resourceTiming = data.resourceTiming;
         }
 
@@ -285,7 +285,7 @@ export class VectorTileSource extends Evented implements Source {
             tile.setExpiryData(data);
         }
 
-        if (data && data.etag) {
+        if (data?.etag) {
             tile.etag = data.etag;
         }
 

@@ -2,7 +2,7 @@ import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
-import {type LoadVectorData, VectorTileWorkerSource} from '../source/vector_tile_worker_source';
+import {VectorTileWorkerSource} from '../source/vector_tile_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {fakeServer, type FakeServer} from 'nise';
 import {type IActor} from '../util/actor';
@@ -84,32 +84,6 @@ describe('vector tile worker source', () => {
 
     test('VectorTileWorkerSource.loadTile reparses tile if the reloadTile has been called during parsing', async () => {
         const rawTileData = new ArrayBuffer(0);
-        const loadVectorData: LoadVectorData = (_params, _rawData) => {
-            return {
-                vectorTile: {
-                    layers: {
-                        test: {
-                            version: 2,
-                            name: 'test',
-                            extent: 8192,
-                            length: 1,
-                            feature: (featureIndex: number) => ({
-                                extent: 8192,
-                                type: 1,
-                                id: featureIndex,
-                                properties: {
-                                    name: 'test'
-                                },
-                                loadGeometry () {
-                                    return [[new Point(0, 0)]];
-                                }
-                            })
-                        }
-                    }
-                },
-                rawData: rawTileData
-            };
-        };
 
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
@@ -138,8 +112,34 @@ describe('vector tile worker source', () => {
                 });
             }
         };
+
         const source = new VectorTileWorkerSource(actor, layerIndex, ['hello']);
-        source.loadVectorTile = loadVectorData;
+        source.loadVectorTile = (_params, _rawData) => {
+            return {
+                vectorTile: {
+                    layers: {
+                        test: {
+                            version: 2,
+                            name: 'test',
+                            extent: 8192,
+                            length: 1,
+                            feature: (featureIndex: number) => ({
+                                extent: 8192,
+                                type: 1,
+                                id: featureIndex,
+                                properties: {
+                                    name: 'test'
+                                },
+                                loadGeometry () {
+                                    return [[new Point(0, 0)]];
+                                }
+                            })
+                        }
+                    }
+                },
+                rawData: rawTileData
+            };
+        };
 
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any);
@@ -171,7 +171,7 @@ describe('vector tile worker source', () => {
 
     test('VectorTileWorkerSource.loadTile reparses tile if reloadTile is called during reparsing', async () => {
         const rawTileData = new ArrayBuffer(0);
-        const loadVectorData: LoadVectorData = (_params, _rawData) => {
+        const loadVectorData = (_params, _rawData) => {
             return {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData
@@ -338,7 +338,7 @@ describe('vector tile worker source', () => {
     test('VectorTileWorkerSource provides resource timing information', async () => {
         const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0) as ArrayBuffer;
 
-        const loadVectorData: LoadVectorData = (_params, _rawData) => {
+        const loadVectorData = (_params, _rawData) => {
             return {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
@@ -401,7 +401,7 @@ describe('vector tile worker source', () => {
     test('VectorTileWorkerSource provides resource timing information (fallback method)', async () => {
         const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0) as ArrayBuffer;
 
-        const loadVectorData: LoadVectorData = (_params, _rawData) => {
+        const loadVectorData = (_params, _rawData) => {
             return {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
@@ -459,10 +459,12 @@ describe('vector tile worker source', () => {
         );
     });
 
-    test('VectorTileWorkerSource.loadTile returns etagUnmodified when etag matches response and skips parsing', async () => {
+    test('VectorTileWorkerSource.loadTile skips parsing and returns unmodified when e-tags match', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
 
-        const loadVectorTileSpy = vi.spyOn(source, 'loadVectorTile');
+        source.loadVectorTile = () => {
+            throw new Error('loadVectorTile should not be called when etag matches');
+        };
 
         const rawTileData = new ArrayBuffer(0);
         server.respondWith(request => {
@@ -485,7 +487,6 @@ describe('vector tile worker source', () => {
         const res = await promise;
 
         expect(res).toBeDefined();
-        expect((res as any).etagUnmodified).toBe(true);
-        expect(loadVectorTileSpy).not.toHaveBeenCalled();
+        expect(res.etagUnmodified).toBe(true);
     });
 });

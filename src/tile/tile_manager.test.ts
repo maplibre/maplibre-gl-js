@@ -2571,11 +2571,11 @@ describe('TileManager / etag', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const tile = new Tile(tileID, 512);
 
-        const tileLoadedSpy = vi.spyOn(tileManager as any, '_tileLoaded');
+        const tileLoadedSpy = vi.spyOn(tileManager, '_tileLoaded');
 
         tileManager._source.loadTile = vi.fn().mockResolvedValue({etagUnmodified: true});
 
-        await (tileManager as any)._loadTile(tile, tileID.key, tile.state);
+        await tileManager._loadTile(tile, tileID.key, tile.state);
 
         expect(tileManager._source.loadTile).toHaveBeenCalledTimes(1);
         expect(tileLoadedSpy).not.toHaveBeenCalled();

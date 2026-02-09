@@ -25,15 +25,6 @@ export type LoadVectorTileResult = {
     resourceTiming?: Array<PerformanceResourceTiming>;
 } & ExpiryData;
 
-export type AbortVectorData = () => void;
-export type LoadVectorData = (params: WorkerTileParameters, rawData: ArrayBuffer) => LoadVectorTileResult;
-
-/**
- * The {@link WorkerSource} implementation that supports {@link VectorTileSource}.
- * This class is designed to be easily reused to support custom source types
- * for data formats that can be parsed/converted into an in-memory VectorTile
- * representation. To do so, override its `loadVectorTile` method.
- */
 export class VectorTileWorkerSource implements WorkerSource {
     actor: IActor;
     layerIndex: StyleLayerIndex;
@@ -41,12 +32,6 @@ export class VectorTileWorkerSource implements WorkerSource {
     tileState: WorkerTileState;
     overzoomedTileResultCache: BoundedLRUCache<string, LoadVectorTileResult>;
 
-    /**
-     * @param loadVectorData - Optional method for custom loading of a VectorTile
-     * object based on parameters passed from the main-thread Source. See
-     * {@link VectorTileWorkerSource.loadTile}. The default implementation simply
-     * loads the pbf at `params.url`.
-     */
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>) {
         this.actor = actor;
         this.layerIndex = layerIndex;
@@ -79,9 +64,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     }
 
     /**
-     * Implements {@link WorkerSource.loadTile}. Delegates to
-     * {@link VectorTileWorkerSource.loadVectorData} (which by default expects
-     * a `params.url` property) for fetching and producing a VectorTile object.
+     * Implements {@link WorkerSource.loadTile}.
      */
     async loadTile(params: WorkerTileParameters): Promise<WorkerTileResult | null> {
         const {uid, overzoomParameters} = params;
