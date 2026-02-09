@@ -29,6 +29,38 @@
                 font-size: 14px;
                 z-index: 100;
             }
+            #metrics h3 {
+                margin-top: 0;
+                margin-bottom: 10px;
+            }
+            #metrics table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 10px;
+            }
+            #metrics th,
+            #metrics td {
+                text-align: left;
+                padding: 6px 8px;
+                border-bottom: 1px solid #ddd;
+            }
+            #metrics th {
+                background-color: #f5f5f5;
+                font-weight: bold;
+            }
+            #reset-button {
+                padding: 8px 16px;
+                background-color: #4caf50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                width: 100%;
+            }
+            #reset-button:hover {
+                background-color: #45a049;
+            }
         </style>
     </head>
     <body>
@@ -46,25 +78,48 @@
 
             const metricsElement = document.getElementById("metrics");
 
+            function onResetButtonClick() {
+                map.resetPerformanceMetrics();
+                updateMetricsDisplay();
+            }
+            
             function updateMetricsDisplay() {
                 const metrics = map.performanceMetrics;
 
-                if (metrics) {
-                    metricsElement.innerHTML = `
-                        <h3>Map Performance Metrics</h3>
-                        <p><strong>Load Time:</strong> ${metrics.loadTimeMs?.toFixed(2)} ms</p>
-                        <p><strong>Full Load Time:</strong> ${metrics.fullLoadTimeMs?.toFixed(2)} ms</p>
-                        <p><strong>FPS:</strong> ${metrics.fps.toFixed(2)}</p>
-                        <p><strong>% Dropped Frames:</strong> ${(metrics.droppedFramesCount / metrics.totalFramesCount * 100).toFixed(2)} %</p>
-                        <p><strong>Total Frames:</strong> ${metrics.totalFramesCount}</p>
-                    `;
-                } else {
-                    metricsElement.innerHTML = "Performance metrics not collected (opt-in disabled).";
-                }
+                metricsElement.innerHTML = `
+                    <h3>Map Performance Metrics</h3>
+                    <table>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>Load Time</td>
+                            <td>${metrics?.loadTimeMs?.toFixed(2)} ms</td>
+                        </tr>
+                        <tr>
+                            <td>Full Load Time</td>
+                            <td>${metrics?.fullLoadTimeMs?.toFixed(2)} ms</td>
+                        </tr>
+                        <tr>
+                            <td>Average FPS</td>
+                            <td>${metrics?.fps?.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td>% Frames below 60 FPS</td>
+                            <td>${((metrics?.droppedFramesCount / metrics?.totalFramesCount) * 100).toFixed(2)}%</td>
+                        </tr>
+                        <tr>
+                            <td>Total Frames</td>
+                            <td>${metrics.totalFramesCount}</td>
+                        </tr>
+                    </table>
+                    <button id="reset-button" onclick="onResetButtonClick">Reset Runtime Metrics</button>
+                `;
             }
 
             // Initial update after the map is idle
-            map.on('idle', updateMetricsDisplay);
+            map.on("idle", updateMetricsDisplay);
 
             // Continuous updates using setInterval
             const intervalId = setInterval(updateMetricsDisplay, 1000); // Update every 1 second
