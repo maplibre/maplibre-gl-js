@@ -396,7 +396,7 @@ export type MapOptions = {
     experimentalZoomLevelsToOverscale?: number;
     /**
      * Determines the rotation interaction model:
-     * - When true: Uses "Orbital" logic where rotation is relative to the pivot center. 
+     * - When true: Uses "Orbital" logic where rotation is relative to the pivot center.
      *   Dragging right at the top rotates clockwise, while dragging right at the bottom
      *   rotates counter-clockwise (like spinning a physical globe).
      * - When false: Uses "Linear" logic where horizontal mouse movement translates directly

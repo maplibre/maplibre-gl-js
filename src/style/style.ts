@@ -1684,12 +1684,14 @@ export class Style extends Evented {
 
     setProjection(projection: ProjectionSpecification) {
         this._checkLoaded();
+        this.stylesheet.projection = projection;
         if (this.projection) {
-            if (this.projection.name === projection.type) return;
+            if (this.projection.name === projection.type) {
+                return;
+            }
             this.projection.destroy();
             delete this.projection;
         }
-        this.stylesheet.projection = projection;
         this._setProjectionInternal(projection.type);
     }
 
