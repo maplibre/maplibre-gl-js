@@ -118,7 +118,7 @@
     "rollup-plugin-sourcemaps2": "^0.5.4",
     "rollup-plugin-visualizer": "^6.0.5",
     "rw": "^1.3.3",
-    "semver": "^7.7.3",
+    "semver": "^7.7.4",
     "sharp": "^0.34.5",
     "shuffle-seed": "^1.1.6",
     "st": "^3.0.3",
