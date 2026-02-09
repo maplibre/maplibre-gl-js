@@ -113,5 +113,3 @@ export class RequestPerformance {
         return resourceTimingData;
     }
 }
-
-export default performance;
