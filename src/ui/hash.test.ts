@@ -347,18 +347,46 @@ describe('hash', () => {
                 .addTo(map);
         });
 
-        test('validate correct hash', () => {
+        test('validate hash with zoom and center only', () => {
             window.location.hash = '#10/3.00/-1.00';
 
             expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
+        });
 
+        test('validate hash with bearing and pitch', () => {
             window.location.hash = '#5/1.00/0.50/30/60';
 
             expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
+        });
 
+        test('validate hash with negative bearing and positive pitch', () => {
             window.location.hash = '#5/1.00/0.50/-30/60';
 
             expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
+        });
+
+        test('validate hash with positive bearing and negative pitch', () => {
+            window.location.hash = '#5/1.00/0.50/-30/60';
+
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
+        });
+        
+        test('validate hash with bearing only', () => {
+            window.location.hash = '#5/1.00/0.50/30';
+
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
+        });
+        
+        test('validate hash with negative bearing only', () => {
+            window.location.hash = '#5/1.00/0.50/30';
+
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
+        });
+
+        test('invalidate hash with slashes encoded as %2F', () => {
+            window.location.hash = '#10%2F3.00%2F-1.00';
+
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
         });
 
         test('invalidate hash with string values', () => {
@@ -369,6 +397,12 @@ describe('hash', () => {
 
         test('invalidate hash that is named, but should not be', () => {
             window.location.hash = '#map=10/3.00/-1.00&foo=bar';
+
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
+        });
+
+        test('invalidate hash that has the coord as the second value, but should be first or use named params', () => {
+            window.location.hash = '#foo=bar&10/3.00/-1.00';
 
             expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
         });
@@ -409,12 +443,6 @@ describe('hash', () => {
 
         test('invalidate hash, pitch greater than maxPitch', () => {
             window.location.hash = '#10/3.00/-1.00/30/90';
-
-            expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
-        });
-
-        test('invalidate hash, slashes encoded as %2F are not recognised', () => {
-            window.location.hash = '#10%2F3.00%2F-1.00';
 
             expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
         });
