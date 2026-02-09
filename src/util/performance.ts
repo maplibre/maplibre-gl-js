@@ -61,7 +61,7 @@ export const PerformanceUtils = {
     * @internal
     * Clear browser performance entries associated with this monitor
     */
-    clearInitialisationMetrics() {
+    clearInitializationMetrics() {
         performance.clearMeasures(loadTimeKey);
         performance.clearMeasures(fullLoadTimeKey);
 
@@ -75,7 +75,7 @@ export const PerformanceUtils = {
      */
     remove() {
         this.resetRuntimeMetrics();
-        this.clearInitialisationMetrics();
+        this.clearInitializationMetrics();
     },
 
     /**
