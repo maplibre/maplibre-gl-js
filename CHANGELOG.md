@@ -5,27 +5,20 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-- test: make the hash tests even more strict where the line between valid and invalid is ([#7097](https://github.com/maplibre/maplibre-gl-js/pull/7097)) (by [CommanderStorm](https://github.com/CommanderStorm))
-- refactor: make function and variable naming in `PerformanceUtils` more sensible ([#7096](https://github.com/maplibre/maplibre-gl-js/pull/7096)) (by [CommanderStorm](https://github.com/CommanderStorm))
-- test: More thoroughly test `Hash` ([#7078](https://github.com/maplibre/maplibre-gl-js/pull/7078)) (by [CommanderStorm](https://github.com/CommanderStorm))
-- docs: Reword akward sentence in introduction ([#7081](https://github.com/maplibre/maplibre-gl-js/pull/7081)) (by [CommanderStorm](https://github.com/CommanderStorm))
-- Mention Rotation in the  `NavigationControl.ResetBearing` message ([#7080](https://github.com/maplibre/maplibre-gl-js/pull/7080)) (by [CommanderStorm](https://github.com/CommanderStorm))
-- fix: Incorrect text placement along line in 3d mode (#7039) ([#7040](https://github.com/maplibre/maplibre-gl-js/pull/7040)) (by [russellporter](https://github.com/russellporter))
-- docs: migrate our API docs to zensical ([#7071](https://github.com/maplibre/maplibre-gl-js/pull/7071)) (by [CommanderStorm](https://github.com/CommanderStorm))
-- Fix attribution of raster source example ([#7065](https://github.com/maplibre/maplibre-gl-js/pull/7065)) (by [wipfli](https://github.com/wipfli))
-- Fix LngLatBounds.intersects for zero-width bounds ([#7055](https://github.com/maplibre/maplibre-gl-js/pull/7055)) (by [lucaswoj](https://github.com/lucaswoj))
-- Fix no update on source feature state changes when terrain is enabled ([#7007](https://github.com/maplibre/maplibre-gl-js/pull/7007)) (by [pstaszek](https://github.com/pstaszek))
-- docs: update broken bounty guide link in README.md ([#7027](https://github.com/maplibre/maplibre-gl-js/pull/7027)) (by [shuuji3](https://github.com/shuuji3))
 ## 5.18.0
+
 ### ✨ Features and improvements
+
 - Add support for click events on Marker ([#7028](https://github.com/maplibre/maplibre-gl-js/pull/7028)) (by [@ganesh8068](https://github.com/ganesh8068))
 - Simplify and abstract the GeoJSON Worker ([#7058](https://github.com/maplibre/maplibre-gl-js/pull/7058)) (by [@wayofthefuture](https://github.com/wayofthefuture))
 - Add `pseudo` option to `FullscreenControl` to force CSS-based fullscreen mode instead of native fullscreen API. Users might want this because this is faster on some devices ([#7076](https://github.com/maplibre/maplibre-gl-js/pull/7076)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Migrate our API docs to zensical ([#7071](https://github.com/maplibre/maplibre-gl-js/pull/7071)) (by [CommanderStorm](https://github.com/CommanderStorm))
 
 ### 🐞 Bug fixes
+
 - Fix WebGL context loss error when style is not yet loaded ([#7094](https://github.com/maplibre/maplibre-gl-js/pull/7094)) (by [@kaigritun](https://github.com/kaigritun))
 - Fix updating terrain tiles on feature state changes ([#6231](https://github.com/maplibre/maplibre-gl-js/issues/6231)) (by [@pstaszek](https://github.com/pstaszek))
-- Fix LngLatBounds.intersects for zero-width bounds (by [@lucaswoj](https://github.com/lucaswoj))
+- Fix LngLatBounds.intersects for zero-width bounds ([#7055](https://github.com/maplibre/maplibre-gl-js/pull/7055)) (by [@lucaswoj](https://github.com/lucaswoj))
 - Fix `GlobeControl` not updating when `Map.setProjection()` is called programmatically ([#7005](https://github.com/maplibre/maplibre-gl-js/issues/7005), [#7075](https://github.com/maplibre/maplibre-gl-js/pull/7075)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Fix `map.getProjection()` returning `undefined` after calling `map.setProjection()` with the default `"mercator"` projection ([#7072](https://github.com/maplibre/maplibre-gl-js/pull/7072))
 - Fix incorrect text placement along line in 3D mode ([#7039](https://github.com/maplibre/maplibre-gl-js/issues/7039)) (by [@russellporter](https://github.com/russellporter))
