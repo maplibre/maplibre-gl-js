@@ -3430,6 +3430,13 @@ export class Map extends Camera {
         }
         this.painter.destroy();
 
+        this._lostContextStyle = this._getStyleAndImages();
+
+        if (!this.style) {
+            this.fire(new Event('webglcontextlost', {originalEvent: event}));
+            return;
+        }
+
         // check if style contains custom layers to warn user that they can't be restored automatically
         for (const layer of Object.values(this.style._layers)) {
             if (layer.type === 'custom') {
@@ -3443,9 +3450,9 @@ export class Map extends Camera {
             }
         }
 
-        this._lostContextStyle = this._getStyleAndImages();
         this.style.destroy();
         this.style = null;
+
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
 
