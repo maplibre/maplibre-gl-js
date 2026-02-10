@@ -13,7 +13,7 @@ export type LivecyclePerformanceMetrics = {
 /**
  * Monitors and reports map performance metrics using the Observer pattern
  */
-export class LivecyclePerformanceMonitor implements PerformanceObserver {
+export class LivecyclePerformanceObserver implements PerformanceObserver {
     private static _nextId = 0;
     private _id: number;
 
@@ -27,7 +27,7 @@ export class LivecyclePerformanceMonitor implements PerformanceObserver {
     private _fullLoadTimeMs: number;
 
     constructor() {
-        this._id = LivecyclePerformanceMonitor._nextId++;
+        this._id = LivecyclePerformanceObserver._nextId++;
         this._createMarker = `create-${this._id}`;
         this._loadMarker = `load-${this._id}`;
         this._fullLoadMarker = `fullLoad-${this._id}`;

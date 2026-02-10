@@ -20,7 +20,7 @@ export type RenderingPerformanceMetrics = {
 /**
  * Monitors and reports map performance metrics using the Observer pattern
  */
-export class RenderingPerformanceMonitor implements PerformanceObserver {
+export class RenderingPerformanceObserver implements PerformanceObserver {
     private _lastFrameTime?: number;
     private _lastFrameDuration: number;
     private _totalFrameTime = 0;

@@ -16,6 +16,8 @@ import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
 import {type PerformanceObserver} from './util/performance/observer';
+import {LivecyclePerformanceObserver} from './util/performance/livecycle';
+import {RenderingPerformanceObserver} from './util/performance/rendering';
 import {Evented, type ErrorEvent, Event, type Listener} from './util/evented';
 import {type AddProtocolAction, config} from './util/config';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
@@ -213,6 +215,7 @@ export {
     Popup,
     Marker,
     Style,
+    LivecyclePerformanceObserver,
     LngLat,
     LngLatBounds,
     Point,
@@ -226,6 +229,7 @@ export {
     ImageSource,
     RasterDEMTileSource,
     RasterTileSource,
+    RenderingPerformanceObserver,
     VectorTileSource,
     VideoSource,
     EdgeInsets,
