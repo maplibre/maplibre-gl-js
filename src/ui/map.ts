@@ -685,7 +685,7 @@ export class Map extends Camera {
     transformConstrain: TransformConstrainFunction | null;
 
     constructor(options: MapOptions) {
-        const performanceSubject = new PerformanceSubject(options.performanceObservers);
+        const performanceSubject = new PerformanceSubject(options.performanceObservers ?? []);
         performanceSubject.notifyObservers('create', performance.now());
 
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
