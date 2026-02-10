@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
-import {type IPerformanceObserver} from '../../util/performance/observer';
+import {type IPerformanceObserver} from '../../util/performance_observer/observer';
 
 beforeEach(() => {
     beforeMapTest();

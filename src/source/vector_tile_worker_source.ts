@@ -5,7 +5,7 @@ import {WorkerTile} from './worker_tile';
 import {WorkerTileState, type ParsingState} from './worker_tile_state';
 import {BoundedLRUCache} from '../tile/tile_cache';
 import {extend} from '../util/util';
-import {RequestPerformance} from '../util/performance/request';
+import {RequestPerformance} from '../util/request_performance';
 import {VectorTileOverzoomed, sliceVectorTileLayer, toVirtualVectorTile} from './vector_tile_overzoomed';
 import {MLTVectorTile} from './vector_tile_mlt';
 import type {

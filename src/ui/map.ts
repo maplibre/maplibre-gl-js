@@ -23,7 +23,7 @@ import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSource
 import {TaskQueue} from '../util/task_queue';
 import {throttle} from '../util/throttle';
 import {webpSupported} from '../util/webp_supported';
-import {PerformanceSubject, type IPerformanceObserver} from '../util/performance/observer';
+import {PerformanceSubject, type IPerformanceObserver} from '../util/performance_observer/observer';
 import {type Source} from '../source/source';
 import {type StyleLayer} from '../style/style_layer';
 import {Terrain} from '../render/terrain';
