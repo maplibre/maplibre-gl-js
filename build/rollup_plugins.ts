@@ -4,7 +4,6 @@ import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
-import strip from '@rollup/plugin-strip';
 import {type Plugin} from 'rollup';
 import json from '@rollup/plugin-json';
 import {visualizer} from 'rollup-plugin-visualizer';
@@ -30,10 +29,6 @@ export const plugins = (production: boolean): Plugin[] => [
         values: {
             '_token_stack:': ''
         }
-    }),
-    production && strip({
-        sourceMap: true,
-        functions: ['PerformanceUtils.*']
     }),
     production && terser({
         compress: {
