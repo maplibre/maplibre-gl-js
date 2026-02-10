@@ -125,8 +125,10 @@ export class Hash {
         }
 
         const newHash = decodeURIComponent(params.toString());
-        window.location.hash = newHash ? `#${newHash}` : '';
-        window.history.replaceState(window.history.state, null, window.location.href);
+        const replaceString = newHash ? `#${newHash}` : ''
+        let location = window.location.href.replace(/(#.+)?$/, replaceString);
+        location = location.replace('&&', '&');
+        window.history.replaceState(window.history.state, null, location);
     };
 
     /**
