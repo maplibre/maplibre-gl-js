@@ -39,6 +39,7 @@ test('handles "webglcontextlost" when map is created without style', () => {
     expect(spy).toHaveBeenCalled();
     map.remove();
 });
+
 test('does not fire "webglcontextrestored" after remove has been called', async () => {
     const map = createMap();
     const canvas = map.getCanvas();
