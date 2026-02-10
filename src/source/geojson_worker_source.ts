@@ -1,5 +1,5 @@
 import {getJSON} from '../util/ajax';
-import {RequestPerformance} from '../util/performance';
+import {RequestPerformance} from '../util/performance/request';
 import rewind from '@mapbox/geojson-rewind';
 import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent';
