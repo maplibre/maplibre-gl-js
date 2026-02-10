@@ -4,8 +4,8 @@ This directory contains the source for the [MapLibre GL JS docs](https://maplibr
 
 Besides this README, each other `.md` file in this directory corresponds to a site page. Each is converted into an `.html` file by [MkDocs](https://www.mkdocs.org/).
 
-> [!NOTE]
-> To run the docs, you need to ensure Docker is installed and you have permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).
+!!! info
+    To run the docs, you need to ensure Docker is installed and you have permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).
 
 ## Running the Documentation Server Locally
 
