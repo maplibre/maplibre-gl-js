@@ -23,7 +23,7 @@ import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSource
 import {TaskQueue} from '../util/task_queue';
 import {throttle} from '../util/throttle';
 import {webpSupported} from '../util/webp_supported';
-import {type PerformanceMetrics, PerformanceMonitor} from '../util/performance';
+import {PerformanceSubject, type PerformanceObserver} from '../util/performance/observer';
 import {type Source} from '../source/source';
 import {type StyleLayer} from '../style/style_layer';
 import {Terrain} from '../render/terrain';
@@ -358,11 +358,11 @@ export type MapOptions = {
      */
     pixelRatio?: number;
     /**
-     * If `true`, performance metrics will be collected and can be accessed via `map.performanceMetrics`.
-     * Similar to validateStyle this setting exists for better tree-shaking.
-     * @defaultValue false
+     * Optional array of custom performance observers to monitor map performance events.
+     * These observers will be notified of events like map creation, load, fullLoad, and frame rendering.
+     * @defaultValue undefined
      */
-    collectPerformanceMetrics?: boolean;
+    performanceObservers?: PerformanceObserver[];
     /**
      * If false, style validation will be skipped.
      * Useful in production environments due to enabling tree-shaking of the validation code in some environments and minor performance improvements.
@@ -498,7 +498,6 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     pitchWithRotate: true,
     rollEnabled: false,
     reduceMotion: undefined,
-    collectPerformanceMetrics: false,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
@@ -580,7 +579,7 @@ export class Map extends Camera {
     _controls: Array<IControl> = [];
     _mapId = uniqueId();
     _localIdeographFontFamily: string | false;
-    _performanceMonitor: PerformanceMonitor;
+    _performanceSubject: PerformanceSubject;
     _validateStyle: boolean;
     _requestManager: RequestManager;
     _locale: Record<string, string>;
@@ -686,8 +685,9 @@ export class Map extends Camera {
     transformConstrain: TransformConstrainFunction | null;
 
     constructor(options: MapOptions) {
-        const performanceMonitor: PerformanceMonitor | undefined = options.collectPerformanceMetrics ? new PerformanceMonitor() : undefined;
-        performanceMonitor?.mark('create');
+        const performanceSubject = new PerformanceSubject(options.performanceObservers);
+        performanceSubject.notifyObservers('create', performance.now());
+
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
             ...options.canvasContextAttributes
@@ -818,7 +818,7 @@ export class Map extends Camera {
         this.resize(null, shouldConstrainUsingMercatorTransform);
 
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
-        this._performanceMonitor = performanceMonitor;
+        this._performanceSubject = performanceSubject;
         this._validateStyle = resolvedOptions.validateStyle;
 
         if (resolvedOptions.style) this.setStyle(resolvedOptions.style, {localIdeographFontFamily: resolvedOptions.localIdeographFontFamily});
@@ -3633,7 +3633,7 @@ export class Map extends Camera {
 
         if (this.loaded() && !this._loaded) {
             this._loaded = true;
-            this._performanceMonitor?.mark('load');
+            this._performanceSubject.notifyObservers('load', performance.now());
             this.fire(new Event('load'));
         }
 
@@ -3662,7 +3662,7 @@ export class Map extends Camera {
 
         if (this._loaded && !this._fullyLoaded && !somethingDirty) {
             this._fullyLoaded = true;
-            this._performanceMonitor?.mark('fullLoad');
+            this._performanceSubject.notifyObservers('fullLoad', performance.now());
         }
 
         return this;
@@ -3727,7 +3727,7 @@ export class Map extends Camera {
         this._container.removeEventListener('scroll', this._onMapScroll, false);
         this._container.classList.remove('maplibregl-map');
 
-        this._performanceMonitor?.remove();
+        this._performanceSubject?.remove();
 
         this._removed = true;
         this.fire(new Event('remove'));
@@ -3750,7 +3750,7 @@ export class Map extends Camera {
             browser.frame(
                 this._frameRequest,
                 (paintStartTimeStamp) => {
-                    this._performanceMonitor?.recordStartOfFrameAt(paintStartTimeStamp);
+                    this._performanceSubject.notifyObservers('frame', paintStartTimeStamp);
                     this._frameRequest = null;
                     try {
                         this._render(paintStartTimeStamp);
@@ -3849,25 +3849,6 @@ export class Map extends Camera {
     // show vertices
     get vertices(): boolean { return !!this._vertices; }
     set vertices(value: boolean) { this._vertices = value; this._update(); }
-
-    /**
-     * Calculates and returns the current performance metrics of the map.
-     * 
-     * @returns An object containing various performance metrics or undefined if `collectPerformanceMetrics` is enabled. Otherwise `undefined`.
-     */
-    get performanceMetrics(): PerformanceMetrics | undefined {
-        return this._performanceMonitor?.getPerformanceMetrics();
-    }
-
-    /**
-     * Resets all runtime performance metrics of the map.
-     * 
-     * This is useful for analyzing performance of a certain animation or timeframe.
-     * The Performance metrics are available via the `performanceMetrics` property.
-     */
-    resetRuntimeMetrics() {
-        this._performanceMonitor?.resetRuntimeMetrics();
-    }
 
     /**
      * Returns the package version of the library
