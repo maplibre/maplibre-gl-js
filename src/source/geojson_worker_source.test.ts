@@ -2,7 +2,6 @@ import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {createGeoJSONIndex, GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {OverscaledTileID} from '../tile/tile_id';
-import perf from '../util/performance';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type Actor, type IActor} from '../util/actor';
 import {type TileParameters, type WorkerTileParameters, type WorkerTileResult} from './worker_source';
@@ -334,7 +333,7 @@ describe('resourceTiming', () => {
         const marks = {};
         const measures = {};
         window.performance.getEntriesByName = vi.fn().mockImplementation((name) => { return measures[name] || []; });
-        vi.spyOn(perf, 'mark').mockImplementation((name) => {
+        vi.spyOn(performance, 'mark').mockImplementation((name) => {
             marks[name] = sampleMarks.shift();
             return null;
         });
@@ -348,8 +347,8 @@ describe('resourceTiming', () => {
             });
             return null;
         });
-        vi.spyOn(perf, 'clearMarks').mockImplementation(() => { return null; });
-        vi.spyOn(perf, 'clearMeasures').mockImplementation(() => { return null; });
+        vi.spyOn(performance, 'clearMarks').mockImplementation(() => { return null; });
+        vi.spyOn(performance, 'clearMeasures').mockImplementation(() => { return null; });
 
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
