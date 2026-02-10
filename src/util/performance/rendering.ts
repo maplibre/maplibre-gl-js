@@ -32,7 +32,7 @@ export class RenderingPerformanceMonitor implements PerformanceObserver {
      * @param event - The performance event data
      */
     observe(type: PerformanceEventType, timestamp: number): void {
-        if (type ===  'frame') {
+        if (type ===  'startOfFrame') {
             if (this._lastFrameTime !== undefined) {
                 this._totalFrameCount++;
 

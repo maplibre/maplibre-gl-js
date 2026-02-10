@@ -1,7 +1,7 @@
 /**
  * Performance event types that can be observed
  */
-export type PerformanceEventType = 'create' | 'load' | 'fullLoad' | 'frame';
+export type PerformanceEventType = 'create' | 'load' | 'fullLoad' | 'startOfFrame';
 
 /**
  * Observer interface for performance monitoring

@@ -3750,7 +3750,7 @@ export class Map extends Camera {
             browser.frame(
                 this._frameRequest,
                 (paintStartTimeStamp) => {
-                    this._performanceSubject.notifyObservers('frame', paintStartTimeStamp);
+                    this._performanceSubject.notifyObservers('startOfFrame', paintStartTimeStamp);
                     this._frameRequest = null;
                     try {
                         this._render(paintStartTimeStamp);
