@@ -37,7 +37,7 @@ export class LivecyclePerformanceObserver implements IPerformanceObserver {
     }
 
 
-    /** {@inheritdoc IPerformanceObserver.observe} */
+    /** @inheritDoc */
     observe(type: PerformanceEventType, _timestamp: number): void {
         switch (type) {
             case 'create':
@@ -48,18 +48,18 @@ export class LivecyclePerformanceObserver implements IPerformanceObserver {
                 break;
             case 'fullLoad':
                 performance.mark(this._fullLoadMarker);
-        
+
                 // Ensure measures are taken before querying
                 performance.measure(this._loadTimeMeasure, this._createMarker, this._loadMarker);
                 performance.measure(this._fullLoadTimeMeasure, this._createMarker, this._fullLoadMarker);
-        
+
                 this._loadTimeMs = performance.getEntriesByName(this._loadTimeMeasure)[0]?.duration || 0;
                 this._fullLoadTimeMs = performance.getEntriesByName(this._fullLoadTimeMeasure)[0]?.duration || 0;
                 break;
         }
     }
 
-    /** {@inheritdoc IPerformanceObserver.disconnect} */
+    /** @inheritDoc */
     disconnect(): void {
         performance.clearMarks(this._createMarker);
         performance.clearMarks(this._loadMarker);
