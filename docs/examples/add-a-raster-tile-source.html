@@ -5,8 +5,8 @@
     <meta property="og:description" content="Add a third-party raster source to the map." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.17.0/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.17.0/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.18.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.18.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -25,7 +25,8 @@
                     'tiles': ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
                     'tileSize': 256,
                     'minzoom': 0,
-                    'maxzoom': 19
+                    'maxzoom': 19,
+                    'attribution': "© OpenStreetMap contributors",
                 }
             },
             'layers': [
@@ -33,7 +34,6 @@
                     'id': 'simple-tiles',
                     'type': 'raster',
                     'source': 'raster-tiles',
-                    'attribution': "© OpenStreetMap contributors",
                 }
             ],
             'id': 'blank'

@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://www.maplibre.org/maplibre-gl-js/docs/examples/">
       
       
-        <link rel="prev" href="../API/type-aliases/WorkerTileResult/">
+        <link rel="prev" href="../API/variables/EXTENT/">
       
       
         <link rel="next" href="3d-terrain/">
@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="zensical-0.0.21">
     
     
       
@@ -31,10 +31,15 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.f28b7ce3.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -48,33 +53,20 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
       <link rel="stylesheet" href="../assets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,a=__md_scope)=>JSON.parse(t.getItem(a.pathname+"."+e)),__md_set=(e,t,a=localStorage,_=__md_scope)=>{try{a.setItem(_.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
     
     
-  
-<meta property="og:type" content="website" />
-<meta property="og:title" content="Overview - MapLibre GL JS" />
-<meta property="og:description" content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser." />
-<meta property="og:image" content="https://www.maplibre.org/maplibre-gl-js/docs/assets/images/social/examples/index.png" />
-<meta property="og:image:type" content="image/png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta property="og:url" content="https://www.maplibre.org/maplibre-gl-js/docs/examples/" />
-<meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:title" content="Overview - MapLibre GL JS" />
-<meta property="twitter:description" content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser." />
-<meta property="twitter:image" content="https://www.maplibre.org/maplibre-gl-js/docs/assets/images/social/examples/index.png" />
-</head>
+  </head>
   
   
     
@@ -116,7 +108,7 @@
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -180,57 +172,28 @@
       
         <label class="md-header__button md-icon" for="__search">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-        <div class="md-search__suggest" data-md-component="search-suggest"></div>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/maplibre/maplibre-gl-js/" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
     
@@ -248,8 +211,21 @@
       <a href=".." class="md-tabs__link">
         
   
+  MapLibre GL JS Documentation
+
+      </a>
+    </li>
   
-    
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
   
   Introduction
 
@@ -267,9 +243,6 @@
       <a href="../plugins/" class="md-tabs__link">
         
   
-  
-    
-  
   Plugins
 
       </a>
@@ -285,9 +258,6 @@
     <li class="md-tabs__item">
       <a href="../style-spec/" class="md-tabs__link">
         
-  
-  
-    
   
   Style Specifications
 
@@ -306,7 +276,6 @@
       <li class="md-tabs__item">
         <a href="../API/" class="md-tabs__link">
           
-  
   
   API
 
@@ -329,7 +298,6 @@
         <a href="./" class="md-tabs__link">
           
   
-  
   Examples
 
         </a>
@@ -348,7 +316,6 @@
       <li class="md-tabs__item">
         <a href="../guides/" class="md-tabs__link">
           
-  
   
   Guides
 
@@ -398,7 +365,7 @@
       <a href="https://github.com/maplibre/maplibre-gl-js/" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
@@ -407,6 +374,33 @@
     </div>
   
   <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MapLibre GL JS Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
     
       
       
@@ -509,10 +503,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -530,8 +524,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -589,10 +583,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
         
           
-          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
             
   
   
@@ -610,8 +604,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -677,10 +671,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
         
           
-          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
             
   
   
@@ -698,8 +692,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1885,10 +1879,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
         
           
-          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
             
   
   
@@ -1906,8 +1900,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2029,10 +2023,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
         
           
-          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
             
   
   
@@ -2050,8 +2044,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2649,10 +2643,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
         
           
-          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
             
   
   
@@ -2670,8 +2664,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_6">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3213,10 +3207,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7" >
         
           
-          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_7" id="__nav_5_7_label" tabindex="0">
             
   
   
@@ -3234,8 +3228,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_7">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5745,6 +5739,94 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_8" id="__nav_5_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variables
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Variables
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API/variables/EXTENT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EXTENT
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -5777,10 +5859,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
             
   
   
@@ -5798,8 +5880,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5862,7 +5944,8 @@
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -5871,7 +5954,7 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
@@ -10942,10 +11025,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -10963,8 +11046,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -11134,7 +11217,8 @@
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -11143,7 +11227,7 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
@@ -12580,402 +12664,402 @@
               <article class="md-content__inner md-typeset">
                 
                   
-
-
   
   
 
 
 <h1 id="overview">Overview</h1>
-<h2 id="3d-terrain"><a href="3d-terrain/">3D Terrain</a></h2>
+<h2 id="3d-terrain"><a href="./3d-terrain/">3D Terrain</a></h2>
 <p><img alt="Go beyond hillshade and show elevation in actual 3D." loading="lazy" src="../assets/examples/3d-terrain.webp" /></p>
 <p>Go beyond hillshade and show elevation in actual 3D.</p>
-<h2 id="add-a-3d-model-to-globe-using-threejs"><a href="add-a-3d-model-to-globe-using-threejs/">Add a 3D model to globe using three.js</a></h2>
+<h2 id="add-a-3d-model-to-globe-using-threejs"><a href="./add-a-3d-model-to-globe-using-threejs/">Add a 3D model to globe using three.js</a></h2>
 <p><img alt="Use a custom style layer with three.js to add a 3D model to a globe." loading="lazy" src="../assets/examples/add-a-3d-model-to-globe-using-threejs.webp" /></p>
 <p>Use a custom style layer with three.js to add a 3D model to a globe.</p>
-<h2 id="add-a-3d-model-using-threejs"><a href="add-a-3d-model-using-threejs/">Add a 3D model using three.js</a></h2>
+<h2 id="add-a-3d-model-using-threejs"><a href="./add-a-3d-model-using-threejs/">Add a 3D model using three.js</a></h2>
 <p><img alt="Use a custom style layer with three.js to add a 3D model to the map." loading="lazy" src="../assets/examples/add-a-3d-model-using-threejs.webp" /></p>
 <p>Use a custom style layer with three.js to add a 3D model to the map.</p>
-<h2 id="add-a-3d-model-with-babylonjs"><a href="add-a-3d-model-with-babylonjs/">Add a 3D model with babylon.js</a></h2>
+<h2 id="add-a-3d-model-with-babylonjs"><a href="./add-a-3d-model-with-babylonjs/">Add a 3D model with babylon.js</a></h2>
 <p><img alt="Use a custom style layer with babylon.js to add a 3D model to the map." loading="lazy" src="../assets/examples/add-a-3d-model-with-babylonjs.webp" /></p>
 <p>Use a custom style layer with babylon.js to add a 3D model to the map.</p>
-<h2 id="add-a-3d-model-with-shadow-using-threejs"><a href="add-a-3d-model-with-shadow-using-threejs/">Add a 3D model with shadow using three.js</a></h2>
+<h2 id="add-a-3d-model-with-shadow-using-threejs"><a href="./add-a-3d-model-with-shadow-using-threejs/">Add a 3D model with shadow using three.js</a></h2>
 <p><img alt="    &lt;meta property=&quot;og:description&quot;" loading="lazy" src="../assets/examples/add-a-3d-model-with-shadow-using-threejs.webp" /></p>
 <div class="language-text highlight"><pre><span></span><code>&lt;meta property=&quot;og:description&quot;
 </code></pre></div>
-<h2 id="add-a-canvas-source"><a href="add-a-canvas-source/">Add a canvas source</a></h2>
+<h2 id="add-a-canvas-source"><a href="./add-a-canvas-source/">Add a canvas source</a></h2>
 <p><img alt="Add a canvas source to the map." loading="lazy" src="../assets/examples/add-a-canvas-source.webp" /></p>
 <p>Add a canvas source to the map.</p>
-<h2 id="add-a-cog-raster-source"><a href="add-a-cog-raster-source/">Add a COG raster source</a></h2>
+<h2 id="add-a-cog-raster-source"><a href="./add-a-cog-raster-source/">Add a COG raster source</a></h2>
 <p><img alt="Add an external Cloud Optimized Geotiff (COG) as source." loading="lazy" src="../assets/examples/add-a-cog-raster-source.webp" /></p>
 <p>Add an external Cloud Optimized Geotiff (COG) as source.</p>
-<h2 id="add-a-color-relief-layer"><a href="add-a-color-relief-layer/">Add a color relief layer</a></h2>
+<h2 id="add-a-color-relief-layer"><a href="./add-a-color-relief-layer/">Add a color relief layer</a></h2>
 <p><img alt="Add a color relief layer." loading="lazy" src="../assets/examples/add-a-color-relief-layer.webp" /></p>
 <p>Add a color relief layer.</p>
-<h2 id="add-a-custom-layer-with-tiles-to-a-globe"><a href="add-a-custom-layer-with-tiles-to-a-globe/">Add a custom layer with tiles to a globe</a></h2>
+<h2 id="add-a-custom-layer-with-tiles-to-a-globe"><a href="./add-a-custom-layer-with-tiles-to-a-globe/">Add a custom layer with tiles to a globe</a></h2>
 <p><img alt="Use custom layer to display arbitrary tiles drawn with a custom WebGL shader on a globe." loading="lazy" src="../assets/examples/add-a-custom-layer-with-tiles-to-a-globe.webp" /></p>
 <p>Use custom layer to display arbitrary tiles drawn with a custom WebGL shader on a globe.</p>
-<h2 id="add-a-custom-style-layer"><a href="add-a-custom-style-layer/">Add a custom style layer</a></h2>
+<h2 id="add-a-custom-style-layer"><a href="./add-a-custom-style-layer/">Add a custom style layer</a></h2>
 <p><img alt="Use a custom style layer to render custom WebGL content." loading="lazy" src="../assets/examples/add-a-custom-style-layer.webp" /></p>
 <p>Use a custom style layer to render custom WebGL content.</p>
-<h2 id="add-a-default-marker"><a href="add-a-default-marker/">Add a default marker</a></h2>
+<h2 id="add-a-default-marker"><a href="./add-a-default-marker/">Add a default marker</a></h2>
 <p><img alt="Add a default marker to the map." loading="lazy" src="../assets/examples/add-a-default-marker.webp" /></p>
 <p>Add a default marker to the map.</p>
-<h2 id="add-a-generated-icon-to-the-map"><a href="add-a-generated-icon-to-the-map/">Add a generated icon to the map</a></h2>
+<h2 id="add-a-generated-icon-to-the-map"><a href="./add-a-generated-icon-to-the-map/">Add a generated icon to the map</a></h2>
 <p><img alt="Add an icon to the map that was generated at runtime." loading="lazy" src="../assets/examples/add-a-generated-icon-to-the-map.webp" /></p>
 <p>Add an icon to the map that was generated at runtime.</p>
-<h2 id="add-a-geojson-line"><a href="add-a-geojson-line/">Add a GeoJSON line</a></h2>
+<h2 id="add-a-geojson-line"><a href="./add-a-geojson-line/">Add a GeoJSON line</a></h2>
 <p><img alt="Add a GeoJSON line to a map using addSource, then style it using addLayer’s paint properties." loading="lazy" src="../assets/examples/add-a-geojson-line.webp" /></p>
 <p>Add a GeoJSON line to a map using addSource, then style it using addLayer’s paint properties.</p>
-<h2 id="add-a-geojson-polygon"><a href="add-a-geojson-polygon/">Add a GeoJSON polygon</a></h2>
+<h2 id="add-a-geojson-polygon"><a href="./add-a-geojson-polygon/">Add a GeoJSON polygon</a></h2>
 <p><img alt="Style a polygon with the fill layer type." loading="lazy" src="../assets/examples/add-a-geojson-polygon.webp" /></p>
 <p>Style a polygon with the fill layer type.</p>
-<h2 id="add-a-hillshade-layer"><a href="add-a-hillshade-layer/">Add a hillshade layer</a></h2>
+<h2 id="add-a-hillshade-layer"><a href="./add-a-hillshade-layer/">Add a hillshade layer</a></h2>
 <p><img alt="Add a simple hillshade layer." loading="lazy" src="../assets/examples/add-a-hillshade-layer.webp" /></p>
 <p>Add a simple hillshade layer.</p>
-<h2 id="add-a-multidirectional-hillshade-layer"><a href="add-a-multidirectional-hillshade-layer/">Add a multidirectional hillshade layer</a></h2>
+<h2 id="add-a-multidirectional-hillshade-layer"><a href="./add-a-multidirectional-hillshade-layer/">Add a multidirectional hillshade layer</a></h2>
 <p><img alt="Add a hillshade layer with multiple illumination sources." loading="lazy" src="../assets/examples/add-a-multidirectional-hillshade-layer.webp" /></p>
 <p>Add a hillshade layer with multiple illumination sources.</p>
-<h2 id="add-a-new-layer-below-labels"><a href="add-a-new-layer-below-labels/">Add a new layer below labels</a></h2>
+<h2 id="add-a-new-layer-below-labels"><a href="./add-a-new-layer-below-labels/">Add a new layer below labels</a></h2>
 <p><img alt="Use the second argument of addLayer to add a layer below labels." loading="lazy" src="../assets/examples/add-a-new-layer-below-labels.webp" /></p>
 <p>Use the second argument of addLayer to add a layer below labels.</p>
-<h2 id="add-a-pattern-to-a-polygon"><a href="add-a-pattern-to-a-polygon/">Add a pattern to a polygon</a></h2>
+<h2 id="add-a-pattern-to-a-polygon"><a href="./add-a-pattern-to-a-polygon/">Add a pattern to a polygon</a></h2>
 <p><img alt="Use fill-pattern to draw a polygon from a repeating image pattern." loading="lazy" src="../assets/examples/add-a-pattern-to-a-polygon.webp" /></p>
 <p>Use fill-pattern to draw a polygon from a repeating image pattern.</p>
-<h2 id="add-a-raster-tile-source"><a href="add-a-raster-tile-source/">Add a raster tile source</a></h2>
+<h2 id="add-a-raster-tile-source"><a href="./add-a-raster-tile-source/">Add a raster tile source</a></h2>
 <p><img alt="Add a third-party raster source to the map." loading="lazy" src="../assets/examples/add-a-raster-tile-source.webp" /></p>
 <p>Add a third-party raster source to the map.</p>
-<h2 id="add-a-simple-custom-layer-on-a-globe"><a href="add-a-simple-custom-layer-on-a-globe/">Add a simple custom layer on a globe</a></h2>
+<h2 id="add-a-simple-custom-layer-on-a-globe"><a href="./add-a-simple-custom-layer-on-a-globe/">Add a simple custom layer on a globe</a></h2>
 <p><img alt="Use a custom layer to draw simple WebGL content on a globe." loading="lazy" src="../assets/examples/add-a-simple-custom-layer-on-a-globe.webp" /></p>
 <p>Use a custom layer to draw simple WebGL content on a globe.</p>
-<h2 id="add-a-stretchable-image-to-the-map"><a href="add-a-stretchable-image-to-the-map/">Add a stretchable image to the map</a></h2>
+<h2 id="add-a-stretchable-image-to-the-map"><a href="./add-a-stretchable-image-to-the-map/">Add a stretchable image to the map</a></h2>
 <p><img alt="Use a stretchable image as a background for text." loading="lazy" src="../assets/examples/add-a-stretchable-image-to-the-map.webp" /></p>
 <p>Use a stretchable image as a background for text.</p>
-<h2 id="add-a-vector-tile-source"><a href="add-a-vector-tile-source/">Add a vector tile source</a></h2>
+<h2 id="add-a-vector-tile-source"><a href="./add-a-vector-tile-source/">Add a vector tile source</a></h2>
 <p><img alt="Add a vector source to a map." loading="lazy" src="../assets/examples/add-a-vector-tile-source.webp" /></p>
 <p>Add a vector source to a map.</p>
-<h2 id="add-a-video"><a href="add-a-video/">Add a video</a></h2>
+<h2 id="add-a-video"><a href="./add-a-video/">Add a video</a></h2>
 <p><img alt="Display a video on top of a satellite raster baselayer." loading="lazy" src="../assets/examples/add-a-video.webp" /></p>
 <p>Display a video on top of a satellite raster baselayer.</p>
-<h2 id="add-a-wms-source"><a href="add-a-wms-source/">Add a WMS source</a></h2>
+<h2 id="add-a-wms-source"><a href="./add-a-wms-source/">Add a WMS source</a></h2>
 <p><img alt="Add an external Web Map Service raster layer to the map using addSource's tiles option." loading="lazy" src="../assets/examples/add-a-wms-source.webp" /></p>
 <p>Add an external Web Map Service raster layer to the map using addSource's tiles option.</p>
-<h2 id="add-an-animated-icon-to-the-map"><a href="add-an-animated-icon-to-the-map/">Add an animated icon to the map</a></h2>
+<h2 id="add-an-animated-icon-to-the-map"><a href="./add-an-animated-icon-to-the-map/">Add an animated icon to the map</a></h2>
 <p><img alt="Add an animated icon to the map that was generated at runtime with the Canvas API." loading="lazy" src="../assets/examples/add-an-animated-icon-to-the-map.webp" /></p>
 <p>Add an animated icon to the map that was generated at runtime with the Canvas API.</p>
-<h2 id="add-an-icon-to-the-map"><a href="add-an-icon-to-the-map/">Add an icon to the map</a></h2>
+<h2 id="add-an-icon-to-the-map"><a href="./add-an-icon-to-the-map/">Add an icon to the map</a></h2>
 <p><img alt="Add an icon to the map from an external URL and use it in a symbol layer." loading="lazy" src="../assets/examples/add-an-icon-to-the-map.webp" /></p>
 <p>Add an icon to the map from an external URL and use it in a symbol layer.</p>
-<h2 id="add-contour-lines"><a href="add-contour-lines/">Add Contour Lines</a></h2>
+<h2 id="add-contour-lines"><a href="./add-contour-lines/">Add Contour Lines</a></h2>
 <p><img alt="Add contour lines to your map from a raster-dem source." loading="lazy" src="../assets/examples/add-contour-lines.webp" /></p>
 <p>Add contour lines to your map from a raster-dem source.</p>
-<h2 id="add-custom-icons-with-markers"><a href="add-custom-icons-with-markers/">Add custom icons with Markers</a></h2>
+<h2 id="add-custom-icons-with-markers"><a href="./add-custom-icons-with-markers/">Add custom icons with Markers</a></h2>
 <p><img alt="Add custom marker icons to your map." loading="lazy" src="../assets/examples/add-custom-icons-with-markers.webp" /></p>
 <p>Add custom marker icons to your map.</p>
-<h2 id="add-live-realtime-data"><a href="add-live-realtime-data/">Add live realtime data</a></h2>
+<h2 id="add-live-realtime-data"><a href="./add-live-realtime-data/">Add live realtime data</a></h2>
 <p><img alt="Use realtime GeoJSON data streams to move a symbol on your map." loading="lazy" src="../assets/examples/add-live-realtime-data.webp" /></p>
 <p>Use realtime GeoJSON data streams to move a symbol on your map.</p>
-<h2 id="add-multiple-geometries-from-one-geojson-source"><a href="add-multiple-geometries-from-one-geojson-source/">Add multiple geometries from one GeoJSON source</a></h2>
+<h2 id="add-multiple-geometries-from-one-geojson-source"><a href="./add-multiple-geometries-from-one-geojson-source/">Add multiple geometries from one GeoJSON source</a></h2>
 <p><img alt="Add a polygon and circle layer from the same GeoJSON source." loading="lazy" src="../assets/examples/add-multiple-geometries-from-one-geojson-source.webp" /></p>
 <p>Add a polygon and circle layer from the same GeoJSON source.</p>
-<h2 id="add-support-for-right-to-left-scripts"><a href="add-support-for-right-to-left-scripts/">Add support for right-to-left scripts</a></h2>
+<h2 id="add-support-for-right-to-left-scripts"><a href="./add-support-for-right-to-left-scripts/">Add support for right-to-left scripts</a></h2>
 <p><img alt="Use the mapbox-gl-rtl-text plugin to support right-to-left languages such as Arabic and Hebrew." loading="lazy" src="../assets/examples/add-support-for-right-to-left-scripts.webp" /></p>
 <p>Use the mapbox-gl-rtl-text plugin to support right-to-left languages such as Arabic and Hebrew.</p>
-<h2 id="adding-3d-models-using-threejs-on-terrain"><a href="adding-3d-models-using-threejs-on-terrain/">Adding 3D models using three.js on terrain</a></h2>
+<h2 id="adding-3d-models-using-threejs-on-terrain"><a href="./adding-3d-models-using-threejs-on-terrain/">Adding 3D models using three.js on terrain</a></h2>
 <p><img alt="Use a custom style layer with three.js to add 3D models to a map with 3d terrain." loading="lazy" src="../assets/examples/adding-3d-models-using-threejs-on-terrain.webp" /></p>
 <p>Use a custom style layer with three.js to add 3D models to a map with 3d terrain.</p>
-<h2 id="animate-a-line"><a href="animate-a-line/">Animate a line</a></h2>
+<h2 id="animate-a-line"><a href="./animate-a-line/">Animate a line</a></h2>
 <p><img alt="Animate a line by updating a GeoJSON source on each frame." loading="lazy" src="../assets/examples/animate-a-line.webp" /></p>
 <p>Animate a line by updating a GeoJSON source on each frame.</p>
-<h2 id="animate-a-marker"><a href="animate-a-marker/">Animate a marker</a></h2>
+<h2 id="animate-a-marker"><a href="./animate-a-marker/">Animate a marker</a></h2>
 <p><img alt="Animate the position of a marker by updating its location on each frame." loading="lazy" src="../assets/examples/animate-a-marker.webp" /></p>
 <p>Animate the position of a marker by updating its location on each frame.</p>
-<h2 id="animate-a-point-along-a-route"><a href="animate-a-point-along-a-route/">Animate a point along a route</a></h2>
+<h2 id="animate-a-point-along-a-route"><a href="./animate-a-point-along-a-route/">Animate a point along a route</a></h2>
 <p><img alt="Use Turf to smoothly animate a point along the distance of a line." loading="lazy" src="../assets/examples/animate-a-point-along-a-route.webp" /></p>
 <p>Use Turf to smoothly animate a point along the distance of a line.</p>
-<h2 id="animate-a-point"><a href="animate-a-point/">Animate a point</a></h2>
+<h2 id="animate-a-point"><a href="./animate-a-point/">Animate a point</a></h2>
 <p><img alt="Animate the position of a point by updating a GeoJSON source on each frame." loading="lazy" src="../assets/examples/animate-a-point.webp" /></p>
 <p>Animate the position of a point by updating a GeoJSON source on each frame.</p>
-<h2 id="animate-a-series-of-images"><a href="animate-a-series-of-images/">Animate a series of images</a></h2>
+<h2 id="animate-a-series-of-images"><a href="./animate-a-series-of-images/">Animate a series of images</a></h2>
 <p><img alt="Use a series of image sources to create an animation." loading="lazy" src="../assets/examples/animate-a-series-of-images.webp" /></p>
 <p>Use a series of image sources to create an animation.</p>
-<h2 id="animate-map-camera-around-a-point"><a href="animate-map-camera-around-a-point/">Animate map camera around a point</a></h2>
+<h2 id="animate-map-camera-around-a-point"><a href="./animate-map-camera-around-a-point/">Animate map camera around a point</a></h2>
 <p><img alt="Animate the map camera around a point." loading="lazy" src="../assets/examples/animate-map-camera-around-a-point.webp" /></p>
 <p>Animate the map camera around a point.</p>
-<h2 id="animate-symbol-to-follow-the-mouse"><a href="animate-symbol-to-follow-the-mouse/">Animate symbol to follow the mouse</a></h2>
+<h2 id="animate-symbol-to-follow-the-mouse"><a href="./animate-symbol-to-follow-the-mouse/">Animate symbol to follow the mouse</a></h2>
 <p><img alt="Animate symbol to follow the mouse." loading="lazy" src="../assets/examples/animate-symbol-to-follow-the-mouse.webp" /></p>
 <p>Animate symbol to follow the mouse.</p>
-<h2 id="attach-a-popup-to-a-marker-instance"><a href="attach-a-popup-to-a-marker-instance/">Attach a popup to a marker instance</a></h2>
+<h2 id="attach-a-popup-to-a-marker-instance"><a href="./attach-a-popup-to-a-marker-instance/">Attach a popup to a marker instance</a></h2>
 <p><img alt="Attach a popup to a marker and display it on click." loading="lazy" src="../assets/examples/attach-a-popup-to-a-marker-instance.webp" /></p>
 <p>Attach a popup to a marker and display it on click.</p>
-<h2 id="center-the-map-on-a-clicked-symbol"><a href="center-the-map-on-a-clicked-symbol/">Center the map on a clicked symbol</a></h2>
+<h2 id="center-the-map-on-a-clicked-symbol"><a href="./center-the-map-on-a-clicked-symbol/">Center the map on a clicked symbol</a></h2>
 <p><img alt="Use events and flyTo to center the map on a symbol." loading="lazy" src="../assets/examples/center-the-map-on-a-clicked-symbol.webp" /></p>
 <p>Use events and flyTo to center the map on a symbol.</p>
-<h2 id="change-a-layers-color-with-buttons"><a href="change-a-layers-color-with-buttons/">Change a layer's color with buttons</a></h2>
+<h2 id="change-a-layers-color-with-buttons"><a href="./change-a-layers-color-with-buttons/">Change a layer's color with buttons</a></h2>
 <p><img alt="Use setPaintProperty to change a layer's fill color." loading="lazy" src="../assets/examples/change-a-layers-color-with-buttons.webp" /></p>
 <p>Use setPaintProperty to change a layer's fill color.</p>
-<h2 id="change-a-maps-language"><a href="change-a-maps-language/">Change a map's language</a></h2>
+<h2 id="change-a-maps-language"><a href="./change-a-maps-language/">Change a map's language</a></h2>
 <p><img alt="Use setLayoutProperty to switch languages dynamically." loading="lazy" src="../assets/examples/change-a-maps-language.webp" /></p>
 <p>Use setLayoutProperty to switch languages dynamically.</p>
-<h2 id="change-building-color-based-on-zoom-level"><a href="change-building-color-based-on-zoom-level/">Change building color based on zoom level</a></h2>
+<h2 id="change-building-color-based-on-zoom-level"><a href="./change-building-color-based-on-zoom-level/">Change building color based on zoom level</a></h2>
 <p><img alt="Use the interpolate expression to ease-in the building layer and smoothly fade from one color to the next." loading="lazy" src="../assets/examples/change-building-color-based-on-zoom-level.webp" /></p>
 <p>Use the interpolate expression to ease-in the building layer and smoothly fade from one color to the next.</p>
-<h2 id="change-the-case-of-labels"><a href="change-the-case-of-labels/">Change the case of labels</a></h2>
+<h2 id="change-the-case-of-labels"><a href="./change-the-case-of-labels/">Change the case of labels</a></h2>
 <p><img alt="Use the upcase and downcase expressions to change the case of labels." loading="lazy" src="../assets/examples/change-the-case-of-labels.webp" /></p>
 <p>Use the upcase and downcase expressions to change the case of labels.</p>
-<h2 id="change-the-default-position-for-attribution"><a href="change-the-default-position-for-attribution/">Change the default position for attribution</a></h2>
+<h2 id="change-the-default-position-for-attribution"><a href="./change-the-default-position-for-attribution/">Change the default position for attribution</a></h2>
 <p><img alt="Place attribution in the top-left position when initializing a map." loading="lazy" src="../assets/examples/change-the-default-position-for-attribution.webp" /></p>
 <p>Place attribution in the top-left position when initializing a map.</p>
-<h2 id="check-if-webgl-is-supported"><a href="check-if-webgl-is-supported/">Check if WebGL is supported</a></h2>
+<h2 id="check-if-webgl-is-supported"><a href="./check-if-webgl-is-supported/">Check if WebGL is supported</a></h2>
 <p><img alt="Check for WebGL browser support." loading="lazy" src="../assets/examples/check-if-webgl-is-supported.webp" /></p>
 <p>Check for WebGL browser support.</p>
-<h2 id="cooperative-gestures"><a href="cooperative-gestures/">Cooperative gestures</a></h2>
+<h2 id="cooperative-gestures"><a href="./cooperative-gestures/">Cooperative gestures</a></h2>
 <p><img alt="Enable cooperative gestures. See how it behaves in fullscreen mode." loading="lazy" src="../assets/examples/cooperative-gestures.webp" /></p>
 <p>Enable cooperative gestures. See how it behaves in fullscreen mode.</p>
-<h2 id="create-a-draggable-marker"><a href="create-a-draggable-marker/">Create a draggable Marker</a></h2>
+<h2 id="create-a-draggable-marker"><a href="./create-a-draggable-marker/">Create a draggable Marker</a></h2>
 <p><img alt="Drag the marker to a new location on a map and populate its coordinates in a display." loading="lazy" src="../assets/examples/create-a-draggable-marker.webp" /></p>
 <p>Drag the marker to a new location on a map and populate its coordinates in a display.</p>
-<h2 id="create-a-draggable-point"><a href="create-a-draggable-point/">Create a draggable point</a></h2>
+<h2 id="create-a-draggable-point"><a href="./create-a-draggable-point/">Create a draggable point</a></h2>
 <p><img alt="Drag the point to a new location on a map and populate its coordinates in a display." loading="lazy" src="../assets/examples/create-a-draggable-point.webp" /></p>
 <p>Drag the point to a new location on a map and populate its coordinates in a display.</p>
-<h2 id="create-a-gradient-line-with-dasharray-using-an-expression"><a href="create-a-gradient-dashed-line-using-an-expression/">Create a gradient line with dasharray using an expression</a></h2>
+<h2 id="create-a-gradient-line-with-dasharray-using-an-expression"><a href="./create-a-gradient-dashed-line-using-an-expression/">Create a gradient line with dasharray using an expression</a></h2>
 <p><img alt="Use the line-gradient and line-dasharray paint properties together to create a dashed line with gradient colors." loading="lazy" src="../assets/examples/create-a-gradient-dashed-line-using-an-expression.webp" /></p>
 <p>Use the line-gradient and line-dasharray paint properties together to create a dashed line with gradient colors.</p>
-<h2 id="create-a-gradient-line-using-an-expression"><a href="create-a-gradient-line-using-an-expression/">Create a gradient line using an expression</a></h2>
+<h2 id="create-a-gradient-line-using-an-expression"><a href="./create-a-gradient-line-using-an-expression/">Create a gradient line using an expression</a></h2>
 <p><img alt="Use the line-gradient paint property and an expression to visualize distance from the starting point of a line." loading="lazy" src="../assets/examples/create-a-gradient-line-using-an-expression.webp" /></p>
 <p>Use the line-gradient paint property and an expression to visualize distance from the starting point of a line.</p>
-<h2 id="create-a-heatmap-layer-on-a-globe-with-terrain-elevation"><a href="create-a-heatmap-layer-on-a-globe-with-terrain-elevation/">Create a Heatmap layer on a globe with terrain elevation</a></h2>
+<h2 id="create-a-heatmap-layer-on-a-globe-with-terrain-elevation"><a href="./create-a-heatmap-layer-on-a-globe-with-terrain-elevation/">Create a Heatmap layer on a globe with terrain elevation</a></h2>
 <p><img alt="Create a Heatmap layer on a globe with terrain elevation." loading="lazy" src="../assets/examples/create-a-heatmap-layer-on-a-globe-with-terrain-elevation.webp" /></p>
 <p>Create a Heatmap layer on a globe with terrain elevation.</p>
-<h2 id="create-a-heatmap-layer"><a href="create-a-heatmap-layer/">Create a heatmap layer</a></h2>
+<h2 id="create-a-heatmap-layer"><a href="./create-a-heatmap-layer/">Create a heatmap layer</a></h2>
 <p><img alt="Visualize earthquake frequency by location using a heatmap layer." loading="lazy" src="../assets/examples/create-a-heatmap-layer.webp" /></p>
 <p>Visualize earthquake frequency by location using a heatmap layer.</p>
-<h2 id="create-a-hover-effect"><a href="create-a-hover-effect/">Create a hover effect</a></h2>
+<h2 id="create-a-hover-effect"><a href="./create-a-hover-effect/">Create a hover effect</a></h2>
 <p><img alt="Use events and feature states to create a per feature hover effect." loading="lazy" src="../assets/examples/create-a-hover-effect.webp" /></p>
 <p>Use events and feature states to create a per feature hover effect.</p>
-<h2 id="create-a-time-slider"><a href="create-a-time-slider/">Create a time slider</a></h2>
+<h2 id="create-a-time-slider"><a href="./create-a-time-slider/">Create a time slider</a></h2>
 <p><img alt="Visualize earthquakes with a range slider." loading="lazy" src="../assets/examples/create-a-time-slider.webp" /></p>
 <p>Visualize earthquakes with a range slider.</p>
-<h2 id="create-and-style-clusters"><a href="create-and-style-clusters/">Create and style clusters</a></h2>
+<h2 id="create-and-style-clusters"><a href="./create-and-style-clusters/">Create and style clusters</a></h2>
 <p><img alt="Use MapLibre GL JS' built-in functions to visualize points as clusters." loading="lazy" src="../assets/examples/create-and-style-clusters.webp" /></p>
 <p>Use MapLibre GL JS' built-in functions to visualize points as clusters.</p>
-<h2 id="create-deckgl-layer-using-rest-api"><a href="create-deckgl-layer-using-rest-api/">Create deck.gl layer using REST API</a></h2>
+<h2 id="create-deckgl-layer-using-rest-api"><a href="./create-deckgl-layer-using-rest-api/">Create deck.gl layer using REST API</a></h2>
 <p><img alt="Create a deck.gl layer as an overlay from a REST API." loading="lazy" src="../assets/examples/create-deckgl-layer-using-rest-api.webp" /></p>
 <p>Create a deck.gl layer as an overlay from a REST API.</p>
-<h2 id="customize-camera-animations"><a href="customize-camera-animations/">Customize camera animations</a></h2>
+<h2 id="customize-camera-animations"><a href="./customize-camera-animations/">Customize camera animations</a></h2>
 <p><img alt="Customize camera animations using AnimationOptions." loading="lazy" src="../assets/examples/customize-camera-animations.webp" /></p>
 <p>Customize camera animations using AnimationOptions.</p>
-<h2 id="customize-the-map-transform-constrain"><a href="customize-the-map-transform-constrain/">Customize the map transform constrain</a></h2>
+<h2 id="customize-the-map-transform-constrain"><a href="./customize-the-map-transform-constrain/">Customize the map transform constrain</a></h2>
 <p><img alt="    &lt;meta property='og:description' content='Customize the constrain callback of the map transform. For example, to allow users to underzoom and overpan the bounds.' /&gt;" loading="lazy" src="../assets/examples/customize-the-map-transform-constrain.webp" /></p>
 <div class="language-text highlight"><pre><span></span><code>&lt;meta property=&#39;og:description&#39; content=&#39;Customize the constrain callback of the map transform. For example, to allow users to underzoom and overpan the bounds.&#39; /&gt;
 </code></pre></div>
-<h2 id="disable-map-rotation"><a href="disable-map-rotation/">Disable map rotation</a></h2>
+<h2 id="disable-map-rotation"><a href="./disable-map-rotation/">Disable map rotation</a></h2>
 <p><img alt="Prevent users from rotating a map." loading="lazy" src="../assets/examples/disable-map-rotation.webp" /></p>
 <p>Prevent users from rotating a map.</p>
-<h2 id="disable-scroll-zoom"><a href="disable-scroll-zoom/">Disable scroll zoom</a></h2>
+<h2 id="disable-scroll-zoom"><a href="./disable-scroll-zoom/">Disable scroll zoom</a></h2>
 <p><img alt="Prevent scroll from zooming a map." loading="lazy" src="../assets/examples/disable-scroll-zoom.webp" /></p>
 <p>Prevent scroll from zooming a map.</p>
-<h2 id="display-a-globe-with-a-fill-extrusion-layer"><a href="display-a-globe-with-a-fill-extrusion-layer/">Display a globe with a fill extrusion layer</a></h2>
+<h2 id="display-a-globe-with-a-fill-extrusion-layer"><a href="./display-a-globe-with-a-fill-extrusion-layer/">Display a globe with a fill extrusion layer</a></h2>
 <p><img alt="Display a globe with a fill extrusion layer." loading="lazy" src="../assets/examples/display-a-globe-with-a-fill-extrusion-layer.webp" /></p>
 <p>Display a globe with a fill extrusion layer.</p>
-<h2 id="display-a-globe-with-a-vector-map"><a href="display-a-globe-with-a-vector-map/">Display a globe with a vector map</a></h2>
+<h2 id="display-a-globe-with-a-vector-map"><a href="./display-a-globe-with-a-vector-map/">Display a globe with a vector map</a></h2>
 <p><img alt="Display a globe with a vector map." loading="lazy" src="../assets/examples/display-a-globe-with-a-vector-map.webp" /></p>
 <p>Display a globe with a vector map.</p>
-<h2 id="display-a-globe-with-an-atmosphere"><a href="display-a-globe-with-an-atmosphere/">Display a globe with an atmosphere</a></h2>
+<h2 id="display-a-globe-with-an-atmosphere"><a href="./display-a-globe-with-an-atmosphere/">Display a globe with an atmosphere</a></h2>
 <p><img alt="Display a globe with an atmosphere." loading="lazy" src="../assets/examples/display-a-globe-with-an-atmosphere.webp" /></p>
 <p>Display a globe with an atmosphere.</p>
-<h2 id="display-a-hybrid-satellite-map-with-terrain-elevation"><a href="display-a-hybrid-satellite-map-with-terrain-elevation/">Display a hybrid satellite map with terrain elevation</a></h2>
+<h2 id="display-a-hybrid-satellite-map-with-terrain-elevation"><a href="./display-a-hybrid-satellite-map-with-terrain-elevation/">Display a hybrid satellite map with terrain elevation</a></h2>
 <p><img alt="Display a hybrid satellite map with terrain elevation." loading="lazy" src="../assets/examples/display-a-hybrid-satellite-map-with-terrain-elevation.webp" /></p>
 <p>Display a hybrid satellite map with terrain elevation.</p>
-<h2 id="display-a-map-with-mlt"><a href="display-a-map-with-mlt/">Display a map with MLT</a></h2>
+<h2 id="display-a-map-with-mlt"><a href="./display-a-map-with-mlt/">Display a map with MLT</a></h2>
 <p><img alt="Initialize a map in an HTML element with MapLibre GL JS. This example is using a style that uses MLT (MapLibre Tiles). The example is very similar to the regular one except the tiles are in a different encoding." loading="lazy" src="../assets/examples/display-a-map-with-mlt.webp" /></p>
 <p>Initialize a map in an HTML element with MapLibre GL JS. This example is using a style that uses MLT (MapLibre Tiles). The example is very similar to the regular one except the tiles are in a different encoding.</p>
-<h2 id="display-a-map"><a href="display-a-map/">Display a map</a></h2>
+<h2 id="display-a-map"><a href="./display-a-map/">Display a map</a></h2>
 <p><img alt="Initialize a map in an HTML element with MapLibre GL JS." loading="lazy" src="../assets/examples/display-a-map.webp" /></p>
 <p>Initialize a map in an HTML element with MapLibre GL JS.</p>
-<h2 id="display-a-non-interactive-map"><a href="display-a-non-interactive-map/">Display a non-interactive map</a></h2>
+<h2 id="display-a-non-interactive-map"><a href="./display-a-non-interactive-map/">Display a non-interactive map</a></h2>
 <p><img alt="Disable interactivity to create a static map." loading="lazy" src="../assets/examples/display-a-non-interactive-map.webp" /></p>
 <p>Disable interactivity to create a static map.</p>
-<h2 id="display-a-popup-on-click"><a href="display-a-popup-on-click/">Display a popup on click</a></h2>
+<h2 id="display-a-popup-on-click"><a href="./display-a-popup-on-click/">Display a popup on click</a></h2>
 <p><img alt="When a user clicks a symbol, show a popup containing more information." loading="lazy" src="../assets/examples/display-a-popup-on-click.webp" /></p>
 <p>When a user clicks a symbol, show a popup containing more information.</p>
-<h2 id="display-a-popup-on-hover"><a href="display-a-popup-on-hover/">Display a popup on hover</a></h2>
+<h2 id="display-a-popup-on-hover"><a href="./display-a-popup-on-hover/">Display a popup on hover</a></h2>
 <p><img alt="When a user hovers over a custom marker, show a popup containing more information." loading="lazy" src="../assets/examples/display-a-popup-on-hover.webp" /></p>
 <p>When a user hovers over a custom marker, show a popup containing more information.</p>
-<h2 id="display-a-popup"><a href="display-a-popup/">Display a popup</a></h2>
+<h2 id="display-a-popup"><a href="./display-a-popup/">Display a popup</a></h2>
 <p><img alt="Add a popup to the map." loading="lazy" src="../assets/examples/display-a-popup.webp" /></p>
 <p>Add a popup to the map.</p>
-<h2 id="display-a-remote-svg-symbol"><a href="display-a-remote-svg-symbol/">Display a remote SVG symbol</a></h2>
+<h2 id="display-a-remote-svg-symbol"><a href="./display-a-remote-svg-symbol/">Display a remote SVG symbol</a></h2>
 <p><img alt="Uses the 'styleimagemissing' event to load a remote image and use it." loading="lazy" src="../assets/examples/display-a-remote-svg-symbol.webp" /></p>
 <p>Uses the 'styleimagemissing' event to load a remote image and use it.</p>
-<h2 id="display-a-satellite-map"><a href="display-a-satellite-map/">Display a satellite map</a></h2>
+<h2 id="display-a-satellite-map"><a href="./display-a-satellite-map/">Display a satellite map</a></h2>
 <p><img alt="Display a satellite raster baselayer." loading="lazy" src="../assets/examples/display-a-satellite-map.webp" /></p>
 <p>Display a satellite raster baselayer.</p>
-<h2 id="display-and-style-rich-text-labels"><a href="display-and-style-rich-text-labels/">Display and style rich text labels</a></h2>
+<h2 id="display-and-style-rich-text-labels"><a href="./display-and-style-rich-text-labels/">Display and style rich text labels</a></h2>
 <p><img alt="Use the format expression to display country labels in both English and in the local language." loading="lazy" src="../assets/examples/display-and-style-rich-text-labels.webp" /></p>
 <p>Use the format expression to display country labels in both English and in the local language.</p>
-<h2 id="display-buildings-in-3d"><a href="display-buildings-in-3d/">Display buildings in 3D</a></h2>
+<h2 id="display-buildings-in-3d"><a href="./display-buildings-in-3d/">Display buildings in 3D</a></h2>
 <p><img alt="Use extrusions to display buildings' height in 3D." loading="lazy" src="../assets/examples/display-buildings-in-3d.webp" /></p>
 <p>Use extrusions to display buildings' height in 3D.</p>
-<h2 id="display-html-clusters-with-custom-properties"><a href="display-html-clusters-with-custom-properties/">Display HTML clusters with custom properties</a></h2>
+<h2 id="display-html-clusters-with-custom-properties"><a href="./display-html-clusters-with-custom-properties/">Display HTML clusters with custom properties</a></h2>
 <p><img alt="Extend clustering with HTML markers and custom property expressions. " loading="lazy" src="../assets/examples/display-html-clusters-with-custom-properties.webp" /></p>
 <p>Extend clustering with HTML markers and custom property expressions. </p>
-<h2 id="display-line-that-crosses-180th-meridian"><a href="display-line-that-crosses-180th-meridian/">Display line that crosses 180th meridian</a></h2>
+<h2 id="display-line-that-crosses-180th-meridian"><a href="./display-line-that-crosses-180th-meridian/">Display line that crosses 180th meridian</a></h2>
 <p><img alt="Draw a line across the 180th meridian using a GeoJSON source." loading="lazy" src="../assets/examples/display-line-that-crosses-180th-meridian.webp" /></p>
 <p>Draw a line across the 180th meridian using a GeoJSON source.</p>
-<h2 id="display-map-navigation-controls"><a href="display-map-navigation-controls/">Display map navigation controls</a></h2>
+<h2 id="display-map-navigation-controls"><a href="./display-map-navigation-controls/">Display map navigation controls</a></h2>
 <p><img alt="Add zoom and rotation controls to the map." loading="lazy" src="../assets/examples/display-map-navigation-controls.webp" /></p>
 <p>Add zoom and rotation controls to the map.</p>
-<h2 id="draw-a-circle"><a href="draw-a-circle/">Draw a Circle</a></h2>
+<h2 id="draw-a-circle"><a href="./draw-a-circle/">Draw a Circle</a></h2>
 <p><img alt="Draw a radius to approximate a location with Turf.js" loading="lazy" src="../assets/examples/draw-a-circle.webp" /></p>
 <p>Draw a radius to approximate a location with Turf.js</p>
-<h2 id="draw-geojson-points"><a href="draw-geojson-points/">Draw GeoJSON points</a></h2>
+<h2 id="draw-geojson-points"><a href="./draw-geojson-points/">Draw GeoJSON points</a></h2>
 <p><img alt="Draw points from a GeoJSON collection to a map." loading="lazy" src="../assets/examples/draw-geojson-points.webp" /></p>
 <p>Draw points from a GeoJSON collection to a map.</p>
-<h2 id="draw-geometries-with-terra-draw"><a href="draw-geometries-with-terra-draw/">Draw geometries with terra-draw</a></h2>
+<h2 id="draw-geometries-with-terra-draw"><a href="./draw-geometries-with-terra-draw/">Draw geometries with terra-draw</a></h2>
 <p><img alt="Use maplibre-gl-terradraw to draw a geometry in various forms such as point, line or polygon on your map." loading="lazy" src="../assets/examples/draw-geometries-with-terra-draw.webp" /></p>
 <p>Use maplibre-gl-terradraw to draw a geometry in various forms such as point, line or polygon on your map.</p>
-<h2 id="draw-polygon-with-mapbox-gl-draw"><a href="draw-polygon-with-mapbox-gl-draw/">Draw polygon with mapbox-gl-draw</a></h2>
+<h2 id="draw-polygon-with-mapbox-gl-draw"><a href="./draw-polygon-with-mapbox-gl-draw/">Draw polygon with mapbox-gl-draw</a></h2>
 <p><img alt="Use mapbox-gl-draw to draw a polygon and Turf.js to calculate its area in square meters." loading="lazy" src="../assets/examples/draw-polygon-with-mapbox-gl-draw.webp" /></p>
 <p>Use mapbox-gl-draw to draw a polygon and Turf.js to calculate its area in square meters.</p>
-<h2 id="extrude-polygons-for-3d-indoor-mapping"><a href="extrude-polygons-for-3d-indoor-mapping/">Extrude polygons for 3D indoor mapping</a></h2>
+<h2 id="extrude-polygons-for-3d-indoor-mapping"><a href="./extrude-polygons-for-3d-indoor-mapping/">Extrude polygons for 3D indoor mapping</a></h2>
 <p><img alt="Create a 3D indoor map with the fill-extrude-height paint property." loading="lazy" src="../assets/examples/extrude-polygons-for-3d-indoor-mapping.webp" /></p>
 <p>Create a 3D indoor map with the fill-extrude-height paint property.</p>
-<h2 id="filter-layer-symbols-using-global-state"><a href="filter-layer-symbols-using-global-state/">Filter layer symbols using global state</a></h2>
+<h2 id="filter-layer-symbols-using-global-state"><a href="./filter-layer-symbols-using-global-state/">Filter layer symbols using global state</a></h2>
 <p><img alt="Filter a layer symbols based on user input using setGlobalStateProperty()." loading="lazy" src="../assets/examples/filter-layer-symbols-using-global-state.webp" /></p>
 <p>Filter a layer symbols based on user input using setGlobalStateProperty().</p>
-<h2 id="filter-symbols-by-text-input"><a href="filter-symbols-by-text-input/">Filter symbols by text input</a></h2>
+<h2 id="filter-symbols-by-text-input"><a href="./filter-symbols-by-text-input/">Filter symbols by text input</a></h2>
 <p><img alt="Filter symbols by icon name by typing in a text input." loading="lazy" src="../assets/examples/filter-symbols-by-text-input.webp" /></p>
 <p>Filter symbols by icon name by typing in a text input.</p>
-<h2 id="filter-symbols-by-toggling-a-list"><a href="filter-symbols-by-toggling-a-list/">Filter symbols by toggling a list</a></h2>
+<h2 id="filter-symbols-by-toggling-a-list"><a href="./filter-symbols-by-toggling-a-list/">Filter symbols by toggling a list</a></h2>
 <p><img alt="Filter a set of symbols based on a property value in the data." loading="lazy" src="../assets/examples/filter-symbols-by-toggling-a-list.webp" /></p>
 <p>Filter a set of symbols based on a property value in the data.</p>
-<h2 id="filter-within-a-layer"><a href="filter-within-a-layer/">Filter within a Layer</a></h2>
+<h2 id="filter-within-a-layer"><a href="./filter-within-a-layer/">Filter within a Layer</a></h2>
 <p><img alt="Filter a layer based on user input using setFilter()." loading="lazy" src="../assets/examples/filter-within-a-layer.webp" /></p>
 <p>Filter a layer based on user input using setFilter().</p>
-<h2 id="fit-a-map-to-a-bounding-box"><a href="fit-a-map-to-a-bounding-box/">Fit a map to a bounding box</a></h2>
+<h2 id="fit-a-map-to-a-bounding-box"><a href="./fit-a-map-to-a-bounding-box/">Fit a map to a bounding box</a></h2>
 <p><img alt="Fit the map to a specific area, regardless of the pixel size of the map." loading="lazy" src="../assets/examples/fit-a-map-to-a-bounding-box.webp" /></p>
 <p>Fit the map to a specific area, regardless of the pixel size of the map.</p>
-<h2 id="fit-to-the-bounds-of-a-linestring"><a href="fit-to-the-bounds-of-a-linestring/">Fit to the bounds of a LineString</a></h2>
+<h2 id="fit-to-the-bounds-of-a-linestring"><a href="./fit-to-the-bounds-of-a-linestring/">Fit to the bounds of a LineString</a></h2>
 <p><img alt="Get the bounds of a LineString." loading="lazy" src="../assets/examples/fit-to-the-bounds-of-a-linestring.webp" /></p>
 <p>Get the bounds of a LineString.</p>
-<h2 id="fly-to-a-location-based-on-scroll-position"><a href="fly-to-a-location-based-on-scroll-position/">Fly to a location based on scroll position</a></h2>
+<h2 id="fly-to-a-location-based-on-scroll-position"><a href="./fly-to-a-location-based-on-scroll-position/">Fly to a location based on scroll position</a></h2>
 <p><img alt="Scroll down through the story and the map will fly to the chapter's location." loading="lazy" src="../assets/examples/fly-to-a-location-based-on-scroll-position.webp" /></p>
 <p>Scroll down through the story and the map will fly to the chapter's location.</p>
-<h2 id="fly-to-a-location"><a href="fly-to-a-location/">Fly to a location</a></h2>
+<h2 id="fly-to-a-location"><a href="./fly-to-a-location/">Fly to a location</a></h2>
 <p><img alt="Use flyTo to smoothly interpolate between locations." loading="lazy" src="../assets/examples/fly-to-a-location.webp" /></p>
 <p>Use flyTo to smoothly interpolate between locations.</p>
-<h2 id="generate-and-add-a-missing-icon-to-the-map"><a href="generate-and-add-a-missing-icon-to-the-map/">Generate and add a missing icon to the map</a></h2>
+<h2 id="generate-and-add-a-missing-icon-to-the-map"><a href="./generate-and-add-a-missing-icon-to-the-map/">Generate and add a missing icon to the map</a></h2>
 <p><img alt="Dynamically generate a missing icon at runtime and add it to the map." loading="lazy" src="../assets/examples/generate-and-add-a-missing-icon-to-the-map.webp" /></p>
 <p>Dynamically generate a missing icon at runtime and add it to the map.</p>
-<h2 id="geocode-with-nominatim"><a href="geocode-with-nominatim/">Geocode with Nominatim</a></h2>
+<h2 id="geocode-with-nominatim"><a href="./geocode-with-nominatim/">Geocode with Nominatim</a></h2>
 <p><img alt="Geocode with Nominatim and the maplibre-gl-geocoder plugin." loading="lazy" src="../assets/examples/geocode-with-nominatim.webp" /></p>
 <p>Geocode with Nominatim and the maplibre-gl-geocoder plugin.</p>
-<h2 id="get-coordinates-of-the-mouse-pointer"><a href="get-coordinates-of-the-mouse-pointer/">Get coordinates of the mouse pointer</a></h2>
+<h2 id="get-coordinates-of-the-mouse-pointer"><a href="./get-coordinates-of-the-mouse-pointer/">Get coordinates of the mouse pointer</a></h2>
 <p><img alt="Show mouse position on hover with pixel and latitude and longitude coordinates." loading="lazy" src="../assets/examples/get-coordinates-of-the-mouse-pointer.webp" /></p>
 <p>Show mouse position on hover with pixel and latitude and longitude coordinates.</p>
-<h2 id="get-features-under-the-mouse-pointer"><a href="get-features-under-the-mouse-pointer/">Get features under the mouse pointer</a></h2>
+<h2 id="get-features-under-the-mouse-pointer"><a href="./get-features-under-the-mouse-pointer/">Get features under the mouse pointer</a></h2>
 <p><img alt="Use queryRenderedFeatures to show properties of hovered-over map elements." loading="lazy" src="../assets/examples/get-features-under-the-mouse-pointer.webp" /></p>
 <p>Use queryRenderedFeatures to show properties of hovered-over map elements.</p>
-<h2 id="hash-routing"><a href="hash-routing/">Hash routing</a></h2>
+<h2 id="hash-routing"><a href="./hash-routing/">Hash routing</a></h2>
 <p><img alt="Keep the viewport state in the url with hash routing." loading="lazy" src="../assets/examples/hash-routing.webp" /></p>
 <p>Keep the viewport state in the url with hash routing.</p>
-<h2 id="jump-to-a-series-of-locations"><a href="jump-to-a-series-of-locations/">Jump to a series of locations</a></h2>
+<h2 id="jump-to-a-series-of-locations"><a href="./jump-to-a-series-of-locations/">Jump to a series of locations</a></h2>
 <p><img alt="Use the jumpTo function to showcase multiple locations." loading="lazy" src="../assets/examples/jump-to-a-series-of-locations.webp" /></p>
 <p>Use the jumpTo function to showcase multiple locations.</p>
-<h2 id="level-of-detail-control"><a href="level-of-detail-control/">Level of Detail Control</a></h2>
+<h2 id="level-of-detail-control"><a href="./level-of-detail-control/">Level of Detail Control</a></h2>
 <p><img alt="Modify how Level of Detail behaves at high pitch angles." loading="lazy" src="../assets/examples/level-of-detail-control.webp" /></p>
 <p>Modify how Level of Detail behaves at high pitch angles.</p>
-<h2 id="locale-switching"><a href="locale-switching/">Locale switching</a></h2>
+<h2 id="locale-switching"><a href="./locale-switching/">Locale switching</a></h2>
 <p><img alt="Show how localization can be applied manually to UI elements. Hover over a control to see the translated tooltip." loading="lazy" src="../assets/examples/locale-switching.webp" /></p>
 <p>Show how localization can be applied manually to UI elements. Hover over a control to see the translated tooltip.</p>
-<h2 id="locate-the-user"><a href="locate-the-user/">Locate the user</a></h2>
+<h2 id="locate-the-user"><a href="./locate-the-user/">Locate the user</a></h2>
 <p><img alt="Geolocate the user and then track their current location on the map using the GeolocateControl." loading="lazy" src="../assets/examples/locate-the-user.webp" /></p>
 <p>Geolocate the user and then track their current location on the map using the GeolocateControl.</p>
-<h2 id="measure-distances"><a href="measure-distances/">Measure distances</a></h2>
+<h2 id="measure-distances"><a href="./measure-distances/">Measure distances</a></h2>
 <p><img alt="Click points on a map to create lines that measure distanced using turf.length." loading="lazy" src="../assets/examples/measure-distances.webp" /></p>
 <p>Click points on a map to create lines that measure distanced using turf.length.</p>
-<h2 id="navigate-the-map-with-game-like-controls"><a href="navigate-the-map-with-game-like-controls/">Navigate the map with game-like controls</a></h2>
+<h2 id="navigate-the-map-with-game-like-controls"><a href="./navigate-the-map-with-game-like-controls/">Navigate the map with game-like controls</a></h2>
 <p><img alt="Use the keyboard's arrow keys to move around the map with game-like controls." loading="lazy" src="../assets/examples/navigate-the-map-with-game-like-controls.webp" /></p>
 <p>Use the keyboard's arrow keys to move around the map with game-like controls.</p>
-<h2 id="offset-the-vanishing-point-using-padding"><a href="offset-the-vanishing-point-using-padding/">Offset the vanishing point using padding</a></h2>
+<h2 id="offset-the-vanishing-point-using-padding"><a href="./offset-the-vanishing-point-using-padding/">Offset the vanishing point using padding</a></h2>
 <p><img alt="Offset the center or vanishing point of the map to reduce distortion when floating elements are displayed over the map." loading="lazy" src="../assets/examples/offset-the-vanishing-point-using-padding.webp" /></p>
 <p>Offset the center or vanishing point of the map to reduce distortion when floating elements are displayed over the map.</p>
-<h2 id="pmtiles-source-and-protocol"><a href="pmtiles-source-and-protocol/">PMTiles source and protocol</a></h2>
+<h2 id="pmtiles-source-and-protocol"><a href="./pmtiles-source-and-protocol/">PMTiles source and protocol</a></h2>
 <p><img alt="Uses the PMTiles plugin and protocol to present a map." loading="lazy" src="../assets/examples/pmtiles-source-and-protocol.webp" /></p>
 <p>Uses the PMTiles plugin and protocol to present a map.</p>
-<h2 id="render-world-copies"><a href="render-world-copies/">Render world copies</a></h2>
+<h2 id="render-world-copies"><a href="./render-world-copies/">Render world copies</a></h2>
 <p><img alt="Toggle between rendering a single world and multiple copies of the world using setRenderWorldCopies." loading="lazy" src="../assets/examples/render-world-copies.webp" /></p>
 <p>Toggle between rendering a single world and multiple copies of the world using setRenderWorldCopies.</p>
-<h2 id="restrict-map-panning-to-an-area"><a href="restrict-map-panning-to-an-area/">Restrict map panning to an area</a></h2>
+<h2 id="restrict-map-panning-to-an-area"><a href="./restrict-map-panning-to-an-area/">Restrict map panning to an area</a></h2>
 <p><img alt="Prevent a map from being panned to a different place by setting maxBounds." loading="lazy" src="../assets/examples/restrict-map-panning-to-an-area.webp" /></p>
 <p>Prevent a map from being panned to a different place by setting maxBounds.</p>
-<h2 id="set-center-point-above-ground"><a href="set-center-point-above-ground/">Set center point above ground</a></h2>
+<h2 id="set-center-point-above-ground"><a href="./set-center-point-above-ground/">Set center point above ground</a></h2>
 <p><img alt="Set the center point above ground level." loading="lazy" src="../assets/examples/set-center-point-above-ground.webp" /></p>
 <p>Set the center point above ground level.</p>
-<h2 id="set-pitch-and-bearing"><a href="set-pitch-and-bearing/">Set pitch and bearing</a></h2>
+<h2 id="set-pitch-and-bearing"><a href="./set-pitch-and-bearing/">Set pitch and bearing</a></h2>
 <p><img alt="Initialize a map with pitch and bearing camera options." loading="lazy" src="../assets/examples/set-pitch-and-bearing.webp" /></p>
 <p>Initialize a map with pitch and bearing camera options.</p>
-<h2 id="show-polygon-information-on-click"><a href="show-polygon-information-on-click/">Show polygon information on click</a></h2>
+<h2 id="show-polygon-information-on-click"><a href="./show-polygon-information-on-click/">Show polygon information on click</a></h2>
 <p><img alt="When a user clicks a polygon, show a popup containing more information." loading="lazy" src="../assets/examples/show-polygon-information-on-click.webp" /></p>
 <p>When a user clicks a polygon, show a popup containing more information.</p>
-<h2 id="sky-fog-terrain"><a href="sky-fog-terrain/">Sky, Fog, Terrain</a></h2>
+<h2 id="sky-fog-terrain"><a href="./sky-fog-terrain/">Sky, Fog, Terrain</a></h2>
 <p><img alt="Allows changing the sky, fog and horizon color and blends." loading="lazy" src="../assets/examples/sky-fog-terrain.webp" /></p>
 <p>Allows changing the sky, fog and horizon color and blends.</p>
-<h2 id="slowly-fly-to-a-location"><a href="slowly-fly-to-a-location/">Slowly fly to a location</a></h2>
+<h2 id="slowly-fly-to-a-location"><a href="./slowly-fly-to-a-location/">Slowly fly to a location</a></h2>
 <p><img alt="Use flyTo with flyOptions to slowly zoom to a location." loading="lazy" src="../assets/examples/slowly-fly-to-a-location.webp" /></p>
 <p>Use flyTo with flyOptions to slowly zoom to a location.</p>
-<h2 id="style-labels-with-local-fonts"><a href="style-labels-with-local-fonts/">Style labels with local fonts</a></h2>
+<h2 id="style-labels-with-local-fonts"><a href="./style-labels-with-local-fonts/">Style labels with local fonts</a></h2>
 <p><img alt="Apply local fonts to your style’s text labels. This option is suitable if you don’t need every user to see exactly the same font, or if you want to avoid relying on a third-party content delivery network (CDN). For maximum compatibility, the text-font property should include fonts commonly found on multiple platforms." loading="lazy" src="../assets/examples/style-labels-with-local-fonts.webp" /></p>
 <p>Apply local fonts to your style’s text labels. This option is suitable if you don’t need every user to see exactly the same font, or if you want to avoid relying on a third-party content delivery network (CDN). For maximum compatibility, the text-font property should include fonts commonly found on multiple platforms.</p>
-<h2 id="style-labels-with-web-fonts"><a href="style-labels-with-web-fonts/">Style labels with Web fonts</a></h2>
+<h2 id="style-labels-with-web-fonts"><a href="./style-labels-with-web-fonts/">Style labels with Web fonts</a></h2>
 <p><img alt="Apply Web fonts to your style’s text labels. Unlike signed distance field (SDF) glyph sets, Web fonts are available from a variety of providers, or your can make your own using popular tools. This option is suitable for fonts that are only available through a third-party content delivery network (CDN) for technical or legal reasons, as well as fonts that are incompatible with SDF, such as variable fonts. For compatibility with Android and iOS applications, specify equivalent fonts in the style’s font-faces property." loading="lazy" src="../assets/examples/style-labels-with-web-fonts.webp" /></p>
 <p>Apply Web fonts to your style’s text labels. Unlike signed distance field (SDF) glyph sets, Web fonts are available from a variety of providers, or your can make your own using popular tools. This option is suitable for fonts that are only available through a third-party content delivery network (CDN) for technical or legal reasons, as well as fonts that are incompatible with SDF, such as variable fonts. For compatibility with Android and iOS applications, specify equivalent fonts in the style’s font-faces property.</p>
-<h2 id="style-lines-with-a-data-driven-property"><a href="style-lines-with-a-data-driven-property/">Style lines with a data-driven property</a></h2>
+<h2 id="style-lines-with-a-data-driven-property"><a href="./style-lines-with-a-data-driven-property/">Style lines with a data-driven property</a></h2>
 <p><img alt="Create a visualization with a data expression for line-color." loading="lazy" src="../assets/examples/style-lines-with-a-data-driven-property.webp" /></p>
 <p>Create a visualization with a data expression for line-color.</p>
-<h2 id="sync-movement-of-multiple-maps"><a href="sync-movement-of-multiple-maps/">Sync movement of multiple maps</a></h2>
+<h2 id="sync-movement-of-multiple-maps"><a href="./sync-movement-of-multiple-maps/">Sync movement of multiple maps</a></h2>
 <p><img alt="Synchronize MapLibre GL JS maps with the sync-move plugin." loading="lazy" src="../assets/examples/sync-movement-of-multiple-maps.webp" /></p>
 <p>Synchronize MapLibre GL JS maps with the sync-move plugin.</p>
-<h2 id="toggle-deckgl-layer"><a href="toggle-deckgl-layer/">Toggle deck.gl layer</a></h2>
+<h2 id="toggle-deckgl-layer"><a href="./toggle-deckgl-layer/">Toggle deck.gl layer</a></h2>
 <p><img alt="Toggle deck.gl layer using maplibre." loading="lazy" src="../assets/examples/toggle-deckgl-layer.webp" /></p>
 <p>Toggle deck.gl layer using maplibre.</p>
-<h2 id="toggle-interactions"><a href="toggle-interactions/">Toggle interactions</a></h2>
+<h2 id="toggle-interactions"><a href="./toggle-interactions/">Toggle interactions</a></h2>
 <p><img alt="Enable or disable UI handlers on a map." loading="lazy" src="../assets/examples/toggle-interactions.webp" /></p>
 <p>Enable or disable UI handlers on a map.</p>
-<h2 id="update-a-feature-in-realtime"><a href="update-a-feature-in-realtime/">Update a feature in realtime</a></h2>
+<h2 id="update-a-feature-in-realtime"><a href="./update-a-feature-in-realtime/">Update a feature in realtime</a></h2>
 <p><img alt="Change an existing feature on your map in real-time by updating its data." loading="lazy" src="../assets/examples/update-a-feature-in-realtime.webp" /></p>
 <p>Change an existing feature on your map in real-time by updating its data.</p>
-<h2 id="use-a-fallback-image"><a href="use-a-fallback-image/">Use a fallback image</a></h2>
+<h2 id="use-a-fallback-image"><a href="./use-a-fallback-image/">Use a fallback image</a></h2>
 <p><img alt="Use a coalesce expression to display another image when a requested image is not available." loading="lazy" src="../assets/examples/use-a-fallback-image.webp" /></p>
 <p>Use a coalesce expression to display another image when a requested image is not available.</p>
-<h2 id="use-addprotocol-to-transform-feature-properties"><a href="use-addprotocol-to-transform-feature-properties/">Use addProtocol to Transform Feature Properties</a></h2>
+<h2 id="use-addprotocol-to-transform-feature-properties"><a href="./use-addprotocol-to-transform-feature-properties/">Use addProtocol to Transform Feature Properties</a></h2>
 <p><img alt="Reverse country names with addProtocol in plain JavaScript." loading="lazy" src="../assets/examples/use-addprotocol-to-transform-feature-properties.webp" /></p>
 <p>Reverse country names with addProtocol in plain JavaScript.</p>
-<h2 id="use-locally-generated-ideographs"><a href="use-locally-generated-ideographs/">Use locally generated ideographs</a></h2>
+<h2 id="use-locally-generated-ideographs"><a href="./use-locally-generated-ideographs/">Use locally generated ideographs</a></h2>
 <p><img alt="Set localIdeographFontFamily to override the font used for displaying CJK (Chinese, Japanese and Korean) characters, ignoring the map style. This setting must be a CSS font rule specifying fallbacks of on-device fonts. Set localIdeographFontFamily to false to use server-provided fonts, which is much slower." loading="lazy" src="../assets/examples/use-locally-generated-ideographs.webp" /></p>
 <p>Set localIdeographFontFamily to override the font used for displaying CJK (Chinese, Japanese and Korean) characters, ignoring the map style. This setting must be a CSS font rule specifying fallbacks of on-device fonts. Set localIdeographFontFamily to false to use server-provided fonts, which is much slower.</p>
-<h2 id="variable-label-placement-with-offset"><a href="variable-label-placement-with-offset/">Variable label placement with offset</a></h2>
+<h2 id="variable-label-placement-with-offset"><a href="./variable-label-placement-with-offset/">Variable label placement with offset</a></h2>
 <p><img alt="Use text-variable-anchor-offset to allow high priority labels to shift position to stay on the map." loading="lazy" src="../assets/examples/variable-label-placement-with-offset.webp" /></p>
 <p>Use text-variable-anchor-offset to allow high priority labels to shift position to stay on the map.</p>
-<h2 id="variable-label-placement"><a href="variable-label-placement/">Variable label placement</a></h2>
+<h2 id="variable-label-placement"><a href="./variable-label-placement/">Variable label placement</a></h2>
 <p><img alt="Use text-variable-anchor to allow high priority labels to shift position to stay on the map." loading="lazy" src="../assets/examples/variable-label-placement.webp" /></p>
 <p>Use text-variable-anchor to allow high priority labels to shift position to stay on the map.</p>
-<h2 id="view-a-fullscreen-map"><a href="view-a-fullscreen-map/">View a fullscreen map</a></h2>
+<h2 id="view-a-fullscreen-map"><a href="./view-a-fullscreen-map/">View a fullscreen map</a></h2>
 <p><img alt="Toggle between current view and fullscreen mode. Does not work on iPhones because a pseudo-fullscreen is used, and the code is embedded in an iframe, which prevents the map from scaling." loading="lazy" src="../assets/examples/view-a-fullscreen-map.webp" /></p>
 <p>Toggle between current view and fullscreen mode. Does not work on iPhones because a pseudo-fullscreen is used, and the code is embedded in an iframe, which prevents the map from scaling.</p>
-<h2 id="view-local-geojson-experimental"><a href="view-local-geojson-experimental/">View local GeoJSON (experimental)</a></h2>
+<h2 id="view-local-geojson-experimental"><a href="./view-local-geojson-experimental/">View local GeoJSON (experimental)</a></h2>
 <p><img alt="View local GeoJSON with experimental File System Access API." loading="lazy" src="../assets/examples/view-local-geojson-experimental.webp" /></p>
 <p>View local GeoJSON with experimental File System Access API.</p>
-<h2 id="view-local-geojson"><a href="view-local-geojson/">View local GeoJSON</a></h2>
+<h2 id="view-local-geojson"><a href="./view-local-geojson/">View local GeoJSON</a></h2>
 <p><img alt="View local GeoJSON without server upload." loading="lazy" src="../assets/examples/view-local-geojson.webp" /></p>
 <p>View local GeoJSON without server upload.</p>
-<h2 id="visualize-population-density"><a href="visualize-population-density/">Visualize population density</a></h2>
+<h2 id="visualize-population-density"><a href="./visualize-population-density/">Visualize population density</a></h2>
 <p><img alt="Use a variable binding expression to calculate and display population density." loading="lazy" src="../assets/examples/visualize-population-density.webp" /></p>
 <p>Use a variable binding expression to calculate and display population density.</p>
-<h2 id="zoom-and-planet-size-relation-on-globe"><a href="zoom-and-planet-size-relation-on-globe/">Zoom and planet size relation on globe</a></h2>
+<h2 id="zoom-and-planet-size-relation-on-globe"><a href="./zoom-and-planet-size-relation-on-globe/">Zoom and planet size relation on globe</a></h2>
 <p><img alt="Explanation of zoom and planet size relation under globe projection and how to account for it when changing the map center and zoom by some delta." loading="lazy" src="../assets/examples/zoom-and-planet-size-relation-on-globe.webp" /></p>
 <p>Explanation of zoom and planet size relation under globe projection and how to account for it when changing the map center and zoom by some delta.</p>
+
+
 
 
 
@@ -12998,7 +13082,7 @@
         
           <button type="button" class="md-top md-icon" data-md-component="top" hidden>
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
   Back to top
 </button>
         
@@ -13012,8 +13096,8 @@
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -13029,7 +13113,7 @@
       
     
     <a href="https://bsky.app/profile/maplibre.org" target="_blank" rel="noopener" title="bsky.app" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M407.8 294.7c-3.3-.4-6.7-.8-10-1.3 3.4.4 6.7.9 10 1.3M288 227.1c-26.1-50.7-97.1-145.2-163.1-191.8C61.6-9.4 37.5-1.7 21.6 5.5 3.3 13.8 0 41.9 0 58.4S9.1 194 15 213.9c19.5 65.7 89.1 87.9 153.2 80.7 3.3-.5 6.6-.9 10-1.4-3.3.5-6.6 1-10 1.4-93.9 14-177.3 48.2-67.9 169.9C220.6 589.1 265.1 437.8 288 361.1c22.9 76.7 49.2 222.5 185.6 103.4 102.4-103.4 28.1-156-65.8-169.9-3.3-.4-6.7-.8-10-1.3 3.4.4 6.7.9 10 1.3 64.1 7.1 133.6-15.1 153.2-80.7C566.9 194 576 75 576 58.4s-3.3-44.7-21.6-52.9c-15.8-7.1-40-14.9-103.2 29.8C385.1 81.9 314.1 176.4 288 227.1"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M407.8 294.7c-3.3-.4-6.7-.8-10-1.3 3.4.4 6.7.9 10 1.3M288 227.1c-26.1-50.7-97.1-145.2-163.1-191.8C61.6-9.4 37.5-1.7 21.6 5.5 3.3 13.8 0 41.9 0 58.4S9.1 194 15 213.9c19.5 65.7 89.1 87.9 153.2 80.7 3.3-.5 6.6-.9 10-1.4-3.3.5-6.6 1-10 1.4-93.9 14-177.3 48.2-67.9 169.9C220.6 589.1 265.1 437.8 288 361.1c22.9 76.7 49.2 222.5 185.6 103.4 102.4-103.4 28.1-156-65.8-169.9-3.3-.4-6.7-.8-10-1.3 3.4.4 6.7.9 10 1.3 64.1 7.1 133.6-15.1 153.2-80.7C566.9 194 576 75 576 58.4s-3.3-44.7-21.6-52.9c-15.8-7.1-40-14.9-103.2 29.8C385.1 81.9 314.1 176.4 288 227.1"/></svg>
     </a>
   
     
@@ -13042,7 +13126,7 @@
       
     
     <a href="https://mastodon.social/@maplibre" target="_blank" rel="noopener me" title="mastodon.social" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M433 179.1c0-97.2-63.7-125.7-63.7-125.7-62.5-28.7-228.6-28.4-290.5 0 0 0-63.7 28.5-63.7 125.7 0 115.7-6.6 259.4 105.6 289.1 40.5 10.7 75.3 13 103.3 11.4 50.8-2.8 79.3-18.1 79.3-18.1l-1.7-36.9s-36.3 11.4-77.1 10.1c-40.4-1.4-83-4.4-89.6-54-.6-4.6-.9-9.3-.9-13.9 85.6 20.9 158.7 9.1 178.7 6.7 56.1-6.7 105-41.3 111.2-72.9 9.8-49.8 9-121.5 9-121.5zm-75.1 125.2h-46.6V190.1c0-49.7-64-51.6-64 6.9v62.5H201V197c0-58.5-64-56.6-64-6.9v114.2H90.3c0-122.1-5.2-147.9 18.4-175 25.9-28.9 79.8-30.8 103.8 6.1l11.6 19.5 11.6-19.5c24.1-37.1 78.1-34.8 103.8-6.1 23.7 27.3 18.4 53 18.4 175"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M433 179.1c0-97.2-63.7-125.7-63.7-125.7-62.5-28.7-228.6-28.4-290.5 0 0 0-63.7 28.5-63.7 125.7 0 115.7-6.6 259.4 105.6 289.1 40.5 10.7 75.3 13 103.3 11.4 50.8-2.8 79.3-18.1 79.3-18.1l-1.7-36.9s-36.3 11.4-77.1 10.1c-40.4-1.4-83-4.4-89.6-54-.6-4.6-.9-9.3-.9-13.9 85.6 20.9 158.7 9.1 178.7 6.7 56.1-6.7 105-41.3 111.2-72.9 9.8-49.8 9-121.5 9-121.5zm-75.1 125.2h-46.6V190.1c0-49.7-64-51.6-64 6.9v62.5H201V197c0-58.5-64-56.6-64-6.9v114.2H90.3c0-122.1-5.2-147.9 18.4-175 25.9-28.9 79.8-30.8 103.8 6.1l11.6 19.5 11.6-19.5c24.1-37.1 78.1-34.8 103.8-6.1 23.7 27.3 18.4 53 18.4 175"/></svg>
     </a>
   
     
@@ -13053,7 +13137,7 @@
       
     
     <a href="https://x.com/maplibre" target="_blank" rel="noopener" title="x.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M357.2 48h70.6L273.6 224.2 455 464H313L201.7 318.6 74.5 464H3.8l164.9-188.5L-5.2 48h145.6l100.5 132.9zm-24.8 373.8h39.1L119.1 88h-42z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M357.2 48h70.6L273.6 224.2 455 464H313L201.7 318.6 74.5 464H3.8l164.9-188.5L-5.2 48h145.6l100.5 132.9zm-24.8 373.8h39.1L119.1 88h-42z"/></svg>
     </a>
   
     
@@ -13064,7 +13148,7 @@
       
     
     <a href="https://www.linkedin.com/company/maplibre" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zM102.2 96a38.5 38.5 0 1 1 0 77 38.5 38.5 0 1 1 0-77m282.1 320h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zM102.2 96a38.5 38.5 0 1 1 0 77 38.5 38.5 0 1 1 0-77m282.1 320h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
     </a>
   
     
@@ -13075,7 +13159,7 @@
       
     
     <a href="https://osmus.slack.com/archives/C01G3D28DAB" target="_blank" rel="noopener" title="osmus.slack.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M94.1 315.1c0 25.9-21.2 47.1-47.1 47.1S0 341 0 315.1 21.2 268 47.1 268h47.1v47.1zm23.7 0c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1v117.8c0 25.9-21.2 47.1-47.1 47.1s-47.1-21.2-47.1-47.1zm47.1-189c-25.9 0-47.1-21.2-47.1-47.1s21.2-47 47.1-47S212 53.2 212 79.1v47.1h-47.1zm0 23.7c25.9 0 47.1 21.2 47.1 47.1S190.8 244 164.9 244H47.1C21.2 244 0 222.8 0 196.9s21.2-47.1 47.1-47.1zm189 47.1c0-25.9 21.2-47.1 47.1-47.1s47 21.2 47 47.1-21.2 47.1-47.1 47.1h-47.1v-47.1zm-23.7 0c0 25.9-21.2 47.1-47.1 47.1S236 222.8 236 196.9V79.1c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1zm-47.1 189c25.9 0 47.1 21.2 47.1 47.1s-21.2 47-47.1 47-47.1-21.2-47.1-47.1v-47.1h47.1zm0-23.7c-25.9 0-47.1-21.2-47.1-47.1s21.2-47.1 47.1-47.1h117.8c25.9 0 47.1 21.2 47.1 47.1s-21.2 47.1-47.1 47.1z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M94.1 315.1c0 25.9-21.2 47.1-47.1 47.1S0 341 0 315.1 21.2 268 47.1 268h47.1v47.1zm23.7 0c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1v117.8c0 25.9-21.2 47.1-47.1 47.1s-47.1-21.2-47.1-47.1zm47.1-189c-25.9 0-47.1-21.2-47.1-47.1s21.2-47 47.1-47S212 53.2 212 79.1v47.1h-47.1zm0 23.7c25.9 0 47.1 21.2 47.1 47.1S190.8 244 164.9 244H47.1C21.2 244 0 222.8 0 196.9s21.2-47.1 47.1-47.1zm189 47.1c0-25.9 21.2-47.1 47.1-47.1s47 21.2 47 47.1-21.2 47.1-47.1 47.1h-47.1v-47.1zm-23.7 0c0 25.9-21.2 47.1-47.1 47.1S236 222.8 236 196.9V79.1c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1zm-47.1 189c25.9 0 47.1 21.2 47.1 47.1s-21.2 47-47.1 47-47.1-21.2-47.1-47.1v-47.1h47.1zm0-23.7c-25.9 0-47.1-21.2-47.1-47.1s21.2-47.1 47.1-47.1h117.8c25.9 0 47.1 21.2 47.1 47.1s-21.2 47.1-47.1 47.1z"/></svg>
     </a>
   
     
@@ -13086,7 +13170,7 @@
       
     
     <a href="https://github.com/maplibre" target="_blank" rel="noopener" title="github.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
     </a>
   
 </div>
@@ -13104,10 +13188,11 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"search":"../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.36a64b72.min.js"></script>
       
     
   </body>
