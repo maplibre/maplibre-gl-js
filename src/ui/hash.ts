@@ -83,8 +83,7 @@ export class Hash {
             return (params.get(this._hashName) || '').split('/');
         }
         // For unnamed hashes, get the first key
-        const keys = Array.from(params.keys());
-        const hash = keys.length > 0 ? keys[0] : '';
+        const hash = [...params.keys()][0] ?? '';
         return hash.split('/');
     };
 
