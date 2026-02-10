@@ -123,7 +123,7 @@ export class Hash {
             }
         }
 
-        const newHash = decodeURIComponent(params.toString());
+        const newHash = decodeURIComponent(params.toString()).replace(/=&|=$/g, '');
         const replaceString = newHash ? `#${newHash}` : ''
         let location = window.location.href.replace(/(#.+)?$/, replaceString);
         location = location.replace('&&', '&');
