@@ -273,7 +273,7 @@ describe('hash', () => {
 
         map.setCenter([2.0, 1.0]);
 
-        expect(window.location.hash).toBe('#baz=&map=7/1/2/135/60&foo=bar');
+        expect(window.location.hash).toBe('#baz&map=7/1/2/135/60&foo=bar');
     });
 
     describe('_removeHash without a name', () => {
@@ -335,7 +335,7 @@ describe('hash', () => {
 
             hash._removeHash();
 
-            expect(window.location.hash).toBe('#baz=&foo=bar');
+            expect(window.location.hash).toBe('#baz&foo=bar');
         });
     });
 

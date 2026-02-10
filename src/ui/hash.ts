@@ -67,7 +67,7 @@ export class Hash {
         if (this._hashName) {
             const params = this._getHashParams();
             params.set(this._hashName, hash);
-            return `#${decodeURIComponent(params.toString())}`;
+            return `#${decodeURIComponent(params.toString()).replace(/=&|=$/g, '')}`;
         }
 
         return `#${hash}`;
