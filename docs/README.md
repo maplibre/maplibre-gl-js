@@ -25,8 +25,6 @@ npm run build-css
 Then generate the docs files:
 
 ```bash
-npm run build-prod
-npm run build-css
 npm run generate-docs
 ```
 
