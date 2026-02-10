@@ -1,4 +1,4 @@
-import {type PerformanceEventType, type PerformanceObserver} from './observer';
+import {type PerformanceEventType, type IPerformanceObserver} from './observer';
 
 /**
  * Represents a collection of performance metrics for the map.
@@ -12,8 +12,9 @@ export type LivecyclePerformanceMetrics = {
 
 /**
  * Monitors and reports map performance metrics using the Observer pattern
+ * @group Performance
  */
-export class LivecyclePerformanceObserver implements PerformanceObserver {
+export class LivecyclePerformanceObserver implements IPerformanceObserver {
     private static _nextId = 0;
     private _id: number;
 
@@ -35,10 +36,8 @@ export class LivecyclePerformanceObserver implements PerformanceObserver {
         this._fullLoadTimeMeasure = `fullLoad-${this._id}`;
     }
 
-    /**
-     * Handles performance events from the subject
-     * @param event - The performance event data
-     */
+
+    /** {@inheritdoc IPerformanceObserver.observe} */
     observe(type: PerformanceEventType, _timestamp: number): void {
         switch (type) {
             case 'create':
@@ -48,34 +47,19 @@ export class LivecyclePerformanceObserver implements PerformanceObserver {
                 performance.mark(this._loadMarker);
                 break;
             case 'fullLoad':
-                this._handleFullLoad();
+                performance.mark(this._fullLoadMarker);
+        
+                // Ensure measures are taken before querying
+                performance.measure(this._loadTimeMeasure, this._createMarker, this._loadMarker);
+                performance.measure(this._fullLoadTimeMeasure, this._createMarker, this._fullLoadMarker);
+        
+                this._loadTimeMs = performance.getEntriesByName(this._loadTimeMeasure)[0]?.duration || 0;
+                this._fullLoadTimeMs = performance.getEntriesByName(this._fullLoadTimeMeasure)[0]?.duration || 0;
                 break;
         }
     }
 
-    /**
-     * Handles the 'fullLoad' event
-     */
-    private _handleFullLoad(): void {
-        performance.mark(this._fullLoadMarker);
-
-        // Ensure measures are taken before querying
-        performance.measure(this._loadTimeMeasure, this._createMarker, this._loadMarker);
-        performance.measure(this._fullLoadTimeMeasure, this._createMarker, this._fullLoadMarker);
-
-        this._loadTimeMs = performance.getEntriesByName(this._loadTimeMeasure)[0]?.duration || 0;
-        this._fullLoadTimeMs = performance.getEntriesByName(this._fullLoadTimeMeasure)[0]?.duration || 0;
-    }
-
-    /**
-     * Clear browser performance entries associated with this monitor
-     */
-    private clearInitialisationMetrics(): void {
-    }
-
-    /**
-     * Clears the initialisation metrics
-     */
+    /** {@inheritdoc IPerformanceObserver.disconnect} */
     disconnect(): void {
         performance.clearMarks(this._createMarker);
         performance.clearMarks(this._loadMarker);

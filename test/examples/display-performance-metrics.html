@@ -28,6 +28,7 @@
                 font-family: sans-serif;
                 font-size: 14px;
                 z-index: 100;
+                max-width: 400px;
             }
             #metrics h3 {
                 margin-top: 0;
@@ -68,58 +69,68 @@
         <div id="metrics">Loading performance metrics...</div>
 
         <script>
+            const livecycleObserver = new maplibregl.LivecyclePerformanceObserver();
+            const renderingObserver = new maplibregl.RenderingPerformanceObserver();
+
+            // Create map with performance observers passed as an option.
+            // The observers will be automatically notified of relevant performance events.
             const map = new maplibregl.Map({
                 container: "map",
-                style: "https://demotiles.maplibre.org/style.json", // A basic style
+                style: "https://demotiles.maplibre.org/style.json",
                 center: [0, 0],
                 zoom: 1,
-                collectPerformanceMetrics: true, // Enable performance metric collection
+                performanceObservers: [livecycleObserver, renderingObserver],
             });
 
             const metricsElement = document.getElementById("metrics");
 
             function onResetButtonClick() {
-                map.resetPerformanceMetrics();
+                renderingObserver.reset();
                 updateMetricsDisplay();
             }
-            
+
             function updateMetricsDisplay() {
-                const metrics = map.performanceMetrics;
+                const livecycleMetrics = livecycleObserver.takeRecords();
+                const renderingMetrics = renderingObserver.takeRecords();
 
                 metricsElement.innerHTML = `
                     <h3>Map Performance Metrics</h3>
                     <table>
                         <tr>
-                            <th>Metric</th>
-                            <th>Value</th>
+                            <th colspan="2">Lifecycle Metrics</th>
                         </tr>
                         <tr>
                             <td>Load Time</td>
-                            <td>${metrics?.loadTimeMs?.toFixed(2)} ms</td>
+                            <td>${livecycleMetrics.loadTimeMs !== undefined ? livecycleMetrics.loadTimeMs.toFixed(2) + " ms" : "Not yet available"}</td>
                         </tr>
                         <tr>
                             <td>Full Load Time</td>
-                            <td>${metrics?.fullLoadTimeMs?.toFixed(2)} ms</td>
+                            <td>${livecycleMetrics.fullLoadTimeMs !== undefined ? livecycleMetrics.fullLoadTimeMs.toFixed(2) + " ms" : "Not yet available"}</td>
+                        </tr>
+                        <tr>
+                            <th colspan="2">Rendering Metrics</th>
                         </tr>
                         <tr>
                             <td>Average FPS</td>
-                            <td>${metrics?.fps?.toFixed(2)}</td>
+                            <td>${!isNaN(renderingMetrics.averageFramesPerSecond) && isFinite(renderingMetrics.averageFramesPerSecond) ? renderingMetrics.averageFramesPerSecond.toFixed(2) : "N/A"}</td>
                         </tr>
                         <tr>
-                            <td>% Frames below 60 FPS</td>
-                            <td>${((metrics?.droppedFramesCount / metrics?.totalFramesCount) * 100).toFixed(2)}%</td>
+                            <td>Last Frame Duration</td>
+                            <td>${renderingMetrics.lastFrameDurationMs !== undefined ? renderingMetrics.lastFrameDurationMs.toFixed(2) + " ms" : "N/A"}</td>
+                        </tr>
+                        <tr>
+                            <td>Dropped Frames</td>
+                            <td>${renderingMetrics.droppedFramesCount}</td>
                         </tr>
                         <tr>
                             <td>Total Frames</td>
-                            <td>${metrics.totalFramesCount}</td>
+                            <td>${renderingMetrics.totalFramesCount}</td>
                         </tr>
                     </table>
-                    <button id="reset-button" onclick="onResetButtonClick">Reset Runtime Metrics</button>
+                    <button id="reset-button" onclick="onResetButtonClick">Reset Rendering Metrics</button>
                 `;
             }
-
-            // Initial update after the map is idle
-            map.on("idle", updateMetricsDisplay);
+            map.on("load", updateMetricsDisplay);
 
             // Continuous updates using setInterval
             const intervalId = setInterval(updateMetricsDisplay, 1000); // Update every 1 second

@@ -23,7 +23,7 @@ import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSource
 import {TaskQueue} from '../util/task_queue';
 import {throttle} from '../util/throttle';
 import {webpSupported} from '../util/webp_supported';
-import {PerformanceSubject, type PerformanceObserver} from '../util/performance/observer';
+import {PerformanceSubject, type IPerformanceObserver} from '../util/performance/observer';
 import {type Source} from '../source/source';
 import {type StyleLayer} from '../style/style_layer';
 import {Terrain} from '../render/terrain';
@@ -362,7 +362,7 @@ export type MapOptions = {
      * These observers will be notified of events like map creation, load, fullLoad, and frame rendering.
      * @defaultValue undefined
      */
-    performanceObservers?: PerformanceObserver[];
+    performanceObservers?: IPerformanceObserver[];
     /**
      * If false, style validation will be skipped.
      * Useful in production environments due to enabling tree-shaking of the validation code in some environments and minor performance improvements.

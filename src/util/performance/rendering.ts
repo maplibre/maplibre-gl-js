@@ -1,4 +1,4 @@
-import {type PerformanceEventType, type PerformanceObserver} from './observer';
+import {type PerformanceEventType, type IPerformanceObserver} from './observer';
 
 const minFramerateTarget = 60;
 const frameTimeTarget = 1000 / minFramerateTarget;
@@ -19,18 +19,17 @@ export type RenderingPerformanceMetrics = {
 
 /**
  * Monitors and reports map performance metrics using the Observer pattern
+ * @group Performance
  */
-export class RenderingPerformanceObserver implements PerformanceObserver {
+export class RenderingPerformanceObserver implements IPerformanceObserver {
     private _lastFrameTime?: number;
     private _lastFrameDuration: number;
     private _totalFrameTime = 0;
     private _totalFrameCount = 0;
     private _totalDroppedFrameCount = 0;
 
-    /**
-     * Handles performance events from the subject
-     * @param event - The performance event data
-     */
+
+    /** {@inheritdoc IPerformanceObserver.observe} */
     observe(type: PerformanceEventType, timestamp: number): void {
         if (type ===  'startOfFrame') {
             if (this._lastFrameTime !== undefined) {
@@ -48,14 +47,19 @@ export class RenderingPerformanceObserver implements PerformanceObserver {
     }
 
     /**
-     * Resets all recorded performance metrics and markers for this monitor instance.
+     * Resets all recorded performance metrics
      */
-    disconnect(): void {
+    reset(): void {
         this._lastFrameTime = undefined;
         this._lastFrameDuration = undefined;
         this._totalFrameTime = 0;
         this._totalFrameCount = 0;
         this._totalDroppedFrameCount = 0;
+    }
+
+    /** {@inheritdoc IPerformanceObserver.disconnect} */
+    disconnect(): void {
+        this.reset();
     }
 
     /**

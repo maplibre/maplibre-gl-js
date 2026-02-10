@@ -15,7 +15,7 @@ import {LngLat, type LngLatLike} from './geo/lng_lat';
 import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
-import {type PerformanceObserver} from './util/performance/observer';
+import {type IPerformanceObserver} from './util/performance/observer';
 import {LivecyclePerformanceObserver} from './util/performance/livecycle';
 import {RenderingPerformanceObserver} from './util/performance/rendering';
 import {Evented, type ErrorEvent, Event, type Listener} from './util/evented';
@@ -362,7 +362,7 @@ export {
     type GeoJSONFeature,
     type CoveringTilesOptions,
     type DashEntry,
-    type PerformanceObserver,
+    type IPerformanceObserver,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,

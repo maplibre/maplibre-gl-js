@@ -5,8 +5,9 @@ export type PerformanceEventType = 'create' | 'load' | 'fullLoad' | 'startOfFram
 
 /**
  * Observer interface for performance monitoring
+ * @group Performance
  */
-export interface PerformanceObserver {
+export interface IPerformanceObserver {
     /**
      * Called when a performance event occurs
      * @param timestamp - when the event occurred
@@ -21,15 +22,16 @@ export interface PerformanceObserver {
 
 /**
  * Subject that notifies observers of performance events
+ * @internal
  */
 export class PerformanceSubject {
-    private readonly _observers: ReadonlyArray<PerformanceObserver>;
+    private readonly _observers: ReadonlyArray<IPerformanceObserver>;
 
     /**
      * Creates a new PerformanceSubject with a static list of observers
      * @param observers - Array of observers to be notified of performance events
      */
-    constructor(observers: PerformanceObserver[]) {
+    constructor(observers: IPerformanceObserver[]) {
         this._observers = Object.freeze(observers);
     }
 
