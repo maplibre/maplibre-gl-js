@@ -1,149 +1,152 @@
 <!doctype html>
 <html>
-    <head>
-        <meta charset="utf-8" />
-        <title>Display Map Performance Metrics</title>
-        <meta property="og:description" content="Display the performance metrics of a MapLibre GL JS map, including load times, FPS, and dropped frames." />
-        <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-        <script src="../../dist/maplibre-gl.js"></script>
-        <link href="../../dist/maplibre-gl.css" rel="stylesheet" />
-        <style>
-            body {
-                margin: 0;
-                padding: 0;
-            }
-            #map {
-                position: absolute;
-                top: 0;
-                bottom: 0;
-                width: 100%;
-            }
-            #metrics {
-                position: absolute;
-                top: 10px;
-                left: 10px;
-                background: white;
-                padding: 10px;
-                border-radius: 5px;
-                font-family: sans-serif;
-                font-size: 14px;
-                z-index: 100;
-                max-width: 400px;
-            }
-            #metrics h3 {
-                margin-top: 0;
-                margin-bottom: 10px;
-            }
-            #metrics table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-bottom: 10px;
-            }
-            #metrics th,
-            #metrics td {
-                text-align: left;
-                padding: 6px 8px;
-                border-bottom: 1px solid #ddd;
-            }
-            #metrics th {
-                background-color: #f5f5f5;
-                font-weight: bold;
-            }
-            #reset-button {
-                padding: 8px 16px;
-                background-color: #4caf50;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 14px;
-                width: 100%;
-            }
-            #reset-button:hover {
-                background-color: #45a049;
-            }
-        </style>
-    </head>
-    <body>
-        <div id="map"></div>
-        <div id="metrics">Loading performance metrics...</div>
+<head>
+<meta charset="utf-8" />
+<title>Display Map Performance Metrics</title>
+<meta property="og:description" content="Display the performance metrics of a MapLibre GL JS map, including load times, FPS, and dropped frames." />
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+<script src='../../dist/maplibre-gl-dev.js'></script>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+    }
+    #metrics {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: white;
+        padding: 10px;
+        border-radius: .4rem;
+        font-family: sans-serif;
+        font-size: 14px;
+        z-index: 100;
+        max-width: 400px;
+    }
+    #metrics h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+    #metrics table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+    }
+    #metrics th,
+    #metrics td {
+        text-align: left;
+        padding: 6px 8px;
+    }
+    #metrics th {
+        font-weight: bold;
+    }
+    #reset-button {
+        padding: 8px 16px;
+        background-color: #4287ff;
+        color: white;
+        border: none;
+        border-radius: .4rem;
+        cursor: pointer;
+        font-size: 14px;
+        width: 100%;
+    }
+    #reset-button:hover {
+        background-color: #4051b5;
+    }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="metrics">
+    <h3>Map Performance Metrics</h3>
+    <table>
+        <tr>
+            <th colspan="2">Lifecycle Metrics</th>
+        </tr>
+        <tr>
+            <td><abbr title="Time taken to load the initial map view, measured from the map's creation until its initial style and sources are loaded">Load Time</abbr></td>
+            <td id="loadTimeMs">N/A</td>
+        </tr>
+        <tr>
+            <td><abbr title="Time taken for the map to fully load all its resources, measured from the map's creation until all tiles, sprites, and other assets are loaded">Full Load Time</abbr></td>
+            <td id="fullLoadTimeMs">N/A</td>
+        </tr>
+        <tr>
+            <th colspan="2">Rendering Metrics</th>
+        </tr>
+        <tr>
+            <td><abbr title="Average frames per second">Average FPS</abbr></td>
+            <td id="averageFrameRate">N/A</td>
+        </tr>
+        <tr>
+            <td><abbr title="Time taken for the last frame to render, measured from the last frame's frame-rendering start until the next frames rendering starts.">Last Frame Duration</abbr></td>
+            <td id="lastFrameDurationMs">N/A</td>
+        </tr>
+        <tr>
+            <td><abbr title="number of 'ideal frames' that could have fit into the time lost by slow frames">Dropped Frames</abbr></td>
+            <td id="virtualDroppedFramesCount">N/A</td>
+        </tr>
+        <tr>
+            <td><abbr title="Total number of frames rendered">Total Frames</abbr></td>
+            <td id="totalFramesCount">N/A</td>
+        </tr>
+    </table>
+    <button id="reset-button" onclick="onResetButtonClick">Reset Rendering Metrics</button>
+</div>
 
-        <script>
-            const livecycleObserver = new maplibregl.LivecyclePerformanceObserver();
-            const renderingObserver = new maplibregl.RenderingPerformanceObserver();
+<script>
+    const livecycleObserver = new maplibregl.LivecyclePerformanceObserver();
+    const renderingObserver = new maplibregl.RenderingPerformanceObserver();
 
-            // Create map with performance observers passed as an option.
-            // The observers will be automatically notified of relevant performance events.
-            const map = new maplibregl.Map({
-                container: "map",
-                style: "https://demotiles.maplibre.org/style.json",
-                center: [0, 0],
-                zoom: 1,
-                performanceObservers: [livecycleObserver, renderingObserver],
-            });
+    // Create map with performance observers passed as an option.
+    // The observers will be automatically notified of relevant performance events.
+    const map = new maplibregl.Map({
+        container: "map",
+        style: "https://demotiles.maplibre.org/style.json",
+        center: [0, 0],
+        zoom: 1,
+        performanceObservers: [livecycleObserver, renderingObserver],
+    });
 
-            const metricsElement = document.getElementById("metrics");
+    function onResetButtonClick() {
+        renderingObserver.reset();
+        updateMetricsDisplay();
+    }
 
-            function onResetButtonClick() {
-                renderingObserver.reset();
-                updateMetricsDisplay();
-            }
+    function updateMetricsDisplay() {
+        const livecycleMetrics = livecycleObserver.takeRecords();
+        
+        if (livecycleMetrics.loadTimeMs !== undefined) document.getElementById("loadTimeMs").innerHTML =  livecycleMetrics.loadTimeMs.toFixed(2) + " ms";
+        if (livecycleMetrics.fullLoadTimeMs !== undefined) document.getElementById("fullLoadTimeMs").innerHTML =  livecycleMetrics.fullLoadTimeMs.toFixed(2) + " ms";
+        
+        const renderingMetrics = renderingObserver.takeRecords();
+        
+        document.getElementById("averageFrameRate").innerHTML = renderingMetrics.averageFramesPerSecond.toFixed(2);
+        if (renderingMetrics.lastFrameDurationMs !== undefined) document.getElementById("lastFrameDurationMs").innerHTML = renderingMetrics.lastFrameDurationMs.toFixed(2) + " ms";
+        document.getElementById("virtualDroppedFramesCount").innerHTML = renderingMetrics.virtualDroppedFramesCount;
+        document.getElementById("totalFramesCount").innerHTML = renderingMetrics.totalFramesCount;
+    }
+    map.on("load", updateMetricsDisplay);
 
-            function updateMetricsDisplay() {
-                const livecycleMetrics = livecycleObserver.takeRecords();
-                const renderingMetrics = renderingObserver.takeRecords();
+    // Continuous updates using setInterval
+    const intervalId = setInterval(updateMetricsDisplay, 100); // Update every 1 second
 
-                metricsElement.innerHTML = `
-                    <h3>Map Performance Metrics</h3>
-                    <table>
-                        <tr>
-                            <th colspan="2">Lifecycle Metrics</th>
-                        </tr>
-                        <tr>
-                            <td>Load Time</td>
-                            <td>${livecycleMetrics.loadTimeMs !== undefined ? livecycleMetrics.loadTimeMs.toFixed(2) + " ms" : "Not yet available"}</td>
-                        </tr>
-                        <tr>
-                            <td>Full Load Time</td>
-                            <td>${livecycleMetrics.fullLoadTimeMs !== undefined ? livecycleMetrics.fullLoadTimeMs.toFixed(2) + " ms" : "Not yet available"}</td>
-                        </tr>
-                        <tr>
-                            <th colspan="2">Rendering Metrics</th>
-                        </tr>
-                        <tr>
-                            <td>Average FPS</td>
-                            <td>${!isNaN(renderingMetrics.averageFramesPerSecond) && isFinite(renderingMetrics.averageFramesPerSecond) ? renderingMetrics.averageFramesPerSecond.toFixed(2) : "N/A"}</td>
-                        </tr>
-                        <tr>
-                            <td>Last Frame Duration</td>
-                            <td>${renderingMetrics.lastFrameDurationMs !== undefined ? renderingMetrics.lastFrameDurationMs.toFixed(2) + " ms" : "N/A"}</td>
-                        </tr>
-                        <tr>
-                            <td>Dropped Frames</td>
-                            <td>${renderingMetrics.droppedFramesCount}</td>
-                        </tr>
-                        <tr>
-                            <td>Total Frames</td>
-                            <td>${renderingMetrics.totalFramesCount}</td>
-                        </tr>
-                    </table>
-                    <button id="reset-button" onclick="onResetButtonClick">Reset Rendering Metrics</button>
-                `;
-            }
-            map.on("load", updateMetricsDisplay);
+    map.on("remove", () => {
+        clearInterval(intervalId); // Clear the interval when the map is removed
+    });
 
-            // Continuous updates using setInterval
-            const intervalId = setInterval(updateMetricsDisplay, 1000); // Update every 1 second
-
-            map.on("remove", () => {
-                clearInterval(intervalId); // Clear the interval when the map is removed
-            });
-
-            map.on("error", (e) => {
-                console.error("Map error:", e.error);
-                metricsElement.innerHTML = `Error loading map: ${e.error.message}`;
-                clearInterval(intervalId); // Also clear on error
-            });
-        </script>
-    </body>
+    map.on("error", (e) => {
+        console.error("Map error:", e.error);
+        metricsElement.innerHTML = `Error loading map: ${e.error.message}`;
+        clearInterval(intervalId); // Also clear on error
+    });
+</script>
+</body>
 </html>
