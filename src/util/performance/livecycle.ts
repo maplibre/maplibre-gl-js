@@ -36,8 +36,7 @@ export class LivecyclePerformanceObserver implements IPerformanceObserver {
         this._fullLoadTimeMeasure = `fullLoad-${this._id}`;
     }
 
-
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     observe(type: PerformanceEventType, _timestamp: number): void {
         switch (type) {
             case 'create':
@@ -59,7 +58,7 @@ export class LivecyclePerformanceObserver implements IPerformanceObserver {
         }
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     disconnect(): void {
         performance.clearMarks(this._createMarker);
         performance.clearMarks(this._loadMarker);

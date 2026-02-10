@@ -28,8 +28,7 @@ export class RenderingPerformanceObserver implements IPerformanceObserver {
     private _totalFrameCount = 0;
     private _totalDroppedFrameCount = 0;
 
-
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     observe(type: PerformanceEventType, timestamp: number): void {
         if (type ===  'startOfFrame') {
             if (this._lastFrameTime !== undefined) {
@@ -57,7 +56,7 @@ export class RenderingPerformanceObserver implements IPerformanceObserver {
         this._totalDroppedFrameCount = 0;
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     disconnect(): void {
         this.reset();
     }
