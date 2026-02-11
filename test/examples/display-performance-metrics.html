@@ -145,8 +145,7 @@
 
     map.on("error", (e) => {
         console.error("Map error:", e.error);
-        metricsElement.innerHTML = `Error loading map: ${e.error.message}`;
-        clearInterval(intervalId); // Also clear on error
+        clearInterval(intervalId);
     });
 </script>
 </body>
