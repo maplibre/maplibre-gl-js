@@ -10,8 +10,8 @@ export type PerformanceEventType = 'create' | 'load' | 'fullLoad' | 'startOfFram
 export interface IPerformanceObserver {
     /**
      * Called when a performance event occurs
-     * @param timestamp - when the event occurred
      * @param type - the type of event
+     * @param timestamp - when the event occurred
      */
     observe(type: PerformanceEventType, timestamp: number): void;
     /**
