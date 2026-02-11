@@ -67,7 +67,7 @@ export class Hash {
         if (this._hashName) {
             const params = this._getHashParams();
             params.set(this._hashName, hash);
-            return `#${decodeURIComponent(params.toString()).replace(/=&|=$/g, '')}`;
+            return `#${decodeURIComponent(params.toString()).replace(/=&/g, '&').replace(/=$/g, '')}`;
         }
 
         return `#${hash}`;
@@ -123,8 +123,8 @@ export class Hash {
             }
         }
 
-        const newHash = decodeURIComponent(params.toString()).replace(/=&|=$/g, '');
-        const replaceString = newHash ? `#${newHash}` : ''
+        const newHash = decodeURIComponent(params.toString()).replace(/=&/g, '&').replace(/=$/g, '');
+        const replaceString = newHash ? `#${newHash}` : '';
         let location = window.location.href.replace(/(#.+)?$/, replaceString);
         location = location.replace('&&', '&');
         window.history.replaceState(window.history.state, null, location);

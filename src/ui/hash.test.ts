@@ -533,7 +533,7 @@ describe('hash', () => {
         map.setZoom(5);
         map.setCenter([1.0, 2.0]);
 
-        expect(window.location.hash).toBe('#map=5/2/1&returnUrl=https://example.com&filter=a&b=');
+        expect(window.location.hash).toBe('#map=5/2/1&returnUrl=https://example.com&filter=a&b');
 
         window.location.hash = '#search=foo&map=7/4/2&redirect=/path?query=value';
         hash._onHashChange();
@@ -551,7 +551,7 @@ describe('hash', () => {
         map.setZoom(5);
         map.setCenter([1.0, 2.0]);
 
-        expect(window.location.hash).toBe('#map=5/2/1&returnUrl=https://example.com/abcd/ef&filter=a&b=');
+        expect(window.location.hash).toBe('#map=5/2/1&returnUrl=https://example.com/abcd/ef&filter=a&b');
 
         window.location.hash = '#search=foo&map=7/4/2&redirect=/path?query=value';
         hash._onHashChange();
@@ -610,7 +610,7 @@ describe('hash', () => {
         expect(map.getZoom()).toBe(10);
 
         map.setZoom(5);
-        expect(window.location.hash).toBe('#map=5/3/-1&empty=');
+        expect(window.location.hash).toBe('#map=5/3/-1&empty');
     });
 
     describe('geographic boundary values', () => {
