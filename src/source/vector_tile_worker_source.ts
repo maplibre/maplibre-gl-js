@@ -25,6 +25,10 @@ export type LoadVectorTileResult = {
     resourceTiming?: Array<PerformanceResourceTiming>;
 } & ExpiryData;
 
+/**
+ * The {@link WorkerSource} implementation that supports {@link VectorTileSource}. This class is
+ * used by vector tile sources to perform tile processing operations in a separate worker thread.
+ */
 export class VectorTileWorkerSource implements WorkerSource {
     actor: IActor;
     layerIndex: StyleLayerIndex;
@@ -137,10 +141,11 @@ export class VectorTileWorkerSource implements WorkerSource {
         return result;
     }
 
-    _getExpiryData({expires, cacheControl}: ExpiryData): ExpiryData {
+    _getExpiryData({expires, cacheControl, etag}: ExpiryData): ExpiryData {
         const data: ExpiryData = {};
         if (expires) data.expires = expires;
         if (cacheControl) data.cacheControl = cacheControl;
+        if (etag) data.etag = etag;
         return data;
     }
 
