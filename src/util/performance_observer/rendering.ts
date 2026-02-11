@@ -11,8 +11,8 @@ export type RenderingPerformanceMetrics = {
     lastFrameDurationMs?: number;
     /** Average frames per second. */
     averageFramesPerSecond: number;
-    /** Number of frames that fell below 60 fps. */
-    droppedFramesCount: number;
+    /** number of 'ideal frames' that could have fit into the time lost by slow frames */
+    virtualDroppedFramesCount: number;
     /** Total number of frames recorded. */
     totalFramesCount: number;
 };
@@ -38,7 +38,7 @@ export class RenderingPerformanceObserver implements IPerformanceObserver {
                 this._totalFrameTime += frameDuration;
                 this._lastFrameDuration = frameDuration;
                 if (frameDuration > frameTimeTarget) {
-                    this._totalDroppedFrameCount++;
+                    this._totalDroppedFrameCount += Math.floor(frameDuration / frameTimeTarget);
                 }
             }
             this._lastFrameTime = timestamp;
@@ -72,7 +72,7 @@ export class RenderingPerformanceObserver implements IPerformanceObserver {
         return {
             lastFrameDurationMs: this._lastFrameDuration,
             averageFramesPerSecond,
-            droppedFramesCount: this._totalDroppedFrameCount,
+            virtualDroppedFramesCount: this._totalDroppedFrameCount,
             totalFramesCount: this._totalFrameCount
         };
     }
