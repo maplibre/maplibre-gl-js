@@ -524,7 +524,7 @@ describe('hash', () => {
 
     });
 
-    test('hash with URL in other parameter does not change', () => {
+    test('hash with URL in other parameter does not change except normalization', () => {
         const hash = createHash('map')
             .addTo(map);
 
@@ -542,7 +542,7 @@ describe('hash', () => {
         expect(map.getCenter().lng).toBe(2);
     });
 
-    test('hash with URL+path in other parameter does not change', () => {
+    test('hash with URL+path in other parameter does not change except for normalization', () => {
         const hash = createHash('map')
             .addTo(map);
 
@@ -601,7 +601,7 @@ describe('hash', () => {
 
     });
 
-    test('update to hash with empty parameter values is kept as-is', () => {
+    test('update to hash with empty parameter are de-normalized', () => {
         const hash = createHash('map')
             .addTo(map);
 
