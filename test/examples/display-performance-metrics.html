@@ -137,7 +137,7 @@
     map.on("load", updateMetricsDisplay);
 
     // Continuous updates using setInterval
-    const intervalId = setInterval(updateMetricsDisplay, 100); // Update every 1 second
+    const intervalId = setInterval(updateMetricsDisplay, 200); // Update display every 200ms
 
     map.on("remove", () => {
         clearInterval(intervalId); // Clear the interval when the map is removed
