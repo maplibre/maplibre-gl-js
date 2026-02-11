@@ -18,6 +18,7 @@ import {MercatorCoordinate} from './geo/mercator_coordinate';
 import {type IPerformanceObserver, type PerformanceEventType} from './util/performance_observer/observer';
 import {LivecyclePerformanceObserver, type LivecyclePerformanceMetrics} from './util/performance_observer/livecycle';
 import {RenderingPerformanceObserver, type RenderingPerformanceMetrics} from './util/performance_observer/rendering';
+import {MarkingPerformanceObserver} from './util/performance_observer/marker';
 import {Evented, type ErrorEvent, Event, type Listener} from './util/evented';
 import {type AddProtocolAction, config} from './util/config';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
@@ -219,6 +220,7 @@ export {
     LngLat,
     LngLatBounds,
     Point,
+    MarkingPerformanceObserver,
     MercatorCoordinate,
     Evented,
     Event,

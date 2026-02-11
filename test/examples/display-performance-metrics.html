@@ -104,6 +104,7 @@
 <script>
     const livecycleObserver = new maplibregl.LivecyclePerformanceObserver();
     const renderingObserver = new maplibregl.RenderingPerformanceObserver();
+    const markingObserver = new maplibregl.MarkingPerformanceObserver();
 
     // Create map with performance observers passed as an option.
     // The observers will be automatically notified of relevant performance events.
@@ -112,7 +113,7 @@
         style: "https://demotiles.maplibre.org/style.json",
         center: [0, 0],
         zoom: 1,
-        performanceObservers: [livecycleObserver, renderingObserver],
+        performanceObservers: [livecycleObserver, renderingObserver, markingObserver],
     });
 
     function onResetButtonClick() {
