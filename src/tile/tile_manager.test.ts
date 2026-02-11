@@ -2578,4 +2578,26 @@ describe('TileManager / etag', () => {
         expect(tileManager._source.loadTile).toHaveBeenCalledTimes(1);
         expect(tileLoadedSpy).not.toHaveBeenCalled();
     });
+
+    test('does not fire data event if an etag unmodified tile was reloaded', async () => {
+        const tileManager = createTileManager();
+        const tileID = new OverscaledTileID(1, 0, 1, 0, 1);
+        const tileEtag = 'test';
+        let loadCount = 0;
+
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+            tile.etag = tileEtag;
+            loadCount++;
+        };
+        const tile = tileManager._addTile(tileID);
+
+        const dataEventSpy = vi.fn();
+        tileManager.on('data', dataEventSpy);
+        tileManager.reload();
+
+        expect(loadCount).toBe(2);
+        expect(dataEventSpy).not.toHaveBeenCalled();
+        expect(tile.etag).toBe(tileEtag);
+    });
 });
