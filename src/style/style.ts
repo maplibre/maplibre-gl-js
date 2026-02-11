@@ -1035,7 +1035,7 @@ export class Style extends Evented {
         this._checkLoaded();
 
         if (this.tileManagers[id] === undefined) {
-            throw new Error('There is no source with this ID');
+            throw new Error(`There is no source with this ID=${id}`);
         }
         for (const layerId in this._layers) {
             if (this._layers[layerId].source === id) {
