@@ -100,6 +100,17 @@ describe('TaskQueue', () => {
         expect(after).toHaveBeenCalledTimes(1);
     });
 
+    test('Recovers from task callback errors and allows subsequent run()', () => {
+        const q = new TaskQueue();
+        q.add(() => { throw new Error('task error'); });
+        expect(() => q.run()).toThrow('task error');
+        // Queue should be recoverable — not stuck in "already running" state
+        const cb = vi.fn();
+        q.add(cb);
+        q.run();
+        expect(cb).toHaveBeenCalledTimes(1);
+    });
+
     test('TaskQueue.clear() interrupts currently-running queue', () => {
         const q = new TaskQueue();
         const before = vi.fn();
