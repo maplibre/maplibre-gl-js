@@ -284,10 +284,7 @@ export class VectorTileSource extends Evented implements Source {
         if (data && this.map._refreshExpiredTiles) {
             tile.setExpiryData(data);
         }
-
-        if (data?.etag) {
-            tile.etag = data.etag;
-        }
+        tile.etag = data?.etag;
 
         tile.loadVectorData(data, this.map.painter);
 

@@ -205,7 +205,10 @@ export class Tile {
      * @param justReloaded - `true` to just reload
      */
     loadVectorData(data: WorkerTileResult, painter: any, justReloaded?: boolean | null) {
-        if (data?.etagUnmodified === true) return;
+        if (data?.etagUnmodified === true) {
+            this.state = 'loaded';
+            return;
+        }
 
         if (this.hasData()) {
             this.unloadVectorData();

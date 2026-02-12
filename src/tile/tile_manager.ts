@@ -188,13 +188,7 @@ export class TileManager extends Evented {
     async _loadTile(tile: Tile, id: string, state: TileState): Promise<void> {
         try {
             const result = await this._source.loadTile(tile) as LoadTileResult;
-
-            if (result?.unmodified) {
-                this._setTileReloadTimer(id, tile);
-                return;
-            }
-
-            this._tileLoaded(tile, id, state);
+            this._tileLoaded(tile, id, state, result);
         } catch (err) {
             tile.state = 'errored';
 
@@ -303,7 +297,7 @@ export class TileManager extends Evented {
         await this._loadTile(tile, id, state);
     }
 
-    _tileLoaded(tile: Tile, id: string, previousState: TileState) {
+    _tileLoaded(tile: Tile, id: string, previousState: TileState, result: LoadTileResult) {
         tile.timeAdded = now();
         // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
         if (tile.selfFading) {
@@ -312,6 +306,9 @@ export class TileManager extends Evented {
 
         if (previousState === 'expired') tile.refreshedUponExpiration = true;
         this._setTileReloadTimer(id, tile);
+
+        if (result?.unmodified) return;
+
         if (this.getSource().type === 'raster-dem' && tile.dem) {
             backfillDEM(tile, this._inViewTiles);
         }
