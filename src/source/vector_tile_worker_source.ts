@@ -22,8 +22,7 @@ import type {VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
 export type LoadVectorTileResult = {
     vectorTile: VectorTileLike;
     rawData: ArrayBufferLike;
-    resourceTiming?: Array<PerformanceResourceTiming>;
-} & ExpiryData;
+};
 
 /**
  * The {@link WorkerSource} implementation that supports {@link VectorTileSource}. This class is
