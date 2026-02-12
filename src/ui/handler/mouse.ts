@@ -62,7 +62,7 @@ export function generateMouseRotationHandler({enable, clickTolerance, aroundCent
     const mouseMoveStateManager = new MouseMoveStateManager({
         checkCorrectEvent: (e: MouseEvent): boolean =>
             (DOM.mouseButton(e) === LEFT_BUTTON && e.ctrlKey) ||
-            (DOM.mouseButton(e) === RIGHT_BUTTON && !e.ctrlKey),
+            (DOM.mouseButton(e) === RIGHT_BUTTON),
     });
     return new DragHandler<DragRotateResult, MouseEvent>({
         clickTolerance,
