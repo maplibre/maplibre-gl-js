@@ -110,7 +110,7 @@ const focusQuerySelector = [
     'a[href]',
     '[tabindex]:not([tabindex=\'-1\'])',
     '[contenteditable]:not([contenteditable=\'false\'])',
-    'button:not([disabled])',
+    'button:not([disabled]):not([tabindex=\'-1\'])',
     'input:not([disabled])',
     'select:not([disabled])',
     'textarea:not([disabled])',
@@ -594,6 +594,7 @@ export class Popup extends Evented {
         if (this.options.closeButton) {
             this._closeButton = DOM.create('button', 'maplibregl-popup-close-button', this._content);
             this._closeButton.type = 'button';
+            this._closeButton.setAttribute('tabindex', '-1');
             this._closeButton.innerHTML = '&#215;';
             this._closeButton.addEventListener('click', this._onClose);
         }

@@ -729,7 +729,7 @@ describe('popup', () => {
         expect(window.document.activeElement).toBe(dummyFocusedEl);
     });
 
-    test('Close button is focused if it is the only focusable element', () => {
+    test('Close button is not automatically focused when popup opens', () => {
         const dummyFocusedEl = window.document.createElement('button');
         window.document.body.appendChild(dummyFocusedEl);
         dummyFocusedEl.focus();
@@ -743,10 +743,12 @@ describe('popup', () => {
                 }
             }));
 
-        // Suboptimal because the string matching is case-sensitive
+        // Close button has tabindex="-1" so it should not receive automatic focus
+        expect(window.document.activeElement).toBe(dummyFocusedEl);
+        
+        // Verify close button has tabindex="-1"
         const closeButton = popup._container.querySelector('[aria-label^=\'Alt close label\']');
-
-        expect(window.document.activeElement).toBe(closeButton);
+        expect(closeButton.getAttribute('tabindex')).toBe('-1');
     });
 
     test('If popup content contains a focusable element it is focused', () => {
@@ -761,16 +763,20 @@ describe('popup', () => {
     });
 
     test('Element with tabindex="-1" is not focused', () => {
+        const dummyFocusedEl = window.document.createElement('button');
+        window.document.body.appendChild(dummyFocusedEl);
+        dummyFocusedEl.focus();
+
         const popup = new Popup({closeButton: true})
             .setHTML('<span tabindex="-1" data-testid="abc">Test</span>')
             .setLngLat([0, 0])
             .addTo(createMap());
 
         const nonFocusableEl = popup._container.querySelector('[data-testid=\'abc\']');
-        const closeButton = popup._container.querySelector('button[aria-label=\'Close popup\']');
 
+        // Neither the element with tabindex="-1" nor the close button should be focused
         expect(window.document.activeElement).not.toBe(nonFocusableEl);
-        expect(window.document.activeElement).toBe(closeButton);
+        expect(window.document.activeElement).toBe(dummyFocusedEl);
     });
 
     test('If popup contains a disabled button and a focusable element then the latter is focused', () => {
