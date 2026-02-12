@@ -648,7 +648,8 @@ export abstract class Camera extends Evented {
     /**
      * Sets the padding in pixels around the viewport.
      *
-     * Equivalent to `jumpTo({padding: padding})`.
+     * Unlike calling `jumpTo({padding})`, this method does not interrupt ongoing camera animations.
+     * If you need to stop any animation before updating the padding, call `map.stop()` first.
      *
      * Triggers the following events: `movestart` and `moveend`.
      *
@@ -661,7 +662,27 @@ export abstract class Camera extends Evented {
      * ```
      */
     setPadding(padding: PaddingOptions, eventData?: any): this {
-        this.jumpTo({padding}, eventData);
+        const tr = this._getTransformForUpdate();
+        
+        if (tr.isPaddingEqual(padding)) {
+            return this;
+        }
+        
+        const isEasing = this.isEasing();
+        
+        if (!isEasing) {
+            this.fire(new Event('movestart', eventData));
+        }
+        
+        tr.setPadding(padding);
+        this._applyUpdatedTransform(tr);
+        
+        this.fire(new Event('move', eventData));
+        
+        if (!isEasing) {
+            this.fire(new Event('moveend', eventData));
+        }
+        
         return this;
     }
 

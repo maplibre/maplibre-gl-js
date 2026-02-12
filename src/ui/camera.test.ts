@@ -572,6 +572,22 @@ describe('setPadding', () => {
         expect(currentPadding.right).toBe(padding1.right);
         expect(currentPadding.bottom).toBe(padding.bottom);
     });
+
+    test('does not interrupt ongoing flyTo animation', () => {
+        const camera = createCamera();
+        
+        camera.flyTo({center: [10, 10], duration: 100});
+        expect(camera.isEasing()).toBe(true);
+        
+        // Call setPadding during the animation - should not stop it
+        camera.setPadding({left: 100, top: 50, right: 100, bottom: 50});
+        
+        // Animation should still be running (not interrupted)
+        expect(camera.isEasing()).toBe(true);
+        
+        // Padding should be applied immediately
+        expect(camera.getPadding()).toEqual({left: 100, top: 50, right: 100, bottom: 50});
+    });
 });
 
 describe('panBy', () => {
