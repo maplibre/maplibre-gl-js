@@ -65,41 +65,74 @@ export class Hash {
         if (pitch) hash += (`/${Math.round(pitch)}`);
 
         if (this._hashName) {
-            const hashName = this._hashName;
+            const params = this._parseHash();
             let found = false;
-            const parts = window.location.hash.slice(1).split('&').map(part => {
-                const key = part.split('=')[0];
-                if (key === hashName) {
+            for (let i = 0; i < params.length; i++) {
+                if (params[i][0] === this._hashName) {
+                    params[i] = [this._hashName, hash];
                     found = true;
-                    return `${key}=${hash}`;
+                    break;
                 }
-                return part;
-            }).filter(a => a);
-            if (!found) {
-                parts.push(`${hashName}=${hash}`);
             }
-            return `#${parts.join('&')}`;
+            if (!found) {
+                params.push([this._hashName, hash]);
+            }
+            return `#${this._serializeParams(params)}`;
         }
 
         return `#${hash}`;
     }
 
+    /**
+     * Parse the current hash fragment into a Map of key-value pairs.
+     * Handles the `&`-separated `key=value` format used in named hash mode.
+     * Unlike URLSearchParams, this preserves slashes and colons in values
+     * without encoding them.
+     */
+    /**
+     * Parse the current hash fragment into an array of `[key, value]` pairs.
+     * Handles the `&`-separated `key=value` format used in named hash mode.
+     * Unlike URLSearchParams, this preserves slashes and colons in values
+     * without encoding them, and preserves the distinction between `key`
+     * (no equals) and `key=` (empty value).
+     */
+    _parseHash(): Array<[string, string | null]> {
+        const rawHash = window.location.hash.slice(1);
+        const result: Array<[string, string | null]> = [];
+        if (!rawHash) return result;
+        for (const part of rawHash.split('&')) {
+            if (!part) continue;
+            const eqIdx = part.indexOf('=');
+            if (eqIdx === -1) {
+                result.push([part, null]);
+            } else {
+                result.push([part.slice(0, eqIdx), part.slice(eqIdx + 1)]);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Serialize an array of `[key, value]` pairs into an `&`-separated string.
+     * Values are written as-is (no percent-encoding of slashes or colons).
+     * Preserves the distinction between `key` (no equals) and `key=` (empty value).
+     */
+    _serializeParams(params: Array<[string, string | null]>): string {
+        return params.map(([key, value]) =>
+            value !== null ? `${key}=${value}` : key
+        ).join('&');
+    }
+
     _getCurrentHash = () => {
         // Get the current hash from location, stripped from its number sign
-        const hash = window.location.hash.replace('#', '');
+        const rawHash = window.location.hash.replace('#', '');
         if (this._hashName) {
-            // Split the parameter-styled hash into parts and find the value we need
-            let keyval;
-            hash.split('&').map(
-                part => part.split('=')
-            ).forEach(part => {
-                if (part[0] === this._hashName) {
-                    keyval = part;
-                }
-            });
-            return (keyval ? keyval[1] || '' : '').split('/');
+            const params = this._parseHash();
+            const entry = params.find(([key]) => key === this._hashName);
+            const value = entry ? (entry[1] || '') : '';
+            return value.split('/');
         }
-        return hash.split('/');
+        return rawHash.split('/');
     };
 
     _onHashChange = () => {
@@ -127,27 +160,28 @@ export class Hash {
     };
 
     _removeHash = () => {
-        const currentHash = this._getCurrentHash();
-        if (currentHash.length === 0) {
-            return;
-        }
-        const baseHash = currentHash.join('/');
-        let targetHash = baseHash;
-        if (targetHash.split('&').length > 0) {
-            targetHash = targetHash.split('&')[0]; // #3/1/2&foo=bar -> #3/1/2
-        }
+        const rawHash = window.location.hash.slice(1);
+        if (!rawHash) return;
+
         if (this._hashName) {
-            targetHash = `${this._hashName}=${baseHash}`;
+            const params = this._parseHash().filter(([key]) => key !== this._hashName);
+            const remaining = this._serializeParams(params);
+            const replaceString = remaining ? `#${remaining}` : '';
+            const location = window.location.href.replace(/(#.*)?$/, replaceString);
+            window.history.replaceState(window.history.state, null, location);
+        } else {
+            // For unnamed hashes, the map hash is the first part before any '&'.
+            // Preserve any other parameters that follow.
+            const ampIdx = rawHash.indexOf('&');
+            if (ampIdx !== -1) {
+                const remaining = rawHash.slice(ampIdx + 1);
+                const location = window.location.href.replace(/(#.*)?$/, remaining ? `#${remaining}` : '');
+                window.history.replaceState(window.history.state, null, location);
+            } else {
+                const location = window.location.href.replace(/(#.*)?$/, '');
+                window.history.replaceState(window.history.state, null, location);
+            }
         }
-        let replaceString = window.location.hash.replace(targetHash, '');
-        if (replaceString.startsWith('#&')) {
-            replaceString = replaceString.slice(0, 1) + replaceString.slice(2);
-        } else if (replaceString === '#') {
-            replaceString = '';
-        }
-        let location = window.location.href.replace(/(#.+)?$/, replaceString);
-        location = location.replace('&&', '&');
-        window.history.replaceState(window.history.state, null, location);
     };
 
     /**
