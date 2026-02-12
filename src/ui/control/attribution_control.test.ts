@@ -566,4 +566,75 @@ describe('AttributionControl test regarding the HTML elements details and summar
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')[0].getAttribute('open')).toBe('');
         });
     });
+
+    describe('edge cases', () => {
+        test('whitespace-only source attribution is filtered out', async () => {
+            const attribution = new AttributionControl({});
+            map.addControl(attribution);
+            await map.once('load');
+
+            map.addSource('whitespace', {
+                type: 'geojson',
+                data: {type: 'FeatureCollection', features: []},
+                attribution: ' '
+            });
+            map.addSource('valid', {
+                type: 'geojson',
+                data: {type: 'FeatureCollection', features: []},
+                attribution: 'Valid Attribution'
+            });
+
+            map.addLayer({id: 'whitespace', type: 'fill', source: 'whitespace'});
+            map.addLayer({id: 'valid', type: 'fill', source: 'valid'});
+
+            await sleep(100);
+
+            expect(attribution._innerContainer.innerHTML).toBe('Valid Attribution');
+        });
+
+        test('empty customAttribution string results in empty attribution', () => {
+            const attribution = new AttributionControl({
+                customAttribution: ''
+            });
+            map.addControl(attribution);
+
+            expect(attribution._innerContainer.innerHTML).toBe('');
+            expect(attribution._container.classList.contains('maplibregl-attrib-empty')).toBe(true);
+        });
+
+        test('drag minimizes expanded compact attribution', () => {
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 600, configurable: true});
+            const attribution = new AttributionControl({
+                compact: true,
+                customAttribution: 'Test Attribution'
+            });
+            map.addControl(attribution);
+
+            // Initially compact-show is present
+            expect(attribution._container.classList.contains('maplibregl-compact-show')).toBe(true);
+
+            // First click collapses, second click expands
+            const toggle = attribution._container.querySelector('.maplibregl-ctrl-attrib-button');
+            simulate.click(toggle);
+            simulate.click(toggle);
+            expect(attribution._container.classList.contains('maplibregl-compact-show')).toBe(true);
+
+            map.fire('drag');
+            expect(attribution._container.classList.contains('maplibregl-compact-show')).toBe(false);
+        });
+
+        test('onRemove cleans up DOM and internal state', () => {
+            const attribution = new AttributionControl({customAttribution: 'Test', compact: true});
+            map.addControl(attribution);
+
+            const container = map.getContainer();
+            expect(container.querySelectorAll('.maplibregl-ctrl-attrib')).toHaveLength(1);
+            expect(attribution._map).toBeDefined();
+
+            map.removeControl(attribution);
+
+            expect(container.querySelectorAll('.maplibregl-ctrl-attrib')).toHaveLength(0);
+            expect(attribution._map).toBeUndefined();
+        });
+    });
 });
