@@ -571,6 +571,103 @@ describe('Style.loadJSON', () => {
     });
 });
 
+describe('Style.getStyleUrl', () => {
+    test('returns null when style is loaded from JSON object', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        expect(style.getStyleUrl()).toBeNull();
+    });
+
+    test('returns the style URL when loaded from URL', async () => {
+        const styleUrl = 'http://example.com/style.json';
+        server.respondWith(
+            'GET',
+            styleUrl,
+            [200, {'Content-Type': 'application/json'}, JSON.stringify(createStyleJSON())]
+        );
+
+        const style = new Style(getStubMap());
+        style.loadURL(styleUrl);
+        server.respond();
+        await style.once('style.load');
+
+        expect(style.getStyleUrl()).toBe(styleUrl);
+    });
+
+    test('returns null after loadJSON is called', async () => {
+        const styleUrl = 'http://example.com/style.json';
+        server.respondWith(
+            'GET',
+            styleUrl,
+            [200, {'Content-Type': 'application/json'}, JSON.stringify(createStyleJSON())]
+        );
+
+        const style = new Style(getStubMap());
+        style.loadURL(styleUrl);
+        server.respond();
+        await style.once('style.load');
+
+        expect(style.getStyleUrl()).toBe(styleUrl);
+
+        // Now load JSON
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        expect(style.getStyleUrl()).toBeNull();
+    });
+
+    test('returns null after loadEmpty is called', async () => {
+        const styleUrl = 'http://example.com/style.json';
+        server.respondWith(
+            'GET',
+            styleUrl,
+            [200, {'Content-Type': 'application/json'}, JSON.stringify(createStyleJSON())]
+        );
+
+        const style = new Style(getStubMap());
+        style.loadURL(styleUrl);
+        server.respond();
+        await style.once('style.load');
+
+        expect(style.getStyleUrl()).toBe(styleUrl);
+
+        // Now load empty - loadEmpty is synchronous, so _styleUrl is cleared immediately
+        style.loadEmpty();
+
+        expect(style.getStyleUrl()).toBeNull();
+    });
+
+    test('updates when loadURL is called with a different URL', async () => {
+        const styleUrl1 = 'http://example.com/style1.json';
+        const styleUrl2 = 'http://example.com/style2.json';
+        server.respondWith(
+            'GET',
+            styleUrl1,
+            [200, {'Content-Type': 'application/json'}, JSON.stringify(createStyleJSON())]
+        );
+        server.respondWith(
+            'GET',
+            styleUrl2,
+            [200, {'Content-Type': 'application/json'}, JSON.stringify(createStyleJSON())]
+        );
+
+        const style = new Style(getStubMap());
+        style.loadURL(styleUrl1);
+        server.respond();
+        await style.once('style.load');
+
+        expect(style.getStyleUrl()).toBe(styleUrl1);
+
+        style.loadURL(styleUrl2);
+        server.respond();
+        await style.once('style.load');
+
+        expect(style.getStyleUrl()).toBe(styleUrl2);
+    });
+});
+
 describe('Style._load', () => {
     test('initiates sprite loading when it\'s present', () => {
         const style = new Style(getStubMap());

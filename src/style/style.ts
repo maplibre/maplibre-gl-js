@@ -239,6 +239,7 @@ export class Style extends Evented {
     pauseablePlacement: PauseablePlacement;
     placement: Placement;
     z: number;
+    _styleUrl: string | null;
 
     constructor(map: Map, options: StyleOptions = {}) {
         super();
@@ -304,6 +305,7 @@ export class Style extends Evented {
         this.stylesheet = null;
         this.light = null;
         this.sky = null;
+        this._styleUrl = null;
         if (this.projection) {
             this.projection.destroy();
             delete this.projection;
@@ -421,6 +423,7 @@ export class Style extends Evented {
     }
 
     loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification) {
+        this._styleUrl = url;
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
         options.validate = typeof options.validate === 'boolean' ?
@@ -441,6 +444,7 @@ export class Style extends Evented {
     }
 
     loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification) {
+        this._styleUrl = null;
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
         this._frameRequest = new AbortController();
@@ -452,6 +456,7 @@ export class Style extends Evented {
     }
 
     loadEmpty() {
+        this._styleUrl = null;
         this.fire(new Event('dataloading', {dataType: 'style'}));
         this._load(empty, {validate: false});
     }
@@ -1919,6 +1924,15 @@ export class Style extends Evented {
 
     getGlyphsUrl(): string | null {
         return this.stylesheet.glyphs || null;
+    }
+
+    /**
+     * Returns the URL of the style if it was loaded from a URL, or null if it was loaded from a JSON object.
+     *
+     * @returns The style URL, or null if the style was loaded from a JSON object.
+     */
+    getStyleUrl(): string | null {
+        return this._styleUrl;
     }
 
     setGlyphs(glyphsUrl: string | null | undefined, options: StyleSetterOptions = {}) {

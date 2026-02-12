@@ -514,4 +514,96 @@ describe('getStyle', () => {
         });
     });
 
+    describe('getStyleUrl', () => {
+        test('returns null when style is loaded from JSON object', async () => {
+            const map = createMap({style: {version: 8, sources: {}, layers: []}});
+            await map.once('style.load');
+
+            expect(map.getStyleUrl()).toBeNull();
+        });
+
+        test('returns the style URL when loaded from URL', async () => {
+            const styleUrl = 'http://example.com/style.json';
+            server.respondWith(
+                'GET',
+                styleUrl,
+                [200, {'Content-Type': 'application/json'}, JSON.stringify({version: 8, sources: {}, layers: []})]
+            );
+
+            const map = createMap();
+            map.setStyle(styleUrl);
+            server.respond();
+            await map.once('style.load');
+
+            expect(map.getStyleUrl()).toBe(styleUrl);
+        });
+
+        test('returns null after setStyle with JSON object', async () => {
+            const styleUrl = 'http://example.com/style.json';
+            server.respondWith(
+                'GET',
+                styleUrl,
+                [200, {'Content-Type': 'application/json'}, JSON.stringify({
+                    version: 8,
+                    sources: {},
+                    layers: [{id: 'bg', type: 'background', paint: {'background-color': 'red'}}]
+                })]
+            );
+
+            const map = createMap();
+            map.setStyle(styleUrl, {diff: false});
+            server.respond();
+            await map.once('style.load');
+
+            expect(map.getStyleUrl()).toBe(styleUrl);
+
+            // Now set style with JSON object
+            map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
+            await map.once('style.load');
+
+            expect(map.getStyleUrl()).toBeNull();
+        });
+
+        test('updates when setStyle is called with a different URL', async () => {
+            const styleUrl1 = 'http://example.com/style1.json';
+            const styleUrl2 = 'http://example.com/style2.json';
+            server.respondWith(
+                'GET',
+                styleUrl1,
+                [200, {'Content-Type': 'application/json'}, JSON.stringify({
+                    version: 8,
+                    sources: {},
+                    layers: [{id: 'bg', type: 'background', paint: {'background-color': 'red'}}]
+                })]
+            );
+            server.respondWith(
+                'GET',
+                styleUrl2,
+                [200, {'Content-Type': 'application/json'}, JSON.stringify({
+                    version: 8,
+                    sources: {},
+                    layers: [{id: 'bg', type: 'background', paint: {'background-color': 'blue'}}]
+                })]
+            );
+
+            const map = createMap();
+            map.setStyle(styleUrl1);
+            server.respond();
+            await map.once('style.load');
+
+            expect(map.getStyleUrl()).toBe(styleUrl1);
+
+            map.setStyle(styleUrl2);
+            server.respond();
+            await map.once('style.load');
+
+            expect(map.getStyleUrl()).toBe(styleUrl2);
+        });
+
+        test('returns null when no style is set', () => {
+            const map = createMap({style: undefined});
+            expect(map.getStyleUrl()).toBeNull();
+        });
+    });
+
 });

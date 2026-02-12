@@ -2102,20 +2102,22 @@ export class Map extends Camera {
     _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
+            this.style._styleUrl = url;
             const request = this._requestManager.transformRequest(url, ResourceType.Style);
             getJSON<StyleSpecification>(request, new AbortController()).then((response) => {
-                this._updateDiff(response.data, options);
+                this._updateDiff(response.data, options, url);
             }).catch((error) => {
                 if (error) {
                     this.fire(new ErrorEvent(error));
                 }
             });
         } else if (typeof style === 'object') {
+            this.style._styleUrl = null;
             this._updateDiff(style, options);
         }
     }
 
-    _updateDiff(style: StyleSpecification, options?: StyleSwapOptions & StyleOptions) {
+    _updateDiff(style: StyleSpecification, options?: StyleSwapOptions & StyleOptions, sourceUrl?: string) {
         try {
             if (this.style.setState(style, options)) {
                 this._update(true);
@@ -2124,7 +2126,11 @@ export class Map extends Camera {
             warnOnce(
                 `Unable to perform style diff: ${e.message || e.error || e}.  Rebuilding the style from scratch.`
             );
+            // When falling back, use the JSON and preserve the URL if one was provided
             this._updateStyle(style, options);
+            if (sourceUrl && this.style) {
+                this.style._styleUrl = sourceUrl;
+            }
         }
     }
 
@@ -2143,6 +2149,32 @@ export class Map extends Camera {
         if (this.style) {
             return this.style.serialize();
         }
+    }
+
+    /**
+     * Returns the URL of the map's style if it was loaded from a URL, or null if it was loaded from a JSON object.
+     *
+     * @returns The style URL, or null if the style was loaded from a JSON object or no style has been set.
+     *
+     * @example
+     * ```ts
+     * // Get the style URL
+     * const styleUrl = map.getStyleUrl();
+     *
+     * // After setStyle() with a URL, it will return the URL
+     * map.setStyle('https://example.com/style.json');
+     * map.getStyleUrl(); // 'https://example.com/style.json'
+     *
+     * // If style was set as an object, returns null
+     * map.setStyle({ version: 8, sources: {}, layers: [] });
+     * map.getStyleUrl(); // null
+     * ```
+     */
+    getStyleUrl(): string | null {
+        if (this.style) {
+            return this.style.getStyleUrl();
+        }
+        return null;
     }
 
     /**
