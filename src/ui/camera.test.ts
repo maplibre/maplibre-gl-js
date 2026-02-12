@@ -2434,6 +2434,32 @@ describe('fitBounds', () => {
         expect(fixedNum(camera.getZoom(), 3)).toBe(4.163);
     });
 
+    test('padding from flyTo does not accumulate with fitBounds padding (issue #6744)', () => {
+        const camera = createCamera();
+        
+        // First, flyTo with padding
+        camera.flyTo({
+            center: [0, 0],
+            padding: {top: 50, bottom: 0, left: 100, right: 0},
+            duration: 0
+        });
+        
+        // Verify the padding from flyTo is set on the transform
+        expect(camera.transform.padding).toEqual({top: 50, bottom: 0, left: 100, right: 0});
+        
+        // Now call fitBounds with its own padding
+        const bb = [[-10, -10], [10, 10]] as [LngLatLike, LngLatLike];
+        camera.fitBounds(bb, {padding: 20, duration: 0});
+        
+        // The result should be the same as fitBounds with padding 20 on a fresh camera
+        // (i.e., the flyTo padding should not be summed with the fitBounds padding)
+        const freshCamera = createCamera();
+        freshCamera.fitBounds(bb, {padding: 20, duration: 0});
+        
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual(fixedLngLat(freshCamera.getCenter(), 4));
+        expect(fixedNum(camera.getZoom(), 3)).toBe(fixedNum(freshCamera.getZoom(), 3));
+    });
+
 });
 
 describe('fitScreenCoordinates', () => {

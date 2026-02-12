@@ -154,8 +154,6 @@ export function updateRotation(args: UpdateRotationArgs) {
 }
 
 export function cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult {
-    const edgePadding = tr.padding;
-
     // Consider all corners of the rotated bounding box derived from the given points
     // when find the camera position that fits the given points.
 
@@ -184,8 +182,8 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, padding:
     // Calculate zoom: consider the original bbox and padding.
     const size = upperRight.sub(lowerLeft);
 
-    const availableWidth = (tr.width - (edgePadding.left + edgePadding.right + padding.left + padding.right));
-    const availableHeight = (tr.height - (edgePadding.top + edgePadding.bottom + padding.top + padding.bottom));
+    const availableWidth = (tr.width - (padding.left + padding.right));
+    const availableHeight = (tr.height - (padding.top + padding.bottom));
     const scaleX = availableWidth / size.x;
     const scaleY = availableHeight / size.y;
 
