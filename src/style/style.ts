@@ -443,8 +443,8 @@ export class Style extends Evented {
         });
     }
 
-    loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification) {
-        this._styleUrl = null;
+    loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification, sourceUrl?: string) {
+        this._styleUrl = sourceUrl ?? null;
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
         this._frameRequest = new AbortController();
@@ -1933,6 +1933,16 @@ export class Style extends Evented {
      */
     getStyleUrl(): string | null {
         return this._styleUrl;
+    }
+
+    /**
+     * Sets the URL of the style. This is used internally when the style is loaded from a URL
+     * or when the style URL needs to be updated during diff operations.
+     *
+     * @param url - The style URL, or null if the style is not loaded from a URL.
+     */
+    setStyleUrl(url: string | null) {
+        this._styleUrl = url;
     }
 
     setGlyphs(glyphsUrl: string | null | undefined, options: StyleSetterOptions = {}) {

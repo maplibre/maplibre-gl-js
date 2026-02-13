@@ -2102,7 +2102,7 @@ export class Map extends Camera {
     _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
-            this.style._styleUrl = url;
+            this.style.setStyleUrl(url);
             const request = this._requestManager.transformRequest(url, ResourceType.Style);
             getJSON<StyleSpecification>(request, new AbortController()).then((response) => {
                 this._updateDiff(response.data, options, url);
@@ -2112,7 +2112,7 @@ export class Map extends Camera {
                 }
             });
         } else if (typeof style === 'object') {
-            this.style._styleUrl = null;
+            this.style.setStyleUrl(null);
             this._updateDiff(style, options);
         }
     }
@@ -2126,12 +2126,27 @@ export class Map extends Camera {
             warnOnce(
                 `Unable to perform style diff: ${e.message || e.error || e}.  Rebuilding the style from scratch.`
             );
-            // When falling back, use the JSON and preserve the URL if one was provided
-            this._updateStyle(style, options);
-            if (sourceUrl && this.style) {
-                this.style._styleUrl = sourceUrl;
-            }
+            // When falling back, pass the sourceUrl to loadJSON via _updateStyle
+            this._updateStyleWithSourceUrl(style, options, sourceUrl);
         }
+    }
+
+    private _updateStyleWithSourceUrl(style: StyleSpecification, options?: StyleSwapOptions & StyleOptions, sourceUrl?: string) {
+        // transformStyle relies on having previous style serialized, if it is not loaded yet, delay until previous style is loaded
+        if (options?.transformStyle && this.style && !this.style._loaded) {
+            this.style.once('style.load', () => this._updateStyleWithSourceUrl(style, options, sourceUrl));
+            return;
+        }
+
+        const previousStyle = this.style && options?.transformStyle ? this.style.serialize() : undefined;
+        if (this.style) {
+            this.style.setEventedParent(null);
+            this.style._remove(false);
+        }
+
+        this.style = new Style(this, options || {});
+        this.style.setEventedParent(this, {style: this.style});
+        this.style.loadJSON(style, options, previousStyle, sourceUrl);
     }
 
     /**
