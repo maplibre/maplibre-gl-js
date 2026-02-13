@@ -50,7 +50,7 @@
     "@rollup/plugin-strip": "^3.0.4",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.1.4",
-    "@stylistic/eslint-plugin": "^5.7.1",
+    "@stylistic/eslint-plugin": "^5.8.0",
     "@types/benchmark": "^2.1.5",
     "@types/d3": "^7.4.3",
     "@types/earcut": "^3.0.0",
