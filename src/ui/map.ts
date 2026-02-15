@@ -1365,7 +1365,7 @@ export class Map extends Camera {
     getMaxPitch(): number { return this.transform.maxPitch; }
 
     /**
-     * Returns the map's anisotropic threshold pitch.
+     * Returns the map's anisotropic filter pitch.
      * If the map is pitched beyond this threshold, anisotropic filtering will be applied to all raster layers.
      *
      * @returns The anisotropicFilterPitch
@@ -1373,24 +1373,24 @@ export class Map extends Camera {
      * ```ts
      * let anisotropicFilterPitch = map.getAnisotropicFilterPitch();
      * ```
-     * @see [Anisotropic threshold pitch](https://maplibre.org/maplibre-gl-js/docs/examples/anisotropic-threshold-pitch/)
+     * @see [Anisotropic filter pitch](https://maplibre.org/maplibre-gl-js/docs/examples/anisotropic-filter-pitch/)
      */
     getAnisotropicFilterPitch(): number { return this._anisotropicFilterPitch; }
 
     /**
-     * Sets or clears the map's anisotropic threshold pitch.
+     * Sets the map's anisotropic filter pitch or reverts it to its default.
      *
      * A {@link ErrorEvent} event will be fired if anisotropicFilterPitch is out of bounds.
      *
      * @param anisotropicFilterPitch - The pitch above which to apply anisotropic filtering to the map's raster layers (0-180).
-     * If `null` or `undefined` is provided, the function removes the current threshold pitch (sets it to 20).
+     * If `null` or `undefined` is provided, the function reverts to the default pitch threshold (20).
      * 
      * 
      * @example
      * ```ts
      * map.setAnisotropicFilterPitch(85);
      * ```
-     * @see [Anisotropic threshold pitch](https://maplibre.org/maplibre-gl-js/docs/examples/anisotropic-threshold-pitch/)
+     * @see [Anisotropic filter pitch](https://maplibre.org/maplibre-gl-js/docs/examples/anisotropic-filter-pitch/)
      */
     setAnisotropicFilterPitch(anisotropicFilterPitch?: number | null): Map {
 
