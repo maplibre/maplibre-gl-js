@@ -3,8 +3,10 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix correct bounds calculation for GeoJSON with elevation ([#6963](https://github.com/maplibre/maplibre-gl-js/pull/6963)) (by [@simonmnt](https://github.com/simonmnt))
 - _...Add new stuff here..._
+- Fix correct bounds calculation for GeoJSON with elevation ([#6963](https://github.com/maplibre/maplibre-gl-js/pull/6963)) (by [@simonmnt](https://github.com/simonmnt))
+- Fix Firefox "Alpha-premult deprecated for non-DOM uploads" warning ([#7128](https://github.com/maplibre/maplibre-gl-js/pull/7128)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix raster tiles rendering with glyph/icon atlas content after WebGL context loss ([#7126](https://github.com/maplibre/maplibre-gl-js/pull/7126)) (by [@birkskyum](https://github.com/birkskyum))
 
 ## 5.18.0
 
