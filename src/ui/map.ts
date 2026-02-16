@@ -1373,7 +1373,6 @@ export class Map extends Camera {
      * ```ts
      * let anisotropicFilterPitch = map.getAnisotropicFilterPitch();
      * ```
-     * @see [Anisotropic filter pitch](https://maplibre.org/maplibre-gl-js/docs/examples/anisotropic-filter-pitch/)
      */
     getAnisotropicFilterPitch(): number { return this._anisotropicFilterPitch; }
 
@@ -1390,7 +1389,6 @@ export class Map extends Camera {
      * ```ts
      * map.setAnisotropicFilterPitch(85);
      * ```
-     * @see [Anisotropic filter pitch](https://maplibre.org/maplibre-gl-js/docs/examples/anisotropic-filter-pitch/)
      */
     setAnisotropicFilterPitch(anisotropicFilterPitch?: number | null): Map {
 
