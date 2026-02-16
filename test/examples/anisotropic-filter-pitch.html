@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <title>Anisotropic filter pitch</title>
-    <meta property="og:description" content="Specify the pitch above which raster layers are anistropically filtered." />
+    <meta property="og:description" content="Specify the pitch above which the map applies an anisotropic filter to all raster layers." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
@@ -13,15 +13,39 @@
     </style>
 </head>
 <body>
+<style>
+    #menu {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        top: 0;
+        left: 0;
+        gap: 10px;
+        background: #fff;
+        padding: 10px;
+        font-family: 'Open Sans', sans-serif;
+    }
+</style>
 <div id="map"></div>
+<div id=menu>
+    <div>
+        Current pitch: <span id=pitch></span><span>°</span>
+    </div>
+    <div>
+        <div>Set <code>anisotropicFilterPitch</code>:</div>
+        <div style="display: flex; align-items: center;">
+            <input type=range name=range id=range min=0 max=90 step=10 style="width: 100%;"/>
+            <label for=range></label><span>°</span>
+        </div>
+    </div>
+</div>
 <script>
     const map = (window.map = new maplibregl.Map({
         container: 'map',
         zoom: 17.62,
         center: [11.167646, 47.061039],
-        pitch: 80,
+        pitch: 50,
         bearing: -116.8,
-        hash: true,
         style: {
             version: 8,
             sources: {
@@ -52,8 +76,8 @@
             },
         },
         maxZoom: 18,
-        maxPitch: 85,
-        anisotropicFilterPitch: 85,
+        maxPitch: 90,
+        anisotropicFilterPitch: 20,
     }));
 
     map.addControl(
@@ -70,6 +94,37 @@
             exaggeration: 1
         })
     );
+
+    const pitch = document.getElementById('pitch');
+    const range = document.getElementById('range');
+    const label = document.querySelector('label[for="range"]');
+
+    map.on('load', (event) => {
+        const value = event.target.getAnisotropicFilterPitch();
+        range.value = value;
+        label.textContent = value;
+    })
+
+    function setMapAnisotropicFilterPitch(option) {
+        const value = option.target.value;
+        map.setAnisotropicFilterPitch(Number(value))
+        label.textContent = value;
+    }
+
+    let timeout;
+    map.on('pitch', (event) => {
+        pitch.textContent = event.target.getPitch().toFixed(1);
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+        setTimeout(() => {
+            map.refreshTiles('osm');
+        }, 1000)
+    })
+
+    range.oninput = setMapAnisotropicFilterPitch;
+    range.onchange = () => map.refreshTiles('osm');
+    pitch.textContent = map.getPitch().toFixed(1);
 </script>
 </body>
 </html>
