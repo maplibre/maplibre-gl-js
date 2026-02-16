@@ -709,14 +709,6 @@ export class Map extends Camera {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
-        if (resolvedOptions.anisotropicFilterPitch != null && resolvedOptions.anisotropicFilterPitch < defaultMinPitch) {
-            throw new Error(`anisotropicFilterPitch must be greater than or equal to ${defaultMinPitch}`);
-        }
-
-        if (resolvedOptions.anisotropicFilterPitch != null && resolvedOptions.anisotropicFilterPitch > maxPitchThreshold) {
-            throw new Error(`anisotropicFilterPitch must be less than or equal to ${maxPitchThreshold}`);
-        }
-
         // For now we will use a temporary MercatorTransform instance.
         // Transform specialization will later be set by style when it creates its projection instance.
         // When this happens, the new transform will inherit all properties of this temporary transform.
@@ -766,7 +758,7 @@ export class Map extends Camera {
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
-        this._anisotropicFilterPitch = resolvedOptions.anisotropicFilterPitch;
+        this.setAnisotropicFilterPitch(resolvedOptions.anisotropicFilterPitch);
 
         if (resolvedOptions.reduceMotion !== undefined) {
             browser.prefersReducedMotion = resolvedOptions.reduceMotion;
