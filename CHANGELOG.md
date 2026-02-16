@@ -4,8 +4,42 @@
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+- Fix correct bounds calculation for GeoJSON with elevation ([#6963](https://github.com/maplibre/maplibre-gl-js/pull/6963)) (by [@simonmnt](https://github.com/simonmnt))
 - Fix Firefox "Alpha-premult deprecated for non-DOM uploads" warning ([#7128](https://github.com/maplibre/maplibre-gl-js/pull/7128)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix raster tiles rendering with glyph/icon atlas content after WebGL context loss ([#7126](https://github.com/maplibre/maplibre-gl-js/pull/7126)) (by [@birkskyum](https://github.com/birkskyum))
+
+## 5.18.0
+
+### ✨ Features and improvements
+
+- Add support for click events on Marker ([#7028](https://github.com/maplibre/maplibre-gl-js/pull/7028)) (by [@ganesh8068](https://github.com/ganesh8068))
+- Simplify and abstract the GeoJSON Worker ([#7058](https://github.com/maplibre/maplibre-gl-js/pull/7058)) (by [@wayofthefuture](https://github.com/wayofthefuture))
+- Add `pseudo` option to `FullscreenControl` to force CSS-based fullscreen mode instead of native fullscreen API. Users might want this because this is faster on some devices ([#7076](https://github.com/maplibre/maplibre-gl-js/pull/7076)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Migrate our API docs to zensical ([#7071](https://github.com/maplibre/maplibre-gl-js/pull/7071)) (by [CommanderStorm](https://github.com/CommanderStorm))
+
+### 🐞 Bug fixes
+
+- Fix WebGL context loss error when style is not yet loaded ([#7094](https://github.com/maplibre/maplibre-gl-js/pull/7094)) (by [@kaigritun](https://github.com/kaigritun))
+- Fix updating terrain tiles on feature state changes ([#6231](https://github.com/maplibre/maplibre-gl-js/issues/6231)) (by [@pstaszek](https://github.com/pstaszek))
+- Fix LngLatBounds.intersects for zero-width bounds ([#7055](https://github.com/maplibre/maplibre-gl-js/pull/7055)) (by [@lucaswoj](https://github.com/lucaswoj))
+- Fix `GlobeControl` not updating when `Map.setProjection()` is called programmatically ([#7005](https://github.com/maplibre/maplibre-gl-js/issues/7005), [#7075](https://github.com/maplibre/maplibre-gl-js/pull/7075)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Fix `map.getProjection()` returning `undefined` after calling `map.setProjection()` with the default `"mercator"` projection ([#7072](https://github.com/maplibre/maplibre-gl-js/pull/7072))
+- Fix incorrect text placement along line in 3D mode ([#7039](https://github.com/maplibre/maplibre-gl-js/issues/7039)) (by [@russellporter](https://github.com/russellporter))
+- When the `prefers-reduced-motion` media query is active, we now no longer display the pulsing GeoLocation animation ([#7066](https://github.com/maplibre/maplibre-gl-js/pull/7066)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+
+## 5.17.0
+
+### ✨ Features and improvements
+
+- Refactor _updateWorkerData ([#6983](https://github.com/maplibre/maplibre-gl-js/pull/6983)) (by [@wayofthefuture](https://github.com/wayofthefuture))
+- ⚠️ Add `zoomSnap` option to `Map` to allow snapping zoom levels to a grid when zooming in and out; aligns the behavior across all UI patterns (keyboard, scroll wheel, on-screen zoom buttons, double-click, double-tap). Previously, pressing +/- on the keyboard zoomed to rounded whole integers, more or less than 1 zoom level when starting from a fractional zoom. Now any number can be specified for `zoomSnap`; a value of 1.0 produces the rounded whole integer behavior across all UI patterns. ([#6941](https://github.com/maplibre/maplibre-gl-js/pull/6941)) (by [@mizmay](https://github.com/mizmay))
+- Add support for container elements from different windows (e.g., popup or iframe) ([#6969](https://github.com/maplibre/maplibre-gl-js/pull/6969)) (by [@Syncret](https://github.com/Syncret))
+- Migrate to @maplibre/geojson-vt ([#6995](https://github.com/maplibre/maplibre-gl-js/pull/6995)) (by [@HarelM](https://github.com/HarelM))
+
+### 🐞 Bug fixes
+
+- Fix incorrect shader selection for text labels with inline images ([#6956](https://github.com/maplibre/maplibre-gl-js/pull/6956)) (by [@ciscorn](https://github.com/ciscorn))
+- Fix marker positions not updating when zoom or pitch are changed following a change in constraints ([#6925](https://github.com/maplibre/maplibre-gl-js/issues/6925)) (by [auspicus](https://github.com/auspicus))
 
 ## 5.18.0
 
