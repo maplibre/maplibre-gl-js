@@ -602,6 +602,17 @@ describe('AttributionControl test regarding the HTML elements details and summar
             expect(attribution._container.classList.contains('maplibregl-attrib-empty')).toBe(true);
         });
 
+        test('compact attribution is initially expanded on wide map', () => {
+            Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 600, configurable: true});
+            const attribution = new AttributionControl({
+                compact: true,
+                customAttribution: 'Test Attribution'
+            });
+            map.addControl(attribution);
+
+            expect(attribution._container.classList.contains('maplibregl-compact-show')).toBe(true);
+        });
+
         test('drag minimizes expanded compact attribution', () => {
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 600, configurable: true});
             const attribution = new AttributionControl({
@@ -610,10 +621,6 @@ describe('AttributionControl test regarding the HTML elements details and summar
             });
             map.addControl(attribution);
 
-            // Initially compact-show is present
-            expect(attribution._container.classList.contains('maplibregl-compact-show')).toBe(true);
-
-            // First click collapses, second click expands
             const toggle = attribution._container.querySelector('.maplibregl-ctrl-attrib-button');
             simulate.click(toggle);
             simulate.click(toggle);
