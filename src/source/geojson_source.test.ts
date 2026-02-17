@@ -829,6 +829,27 @@ describe('GeoJSONSource.getBounds', () => {
         expect(bounds.getSouthWest().lat).toBe(1.2);
         expect(bounds.getSouthWest().lng).toBe(1.1);
     });
+
+    test('get bounds returns result with elevation', async () => {
+        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message) {
+                expect(message.type).toBe(MessageType.getData);
+                return Promise.resolve({
+                    type: 'LineString',
+                    coordinates: [
+                        [1.1, 1.2, 3250],
+                        [1.3, 1.4, 3251]
+                    ]
+                });
+            }
+        }), undefined);
+        source.map = mapStub;
+        const bounds = await source.getBounds();
+        expect(bounds.getNorthEast().lat).toBe(1.4);
+        expect(bounds.getNorthEast().lng).toBe(1.3);
+        expect(bounds.getSouthWest().lat).toBe(1.2);
+        expect(bounds.getSouthWest().lng).toBe(1.1);
+    });
 });
 
 describe('GeoJSONSource.serialize', () => {

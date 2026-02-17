@@ -2,9 +2,13 @@
 ### ✨ Features and improvements
 - Add Etag unmodified support to optimize vector tile reloading ([#7074](https://github.com/maplibre/maplibre-gl-js/pull/7074)) (by [@rivkamatan](https://github.com/rivkamatan and [@wayofthefuture](https://github.com/wayofthefuture))
 - _...Add new stuff here..._
+- Add `anisotropicFilterPitch` map option to set the pitch above which the anisotropic filter is applied to all raster layers, the default of which is 20° ([#7134](https://github.com/maplibre/maplibre-gl-js/issues/7134)) (by [larsmaxfield](https://github.com/larsmaxfield))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+- Fix correct bounds calculation for GeoJSON with elevation ([#6963](https://github.com/maplibre/maplibre-gl-js/pull/6963)) (by [@simonmnt](https://github.com/simonmnt))
+- Fix Firefox "Alpha-premult deprecated for non-DOM uploads" warning ([#7128](https://github.com/maplibre/maplibre-gl-js/pull/7128)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix raster tiles rendering with glyph/icon atlas content after WebGL context loss ([#7126](https://github.com/maplibre/maplibre-gl-js/pull/7126)) (by [@birkskyum](https://github.com/birkskyum))
 
 ## 5.18.0
 

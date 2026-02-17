@@ -124,9 +124,9 @@ function drawTiles(
             tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
         }
 
-        // Enable anisotropic filtering only when the pitch is greater than 20 degrees
-        // to preserve image sharpness on flat or slightly tilted maps.
-        if (tile.texture.useMipmap && context.extTextureFilterAnisotropic && painter.transform.pitch > 20) {
+        // Enable anisotropic filtering only when the pitch is greater than the threshold pitch.
+        // The default threshold is 20 degrees to preserve image sharpness on flat or slightly tilted maps.
+        if (tile.texture.useMipmap && context.extTextureFilterAnisotropic && painter.transform.pitch > painter.options.anisotropicFilterPitch) {
             gl.texParameterf(gl.TEXTURE_2D, context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT,
                 context.extTextureFilterAnisotropicMax);
         }

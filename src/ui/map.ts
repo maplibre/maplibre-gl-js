@@ -170,6 +170,11 @@ export type MapOptions = {
      */
     maxPitch?: number | null;
     /**
+     * The pitch above which to apply anisotropic filtering to the map's raster layers (0-180).
+     * @defaultValue 20
+     */
+    anisotropicFilterPitch?: number | null;
+    /**
      * If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).
      * @defaultValue true
      */
@@ -433,8 +438,9 @@ const defaultMaxZoom = 22;
 // the default values, but also the valid range
 const defaultMinPitch = 0;
 const defaultMaxPitch = 60;
+const defaultAnisotropicFilterPitch = 20;
 
-// use this variable to check maxPitch for validity
+// use this variable to check maxPitch and anisotropicFilterPitch for validity
 const maxPitchThreshold = 180;
 
 const defaultOptions: Readonly<Partial<MapOptions>> = {
@@ -497,7 +503,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
     centerClampedToGround: true,
-    experimentalZoomLevelsToOverscale: undefined
+    experimentalZoomLevelsToOverscale: undefined,
+    anisotropicFilterPitch: defaultAnisotropicFilterPitch,
 };
 
 /**
@@ -554,6 +561,7 @@ export class Map extends Camera {
     _styleDirty: boolean;
     _sourcesDirty: boolean;
     _placementDirty: boolean;
+    _anisotropicFilterPitch: number;
 
     _loaded: boolean;
     _idleTriggered = false;
@@ -750,6 +758,7 @@ export class Map extends Camera {
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
+        this.setAnisotropicFilterPitch(resolvedOptions.anisotropicFilterPitch);
 
         if (resolvedOptions.reduceMotion !== undefined) {
             browser.prefersReducedMotion = resolvedOptions.reduceMotion;
@@ -1346,6 +1355,48 @@ export class Map extends Camera {
      * @returns The maxPitch
      */
     getMaxPitch(): number { return this.transform.maxPitch; }
+
+    /**
+     * Returns the map's anisotropic filter pitch.
+     * If the map is pitched beyond this threshold, anisotropic filtering will be applied to all raster layers.
+     *
+     * @returns The anisotropicFilterPitch
+     * @example
+     * ```ts
+     * let anisotropicFilterPitch = map.getAnisotropicFilterPitch();
+     * ```
+     */
+    getAnisotropicFilterPitch(): number { return this._anisotropicFilterPitch; }
+
+    /**
+     * Sets the map's anisotropic filter pitch or reverts it to its default.
+     *
+     * A {@link ErrorEvent} event will be fired if anisotropicFilterPitch is out of bounds.
+     *
+     * @param anisotropicFilterPitch - The pitch above which to apply anisotropic filtering to the map's raster layers (0-180).
+     * If `null` or `undefined` is provided, the function reverts to the default pitch threshold (20).
+     * 
+     * 
+     * @example
+     * ```ts
+     * map.setAnisotropicFilterPitch(85);
+     * ```
+     */
+    setAnisotropicFilterPitch(anisotropicFilterPitch?: number | null): Map {
+
+        anisotropicFilterPitch = anisotropicFilterPitch === null || anisotropicFilterPitch === undefined ? defaultAnisotropicFilterPitch : anisotropicFilterPitch;
+
+        if (anisotropicFilterPitch > maxPitchThreshold) {
+            throw new Error(`anisotropicFilterPitch must be less than or equal to ${maxPitchThreshold}`);
+        }
+
+        if (anisotropicFilterPitch < defaultMinPitch) {
+            throw new Error(`anisotropicFilterPitch must be greater than or equal to ${defaultMinPitch}`);
+        }
+
+        this._anisotropicFilterPitch = anisotropicFilterPitch;
+        return this._update();
+    }
 
     /**
      * Returns the state of `renderWorldCopies`. If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
@@ -3618,6 +3669,7 @@ export class Map extends Camera {
             moving: this.isMoving(),
             fadeDuration,
             showPadding: this.showPadding,
+            anisotropicFilterPitch: this.getAnisotropicFilterPitch(),
         });
 
         this.fire(new Event('render'));
