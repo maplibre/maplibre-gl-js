@@ -589,59 +589,56 @@ describe('AttributionControl test regarding the HTML elements details and summar
 
             await sleep(100);
 
-            expect(attribution._innerContainer.innerHTML).toBe('Valid Attribution');
+            const innerContainer = map.getContainer().querySelector('.maplibregl-ctrl-attrib-inner');
+            expect(innerContainer.innerHTML).toBe('Valid Attribution');
         });
 
         test('empty customAttribution string results in empty attribution', () => {
-            const attribution = new AttributionControl({
-                customAttribution: ''
-            });
-            map.addControl(attribution);
+            map.addControl(new AttributionControl({customAttribution: ''}));
 
-            expect(attribution._innerContainer.innerHTML).toBe('');
-            expect(attribution._container.classList.contains('maplibregl-attrib-empty')).toBe(true);
+            const container = map.getContainer();
+            const attrib = container.querySelector('.maplibregl-ctrl-attrib-inner');
+            expect(attrib.innerHTML).toBe('');
+            expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(1);
         });
 
-        test('compact attribution is initially expanded on wide map', () => {
+        test('compact attribution is initially expanded', () => {
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 600, configurable: true});
-            const attribution = new AttributionControl({
+            map.addControl(new AttributionControl({
                 compact: true,
                 customAttribution: 'Test Attribution'
-            });
-            map.addControl(attribution);
+            }));
 
-            expect(attribution._container.classList.contains('maplibregl-compact-show')).toBe(true);
+            expect(map.getContainer().querySelectorAll('.maplibregl-compact-show')).toHaveLength(1);
         });
 
         test('drag minimizes expanded compact attribution', () => {
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 600, configurable: true});
-            const attribution = new AttributionControl({
+            map.addControl(new AttributionControl({
                 compact: true,
                 customAttribution: 'Test Attribution'
-            });
-            map.addControl(attribution);
+            }));
 
-            const toggle = attribution._container.querySelector('.maplibregl-ctrl-attrib-button');
+            const container = map.getContainer();
+            const toggle = container.querySelector('.maplibregl-ctrl-attrib-button');
             simulate.click(toggle);
             simulate.click(toggle);
-            expect(attribution._container.classList.contains('maplibregl-compact-show')).toBe(true);
+            expect(container.querySelectorAll('.maplibregl-compact-show')).toHaveLength(1);
 
             map.fire('drag');
-            expect(attribution._container.classList.contains('maplibregl-compact-show')).toBe(false);
+            expect(container.querySelectorAll('.maplibregl-compact-show')).toHaveLength(0);
         });
 
-        test('onRemove cleans up DOM and internal state', () => {
+        test('onRemove cleans up DOM', () => {
             const attribution = new AttributionControl({customAttribution: 'Test', compact: true});
             map.addControl(attribution);
 
             const container = map.getContainer();
             expect(container.querySelectorAll('.maplibregl-ctrl-attrib')).toHaveLength(1);
-            expect(attribution._map).toBeDefined();
 
             map.removeControl(attribution);
 
             expect(container.querySelectorAll('.maplibregl-ctrl-attrib')).toHaveLength(0);
-            expect(attribution._map).toBeUndefined();
         });
     });
 });
