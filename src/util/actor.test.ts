@@ -277,4 +277,21 @@ describe('Actor', () => {
 
         expect(spy).toHaveBeenCalled();
     });
+
+    test('should process a message when sender origin is "null" (srcdoc iframe)', async () => {
+        // Browsers assign a null origin to srcdoc iframes. When MapLibre is hosted inside
+        // such an iframe the worker's origin may differ from the iframe's 'null' origin.
+        // We must allow communication in this case, similar to file:// environments.
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+        const actor = new Actor(worker, '1');
+
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
+
+        actor.target.postMessage({type: MessageType.getClusterExpansionZoom, data: {} as any, origin: 'null'});
+
+        await sleep(0);
+
+        expect(spy).toHaveBeenCalled();
+    });
 });

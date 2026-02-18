@@ -147,7 +147,14 @@ export class Actor implements IActor {
     receive(message: {data: MessageData}) {
         const data = message.data;
         const id = data.id;
-        if (data.origin !== 'file://' && location.origin !== 'file://' && data.origin !== 'resource://android' && location.origin !== 'resource://android' && data.origin !== location.origin) {
+        // 'file://' and 'resource://android' are special origins used in local/embedded environments.
+        // 'null' is the opaque origin assigned by browsers to documents loaded via srcdoc iframes
+        // (or sandboxed iframes without allow-same-origin). When either side has a null origin we
+        // cannot reliably enforce the same-origin check, so we allow communication in the same way
+        // we do for file:// and Android webviews. See: https://github.com/maplibre/maplibre-gl-js/issues/7047
+        const allowedOrigin = (origin: string) =>
+            origin === 'file://' || origin === 'resource://android' || origin === 'null';
+        if (!allowedOrigin(data.origin) && !allowedOrigin(location.origin) && data.origin !== location.origin) {
             return;
         }
         if (data.targetMapId && this.mapId !== data.targetMapId) {
