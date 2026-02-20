@@ -514,4 +514,27 @@ describe('getStyle', () => {
         });
     });
 
+    describe('getStyleUrl', () => {
+        test('returns the style URL when loaded from URL', async () => {
+            const styleUrl = 'http://example.com/style.json';
+            server.respondWith(
+                'GET',
+                styleUrl,
+                [200, {'Content-Type': 'application/json'}, JSON.stringify({version: 8, sources: {}, layers: []})]
+            );
+
+            const map = createMap();
+            map.setStyle(styleUrl);
+            server.respond();
+            await map.once('style.load');
+
+            expect(map.getStyleUrl()).toBe(styleUrl);
+        });
+
+        test('returns null when no style is set', () => {
+            const map = createMap({style: undefined});
+            expect(map.getStyleUrl()).toBeNull();
+        });
+    });
+
 });
