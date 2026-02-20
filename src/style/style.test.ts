@@ -1175,6 +1175,47 @@ describe('Style.setState', () => {
 
         expect(didChange).toBeTruthy();
     });
+
+    test('setState updates styleUrl when sourceUrl is provided', async () => {
+        const style = new Style(getStubMap());
+        const styleSpec = createStyleJSON();
+        style.loadJSON(styleSpec);
+
+        await style.once('style.load');
+
+        expect(style.getStyleUrl()).toBeNull();
+
+        const newStyleSpec = createStyleJSON({
+            layers: [{id: 'bg', type: 'background'}]
+        });
+        const sourceUrl = 'http://example.com/style.json';
+        style.setState(newStyleSpec, {}, sourceUrl);
+
+        expect(style.getStyleUrl()).toBe(sourceUrl);
+    });
+
+    test('setState clears styleUrl when sourceUrl is not provided', async () => {
+        const styleUrl = 'http://example.com/style.json';
+        server.respondWith(
+            'GET',
+            styleUrl,
+            [200, {'Content-Type': 'application/json'}, JSON.stringify(createStyleJSON())]
+        );
+
+        const style = new Style(getStubMap());
+        style.loadURL(styleUrl);
+        server.respond();
+        await style.once('style.load');
+
+        expect(style.getStyleUrl()).toBe(styleUrl);
+
+        const newStyleSpec = createStyleJSON({
+            layers: [{id: 'bg', type: 'background'}]
+        });
+        style.setState(newStyleSpec);
+
+        expect(style.getStyleUrl()).toBeNull();
+    });
 });
 
 describe('Style.addSource', () => {

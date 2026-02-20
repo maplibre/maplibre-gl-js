@@ -857,7 +857,7 @@ export class Style extends Evented {
      *
      * @returns true if any changes were made; false otherwise
      */
-    setState(nextState: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions = {}) {
+    setState(nextState: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions = {}, sourceUrl?: string) {
         this._checkLoaded();
 
         const serializedStyle =  this.serialize();
@@ -876,6 +876,8 @@ export class Style extends Evented {
         }
 
         if (operations.operations.length === 0) {
+            // Update sourceUrl even when there are no changes
+            this._styleUrl = sourceUrl ?? null;
             return false;
         }
 
@@ -887,6 +889,9 @@ export class Style extends Evented {
 
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
+
+        // Update sourceUrl when setState succeeds
+        this._styleUrl = sourceUrl ?? null;
 
         this.fire(new Event('style.load', {style: this}));
 
@@ -1933,16 +1938,6 @@ export class Style extends Evented {
      */
     getStyleUrl(): string | null {
         return this._styleUrl;
-    }
-
-    /**
-     * Sets the URL of the style. This is used internally when the style is loaded from a URL
-     * or when the style URL needs to be updated during diff operations.
-     *
-     * @param url - The style URL, or null if the style is not loaded from a URL.
-     */
-    setStyleUrl(url: string | null) {
-        this._styleUrl = url;
     }
 
     setGlyphs(glyphsUrl: string | null | undefined, options: StyleSetterOptions = {}) {
