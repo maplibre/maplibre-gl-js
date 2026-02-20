@@ -8,6 +8,32 @@ import type Point from '@mapbox/point-geometry';
 import {type Handler} from '../handler_manager';
 
 /**
+ * Result type for a custom box zoom end callback.
+ */
+export type BoxZoomEndResult = {
+    /**
+     * A custom camera animation to run instead of the default fit-to-box behavior.
+     */
+    cameraAnimation?: (map: Map) => any;
+};
+
+/**
+ * Callback type for customizing the action that runs when a box zoom ends.
+ */
+export type BoxZoomEndHandler = (map: Map, startPos: Point, endPos: Point, originalEvent: MouseEvent) => BoxZoomEndResult | void;
+
+/**
+ * A {@link BoxZoomHandler} options object.
+ */
+export type BoxZoomHandlerOptions = {
+    /**
+     * A callback that runs when the user completes the Shift-drag box gesture.
+     * Returning a {@link BoxZoomEndResult} allows overriding the default camera animation.
+     */
+    boxZoomEnd?: BoxZoomEndHandler;
+};
+
+/**
  * The `BoxZoomHandler` allows the user to zoom the map to fit within a bounding box.
  * The bounding box is defined by clicking and holding `shift` while dragging the cursor.
  *
@@ -24,6 +50,7 @@ export class BoxZoomHandler implements Handler {
     _lastPos: Point;
     _box: HTMLElement;
     _clickTolerance: number;
+    _boxZoomEnd?: BoxZoomEndHandler;
 
     /** @internal */
     constructor(map: Map, options: {
@@ -57,12 +84,16 @@ export class BoxZoomHandler implements Handler {
     /**
      * Enables the "box zoom" interaction.
      *
+     * @param options - Options object.
      * @example
      * ```ts
      * map.boxZoom.enable();
      * ```
      */
-    enable() {
+    enable(options?: BoxZoomHandlerOptions | boolean) {
+        if (options && typeof options === 'object') {
+            this._boxZoomEnd = options.boxZoomEnd;
+        }
         if (this.isEnabled()) return;
         this._enabled = true;
     }
@@ -134,6 +165,9 @@ export class BoxZoomHandler implements Handler {
             this._fireEvent('boxzoomcancel', e);
         } else {
             this._map.fire(new Event('boxzoomend', {originalEvent: e}));
+            if (this._boxZoomEnd) {
+                return this._boxZoomEnd(this._map, p0, p1, e);
+            }
             return {
                 cameraAnimation: map => map.fitScreenCoordinates(p0, p1, this._tr.bearing, {linear: true})
             };

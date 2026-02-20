@@ -255,7 +255,7 @@ export class HandlerManager {
         const boxZoom = map.boxZoom = new BoxZoomHandler(map, options);
         this._add('boxZoom', boxZoom);
         if (options.interactive && options.boxZoom) {
-            boxZoom.enable();
+            boxZoom.enable(options.boxZoom);
         }
 
         const cooperativeGestures = map.cooperativeGestures = new CooperativeGesturesHandler(map, options.cooperativeGestures);
