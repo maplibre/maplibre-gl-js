@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - _...Add new stuff here..._
+- Change the return type of `LngLatBounds.toArray()` to use a more precise type ([#7156](https://github.com/maplibre/maplibre-gl-js/pull/7156)) (by [@Its-Just-Nans](https://github.com/Its-Just-Nans))
 - Add `anisotropicFilterPitch` map option to set the pitch above which the anisotropic filter is applied to all raster layers, the default of which is 20° ([#7134](https://github.com/maplibre/maplibre-gl-js/issues/7134)) (by [larsmaxfield](https://github.com/larsmaxfield))
 
 ### 🐞 Bug fixes
