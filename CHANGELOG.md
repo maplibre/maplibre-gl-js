@@ -1,15 +1,16 @@
 ## main
 ### ✨ Features and improvements
-- _...Add new stuff here..._
 - Change the return type of `LngLatBounds.toArray()` to use a more precise type ([#7156](https://github.com/maplibre/maplibre-gl-js/pull/7156)) (by [@n4n5](https://github.com/Its-Just-Nans))
 - Add `anisotropicFilterPitch` map option to set the pitch above which the anisotropic filter is applied to all raster layers, the default of which is 20° ([#7134](https://github.com/maplibre/maplibre-gl-js/issues/7134)) (by [larsmaxfield](https://github.com/larsmaxfield))
+- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
 - Fix SDF `icon-text-fit` rendering by correctly unpacking packed shader values in `symbol_sdf.vertex.glsl`, with render-test coverage ([#7141](https://github.com/maplibre/maplibre-gl-js/pull/7141), fixes [#6953](https://github.com/maplibre/maplibre-gl-js/issues/6953)) (by [@pcardinal](https://github.com/pcardinal))
 - Fix correct bounds calculation for GeoJSON with elevation ([#6963](https://github.com/maplibre/maplibre-gl-js/pull/6963)) (by [@simonmnt](https://github.com/simonmnt))
 - Fix Firefox "Alpha-premult deprecated for non-DOM uploads" warning ([#7128](https://github.com/maplibre/maplibre-gl-js/pull/7128)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix raster tiles rendering with glyph/icon atlas content after WebGL context loss ([#7126](https://github.com/maplibre/maplibre-gl-js/pull/7126)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix popup tip in RTL pages ([#7157](https://github.com/maplibre/maplibre-gl-js/pull/7157)) (by [@HarelM](https://github.com/HarelM))
+- _...Add new stuff here..._
 
 ## 5.18.0
 
