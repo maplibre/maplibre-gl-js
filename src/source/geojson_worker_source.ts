@@ -11,6 +11,7 @@ import {type GeoJSONSourceDiff, applySourceDiff, toUpdateable, type GeoJSONFeatu
 import {WorkerTile} from './worker_tile';
 import {WorkerTileState, type ParsingState} from './worker_tile_state';
 import {extend} from '../util/util';
+import {serializeTile} from '../util/fast_tile_serializer';
 
 import type {WorkerSource, WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source';
 import type {LoadVectorTileResult} from './vector_tile_worker_source';
@@ -18,7 +19,6 @@ import type {RequestParameters} from '../util/ajax';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
 import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
-import { serializeTile } from '../util/fast_tile_serializer';
 
 /**
  * The geojson worker options that can be passed to the worker

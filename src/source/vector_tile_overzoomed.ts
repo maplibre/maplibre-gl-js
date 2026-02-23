@@ -1,7 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {serializeTile} from '../util/fast_tile_serializer';
 import {clipGeometry} from '../symbol/clip_line';
-import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {CanonicalTileID} from '../tile/tile_id';
 import type {VectorTileFeatureLike, VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
 
