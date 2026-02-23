@@ -22,5 +22,6 @@ test('Render must not fail with incompletely loaded style', () => {
         showPadding: false,
         showTileBoundaries: false,
         zooming: false,
+        anisotropicFilterPitch: 20,
     });
 });

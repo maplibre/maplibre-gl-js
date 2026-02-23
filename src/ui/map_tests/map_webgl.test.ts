@@ -24,6 +24,22 @@ test('does not fire "webglcontextlost" after remove has been called', () => {
     expect(spy).not.toHaveBeenCalled();
 });
 
+test('handles "webglcontextlost" when map is created without style', () => {
+    // This test verifies fix for #7022 - map should not throw when WebGL context
+    // is lost before the style is loaded (i.e., when style is null/undefined)
+    const map = createMap({deleteStyle: true});
+    const canvas = map.getCanvas();
+    const spy = vi.fn();
+    map.on('webglcontextlost', spy);
+    // Dispatch the event manually because at the time of this writing, gl does not support
+    // the WEBGL_lose_context extension.
+    expect(() => {
+        canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    }).not.toThrow();
+    expect(spy).toHaveBeenCalled();
+    map.remove();
+});
+
 test('does not fire "webglcontextrestored" after remove has been called', async () => {
     const map = createMap();
     const canvas = map.getCanvas();

@@ -60,6 +60,7 @@ import type {Tile} from './tile/tile';
 import type {GeoJSONFeatureDiff, GeoJSONFeatureId, GeoJSONSourceDiff} from './source/geojson_source_diff';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from './source/query_features';
 import type {RequestTransformFunction, ResourceType} from './util/request_manager';
+import {EXTENT} from './data/extent';
 import type {OverscaledTileID} from './tile/tile_id';
 import type {PositionAnchor} from './ui/anchor';
 import type {ProjectionData} from './geo/projection/projection_data';
@@ -375,5 +376,6 @@ export {
     now,
     setNow,
     restoreNow,
-    isTimeFrozen
+    isTimeFrozen,
+    EXTENT
 };
