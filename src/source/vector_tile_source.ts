@@ -204,8 +204,12 @@ export class VectorTileSource extends Evented implements Source {
 
     async loadTile(tile: Tile): Promise<LoadTileResult | void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+        const request = this.map._requestManager.transformRequest(url, ResourceType.Tile);
+        const resolvedRequest = request instanceof Promise ? await request : request;
+        const overzoomParameters = this._getOverzoomParameters(tile);
+        const resolvedOverzoomParameters = overzoomParameters instanceof Promise ? await overzoomParameters : overzoomParameters;
         const params: WorkerTileParameters = {
-            request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
+            request: resolvedRequest,
             uid: tile.uid,
             tileID: tile.tileID,
             zoom: tile.tileID.overscaledZ,
@@ -217,7 +221,7 @@ export class VectorTileSource extends Evented implements Source {
             promoteId: this.promoteId,
             subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
             encoding: this.encoding,
-            overzoomParameters: this._getOverzoomParameters(tile),
+            overzoomParameters: resolvedOverzoomParameters,
             etag: tile.etag
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
@@ -260,7 +264,7 @@ export class VectorTileSource extends Evented implements Source {
      * When the requested tile has a higher canonical Z than source maxzoom, pass overzoom parameters so worker can load the
      * deepest tile at source max zoom to generate sub tiles using geojsonvt for highest performance on vector overscaling
      */
-    private _getOverzoomParameters(tile: Tile): OverzoomParameters | undefined {
+    private _getOverzoomParameters(tile: Tile): OverzoomParameters | Promise<OverzoomParameters> | undefined {
         if (tile.tileID.canonical.z <= this.maxzoom) {
             return undefined;
         }
@@ -270,10 +274,18 @@ export class VectorTileSource extends Evented implements Source {
         const maxZoomTileID = tile.tileID.scaledTo(this.maxzoom).canonical;
         const maxZoomTileUrl = maxZoomTileID.url(this.tiles, this.map.getPixelRatio(), this.scheme);
 
-        return {
-            maxZoomTileID,
-            overzoomRequest: this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile)
-        };
+        const overzoomRequest = this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile);
+        if (overzoomRequest instanceof Promise) {
+            return overzoomRequest.then(overzoomRequest => ({
+                maxZoomTileID,
+                overzoomRequest
+            }));
+        } else {
+            return {
+                maxZoomTileID,
+                overzoomRequest
+            };
+        }
     }
 
     private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {

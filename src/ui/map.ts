@@ -2156,13 +2156,18 @@ export class Map extends Camera {
         if (typeof style === 'string') {
             const url = style;
             const request = this._requestManager.transformRequest(url, ResourceType.Style);
-            getJSON<StyleSpecification>(request, new AbortController()).then((response) => {
+            const _getJSON = (request) => getJSON<StyleSpecification>(request, new AbortController()).then((response) => {
                 this._updateDiff(response.data, options);
             }).catch((error) => {
                 if (error) {
                     this.fire(new ErrorEvent(error));
                 }
             });
+            if (request instanceof Promise) {
+                request.then(_getJSON);
+            } else {
+                _getJSON(request);
+            }
         } else if (typeof style === 'object') {
             this._updateDiff(style, options);
         }
@@ -2710,8 +2715,8 @@ export class Map extends Camera {
      * ```
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-icon-to-the-map/)
      */
-    loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
-        return ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
+    async loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
+        return ImageRequest.getImage(await this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
     }
 
     /**

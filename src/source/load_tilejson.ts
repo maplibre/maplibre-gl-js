@@ -26,7 +26,9 @@ export async function loadTileJson(
 ): Promise<LoadTileJsonResponse | null> {
     let tileJSON: TileJSON | typeof options = options;
     if (options.url) {
-        const response = await getJSON<TileJSON>(requestManager.transformRequest(options.url, ResourceType.Source), abortController);
+        const request = requestManager.transformRequest(options.url, ResourceType.Source);
+        const resolvedRequest = request instanceof Promise ? await request : request;
+        const response = await getJSON<TileJSON>(resolvedRequest, abortController);
         tileJSON = response.data;
     } else {
         await browser.frameAsync(abortController, targetWindow);

@@ -17,8 +17,9 @@ export async function loadGlyphRange(fontstack: string,
         urlTemplate.replace('{fontstack}', fontstack).replace('{range}', `${begin}-${end}`),
         ResourceType.Glyphs
     );
+    const resolvedRequest = request instanceof Promise ? await request : request;
 
-    const response = await getArrayBuffer(request, new AbortController());
+    const response = await getArrayBuffer(resolvedRequest, new AbortController());
     if (!response || !response.data) {
         throw new Error(`Could not load glyph range. range: ${range}, ${begin}-${end}`);
     }

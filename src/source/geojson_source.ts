@@ -402,7 +402,8 @@ export class GeoJSONSource extends Evented implements Source {
         }
 
         const {data, diff, updateCluster} = this._pendingWorkerUpdate;
-        const params = this._getLoadGeoJSONParameters(data, diff, updateCluster);
+        const paramsMaybePromise = this._getLoadGeoJSONParameters(data, diff, updateCluster);
+        const params = paramsMaybePromise instanceof Promise ? await paramsMaybePromise : paramsMaybePromise;
 
         if (data !== undefined) {
             this._pendingWorkerUpdate.data = undefined;
@@ -418,14 +419,23 @@ export class GeoJSONSource extends Evented implements Source {
     /**
      * Create the parameters object that will be sent to the worker and used to load GeoJSON.
      */
-    private _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): LoadGeoJSONParameters | undefined {
+    private _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): LoadGeoJSONParameters | Promise<LoadGeoJSONParameters> | undefined {
         const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
 
         // Data comes from a remote url
         if (typeof data === 'string') {
-            params.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
-            params.request.collectResourceTiming = this._collectResourceTiming;
-            return params;
+            const request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
+            if (request instanceof Promise) {
+                return request.then((request) => {
+                    request.collectResourceTiming = this._collectResourceTiming;
+                    params.request = request;
+                    return params;
+                });
+            } else {
+                request.collectResourceTiming = this._collectResourceTiming;
+                params.request = request;
+                return params;
+            }
         }
 
         // Data is a geojson object
