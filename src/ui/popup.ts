@@ -656,7 +656,7 @@ export class Popup extends Evented {
             const width = this._container.offsetWidth;
             const height = this._container.offsetHeight;
             const padding = normalizePadding(this.options.padding);
-            let anchorComponents;
+            let anchorComponents: string[];
 
             if (pos.y + offset.bottom.y < height + padding.top) {
                 anchorComponents = ['top'];

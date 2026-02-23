@@ -230,7 +230,7 @@ export class LngLatBounds {
      * llb.toArray(); // = [[-73.9876, 40.7661], [-73.9397, 40.8002]]
      * ```
      */
-    toArray() {
+    toArray(): [[number, number], [number, number]] {
         return [this._sw.toArray(), this._ne.toArray()];
     }
 
