@@ -16,6 +16,8 @@ import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import type {DashEntry} from '../render/line_atlas';
 
+export type TileEncoding = 'mlt' | 'mvt' | 'geojson'
+
 /**
  * Parameters to identify a tile
  */
@@ -40,7 +42,7 @@ export type WorkerTileParameters = TileParameters & {
     collectResourceTiming?: boolean;
     returnDependencies?: boolean;
     subdivisionGranularity: SubdivisionGranularitySetting;
-    encoding?: 'mlt' | 'mvt' | 'harel';
+    encoding?: TileEncoding;
     /**
      * Provide this property when the requested tile has a higher canonical Z than source maxzoom.
      * This allows the worker to know that it needs to overzoom from a source tile.
@@ -79,7 +81,7 @@ export type WorkerTileResult = ExpiryData & {
     featureIndex: FeatureIndex;
     collisionBoxArray: CollisionBoxArray;
     rawTileData?: ArrayBuffer;
-    encoding?: 'mlt' | 'mvt' | 'harel';
+    encoding?: TileEncoding;
     resourceTiming?: Array<PerformanceResourceTiming>;
     // Only used for benchmarking:
     glyphMap?: {

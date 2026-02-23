@@ -218,7 +218,7 @@ describe('reloadTile', () => {
         let data = await source.reloadTile(tileParams as any as WorkerTileParameters);
         expect('rawTileData' in data).toBeFalsy();
         data.rawTileData = firstData.rawTileData;
-        data.encoding = 'harel';
+        data.encoding = 'geojson';
         expect(data).toEqual(firstData);
 
         // also shouldn't call loadVectorData again
@@ -271,7 +271,7 @@ describe('reloadTile', () => {
 
         // deserialize tile layers in the feature index
         data.featureIndex.rawTileData = data.rawTileData;
-        data.featureIndex.encoding = 'harel';
+        data.featureIndex.encoding = 'geojson';
         const featureLayers = data.featureIndex.loadVTLayers();
         expect(Object.keys(featureLayers)).toHaveLength(1);
 

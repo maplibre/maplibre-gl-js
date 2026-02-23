@@ -68,7 +68,7 @@ export class FeatureIndex {
     grid3D: TransferableGridIndex;
     featureIndexArray: FeatureIndexArray;
     promoteId?: PromoteIdSpecification;
-    encoding: 'mlt' | 'mvt' | 'harel';
+    encoding: 'mlt' | 'mvt' | 'geojson';
     rawTileData: ArrayBuffer;
     bucketLayerIDs: Array<Array<string>>;
 
@@ -119,7 +119,7 @@ export class FeatureIndex {
                 case 'mlt':
                     this.vtLayers = new MLTVectorTile(this.rawTileData).layers;
                     break;
-                case 'harel':
+                case 'geojson':
                     this.vtLayers = deserializeTile(new Uint8Array(this.rawTileData)).layers;
                     break;
                 case 'mvt':

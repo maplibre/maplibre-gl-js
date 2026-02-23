@@ -11,12 +11,10 @@ import {toEvaluationFeature} from '../data/evaluation_feature';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
 
-const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
-
 import type {SourceFeatureState} from '../source/source_state';
 import type {Bucket} from '../data/bucket';
 import type {StyleLayer} from '../style/style_layer';
-import type {WorkerTileResult} from '../source/worker_source';
+import type {TileEncoding, WorkerTileResult} from '../source/worker_source';
 import type {Actor} from '../util/actor';
 import type {DEMData} from '../data/dem_data';
 import type {AlphaImage} from '../util/image';
@@ -33,6 +31,9 @@ import type {ExpiryData} from '../util/ajax';
 import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict} from '../source/query_features';
 import type {DashEntry} from '../render/line_atlas';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
+
+const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
+
 /**
  * The tile's state, can be:
  *
@@ -72,7 +73,7 @@ export class Tile {
     buckets: {[_: string]: Bucket};
     latestFeatureIndex: FeatureIndex | null;
     latestRawTileData: ArrayBuffer;
-    latestEncoding: 'mlt' | 'mvt' | 'harel';
+    latestEncoding: TileEncoding;
     imageAtlas: ImageAtlas;
     imageAtlasTexture: Texture;
     dashPositions: {[_: string]: DashEntry};

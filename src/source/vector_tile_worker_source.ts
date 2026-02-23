@@ -12,7 +12,8 @@ import type {
     WorkerSource,
     WorkerTileParameters,
     TileParameters,
-    WorkerTileResult
+    WorkerTileResult,
+    TileEncoding
 } from '../source/worker_source';
 import type {IActor} from '../util/actor';
 import type {StyleLayer} from '../style/style_layer';
@@ -23,7 +24,7 @@ export type LoadVectorTileResult = {
     vectorTile: VectorTileLike;
     rawData: ArrayBufferLike;
     resourceTiming?: Array<PerformanceResourceTiming>;
-    encoding: 'mlt' | 'mvt' | 'harel';
+    encoding: TileEncoding;
 } & ExpiryData;
 
 export type AbortVectorData = () => void;
