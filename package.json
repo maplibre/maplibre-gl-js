@@ -110,7 +110,7 @@
     "postcss-cli": "^11.0.1",
     "postcss-inline-svg": "^6.0.0",
     "pretty-bytes": "^7.1.0",
-    "puppeteer": "^24.37.3",
+    "puppeteer": "^24.37.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "regenerate": "^1.4.2",
