@@ -275,7 +275,6 @@ export class FeatureIndex {
             }
 
             const geojsonFeature = new GeoJSONFeature(feature, this.z, this.x, this.y, id) as MapGeoJSONFeature;
-            console.log('matching feature: ', feature.loadGeometry(), feature.type);
             geojsonFeature.layer = serializedLayer;
             let layerResult = result[layerID];
             if (layerResult === undefined) {
