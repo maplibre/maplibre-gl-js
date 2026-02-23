@@ -2,7 +2,7 @@ import {MercatorCameraHelper} from './mercator_camera_helper.ts';
 import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas} from './camera_helper.ts';
+import type {CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHandlerOptions, FlyToHandlerResult, FlyToHandlerOptions, ICameraHelper, MapControlsDeltas, PanInertiaData} from './camera_helper.ts';
 import type {LngLat, LngLatLike} from '../lng_lat.ts';
 import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';
 import type {GlobeProjection} from './globe_projection.ts';
@@ -30,19 +30,21 @@ export class GlobeCameraHelper implements ICameraHelper {
         return this.useGlobeControls ? this._verticalPerspectiveCameraHelper : this._mercatorCameraHelper;
     }
 
-    handlePanInertia(pan: Point, transform: IReadonlyTransform): {
+    handlePanInertia(pan: Point, transform: IReadonlyTransform, around?: Point, fixedBearing?: boolean): {
         easingCenter: LngLat;
         easingOffset: Point;
+        easingBearing?: number;
+        panInertia?: PanInertiaData;
     } {
-        return this.currentHelper.handlePanInertia(pan, transform);
+        return this.currentHelper.handlePanInertia(pan, transform, around, fixedBearing);
     }
 
     handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void {
         this.currentHelper.handleMapControlsRollPitchBearingZoom(deltas, tr);
     }
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void {
-        this.currentHelper.handleMapControlsPan(deltas, tr, preZoomAroundLoc);
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat, fixedBearing?: boolean): void {
+        this.currentHelper.handleMapControlsPan(deltas, tr, preZoomAroundLoc, fixedBearing);
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {

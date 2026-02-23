@@ -138,6 +138,7 @@ export type MapControlsScenarioOptions = {
     preZoomAroundLoc: LngLat;
     combinedEventsInProgress: EventsInProgress;
     panDelta?: Point;
+    fixedBearing?: boolean;
 };
 
 function hasChange(result: HandlerResult) {
@@ -573,6 +574,11 @@ export class HandlerManager {
             tr.center :
             tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
 
+        let fixedBearing: boolean;
+        if (typeof this._map.dragPan._inertiaOptions !== 'boolean') {
+            fixedBearing = this._map.dragPan._inertiaOptions.fixedBearing;
+        }
+
         this._handleMapControls({
             terrain,
             tr,
@@ -580,6 +586,7 @@ export class HandlerManager {
             preZoomAroundLoc,
             combinedEventsInProgress,
             panDelta,
+            fixedBearing,
         });
 
         this._camera.applyUpdatedTransform(tr);
@@ -596,14 +603,15 @@ export class HandlerManager {
         deltasForHelper,
         preZoomAroundLoc,
         combinedEventsInProgress,
-        panDelta}: MapControlsScenarioOptions): void {
+        panDelta,
+        fixedBearing}: MapControlsScenarioOptions): void {
 
         const cameraHelper = this._camera.cameraHelper;
 
         cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
 
         if (!terrain) {
-            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc, fixedBearing);
             return;
         }
 
@@ -612,14 +620,14 @@ export class HandlerManager {
                 this._terrainMovement = true;
                 this._camera.elevationFreeze = true;
             }
-            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc, fixedBearing);
             return;
         }
 
         if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
             this._terrainMovement = true;
             this._camera.elevationFreeze = true;
-            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc, fixedBearing);
             return;
         }
 
@@ -628,7 +636,7 @@ export class HandlerManager {
             return;
         }
 
-        cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
+        cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc, fixedBearing);
     }
 
     _fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {[handlerName: string]: Event}, allowEndAnimation: boolean): void {

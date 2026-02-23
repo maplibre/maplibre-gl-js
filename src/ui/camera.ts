@@ -799,6 +799,7 @@ export class Camera extends Evented<MapEventType> {
             offset: options.offset,
             zoom: options.zoom,
             center: options.center,
+            panInertia: (options as any)._panInertia,
         });
 
         this._rotating ||= (startBearing !== bearing);
