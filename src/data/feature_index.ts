@@ -1,4 +1,5 @@
 import type Point from '@mapbox/point-geometry';
+import {type VectorTileFeatureLike, type VectorTileLayerLike, GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
 import {loadGeometry} from './load_geometry';
 import {toEvaluationFeature} from './evaluation_feature';
 import {EXTENT} from './extent';
@@ -25,7 +26,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
-import {type VectorTileFeatureLike, type VectorTileLayerLike, GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
+import type {TileEncoding} from '../source/worker_source';
 
 export {GEOJSON_TILE_LAYER_NAME};
 
@@ -68,7 +69,7 @@ export class FeatureIndex {
     grid3D: TransferableGridIndex;
     featureIndexArray: FeatureIndexArray;
     promoteId?: PromoteIdSpecification;
-    encoding: 'mlt' | 'mvt' | 'geojson';
+    encoding: TileEncoding;
     rawTileData: ArrayBuffer;
     bucketLayerIDs: Array<Array<string>>;
 
