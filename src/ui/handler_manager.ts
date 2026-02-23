@@ -79,6 +79,11 @@ export interface Handler {
 }
 
 /**
+ * Callback that performs a one-off camera animation on the map.
+ */
+export type CameraAnimationCallback = (map: Map) => void;
+
+/**
  * All handler methods that are called with events can optionally return a `HandlerResult`.
  */
 export type HandlerResult = {
@@ -98,7 +103,7 @@ export type HandlerResult = {
     /**
      * A method that can fire a one-off easing by directly changing the map's camera.
      */
-    cameraAnimation?: (map: Map) => any;
+    cameraAnimation?: CameraAnimationCallback;
     /**
      * The last three properties are needed by only one handler: scrollzoom.
      * The DOM event to be used as the `originalEvent` on any camera change events.
@@ -255,7 +260,7 @@ export class HandlerManager {
         const boxZoom = map.boxZoom = new BoxZoomHandler(map, options);
         this._add('boxZoom', boxZoom);
         if (options.interactive && options.boxZoom) {
-            boxZoom.enable(options.boxZoom);
+            boxZoom.enable();
         }
 
         const cooperativeGestures = map.cooperativeGestures = new CooperativeGesturesHandler(map, options.cooperativeGestures);

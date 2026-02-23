@@ -176,7 +176,7 @@ export type MapOptions = {
     anisotropicFilterPitch?: number | null;
     /**
      * If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).
-     * An `Object` value is passed as options to {@link BoxZoomHandler.enable}.
+     * An `Object` value configures {@link BoxZoomHandler} options.
      * @defaultValue true
      */
     boxZoom?: boolean | BoxZoomHandlerOptions;

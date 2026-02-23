@@ -5,20 +5,21 @@ import {TransformProvider} from './transform-provider';
 
 import type {Map} from '../map';
 import type Point from '@mapbox/point-geometry';
-import {type Handler} from '../handler_manager';
+import {type Handler, type CameraAnimationCallback} from '../handler_manager';
 
 /**
- * Result type for a custom box zoom end callback.
+ * Result returned by {@link BoxZoomEndHandler}.
+ * Return `void` to skip the default zoom behavior, or return `cameraAnimation` to run a custom camera action.
  */
 export type BoxZoomEndResult = {
     /**
-     * A custom camera animation to run instead of the default fit-to-box behavior.
+     * A custom camera action to run after `boxzoomend`.
      */
-    cameraAnimation?: (map: Map) => any;
+    cameraAnimation?: CameraAnimationCallback;
 };
 
 /**
- * Callback type for customizing the action that runs when a box zoom ends.
+ * Callback for customizing what happens when a box zoom gesture ends.
  */
 export type BoxZoomEndHandler = (map: Map, startPos: Point, endPos: Point, originalEvent: MouseEvent) => BoxZoomEndResult | void;
 
@@ -55,12 +56,16 @@ export class BoxZoomHandler implements Handler {
     /** @internal */
     constructor(map: Map, options: {
         clickTolerance: number;
+        boxZoom?: boolean | BoxZoomHandlerOptions;
     }) {
         this._map = map;
         this._tr = new TransformProvider(map);
         this._el = map.getCanvasContainer();
         this._container = map.getContainer();
         this._clickTolerance = options.clickTolerance || 1;
+        if (options.boxZoom && typeof options.boxZoom === 'object') {
+            this._boxZoomEnd = options.boxZoom.boxZoomEnd;
+        }
     }
 
     /**
@@ -84,16 +89,12 @@ export class BoxZoomHandler implements Handler {
     /**
      * Enables the "box zoom" interaction.
      *
-     * @param options - Options object.
      * @example
      * ```ts
      * map.boxZoom.enable();
      * ```
      */
-    enable(options?: BoxZoomHandlerOptions | boolean) {
-        if (options && typeof options === 'object') {
-            this._boxZoomEnd = options.boxZoomEnd;
-        }
+    enable() {
         if (this.isEnabled()) return;
         this._enabled = true;
     }
