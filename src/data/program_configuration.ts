@@ -187,7 +187,7 @@ class CrossFadedConstantBinder implements UniformBinder {
     }
 
     getBinding(context: Context, location: WebGLUniformLocation, name: string): Partial<Uniform<any>> {
-        return (name.substr(0, 9) === 'u_pattern' || name.substr(0, 12) === 'u_dasharray_') ?
+        return (name.startsWith('u_pattern') || name.startsWith('u_dasharray_')) ?
             new Uniform4f(context, location) :
             new Uniform1f(context, location);
     }

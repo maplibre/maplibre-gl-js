@@ -22,17 +22,11 @@ import type {VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
 export type LoadVectorTileResult = {
     vectorTile: VectorTileLike;
     rawData: ArrayBufferLike;
-    resourceTiming?: Array<PerformanceResourceTiming>;
-} & ExpiryData;
-
-export type AbortVectorData = () => void;
-export type LoadVectorData = (params: WorkerTileParameters, abortController: AbortController) => Promise<LoadVectorTileResult | null>;
+};
 
 /**
- * The {@link WorkerSource} implementation that supports {@link VectorTileSource}.
- * This class is designed to be easily reused to support custom source types
- * for data formats that can be parsed/converted into an in-memory VectorTile
- * representation. To do so, override its `loadVectorTile` method.
+ * The {@link WorkerSource} implementation that supports {@link VectorTileSource}. This class is
+ * used by vector tile sources to perform tile processing operations in a separate worker thread.
  */
 export class VectorTileWorkerSource implements WorkerSource {
     actor: IActor;
@@ -41,12 +35,6 @@ export class VectorTileWorkerSource implements WorkerSource {
     tileState: WorkerTileState;
     overzoomedTileResultCache: BoundedLRUCache<string, LoadVectorTileResult>;
 
-    /**
-     * @param loadVectorData - Optional method for custom loading of a VectorTile
-     * object based on parameters passed from the main-thread Source. See
-     * {@link VectorTileWorkerSource.loadTile}. The default implementation simply
-     * loads the pbf at `params.url`.
-     */
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>) {
         this.actor = actor;
         this.layerIndex = layerIndex;
@@ -58,20 +46,15 @@ export class VectorTileWorkerSource implements WorkerSource {
     /**
      * Loads a vector tile
      */
-    async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
-        const response = await getArrayBuffer(params.request, abortController);
+    loadVectorTile(params: WorkerTileParameters, rawData: ArrayBuffer): LoadVectorTileResult {
         try {
             const vectorTile = params.encoding !== 'mlt'
-                ? new VectorTile(new Protobuf(response.data))
-                : new MLTVectorTile(response.data);
-            return {
-                vectorTile,
-                rawData: response.data,
-                cacheControl: response.cacheControl,
-                expires: response.expires
-            };
+                ? new VectorTile(new Protobuf(rawData))
+                : new MLTVectorTile(rawData);
+
+            return {vectorTile, rawData};
         } catch (ex) {
-            const bytes = new Uint8Array(response.data);
+            const bytes = new Uint8Array(rawData);
             const isGzipped = bytes[0] === 0x1f && bytes[1] === 0x8b;
             let errorMessage = `Unable to parse the tile at ${params.request.url}, `;
             if (isGzipped) {
@@ -84,9 +67,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     }
 
     /**
-     * Implements {@link WorkerSource.loadTile}. Delegates to
-     * {@link VectorTileWorkerSource.loadVectorData} (which by default expects
-     * a `params.url` property) for fetching and producing a VectorTile object.
+     * Implements {@link WorkerSource.loadTile}.
      */
     async loadTile(params: WorkerTileParameters): Promise<WorkerTileResult | null> {
         const {uid, overzoomParameters} = params;
@@ -102,16 +83,25 @@ export class VectorTileWorkerSource implements WorkerSource {
         const abortController = new AbortController();
         workerTile.abort = abortController;
         try {
-            const response = await this.loadVectorTile(params, abortController);
-            this.tileState.finishLoading(uid);
-            if (!response) return null;
+            // Download the tile data from the network.
+            const tileResponse = await getArrayBuffer(params.request, abortController);
 
-            let {vectorTile, rawData} = response;
-            if (overzoomParameters) {
-                ({vectorTile, rawData} = this._getOverzoomTile(params, response.vectorTile));
+            // Tile data hasn't changed (etag support) - return an unmodified result
+            if (params.etag && params.etag === tileResponse.etag) {
+                this.tileState.finishLoading(uid);
+                return this._getEtagUnmodifiedResult(tileResponse, timing);
             }
 
-            const cacheControl = this._getExpiryData(response);
+            const tileResult = this.loadVectorTile(params, tileResponse.data);
+            this.tileState.finishLoading(uid);
+            if (!tileResult) return null;
+
+            let {vectorTile, rawData} = tileResult;
+            if (overzoomParameters) {
+                ({vectorTile, rawData} = this._getOverzoomTile(params, vectorTile));
+            }
+
+            const cacheControl = this._getExpiryData(tileResponse);
             const resourceTiming = this._finishRequestTiming(timing);
 
             workerTile.vectorTile = vectorTile;
@@ -132,6 +122,12 @@ export class VectorTileWorkerSource implements WorkerSource {
         }
     }
 
+    _getEtagUnmodifiedResult(response: ExpiryData, timing: RequestPerformance): WorkerTileResult {
+        const cacheControl = this._getExpiryData(response);
+        const resourceTiming = this._finishRequestTiming(timing);
+        return extend({etagUnmodified: true as const}, cacheControl, resourceTiming);
+    }
+
     async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
         let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 
@@ -144,13 +140,11 @@ export class VectorTileWorkerSource implements WorkerSource {
         return result;
     }
 
-    _getExpiryData(response: LoadVectorTileResult): ExpiryData {
-        const {expires, cacheControl} = response;
-
+    _getExpiryData({expires, cacheControl, etag}: ExpiryData): ExpiryData {
         const data: ExpiryData = {};
         if (expires) data.expires = expires;
         if (cacheControl) data.cacheControl = cacheControl;
-
+        if (etag) data.etag = etag;
         return data;
     }
 
