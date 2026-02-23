@@ -74,6 +74,7 @@ import type {ImageAtlas} from './render/image_atlas';
 import type {StyleGlyph} from './style/style_glyph';
 import type {FeatureIndex} from './data/feature_index';
 import type {DashEntry} from './render/line_atlas';
+import type {Painter} from './render/painter';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -358,6 +359,7 @@ export {
     type GeoJSONFeature,
     type CoveringTilesOptions,
     type DashEntry,
+    type Painter,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,
