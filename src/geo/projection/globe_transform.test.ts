@@ -405,6 +405,59 @@ describe('GlobeTransform', () => {
                 });
             });
         });
+
+        describe('setLocationAtPoint with fixedBearing=false (versor)', () => {
+            const precisionDigits = 4;
+
+            test('round-trip accuracy', () => {
+                const globeTransform = createGlobeTransform();
+                globeTransform.setZoom(1);
+                const coords = new LngLat(20, 30);
+                const point = new Point(280, 200);
+                globeTransform.setLocationAtPoint(coords, point, false);
+                const unprojected = globeTransform.screenPointToLocation(point);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+            });
+
+            test('round-trip accuracy at center', () => {
+                const globeTransform = createGlobeTransform();
+                globeTransform.setZoom(1);
+                const coords = new LngLat(10, 15);
+                const point = new Point(320, 240); // center point
+                globeTransform.setLocationAtPoint(coords, point, false);
+                const unprojected = globeTransform.screenPointToLocation(point);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+            });
+
+            test('near-pole panning stability', () => {
+                const globeTransform = createGlobeTransform();
+                globeTransform.setZoom(1);
+                globeTransform.setCenter(new LngLat(0, 80));
+                const coords = new LngLat(10, 85);
+                const point = new Point(300, 230);
+                // Should not throw or produce NaN
+                globeTransform.setLocationAtPoint(coords, point, false);
+                expect(isNaN(globeTransform.center.lng)).toBe(false);
+                expect(isNaN(globeTransform.center.lat)).toBe(false);
+                expect(isNaN(globeTransform.bearing)).toBe(false);
+            });
+
+            test('NaN safety for identical points', () => {
+                const globeTransform = createGlobeTransform();
+                globeTransform.setZoom(1);
+                const centerBefore = globeTransform.center;
+                // Setting a point to itself should not produce NaN
+                const point = new Point(320, 240);
+                const coords = globeTransform.screenPointToLocation(point);
+                globeTransform.setLocationAtPoint(coords, point, false);
+                expect(isNaN(globeTransform.center.lng)).toBe(false);
+                expect(isNaN(globeTransform.center.lat)).toBe(false);
+                expect(globeTransform.center.lng).toBeCloseTo(centerBefore.lng, precisionDigits);
+                expect(globeTransform.center.lat).toBeCloseTo(centerBefore.lat, precisionDigits);
+            });
+        });
     });
 
     describe('isPointOnMapSurface', () => {

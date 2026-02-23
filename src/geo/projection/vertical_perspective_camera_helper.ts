@@ -1,9 +1,9 @@
 import Point from '@mapbox/point-geometry';
-import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, type UpdateRotationArgs, cameraForBoxAndBearing} from './camera_helper';
+import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, type PanInertiaData, updateRotation, type UpdateRotationArgs, cameraForBoxAndBearing} from './camera_helper';
 import {LngLat, type LngLatLike} from '../lng_lat';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils';
-import {clamp, createVec3f64, differenceOfAnglesDegrees, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util';
-import {type mat4, vec3} from 'gl-matrix';
+import {clamp, createVec3f64, createVec4f64, differenceOfAnglesDegrees, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util';
+import {type mat4, quat, vec3} from 'gl-matrix';
 import {normalizeCenter} from '../transform_helper';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
@@ -19,20 +19,31 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
 
     get useGlobeControls(): boolean { return true; }
 
-    handlePanInertia(pan: Point, transform: IReadonlyTransform): {
+    handlePanInertia(pan: Point, transform: IReadonlyTransform, around?: Point, fixedBearing?: boolean): {
         easingCenter: LngLat;
         easingOffset: Point;
+        easingBearing?: number;
+        panInertia?: PanInertiaData;
     } {
-        const panCenter = computeGlobePanCenter(pan, transform);
-        if (Math.abs(panCenter.lng - transform.center.lng) > 180) {
-            // If easeTo target would be over 180° distant, the animation would move
-            // in the opposite direction that what the user intended.
-            // Thus we clamp the movement to 179.5°.
-            panCenter.lng = transform.center.lng + 179.5 * Math.sign(panCenter.lng - transform.center.lng);
+        const anchorPoint = around || transform.centerPoint;
+        const location = transform.screenPointToLocation(anchorPoint);
+        const finalPoint = anchorPoint.add(pan);
+        const cloneTr = (transform as ITransform).clone();
+        cloneTr.setLocationAtPoint(location, finalPoint, false);
+        const easingCenter = cloneTr.center;
+        if (Math.abs(easingCenter.lng - transform.center.lng) > 180) {
+            easingCenter.lng = transform.center.lng + 179.5 * Math.sign(easingCenter.lng - transform.center.lng);
         }
         return {
-            easingCenter: panCenter,
+            easingCenter,
             easingOffset: new Point(0, 0),
+            easingBearing: fixedBearing === false ? cloneTr.bearing : undefined,
+            panInertia: fixedBearing === false ? {
+                startCenter: new LngLat(transform.center.lng, transform.center.lat),
+                startBearing: transform.bearing,
+                endCenter: new LngLat(cloneTr.center.lng, cloneTr.center.lat),
+                endBearing: cloneTr.bearing,
+            } : undefined,
         };
     }
 
@@ -123,19 +134,21 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         tr.setZoom(oldZoom + getZoomAdjustment(oldCenterLat, tr.center.lat));
     }
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, _preZoomAroundLoc: LngLat): void {
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat, fixedBearing?: boolean): void {
         if (!deltas.panDelta) {
             return;
         }
 
-        // These are actually very similar to mercator controls, and should converge to them at high zooms.
-        // We avoid using the "grab a place and move it around" approach from mercator here,
-        // since it is not a very pleasant way to pan a globe.
-        const oldLat = tr.center.lat;
-        const oldZoom = tr.zoom;
-        tr.setCenter(computeGlobePanCenter(deltas.panDelta, tr).wrap());
-        // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
-        tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
+        if (fixedBearing === false) {
+            // Quaternion-based panning: grab the point and move it to the new location
+            tr.setLocationAtPoint(preZoomAroundLoc, deltas.around, false);
+        } else {
+            // Default: heuristic panning that keeps bearing fixed
+            const oldLat = tr.center.lat;
+            const oldZoom = tr.zoom;
+            tr.setCenter(computeGlobePanCenter(deltas.panDelta, tr).wrap());
+            tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
+        }
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
@@ -279,35 +292,55 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         const finalScale = zoomScale(normalizedEndZoom - normalizedStartZoom);
         isZooming = (endZoomWithShift !== startZoom);
 
+        // Pre-compute quaternions for panInertia slerp (outside easeFunc to avoid per-frame allocation)
+        let panInertiaStartQuat: quat;
+        let panInertiaEndQuat: quat;
+        if (options.panInertia) {
+            const {startCenter: piStart, startBearing: piStartBearing, endCenter: piEnd, endBearing: piEndBearing} = options.panInertia;
+            panInertiaStartQuat = quat.fromEuler(createVec4f64() as any, -piStart.lng, -piStart.lat, piStartBearing);
+            panInertiaEndQuat = quat.fromEuler(createVec4f64() as any, -piEnd.lng, -piEnd.lat, piEndBearing);
+        }
+
         const easeFunc = (k: number) => {
-            if (!rollPitchBearingEqual(startEulerAngles, endEulerAngles)) {
-                updateRotation({
-                    startEulerAngles,
-                    endEulerAngles,
-                    tr,
-                    k,
-                    useSlerp: startEulerAngles.roll != endEulerAngles.roll} as UpdateRotationArgs);
-            }
-
             if (doPadding) {
-                tr.interpolatePadding(startPadding, options.padding,k);
+                tr.interpolatePadding(startPadding, options.padding, k);
             }
 
-            if (options.around) {
-                warnOnce('Easing around a point is not supported under globe projection.');
-                tr.setLocationAtPoint(options.around, options.aroundPoint);
+            if (options.panInertia) {
+                // Quaternion slerp for inertia: interpolate the globe's rotation directly
+                // in quaternion space. This avoids screen-space interpolation which breaks
+                // when large pan vectors send the target point off the visible globe,
+                // and naturally couples center and bearing through the same rotation.
+                const interpolated: quat = createVec4f64() as any;
+                quat.slerp(interpolated, panInertiaStartQuat, panInertiaEndQuat, k);
+                const [b, c, d, a] = interpolated;
+                const newLng = -(Math.atan2(2 * (a * b + c * d), 1 - 2 * (b * b + c * c)) * 180) / Math.PI;
+                const newLat = -(Math.asin(Math.max(-1, Math.min(1, 2 * (a * c - d * b)))) * 180) / Math.PI;
+                const newBearing = (Math.atan2(2 * (a * d + b * c), 1 - 2 * (c * c + d * d)) * 180) / Math.PI;
+                tr.setCenter(new LngLat(newLng, newLat));
+                tr.setBearing(newBearing);
             } else {
                 const base = normalizedEndZoom > normalizedStartZoom ?
                     Math.min(2, finalScale) :
                     Math.max(0.5, finalScale);
                 const speedup = Math.pow(base, 1 - k);
                 const factor = k * speedup;
+                if (!rollPitchBearingEqual(startEulerAngles, endEulerAngles)) {
+                    updateRotation({
+                        startEulerAngles,
+                        endEulerAngles,
+                        tr,
+                        k,
+                        useSlerp: startEulerAngles.roll != endEulerAngles.roll} as UpdateRotationArgs);
+                }
 
-                // Spherical lerp might be used here instead, but that was tested and it leads to very weird paths when the interpolated arc gets near the poles.
-                // Instead we interpolate LngLat almost directly, but taking into account that
-                // one degree of longitude gets progressively smaller relative to latitude towards the poles.
-                const newCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, factor);
-                tr.setCenter(newCenter.wrap());
+                if (options.around) {
+                    warnOnce('Easing around a point is not supported under globe projection.');
+                    tr.setLocationAtPoint(options.around, options.aroundPoint);
+                } else {
+                    const newCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, factor);
+                    tr.setCenter(newCenter.wrap());
+                }
             }
 
             if (isZooming) {
