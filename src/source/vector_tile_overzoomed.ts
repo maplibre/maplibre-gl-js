@@ -62,21 +62,6 @@ export class VectorTileOverzoomed implements VectorTileLike {
 }
 
 /**
- * Encodes the virtual tile into binary vector tile form.
- * This is a convenience that allows `FeatureIndex` to operate the same way across `VectorTileSource` and `GeoJSONSource` data.
- * @param virtualVectorTile - a syntetically created vector tile, this tile should have the relevant layer and features already added to it.
- * @returns - the encoded vector tile along with the original virtual tile binary data.
- */
-export function toVirtualVectorTile(virtualVectorTile: VectorTileLike): LoadVectorTileResult {
-    const pbf = serializeTile(virtualVectorTile);
-    return {
-        vectorTile: virtualVectorTile,
-        rawData: pbf.buffer,
-        encoding: 'geojson'
-    };
-}
-
-/**
  * This function slices a source tile layer into an overzoomed tile layer for a target tile ID.
  * @param sourceLayer - the source tile layer to slice
  * @param maxZoomTileID - the maximum zoom tile ID

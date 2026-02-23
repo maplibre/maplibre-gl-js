@@ -7,7 +7,6 @@ import Supercluster, {type Options as SuperclusterOptions, type ClusterPropertie
 import geojsonvt, {type GeoJSONVTOptions, type GeoJSONVT} from '@maplibre/geojson-vt';
 import {createExpression} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error';
-import {toVirtualVectorTile} from './vector_tile_overzoomed';
 import {type GeoJSONSourceDiff, applySourceDiff, toUpdateable, type GeoJSONFeatureId} from './geojson_source_diff';
 import {WorkerTile} from './worker_tile';
 import {WorkerTileState, type ParsingState} from './worker_tile_state';
@@ -19,6 +18,7 @@ import type {RequestParameters} from '../util/ajax';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
 import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
+import { serializeTile } from '../util/fast_tile_serializer';
 
 /**
  * The geojson worker options that can be passed to the worker
@@ -99,7 +99,11 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (!geoJSONTile) return null;
 
         const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features, {version: 2, extent: EXTENT});
-        return toVirtualVectorTile(geojsonWrapper);
+        return {
+            vectorTile: geojsonWrapper,
+            rawData: serializeTile(geojsonWrapper).buffer
+        };
+
     }
 
     /**
@@ -159,7 +163,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (parseState) {
             const {rawData} = parseState;
             // Transferring a copy of rawTileData because the worker needs to retain its copy.
-            result = extend({rawTileData: rawData.slice(0)}, result);
+            result = extend({rawTileData: rawData.slice(0), encoding: 'geojson'}, result);
         }
 
         return result;

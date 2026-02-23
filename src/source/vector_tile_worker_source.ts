@@ -1,24 +1,23 @@
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
+import {fromVectorTileJs, type VectorTileLayerLike, type VectorTileLike} from '@maplibre/vt-pbf';
 import {type ExpiryData, getArrayBuffer} from '../util/ajax';
 import {WorkerTile} from './worker_tile';
 import {WorkerTileState, type ParsingState} from './worker_tile_state';
 import {BoundedLRUCache} from '../tile/tile_cache';
 import {extend} from '../util/util';
 import {RequestPerformance} from '../util/performance';
-import {VectorTileOverzoomed, sliceVectorTileLayer, toVirtualVectorTile} from './vector_tile_overzoomed';
+import {VectorTileOverzoomed, sliceVectorTileLayer} from './vector_tile_overzoomed';
 import {MLTVectorTile} from './vector_tile_mlt';
 import type {
     WorkerSource,
     WorkerTileParameters,
     TileParameters,
-    WorkerTileResult,
-    TileEncoding
+    WorkerTileResult
 } from '../source/worker_source';
 import type {IActor} from '../util/actor';
 import type {StyleLayer} from '../style/style_layer';
 import type {StyleLayerIndex} from '../style/style_layer_index';
-import type {VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
 
 export type LoadVectorTileResult = {
     vectorTile: VectorTileLike;
@@ -196,7 +195,10 @@ export class VectorTileWorkerSource implements WorkerSource {
                 overzoomedVectorTile.addLayer(slicedTileLayer);
             }
         }
-        const overzoomedVectorTileResult = toVirtualVectorTile(overzoomedVectorTile);
+        const overzoomedVectorTileResult = {
+            vectorTile: overzoomedVectorTile,
+            rawData: fromVectorTileJs(overzoomedVectorTile).buffer
+        };
         this.overzoomedTileResultCache.set(cacheKey, overzoomedVectorTileResult);
 
         return overzoomedVectorTileResult;
