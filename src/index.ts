@@ -27,7 +27,7 @@ import {CanvasSource, type CanvasSourceSpecification} from './source/canvas_sour
 import {type CanonicalTileRange, type Coordinates, ImageSource, type UpdateImageOptions} from './source/image_source';
 import {RasterDEMTileSource} from './source/raster_dem_tile_source';
 import {RasterTileSource} from './source/raster_tile_source';
-import {VectorTileSource} from './source/vector_tile_source';
+import {VectorTileSource, type LoadTileResult} from './source/vector_tile_source';
 import {VideoSource} from './source/video_source';
 import {type Source, type SourceClass, addSourceType} from './source/source';
 import {addProtocol, removeProtocol} from './source/protocol_crud';
@@ -74,6 +74,7 @@ import type {ImageAtlas} from './render/image_atlas';
 import type {StyleGlyph} from './style/style_glyph';
 import type {FeatureIndex} from './data/feature_index';
 import type {DashEntry} from './render/line_atlas';
+import type {Painter} from './render/painter';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -226,6 +227,7 @@ export {
     RasterDEMTileSource,
     RasterTileSource,
     VectorTileSource,
+    LoadTileResult,
     VideoSource,
     EdgeInsets,
     BoxZoomHandler,
@@ -357,6 +359,7 @@ export {
     type GeoJSONFeature,
     type CoveringTilesOptions,
     type DashEntry,
+    type Painter,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,

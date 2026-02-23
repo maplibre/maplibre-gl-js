@@ -31,6 +31,7 @@ import type {ExpiryData} from '../util/ajax';
 import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict} from '../source/query_features';
 import type {DashEntry} from '../render/line_atlas';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
+import type {Painter} from '../render/painter';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
@@ -79,6 +80,7 @@ export class Tile {
     dashPositions: {[_: string]: DashEntry};
     glyphAtlasImage: AlphaImage;
     glyphAtlasTexture: Texture;
+    etag?: string;
     expirationTime: any;
     expiredRequestCount: number;
     state: TileState;
@@ -204,7 +206,12 @@ export class Tile {
      * @param painter - the painter
      * @param justReloaded - `true` to just reload
      */
-    loadVectorData(data: WorkerTileResult, painter: any, justReloaded?: boolean | null) {
+    loadVectorData(data: WorkerTileResult, painter: Painter, justReloaded?: boolean | null) {
+        if (data?.etagUnmodified === true) {
+            this.state = 'loaded';
+            return;
+        }
+
         if (this.hasData()) {
             this.unloadVectorData();
         }
