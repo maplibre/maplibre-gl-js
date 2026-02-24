@@ -46,7 +46,7 @@ export class GeoJSONFeature {
         this._y = y;
         this._z = z;
 
-        this.properties = Object.fromEntries(Object.entries(vectorTileFeature.properties).map(e => [e[0], e[1]?.toString().startsWith(JSON_PREFIX) ? JSON.parse(e[1]?.toString().replace(JSON_PREFIX, "")) : e[1]]));
+        this.properties = Object.fromEntries(Object.entries(vectorTileFeature.properties).map(e => [e[0], e[1]?.toString().startsWith(JSON_PREFIX) ? JSON.parse(e[1]?.toString().replace(JSON_PREFIX, '')) : e[1]]));
         this.id = id;
     }
 
