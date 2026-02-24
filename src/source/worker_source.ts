@@ -16,7 +16,7 @@ import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import type {DashEntry} from '../render/line_atlas';
 
-export type TileEncoding = 'mlt' | 'mvt' | 'geojson';
+export type TileEncoding = 'mlt' | 'mvt';
 
 /**
  * Parameters to identify a tile

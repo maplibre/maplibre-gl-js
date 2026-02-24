@@ -98,9 +98,7 @@ export class VectorTileWorkerSource implements WorkerSource {
 
             let {vectorTile, rawData} = tileResult;
             if (overzoomParameters) {
-                const overzoomTile = this._getOverzoomTile(params, tileResult.vectorTile);
-                vectorTile = overzoomTile.vectorTile;
-                rawData = overzoomTile.rawData;
+                ({vectorTile, rawData} = this._getOverzoomTile(params, vectorTile));
             }
 
             const cacheControl = this._getExpiryData(tileResponse);
