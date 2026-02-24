@@ -218,6 +218,7 @@ describe('reloadTile', () => {
         let data = await source.reloadTile(tileParams as any as WorkerTileParameters) as WorkerTileWithData;
         expect('rawTileData' in data).toBeFalsy();
         data.rawTileData = firstData.rawTileData;
+        data.encoding = 'mvt';
         expect(data).toEqual(firstData);
 
         // also shouldn't call loadVectorData again

@@ -174,7 +174,8 @@ describe('vector tile worker source', () => {
         const loadVectorData = (_params, _rawData) => {
             return {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
-                rawData: rawTileData
+                rawData: rawTileData,
+                encoding: 'mvt'
             };
         };
 
@@ -343,7 +344,8 @@ describe('vector tile worker source', () => {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
-                expires: null
+                expires: null,
+                encoding: 'mvt'
             };
         };
 
@@ -406,7 +408,8 @@ describe('vector tile worker source', () => {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
-                expires: null
+                expires: null,
+                encoding: 'mvt'
             };
         };
 

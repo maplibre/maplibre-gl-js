@@ -1,0 +1,21 @@
+[
+  {
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        0,
+        0
+      ]
+    },
+    "type": "Feature",
+    "properties": {
+      "nested": {
+        "nested2": {
+          "num": 1
+        }
+      }
+    },
+    "source": "geojson",
+    "state": {}
+  }
+]

@@ -147,16 +147,16 @@
 
             map.getSource('geojson').setData(geojson);
         });
-    });
 
-    map.on('mousemove', (e) => {
-        const features = map.queryRenderedFeatures(e.point, {
-            layers: ['measure-points']
+        map.on('mousemove', (e) => {
+            const features = map.queryRenderedFeatures(e.point, {
+                layers: ['measure-points']
+            });
+            // UI indicator for clicking/hovering a point on the map
+            map.getCanvas().style.cursor = features.length ?
+                'pointer' :
+                'crosshair';
         });
-        // UI indicator for clicking/hovering a point on the map
-        map.getCanvas().style.cursor = features.length ?
-            'pointer' :
-            'crosshair';
     });
 </script>
 </body>

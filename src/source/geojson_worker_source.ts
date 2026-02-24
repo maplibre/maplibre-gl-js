@@ -1,17 +1,16 @@
 import {getJSON} from '../util/ajax';
 import {RequestPerformance} from '../util/performance';
 import rewind from '@mapbox/geojson-rewind';
-import {GeoJSONWrapper} from '@maplibre/vt-pbf';
+import {fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent';
 import Supercluster, {type Options as SuperclusterOptions, type ClusterProperties} from 'supercluster';
 import geojsonvt, {type GeoJSONVTOptions, type GeoJSONVT} from '@maplibre/geojson-vt';
 import {createExpression} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error';
-import {toVirtualVectorTile} from './vector_tile_overzoomed';
 import {type GeoJSONSourceDiff, applySourceDiff, toUpdateable, type GeoJSONFeatureId} from './geojson_source_diff';
 import {WorkerTile} from './worker_tile';
 import {WorkerTileState, type ParsingState} from './worker_tile_state';
-import {extend} from '../util/util';
+import {extend, JSON_PREFIX} from '../util/util';
 
 import type {WorkerSource, WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source';
 import type {LoadVectorTileResult} from './vector_tile_worker_source';
@@ -99,7 +98,11 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (!geoJSONTile) return null;
 
         const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features, {version: 2, extent: EXTENT});
-        return toVirtualVectorTile(geojsonWrapper);
+        return {
+            vectorTile: geojsonWrapper,
+            rawData: fromVectorTileJs(geojsonWrapper, JSON_PREFIX).buffer
+        };
+
     }
 
     /**
@@ -159,7 +162,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (parseState) {
             const {rawData} = parseState;
             // Transferring a copy of rawTileData because the worker needs to retain its copy.
-            result = extend({rawTileData: rawData.slice(0)}, result);
+            result = extend({rawTileData: rawData.slice(0), encoding: 'mvt'}, result);
         }
 
         return result;
