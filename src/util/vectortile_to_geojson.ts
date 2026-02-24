@@ -53,7 +53,7 @@ export class GeoJSONFeature {
             // JSON parsing the special case of a json prefix that is serialized in geojson worker source.
             vectorTileFeature.properties[key] = JSON.parse(vectorTileFeature.properties[key].slice(JSON_PREFIX.length));
         }
-        this.properties = vectorTileFeature.properties
+        this.properties = vectorTileFeature.properties;
         this.id = id;
     }
 
