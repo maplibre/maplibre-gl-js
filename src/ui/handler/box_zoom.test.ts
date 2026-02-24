@@ -46,10 +46,10 @@ describe('BoxZoomHandler', () => {
         map.remove();
     });
 
-    test('runs custom camera animation returned by box zoom end callback', () => {
-        const cameraAnimation = vi.fn();
-        const boxZoomEnd = vi.fn(() => ({cameraAnimation}));
+    test('runs custom box zoom end callback and skips default zoom animation', () => {
+        const boxZoomEnd = vi.fn();
         const map = createMap(undefined, {boxZoomEnd});
+        const fitScreenCoordinatesSpy = vi.spyOn(map, 'fitScreenCoordinates');
 
         simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
         map._renderTaskQueue.run();
@@ -60,8 +60,14 @@ describe('BoxZoomHandler', () => {
         simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
         map._renderTaskQueue.run();
 
-        expect(cameraAnimation).toHaveBeenCalledTimes(1);
-        expect(cameraAnimation).toHaveBeenCalledWith(map);
+        expect(boxZoomEnd).toHaveBeenCalledTimes(1);
+        expect(boxZoomEnd).toHaveBeenCalledWith(
+            map,
+            expect.objectContaining({x: 0, y: 0}),
+            expect.objectContaining({x: 5, y: 5}),
+            expect.any(MouseEvent)
+        );
+        expect(fitScreenCoordinatesSpy).not.toHaveBeenCalled();
 
         map.remove();
     });

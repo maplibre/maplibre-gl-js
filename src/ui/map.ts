@@ -177,6 +177,7 @@ export type MapOptions = {
     /**
      * If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).
      * An `Object` value configures {@link BoxZoomHandler} options.
+     * If `boxZoomEnd` is provided, the callback runs instead of the default fit-to-box zoom.
      * @defaultValue true
      */
     boxZoom?: boolean | BoxZoomHandlerOptions;

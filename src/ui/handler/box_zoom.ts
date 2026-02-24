@@ -5,23 +5,12 @@ import {TransformProvider} from './transform-provider';
 
 import type {Map} from '../map';
 import type Point from '@mapbox/point-geometry';
-import {type Handler, type CameraAnimationCallback} from '../handler_manager';
-
-/**
- * Result returned by {@link BoxZoomEndHandler}.
- * Return `void` to skip the default zoom behavior, or return `cameraAnimation` to run a custom camera action.
- */
-export type BoxZoomEndResult = {
-    /**
-     * A custom camera action to run after `boxzoomend`.
-     */
-    cameraAnimation?: CameraAnimationCallback;
-};
+import {type Handler} from '../handler_manager';
 
 /**
  * Callback for customizing what happens when a box zoom gesture ends.
  */
-export type BoxZoomEndHandler = (map: Map, startPos: Point, endPos: Point, originalEvent: MouseEvent) => BoxZoomEndResult | void;
+export type BoxZoomEndHandler = (map: Map, startPos: Point, endPos: Point, originalEvent: MouseEvent) => void;
 
 /**
  * A {@link BoxZoomHandler} options object.
@@ -29,7 +18,7 @@ export type BoxZoomEndHandler = (map: Map, startPos: Point, endPos: Point, origi
 export type BoxZoomHandlerOptions = {
     /**
      * A callback that runs when the user completes the Shift-drag box gesture.
-     * Returning a {@link BoxZoomEndResult} allows overriding the default camera animation.
+     * Providing this callback suppresses the default fit-to-box zoom behavior.
      */
     boxZoomEnd?: BoxZoomEndHandler;
 };
@@ -167,7 +156,8 @@ export class BoxZoomHandler implements Handler {
         } else {
             this._map.fire(new Event('boxzoomend', {originalEvent: e}));
             if (this._boxZoomEnd) {
-                return this._boxZoomEnd(this._map, p0, p1, e);
+                this._boxZoomEnd(this._map, p0, p1, e);
+                return;
             }
             return {
                 cameraAnimation: map => map.fitScreenCoordinates(p0, p1, this._tr.bearing, {linear: true})
