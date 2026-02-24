@@ -7,7 +7,8 @@
         "Geography and Geometry",
         "Handlers",
         "Sources",
-        "Event Related"
+        "Event Related",
+        "Performance"
     ],
     "out": "./docs/API",
     "excludeExternals": true,
