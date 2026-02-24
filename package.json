@@ -25,7 +25,7 @@
     "@mapbox/vector-tile": "^2.0.4",
     "@mapbox/whoots-js": "^3.1.0",
     "@maplibre/geojson-vt": "^5.0.4",
-    "@maplibre/maplibre-gl-style-spec": "^24.4.1",
+    "@maplibre/maplibre-gl-style-spec": "^24.5.0",
     "@maplibre/mlt": "^1.1.6",
     "@maplibre/vt-pbf": "^4.3.0",
     "@types/geojson": "^7946.0.16",
