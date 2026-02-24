@@ -46,7 +46,14 @@ export class GeoJSONFeature {
         this._y = y;
         this._z = z;
 
-        this.properties = Object.fromEntries(Object.entries(vectorTileFeature.properties).map(e => [e[0], e[1]?.toString().startsWith(JSON_PREFIX) ? JSON.parse(e[1]?.toString().replace(JSON_PREFIX, '')) : e[1]]));
+        for (const key in vectorTileFeature.properties) {
+            if (typeof vectorTileFeature.properties[key] !== 'string' || !vectorTileFeature.properties[key].startsWith(JSON_PREFIX)) {
+                continue;
+            }
+            // JSON parsing the special case of a json prefix that is serialized in geojson worker source.
+            vectorTileFeature.properties[key] = JSON.parse(vectorTileFeature.properties[key].slice(JSON_PREFIX.length));
+        }
+        this.properties = vectorTileFeature.properties
         this.id = id;
     }
 
