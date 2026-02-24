@@ -201,6 +201,7 @@ function importScriptInWorkers(workerUrl: string) { return getGlobalDispatcher()
 
 export {
     Map,
+    Map as MapLibreMap,
     NavigationControl,
     GeolocateControl,
     AttributionControl,
