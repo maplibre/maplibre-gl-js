@@ -408,36 +408,35 @@ describe('GlobeTransform', () => {
 
         describe('setLocationAtPoint with fixedBearing=false (versor)', () => {
             const precisionDigits = 4;
+            const globeTransform = createGlobeTransform();
+            globeTransform.setZoom(1);
+            globeTransform.setTransitionState(1, 0);
+            let coords: LngLat;
+            let point: Point;
+            let unprojected: LngLat;
 
             test('round-trip accuracy', () => {
-                const globeTransform = createGlobeTransform();
-                globeTransform.setZoom(1);
-                const coords = new LngLat(20, 30);
-                const point = new Point(280, 200);
+                coords = new LngLat(20, 30);
+                point = new Point(280, 200);
                 globeTransform.setLocationAtPoint(coords, point, false);
-                const unprojected = globeTransform.screenPointToLocation(point);
+                unprojected = globeTransform.screenPointToLocation(point);
                 expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
             });
 
             test('round-trip accuracy at center', () => {
-                const globeTransform = createGlobeTransform();
-                globeTransform.setZoom(1);
-                const coords = new LngLat(10, 15);
-                const point = new Point(320, 240); // center point
+                coords = new LngLat(10, 15);
+                point = new Point(320, 240);
                 globeTransform.setLocationAtPoint(coords, point, false);
-                const unprojected = globeTransform.screenPointToLocation(point);
+                unprojected = globeTransform.screenPointToLocation(point);
                 expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
             });
 
             test('near-pole panning stability', () => {
-                const globeTransform = createGlobeTransform();
-                globeTransform.setZoom(1);
                 globeTransform.setCenter(new LngLat(0, 80));
-                const coords = new LngLat(10, 85);
-                const point = new Point(300, 230);
-                // Should not throw or produce NaN
+                coords = new LngLat(10, 85);
+                point = new Point(300, 230);
                 globeTransform.setLocationAtPoint(coords, point, false);
                 expect(isNaN(globeTransform.center.lng)).toBe(false);
                 expect(isNaN(globeTransform.center.lat)).toBe(false);
@@ -445,17 +444,23 @@ describe('GlobeTransform', () => {
             });
 
             test('NaN safety for identical points', () => {
-                const globeTransform = createGlobeTransform();
-                globeTransform.setZoom(1);
                 const centerBefore = globeTransform.center;
-                // Setting a point to itself should not produce NaN
-                const point = new Point(320, 240);
-                const coords = globeTransform.screenPointToLocation(point);
+                point = new Point(320, 240);
+                coords = globeTransform.screenPointToLocation(point);
                 globeTransform.setLocationAtPoint(coords, point, false);
                 expect(isNaN(globeTransform.center.lng)).toBe(false);
                 expect(isNaN(globeTransform.center.lat)).toBe(false);
                 expect(globeTransform.center.lng).toBeCloseTo(centerBefore.lng, precisionDigits);
                 expect(globeTransform.center.lat).toBeCloseTo(centerBefore.lat, precisionDigits);
+            });
+
+            test('bearing changes when panning off-center', () => {
+                const bearingBefore = globeTransform.bearing;
+                coords = new LngLat(20, 30);
+                point = new Point(250, 180);
+                globeTransform.setLocationAtPoint(coords, point, false);
+                // Versor panning should change bearing (unlike fixedBearing=true)
+                expect(globeTransform.bearing).not.toBeCloseTo(bearingBefore, 1);
             });
         });
     });
@@ -643,7 +648,7 @@ describe('GlobeTransform', () => {
         test('change projection and make sure render world copies is kept', () => {
             const globeTransform = createGlobeTransform();
             globeTransform.setRenderWorldCopies(true);
-            
+
             expect(globeTransform.renderWorldCopies).toBeTruthy();
         });
 
