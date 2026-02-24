@@ -8,6 +8,8 @@ import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import {type OverscaledTileID} from '../tile/tile_id';
 import type {Event} from './evented';
 
+export const JSON_PREFIX = "__$json__:";
+
 /**
  * Returns a new 64 bit float vec4 of zeroes.
  */

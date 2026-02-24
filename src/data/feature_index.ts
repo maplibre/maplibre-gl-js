@@ -14,11 +14,10 @@ import {EvaluationParameters} from '../style/evaluation_parameters';
 import {polygonIntersectsBox} from '../util/intersection_tests';
 import {PossiblyEvaluated} from '../style/properties';
 import {FeatureIndexArray} from './array_types.g';
-
 import {MLTVectorTile} from '../source/vector_tile_mlt';
 import {Bounds} from '../geo/bounds';
 import {VectorTile} from '@mapbox/vector-tile';
-import {deserializeTile} from '../util/fast_tile_serializer';
+
 import type {OverscaledTileID} from '../tile/tile_id';
 import type {SourceFeatureState} from '../source/source_state';
 import type {mat4} from 'gl-matrix';
@@ -119,9 +118,6 @@ export class FeatureIndex {
             switch (this.encoding) {
                 case 'mlt':
                     this.vtLayers = new MLTVectorTile(this.rawTileData).layers;
-                    break;
-                case 'geojson':
-                    this.vtLayers = deserializeTile(new Uint8Array(this.rawTileData)).layers;
                     break;
                 case 'mvt':
                 default:

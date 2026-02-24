@@ -1,5 +1,6 @@
 import type Point from '@mapbox/point-geometry';
 import {classifyRings} from '@mapbox/vector-tile';
+import {JSON_PREFIX} from './util';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
@@ -45,7 +46,7 @@ export class GeoJSONFeature {
         this._y = y;
         this._z = z;
 
-        this.properties = vectorTileFeature.properties;
+        this.properties = Object.fromEntries(Object.entries(vectorTileFeature.properties).map(e => [e[0], e[1]?.toString().startsWith(JSON_PREFIX) ? JSON.parse(e[1]?.toString().replace(JSON_PREFIX, "")) : e[1]]));
         this.id = id;
     }
 
