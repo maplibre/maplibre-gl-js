@@ -86,7 +86,7 @@
     "devtools-protocol": "^0.0.1588380",
     "diff": "^8.0.3",
     "dts-bundle-generator": "^9.5.1",
-    "eslint": "^9.39.2",
+    "eslint": "^10.0.0",
     "eslint-plugin-html": "^8.1.4",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react": "^7.37.5",
