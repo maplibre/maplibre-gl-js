@@ -115,7 +115,7 @@ export default class Worker {
         });
 
         this.actor.registerMessageHandler(MessageType.getData, (mapId: string, params: LoadGeoJSONParameters) => {
-            return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getData(params);
+            return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getData();
         });
 
         this.actor.registerMessageHandler(MessageType.loadTile, (mapId: string, params: WorkerTileParameters) => {

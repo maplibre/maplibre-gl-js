@@ -230,7 +230,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
      * Get the source's full GeoJSON data source.
      * @returns a promise which is resolved with the source's actual GeoJSON
      */
-    async getData(_params?: LoadGeoJSONParameters): Promise<GeoJSON.GeoJSON> {
+    async getData(): Promise<GeoJSON.GeoJSON> {
         // TODO: move getData and use data located in the main thread
         return this._geoJSONIndex.getData();
     }
