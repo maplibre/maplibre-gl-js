@@ -200,7 +200,7 @@ export class GeoJSONSource extends Evented implements Source {
                 maxZoom: this.maxzoom,
                 lineMetrics: options.lineMetrics || false,
                 generateId: options.generateId || false,
-                updatable: true
+                updateable: true
             },
             superclusterOptions: {
                 maxZoom: this._getClusterMaxZoom(options.clusterMaxZoom),
@@ -291,8 +291,16 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns a promise which resolves to the source's actual GeoJSON data
      */
     async getData(): Promise<GeoJSON.GeoJSON> {
-        const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
-        return this.actor.sendAsync({type: MessageType.getData, data: options});
+        if (this._data.url) {
+            await this.once('data'); // wait for loading to complete
+        }
+        if (this._data.geojson) {
+            return this._data.geojson;
+        }
+        return {
+            type: 'FeatureCollection',
+            features: Array.from(this._data.updateable.values())
+        };
     }
 
     /**
