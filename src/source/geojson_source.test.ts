@@ -268,7 +268,8 @@ describe('GeoJSONSource.update', () => {
                     tolerance: 4,
                     buffer: 256,
                     lineMetrics: false,
-                    generateId: true
+                    generateId: true,
+                    updateable: true
                 });
                 spy();
                 return Promise.resolve({});
@@ -607,18 +608,10 @@ describe('GeoJSONSource.getData', () => {
             transformRequest: (url) => { return {url}; }
         }
     } as any;
-    test('sends a message with a correct type to the worker and forwards the data provided returned by it', async () => {
-        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
-            sendAsync(message) {
-                expect(message.type).toBe(MessageType.getData);
-                return Promise.resolve({});
-            }
-        }), undefined);
+    test('gets the data when passed as a geojson object', async () => {
+        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = mapStub;
-
-        // This is a bit dumb test, as communication with the worker is mocked, and thus the worker always returns an
-        // empty object instead of returning the result of an actual computation.
-        await expect(source.getData()).resolves.toStrictEqual({});
+        await expect(source.getData()).resolves.toStrictEqual(hawkHill);
     });
 });
 
@@ -810,18 +803,15 @@ describe('GeoJSONSource.getBounds', () => {
     } as any;
 
     test('get bounds returns result from getGeoJSONBounds util', async () => {
-        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
-            sendAsync(message) {
-                expect(message.type).toBe(MessageType.getData);
-                return Promise.resolve({
-                    type: 'LineString',
-                    coordinates: [
-                        [1.1, 1.2],
-                        [1.3, 1.4]
-                    ]
-                });
+        const source = new GeoJSONSource('id', {
+            data: {
+                type: 'LineString',
+                coordinates: [
+                    [1.1, 1.2],
+                    [1.3, 1.4]
+                ]
             }
-        }), undefined);
+        } as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = mapStub;
         const bounds = await source.getBounds();
         expect(bounds.getNorthEast().lat).toBe(1.4);
@@ -831,18 +821,15 @@ describe('GeoJSONSource.getBounds', () => {
     });
 
     test('get bounds returns result with elevation', async () => {
-        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
-            sendAsync(message) {
-                expect(message.type).toBe(MessageType.getData);
-                return Promise.resolve({
-                    type: 'LineString',
-                    coordinates: [
-                        [1.1, 1.2, 3250],
-                        [1.3, 1.4, 3251]
-                    ]
-                });
+        const source = new GeoJSONSource('id', {
+            data: {
+                type: 'LineString',
+                coordinates: [
+                    [1.1, 1.2, 3250],
+                    [1.3, 1.4, 3251]
+                ]
             }
-        }), undefined);
+        } as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = mapStub;
         const bounds = await source.getBounds();
         expect(bounds.getNorthEast().lat).toBe(1.4);

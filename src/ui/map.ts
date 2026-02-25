@@ -402,15 +402,6 @@ export type MapOptions = {
      */
     experimentalZoomLevelsToOverscale?: number;
     /**
-     * Causes GeoJSONVT used in the the GeoJSON worker to use differential updates when updateData is
-     * called on a GeoJSON source. Previously, when using updateData on a GeoJSON source, the internal
-     * GeoJSONVT tile index would be rebuilt from scratch on every feature update. This option allows for
-     * updates to be applied to the existing GeoJSON source without having to rebuild the entire tile index.
-     * @defaultValue false
-     * @experimental
-     */
-    experimentalUpdateableGeoJSONVT?: boolean;
-    /**
      * Determines the rotation interaction model:
      * - When true: Uses "Orbital" logic where rotation is relative to the pivot center.
      *   Dragging right at the top rotates clockwise, while dragging right at the bottom
@@ -513,7 +504,6 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     cancelPendingTileRequestsWhileZooming: true,
     centerClampedToGround: true,
     experimentalZoomLevelsToOverscale: undefined,
-    experimentalUpdateableGeoJSONVT: false,
     anisotropicFilterPitch: defaultAnisotropicFilterPitch,
 };
 
@@ -601,8 +591,6 @@ export class Map extends Camera {
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
     /** @internal */
     _zoomLevelsToOverscale: number | undefined;
-    /** @internal */
-    _experimentalUpdateableGeoJSONVT: boolean;
 
     /**
      * @internal
@@ -767,7 +755,6 @@ export class Map extends Camera {
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
         this._zoomLevelsToOverscale = resolvedOptions.experimentalZoomLevelsToOverscale;
-        this._experimentalUpdateableGeoJSONVT = resolvedOptions.experimentalUpdateableGeoJSONVT;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
