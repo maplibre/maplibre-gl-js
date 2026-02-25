@@ -53,7 +53,8 @@ void main() {
     vec2 a_size = a_data.zw;
 
     float a_size_min = floor(a_size[0] * 0.5);
-    vec2 a_pxoffset = a_pixeloffset.xy;
+    vec2 a_pxoffset = a_pixeloffset.xy / 16.0;
+    vec2 a_minFontScale = a_pixeloffset.zw / 256.0;
 
     float ele = get_elevation(a_pos);
     highp float segment_angle = -a_projected_pos[2];
@@ -126,7 +127,7 @@ void main() {
     }
 #endif
 
-    vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale + a_pxoffset) * projectionScaling, z, 1.0);
+    vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * max(a_minFontScale, fontScale) + a_pxoffset) * projectionScaling, z, 1.0);
     if(u_pitch_with_map) {
         finalPos = projectTileWithElevation(finalPos.xy, finalPos.z);
     }
