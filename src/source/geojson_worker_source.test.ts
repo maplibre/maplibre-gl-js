@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
-import {createGeoJSONIndex, GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
+import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {OverscaledTileID} from '../tile/tile_id';
 import {setPerformance, sleep} from '../util/test/util';
@@ -338,7 +338,7 @@ describe('resourceTiming', () => {
     });
 
     test('loadData - url (resourceTiming fallback method)', async () => {
-         server.respondWith(request => {
+        server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify(geoJson));
         });
         const sampleMarks = [100, 350];

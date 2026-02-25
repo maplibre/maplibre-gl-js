@@ -3,7 +3,7 @@ import {RequestPerformance} from '../util/performance';
 import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent';
 import {GeoJSONVT, type GeoJSONVTOptions, type SuperclusterOptions, type ClusterProperties} from '@maplibre/geojson-vt';
-import {createExpression, FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {createExpression, type FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error';
 import {toVirtualVectorTile} from './vector_tile_overzoomed';
 import {WorkerTile} from './worker_tile';
@@ -297,7 +297,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (predicate === undefined) return data;
         const features = data.features.filter(feature => predicate(feature));
 
-        return { type: 'FeatureCollection', features };
+        return {type: 'FeatureCollection', features};
     }
 
     /**
@@ -351,7 +351,6 @@ export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONPar
 
     return new GeoJSONVT(data, options);
 }
-
 
 function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
     if (!clusterProperties || !superclusterOptions) return superclusterOptions;
