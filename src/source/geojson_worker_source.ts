@@ -282,6 +282,10 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (params.updateCluster) {
             this._geoJSONIndex.updateClusterOptions(params.cluster, getSuperclusterOptions(params));
         }
+
+        if (this._geoJSONIndex == null) {
+            throw new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`);
+        }
     }
 
     /**

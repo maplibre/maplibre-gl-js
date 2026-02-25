@@ -14,14 +14,6 @@ import type {WorkerTile} from './worker_tile';
 
 const actor = {send: () => {}} as any as Actor;
 
-beforeEach(() => {
-    setPerformance();
-});
-
-afterEach(() => {
-    vi.clearAllMocks();
-});
-
 describe('geojson tile worker source', () => {
     const actor: IActor = {sendAsync: () => Promise.resolve({})} as any as IActor;
 
@@ -281,14 +273,15 @@ describe('reloadTile', () => {
 });
 
 describe('resourceTiming', () => {
-
     let server: FakeServer;
     beforeEach(() => {
+        setPerformance();
         global.fetch = null;
         server = fakeServer.create();
     });
     afterEach(() => {
         server.restore();
+        vi.clearAllMocks();
     });
 
     const layers = [
@@ -336,7 +329,9 @@ describe('resourceTiming', () => {
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
 
-        const result = await source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters);
+        const promise = source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters);
+        server.respond();
+        const result = await promise;
 
         expect(result.resourceTiming.testSource).toEqual([exampleResourceTiming]);
     });
@@ -369,7 +364,9 @@ describe('resourceTiming', () => {
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
 
-        const result = await source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters);
+        const promise = source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters);
+        server.respond();
+        const result = await promise;
 
         expect(result.resourceTiming.testSource).toEqual(
             [{'duration': 250, 'entryType': 'measure', 'name': 'http://localhost/nonexistent', 'startTime': 100}]
@@ -508,7 +505,7 @@ describe('loadData', () => {
     test('loadData with geojson creates an updateable source', async () => {
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
-        await worker.loadData({source: 'source1', data: updateableGeoJson} as LoadGeoJSONParameters);
+        await worker.loadData({source: 'source1', data: updateableGeoJson, geojsonVtOptions: {updateable: true}} as LoadGeoJSONParameters);
         await expect(worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters)).resolves.toBeDefined();
     });
 
@@ -519,7 +516,7 @@ describe('loadData', () => {
             request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify(updateableGeoJson));
         });
 
-        const load1Promise = worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters);
+        const load1Promise = worker.loadData({source: 'source1', request: {url: ''}, geojsonVtOptions: {updateable: true}} as LoadGeoJSONParameters);
         server.respond();
 
         const result = await load1Promise;
@@ -546,7 +543,7 @@ describe('loadData', () => {
     test('loadData with diff updates', async () => {
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
-        await worker.loadData({source: 'source1', data: updateableGeoJson} as LoadGeoJSONParameters);
+        await worker.loadData({source: 'source1', data: updateableGeoJson, geojsonVtOptions: {updateable: true}} as LoadGeoJSONParameters);
         const result = await worker.loadData({source: 'source1', dataDiff: {
             add: [{
                 type: 'Feature',
@@ -632,7 +629,7 @@ describe('getData', () => {
     test('getData returns correct geojson when the source was loaded with geojson', async () => {
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
-        await worker.loadData({source: 'source1', data: geoJson} as LoadGeoJSONParameters);
+        await worker.loadData({source: 'source1', data: geoJson, geojsonVtOptions: {updateable: true}} as LoadGeoJSONParameters);
         await expect(worker.getData()).resolves.toEqual({
             type: 'FeatureCollection',
             features: [geoJson]
@@ -646,7 +643,7 @@ describe('getData', () => {
             request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify(updateableGeoJson));
         });
 
-        const load1Promise = worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters);
+        const load1Promise = worker.loadData({source: 'source1', request: {url: ''}, geojsonVtOptions: {updateable: true}} as LoadGeoJSONParameters);
         server.respond();
 
         await load1Promise;
@@ -659,7 +656,7 @@ describe('getData', () => {
     test('getData after diff updates returns updated geojson', async () => {
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
-        await worker.loadData({source: 'source1', data: updateableGeoJson} as LoadGeoJSONParameters);
+        await worker.loadData({type: 'geojson', source: 'source1', data: updateableGeoJson, geojsonVtOptions: {updateable: true}} as LoadGeoJSONParameters);
         await expect(worker.loadData({source: 'source1', dataDiff: {
             add: [{
                 type: 'Feature',
