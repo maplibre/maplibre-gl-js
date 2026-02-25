@@ -39,3 +39,37 @@ test('loadGlyphRange', async ()  => {
     }
     expect(server.requests[0].url).toBe('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
 });
+
+test('loadGlyphRange with async transformRequest', async () => {
+    global.fetch = null;
+
+    const manager = new RequestManager(async (url) => ({
+        url,
+        headers: { Authorization: 'Bearer token' }
+    }));
+
+    const server = fakeServer.create();
+    server.respondWith(bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/0-255.pbf'))));
+
+    setTimeout(() => {
+        // delay server.respond so that it happens after the glyph range request is made
+        // otherwise, the subsequent await blocks indefinitely
+        server.respond();
+    });
+    const result = await loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager);
+
+    expect(Object.keys(result)).toHaveLength(223);
+    for (const key in result) {
+        const id = Number(key);
+        const glyph = result[id];
+
+        expect(glyph.id).toBe(Number(id));
+        expect(glyph.metrics).toBeTruthy();
+        expect(typeof glyph.metrics.width).toBe('number');
+        expect(typeof glyph.metrics.height).toBe('number');
+        expect(typeof glyph.metrics.top).toBe('number');
+        expect(typeof glyph.metrics.advance).toBe('number');
+    }
+    expect(server.requests[0].url).toBe('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
+    expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
+});

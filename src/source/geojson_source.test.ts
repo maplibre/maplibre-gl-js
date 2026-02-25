@@ -161,6 +161,27 @@ describe('GeoJSONSource.setData', () => {
         expect(spy).toHaveBeenCalled();
     });
 
+    test('respects collectResourceTiming parameter on source (async transformRequest)', async () => {
+        const source = createSource({collectResourceTiming: true});
+        source.map = {
+            _requestManager: {
+                transformRequest: async (url) => { return {url}; }
+            } as any as RequestManager
+        } as any;
+        const spy = vi.fn();
+        source.actor.sendAsync = (message: ActorMessage<MessageType>) => {
+            return new Promise((resolve) => {
+                if (message.type === MessageType.loadData) {
+                    expect((message.data as any).request.collectResourceTiming).toBeTruthy();
+                    spy();
+                    resolve({} as any);
+                }
+            });
+        };
+        await source.setData('http://localhost/nonexistent', true);
+        expect(spy).toHaveBeenCalled();
+    });
+
     test('only marks source as loaded when there are no pending loads', async () => {
         const source = createSource();
         const setDataPromise = source.once('data');
@@ -503,6 +524,30 @@ describe('GeoJSONSource.update', () => {
 
         expect(source.serialize()).toStrictEqual({type: 'geojson', data: hawkHill});
     });
+
+    test('can asynchronously transform request', async () => {
+        const spy = vi.fn();
+        const source = new GeoJSONSource('id', {data: 'https://example.com/data.geojson'} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message) {
+                spy(message);
+                return Promise.resolve({});
+            }
+        }), undefined);
+        source.map = {
+            _requestManager: {
+                transformRequest: async (url) => ({
+                    url,
+                    headers: { Authorization: 'Bearer token' }
+                })
+            }
+        } as any;
+        await source.load();
+        expect(spy).toHaveBeenCalled();
+        expect(spy.mock.calls[0][0].data.request).toEqual({
+            url: 'https://example.com/data.geojson',
+            headers: { Authorization: 'Bearer token' }
+        });
+    })
 
     test('fires event when metadata loads', async () =>  {
         const mockDispatcher = wrapDispatcher({

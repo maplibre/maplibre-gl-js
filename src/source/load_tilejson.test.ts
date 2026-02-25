@@ -45,6 +45,42 @@ describe('loadTileJson', () => {
         expect(result).toEqual(mockTileJSON);
     });
 
+    test('fetches and returns TileJSON (async transformRequest)', async () => {
+        const options = {
+            type: 'raster',
+            url: 'http://example.com/test.json',
+        } satisfies RasterSourceSpecification;
+
+        const mockTileJSON = {
+            tiles: ['http://example.com/tile/{z}/{x}/{y}.png'],
+            minzoom: 0,
+            maxzoom: 14,
+            attribution: 'Test Attribution',
+            bounds: [-180, -85, 180, 85],
+            scheme: 'xyz',
+            tileSize: 256,
+        };
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify(mockTileJSON));
+        });
+
+        const requestManager = new RequestManager(async (url) => ({
+            url,
+            headers: { Authorization: 'Bearer token' }
+        }));
+        setTimeout(() => {
+            // delay server.respond so that it happens after the TileJSON request is made
+            // otherwise, the subsequent await blocks indefinitely
+            server.respond();
+        });
+        const result = await loadTileJson(options, requestManager, new AbortController());
+
+        expect(result).toEqual(mockTileJSON);
+        expect(server.requests[0].url).toBe('http://example.com/test.json');
+        expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
+    });
+
     test('combines input and TileJSON', async () => {
         const options = {
             type: 'raster',

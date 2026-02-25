@@ -133,6 +133,27 @@ describe('Style.loadURL', () => {
         expect(spy.mock.calls[0][1]).toBe('Style');
     });
 
+    test('can asynchronously transform style request', async () => {
+        server.respondWith('style.json', JSON.stringify(createStyleJSON()));
+
+        const map = getStubMap();
+        map._requestManager.transformRequest = async (url, type) => ({
+            url,
+            type,
+            headers: { Authorization: 'Bearer token' }
+        });
+
+        const style = new Style(map);
+        style.loadURL('style.json');
+        setTimeout(() => {
+            server.respond();
+        });
+        await waitForEvent(style, 'data', (event) => event.dataType === 'style');
+
+        expect(server.requests[0].url).toBe('style.json');
+        expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
+    });
+
     test('validates the style', async () => {
         const style = new Style(getStubMap());
 

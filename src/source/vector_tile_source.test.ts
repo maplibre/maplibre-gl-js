@@ -89,6 +89,22 @@ describe('VectorTileSource', () => {
         expect(transformSpy).toHaveBeenCalledWith('/source.json', 'Source');
     });
 
+    test('can asynchronously transform the request for TileJSON URL', async () => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+        const source = createSource({url: '/source.json'}, async (url) => ({
+            url,
+            headers: { Authorization: 'Bearer token' }
+        }));
+        setTimeout(() => {
+            // delay server.response so that it happens after the TileJSON request is made
+            // otherwise, the subsequent await blocks indefinitely
+            server.respond();
+        });
+        await waitForMetadataEvent(source);
+        expect(server.requests[0].url).toBe('/source.json');
+        expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
+    });
+
     test('fires event with metadata property', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         const source = createSource({url: '/source.json'});
@@ -200,6 +216,34 @@ describe('VectorTileSource', () => {
         source.loadTile(tile);
         expect(transformSpy).toHaveBeenCalledTimes(1);
         expect(transformSpy).toHaveBeenCalledWith('http://example.com/10/5/5.png', 'Tile');
+    });
+
+    test('can asynchronously transform tile request', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            scheme: 'xyz'
+        }, async (url) => ({
+            url,
+            headers: { Authorization: 'Bearer token' }
+        }));
+        let receivedMessage: ActorMessage<MessageType> = null;
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(message) {
+                receivedMessage = message;
+                return Promise.resolve({});
+            }
+        });
+        await waitForMetadataEvent(source);
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData() {},
+            setExpiryData() {}
+        } as any as Tile;
+        await source.loadTile(tile);
+        expect((receivedMessage.data as WorkerTileParameters).request.url).toBe('http://example.com/10/5/5.png');
+        expect((receivedMessage.data as WorkerTileParameters).request.headers.Authorization).toBe('Bearer token');
     });
 
     test('loads a tile even in case of 404', async () => {

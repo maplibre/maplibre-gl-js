@@ -52,6 +52,28 @@ describe('RasterTileSource', () => {
         expect(transformSpy.mock.calls[0][1]).toBe('Source');
     });
 
+    test('can asynchronously transform request for TileJSON URL', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            bounds: [-47, -7, -45, -5]
+        }));
+        const source = createSource({url: '/source.json'}, async (url) => ({
+            url,
+            headers: { Authorization: 'Bearer token' }
+        }));
+        setTimeout(() => {
+            // delay server.respond so that it happens after the TileJSON request is made
+            // otherwise, the subsequent await blocks indefinitely
+            server.respond();
+        }, 0);
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        expect(server.requests[0].url).toBe('/source.json');
+        expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
+    });
+
     test('fires "error" event if TileJSON request fails', async () => {
         server.respondWith('/source.json', [404, {}, '']);
 
@@ -133,6 +155,37 @@ describe('RasterTileSource', () => {
         expect(transformSpy).toHaveBeenCalledTimes(1);
         expect(transformSpy.mock.calls[0][0]).toBe('http://example.com/10/5/5.png');
         expect(transformSpy.mock.calls[0][1]).toBe('Tile');
+    });
+
+    test('can asynchronously transform tile request', async () => {
+        server.respondWith('http://example.com/10/5/5.png',
+            [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': 'max-age=100'}, '0']
+        );
+
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }, async (url) => ({
+            url,
+            headers: { Authorization: 'Bearer token' }
+        }));
+        source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData () {},
+            setExpiryData() {}
+        } as any as Tile;
+        setTimeout(() => {
+            // delay server.respond so that it happens after the tile request is made
+            // otherwise, the subsequent await blocks indefinitely
+            server.respond();
+        });
+        await source.loadTile(tile);
+        expect(server.requests[0].url).toBe('http://example.com/10/5/5.png');
+        expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
+        expect(tile.state).toBe('loaded');
     });
 
     test('HttpImageElement used to get image when refreshExpiredTiles is false', async () => {

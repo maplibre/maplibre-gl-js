@@ -83,6 +83,27 @@ describe('ImageSource', () => {
         expect(spy.mock.calls[0][1]).toBe('Image');
     });
 
+    test('can asynchronously transform request', async () => {
+        const source = createSource({url: '/image.png'});
+        const map = new StubMap() as any;
+        map._requestManager = {
+            transformRequest: async (url) => ({
+                url,
+                headers: { Authorization: 'Bearer token' }
+            })
+        };
+        const promise = source.once('data');
+        source.onAdd(map);
+        setTimeout(() => {
+            // delay server.respond so that it happens after the image request is made
+            // otherwise, the subsequent await blocks indefinitely
+            server.respond();
+        }, 0);
+        await promise;
+        expect(server.requests[0].url).toBe('/image.png');
+        expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer token');
+    });
+
     test('updates url from updateImage', () => {
         const source = createSource({url: '/image.png'});
         const map = new StubMap() as any;
