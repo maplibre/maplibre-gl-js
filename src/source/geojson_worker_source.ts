@@ -343,7 +343,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
     }
 }
 
-function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONVT {
+export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONVT {
     const options = extend(params.geojsonVtOptions || {}, {
         cluster: params.cluster,
         clusterOptions: params.superclusterOptions

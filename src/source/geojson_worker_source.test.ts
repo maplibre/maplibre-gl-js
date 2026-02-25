@@ -1,12 +1,13 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
-import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
+import {createGeoJSONIndex, GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {OverscaledTileID} from '../tile/tile_id';
 import {setPerformance, sleep} from '../util/test/util';
 import {type FakeServer, fakeServer} from 'nise';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
+import type {GeoJSONVT} from '@maplibre/geojson-vt';
 import type {Actor, IActor} from '../util/actor';
 import type {TileParameters, WorkerTileParameters, WorkerTileResult, WorkerTileWithData} from './worker_source';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -569,18 +570,16 @@ describe('loadData', () => {
         await expect(worker.loadData({} as LoadGeoJSONParameters)).resolves.toBeDefined();
     });
 
-    /* HM TODO: bring this back
     test('loadData should process cluster change with no data', async () => {
-        const mockGetSuperclusterOptions = vi.fn(getSuperclusterOptions);
-        const worker = new GeoJSONWorkerSource(actor, layerIndex, [], mockGetSuperclusterOptions);
-
+        const mockGeoJSONIndex = {
+            updateClusterOptions: vi.fn()
+        } as any as GeoJSONVT;
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, [], () => mockGeoJSONIndex);
         await worker.loadData({source: 'source1', data: updateableFeatureCollection, cluster: false} as LoadGeoJSONParameters);
-        expect(mockGetSuperclusterOptions.mock.calls[0]).toBeUndefined();
-
-        await expect(worker.loadData({updateCluster: true, cluster: true} as LoadGeoJSONParameters)).resolves.toBeDefined();
-        expect(mockGetSuperclusterOptions.mock.calls[0][0].cluster).toBe(true);
+        expect(mockGeoJSONIndex.updateClusterOptions).not.toHaveBeenCalled();
+        await expect(worker.loadData({updateCluster: true} as LoadGeoJSONParameters)).resolves.toBeDefined();
+        expect(mockGeoJSONIndex.updateClusterOptions).toHaveBeenCalled();
     });
-    */
 });
 
 describe('getData', () => {
