@@ -537,7 +537,7 @@ describe('GeoJSONSource.update', () => {
             _requestManager: {
                 transformRequest: async (url) => ({
                     url,
-                    headers: { Authorization: 'Bearer token' }
+                    headers: {Authorization: 'Bearer token'}
                 })
             }
         } as any;
@@ -545,9 +545,9 @@ describe('GeoJSONSource.update', () => {
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][0].data.request).toEqual({
             url: 'https://example.com/data.geojson',
-            headers: { Authorization: 'Bearer token' }
+            headers: {Authorization: 'Bearer token'}
         });
-    })
+    });
 
     test('fires event when metadata loads', async () =>  {
         const mockDispatcher = wrapDispatcher({

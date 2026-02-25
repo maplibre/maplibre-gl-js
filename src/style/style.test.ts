@@ -140,7 +140,7 @@ describe('Style.loadURL', () => {
         map._requestManager.transformRequest = async (url, type) => ({
             url,
             type,
-            headers: { Authorization: 'Bearer token' }
+            headers: {Authorization: 'Bearer token'}
         });
 
         const style = new Style(map);

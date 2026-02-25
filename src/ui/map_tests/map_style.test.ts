@@ -298,7 +298,7 @@ describe('setStyle', () => {
         const map = createMap({style});
         const transformRequestSpy = vi.fn(async (url) => ({
             url,
-            headers: { Authorization: 'Bearer token' }
+            headers: {Authorization: 'Bearer token'}
         }));
         map.setTransformRequest(transformRequestSpy);
         await map.once('style.load');

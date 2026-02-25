@@ -93,7 +93,7 @@ describe('VectorTileSource', () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         const source = createSource({url: '/source.json'}, async (url) => ({
             url,
-            headers: { Authorization: 'Bearer token' }
+            headers: {Authorization: 'Bearer token'}
         }));
         setTimeout(() => {
             // delay server.response so that it happens after the TileJSON request is made
@@ -224,7 +224,7 @@ describe('VectorTileSource', () => {
             scheme: 'xyz'
         }, async (url) => ({
             url,
-            headers: { Authorization: 'Bearer token' }
+            headers: {Authorization: 'Bearer token'}
         }));
         let receivedMessage: ActorMessage<MessageType> = null;
         source.dispatcher = getWrapDispatcher()({

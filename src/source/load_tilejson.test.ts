@@ -67,7 +67,7 @@ describe('loadTileJson', () => {
 
         const requestManager = new RequestManager(async (url) => ({
             url,
-            headers: { Authorization: 'Bearer token' }
+            headers: {Authorization: 'Bearer token'}
         }));
         setTimeout(() => {
             // delay server.respond so that it happens after the TileJSON request is made

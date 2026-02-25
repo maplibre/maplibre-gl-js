@@ -92,7 +92,7 @@ describe('loadSprite', () => {
     test('backwards compatibility: single string is treated as a URL for the default sprite (async transformRequest)', async () => {
         const manager = new RequestManager((url) => ({
             url,
-            headers: { Authorization: 'Bearer token' }
+            headers: {Authorization: 'Bearer token'}
         }));
 
         server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1.json', fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json')).toString());
@@ -165,7 +165,7 @@ describe('loadSprite', () => {
     test('array of objects support (async tranformRequest)', async () => {
         const manager = new RequestManager(async (url) => ({
             url,
-            headers: { Authorization: 'Bearer token' }
+            headers: {Authorization: 'Bearer token'}
         }));
 
         server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1.json', fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json')).toString());

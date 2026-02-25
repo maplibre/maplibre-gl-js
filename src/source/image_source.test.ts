@@ -89,7 +89,7 @@ describe('ImageSource', () => {
         map._requestManager = {
             transformRequest: async (url) => ({
                 url,
-                headers: { Authorization: 'Bearer token' }
+                headers: {Authorization: 'Bearer token'}
             })
         };
         const promise = source.once('data');

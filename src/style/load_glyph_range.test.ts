@@ -45,7 +45,7 @@ test('loadGlyphRange with async transformRequest', async () => {
 
     const manager = new RequestManager(async (url) => ({
         url,
-        headers: { Authorization: 'Bearer token' }
+        headers: {Authorization: 'Bearer token'}
     }));
 
     const server = fakeServer.create();

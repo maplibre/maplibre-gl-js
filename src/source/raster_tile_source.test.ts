@@ -62,7 +62,7 @@ describe('RasterTileSource', () => {
         }));
         const source = createSource({url: '/source.json'}, async (url) => ({
             url,
-            headers: { Authorization: 'Bearer token' }
+            headers: {Authorization: 'Bearer token'}
         }));
         setTimeout(() => {
             // delay server.respond so that it happens after the TileJSON request is made
@@ -166,7 +166,7 @@ describe('RasterTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         }, async (url) => ({
             url,
-            headers: { Authorization: 'Bearer token' }
+            headers: {Authorization: 'Bearer token'}
         }));
         source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
