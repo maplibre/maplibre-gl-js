@@ -3,7 +3,7 @@ import {RequestPerformance} from '../util/performance';
 import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent';
 import {GeoJSONVT, type GeoJSONVTOptions, type SuperclusterOptions, type ClusterProperties} from '@maplibre/geojson-vt';
-import {createExpression} from '@maplibre/maplibre-gl-style-spec';
+import {createExpression, FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error';
 import {toVirtualVectorTile} from './vector_tile_overzoomed';
 import {WorkerTile} from './worker_tile';
@@ -27,7 +27,7 @@ export type GeoJSONWorkerOptions = {
     geojsonVtOptions?: GeoJSONVTOptions;
     superclusterOptions?: SuperclusterOptions;
     clusterProperties?: ClusterProperties;
-    filter?: Array<unknown>;
+    filter?: FilterSpecification;
     promoteId?: string;
     collectResourceTiming?: boolean;
 };
@@ -69,12 +69,6 @@ export class GeoJSONWorkerSource implements WorkerSource {
     availableImages: Array<string>;
     tileState: WorkerTileState;
 
-    /**
-     * The actual GeoJSON takes some time to load (as there may be a need to parse a diff, or to apply filters, or the
-     * data may even need to be loaded via a URL). This promise resolves with a ready-to-be-consumed GeoJSON which is
-     * ready to be returned by the `getData` method.
-     */
-    _pendingData: Promise<GeoJSON.GeoJSON>;
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONVT;
     _createGeoJSONIndex: typeof createGeoJSONIndex;
@@ -86,7 +80,6 @@ export class GeoJSONWorkerSource implements WorkerSource {
         this.tileState = new WorkerTileState();
         this._createGeoJSONIndex = createGeoJSONIndexFunc;
     }
-
 
     /**
      * Retrieves and sends loaded vector tiles to the main thread.
@@ -271,7 +264,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
      */
     async loadAndProcessGeoJSON(params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
         if (params.request) {
-            params.data = await this.loadGeoJSONFromUrl(params, abortController);
+            params.data = (await getJSON<GeoJSON.GeoJSON>(params.request, abortController)).data;
         }
 
         if (params.data) {
@@ -281,7 +274,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         }
 
         if (params.dataDiff) {
-            this._geoJSONIndex ??= this._createGeoJSONIndex(this._toFeatureCollection([]), params);
+            this._geoJSONIndex ??= this._createGeoJSONIndex({type: 'FeatureCollection', features: []}, params);
             this._geoJSONIndex.updateData(params.dataDiff, this._getFilterPredicate(params.filter));
             return;
         }
@@ -292,30 +285,22 @@ export class GeoJSONWorkerSource implements WorkerSource {
     }
 
     /**
-     * Loads GeoJSON from a URL and sets the sources updateable GeoJSON object.
-     */
-    async loadGeoJSONFromUrl(params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
-        const response = await getJSON<GeoJSON.GeoJSON>(params.request, abortController);
-        return response.data;
-    }
-
-    /**
      * Applies a filter to a GeoJSON object.
      */
-    _filterGeoJSON(data: GeoJSON.GeoJSON, filter: Array<unknown>): GeoJSON.FeatureCollection {
-        if (!filter?.length) return data as GeoJSON.FeatureCollection;
+    _filterGeoJSON(data: GeoJSON.GeoJSON, filter: FilterSpecification): GeoJSON.GeoJSON {
+        if (!('features' in data)) return data;
+        const predicate = this._getFilterPredicate(filter);
+        if (predicate === undefined) return data;
+        const features = data.features.filter(feature => predicate(feature));
 
-        const compiled = this._getCompiledExpression(filter);
-        const features = (data as any).features.filter(feature => compiled.value.evaluate({zoom: 0}, feature));
-
-        return this._toFeatureCollection(features);
+        return { type: 'FeatureCollection', features };
     }
 
     /**
      * Gets a predicate function that can be used to filter GeoJSON features.
      */
-    _getFilterPredicate(filter: Array<unknown>): (feature: GeoJSON.Feature) => boolean {
-        if (!filter?.length) return undefined;
+    _getFilterPredicate(filter: FilterSpecification): (feature: GeoJSON.Feature) => boolean {
+        if (typeof filter !== 'boolean' && !filter?.length) return undefined;
 
         const compiled = this._getCompiledExpression(filter);
         const predicate = (feature: GeoJSON.Feature) => compiled.value.evaluate({zoom: 0}, feature as any);
@@ -323,7 +308,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         return predicate;
     }
 
-    _getCompiledExpression(filter: Array<unknown>)  {
+    _getCompiledExpression(filter: FilterSpecification)  {
         const compiled = createExpression(filter, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
 
         if (compiled.result === 'error') {
@@ -331,13 +316,6 @@ export class GeoJSONWorkerSource implements WorkerSource {
         }
 
         return compiled;
-    }
-
-    /**
-     * Converts an array of GeoJSON features into a GeoJSON FeatureCollection.
-     */
-    _toFeatureCollection(features: Array<GeoJSON.Feature>): GeoJSON.FeatureCollection {
-        return {type: 'FeatureCollection', features};
     }
 
     async removeSource(_params: RemoveSourceParams): Promise<void> {
