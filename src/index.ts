@@ -34,7 +34,7 @@ import {addProtocol, removeProtocol} from './source/protocol_crud';
 import {type Dispatcher, getGlobalDispatcher} from './util/dispatcher';
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets';
 import {type MapTerrainEvent, type MapStyleImageMissingEvent, type MapStyleDataEvent, type MapSourceDataEvent, type MapLibreZoomEvent, type MapLibreEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, type MapDataEvent, type MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type MapProjectionEvent} from './ui/events';
-import {BoxZoomHandler} from './ui/handler/box_zoom';
+import {BoxZoomHandler, type BoxZoomEndHandler, type BoxZoomHandlerOptions} from './ui/handler/box_zoom';
 import {DragRotateHandler} from './ui/handler/shim/drag_rotate';
 import {DragPanHandler, type DragPanOptions} from './ui/handler/shim/drag_pan';
 import {ScrollZoomHandler} from './ui/handler/scroll_zoom';
@@ -304,6 +304,8 @@ export {
     type ScaleControlOptions,
     type Unit,
     type AroundCenterOptions,
+    type BoxZoomEndHandler,
+    type BoxZoomHandlerOptions,
     type HandlerResult,
     type CustomRenderMethodInput,
     type ExpiryData,

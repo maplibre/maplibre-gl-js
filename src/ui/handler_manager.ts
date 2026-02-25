@@ -79,11 +79,6 @@ export interface Handler {
 }
 
 /**
- * Callback that performs a one-off camera animation on the map.
- */
-export type CameraAnimationCallback = (map: Map) => void;
-
-/**
  * All handler methods that are called with events can optionally return a `HandlerResult`.
  */
 export type HandlerResult = {
@@ -103,7 +98,7 @@ export type HandlerResult = {
     /**
      * A method that can fire a one-off easing by directly changing the map's camera.
      */
-    cameraAnimation?: CameraAnimationCallback;
+    cameraAnimation?: (map: Map) => void;
     /**
      * The last three properties are needed by only one handler: scrollzoom.
      * The DOM event to be used as the `originalEvent` on any camera change events.
