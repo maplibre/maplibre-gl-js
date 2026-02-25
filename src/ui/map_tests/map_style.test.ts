@@ -269,6 +269,67 @@ describe('setStyle', () => {
         expect(loadedStyle.layers).toHaveLength(1);
     });
 
+    // in this special case, retrieval of the style JSON is not done by style but by map
+    test('can asynchronously transform style JSON request specified to setStyle with diffing', async () => {
+        server.respondWith('style.json', JSON.stringify(createStyle()));
+
+        const style = extend(createStyle(), {
+            sources: {
+                maplibre: {
+                    type: 'vector',
+                    minzoom: 1,
+                    maxzoom: 10,
+                    tiles: ['http://example.com/{z}/{x}/{y}.png']
+                }
+            },
+            layers: [{
+                id: 'layerId0',
+                type: 'circle',
+                source: 'maplibre',
+                'source-layer': 'sourceLayer'
+            }, {
+                id: 'layerId1',
+                type: 'circle',
+                source: 'maplibre',
+                'source-layer': 'sourceLayer'
+            }]
+        });
+
+        const map = createMap({style});
+        const transformRequestSpy = vi.fn(async (url) => ({
+            url,
+            headers: { Authorization: 'Bearer token' }
+        }));
+        map.setTransformRequest(transformRequestSpy);
+        await map.once('style.load');
+
+        map.setStyle('style.json', {
+            diff: true,
+            /*
+            transformStyle: (prevStyle, nextStyle) => ({
+                ...nextStyle,
+                sources: {
+                    ...nextStyle.sources,
+                    maplibre: prevStyle.sources.maplibre
+                },
+                layers: [
+                    ...nextStyle.layers,
+                    prevStyle.layers[0]
+                ]
+            }) */
+        });
+        setTimeout(() => {
+            // delay server.respond so that it happens after the style JSON request is made
+            // otherwise, the subsequent await blocks indefinitely
+            server.respond();
+        });
+        await map.once('style.load');
+
+        expect(transformRequestSpy).toHaveBeenCalledWith('style.json', 'Style');
+        expect(server.requests[0].url).toBe('style.json');
+        expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
+    });
+
     test('transformStyle should get called when passed to setStyle after the map is initialised without a style', async () => {
         const map = createMap({deleteStyle: true});
         map.setStyle(createStyle(), {
