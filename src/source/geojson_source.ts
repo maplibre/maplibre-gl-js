@@ -199,7 +199,8 @@ export class GeoJSONSource extends Evented implements Source {
                 extent: EXTENT,
                 maxZoom: this.maxzoom,
                 lineMetrics: options.lineMetrics || false,
-                generateId: options.generateId || false
+                generateId: options.generateId || false,
+                updatable: true
             },
             superclusterOptions: {
                 maxZoom: this._getClusterMaxZoom(options.clusterMaxZoom),
@@ -290,8 +291,7 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns a promise which resolves to the source's actual GeoJSON data
      */
     async getData(): Promise<GeoJSON.GeoJSON> {
-        // experimentalUpdateable property: when _experimentalUpdateableGeoJSONVT is removed, this property should be removed
-        const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions, {experimentalUpdateable: this.map?._experimentalUpdateableGeoJSONVT});
+        const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
         return this.actor.sendAsync({type: MessageType.getData, data: options});
     }
 
@@ -412,9 +412,7 @@ export class GeoJSONSource extends Evented implements Source {
      * Create the parameters object that will be sent to the worker and used to load GeoJSON.
      */
     private _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): LoadGeoJSONParameters | undefined {
-        // experimentalUpdateable property: when _experimentalUpdateableGeoJSONVT is removed, this property should be removed
-        // from here and `updateble: true` should be added to the geojsonVtOptions above (about line 191).
-        const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions, {experimentalUpdateable: this.map?._experimentalUpdateableGeoJSONVT});
+        const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
 
         // Data comes from a remote url
         if (typeof data === 'string') {
