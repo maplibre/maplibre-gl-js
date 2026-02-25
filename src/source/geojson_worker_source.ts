@@ -337,7 +337,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
 export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONVT {
     const options = extend(params.geojsonVtOptions || {}, {
         cluster: params.cluster,
-        clusterOptions: params.superclusterOptions
+        clusterOptions: getSuperclusterOptions(params)
     });
 
     return new GeoJSONVT(data, options);
@@ -378,6 +378,5 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGe
             accumulated[key] = reduceExpressions[key].evaluate(globals, feature);
         }
     };
-
     return superclusterOptions;
 }
