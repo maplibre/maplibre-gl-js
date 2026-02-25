@@ -1,5 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {createGeoJSONIndex, GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
+import {getSuperclusterOptions, GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {OverscaledTileID} from '../tile/tile_id';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -14,8 +14,8 @@ import {type WorkerTile} from './worker_tile';
 const actor = {send: () => {}} as any as Actor;
 
 const globalOptions: Partial<LoadGeoJSONParameters> = {
-    experimentalUpdateable: false
-    // experimentalUpdateable: true
+    // experimentalUpdateable: false
+    experimentalUpdateable: true
 };
 
 beforeEach(() => {
@@ -489,6 +489,7 @@ describe('loadData', () => {
     });
 
     test('loadData with geojson creates an non-updateable source', async () => {
+        if (globalOptions.experimentalUpdateable) return;
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
         await worker.loadData({source: 'source1', data: geoJson, ...globalOptions} as LoadGeoJSONParameters);
@@ -518,6 +519,7 @@ describe('loadData', () => {
     });
 
     test('loadData with geojson network call creates a non-updateable source', async () => {
+        if (globalOptions.experimentalUpdateable) return;
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
         server.respondWith(request => {
@@ -550,6 +552,7 @@ describe('loadData', () => {
     });
 
     test('loadData should reject as first call with no data', async () => {
+        if (globalOptions.experimentalUpdateable) return;
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
         await expect(worker.loadData({...globalOptions} as LoadGeoJSONParameters)).rejects.toBeDefined();
@@ -563,13 +566,14 @@ describe('loadData', () => {
     });
 
     test('loadData should process cluster change with no data', async () => {
-        const mockCreateGeoJSONIndex = vi.fn(createGeoJSONIndex);
-        const worker = new GeoJSONWorkerSource(actor, layerIndex, [], mockCreateGeoJSONIndex);
+        const mockGetSuperclusterOptions = vi.fn(getSuperclusterOptions);
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, [], mockGetSuperclusterOptions);
 
         await worker.loadData({source: 'source1', data: updateableFeatureCollection, cluster: false, ...globalOptions} as LoadGeoJSONParameters);
-        expect(mockCreateGeoJSONIndex.mock.calls[0][1].cluster).toBe(false);
-        await expect(worker.loadData({cluster: true, ...globalOptions} as LoadGeoJSONParameters)).resolves.toBeDefined();
-        expect(mockCreateGeoJSONIndex.mock.calls[1][1].cluster).toBe(true);
+        expect(mockGetSuperclusterOptions.mock.calls[0]).toBeUndefined();
+
+        await expect(worker.loadData({updateCluster: true, cluster: true, ...globalOptions} as LoadGeoJSONParameters)).resolves.toBeDefined();
+        expect(mockGetSuperclusterOptions.mock.calls[0][0].cluster).toBe(true);
     });
 });
 
@@ -620,7 +624,10 @@ describe('getData', () => {
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
         await worker.loadData({source: 'source1', data: geoJson, ...globalOptions} as LoadGeoJSONParameters);
-        await expect(worker.getData()).resolves.toStrictEqual(geoJson);
+        await expect(worker.getData({experimentalUpdateable: true} as LoadGeoJSONParameters)).resolves.toEqual({
+            type: 'FeatureCollection',
+            features: [geoJson]
+        });
     });
 
     test('getData after a geojson network call returns actual loaded geojson', async () => {
@@ -634,7 +641,10 @@ describe('getData', () => {
         server.respond();
 
         await load1Promise;
-        await expect(worker.getData()).resolves.toStrictEqual(updateableGeoJson);
+        await expect(worker.getData({experimentalUpdateable: true} as LoadGeoJSONParameters)).resolves.toEqual({
+            type: 'FeatureCollection',
+            features: [updateableGeoJson]
+        });
     });
 
     test('getData after diff updates returns updated geojson', async () => {
@@ -650,7 +660,7 @@ describe('getData', () => {
             }]
         }, ...globalOptions} as LoadGeoJSONParameters)).resolves.toBeDefined();
 
-        await expect(worker.getData()).resolves.toStrictEqual({
+        await expect(worker.getData({experimentalUpdateable: true} as LoadGeoJSONParameters)).resolves.toStrictEqual({
             type: 'FeatureCollection',
             features: [
                 {...updateableGeoJson},

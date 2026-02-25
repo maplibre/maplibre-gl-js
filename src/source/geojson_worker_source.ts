@@ -3,8 +3,7 @@ import {RequestPerformance} from '../util/performance';
 import rewind from '@mapbox/geojson-rewind';
 import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent';
-import Supercluster, {type Options as SuperclusterOptions, type ClusterProperties} from 'supercluster';
-import geojsonvt, {type GeoJSONVTOptions, type GeoJSONVT} from '@maplibre/geojson-vt';
+import {GeoJSONVT, type GeoJSONVTOptions, type SuperclusterOptions, type ClusterProperties} from '@maplibre/geojson-vt';
 import {createExpression} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error';
 import {toVirtualVectorTile} from './vector_tile_overzoomed';
@@ -27,7 +26,7 @@ export type GeoJSONWorkerOptions = {
     source?: string;
     cluster?: boolean;
     geojsonVtOptions?: GeoJSONVTOptions;
-    superclusterOptions?: SuperclusterOptions<any, any>;
+    superclusterOptions?: SuperclusterOptions;
     clusterProperties?: ClusterProperties;
     filter?: Array<unknown>;
     promoteId?: string;
@@ -59,8 +58,6 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
     updateCluster?: boolean;
 };
 
-type GeoJSONIndex = GeoJSONVT | Supercluster;
-
 /**
  * The {@link WorkerSource} implementation that supports {@link GeoJSONSource}.
  * This class is designed to be easily reused to support custom source types
@@ -82,16 +79,16 @@ export class GeoJSONWorkerSource implements WorkerSource {
      */
     _pendingData: Promise<GeoJSON.GeoJSON>;
     _pendingRequest: AbortController;
-    _geoJSONIndex: GeoJSONIndex;
+    _geoJSONIndex: GeoJSONVT;
     _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
-    _createGeoJSONIndex: typeof createGeoJSONIndex;
+    _getSuperclusterOptions: typeof getSuperclusterOptions;
 
-    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>, createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
+    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>, getSuperclusterOptionsFunc: typeof getSuperclusterOptions = getSuperclusterOptions) {
         this.actor = actor;
         this.layerIndex = layerIndex;
         this.availableImages = availableImages;
         this.tileState = new WorkerTileState();
-        this._createGeoJSONIndex = createGeoJSONIndexFunc;
+        this._getSuperclusterOptions = getSuperclusterOptionsFunc;
     }
 
     /**
@@ -203,7 +200,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
      */
     async loadData(params: LoadGeoJSONParameters): Promise<GeoJSONWorkerSourceLoadDataResult> {
         if (params.experimentalUpdateable) {
-            return this.experimentalLoadData(params);
+            return await this.experimentalLoadData(params);
         }
 
         this._pendingRequest?.abort();
@@ -281,7 +278,10 @@ export class GeoJSONWorkerSource implements WorkerSource {
      * Get the source's full GeoJSON data source.
      * @returns a promise which is resolved with the source's actual GeoJSON
      */
-    async getData(): Promise<GeoJSON.GeoJSON> {
+    async getData(params: LoadGeoJSONParameters): Promise<GeoJSON.GeoJSON> {
+        if (params.experimentalUpdateable) {
+            return this._geoJSONIndex.getData();
+        }
         //TO DO: move getData and use data located in the main thread
         return this._pendingData;
     }
@@ -318,7 +318,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
 
         if (params.request) {
             // Data is loaded from a fetchable URL
-            data = await this.loadGeoJSONFromUrl(params.request, params.promoteId, abortController);
+            data = await this.loadGeoJSONFromUrl(params, abortController);
 
         } else if (params.data) {
             // Data is loaded from a GeoJSON Object
@@ -351,8 +351,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
     async _experimentalLoadAndProcessGeoJSON(params: LoadGeoJSONParameters, abortController: AbortController) {
         // Data is loaded from a fetchable URL - download it before processing data
         if (params.request) {
-            const response = await getJSON<GeoJSON.GeoJSON>(params.request, abortController);
-            params.data = response.data;
+            params.data = await this.loadGeoJSONFromUrl(params, abortController);
         }
 
         // Create a new GeoJSON index using the full `data`
@@ -365,21 +364,31 @@ export class GeoJSONWorkerSource implements WorkerSource {
         // Update the GeoJSON index using the `dataDiff` (or create a new index if none exists)
         if (params.dataDiff) {
             this._geoJSONIndex ??= this._createGeoJSONIndex(this._toFeatureCollection([]), params);
-            (this._geoJSONIndex as GeoJSONVT).updateData(params.dataDiff, this._getFilterPredicate(params.filter));
+            this._geoJSONIndex.updateData(params.dataDiff, this._getFilterPredicate(params.filter));
             return;
         }
 
         if (params.updateCluster) {
-            (this._geoJSONIndex as GeoJSONVT).updateClusterOptions(params.cluster, getSuperclusterOptions(params));
+            this._geoJSONIndex.updateClusterOptions(params.cluster, this._getSuperclusterOptions(params));
         }
+    }
+
+    _createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONVT {
+        const options = extend(params.geojsonVtOptions || {}, {
+            updateable: params.experimentalUpdateable,
+            cluster: params.cluster,
+            clusterOptions: params.superclusterOptions
+        });
+
+        return new GeoJSONVT(data, options);
     }
 
     /**
      * Loads GeoJSON from a URL and sets the sources updateable GeoJSON object.
      */
-    async loadGeoJSONFromUrl(request: RequestParameters, promoteId: string, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
-        const response = await getJSON<GeoJSON.GeoJSON>(request, abortController);
-        this._dataUpdateable = toUpdateable(response.data, promoteId);
+    async loadGeoJSONFromUrl(params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
+        const response = await getJSON<GeoJSON.GeoJSON>(params.request, abortController);
+        if (!params.experimentalUpdateable) this._dataUpdateable = toUpdateable(response.data, params.promoteId);
         return response.data;
     }
 
@@ -452,11 +461,11 @@ export class GeoJSONWorkerSource implements WorkerSource {
     }
 
     getClusterExpansionZoom(params: ClusterIDAndSource): number {
-        return (this._geoJSONIndex as Supercluster).getClusterExpansionZoom(params.clusterId);
+        return this._geoJSONIndex.getClusterExpansionZoom(params.clusterId);
     }
 
     getClusterChildren(params: ClusterIDAndSource): Array<GeoJSON.Feature> {
-        return (this._geoJSONIndex as Supercluster).getChildren(params.clusterId);
+        return this._geoJSONIndex.getClusterChildren(params.clusterId);
     }
 
     getClusterLeaves(params: {
@@ -464,26 +473,11 @@ export class GeoJSONWorkerSource implements WorkerSource {
         limit: number;
         offset: number;
     }): Array<GeoJSON.Feature> {
-        return (this._geoJSONIndex as Supercluster).getLeaves(params.clusterId, params.limit, params.offset);
+        return this._geoJSONIndex.getClusterLeaves(params.clusterId, params.limit, params.offset);
     }
 }
 
-export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONIndex {
-    if (params.cluster) {
-        return new Supercluster(getSuperclusterOptions(params)).load((data as any).features);
-    }
-
-    // Experimental updateable geojsonvt option - see map.ts experimentalUpdateableGeoJSONVT
-    // to do: remove this once experimentalUpdateableGeoJSONVT is removed and set `updateable: true`
-    // in default geojsonVtOptions in geojson_source.ts about line 191
-    if (params.experimentalUpdateable) {
-        params.geojsonVtOptions = extend(params.geojsonVtOptions || {}, {updateable: true});
-    }
-
-    return geojsonvt(data, params.geojsonVtOptions);
-}
-
-function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
+export function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
     if (!clusterProperties || !superclusterOptions) return superclusterOptions;
 
     const mapExpressions = {};
@@ -493,7 +487,7 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGe
     const propertyNames = Object.keys(clusterProperties);
 
     for (const key of propertyNames) {
-        const [operator, mapExpression] = clusterProperties[key];
+        const [operator, mapExpression] = clusterProperties[key] as [unknown, unknown];
 
         const mapExpressionParsed = createExpression(mapExpression);
         const reduceExpressionParsed = createExpression(

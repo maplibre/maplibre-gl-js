@@ -290,7 +290,8 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns a promise which resolves to the source's actual GeoJSON data
      */
     async getData(): Promise<GeoJSON.GeoJSON> {
-        const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
+        // experimentalUpdateable property: when _experimentalUpdateableGeoJSONVT is removed, this property should be removed
+        const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions, {experimentalUpdateable: this.map?._experimentalUpdateableGeoJSONVT});
         return this.actor.sendAsync({type: MessageType.getData, data: options});
     }
 
