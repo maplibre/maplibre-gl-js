@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Select features with a boxZoomEnd callback</title>
+    <meta property="og:description" content="Use the boxZoomEnd callback to select features with Shift-drag instead of fitting the map to the dragged box." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    #panel {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 1;
+        width: min(320px, calc(100vw - 24px));
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(15, 23, 42, 0.15);
+        background: rgba(255, 255, 255, 0.95);
+        font-family: 'Arial', sans-serif;
+        color: #0f172a;
+    }
+
+    #panel h1 {
+        margin: 0 0 8px;
+        font-size: 18px;
+        line-height: 1.3;
+    }
+
+    #panel p {
+        margin: 0 0 12px;
+        font-size: 14px;
+        line-height: 1.45;
+    }
+
+    #selected-count-wrapper {
+        margin: 0 0 10px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    #clear-selection {
+        display: inline-block;
+        border: 1px solid #0f172a;
+        border-radius: 4px;
+        background: #0f172a;
+        color: #ffffff;
+        padding: 6px 10px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    #clear-selection:hover {
+        background: #1e293b;
+    }
+</style>
+<div id="map"></div>
+<div id="panel">
+    <h1>Shift-drag to select points</h1>
+    <p>Use <strong>Shift</strong> + drag to draw a selection box. This example uses <code>boxZoomEnd</code>, so the map does not zoom when the box is released.</p>
+    <div id="selected-count-wrapper">Selected points: <span id="selected-count">0</span></div>
+    <button id="clear-selection" type="button">Clear selection</button>
+</div>
+<script>
+    const SOURCE_ID = 'demo-points';
+    const BASE_LAYER_ID = 'demo-points-base';
+    const SELECTED_LAYER_ID = 'demo-points-selected';
+
+    const pointsGeoJSON = {
+        type: 'FeatureCollection',
+        features: [
+            {type: 'Feature', id: 1, properties: {name: 'Seattle'}, geometry: {type: 'Point', coordinates: [-122.3321, 47.6062]}},
+            {type: 'Feature', id: 2, properties: {name: 'San Francisco'}, geometry: {type: 'Point', coordinates: [-122.4194, 37.7749]}},
+            {type: 'Feature', id: 3, properties: {name: 'Los Angeles'}, geometry: {type: 'Point', coordinates: [-118.2437, 34.0522]}},
+            {type: 'Feature', id: 4, properties: {name: 'Denver'}, geometry: {type: 'Point', coordinates: [-104.9903, 39.7392]}},
+            {type: 'Feature', id: 5, properties: {name: 'Dallas'}, geometry: {type: 'Point', coordinates: [-96.7970, 32.7767]}},
+            {type: 'Feature', id: 6, properties: {name: 'Chicago'}, geometry: {type: 'Point', coordinates: [-87.6298, 41.8781]}},
+            {type: 'Feature', id: 7, properties: {name: 'Atlanta'}, geometry: {type: 'Point', coordinates: [-84.3880, 33.7490]}},
+            {type: 'Feature', id: 8, properties: {name: 'Miami'}, geometry: {type: 'Point', coordinates: [-80.1918, 25.7617]}},
+            {type: 'Feature', id: 9, properties: {name: 'Washington DC'}, geometry: {type: 'Point', coordinates: [-77.0369, 38.9072]}},
+            {type: 'Feature', id: 10, properties: {name: 'New York'}, geometry: {type: 'Point', coordinates: [-74.0060, 40.7128]}},
+            {type: 'Feature', id: 11, properties: {name: 'Boston'}, geometry: {type: 'Point', coordinates: [-71.0589, 42.3601]}},
+            {type: 'Feature', id: 12, properties: {name: 'Minneapolis'}, geometry: {type: 'Point', coordinates: [-93.2650, 44.9778]}}
+        ]
+    };
+
+    const selectedCountElement = document.getElementById('selected-count');
+    const clearSelectionButton = document.getElementById('clear-selection');
+
+    let selectedIds = [];
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [-97.5, 38.9],
+        zoom: 3.5,
+        boxZoom: {
+            boxZoomEnd: (mapInstance, p0, p1) => {
+                const minX = Math.min(p0.x, p1.x);
+                const maxX = Math.max(p0.x, p1.x);
+                const minY = Math.min(p0.y, p1.y);
+                const maxY = Math.max(p0.y, p1.y);
+
+                const features = mapInstance.queryRenderedFeatures(
+                    [[minX, minY], [maxX, maxY]],
+                    {layers: [BASE_LAYER_ID]}
+                );
+
+                const ids = Array.from(new Set(
+                    features
+                        .map((feature) => feature.id)
+                        .filter((id) => id !== undefined && id !== null)
+                ));
+
+                setSelectedIds(ids);
+                // Returning void keeps the default box-zoom camera fit from running.
+            }
+        }
+    });
+
+    function setSelectedIds(ids) {
+        selectedIds = ids;
+        selectedCountElement.textContent = String(selectedIds.length);
+
+        if (!map.getLayer(SELECTED_LAYER_ID)) {
+            return;
+        }
+
+        map.setFilter(SELECTED_LAYER_ID, ['in', ['id'], ['literal', selectedIds]]);
+    }
+
+    function clearSelection() {
+        setSelectedIds([]);
+    }
+
+    clearSelectionButton.addEventListener('click', () => {
+        clearSelection();
+    });
+
+    map.on('load', () => {
+        map.addSource(SOURCE_ID, {
+            type: 'geojson',
+            data: pointsGeoJSON
+        });
+
+        map.addLayer({
+            id: BASE_LAYER_ID,
+            type: 'circle',
+            source: SOURCE_ID,
+            paint: {
+                'circle-radius': 6,
+                'circle-color': '#2563eb',
+                'circle-stroke-color': '#ffffff',
+                'circle-stroke-width': 1.5,
+                'circle-opacity': 0.7
+            }
+        });
+
+        map.addLayer({
+            id: SELECTED_LAYER_ID,
+            type: 'circle',
+            source: SOURCE_ID,
+            paint: {
+                'circle-radius': 10,
+                'circle-color': '#f97316',
+                'circle-stroke-color': '#7c2d12',
+                'circle-stroke-width': 2,
+                'circle-opacity': 0.95
+            },
+            filter: ['in', ['id'], ['literal', []]]
+        });
+    });
+</script>
+</body>
+</html>
