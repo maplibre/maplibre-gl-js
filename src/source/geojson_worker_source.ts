@@ -77,15 +77,16 @@ export class GeoJSONWorkerSource implements WorkerSource {
     _pendingData: Promise<GeoJSON.GeoJSON>;
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONVT;
-    _getSuperclusterOptions: typeof getSuperclusterOptions;
+    _createGeoJSONIndex: typeof createGeoJSONIndex;
 
-    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>, getSuperclusterOptionsFunc: typeof getSuperclusterOptions = getSuperclusterOptions) {
+    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>, createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
         this.actor = actor;
         this.layerIndex = layerIndex;
         this.availableImages = availableImages;
         this.tileState = new WorkerTileState();
-        this._getSuperclusterOptions = getSuperclusterOptionsFunc;
+        this._createGeoJSONIndex = createGeoJSONIndexFunc;
     }
+
 
     /**
      * Retrieves and sends loaded vector tiles to the main thread.
@@ -286,17 +287,8 @@ export class GeoJSONWorkerSource implements WorkerSource {
         }
 
         if (params.updateCluster) {
-            this._geoJSONIndex.updateClusterOptions(params.cluster, this._getSuperclusterOptions(params));
+            this._geoJSONIndex.updateClusterOptions(params.cluster, getSuperclusterOptions(params));
         }
-    }
-
-    _createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONVT {
-        const options = extend(params.geojsonVtOptions || {}, {
-            cluster: params.cluster,
-            clusterOptions: params.superclusterOptions
-        });
-
-        return new GeoJSONVT(data, options);
     }
 
     /**
@@ -369,7 +361,17 @@ export class GeoJSONWorkerSource implements WorkerSource {
     }
 }
 
-export function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
+function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONVT {
+    const options = extend(params.geojsonVtOptions || {}, {
+        cluster: params.cluster,
+        clusterOptions: params.superclusterOptions
+    });
+
+    return new GeoJSONVT(data, options);
+}
+
+
+function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
     if (!clusterProperties || !superclusterOptions) return superclusterOptions;
 
     const mapExpressions = {};
