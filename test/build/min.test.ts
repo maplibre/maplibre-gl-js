@@ -46,7 +46,7 @@ describe('test min build', () => {
             fs.writeFileSync(path.resolve(__dirname, './bundle_size.json'), `${expectedBytes}\n`);
         }
 
-        expect(actualBytes, `Consider changing bundle_size.json to ${actualBytes}: UPDATE=true npm run test-build -- min.test.ts`).toBeLessThan(expectedBytes + increaseQuota);
+        expect(actualBytes, `Consider changing bundle_size.json to ${actualBytes} by running: UPDATE=true npm run test-build -- min.test.ts`).toBeLessThan(expectedBytes + increaseQuota);
         expect(actualBytes).toBeGreaterThan(expectedBytes - decreaseQuota);
     });
 });

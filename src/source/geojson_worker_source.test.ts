@@ -2,13 +2,14 @@ import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {createGeoJSONIndex, GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {OverscaledTileID} from '../tile/tile_id';
-import perf from '../util/performance';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type Actor} from '../util/actor';
-import {type WorkerTileParameters} from './worker_source';
+import {type Actor, type IActor} from '../util/actor';
+import {type TileParameters, type WorkerTileParameters, type WorkerTileResult, type WorkerTileWithData} from './worker_source';
 import {setPerformance, sleep} from '../util/test/util';
 import {type FakeServer, fakeServer} from 'nise';
 import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import {type WorkerTile} from './worker_tile';
 
 const actor = {send: () => {}} as any as Actor;
 
@@ -19,6 +20,171 @@ const globalOptions: Partial<LoadGeoJSONParameters> = {
 
 beforeEach(() => {
     setPerformance();
+});
+
+afterEach(() => {
+    vi.clearAllMocks();
+});
+
+describe('geojson tile worker source', () => {
+    const actor: IActor = {sendAsync: () => Promise.resolve({})} as any as IActor;
+
+    test('GeoJSONWorkerSource.removeTile removes loaded tile', async () => {
+        const source = new GeoJSONWorkerSource(actor, new StyleLayerIndex(), []);
+
+        source.tileState.loaded = {
+            '0': {} as WorkerTile
+        };
+
+        const res = await source.removeTile({
+            source: 'source',
+            uid: 0
+        } as any as TileParameters);
+        expect(res).toBeUndefined();
+
+        expect(source.tileState.loaded).toEqual({});
+    });
+
+    test('GeoJSONWorkerSource.reloadTile reloads a previously-loaded tile', async () => {
+        const source = new GeoJSONWorkerSource(actor, new StyleLayerIndex(), []);
+        const parse = vi.fn().mockResolvedValue({} as WorkerTileResult);
+
+        source.tileState.loaded = {
+            '0': {
+                status: 'done',
+                vectorTile: {},
+                parse
+            } as any as WorkerTile
+        };
+
+        const reloadPromise = source.reloadTile({uid: 0} as any as WorkerTileParameters);
+        expect(parse).toHaveBeenCalledTimes(1);
+        await expect(reloadPromise).resolves.toBeTruthy();
+    });
+
+    test('GeoJSONWorkerSource.reloadTile returns parse result without rawTileData when parsing state was already consumed', async () => {
+        const source = new GeoJSONWorkerSource(actor, new StyleLayerIndex(), []);
+        const parseResult = {buckets: []} as any as WorkerTileResult;
+        const parse = vi.fn().mockResolvedValue(parseResult);
+
+        source.tileState.loaded = {
+            '0': {
+                status: 'parsing',
+                vectorTile: {},
+                parse
+            } as any as WorkerTile
+        };
+
+        const result = await source.reloadTile({uid: 0} as any as WorkerTileParameters) as WorkerTileWithData;
+
+        expect(parse).toHaveBeenCalledTimes(1);
+        expect(result).toBe(parseResult);
+        expect(result.rawTileData).toBeUndefined();
+    });
+
+    test('GeoJSONWorkerSource.loadTile reparses tile if reloadTile has been called during parsing', async () => {
+        const layerIndex = new StyleLayerIndex([{
+            id: 'test',
+            source: 'source',
+            'source-layer': '_geojsonTileLayer',
+            type: 'symbol',
+            layout: {
+                'icon-image': 'hello',
+                'text-font': ['StandardFont-Bold'],
+                'text-field': '{name}'
+            }
+        }]);
+
+        const actor = {
+            sendAsync: (message: {type: string; data: unknown}, abortController: AbortController) => {
+                return new Promise((resolve, _reject) => {
+                    const res = setTimeout(() => {
+                        const response = message.type === 'getImages' ?
+                            {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
+                            {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
+                        resolve(response);
+                    }, 100);
+                    abortController.signal.addEventListener('abort', () => {
+                        clearTimeout(res);
+                    });
+                });
+            }
+        };
+
+        const source = new GeoJSONWorkerSource(actor as any, layerIndex, ['hello']);
+
+        const geoJson = {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                id: 1,
+                geometry: {
+                    type: 'Point',
+                    coordinates: [0, 0]
+                },
+                properties: {
+                    name: 'test'
+                }
+            }]
+        } as GeoJSON.GeoJSON;
+
+        await source.loadData({source: 'source', data: geoJson} as LoadGeoJSONParameters);
+
+        source.loadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+        } as any as WorkerTileParameters).then(() => expect(false).toBeTruthy());
+
+        // allow promise to run
+        await sleep(0);
+
+        const res = await source.reloadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+        } as any as WorkerTileParameters) as WorkerTileWithData;
+
+        expect(res).toBeDefined();
+        expect(res.rawTileData).toBeDefined();
+    });
+
+    test('GeoJSONWorkerSource.loadTile returns null for an empty tile', async () => {
+        const source = new GeoJSONWorkerSource(actor, new StyleLayerIndex(), []);
+        await source.loadData({source: 'source', data: {type: 'FeatureCollection', features: []}} as LoadGeoJSONParameters);
+
+        const result = await source.loadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+        } as any as WorkerTileParameters);
+
+        expect(result).toBeNull();
+    });
+
+    test('GeoJSONWorkerSource.loadTile throws error when data has not been loaded', async () => {
+        const source = new GeoJSONWorkerSource(actor, new StyleLayerIndex(), []);
+
+        await expect(source.loadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+        } as any as WorkerTileParameters)).rejects.toThrowError(/Unable to parse the data into a cluster or geojson/);
+    });
+
+    test('GeoJSONWorkerSource.abortTile aborts tile state', async () => {
+        const source = new GeoJSONWorkerSource(actor, new StyleLayerIndex(), []);
+        const abortSpy = vi.spyOn(source.tileState, 'abort');
+
+        await source.abortTile({
+            source: 'source',
+            uid: 0
+        } as any as TileParameters);
+
+        expect(abortSpy).toHaveBeenCalledWith(0);
+    });
 });
 
 describe('reloadTile', () => {
@@ -50,11 +216,11 @@ describe('reloadTile', () => {
         await source.loadData({source: 'sourceId', data: geoJson, ...globalOptions} as LoadGeoJSONParameters);
 
         // first call should load vector data from geojson
-        const firstData = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        const firstData = await source.reloadTile(tileParams as any as WorkerTileParameters) as WorkerTileWithData;
         expect(spy).toHaveBeenCalledTimes(1);
 
         // second call won't give us new rawTileData
-        let data = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        let data = await source.reloadTile(tileParams as any as WorkerTileParameters) as WorkerTileWithData;
         expect('rawTileData' in data).toBeFalsy();
         data.rawTileData = firstData.rawTileData;
         expect(data).toEqual(firstData);
@@ -66,7 +232,7 @@ describe('reloadTile', () => {
         await source.loadData({source: 'sourceId', data: geoJson, ...globalOptions} as LoadGeoJSONParameters);
 
         // should call loadVectorData again after changing geojson data
-        data = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        data = await source.reloadTile(tileParams as any as WorkerTileParameters) as WorkerTileWithData;
         expect('rawTileData' in data).toBeTruthy();
         expect(data).toEqual(firstData);
         expect(spy).toHaveBeenCalledTimes(2);
@@ -104,7 +270,7 @@ describe('reloadTile', () => {
         await source.loadData({type: 'geojson', source: 'sourceId', data: geoJson, ...globalOptions} as LoadGeoJSONParameters);
 
         // load vector data from geojson, passing through the tile serialization step
-        const data = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        const data = await source.reloadTile(tileParams as any as WorkerTileParameters) as WorkerTileWithData;
         expect(data.featureIndex).toBeDefined();
 
         // deserialize tile layers in the feature index
@@ -172,7 +338,7 @@ describe('resourceTiming', () => {
         const marks = {};
         const measures = {};
         window.performance.getEntriesByName = vi.fn().mockImplementation((name) => { return measures[name] || []; });
-        vi.spyOn(perf, 'mark').mockImplementation((name) => {
+        vi.spyOn(performance, 'mark').mockImplementation((name) => {
             marks[name] = sampleMarks.shift();
             return null;
         });
@@ -186,8 +352,8 @@ describe('resourceTiming', () => {
             });
             return null;
         });
-        vi.spyOn(perf, 'clearMarks').mockImplementation(() => { return null; });
-        vi.spyOn(perf, 'clearMeasures').mockImplementation(() => { return null; });
+        vi.spyOn(performance, 'clearMarks').mockImplementation(() => { return null; });
+        vi.spyOn(performance, 'clearMeasures').mockImplementation(() => { return null; });
 
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);

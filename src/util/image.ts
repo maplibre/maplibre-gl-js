@@ -109,7 +109,7 @@ export class AlphaImage {
 
 /**
  * An object to store image data not premultiplied, because ImageData is not premultiplied.
- * UNPACK_PREMULTIPLY_ALPHA_WEBGL must be used when uploading to a texture.
+ * Premultiplication is applied in JS before uploading to a texture.
  */
 export class RGBAImage {
     width: number;
@@ -153,6 +153,19 @@ export class RGBAImage {
         this.data[rLocation + 2] = Math.round(value.b * 255 / value.a);
         this.data[rLocation + 3] = Math.round(value.a * 255);
     }
+}
+
+/** Returns a copy of RGBA data with premultiplied alpha. */
+export function premultiplyAlpha(data: Uint8Array): Uint8Array {
+    const out = new Uint8Array(data.length);
+    for (let i = 0; i < data.length; i += 4) {
+        const a = data[i + 3];
+        out[i + 0] = Math.round(data[i + 0] * a / 255);
+        out[i + 1] = Math.round(data[i + 1] * a / 255);
+        out[i + 2] = Math.round(data[i + 2] * a / 255);
+        out[i + 3] = a;
+    }
+    return out;
 }
 
 register('AlphaImage', AlphaImage);

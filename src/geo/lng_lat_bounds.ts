@@ -230,7 +230,7 @@ export class LngLatBounds {
      * llb.toArray(); // = [[-73.9876, 40.7661], [-73.9397, 40.8002]]
      * ```
      */
-    toArray() {
+    toArray(): [[number, number], [number, number]] {
         return [this._sw.toArray(), this._ne.toArray()];
     }
 
@@ -321,8 +321,9 @@ export class LngLatBounds {
         const otherEast = wrap(other.getEast(), -180, 180);
 
         // Check if either bounds wraps around the antimeridian
-        const thisWraps = thisWest >= thisEast;
-        const otherWraps = otherWest >= otherEast;
+        // Use strict inequality: equal values indicate zero-width bounds (e.g., a point), not wrapping
+        const thisWraps = thisWest > thisEast;
+        const otherWraps = otherWest > otherEast;
 
         // Both wrap: they always intersect
         if (thisWraps && otherWraps) {

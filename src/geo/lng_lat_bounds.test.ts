@@ -432,6 +432,12 @@ describe('LngLatBounds', () => {
                 const bounds = new LngLatBounds([[-8.290589217651302, 44.47966524518165], [20.566067150212803, 50.98693819014929]]);
                 expect(tileBounds.intersects(bounds)).toBe(true);
             });
+
+            test('point feature outside bounds does not intersect', () => {
+                const bounds = new LngLatBounds([0, 0], [10, 10]);
+                const point = new LngLatBounds([20, 5], [20, 5]);
+                expect(bounds.intersects(point)).toBe(false);
+            });
         });
     });
 });

@@ -9,6 +9,7 @@ import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
 import {CollisionBoxArray} from '../data/array_types.g';
 import {extend} from '../util/util';
 import {serialize, deserialize} from '../util/web_worker_transfer';
+import type {Painter} from '../render/painter';
 
 describe('querySourceFeatures', () => {
     const features = [{
@@ -117,11 +118,21 @@ describe('querySourceFeatures', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         tile.state = 'loaded';
         const spy = vi.spyOn(tile, 'unloadVectorData');
-        const painter = {};
+        const painter = createPainter();
 
         tile.loadVectorData(null, painter);
 
         expect(spy).toHaveBeenCalledWith();
+    });
+
+    test('loadVectorData should not do anything if etag was unchanged', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
+        tile.state = 'loading';
+        const painter = createPainter();
+
+        tile.loadVectorData({etagUnmodified: true}, painter);
+
+        expect(tile.state).toBe('loaded');
     });
 
     test('loadVectorData preserves the most recent rawTileData', () => {
@@ -300,6 +311,6 @@ function createVectorData(options?) {
     }, options);
 }
 
-function createPainter(styleStub = {}) {
-    return {style: styleStub};
+function createPainter(styleStub = {}): Painter {
+    return {style: styleStub} as unknown as Painter;
 }
