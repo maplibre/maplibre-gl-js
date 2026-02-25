@@ -268,7 +268,8 @@ describe('GeoJSONSource.update', () => {
                     tolerance: 4,
                     buffer: 256,
                     lineMetrics: false,
-                    generateId: true
+                    generateId: true,
+                    updatable: true
                 });
                 spy();
                 return Promise.resolve({});

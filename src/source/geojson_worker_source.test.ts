@@ -1,15 +1,16 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
 import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {OverscaledTileID} from '../tile/tile_id';
-import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type Actor, type IActor} from '../util/actor';
-import {type TileParameters, type WorkerTileParameters, type WorkerTileResult, type WorkerTileWithData} from './worker_source';
 import {setPerformance, sleep} from '../util/test/util';
 import {type FakeServer, fakeServer} from 'nise';
-import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import {type WorkerTile} from './worker_tile';
+
+import type {Actor, IActor} from '../util/actor';
+import type {TileParameters, WorkerTileParameters, WorkerTileResult, WorkerTileWithData} from './worker_source';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {WorkerTile} from './worker_tile';
 
 const actor = {send: () => {}} as any as Actor;
 
@@ -218,6 +219,7 @@ describe('reloadTile', () => {
         let data = await source.reloadTile(tileParams as any as WorkerTileParameters) as WorkerTileWithData;
         expect('rawTileData' in data).toBeFalsy();
         data.rawTileData = firstData.rawTileData;
+        data.encoding = 'mvt';
         expect(data).toEqual(firstData);
 
         // also shouldn't call loadVectorData again
@@ -280,6 +282,15 @@ describe('reloadTile', () => {
 
 describe('resourceTiming', () => {
 
+    let server: FakeServer;
+    beforeEach(() => {
+        global.fetch = null;
+        server = fakeServer.create();
+    });
+    afterEach(() => {
+        server.restore();
+    });
+
     const layers = [
         {
             id: 'mylayer',
@@ -296,6 +307,9 @@ describe('resourceTiming', () => {
     } as GeoJSON.GeoJSON;
 
     test('loadData - url', async () => {
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify(geoJson));
+        });
         const exampleResourceTiming = {
             connectEnd: 473,
             connectStart: 473,
@@ -321,7 +335,6 @@ describe('resourceTiming', () => {
 
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
-        source.loadGeoJSONFromUrl = () => Promise.resolve(geoJson);
 
         const result = await source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters);
 
@@ -329,6 +342,9 @@ describe('resourceTiming', () => {
     });
 
     test('loadData - url (resourceTiming fallback method)', async () => {
+         server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify(geoJson));
+        });
         const sampleMarks = [100, 350];
         const marks = {};
         const measures = {};
@@ -352,7 +368,6 @@ describe('resourceTiming', () => {
 
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
-        source.loadGeoJSONFromUrl = () => Promise.resolve(geoJson);
 
         const result = await source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters);
 
