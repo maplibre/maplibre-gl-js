@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 - Add Etag unmodified support to optimize vector tile reloading ([#7074](https://github.com/maplibre/maplibre-gl-js/pull/7074)) (by [@rivkamatan](https://github.com/rivkamatan and [@wayofthefuture](https://github.com/wayofthefuture))
 - _...Add new stuff here..._
+- Add `boxZoom.boxZoomEnd` option to customize the action after Shift-drag box selection ([#6397](https://github.com/maplibre/maplibre-gl-js/issues/6397))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._

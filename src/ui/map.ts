@@ -45,7 +45,7 @@ import type {MapDataEvent} from './events';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image';
 import type {PointLike} from './camera';
 import type {ScrollZoomHandler} from './handler/scroll_zoom';
-import type {BoxZoomHandler} from './handler/box_zoom';
+import type {BoxZoomHandler, BoxZoomHandlerOptions} from './handler/box_zoom';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
 import type {DragRotateHandler} from './handler/shim/drag_rotate';
 import type {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan';
@@ -176,9 +176,11 @@ export type MapOptions = {
     anisotropicFilterPitch?: number | null;
     /**
      * If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).
+     * An `Object` value configures {@link BoxZoomHandler} options.
+     * If `boxZoomEnd` is provided, the callback runs instead of the default fit-to-box zoom.
      * @defaultValue true
      */
-    boxZoom?: boolean;
+    boxZoom?: boolean | BoxZoomHandlerOptions;
     /**
      * If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}).
      * @defaultValue true
