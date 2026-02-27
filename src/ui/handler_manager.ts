@@ -98,7 +98,7 @@ export type HandlerResult = {
     /**
      * A method that can fire a one-off easing by directly changing the map's camera.
      */
-    cameraAnimation?: (map: Map) => any;
+    cameraAnimation?: (map: Map) => void;
     /**
      * The last three properties are needed by only one handler: scrollzoom.
      * The DOM event to be used as the `originalEvent` on any camera change events.

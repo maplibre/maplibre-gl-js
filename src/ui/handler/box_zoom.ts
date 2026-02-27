@@ -8,6 +8,22 @@ import type Point from '@mapbox/point-geometry';
 import {type Handler} from '../handler_manager';
 
 /**
+ * Callback for customizing what happens when a box zoom gesture ends.
+ */
+export type BoxZoomEndHandler = (map: Map, startPos: Point, endPos: Point, originalEvent: MouseEvent) => void;
+
+/**
+ * A {@link BoxZoomHandler} options object.
+ */
+export type BoxZoomHandlerOptions = {
+    /**
+     * A callback that runs when the user completes the Shift-drag box gesture.
+     * Providing this callback suppresses the default fit-to-box zoom behavior.
+     */
+    boxZoomEnd?: BoxZoomEndHandler;
+};
+
+/**
  * The `BoxZoomHandler` allows the user to zoom the map to fit within a bounding box.
  * The bounding box is defined by clicking and holding `shift` while dragging the cursor.
  *
@@ -24,16 +40,21 @@ export class BoxZoomHandler implements Handler {
     _lastPos: Point;
     _box: HTMLElement;
     _clickTolerance: number;
+    _boxZoomEnd?: BoxZoomEndHandler;
 
     /** @internal */
     constructor(map: Map, options: {
         clickTolerance: number;
+        boxZoom?: boolean | BoxZoomHandlerOptions;
     }) {
         this._map = map;
         this._tr = new TransformProvider(map);
         this._el = map.getCanvasContainer();
         this._container = map.getContainer();
         this._clickTolerance = options.clickTolerance || 1;
+        if (options.boxZoom && typeof options.boxZoom === 'object') {
+            this._boxZoomEnd = options.boxZoom.boxZoomEnd;
+        }
     }
 
     /**
@@ -134,6 +155,10 @@ export class BoxZoomHandler implements Handler {
             this._fireEvent('boxzoomcancel', e);
         } else {
             this._map.fire(new Event('boxzoomend', {originalEvent: e}));
+            if (this._boxZoomEnd) {
+                this._boxZoomEnd(this._map, p0, p1, e);
+                return;
+            }
             return {
                 cameraAnimation: map => map.fitScreenCoordinates(p0, p1, this._tr.bearing, {linear: true})
             };

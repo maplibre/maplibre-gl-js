@@ -4,7 +4,7 @@ import {StyleLayerIndex} from '../style/style_layer_index';
 import {OverscaledTileID} from '../tile/tile_id';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type Actor, type IActor} from '../util/actor';
-import {type TileParameters, type WorkerTileParameters, type WorkerTileResult} from './worker_source';
+import {type TileParameters, type WorkerTileParameters, type WorkerTileResult, type WorkerTileWithData} from './worker_source';
 import {setPerformance, sleep} from '../util/test/util';
 import {type FakeServer, fakeServer} from 'nise';
 import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
@@ -70,7 +70,7 @@ describe('geojson tile worker source', () => {
             } as any as WorkerTile
         };
 
-        const result = await source.reloadTile({uid: 0} as any as WorkerTileParameters);
+        const result = await source.reloadTile({uid: 0} as any as WorkerTileParameters) as WorkerTileWithData;
 
         expect(parse).toHaveBeenCalledTimes(1);
         expect(result).toBe(parseResult);
@@ -140,7 +140,7 @@ describe('geojson tile worker source', () => {
             uid: 0,
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
-        } as any as WorkerTileParameters);
+        } as any as WorkerTileParameters) as WorkerTileWithData;
 
         expect(res).toBeDefined();
         expect(res.rawTileData).toBeDefined();
@@ -211,11 +211,11 @@ describe('reloadTile', () => {
         await source.loadData({source: 'sourceId', data: geoJson} as LoadGeoJSONParameters);
 
         // first call should load vector data from geojson
-        const firstData = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        const firstData = await source.reloadTile(tileParams as any as WorkerTileParameters) as WorkerTileWithData;
         expect(spy).toHaveBeenCalledTimes(1);
 
         // second call won't give us new rawTileData
-        let data = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        let data = await source.reloadTile(tileParams as any as WorkerTileParameters) as WorkerTileWithData;
         expect('rawTileData' in data).toBeFalsy();
         data.rawTileData = firstData.rawTileData;
         expect(data).toEqual(firstData);
@@ -227,7 +227,7 @@ describe('reloadTile', () => {
         await source.loadData({source: 'sourceId', data: geoJson} as LoadGeoJSONParameters);
 
         // should call loadVectorData again after changing geojson data
-        data = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        data = await source.reloadTile(tileParams as any as WorkerTileParameters) as WorkerTileWithData;
         expect('rawTileData' in data).toBeTruthy();
         expect(data).toEqual(firstData);
         expect(spy).toHaveBeenCalledTimes(2);
@@ -265,7 +265,7 @@ describe('reloadTile', () => {
         await source.loadData({type: 'geojson', source: 'sourceId', data: geoJson} as LoadGeoJSONParameters);
 
         // load vector data from geojson, passing through the tile serialization step
-        const data = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        const data = await source.reloadTile(tileParams as any as WorkerTileParameters) as WorkerTileWithData;
         expect(data.featureIndex).toBeDefined();
 
         // deserialize tile layers in the feature index
