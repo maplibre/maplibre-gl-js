@@ -95,7 +95,7 @@ function drawTiles(
     const colorMode = painter.colorModeForRenderPass();
     const align = !painter.options.moving;
     const rasterOpacity = layer.paint.get('raster-opacity');
-    const rasterResampling = layer.paint.get('raster-resampling');
+    const textureFilter = layer.paint.get('resampling') === 'nearest' ?  gl.NEAREST : gl.LINEAR;
     const fadeDuration = layer.paint.get('raster-fade-duration');
     const isTerrain = !!painter.style.map.terrain;
 
@@ -107,7 +107,6 @@ function drawTiles(
             rasterOpacity === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
 
         const tile = tileManager.getTile(coord);
-        const textureFilter = rasterResampling === 'nearest' ?  gl.NEAREST : gl.LINEAR;
 
         // create and bind first texture
         context.activeTexture.set(gl.TEXTURE0);
