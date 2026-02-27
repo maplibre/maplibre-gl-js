@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MapLibre GL JS Benchmarks (Production Build)</title>
+
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="about:blank">
+</head>
+
+<body>
+    <div id="benchmarks"></div>
+    <script src="/test/bench/benchmarks_view_generated.js"></script>
+    <script>
+        /**
+         * Production-build benchmark runner.
+         *
+         * Instead of loading benchmarks_generated.js (which bundles the library
+         * from source via a custom rollup config), this page loads the standard
+         * production dist/maplibre-gl.js and runs benchmarks against it.
+         *
+         * For version comparison, previous versions are fetched from unpkg CDN
+         * or the GitHub Pages benchmarks directory, meaning no special build
+         * artifacts are needed per version.
+         *
+         * Usage:
+         *   ?version=5.18.0          Compare current build against v5.18.0 from CDN
+         *   ?version=5.18.0&version=5.17.0   Compare against multiple versions
+         *   (no params)              Run current build only
+         */
+
+        runProductionBenchmarks();
+
+        async function runProductionBenchmarks() {
+            try {
+                const params = new URL(location).searchParams;
+                const versions = params.getAll('version').filter(Boolean);
+                window.versionsDisplayName = versions.slice();
+
+                // Load comparison versions from unpkg CDN
+                for (const ver of versions) {
+                    const cdnUrl = `https://unpkg.com/maplibre-gl@${ver}/dist/maplibre-gl.js`;
+                    await loadScript(cdnUrl);
+                }
+
+                // Load current build from local dist
+                await loadScript('/dist/maplibre-gl-dev.js');
+                window.versionsDisplayName.push('current');
+
+                // Now load the benchmark registration code.
+                // This registers benchmarks against all loaded maplibregl versions.
+                await loadScript('/test/bench/versions/benchmarks_generated.js');
+
+                const benchmarks = [];
+                const benchmarkNameList = Object.keys(window.maplibreglBenchmarks).sort();
+                for (const benchmarkName of benchmarkNameList) {
+                    const versionEntries = [];
+                    let index = 0;
+                    for (const version in window.maplibreglBenchmarks[benchmarkName]) {
+                        if (!window.versionsDisplayName[index]) {
+                            window.versionsDisplayName[index] = version;
+                        }
+                        versionEntries.push({
+                            displayName: window.versionsDisplayName[index],
+                            name: version,
+                            bench: window.maplibreglBenchmarks[benchmarkName][version]
+                        });
+                        index++;
+                    }
+                    benchmarks.push({name: benchmarkName, versions: versionEntries});
+                }
+
+                const results = await window.Benchmarks.run(benchmarks);
+
+                window.maplibreglBenchmarkResults = {};
+                for (const result of results) {
+                    window.maplibreglBenchmarkResults[result.name] = {};
+                    for (const version of result.versions) {
+                        window.maplibreglBenchmarkResults[result.name][version.name] = {
+                            name: version.name,
+                            summary: version.summary,
+                            regression: version.regression,
+                        };
+                    }
+                }
+
+                window.maplibreglBenchmarkFinished = true;
+            } catch (ex) {
+                console.error(ex);
+            }
+        }
+
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = src;
+                s.onload = resolve;
+                s.onerror = () => {
+                    console.warn('Failed to load script: ' + src);
+                    resolve(); // Don't block on missing comparison versions
+                };
+                document.head.appendChild(s);
+            });
+        }
+    </script>
+</body>
+
+</html>

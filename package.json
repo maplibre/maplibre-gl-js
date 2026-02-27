@@ -171,6 +171,8 @@
     "test-render": "node --no-warnings --loader ts-node/esm test/integration/render/run_render_tests.ts",
     "codegen": "run-p --print-label generate-dist-package generate-style-code generate-unicode-data generate-struct-arrays generate-shaders && npm run generate-typings",
     "benchmark": "node --no-warnings --loader ts-node/esm test/bench/run-benchmarks.ts",
+    "benchmark-ci": "node --no-warnings --loader ts-node/esm test/bench/run-benchmarks-ci.ts",
+    "benchmark-micro": "npx vitest bench --config vitest.config.bench.ts",
     "gl-stats": "node --no-warnings --loader ts-node/esm test/bench/gl-stats.ts",
     "prepare": "npm run codegen",
     "typecheck": "tsc --noEmit && tsc --project tsconfig.dist.json",
