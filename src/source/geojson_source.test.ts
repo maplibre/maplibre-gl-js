@@ -613,6 +613,17 @@ describe('GeoJSONSource.getData', () => {
         source.map = mapStub;
         await expect(source.getData()).resolves.toStrictEqual(hawkHill);
     });
+
+    test('waits for data to load when source has a URL', async () => {
+        const source = new GeoJSONSource('id', {data: 'https://example.com/data.geojson'} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() { return Promise.resolve({data: hawkHill}); }
+        }), undefined);
+        source.map = mapStub;
+
+        source.load();
+        const data = await source.getData();
+        expect(data).toStrictEqual(hawkHill);
+    });
 });
 
 describe('GeoJSONSource.updateData', () => {

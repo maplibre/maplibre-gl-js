@@ -291,11 +291,11 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns a promise which resolves to the source's actual GeoJSON data
      */
     async getData(): Promise<GeoJSON.GeoJSON> {
-        if (this._data.url) {
-            await this.once('data'); // wait for loading to complete
-        }
         if (this._data.geojson) {
             return this._data.geojson;
+        }
+        if (this._data.url) {
+            await this.once('data'); // wait for loading to complete
         }
         return {
             type: 'FeatureCollection',
