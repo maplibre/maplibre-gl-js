@@ -51,7 +51,6 @@ export class RasterStyleLayer extends StyleLayer {
                 }),
             };
         }
-        layer.paint['raster-resampling'] = 'nearest'; 
         super(layer, properties, globalState);
     }
 
