@@ -10,8 +10,8 @@ import {type StyleSetterOptions} from '../style';
 export const isRasterStyleLayer = (layer: StyleLayer): layer is RasterStyleLayer => layer.type === 'raster';
 
 interface Resamplings {
-    'resampling': RasterPaintProps['raster-resampling'];
-    'raster-resampling': RasterPaintProps['raster-resampling'];
+    resampling: RasterPaintPropsPossiblyEvaluated['resampling'];
+    'raster-resampling': RasterPaintPropsPossiblyEvaluated['raster-resampling'];
 }
 
 function _handleResampling(resamplings: Partial<Resamplings>): Partial<Resamplings> {
