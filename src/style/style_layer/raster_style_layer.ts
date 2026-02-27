@@ -54,12 +54,12 @@ export class RasterStyleLayer extends StyleLayer {
         super(layer, properties, globalState);
     }
 
-    override setPaintProperty(name: string, value: unknown, options: StyleSetterOptions): boolean {
+    override setPaintProperty(name: string, value: unknown, options: StyleSetterOptions = {}): boolean {
         if (name === 'resampling' || name === 'raster-resampling') {
             const otherResampling = name === 'resampling' ? 'raster-resampling' : 'resampling';
             const handledResamplings = _handleResampling({[name]: value});
             if (handledResamplings?.[otherResampling]) {
-                super.setPaintProperty(otherResampling, handledResamplings[otherResampling]);
+                super.setPaintProperty(otherResampling, handledResamplings[otherResampling], options);
             }
         }
         return super.setPaintProperty(name, value, options);
