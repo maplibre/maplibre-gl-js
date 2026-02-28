@@ -336,6 +336,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
 
 export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONVT {
     const options = extend(params.geojsonVtOptions || {}, {
+        updateable: true,
         cluster: params.cluster,
         clusterOptions: getSuperclusterOptions(params)
     });
