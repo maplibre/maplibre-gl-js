@@ -47,7 +47,7 @@ export class RasterStyleLayer extends StyleLayer {
                 ...layer.paint,
                 ..._handleResampling({
                     ...(resampling ? {resampling} : {}),
-                    ...(rasterResampling ? {'raster-resampling': resampling} : {}),
+                    ...(rasterResampling ? {'raster-resampling': rasterResampling} : {}),
                 }),
             };
         }
