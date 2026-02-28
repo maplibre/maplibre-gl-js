@@ -283,12 +283,12 @@ export class GeoJSONWorkerSource implements WorkerSource {
      * Applies a filter to a GeoJSON object.
      */
     _filterGeoJSON(data: GeoJSON.GeoJSON, filter: FilterSpecification): GeoJSON.GeoJSON {
-        if (!('features' in data)) return data;
+        if (data.type !== 'FeatureCollection') return data;
+        
         const predicate = this._getFilterPredicate(filter);
-        if (predicate === undefined) return data;
-        const features = data.features.filter(feature => predicate(feature));
+        if (!predicate) return data;
 
-        return {type: 'FeatureCollection', features};
+        return {type: 'FeatureCollection', features: data.features.filter(feature => predicate(feature))};
     }
 
     /**
@@ -297,20 +297,13 @@ export class GeoJSONWorkerSource implements WorkerSource {
     _getFilterPredicate(filter: FilterSpecification): (feature: GeoJSON.Feature) => boolean {
         if (typeof filter !== 'boolean' && !filter?.length) return undefined;
 
-        const compiled = this._getCompiledExpression(filter);
-        const predicate = (feature: GeoJSON.Feature) => compiled.value.evaluate({zoom: 0}, feature as any);
-
-        return predicate;
-    }
-
-    _getCompiledExpression(filter: FilterSpecification)  {
         const compiled = createExpression(filter, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
-
         if (compiled.result === 'error') {
             throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
         }
-
-        return compiled;
+        
+        const predicate = (feature: GeoJSON.Feature) => compiled.value.evaluate({zoom: 0}, feature as any);
+        return predicate;
     }
 
     async removeSource(_params: RemoveSourceParams): Promise<void> {
