@@ -11,9 +11,9 @@ function createLayerSpec(properties?): LayerSpecification {
     }, properties);
 }
 
-describe('RasterStyleLayer correctly handles resampling and raster-resampling', () => {
+describe('RasterStyleLayer correctly handles "resampling" and "raster-resampling" paint properties', () => {
 
-    test('automatically set raster-resampling equal to resampling when instantiated with resampling', () => {
+    test('automatically sets "raster-resampling" equal to "resampling" when instantiated with "resampling"', () => {
         const layerSpec = createLayerSpec({
             paint: {
                 resampling: 'nearest',
@@ -25,7 +25,7 @@ describe('RasterStyleLayer correctly handles resampling and raster-resampling', 
         expect(rasterResampling).toEqual('nearest');
     });
 
-    test('automatically set resampling equal to raster-resampling when instantiated with raster-resampling', () => {
+    test('automatically sets "resampling" equal to "raster-resampling" when instantiated with "raster-resampling"', () => {
         const layerSpec = createLayerSpec({
             paint: {
                 'raster-resampling': 'nearest',
@@ -37,7 +37,7 @@ describe('RasterStyleLayer correctly handles resampling and raster-resampling', 
         expect(resampling).toEqual('nearest');
     });
 
-    test('automatically set raster-resampling equal to resampling when setting resampling', () => {
+    test('automatically sets "raster-resampling" equal to "resampling" when "resampling" is set', () => {
         const layerSpec = createLayerSpec();
         const layer = createStyleLayer(layerSpec, {});
 
@@ -47,7 +47,7 @@ describe('RasterStyleLayer correctly handles resampling and raster-resampling', 
         expect(rasterResampling).toEqual('nearest');
     });
 
-    test('automatically set resampling equal to raster-resampling when setting raster-resampling', () => {
+    test('automatically sets "resampling" equal to "raster-resampling" when "raster-resampling" is set', () => {
         const layerSpec = createLayerSpec();
         const layer = createStyleLayer(layerSpec, {});
 
@@ -57,7 +57,7 @@ describe('RasterStyleLayer correctly handles resampling and raster-resampling', 
         expect(resampling).toEqual('nearest');
     });
 
-    test('warn when both resampling and raster-resampling specified when instantiated', () => {
+    test('warns when both "resampling" and "raster-resampling" are specified upon instantiation', () => {
         const originalWarn = console.warn;
         console.warn = vi.fn();
 
@@ -72,7 +72,7 @@ describe('RasterStyleLayer correctly handles resampling and raster-resampling', 
         console.warn = originalWarn;
     });
 
-    test('automatically use resampling when instantiated with both resampling and raster-resampling but not equal', () => {
+    test('automatically uses "resampling" when both "resampling" and "raster-resampling" are specified and not equal upon instantiation', () => {
         const layerSpec = createLayerSpec({
             paint: {
                 resampling: 'nearest',

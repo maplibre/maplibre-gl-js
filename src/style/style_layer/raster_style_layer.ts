@@ -19,9 +19,9 @@ function _handleResampling(resamplings: Partial<Resamplings>): Partial<Resamplin
     let rasterResampling = resamplings['raster-resampling'];
     if (resampling === undefined && rasterResampling === undefined) return {};
     if (resampling && rasterResampling) {
-        console.warn('Raster layer paint property "resampling" and "raster-resampling" are both specified, but only "resampling" needs to be specified.');
+        console.warn('Raster layer paint properties "resampling" and "raster-resampling" are both specified, but only "resampling" needs to be specified.');
         if (resampling !== rasterResampling) {
-            console.warn(`Value of "resampling" (${resampling}) is different than that of "raster-resampling" (${rasterResampling}); defaulting to that of "resampling".`);
+            console.warn(`Value of "resampling" ('${resampling}') is different than that of "raster-resampling" ('${rasterResampling}'); defaulting to "resampling".`);
             rasterResampling = resampling;
         }
     } else {
