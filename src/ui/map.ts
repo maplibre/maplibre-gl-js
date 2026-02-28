@@ -2152,22 +2152,17 @@ export class Map extends Camera {
         }
     }
 
-    _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
+    async _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
-            const request = this._requestManager.transformRequest(url, ResourceType.Style);
-            const _getJSON = (request) => getJSON<StyleSpecification>(request, new AbortController()).then((response) => {
+            const request = await this._requestManager.transformRequest(url, ResourceType.Style);
+            getJSON<StyleSpecification>(request, new AbortController()).then((response) => {
                 this._updateDiff(response.data, options);
             }).catch((error) => {
                 if (error) {
                     this.fire(new ErrorEvent(error));
                 }
             });
-            if (request instanceof Promise) {
-                request.then(_getJSON);
-            } else {
-                _getJSON(request);
-            }
         } else if (typeof style === 'object') {
             this._updateDiff(style, options);
         }

@@ -294,7 +294,10 @@ describe('AttributionControl', () => {
         map.on('data', spy);
         await map.once('load');
         map.addSource('1', {type: 'raster-dem', url: '/source.json'});
-        server.respond();
+        setTimeout(() => {
+            // delay server.respond so that it happens after the pending request is made
+            server.respond();
+        });
 
         await sleep(100);
 
@@ -326,7 +329,10 @@ describe('AttributionControl', () => {
         map.on('data', spy);
         await map.once('load');
         map.addSource('1', {type: 'raster-dem', url: '/source.json'});
-        server.respond();
+        setTimeout(() => {
+            // delay server.respond so that it happens after the pending request is made
+            server.respond();
+        });
         map.setTerrain({source: '1'});
         await sleep(100);
 

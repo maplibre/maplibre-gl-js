@@ -62,6 +62,12 @@ function createStyle(map = getStubMap()) {
 let server: FakeServer;
 let mockConsoleError: MockInstance;
 
+// delay server.respond so that it happens after the pending request is made
+// this works around a microtask delay introduced by unconditionally awaiting the transformRequest result
+const delayServerRespond = () => {
+    setTimeout(() => server.respond());
+};
+
 beforeEach(() => {
     global.fetch = null;
     server = fakeServer.create();
@@ -145,9 +151,7 @@ describe('Style.loadURL', () => {
 
         const style = new Style(map);
         style.loadURL('style.json');
-        setTimeout(() => {
-            server.respond();
-        });
+        delayServerRespond();
         await waitForEvent(style, 'data', (event) => event.dataType === 'style');
 
         expect(server.requests[0].url).toBe('style.json');
@@ -161,16 +165,17 @@ describe('Style.loadURL', () => {
 
         style.loadURL('style.json');
         server.respondWith(JSON.stringify(createStyleJSON({version: 'invalid'})));
-        server.respond();
+        delayServerRespond();
 
         const {error} = await errorPromise;
         expect(error).toBeTruthy();
         expect(error.message).toMatch(/version/);
     });
 
-    test('cancels pending requests if removed', () => {
+    test('cancels pending requests if removed', async () => {
         const style = new Style(getStubMap());
         style.loadURL('style.json');
+        await sleep(0); // to resolve pending transformRequest
         style._remove();
         expect((server.lastRequest as any).aborted).toBe(true);
     });
@@ -194,7 +199,7 @@ describe('Style.loadURL', () => {
         const promise = style.once('error');
         style.loadURL('style.json');
         server.respondWith(request => request.respond(errorStatus));
-        server.respond();
+        delayServerRespond();
         const {error} = await promise;
 
         expect(error).toBeTruthy();
@@ -274,7 +279,7 @@ describe('Style.loadJSON', () => {
         expect(e.dataType).toBe('style');
 
         const promise = style.once('data');
-        server.respond();
+        delayServerRespond();
 
         await promise;
         expect(e.target).toBe(style);
@@ -307,7 +312,7 @@ describe('Style.loadJSON', () => {
 
         const secondDataPromise = style.once('data');
 
-        server.respond();
+        delayServerRespond();
 
         const secondDateEvent = await secondDataPromise;
         expect(secondDateEvent.target).toBe(style);
@@ -1422,6 +1427,7 @@ describe('Style.addSprite', () => {
         style.on('error', errorHandler);
 
         style.addSprite('test', 'https://example.com/sprite');
+        await sleep(0); // to resolve pending transformRequest
         style._remove();
 
         await waitForEvent(style, 'data', (event) => event.dataType === 'style');
@@ -1523,7 +1529,7 @@ describe('Style.setSprite', () => {
 
         const errorPromise = style.once('error');
         style.setSprite('https://example.com/sprite');
-        server.respond();
+        delayServerRespond();
 
         const {error} = await errorPromise;
         expect(error.message).toBe('AJAXError: Not Found (404): https://example.com/sprite.json');

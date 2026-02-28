@@ -45,6 +45,11 @@ class StubMap extends Evented {
 describe('ImageSource', () => {
     stubAjaxGetImage(undefined);
     let server: FakeServer;
+    // delay server.respond so that it happens after the pending request is made
+    // this works around a microtask delay introduced by unconditionally awaiting the transformRequest result
+    const delayServerRespond = () => {
+        setTimeout(() => server.respond());
+    };
 
     beforeEach(() => {
         global.fetch = null;
@@ -67,7 +72,7 @@ describe('ImageSource', () => {
             expect(e.dataType).toBe('source');
         });
         source.onAdd(new StubMap() as any);
-        server.respond();
+        delayServerRespond();
         await sleep(0);
         expect(source.image).toBeTruthy();
     });
@@ -94,11 +99,7 @@ describe('ImageSource', () => {
         };
         const promise = source.once('data');
         source.onAdd(map);
-        setTimeout(() => {
-            // delay server.respond so that it happens after the image request is made
-            // otherwise, the subsequent await blocks indefinitely
-            server.respond();
-        }, 0);
+        delayServerRespond();
         await promise;
         expect(server.requests[0].url).toBe('/image.png');
         expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer token');
@@ -143,7 +144,7 @@ describe('ImageSource', () => {
             url: '/image2.png',
             coordinates: [[0, 0], [-1, 0], [-1, -1], [0, -1]]
         });
-        server.respond();
+        delayServerRespond();
         await sleep(0);
         const afterSerialized = source.serialize();
         expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
@@ -153,7 +154,7 @@ describe('ImageSource', () => {
         const source = createSource({url: '/image.png'});
         const promise = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'content');
         source.onAdd(new StubMap() as any);
-        server.respond();
+        delayServerRespond();
         await promise;
         expect(typeof source.tileID == 'object').toBeTruthy();
     });
@@ -162,7 +163,7 @@ describe('ImageSource', () => {
         const source = createSource({url: '/image.png'});
         const promise = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'metadata');
         source.onAdd(new StubMap() as any);
-        server.respond();
+        delayServerRespond();
         await expect(promise).resolves.toBeDefined();
     });
 
@@ -200,19 +201,20 @@ describe('ImageSource', () => {
         source.onAdd(map);
         expect(source.image).toBeUndefined();
         source.updateImage({url: '/image2.png'});
-        server.respond();
+        delayServerRespond();
         await sleep(10);
 
         expect(source.image).toBeTruthy();
     });
 
-    test('cancels request if updateImage is used', () => {
+    test('cancels request if updateImage is used', async () => {
         const map = new StubMap() as any;
         const source = createSource({url: '/image.png', eventedParent: map});
 
         // Suppress errors because we're aborting.
         map.on('error', () => {});
         source.onAdd(map);
+        await sleep(0); // flush any resolvable `await`s
 
         const spy = vi.spyOn(server.requests[0] as any, 'abort');
 
@@ -226,7 +228,7 @@ describe('ImageSource', () => {
 
         expect(source.loaded()).toBe(false);
         source.onAdd(map);
-        server.respond();
+        delayServerRespond();
         await sleep(0);
         expect(source.loaded()).toBe(true);
 
@@ -237,7 +239,7 @@ describe('ImageSource', () => {
 
         expect(missingImagesource.loaded()).toBe(false);
         missingImagesource.onAdd(map);
-        server.respond();
+        delayServerRespond();
         await sleep(0);
 
         expect(missingImagesource.loaded()).toBe(true);

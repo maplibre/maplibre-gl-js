@@ -420,16 +420,16 @@ export class Style extends Evented {
         }
     }
 
-    loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification) {
+    async loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
         options.validate = typeof options.validate === 'boolean' ?
             options.validate : true;
 
-        const request = this.map._requestManager.transformRequest(url, ResourceType.Style);
+        const request = await this.map._requestManager.transformRequest(url, ResourceType.Style);
         this._loadStyleRequest = new AbortController();
         const abortController = this._loadStyleRequest;
-        const _getJSON = (request) => getJSON<StyleSpecification>(request, this._loadStyleRequest).then((response) => {
+        getJSON<StyleSpecification>(request, this._loadStyleRequest).then((response) => {
             this._loadStyleRequest = null;
             this._load(response.data, options, previousStyle);
         }).catch((error) => {
@@ -438,11 +438,6 @@ export class Style extends Evented {
                 this.fire(new ErrorEvent(error));
             }
         });
-        if (request instanceof Promise) {
-            request.then(_getJSON);
-        } else {
-            _getJSON(request);
-        }
     }
 
     loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification) {

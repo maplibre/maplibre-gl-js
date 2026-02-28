@@ -303,24 +303,9 @@ describe('setStyle', () => {
         map.setTransformRequest(transformRequestSpy);
         await map.once('style.load');
 
-        map.setStyle('style.json', {
-            diff: true,
-            /*
-            transformStyle: (prevStyle, nextStyle) => ({
-                ...nextStyle,
-                sources: {
-                    ...nextStyle.sources,
-                    maplibre: prevStyle.sources.maplibre
-                },
-                layers: [
-                    ...nextStyle.layers,
-                    prevStyle.layers[0]
-                ]
-            }) */
-        });
+        map.setStyle('style.json', {diff: true});
         setTimeout(() => {
-            // delay server.respond so that it happens after the style JSON request is made
-            // otherwise, the subsequent await blocks indefinitely
+            // delay server.respond so that it happens after the style JSON request is made, otherwise, the subsequent await blocks indefinitely
             server.respond();
         });
         await map.once('style.load');

@@ -19,7 +19,10 @@ test('loadGlyphRange', async ()  => {
     server.respondWith(bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/0-255.pbf'))));
 
     const promise = loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager);
-    server.respond();
+    setTimeout(() => {
+        // delay server.respond so that it happens after the glyph range request is made, otherwise, the subsequent await blocks indefinitely
+        server.respond();
+    });
     const result = await promise;
 
     expect(transform).toHaveBeenCalledTimes(1);
@@ -52,8 +55,7 @@ test('loadGlyphRange with async transformRequest', async () => {
     server.respondWith(bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/0-255.pbf'))));
 
     setTimeout(() => {
-        // delay server.respond so that it happens after the glyph range request is made
-        // otherwise, the subsequent await blocks indefinitely
+        // delay server.respond so that it happens after the glyph range request is made, otherwise, the subsequent await blocks indefinitely
         server.respond();
     });
     const result = await loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager);

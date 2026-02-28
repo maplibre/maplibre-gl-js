@@ -4,7 +4,7 @@ import {RasterDEMTileSource} from './raster_dem_tile_source';
 import {OverscaledTileID} from '../tile/tile_id';
 import {RequestManager} from '../util/request_manager';
 import {type Tile} from '../tile/tile';
-import {waitForEvent, waitForMetadataEvent} from '../util/test/util';
+import {sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util';
 import type {MapSourceDataEvent} from '../ui/events';
 
 function createSource(options, transformCallback?) {
@@ -25,6 +25,12 @@ function createSource(options, transformCallback?) {
 
 describe('RasterDEMTileSource', () => {
     let server: FakeServer;
+    // delay server.respond so that it happens after the pending request is made
+    // this works around a microtask delay introduced by unconditionally awaiting the transformRequest result
+    const delayServerRespond = () => {
+        setTimeout(() => server.respond());
+    };
+
     beforeEach(() => {
         global.fetch = null;
         server = fakeServer.create();
@@ -65,11 +71,7 @@ describe('RasterDEMTileSource', () => {
             url,
             headers: {Authorization: 'Bearer token'}
         }));
-        setTimeout(() => {
-            // delay server.respond so that it happens after the TileJSON request is made
-            // otherwise, the subsequent await blocks indefinitely
-            server.respond();
-        });
+        delayServerRespond();
         await waitForMetadataEvent(source);
         expect(server.requests[0].url).toBe('/source.json');
         expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
@@ -86,7 +88,7 @@ describe('RasterDEMTileSource', () => {
         const source = createSource({url: '/source.json'});
         const transformSpy = vi.spyOn(source.map._requestManager, 'transformRequest');
         const promise = waitForMetadataEvent(source);
-        server.respond();
+        delayServerRespond();
         await promise;
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
@@ -121,11 +123,7 @@ describe('RasterDEMTileSource', () => {
             setExpiryData() {},
             actor: 1
         } as any as Tile;
-        setTimeout(() => {
-            // delay server.respond so that it happens after the tile request is made
-            // otherwise, the subsequent await blocks indefinitely
-            server.respond();
-        });
+        delayServerRespond();
         await source.loadTile(tile);
         expect(server.requests[0].url).toBe('http://example.com/10/5/5.png');
         expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
@@ -140,7 +138,7 @@ describe('RasterDEMTileSource', () => {
         }));
         const source = createSource({url: '/source.json'});
         const promise = waitForMetadataEvent(source);
-        server.respond();
+        delayServerRespond();
         await promise;
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
@@ -149,6 +147,7 @@ describe('RasterDEMTileSource', () => {
             setExpiryData() {}
         } as any as Tile;
         source.loadTile(tile);
+        await sleep(0); // to resolve pending transformRequest
 
         expect(Object.keys(tile.neighboringTiles)).toEqual([
             new OverscaledTileID(10, 0, 10, 4, 5).key,
@@ -173,7 +172,7 @@ describe('RasterDEMTileSource', () => {
         const source = createSource({url: '/source.json'});
         const promise = waitForMetadataEvent(source);
 
-        server.respond();
+        delayServerRespond();
         await promise;
 
         const tile = {
@@ -183,6 +182,7 @@ describe('RasterDEMTileSource', () => {
             setExpiryData() {}
         } as any as Tile;
         source.loadTile(tile);
+        await sleep(0); // to resolve pending transformRequest
 
         expect(Object.keys(tile.neighboringTiles)).toEqual([
             new OverscaledTileID(5, 0, 5, 30, 6).key,
@@ -226,7 +226,7 @@ describe('RasterDEMTileSource', () => {
         source.map._refreshExpiredTiles = true;
 
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-        server.respond();
+        delayServerRespond();
         await promise;
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
@@ -236,7 +236,7 @@ describe('RasterDEMTileSource', () => {
         } as any as Tile;
         const expiryDataSpy = vi.spyOn(tile, 'setExpiryData');
         const tilePromise = source.loadTile(tile);
-        server.respond();
+        delayServerRespond();
         await tilePromise;
         expect(expiryDataSpy).toHaveBeenCalledTimes(1);
     });
@@ -257,7 +257,7 @@ describe('RasterDEMTileSource', () => {
         source.map._refreshExpiredTiles = true;
 
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-        server.respond();
+        delayServerRespond();
         await promise;
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
@@ -267,7 +267,7 @@ describe('RasterDEMTileSource', () => {
         } as any as Tile;
         const expiryDataSpy = vi.spyOn(tile, 'setExpiryData');
         const tilePromise = source.loadTile(tile);
-        server.respond();
+        delayServerRespond();
         await tilePromise;
         expect(expiryDataSpy).toHaveBeenCalledTimes(1);
     });
@@ -288,7 +288,7 @@ describe('RasterDEMTileSource', () => {
         source.map._refreshExpiredTiles = true;
 
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
-        server.respond();
+        delayServerRespond();
         await promise;
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
@@ -298,7 +298,7 @@ describe('RasterDEMTileSource', () => {
         } as any as Tile;
         const expiryDataSpy = vi.spyOn(tile, 'setExpiryData');
         const tilePromise = source.loadTile(tile);
-        server.respond();
+        delayServerRespond();
         await tilePromise;
         expect(expiryDataSpy).toHaveBeenCalledTimes(1);
     });
@@ -314,7 +314,7 @@ describe('RasterDEMTileSource', () => {
         const source = createSource({url: '/source.json'});
         const promise = waitForMetadataEvent(source);
 
-        server.respond();
+        delayServerRespond();
         await promise;
 
         const tile = {
@@ -324,6 +324,7 @@ describe('RasterDEMTileSource', () => {
             setExpiryData() {}
         } as any as Tile;
         const loadPromise = source.loadTile(tile);
+        await sleep(0); // to resolve pending transformRequest
 
         tile.abortController.abort();
         tile.aborted = true;

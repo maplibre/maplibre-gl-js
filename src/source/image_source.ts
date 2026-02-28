@@ -151,9 +151,8 @@ export class ImageSource extends Evented implements Source {
 
         this._request = new AbortController();
         try {
-            const request = this.map._requestManager.transformRequest(this.url, ResourceType.Image);
-            const resolvedRequest = request instanceof Promise ? await request : request;
-            const image = await ImageRequest.getImage(resolvedRequest, this._request);
+            const request = await this.map._requestManager.transformRequest(this.url, ResourceType.Image);
+            const image = await ImageRequest.getImage(request, this._request);
             this._request = null;
             this._loaded = true;
 
