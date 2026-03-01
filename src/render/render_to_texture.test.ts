@@ -79,6 +79,7 @@ describe('render to texture', () => {
     const tileManager = {
         _source: {minzoom: 0, maxzoom: 2},
         getTileByID: (_id) => tile,
+        findTileByKey: (_id) => tile,
         getVisibleCoordinates: () => [tile.tileID]
     } as TileManager;
 

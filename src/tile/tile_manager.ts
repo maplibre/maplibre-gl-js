@@ -333,6 +333,14 @@ export class TileManager extends Evented {
     }
 
     /**
+     * Find a tile by its key, searching both in-view tiles and the
+     * out-of-view cache. Returns `undefined` when not found.
+     */
+    findTileByKey(key: string): Tile | undefined {
+        return this._inViewTiles.getTileById(key) ?? this._outOfViewCache.getByKey(key) ?? undefined;
+    }
+
+    /**
      * Retain the uppermost loaded children of each provided target tile, within a variable covering zoom range.
      *
      * On pitched maps, different parts of the screen show different zoom levels simultaneously.

@@ -157,6 +157,9 @@ describe('Terrain', () => {
             getTileByID: () => {
                 return tile;
             },
+            findTileByKey: () => {
+                return tile;
+            }
         } as any as TileManager;
         const terrain = new Terrain(
             painter,
@@ -183,6 +186,7 @@ describe('Terrain', () => {
             _source: {maxzoom: 12, tileSize: 512},
             _cache: {max: 10},
             getTileByID: () => null,
+            findTileByKey: () => null,
             _outOfViewCache: {
                 getByKey: () => null,
             },
@@ -213,6 +217,9 @@ describe('Terrain', () => {
             _source: {maxzoom: 12, tileSize: 512},
             _cache: {max: 10},
             getTileByID: () => {
+                return tile;
+            },
+            findTileByKey: () => {
                 return tile;
             },
         } as any as TileManager;
@@ -302,6 +309,9 @@ describe('Terrain', () => {
             getTileByID: () => {
                 return new Tile(new OverscaledTileID(zoom, 0, 0, 0, 0), 256);
             },
+            findTileByKey: () => {
+                return new Tile(new OverscaledTileID(zoom, 0, 0, 0, 0), 256);
+            }
         } as any as TileManager;
         const terrain = new Terrain(
             painter,
