@@ -140,7 +140,7 @@ describe('GeoJSONSource.setData', () => {
         await expect(promise).resolves.toBeDefined();
     });
 
-    test('respects collectResourceTiming parameter on source', () => {
+    test('respects collectResourceTiming parameter on source', async () => {
         const source = createSource({collectResourceTiming: true});
         source.map = {
             _requestManager: {
@@ -158,6 +158,7 @@ describe('GeoJSONSource.setData', () => {
             });
         };
         source.setData('http://localhost/nonexistent');
+        await sleep(0); // to resolve pending `await`s
         expect(spy).toHaveBeenCalled();
     });
 
@@ -261,7 +262,7 @@ describe('GeoJSONSource.update', () => {
     transform.setZoom(15);
     transform.setLocationAtPoint(lngLat, point);
 
-    test('sends initial loadData request to dispatcher', () => {
+    test('sends initial loadData request to dispatcher', async () => {
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message: ActorMessage<MessageType>) {
@@ -272,10 +273,11 @@ describe('GeoJSONSource.update', () => {
         });
 
         new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined).load();
+        await sleep(); // to resolve pending `await`s
         expect(spy).toHaveBeenCalled();
     });
 
-    test('forwards geojson-vt options with worker request', () => {
+    test('forwards geojson-vt options with worker request', async () => {
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message: ActorMessage<any>) {
@@ -300,10 +302,11 @@ describe('GeoJSONSource.update', () => {
             buffer: 16,
             generateId: true
         } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
+        await sleep(0); // to resolve pending `await`s
         expect(spy).toHaveBeenCalled();
     });
 
-    test('forwards Supercluster options with worker request', () => {
+    test('forwards Supercluster options with worker request', async () => {
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
@@ -321,6 +324,7 @@ describe('GeoJSONSource.update', () => {
             generateId: true
         } as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.load();
+        await sleep(0); // to resolve pending `await`s
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
         expect(spy.mock.calls[0][0].data.superclusterOptions).toEqual({
@@ -359,6 +363,7 @@ describe('GeoJSONSource.update', () => {
         spy.mockClear();
 
         source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
+        await sleep(0); // to resolve pending `await`s
 
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
@@ -387,7 +392,7 @@ describe('GeoJSONSource.update', () => {
 
         // Wait for initial data to be loaded
         source.load();
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0); // to resolve all the pending `await`s
 
         spy.mockClear();
 
@@ -400,7 +405,7 @@ describe('GeoJSONSource.update', () => {
         source.setData(sourceData2);
         source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
 
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0); // to resolve all the pending `await`s
 
         expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
@@ -457,7 +462,7 @@ describe('GeoJSONSource.update', () => {
         source.updateData(diff);
         source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
 
-        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0); // to resolve all the pending `await`s
 
         expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[0][0].data.cluster).toBe(false);
@@ -467,7 +472,7 @@ describe('GeoJSONSource.update', () => {
         expect(spy.mock.calls[1][0].data.dataDiff).not.toBeDefined();
     });
 
-    test('forwards Supercluster options with worker request, ignore max zoom of source', () => {
+    test('forwards Supercluster options with worker request, ignore max zoom of source', async () => {
         const spy = vi.fn();
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         const mockDispatcher = wrapDispatcher({
@@ -487,6 +492,7 @@ describe('GeoJSONSource.update', () => {
             generateId: true
         } as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.load();
+        await sleep(0); // to resolve pending `await`s
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
         expect(spy.mock.calls[0][0].data.superclusterOptions).toEqual({
