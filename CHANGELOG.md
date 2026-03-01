@@ -2,9 +2,10 @@
 
 ### ✨ Features and improvements
 - Add Etag unmodified support to optimize vector tile reloading ([#7074](https://github.com/maplibre/maplibre-gl-js/pull/7074)) (by [@rivkamatan](https://github.com/rivkamatan and [@wayofthefuture](https://github.com/wayofthefuture))
-- _...Add new stuff here..._
 - Add `boxZoom.boxZoomEnd` option to customize the action after Shift-drag box selection ([#6397](https://github.com/maplibre/maplibre-gl-js/issues/6397))
 - Implement `resampling` paint property for raster, hillshade, and color-relief layers ([#7074](https://github.com/maplibre/maplibre-gl-js/pull/7194)) (by [@larsmaxfield](https://github.com/larsmaxfield))
+- Add updateable support for GeoJSON-VT ([#7172](https://github.com/maplibre/maplibre-gl-js/issues/7172)) (by [@wayofthefuture](https://github.com/wayofthefuture) and [HarelM](https://github.com/HarelM))
+- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._

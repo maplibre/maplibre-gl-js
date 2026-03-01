@@ -142,7 +142,11 @@ export class GeoJSONSource extends Evented implements Source {
     map: Map;
     actor: Actor;
     _isUpdatingWorker: boolean;
-    _pendingWorkerUpdate: { data?: GeoJSON.GeoJSON | string; diff?: GeoJSONSourceDiff; optionsChanged?: boolean };
+    _pendingWorkerUpdate: {
+        data?: GeoJSON.GeoJSON | string;
+        diff?: GeoJSONSourceDiff;
+        updateCluster?: boolean;
+    };
     _collectResourceTiming: boolean;
     _removed: boolean;
 
@@ -216,7 +220,7 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     private _hasPendingWorkerUpdate(): boolean {
-        return this._pendingWorkerUpdate.data !== undefined || this._pendingWorkerUpdate.diff !== undefined || this._pendingWorkerUpdate.optionsChanged;
+        return this._pendingWorkerUpdate.data !== undefined || this._pendingWorkerUpdate.diff !== undefined || this._pendingWorkerUpdate.updateCluster;
     }
 
     private _pixelsToTileUnits(pixelValue: number): number {
@@ -286,8 +290,16 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns a promise which resolves to the source's actual GeoJSON data
      */
     async getData(): Promise<GeoJSON.GeoJSON> {
-        const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
-        return this.actor.sendAsync({type: MessageType.getData, data: options});
+        if (this._data.url) {
+            await this.once('data'); // wait for loading to complete
+        }
+        if (this._data.geojson) {
+            return this._data.geojson;
+        }
+        return {
+            type: 'FeatureCollection',
+            features: Array.from(this._data.updateable.values())
+        };
     }
 
     /**
@@ -316,7 +328,7 @@ export class GeoJSONSource extends Evented implements Source {
         if (options.clusterMaxZoom !== undefined) {
             this.workerOptions.superclusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
         }
-        this._pendingWorkerUpdate.optionsChanged = true;
+        this._pendingWorkerUpdate.updateCluster = true;
         this._updateWorkerData();
         return this;
     }
@@ -389,17 +401,16 @@ export class GeoJSONSource extends Evented implements Source {
             return;
         }
 
-        const {data, diff} = this._pendingWorkerUpdate;
-        const params = this._getLoadGeoJSONParameters(data, diff);
+        const {data, diff, updateCluster} = this._pendingWorkerUpdate;
+        const params = this._getLoadGeoJSONParameters(data, diff, updateCluster);
 
         if (data !== undefined) {
             this._pendingWorkerUpdate.data = undefined;
         } else if (diff) {
             this._pendingWorkerUpdate.diff = undefined;
+        } else if (updateCluster) {
+            this._pendingWorkerUpdate.updateCluster = undefined;
         }
-
-        // Reset the flag since this update is using the latest options
-        this._pendingWorkerUpdate.optionsChanged = undefined;
 
         await this._dispatchWorkerUpdate(params);
     }
@@ -407,7 +418,7 @@ export class GeoJSONSource extends Evented implements Source {
     /**
      * Create the parameters object that will be sent to the worker and used to load GeoJSON.
      */
-    private _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff): LoadGeoJSONParameters {
+    private _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): LoadGeoJSONParameters | undefined {
         const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
 
         // Data comes from a remote url
@@ -429,7 +440,11 @@ export class GeoJSONSource extends Evented implements Source {
             return params;
         }
 
-        return params;
+        // Update supercluster with the latest worker cluster options
+        if (updateCluster) {
+            params.updateCluster = true;
+            return params;
+        }
     }
 
     /**
