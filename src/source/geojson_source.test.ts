@@ -8,7 +8,7 @@ import {extend} from '../util/util';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {sleep, waitForEvent} from '../util/test/util';
-import {type ActorMessage, ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages';
+import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {Dispatcher} from '../util/dispatcher';
 import type {RequestManager} from '../util/request_manager';
