@@ -407,7 +407,7 @@ describe('GeoJSONSource.update', () => {
 
         await sleep(0);
 
-        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy).toHaveBeenCalledTimes(3);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
         expect(spy.mock.calls[0][0].data.cluster).toBe(false);
         expect(spy.mock.calls[0][0].data.data).toBe(sourceData1);
@@ -417,6 +417,11 @@ describe('GeoJSONSource.update', () => {
         expect(spy.mock.calls[1][0].data.superclusterOptions.maxZoom).toBe(16);
         expect(spy.mock.calls[1][0].data.data).toBe(sourceData2);
         expect(spy.mock.calls[1][0].data.dataDiff).toBeUndefined();
+        expect(spy.mock.calls[2][0].data.cluster).toBe(true);
+        expect(spy.mock.calls[2][0].data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
+        expect(spy.mock.calls[2][0].data.superclusterOptions.maxZoom).toBe(16);
+        expect(spy.mock.calls[2][0].data.data).toBeUndefined();
+        expect(spy.mock.calls[2][0].data.dataDiff).toBeUndefined();
     });
 
     test('modifying cluster properties after sending a diff', async () => {
