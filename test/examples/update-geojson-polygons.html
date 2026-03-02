@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Update GeoJSON polygons</title>
+    <meta property="og:description" content="Update GeoJSON polygons using updateable GeoJSONVT" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [-68.13734351262877, 45.137451890638886],
+        zoom: 5
+    });
+    map.showTileBoundaries = true;
+
+    const rectangles = Array.from({length: 5}, (_, i) => ({
+        id: i,
+        x: -68.13 + (Math.random() - 0.5) * 5,
+        y: 45.13 + (Math.random() - 0.5) * 5,
+        vx: (Math.random() - 0.5) * 0.05,
+        vy: (Math.random() - 0.5) * 0.05,
+        w: 0.5 + Math.random(),
+        h: 0.5 + Math.random(),
+        rotation: Math.random() * 2 * Math.PI,
+        rotationSpeed: (Math.random() - 0.5) * 0.1,
+        color: '#008888',
+        every: Math.round(Math.random() * 100 + 200)
+    }));
+
+    const getRandomColor = () => '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+
+    function getRectangleGeometry({x, y, w, h, rotation}) {
+        const c = Math.cos(rotation), s = Math.sin(rotation);
+        const hw = w / 2, hh = h / 2;
+        const coords = [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]]
+            .map(([dx, dy]) => [x + dx * c - dy * s, y + dx * s + dy * c]);
+        coords.push(coords[0]);
+        return {type: 'Polygon', coordinates: [coords]};
+    }
+
+    map.on('load', () => {
+        const features = rectangles.flatMap(rect => [
+            {type: 'Feature', id: rect.id, properties: {color: rect.color}, geometry: getRectangleGeometry(rect)},
+            {type: 'Feature', id: `${rect.id}_label`, properties: {label: `Zoom: ${Math.round(map.getZoom())}`}, geometry: {type: 'Point', coordinates: [rect.x, rect.y]}}
+        ]);
+
+        map.addSource('rectangles', {type: 'geojson', data: {type: 'FeatureCollection', features}});
+
+        map.addLayer({
+            id: 'rectangles', type: 'fill', source: 'rectangles',
+            paint: {'fill-color': ['get', 'color'], 'fill-opacity': 0.8},
+            filter: ['==', '$type', 'Polygon']
+        });
+
+        map.addLayer({
+            id: 'rectangles-label', type: 'symbol', source: 'rectangles',
+            layout: {'text-field': ['get', 'label'], 'text-size': 14, 'text-allow-overlap': true, 'text-ignore-placement': true},
+            paint: {'text-color': '#ffffff'},
+            filter: ['==', '$type', 'Point']
+        });
+
+        let count = 0;
+        function animate() {
+            const zoom = map.getZoom().toFixed(1);
+            count++;
+
+            const updates = rectangles.flatMap(rect => {
+                rect.x += rect.vx; rect.y += rect.vy; rect.rotation += rect.rotationSpeed;
+                if (rect.x < -75 || rect.x > -60) rect.vx *= -1;
+                if (rect.y < 40 || rect.y > 50) rect.vy *= -1;
+                if (count % rect.every === 0) rect.color = getRandomColor();
+
+                return [
+                    {id: rect.id, newGeometry: getRectangleGeometry(rect), addOrUpdateProperties: [{key: 'color', value: rect.color}]},
+                    {id: `${rect.id}_label`, newGeometry: {type: 'Point', coordinates: [rect.x, rect.y]}, addOrUpdateProperties: [{key: 'label', value: zoom}]}
+                ];
+            });
+
+            map.getSource('rectangles')?.updateData({update: updates});
+            requestAnimationFrame(animate);
+        }
+        animate();
+    });
+</script>
+</body>
+</html>

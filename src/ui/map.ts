@@ -1377,8 +1377,8 @@ export class Map extends Camera {
      *
      * @param anisotropicFilterPitch - The pitch above which to apply anisotropic filtering to the map's raster layers (0-180).
      * If `null` or `undefined` is provided, the function reverts to the default pitch threshold (20).
-     * 
-     * 
+     *
+     *
      * @example
      * ```ts
      * map.setAnisotropicFilterPitch(85);

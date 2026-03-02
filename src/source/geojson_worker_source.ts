@@ -1,18 +1,16 @@
 import {getJSON} from '../util/ajax';
 import {RequestPerformance} from '../util/performance';
-import rewind from '@mapbox/geojson-rewind';
 import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent';
-import Supercluster, {type Options as SuperclusterOptions, type ClusterProperties} from 'supercluster';
-import geojsonvt, {type GeoJSONVTOptions, type GeoJSONVT} from '@maplibre/geojson-vt';
-import {createExpression} from '@maplibre/maplibre-gl-style-spec';
+import {GeoJSONVT, type GeoJSONVTOptions, type SuperclusterOptions, type ClusterProperties} from '@maplibre/geojson-vt';
+import {createExpression, type FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error';
 import {toVirtualVectorTile} from './vector_tile_overzoomed';
-import {type GeoJSONSourceDiff, applySourceDiff, toUpdateable, type GeoJSONFeatureId} from './geojson_source_diff';
 import {WorkerTile} from './worker_tile';
 import {WorkerTileState, type ParsingState} from './worker_tile_state';
 import {extend} from '../util/util';
 
+import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {WorkerSource, WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source';
 import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {RequestParameters} from '../util/ajax';
@@ -27,9 +25,9 @@ export type GeoJSONWorkerOptions = {
     source?: string;
     cluster?: boolean;
     geojsonVtOptions?: GeoJSONVTOptions;
-    superclusterOptions?: SuperclusterOptions<any, any>;
+    superclusterOptions?: SuperclusterOptions;
     clusterProperties?: ClusterProperties;
-    filter?: Array<unknown>;
+    filter?: FilterSpecification;
     promoteId?: string;
     collectResourceTiming?: boolean;
 };
@@ -51,9 +49,11 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
      * GeoJSONSourceDiff to apply to the existing GeoJSON source data.
      */
     dataDiff?: GeoJSONSourceDiff;
+    /**
+     * Update the supercluster using the latest worker cluster options.
+     */
+    updateCluster?: boolean;
 };
-
-type GeoJSONIndex = GeoJSONVT | Supercluster;
 
 /**
  * The {@link WorkerSource} implementation that supports {@link GeoJSONSource}.
@@ -69,15 +69,8 @@ export class GeoJSONWorkerSource implements WorkerSource {
     availableImages: Array<string>;
     tileState: WorkerTileState;
 
-    /**
-     * The actual GeoJSON takes some time to load (as there may be a need to parse a diff, or to apply filters, or the
-     * data may even need to be loaded via a URL). This promise resolves with a ready-to-be-consumed GeoJSON which is
-     * ready to be returned by the `getData` method.
-     */
-    _pendingData: Promise<GeoJSON.GeoJSON>;
     _pendingRequest: AbortController;
-    _geoJSONIndex: GeoJSONIndex;
-    _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
+    _geoJSONIndex: GeoJSONVT;
     _createGeoJSONIndex: typeof createGeoJSONIndex;
 
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>, createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
@@ -159,7 +152,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (parseState) {
             const {rawData} = parseState;
             // Transferring a copy of rawTileData because the worker needs to retain its copy.
-            result = extend({rawTileData: rawData.slice(0)}, result);
+            result = extend({rawTileData: rawData.slice(0), encoding: 'mvt'}, result);
         }
 
         return result;
@@ -201,29 +194,21 @@ export class GeoJSONWorkerSource implements WorkerSource {
         const timing = this._startRequestTiming(params);
         this._pendingRequest = new AbortController();
         try {
-            // Load and process the GeoJSON data if it hasn't been loaded yet or if the data is changed.
-            if (!this._pendingData || params.request || params.data || params.dataDiff) {
-                this._pendingData = this.loadAndProcessGeoJSON(params, this._pendingRequest);
-            }
-
-            const data = await this._pendingData;
-            this._geoJSONIndex = this._createGeoJSONIndex(data, params);
+            await this.loadAndProcessGeoJSON(params, this._pendingRequest);
+            delete this._pendingRequest;
             this.tileState.clearLoaded();
 
+            // Sending a large GeoJSON payload from the worker to the main thread is slow so only do if necessary.
+            // Send data only if it was loaded from a URL, otherwise the main thread already has a copy of this data.
             const result: GeoJSONWorkerSourceLoadDataResult = {};
-
-            // Sending a large GeoJSON payload from the worker thread to the main thread
-            // is SLOW so we only do it if absolutely nescessary.
-            // The main thread already has a copy of this data UNLESS it was loaded
-            // from a URL.
-            if (params.request) result.data = data;
+            if (params.request) result.data = params.data;
 
             this._finishRequestTiming(timing, params, result);
             return result;
         } catch (err) {
             delete this._pendingRequest;
-            if (isAbortError(err)) return {abandoned: true};
-            throw err;
+            if (!isAbortError(err)) throw err;
+            return {abandoned: true};
         }
     }
 
@@ -239,14 +224,6 @@ export class GeoJSONWorkerSource implements WorkerSource {
         // it's necessary to eval the result of getEntriesByName() here via parse/stringify
         // late evaluation in the main thread causes TypeError: illegal invocation
         result.resourceTiming = {[params.source]: JSON.parse(JSON.stringify(timingData))};
-    }
-
-    /**
-     * Get the source's full GeoJSON data source.
-     * @returns a promise which is resolved with the source's actual GeoJSON
-     */
-    async getData(): Promise<GeoJSON.GeoJSON> {
-        return this._pendingData;
     }
 
     /**
@@ -277,88 +254,56 @@ export class GeoJSONWorkerSource implements WorkerSource {
      * @returns a promise that is resolved with the processes GeoJSON
      */
     async loadAndProcessGeoJSON(params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
-        let data: GeoJSON.GeoJSON;
-
         if (params.request) {
-            // Data is loaded from a fetchable URL
-            data = await this.loadGeoJSONFromUrl(params.request, params.promoteId, abortController);
-
-        } else if (params.data) {
-            // Data is loaded from a GeoJSON Object
-            data = this._loadGeoJSONFromObject(params.data, params.promoteId);
-
-        } else if (params.dataDiff) {
-            // Data is loaded from a GeoJSONSourceDiff
-            data = this._loadGeoJSONFromDiff(params.dataDiff, params.promoteId, params.source);
+            params.data = (await getJSON<GeoJSON.GeoJSON>(params.request, abortController)).data;
         }
 
-        delete this._pendingRequest;
+        if (params.data) {
+            params.data = this._filterGeoJSON(params.data, params.filter);
+            this._geoJSONIndex = this._createGeoJSONIndex(params.data, params);
+            return;
+        }
 
-        if (typeof data !== 'object') {
+        if (params.dataDiff) {
+            this._geoJSONIndex ??= this._createGeoJSONIndex({type: 'FeatureCollection', features: []}, params);
+            this._geoJSONIndex.updateData(params.dataDiff, this._getFilterPredicate(params.filter));
+            return;
+        }
+
+        if (params.updateCluster) {
+            this._geoJSONIndex.updateClusterOptions(params.cluster, getSuperclusterOptions(params));
+        }
+
+        if (this._geoJSONIndex == null) {
             throw new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`);
         }
-
-        // Generate winding-order compliant GeoJSON Polygon and MultiPolygon geometries
-        rewind(data, true);
-
-        if (params.filter) {
-            data = this._filterGeoJSON(data, params.filter);
-        }
-
-        return data;
-    }
-
-    /**
-     * Loads GeoJSON from a URL and sets the sources updateable GeoJSON object.
-     */
-    async loadGeoJSONFromUrl(request: RequestParameters, promoteId: string, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
-        const response = await getJSON<GeoJSON.GeoJSON>(request, abortController);
-        this._dataUpdateable = toUpdateable(response.data, promoteId);
-        return response.data;
-    }
-
-    /**
-     * Loads GeoJSON from a string and sets the sources updateable GeoJSON object.
-     */
-    _loadGeoJSONFromObject(data: GeoJSON.GeoJSON, promoteId: string): GeoJSON.GeoJSON {
-        this._dataUpdateable = toUpdateable(data, promoteId);
-        return data;
-    }
-
-    /**
-     * Loads GeoJSON from a GeoJSONSourceDiff and applies it to the existing source updateable GeoJSON object.
-     */
-    _loadGeoJSONFromDiff(dataDiff: GeoJSONSourceDiff, promoteId: string, source: string): GeoJSON.FeatureCollection {
-        if (!this._dataUpdateable) {
-            throw new Error(`Cannot update existing geojson data in ${source}`);
-        }
-
-        // Incrementally apply the diff to existing source data
-        applySourceDiff(this._dataUpdateable, dataDiff, promoteId);
-
-        const features = Array.from(this._dataUpdateable.values());
-        return this._toFeatureCollection(features);
     }
 
     /**
      * Applies a filter to a GeoJSON object.
      */
-    _filterGeoJSON(data: GeoJSON.GeoJSON, filter: Array<unknown>): GeoJSON.FeatureCollection {
-        const compiled = createExpression(filter, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
+    _filterGeoJSON(data: GeoJSON.GeoJSON, filter: FilterSpecification): GeoJSON.GeoJSON {
+        if (data.type !== 'FeatureCollection') return data;
+        
+        const predicate = this._getFilterPredicate(filter);
+        if (!predicate) return data;
 
-        if (compiled.result === 'error') {
-            throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
-        }
-
-        const features = (data as any).features.filter(feature => compiled.value.evaluate({zoom: 0}, feature));
-        return this._toFeatureCollection(features);
+        return {type: 'FeatureCollection', features: data.features.filter(feature => predicate(feature))};
     }
 
     /**
-     * Converts an array of GeoJSON features into a GeoJSON FeatureCollection.
+     * Gets a predicate function that can be used to filter GeoJSON features.
      */
-    _toFeatureCollection(features: Array<GeoJSON.Feature>): GeoJSON.FeatureCollection {
-        return {type: 'FeatureCollection', features};
+    _getFilterPredicate(filter: FilterSpecification): (feature: GeoJSON.Feature) => boolean {
+        if (typeof filter !== 'boolean' && !filter?.length) return undefined;
+
+        const compiled = createExpression(filter, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
+        if (compiled.result === 'error') {
+            throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
+        }
+        
+        const predicate = (feature: GeoJSON.Feature) => compiled.value.evaluate({zoom: 0}, feature as any);
+        return predicate;
     }
 
     async removeSource(_params: RemoveSourceParams): Promise<void> {
@@ -366,11 +311,11 @@ export class GeoJSONWorkerSource implements WorkerSource {
     }
 
     getClusterExpansionZoom(params: ClusterIDAndSource): number {
-        return (this._geoJSONIndex as Supercluster).getClusterExpansionZoom(params.clusterId);
+        return this._geoJSONIndex.getClusterExpansionZoom(params.clusterId);
     }
 
     getClusterChildren(params: ClusterIDAndSource): Array<GeoJSON.Feature> {
-        return (this._geoJSONIndex as Supercluster).getChildren(params.clusterId);
+        return this._geoJSONIndex.getClusterChildren(params.clusterId);
     }
 
     getClusterLeaves(params: {
@@ -378,15 +323,18 @@ export class GeoJSONWorkerSource implements WorkerSource {
         limit: number;
         offset: number;
     }): Array<GeoJSON.Feature> {
-        return (this._geoJSONIndex as Supercluster).getLeaves(params.clusterId, params.limit, params.offset);
+        return this._geoJSONIndex.getClusterLeaves(params.clusterId, params.limit, params.offset);
     }
 }
 
-export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONIndex {
-    if (params.cluster) {
-        return new Supercluster(getSuperclusterOptions(params)).load((data as any).features);
-    }
-    return geojsonvt(data, params.geojsonVtOptions);
+export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONVT {
+    const options = extend(params.geojsonVtOptions || {}, {
+        updateable: true,
+        cluster: params.cluster,
+        clusterOptions: getSuperclusterOptions(params)
+    });
+
+    return new GeoJSONVT(data, options);
 }
 
 function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
@@ -399,7 +347,7 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGe
     const propertyNames = Object.keys(clusterProperties);
 
     for (const key of propertyNames) {
-        const [operator, mapExpression] = clusterProperties[key];
+        const [operator, mapExpression] = clusterProperties[key] as [unknown, unknown];
 
         const mapExpressionParsed = createExpression(mapExpression);
         const reduceExpressionParsed = createExpression(
@@ -424,6 +372,5 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGe
             accumulated[key] = reduceExpressions[key].evaluate(globals, feature);
         }
     };
-
     return superclusterOptions;
 }
