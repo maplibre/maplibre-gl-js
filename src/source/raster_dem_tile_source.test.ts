@@ -25,7 +25,6 @@ function createSource(options, transformCallback?) {
 
 describe('RasterDEMTileSource', () => {
     let server: FakeServer;
-
     beforeEach(() => {
         global.fetch = null;
         server = fakeServer.create();
