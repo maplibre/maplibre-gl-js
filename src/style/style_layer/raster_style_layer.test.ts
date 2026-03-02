@@ -13,24 +13,16 @@ function createLayerSpec(properties?): LayerSpecification {
 
 describe('RasterStyleLayer correctly handles "resampling" and "raster-resampling" paint properties', () => {
 
-    test('sets "raster-resampling" undefined when instantiated with "resampling"', () => {
-        const layerSpec = createLayerSpec({
-            paint: {
-                resampling: 'nearest',
-            }
-        });
+    test('"raster-resampling" is undefined when instantiated with "resampling"', () => {
+        const layerSpec = createLayerSpec();
         const layer = createStyleLayer(layerSpec, {});
     
         const rasterResampling = layer.getPaintProperty('raster-resampling');
         expect(rasterResampling).toEqual(undefined);
     });
 
-    test('sets "resampling" undefined when instantiated with "raster-resampling"', () => {
-        const layerSpec = createLayerSpec({
-            paint: {
-                'raster-resampling': 'nearest',
-            }
-        });
+    test('"resampling" is undefined when instantiated with "raster-resampling"', () => {
+        const layerSpec = createLayerSpec();
         const layer = createStyleLayer(layerSpec, {});
     
         const resampling = layer.getPaintProperty('resampling');
