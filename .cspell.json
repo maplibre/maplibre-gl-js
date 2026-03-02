@@ -252,8 +252,7 @@
         "Zfrom",
         "zoomto",
         "ZULN",
-        "dtiles",
-        "Dtiles"
+        "dtiles"
     ],
     "allowCompoundWords": true,
     "language": "en,en-GB,en-US,es-ES",

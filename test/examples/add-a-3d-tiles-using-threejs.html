@@ -69,7 +69,7 @@
      * @param {string} url Model URL
      * @param {number} altOffset Model altitude offset (set appropriate value to align with the ground)
      */
-    function load3Dtiles(url, altOffset = 0) {
+    function load3dtiles(url, altOffset = 0) {
         let localTransform;
 
         function getModelTransform(coord, rotate= [Math.PI / 2, 0, 0]) {
@@ -139,24 +139,18 @@
                 const sphere = new THREE.Sphere();
                 tiles.getBoundingSphere(sphere);
                 const center = sphere.center.clone();
-                const root = (tiles ).root;
+                const root = tiles.root;
 
-                console.log('tiles',tiles)
                 let m = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
                 // Get matrix
-                if (root.transform) {
-                    m = root.transform;
-                } else {
-                    console.warn("tileset does not have a transform matrix, using default matrix");
-                }
+                if (root.transform)  m = root.transform;
                 loadedTileSetHandled = true;
 
                 const { lng, lat, alt } = ecefToLngLatAlt(center.x, center.y, center.z);
                 map.jumpTo({ center: [lng, lat], zoom: 18, pitch: 60 });
                 updateLocalTransform([lng, lat, alt + altOffset]);
 
-                const rotationMat3 = new THREE.Matrix3().set(m[0], m[1], m[2], m[8], m[9], m[10], -m[4], -m[5], -m[6]); // The original model is based on a Z-up coordinate system (oblique photography), apply this matrix transformation
-                // const rotationMat3 = new THREE.Matrix3().set(-m[0], -m[1], -m[2], -m[4], -m[5], -m[6], -m[8], -m[9], -m[10]); // The original model is based on a Y-up coordinate system (consistent with three.js), apply this matrix transformation
+                const rotationMat3 = new THREE.Matrix3().set(m[0], m[1], m[2], m[8], m[9], m[10], -m[4], -m[5], -m[6]); 
                 const rotationMat4 = new THREE.Matrix4().setFromMatrix3(rotationMat3);
                 const moveToOrigin = new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z);
                 const finalMatrix = new THREE.Matrix4().multiplyMatrices(rotationMat4, moveToOrigin);
@@ -205,12 +199,11 @@
         };
 
         map.on('style.load', () => {
-            console.log("style.load");
             map.addLayer(customLayer);
         });
     };
 
-    load3Dtiles("https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json", -300);
+    load3dtiles("https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json", -300);
 </script>
 </body>
 </html>
