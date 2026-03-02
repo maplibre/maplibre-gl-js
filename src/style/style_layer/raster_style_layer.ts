@@ -15,16 +15,8 @@ export class RasterStyleLayer extends StyleLayer {
 
     constructor(layer: LayerSpecification, globalState: Record<string, any>) {
         const resampling = layer.paint?.['resampling'];
-        const rasterResampling = layer.paint?.['raster-resampling'];
-        if (resampling || rasterResampling) {
-            if (resampling && rasterResampling) {
-                console.warn(`Raster layer paint properties "resampling" and "raster-resampling" are both specified, but only "resampling" needs to be specified. Defaulting to "resampling" (${resampling}).`);
-            }
-            layer.paint = {
-                ...layer.paint,
-                resampling: resampling,
-                'raster-resampling': rasterResampling,
-            };
+        if (resampling && layer.paint?.['raster-resampling']) {
+            console.warn(`Raster layer paint properties "resampling" and "raster-resampling" are both specified, but only "resampling" needs to be specified. Defaulting to "resampling" (${resampling}).`);
         }
         super(layer, properties, globalState);
     }
