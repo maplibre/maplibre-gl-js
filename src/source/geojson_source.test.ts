@@ -149,17 +149,19 @@ describe('GeoJSONSource.setData', () => {
         } as any;
         const spy = vi.fn();
         source.actor.sendAsync = (message: ActorMessage<MessageType>) => {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 if (message.type === MessageType.loadData) {
-                    expect((message.data as any).request.collectResourceTiming).toBeTruthy();
                     setTimeout(() => resolve({} as any), 0);
-                    spy();
+                    spy(message);
+                } else {
+                    reject(new Error(`MessageType.loadData is expected but got ${message.type}`));
                 }
             });
         };
         source.setData('http://localhost/nonexistent');
         await sleep(0);
-        expect(spy).toHaveBeenCalled();
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls[0][0].data.request.collectResourceTiming).toBeTruthy();
     });
 
     test('respects collectResourceTiming parameter on source (async transformRequest)', async () => {
@@ -173,14 +175,14 @@ describe('GeoJSONSource.setData', () => {
         source.actor.sendAsync = (message: ActorMessage<MessageType>) => {
             return new Promise((resolve) => {
                 if (message.type === MessageType.loadData) {
-                    expect((message.data as any).request.collectResourceTiming).toBeTruthy();
-                    spy();
+                    spy(message);
                     resolve({} as any);
                 }
             });
         };
         await source.setData('http://localhost/nonexistent', true);
-        expect(spy).toHaveBeenCalled();
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls[0][0].data.request.collectResourceTiming).toBeTruthy();
     });
 
     test('only marks source as loaded when there are no pending loads', async () => {
@@ -243,14 +245,14 @@ describe('GeoJSONSource.onRemove', () => {
         const spy = vi.fn();
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message: ActorMessage<MessageType>) {
-                expect(message.type).toBe(MessageType.removeSource);
-                expect(message.data).toEqual({type: 'geojson', source: 'id'});
-                spy();
+                spy(message);
                 return Promise.resolve({});
             }
         }), undefined);
         source.onRemove();
-        expect(spy).toHaveBeenCalled();
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls[0][0].type).toBe(MessageType.removeSource);
+        expect(spy.mock.calls[0][0].data).toEqual({type: 'geojson', source: 'id'});
     });
 });
 
@@ -266,31 +268,22 @@ describe('GeoJSONSource.update', () => {
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message: ActorMessage<MessageType>) {
-                expect(message.type).toBe(MessageType.loadData);
-                spy();
+                spy(message);
                 return Promise.resolve({});
             }
         });
 
         new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined).load();
-        await sleep(); // to resolve pending `await`s
-        expect(spy).toHaveBeenCalled();
+        await sleep(0);
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
     });
 
     test('forwards geojson-vt options with worker request', async () => {
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message: ActorMessage<any>) {
-                expect(message.type).toBe(MessageType.loadData);
-                expect(message.data.geojsonVtOptions).toEqual({
-                    extent: EXTENT,
-                    maxZoom: 10,
-                    tolerance: 4,
-                    buffer: 256,
-                    lineMetrics: false,
-                    generateId: true
-                });
-                spy();
+                spy(message);
                 return Promise.resolve({});
             }
         });
@@ -303,7 +296,16 @@ describe('GeoJSONSource.update', () => {
             generateId: true
         } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
         await sleep(0);
-        expect(spy).toHaveBeenCalled();
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
+        expect(spy.mock.calls[0][0].data.geojsonVtOptions).toEqual({
+            extent: EXTENT,
+            maxZoom: 10,
+            tolerance: 4,
+            buffer: 256,
+            lineMetrics: false,
+            generateId: true
+        });
     });
 
     test('forwards Supercluster options with worker request', async () => {
@@ -325,7 +327,7 @@ describe('GeoJSONSource.update', () => {
         } as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.load();
         await sleep(0);
-        expect(spy).toHaveBeenCalled();
+        expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
         expect(spy.mock.calls[0][0].data.superclusterOptions).toEqual({
             maxZoom: 12,
@@ -392,7 +394,7 @@ describe('GeoJSONSource.update', () => {
 
         // Wait for initial data to be loaded
         source.load();
-        await sleep(0);
+        await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
         spy.mockClear();
 
