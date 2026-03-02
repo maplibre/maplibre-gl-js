@@ -198,7 +198,7 @@
             },
         };
 
-        map.on('style.load', () => {
+        map.once('style.load', () => {
             map.addLayer(customLayer);
         });
     };
