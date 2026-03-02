@@ -9,11 +9,6 @@ import {type RasterSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 describe('loadTileJson', () => {
     let server: FakeServer;
-    // delay server.resond so that it happens after the pending request is made
-    // this works around a microtask delay introduced by unconditionally awaiting the transformRequest result
-    const delayServerRespond = () => {
-        setTimeout(() => server.respond());
-    };
     beforeEach(() => {
         global.fetch = null;
         server = fakeServer.create();
@@ -45,7 +40,8 @@ describe('loadTileJson', () => {
         });
 
         const promise = loadTileJson(options, requestManager, new AbortController());
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
         const result = await promise;
 
         expect(result).toEqual(mockTileJSON);
@@ -75,8 +71,10 @@ describe('loadTileJson', () => {
             url,
             headers: {Authorization: 'Bearer token'}
         }));
-        delayServerRespond();
-        const result = await loadTileJson(options, requestManager, new AbortController());
+        const promise = loadTileJson(options, requestManager, new AbortController());
+        await sleep(0);
+        server.respond();
+        const result = await promise;
 
         expect(result).toEqual(mockTileJSON);
         expect(server.requests[0].url).toBe('http://example.com/test.json');
@@ -106,7 +104,8 @@ describe('loadTileJson', () => {
         });
 
         const promise = loadTileJson(options, requestManager, new AbortController());
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
         const result = await promise;
 
         expect(result).toEqual({
@@ -139,7 +138,8 @@ describe('loadTileJson', () => {
         });
 
         const promise = loadTileJson(options, requestManager, new AbortController());
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
         const result: any = await promise;
 
         expect(result.someData1).toBeUndefined();
@@ -168,7 +168,8 @@ describe('loadTileJson', () => {
         });
 
         const promise = loadTileJson(options, requestManager, new AbortController());
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
         const result = await promise;
 
         expect(result.vectorLayerIds).toEqual(['layer1', 'layer2']);
@@ -196,9 +197,9 @@ describe('loadTileJson', () => {
 
         const abortController = new AbortController();
         const promise = loadTileJson(options, requestManager, abortController);
-        await sleep(0); // to resolve pending transformRequest
+        await sleep(0);
         abortController.abort();
-        delayServerRespond();
+        server.respond();
 
         await expect(promise).rejects.toThrow(expect.objectContaining({name: ABORT_ERROR}));
     });
@@ -214,7 +215,8 @@ describe('loadTileJson', () => {
         });
 
         const promise = loadTileJson(options, requestManager, new AbortController());
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
 
         await expect(promise).rejects.toThrow('AJAXError: Not Found (404): http://example.com/test.json');
     });

@@ -4,7 +4,7 @@ import path from 'path';
 import {RequestManager} from '../util/request_manager';
 import {loadGlyphRange} from './load_glyph_range';
 import {fakeServer} from 'nise';
-import {bufferToArrayBuffer} from '../util/test/util';
+import {bufferToArrayBuffer, sleep} from '../util/test/util';
 
 test('loadGlyphRange', async ()  => {
     global.fetch = null;
@@ -19,10 +19,8 @@ test('loadGlyphRange', async ()  => {
     server.respondWith(bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/0-255.pbf'))));
 
     const promise = loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager);
-    setTimeout(() => {
-        // delay server.respond so that it happens after the glyph range request is made, otherwise, the subsequent await blocks indefinitely
-        server.respond();
-    });
+    await sleep(0);
+    server.respond();
     const result = await promise;
 
     expect(transform).toHaveBeenCalledTimes(1);
@@ -54,11 +52,10 @@ test('loadGlyphRange with async transformRequest', async () => {
     const server = fakeServer.create();
     server.respondWith(bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/0-255.pbf'))));
 
-    setTimeout(() => {
-        // delay server.respond so that it happens after the glyph range request is made, otherwise, the subsequent await blocks indefinitely
-        server.respond();
-    });
-    const result = await loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager);
+    const promise = loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager);
+    await sleep(0);
+    server.respond();
+    const result = await promise;
 
     expect(Object.keys(result)).toHaveLength(223);
     for (const key in result) {

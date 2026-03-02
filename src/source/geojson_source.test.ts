@@ -158,7 +158,7 @@ describe('GeoJSONSource.setData', () => {
             });
         };
         source.setData('http://localhost/nonexistent');
-        await sleep(0); // to resolve pending `await`s
+        await sleep(0);
         expect(spy).toHaveBeenCalled();
     });
 
@@ -302,7 +302,7 @@ describe('GeoJSONSource.update', () => {
             buffer: 16,
             generateId: true
         } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
-        await sleep(0); // to resolve pending `await`s
+        await sleep(0);
         expect(spy).toHaveBeenCalled();
     });
 
@@ -324,7 +324,7 @@ describe('GeoJSONSource.update', () => {
             generateId: true
         } as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.load();
-        await sleep(0); // to resolve pending `await`s
+        await sleep(0);
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
         expect(spy.mock.calls[0][0].data.superclusterOptions).toEqual({
@@ -363,7 +363,7 @@ describe('GeoJSONSource.update', () => {
         spy.mockClear();
 
         source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
-        await sleep(0); // to resolve pending `await`s
+        await sleep(0);
 
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
@@ -392,7 +392,7 @@ describe('GeoJSONSource.update', () => {
 
         // Wait for initial data to be loaded
         source.load();
-        await sleep(0); // to resolve all the pending `await`s
+        await sleep(0);
 
         spy.mockClear();
 
@@ -405,7 +405,7 @@ describe('GeoJSONSource.update', () => {
         source.setData(sourceData2);
         source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
 
-        await sleep(0); // to resolve all the pending `await`s
+        await sleep(0);
 
         expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
@@ -462,7 +462,7 @@ describe('GeoJSONSource.update', () => {
         source.updateData(diff);
         source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
 
-        await sleep(0); // to resolve all the pending `await`s
+        await sleep(0);
 
         expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[0][0].data.cluster).toBe(false);
@@ -492,7 +492,7 @@ describe('GeoJSONSource.update', () => {
             generateId: true
         } as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.load();
-        await sleep(0); // to resolve pending `await`s
+        await sleep(0);
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
         expect(spy.mock.calls[0][0].data.superclusterOptions).toEqual({

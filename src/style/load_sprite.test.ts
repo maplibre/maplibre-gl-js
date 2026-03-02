@@ -43,11 +43,6 @@ describe('normalizeSpriteURL', () => {
 describe('loadSprite', () => {
 
     let server: FakeServer;
-    // delay server.respond so that it happens after the pending request is made
-    // this works around a microtask delay introduced by unconditionally awaiting the transformRequest result
-    const delayServerRespond = () => {
-        setTimeout(() => server.respond());
-    };
 
     beforeEach(() => {
         vi.spyOn(util, 'arrayBufferToImageBitmap').mockImplementation(async (_data: ArrayBuffer) => {
@@ -74,7 +69,8 @@ describe('loadSprite', () => {
 
         const promise = loadSprite('http://localhost:9966/test/unit/assets/sprite1', manager, 1, new AbortController());
 
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
 
         const result = await promise;
 
@@ -103,8 +99,10 @@ describe('loadSprite', () => {
         server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1.json', fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json')).toString());
         server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1.png', bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.png'))));
 
-        delayServerRespond();
-        const result = await loadSprite('http://localhost:9966/test/unit/assets/sprite1', manager, 1, new AbortController());
+        const promise = loadSprite('http://localhost:9966/test/unit/assets/sprite1', manager, 1, new AbortController());
+        await sleep(0);
+        server.respond();
+        const result = await promise;
 
         expect(Object.keys(result)).toHaveLength(1);
         expect(Object.keys(result)[0]).toBe('default');
@@ -134,7 +132,8 @@ describe('loadSprite', () => {
 
         const promise = loadSprite([{id: 'sprite1', url: 'http://localhost:9966/test/unit/assets/sprite1'}, {id: 'sprite2', url: 'http://localhost:9966/test/unit/assets/sprite2'}], manager, 1, new AbortController());
 
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
 
         const result = await promise;
         expect(transform).toHaveBeenCalledTimes(4);
@@ -174,8 +173,10 @@ describe('loadSprite', () => {
         server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite2.json', fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite2.json')).toString());
         server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite2.png', bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite2.png'))));
 
-        delayServerRespond();
-        const result = await loadSprite([{id: 'sprite1', url: 'http://localhost:9966/test/unit/assets/sprite1'}, {id: 'sprite2', url: 'http://localhost:9966/test/unit/assets/sprite2'}], manager, 1, new AbortController());
+        const promise = loadSprite([{id: 'sprite1', url: 'http://localhost:9966/test/unit/assets/sprite1'}, {id: 'sprite2', url: 'http://localhost:9966/test/unit/assets/sprite2'}], manager, 1, new AbortController());
+        await sleep(0);
+        server.respond();
+        const result = await promise;
 
         expect(Object.keys(result)).toHaveLength(2);
         expect(Object.keys(result)[0]).toBe('sprite1');
@@ -210,7 +211,8 @@ describe('loadSprite', () => {
 
         server.respondWith((xhr) => xhr.respond(500));
         const promise = loadSprite([{id: 'sprite1', url: 'http://localhost:9966/test/unit/assets/sprite1'}], manager, 1, new AbortController());
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
 
         await expect(promise).rejects.toThrow(/AJAXError.*500.*/);
         expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
@@ -228,7 +230,7 @@ describe('loadSprite', () => {
 
         const abortController = new AbortController();
         const promise = loadSprite([{id: 'sprite1', url: 'http://localhost:9966/test/unit/assets/sprite1'}], manager, 1, abortController);
-        await sleep(0); // to resolve pending transformRequest
+        await sleep(0);
         abortController.abort();
 
         expect((server.requests[0] as any).aborted).toBeTruthy();
@@ -251,7 +253,8 @@ describe('loadSprite', () => {
         server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1@2x.png', bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.png'))));
 
         const promise = loadSprite('http://localhost:9966/test/unit/assets/sprite1', manager, 2, new AbortController());
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
 
         const result = await promise;
         expect(transform).toHaveBeenCalledTimes(2);

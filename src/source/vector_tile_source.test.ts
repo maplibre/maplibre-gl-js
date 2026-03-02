@@ -39,11 +39,6 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
 
 describe('VectorTileSource', () => {
     let server: FakeServer;
-    // delay server.respond so that it happens after the pending request is made
-    // this works around a microtask delay introduced by unconditionally awaiting the transformRequest result
-    const delayServerRespond = () => {
-        setTimeout(() => server.respond());
-    };
     beforeEach(() => {
         global.fetch = null;
         server = fakeServer.create();
@@ -74,7 +69,8 @@ describe('VectorTileSource', () => {
         const source = createSource({url: '/source.json'});
 
         const promise = waitForMetadataEvent(source);
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
 
         await promise;
         expect(source.tiles).toEqual(['http://example.com/{z}/{x}/{y}.png']);
@@ -90,7 +86,7 @@ describe('VectorTileSource', () => {
         });
 
         createSource({url: '/source.json'}, transformSpy);
-        delayServerRespond();
+        server.respond();
         expect(transformSpy).toHaveBeenCalledWith('/source.json', 'Source');
     });
 
@@ -100,7 +96,8 @@ describe('VectorTileSource', () => {
             url,
             headers: {Authorization: 'Bearer token'}
         }));
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
         await waitForMetadataEvent(source);
         expect(server.requests[0].url).toBe('/source.json');
         expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
@@ -110,7 +107,8 @@ describe('VectorTileSource', () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         const source = createSource({url: '/source.json'});
         const dataEvent = waitForEvent(source, 'data', (e) => e.sourceDataType === 'content');
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
         await expect(dataEvent).resolves.toBeDefined();
     });
 
@@ -123,7 +121,8 @@ describe('VectorTileSource', () => {
         });
         const source = createSource({url: '/source.json', eventedParent: evented});
         const promise = waitForMetadataEvent(source);
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
 
         await promise;
         expect(dataloadingFired).toBeTruthy();
@@ -134,7 +133,8 @@ describe('VectorTileSource', () => {
 
         const source = createSource({url: '/source.json'});
         const errorEvent = waitForEvent(source, 'error', (e) => e.error.status === 404);
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
 
         await expect(errorEvent).resolves.toBeDefined();
         expect(source.loaded()).toBe(true);
@@ -205,7 +205,8 @@ describe('VectorTileSource', () => {
         const source = createSource({url: '/source.json'});
         const transformSpy = vi.spyOn(source.map._requestManager, 'transformRequest');
         const promise = waitForMetadataEvent(source);
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
         await promise;
 
         const tile = {
@@ -259,7 +260,8 @@ describe('VectorTileSource', () => {
             }
         });
         const promise = waitForMetadataEvent(source);
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
         await promise;
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
@@ -281,7 +283,8 @@ describe('VectorTileSource', () => {
             }
         });
         const promise = waitForMetadataEvent(source);
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
         await promise;
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
@@ -304,7 +307,8 @@ describe('VectorTileSource', () => {
         });
 
         const promise = waitForMetadataEvent(source);
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
         await promise;
 
         const tile = {
@@ -385,7 +389,8 @@ describe('VectorTileSource', () => {
         const source = createSource({url: '/source.json'});
 
         const promise = waitForMetadataEvent(source);
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
 
         await promise;
         expect(source.hasTile(new OverscaledTileID(8, 0, 8, 96, 132))).toBeFalsy();
@@ -423,7 +428,7 @@ describe('VectorTileSource', () => {
 
     test('cancels TileJSON request if removed', async () => {
         const source = createSource({url: '/source.json'});
-        await sleep(0); // to resolve pending transformRequest
+        await sleep(0);
         source.onRemove();
         expect((server.lastRequest as any).aborted).toBe(true);
     });
@@ -439,12 +444,13 @@ describe('VectorTileSource', () => {
         const source = createSource({
             url: 'http://localhost:2900/source.json'
         });
-        await sleep(0); // to resolve pending transformRequest
+        await sleep(0);
         const errorHandler = vi.fn();
         source.on('error', errorHandler);
         source.setUrl('http://localhost:2900/source2.json');
 
-        delayServerRespond();
+        await sleep(0);
+        server.respond();
 
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
