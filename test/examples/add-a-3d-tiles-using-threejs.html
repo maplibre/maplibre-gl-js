@@ -42,7 +42,7 @@
         canvasContextAttributes: {antialias: true}
     });
 
-    // 笛卡尔转经纬度
+    // Convert Cartesian coordinates to latitude and longitude
     function ecefToLngLatAlt(x, y, z) {
         const a = 6378137.0;
         const e2 = 6.69437999014e-3;
@@ -64,11 +64,11 @@
     };
 
     /**
-     * 加载3D模型
-     * @param {string} url 模型地址
-     * @param {number} altOffset 模型偏移高度（设置合适值贴合地面）
+     * Load 3D model
+     * @param {string} url Model URL
+     * @param {number} altOffset Model altitude offset (set appropriate value to align with the ground)
      */
-    async function load3Dtiles(url, altOffset = 0) {
+    function load3Dtiles(url, altOffset = 0) {
         let localTransform;
 
         function getModelTransform(coord, rotate= [Math.PI / 2, 0, 0]) {
@@ -102,8 +102,8 @@
                 .multiply(rotationZ);
         }
 
-        // 初始化tiles
-        async function initTiles(url, sceneInst, cameraInst, rendererInst) {
+        // Initialize tiles
+        function initTiles(url, sceneInst, cameraInst, rendererInst) {
             const gltfLoader = new GLTFLoader();
             const dracoLoader = new DRACOLoader();
             dracoLoader.setDecoderPath("https://unpkg.com/three@0.183.0/examples/jsm/libs/draco/");
@@ -127,7 +127,7 @@
             tiles.lruCache.maxBytesSize = 4 * 2 ** 30;
 
             let loadedTileSetHandled = false;
-            // 调整模型矩阵
+            // Adjust model matrix
             const loadTileSet = () => {
                 if (loadedTileSetHandled) {
                     tiles?.removeEventListener("load-tileset", loadTileSet);
@@ -142,11 +142,11 @@
 
                 console.log('tiles',tiles)
                 let m = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-                // 获取矩阵
+                // Get matrix
                 if (root.transform) {
                     m = root.transform;
                 } else {
-                    console.warn("tileset不存在transform矩阵，使用默认矩阵");
+                    console.warn("tileset does not have a transform matrix, using default matrix");
                 }
                 loadedTileSetHandled = true;
 
@@ -154,17 +154,11 @@
                 map.jumpTo({ center: [lng, lat], zoom: 18, pitch: 60 });
                 updateLocalTransform([lng, lat, alt + altOffset]);
 
-                // const rotationMat3 = new THREE.Matrix3().set(m[0], m[1], m[2], m[8], m[9], m[10], -m[4], -m[5], -m[6]); // 原模型是基于z轴向上的坐标系（倾斜摄影），使用该矩阵变换
-                const rotationMat3 = new THREE.Matrix3().set(-m[0], -m[1], -m[2], -m[4], -m[5], -m[6], -m[8], -m[9], -m[10]); // 原模型是基于y轴向上的坐标系（与three.js一致），使用该矩阵变换
+                // const rotationMat3 = new THREE.Matrix3().set(m[0], m[1], m[2], m[8], m[9], m[10], -m[4], -m[5], -m[6]); // The original model is based on a Z-up coordinate system (oblique photography), apply this matrix transformation
+                const rotationMat3 = new THREE.Matrix3().set(-m[0], -m[1], -m[2], -m[4], -m[5], -m[6], -m[8], -m[9], -m[10]); // The original model is based on a Y-up coordinate system (consistent with three.js), apply this matrix transformation
                 const rotationMat4 = new THREE.Matrix4().setFromMatrix3(rotationMat3);
-
-                const translationMatrix1 = new THREE.Matrix4().makeTranslation(center.x, center.y, center.z);
-                const translationMatrix2 = new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z);
-                const scaleMatrix = new THREE.Matrix4().makeScale(scale, scale, scale);
-                let finalMatrix = new THREE.Matrix4().multiplyMatrices(translationMatrix1, scaleMatrix.clone().multiply(rotationMat4)).multiply(translationMatrix2);
-
                 const moveToOrigin = new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z);
-                finalMatrix = moveToOrigin.multiply(finalMatrix);
+                const finalMatrix = new THREE.Matrix4().multiplyMatrices(rotationMat4, moveToOrigin);
 
                 tiles.group.matrix.copy(finalMatrix);
                 tiles.group.matrixAutoUpdate = false;
@@ -172,7 +166,7 @@
             };
             tiles.addEventListener("load-tileset", loadTileSet);
 
-            // 更新矩阵
+            // Update matrix
             updateLocalTransform();
         }
 
@@ -180,7 +174,7 @@
             id: "3d-tiles",
             type: "custom" ,
             renderingMode: "3d" ,
-            async onAdd(mapArg, gl) {
+            onAdd(mapArg, gl) {
                 camera = new THREE.PerspectiveCamera() ;
                 scene = new THREE.Scene();
 
@@ -195,13 +189,10 @@
                 });
                 renderer.autoClear = false;
 
-                // 初始化 3dtiles
-                initTiles(url, scene, camera, renderer).catch((e) => {
-                    console.error("initTiles error:", e);
-                });
+                initTiles(url, scene, camera, renderer)
             },
             render(_gl, args) {
-                // 更新相机矩阵并渲染
+                // Update camera matrix and render
                 if (!camera || !renderer || !scene || !localTransform) return;
                 camera.projectionMatrix.fromArray(args.defaultProjectionData.mainMatrix);
                 camera.projectionMatrix.multiply(localTransform);
@@ -218,7 +209,7 @@
         });
     };
 
-    await load3Dtiles("https://maplibre.org/maplibre-gl-js/docs/assets/obj2tiles/tileset.json", -150);
+    load3Dtiles("https://maplibre.org/maplibre-gl-js/docs/assets/obj2tiles/tileset.json", -155);
 </script>
 </body>
 </html>
