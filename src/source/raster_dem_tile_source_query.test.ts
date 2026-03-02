@@ -76,7 +76,7 @@ function createMockSource(options: {
     }
 
     const tileManager = {
-        findTileByKey: (key: string) => tilesByKey.get(key)
+        getAnyTileByID: (key: string) => tilesByKey.get(key)
     };
 
     source.map = {

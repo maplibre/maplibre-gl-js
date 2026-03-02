@@ -275,11 +275,11 @@ export class TerrainTileManager extends Evented {
         // cache for tileID to terrain-tileID
         if (!this._sourceTileCache[tileID.key])
             this._sourceTileCache[tileID.key] = tileID.scaledTo(z).key;
-        let tile = this.tileManager.findTileByKey(this._sourceTileCache[tileID.key]);
+        let tile = this.tileManager.getAnyTileByID(this._sourceTileCache[tileID.key]);
         // during tile-loading phase look if parent tiles (with loaded dem) are available.
         if (!tile?.dem && searchForDEM) {
             while (z >= source.minzoom && !tile?.dem)
-                tile = this.tileManager.findTileByKey(tileID.scaledTo(z--).key);
+                tile = this.tileManager.getAnyTileByID(tileID.scaledTo(z--).key);
         }
         return tile;
     }

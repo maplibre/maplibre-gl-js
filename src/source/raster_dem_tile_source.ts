@@ -246,7 +246,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
                 // For raster-dem sources, overscaledZ always equals canonical z
                 const key = calculateTileKey(0, z, z, tileX, tileY);
-                const tile = tileManager.findTileByKey(key);
+                const tile = tileManager.getAnyTileByID(key);
                 if (!tile?.dem) continue;
 
                 const fx = mx * tileCount - tileX;
