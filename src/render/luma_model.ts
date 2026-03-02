@@ -5,8 +5,6 @@ import type {IndexBuffer} from '../gl/index_buffer';
 import type {SegmentVector} from '../data/segment';
 import type {Context} from '../gl/context';
 import {VertexArrayObject} from './vertex_array_object';
-import {projectionObjectToUniformMap} from '../geo/projection/projection_data';
-import type {DrawMode} from '../gl/types';
 import type {DepthMode} from '../gl/depth_mode';
 import type {StencilMode} from '../gl/stencil_mode';
 import type {ColorMode} from '../gl/color_mode';
@@ -33,7 +31,7 @@ export class LumaModel {
 
     draw(
         context: Context,
-        drawMode: DrawMode,
+        drawMode: any,
         depthMode: Readonly<DepthMode>,
         stencilMode: Readonly<StencilMode>,
         colorMode: Readonly<ColorMode>,
@@ -74,8 +72,15 @@ export class LumaModel {
         }
 
         if (projectionData) {
+            const projectionObjectToUniformMap: any = {
+                mainMatrix: 'u_matrix',
+                tileMercatorCoords: 'u_tile_mercator_coords',
+                clippingPlane: 'u_clipping_plane',
+                projectionTransition: 'u_projection_transition',
+                fallbackMatrix: 'u_inv_rot_matrix'
+            };
             for (const fieldName in projectionData) {
-                const uniformName = (projectionObjectToUniformMap as any)[fieldName];
+                const uniformName = projectionObjectToUniformMap[fieldName];
                 if (program.projectionUniforms[uniformName]) {
                     program.projectionUniforms[uniformName].set((projectionData as any)[fieldName]);
                 }

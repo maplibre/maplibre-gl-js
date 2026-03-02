@@ -264,7 +264,15 @@ export class Painter {
         };
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.
-        this.useProgram('clippingMask', null, true).draw(context, gl.TRIANGLES,
+        const program = this.useProgram('clippingMask', null, true);
+        const lumaModel = new LumaModel(
+            this.device,
+            program,
+            this.viewportBuffer,
+            this.quadTriangleIndexBuffer,
+            this.viewportSegments
+        );
+        lumaModel.draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
             null, null, projectionData,
             '$clipping', this.viewportBuffer,

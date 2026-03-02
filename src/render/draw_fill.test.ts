@@ -19,6 +19,7 @@ import type {ProjectionData} from '../geo/projection/projection_data';
 
 vi.mock('./painter');
 vi.mock('./program');
+vi.mock('./luma_model');
 vi.mock('../tile/tile_manager');
 vi.mock('../tile/tile');
 
@@ -30,7 +31,7 @@ vi.mock('../data/bucket/symbol_bucket', () => {
 vi.mock('../symbol/projection');
 
 describe('drawFill', () => {
-    test('should call programConfiguration.setConstantPatternPositions for transitioning fill-pattern', () => {
+    test('should call programConfiguration.setConstantPatternPositions for transitioning fill-pattern', async () => {
 
         const painterMock: Painter = constructMockPainter();
         const layer: FillStyleLayer = constructMockLayer();
@@ -48,7 +49,8 @@ describe('drawFill', () => {
         drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], renderOptions);
 
         // twice: first for fill, second for stroke
-        expect(programMock.draw).toHaveBeenCalledTimes(2);
+        const {LumaModel} = await import('./luma_model');
+        expect(LumaModel.prototype.draw).toHaveBeenCalledTimes(2);
 
         const bucket: FillBucket = (mockTile.getBucket(layer) as any);
         const programConfiguration = bucket.programConfigurations.get(layer.id);
@@ -82,7 +84,7 @@ describe('drawFill', () => {
     }
 
     function constructMockPainter(): Painter {
-        const painterMock = new Painter(null as any, null as any);
+        const painterMock = new Painter(null as any, null as any, null as any);
         painterMock.context = {
             gl: {},
             activeTexture: {

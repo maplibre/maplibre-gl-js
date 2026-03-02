@@ -19,8 +19,9 @@ import {MercatorProjection} from '../geo/projection/mercator_projection';
 import type {ProjectionData} from '../geo/projection/projection_data';
 
 vi.mock('./painter');
+vi.mock('./painter');
 vi.mock('./program');
-vi.mock('../tile/tile_manager');
+vi.mock('./luma_model');
 vi.mock('../tile/tile');
 vi.mock('../data/bucket/symbol_bucket', () => {
     return {
@@ -52,7 +53,7 @@ function createMockTransform() {
 
 describe('drawSymbol', () => {
     test('should not do anything', () => {
-        const mockPainter = new Painter(null, null);
+        const mockPainter = new Painter(null, null, null);
         mockPainter.renderPass = 'opaque';
 
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
@@ -61,8 +62,8 @@ describe('drawSymbol', () => {
         expect(mockPainter.colorModeForRenderPass).not.toHaveBeenCalled();
     });
 
-    test('should call program.draw', () => {
-        const painterMock = new Painter(null, null);
+    test('should call program.draw', async () => {
+        const painterMock = new Painter(null, null, null);
         painterMock.context = {
             gl: {},
             activeTexture: {
@@ -120,12 +121,13 @@ describe('drawSymbol', () => {
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         drawSymbols(painterMock, tileManagerMock, layer, [tileId], null, renderOptions);
 
-        expect(programMock.draw).toHaveBeenCalledTimes(1);
+        const {LumaModel} = await import('./luma_model');
+        expect(LumaModel.prototype.draw).toHaveBeenCalledTimes(1);
     });
 
     test('should call updateLineLabels with rotateToLine === false if text-rotation-alignment is viewport-glyph', () => {
 
-        const painterMock = new Painter(null, null);
+        const painterMock = new Painter(null, null, null);
         painterMock.context = {
             gl: {},
             activeTexture: {
@@ -191,9 +193,9 @@ describe('drawSymbol', () => {
         expect(spy.mock.calls[0][7]).toBeFalsy(); // rotateToLine === false
     });
 
-    test('transparent tile optimization should prevent program.draw from being called', () => {
+    test('transparent tile optimization should prevent program.draw from being called', async () => {
 
-        const painterMock = new Painter(null, null);
+        const painterMock = new Painter(null, null, null);
         painterMock.context = {
             gl: {},
             activeTexture: {
@@ -250,6 +252,7 @@ describe('drawSymbol', () => {
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
         drawSymbols(painterMock, tileManagerMock, layer, [tileId], null, renderOptions);
 
-        expect(programMock.draw).toHaveBeenCalledTimes(0);
+        const {LumaModel} = await import('./luma_model');
+        expect(LumaModel.prototype.draw).toHaveBeenCalledTimes(0);
     });
 });

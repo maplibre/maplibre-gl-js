@@ -3465,7 +3465,7 @@ export class Map extends Camera {
             }
         }
 
-        const device = WebGLDevice.attach(gl);
+        const device = new WebGLDevice({_handle: gl});
 
         this.painter = new Painter(gl, device, this.transform);
 
