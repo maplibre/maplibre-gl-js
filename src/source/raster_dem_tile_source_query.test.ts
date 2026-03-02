@@ -158,47 +158,6 @@ describe('RasterDEMTileSource#queryElevations', () => {
         expect(results[0].tileZoom).toBe(2);
     });
 
-    test('respects minzoom option to skip low-res tiles', () => {
-        const demZ0 = createUniformDEM(4, 50);
-        const demZ2 = createUniformDEM(4, 200);
-
-        const source = createMockSource({
-            tiles: [
-                {z: 0, x: 0, y: 0, dem: demZ0},
-                {z: 2, x: 0, y: 0, dem: demZ2}
-            ],
-            maxzoom: 5
-        });
-
-        // With minzoom: 2, should find the z2 tile
-        const results = source.queryElevations([[-135, 80]], 2);
-        expect(results[0]).not.toBeNull();
-        expect(results[0].tileZoom).toBe(2);
-
-        // With minzoom: 3, neither z0 nor z2 qualifies → null
-        const results2 = source.queryElevations([[-135, 80]], 3);
-        expect(results2[0]).toBeNull();
-    });
-
-    test('respects maxzoom option to limit resolution', () => {
-        const demZ0 = createUniformDEM(4, 50);
-        const demZ2 = createUniformDEM(4, 200);
-
-        const source = createMockSource({
-            tiles: [
-                {z: 0, x: 0, y: 0, dem: demZ0},
-                {z: 2, x: 0, y: 0, dem: demZ2}
-            ],
-            maxzoom: 5
-        });
-
-        // With maxzoom: 1, should skip z2 and fall back to z0
-        const results = source.queryElevations([[-135, 80]], undefined, 1);
-        expect(results[0]).not.toBeNull();
-        expect(results[0].elevation).toBeCloseTo(50, 0);
-        expect(results[0].tileZoom).toBe(0);
-    });
-
     test('falls back to lower-zoom tile when higher zoom not loaded', () => {
         const demZ0 = createUniformDEM(4, 100);
 

@@ -192,23 +192,14 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
      *
      * Returns `null` for coordinates where no DEM tile is currently loaded.
      *
-     * Tiles are not evicted during a single call, so it is safe to batch-process
-     * a large number of coordinates (e.g. a full GPX track) in one call.
-     *
      * @param lnglats - Array of geographic coordinates to query.
-     * @param minzoom - Minimum zoom to consider (default: source minzoom). Tiles below this are skipped.
-     * @param maxzoom - Maximum zoom to consider (default: source maxzoom). Search starts here.
      * @returns Array of elevation results (or `null` where no data is available),
      *   in the same order as the input coordinates.
      *
      * @example
      * ```ts
      * const demSource = map.getSource('terrain-dem') as RasterDEMTileSource;
-     * // Query with minimum zoom 12 to avoid low-resolution data
-     * const results = demSource.queryElevations(
-     *     [[7.0, 45.0], [7.1, 45.1]],
-     *     12 // minzoom
-     * );
+     * const results = demSource.queryElevations([[7.0, 45.0], [7.1, 45.1]]);
      * const missing = results.filter(r => r === null).length;
      * if (missing > 0) console.log(`${missing} points have no loaded tile`);
      * results.forEach((r, i) => {
@@ -217,9 +208,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
      * ```
      */
     queryElevations(
-        lnglats: LngLatLike[],
-        minzoom?: number,
-        maxzoom?: number
+        lnglats: LngLatLike[]
     ): (ElevationQueryResult | null)[] {
         if (!this.map) {
             throw new Error('Source is not added to a map');
@@ -230,16 +219,13 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
             throw new Error(`No tile manager found for source "${this.id}"`);
         }
 
-        const maxZ = Math.min(maxzoom ?? this.maxzoom, this.maxzoom);
-        const minZ = Math.max(minzoom ?? this.minzoom, this.minzoom);
-
         return lnglats.map(ll => {
             const lnglat = LngLat.convert(ll).wrap();
             const mercator = MercatorCoordinate.fromLngLat(lnglat);
             const mx = Math.max(0, Math.min(1 - 1e-15, mercator.x));
             const my = Math.max(0, Math.min(1 - 1e-15, mercator.y));
 
-            for (let z = maxZ; z >= minZ; z--) {
+            for (let z = this.maxzoom; z >= this.minzoom; z--) {
                 const tileCount = 1 << z;
                 const tileX = Math.min(Math.floor(mx * tileCount), tileCount - 1);
                 const tileY = Math.min(Math.floor(my * tileCount), tileCount - 1);
