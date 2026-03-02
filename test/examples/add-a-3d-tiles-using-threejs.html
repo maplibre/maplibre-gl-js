@@ -39,6 +39,7 @@
         zoom: 1,
         center: [0, 0],
         pitch: 60,
+        maxPitch: 80,
         canvasContextAttributes: {antialias: true}
     });
 
@@ -154,8 +155,8 @@
                 map.jumpTo({ center: [lng, lat], zoom: 18, pitch: 60 });
                 updateLocalTransform([lng, lat, alt + altOffset]);
 
-                // const rotationMat3 = new THREE.Matrix3().set(m[0], m[1], m[2], m[8], m[9], m[10], -m[4], -m[5], -m[6]); // The original model is based on a Z-up coordinate system (oblique photography), apply this matrix transformation
-                const rotationMat3 = new THREE.Matrix3().set(-m[0], -m[1], -m[2], -m[4], -m[5], -m[6], -m[8], -m[9], -m[10]); // The original model is based on a Y-up coordinate system (consistent with three.js), apply this matrix transformation
+                const rotationMat3 = new THREE.Matrix3().set(m[0], m[1], m[2], m[8], m[9], m[10], -m[4], -m[5], -m[6]); // The original model is based on a Z-up coordinate system (oblique photography), apply this matrix transformation
+                // const rotationMat3 = new THREE.Matrix3().set(-m[0], -m[1], -m[2], -m[4], -m[5], -m[6], -m[8], -m[9], -m[10]); // The original model is based on a Y-up coordinate system (consistent with three.js), apply this matrix transformation
                 const rotationMat4 = new THREE.Matrix4().setFromMatrix3(rotationMat3);
                 const moveToOrigin = new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z);
                 const finalMatrix = new THREE.Matrix4().multiplyMatrices(rotationMat4, moveToOrigin);
@@ -209,7 +210,7 @@
         });
     };
 
-    load3Dtiles("https://maplibre.org/maplibre-gl-js/docs/assets/obj2tiles/tileset.json", -155);
+    load3Dtiles("https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json", -300);
 </script>
 </body>
 </html>
