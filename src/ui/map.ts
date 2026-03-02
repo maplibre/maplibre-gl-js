@@ -2156,13 +2156,14 @@ export class Map extends Camera {
         if (typeof style === 'string') {
             const url = style;
             const request = await this._requestManager.transformRequest(url, ResourceType.Style);
-            getJSON<StyleSpecification>(request, new AbortController()).then((response) => {
+            try {
+                const response = await getJSON<StyleSpecification>(request, new AbortController());
                 this._updateDiff(response.data, options);
-            }).catch((error) => {
+            } catch (error) {
                 if (error) {
                     this.fire(new ErrorEvent(error));
                 }
-            });
+            }
         } else if (typeof style === 'object') {
             this._updateDiff(style, options);
         }
