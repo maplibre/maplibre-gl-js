@@ -36,6 +36,7 @@ import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
 import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id';
+import {WebGLDevice} from '@luma.gl/webgl';
 
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
@@ -73,7 +74,7 @@ import type {ICameraHelper} from '../geo/projection/camera_helper';
 const version = packageJSON.version;
 
 export type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined;
-export type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
+export type WebGLContextAttributesWithType = WebGLContextAttributes & { contextType?: WebGLSupportedVersions };
 
 /**
  * The {@link Map} options object.
@@ -424,14 +425,14 @@ export type CompleteMapOptions = Complete<MapOptions>;
 type DelegatedListener = {
     layers: string[];
     listener: Listener;
-    delegates: {[E in keyof MapEventType]?: Delegate<MapEventType[E]>};
+    delegates: { [E in keyof MapEventType]?: Delegate<MapEventType[E]> };
 };
 
 type Delegate<E extends Event = Event> = (e: E) => void;
 
 type LostContextStyle = {
     style: StyleSpecification | null;
-    images: {[_: string]: StyleImage} | null;
+    images: { [_: string]: StyleImage } | null;
 };
 
 const defaultMinZoom = -2;
@@ -690,10 +691,12 @@ export class Map extends Camera {
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
-        const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
-            ...defaultOptions.canvasContextAttributes,
-            ...options.canvasContextAttributes
-        }} as CompleteMapOptions;
+        const resolvedOptions = {
+            ...defaultOptions, ...options, canvasContextAttributes: {
+                ...defaultOptions.canvasContextAttributes,
+                ...options.canvasContextAttributes
+            }
+        } as CompleteMapOptions;
 
         if (resolvedOptions.minZoom != null && resolvedOptions.maxZoom != null && resolvedOptions.minZoom > resolvedOptions.maxZoom) {
             throw new Error('maxZoom must be greater than or equal to minZoom');
@@ -2457,10 +2460,10 @@ export class Map extends Camera {
      * @see [Modify Level of Detail behavior](https://maplibre.org/maplibre-gl-js/docs/examples/level-of-detail-control/)
 
      */
-    setSourceTileLodParams(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number, sourceId?: string) : this {
+    setSourceTileLodParams(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number, sourceId?: string): this {
         if (sourceId) {
             const source = this.getSource(sourceId);
-            if(!source) {
+            if (!source) {
                 throw new Error(`There is no source with ID "${sourceId}", cannot set LOD parameters`);
             }
             source.calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
@@ -2483,15 +2486,15 @@ export class Map extends Camera {
      * map.refreshTiles('satellite', [{x:1024, y: 1023, z: 11}, {x:1023, y: 1023, z: 11}]);
      * ```
      */
-    refreshTiles(sourceId: string, tileIds?: Array<{x: number; y: number; z: number}>) {
+    refreshTiles(sourceId: string, tileIds?: Array<{ x: number; y: number; z: number }>) {
         const tileManager = this.style.tileManagers[sourceId];
-        if(!tileManager) {
+        if (!tileManager) {
             throw new Error(`There is no tile manager with ID "${sourceId}", cannot refresh tile`);
         }
         if (tileIds === undefined) {
             tileManager.reload(true);
         } else {
-            tileManager.refreshTiles(tileIds.map((tileId) => {return new CanonicalTileID(tileId.z, tileId.x, tileId.y);}));
+            tileManager.refreshTiles(tileIds.map((tileId) => { return new CanonicalTileID(tileId.z, tileId.x, tileId.y); }));
         }
     }
 
@@ -3084,7 +3087,7 @@ export class Map extends Camera {
      *
      * @returns style's sprite list of id-url pairs
      */
-    getSprite(): {id: string; url: string}[] {
+    getSprite(): { id: string; url: string }[] {
         return this.style.getSprite();
     }
 
@@ -3462,7 +3465,9 @@ export class Map extends Camera {
             }
         }
 
-        this.painter = new Painter(gl, this.transform);
+        const device = WebGLDevice.attach(gl);
+
+        this.painter = new Painter(gl, device, this.transform);
 
         webpSupported.testSupport(gl);
     }
@@ -3799,13 +3804,13 @@ export class Map extends Camera {
                     this._frameRequest = null;
                     try {
                         this._render(paintStartTimeStamp);
-                    } catch(error) {
+                    } catch (error) {
                         if (!isAbortError(error) && !isFramebufferNotCompleteError(error)) {
                             throw error;
                         }
                     }
                 },
-                () => {},
+                () => { },
                 this._ownerWindow
             );
         }

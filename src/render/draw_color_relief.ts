@@ -6,6 +6,7 @@ import {type ColorMode} from '../gl/color_mode';
 import {
     colorReliefUniformValues
 } from './program/color_relief_program';
+import {LumaModel} from './luma_model';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
@@ -42,7 +43,7 @@ function renderColorRelief(
     tileManager: TileManager,
     layer: ColorReliefStyleLayer,
     coords: Array<OverscaledTileID>,
-    stencilModes: {[_: number]: Readonly<StencilMode>},
+    stencilModes: { [_: number]: Readonly<StencilMode> },
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
     useBorder: boolean,
@@ -61,7 +62,7 @@ function renderColorRelief(
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);
         const dem = tile.dem;
-        if(firstTile) {
+        if (firstTile) {
             const maxLength = gl.getParameter(gl.MAX_TEXTURE_SIZE);
             const {elevationTexture, colorTexture} = layer.getColorRampTextures(context, maxLength, dem.getUnpackVector());
             context.activeTexture.set(gl.TEXTURE1);
@@ -103,7 +104,14 @@ function renderColorRelief(
             applyTerrainMatrix: true
         });
 
-        program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
-            colorReliefUniformValues(layer, tile.dem, colorRampSize), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+        const lumaModel = new LumaModel(
+            painter.device,
+            program,
+            mesh.vertexBuffer,
+            mesh.indexBuffer,
+            mesh.segments
+        );
+        lumaModel.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
+            colorReliefUniformValues(layer, tile.dem, colorRampSize) as any, terrainData as any, projectionData as any, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }

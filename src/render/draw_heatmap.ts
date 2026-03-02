@@ -12,6 +12,7 @@ import {
     heatmapTextureUniformValues
 } from './program/heatmap_program';
 import {HEATMAP_FULL_RENDER_FBO_KEY} from '../style/style_layer/heatmap_style_layer';
+import {LumaModel} from './luma_model';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
@@ -84,9 +85,17 @@ function prepareHeatmapFlat(painter: Painter, tileManager: TileManager, layer: H
 
         const radiusCorrectionFactor = transform.getCircleRadiusCorrection();
 
-        program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.backCCW,
-            heatmapUniformValues(tile, transform.zoom, layer.paint.get('heatmap-intensity'), radiusCorrectionFactor),
-            null, projectionData,
+        const lumaModel = new LumaModel(
+            painter.device,
+            program,
+            bucket.layoutVertexBuffer,
+            bucket.indexBuffer,
+            bucket.segments
+        );
+
+        lumaModel.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.backCCW,
+            heatmapUniformValues(tile, transform.zoom, layer.paint.get('heatmap-intensity'), radiusCorrectionFactor) as any,
+            null, projectionData as any,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
             bucket.segments, layer.paint, transform.zoom,
             programConfiguration);
@@ -113,9 +122,18 @@ function renderHeatmapFlat(painter: Painter, layer: HeatmapStyleLayer) {
     const colorRampTexture = getColorRampTexture(context, layer);
     colorRampTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 
-    painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
+    const textureProgram = painter.useProgram('heatmapTexture');
+    const textureLumaModel = new LumaModel(
+        painter.device,
+        textureProgram,
+        painter.viewportBuffer,
+        painter.quadTriangleIndexBuffer,
+        painter.viewportSegments
+    );
+
+    textureLumaModel.draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
-        heatmapTextureUniformValues(painter, layer, 0, 1), null, null,
+        heatmapTextureUniformValues(painter, layer, 0, 1) as any, null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
         painter.viewportSegments, layer.paint, painter.transform.zoom);
 }
@@ -149,8 +167,16 @@ function prepareHeatmapTerrain(painter: Painter, tile: Tile, layer: HeatmapStyle
     const projectionData = painter.transform.getProjectionData({overscaledTileID: tile.tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
 
     const terrainData = painter.style.map.terrain.getTerrainData(coord);
-    program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
-        heatmapUniformValues(tile, painter.transform.zoom, layer.paint.get('heatmap-intensity'), 1.0), terrainData, projectionData,
+    const lumaModel = new LumaModel(
+        painter.device,
+        program,
+        bucket.layoutVertexBuffer,
+        bucket.indexBuffer,
+        bucket.segments
+    );
+
+    lumaModel.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
+        heatmapUniformValues(tile, painter.transform.zoom, layer.paint.get('heatmap-intensity'), 1.0) as any, terrainData as any, projectionData as any,
         layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
         bucket.segments, layer.paint, painter.transform.zoom,
         programConfiguration);
@@ -180,9 +206,18 @@ function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord:
 
     const projectionData = transform.getProjectionData({overscaledTileID: coord, applyTerrainMatrix: isRenderingGlobe, applyGlobeMatrix: !isRenderingToTexture});
 
-    painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES,
+    const textureProgram = painter.useProgram('heatmapTexture');
+    const textureLumaModel = new LumaModel(
+        painter.device,
+        textureProgram,
+        painter.rasterBoundsBuffer,
+        painter.quadTriangleIndexBuffer,
+        painter.rasterBoundsSegments
+    );
+
+    textureLumaModel.draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
-        heatmapTextureUniformValues(painter, layer, 0, 1), null, projectionData,
+        heatmapTextureUniformValues(painter, layer, 0, 1) as any, null, projectionData as any,
         layer.id, painter.rasterBoundsBuffer, painter.quadTriangleIndexBuffer,
         painter.rasterBoundsSegments, layer.paint, transform.zoom);
 

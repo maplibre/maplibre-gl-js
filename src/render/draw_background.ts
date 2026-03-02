@@ -5,6 +5,7 @@ import {
     backgroundUniformValues,
     backgroundPatternUniformValues
 } from './program/background_program';
+import {LumaModel} from './luma_model';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
@@ -43,7 +44,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     }
 
     const crossfade = layer.getCrossfadeParameters();
-    
+
     for (const tileID of tileIDs) {
         const projectionData = transform.getProjectionData({
             overscaledTileID: tileID,
@@ -66,8 +67,15 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
         // first though, as that doesn't seem to happen for background layers as of writing this.
 
         const mesh = projection.getMeshFromTileID(context, tileID.canonical, false, true, 'raster');
-        program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
-            uniformValues, terrainData, projectionData, layer.id,
+        const lumaModel = new LumaModel(
+            painter.device,
+            program,
+            mesh.vertexBuffer,
+            mesh.indexBuffer,
+            mesh.segments
+        );
+        lumaModel.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
+            uniformValues as any, terrainData as any, projectionData as any, layer.id,
             mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }

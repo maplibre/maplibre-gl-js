@@ -19,6 +19,7 @@ import {
     symbolSDFUniformValues,
     symbolTextAndIconUniformValues
 } from './program/symbol_program';
+import {LumaModel} from './luma_model';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
@@ -129,12 +130,12 @@ function calculateVariableRenderShift(
 
 function updateVariableAnchors(coords: Array<OverscaledTileID>,
     painter: Painter,
-    layer:SymbolStyleLayer, tileManager: TileManager,
+    layer: SymbolStyleLayer, tileManager: TileManager,
     rotationAlignment: SymbolLayerSpecification['layout']['text-rotation-alignment'],
     pitchAlignment: SymbolLayerSpecification['layout']['text-pitch-alignment'],
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
-    variableOffsets: {[_ in CrossTileID]: VariableOffset}) {
+    variableOffsets: { [_ in CrossTileID]: VariableOffset }) {
     const transform = painter.transform;
     const terrain = painter.style.map.terrain;
     const rotateWithMap = rotationAlignment === 'map';
@@ -193,7 +194,7 @@ function updateVariableAnchorsForBucket(
     bucket: SymbolBucket,
     rotateWithMap: boolean,
     pitchWithMap: boolean,
-    variableOffsets: {[_ in CrossTileID]: VariableOffset},
+    variableOffsets: { [_ in CrossTileID]: VariableOffset },
     transform: IReadonlyTransform,
     pitchedLabelPlaneMatrix: mat4,
     tileScale: number,
@@ -217,7 +218,7 @@ function updateVariableAnchorsForBucket(
             // These symbols are from a justification that is not being used, or a label that wasn't placed
             // so we don't need to do the extra math to figure out what incremental shift to apply.
             hideGlyphs(symbol.numGlyphs, dynamicTextLayoutVertexArray);
-        } else  {
+        } else {
             const tileAnchor = new Point(symbol.anchorX, symbol.anchorY);
             const projectionContext: SymbolProjectionContext = {
                 getElevation,
@@ -304,7 +305,7 @@ function drawLayerSymbols(
     pitchAlignment: SymbolLayerSpecification['layout']['text-pitch-alignment'],
     keepUpright: boolean,
     stencilMode: StencilMode,
-    colorMode: Readonly<ColorMode>, 
+    colorMode: Readonly<ColorMode>,
     isRenderingToTexture: boolean) {
 
     const context = painter.context;
@@ -497,8 +498,15 @@ function drawSymbolElements(
     terrainData: TerrainData) {
     const context = painter.context;
     const gl = context.gl;
-    program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
-        uniformValues, terrainData, projectionData, layer.id, buffers.layoutVertexBuffer,
+    const lumaModel = new LumaModel(
+        painter.device,
+        program,
+        buffers.layoutVertexBuffer,
+        buffers.indexBuffer,
+        segments
+    );
+    lumaModel.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
+        uniformValues as any, terrainData as any, projectionData as any, layer.id, buffers.layoutVertexBuffer,
         buffers.indexBuffer, segments, layer.paint,
         painter.transform.zoom, buffers.programConfigurations.get(layer.id),
         buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer);

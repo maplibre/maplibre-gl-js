@@ -9,6 +9,7 @@ import {rasterUniformValues} from './program/raster_program';
 import {EXTENT} from '../data/extent';
 import {FadingDirections} from '../tile/tile';
 import Point from '@mapbox/point-geometry';
+import {LumaModel} from './luma_model';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
@@ -26,7 +27,7 @@ type FadeProperties = {
 type FadeValues = {
     tileOpacity: number;
     parentTileOpacity?: number;
-    fadeMix: {opacity: number; mix: number};
+    fadeMix: { opacity: number; mix: number };
 };
 
 const cornerCoords = [
@@ -77,7 +78,7 @@ function drawTiles(
     tileManager: TileManager,
     layer: RasterStyleLayer,
     coords: Array<OverscaledTileID>,
-    stencilModes: {[_: number]: Readonly<StencilMode>} | null,
+    stencilModes: { [_: number]: Readonly<StencilMode> } | null,
     useBorder: boolean,
     allowPoles: boolean,
     corners: Array<Point>,
@@ -107,7 +108,7 @@ function drawTiles(
             rasterOpacity === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
 
         const tile = tileManager.getTile(coord);
-        const textureFilter = rasterResampling === 'nearest' ?  gl.NEAREST : gl.LINEAR;
+        const textureFilter = rasterResampling === 'nearest' ? gl.NEAREST : gl.LINEAR;
 
         // create and bind first texture
         context.activeTexture.set(gl.TEXTURE0);
@@ -138,8 +139,16 @@ function drawTiles(
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
         const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
 
-        program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, flipCullfaceMode ? CullFaceMode.frontCCW : CullFaceMode.backCCW,
-            uniformValues, terrainData, projectionData, layer.id, mesh.vertexBuffer,
+        const lumaModel = new LumaModel(
+            painter.device,
+            program,
+            mesh.vertexBuffer,
+            mesh.indexBuffer,
+            mesh.segments
+        );
+
+        lumaModel.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, flipCullfaceMode ? CullFaceMode.frontCCW : CullFaceMode.backCCW,
+            uniformValues as any, terrainData as any, projectionData as any, layer.id, mesh.vertexBuffer,
             mesh.indexBuffer, mesh.segments);
     }
 }

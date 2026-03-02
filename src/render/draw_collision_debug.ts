@@ -12,6 +12,7 @@ import {collisionCircleLayout} from '../data/bucket/symbol_attributes';
 import {SegmentVector} from '../data/segment';
 import {type VertexBuffer} from '../gl/vertex_buffer';
 import {type IndexBuffer} from '../gl/index_buffer';
+import {LumaModel} from './luma_model';
 
 type TileBatch = {
     circleArray: Array<number>;
@@ -56,13 +57,20 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             continue;
         }
 
-        program.draw(context, gl.LINES,
+        const lumaModel = new LumaModel(
+            painter.device,
+            program,
+            buffers.layoutVertexBuffer,
+            buffers.indexBuffer,
+            buffers.segments
+        );
+        lumaModel.draw(context, gl.LINES,
             DepthMode.disabled, StencilMode.disabled,
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
-            collisionUniformValues(painter.transform),
-            painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord),
-            transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true}),
+            collisionUniformValues(painter.transform) as any,
+            (painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord)) as any,
+            transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true}) as any,
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
             buffers.collisionVertexBuffer);
@@ -107,21 +115,29 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
     // Render batches
     for (const batch of tileBatches) {
         const uniforms = collisionCircleUniformValues(painter.transform);
+        const segments = SegmentVector.simpleSegment(0, batch.circleOffset * 2, batch.circleArray.length, batch.circleArray.length / 2);
+        const circleLumaModel = new LumaModel(
+            painter.device,
+            circleProgram,
+            vertexBuffer,
+            indexBuffer,
+            segments
+        );
 
-        circleProgram.draw(
+        circleLumaModel.draw(
             context,
             gl.TRIANGLES,
             DepthMode.disabled,
             StencilMode.disabled,
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
-            uniforms,
-            painter.style.map.terrain && painter.style.map.terrain.getTerrainData(batch.coord),
+            uniforms as any,
+            (painter.style.map.terrain && painter.style.map.terrain.getTerrainData(batch.coord)) as any,
             null,
             layer.id,
             vertexBuffer,
             indexBuffer,
-            SegmentVector.simpleSegment(0, batch.circleOffset * 2, batch.circleArray.length, batch.circleArray.length / 2),
+            segments,
             null,
             painter.transform.zoom,
             null,

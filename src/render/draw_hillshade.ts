@@ -7,6 +7,7 @@ import {
     hillshadeUniformValues,
     hillshadeUniformPrepareValues
 } from './program/hillshade_program';
+import {LumaModel} from './luma_model';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
@@ -49,7 +50,7 @@ function renderHillshade(
     tileManager: TileManager,
     layer: HillshadeStyleLayer,
     coords: Array<OverscaledTileID>,
-    stencilModes: {[_: number]: Readonly<StencilMode>},
+    stencilModes: { [_: number]: Readonly<StencilMode> },
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
     useBorder: boolean,
@@ -84,8 +85,16 @@ function renderHillshade(
             applyTerrainMatrix: true
         });
 
-        program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
-            hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+        const lumaModel = new LumaModel(
+            painter.device,
+            program,
+            mesh.vertexBuffer,
+            mesh.indexBuffer,
+            mesh.segments
+        );
+
+        lumaModel.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
+            hillshadeUniformValues(painter, tile, layer) as any, terrainData as any, projectionData as any, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
 
@@ -147,9 +156,18 @@ function prepareHillshade(
         context.bindFramebuffer.set(fbo.framebuffer);
         context.viewport.set([0, 0, tileSize, tileSize]);
 
-        painter.useProgram('hillshadePrepare').draw(context, gl.TRIANGLES,
+        const prepareProgram = painter.useProgram('hillshadePrepare');
+        const prepareLumaModel = new LumaModel(
+            painter.device,
+            prepareProgram,
+            painter.rasterBoundsBuffer,
+            painter.quadTriangleIndexBuffer,
+            painter.rasterBoundsSegments
+        );
+
+        prepareLumaModel.draw(context, gl.TRIANGLES,
             depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-            hillshadeUniformPrepareValues(tile.tileID, dem),
+            hillshadeUniformPrepareValues(tile.tileID, dem) as any,
             null, null, layer.id, painter.rasterBoundsBuffer,
             painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
 

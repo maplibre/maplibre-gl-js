@@ -15,6 +15,7 @@ import type {OverscaledTileID} from '../tile/tile_id';
 
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
+import {LumaModel} from './luma_model';
 
 export function drawFillExtrusion(painter: Painter, tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const opacity = layer.paint.get('fill-extrusion-opacity');
@@ -96,8 +97,16 @@ function drawExtrusionTiles(
             fillExtrusionPatternUniformValues(painter, shouldUseVerticalGradient, opacity, translate, coord, crossfade, tile) :
             fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate);
 
-        program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
-            uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
+        const lumaModel = new LumaModel(
+            painter.device,
+            program,
+            bucket.layoutVertexBuffer,
+            bucket.indexBuffer,
+            bucket.segments
+        );
+
+        lumaModel.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
+            uniformValues as any, terrainData as any, projectionData as any, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
             bucket.segments, layer.paint, painter.transform.zoom,
             programConfiguration, painter.style.map.terrain && bucket.centroidVertexBuffer);
     }

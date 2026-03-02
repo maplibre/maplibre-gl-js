@@ -35,6 +35,8 @@ import {type OverscaledTileID} from '../tile/tile_id';
 import {drawSky, drawAtmosphere} from './draw_sky';
 import {Mesh} from './mesh';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection';
+import type {Device} from '@luma.gl/core';
+import {LumaModel} from './luma_model';
 
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {Style} from '../style/style';
@@ -86,6 +88,7 @@ export type RenderOptions = {
  */
 export class Painter {
     context: Context;
+    device: Device;
     transform: IReadonlyTransform;
     renderToTexture: RenderToTexture;
     _tileTextures: {
@@ -111,7 +114,7 @@ export class Painter {
     viewportSegments: SegmentVector;
     quadTriangleIndexBuffer: IndexBuffer;
     tileBorderIndexBuffer: IndexBuffer;
-    _tileClippingMaskIDs: {[_: string]: number};
+    _tileClippingMaskIDs: { [_: string]: number };
     stencilClearMode: StencilMode;
     style: Style;
     options: PainterOptions;
@@ -126,7 +129,7 @@ export class Painter {
     nextStencilID: number;
     id: string;
     _showOverdrawInspector: boolean;
-    cache: {[_: string]: Program<any>};
+    cache: { [_: string]: Program<any> };
     crossTileSymbolIndex: CrossTileSymbolIndex;
     symbolFadeChange: number;
     debugOverlayTexture: Texture;
@@ -134,10 +137,11 @@ export class Painter {
     // this object stores the current camera-matrix and the last render time
     // of the terrain-facilitators. e.g. depth & coords framebuffers
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
-    terrainFacilitator: {dirty: boolean; matrix: mat4; renderTime: number};
+    terrainFacilitator: { dirty: boolean; matrix: mat4; renderTime: number };
 
-    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: IReadonlyTransform) {
+    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, device: Device, transform: IReadonlyTransform) {
         this.context = new Context(gl);
+        this.device = device;
         this.transform = transform;
         this._tileTextures = {};
         this.terrainFacilitator = {dirty: true, matrix: mat4.identity(new Float64Array(16) as any), renderTime: 0};
@@ -301,7 +305,7 @@ export class Painter {
         this._tileClippingMaskIDs = stencilRefs;
     }
 
-    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean, useBorders: boolean) {
+    _renderTileMasks(tileStencilRefs: { [_: string]: number }, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean, useBorders: boolean) {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.projection;
@@ -318,11 +322,18 @@ export class Painter {
 
             const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: !renderToTexture, applyTerrainMatrix: true});
 
-            program.draw(context, gl.TRIANGLES, DepthMode.disabled,
+            const lumaModel = new LumaModel(
+                this.device,
+                program,
+                mesh.vertexBuffer,
+                mesh.indexBuffer,
+                mesh.segments
+            );
+            lumaModel.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
                 new StencilMode({func: gl.ALWAYS, mask: 0}, stencilRef, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
                 ColorMode.disabled, renderToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null,
-                terrainData, projectionData, '$clipping', mesh.vertexBuffer,
+                terrainData as any, projectionData as any, '$clipping', mesh.vertexBuffer,
                 mesh.indexBuffer, mesh.segments);
         }
     }
@@ -348,9 +359,16 @@ export class Painter {
 
             const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
 
-            program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled,
+            const lumaModel = new LumaModel(
+                this.device,
+                program,
+                mesh.vertexBuffer,
+                mesh.indexBuffer,
+                mesh.segments
+            );
+            lumaModel.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled,
                 ColorMode.disabled, CullFaceMode.backCCW, null,
-                terrainData, projectionData, '$clipping', mesh.vertexBuffer,
+                terrainData as any, projectionData as any, '$clipping', mesh.vertexBuffer,
                 mesh.indexBuffer, mesh.segments);
         }
     }
@@ -492,9 +510,9 @@ export class Painter {
         const layerIds = this.style._order;
         const tileManagers = this.style.tileManagers;
 
-        const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
-        const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
-        const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
+        const coordsAscending: { [_: string]: Array<OverscaledTileID> } = {};
+        const coordsDescending: { [_: string]: Array<OverscaledTileID> } = {};
+        const coordsDescendingSymbol: { [_: string]: Array<OverscaledTileID> } = {};
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection?.transitionState > 0};
 
         for (const id in tileManagers) {
