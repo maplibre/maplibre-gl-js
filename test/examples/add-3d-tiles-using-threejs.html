@@ -69,7 +69,7 @@
      * @param {string} url Model URL
      * @param {number} altOffset Model altitude offset (set appropriate value to align with the ground)
      */
-    function load3dtiles(url, altOffset = 0) {
+    async function load3dtiles(url, altOffset = 0) {
         let localTransform;
 
         function getModelTransform(coord, rotate= [Math.PI / 2, 0, 0]) {
@@ -198,9 +198,8 @@
             },
         };
 
-        map.once('style.load', () => {
-            map.addLayer(customLayer);
-        });
+        await map.once('style.load');
+        map.addLayer(customLayer);
     };
 
     load3dtiles("https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json", -300);
