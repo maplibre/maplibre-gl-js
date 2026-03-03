@@ -1,5 +1,5 @@
-import { StyleLayer } from '../style_layer';
-import { warnOnce } from '../../util/util';
+import {StyleLayer} from '../style_layer';
+import {warnOnce} from '../../util/util';
 
 import properties, {type RasterPaintPropsPossiblyEvaluated} from './raster_style_layer_properties.g';
 import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties';
