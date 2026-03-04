@@ -12,7 +12,7 @@ describe('Texture', () => {
 
         function getContext(): Context {
             const gl = document.createElement('canvas').getContext('webgl') as WebGL2RenderingContext;
-            return new Context(gl);
+            return new Context(gl, null);
         }
 
         function checkPixelStoreState(context: Context): void {
@@ -40,7 +40,7 @@ describe('Texture', () => {
 
     test('bind restores handle after corruption (#2811)', () => {
         const gl = document.createElement('canvas').getContext('webgl') as WebGL2RenderingContext;
-        const context = new Context(gl);
+        const context = new Context(gl, null);
         const image = new RGBAImage({width: 2, height: 1}, new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]));
         const texture = new Texture(context, image, gl.RGBA);
 

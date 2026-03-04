@@ -37,6 +37,7 @@ function getTokenizedAttributesAndUniforms(array: Array<string>): Array<string> 
  */
 export class Program<Us extends UniformBindings> {
     program: WebGLProgram;
+    name: string;
     attributes: { [_: string]: number };
     numAttributes: number;
     fixedUniforms: Us;
@@ -55,9 +56,11 @@ export class Program<Us extends UniformBindings> {
         hasTerrain: boolean,
         projectionPrelude: PreparedShader,
         projectionDefine: string,
-        extraDefines: Array<string> = []) {
+        extraDefines: Array<string> = [],
+        name: string = '') {
 
         const gl = context.gl;
+        this.name = name;
         this.program = gl.createProgram();
 
         const staticAttrInfo = getTokenizedAttributesAndUniforms(source.staticAttributes);
@@ -104,7 +107,8 @@ export class Program<Us extends UniformBindings> {
         this.fragmentSource = fragmentSource;
 
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-        if (gl.isContextLost()) {
+        if (!fragmentShader || gl.isContextLost()) {
+            console.log(`[Program] createShader block: fragShader=${!!fragmentShader} contextLost=${gl.isContextLost()} error=${gl.getError()}`);
             this.failedToCreate = true;
             return;
         }
@@ -118,7 +122,8 @@ export class Program<Us extends UniformBindings> {
         gl.attachShader(this.program, fragmentShader);
 
         const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-        if (gl.isContextLost()) {
+        if (!vertexShader || gl.isContextLost()) {
+            console.log(`[Program] vertexShader failed! vertexShader=${!!vertexShader} contextLost=${gl.isContextLost()}`);
             this.failedToCreate = true;
             return;
         }

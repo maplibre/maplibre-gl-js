@@ -8,6 +8,8 @@ import backgroundPatternFrag from './background_pattern.fragment.glsl.g';
 import backgroundPatternVert from './background_pattern.vertex.glsl.g';
 import circleFrag from './circle.fragment.glsl.g';
 import circleVert from './circle.vertex.glsl.g';
+import circleWgsl from './circle.wgsl.g';
+import backgroundWgsl from './background.wgsl.g';
 import clippingMaskFrag from './clipping_mask.fragment.glsl.g';
 import clippingMaskVert from './clipping_mask.vertex.glsl.g';
 import heatmapFrag from './heatmap.fragment.glsl.g';
@@ -86,6 +88,8 @@ export const shaders = {
     background: prepare(backgroundFrag, backgroundVert),
     backgroundPattern: prepare(backgroundPatternFrag, backgroundPatternVert),
     circle: prepare(circleFrag, circleVert),
+    circleWgsl: circleWgsl,
+    backgroundWgsl: backgroundWgsl,
     clippingMask: prepare(clippingMaskFrag, clippingMaskVert),
     heatmap: prepare(heatmapFrag, heatmapVert),
     heatmapTexture: prepare(heatmapTextureFrag, heatmapTextureVert),

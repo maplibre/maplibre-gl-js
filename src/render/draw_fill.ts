@@ -18,11 +18,22 @@ import {updatePatternPositionsInProgram} from './update_pattern_positions_in_pro
 import {translatePosition} from '../util/util';
 import {LumaModel} from './luma_model';
 
+// Drawable imports
+import {DrawableBuilder} from './drawable/drawable_builder';
+import {TileLayerGroup} from './drawable/tile_layer_group';
+import {FillLayerTweaker} from './drawable/tweakers/fill_layer_tweaker';
+
 export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
 
     if (opacity.constantOr(1) === 0) {
+        return;
+    }
+
+    // Use drawable path if enabled
+    if (painter.useDrawables && painter.useDrawables.has('fill')) {
+        drawFillDrawable(painter, tileManager, layer, coords, renderOptions);
         return;
     }
 
@@ -143,5 +154,169 @@ function drawFillTiles(
             stencil, colorMode, CullFaceMode.backCCW, uniformValues as any, terrainData as any, projectionData as any,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
+    }
+}
+
+/**
+ * Drawable-based rendering path for fills.
+ * Creates drawables for both fill triangles and outline lines per tile.
+ */
+function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+    const {isRenderingToTexture} = renderOptions;
+    const context = painter.context;
+    const gl = context.gl;
+    const transform = painter.transform;
+
+    const color = layer.paint.get('fill-color');
+    const opacity = layer.paint.get('fill-opacity');
+    const colorMode = painter.colorModeForRenderPass();
+    const pattern = layer.paint.get('fill-pattern');
+    const image = pattern && pattern.constantOr(1 as any);
+    const crossfade = layer.getCrossfadeParameters();
+
+    const pass = painter.opaquePassEnabledForLayer() &&
+        (!pattern.constantOr(1 as any) &&
+            color.constantOr(Color.transparent).a === 1 &&
+            opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
+
+    // Get or create tweaker
+    let tweaker = painter.layerTweakers.get(layer.id) as FillLayerTweaker;
+    if (!tweaker) {
+        tweaker = new FillLayerTweaker(layer.id);
+        painter.layerTweakers.set(layer.id, tweaker);
+    }
+
+    // Get or create layer group
+    let layerGroup = painter.layerGroups.get(layer.id);
+    if (!layerGroup) {
+        layerGroup = new TileLayerGroup(layer.id);
+        painter.layerGroups.set(layer.id, layerGroup);
+    }
+
+    const propertyFillTranslate = layer.paint.get('fill-translate');
+    const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
+    const fillPropertyName = 'fill-pattern';
+    const patternProperty = layer.paint.get(fillPropertyName);
+    const constantPattern = patternProperty.constantOr(null);
+
+    const visibleTileKeys = new Set<string>();
+
+    for (const coord of coords) {
+        visibleTileKeys.add(coord.key.toString());
+
+        const tile = tileManager.getTile(coord);
+        if (image && !tile.patternsLoaded()) continue;
+
+        const bucket: FillBucket = (tile.getBucket(layer) as any);
+        if (!bucket) continue;
+
+        // Rebuild drawables each frame
+        layerGroup.removeDrawablesForTile(coord);
+
+        const programConfiguration = bucket.programConfigurations.get(layer.id);
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+
+        if (image) {
+            context.activeTexture.set(gl.TEXTURE0);
+            tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+            programConfiguration.updatePaintBuffers(crossfade);
+        }
+
+        updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
+
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: coord,
+            applyGlobeMatrix: !isRenderingToTexture,
+            applyTerrainMatrix: true
+        });
+
+        const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
+        const stencil = painter.stencilModeForClipping(coord);
+
+        // Draw fill triangles
+        if (painter.renderPass === pass) {
+            const depthMode = painter.getDepthModeForSublayer(
+                1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
+            const programName = image ? 'fillPattern' : 'fill';
+            const program = painter.useProgram(programName, programConfiguration);
+            const uniformValues = image ?
+                fillPatternUniformValues(painter, crossfade, tile, translateForUniforms) :
+                fillUniformValues(translateForUniforms);
+
+            const fillBuilder = new DrawableBuilder()
+                .setShader(programName)
+                .setRenderPass(pass as 'opaque' | 'translucent')
+                .setDepthMode(depthMode)
+                .setStencilMode(stencil)
+                .setColorMode(colorMode)
+                .setCullFaceMode(CullFaceMode.backCCW)
+                .setLayerTweaker(tweaker);
+
+            const fillDrawable = fillBuilder.flush({
+                tileID: coord,
+                layer,
+                program,
+                programConfiguration,
+                layoutVertexBuffer: bucket.layoutVertexBuffer,
+                indexBuffer: bucket.indexBuffer,
+                segments: bucket.segments,
+                projectionData,
+                terrainData: terrainData || null,
+                paintProperties: layer.paint,
+                zoom: painter.transform.zoom,
+            });
+            fillDrawable.uniformValues = uniformValues as any;
+            layerGroup.addDrawable(coord, fillDrawable);
+        }
+
+        // Draw outline
+        if (painter.renderPass === 'translucent' && layer.paint.get('fill-antialias')) {
+            const depthMode = painter.getDepthModeForSublayer(
+                layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
+            const outlineProgramName = image && !layer.getPaintProperty('fill-outline-color') ? 'fillOutlinePattern' : 'fillOutline';
+            const outlineProgram = painter.useProgram(outlineProgramName, programConfiguration);
+
+            const drawingBufferSize = [gl.drawingBufferWidth, gl.drawingBufferHeight] as [number, number];
+            const outlineUniformValues = (outlineProgramName === 'fillOutlinePattern' && image) ?
+                fillOutlinePatternUniformValues(painter, crossfade, tile, drawingBufferSize, translateForUniforms) :
+                fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
+
+            const outlineBuilder = new DrawableBuilder()
+                .setShader(outlineProgramName)
+                .setRenderPass('translucent')
+                .setDepthMode(depthMode)
+                .setStencilMode(stencil)
+                .setColorMode(colorMode)
+                .setCullFaceMode(CullFaceMode.backCCW)
+                .setLayerTweaker(tweaker);
+
+            const outlineDrawable = outlineBuilder.flush({
+                tileID: coord,
+                layer,
+                program: outlineProgram,
+                programConfiguration,
+                layoutVertexBuffer: bucket.layoutVertexBuffer,
+                indexBuffer: bucket.indexBuffer2,
+                segments: bucket.segments2,
+                projectionData,
+                terrainData: terrainData || null,
+                paintProperties: layer.paint,
+                zoom: painter.transform.zoom,
+            });
+            outlineDrawable.uniformValues = outlineUniformValues as any;
+            layerGroup.addDrawable(coord, outlineDrawable);
+        }
+    }
+
+    // Remove stale tiles
+    layerGroup.removeDrawablesIf(d => d.tileID !== null && !visibleTileKeys.has(d.tileID.key.toString()));
+
+    // Run tweaker
+    const allDrawables = layerGroup.getAllDrawables();
+    tweaker.execute(allDrawables, painter, layer, coords);
+
+    // Draw
+    for (const drawable of allDrawables) {
+        drawable.draw(context, painter.device, painter, renderOptions.renderPass);
     }
 }

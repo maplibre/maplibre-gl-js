@@ -2,6 +2,7 @@
 import type {StructArray} from '../util/struct_array';
 import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type';
 import type {Context} from '../gl/context';
+import {Buffer as LumaBuffer} from '@luma.gl/core';
 
 /**
  * @internal
@@ -10,6 +11,7 @@ import type {Context} from '../gl/context';
 export class IndexBuffer {
     context: Context;
     buffer: WebGLBuffer;
+    webgpuBuffer: LumaBuffer | null = null;
     dynamicDraw: boolean;
 
     constructor(context: Context, array: TriangleIndexArray | LineIndexArray | LineStripIndexArray, dynamicDraw?: boolean) {
@@ -17,6 +19,14 @@ export class IndexBuffer {
         const gl = context.gl;
         this.buffer = gl.createBuffer();
         this.dynamicDraw = Boolean(dynamicDraw);
+
+        if (context.device && context.device.type === 'webgpu') {
+            this.webgpuBuffer = context.device.createBuffer({
+                usage: LumaBuffer.INDEX | LumaBuffer.COPY_DST,
+                indexType: 'uint16',
+                data: new Uint8Array(array.arrayBuffer)
+            });
+        }
 
         // The bound index buffer is part of vertex array object state. We don't want to
         // modify whatever VAO happens to be currently bound, so make sure the default
@@ -42,6 +52,9 @@ export class IndexBuffer {
         // See https://github.com/mapbox/mapbox-gl-js/issues/5620
         this.context.unbindVAO();
         this.bind();
+        if (this.webgpuBuffer) {
+            this.webgpuBuffer.write(new Uint8Array(array.arrayBuffer));
+        }
         gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, array.arrayBuffer);
     }
 
@@ -50,6 +63,10 @@ export class IndexBuffer {
         if (this.buffer) {
             gl.deleteBuffer(this.buffer);
             delete this.buffer;
+        }
+        if (this.webgpuBuffer) {
+            this.webgpuBuffer.destroy();
+            this.webgpuBuffer = null;
         }
     }
 }

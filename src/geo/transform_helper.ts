@@ -135,7 +135,6 @@ export class TransformHelper implements ITransformGetters {
     _center: LngLat;
     _elevation: number;
     _minElevationForCurrentTile: number;
-    _pixelPerMeter: number;
     _edgeInsets: EdgeInsets;
     _unmodified: boolean;
 
@@ -182,6 +181,10 @@ export class TransformHelper implements ITransformGetters {
         this._edgeInsets = new EdgeInsets();
         this._minElevationForCurrentTile = 0;
         this._autoCalculateNearFarZ = true;
+    }
+
+    get _pixelPerMeter(): number {
+        return Math.max(mercatorZfromAltitude(1, this.center.lat) * this.worldSize, 1);
     }
 
     public apply(thatI: ITransformGetters, constrain: boolean, forceOverrideZ?: boolean): void {
@@ -569,6 +572,8 @@ export class TransformHelper implements ITransformGetters {
             this._pixelsToClipSpaceMatrix = m;
             const halfFov = this.fovInRadians / 2;
             this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
+        } else {
+            this._cameraToCenterDistance = 1;
         }
         this._callbacks.calcMatrices();
     }
@@ -579,7 +584,7 @@ export class TransformHelper implements ITransformGetters {
 
         const {distanceToCenter, clampedElevation} = this._distanceToCenterFromAltElevationPitch(alt, this.elevation, cameraPitch);
         const {x, y} = cameraDirectionFromPitchBearing(cameraPitch, cameraBearing);
-        
+
         // The mercator transform scale changes with latitude. At high latitudes, there are more "Merc units" per meter
         // than at the equator. We treat the center point as our fundamental quantity. This means we want to convert
         // elevation to Mercator Z using the scale factor at the center point (not the camera point). Since the center point is
@@ -622,7 +627,7 @@ export class TransformHelper implements ITransformGetters {
         const originalCenterPixelX = originalCenterMercator.x / mercUnitsPerPixel;
         const originalCenterPixelY = originalCenterMercator.y / mercUnitsPerPixel;
         const originalCenterPixelZ = originalCenterMercator.z / mercUnitsPerPixel;
-        
+
         const cameraPitch = this.pitch;
         const cameraBearing = this.bearing;
         const {x, y, z} = cameraDirectionFromPitchBearing(cameraPitch, cameraBearing);

@@ -40,6 +40,7 @@ function testSupport(gl: WebGLRenderingContext | WebGL2RenderingContext) {
 }
 
 function testWebpTextureUpload(gl: WebGLRenderingContext|WebGL2RenderingContext) {
+    if (!gl) return;
     // Edge 18 supports WebP but not uploading a WebP image to a gl texture
     // Test support for this before allowing WebP images.
     // https://github.com/mapbox/mapbox-gl-js/issues/7671

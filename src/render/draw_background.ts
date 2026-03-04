@@ -13,11 +13,24 @@ import type {BackgroundStyleLayer} from '../style/style_layer/background_style_l
 import {type OverscaledTileID} from '../tile/tile_id';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 
+// Drawable imports
+import {DrawableBuilder} from './drawable/drawable_builder';
+import {TileLayerGroup} from './drawable/tile_layer_group';
+import {BackgroundLayerTweaker} from './drawable/tweakers/background_layer_tweaker';
+
 export function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const color = layer.paint.get('background-color');
     const opacity = layer.paint.get('background-opacity');
 
     if (opacity === 0) return;
+
+    const image = layer.paint.get('background-pattern');
+
+    // Use WebGPU drawable path for solid-color backgrounds
+    if (painter.device?.type === 'webgpu' && !image) {
+        drawBackgroundDrawable(painter, layer, coords, renderOptions);
+        return;
+    }
 
     const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
@@ -25,7 +38,6 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     const projection = painter.style.projection;
     const transform = painter.transform;
     const tileSize = transform.tileSize;
-    const image = layer.paint.get('background-pattern');
 
     if (painter.isPatternMissing(image)) return;
 
@@ -52,6 +64,10 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
             applyTerrainMatrix: true
         });
 
+        if (tileID.overscaledZ === 1) { // Log selectively
+            console.log(`[drawBackground] proj=${Array.from(projectionData.mainMatrix as any).slice(0, 4).join(',')} viewport=${painter.width}x${painter.height} dToCenter=${transform.cameraToCenterDistance}`);
+        }
+
         const uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(opacity, color);
@@ -77,5 +93,93 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
         lumaModel.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues as any, terrainData as any, projectionData as any, layer.id,
             mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+    }
+}
+
+function drawBackgroundDrawable(painter: Painter, layer: BackgroundStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+    const {isRenderingToTexture} = renderOptions;
+    const context = painter.context;
+    const transform = painter.transform;
+    const tileSize = transform.tileSize;
+    const projection = painter.style.projection;
+
+    const color = layer.paint.get('background-color');
+    const opacity = layer.paint.get('background-opacity');
+    const pass = (color.a === 1 && opacity === 1 && painter.opaquePassEnabledForLayer()) ? 'opaque' : 'translucent';
+    if (painter.renderPass !== pass) {
+        console.log(`[drawBackgroundDrawable] skip pass=${pass} renderPass=${painter.renderPass}`);
+        return;
+    }
+    console.log(`[drawBackgroundDrawable] DRAWING pass=${pass} color=(${color.r},${color.g},${color.b},${color.a}) opacity=${opacity}`);
+
+    const stencilMode = StencilMode.disabled;
+    const depthMode = painter.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
+    const colorMode = painter.colorModeForRenderPass();
+    const program = painter.useProgram('background');
+
+    const tileIDs = coords ? coords : coveringTiles(transform, {tileSize, terrain: painter.style.map.terrain});
+    console.log(`[drawBackgroundDrawable] tileIDs=${tileIDs.length} coords=${coords?.length}`);
+
+    // Get or create tweaker
+    let tweaker = painter.layerTweakers.get(layer.id) as BackgroundLayerTweaker;
+    if (!tweaker) {
+        tweaker = new BackgroundLayerTweaker(layer.id);
+        painter.layerTweakers.set(layer.id, tweaker);
+    }
+
+    // Get or create layer group
+    let layerGroup = painter.layerGroups.get(layer.id);
+    if (!layerGroup) {
+        layerGroup = new TileLayerGroup(layer.id);
+        painter.layerGroups.set(layer.id, layerGroup);
+    }
+
+    const visibleTileKeys = new Set<string>();
+    const builder = new DrawableBuilder()
+        .setShader('background')
+        .setRenderPass(pass)
+        .setDepthMode(depthMode)
+        .setStencilMode(stencilMode)
+        .setColorMode(colorMode)
+        .setCullFaceMode(CullFaceMode.backCCW)
+        .setLayerTweaker(tweaker);
+
+    for (const tileID of tileIDs) {
+        visibleTileKeys.add(tileID.key.toString());
+
+        layerGroup.removeDrawablesForTile(tileID);
+
+        const mesh = projection.getMeshFromTileID(context, tileID.canonical, false, true, 'raster');
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: tileID,
+            applyGlobeMatrix: !isRenderingToTexture,
+            applyTerrainMatrix: true
+        });
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(tileID);
+
+        const drawable = builder.flush({
+            tileID,
+            layer,
+            program,
+            programConfiguration: null,
+            layoutVertexBuffer: mesh.vertexBuffer,
+            indexBuffer: mesh.indexBuffer,
+            segments: mesh.segments,
+            projectionData,
+            terrainData: terrainData || null,
+        });
+
+        const uniformValues = backgroundUniformValues(opacity, color);
+        drawable.uniformValues = uniformValues as any;
+        layerGroup.addDrawable(tileID, drawable);
+    }
+
+    layerGroup.removeDrawablesIf(d => d.tileID !== null && !visibleTileKeys.has(d.tileID.key.toString()));
+
+    const allDrawables = layerGroup.getAllDrawables();
+    tweaker.execute(allDrawables, painter, layer, tileIDs);
+
+    for (const drawable of allDrawables) {
+        drawable.draw(context, painter.device, painter, renderOptions.renderPass);
     }
 }

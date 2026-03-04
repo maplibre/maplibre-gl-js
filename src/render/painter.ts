@@ -38,6 +38,12 @@ import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/
 import type {Device} from '@luma.gl/core';
 import {LumaModel} from './luma_model';
 
+// Drawable architecture imports
+import {TileLayerGroup} from './drawable/tile_layer_group';
+import {PipelineCache} from './drawable/pipeline_cache';
+import {UniformBlock} from './drawable/uniform_block';
+import type {LayerTweaker} from './drawable/layer_tweaker';
+
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {Style} from '../style/style';
 import type {StyleLayer} from '../style/style_layer';
@@ -80,6 +86,7 @@ type PainterOptions = {
 export type RenderOptions = {
     isRenderingToTexture: boolean;
     isRenderingGlobe: boolean;
+    renderPass?: any; // WebGPU RenderPass instance
 };
 
 /**
@@ -124,6 +131,7 @@ export class Painter {
     depthRangeFor3D: DepthRangeType;
     opaquePassCutoff: number;
     renderPass: RenderPass;
+    renderPassWGSL?: any;
     currentLayer: number;
     currentStencilSource: string;
     nextStencilID: number;
@@ -139,12 +147,31 @@ export class Painter {
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
     terrainFacilitator: { dirty: boolean; matrix: mat4; renderTime: number };
 
-    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, device: Device, transform: IReadonlyTransform) {
-        this.context = new Context(gl);
+    // Drawable architecture fields
+    layerGroups: Map<string, TileLayerGroup>;
+    layerTweakers: Map<string, LayerTweaker>;
+    pipelineCache: PipelineCache;
+    globalUBO: UniformBlock;
+    useDrawables: Set<string>;
+
+    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext | null, device: Device, transform: IReadonlyTransform) {
+        this.context = new Context(gl, device);
         this.device = device;
         this.transform = transform;
         this._tileTextures = {};
         this.terrainFacilitator = {dirty: true, matrix: mat4.identity(new Float64Array(16) as any), renderTime: 0};
+
+        // Initialize drawable architecture
+        this.layerGroups = new Map();
+        this.layerTweakers = new Map();
+        this.pipelineCache = new PipelineCache();
+        this.globalUBO = new UniformBlock(64); // GlobalPaintParamsUBO size
+        this.useDrawables = new Set(); // Enable per layer type: 'circle', 'fill', 'line'
+
+        // Enable drawable path for WebGPU
+        if (this.device && this.device.type === 'webgpu') {
+            this.useDrawables.add('circle');
+        }
 
         this.setup();
 
@@ -507,9 +534,28 @@ export class Painter {
         this.style = style;
         this.options = options;
 
+        if (this.device && this.device.type === 'webgpu') {
+            console.log('[Painter.render] Executing native WebGPU RenderPass!');
+            try {
+                // Initialize the render pass once per frame for now and store it on Painter.
+                this.renderPassWGSL = this.device.beginRenderPass({
+                    clearColor: [0.0, 1.0, 0.0, 1.0] // Green clear indicates WebGPU is active
+                });
+                console.log('[Painter.render] RenderPass created:', !!this.renderPassWGSL,
+                    'canvasContext:', !!(this.device as any).canvasContext);
+            } catch (e) {
+                console.error('[Painter.render] WebGPU RenderPass failed!', e);
+            }
+        }
+
         this.lineAtlas = style.lineAtlas;
         this.imageManager = style.imageManager;
         this.glyphManager = style.glyphManager;
+
+        // Update global UBO once per frame (for drawable architecture)
+        if (this.useDrawables.size > 0 || (this.device && this.device.type === 'webgpu')) {
+            this.updateGlobalUBO();
+        }
 
         this.symbolFadeChange = style.placement.symbolFadeChange(now());
 
@@ -578,7 +624,9 @@ export class Painter {
         this.context.bindFramebuffer.set(null);
 
         // Clear buffers in preparation for drawing to the main framebuffer
-        this.context.clear({color: options.showOverdrawInspector ? Color.black : Color.transparent, depth: 1});
+        if (!(this.device && this.device.type === 'webgpu')) {
+            this.context.clear({color: options.showOverdrawInspector ? Color.black : Color.transparent, depth: 1});
+        }
         this.clearStencil();
 
         // draw sky first to not overwrite symbols
@@ -586,6 +634,11 @@ export class Painter {
 
         this._showOverdrawInspector = options.showOverdrawInspector;
         this.depthRangeFor3D = [0, 1 - ((style._order.length + 2) * this.numSublayers * this.depthEpsilon)];
+
+        // For WebGPU, pass the renderPass to all draw calls
+        if (this.device && this.device.type === 'webgpu' && this.renderPassWGSL) {
+            renderOptions.renderPass = this.renderPassWGSL;
+        }
 
         // Opaque pass ===============================================
         // Draw opaque layers top-to-bottom first.
@@ -629,6 +682,7 @@ export class Painter {
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
+
             this.renderLayer(this, tileManager, layer, coords, renderOptions);
         }
 
@@ -646,6 +700,17 @@ export class Painter {
 
         if (this.options.showPadding) {
             drawDebugPadding(this);
+        }
+
+        // End the WebGPU render pass to submit GPU commands
+        if (this.renderPassWGSL) {
+            this.renderPassWGSL.end();
+            this.renderPassWGSL = null;
+            // Explicitly submit GPU command buffer
+            if (this.device && (this.device as any).submit) {
+                (this.device as any).submit();
+            }
+            console.log('[Painter.render] WebGPU render pass ended and submitted');
         }
 
         // Set defaults for most GL values so that anyone using the state after the render
@@ -684,6 +749,7 @@ export class Painter {
     renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
+        console.log(`[Painter.renderLayer] id=${layer.id} type=${layer.type} coords=${coords?.length}`);
         this.id = layer.id;
 
         if (isSymbolStyleLayer(layer)) {
@@ -774,7 +840,8 @@ export class Painter {
                 useTerrain,
                 projectionPrelude,
                 projectionDefine,
-                defines
+                defines,
+                name
             );
         }
         return this.cache[key];
@@ -819,6 +886,37 @@ export class Painter {
         }
     }
 
+    /**
+     * Update the global UBO once per frame with camera/viewport parameters.
+     * This UBO is shared across all drawables.
+     */
+    updateGlobalUBO(): void {
+        const transform = this.transform;
+        const ubo = this.globalUBO;
+
+        // GlobalPaintParamsUBO layout matches circle.wgsl:
+        // pattern_atlas_texsize: vec2<f32>   offset 0
+        // units_to_pixels: vec2<f32>         offset 8
+        // world_size: vec2<f32>              offset 16
+        // camera_to_center_distance: f32     offset 24
+        // symbol_fade_change: f32            offset 28
+        // aspect_ratio: f32                  offset 32
+        // pixel_ratio: f32                   offset 36
+        // map_zoom: f32                      offset 40
+        // pad1: f32                          offset 44
+        ubo.setVec2(0, 0, 0); // pattern_atlas_texsize - set if pattern atlas available
+        ubo.setVec2(8,
+            1 / transform.pixelsToGLUnits[0],
+            1 / transform.pixelsToGLUnits[1]
+        );
+        ubo.setVec2(16, transform.worldSize, transform.worldSize);
+        ubo.setFloat(24, transform.cameraToCenterDistance);
+        ubo.setFloat(28, this.symbolFadeChange || 0);
+        ubo.setFloat(32, transform.width / transform.height);
+        ubo.setFloat(36, this.pixelRatio);
+        ubo.setFloat(40, transform.zoom);
+    }
+
     destroy() {
         if (this._tileTextures) {
             for (const size in this._tileTextures) {
@@ -854,6 +952,26 @@ export class Painter {
                 }
             }
             this.cache = {};
+        }
+
+        // Destroy drawable architecture resources
+        if (this.layerGroups) {
+            for (const group of this.layerGroups.values()) {
+                group.destroy();
+            }
+            this.layerGroups.clear();
+        }
+        if (this.layerTweakers) {
+            for (const tweaker of this.layerTweakers.values()) {
+                tweaker.destroy();
+            }
+            this.layerTweakers.clear();
+        }
+        if (this.pipelineCache) {
+            this.pipelineCache.destroy();
+        }
+        if (this.globalUBO) {
+            this.globalUBO.destroy();
         }
 
         if (this.context) {

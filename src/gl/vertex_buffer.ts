@@ -6,6 +6,7 @@ import type {
 
 import type {Program} from '../render/program';
 import type {Context} from '../gl/context';
+import {Buffer as LumaBuffer} from '@luma.gl/core';
 
 /**
  * An Enum for AttributeType
@@ -32,6 +33,7 @@ export class VertexBuffer {
     dynamicDraw: boolean;
     context: Context;
     buffer: WebGLBuffer;
+    webgpuBuffer: LumaBuffer | null = null;
 
     /**
      * @param dynamicDraw - Whether this buffer will be repeatedly updated.
@@ -45,6 +47,14 @@ export class VertexBuffer {
         this.context = context;
         const gl = context.gl;
         this.buffer = gl.createBuffer();
+
+        if (context.device && context.device.type === 'webgpu') {
+            this.webgpuBuffer = context.device.createBuffer({
+                usage: LumaBuffer.VERTEX | LumaBuffer.COPY_DST,
+                data: new Uint8Array(array.arrayBuffer)
+            });
+        }
+
         context.bindVertexBuffer.set(this.buffer);
         gl.bufferData(gl.ARRAY_BUFFER, array.arrayBuffer, this.dynamicDraw ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
 
@@ -61,6 +71,9 @@ export class VertexBuffer {
         if (array.length !== this.length) throw new Error(`Length of new data is ${array.length}, which doesn't match current length of ${this.length}`);
         const gl = this.context.gl;
         this.bind();
+        if (this.webgpuBuffer) {
+            this.webgpuBuffer.write(array.arrayBuffer);
+        }
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, array.arrayBuffer);
     }
 
@@ -106,6 +119,10 @@ export class VertexBuffer {
         if (this.buffer) {
             gl.deleteBuffer(this.buffer);
             delete this.buffer;
+        }
+        if (this.webgpuBuffer) {
+            this.webgpuBuffer.destroy();
+            this.webgpuBuffer = null;
         }
     }
 }

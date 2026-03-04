@@ -15,7 +15,7 @@ import type {
     StructArrayMember
 } from '../util/struct_array';
 import type {Color} from '@maplibre/maplibre-gl-style-spec';
-import {WebGLDevice} from '@luma.gl/webgl';
+import type {Device} from '@luma.gl/core';
 import {isWebGL2} from './webgl2';
 
 type ClearArgs = {
@@ -30,7 +30,7 @@ type ClearArgs = {
  */
 export class Context {
     gl: WebGLRenderingContext | WebGL2RenderingContext;
-    device: WebGLDevice;
+    device: Device;
 
     currentNumAttributes: number;
     maxTextureSize: number;
@@ -73,8 +73,17 @@ export class Context {
     RGBA16F?: GLenum;
     RGB16F?: GLenum;
 
-    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext) {
-        this.device = new WebGLDevice({_handle: gl});
+    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext | null, device: Device) {
+        this.gl = gl || new Proxy({} as WebGL2RenderingContext, {
+            get: (target, prop) => {
+                if (typeof prop === 'string') {
+                    if (prop === prop.toUpperCase()) return 0;
+                    return () => null;
+                }
+                return undefined;
+            }
+        });
+        this.device = device;
         this.clearColor = new ClearColor(this);
         this.clearDepth = new ClearDepth(this);
         this.clearStencil = new ClearStencil(this);
@@ -107,28 +116,29 @@ export class Context {
         this.pixelStoreUnpackPremultiplyAlpha = new PixelStoreUnpackPremultiplyAlpha(this);
         this.pixelStoreUnpackFlipY = new PixelStoreUnpackFlipY(this);
 
+        const glContext = this.gl;
         this.extTextureFilterAnisotropic = (
-            gl.getExtension('EXT_texture_filter_anisotropic') ||
-            gl.getExtension('MOZ_EXT_texture_filter_anisotropic') ||
-            gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic')
+            glContext.getExtension('EXT_texture_filter_anisotropic') ||
+            glContext.getExtension('MOZ_EXT_texture_filter_anisotropic') ||
+            glContext.getExtension('WEBKIT_EXT_texture_filter_anisotropic')
         );
 
         if (this.extTextureFilterAnisotropic) {
-            this.extTextureFilterAnisotropicMax = gl.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+            this.extTextureFilterAnisotropicMax = glContext.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
         }
 
-        this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+        this.maxTextureSize = glContext.getParameter(glContext.MAX_TEXTURE_SIZE);
 
-        if (isWebGL2(gl)) {
-            this.HALF_FLOAT = gl.HALF_FLOAT;
-            const extColorBufferHalfFloat = gl.getExtension('EXT_color_buffer_half_float');
-            this.RGBA16F = gl.RGBA16F ?? extColorBufferHalfFloat?.RGBA16F_EXT;
-            this.RGB16F = gl.RGB16F ?? extColorBufferHalfFloat?.RGB16F_EXT;
-            gl.getExtension('EXT_color_buffer_float');
+        if (isWebGL2(glContext)) {
+            this.HALF_FLOAT = glContext.HALF_FLOAT;
+            const extColorBufferHalfFloat = glContext.getExtension('EXT_color_buffer_half_float');
+            this.RGBA16F = glContext.RGBA16F ?? extColorBufferHalfFloat?.RGBA16F_EXT;
+            this.RGB16F = glContext.RGB16F ?? extColorBufferHalfFloat?.RGB16F_EXT;
+            glContext.getExtension('EXT_color_buffer_float');
         } else {
-            gl.getExtension('EXT_color_buffer_half_float');
-            gl.getExtension('OES_texture_half_float_linear');
-            const extTextureHalfFloat = gl.getExtension('OES_texture_half_float');
+            glContext.getExtension('EXT_color_buffer_half_float');
+            glContext.getExtension('OES_texture_half_float_linear');
+            const extTextureHalfFloat = glContext.getExtension('OES_texture_half_float');
             this.HALF_FLOAT = extTextureHalfFloat?.HALF_FLOAT_OES;
         }
     }

@@ -12,23 +12,29 @@ console.log('Generating shaders');
  * It will also create a simple package.json file to allow importing this package in webpack
  */
 
-function glslToTs(code: string): string {
-    code = code
-        .trim() // strip whitespace at the start/end
-        .replace(/\s*\/\/[^\n]*\n/g, '\n') // strip double-slash comments
-        .replace(/\n+/g, '\n') // collapse multi line breaks
-        .replace(/\n\s+/g, '\n') // strip indentation
-        .replace(/\s?([+-\/*=,])\s?/g, '$1') // strip whitespace around operators
-        .replace(/([;\(\),\{\}])\n(?=[^#])/g, '$1'); // strip more line breaks
+function glslToTs(code: string, isWgsl: boolean = false): string {
+    if (!isWgsl) {
+        code = code
+            .trim() // strip whitespace at the start/end
+            .replace(/\s*\/\/[^\n]*\n/g, '\n') // strip double-slash comments
+            .replace(/\n+/g, '\n') // collapse multi line breaks
+            .replace(/\n\s+/g, '\n') // strip indentation
+            .replace(/\s?([+-\/*=,])\s?/g, '$1') // strip whitespace around operators
+            .replace(/([;\(\),\{\}])\n(?=[^#])/g, '$1'); // strip more line breaks
+    } else {
+        code = code.trim().replace(/\s*\/\/[^\n]*\n/g, '\n');
+        // For WGSL, be less aggressive with space stripping to avoid breaking parsers.
+    }
 
     return `// This file is generated. Edit build/generate-shaders.ts, then run \`npm run codegen\`.
 export default ${JSON.stringify(code).replaceAll('"', '\'')};\n`;
 }
 
-const shaderFiles = globSync('./src/shaders/*.glsl');
+const shaderFiles = [...globSync('./src/shaders/*.glsl'), ...globSync('./src/shaders/*.wgsl')];
 for (const file of shaderFiles) {
     const glslFile = fs.readFileSync(file, 'utf8');
-    const tsSource = glslToTs(glslFile);
+    const isWgsl = file.endsWith('.wgsl');
+    const tsSource = glslToTs(glslFile, isWgsl);
     const fileName = path.join('.', 'src', 'shaders', `${file.split(path.sep).splice(-1)}.g.ts`);
     fs.writeFileSync(fileName, tsSource);
 }

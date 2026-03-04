@@ -36,8 +36,9 @@ import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
 import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id';
-import {WebGLDevice} from '@luma.gl/webgl';
-
+import {WebGLDevice, webgl2Adapter} from '@luma.gl/webgl';
+import {webgpuAdapter} from '@luma.gl/webgpu';
+import type {Device} from '@luma.gl/core';
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
@@ -543,7 +544,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
  */
 export class Map extends Camera {
     style: Style;
-    painter: Painter;
+    painter: Painter | null;
     handlers: HandlerManager;
 
     _container: HTMLElement;
@@ -780,13 +781,15 @@ export class Map extends Camera {
         }
 
         this._setupContainer();
-        this._setupPainter();
+        this._setupPainterAsync();
 
         this.on('move', () => this._update(false));
         this.on('moveend', () => this._update(false));
         this.on('zoom', () => this._update(true));
         this.on('terrain', () => {
-            this.painter.terrainFacilitator.dirty = true;
+            if (this.painter) {
+                this.painter.terrainFacilitator.dirty = true;
+            }
             this._update(true);
         });
         this.once('idle', () => { this._idleTriggered = true; });
@@ -1048,21 +1051,23 @@ export class Map extends Camera {
      */
     _resizeInternal(constrainTransform = true) {
         const [width, height] = this._containerDimensions();
+        console.log(`[Map._resizeInternal] container dimensions: ${width}x${height}`);
 
         const clampedPixelRatio = this._getClampedPixelRatio(width, height);
         this._resizeCanvas(width, height, clampedPixelRatio);
-        this.painter.resize(width, height, clampedPixelRatio);
-
-        // check if we've reached GL limits, in that case further clamps pixelRatio
-        if (this.painter.overLimit()) {
-            const gl = this.painter.context.gl;
-            // store updated _maxCanvasSize value
-            this._maxCanvasSize = [gl.drawingBufferWidth, gl.drawingBufferHeight];
-            const clampedPixelRatio = this._getClampedPixelRatio(width, height);
-            this._resizeCanvas(width, height, clampedPixelRatio);
+        if (this.painter) {
             this.painter.resize(width, height, clampedPixelRatio);
-        }
 
+            // check if we've reached GL limits, in that case further clamps pixelRatio
+            if (this.painter.overLimit()) {
+                const gl = this.painter.context.gl;
+                // store updated _maxCanvasSize value
+                this._maxCanvasSize = [gl.drawingBufferWidth, gl.drawingBufferHeight];
+                const clampedPixelRatio = this._getClampedPixelRatio(width, height);
+                this._resizeCanvas(width, height, clampedPixelRatio);
+                this.painter.resize(width, height, clampedPixelRatio);
+            }
+        }
         this._resizeTransform(constrainTransform);
     }
 
@@ -1473,7 +1478,7 @@ export class Map extends Camera {
      * ```
      */
     project(lnglat: LngLatLike): Point {
-        return this.transform.locationToScreenPoint(LngLat.convert(lnglat), this.style && this.terrain);
+        return this.transform.locationToScreenPoint(LngLat.convert(lnglat), this.painter && this.style ? this.terrain : null);
     }
 
     /**
@@ -1491,7 +1496,7 @@ export class Map extends Camera {
      * ```
      */
     unproject(point: PointLike): LngLat {
-        return this.transform.screenPointToLocation(Point.convert(point), this.terrain);
+        return this.transform.screenPointToLocation(Point.convert(point), this.painter ? this.terrain : null);
     }
 
     /**
@@ -1877,7 +1882,7 @@ export class Map extends Camera {
      * Overload of the `off` method that allows to remove an event created without specifying a layer.
      * @event
      * @param type - The type of the event.
-     * @param listener - The function previously installed as a listener.
+     * @param listener - The listener callback.
      */
     off(type: keyof MapEventType | string, listener: Listener): this;
     off(type: keyof MapEventType | string, layerIdsOrListener: string | string[] | Listener, listener?: Listener): this {
@@ -2207,6 +2212,9 @@ export class Map extends Camera {
      * @returns An object containing the style and images.
      */
     _getStyleAndImages(): LostContextStyle {
+        if (!this.painter || this._repaint) {
+            return;
+        }
         if (this.style) {
             return {
                 style: this.style.serialize(),
@@ -2317,8 +2325,8 @@ export class Map extends Camera {
             // remove terrain
             if (this.terrain) this.terrain.tileManager.destruct();
             this.terrain = null;
-            if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
-            this.painter.renderToTexture = null;
+            if (this.painter && this.painter.renderToTexture) this.painter.renderToTexture.destruct();
+            if (this.painter) this.painter.renderToTexture = null;
             this.transform.setMinElevationForCurrentTile(0);
             if (this._centerClampedToGround) {
                 this.transform.setElevation(0);
@@ -2339,8 +2347,14 @@ export class Map extends Camera {
                     warnOnce('You are using the same source for a color-relief layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
                 }
             }
-            this.terrain = new Terrain(this.painter, tileManager, options);
-            this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
+            if (this.painter) {
+                this.terrain = new Terrain(this.painter, tileManager, options);
+                if (this.painter && this.painter.renderToTexture) {
+                    this.painter.renderToTexture.destruct();
+                    this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
+                }
+                this._update(true);
+            }
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this._terrainDataCallback = e => {
@@ -3427,7 +3441,7 @@ export class Map extends Camera {
         this._canvas.style.height = `${height}px`;
     }
 
-    _setupPainter() {
+    async _setupPainterAsync() {
 
         // Maplibre WebGL context requires alpha, depth and stencil buffers. It also forces premultipliedAlpha: true.
         // We use the values provided in the map constructor for the rest of context attributes
@@ -3439,7 +3453,10 @@ export class Map extends Camera {
             premultipliedAlpha: true
         };
 
+        let device: Device;
+        let gl: WebGL2RenderingContext | WebGLRenderingContext | null = null;
         let webglcontextcreationerrorDetailObject: any = null;
+
         this._canvas.addEventListener('webglcontextcreationerror', (args: WebGLContextEvent) => {
             webglcontextcreationerrorDetailObject = {requestedAttributes: attributes};
             if (args) {
@@ -3448,15 +3465,47 @@ export class Map extends Camera {
             }
         }, {once: true});
 
-        let gl: WebGL2RenderingContext | WebGLRenderingContext | null = null;
         if (this._canvasContextAttributes.contextType) {
             gl = this._canvas.getContext(this._canvasContextAttributes.contextType, attributes) as WebGL2RenderingContext | WebGLRenderingContext;
         } else {
-            gl = this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext || this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+            console.log('Trying WebGPU first...');
+            try {
+                device = await webgpuAdapter.create({
+                    createCanvasContext: {
+                        canvas: this._canvas,
+                        ...attributes
+                    }
+                });
+                console.log(`WebGPU initialization complete: !!device = ${!!device}`);
+            } catch (e) {
+                console.warn('WebGPU uninitialized or unavailable. Falling back to WebGL...', e);
+            }
+
+            if (!device) {
+                console.log('Attempting WebGL2 fallback...');
+                gl = this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext;
+                if (!gl) {
+                    console.warn('WebGL2 not available, trying WebGL1...');
+                    gl = this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+                }
+                console.log(`WebGL fallback complete: !!gl = ${!!gl}`);
+            }
         }
 
-        if (!gl) {
-            const msg = 'Failed to initialize WebGL';
+        if (device && device.type === 'webgpu') {
+            webpSupported.testSupport(null);
+            console.log('Successfully initialized WebGPU device');
+        } else if (gl) {
+            device = await webgl2Adapter.attach(gl as WebGL2RenderingContext, {
+                createCanvasContext: {
+                    canvas: this._canvas,
+                    ...attributes
+                }
+            });
+            webpSupported.testSupport(gl);
+            console.log('Successfully initialized WebGL device');
+        } else {
+            const msg = 'Failed to initialize WebGL and WebGPU';
             if (webglcontextcreationerrorDetailObject) {
                 webglcontextcreationerrorDetailObject.message = msg;
                 throw new Error(JSON.stringify(webglcontextcreationerrorDetailObject));
@@ -3465,16 +3514,19 @@ export class Map extends Camera {
             }
         }
 
-        const device = new WebGLDevice({_handle: gl});
+        // If device is WebGPU, gl is null. So we extract it from device if it's a WebGLDevice wrapper!
+        const finalGl = gl || (device as any).gl || null;
 
-        this.painter = new Painter(gl, device, this.transform);
-
-        webpSupported.testSupport(gl);
+        this.painter = new Painter(finalGl, device, this.transform);
+        if (this.transform.width && this.transform.height) {
+            this.painter.resize(this.transform.width, this.transform.height, this.getPixelRatio());
+        }
+        this._update(true); // Catch up any missing updates
     }
 
     override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
         super.migrateProjection(newTransform, newCameraHelper);
-        this.painter.transform = newTransform;
+        if (this.painter) this.painter.transform = newTransform;
         this.fire(new Event('projectiontransition', {
             newProjection: this.style.projection.name,
         }));
@@ -3486,7 +3538,7 @@ export class Map extends Camera {
             this._frameRequest.abort();
             this._frameRequest = null;
         }
-        this.painter.destroy();
+        if (this.painter) this.painter.destroy();
 
         this._lostContextStyle = this._getStyleAndImages();
 
@@ -3525,7 +3577,7 @@ export class Map extends Camera {
 
         this._lostContextStyle = {style: null, images: null};
 
-        this._setupPainter();
+        this._setupPainterAsync();
         this.resize();
         this._update();
         this._resizeInternal();
@@ -3566,6 +3618,12 @@ export class Map extends Camera {
 
         this._styleDirty = this._styleDirty || updateStyle;
         this._sourcesDirty = true;
+
+        if (!this.painter && this._sourcesDirty) {
+            this._sourcesDirty = false;
+            this.style._updateSources(this.transform);
+        }
+
         this.triggerRepaint();
 
         return this;
@@ -3599,13 +3657,16 @@ export class Map extends Camera {
      * @param paintStartTimeStamp - The time when the animation frame began executing.
      */
     _render(paintStartTimeStamp: number) {
+        console.log(`[Map._render EARLY] START: zoom=${this.transform.zoom} w=${this.transform.width} h=${this.transform.height} proj=${Array.from(this.transform.projectionMatrix || []).slice(0,4)}`);
         const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
 
         const isGlobeRendering = this.style.projection?.transitionState > 0;
 
         // A custom layer may have used the context asynchronously. Mark the state as dirty.
-        this.painter.context.setDirty();
-        this.painter.setBaseState();
+        if (this.painter) {
+            this.painter.context.setDirty();
+            this.painter.setBaseState();
+        }
 
         this._renderTaskQueue.run(paintStartTimeStamp);
         // A task queue callback may have fired a user event which may have removed the map
@@ -3667,7 +3728,11 @@ export class Map extends Camera {
 
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
-        // Actually draw
+        if (!this.painter) {
+            console.warn('[Map._render] painter is not initialized yet. Skipping render pass.');
+            return;
+        }
+
         this.painter.render(this.style, {
             showTileBoundaries: this.showTileBoundaries,
             showOverdrawInspector: this._showOverdrawInspector,
@@ -3678,6 +3743,13 @@ export class Map extends Camera {
             showPadding: this.showPadding,
             anisotropicFilterPitch: this.getAnisotropicFilterPitch(),
         });
+
+        // Debug projection data
+        try {
+            console.log(`[Map._render DEBUG] _loaded=${this.loaded()} layerCount=${this.style._order?.length} zoom=${this.transform.zoom} w=${this.transform.width} h=${this.transform.height} center=(${this.transform.center.lng.toFixed(2)},${this.transform.center.lat.toFixed(2)}) dToC=${this.transform.cameraToCenterDistance} proj=${Array.from(this.transform.projectionMatrix).slice(0,4)}`);
+        } catch(e) {
+            console.log(`[Map._render DEBUG error] ${e}`);
+        }
 
         this.fire(new Event('render'));
 

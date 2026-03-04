@@ -23,6 +23,11 @@ import {renderColorRamp} from '../util/color_ramp';
 import {EXTENT} from '../data/extent';
 import type {RGBAImage} from '../util/image';
 
+// Drawable imports
+import {DrawableBuilder} from './drawable/drawable_builder';
+import {TileLayerGroup} from './drawable/tile_layer_group';
+import {LineLayerTweaker} from './drawable/tweakers/line_layer_tweaker';
+
 type GradientTexture = {
     texture?: Texture;
     gradient?: RGBAImage;
@@ -148,6 +153,12 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     const width = layer.paint.get('line-width');
     if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0) return;
 
+    // Use drawable path if enabled
+    if (painter.useDrawables && painter.useDrawables.has('line')) {
+        drawLineDrawable(painter, tileManager, layer, coords, renderOptions);
+        return;
+    }
+
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
 
@@ -244,5 +255,151 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
 
         firstTile = false;
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic
+    }
+}
+
+/**
+ * Drawable-based rendering path for lines.
+ */
+function drawLineDrawable(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+    const {isRenderingToTexture} = renderOptions;
+    const context = painter.context;
+    const gl = context.gl;
+    const transform = painter.transform;
+
+    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
+    const colorMode = painter.colorModeForRenderPass();
+
+    const dasharrayProperty = layer.paint.get('line-dasharray');
+    const dasharray = dasharrayProperty.constantOr(1 as any);
+    const patternProperty = layer.paint.get('line-pattern');
+    const image = patternProperty.constantOr(1 as any);
+    const gradient = layer.paint.get('line-gradient');
+    const crossfade = layer.getCrossfadeParameters();
+
+    let programId: string;
+    if (image) programId = 'linePattern';
+    else if (dasharray && gradient) programId = 'lineGradientSDF';
+    else if (dasharray) programId = 'lineSDF';
+    else if (gradient) programId = 'lineGradient';
+    else programId = 'line';
+
+    // Get or create tweaker
+    let tweaker = painter.layerTweakers.get(layer.id) as LineLayerTweaker;
+    if (!tweaker) {
+        tweaker = new LineLayerTweaker(layer.id);
+        painter.layerTweakers.set(layer.id, tweaker);
+    }
+
+    // Get or create layer group
+    let layerGroup = painter.layerGroups.get(layer.id);
+    if (!layerGroup) {
+        layerGroup = new TileLayerGroup(layer.id);
+        painter.layerGroups.set(layer.id, layerGroup);
+    }
+
+    const visibleTileKeys = new Set<string>();
+    let firstTile = true;
+
+    for (const coord of coords) {
+        visibleTileKeys.add(coord.key.toString());
+
+        const tile = tileManager.getTile(coord);
+        if (image && !tile.patternsLoaded()) continue;
+
+        const bucket: LineBucket = (tile.getBucket(layer) as any);
+        if (!bucket) continue;
+
+        // Rebuild drawables each frame
+        layerGroup.removeDrawablesForTile(coord);
+
+        const programConfiguration = bucket.programConfigurations.get(layer.id);
+        const prevProgram = context.program.get();
+        const program = painter.useProgram(programId, programConfiguration);
+        const programChanged = firstTile || program.program !== prevProgram;
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+
+        const constantPattern = patternProperty.constantOr(null);
+        const constantDasharray = dasharrayProperty && dasharrayProperty.constantOr(null);
+
+        if (constantPattern && tile.imageAtlas) {
+            const atlas = tile.imageAtlas;
+            const posTo = atlas.patternPositions[constantPattern.to.toString()];
+            const posFrom = atlas.patternPositions[constantPattern.from.toString()];
+            if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
+        } else if (constantDasharray) {
+            const round = layer.layout.get('line-cap') === 'round';
+            const dashTo = painter.lineAtlas.getDash(constantDasharray.to, round);
+            const dashFrom = painter.lineAtlas.getDash(constantDasharray.from, round);
+            programConfiguration.setConstantDashPositions(dashTo, dashFrom);
+        }
+
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: coord,
+            applyGlobeMatrix: !isRenderingToTexture,
+            applyTerrainMatrix: true
+        });
+
+        const pixelRatio = transform.getPixelScale();
+
+        // Compute uniform values and bind textures (same as legacy path)
+        let uniformValues;
+        if (image) {
+            uniformValues = linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade);
+            bindImagePatternTextures(context, gl, tile, programConfiguration, crossfade);
+        } else if (dasharray && gradient) {
+            uniformValues = lineGradientSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, bucket.lineClipsArray.length);
+            bindGradientAndDashTextures(painter, tileManager, context, gl, layer, bucket, coord, programConfiguration, crossfade);
+        } else if (dasharray) {
+            uniformValues = lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade);
+            bindDasharrayTextures(painter, context, gl, programConfiguration, programChanged, crossfade);
+        } else if (gradient) {
+            uniformValues = lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length);
+            bindGradientTextures(painter, tileManager, context, gl, layer, bucket, coord);
+        } else {
+            uniformValues = lineUniformValues(painter, tile, layer, pixelRatio);
+        }
+
+        const stencil = painter.stencilModeForClipping(coord);
+
+        const lineBuilder = new DrawableBuilder()
+            .setShader(programId)
+            .setRenderPass('translucent')
+            .setDepthMode(depthMode)
+            .setStencilMode(stencil)
+            .setColorMode(colorMode)
+            .setCullFaceMode(CullFaceMode.disabled)
+            .setLayerTweaker(tweaker);
+
+        const drawable = lineBuilder.flush({
+            tileID: coord,
+            layer,
+            program,
+            programConfiguration,
+            layoutVertexBuffer: bucket.layoutVertexBuffer,
+            indexBuffer: bucket.indexBuffer,
+            segments: bucket.segments,
+            dynamicLayoutBuffer: bucket.layoutVertexBuffer2,
+            projectionData,
+            terrainData: terrainData || null,
+            paintProperties: layer.paint,
+            zoom: painter.transform.zoom,
+        });
+        drawable.uniformValues = uniformValues as any;
+        layerGroup.addDrawable(coord, drawable);
+
+        firstTile = false;
+    }
+
+    // Remove stale tiles
+    layerGroup.removeDrawablesIf(d => d.tileID !== null && !visibleTileKeys.has(d.tileID.key.toString()));
+
+    // Run tweaker
+    const allDrawables = layerGroup.getAllDrawables();
+    tweaker.execute(allDrawables, painter, layer, coords);
+
+    // Draw
+    for (const drawable of allDrawables) {
+        drawable.draw(context, painter.device, painter, renderOptions.renderPass);
     }
 }

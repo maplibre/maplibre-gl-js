@@ -18,7 +18,7 @@ describe('VertexBuffer', () => {
     ] as StructArrayMember[];
 
     test('constructs itself', () => {
-        const context = new Context(gl);
+        const context = new Context(gl, null);
         const array = new TestArray();
         array.emplaceBack(1, 1, 1);
         array.emplaceBack(1, 1, 1);
@@ -35,7 +35,7 @@ describe('VertexBuffer', () => {
     });
 
     test('enableAttributes', () => {
-        const context = new Context(gl);
+        const context = new Context(gl, null);
         const array = new TestArray();
         const buffer = new VertexBuffer(context, array, attributes);
         const spy = vi.spyOn(context.gl, 'enableVertexAttribArray').mockImplementation(() => {});
@@ -44,7 +44,7 @@ describe('VertexBuffer', () => {
     });
 
     test('setVertexAttribPointers', () => {
-        const context = new Context(gl);
+        const context = new Context(gl, null);
         const array = new TestArray();
         const buffer = new VertexBuffer(context, array, attributes);
         const spy = vi.spyOn(context.gl, 'vertexAttribPointer').mockImplementation(() => {});
