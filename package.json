@@ -90,7 +90,7 @@
     "eslint-plugin-tsdoc": "0.5.2",
     "expect": "^30.2.0",
     "glob": "^13.0.6",
-    "globals": "^17.3.0",
+    "globals": "^17.4.0",
     "is-builtin-module": "^5.0.0",
     "jsdom": "^28.1.0",
     "junit-report-builder": "^5.1.1",
