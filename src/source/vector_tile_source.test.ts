@@ -7,7 +7,7 @@ import {OverscaledTileID} from '../tile/tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
-import {getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util';
+import {getMockDispatcher, getWrapDispatcher, waitForEvent, waitForMetadataEvent} from '../util/test/util';
 import {type Map} from '../ui/map';
 import {type WorkerTileParameters} from './worker_source';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
@@ -427,14 +427,13 @@ describe('VectorTileSource', () => {
         });
     });
 
-    test('setTiles only clears the cache once the TileJSON has reloaded', async () => {
+    test('setTiles updates tiles without clearing the cache', async () => {
         const clearTiles = vi.fn();
         const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']}, undefined, clearTiles);
         source.setTiles(['http://example2.com/{z}/{x}/{y}.pbf']);
-        expect(clearTiles.mock.calls).toHaveLength(0);
-        await sleep(0);
-        await source.once('data');
-        expect(clearTiles.mock.calls).toHaveLength(1);
+        const e: MapSourceDataEvent = await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        expect(e.sourceDataChanged).toBe(true);
+        expect(clearTiles).not.toHaveBeenCalled();
     });
 
     test('returns early after worker response if tile was aborted', async () => {
