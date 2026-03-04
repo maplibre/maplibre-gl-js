@@ -231,7 +231,9 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
         });
 
         const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
-        const stencil = painter.stencilModeForClipping(coord);
+        // In WebGPU mode, stencil clipping is handled by _drawWebGPU via setStencilReference
+        const isWebGPU = painter.device?.type === 'webgpu';
+        const stencil = isWebGPU ? null : painter.stencilModeForClipping(coord);
 
         // Draw fill triangles
         if (painter.renderPass === pass) {
@@ -239,7 +241,6 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
                 1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
             const programName = image ? 'fillPattern' : 'fill';
             // Skip WebGL program creation in WebGPU mode (would fail and log noise)
-            const isWebGPU = painter.device?.type === 'webgpu';
             const program = isWebGPU ? null : painter.useProgram(programName, programConfiguration);
             const uniformValues = image ?
                 fillPatternUniformValues(painter, crossfade, tile, translateForUniforms) :

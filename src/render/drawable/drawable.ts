@@ -300,6 +300,21 @@ export class Drawable {
                 const shaderModule = gpuDevice.createShaderModule({code: wgslSource});
                 const canvasFormat = (navigator as any).gpu.getPreferredCanvasFormat();
 
+                // Determine if this layer needs stencil clipping (fill/line use tile stencil)
+                const needsStencilClip = this.shaderName === 'fill' || this.shaderName === 'line';
+
+                const depthStencilState: any = {
+                    format: 'depth24plus-stencil8',
+                    depthWriteEnabled: true,
+                    depthCompare: 'less-equal',
+                };
+                if (needsStencilClip) {
+                    depthStencilState.stencilFront = {compare: 'equal', passOp: 'keep', failOp: 'keep', depthFailOp: 'keep'};
+                    depthStencilState.stencilBack = {compare: 'equal', passOp: 'keep', failOp: 'keep', depthFailOp: 'keep'};
+                    depthStencilState.stencilReadMask = 0xFF;
+                    depthStencilState.stencilWriteMask = 0x00;
+                }
+
                 const pipeline = gpuDevice.createRenderPipeline({
                     layout: 'auto',
                     vertex: {
@@ -317,7 +332,7 @@ export class Drawable {
                         targets: [{format: canvasFormat}],
                     },
                     primitive: {topology: 'triangle-list'},
-                    depthStencil: {format: 'depth24plus', depthWriteEnabled: true, depthCompare: 'less-equal'},
+                    depthStencil: depthStencilState,
                 });
 
                 (painter as any)._rawPipelines[cacheKey] = pipeline;
@@ -350,6 +365,15 @@ export class Drawable {
 
             rpEncoder.setPipeline(pipeline);
             rpEncoder.setBindGroup(0, bindGroup);
+
+            // Set stencil reference for tile clipping
+            if (this.tileID) {
+                const stencilRef = painter.getWebGPUStencilRef(this.tileID);
+                if (stencilRef) {
+                    rpEncoder.setStencilReference(stencilRef);
+                }
+            }
+
             rpEncoder.setVertexBuffer(0, this.layoutVertexBuffer.webgpuBuffer.handle);
             rpEncoder.setIndexBuffer(this.indexBuffer.webgpuBuffer.handle, 'uint16');
 

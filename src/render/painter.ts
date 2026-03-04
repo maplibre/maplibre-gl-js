@@ -153,6 +153,12 @@ export class Painter {
     pipelineCache: PipelineCache;
     globalUBO: UniformBlock;
     useDrawables: Set<string>;
+    _webgpuDepthStencilTexture: any;
+    _webgpuStencilClipPipeline: any;
+    _webgpuClipUBOBuffers: any[];
+    _webgpuTileStencilRefs: { [_: string]: number };
+    _webgpuNextStencilID: number;
+    _webgpuCurrentStencilSource: string;
 
     constructor(gl: WebGLRenderingContext | WebGL2RenderingContext | null, device: Device, transform: IReadonlyTransform) {
         this.context = new Context(gl, device);
@@ -376,6 +382,144 @@ export class Painter {
     }
 
     /**
+     * WebGPU stencil clipping: writes unique stencil IDs per tile.
+     * Called before rendering layers that need tile clipping (fill, line, etc).
+     */
+    _renderTileClippingMasksWebGPU(layer: StyleLayer, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean) {
+        if (!this.renderPassWGSL || !tileIDs || !tileIDs.length) return;
+        if (this._webgpuCurrentStencilSource === layer.source || !layer.isTileClipped()) return;
+
+        this._webgpuCurrentStencilSource = layer.source;
+
+        if (this._webgpuNextStencilID + tileIDs.length > 256) {
+            this._webgpuNextStencilID = 1;
+        }
+
+        const gpuDevice = (this.device as any).handle;
+        const rpEncoder = this.renderPassWGSL.handle;
+        const projection = this.style.projection;
+        const transform = this.transform;
+
+        // Get or create stencil clipping pipeline
+        if (!this._webgpuStencilClipPipeline) {
+            const shaderCode = `
+struct ClipUBO { matrix: mat4x4<f32> };
+@group(0) @binding(0) var<uniform> clip: ClipUBO;
+
+struct VertexInput { @location(0) pos: vec2<i32> };
+struct VertexOutput { @builtin(position) position: vec4<f32> };
+
+@vertex fn vertexMain(vin: VertexInput) -> VertexOutput {
+    var vout: VertexOutput;
+    let p = vec2<f32>(f32(vin.pos.x), f32(vin.pos.y));
+    vout.position = clip.matrix * vec4<f32>(p, 0.0, 1.0);
+    vout.position.z = (vout.position.z + vout.position.w) * 0.5;
+    return vout;
+}
+
+@fragment fn fragmentMain() -> @location(0) vec4<f32> {
+    return vec4<f32>(0.0, 0.0, 0.0, 0.0);
+}`;
+            const module = gpuDevice.createShaderModule({code: shaderCode});
+            const canvasFormat = (navigator as any).gpu.getPreferredCanvasFormat();
+            this._webgpuStencilClipPipeline = gpuDevice.createRenderPipeline({
+                layout: 'auto',
+                vertex: {
+                    module,
+                    entryPoint: 'vertexMain',
+                    buffers: [{
+                        arrayStride: 4, // 2x Int16
+                        stepMode: 'vertex' as any,
+                        attributes: [{shaderLocation: 0, format: 'sint16x2' as any, offset: 0}],
+                    }],
+                },
+                fragment: {
+                    module,
+                    entryPoint: 'fragmentMain',
+                    targets: [{
+                        format: canvasFormat,
+                        writeMask: 0, // Don't write to color buffer
+                    }],
+                },
+                primitive: {topology: 'triangle-list'},
+                depthStencil: {
+                    format: 'depth24plus-stencil8',
+                    depthWriteEnabled: false,
+                    depthCompare: 'always',
+                    stencilFront: {compare: 'always', passOp: 'replace', failOp: 'keep', depthFailOp: 'keep'},
+                    stencilBack: {compare: 'always', passOp: 'replace', failOp: 'keep', depthFailOp: 'keep'},
+                    stencilReadMask: 0xFF,
+                    stencilWriteMask: 0xFF,
+                },
+            });
+        }
+
+        const stencilRefs: { [_: string]: number } = {};
+
+        // Ensure we have enough per-tile UBO buffers (each tile needs its own buffer
+        // because writeBuffer + render pass commands are deferred — a single buffer
+        // would only contain the last tile's matrix when the GPU executes).
+        const needed = tileIDs.length;
+        if (!this._webgpuClipUBOBuffers) this._webgpuClipUBOBuffers = [];
+        while (this._webgpuClipUBOBuffers.length < needed) {
+            this._webgpuClipUBOBuffers.push(gpuDevice.createBuffer({
+                size: 64, // mat4x4<f32>
+                usage: 64 | 8, // GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+            }));
+        }
+
+        const pipeline = this._webgpuStencilClipPipeline;
+        rpEncoder.setPipeline(pipeline);
+
+        // Two passes: first with borders, then without (matching WebGL approach)
+        for (const useBorders of [true, false]) {
+            for (let i = 0; i < tileIDs.length; i++) {
+                const tileID = tileIDs[i];
+                if (useBorders) {
+                    stencilRefs[tileID.key] = this._webgpuNextStencilID++;
+                }
+                const stencilRef = stencilRefs[tileID.key];
+
+                const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
+                const projectionData = transform.getProjectionData({
+                    overscaledTileID: tileID,
+                    applyGlobeMatrix: !renderToTexture,
+                    applyTerrainMatrix: true
+                });
+
+                // Each tile gets its own buffer so the GPU sees the correct matrix
+                const clipUBOBuffer = this._webgpuClipUBOBuffers[i];
+                gpuDevice.queue.writeBuffer(clipUBOBuffer, 0, projectionData.mainMatrix as Float32Array);
+
+                const bindGroup = gpuDevice.createBindGroup({
+                    layout: pipeline.getBindGroupLayout(0),
+                    entries: [{binding: 0, resource: {buffer: clipUBOBuffer}}],
+                });
+
+                rpEncoder.setStencilReference(stencilRef);
+                rpEncoder.setBindGroup(0, bindGroup);
+                rpEncoder.setVertexBuffer(0, mesh.vertexBuffer.webgpuBuffer.handle);
+                rpEncoder.setIndexBuffer(mesh.indexBuffer.webgpuBuffer.handle, 'uint16');
+
+                for (const segment of mesh.segments.get()) {
+                    const indexCount = segment.primitiveLength * 3;
+                    const firstIndex = segment.primitiveOffset * 3;
+                    rpEncoder.drawIndexed(indexCount, 1, firstIndex, segment.vertexOffset);
+                }
+            }
+        }
+
+        this._webgpuTileStencilRefs = stencilRefs;
+    }
+
+    /**
+     * Get the WebGPU stencil reference for a tile (set during clipping mask pass).
+     */
+    getWebGPUStencilRef(tileID: OverscaledTileID): number {
+        return this._webgpuTileStencilRefs?.[tileID.key] ?? 0;
+    }
+
+    /**
      * Fills the depth buffer with the geometry of all supplied tiles.
      * Does not change the color buffer or the stencil buffer.
      */
@@ -537,14 +681,54 @@ export class Painter {
         this.options = options;
 
         if (this.device && this.device.type === 'webgpu') {
-            console.log('[Painter.render] Executing native WebGPU RenderPass!');
             try {
-                // Initialize the render pass once per frame for now and store it on Painter.
-                this.renderPassWGSL = this.device.beginRenderPass({
-                    clearColor: [0.0, 1.0, 0.0, 1.0] // Green clear indicates WebGPU is active
+                // Create render pass with depth24plus-stencil8 for stencil clipping support.
+                // We bypass luma.gl's beginRenderPass because it hardcodes hasStencilAspect=false.
+                const gpuDevice = (this.device as any).handle;
+                const canvasCtx = (this.device as any).canvasContext;
+                const currentTexture = canvasCtx.handle.getCurrentTexture();
+                const colorView = currentTexture.createView();
+
+                // Create or reuse depth-stencil texture with stencil
+                if (!this._webgpuDepthStencilTexture ||
+                    this._webgpuDepthStencilTexture.width !== currentTexture.width ||
+                    this._webgpuDepthStencilTexture.height !== currentTexture.height) {
+                    if (this._webgpuDepthStencilTexture) this._webgpuDepthStencilTexture.destroy();
+                    this._webgpuDepthStencilTexture = gpuDevice.createTexture({
+                        size: [currentTexture.width, currentTexture.height],
+                        format: 'depth24plus-stencil8',
+                        usage: 16, // GPUTextureUsage.RENDER_ATTACHMENT
+                    });
+                }
+                const dsView = this._webgpuDepthStencilTexture.createView();
+
+                // Use luma.gl's command encoder so device.submit() still works
+                const commandEncoder = (this.device as any).commandEncoder.handle;
+                const rpEncoder = commandEncoder.beginRenderPass({
+                    colorAttachments: [{
+                        view: colorView,
+                        clearValue: {r: 0, g: 1, b: 0, a: 1},
+                        loadOp: 'clear',
+                        storeOp: 'store',
+                    }],
+                    depthStencilAttachment: {
+                        view: dsView,
+                        depthClearValue: 1.0,
+                        depthLoadOp: 'clear',
+                        depthStoreOp: 'store',
+                        stencilClearValue: 0,
+                        stencilLoadOp: 'clear',
+                        stencilStoreOp: 'store',
+                    },
                 });
-                console.log('[Painter.render] RenderPass created:', !!this.renderPassWGSL,
-                    'canvasContext:', !!(this.device as any).canvasContext);
+
+                // Wrap in object with .handle so _drawWebGPU can access the raw encoder
+                this.renderPassWGSL = {handle: rpEncoder, _isRawEncoder: true};
+
+                // Reset stencil state for this frame
+                this._webgpuNextStencilID = 1;
+                this._webgpuCurrentStencilSource = '';
+                this._webgpuTileStencilRefs = {};
             } catch (e) {
                 console.error('[Painter.render] WebGPU RenderPass failed!', e);
             }
@@ -652,7 +836,11 @@ export class Painter {
                 const tileManager = tileManagers[layer.source];
                 const coords = coordsAscending[layer.source];
 
-                this._renderTileClippingMasks(layer, coords, false);
+                if (this.device?.type === 'webgpu') {
+                    this._renderTileClippingMasksWebGPU(layer, coords, false);
+                } else {
+                    this._renderTileClippingMasks(layer, coords, false);
+                }
                 this.renderLayer(this, tileManager, layer, coords, renderOptions);
             }
         }
@@ -671,19 +859,18 @@ export class Painter {
 
             if (!this.opaquePassEnabledForLayer() && !globeDepthRendered) {
                 globeDepthRendered = true;
-                // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
-                // There should be no need for explicitly writing tile depths when terrain is enabled.
                 if (renderOptions.isRenderingGlobe && !this.style.map.terrain) {
                     this._renderTilesDepthBuffer();
                 }
             }
 
-            // For symbol layers in the translucent pass, we add extra tiles to the renderable set
-            // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render
-            // separate clipping masks
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
-            this._renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
+            if (this.device?.type === 'webgpu') {
+                this._renderTileClippingMasksWebGPU(layer, coordsAscending[layer.source], !!this.renderToTexture);
+            } else {
+                this._renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
+            }
 
             this.renderLayer(this, tileManager, layer, coords, renderOptions);
         }
@@ -706,13 +893,20 @@ export class Painter {
 
         // End the WebGPU render pass to submit GPU commands
         if (this.renderPassWGSL) {
-            this.renderPassWGSL.end();
-            this.renderPassWGSL = null;
-            // Explicitly submit GPU command buffer
-            if (this.device && (this.device as any).submit) {
-                (this.device as any).submit();
+            if (this.renderPassWGSL._isRawEncoder) {
+                // Raw GPURenderPassEncoder — end and submit via luma.gl device
+                this.renderPassWGSL.handle.end();
+                this.renderPassWGSL = null;
+                if (this.device && (this.device as any).submit) {
+                    (this.device as any).submit();
+                }
+            } else {
+                this.renderPassWGSL.end();
+                this.renderPassWGSL = null;
+                if (this.device && (this.device as any).submit) {
+                    (this.device as any).submit();
+                }
             }
-            console.log('[Painter.render] WebGPU render pass ended and submitted');
         }
 
         // Set defaults for most GL values so that anyone using the state after the render

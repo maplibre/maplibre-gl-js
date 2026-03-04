@@ -47,7 +47,7 @@ export class DrawableBuilder {
         return this;
     }
 
-    setStencilMode(mode: Readonly<StencilMode>): this {
+    setStencilMode(mode: Readonly<StencilMode> | null): this {
         this._stencilMode = mode;
         return this;
     }

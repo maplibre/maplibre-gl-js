@@ -363,7 +363,8 @@ function drawLineDrawable(painter: Painter, tileManager: TileManager, layer: Lin
             uniformValues = lineUniformValues(painter, tile, layer, pixelRatio);
         }
 
-        const stencil = painter.stencilModeForClipping(coord);
+        // In WebGPU mode, stencil clipping is handled by _drawWebGPU via setStencilReference
+        const stencil = isWebGPU ? null : painter.stencilModeForClipping(coord);
 
         const lineBuilder = new DrawableBuilder()
             .setShader(programId)
