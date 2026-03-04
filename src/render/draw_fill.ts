@@ -204,14 +204,14 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
     for (const coord of coords) {
         visibleTileKeys.add(coord.key.toString());
 
+        // Reuse existing drawable if tile already has one (avoids GPU buffer churn)
+        if (layerGroup.hasDrawablesForTile(coord)) continue;
+
         const tile = tileManager.getTile(coord);
         if (image && !tile.patternsLoaded()) continue;
 
         const bucket: FillBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
-
-        // Rebuild drawables each frame
-        layerGroup.removeDrawablesForTile(coord);
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
@@ -238,7 +238,9 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
             const depthMode = painter.getDepthModeForSublayer(
                 1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
             const programName = image ? 'fillPattern' : 'fill';
-            const program = painter.useProgram(programName, programConfiguration);
+            // Skip WebGL program creation in WebGPU mode (would fail and log noise)
+            const isWebGPU = painter.device?.type === 'webgpu';
+            const program = isWebGPU ? null : painter.useProgram(programName, programConfiguration);
             const uniformValues = image ?
                 fillPatternUniformValues(painter, crossfade, tile, translateForUniforms) :
                 fillUniformValues(translateForUniforms);
@@ -269,8 +271,8 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
             layerGroup.addDrawable(coord, fillDrawable);
         }
 
-        // Draw outline
-        if (painter.renderPass === 'translucent' && layer.paint.get('fill-antialias')) {
+        // Draw outline (skip in WebGPU mode — no fillOutline WGSL shader yet)
+        if (painter.renderPass === 'translucent' && layer.paint.get('fill-antialias') && painter.device?.type !== 'webgpu') {
             const depthMode = painter.getDepthModeForSublayer(
                 layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
             const outlineProgramName = image && !layer.getPaintProperty('fill-outline-color') ? 'fillOutlinePattern' : 'fillOutline';

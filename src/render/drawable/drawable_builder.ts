@@ -93,7 +93,7 @@ export class DrawableBuilder {
     flush(params: {
         tileID: OverscaledTileID;
         layer: StyleLayer;
-        program: Program<any>;
+        program?: Program<any> | null;
         programConfiguration: ProgramConfiguration;
         layoutVertexBuffer: VertexBuffer;
         indexBuffer: IndexBuffer;
@@ -137,7 +137,7 @@ export class DrawableBuilder {
         drawable.textures = [...this._textures];
 
         // GL program for WebGL path
-        drawable._glProgram = params.program;
+        drawable._glProgram = params.program || null;
 
         // Projection & terrain
         drawable.projectionData = params.projectionData || null;

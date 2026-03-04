@@ -5,6 +5,7 @@ import type {Painter} from '../../painter';
 import type {StyleLayer} from '../../../style/style_layer';
 import type {LineStyleLayer} from '../../../style/style_layer/line_style_layer';
 import type {OverscaledTileID} from '../../../tile/tile_id';
+import {pixelsToTileUnits} from '../../../source/pixels_to_tile_units';
 
 // LineEvaluatedPropsUBO layout (48 bytes, 16-byte aligned):
 // color:       vec4<f32>     offset 0   (16 bytes)
@@ -85,6 +86,9 @@ export class LineLayerTweaker extends LayerTweaker {
         }
 
         // Update per-drawable data
+        const zoom = transform.zoom;
+        const pixelScale = transform.getPixelScale();
+
         for (const drawable of drawables) {
             if (!drawable.enabled || !drawable.tileID) continue;
 
@@ -95,6 +99,17 @@ export class LineLayerTweaker extends LayerTweaker {
                 applyTerrainMatrix: true
             });
             drawable.projectionData = projectionData;
+
+            // Set drawableUBO with matrix + line-specific uniforms for WebGPU path
+            // LineDrawableUBO: matrix(64) + ratio(4) + device_pixel_ratio(4) + units_to_pixels(8) = 80 bytes
+            if (!drawable.drawableUBO) {
+                drawable.drawableUBO = new UniformBlock(80);
+            }
+            drawable.drawableUBO.setMat4(0, projectionData.mainMatrix as Float32Array);
+            const tileProxy = {tileID: drawable.tileID, tileSize: transform.tileSize};
+            drawable.drawableUBO.setFloat(64, pixelScale / pixelsToTileUnits(tileProxy, 1, zoom));
+            drawable.drawableUBO.setFloat(68, painter.pixelRatio);
+            drawable.drawableUBO.setVec2(72, 1 / transform.pixelsToGLUnits[0], 1 / transform.pixelsToGLUnits[1]);
 
             // Share the layer-level UBO reference
             drawable.layerUBO = this.evaluatedPropsUBO;

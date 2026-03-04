@@ -304,19 +304,22 @@ function drawLineDrawable(painter: Painter, tileManager: TileManager, layer: Lin
     for (const coord of coords) {
         visibleTileKeys.add(coord.key.toString());
 
+        // Reuse existing drawable if tile already has one (avoids GPU buffer churn)
+        if (layerGroup.hasDrawablesForTile(coord)) {
+            continue;
+        }
+
         const tile = tileManager.getTile(coord);
         if (image && !tile.patternsLoaded()) continue;
 
         const bucket: LineBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
-        // Rebuild drawables each frame
-        layerGroup.removeDrawablesForTile(coord);
-
         const programConfiguration = bucket.programConfigurations.get(layer.id);
+        const isWebGPU = painter.device?.type === 'webgpu';
         const prevProgram = context.program.get();
-        const program = painter.useProgram(programId, programConfiguration);
-        const programChanged = firstTile || program.program !== prevProgram;
+        const program = isWebGPU ? null : painter.useProgram(programId, programConfiguration);
+        const programChanged = firstTile || (program && program.program !== prevProgram);
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 
         const constantPattern = patternProperty.constantOr(null);

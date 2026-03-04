@@ -171,6 +171,8 @@ export class Painter {
         // Enable drawable path for WebGPU
         if (this.device && this.device.type === 'webgpu') {
             this.useDrawables.add('circle');
+            this.useDrawables.add('fill');
+            this.useDrawables.add('line');
         }
 
         this.setup();

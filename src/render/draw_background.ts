@@ -64,10 +64,6 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
             applyTerrainMatrix: true
         });
 
-        if (tileID.overscaledZ === 1) { // Log selectively
-            console.log(`[drawBackground] proj=${Array.from(projectionData.mainMatrix as any).slice(0, 4).join(',')} viewport=${painter.width}x${painter.height} dToCenter=${transform.cameraToCenterDistance}`);
-        }
-
         const uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(opacity, color);
@@ -106,19 +102,15 @@ function drawBackgroundDrawable(painter: Painter, layer: BackgroundStyleLayer, c
     const color = layer.paint.get('background-color');
     const opacity = layer.paint.get('background-opacity');
     const pass = (color.a === 1 && opacity === 1 && painter.opaquePassEnabledForLayer()) ? 'opaque' : 'translucent';
-    if (painter.renderPass !== pass) {
-        console.log(`[drawBackgroundDrawable] skip pass=${pass} renderPass=${painter.renderPass}`);
-        return;
-    }
-    console.log(`[drawBackgroundDrawable] DRAWING pass=${pass} color=(${color.r},${color.g},${color.b},${color.a}) opacity=${opacity}`);
+    if (painter.renderPass !== pass) return;
 
     const stencilMode = StencilMode.disabled;
     const depthMode = painter.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
-    const program = painter.useProgram('background');
+    // Skip WebGL program creation in WebGPU mode
+    const program = painter.device?.type === 'webgpu' ? null : painter.useProgram('background');
 
     const tileIDs = coords ? coords : coveringTiles(transform, {tileSize, terrain: painter.style.map.terrain});
-    console.log(`[drawBackgroundDrawable] tileIDs=${tileIDs.length} coords=${coords?.length}`);
 
     // Get or create tweaker
     let tweaker = painter.layerTweakers.get(layer.id) as BackgroundLayerTweaker;
@@ -147,7 +139,8 @@ function drawBackgroundDrawable(painter: Painter, layer: BackgroundStyleLayer, c
     for (const tileID of tileIDs) {
         visibleTileKeys.add(tileID.key.toString());
 
-        layerGroup.removeDrawablesForTile(tileID);
+        // Reuse existing drawable if tile already has one (avoids GPU buffer churn)
+        if (layerGroup.hasDrawablesForTile(tileID)) continue;
 
         const mesh = projection.getMeshFromTileID(context, tileID.canonical, false, true, 'raster');
         const projectionData = transform.getProjectionData({

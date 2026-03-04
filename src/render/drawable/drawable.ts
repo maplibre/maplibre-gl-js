@@ -231,14 +231,13 @@ export class Drawable {
     }
 
     /**
-     * WebGPU draw path: uses luma.gl Model with pipeline caching.
+     * WebGPU draw path: raw GPURenderPipeline with dynamic bind group entries.
      */
     private _drawWebGPU(device: Device, painter: Painter, renderPass?: any): void {
         if (!renderPass || !this.layoutVertexBuffer || !this.indexBuffer || !this.segments) return;
         if (!this.drawableUBO || !this.layerUBO) return;
 
         try {
-            // Direct WebGPU draw bypassing luma.gl Model
             const gpuDevice = (device as any).handle;
             const rpEncoder = (renderPass as any).handle;
             if (!gpuDevice || !rpEncoder) return;
@@ -254,16 +253,15 @@ export class Drawable {
             const drawableVecBuf = this._uploadAsStorage(device, this.drawableUBO);
             const propsBuf = this.layerUBO.upload(device);
 
-            // Get or create pipeline and bind group layout (cached on painter)
+            // Get or create pipeline (cached on painter)
             const cacheKey = `raw_${this.shaderName}`;
             if (!(painter as any)._rawPipelines) (painter as any)._rawPipelines = {};
             if (!(painter as any)._rawPipelines[cacheKey]) {
-                // Build WGSL with VertexInput struct
                 const wgslKey = `${this.shaderName}Wgsl`;
                 let wgslSource = (shaders as any)[wgslKey];
                 if (!wgslSource) return;
 
-                // Generate VertexInput struct
+                // Generate VertexInput struct from layout buffer attributes
                 let vertexInputStruct = 'struct VertexInput {\n';
                 const vbAttributes: any[] = [];
                 let locationIndex = 0;
@@ -273,6 +271,8 @@ export class Drawable {
                     let wgslType = 'vec4<f32>';
                     if (format.startsWith('sint16')) {
                         wgslType = format === 'sint16' ? 'i32' : `vec${format.charAt(format.length - 1)}<i32>`;
+                    } else if (format.startsWith('uint8')) {
+                        wgslType = format === 'uint8' ? 'u32' : `vec${format.charAt(format.length - 1)}<u32>`;
                     } else if (format.startsWith('float32')) {
                         wgslType = format === 'float32' ? 'f32' : `vec${format.charAt(format.length - 1)}<f32>`;
                     }
@@ -286,6 +286,16 @@ export class Drawable {
                 } else {
                     wgslSource = `${vertexInputStruct}\n${wgslSource}`;
                 }
+
+                // Cache which bindings are declared in the WGSL source
+                const declaredBindings = new Set<number>();
+                const bindingRegex = /@binding\((\d+)\)/g;
+                let match: RegExpExecArray | null;
+                while ((match = bindingRegex.exec(wgslSource)) !== null) {
+                    declaredBindings.add(parseInt(match[1]));
+                }
+                if (!(painter as any)._rawBindings) (painter as any)._rawBindings = {};
+                (painter as any)._rawBindings[cacheKey] = declaredBindings;
 
                 const shaderModule = gpuDevice.createShaderModule({code: wgslSource});
                 const canvasFormat = (navigator as any).gpu.getPreferredCanvasFormat();
@@ -311,32 +321,31 @@ export class Drawable {
                 });
 
                 (painter as any)._rawPipelines[cacheKey] = pipeline;
-                console.log(`[RAW _drawWebGPU] Pipeline created for ${this.shaderName}, format=${canvasFormat}, stride=${this.layoutVertexBuffer.itemSize}`);
             }
 
             const pipeline = (painter as any)._rawPipelines[cacheKey];
+            const declaredBindings: Set<number> = (painter as any)._rawBindings[cacheKey];
 
-            // Debug: log buffer handles
-            if (!this._loggedDraw) {
-                const gi = globalIndexBuf.handle as any, dv = drawableVecBuf.handle as any, pr = propsBuf.handle as any;
-                console.log(`[RAW _drawWebGPU] globalIdx: handle=${!!gi} size=${gi?.size} usage=${gi?.usage}`);
-                console.log(`[RAW _drawWebGPU] drawableVec: handle=${!!dv} size=${dv?.size} usage=${dv?.usage}`);
-                console.log(`[RAW _drawWebGPU] props: handle=${!!pr} size=${pr?.size} usage=${pr?.usage}`);
+            // Build bind group entries dynamically based on shader declarations
+            const entries: any[] = [];
+            if (declaredBindings.has(0) && painter.globalUBO) {
+                const globalPaintBuf = painter.globalUBO.upload(device);
+                entries.push({binding: 0, resource: {buffer: globalPaintBuf.handle}});
+            }
+            if (declaredBindings.has(1)) {
+                entries.push({binding: 1, resource: {buffer: globalIndexBuf.handle}});
+            }
+            if (declaredBindings.has(2)) {
+                entries.push({binding: 2, resource: {buffer: drawableVecBuf.handle}});
+            }
+            if (declaredBindings.has(4)) {
+                entries.push({binding: 4, resource: {buffer: propsBuf.handle}});
             }
 
-            // Create bind group with validation error capture
             const bindGroupLayout = pipeline.getBindGroupLayout(0);
-            gpuDevice.pushErrorScope('validation');
             const bindGroup = gpuDevice.createBindGroup({
                 layout: bindGroupLayout,
-                entries: [
-                    {binding: 1, resource: {buffer: globalIndexBuf.handle}},
-                    {binding: 2, resource: {buffer: drawableVecBuf.handle}},
-                    {binding: 4, resource: {buffer: propsBuf.handle}},
-                ],
-            });
-            gpuDevice.popErrorScope().then((error: any) => {
-                if (error) console.log(`[RAW _drawWebGPU] BindGroup VALIDATION ERROR: ${error.message}`);
+                entries,
             });
 
             rpEncoder.setPipeline(pipeline);
@@ -350,13 +359,11 @@ export class Drawable {
                 const firstIndex = segment.primitiveOffset * 3;
                 rpEncoder.drawIndexed(indexCount, 1, firstIndex, segment.vertexOffset);
             }
-
+        } catch (e) {
             if (!this._loggedDraw) {
                 this._loggedDraw = true;
-                console.log(`[RAW _drawWebGPU] Drew ${this.shaderName}: segs=${segs.length}`);
+                console.warn('[_drawWebGPU] error:', this.shaderName, e);
             }
-        } catch (e) {
-            console.log('[RAW _drawWebGPU] error:', e);
         }
     }
 
@@ -511,6 +518,11 @@ export class Drawable {
 
     destroy(): void {
         if (this.drawableUBO) {
+            // Also destroy the storage buffer created by _uploadAsStorage
+            if ((this.drawableUBO as any)._storageBuffer) {
+                (this.drawableUBO as any)._storageBuffer.destroy();
+                (this.drawableUBO as any)._storageBuffer = null;
+            }
             this.drawableUBO.destroy();
             this.drawableUBO = null;
         }

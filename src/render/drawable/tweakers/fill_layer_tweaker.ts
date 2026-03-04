@@ -84,6 +84,12 @@ export class FillLayerTweaker extends LayerTweaker {
             });
             drawable.projectionData = projectionData;
 
+            // Set drawableUBO with matrix for WebGPU path
+            if (!drawable.drawableUBO) {
+                drawable.drawableUBO = new UniformBlock(64);
+            }
+            drawable.drawableUBO.setMat4(0, projectionData.mainMatrix as Float32Array);
+
             // Share the layer-level UBO reference
             drawable.layerUBO = this.evaluatedPropsUBO;
         }
