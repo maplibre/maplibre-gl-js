@@ -30,7 +30,7 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
     if (tileCornerToPointX < 0) {
         // Point is left of tile
         distanceX = Math.min(-tileCornerToPointX, 1.0 + tileCornerToPointX - tileSize);
-    } else if (tileCornerToPointX > 1) {
+    } else if (tileCornerToPointX > tileSize) {
         // Point is right of tile
         distanceX = Math.min(Math.max(tileCornerToPointX - tileSize, 0), 1.0 - tileCornerToPointX);
     } else {
@@ -95,7 +95,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         }
         return 0;
     }
-    
+
     allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): boolean {
         return coveringZoomLevel(transform, options) > 4;
     }
@@ -227,7 +227,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             // /--                 --\
             //    -----       -----
             //         ---m---
-            
+
             if (tileID.y >= (1 << tileID.z) / 2) {
                 // South hemisphere - include the tile's north edge midpoint
                 extremesPoints.push(vec3.scale([] as any, projectTileCoordinatesToSphere(EXTENT / 2, 0, tileID.x, tileID.y, tileID.z), maxElevation));
@@ -255,7 +255,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
 
             // North points
             if (tileID.y === 0) {
-                // If the tile borders a pole, then 
+                // If the tile borders a pole, then
                 points.push(
                     threePlaneIntersection(planeWest, planeEast, planeUp),
                     threePlaneIntersection(planeWest, planeEast, planeDown),
