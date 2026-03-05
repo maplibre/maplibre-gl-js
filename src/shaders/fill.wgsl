@@ -32,12 +32,11 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     let drawable = drawableVector[globalIndex.value];
     let pos = vec2<f32>(f32(vin.pos.x), f32(vin.pos.y));
     vout.position = drawable.matrix * vec4<f32>(pos, 0.0, 1.0);
-    // Remap z from WebGL NDC [-1,1] to WebGPU NDC [0,1]
     vout.position.z = (vout.position.z + vout.position.w) * 0.5;
     return vout;
 }
 
 @fragment
 fn fragmentMain() -> @location(0) vec4<f32> {
-    return props.color * props.opacity;
+    return vec4<f32>(props.color.rgb * props.opacity, props.color.a * props.opacity);
 }

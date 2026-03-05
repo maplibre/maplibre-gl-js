@@ -138,6 +138,10 @@ export class Drawable {
         if (!this.enabled) return;
 
         const isWebGPU = device && device.type === 'webgpu';
+        if (!(this as any)._loggedDraw2) {
+            (this as any)._loggedDraw2 = true;
+            console.warn(`[${this.shaderName} draw()] isWebGPU=${isWebGPU} device.type=${device?.type} enabled=${this.enabled} hasRP=${!!renderPass} rpType=${typeof renderPass}`);
+        }
         if (isWebGPU) {
             this._drawWebGPU(device, painter, renderPass);
         } else {
@@ -234,13 +238,31 @@ export class Drawable {
      * WebGPU draw path: raw GPURenderPipeline with dynamic bind group entries.
      */
     private _drawWebGPU(device: Device, painter: Painter, renderPass?: any): void {
-        if (!renderPass || !this.layoutVertexBuffer || !this.indexBuffer || !this.segments) return;
-        if (!this.drawableUBO || !this.layerUBO) return;
+        if (!renderPass || !this.layoutVertexBuffer || !this.indexBuffer || !this.segments) {
+            if (!(this as any)._loggedEarly) {
+                (this as any)._loggedEarly = true;
+                console.warn(`[${this.shaderName} EARLY] rp=${!!renderPass} vb=${!!this.layoutVertexBuffer} ib=${!!this.indexBuffer} seg=${!!this.segments}`);
+            }
+            return;
+        }
+        if (!this.drawableUBO || !this.layerUBO) {
+            if (!(this as any)._loggedEarly2) {
+                (this as any)._loggedEarly2 = true;
+                console.warn(`[${this.shaderName} EARLY2] drawableUBO=${!!this.drawableUBO} layerUBO=${!!this.layerUBO}`);
+            }
+            return;
+        }
 
         try {
             const gpuDevice = (device as any).handle;
             const rpEncoder = (renderPass as any).handle;
-            if (!gpuDevice || !rpEncoder) return;
+            if (!gpuDevice || !rpEncoder) {
+                if (!(this as any)._loggedRP) {
+                    (this as any)._loggedRP = true;
+                    console.warn(`[${this.shaderName} EARLY3] gpuDevice=${!!gpuDevice} rpEncoder=${!!rpEncoder} renderPass=${renderPass} rpKeys=${renderPass ? Object.keys(renderPass).join(',') : 'null'}`);
+                }
+                return;
+            }
 
             // Reuse globalIndex UBO across frames (32 bytes for WGSL alignment)
             if (!this._globalIndexUBO) {
@@ -298,22 +320,23 @@ export class Drawable {
                 (painter as any)._rawBindings[cacheKey] = declaredBindings;
 
                 const shaderModule = gpuDevice.createShaderModule({code: wgslSource});
+                shaderModule.getCompilationInfo().then((info: any) => {
+                    for (const msg of info.messages) {
+                        console.warn(`[WGSL ${msg.type}] ${this.shaderName}: ${msg.message} (line ${msg.lineNum})`);
+                    }
+                });
+                if (this.shaderName === 'fill') {
+                    console.warn('[FILL WGSL]', wgslSource.substring(0, 300));
+                }
                 const canvasFormat = (navigator as any).gpu.getPreferredCanvasFormat();
 
-                // Determine if this layer needs stencil clipping (fill/line use tile stencil)
-                const needsStencilClip = this.shaderName === 'fill' || this.shaderName === 'line';
-
+                // Fill/line use fragment-shader tile clipping (discard outside [0,EXTENT])
+                // instead of stencil — avoids stencil artifacts during zoom transitions.
                 const depthStencilState: any = {
                     format: 'depth24plus-stencil8',
-                    depthWriteEnabled: true,
-                    depthCompare: 'less-equal',
+                    depthWriteEnabled: false,
+                    depthCompare: 'always',
                 };
-                if (needsStencilClip) {
-                    depthStencilState.stencilFront = {compare: 'equal', passOp: 'keep', failOp: 'keep', depthFailOp: 'keep'};
-                    depthStencilState.stencilBack = {compare: 'equal', passOp: 'keep', failOp: 'keep', depthFailOp: 'keep'};
-                    depthStencilState.stencilReadMask = 0xFF;
-                    depthStencilState.stencilWriteMask = 0x00;
-                }
 
                 const pipeline = gpuDevice.createRenderPipeline({
                     layout: 'auto',
@@ -366,12 +389,11 @@ export class Drawable {
             rpEncoder.setPipeline(pipeline);
             rpEncoder.setBindGroup(0, bindGroup);
 
-            // Set stencil reference for tile clipping
-            if (this.tileID) {
+            // Set stencil reference for tile clipping (for layers that use stencil)
+            // Fill/line now use fragment-shader clipping, so stencil ref is only for other layers
+            if (this.tileID && this.shaderName !== 'fill' && this.shaderName !== 'line') {
                 const stencilRef = painter.getWebGPUStencilRef(this.tileID);
-                if (stencilRef) {
-                    rpEncoder.setStencilReference(stencilRef);
-                }
+                rpEncoder.setStencilReference(stencilRef);
             }
 
             rpEncoder.setVertexBuffer(0, this.layoutVertexBuffer.webgpuBuffer.handle);

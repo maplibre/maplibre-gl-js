@@ -387,9 +387,13 @@ export class Painter {
      */
     _renderTileClippingMasksWebGPU(layer: StyleLayer, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean) {
         if (!this.renderPassWGSL || !tileIDs || !tileIDs.length) return;
-        if (this._webgpuCurrentStencilSource === layer.source || !layer.isTileClipped()) return;
+        if (!layer.isTileClipped()) return;
 
-        this._webgpuCurrentStencilSource = layer.source;
+        // Re-render stencil masks for EVERY tile-clipped layer (matching native's
+        // per-layer-group approach). Each layer gets fresh stencil values drawn
+        // RIGHT BEFORE its drawables, ensuring stencil-fill consistency.
+        // The per-source guard was removed because it caused stale stencil state
+        // during zoom level transitions.
 
         if (this._webgpuNextStencilID + tileIDs.length > 256) {
             this._webgpuNextStencilID = 1;
@@ -454,8 +458,6 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
             });
         }
 
-        const stencilRefs: { [_: string]: number } = {};
-
         // Ensure we have enough per-tile UBO buffers (each tile needs its own buffer
         // because writeBuffer + render pass commands are deferred — a single buffer
         // would only contain the last tile's matrix when the GPU executes).
@@ -471,45 +473,52 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         const pipeline = this._webgpuStencilClipPipeline;
         rpEncoder.setPipeline(pipeline);
 
-        // Two passes: first with borders, then without (matching WebGL approach)
-        for (const useBorders of [true, false]) {
-            for (let i = 0; i < tileIDs.length; i++) {
-                const tileID = tileIDs[i];
-                if (useBorders) {
-                    stencilRefs[tileID.key] = this._webgpuNextStencilID++;
-                }
-                const stencilRef = stencilRefs[tileID.key];
-
-                const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
-                const projectionData = transform.getProjectionData({
-                    overscaledTileID: tileID,
-                    applyGlobeMatrix: !renderToTexture,
-                    applyTerrainMatrix: true
-                });
-
-                // Each tile gets its own buffer so the GPU sees the correct matrix
-                const clipUBOBuffer = this._webgpuClipUBOBuffers[i];
-                gpuDevice.queue.writeBuffer(clipUBOBuffer, 0, projectionData.mainMatrix as Float32Array);
-
-                const bindGroup = gpuDevice.createBindGroup({
-                    layout: pipeline.getBindGroupLayout(0),
-                    entries: [{binding: 0, resource: {buffer: clipUBOBuffer}}],
-                });
-
-                rpEncoder.setStencilReference(stencilRef);
-                rpEncoder.setBindGroup(0, bindGroup);
-                rpEncoder.setVertexBuffer(0, mesh.vertexBuffer.webgpuBuffer.handle);
-                rpEncoder.setIndexBuffer(mesh.indexBuffer.webgpuBuffer.handle, 'uint16');
-
-                for (const segment of mesh.segments.get()) {
-                    const indexCount = segment.primitiveLength * 3;
-                    const firstIndex = segment.primitiveOffset * 3;
-                    rpEncoder.drawIndexed(indexCount, 1, firstIndex, segment.vertexOffset);
-                }
-            }
+        // DEBUG: Log when tiles span multiple zoom levels (zoom transition)
+        const zoomLevels = new Set(tileIDs.map(t => t.overscaledZ));
+        if (zoomLevels.size > 1) {
+            const byZoom: {[z: number]: number} = {};
+            for (const t of tileIDs) byZoom[t.overscaledZ] = (byZoom[t.overscaledZ] || 0) + 1;
+            console.warn('[STENCIL DEBUG] Multi-zoom transition:', JSON.stringify(byZoom),
+                'tiles:', tileIDs.map(t => `z${t.overscaledZ}(${t.canonical.x},${t.canonical.y})→ref${this._webgpuNextStencilID + tileIDs.indexOf(t)}`).join(' '));
         }
 
-        this._webgpuTileStencilRefs = stencilRefs;
+        // Single pass: draw each tile's stencil mask with a unique ref.
+        // For mercator, getMeshFromTileID ignores the border parameter,
+        // so the two-pass approach used in WebGL is unnecessary.
+        // Tiles in ascending z order means higher-zoom tiles get higher refs
+        // and overwrite parent tiles in overlap areas.
+        for (let i = 0; i < tileIDs.length; i++) {
+            const tileID = tileIDs[i];
+            const stencilRef = this._webgpuNextStencilID++;
+            this._webgpuTileStencilRefs[tileID.key] = stencilRef;
+
+            const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, false, true, 'stencil');
+            const projectionData = transform.getProjectionData({
+                overscaledTileID: tileID,
+                applyGlobeMatrix: !renderToTexture,
+                applyTerrainMatrix: true
+            });
+
+            // Each tile gets its own buffer so the GPU sees the correct matrix
+            const clipUBOBuffer = this._webgpuClipUBOBuffers[i];
+            gpuDevice.queue.writeBuffer(clipUBOBuffer, 0, projectionData.mainMatrix as Float32Array);
+
+            const bindGroup = gpuDevice.createBindGroup({
+                layout: pipeline.getBindGroupLayout(0),
+                entries: [{binding: 0, resource: {buffer: clipUBOBuffer}}],
+            });
+
+            rpEncoder.setStencilReference(stencilRef);
+            rpEncoder.setBindGroup(0, bindGroup);
+            rpEncoder.setVertexBuffer(0, mesh.vertexBuffer.webgpuBuffer.handle);
+            rpEncoder.setIndexBuffer(mesh.indexBuffer.webgpuBuffer.handle, 'uint16');
+
+            for (const segment of mesh.segments.get()) {
+                const indexCount = segment.primitiveLength * 3;
+                const firstIndex = segment.primitiveOffset * 3;
+                rpEncoder.drawIndexed(indexCount, 1, firstIndex, segment.vertexOffset);
+            }
+        }
     }
 
     /**
@@ -707,7 +716,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
                 const rpEncoder = commandEncoder.beginRenderPass({
                     colorAttachments: [{
                         view: colorView,
-                        clearValue: {r: 0, g: 1, b: 0, a: 1},
+                        clearValue: {r: 0, g: 0, b: 0, a: 0},
                         loadOp: 'clear',
                         storeOp: 'store',
                     }],
