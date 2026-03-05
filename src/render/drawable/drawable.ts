@@ -275,7 +275,7 @@ export class Drawable {
             const drawableVecBuf = this._uploadAsStorage(device, this.drawableUBO);
             const propsBuf = this.layerUBO.upload(device);
 
-            // Get or create pipeline (cached on painter)
+            // Get or create pipeline (cached on painter, keyed by shader+stencil state)
             const cacheKey = `raw_${this.shaderName}`;
             if (!(painter as any)._rawPipelines) (painter as any)._rawPipelines = {};
             if (!(painter as any)._rawPipelines[cacheKey]) {
@@ -330,13 +330,19 @@ export class Drawable {
                 }
                 const canvasFormat = (navigator as any).gpu.getPreferredCanvasFormat();
 
-                // Fill/line use fragment-shader tile clipping (discard outside [0,EXTENT])
-                // instead of stencil — avoids stencil artifacts during zoom transitions.
+                const needsStencilClip = this.shaderName === 'fill' || this.shaderName === 'line';
                 const depthStencilState: any = {
                     format: 'depth24plus-stencil8',
                     depthWriteEnabled: false,
                     depthCompare: 'always',
                 };
+                if (needsStencilClip) {
+                    // Content reads stencil (Equal test), masks written by _renderTileClippingMasksWebGPU
+                    depthStencilState.stencilFront = {compare: 'equal', passOp: 'keep', failOp: 'keep', depthFailOp: 'keep'};
+                    depthStencilState.stencilBack = {compare: 'equal', passOp: 'keep', failOp: 'keep', depthFailOp: 'keep'};
+                    depthStencilState.stencilReadMask = 0xFF;
+                    depthStencilState.stencilWriteMask = 0x00;
+                }
 
                 const pipeline = gpuDevice.createRenderPipeline({
                     layout: 'auto',
@@ -389,9 +395,8 @@ export class Drawable {
             rpEncoder.setPipeline(pipeline);
             rpEncoder.setBindGroup(0, bindGroup);
 
-            // Set stencil reference for tile clipping (for layers that use stencil)
-            // Fill/line now use fragment-shader clipping, so stencil ref is only for other layers
-            if (this.tileID && this.shaderName !== 'fill' && this.shaderName !== 'line') {
+            // Set stencil reference for tile clipping
+            if (this.tileID) {
                 const stencilRef = painter.getWebGPUStencilRef(this.tileID);
                 rpEncoder.setStencilReference(stencilRef);
             }
