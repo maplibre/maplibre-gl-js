@@ -339,4 +339,28 @@ describe('RasterTileSource', () => {
         await expect(loadPromise).resolves.toBeUndefined();
         expect(tile.state).toBe('unloaded');
     });
+
+    test('setUrl aborts in-flight raster tile requests through TileManager', () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+
+        const abortAllRequests = vi.fn();
+
+        (source.map as any).style = {
+            tileManagers: {
+                [source.id]: {abortAllRequests}
+            }
+        };
+
+        const loadSpy = vi.spyOn(source, 'load').mockResolvedValue(undefined as any);
+        loadSpy.mockClear();
+
+        source.setUrl('http://localhost:2900/source2.json');
+
+        expect(abortAllRequests).toHaveBeenCalledTimes(1);
+        expect(source.url).toBe('http://localhost:2900/source2.json');
+        expect(loadSpy).toHaveBeenCalledWith(true);
+    });
+
 });

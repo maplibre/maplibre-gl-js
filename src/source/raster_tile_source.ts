@@ -163,6 +163,12 @@ export class RasterTileSource extends Evented implements Source {
      * @param url - A URL to a TileJSON resource. Supported protocols are `http:` and `https:`.
      */
     setUrl(url: string): this {
+        // Cancels all in-flight raster tile requests for this source
+        const tileManager = this.map?.style?.tileManagers?.[this.id];
+        if (tileManager && typeof tileManager.abortAllRequests === 'function') {
+            tileManager.abortAllRequests();
+        }
+
         this.setSourceProperty(() => {
             this.url = url;
             this._options.url = url;

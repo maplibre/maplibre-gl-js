@@ -125,6 +125,21 @@ export class TileManager extends Evented {
         this._updated = false;
     }
 
+    abortAllRequests() {
+        if (this._inViewTiles) {
+            for (const id of this._inViewTiles.getAllIds()) {
+                const tile = this._inViewTiles.getTileById(id);
+                if (tile && tile.abortController) {
+                    tile.abortController.abort();
+                }
+            }
+        }
+        // Cancels out-of-sight tile queries
+        if (this._outOfViewCache && typeof this._outOfViewCache.abortAllRequests === 'function') {
+            this._outOfViewCache.abortAllRequests();
+        }
+    }
+
     onAdd(map: Map) {
         this.map = map;
         this._maxTileCacheSize = map ? map._maxTileCacheSize : null;
