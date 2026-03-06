@@ -129,15 +129,18 @@ export class TileManager extends Evented {
         if (this._inViewTiles) {
             for (const id of this._inViewTiles.getAllIds()) {
                 const tile = this._inViewTiles.getTileById(id);
-                if (tile && tile.abortController) {
-                    tile.abortController.abort();
+                if (!tile) continue;
+
+                tile.aborted = true;
+                tile.abortController?.abort();
+
+                if (this._source?.abortTile) {
+                    void this._source.abortTile(tile);
                 }
             }
         }
-        // Cancels out-of-sight tile queries
-        if (this._outOfViewCache && typeof this._outOfViewCache.abortAllRequests === 'function') {
-            this._outOfViewCache.abortAllRequests();
-        }
+
+        this._outOfViewCache?.abortAllRequests?.();
     }
 
     onAdd(map: Map) {
@@ -222,8 +225,9 @@ export class TileManager extends Evented {
     }
 
     _abortTile(tile: Tile) {
-        if (this._source.abortTile)
-            this._source.abortTile(tile);
+        if (this._source.abortTile) {
+            void this._source.abortTile(tile);
+        }
 
         this._source.fire(new Event('dataabort', {tile, coord: tile.tileID, dataType: 'source'}));
     }
@@ -813,14 +817,18 @@ export class TileManager extends Evented {
     private _dataHandler(e: MapSourceDataEvent) {
         if (e.dataType !== 'source') return;
 
+        if (e.abortPendingTileRequests && e.sourceDataType == null) {
+            this.abortAllRequests();
+            this._sourceLoaded = false;
+            return;
+        }
+
         if (e.sourceDataType === 'metadata') {
             this._sourceLoaded = true;
             return;
         }
 
-        if (e.sourceDataType !== 'content' || !this._sourceLoaded || this._paused) {
-            return;
-        }
+        if (e.sourceDataType !== 'content' || !this._sourceLoaded || this._paused) return;
 
         this.reload(e.sourceDataChanged, e.shouldReloadTileOptions);
         if (this.transform) {
