@@ -488,4 +488,49 @@ describe('VectorTileSource', () => {
         await source.loadTile(tile);
         expect(tile.etag).toBe('test');
     });
+
+    test('setSourceProperty emits abortPendingTileRequests and calls load(true, true)', () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+        });
+
+        const loadSpy = vi.spyOn(source, 'load').mockResolvedValue(undefined);
+        let abortEvent: any;
+
+        source.on('data', (e) => {
+            if (e.sourceDataType == null && (e as any).abortPendingTileRequests) {
+                abortEvent = e;
+            }
+        });
+
+        source.setSourceProperty(() => {
+            source.url = 'http://localhost:2900/source2.json';
+        });
+
+        expect(abortEvent).toBeDefined();
+        expect(loadSpy).toHaveBeenCalledWith(true, true);
+    });
+
+    test('abortTile aborts controller and sends abortTile to worker', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+        });
+
+        const abort = vi.fn();
+        const sendAsync = vi.fn().mockResolvedValue(undefined);
+        const tile = {
+            uid: 42,
+            abortController: {abort},
+            actor: {sendAsync}
+        } as any as Tile;
+
+        await source.abortTile(tile);
+
+        expect(abort).toHaveBeenCalledTimes(1);
+        expect(tile.abortController).toBeUndefined();
+        expect(sendAsync).toHaveBeenCalledWith({
+            type: MessageType.abortTile,
+            data: {uid: 42, type: source.type, source: source.id}
+        });
+    });
 });
