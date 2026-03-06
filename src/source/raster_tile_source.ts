@@ -139,8 +139,13 @@ export class RasterTileSource extends Evented implements Source {
             this._tileJSONRequest = null;
         }
 
-        callback();
+        // Request to cancel tiles in flight, without depending on map.style.tileManagers
+        this.fire(new Event('data', {
+            dataType: 'source',
+            abortPendingTileRequests: true
+        } ));
 
+        callback();
         this.load(true);
     }
 
@@ -181,6 +186,8 @@ export class RasterTileSource extends Evented implements Source {
 
     async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+        // A tile can be reused after a previous abort; clear stale abort state before a new request.
+        tile.aborted = false;
         tile.abortController = new AbortController();
         try {
             const response = await ImageRequest.getImage(await this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles);

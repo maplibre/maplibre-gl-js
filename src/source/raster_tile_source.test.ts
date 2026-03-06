@@ -7,6 +7,11 @@ import {fakeServer, type FakeServer} from 'nise';
 import {type Tile} from '../tile/tile';
 import {sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util';
 import {type MapSourceDataEvent} from '../ui/events';
+import * as loadTileJSONModule from './load_tilejson';
+
+function isAbortPendingTileRequestsEvent(e: any): boolean {
+    return e?.abortPendingTileRequests === true || e?.data?.abortPendingTileRequests === true;
+}
 
 function createSource(options, transformCallback?) {
     const source = new RasterTileSource('id', options, {send() {}} as any as Dispatcher, options.eventedParent);
@@ -31,6 +36,7 @@ describe('RasterTileSource', () => {
 
     afterEach(() => {
         server.restore();
+        vi.restoreAllMocks();
     });
 
     test('transforms request for TileJSON URL', () => {
@@ -402,4 +408,118 @@ describe('RasterTileSource', () => {
         await expect(loadPromise).resolves.toBeUndefined();
         expect(tile.state).toBe('unloaded');
     });
+
+    test('loads tile after previous abort flag was set', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            bounds: [-47, -7, -45, -5]
+        }));
+        server.respondWith('http://example.com/10/5/5.png',
+            [200, {'Content-Type': 'image/png', 'Content-Length': 1}, '0']
+        );
+
+        const source = createSource({url: '/source.json'});
+        source.map.painter = {context: {}, getTileTexture: () => ({update: () => {}})} as any;
+
+        const sourcePromise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        server.respond();
+        await sourcePromise;
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            aborted: true,
+            setExpiryData() {}
+        } as any as Tile;
+
+        expect(tile.aborted).toBe(true);
+
+        const tilePromise = source.loadTile(tile);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('loaded');
+        expect(tile.aborted).toBe(false);
+    });
+
+    test('setSourceProperty emits abortPendingTileRequests before callback and load(true)', () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        const onData = vi.fn();
+        source.on('data', onData);
+
+        const callback = vi.fn();
+        const loadSpy = vi.spyOn(source, 'load');
+
+        source.setSourceProperty(callback);
+
+        const abortEventIndex = onData.mock.calls.findIndex(([e]) => isAbortPendingTileRequestsEvent(e));
+        expect(abortEventIndex).toBeGreaterThan(-1);
+
+        const abortEventOrder = onData.mock.invocationCallOrder[abortEventIndex];
+        const callbackOrder = callback.mock.invocationCallOrder[0];
+        const loadOrder = loadSpy.mock.invocationCallOrder[0];
+
+        expect(abortEventOrder).toBeLessThan(callbackOrder);
+        expect(callbackOrder).toBeLessThan(loadOrder);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(loadSpy).toHaveBeenCalledTimes(1);
+        expect(loadSpy).toHaveBeenCalledWith(true);
+    });
+
+    test('setUrl emits abortPendingTileRequests and calls load(true)', () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+
+        const loadSpy = vi.spyOn(source, 'load');
+        const events: Array<any> = [];
+        source.on('data', (e: any) => events.push(e));
+
+        source.setUrl('http://localhost:2900/source2.json');
+
+        expect(
+            events.some((e) => isAbortPendingTileRequestsEvent(e))
+        ).toBe(true);
+        expect(source.url).toBe('http://localhost:2900/source2.json');
+        expect(loadSpy).toHaveBeenCalledWith(true);
+    });
+
+    test('load ignores AbortError from TileJSON request', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+
+        const abortError = new Error('aborted');
+        (abortError as any).name = 'AbortError';
+        vi.spyOn(loadTileJSONModule, 'loadTileJson').mockRejectedValueOnce(abortError);
+
+        const onError = vi.fn();
+        source.on('error', onError);
+
+        await source.load(true);
+
+        expect(onError).not.toHaveBeenCalled();
+    });
+
+    test('load emits error event when TileJSON is malformed (parser rejection)', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+
+        vi.spyOn(loadTileJSONModule, 'loadTileJson').mockRejectedValueOnce(new Error('Invalid TileJSON payload'));
+
+        const onError = vi.fn();
+        source.on('error', onError);
+
+        await source.load(true);
+
+        expect(onError).toHaveBeenCalledTimes(1);
+    });
+
 });
