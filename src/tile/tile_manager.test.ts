@@ -2586,3 +2586,31 @@ describe('TileManager / etag', () => {
         expect(tile.etag).toBe(tileEtag);
     });
 });
+
+describe('TileManager.abortAllRequests', () => {
+    test('aborts requests from in-view and out-of-view tiles', () => {
+        const abortA = vi.fn();
+        const abortB = vi.fn();
+        const abortCache = vi.fn();
+
+        const managerLike = {
+            _inViewTiles: {
+                getAllIds: () => ['a', 'b', 'c'],
+                getTileById: (id: string) => {
+                    if (id === 'a') return {abortController: {abort: abortA}};
+                    if (id === 'b') return {abortController: {abort: abortB}};
+                    return {abortController: undefined};
+                }
+            },
+            _outOfViewCache: {
+                abortAllRequests: abortCache
+            }
+        };
+
+        TileManager.prototype.abortAllRequests.call(managerLike);
+
+        expect(abortA).toHaveBeenCalledTimes(1);
+        expect(abortB).toHaveBeenCalledTimes(1);
+        expect(abortCache).toHaveBeenCalledTimes(1);
+    });
+});
