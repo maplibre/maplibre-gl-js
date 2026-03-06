@@ -489,29 +489,27 @@ describe('VectorTileSource', () => {
         expect(tile.etag).toBe('test');
     });
 
-    test('setSourceProperty emits abortPendingTileRequests and calls load(true, true)', () => {
+    test( 'setSourceProperty emits abortPendingTileRequests and calls load(true)', () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.pbf']
         });
 
-        const loadSpy = vi.spyOn(source, 'load').mockResolvedValue(undefined);
-        let abortEvent: any;
+        const loadSpy = vi.spyOn(source, 'load').mockResolvedValue(undefined as any);
+        const callback = vi.fn();
+        const events: Array<any> = [];
 
-        source.on('data', (e) => {
-            if (e.sourceDataType == null && (e as any).abortPendingTileRequests) {
-                abortEvent = e;
-            }
-        });
+        source.on('data', (e: any) => events.push(e));
+        source.setSourceProperty(callback);
 
-        source.setSourceProperty(() => {
-            source.url = 'http://localhost:2900/source2.json';
-        });
-
-        expect(abortEvent).toBeDefined();
-        expect(loadSpy).toHaveBeenCalledWith(true, true);
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(
+            events.some((e) => e?.abortPendingTileRequests === true || e?.data?.abortPendingTileRequests === true)
+        ).toBe(true);
+        expect(loadSpy).toHaveBeenCalledTimes(1);
+        expect(loadSpy).toHaveBeenCalledWith(true);
     });
 
-    test('abortTile aborts controller and sends abortTile to worker', async () => {
+    test('abortTile aborts controller and sends MessageType.abortTile', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.pbf']
         });
@@ -522,7 +520,7 @@ describe('VectorTileSource', () => {
             uid: 42,
             abortController: {abort},
             actor: {sendAsync}
-        } as any as Tile;
+        } as any;
 
         await source.abortTile(tile);
 
@@ -532,5 +530,95 @@ describe('VectorTileSource', () => {
             type: MessageType.abortTile,
             data: {uid: 42, type: source.type, source: source.id}
         });
+    });
+
+    test('setSourceProperty aborts existing TileJSON request, emits abort event, then calls callback and load(true)', () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+        });
+
+        const requestAbort = vi.fn();
+        (source as any)._tileJSONRequest = {abort: requestAbort};
+
+        const isAbortEvent = (e: any) => e?.abortPendingTileRequests === true || e?.data?.abortPendingTileRequests === true;
+        const sequence: string[] = [];
+
+        source.on('data', (e: any) => {
+            if (isAbortEvent(e)) sequence.push('abort-event');
+        });
+
+        const callback = vi.fn(() => sequence.push('callback'));
+        const loadSpy = vi.spyOn(source, 'load').mockImplementation(async (...args: any[]) => {
+            sequence.push('load');
+            expect(args[0]).toBe(true);
+            return undefined as any;
+        });
+
+        source.setSourceProperty(callback);
+
+        expect(requestAbort).toHaveBeenCalledTimes(1);
+        expect((source as any)._tileJSONRequest).toBeNull();
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(loadSpy).toHaveBeenCalledTimes(1);
+        expect(loadSpy).toHaveBeenCalledWith(true);
+        expect(sequence).toEqual(['abort-event', 'callback', 'load']);
+    });
+
+    test('setSourceProperty emits abort event and calls load(true) even without in-flight TileJSON request', () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+        });
+
+        const isAbortEvent = (e: any) => e?.abortPendingTileRequests === true || e?.data?.abortPendingTileRequests === true;
+        let sawAbortEvent = false;
+
+        source.on('data', (e: any) => {
+            if (isAbortEvent(e)) sawAbortEvent = true;
+        });
+
+        const loadSpy = vi.spyOn(source, 'load').mockResolvedValue(undefined as any);
+
+        source.setSourceProperty(() => {});
+
+        expect(sawAbortEvent).toBe(true);
+        expect(loadSpy).toHaveBeenCalledTimes(1);
+        expect(loadSpy).toHaveBeenCalledWith(true);
+    });
+
+    test('abortTile sets tile state to unloaded, aborts controller, and sends MessageType.abortTile', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
+
+        const abort = vi.fn();
+        const sendAsync = vi.fn().mockResolvedValue(undefined);
+        const tile = {uid: 42, state: 'loading', abortController: {abort}, actor: {sendAsync}} as any;
+
+        await source.abortTile(tile);
+
+        expect(tile.state).toBe('unloaded');
+        expect(abort).toHaveBeenCalledTimes(1);
+        expect(tile.abortController).toBeUndefined();
+        expect(sendAsync).toHaveBeenCalledWith({
+            type: MessageType.abortTile,
+            data: {uid: 42, type: source.type, source: source.id}
+        });
+    });
+
+    test('abortTile sets tile state to unloaded and aborts controller even when actor is missing', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
+
+        const abort = vi.fn();
+        const tile = {uid: 43, state: 'loading', abortController: {abort}} as any;
+
+        await expect(source.abortTile(tile)).resolves.toBeUndefined();
+
+        expect(tile.state).toBe('unloaded');
+        expect(abort).toHaveBeenCalledTimes(1);
+        expect(tile.abortController).toBeUndefined();
+    });
+
+    test('abortTile is a no-op when tile has neither actor nor abortController', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
+        const tile = {uid: 44, state: 'loading'} as any;
+        await expect(source.abortTile(tile)).resolves.toBeUndefined();
     });
 });

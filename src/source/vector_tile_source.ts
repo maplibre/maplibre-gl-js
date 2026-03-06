@@ -156,10 +156,18 @@ export class VectorTileSource extends Evented implements Source {
     setSourceProperty(callback: Function) {
         if (this._tileJSONRequest) {
             this._tileJSONRequest.abort();
+            this._tileJSONRequest = null;
         }
 
-        callback();
+        this._loaded = false;
 
+        // Immediate abort of in-flight tile requests
+        this.fire(new Event('data', {
+            dataType: 'source',
+            abortPendingTileRequests: true
+        }));
+
+        callback();
         this.load(true);
     }
 
@@ -220,8 +228,9 @@ export class VectorTileSource extends Evented implements Source {
             etag: tile.etag
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
+
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
-        if (!tile.actor || tile.state === 'expired') {
+        if (!tile.actor || tile.state === 'expired' || tile.state === 'unloaded') {
             tile.actor = this.dispatcher.getActor();
             messageType = MessageType.loadTile;
         } else if (tile.state === 'loading') {
@@ -229,14 +238,20 @@ export class VectorTileSource extends Evented implements Source {
                 tile.reloadPromise = {resolve, reject};
             });
         }
+
+        tile.aborted = false;
         tile.abortController = new AbortController();
+
         try {
             const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
             delete tile.abortController;
 
             if (tile.aborted) {
+                tile.state = 'unloaded';
+                void this._restartQueuedReload(tile);
                 return;
             }
+
             this._afterTileLoadWorkerResponse(tile, data);
 
             const result: LoadTileResult = {};
@@ -245,9 +260,12 @@ export class VectorTileSource extends Evented implements Source {
         } catch (err) {
             delete tile.abortController;
 
-            if (tile.aborted) {
+            if (tile.aborted || isAbortError(err)) {
+                tile.state = 'unloaded';
+                void this._restartQueuedReload(tile);
                 return;
             }
+
             if (err && err.status !== 404) {
                 throw err;
             }
@@ -275,6 +293,20 @@ export class VectorTileSource extends Evented implements Source {
         };
     }
 
+    private async _restartQueuedReload(tile: Tile): Promise<void> {
+        if (!tile.reloadPromise) return;
+
+        const reloadPromise = tile.reloadPromise;
+        tile.reloadPromise = null;
+
+        try {
+            await this.loadTile(tile);
+            reloadPromise.resolve();
+        } catch  {
+            reloadPromise.reject();
+        }
+    }
+
     private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {
         if (data?.resourceTiming) {
             tile.resourceTiming = data.resourceTiming;
@@ -287,14 +319,12 @@ export class VectorTileSource extends Evented implements Source {
 
         tile.loadVectorData(data, this.map.painter);
 
-        if (tile.reloadPromise) {
-            const reloadPromise = tile.reloadPromise;
-            tile.reloadPromise = null;
-            this.loadTile(tile).then(reloadPromise.resolve).catch(reloadPromise.reject);
-        }
+        void this._restartQueuedReload(tile);
     }
 
     async abortTile(tile: Tile): Promise<void> {
+        tile.aborted = true;
+        tile.state = 'unloaded';
         if (tile.abortController) {
             tile.abortController.abort();
             delete tile.abortController;
