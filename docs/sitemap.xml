@@ -286,6 +286,12 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/AttributionControlOptions/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/BoxZoomEndHandler/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/BoxZoomHandlerOptions/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/CalculateTileZoomFunction/</loc>
       </url>
       <url>
@@ -529,9 +535,6 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/UpdateImageOptions/</loc>
       </url>
       <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/WorkerTileResult/</loc>
-      </url>
-      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/variables/EXTENT/</loc>
       </url>
       <url>
@@ -539,6 +542,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/3d-terrain/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-3d-tiles-using-threejs/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-to-globe-using-threejs/</loc>
@@ -859,6 +865,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/restrict-map-panning-to-an-area/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/select-features-with-box-zoom-end-callback/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/set-center-point-above-ground/</loc>
       </url>
       <url>
@@ -893,6 +902,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/update-a-feature-in-realtime/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/update-geojson-polygons/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/use-a-fallback-image/</loc>
