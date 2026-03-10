@@ -188,6 +188,37 @@ describe('TileManager.addTile', () => {
 
     });
 
+    test('falls back to cache miss after out-of-view cache reset', () => {
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        let load = 0;
+        let unload = 0;
+
+        const tileManager = createTileManager({});
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+            load++;
+        };
+        tileManager._source.unloadTile = async () => {
+            unload++;
+        };
+
+        const tr = new MercatorTransform();
+        tr.resize(512, 512);
+        tileManager.updateCacheSize(tr);
+
+        tileManager._addTile(tileID);
+        tileManager._removeTile(tileID.key);
+        tileManager._addTile(tileID);
+        expect(load).toBe(1);
+
+        tileManager._removeTile(tileID.key);
+        tileManager.reload();
+        expect(unload).toBe(1);
+
+        tileManager._addTile(tileID);
+        expect(load).toBe(2);
+    });
+
     test('updates feature state on cached tile', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
 
@@ -345,6 +376,25 @@ describe('TileManager.removeTile', () => {
         expect(abort).toBe(1);
         expect(unload).toBe(1);
 
+    });
+
+    test('calls abortTile before unloadTile for unfinished tile', () => {
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const calls: string[] = [];
+
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = () => new Promise(() => {});
+        tileManager._source.abortTile = async () => {
+            calls.push('abort');
+        };
+        tileManager._source.unloadTile = async () => {
+            calls.push('unload');
+        };
+
+        tileManager._addTile(tileID);
+        tileManager._removeTile(tileID.key);
+
+        expect(calls).toEqual(['abort', 'unload']);
     });
 
     test('_tileLoaded after _removeTile skips tile.added', () => {
@@ -513,6 +563,53 @@ describe('TileManager / Source lifecycle', () => {
         tileManager.onAdd(undefined);
         await errorPromise;
         expect(tileManager.loaded()).toBeFalsy();
+    });
+
+    test('ignores content events after abortPendingTileRequests until metadata arrives', () => {
+        const tileManager = createTileManager({});
+        const abortAllSpy = vi.spyOn(tileManager, 'abortAllRequests');
+        const reloadSpy = vi.spyOn(tileManager, 'reload').mockImplementation(() => {});
+        const updateSpy = vi.spyOn(tileManager, 'update').mockImplementation(() => undefined as any);
+
+        tileManager._sourceLoaded = true;
+        tileManager._paused = false;
+        tileManager.transform = new MercatorTransform() as any;
+
+        (tileManager as any)._dataHandler({dataType: 'source', abortPendingTileRequests: true});
+        expect(abortAllSpy).toHaveBeenCalledTimes(1);
+        expect(tileManager._sourceLoaded).toBe(false);
+
+        (tileManager as any)._dataHandler({dataType: 'source', sourceDataType: 'content', sourceDataChanged: true});
+        expect(reloadSpy).toHaveBeenCalledTimes(0);
+        expect(updateSpy).toHaveBeenCalledTimes(0);
+
+        (tileManager as any)._dataHandler({dataType: 'source', sourceDataType: 'metadata'});
+        (tileManager as any)._dataHandler({dataType: 'source', sourceDataType: 'content', sourceDataChanged: true});
+
+        expect(reloadSpy).toHaveBeenCalledTimes(1);
+        expect(updateSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('forwards sourceDataChanged and shouldReloadTileOptions to reload', () => {
+        const tileManager = createTileManager({});
+        const reloadSpy = vi.spyOn(tileManager, 'reload').mockImplementation(() => {});
+        const updateSpy = vi.spyOn(tileManager, 'update').mockImplementation(() => undefined as any);
+        const shouldReloadTileOptions = {affectedBounds: [{_sw: {lng: 0, lat: 0}, _ne: {lng: 1, lat: 1}}]};
+
+        tileManager._sourceLoaded = true;
+        tileManager._paused = false;
+        tileManager.transform = new MercatorTransform() as any;
+
+        (tileManager as any)._dataHandler({
+            dataType: 'source',
+            sourceDataType: 'content',
+            sourceDataChanged: true,
+            shouldReloadTileOptions
+        });
+
+        expect(reloadSpy).toHaveBeenCalledTimes(1);
+        expect(reloadSpy).toHaveBeenCalledWith(true, shouldReloadTileOptions);
+        expect(updateSpy).toHaveBeenCalledTimes(1);
     });
 
     test('reloads tiles after a data event where source is updated', () => {

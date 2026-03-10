@@ -210,11 +210,9 @@ export class TileCache {
         }
     }
     abortAllRequests() {
-        for (const key in this.data) {
-            for (const entry of this.data[key]) {
-                if (entry.value && entry.value.abortController) {
-                    entry.value.abortController.abort();
-                }
+        for (const [, entries] of Object.entries(this.data)) {
+            for (const entry of entries) {
+                entry.value?.abortController?.abort();
             }
         }
     }

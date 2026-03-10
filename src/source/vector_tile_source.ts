@@ -27,6 +27,10 @@ export type LoadTileResult = {
     unmodified?: boolean;
 };
 
+function hasRenderableState(tile: Tile): boolean {
+    return tile.state === 'loaded' || tile.state === 'reloading' || tile.state === 'expired';
+}
+
 /**
  * A source containing vector tiles in [Maplibre Vector Tile format](https://maplibre.org/maplibre-tile-spec/) or [Mapbox Vector Tile format](https://docs.mapbox.com/vector-tiles/reference/).
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
@@ -210,6 +214,7 @@ export class VectorTileSource extends Evented implements Source {
     }
 
     async loadTile(tile: Tile): Promise<LoadTileResult | void> {
+        const wasRenderableBeforeLoad = hasRenderableState(tile);
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const params: WorkerTileParameters = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
@@ -234,8 +239,22 @@ export class VectorTileSource extends Evented implements Source {
             tile.actor = this.dispatcher.getActor();
             messageType = MessageType.loadTile;
         } else if (tile.state === 'loading') {
+            const pendingReload = tile.reloadPromise;
             return new Promise<void>((resolve, reject) => {
-                tile.reloadPromise = {resolve, reject};
+                if (pendingReload) {
+                    tile.reloadPromise = {
+                        resolve: () => {
+                            pendingReload.resolve();
+                            resolve();
+                        },
+                        reject: () => {
+                            pendingReload.reject();
+                            reject();
+                        }
+                    };
+                } else {
+                    tile.reloadPromise = {resolve, reject};
+                }
             });
         }
 
@@ -247,8 +266,10 @@ export class VectorTileSource extends Evented implements Source {
             delete tile.abortController;
 
             if (tile.aborted) {
-                tile.state = 'unloaded';
-                void this._restartQueuedReload(tile);
+                if (!wasRenderableBeforeLoad) {
+                    tile.state = 'unloaded';
+                }
+                this._processQueuedReloadIfRetained(tile);
                 return;
             }
 
@@ -261,8 +282,10 @@ export class VectorTileSource extends Evented implements Source {
             delete tile.abortController;
 
             if (tile.aborted || isAbortError(err)) {
-                tile.state = 'unloaded';
-                void this._restartQueuedReload(tile);
+                if (!wasRenderableBeforeLoad) {
+                    tile.state = 'unloaded';
+                }
+                this._processQueuedReloadIfRetained(tile);
                 return;
             }
 
@@ -293,11 +316,18 @@ export class VectorTileSource extends Evented implements Source {
         };
     }
 
-    private async _restartQueuedReload(tile: Tile): Promise<void> {
+    private async _processQueuedReloadIfRetained(tile: Tile): Promise<void> {
         if (!tile.reloadPromise) return;
 
         const reloadPromise = tile.reloadPromise;
         tile.reloadPromise = null;
+
+        // Handle a reload request queued while this tile was already loading.
+        // Retry only if TileManager still retains the tile; otherwise resolve the queued request without reloading.
+        if (tile.uses <= 0) {
+            reloadPromise.resolve();
+            return;
+        }
 
         try {
             await this.loadTile(tile);
@@ -319,12 +349,14 @@ export class VectorTileSource extends Evented implements Source {
 
         tile.loadVectorData(data, this.map.painter);
 
-        void this._restartQueuedReload(tile);
+        this._processQueuedReloadIfRetained(tile);
     }
 
     async abortTile(tile: Tile): Promise<void> {
         tile.aborted = true;
-        tile.state = 'unloaded';
+        if (!hasRenderableState(tile)) {
+            tile.state = 'unloaded';
+        }
         if (tile.abortController) {
             tile.abortController.abort();
             delete tile.abortController;

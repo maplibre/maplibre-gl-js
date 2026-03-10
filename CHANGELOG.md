@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+- Fix: Add proper cancellation of in-flight raster/vector tile requests on setUrl ([#7149](https://github.com/maplibre/maplibre-gl-js/pull/7149))(by [@pcardinal](https://github.com/pcardinal))
 
 ## 5.20.0
 

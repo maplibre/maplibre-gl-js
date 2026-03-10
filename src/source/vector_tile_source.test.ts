@@ -302,6 +302,81 @@ describe('VectorTileSource', () => {
         await expect(initialLoadPromise).resolves.toStrictEqual({});
     });
 
+    test('resolves all queued reload promises while tile is loading', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+
+        let resolveFirstRequest: (value: any) => void;
+        const sendAsync = vi.fn((_message) => {
+            if (!resolveFirstRequest) {
+                return new Promise((resolve) => {
+                    resolveFirstRequest = resolve;
+                });
+            }
+            return Promise.resolve({});
+        });
+
+        source.dispatcher = getWrapDispatcher()({sendAsync});
+        await waitForMetadataEvent(source);
+
+        const tile = {
+            uses: 1,
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            aborted: false,
+            loadVectorData() {
+                this.state = 'loaded';
+            },
+            setExpiryData() {}
+        } as any as Tile;
+
+        const initialLoad = source.loadTile(tile);
+        const queuedReloadA = source.loadTile(tile);
+        const queuedReloadB = source.loadTile(tile);
+
+        resolveFirstRequest({});
+
+        await initialLoad;
+        await Promise.race([
+            Promise.all([queuedReloadA, queuedReloadB]),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('queued reload promises did not resolve')), 200))
+        ]);
+
+        expect(sendAsync).toHaveBeenCalledTimes(2);
+    });
+
+    test('keeps renderable tile state when aborted refresh request rejects with 404', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        await waitForMetadataEvent(source);
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'expired',
+            aborted: false,
+            etag: 'old-etag',
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message, _abortController) {
+                tile.aborted = true;
+                const error: any = new Error('Not found');
+                error.status = 404;
+                return Promise.reject(error);
+            }
+        });
+
+        const result = await source.loadTile(tile);
+        expect(result).toBeUndefined();
+        expect(tile.state).toBe('expired');
+        expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
+        expect(tile.etag).toBe('old-etag');
+    });
+
     test('respects TileJSON.bounds', async () => {
         const source = createSource({
             minzoom: 0,
@@ -464,6 +539,35 @@ describe('VectorTileSource', () => {
         expect(tile.etag).toBeUndefined();
     });
 
+    test('keeps renderable tile state when refresh request is aborted', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        await waitForMetadataEvent(source);
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'expired',
+            aborted: false,
+            etag: 'old-etag',
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message, _abortController) {
+                tile.aborted = true;
+                return Promise.resolve({etag: 'new-etag'} as any);
+            }
+        });
+
+        const result = await source.loadTile(tile);
+        expect(result).toBeUndefined();
+        expect(tile.state).toBe('expired');
+        expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
+        expect(tile.etag).toBe('old-etag');
+    });
+
     test('stores worker etag on tile when present', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
@@ -600,6 +704,24 @@ describe('VectorTileSource', () => {
         expect(sendAsync).toHaveBeenCalledWith({
             type: MessageType.abortTile,
             data: {uid: 42, type: source.type, source: source.id}
+        });
+    });
+
+    test('abortTile preserves renderable state for expired tiles', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
+
+        const abort = vi.fn();
+        const sendAsync = vi.fn().mockResolvedValue(undefined);
+        const tile = {uid: 45, state: 'expired', abortController: {abort}, actor: {sendAsync}} as any;
+
+        await source.abortTile(tile);
+
+        expect(tile.state).toBe('expired');
+        expect(abort).toHaveBeenCalledTimes(1);
+        expect(tile.abortController).toBeUndefined();
+        expect(sendAsync).toHaveBeenCalledWith({
+            type: MessageType.abortTile,
+            data: {uid: 45, type: source.type, source: source.id}
         });
     });
 
