@@ -472,6 +472,11 @@ export type MapSourceDataEvent = MapLibreEvent & {
      * the event is related to loading of a tile.
      */
     tile: any;
+
+    /**
+     * Options to determine whether a tile should be reloaded.
+     * @internal
+     */
     shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions;
 
     /**

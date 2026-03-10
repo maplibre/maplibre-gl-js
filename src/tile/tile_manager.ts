@@ -126,21 +126,23 @@ export class TileManager extends Evented {
     }
 
     abortAllRequests() {
-        if (this._inViewTiles) {
-            for (const id of this._inViewTiles.getAllIds()) {
-                const tile = this._inViewTiles.getTileById(id);
-                if (!tile) continue;
+        for (const id of this._inViewTiles.getAllIds()) {
+            const tile = this._inViewTiles.getTileById(id);
+            if (!tile) continue;
 
-                tile.aborted = true;
+            const hasInFlightRequest = tile.state === 'loading' || tile.abortController != null;
+            if (!hasInFlightRequest) continue;
+
+            tile.aborted = true;
+
+            if (this._source?.abortTile) {
+                this._source.abortTile(tile);
+            } else {
                 tile.abortController?.abort();
-
-                if (this._source?.abortTile) {
-                    void this._source.abortTile(tile);
-                }
             }
         }
 
-        this._outOfViewCache?.abortAllRequests?.();
+        this._outOfViewCache.abortAllRequests();
     }
 
     onAdd(map: Map) {
@@ -225,9 +227,8 @@ export class TileManager extends Evented {
     }
 
     _abortTile(tile: Tile) {
-        if (this._source.abortTile) {
-            void this._source.abortTile(tile);
-        }
+        if (this._source.abortTile)
+            this._source.abortTile(tile);
 
         this._source.fire(new Event('dataabort', {tile, coord: tile.tileID, dataType: 'source'}));
     }
@@ -828,7 +829,9 @@ export class TileManager extends Evented {
             return;
         }
 
-        if (e.sourceDataType !== 'content' || !this._sourceLoaded || this._paused) return;
+        if (e.sourceDataType !== 'content' || !this._sourceLoaded || this._paused) {
+            return;
+        }
 
         this.reload(e.sourceDataChanged, e.shouldReloadTileOptions);
         if (this.transform) {

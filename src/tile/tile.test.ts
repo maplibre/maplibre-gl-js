@@ -1,6 +1,6 @@
 import {describe, test, expect, vi} from 'vitest';
 import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer';
-import {Tile} from './tile';
+import {Tile, type TileState} from './tile';
 import {OverscaledTileID} from './tile_id';
 import fs from 'fs';
 import path from 'path';
@@ -197,6 +197,26 @@ describe('Tile.isLessThan', () => {
             new OverscaledTileID(9, 1, 9, 147, 196),
             new OverscaledTileID(10, 1, 10, 293, 390),
         ]);
+    });
+});
+
+describe('Tile renderable states', () => {
+    test('hasRenderableState and hasData follow the same state table', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
+        const stateExpectations: Array<{state: TileState; renderable: boolean}> = [
+            {state: 'loading', renderable: false},
+            {state: 'loaded', renderable: true},
+            {state: 'reloading', renderable: true},
+            {state: 'unloaded', renderable: false},
+            {state: 'errored', renderable: false},
+            {state: 'expired', renderable: true}
+        ];
+
+        for (const {state, renderable} of stateExpectations) {
+            tile.state = state;
+            expect(Tile.hasRenderableState(tile)).toBe(renderable);
+            expect(tile.hasData()).toBe(renderable);
+        }
     });
 });
 

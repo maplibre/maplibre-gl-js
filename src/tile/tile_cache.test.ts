@@ -188,33 +188,41 @@ describe('BoundedLRUCache', () => {
         expect(cache.get(1)).toBeUndefined();
         expect(cache.get(2)).toBeUndefined();
     });
+});
 
-    describe('TileCache#abortAllRequests', () => {
-        test('aborts all entries that have an abortController', () => {
-            const cache = new TileCache(10, () => {});
-            const abortA = vi.fn();
-            const abortB = vi.fn();
+describe('TileCache#abortAllRequests', () => {
+    test('aborts all cached entries that have an abortController', () => {
+        const cache = new TileCache(10, () => {});
+        const abortA = vi.fn();
+        const abortB = vi.fn();
 
-            (cache as any).data = {
-                a: [{value: {abortController: {abort: abortA}}, timeout: undefined}],
-                b: [{value: {abortController: {abort: abortB}}, timeout: undefined}],
-                c: [{value: {}, timeout: undefined}]
-            };
+        const tileWithAbortA = {tileID: idA, aborted: false, abortController: {abort: abortA}} as unknown as Tile;
+        const tileWithAbortB = {tileID: idB, aborted: false, abortController: {abort: abortB}} as unknown as Tile;
+        const tileWithoutAbort = {tileID: idC, aborted: false} as unknown as Tile;
 
-            cache.abortAllRequests();
+        cache.add(idA, tileWithAbortA);
+        cache.add(idB, tileWithAbortB);
+        cache.add(idC, tileWithoutAbort);
 
-            expect(abortA).toHaveBeenCalledTimes(1);
-            expect(abortB).toHaveBeenCalledTimes(1);
-        });
+        cache.abortAllRequests();
 
-        test('does not throw when entries have no abortController', () => {
-            const cache = new TileCache(10, () => {});
-            (cache as any).data = {
-                a: [{value: {}, timeout: undefined}],
-                b: [{value: null, timeout: undefined}]
-            };
+        expect(tileWithAbortA.aborted).toBe(true);
+        expect(tileWithAbortB.aborted).toBe(true);
+        expect(tileWithoutAbort.aborted).toBe(true);
+        expect(abortA).toHaveBeenCalledTimes(1);
+        expect(abortB).toHaveBeenCalledTimes(1);
+    });
 
-            expect(() => cache.abortAllRequests()).not.toThrow();
-        });
+    test('does not throw when cached entries have no abortController', () => {
+        const cache = new TileCache(10, () => {});
+        const tileA = {tileID: idA} as unknown as Tile;
+        const tileB = {tileID: idB, abortController: undefined} as unknown as Tile;
+
+        cache.add(idA, tileA);
+        cache.add(idB, tileB);
+
+        expect(() => cache.abortAllRequests()).not.toThrow();
+        expect(tileA.aborted).toBe(true);
+        expect(tileB.aborted).toBe(true);
     });
 });

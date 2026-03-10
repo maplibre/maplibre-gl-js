@@ -14,8 +14,13 @@ import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_s
 import {type ActorMessage, MessageType} from '../util/actor_messages';
 import {type MapSourceDataEvent} from '../ui/events';
 
-function createSource(options, transformCallback?, clearTiles = () => {}) {
-    const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
+function isAbortPendingTileRequestsEvent(e: any): boolean {
+    return e?.abortPendingTileRequests === true || e?.data?.abortPendingTileRequests === true;
+}
+
+function createSource(options, transformCallback?, clearTiles = () => {}, customActor?: {sendAsync: (...args: any[]) => Promise<any>}) {
+    const dispatcher = customActor ? getWrapDispatcher()(customActor as any) : getMockDispatcher();
+    const source = new VectorTileSource('id', options, dispatcher, options.eventedParent);
     source.onAdd({
         transform: {showCollisionBoxes: false},
         _getMapId: () => 1,
@@ -302,6 +307,80 @@ describe('VectorTileSource', () => {
         await expect(initialLoadPromise).resolves.toStrictEqual({});
     });
 
+    test('resolves all queued reload promises while tile is loading', async () => {
+        let resolveFirstRequest: (value: any) => void;
+        const sendAsync = vi.fn((_message) => {
+            if (!resolveFirstRequest) {
+                return new Promise((resolve) => {
+                    resolveFirstRequest = resolve;
+                });
+            }
+            return Promise.resolve({});
+        });
+
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }, undefined, undefined, {sendAsync});
+
+        await waitForMetadataEvent(source);
+
+        const tile = {
+            uses: 1,
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            aborted: false,
+            loadVectorData() {
+                this.state = 'loaded';
+            },
+            setExpiryData() {}
+        } as any as Tile;
+
+        const initialLoad = source.loadTile(tile);
+        const queuedReloadA = source.loadTile(tile);
+        const queuedReloadB = source.loadTile(tile);
+
+        resolveFirstRequest({});
+
+        await initialLoad;
+        await Promise.race([
+            Promise.all([queuedReloadA, queuedReloadB]),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('queued reload promises did not resolve')), 200))
+        ]);
+
+        expect(sendAsync).toHaveBeenCalledTimes(2);
+    });
+
+    test('keeps renderable tile state when aborted refresh request rejects with 404', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        await waitForMetadataEvent(source);
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'expired',
+            aborted: false,
+            etag: 'old-etag',
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message, _abortController) {
+                tile.aborted = true;
+                const error: any = new Error('Not found');
+                error.status = 404;
+                return Promise.reject(error);
+            }
+        });
+
+        const result = await source.loadTile(tile);
+        expect(result).toBeUndefined();
+        expect(tile.state).toBe('expired');
+        expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
+        expect(tile.etag).toBe('old-etag');
+    });
+
     test('respects TileJSON.bounds', async () => {
         const source = createSource({
             minzoom: 0,
@@ -464,6 +543,35 @@ describe('VectorTileSource', () => {
         expect(tile.etag).toBeUndefined();
     });
 
+    test('keeps renderable tile state when refresh request is aborted', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        await waitForMetadataEvent(source);
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'expired',
+            aborted: false,
+            etag: 'old-etag',
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message, _abortController) {
+                tile.aborted = true;
+                return Promise.resolve({etag: 'new-etag'} as any);
+            }
+        });
+
+        const result = await source.loadTile(tile);
+        expect(result).toBeUndefined();
+        expect(tile.state).toBe('expired');
+        expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
+        expect(tile.etag).toBe('old-etag');
+    });
+
     test('stores worker etag on tile when present', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
@@ -489,22 +597,29 @@ describe('VectorTileSource', () => {
         expect(tile.etag).toBe('test');
     });
 
-    test( 'setSourceProperty emits abortPendingTileRequests and calls load(true)', () => {
+    test( 'setSourceProperty emits abortPendingTileRequests before callback and load(true)', () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.pbf']
         });
 
         const loadSpy = vi.spyOn(source, 'load').mockResolvedValue(undefined as any);
         const callback = vi.fn();
-        const events: Array<any> = [];
+        const onData = vi.fn();
 
-        source.on('data', (e: any) => events.push(e));
+        source.on('data', onData);
         source.setSourceProperty(callback);
 
+        const abortEventIndex = onData.mock.calls.findIndex(([e]) => isAbortPendingTileRequestsEvent(e));
+        expect(abortEventIndex).toBeGreaterThan(-1);
+
+        const abortEventOrder = onData.mock.invocationCallOrder[abortEventIndex];
+        const callbackOrder = callback.mock.invocationCallOrder[0];
+        const loadOrder = loadSpy.mock.invocationCallOrder[0];
+
+        expect(abortEventOrder).toBeLessThan(callbackOrder);
+        expect(callbackOrder).toBeLessThan(loadOrder);
+
         expect(callback).toHaveBeenCalledTimes(1);
-        expect(
-            events.some((e) => e?.abortPendingTileRequests === true || e?.data?.abortPendingTileRequests === true)
-        ).toBe(true);
         expect(loadSpy).toHaveBeenCalledTimes(1);
         expect(loadSpy).toHaveBeenCalledWith(true);
     });
@@ -532,59 +647,6 @@ describe('VectorTileSource', () => {
         });
     });
 
-    test('setSourceProperty aborts existing TileJSON request, emits abort event, then calls callback and load(true)', () => {
-        const source = createSource({
-            tiles: ['http://example.com/{z}/{x}/{y}.pbf']
-        });
-
-        const requestAbort = vi.fn();
-        (source as any)._tileJSONRequest = {abort: requestAbort};
-
-        const isAbortEvent = (e: any) => e?.abortPendingTileRequests === true || e?.data?.abortPendingTileRequests === true;
-        const sequence: string[] = [];
-
-        source.on('data', (e: any) => {
-            if (isAbortEvent(e)) sequence.push('abort-event');
-        });
-
-        const callback = vi.fn(() => sequence.push('callback'));
-        const loadSpy = vi.spyOn(source, 'load').mockImplementation(async (...args: any[]) => {
-            sequence.push('load');
-            expect(args[0]).toBe(true);
-            return undefined as any;
-        });
-
-        source.setSourceProperty(callback);
-
-        expect(requestAbort).toHaveBeenCalledTimes(1);
-        expect((source as any)._tileJSONRequest).toBeNull();
-        expect(callback).toHaveBeenCalledTimes(1);
-        expect(loadSpy).toHaveBeenCalledTimes(1);
-        expect(loadSpy).toHaveBeenCalledWith(true);
-        expect(sequence).toEqual(['abort-event', 'callback', 'load']);
-    });
-
-    test('setSourceProperty emits abort event and calls load(true) even without in-flight TileJSON request', () => {
-        const source = createSource({
-            tiles: ['http://example.com/{z}/{x}/{y}.pbf']
-        });
-
-        const isAbortEvent = (e: any) => e?.abortPendingTileRequests === true || e?.data?.abortPendingTileRequests === true;
-        let sawAbortEvent = false;
-
-        source.on('data', (e: any) => {
-            if (isAbortEvent(e)) sawAbortEvent = true;
-        });
-
-        const loadSpy = vi.spyOn(source, 'load').mockResolvedValue(undefined as any);
-
-        source.setSourceProperty(() => {});
-
-        expect(sawAbortEvent).toBe(true);
-        expect(loadSpy).toHaveBeenCalledTimes(1);
-        expect(loadSpy).toHaveBeenCalledWith(true);
-    });
-
     test('abortTile sets tile state to unloaded, aborts controller, and sends MessageType.abortTile', async () => {
         const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
 
@@ -603,22 +665,22 @@ describe('VectorTileSource', () => {
         });
     });
 
-    test('abortTile sets tile state to unloaded and aborts controller even when actor is missing', async () => {
+    test('abortTile preserves renderable state for expired tiles', async () => {
         const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
 
         const abort = vi.fn();
-        const tile = {uid: 43, state: 'loading', abortController: {abort}} as any;
+        const sendAsync = vi.fn().mockResolvedValue(undefined);
+        const tile = {uid: 45, state: 'expired', abortController: {abort}, actor: {sendAsync}} as any;
 
-        await expect(source.abortTile(tile)).resolves.toBeUndefined();
+        await source.abortTile(tile);
 
-        expect(tile.state).toBe('unloaded');
+        expect(tile.state).toBe('expired');
         expect(abort).toHaveBeenCalledTimes(1);
         expect(tile.abortController).toBeUndefined();
+        expect(sendAsync).toHaveBeenCalledWith({
+            type: MessageType.abortTile,
+            data: {uid: 45, type: source.type, source: source.id}
+        });
     });
 
-    test('abortTile is a no-op when tile has neither actor nor abortController', async () => {
-        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
-        const tile = {uid: 44, state: 'loading'} as any;
-        await expect(source.abortTile(tile)).resolves.toBeUndefined();
-    });
 });

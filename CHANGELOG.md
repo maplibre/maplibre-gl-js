@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+- Fix: Add proper cancellation of in-flight raster/vector tile requests on setUrl ([#7149](https://github.com/maplibre/maplibre-gl-js/pull/7149) (by [@pcardinal](https://github.com/pcardinal))
 - Fix a bug where `raster-resampling: nearest` was not applied as expected ([#7247](https://github.com/maplibre/maplibre-gl-js/pull/7247)) (by [@yano-h](https://github.com/yano-h))
 
 ## 5.20.0

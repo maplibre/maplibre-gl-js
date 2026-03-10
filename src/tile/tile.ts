@@ -146,6 +146,10 @@ export class Tile {
         this.state = 'loading';
     }
 
+    static hasRenderableState(tile: {state: TileState}): boolean {
+        return tile.state === 'loaded' || tile.state === 'reloading' || tile.state === 'expired';
+    }
+
     isRenderable(symbolLayer: boolean): boolean {
         return (
             this.hasData() &&
@@ -404,7 +408,7 @@ export class Tile {
     }
 
     hasData() {
-        return this.state === 'loaded' || this.state === 'reloading' || this.state === 'expired';
+        return Tile.hasRenderableState(this);
     }
 
     patternsLoaded() {
