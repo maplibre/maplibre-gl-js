@@ -19,12 +19,18 @@ import type {
     RasterDEMSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 
+type RasterTileSourceOptions = (RasterSourceSpecification | RasterDEMSourceSpecification) & {
+    premultiply?: boolean;
+};
+
 /**
  * A source containing raster tiles (See the [raster source documentation](https://maplibre.org/maplibre-style-spec/sources/#raster) for detailed documentation of options.)
  *
  * @group Sources
  *
  * \> ℹ️ **Note:** The default `tileSize` is `512`. If your tile provider (such as OpenStreetMap or Stadia Maps) serves 256px tiles, set `tileSize: 256` manually to avoid blurry rendering due to upscaling.
+ *
+ * \> ℹ️ **Note:** Set `premultiply: false` to preserve exact RGBA byte values when alpha carries data instead of opacity.
  *
  * @example
  * ```ts
@@ -67,10 +73,10 @@ export class RasterTileSource extends Evented implements Source {
     tiles: Array<string>;
 
     _loaded: boolean;
-    _options: RasterSourceSpecification | RasterDEMSourceSpecification;
+    _options: RasterTileSourceOptions;
     _tileJSONRequest: AbortController;
 
-    constructor(id: string, options: RasterSourceSpecification | RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
+    constructor(id: string, options: RasterTileSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
         this.id = id;
         this.dispatcher = dispatcher;
@@ -181,9 +187,16 @@ export class RasterTileSource extends Evented implements Source {
 
     async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+        const premultiply = this._options.premultiply !== false;
+        const imageBitmapOptions = premultiply ? undefined : {premultiplyAlpha: 'none'} as const;
         tile.abortController = new AbortController();
         try {
-            const response = await ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles);
+            const response = await ImageRequest.getImage(
+                this.map._requestManager.transformRequest(url, ResourceType.Tile),
+                tile.abortController,
+                this.map._refreshExpiredTiles,
+                imageBitmapOptions
+            );
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
@@ -198,9 +211,9 @@ export class RasterTileSource extends Evented implements Source {
                 const img = response.data;
                 tile.texture = this.map.painter.getTileTexture(img.width);
                 if (tile.texture) {
-                    tile.texture.update(img, {useMipmap: true});
+                    tile.texture.update(img, {useMipmap: true, premultiply});
                 } else {
-                    tile.texture = new Texture(context, img, gl.RGBA, {useMipmap: true});
+                    tile.texture = new Texture(context, img, gl.RGBA, {useMipmap: true, premultiply});
                     tile.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
                 }
                 tile.state = 'loaded';

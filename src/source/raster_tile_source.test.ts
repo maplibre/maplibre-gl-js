@@ -7,6 +7,7 @@ import {fakeServer, type FakeServer} from 'nise';
 import {type Tile} from '../tile/tile';
 import {stubAjaxGetImage, waitForEvent} from '../util/test/util';
 import {type MapSourceDataEvent} from '../ui/events';
+import {ImageRequest} from '../util/image_request';
 
 function createSource(options, transformCallback?) {
     const source = new RasterTileSource('id', options, {send() {}} as any as Dispatcher, options.eventedParent);
@@ -219,6 +220,44 @@ describe('RasterTileSource', () => {
             minzoom: 2,
             maxzoom: 10
         });
+    });
+
+    test('loadTile uploads raster data without premultiplication when configured', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            premultiply: false
+        });
+        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
+        source.map._refreshExpiredTiles = false;
+
+        const image = {width: 256, height: 256} as ImageBitmap;
+        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: image});
+        const update = vi.fn();
+        source.map.painter = {
+            context: {gl: {}},
+            getTileTexture: () => ({update})
+        } as any;
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {}
+        } as any as Tile;
+
+        try {
+            await source.loadTile(tile);
+
+            expect(getImageSpy).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.any(AbortController),
+                false,
+                {premultiplyAlpha: 'none'}
+            );
+            expect(update).toHaveBeenCalledWith(image, {useMipmap: true, premultiply: false});
+            expect(tile.state).toBe('loaded');
+        } finally {
+            getImageSpy.mockRestore();
+        }
     });
 
     test('Tile expiry data is set when "Cache-Control" is set but not "Expires"', async () => {

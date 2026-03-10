@@ -775,13 +775,13 @@ export function isImageBitmap(image: any): image is ImageBitmap {
  * @param data - Data to convert
  * @returns - A  promise resolved when the conversion is finished
  */
-export const arrayBufferToImageBitmap = async (data: ArrayBuffer): Promise<ImageBitmap> => {
+export const arrayBufferToImageBitmap = async (data: ArrayBuffer, options?: ImageBitmapOptions): Promise<ImageBitmap> => {
     if (data.byteLength === 0) {
-        return createImageBitmap(new ImageData(1, 1));
+        return createImageBitmap(new ImageData(1, 1), options);
     }
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
     try {
-        return createImageBitmap(blob);
+        return createImageBitmap(blob, options);
     } catch (e) {
         throw new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`);
     }

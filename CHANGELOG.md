@@ -9,6 +9,7 @@
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+- Add a `premultiply` raster source option to preserve raw RGBA tile values when alpha is used for data instead of opacity.
 - Fix: Tiles are not cleared when using vector tile source `setUrl/setTiles` ([#7185](https://github.com/maplibre/maplibre-gl-js/issues/7185))(by [@madoci](https://github.com/madoci))
 - Fix: Allow opaque origins ("null") in Actor message filtering ([#7047](https://github.com/maplibre/maplibre-gl-js/pull/7047))(by [@pcardinal](https://github.com/pcardinal))
 
