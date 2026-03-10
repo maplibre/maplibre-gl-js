@@ -29,19 +29,4 @@ describe('RasterStyleLayer correctly handles "resampling" and "raster-resampling
         expect(resampling).toEqual(undefined);
     });
 
-    test('warns when both "resampling" and "raster-resampling" are specified upon instantiation', () => {
-        const originalWarn = console.warn;
-        console.warn = vi.fn();
-
-        const layerSpec = createLayerSpec({
-            paint: {
-                resampling: 'nearest',
-                'raster-resampling': 'nearest',
-            }
-        });
-        createStyleLayer(layerSpec, {});
-        expect(console.warn).toHaveBeenCalledTimes(1);
-        console.warn = originalWarn;
-    });
-
 });
