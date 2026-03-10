@@ -10,6 +10,7 @@ type ImageQueueThrottleControlCallback = () => boolean;
 export type ImageRequestQueueItem  = {
     requestParameters: RequestParameters;
     supportImageRefresh: boolean;
+    imageBitmapOptions?: ImageBitmapOptions;
     state: 'queued' | 'running' | 'completed';
     abortController: AbortController;
     onError: (error: Error) => void;
@@ -104,7 +105,12 @@ export namespace ImageRequest {
      * @param supportImageRefresh - `true`, if the image request need to support refresh based on cache headers.
      * @returns - A promise resolved when the image is loaded.
      */
-    export const getImage = (requestParameters: RequestParameters, abortController: AbortController, supportImageRefresh: boolean = true): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> => {
+    export const getImage = (
+        requestParameters: RequestParameters,
+        abortController: AbortController,
+        supportImageRefresh: boolean = true,
+        imageBitmapOptions?: ImageBitmapOptions
+    ): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> => {
         return new Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>>((resolve, reject) => {
             if (webpSupported.supported) {
                 if (!requestParameters.headers) {
@@ -117,6 +123,7 @@ export namespace ImageRequest {
                 abortController,
                 requestParameters,
                 supportImageRefresh,
+                imageBitmapOptions,
                 state: 'queued',
                 onError: (error: Error) => {
                     reject(error);
@@ -131,10 +138,10 @@ export namespace ImageRequest {
         });
     };
 
-    const arrayBufferToCanvasImageSource = (data: ArrayBuffer): Promise<HTMLImageElement | ImageBitmap | null> => {
+    const arrayBufferToCanvasImageSource = (data: ArrayBuffer, imageBitmapOptions?: ImageBitmapOptions): Promise<HTMLImageElement | ImageBitmap | null> => {
         const imageBitmapSupported = typeof createImageBitmap === 'function';
         if (imageBitmapSupported) {
-            return arrayBufferToImageBitmap(data);
+            return arrayBufferToImageBitmap(data, imageBitmapOptions);
         } else {
             return arrayBufferToImage(data);
         }
@@ -142,7 +149,7 @@ export namespace ImageRequest {
 
     const doImageRequest = async (itemInQueue: ImageRequestQueueItem) => {
         itemInQueue.state = 'running';
-        const {requestParameters, supportImageRefresh, onError, onSuccess, abortController} = itemInQueue;
+        const {requestParameters, supportImageRefresh, imageBitmapOptions, onError, onSuccess, abortController} = itemInQueue;
         // - If refreshExpiredTiles is false, then we can use HTMLImageElement to download raster images.
         // - Fetch/XHR (via MakeRequest API) will be used to download images for following scenarios:
         //      1. Style image sprite will had a issue with HTMLImageElement as described
@@ -153,6 +160,7 @@ export namespace ImageRequest {
         //      let makeRequest handle it.
         // - HtmlImageElement request automatically adds accept header for all the browser supported images
         const canUseHTMLImageElement = supportImageRefresh === false &&
+            !imageBitmapOptions &&
             !isWorker(self) &&
             !getProtocol(requestParameters.url) &&
             (!requestParameters.headers ||
@@ -173,7 +181,7 @@ export namespace ImageRequest {
                 // If HtmlImageElement is used to get image then response type will be HTMLImageElement
                 onSuccess(response as GetResourceResponse<HTMLImageElement | ImageBitmap | null>);
             } else if (response.data) {
-                const img = await arrayBufferToCanvasImageSource(response.data);
+                const img = await arrayBufferToCanvasImageSource(response.data, imageBitmapOptions);
                 onSuccess({data: img, cacheControl: response.cacheControl, expires: response.expires});
             }
         } catch (err) {

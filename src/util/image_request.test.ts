@@ -130,6 +130,22 @@ describe('ImageRequest', () => {
         expect(response.expires).toBe('expires');
     });
 
+    test('getImage passes imageBitmapOptions to createImageBitmap', async () => {
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+            'Cache-Control': 'cache',
+            'Expires': 'expires'}, '0'));
+
+        const createImageBitmapSpy = vi.fn().mockResolvedValue({} as ImageBitmap);
+        stubAjaxGetImage(createImageBitmapSpy);
+
+        const options = {premultiplyAlpha: 'none'} as const;
+        const promise = ImageRequest.getImage({url: ''}, new AbortController(), true, options);
+        server.respond();
+
+        await expect(promise).resolves.toBeDefined();
+        expect(createImageBitmapSpy).toHaveBeenCalledWith(expect.any(Blob), options);
+    });
+
     test('getImage using createImageBitmap throws exception', async () => {
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
@@ -206,6 +222,17 @@ describe('ImageRequest', () => {
 
         expect(makeRequestSky).toHaveBeenCalledTimes(1);
         makeRequestSky.mockClear();
+    });
+
+    test('getImage uses makeRequest when imageBitmapOptions are set', async () => {
+        const makeRequestSky = vi.spyOn(ajax, 'makeRequest');
+        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, '0'));
+
+        const promise = ImageRequest.getImage({url: ''}, new AbortController(), false, {premultiplyAlpha: 'none'});
+
+        expect(makeRequestSky).toHaveBeenCalledTimes(1);
+        server.respond();
+        await expect(promise).resolves.toBeDefined();
     });
 
     test('getImage request returned 404 response for fetch request', async () => {
