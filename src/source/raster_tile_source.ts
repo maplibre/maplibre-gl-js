@@ -69,6 +69,7 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
 
     _loaded: boolean;
     _options: RasterSourceSpecification | RasterDEMSourceSpecification;
+    _premultiplyAlpha: boolean;
     _tileJSONRequest: AbortController;
 
     constructor(id: string, options: RasterSourceSpecification | RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -84,6 +85,7 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
         this.scheme = 'xyz';
         this.tileSize = 512;
         this._loaded = false;
+        this._premultiplyAlpha = true;
 
         this._options = extend({type: 'raster'}, options);
         extend(this, pick(options, ['url', 'scheme', 'tileSize']));
@@ -176,15 +178,42 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
         return extend({}, this._options);
     }
 
+    /**
+     * Sets whether alpha premultiplication is applied to raster tile images.
+     * Set to `false` to preserve exact RGBA byte values when alpha carries data instead of opacity.
+     *
+     * @param premultiplyAlpha - If `false`, disables alpha premultiplication for raster tile image decode and texture upload.
+     * @example
+     * ```ts
+     * map.getSource<RasterTileSource>('raster-source').setPremultiplyAlpha(false);
+     * ```
+     */
+    setPremultiplyAlpha(premultiplyAlpha: boolean): this {
+        if (this._premultiplyAlpha === premultiplyAlpha) return this;
+
+        this.setSourceProperty(() => {
+            this._premultiplyAlpha = premultiplyAlpha;
+        });
+
+        return this;
+    }
+
     hasTile(tileID: OverscaledTileID): boolean {
         return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
     }
 
     async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+        const premultiply = this._premultiplyAlpha;
+        const imageBitmapOptions = premultiply ? undefined : {premultiplyAlpha: 'none'} as const;
         tile.abortController = new AbortController();
         try {
-            const response = await ImageRequest.getImage(await this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles);
+            const response = await ImageRequest.getImage(
+                await this.map._requestManager.transformRequest(url, ResourceType.Tile),
+                tile.abortController,
+                this.map._refreshExpiredTiles,
+                imageBitmapOptions
+            );
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
@@ -199,9 +228,9 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
                 const img = response.data;
                 tile.texture = this.map.painter.getTileTexture(img.width);
                 if (tile.texture) {
-                    tile.texture.update(img, {useMipmap: true});
+                    tile.texture.update(img, {useMipmap: true, premultiply});
                 } else {
-                    tile.texture = new Texture(context, img, gl.RGBA, {useMipmap: true});
+                    tile.texture = new Texture(context, img, gl.RGBA, {useMipmap: true, premultiply});
                     tile.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
                 }
                 tile.state = 'loaded';
