@@ -47,6 +47,10 @@ export class TapZoomHandler implements Handler {
     }
 
     touchend(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+        if (!this._enabled) {
+            return;
+        }
+
         const zoomInPoint = this._zoomIn.touchend(e, points, mapTouches);
         const zoomOutPoint = this._zoomOut.touchend(e, points, mapTouches);
         const tr = this._tr;

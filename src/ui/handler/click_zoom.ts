@@ -25,6 +25,9 @@ export class ClickZoomHandler implements Handler {
     }
 
     dblclick(e: MouseEvent, point: Point) {
+        if (!this._enabled) {
+            return;
+        }
         e.preventDefault();
         return {
             cameraAnimation: (map: Map) => {

@@ -50,7 +50,7 @@ export class DoubleClickZoomHandler {
      * @returns `true` if the "double click to zoom" interaction is enabled.
      */
     isEnabled() {
-        return this._clickZoom.isEnabled() && this._tapZoom.isEnabled();
+        return !!(this._clickZoom.isEnabled() && this._tapZoom.isEnabled());
     }
 
     /**
@@ -59,6 +59,6 @@ export class DoubleClickZoomHandler {
      * @returns `true` if the "double click to zoom" interaction is active.
      */
     isActive() {
-        return this._clickZoom.isActive() || this._tapZoom.isActive();
+        return !!(this._clickZoom.isActive() || this._tapZoom.isActive());
     }
 }
