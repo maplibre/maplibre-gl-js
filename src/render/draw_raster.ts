@@ -95,8 +95,8 @@ function drawTiles(
     const colorMode = painter.colorModeForRenderPass();
     const align = !painter.options.moving;
     const rasterOpacity = layer.paint.get('raster-opacity');
-    const resampling = layer.paint.get('resampling') ?? layer.paint.get('raster-resampling');
-    const textureFilter = resampling === 'nearest' ?  gl.NEAREST : gl.LINEAR;
+    const useNearest = layer.paint.get('resampling') === 'nearest' || layer.paint.get('raster-resampling') === 'nearest';
+    const textureFilter = useNearest ?  gl.NEAREST : gl.LINEAR;
     const fadeDuration = layer.paint.get('raster-fade-duration');
     const isTerrain = !!painter.style.map.terrain;
 
