@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+- Fix a bug where `raster-resampling: nearest` was not applied as expected ([#7247](https://github.com/maplibre/maplibre-gl-js/pull/7247)) (by [@yano-h](https://github.com/yano-h))
 
 ## 5.20.0
 
