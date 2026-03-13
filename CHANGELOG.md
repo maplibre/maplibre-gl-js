@@ -6,9 +6,10 @@
 - _...Add new stuff here..._
 
 ## 5.20.1
-### ✨ Features and improvements
 
 ### 🐞 Bug fixes
+
+- Fix cannot read properties of undefined (reading 'range') by updating geojson-vt package ([#7245](https://github.com/maplibre/maplibre-gl-js/issues/7245)) (by [@HarelM](https://github.com/HarelM))
 - Fix a bug where `raster-resampling: nearest` was not applied as expected ([#7247](https://github.com/maplibre/maplibre-gl-js/pull/7247)) (by [@yano-h](https://github.com/yano-h))
 
 ## 5.20.0
