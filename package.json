@@ -88,7 +88,7 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-tsdoc": "0.5.2",
-    "expect": "^30.2.0",
+    "expect": "^30.3.0",
     "glob": "^13.0.6",
     "globals": "^17.4.0",
     "is-builtin-module": "^5.0.0",
