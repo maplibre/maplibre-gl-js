@@ -41,3 +41,4 @@ npm-debug.log
 /.vs/
 .*.swp
 junit.xml
+bench-output.txt

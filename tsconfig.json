@@ -49,6 +49,8 @@
     "build/rollup",
     "test/bench/rollup",
     "test/bench/run-benchmarks.ts",
+    "test/bench/run-benchmarks-ci.ts",
+    "test/bench/format-bench-results.ts",
     "test/bench/gl-stats.ts"  ,
     "test/bench/**/*generated*"
   ]

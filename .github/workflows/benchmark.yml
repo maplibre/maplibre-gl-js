@@ -1,0 +1,88 @@
+name: Benchmarks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # Microbenchmarks run directly via vitest bench -- no browser needed.
+  # These are fast, deterministic, pure-computation benchmarks that catch
+  # regressions in hot paths like subdivision, tile covering, and filter ops.
+  microbenchmarks:
+    name: Microbenchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run microbenchmarks
+        run: npx vitest bench --config vitest.config.bench.ts --reporter=verbose 2>&1 | tee bench-output.txt
+
+      - name: Upload benchmark output
+        if: '!cancelled()'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: microbenchmark-results
+          path: bench-output.txt
+          retention-days: 7
+
+  # End-to-end benchmarks run the full suite in headless Chrome against
+  # the production build. This validates that the build is not broken
+  # and captures high-level timing data for the complete rendering pipeline.
+  e2e-benchmarks:
+    name: E2E Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Disable AppArmor
+        run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: |
+          npm run generate-typings
+          npm run build-benchmarks
+
+      - name: Start server and run benchmarks
+        run: |
+          npx st --no-cache -H localhost --port 9966 . &
+          sleep 3
+          node --no-warnings --loader ts-node/esm test/bench/run-benchmarks-ci.ts \
+            --output test/bench/results/ci-results.json \
+            -- FilterCreate FilterEvaluate Subdivide CoveringTilesGlobe CoveringTilesMercator \
+               CoveringTilesGlobePitched CoveringTilesMercatorPitched \
+               StyleLayerCreate Validate FunctionCreate FunctionEvaluate \
+               ExpressionCreate ExpressionEvaluate
+
+      - name: Upload benchmark results
+        if: '!cancelled()'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: e2e-benchmark-results
+          path: test/bench/results/
+          retention-days: 30
