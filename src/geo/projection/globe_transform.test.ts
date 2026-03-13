@@ -405,6 +405,64 @@ describe('GlobeTransform', () => {
                 });
             });
         });
+
+        describe('setLocationAtPoint with fixedBearing=false (versor)', () => {
+            const precisionDigits = 4;
+            const globeTransform = createGlobeTransform();
+            globeTransform.setZoom(1);
+            globeTransform.setTransitionState(1, 0);
+            let coords: LngLat;
+            let point: Point;
+            let unprojected: LngLat;
+
+            test('round-trip accuracy', () => {
+                coords = new LngLat(20, 30);
+                point = new Point(280, 200);
+                globeTransform.setLocationAtPoint(coords, point, false);
+                unprojected = globeTransform.screenPointToLocation(point);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+            });
+
+            test('round-trip accuracy at center', () => {
+                coords = new LngLat(10, 15);
+                point = new Point(320, 240);
+                globeTransform.setLocationAtPoint(coords, point, false);
+                unprojected = globeTransform.screenPointToLocation(point);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+            });
+
+            test('near-pole panning stability', () => {
+                globeTransform.setCenter(new LngLat(0, 80));
+                coords = new LngLat(10, 85);
+                point = new Point(300, 230);
+                globeTransform.setLocationAtPoint(coords, point, false);
+                expect(isNaN(globeTransform.center.lng)).toBe(false);
+                expect(isNaN(globeTransform.center.lat)).toBe(false);
+                expect(isNaN(globeTransform.bearing)).toBe(false);
+            });
+
+            test('NaN safety for identical points', () => {
+                const centerBefore = globeTransform.center;
+                point = new Point(320, 240);
+                coords = globeTransform.screenPointToLocation(point);
+                globeTransform.setLocationAtPoint(coords, point, false);
+                expect(isNaN(globeTransform.center.lng)).toBe(false);
+                expect(isNaN(globeTransform.center.lat)).toBe(false);
+                expect(globeTransform.center.lng).toBeCloseTo(centerBefore.lng, precisionDigits);
+                expect(globeTransform.center.lat).toBeCloseTo(centerBefore.lat, precisionDigits);
+            });
+
+            test('bearing changes when panning off-center', () => {
+                const bearingBefore = globeTransform.bearing;
+                coords = new LngLat(20, 30);
+                point = new Point(250, 180);
+                globeTransform.setLocationAtPoint(coords, point, false);
+                // Versor panning should change bearing (unlike fixedBearing=true)
+                expect(globeTransform.bearing).not.toBeCloseTo(bearingBefore, 1);
+            });
+        });
     });
 
     describe('isPointOnMapSurface', () => {
@@ -590,7 +648,7 @@ describe('GlobeTransform', () => {
         test('change projection and make sure render world copies is kept', () => {
             const globeTransform = createGlobeTransform();
             globeTransform.setRenderWorldCopies(true);
-            
+
             expect(globeTransform.renderWorldCopies).toBeTruthy();
         });
 

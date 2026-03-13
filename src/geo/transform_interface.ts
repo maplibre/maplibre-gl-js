@@ -205,7 +205,7 @@ interface ITransformMutators {
      * @param lnglat - Desired world coordinates of the point.
      * @param point - The screen point that should lie at the given coordinates.
      */
-    setLocationAtPoint(lnglat: LngLat, point: Point): void;
+    setLocationAtPoint(lnglat: LngLat, point: Point, fixedBearing?: boolean): void;
 
     /**
      * Sets or clears the map's geographical constraints.
