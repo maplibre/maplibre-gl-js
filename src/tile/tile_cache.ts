@@ -209,6 +209,13 @@ export class TileCache {
             this.remove(r.value.tileID, r);
         }
     }
+    abortAllRequests() {
+        for (const [, entries] of Object.entries(this.data)) {
+            for (const entry of entries) {
+                entry.value?.abortController?.abort();
+            }
+        }
+    }
 }
 
 export class BoundedLRUCache<K, V> {

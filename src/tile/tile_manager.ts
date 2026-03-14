@@ -125,6 +125,27 @@ export class TileManager extends Evented {
         this._updated = false;
     }
 
+    abortAllRequests() {
+
+        for (const id of this._inViewTiles.getAllIds()) {
+            const tile = this._inViewTiles.getTileById(id);
+            if (!tile) continue;
+
+            const hasInFlightRequest = tile.state === 'loading' || !!tile.abortController;
+            if (!hasInFlightRequest) continue;
+
+            tile.aborted = true;
+
+            if (this._source?.abortTile) {
+                this._source.abortTile(tile);
+            } else {
+                tile.abortController?.abort();
+            }
+        }
+
+        this._outOfViewCache.abortAllRequests();
+    }
+
     onAdd(map: Map) {
         this.map = map;
         this._maxTileCacheSize = map ? map._maxTileCacheSize : null;
@@ -797,6 +818,12 @@ export class TileManager extends Evented {
      */
     private _dataHandler(e: MapSourceDataEvent) {
         if (e.dataType !== 'source') return;
+
+        if (e.abortPendingTileRequests && e.sourceDataType == null) {
+            this.abortAllRequests();
+            this._sourceLoaded = false;
+            return;
+        }
 
         if (e.sourceDataType === 'metadata') {
             this._sourceLoaded = true;

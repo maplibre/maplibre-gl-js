@@ -478,6 +478,12 @@ export type MapSourceDataEvent = MapLibreEvent & {
      * @internal
      */
     shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions;
+
+    /**
+     * Internal flag used by sources to request aborting in-flight tile requests.
+     * @internal
+     */
+    abortPendingTileRequests?: boolean;
 };
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.
