@@ -1,4 +1,4 @@
-import {describe, test, expect, vi} from 'vitest';
+import {describe, test, expect} from 'vitest';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {createStyleLayer} from '../create_style_layer';
 import {extend} from '../../util/util';
