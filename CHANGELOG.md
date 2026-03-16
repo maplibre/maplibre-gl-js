@@ -3,6 +3,8 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
+- Fix incorrect popup location in case of terrain and `jumpTo` ([#7267](https://github.com/maplibre/maplibre-gl-js/issues/7267)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 5.20.1
