@@ -5,6 +5,12 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+- Remove unused import 'vi' from raster_style_layer test ([#7266](https://github.com/maplibre/maplibre-gl-js/pull/7266)) (by [@HarelM](https://github.com/HarelM))
+## 5.20.2
+### ✨ Features and improvements
+
+### 🐞 Bug fixes
+
 ## 5.20.1
 
 ### 🐞 Bug fixes
