@@ -70,7 +70,7 @@
     "@typescript-eslint/parser": "^8.55.0",
     "@unicode/unicode-17.0.0": "^1.6.16",
     "@vitest/coverage-v8": "4.1.0",
-    "@vitest/eslint-plugin": "^1.6.11",
+    "@vitest/eslint-plugin": "^1.6.12",
     "@vitest/ui": "4.1.0",
     "address": "^2.0.3",
     "autoprefixer": "^10.4.27",
