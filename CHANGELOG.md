@@ -5,6 +5,12 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+## 5.20.2
+
+### 🐞 Bug fixes
+
+- Fix update GeoJSON when using diff update by updating geojson-vt package ([#7257](https://github.com/maplibre/maplibre-gl-js/issues/7257)) (by [@HarelM](https://github.com/HarelM))
+
 ## 5.20.1
 
 ### 🐞 Bug fixes
