@@ -5,11 +5,11 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-- Remove unused import 'vi' from raster_style_layer test ([#7266](https://github.com/maplibre/maplibre-gl-js/pull/7266)) (by [@HarelM](https://github.com/HarelM))
 ## 5.20.2
-### ✨ Features and improvements
 
 ### 🐞 Bug fixes
+
+- Fix update GeoJSON when using diff update by updating geojson-vt package ([#7257](https://github.com/maplibre/maplibre-gl-js/issues/7257)) (by [@HarelM](https://github.com/HarelM))
 
 ## 5.20.1
 
