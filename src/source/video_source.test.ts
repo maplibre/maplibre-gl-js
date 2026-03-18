@@ -129,15 +129,9 @@ describe('VideoSource', () => {
         });
         source.video = video;
 
-        // Simulate the listener being set up during load()
-        source._onPlaying = () => {};
-        video.addEventListener('playing', source._onPlaying);
-        const handler = source._onPlaying;
-
         source.onRemove();
 
-        expect(removeListenerSpy).toHaveBeenCalledWith('playing', handler);
+        expect(removeListenerSpy).toHaveBeenCalledWith('playing', expect.any(Function));
         expect(pauseSpy).toHaveBeenCalled();
-        expect(source._onPlaying).toBeNull();
     });
 });

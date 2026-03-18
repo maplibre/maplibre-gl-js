@@ -56,7 +56,10 @@ export class VideoSource extends ImageSource {
     urls: Array<string>;
     video: HTMLVideoElement;
     roundZoom: boolean;
-    _onPlaying: (() => void) | null = null;
+
+    private _onPlayingHandler = () => {
+        this.map?.triggerRepaint();
+    };
 
     constructor(id: string, options: VideoSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);
@@ -84,10 +87,7 @@ export class VideoSource extends ImageSource {
 
             // Start repainting when video starts playing. hasTransition() will then return
             // true to trigger additional frames as long as the videos continues playing.
-            this._onPlaying = () => {
-                this.map.triggerRepaint();
-            };
-            this.video.addEventListener('playing', this._onPlaying);
+            this.video.addEventListener('playing', this._onPlayingHandler);
 
             if (this.map) {
                 this.video.play();
@@ -150,9 +150,8 @@ export class VideoSource extends ImageSource {
 
     onRemove() {
         super.onRemove();
-        if (this.video && this._onPlaying) {
-            this.video.removeEventListener('playing', this._onPlaying);
-            this._onPlaying = null;
+        if (this.video) {
+            this.video.removeEventListener('playing', this._onPlayingHandler);
             this.video.pause();
         }
     }
