@@ -5,6 +5,7 @@
 ### 🐞 Bug fixes
 - Fix memory leak in VideoSource: remove `playing` event listener and pause video on source removal ([#7279](https://github.com/maplibre/maplibre-gl-js/pull/7279)) (by [@johanrd](https://github.com/johanrd))
 - Fix memory leak where typed array views retained StructArray buffers after GPU upload, preventing garbage collection ([#7280](https://github.com/maplibre/maplibre-gl-js/pull/7280)) (by [@johanrd](https://github.com/johanrd))
+- Fix raster DEM tiles getting stuck in `"reloading"` state ([#7277](https://github.com/maplibre/maplibre-gl-js/pull/7277)) (by [@katemihalikova](https://github.com/katemihalikova))
 
 ## 5.20.2
 
