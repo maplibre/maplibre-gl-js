@@ -423,6 +423,7 @@ describe('RasterTileSource', () => {
 
         const source = createSource({url: '/source.json'});
         source.map.painter = {context: {}, getTileTexture: () => ({update: () => {}})} as any;
+        source.map._refreshExpiredTiles = true;
 
         const sourcePromise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         server.respond();
@@ -431,12 +432,18 @@ describe('RasterTileSource', () => {
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
-            aborted: true,
             setExpiryData() {}
         } as any as Tile;
 
-        expect(tile.aborted).toBe(true);
+        // First load: abort in-flight to simulate a real previous abort
+        const firstPromise = source.loadTile(tile);
+        tile.abortController.abort();
+        tile.aborted = true;
+        await firstPromise;
+        expect(tile.state).toBe('unloaded');
 
+        // Second load: should clear the stale abort flag and succeed
+        tile.state = 'loading';
         const tilePromise = source.loadTile(tile);
         server.respond();
         await tilePromise;
