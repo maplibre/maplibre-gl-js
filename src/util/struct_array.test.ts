@@ -83,7 +83,7 @@ describe('StructArray', () => {
         array.freeBufferAfterUpload();
 
         // arrayBuffer should be deleted (falsy) to preserve the truthiness
-        // contract used by program_configuration.ts upload()
+        // contract used by ProgramConfiguration binder upload()
         expect(array.arrayBuffer).toBeUndefined();
 
         // Typed views should no longer reference the original buffer

@@ -200,7 +200,7 @@ abstract class StructArray {
     freeBufferAfterUpload() {
         // Recreate views over an empty buffer so they release their reference
         // to the original ArrayBuffer, then delete the property to preserve
-        // the falsy-check contract used by program_configuration.ts upload().
+        // the falsy-check contract used by ProgramConfiguration binder upload().
         this.arrayBuffer = new ArrayBuffer(0);
         this._refreshViews();
         delete this.arrayBuffer;
