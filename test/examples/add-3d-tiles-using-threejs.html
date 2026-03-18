@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <title>Add 3D tiles using three.js</title>
-    <meta property="og:description" content="Use a custom style layer with three.js to add a 3D tiles to the map." />
+    <meta property="og:description" content="Use a custom style layer with three.js to add 3D tiles to the map." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
@@ -31,7 +31,7 @@
     import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
     import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 
-    let scene,camera,renderer,mapInstance,tiles;
+    let scene,camera,renderer,mapInstance,tiles,tilesCamera;
 
     const map = new maplibregl.Map({
         container: 'map',
@@ -123,9 +123,6 @@
             tiles.setResolutionFromRenderer(cameraInst, rendererInst);
 
             tiles.manager.addHandler(/\.(gltf|glb)$/g, gltfLoader);
-            tiles.errorTarget = 4;
-            tiles.lruCache.maxSize = 8000;
-            tiles.lruCache.maxBytesSize = 4 * 2 ** 30;
 
             let loadedTileSetHandled = false;
             // Adjust model matrix
@@ -150,7 +147,7 @@
                 map.jumpTo({ center: [lng, lat], zoom: 18, pitch: 60 });
                 updateLocalTransform([lng, lat, alt + altOffset]);
 
-                const rotationMat3 = new THREE.Matrix3().set(m[0], m[1], m[2], m[8], m[9], m[10], -m[4], -m[5], -m[6]); 
+                const rotationMat3 = new THREE.Matrix3().set(m[0], m[1], m[2], m[8], m[9], m[10], -m[4], -m[5], -m[6]);
                 const rotationMat4 = new THREE.Matrix4().setFromMatrix3(rotationMat3);
                 const moveToOrigin = new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z);
                 const finalMatrix = new THREE.Matrix4().multiplyMatrices(rotationMat4, moveToOrigin);
@@ -177,20 +174,32 @@
                 scene.add(ambientLight);
 
                 mapInstance = mapArg;
+                const canvas = mapArg.getCanvas();
                 renderer = new THREE.WebGLRenderer({
-                    canvas: mapArg.getCanvas(),
+                    canvas,
                     context: gl,
                     antialias: true,
                 });
                 renderer.autoClear = false;
 
-                initTiles(url, scene, camera, renderer)
+                tilesCamera = new THREE.PerspectiveCamera();
+
+                initTiles(url, scene, tilesCamera, renderer)
             },
             render(_gl, args) {
                 // Update camera matrix and render
-                if (!camera || !renderer || !scene || !localTransform) return;
+                if (!camera || !renderer || !scene || !localTransform || !tilesCamera) return;
                 camera.projectionMatrix.fromArray(args.defaultProjectionData.mainMatrix);
                 camera.projectionMatrix.multiply(localTransform);
+
+                const P = new THREE.Matrix4().fromArray(args.projectionMatrix);
+                const invP = P.clone().invert();
+                const V = new THREE.Matrix4().multiplyMatrices(invP, camera.projectionMatrix);
+
+                tilesCamera.projectionMatrix.copy(P);
+                tilesCamera.matrixWorldInverse.copy(V);
+                tilesCamera.matrixWorld.copy(V).invert();
+
                 renderer.resetState();
                 renderer.render(scene, camera);
                 if (tiles) tiles.update();
