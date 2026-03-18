@@ -55,4 +55,38 @@ describe('VertexBuffer', () => {
         ]);
     });
 
+    test('static buffer frees StructArray typed views after upload', () => {
+        const context = new Context(gl);
+        const array = new TestArray();
+        array.emplaceBack(1, 2, 3);
+        array.emplaceBack(4, 5, 6);
+
+        const originalBuffer = array.arrayBuffer;
+        expect(originalBuffer.byteLength).toBeGreaterThan(0);
+        expect(array.int16.buffer).toBe(originalBuffer);
+
+        // Static upload (dynamicDraw = false)
+        new VertexBuffer(context, array, attributes);
+
+        // Views should no longer reference the original buffer
+        expect(array.arrayBuffer.byteLength).toBe(0);
+        expect(array.int16.buffer).not.toBe(originalBuffer);
+        expect(array.int16.length).toBe(0);
+    });
+
+    test('dynamic buffer preserves StructArray data after upload', () => {
+        const context = new Context(gl);
+        const array = new TestArray();
+        array.emplaceBack(1, 2, 3);
+
+        const originalBuffer = array.arrayBuffer;
+
+        // Dynamic upload (dynamicDraw = true)
+        new VertexBuffer(context, array, attributes, true);
+
+        // Data should be preserved for future updateData() calls
+        expect(array.arrayBuffer).toBe(originalBuffer);
+        expect(array.int16.length).toBeGreaterThan(0);
+    });
+
 });
