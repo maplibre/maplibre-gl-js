@@ -191,6 +191,16 @@ abstract class StructArray {
     _refreshViews() {
         throw new Error('_refreshViews() must be implemented by each concrete StructArray layout');
     }
+
+    /**
+     * Release the JS heap copy of the buffer data after it has been uploaded
+     * to the GPU. Replaces the buffer with an empty one and recreates all
+     * typed array views so they no longer retain the original ArrayBuffer.
+     */
+    freeBufferAfterUpload() {
+        this.arrayBuffer = new ArrayBuffer(0);
+        this._refreshViews();
+    }
 }
 
 /**
