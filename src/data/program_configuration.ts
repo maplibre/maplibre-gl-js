@@ -244,7 +244,7 @@ class SourceExpressionBinder implements AttributeBinder {
     }
 
     upload(context: Context) {
-        if (this.paintVertexArray && this.paintVertexArray.arrayBuffer.byteLength) {
+        if (this.paintVertexArray?.arrayBuffer.byteLength) {
             if (this.paintVertexBuffer && this.paintVertexBuffer.buffer) {
                 this.paintVertexBuffer.updateData(this.paintVertexArray);
             } else {
@@ -320,7 +320,7 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
     }
 
     upload(context: Context) {
-        if (this.paintVertexArray && this.paintVertexArray.arrayBuffer.byteLength) {
+        if (this.paintVertexArray?.arrayBuffer.byteLength) {
             if (this.paintVertexBuffer && this.paintVertexBuffer.buffer) {
                 this.paintVertexBuffer.updateData(this.paintVertexArray);
             } else {
@@ -407,7 +407,7 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
     }
 
     upload(context: Context) {
-        if (this.zoomInPaintVertexArray && this.zoomInPaintVertexArray.arrayBuffer.byteLength && this.zoomOutPaintVertexArray && this.zoomOutPaintVertexArray.arrayBuffer.byteLength) {
+        if (this.zoomInPaintVertexArray?.arrayBuffer.byteLength && this.zoomOutPaintVertexArray?.arrayBuffer.byteLength) {
             const attributes = this.getVertexAttributes();
             this.zoomInPaintVertexBuffer = context.createVertexBuffer(this.zoomInPaintVertexArray, attributes, this.expression.isStateDependent);
             this.zoomOutPaintVertexBuffer = context.createVertexBuffer(this.zoomOutPaintVertexArray, attributes, this.expression.isStateDependent);
