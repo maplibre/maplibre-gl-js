@@ -793,6 +793,19 @@ export class Painter {
         }
     }
 
+    /*
+     * Force the GPU to finish all pending work and sync with the CPU.
+     * Used for benchmarking.
+     * gl.finish() alone doesn't guarantee a full pipeline flush on all
+     * configurations (e.g. SwiftShader), so we also read a pixel to
+     * force the driver to complete all rendering.
+     */
+    _waitForGPUToFinish() {
+        const gl = this.context.gl;
+        gl.finish();
+        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+    }
+
     destroy() {
         if (this._tileTextures) {
             for (const size in this._tileTextures) {
