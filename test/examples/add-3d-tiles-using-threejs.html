@@ -182,13 +182,7 @@
                 });
                 renderer.autoClear = false;
 
-                const fov = map.transform.fov;
-                tilesCamera = new THREE.PerspectiveCamera(
-                    fov,
-                    canvas.width / canvas.height,
-                    1,
-                    1000
-                );
+                tilesCamera = new THREE.PerspectiveCamera();
 
                 initTiles(url, scene, tilesCamera, renderer)
             },
@@ -198,7 +192,7 @@
                 camera.projectionMatrix.fromArray(args.defaultProjectionData.mainMatrix);
                 camera.projectionMatrix.multiply(localTransform);
 
-                const P = new THREE.Matrix4().fromArray(map.transform._projectionMatrix);
+                const P = new THREE.Matrix4().fromArray(args.projectionMatrix);
                 const invP = P.clone().invert();
                 const V = new THREE.Matrix4().multiplyMatrices(invP, camera.projectionMatrix);
 
