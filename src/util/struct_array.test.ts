@@ -82,14 +82,13 @@ describe('StructArray', () => {
 
         array.freeBufferAfterUpload();
 
-        // arrayBuffer should be replaced with an empty one
-        expect(array.arrayBuffer.byteLength).toBe(0);
-        expect(array.arrayBuffer).not.toBe(originalBuffer);
+        // arrayBuffer should be deleted (falsy) to preserve the truthiness
+        // contract used by program_configuration.ts upload()
+        expect(array.arrayBuffer).toBeUndefined();
 
-        // All typed views should now point to the new empty buffer,
-        // not the original — so the original can be GC'd
-        expect(array.uint8.buffer).toBe(array.arrayBuffer);
-        expect(array.int16.buffer).toBe(array.arrayBuffer);
+        // Typed views should no longer reference the original buffer
+        expect(array.uint8.buffer).not.toBe(originalBuffer);
+        expect(array.int16.buffer).not.toBe(originalBuffer);
         expect(array.uint8.length).toBe(0);
         expect(array.int16.length).toBe(0);
     });
