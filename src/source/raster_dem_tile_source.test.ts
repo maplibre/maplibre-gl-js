@@ -180,7 +180,8 @@ describe('RasterDEMTileSource', () => {
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
-            setExpiryData() {}
+            setExpiryData() {},
+            actor: source.dispatcher.getActor()
         } as any as Tile;
         const expiryDataSpy = vi.spyOn(tile, 'setExpiryData');
         const tilePromise = source.loadTile(tile);
@@ -210,7 +211,8 @@ describe('RasterDEMTileSource', () => {
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
-            setExpiryData() {}
+            setExpiryData() {},
+            actor: source.dispatcher.getActor()
         } as any as Tile;
         const expiryDataSpy = vi.spyOn(tile, 'setExpiryData');
         const tilePromise = source.loadTile(tile);
@@ -240,7 +242,8 @@ describe('RasterDEMTileSource', () => {
         const tile = {
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
-            setExpiryData() {}
+            setExpiryData() {},
+            actor: source.dispatcher.getActor()
         } as any as Tile;
         const expiryDataSpy = vi.spyOn(tile, 'setExpiryData');
         const tilePromise = source.loadTile(tile);
