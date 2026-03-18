@@ -150,6 +150,37 @@ export class Terrain {
         this._coordsTextureSize = 1024;
     }
 
+    destroy() {
+        if (this._fbo) {
+            this._fbo.destroy();
+            this._fbo = null;
+        }
+        if (this._fboCoordsTexture) {
+            this._fboCoordsTexture.destroy();
+            this._fboCoordsTexture = null;
+        }
+        if (this._fboDepthTexture) {
+            this._fboDepthTexture.destroy();
+            this._fboDepthTexture = null;
+        }
+        if (this._emptyDemTexture) {
+            this._emptyDemTexture.destroy();
+            this._emptyDemTexture = null;
+        }
+        if (this._emptyDepthTexture) {
+            this._emptyDepthTexture.destroy();
+            this._emptyDepthTexture = null;
+        }
+        if (this._coordsTexture) {
+            this._coordsTexture.destroy();
+            this._coordsTexture = null;
+        }
+        for (const key in this._meshCache) {
+            this._meshCache[key].destroy();
+        }
+        this._meshCache = {};
+    }
+
     /**
      * Get the elevation-value from original dem-data for a given tile-coordinate.
      * Coordinates that fall outside `[0, extent)` are normalized to the
