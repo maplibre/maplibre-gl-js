@@ -1,4 +1,4 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {VideoSource} from './video_source';
 import {extend} from '../util/util';
 import {getMockDispatcher, waitForEvent} from '../util/test/util';
@@ -115,5 +115,29 @@ describe('VideoSource', () => {
         source.prepare();
         await dataEvent;
         expect(tile.state).toBe('loaded');
+    });
+
+    test('onRemove removes playing listener and pauses video', () => {
+        const video = window.document.createElement('video');
+        const removeListenerSpy = vi.spyOn(video, 'removeEventListener');
+        const pauseSpy = vi.spyOn(video, 'pause');
+
+        const source = createSource({
+            type: 'video',
+            urls: [],
+            coordinates: [[-76.54, 39.18], [-76.52, 39.18], [-76.52, 39.17], [-76.54, 39.17]]
+        });
+        source.video = video;
+
+        // Simulate the listener being set up during load()
+        source._onPlaying = () => {};
+        video.addEventListener('playing', source._onPlaying);
+        const handler = source._onPlaying;
+
+        source.onRemove();
+
+        expect(removeListenerSpy).toHaveBeenCalledWith('playing', handler);
+        expect(pauseSpy).toHaveBeenCalled();
+        expect(source._onPlaying).toBeNull();
     });
 });
