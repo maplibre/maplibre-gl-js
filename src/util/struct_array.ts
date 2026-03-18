@@ -198,12 +198,8 @@ abstract class StructArray {
      * typed array views so they no longer retain the original ArrayBuffer.
      */
     freeBufferAfterUpload() {
-        // Recreate views over an empty buffer so they release their reference
-        // to the original ArrayBuffer, then delete the property to preserve
-        // the falsy-check contract used by ProgramConfiguration binder upload().
         this.arrayBuffer = new ArrayBuffer(0);
         this._refreshViews();
-        delete this.arrayBuffer;
     }
 }
 

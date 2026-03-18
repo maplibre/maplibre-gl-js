@@ -68,8 +68,7 @@ describe('VertexBuffer', () => {
         // Static upload (dynamicDraw = false)
         new VertexBuffer(context, array, attributes);
 
-        // arrayBuffer should be deleted and views should not reference original
-        expect(array.arrayBuffer).toBeUndefined();
+        expect(array.arrayBuffer.byteLength).toBe(0);
         expect(array.int16.buffer).not.toBe(originalBuffer);
         expect(array.int16.length).toBe(0);
     });
