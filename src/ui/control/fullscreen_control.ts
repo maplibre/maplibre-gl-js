@@ -91,7 +91,7 @@ export class FullscreenControl extends Evented implements IControl {
 
     /** {@inheritDoc IControl.onRemove} */
     onRemove() {
-        DOM.remove(this._controlContainer);
+        this._controlContainer.remove();
         this._map = null;
         window.document.removeEventListener(this._fullscreenchange, this._onFullscreenChange);
     }

@@ -1,11 +1,21 @@
 ## main
 ### ✨ Features and improvements
 - Add `referrerPolicy` option to `RequestParameters` to allow controlling the referrer policy for tile requests ([#7278](https://github.com/maplibre/maplibre-gl-js/issues/7278))
+- Remove Edge 18 WebP detection workaround; always send `Accept: image/webp` header for image requests ([#7293](https://github.com/maplibre/maplibre-gl-js/pull/7293)) (by [@johanrd](https://github.com/johanrd))
+- Remove legacy browser compatibility code targeting IE11 and pre-2016 browsers ([#7294](https://github.com/maplibre/maplibre-gl-js/pull/7294)) (by [@johanrd](https://github.com/johanrd))
+- Remove legacy `DOM.remove()` and `DOM.mouseButton()` wrappers; use native APIs directly (baseline 2015) ([#7295](https://github.com/maplibre/maplibre-gl-js/pull/7295)) (by [@johanrd](https://github.com/johanrd))
 
 ### 🐞 Bug fixes
+
+- Fix incorrect popup location in case of terrain and `jumpTo` ([#7267](https://github.com/maplibre/maplibre-gl-js/issues/7267)) (by [@HarelM](https://github.com/HarelM))
+- _...Add new stuff here..._
 - Fix memory leak in VideoSource: remove `playing` event listener and pause video on source removal ([#7279](https://github.com/maplibre/maplibre-gl-js/pull/7279)) (by [@johanrd](https://github.com/johanrd))
 - Fix memory leak where typed array views retained StructArray buffers after GPU upload, preventing garbage collection ([#7280](https://github.com/maplibre/maplibre-gl-js/pull/7280)) (by [@johanrd](https://github.com/johanrd))
 - Fix raster DEM tiles getting stuck in `"reloading"` state ([#7277](https://github.com/maplibre/maplibre-gl-js/pull/7277)) (by [@katemihalikova](https://github.com/katemihalikova))
+- Fix `GeolocateControl` leaking a `movestart` listener on the map after removal, which could also crash if the control was in active tracking state when removed ([#7286](https://github.com/maplibre/maplibre-gl-js/pull/7286)) (by [@johanrd](https://github.com/johanrd))
+- Cap tile texture reuse pool to prevent unbounded VRAM growth during rapid zoom/pan ([#7289](https://github.com/maplibre/maplibre-gl-js/pull/7289)) (by [@johanrd](https://github.com/johanrd))
+- Fix Marker `click` listener not removed on `remove()`, leaking the handler added in #7028 ([#7287](https://github.com/maplibre/maplibre-gl-js/pull/7287)) (by [@johanrd](https://github.com/johanrd))
+- Fix Terrain GPU resource leak: free FBO, textures, and meshes when terrain is disabled via `setTerrain(null)` ([#7288](https://github.com/maplibre/maplibre-gl-js/pull/7288)) (by [@johanrd](https://github.com/johanrd))
 
 ## 5.20.2
 

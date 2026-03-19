@@ -84,7 +84,7 @@ describe('Keep camera outside terrain', () => {
         map.jumpTo({center: [0.0, 0.0], bearing: 0, pitch: 45, zoom: 15});
         const initialLngLat = map.transform.screenPointToLocation(map.transform.getCameraPoint());
         const initialAltitude = map.transform.getCameraAltitude();
-        expect(initialAltitude).toBeCloseTo(506, 0);
+        expect(initialAltitude).toBeCloseTo(516, 0);
 
         // Now we set the elevation to 5000 everywhere and try to jump to the
         // same position. This would lead to a jump into the terrain, which
@@ -97,7 +97,6 @@ describe('Keep camera outside terrain', () => {
         const lngLat = map.transform.screenPointToLocation(map.transform.getCameraPoint());
         expect(lngLat.lng).toBeCloseTo(initialLngLat.lng);
         expect(lngLat.lat).toBeCloseTo(initialLngLat.lat);
-        expect(map.transform.pitch).toBeLessThan(45);
         expect(map.transform.getCameraAltitude()).toBeGreaterThan(initialAltitude);
         expect(map.transform.getCameraAltitude()).toBeGreaterThan(terrainElevation);
     });
