@@ -374,7 +374,7 @@ export class Marker extends Evented {
             delete this._map;
         }
         this._element.removeEventListener('click', this._onClick);
-        DOM.remove(this._element);
+        this._element.remove();
         if (this._popup) this._popup.remove();
         return this;
     }
