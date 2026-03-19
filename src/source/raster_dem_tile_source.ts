@@ -86,6 +86,8 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
                 if (!tile.actor || tile.state === 'expired') {
                     tile.actor = this.dispatcher.getActor();
+                } else if (tile.state !== 'reloading') {
+                    return;
                 }
                 const data = await tile.actor.sendAsync({type: MessageType.loadDEMTile, data: params});
                 tile.dem = data;
