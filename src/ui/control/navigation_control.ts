@@ -139,7 +139,7 @@ export class NavigationControl implements IControl {
 
     /** {@inheritDoc IControl.onRemove} */
     onRemove() {
-        DOM.remove(this._container);
+        this._container.remove();
         if (this.options.showZoom) {
             this._map.off('zoom', this._updateZoomButtons);
         }

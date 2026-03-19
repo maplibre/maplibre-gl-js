@@ -302,7 +302,7 @@ export class GeolocateControl extends Evented implements IControl {
             this._accuracyCircleMarker.remove();
         }
 
-        DOM.remove(this._container);
+        this._container.remove();
         this._map.off('movestart', this._onMoveStart);
         this._map.off('zoom', this._onUpdate);
         this._map.off('move', this._onUpdate);
