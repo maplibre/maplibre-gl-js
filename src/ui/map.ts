@@ -2313,7 +2313,6 @@ export class Map extends Camera {
             // remove terrain
             if (this.terrain) {
                 this.terrain.destroy();
-                this.terrain.tileManager.destruct();
             }
             this.terrain = null;
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();

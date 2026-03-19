@@ -179,6 +179,7 @@ export class Terrain {
             this._meshCache[key].destroy();
         }
         this._meshCache = {};
+        this.tileManager.destruct();
     }
 
     /**

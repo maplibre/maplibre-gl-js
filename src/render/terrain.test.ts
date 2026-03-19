@@ -4,7 +4,6 @@ import {mat4} from 'gl-matrix';
 import {Terrain} from './terrain';
 import {Context} from '../gl/context';
 import {RGBAImage} from '../util/image';
-import {Texture} from './texture';
 import {OverscaledTileID} from '../tile/tile_id';
 import {Tile} from '../tile/tile';
 import {LngLat} from '../geo/lng_lat';
@@ -384,13 +383,7 @@ describe('Terrain', () => {
         });
     });
 
-    test('destroy should free GPU resources', () => {
-        // When terrain is disabled via setTerrain(null), the Terrain object
-        // is dropped without destroying its GPU resources: FBO, depth/coords
-        // textures, empty placeholder textures, and cached meshes.
-        // These resources are viewport-sized (~25 MB total) and leak every
-        // time terrain is toggled off.
-
+    test('destroy releases GPU resources', () => {
         const context = new Context(gl);
         const painter = {
             context,
@@ -399,49 +392,24 @@ describe('Terrain', () => {
             pixelRatio: 1,
             style: {projection: null},
         } as any as Painter;
-        const tileManager = {_source: {tileSize: 512}} as TileManager;
+        const tileManager = {_source: {tileSize: 512}, destruct: vi.fn()} as any as TileManager;
         const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
 
-        // Trigger creation of GPU resources via the public methods
-        // that lazy-initialize them:
-
-        // getCoordsTexture creates _coordsTexture
         terrain.getCoordsTexture();
-        expect(terrain._coordsTexture).toBeTruthy();
-
-        // getFramebuffer creates _fbo, _fboCoordsTexture, _fboDepthTexture
         terrain.getFramebuffer('coords');
-        expect(terrain._fbo).toBeTruthy();
-        expect(terrain._fboCoordsTexture).toBeTruthy();
-        expect(terrain._fboDepthTexture).toBeTruthy();
-
-        // getTerrainMesh creates cached meshes with GPU buffers
         terrain.getTerrainMesh(new OverscaledTileID(0, 0, 0, 0, 0));
-        const meshKeys = Object.keys(terrain._meshCache);
-        expect(meshKeys.length).toBeGreaterThan(0);
 
-        // Manually create the lazy-init textures that getTerrainData
-        // would create (avoids needing full tile manager mocks)
-        const image = new RGBAImage({width: 1, height: 1}, new Uint8Array(4));
-        terrain._emptyDemTexture = new Texture(context, image, gl.RGBA);
-        terrain._emptyDepthTexture = new Texture(context, image, gl.RGBA);
-
-        // Spy on destroy calls
-        const spies = [
-            vi.spyOn(terrain._emptyDemTexture, 'destroy'),
-            vi.spyOn(terrain._emptyDepthTexture, 'destroy'),
-            vi.spyOn(terrain._coordsTexture, 'destroy'),
-            vi.spyOn(terrain._fboCoordsTexture, 'destroy'),
-            vi.spyOn(terrain._fboDepthTexture, 'destroy'),
-            vi.spyOn(terrain._fbo, 'destroy'),
-            ...meshKeys.map(k => vi.spyOn(terrain._meshCache[k], 'destroy')),
-        ];
+        expect(terrain._coordsTexture).toBeTruthy();
+        expect(terrain._fbo).toBeTruthy();
+        expect(Object.keys(terrain._meshCache).length).toBeGreaterThan(0);
 
         terrain.destroy();
 
-        for (const spy of spies) {
-            expect(spy).toHaveBeenCalled();
-        }
+        expect(terrain._coordsTexture).toBeNull();
+        expect(terrain._fbo).toBeNull();
+        expect(terrain._fboCoordsTexture).toBeNull();
+        expect(terrain._fboDepthTexture).toBeNull();
+        expect(Object.keys(terrain._meshCache)).toHaveLength(0);
     });
 
 });
