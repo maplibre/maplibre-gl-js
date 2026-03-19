@@ -2,9 +2,7 @@
  * Manages time flow with optional freezing capability for deterministic rendering.
  */
 class TimeManager {
-    private _realTime = typeof performance !== 'undefined' && performance && performance.now ?
-        performance.now.bind(performance) :
-        Date.now.bind(Date);
+    private _realTime = () => performance.now();
 
     private _frozenAt: number | null = null;
 

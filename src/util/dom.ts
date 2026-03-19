@@ -11,19 +11,9 @@ export class DOM {
 
     private static userSelect: string;
 
-    private static selectProp = DOM.testProp(['userSelect', 'MozUserSelect', 'WebkitUserSelect', 'msUserSelect']);
+    private static selectProp = !DOM.docStyle || 'userSelect' in DOM.docStyle ? 'userSelect' : 'webkitUserSelect';
 
-    private static transformProp = DOM.testProp(['transform', 'WebkitTransform']);
-
-    private static testProp(props: string[]): string {
-        if (!DOM.docStyle) return props[0];
-        for (let i = 0; i < props.length; i++) {
-            if (props[i] in DOM.docStyle) {
-                return props[i];
-            }
-        }
-        return props[0];
-    }
+    private static transformProp = 'transform';
 
     public static create<K extends keyof HTMLElementTagNameMap>(tagName: K, className?: string, container?: HTMLElement): HTMLElementTagNameMap[K] {
         const el = window.document.createElement(tagName);
@@ -58,22 +48,14 @@ export class DOM {
         passive?: boolean;
         capture?: boolean;
     } = {}) {
-        if ('passive' in options) {
-            target.addEventListener(type, callback, options);
-        } else {
-            target.addEventListener(type, callback, options.capture);
-        }
+        target.addEventListener(type, callback, options);
     }
 
     public static removeEventListener(target: HTMLElement | Window | Document, type: string, callback: EventListenerOrEventListenerObject, options: {
         passive?: boolean;
         capture?: boolean;
     } = {}) {
-        if ('passive' in options) {
-            target.removeEventListener(type, callback, options);
-        } else {
-            target.removeEventListener(type, callback, options.capture);
-        }
+        target.removeEventListener(type, callback, options);
     }
 
     // Suppress the next click, but only if it's immediate.

@@ -502,13 +502,7 @@ export class Marker extends Evented {
     };
 
     _onKeyPress = (e: KeyboardEvent) => {
-        const code = e.code;
-        const legacyCode = e.charCode || e.keyCode;
-
-        if (
-            (code === 'Space') || (code === 'Enter') ||
-            (legacyCode === 32) || (legacyCode === 13) // space or enter
-        ) {
+        if (e.code === 'Space' || e.code === 'Enter') {
             this.togglePopup();
         }
     };
