@@ -43,7 +43,7 @@ const timeManager = new TimeManager();
 /**
  * Returns the current time in milliseconds.
  * When time is frozen via setNow(), returns the frozen timestamp.
- * Otherwise returns real browser time (performance.now() or Date.now()).
+ * Otherwise returns real browser time via performance.now().
  *
  * @returns Current time in milliseconds
  * @example
