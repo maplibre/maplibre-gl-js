@@ -3714,15 +3714,6 @@ export class Map extends Camera {
     }
 
     /**
-     * Render, then wait for the GPU to finish the work
-     * For Benchmarking purpose
-     */
-    _renderBench(paintStartTimeStamp: number) {
-        this._render(paintStartTimeStamp);
-        this.painter._waitForGPUToFinish();
-    }
-
-    /**
      * Force a synchronous redraw of the map.
      * @example
      * ```ts
