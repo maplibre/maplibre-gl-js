@@ -13,8 +13,6 @@ export class DOM {
 
     private static selectProp = !DOM.docStyle || 'userSelect' in DOM.docStyle ? 'userSelect' : 'webkitUserSelect';
 
-    private static transformProp = 'transform';
-
     public static create<K extends keyof HTMLElementTagNameMap>(tagName: K, className?: string, container?: HTMLElement): HTMLElementTagNameMap[K] {
         const el = window.document.createElement(tagName);
         if (className !== undefined) el.className = className;
@@ -38,24 +36,6 @@ export class DOM {
         if (DOM.docStyle && DOM.selectProp) {
             DOM.docStyle[DOM.selectProp] = DOM.userSelect;
         }
-    }
-
-    public static setTransform(el: HTMLElement, value: string) {
-        el.style[DOM.transformProp] = value;
-    }
-
-    public static addEventListener(target: HTMLElement | Window | Document, type: string, callback: EventListenerOrEventListenerObject, options: {
-        passive?: boolean;
-        capture?: boolean;
-    } = {}) {
-        target.addEventListener(type, callback, options);
-    }
-
-    public static removeEventListener(target: HTMLElement | Window | Document, type: string, callback: EventListenerOrEventListenerObject, options: {
-        passive?: boolean;
-        capture?: boolean;
-    } = {}) {
-        target.removeEventListener(type, callback, options);
     }
 
     // Suppress the next click, but only if it's immediate.

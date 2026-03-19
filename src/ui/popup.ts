@@ -678,7 +678,7 @@ export class Popup extends Evented {
             offsetedPos = offsetedPos.round();
         }
 
-        DOM.setTransform(this._container, `${anchorTranslate[anchor]} translate(${offsetedPos.x}px,${offsetedPos.y}px)`);
+        this._container.style.transform = `${anchorTranslate[anchor]} translate(${offsetedPos.x}px,${offsetedPos.y}px)`;
         applyAnchorClass(this._container, anchor, 'popup');
 
         this._updateOpacity();
