@@ -5,6 +5,7 @@
 ### 🐞 Bug fixes
 - Fix memory leak in VideoSource: remove `playing` event listener and pause video on source removal ([#7279](https://github.com/maplibre/maplibre-gl-js/pull/7279)) (by [@johanrd](https://github.com/johanrd))
 - Fix memory leak where typed array views retained StructArray buffers after GPU upload, preventing garbage collection ([#7280](https://github.com/maplibre/maplibre-gl-js/pull/7280)) (by [@johanrd](https://github.com/johanrd))
+- Cap tile texture reuse pool to prevent unbounded VRAM growth during rapid zoom/pan ([#7289](https://github.com/maplibre/maplibre-gl-js/pull/7289)) (by [@johanrd](https://github.com/johanrd))
 
 ## 5.20.2
 
