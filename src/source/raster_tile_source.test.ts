@@ -488,7 +488,7 @@ describe('RasterTileSource', () => {
         });
 
         const abortError = new Error('aborted');
-        (abortError as any).name = 'AbortError';
+        abortError.name = 'AbortError';
         vi.spyOn(loadTileJSONModule, 'loadTileJson').mockRejectedValueOnce(abortError);
 
         const onError = vi.fn();
