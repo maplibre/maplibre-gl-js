@@ -127,11 +127,6 @@ export class DOM {
         return e.button;
     }
 
-    public static remove(node: HTMLElement) {
-        if (node.parentNode) {
-            node.parentNode.removeChild(node);
-        }
-    }
 
     /**
      * Sanitize an HTML string - this might not be enough to prevent all XSS attacks

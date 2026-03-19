@@ -180,7 +180,7 @@ export class BoxZoomHandler implements Handler {
         this._container.classList.remove('maplibregl-crosshair');
 
         if (this._box) {
-            DOM.remove(this._box);
+            this._box.remove();
             this._box = null;
         }
 

@@ -274,11 +274,11 @@ export class Popup extends Evented {
      */
     remove = (): this => {
         if (this._content) {
-            DOM.remove(this._content);
+            this._content.remove();
         }
 
         if (this._container) {
-            DOM.remove(this._container);
+            this._container.remove();
             delete this._container;
         }
 

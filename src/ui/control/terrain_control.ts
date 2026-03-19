@@ -46,7 +46,7 @@ export class TerrainControl implements IControl {
 
     /** {@inheritDoc IControl.onRemove} */
     onRemove() {
-        DOM.remove(this._container);
+        this._container.remove();
         this._map.off('terrain', this._updateTerrainIcon);
         this._map = undefined;
     }
