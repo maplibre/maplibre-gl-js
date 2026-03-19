@@ -22,7 +22,6 @@ import {Event, ErrorEvent, type Listener} from '../util/evented';
 import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSourceDataEvent, type MapStyleDataEvent} from './events';
 import {TaskQueue} from '../util/task_queue';
 import {throttle} from '../util/throttle';
-import {webpSupported} from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
 import {type Source} from '../source/source';
 import {type StyleLayer} from '../style/style_layer';
@@ -3463,8 +3462,6 @@ export class Map extends Camera {
         }
 
         this.painter = new Painter(gl, this.transform);
-
-        webpSupported.testSupport(gl);
     }
 
     override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
