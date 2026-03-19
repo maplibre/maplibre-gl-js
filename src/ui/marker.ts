@@ -294,7 +294,6 @@ export class Marker extends Evented {
             e.preventDefault();
         });
         applyAnchorClass(this._element, this._anchor, 'marker');
-        this._element.addEventListener('click', this._onClick);
 
         if (options && options.className) {
             for (const name of options.className.split(' ')) {
@@ -335,6 +334,7 @@ export class Marker extends Evented {
         map.on('terrain', this._update);
         map.on('projectiontransition', this._update);
 
+        this._element.addEventListener('click', this._onClick);
         this.setDraggable(this._draggable);
         this._update();
 
@@ -373,6 +373,7 @@ export class Marker extends Evented {
             this._map.off('touchmove', this._onMove);
             delete this._map;
         }
+        this._element.removeEventListener('click', this._onClick);
         DOM.remove(this._element);
         if (this._popup) this._popup.remove();
         return this;
