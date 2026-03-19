@@ -123,11 +123,6 @@ export class DOM {
         return points;
     }
 
-    public static mouseButton(e: MouseEvent) {
-        return e.button;
-    }
-
-
     /**
      * Sanitize an HTML string - this might not be enough to prevent all XSS attacks
      * Base on https://javascriptsource.com/sanitize-an-html-string-to-reduce-the-risk-of-xss-attacks/

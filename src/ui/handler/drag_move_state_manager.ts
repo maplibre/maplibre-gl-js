@@ -1,5 +1,3 @@
-import {DOM} from '../../util/dom';
-
 const LEFT_BUTTON = 0;
 const RIGHT_BUTTON = 2;
 
@@ -49,7 +47,7 @@ export class MouseMoveStateManager implements DragMoveStateManager<MouseEvent> {
     }
 
     startMove(e: MouseEvent) {
-        const eventButton = DOM.mouseButton(e);
+        const eventButton = e.button;
         this._eventButton = eventButton;
     }
 
@@ -72,7 +70,7 @@ export class MouseMoveStateManager implements DragMoveStateManager<MouseEvent> {
     }
 
     isValidEndEvent(e: MouseEvent) {
-        const eventButton = DOM.mouseButton(e);
+        const eventButton = e.button;
         return eventButton === this._eventButton;
     }
 }
