@@ -40,16 +40,23 @@ describe('tile texture pool', () => {
         return new Texture(painter.context, image, gl.RGBA);
     }
 
-    test('saveTileTexture caps pool size', () => {
+    test('saveTileTexture caps pool size and destroys excess', () => {
         const painter = createPainterWithPool();
+        const cap = Painter.MAX_TEXTURE_POOL_SIZE_PER_BUCKET;
 
-        for (let i = 0; i < 150; i++) {
-            painter.saveTileTexture(createTexture(painter, 256));
+        const textures: Texture[] = [];
+        for (let i = 0; i < cap + 100; i++) {
+            const tex = createTexture(painter, 256);
+            textures.push(tex);
+            painter.saveTileTexture(tex);
         }
 
         let reused = 0;
         while (painter.getTileTexture(256)) reused++;
-        expect(reused).toBe(Painter.MAX_TEXTURE_POOL_SIZE_PER_BUCKET);
+        expect(reused).toBe(cap);
+
+        const destroyed = textures.filter(t => t.texture === null).length;
+        expect(destroyed).toBe(100);
 
         painter.destroy();
     });
