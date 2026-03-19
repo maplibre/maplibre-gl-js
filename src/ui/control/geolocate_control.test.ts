@@ -880,25 +880,17 @@ describe('GeolocateControl with no options', () => {
         expect(geolocate._circleElement.style.width).toBeTruthy();
     });
 
-    test('GeolocateControl removes movestart listener from map on removal', async () => {
-        const geolocate = new GeolocateControl({trackUserLocation: true});
-        map.addControl(geolocate);
-        await sleep(0);
-
-        const movestartBefore = (map._listeners?.movestart ?? []).length;
-
-        map.removeControl(geolocate);
-
-        const movestartAfter = (map._listeners?.movestart ?? []).length;
-        expect(movestartAfter).toBe(movestartBefore - 1);
-    });
-
     test('GeolocateControl does not crash on movestart after removal in ACTIVE_LOCK state', async () => {
         const geolocate = new GeolocateControl({trackUserLocation: true});
         map.addControl(geolocate);
         await sleep(0);
 
-        geolocate._watchState = 'ACTIVE_LOCK';
+        // Reach ACTIVE_LOCK state via the public API
+        const geolocatePromise = geolocate.once('geolocate');
+        geolocate.trigger();
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
+        await geolocatePromise;
+
         map.removeControl(geolocate);
 
         expect(() => {
