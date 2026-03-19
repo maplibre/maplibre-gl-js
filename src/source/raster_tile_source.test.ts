@@ -9,10 +9,6 @@ import {sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util';
 import {type MapSourceDataEvent} from '../ui/events';
 import * as loadTileJSONModule from './load_tilejson';
 
-function isAbortPendingTileRequestsEvent(e: any): boolean {
-    return e?.abortPendingTileRequests === true || e?.data?.abortPendingTileRequests === true;
-}
-
 function createSource(options, transformCallback?) {
     const source = new RasterTileSource('id', options, {send() {}} as any as Dispatcher, options.eventedParent);
     source.onAdd({
@@ -456,23 +452,16 @@ describe('RasterTileSource', () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
-        const onData = vi.fn();
-        source.on('data', onData);
-
+        const fireSpy = vi.spyOn(source, 'fire');
         const callback = vi.fn();
         const loadSpy = vi.spyOn(source, 'load');
 
         source.setSourceProperty(callback);
 
-        const abortEventIndex = onData.mock.calls.findIndex(([e]) => isAbortPendingTileRequestsEvent(e));
-        expect(abortEventIndex).toBeGreaterThan(-1);
-
-        const abortEventOrder = onData.mock.invocationCallOrder[abortEventIndex];
-        const callbackOrder = callback.mock.invocationCallOrder[0];
-        const loadOrder = loadSpy.mock.invocationCallOrder[0];
-
-        expect(abortEventOrder).toBeLessThan(callbackOrder);
-        expect(callbackOrder).toBeLessThan(loadOrder);
+        // calls[0] is the abort signal; load() fires 'dataloading' synchronously as calls[1]
+        expect(fireSpy.mock.calls[0][0]).toMatchObject({type: 'data', abortPendingTileRequests: true});
+        expect(fireSpy.mock.invocationCallOrder[0]).toBeLessThan(callback.mock.invocationCallOrder[0]);
+        expect(callback.mock.invocationCallOrder[0]).toBeLessThan(loadSpy.mock.invocationCallOrder[0]);
 
         expect(callback).toHaveBeenCalledTimes(1);
         expect(loadSpy).toHaveBeenCalledTimes(1);
@@ -483,16 +472,12 @@ describe('RasterTileSource', () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
-
+        const fireSpy = vi.spyOn(source, 'fire');
         const loadSpy = vi.spyOn(source, 'load');
-        const events: Array<any> = [];
-        source.on('data', (e: any) => events.push(e));
 
         source.setUrl('http://localhost:2900/source2.json');
 
-        expect(
-            events.some((e) => isAbortPendingTileRequestsEvent(e))
-        ).toBe(true);
+        expect(fireSpy.mock.calls[0][0]).toMatchObject({type: 'data', abortPendingTileRequests: true});
         expect(source.url).toBe('http://localhost:2900/source2.json');
         expect(loadSpy).toHaveBeenCalledWith(true);
     });
