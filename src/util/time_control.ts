@@ -2,8 +2,6 @@
  * Manages time flow with optional freezing capability for deterministic rendering.
  */
 class TimeManager {
-    private _realTime = () => performance.now();
-
     private _frozenAt: number | null = null;
 
     /**
@@ -11,7 +9,7 @@ class TimeManager {
      * @returns Current time in milliseconds
      */
     getCurrentTime(): number {
-        return this._frozenAt !== null ? this._frozenAt : this._realTime();
+        return this._frozenAt !== null ? this._frozenAt : performance.now();
     }
 
     /**
