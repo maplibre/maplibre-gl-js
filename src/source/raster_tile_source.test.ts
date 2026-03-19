@@ -500,16 +500,36 @@ describe('RasterTileSource', () => {
     });
 
     test('load emits error event when TileJSON is malformed (parser rejection)', async () => {
-        const source = createSource({
-            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        const tileJSONUrl = '/source-malformed.json';
+        let requestCount = 0;
+        server.respondWith(tileJSONUrl, (xhr) => {
+            requestCount++;
+            if (requestCount === 1) {
+                xhr.respond(200, {'Content-Type': 'application/json'}, JSON.stringify({
+                    minzoom: 0,
+                    maxzoom: 22,
+                    attribution: 'MapLibre',
+                    tiles: ['http://example.com/{z}/{x}/{y}.png']
+                }));
+                return;
+            }
+
+            // Invalid JSON body to trigger parser rejection in getJSON/loadTileJson.
+            xhr.respond(200, {'Content-Type': 'application/json'}, '{"tiles": [}');
         });
 
-        vi.spyOn(loadTileJSONModule, 'loadTileJson').mockRejectedValueOnce(new Error('Invalid TileJSON payload'));
+        const source = createSource({url: tileJSONUrl});
+
+        const metadataPromise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        server.respond();
+        await metadataPromise;
 
         const onError = vi.fn();
         source.on('error', onError);
 
-        await source.load(true);
+        const loadPromise = source.load(true);
+        server.respond();
+        await loadPromise;
 
         expect(onError).toHaveBeenCalledTimes(1);
     });
