@@ -950,7 +950,9 @@ export abstract class Camera extends Evented {
         let rollChanged = false;
 
         const oldZoom = tr.zoom;
-
+        if (this.terrain) {
+            tr.setElevation(this.terrain.getElevationForLngLatZoom(options.center ? LngLat.convert(options.center) : tr.center, options.zoom || tr.tileZoom));
+        }
         this.cameraHelper.handleJumpToCenterZoom(tr, options);
 
         const zoomChanged = tr.zoom !== oldZoom;
