@@ -110,4 +110,17 @@ export class TapDragZoomHandler implements Handler {
     isActive() {
         return this._active;
     }
+
+    /**
+    * Modify the speed of tap drag zoom
+    * @param zoomSpeedRatio - 1 The ratio used to multiply zoom delta value (resulting in speed changes).
+    * @example
+    * Speed up tap drag zoom
+    * ```ts
+    * map.touchZoomRotate._tapDragZoom.setZoomSpeed(1.25);
+    * ```
+    */
+    setZoomSpeed(zoomSpeedRatio: number) {
+        this._tapDragZoomSpeed = zoomSpeedRatio;
+    }
 }
