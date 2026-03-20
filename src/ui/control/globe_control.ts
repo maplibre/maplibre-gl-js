@@ -38,7 +38,7 @@ export class GlobeControl implements IControl {
 
     /** {@inheritDoc IControl.onRemove} */
     onRemove() {
-        DOM.remove(this._container);
+        this._container.remove();
         this._map.off('styledata', this._updateGlobeIcon);
         this._map.off('projectiontransition', this._updateGlobeIcon);
         this._globeButton.removeEventListener('click', this._toggleProjection);

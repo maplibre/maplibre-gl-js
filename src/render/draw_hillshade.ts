@@ -103,6 +103,8 @@ function prepareHillshade(
     const context = painter.context;
     const gl = context.gl;
 
+    const textureFilter = layer.paint.get('resampling') === 'nearest' ?  gl.NEAREST : gl.LINEAR;
+
     for (const coord of tileIDs) {
         const tile = tileManager.getTile(coord);
         const dem = tile.dem;
@@ -138,7 +140,7 @@ function prepareHillshade(
 
         if (!fbo) {
             const renderTexture = new Texture(context, {width: tileSize, height: tileSize, data: null}, gl.RGBA);
-            renderTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+            renderTexture.bind(textureFilter, gl.CLAMP_TO_EDGE);
 
             fbo = tile.fbo = context.createFramebuffer(tileSize, tileSize, true, false);
             fbo.colorAttachment.set(renderTexture.texture);
