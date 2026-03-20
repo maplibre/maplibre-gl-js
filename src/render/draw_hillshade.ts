@@ -144,6 +144,7 @@ function prepareHillshade(
 
             fbo = tile.fbo = context.createFramebuffer(tileSize, tileSize, true, false);
             fbo.colorAttachment.set(renderTexture.texture);
+            fbo.checkFramebufferStatus();
         }
 
         context.bindFramebuffer.set(fbo.framebuffer);

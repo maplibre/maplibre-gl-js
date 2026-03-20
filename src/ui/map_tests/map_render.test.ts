@@ -80,6 +80,17 @@ test('no render before style loaded', async () => {
     expect(loaded).toBeTruthy();
 });
 
+test('redraw does not throw on framebuffer error', async () => {
+    const map = createMap({style: createStyle()});
+    await map.once('idle');
+
+    vi.spyOn(map.painter, 'render').mockImplementationOnce(() => {
+        throw new Error('Framebuffer is not complete');
+    });
+
+    expect(() => map.redraw()).not.toThrow();
+});
+
 test('redraw', async () => {
     const map = createMap();
 

@@ -343,6 +343,7 @@ export class Terrain {
             this._fbo.depthAttachment.set(painter.context.createRenderbuffer(painter.context.gl.DEPTH_COMPONENT16, width, height));
         }
         this._fbo.colorAttachment.set(texture === 'coords' ? this._fboCoordsTexture.texture : this._fboDepthTexture.texture);
+        this._fbo.checkFramebufferStatus();
         return this._fbo;
     }
 
