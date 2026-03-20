@@ -356,6 +356,7 @@ describe('RasterDEMTileSource', () => {
         const source = createSource({url: '/source.json'});
         const promise = waitForMetadataEvent(source);
 
+        await sleep(0);
         server.respond();
         await promise;
 
@@ -367,6 +368,7 @@ describe('RasterDEMTileSource', () => {
             setExpiryData() {}
         } as any as Tile;
         const tilePromise = source.loadTile(tile);
+        await sleep(0);
         server.respond();
         await tilePromise;
         expect(tile.state).toBe('loaded');

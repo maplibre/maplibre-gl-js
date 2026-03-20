@@ -7,7 +7,7 @@ import {OverscaledTileID} from '../tile/tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
-import {getMockDispatcher, getWrapDispatcher, waitForEvent, waitForMetadataEvent} from '../util/test/util';
+import {getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util';
 import {type Map} from '../ui/map';
 import {type WorkerTileParameters} from './worker_source';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
