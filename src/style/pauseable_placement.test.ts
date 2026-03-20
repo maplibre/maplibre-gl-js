@@ -4,12 +4,6 @@ import {MercatorTransform} from '../geo/projection/mercator_transform';
 import type {StyleLayer} from './style_layer';
 
 describe('PauseablePlacement', () => {
-    // When a style change adds or reorders symbol layers, the placement loop
-    // can run before style recalculation has finished hydrating the new layer's
-    // `layout` property.  The layer already has `type: 'symbol'` so it passes
-    // the type check, but accessing `layout.get(...)` throws because `layout`
-    // is still undefined.  The guard in continuePlacement should skip these
-    // not-yet-ready layers instead of crashing.
     test('should skip symbol layers whose layout is not yet hydrated', () => {
         const transform = new MercatorTransform();
         transform.resize(512, 512);
