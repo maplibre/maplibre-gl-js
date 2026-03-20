@@ -72,7 +72,7 @@ export class TapDragZoomHandler implements Handler {
             this._active = true;
 
             return {
-                zoomDelta: (dist / 128)*this._tapDragZoomSpeed
+                zoomDelta: (dist / 128) * this._tapDragZoomSpeed
             };
         }
     }
