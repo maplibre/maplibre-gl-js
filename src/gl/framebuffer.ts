@@ -32,6 +32,7 @@ export class Framebuffer {
 
     checkFramebufferStatus() {
         const gl = this.context.gl;
+        this.context.bindFramebuffer.set(this.framebuffer);
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
             throw createFramebufferNotCompleteError();
         }
