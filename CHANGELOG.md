@@ -16,6 +16,7 @@
 - Cap tile texture reuse pool to prevent unbounded VRAM growth during rapid zoom/pan ([#7289](https://github.com/maplibre/maplibre-gl-js/pull/7289)) (by [@johanrd](https://github.com/johanrd))
 - Fix Marker `click` listener not removed on `remove()`, leaking the handler added in #7028 ([#7287](https://github.com/maplibre/maplibre-gl-js/pull/7287)) (by [@johanrd](https://github.com/johanrd))
 - Fix Terrain GPU resource leak: free FBO, textures, and meshes when terrain is disabled via `setTerrain(null)` ([#7288](https://github.com/maplibre/maplibre-gl-js/pull/7288)) (by [@johanrd](https://github.com/johanrd))
+- Fix guard against partial layout in `PauseablePlacement` ([#7079](https://github.com/maplibre/maplibre-gl-js/pull/7079)) (by [@garethbowker](https://github.com/garethbowker))
 - Fix missing tile encoding for MLT queryRenderedFeatures ([#7056](https://github.com/maplibre/maplibre-gl-js/pull/7056)) (by [@dannote](https://github.com/dannote) and [@ted-piotrowski](https://github.com/ted-piotrowski))
 - _...Add new stuff here..._
 
