@@ -22,7 +22,6 @@ import {Event, ErrorEvent, type Listener} from '../util/evented';
 import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSourceDataEvent, type MapStyleDataEvent} from './events';
 import {TaskQueue} from '../util/task_queue';
 import {throttle} from '../util/throttle';
-import {webpSupported} from '../util/webp_supported';
 import {PerformanceSubject, type IPerformanceObserver} from '../util/performance_observer/observer';
 import {type Source} from '../source/source';
 import {type StyleLayer} from '../style/style_layer';
@@ -45,7 +44,7 @@ import type {MapDataEvent} from './events';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image';
 import type {PointLike} from './camera';
 import type {ScrollZoomHandler} from './handler/scroll_zoom';
-import type {BoxZoomHandler} from './handler/box_zoom';
+import type {BoxZoomHandler, BoxZoomHandlerOptions} from './handler/box_zoom';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
 import type {DragRotateHandler} from './handler/shim/drag_rotate';
 import type {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan';
@@ -176,9 +175,11 @@ export type MapOptions = {
     anisotropicFilterPitch?: number | null;
     /**
      * If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).
+     * An `Object` value configures {@link BoxZoomHandler} options.
+     * If `boxZoomEnd` is provided, the callback runs instead of the default fit-to-box zoom.
      * @defaultValue true
      */
-    boxZoom?: boolean;
+    boxZoom?: boolean | BoxZoomHandlerOptions;
     /**
      * If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}).
      * @defaultValue true
@@ -1384,8 +1385,8 @@ export class Map extends Camera {
      *
      * @param anisotropicFilterPitch - The pitch above which to apply anisotropic filtering to the map's raster layers (0-180).
      * If `null` or `undefined` is provided, the function reverts to the default pitch threshold (20).
-     * 
-     * 
+     *
+     *
      * @example
      * ```ts
      * map.setAnisotropicFilterPitch(85);
@@ -2159,17 +2160,18 @@ export class Map extends Camera {
         }
     }
 
-    _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
+    async _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
-            const request = this._requestManager.transformRequest(url, ResourceType.Style);
-            getJSON<StyleSpecification>(request, new AbortController()).then((response) => {
+            const request = await this._requestManager.transformRequest(url, ResourceType.Style);
+            try {
+                const response = await getJSON<StyleSpecification>(request, new AbortController());
                 this._updateDiff(response.data, options);
-            }).catch((error) => {
+            } catch (error) {
                 if (error) {
                     this.fire(new ErrorEvent(error));
                 }
-            });
+            }
         } else if (typeof style === 'object') {
             this._updateDiff(style, options);
         }
@@ -2319,7 +2321,9 @@ export class Map extends Camera {
 
         if (!options) {
             // remove terrain
-            if (this.terrain) this.terrain.tileManager.destruct();
+            if (this.terrain) {
+                this.terrain.destroy();
+            }
             this.terrain = null;
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
@@ -2717,8 +2721,8 @@ export class Map extends Camera {
      * ```
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-icon-to-the-map/)
      */
-    loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
-        return ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
+    async loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
+        return ImageRequest.getImage(await this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
     }
 
     /**
@@ -3470,8 +3474,6 @@ export class Map extends Camera {
         }
 
         this.painter = new Painter(gl, this.transform);
-
-        webpSupported.testSupport(gl);
     }
 
     override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
@@ -3774,8 +3776,8 @@ export class Map extends Camera {
         if (extension?.loseContext) extension.loseContext();
         this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
-        DOM.remove(this._canvasContainer);
-        DOM.remove(this._controlContainer);
+        this._canvasContainer.remove();
+        this._controlContainer.remove();
         this._container.removeEventListener('scroll', this._onMapScroll, false);
         this._container.classList.remove('maplibregl-map');
 

@@ -36,7 +36,7 @@ export default class Paint extends Benchmark {
         for (const map of this.maps) {
             map._styleDirty = true;
             map._sourcesDirty = true;
-            map._render(Date.now());
+            Benchmark.renderMap(map);
         }
     }
 

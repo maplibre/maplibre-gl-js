@@ -250,6 +250,20 @@ describe('Actor', () => {
         expect(spy).not.toHaveBeenCalled();
     });
 
+    test('should process a message when origin is "null"', async () => {
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+        const actor = new Actor(worker, '1');
+
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
+
+        actor.target.postMessage({type: MessageType.getClusterExpansionZoom, data: {} as any, origin: 'null'});
+
+        await sleep(0);
+
+        expect(spy).toHaveBeenCalled();
+    });
+
     test('should process a message when origin is "file://"', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add 3D tiles using three.js</title>
+    <meta property="og:description" content="Use a custom style layer with three.js to add 3D tiles to the map." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<script type="importmap">
+    {
+        "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.module.js",
+        "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/",
+        "3d-tiles-renderer": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.4.21/build/index.three.js"
+        }
+    }
+</script>
+<div id="map"></div>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { TilesRenderer } from "3d-tiles-renderer";
+    import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+    import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+    import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
+
+    let scene,camera,renderer,mapInstance,tiles,tilesCamera;
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://tiles.openfreemap.org/styles/bright',
+        zoom: 1,
+        center: [0, 0],
+        pitch: 60,
+        maxPitch: 80,
+        canvasContextAttributes: {antialias: true}
+    });
+
+    // Convert Cartesian coordinates to latitude and longitude
+    function ecefToLngLatAlt(x, y, z) {
+        const a = 6378137.0;
+        const e2 = 6.69437999014e-3;
+        const b = a * Math.sqrt(1 - e2);
+        const ep2 = (a * a - b * b) / (b * b);
+
+        const p = Math.sqrt(x * x + y * y);
+        const th = Math.atan2(a * z, b * p);
+        const lon = Math.atan2(y, x);
+        const lat = Math.atan2(z + ep2 * b * Math.pow(Math.sin(th), 3), p - e2 * a * Math.pow(Math.cos(th), 3));
+        const n = a / Math.sqrt(1 - e2 * Math.sin(lat) * Math.sin(lat));
+        const alt = p / Math.cos(lat) - n;
+
+        return {
+            lng: (lon * 180) / Math.PI,
+            lat: (lat * 180) / Math.PI,
+            alt,
+        };
+    };
+
+    /**
+     * Load 3D model
+     * @param {string} url Model URL
+     * @param {number} altOffset Model altitude offset (set appropriate value to align with the ground)
+     */
+    async function load3dtiles(url, altOffset = 0) {
+        let localTransform;
+
+        function getModelTransform(coord, rotate= [Math.PI / 2, 0, 0]) {
+            const modelAsMercatorCoordinate = maplibregl.MercatorCoordinate.fromLngLat([coord[0], coord[1]], coord[2]);
+            const modelTransform = {
+                translateX: modelAsMercatorCoordinate.x,
+                translateY: modelAsMercatorCoordinate.y,
+                translateZ: modelAsMercatorCoordinate.z,
+                rotateX: rotate[0],
+                rotateY: rotate[1],
+                rotateZ: rotate[2],
+                scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits(),
+            };
+            return modelTransform;
+        }
+
+        function updateLocalTransform(modelOrigin= [0, 0, 0]) {
+            const modelTransform = getModelTransform(modelOrigin);
+            const axisX = new THREE.Vector3(1, 0, 0);
+            const axisY = new THREE.Vector3(0, 1, 0);
+            const axisZ = new THREE.Vector3(0, 0, 1);
+            const rotationX = new THREE.Matrix4().makeRotationAxis(axisX, modelTransform.rotateX);
+            const rotationY = new THREE.Matrix4().makeRotationAxis(axisY, modelTransform.rotateY);
+            const rotationZ = new THREE.Matrix4().makeRotationAxis(axisZ, modelTransform.rotateZ);
+            const scaleVec = new THREE.Vector3(modelTransform.scale, -modelTransform.scale, modelTransform.scale);
+            localTransform = new THREE.Matrix4()
+                .makeTranslation(modelTransform.translateX, modelTransform.translateY, modelTransform.translateZ)
+                .scale(scaleVec)
+                .multiply(rotationX)
+                .multiply(rotationY)
+                .multiply(rotationZ);
+        }
+
+        // Initialize tiles
+        function initTiles(url, sceneInst, cameraInst, rendererInst) {
+            const gltfLoader = new GLTFLoader();
+            const dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath("https://unpkg.com/three@0.183.0/examples/jsm/libs/draco/");
+            gltfLoader.setDRACOLoader(dracoLoader);
+
+            const ktx2Loader = new KTX2Loader();
+            ktx2Loader.setTranscoderPath("https://unpkg.com/three@0.183.0/examples/jsm/libs/basis/");
+            ktx2Loader.detectSupport(rendererInst);
+            gltfLoader.setKTX2Loader(ktx2Loader);
+
+            tiles = new TilesRenderer(url);
+            tiles.group.name = "tiles";
+            sceneInst.add(tiles.group);
+
+            tiles.setCamera(cameraInst);
+            tiles.setResolutionFromRenderer(cameraInst, rendererInst);
+
+            tiles.manager.addHandler(/\.(gltf|glb)$/g, gltfLoader);
+
+            let loadedTileSetHandled = false;
+            // Adjust model matrix
+            const loadTileSet = () => {
+                if (loadedTileSetHandled) {
+                    tiles?.removeEventListener("load-tileset", loadTileSet);
+                    return;
+                }
+
+                const scale = 1;
+                const sphere = new THREE.Sphere();
+                tiles.getBoundingSphere(sphere);
+                const center = sphere.center.clone();
+                const root = tiles.root;
+
+                let m = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+                // Get matrix
+                if (root.transform)  m = root.transform;
+                loadedTileSetHandled = true;
+
+                const { lng, lat, alt } = ecefToLngLatAlt(center.x, center.y, center.z);
+                map.jumpTo({ center: [lng, lat], zoom: 18, pitch: 60 });
+                updateLocalTransform([lng, lat, alt + altOffset]);
+
+                const rotationMat3 = new THREE.Matrix3().set(m[0], m[1], m[2], m[8], m[9], m[10], -m[4], -m[5], -m[6]);
+                const rotationMat4 = new THREE.Matrix4().setFromMatrix3(rotationMat3);
+                const moveToOrigin = new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z);
+                const finalMatrix = new THREE.Matrix4().multiplyMatrices(rotationMat4, moveToOrigin);
+
+                tiles.group.matrix.copy(finalMatrix);
+                tiles.group.matrixAutoUpdate = false;
+                tiles.group.updateMatrixWorld(true);
+            };
+            tiles.addEventListener("load-tileset", loadTileSet);
+
+            // Update matrix
+            updateLocalTransform();
+        }
+
+        const customLayer = {
+            id: "3d-tiles",
+            type: "custom" ,
+            renderingMode: "3d" ,
+            onAdd(mapArg, gl) {
+                camera = new THREE.PerspectiveCamera() ;
+                scene = new THREE.Scene();
+
+                const ambientLight = new THREE.AmbientLight(0xffffff, 3);
+                scene.add(ambientLight);
+
+                mapInstance = mapArg;
+                const canvas = mapArg.getCanvas();
+                renderer = new THREE.WebGLRenderer({
+                    canvas,
+                    context: gl,
+                    antialias: true,
+                });
+                renderer.autoClear = false;
+
+                tilesCamera = new THREE.PerspectiveCamera();
+
+                initTiles(url, scene, tilesCamera, renderer)
+            },
+            render(_gl, args) {
+                // Update camera matrix and render
+                if (!camera || !renderer || !scene || !localTransform || !tilesCamera) return;
+                camera.projectionMatrix.fromArray(args.defaultProjectionData.mainMatrix);
+                camera.projectionMatrix.multiply(localTransform);
+
+                const P = new THREE.Matrix4().fromArray(args.projectionMatrix);
+                const invP = P.clone().invert();
+                const V = new THREE.Matrix4().multiplyMatrices(invP, camera.projectionMatrix);
+
+                tilesCamera.projectionMatrix.copy(P);
+                tilesCamera.matrixWorldInverse.copy(V);
+                tilesCamera.matrixWorld.copy(V).invert();
+
+                renderer.resetState();
+                renderer.render(scene, camera);
+                if (tiles) tiles.update();
+                mapInstance?.triggerRepaint();
+            },
+        };
+
+        await map.once('style.load');
+        map.addLayer(customLayer);
+    };
+
+    load3dtiles("https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json", -300);
+</script>
+</body>
+</html>
