@@ -3926,4 +3926,3 @@ export class Map extends Camera {
         return this._update(true);
     }
 }
-

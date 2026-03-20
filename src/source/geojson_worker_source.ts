@@ -374,4 +374,3 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGe
     };
     return superclusterOptions;
 }
-

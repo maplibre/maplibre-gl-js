@@ -237,4 +237,3 @@ export class VectorTileWorkerSource implements WorkerSource {
         this.tileState.removeLoaded(params.uid);
     }
 }
-
