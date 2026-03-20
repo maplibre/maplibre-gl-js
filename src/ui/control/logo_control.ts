@@ -63,7 +63,7 @@ export class LogoControl implements IControl {
 
     /** {@inheritDoc IControl.onRemove} */
     onRemove() {
-        DOM.remove(this._container);
+        this._container.remove();
         this._map.off('resize', this._updateCompact);
         this._map = undefined;
         this._compact = undefined;

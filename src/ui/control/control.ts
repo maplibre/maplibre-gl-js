@@ -28,7 +28,7 @@ export type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom
  *     }
  *
  *     onRemove() {
- *         this._container.parentNode.removeChild(this._container);
+ *         this._container.remove();
  *         this._map = undefined;
  *     }
  * }

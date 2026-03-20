@@ -67,7 +67,7 @@ export default class PaintStates extends Benchmark {
         for (let i = 0; i < this.numFeatures; i += 50) {
             this.map.setFeatureState({source: 'land', id: i}, {bench: true});
         }
-        this.map._render();
+        Benchmark.renderMap(this.map);
     }
 
     teardown() {

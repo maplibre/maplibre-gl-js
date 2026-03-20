@@ -374,7 +374,7 @@ export class Marker extends Evented {
             delete this._map;
         }
         this._element.removeEventListener('click', this._onClick);
-        DOM.remove(this._element);
+        this._element.remove();
         if (this._popup) this._popup.remove();
         return this;
     }
@@ -502,13 +502,7 @@ export class Marker extends Evented {
     };
 
     _onKeyPress = (e: KeyboardEvent) => {
-        const code = e.code;
-        const legacyCode = e.charCode || e.keyCode;
-
-        if (
-            (code === 'Space') || (code === 'Enter') ||
-            (legacyCode === 32) || (legacyCode === 13) // space or enter
-        ) {
+        if (e.code === 'Space' || e.code === 'Enter') {
             this.togglePopup();
         }
     };
@@ -643,7 +637,7 @@ export class Marker extends Evented {
             this._pos = this._pos.round();
         }
 
-        DOM.setTransform(this._element, `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`);
+        this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`;
 
         browser.frameAsync(new AbortController(), this._map._ownerWindow).then(() => { // Run _updateOpacity only after painter.render and drawDepth
             this._updateOpacity(e && e.type === 'moveend');
