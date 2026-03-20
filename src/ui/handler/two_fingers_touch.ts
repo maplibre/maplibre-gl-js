@@ -31,10 +31,8 @@ abstract class TwoFingersTouchHandler implements Handler {
     /** @internal */
     constructor() {
         this.reset();
-        if (this._twoFingersZoomSpeed === undefined) {
-            this._twoFingersZoomSpeed = 1;}
-        if (this._zoomThreshold === undefined) {
-            this._zoomThreshold = 0.1;}
+        this._twoFingersZoomSpeed = 1;
+        this._zoomThreshold = 0.1;
     }
 
     reset(): void {
