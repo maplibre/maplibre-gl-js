@@ -2151,17 +2151,18 @@ export class Map extends Camera {
         }
     }
 
-    _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
+    async _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
-            const request = this._requestManager.transformRequest(url, ResourceType.Style);
-            getJSON<StyleSpecification>(request, new AbortController()).then((response) => {
+            const request = await this._requestManager.transformRequest(url, ResourceType.Style);
+            try {
+                const response = await getJSON<StyleSpecification>(request, new AbortController());
                 this._updateDiff(response.data, options);
-            }).catch((error) => {
+            } catch (error) {
                 if (error) {
                     this.fire(new ErrorEvent(error));
                 }
-            });
+            }
         } else if (typeof style === 'object') {
             this._updateDiff(style, options);
         }
@@ -2711,8 +2712,8 @@ export class Map extends Camera {
      * ```
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-icon-to-the-map/)
      */
-    loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
-        return ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
+    async loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
+        return ImageRequest.getImage(await this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
     }
 
     /**
