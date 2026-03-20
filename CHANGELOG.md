@@ -9,7 +9,7 @@
 
 ### ✨ Features and improvements
 
-- Add compatibilty for ES2020 ([#7283](https://github.com/maplibre/maplibre-gl-js/pull/7283)) (by [@claudiobgit](https://github.com/claudiobgit))
+- Add compatibility for ES2020 ([#7283](https://github.com/maplibre/maplibre-gl-js/pull/7283)) (by [@claudiobgit](https://github.com/claudiobgit))
 - Add `referrerPolicy` option to `RequestParameters` to allow controlling the referrer policy for tile requests ([#7278](https://github.com/maplibre/maplibre-gl-js/issues/7278)) (by [@Bingtagui404](https://github.com/Bingtagui404))
 - Wait for the GPU to finish its callstack for rendering benchmarks ([#7285](https://github.com/maplibre/maplibre-gl-js/pull/7285)) (by [@xavierjs](https://github.com/xavierjs))
 - Remove Edge 18 WebP detection workaround; always send `Accept: image/webp` header for image requests ([#7293](https://github.com/maplibre/maplibre-gl-js/pull/7293)) (by [@johanrd](https://github.com/johanrd))
