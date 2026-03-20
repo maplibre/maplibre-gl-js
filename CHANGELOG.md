@@ -5,12 +5,11 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-- Fix RasterDEMTileSource tiles stuck in reloading state ([#7284](https://github.com/maplibre/maplibre-gl-js/pull/7284)) (by [@katemihalikova](https://github.com/katemihalikova))
-- test: add build test for ES2020 compatibility ([#7283](https://github.com/maplibre/maplibre-gl-js/pull/7283)) (by [@claudiobgit](https://github.com/claudiobgit))
-- feat: add referrerPolicy option to RequestParameters ([#7281](https://github.com/maplibre/maplibre-gl-js/pull/7281)) (by [@Bingtagui404](https://github.com/Bingtagui404))
-- Fix 3D Tiles example ([#7275](https://github.com/maplibre/maplibre-gl-js/pull/7275)) (by [@hh-hang](https://github.com/hh-hang))
 ## 5.21.0
+
 ### ✨ Features and improvements
+
+- Add compatibilty for ES2020 ([#7283](https://github.com/maplibre/maplibre-gl-js/pull/7283)) (by [@claudiobgit](https://github.com/claudiobgit))
 - Add `referrerPolicy` option to `RequestParameters` to allow controlling the referrer policy for tile requests ([#7278](https://github.com/maplibre/maplibre-gl-js/issues/7278))
 - Wait for the GPU to finish its callstack for rendering benchmarks ([#7285](https://github.com/maplibre/maplibre-gl-js/pull/7285)) (by [@xavierjs](https://github.com/xavierjs))
 - Remove Edge 18 WebP detection workaround; always send `Accept: image/webp` header for image requests ([#7293](https://github.com/maplibre/maplibre-gl-js/pull/7293)) (by [@johanrd](https://github.com/johanrd))
@@ -22,13 +21,14 @@
 - Fix incorrect popup location in case of terrain and `jumpTo` ([#7267](https://github.com/maplibre/maplibre-gl-js/issues/7267)) (by [@HarelM](https://github.com/HarelM))
 - Fix memory leak in VideoSource: remove `playing` event listener and pause video on source removal ([#7279](https://github.com/maplibre/maplibre-gl-js/pull/7279)) (by [@johanrd](https://github.com/johanrd))
 - Fix memory leak where typed array views retained StructArray buffers after GPU upload, preventing garbage collection ([#7280](https://github.com/maplibre/maplibre-gl-js/pull/7280)) (by [@johanrd](https://github.com/johanrd))
-- Fix raster DEM tiles getting stuck in `"reloading"` state ([#7277](https://github.com/maplibre/maplibre-gl-js/pull/7277)) (by [@katemihalikova](https://github.com/katemihalikova))
+- Fix raster DEM tiles getting stuck in `"reloading"` state ([#7284](https://github.com/maplibre/maplibre-gl-js/pull/7284)) (by [@katemihalikova](https://github.com/katemihalikova))
 - Fix `GeolocateControl` leaking a `movestart` listener on the map after removal, which could also crash if the control was in active tracking state when removed ([#7286](https://github.com/maplibre/maplibre-gl-js/pull/7286)) (by [@johanrd](https://github.com/johanrd))
 - Cap tile texture reuse pool to prevent unbounded VRAM growth during rapid zoom/pan ([#7289](https://github.com/maplibre/maplibre-gl-js/pull/7289)) (by [@johanrd](https://github.com/johanrd))
 - Fix Marker `click` listener not removed on `remove()`, leaking the handler added in #7028 ([#7287](https://github.com/maplibre/maplibre-gl-js/pull/7287)) (by [@johanrd](https://github.com/johanrd))
 - Fix Terrain GPU resource leak: free FBO, textures, and meshes when terrain is disabled via `setTerrain(null)` ([#7288](https://github.com/maplibre/maplibre-gl-js/pull/7288)) (by [@johanrd](https://github.com/johanrd))
 - Fix guard against partial layout in `PauseablePlacement` ([#7079](https://github.com/maplibre/maplibre-gl-js/pull/7079)) (by [@garethbowker](https://github.com/garethbowker))
 - Fix missing tile encoding for MLT queryRenderedFeatures ([#7056](https://github.com/maplibre/maplibre-gl-js/pull/7056)) (by [@dannote](https://github.com/dannote) and [@ted-piotrowski](https://github.com/ted-piotrowski))
+- Fix 3D Tiles example ([#7275](https://github.com/maplibre/maplibre-gl-js/pull/7275)) (by [@hh-hang](https://github.com/hh-hang))
 
 ## 5.20.2
 
