@@ -14,6 +14,7 @@ export class TapDragZoomHandler implements Handler {
     _tapTime: number;
     _tapPoint: Point;
     _tap: TapRecognizer;
+    _tapDragZoomSpeed: number;
 
     constructor() {
 
@@ -21,7 +22,8 @@ export class TapDragZoomHandler implements Handler {
             numTouches: 1,
             numTaps: 1
         });
-
+        if (this._tapDragZoomSpeed === undefined) {
+            this._tapDragZoomSpeed = 1;}
         this.reset();
     }
 
@@ -70,7 +72,7 @@ export class TapDragZoomHandler implements Handler {
             this._active = true;
 
             return {
-                zoomDelta: dist / 128
+                zoomDelta: (dist / 128)*this._tapDragZoomSpeed
             };
         }
     }

@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add `_twoFingersZoomSpeed` & `_tapDragZoomSpeed` properties and expose methods to change it to control zoom speed. Add `_zoomThreshold` and relevant method to control sensitivity to pinch move that trigger zoom ([#7271](https://github.com/maplibre/maplibre-gl-js/issues/7271))
 - Add `referrerPolicy` option to `RequestParameters` to allow controlling the referrer policy for tile requests ([#7278](https://github.com/maplibre/maplibre-gl-js/issues/7278))
 - Wait for the GPU to finish its callstack for rendering benchmarks ([#7285](https://github.com/maplibre/maplibre-gl-js/pull/7285)) (by [@xavierjs](https://github.com/xavierjs))
 - Remove Edge 18 WebP detection workaround; always send `Accept: image/webp` header for image requests ([#7293](https://github.com/maplibre/maplibre-gl-js/pull/7293)) (by [@johanrd](https://github.com/johanrd))

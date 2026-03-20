@@ -25,10 +25,16 @@ abstract class TwoFingersTouchHandler implements Handler {
     _vector?: Point;
     _startVector?: Point;
     _aroundCenter?: boolean;
+    _twoFingersZoomSpeed?: number;
+    _zoomThreshold?: number;
 
     /** @internal */
     constructor() {
         this.reset();
+        if (this._twoFingersZoomSpeed === undefined) {
+            this._twoFingersZoomSpeed = 1;}
+        if (this._zoomThreshold === undefined) {
+            this._zoomThreshold = 0.1;}
     }
 
     reset(): void {
@@ -138,8 +144,6 @@ function getTouchById(mapTouches: Array<Touch>, points: Array<Point>, identifier
 
 /* ZOOM */
 
-const ZOOM_THRESHOLD = 0.1;
-
 function getZoomDelta(distance: number, lastDistance: number): number {
     return Math.log(distance / lastDistance) / Math.LN2;
 }
@@ -167,10 +171,10 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
     _move(points: [Point, Point], pinchAround: Point | null): HandlerResult | void {
         const lastDistance = this._distance!;
         this._distance = points[0].dist(points[1]);
-        if (!this._active && Math.abs(getZoomDelta(this._distance, this._startDistance!)) < ZOOM_THRESHOLD) return;
+        if (!this._active && Math.abs(getZoomDelta(this._distance, this._startDistance!)) < this._zoomThreshold) return;
         this._active = true;
         return {
-            zoomDelta: getZoomDelta(this._distance, lastDistance),
+            zoomDelta: (getZoomDelta(this._distance, lastDistance))*this._twoFingersZoomSpeed,
             pinchAround
         };
     }
