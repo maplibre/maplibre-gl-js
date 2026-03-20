@@ -281,4 +281,95 @@ describe('touch zoom rotate', () => {
 
         map.remove();
     });
+
+    test('TwoFingersTouchZoomRotateHandler applies zoom speed multiplier', () => {
+        const map = createMap();
+        const target = map.getCanvas();
+
+        map.handlers._handlersById.tapZoom.disable();
+        map.touchPitch.disable();
+
+        simulate.touchstart(target, {
+            touches: [
+                {target, identifier: 1, clientX: 0, clientY: -50},
+                {target, identifier: 2, clientX: 0, clientY: 50}
+            ]
+        });
+        map._renderTaskQueue.run();
+
+        simulate.touchmove(target, {
+            touches: [
+                {target, identifier: 1, clientX: 0, clientY: -100},
+                {target, identifier: 2, clientX: 0, clientY: 100}
+            ]
+        });
+        map._renderTaskQueue.run();
+
+        const zoomNormal = map.getZoom();
+
+        map.remove();
+
+        const map2 = createMap();
+        const target2 = map2.getCanvas();
+
+        map2.handlers._handlersById.tapZoom.disable();
+        map2.touchPitch.disable();
+
+        map2.touchZoomRotate._touchZoom.setZoomSpeed(2);
+
+        simulate.touchstart(target2, {
+            touches: [
+                {target: target2, identifier: 1, clientX: 0, clientY: -50},
+                {target: target2, identifier: 2, clientX: 0, clientY: 50}
+            ]
+        });
+        map2._renderTaskQueue.run();
+
+        simulate.touchmove(target2, {
+            touches: [
+                {target: target2, identifier: 1, clientX: 0, clientY: -100},
+                {target: target2, identifier: 2, clientX: 0, clientY: 100}
+            ]
+        });
+        map2._renderTaskQueue.run();
+
+        const zoomFaster = map2.getZoom();
+
+        expect(zoomFaster).toBeGreaterThan(zoomNormal);
+
+        map2.remove();
+    });
+
+    test('TwoFingersTouchZoomRotateHandler respects zoom threshold', () => {
+        const map = createMap();
+        const target = map.getCanvas();
+
+        map.handlers._handlersById.tapZoom.disable();
+        map.touchPitch.disable();
+
+        map.touchZoomRotate._touchZoom.setZoomThreshold(10); 
+
+        const zoomstart = vi.fn();
+        map.on('zoomstart', zoomstart);
+
+        simulate.touchstart(target, {
+            touches: [
+                {target, identifier: 1, clientX: 0, clientY: -50},
+                {target, identifier: 2, clientX: 0, clientY: 50}
+            ]
+        });
+        map._renderTaskQueue.run();
+
+        simulate.touchmove(target, {
+            touches: [
+                {target, identifier: 1, clientX: 0, clientY: -55},
+                {target, identifier: 2, clientX: 0, clientY: 55}
+            ]
+        });
+        map._renderTaskQueue.run();
+
+        expect(zoomstart).toHaveBeenCalledTimes(0); //on a high zoom threshold value like 10 and a small pinch movement like simulated, zoomstart should not be triggered.
+
+        map.remove();
+    });
 });
