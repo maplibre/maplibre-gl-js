@@ -1,6 +1,5 @@
 import {getJSON} from '../util/ajax';
 import {RequestPerformance} from '../util/request_performance';
-import rewind from '@mapbox/geojson-rewind';
 import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent';
 import {GeoJSONVT, type GeoJSONVTOptions, type SuperclusterOptions, type ClusterProperties} from '@maplibre/geojson-vt';
