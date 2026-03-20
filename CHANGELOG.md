@@ -1,5 +1,16 @@
 ## main
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+- Fix RasterDEMTileSource tiles stuck in reloading state ([#7284](https://github.com/maplibre/maplibre-gl-js/pull/7284)) (by [@katemihalikova](https://github.com/katemihalikova))
+- test: add build test for ES2020 compatibility ([#7283](https://github.com/maplibre/maplibre-gl-js/pull/7283)) (by [@claudiobgit](https://github.com/claudiobgit))
+- feat: add referrerPolicy option to RequestParameters ([#7281](https://github.com/maplibre/maplibre-gl-js/pull/7281)) (by [@Bingtagui404](https://github.com/Bingtagui404))
+- Fix 3D Tiles example ([#7275](https://github.com/maplibre/maplibre-gl-js/pull/7275)) (by [@hh-hang](https://github.com/hh-hang))
+## 5.21.0
+### ✨ Features and improvements
 - Add `referrerPolicy` option to `RequestParameters` to allow controlling the referrer policy for tile requests ([#7278](https://github.com/maplibre/maplibre-gl-js/issues/7278))
 - Wait for the GPU to finish its callstack for rendering benchmarks ([#7285](https://github.com/maplibre/maplibre-gl-js/pull/7285)) (by [@xavierjs](https://github.com/xavierjs))
 - Remove Edge 18 WebP detection workaround; always send `Accept: image/webp` header for image requests ([#7293](https://github.com/maplibre/maplibre-gl-js/pull/7293)) (by [@johanrd](https://github.com/johanrd))
@@ -18,7 +29,6 @@
 - Fix Terrain GPU resource leak: free FBO, textures, and meshes when terrain is disabled via `setTerrain(null)` ([#7288](https://github.com/maplibre/maplibre-gl-js/pull/7288)) (by [@johanrd](https://github.com/johanrd))
 - Fix guard against partial layout in `PauseablePlacement` ([#7079](https://github.com/maplibre/maplibre-gl-js/pull/7079)) (by [@garethbowker](https://github.com/garethbowker))
 - Fix missing tile encoding for MLT queryRenderedFeatures ([#7056](https://github.com/maplibre/maplibre-gl-js/pull/7056)) (by [@dannote](https://github.com/dannote) and [@ted-piotrowski](https://github.com/ted-piotrowski))
-- _...Add new stuff here..._
 
 ## 5.20.2
 
