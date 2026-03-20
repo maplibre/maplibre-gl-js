@@ -4,7 +4,7 @@ import path from 'path';
 import {RequestManager} from '../util/request_manager';
 import {loadGlyphRange} from './load_glyph_range';
 import {fakeServer} from 'nise';
-import {bufferToArrayBuffer} from '../util/test/util';
+import {bufferToArrayBuffer, sleep} from '../util/test/util';
 
 test('loadGlyphRange', async ()  => {
     global.fetch = null;
@@ -19,6 +19,7 @@ test('loadGlyphRange', async ()  => {
     server.respondWith(bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/0-255.pbf'))));
 
     const promise = loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager);
+    await sleep(0);
     server.respond();
     const result = await promise;
 
@@ -38,4 +39,36 @@ test('loadGlyphRange', async ()  => {
         expect(typeof glyph.metrics.advance).toBe('number');
     }
     expect(server.requests[0].url).toBe('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
+});
+
+test('loadGlyphRange with async transformRequest', async () => {
+    global.fetch = null;
+
+    const manager = new RequestManager(async (url) => ({
+        url,
+        headers: {Authorization: 'Bearer token'}
+    }));
+
+    const server = fakeServer.create();
+    server.respondWith(bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/0-255.pbf'))));
+
+    const promise = loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager);
+    await sleep(0);
+    server.respond();
+    const result = await promise;
+
+    expect(Object.keys(result)).toHaveLength(223);
+    for (const key in result) {
+        const id = Number(key);
+        const glyph = result[id];
+
+        expect(glyph.id).toBe(Number(id));
+        expect(glyph.metrics).toBeTruthy();
+        expect(typeof glyph.metrics.width).toBe('number');
+        expect(typeof glyph.metrics.height).toBe('number');
+        expect(typeof glyph.metrics.top).toBe('number');
+        expect(typeof glyph.metrics.advance).toBe('number');
+    }
+    expect(server.requests[0].url).toBe('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
+    expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
 });

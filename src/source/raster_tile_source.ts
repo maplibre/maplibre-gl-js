@@ -183,7 +183,7 @@ export class RasterTileSource extends Evented implements Source {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         tile.abortController = new AbortController();
         try {
-            const response = await ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles);
+            const response = await ImageRequest.getImage(await this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles);
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
