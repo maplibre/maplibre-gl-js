@@ -84,14 +84,17 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                     baseShift: this.baseShift
                 };
 
+                if (tile.actor && tile.state !== 'expired' && tile.state !== 'reloading') {
+                    return;
+                }
                 if (!tile.actor || tile.state === 'expired') {
                     tile.actor = this.dispatcher.getActor();
-                    const data = await tile.actor.sendAsync({type: MessageType.loadDEMTile, data: params});
-                    tile.dem = data;
-                    tile.needsHillshadePrepare = true;
-                    tile.needsTerrainPrepare = true;
-                    tile.state = 'loaded';
                 }
+                const data = await tile.actor.sendAsync({type: MessageType.loadDEMTile, data: params});
+                tile.dem = data;
+                tile.needsHillshadePrepare = true;
+                tile.needsTerrainPrepare = true;
+                tile.state = 'loaded';
             }
         } catch (err) {
             delete tile.abortController;
