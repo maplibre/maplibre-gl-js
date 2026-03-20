@@ -1,5 +1,5 @@
 import {LineLayoutArray, LineExtLayoutArray} from '../array_types.g';
-
+import {GEOJSONVT_CLIP_END, GEOJSONVT_CLIP_START} from '@maplibre/geojson-vt';
 import {members as layoutAttributes} from './line_attributes';
 import {members as layoutAttributesExt} from './line_attributes_ext';
 import {SegmentVector} from '../segment';
@@ -12,6 +12,7 @@ import {hasPattern, addPatternDependencies} from './pattern_bucket_features';
 import {loadGeometry} from '../load_geometry';
 import {toEvaluationFeature} from '../evaluation_feature';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {subdivideVertexLine} from '../../render/subdivision';
 
 import type {CanonicalTileID} from '../../tile/tile_id';
 import type {
@@ -24,16 +25,15 @@ import type {
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
 import type Point from '@mapbox/point-geometry';
 import type {Segment} from '../segment';
-import {type RGBAImage} from '../../util/image';
+import type {RGBAImage} from '../../util/image';
 import type {Context} from '../../gl/context';
 import type {Texture} from '../../render/texture';
 import type {IndexBuffer} from '../../gl/index_buffer';
 import type {VertexBuffer} from '../../gl/vertex_buffer';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
-import {subdivideVertexLine} from '../../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {type DashEntry} from '../../render/line_atlas';
+import type {DashEntry} from '../../render/line_atlas';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 // NOTE ON EXTRUDE SCALE:
@@ -247,9 +247,9 @@ export class LineBucket implements Bucket {
     }
 
     lineFeatureClips(feature: BucketFeature): LineClips | undefined {
-        if (!!feature.properties && Object.prototype.hasOwnProperty.call(feature.properties, 'mapbox_clip_start') && Object.prototype.hasOwnProperty.call(feature.properties, 'mapbox_clip_end')) {
-            const start = +feature.properties['mapbox_clip_start'];
-            const end = +feature.properties['mapbox_clip_end'];
+        if (!!feature.properties && Object.prototype.hasOwnProperty.call(feature.properties, GEOJSONVT_CLIP_START) && Object.prototype.hasOwnProperty.call(feature.properties, GEOJSONVT_CLIP_END)) {
+            const start = +feature.properties[GEOJSONVT_CLIP_START];
+            const end = +feature.properties[GEOJSONVT_CLIP_END];
             return {start, end};
         }
     }

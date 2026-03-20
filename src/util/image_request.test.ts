@@ -1,6 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {config} from './config';
-import {webpSupported} from './webp_supported';
 import {sleep, stubAjaxGetImage} from './test/util';
 import {fakeServer, type FakeServer} from 'nise';
 import {ImageRequest} from './image_request';
@@ -98,14 +97,11 @@ describe('ImageRequest', () => {
         expect((queuedRequest as any).aborted).toBe(true);
     });
 
-    test('getImage sends accept/webp when supported', async () => {
+    test('getImage sends accept/webp header', async () => {
         server.respondWith((request) => {
             expect(request.requestHeaders.accept.includes('image/webp')).toBeTruthy();
             request.respond(200, {'Content-Type': 'image/webp'}, '');
         });
-
-        // mock webp support
-        webpSupported.supported = true;
 
         const promise = ImageRequest.getImage({url: ''}, new AbortController());
 

@@ -2,10 +2,6 @@
  * Manages time flow with optional freezing capability for deterministic rendering.
  */
 class TimeManager {
-    private _realTime = typeof performance !== 'undefined' && performance && performance.now ?
-        performance.now.bind(performance) :
-        Date.now.bind(Date);
-
     private _frozenAt: number | null = null;
 
     /**
@@ -13,7 +9,7 @@ class TimeManager {
      * @returns Current time in milliseconds
      */
     getCurrentTime(): number {
-        return this._frozenAt !== null ? this._frozenAt : this._realTime();
+        return this._frozenAt !== null ? this._frozenAt : performance.now();
     }
 
     /**
@@ -45,7 +41,7 @@ const timeManager = new TimeManager();
 /**
  * Returns the current time in milliseconds.
  * When time is frozen via setNow(), returns the frozen timestamp.
- * Otherwise returns real browser time (performance.now() or Date.now()).
+ * Otherwise returns real browser time via performance.now().
  *
  * @returns Current time in milliseconds
  * @example

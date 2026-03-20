@@ -302,7 +302,8 @@ export class GeolocateControl extends Evented implements IControl {
             this._accuracyCircleMarker.remove();
         }
 
-        DOM.remove(this._container);
+        this._container.remove();
+        this._map.off('movestart', this._onMoveStart);
         this._map.off('zoom', this._onUpdate);
         this._map.off('move', this._onUpdate);
         this._map.off('rotate', this._onUpdate);
@@ -531,6 +532,19 @@ export class GeolocateControl extends Evented implements IControl {
         this._timeoutId = undefined;
     };
 
+    _onMoveStart = (event: any) => {
+        if (!this._map) return;
+        const fromResize = event?.[0] instanceof ResizeObserverEntry;
+        if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize && !this._map.isZooming()) {
+            this._watchState = 'BACKGROUND';
+            this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
+            this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
+
+            this.fire(new Event('trackuserlocationend'));
+            this.fire(new Event('userlocationlostfocus'));
+        }
+    };
+
     _setupUI = () => {
         // the control could have been removed before reaching here
         if (!this._map) {
@@ -593,17 +607,7 @@ export class GeolocateControl extends Evented implements IControl {
         // when the camera is changed (and it's not as a result of the Geolocation Control) change
         // the watch mode to background watch, so that the marker is updated but not the camera.
         if (this.options.trackUserLocation) {
-            this._map.on('movestart', (event: any) => {
-                const fromResize = event?.[0] instanceof ResizeObserverEntry;
-                if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize && !this._map.isZooming()) {
-                    this._watchState = 'BACKGROUND';
-                    this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
-                    this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
-
-                    this.fire(new Event('trackuserlocationend'));
-                    this.fire(new Event('userlocationlostfocus'));
-                }
-            });
+            this._map.on('movestart', this._onMoveStart);
         }
     };
 

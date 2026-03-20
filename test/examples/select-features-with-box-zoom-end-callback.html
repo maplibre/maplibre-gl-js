@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Select features with a boxZoomEnd callback</title>
+    <meta property="og:description" content="Use the boxZoomEnd callback to select features with Shift-drag instead of fitting the map to the dragged box." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1;
+            max-width: 360px;
+            padding: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            font: 13px/1.4 sans-serif;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="ui">
+    Shift + drag with <code>boxZoomEnd</code> (no default zoom). Selected: <span id="selected-count">0</span>
+    <button id="clear-selection" type="button">Clear</button>
+</div>
+<script>
+    const BASE_LAYER_ID = 'earthquakes-base';
+    const SELECTED_LAYER_ID = 'earthquakes-selected';
+    const selectedCountElement = document.getElementById('selected-count');
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [-100, 40],
+        zoom: 2.8,
+        boxZoom: {
+            boxZoomEnd: (mapInstance, p0, p1) => {
+                const features = mapInstance.queryRenderedFeatures([
+                    [Math.min(p0.x, p1.x), Math.min(p0.y, p1.y)],
+                    [Math.max(p0.x, p1.x), Math.max(p0.y, p1.y)]
+                ], {layers: [BASE_LAYER_ID]});
+                const ids = [...new Set(features.map((feature) => feature.id).filter((id) => id != null))];
+                setSelectedIds(ids);
+            }
+        }
+    });
+
+    function setSelectedIds(ids) {
+        selectedCountElement.textContent = String(ids.length);
+        if (map.getLayer(SELECTED_LAYER_ID)) {
+            map.setFilter(SELECTED_LAYER_ID, ['in', ['id'], ['literal', ids]]);
+        }
+    }
+
+    document.getElementById('clear-selection').addEventListener('click', () => setSelectedIds([]));
+
+    map.on('load', () => {
+        map.addSource('earthquakes', {
+            type: 'geojson',
+            data: 'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson',
+            promoteId: 'id'
+        });
+
+        map.addLayer({
+            id: BASE_LAYER_ID,
+            type: 'circle',
+            source: 'earthquakes',
+            paint: {'circle-radius': 4, 'circle-color': '#1f78b4', 'circle-opacity': 0.65}
+        });
+        map.addLayer({
+            id: SELECTED_LAYER_ID,
+            type: 'circle',
+            source: 'earthquakes',
+            paint: {'circle-radius': 6, 'circle-color': '#ff6b00', 'circle-opacity': 0.95},
+            filter: ['in', ['id'], ['literal', []]]
+        });
+        setSelectedIds([]);
+    });
+</script>
+</body>
+</html>

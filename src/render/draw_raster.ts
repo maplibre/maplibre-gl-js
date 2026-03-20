@@ -95,7 +95,8 @@ function drawTiles(
     const colorMode = painter.colorModeForRenderPass();
     const align = !painter.options.moving;
     const rasterOpacity = layer.paint.get('raster-opacity');
-    const rasterResampling = layer.paint.get('raster-resampling');
+    const useNearest = layer.paint.get('resampling') === 'nearest' || layer.paint.get('raster-resampling') === 'nearest';
+    const textureFilter = useNearest ?  gl.NEAREST : gl.LINEAR;
     const fadeDuration = layer.paint.get('raster-fade-duration');
     const isTerrain = !!painter.style.map.terrain;
 
@@ -107,7 +108,6 @@ function drawTiles(
             rasterOpacity === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
 
         const tile = tileManager.getTile(coord);
-        const textureFilter = rasterResampling === 'nearest' ?  gl.NEAREST : gl.LINEAR;
 
         // create and bind first texture
         context.activeTexture.set(gl.TEXTURE0);
@@ -124,9 +124,9 @@ function drawTiles(
             tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
         }
 
-        // Enable anisotropic filtering only when the pitch is greater than 20 degrees
-        // to preserve image sharpness on flat or slightly tilted maps.
-        if (tile.texture.useMipmap && context.extTextureFilterAnisotropic && painter.transform.pitch > 20) {
+        // Enable anisotropic filtering only when the pitch is greater than the threshold pitch.
+        // The default threshold is 20 degrees to preserve image sharpness on flat or slightly tilted maps.
+        if (tile.texture.useMipmap && context.extTextureFilterAnisotropic && painter.transform.pitch > painter.options.anisotropicFilterPitch) {
             gl.texParameterf(gl.TEXTURE_2D, context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT,
                 context.extTextureFilterAnisotropicMax);
         }

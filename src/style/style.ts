@@ -1035,7 +1035,7 @@ export class Style extends Evented {
         this._checkLoaded();
 
         if (this.tileManagers[id] === undefined) {
-            throw new Error('There is no source with this ID');
+            throw new Error(`There is no source with this ID=${id}`);
         }
         for (const layerId in this._layers) {
             if (this._layers[layerId].source === id) {
@@ -1684,12 +1684,14 @@ export class Style extends Evented {
 
     setProjection(projection: ProjectionSpecification) {
         this._checkLoaded();
+        this.stylesheet.projection = projection;
         if (this.projection) {
-            if (this.projection.name === projection.type) return;
+            if (this.projection.name === projection.type) {
+                return;
+            }
             this.projection.destroy();
             delete this.projection;
         }
-        this.stylesheet.projection = projection;
         this._setProjectionInternal(projection.type);
     }
 

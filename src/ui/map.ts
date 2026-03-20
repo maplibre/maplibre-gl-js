@@ -22,7 +22,6 @@ import {Event, ErrorEvent, type Listener} from '../util/evented';
 import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSourceDataEvent, type MapStyleDataEvent} from './events';
 import {TaskQueue} from '../util/task_queue';
 import {throttle} from '../util/throttle';
-import {webpSupported} from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
 import {type Source} from '../source/source';
 import {type StyleLayer} from '../style/style_layer';
@@ -45,7 +44,7 @@ import type {MapDataEvent} from './events';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image';
 import type {PointLike} from './camera';
 import type {ScrollZoomHandler} from './handler/scroll_zoom';
-import type {BoxZoomHandler} from './handler/box_zoom';
+import type {BoxZoomHandler, BoxZoomHandlerOptions} from './handler/box_zoom';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
 import type {DragRotateHandler} from './handler/shim/drag_rotate';
 import type {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan';
@@ -170,10 +169,17 @@ export type MapOptions = {
      */
     maxPitch?: number | null;
     /**
+     * The pitch above which to apply anisotropic filtering to the map's raster layers (0-180).
+     * @defaultValue 20
+     */
+    anisotropicFilterPitch?: number | null;
+    /**
      * If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).
+     * An `Object` value configures {@link BoxZoomHandler} options.
+     * If `boxZoomEnd` is provided, the callback runs instead of the default fit-to-box zoom.
      * @defaultValue true
      */
-    boxZoom?: boolean;
+    boxZoom?: boolean | BoxZoomHandlerOptions;
     /**
      * If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}).
      * @defaultValue true
@@ -358,7 +364,9 @@ export type MapOptions = {
      */
     pixelRatio?: number;
     /**
-     * If false, style validation will be skipped. Useful in production environment.
+     * If false, style validation will be skipped.
+     * Useful in production environments due to enabling tree-shaking of the validation code in some environments and minor performance improvements.
+     * Disabling this option comes at the cost of less clear error messages
      * @defaultValue true
      */
     validateStyle?: boolean;
@@ -396,7 +404,7 @@ export type MapOptions = {
     experimentalZoomLevelsToOverscale?: number;
     /**
      * Determines the rotation interaction model:
-     * - When true: Uses "Orbital" logic where rotation is relative to the pivot center. 
+     * - When true: Uses "Orbital" logic where rotation is relative to the pivot center.
      *   Dragging right at the top rotates clockwise, while dragging right at the bottom
      *   rotates counter-clockwise (like spinning a physical globe).
      * - When false: Uses "Linear" logic where horizontal mouse movement translates directly
@@ -431,8 +439,9 @@ const defaultMaxZoom = 22;
 // the default values, but also the valid range
 const defaultMinPitch = 0;
 const defaultMaxPitch = 60;
+const defaultAnisotropicFilterPitch = 20;
 
-// use this variable to check maxPitch for validity
+// use this variable to check maxPitch and anisotropicFilterPitch for validity
 const maxPitchThreshold = 180;
 
 const defaultOptions: Readonly<Partial<MapOptions>> = {
@@ -495,7 +504,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
     centerClampedToGround: true,
-    experimentalZoomLevelsToOverscale: undefined
+    experimentalZoomLevelsToOverscale: undefined,
+    anisotropicFilterPitch: defaultAnisotropicFilterPitch,
 };
 
 /**
@@ -552,6 +562,7 @@ export class Map extends Camera {
     _styleDirty: boolean;
     _sourcesDirty: boolean;
     _placementDirty: boolean;
+    _anisotropicFilterPitch: number;
 
     _loaded: boolean;
     _idleTriggered = false;
@@ -748,6 +759,7 @@ export class Map extends Camera {
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
+        this.setAnisotropicFilterPitch(resolvedOptions.anisotropicFilterPitch);
 
         if (resolvedOptions.reduceMotion !== undefined) {
             browser.prefersReducedMotion = resolvedOptions.reduceMotion;
@@ -1344,6 +1356,48 @@ export class Map extends Camera {
      * @returns The maxPitch
      */
     getMaxPitch(): number { return this.transform.maxPitch; }
+
+    /**
+     * Returns the map's anisotropic filter pitch.
+     * If the map is pitched beyond this threshold, anisotropic filtering will be applied to all raster layers.
+     *
+     * @returns The anisotropicFilterPitch
+     * @example
+     * ```ts
+     * let anisotropicFilterPitch = map.getAnisotropicFilterPitch();
+     * ```
+     */
+    getAnisotropicFilterPitch(): number { return this._anisotropicFilterPitch; }
+
+    /**
+     * Sets the map's anisotropic filter pitch or reverts it to its default.
+     *
+     * A {@link ErrorEvent} event will be fired if anisotropicFilterPitch is out of bounds.
+     *
+     * @param anisotropicFilterPitch - The pitch above which to apply anisotropic filtering to the map's raster layers (0-180).
+     * If `null` or `undefined` is provided, the function reverts to the default pitch threshold (20).
+     *
+     *
+     * @example
+     * ```ts
+     * map.setAnisotropicFilterPitch(85);
+     * ```
+     */
+    setAnisotropicFilterPitch(anisotropicFilterPitch?: number | null): Map {
+
+        anisotropicFilterPitch = anisotropicFilterPitch === null || anisotropicFilterPitch === undefined ? defaultAnisotropicFilterPitch : anisotropicFilterPitch;
+
+        if (anisotropicFilterPitch > maxPitchThreshold) {
+            throw new Error(`anisotropicFilterPitch must be less than or equal to ${maxPitchThreshold}`);
+        }
+
+        if (anisotropicFilterPitch < defaultMinPitch) {
+            throw new Error(`anisotropicFilterPitch must be greater than or equal to ${defaultMinPitch}`);
+        }
+
+        this._anisotropicFilterPitch = anisotropicFilterPitch;
+        return this._update();
+    }
 
     /**
      * Returns the state of `renderWorldCopies`. If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
@@ -2257,7 +2311,9 @@ export class Map extends Camera {
 
         if (!options) {
             // remove terrain
-            if (this.terrain) this.terrain.tileManager.destruct();
+            if (this.terrain) {
+                this.terrain.destroy();
+            }
             this.terrain = null;
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
@@ -3408,8 +3464,6 @@ export class Map extends Camera {
         }
 
         this.painter = new Painter(gl, this.transform);
-
-        webpSupported.testSupport(gl);
     }
 
     override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
@@ -3428,6 +3482,13 @@ export class Map extends Camera {
         }
         this.painter.destroy();
 
+        this._lostContextStyle = this._getStyleAndImages();
+
+        if (!this.style) {
+            this.fire(new Event('webglcontextlost', {originalEvent: event}));
+            return;
+        }
+
         // check if style contains custom layers to warn user that they can't be restored automatically
         for (const layer of Object.values(this.style._layers)) {
             if (layer.type === 'custom') {
@@ -3441,9 +3502,9 @@ export class Map extends Camera {
             }
         }
 
-        this._lostContextStyle = this._getStyleAndImages();
         this.style.destroy();
         this.style = null;
+
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
 
@@ -3609,6 +3670,7 @@ export class Map extends Camera {
             moving: this.isMoving(),
             fadeDuration,
             showPadding: this.showPadding,
+            anisotropicFilterPitch: this.getAnisotropicFilterPitch(),
         });
 
         this.fire(new Event('render'));
@@ -3704,12 +3766,12 @@ export class Map extends Camera {
         if (extension?.loseContext) extension.loseContext();
         this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
-        DOM.remove(this._canvasContainer);
-        DOM.remove(this._controlContainer);
+        this._canvasContainer.remove();
+        this._controlContainer.remove();
         this._container.removeEventListener('scroll', this._onMapScroll, false);
         this._container.classList.remove('maplibregl-map');
 
-        PerformanceUtils.clearMetrics();
+        PerformanceUtils.remove();
 
         this._removed = true;
         this.fire(new Event('remove'));
@@ -3732,7 +3794,7 @@ export class Map extends Camera {
             browser.frame(
                 this._frameRequest,
                 (paintStartTimeStamp) => {
-                    PerformanceUtils.frame(paintStartTimeStamp);
+                    PerformanceUtils.recordStartOfFrameAt(paintStartTimeStamp);
                     this._frameRequest = null;
                     try {
                         this._render(paintStartTimeStamp);

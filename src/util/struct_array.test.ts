@@ -67,6 +67,29 @@ describe('StructArray', () => {
         expect(array.capacity).toBe(1);
         expect(array.arrayBuffer.byteLength).toBe(array.bytesPerElement);
     });
+
+    test('freeBufferAfterUpload releases the original ArrayBuffer', () => {
+        const array = new TestArray();
+        array.emplaceBack(1, 2, 3);
+        array.emplaceBack(4, 5, 6);
+
+        const originalBuffer = array.arrayBuffer;
+        expect(originalBuffer.byteLength).toBeGreaterThan(0);
+
+        // Typed views should reference the original buffer
+        expect(array.uint8.buffer).toBe(originalBuffer);
+        expect(array.int16.buffer).toBe(originalBuffer);
+
+        array.freeBufferAfterUpload();
+
+        expect(array.arrayBuffer.byteLength).toBe(0);
+
+        // Typed views should no longer reference the original buffer
+        expect(array.uint8.buffer).not.toBe(originalBuffer);
+        expect(array.int16.buffer).not.toBe(originalBuffer);
+        expect(array.uint8.length).toBe(0);
+        expect(array.int16.length).toBe(0);
+    });
 });
 
 describe('FeatureIndexArray', () => {
