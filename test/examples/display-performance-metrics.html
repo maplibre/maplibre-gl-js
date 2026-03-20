@@ -1,189 +1,90 @@
 <!doctype html>
 <html>
-<head>
-<meta charset="utf-8" />
-<title>Display Map Performance Metrics</title>
-<meta property="og:description" content="Display the performance metrics of a MapLibre GL JS map, including load times, FPS, and dropped frames using built-in map events." />
-<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-<link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-<script src='../../dist/maplibre-gl-dev.js'></script>
-<style>
-    body {
-        margin: 0;
-        padding: 0;
-    }
-    #map {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 100%;
-    }
-    #metrics {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: white;
-        padding: 10px;
-        border-radius: .4rem;
-        font-family: sans-serif;
-        font-size: 14px;
-        z-index: 100;
-        max-width: 400px;
-    }
-    #metrics h3 {
-        margin-top: 0;
-        margin-bottom: 10px;
-    }
-    #metrics table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 10px;
-    }
-    #metrics th,
-    #metrics td {
-        text-align: left;
-        padding: 6px 8px;
-    }
-    #metrics th {
-        font-weight: bold;
-    }
-    #reset-button {
-        padding: 8px 16px;
-        background-color: #4287ff;
-        color: white;
-        border: none;
-        border-radius: .4rem;
-        cursor: pointer;
-        font-size: 14px;
-        width: 100%;
-    }
-    #reset-button:hover {
-        background-color: #4051b5;
-    }
-</style>
-</head>
-<body>
-<div id="map"></div>
-<div id="metrics">
-    <h3>Map Performance Metrics</h3>
-    <table>
-        <tr>
-            <th colspan="2">Lifecycle Metrics</th>
-        </tr>
-        <tr>
-            <td><abbr title="Time taken to load the initial map view, measured from the map's creation until its initial style and sources are loaded">Load Time</abbr></td>
-            <td id="loadTimeMs">N/A</td>
-        </tr>
-        <tr>
-            <td><abbr title="Time taken for the map to become fully idle, measured from the map's creation until all tiles, sprites, and other assets are loaded">Time to Idle</abbr></td>
-            <td id="idleTimeMs">N/A</td>
-        </tr>
-        <tr>
-            <th colspan="2">Rendering Metrics</th>
-        </tr>
-        <tr>
-            <td><abbr title="Average frames per second">Average FPS</abbr></td>
-            <td id="averageFrameRate">N/A</td>
-        </tr>
-        <tr>
-            <td><abbr title="Time taken for the last frame to render">Last Frame Duration</abbr></td>
-            <td id="lastFrameDurationMs">N/A</td>
-        </tr>
-        <tr>
-            <td><abbr title="Number of 'ideal frames' lost to slow frames (frames exceeding 16.67ms at 60fps target)">Dropped Frames</abbr></td>
-            <td id="virtualDroppedFramesCount">N/A</td>
-        </tr>
-        <tr>
-            <td><abbr title="Total number of frames rendered">Total Frames</abbr></td>
-            <td id="totalFramesCount">N/A</td>
-        </tr>
-    </table>
-    <button id="reset-button" onclick="onResetButtonClick()">Reset Rendering Metrics</button>
-</div>
-
-<script>
-    // Track lifecycle timing using performance.now() and map events
-    const createdAt = performance.now();
-    let loadTimeMs = undefined;
-    let idleTimeMs = undefined;
-
-    // Track rendering metrics via the 'render' event
-    const TARGET_FRAME_MS = 1000 / 60; // ~16.67ms for 60fps
-    let lastRenderTime = undefined;
-    let totalFrames = 0;
-    let totalDurationMs = 0;
-    let lastFrameDurationMs = undefined;
-    let virtualDroppedFrames = 0;
-
-    const map = new maplibregl.Map({
-        container: "map",
-        style: "https://demotiles.maplibre.org/style.json",
-        center: [0, 0],
-        zoom: 1,
-    });
-
-    map.on("load", () => {
-        loadTimeMs = performance.now() - createdAt;
-    });
-
-    map.once("idle", () => {
-        idleTimeMs = performance.now() - createdAt;
-    });
-
-    map.on("render", () => {
-        const now = performance.now();
-        if (lastRenderTime !== undefined) {
-            lastFrameDurationMs = now - lastRenderTime;
-            totalDurationMs += lastFrameDurationMs;
-            totalFrames++;
-
-            // Count "ideal frames" lost to slow frames
-            if (lastFrameDurationMs > TARGET_FRAME_MS) {
-                virtualDroppedFrames += Math.floor(lastFrameDurationMs / TARGET_FRAME_MS) - 1;
+    <head>
+        <meta charset="utf-8" />
+        <title>Display Map Performance Metrics</title>
+        <meta
+            property="og:description"
+            content="Measure map performance using built-in events."
+        />
+        <meta
+            name="viewport"
+            content="initial-scale=1,maximum-scale=1,user-scalable=no"
+        />
+        <link rel="stylesheet" href="../../dist/maplibre-gl.css" />
+        <script src="../../dist/maplibre-gl-dev.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
             }
-        }
-        lastRenderTime = now;
-    });
+            #map {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                width: 100%;
+            }
+            #metrics {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                background: white;
+                padding: 10px 14px;
+                border-radius: 0.4rem;
+                font-family: sans-serif;
+                font-size: 14px;
+                z-index: 100;
+            }
+            #metrics div {
+                margin: 4px 0;
+            }
+            #metrics span {
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <div id="metrics">
+            <div>Load: <span id="load">—</span></div>
+            <div>Idle: <span id="idle">—</span></div>
+            <div>FPS: <span id="fps">—</span></div>
+        </div>
 
-    function onResetButtonClick() {
-        lastRenderTime = undefined;
-        lastFrameDurationMs = undefined;
-        totalFrames = 0;
-        totalDurationMs = 0;
-        virtualDroppedFrames = 0;
-        updateMetricsDisplay();
-    }
+        <script>
+            const createdAt = performance.now();
 
-    function updateMetricsDisplay() {
-        if (loadTimeMs !== undefined) {
-            document.getElementById("loadTimeMs").innerHTML = loadTimeMs.toFixed(2) + " ms";
-        }
-        if (idleTimeMs !== undefined) {
-            document.getElementById("idleTimeMs").innerHTML = idleTimeMs.toFixed(2) + " ms";
-        }
+            const map = new maplibregl.Map({
+                container: "map",
+                style: "https://demotiles.maplibre.org/style.json",
+                center: [0, 0],
+                zoom: 1,
+            });
 
-        const avgFps = totalDurationMs > 0 ? (totalFrames / totalDurationMs) * 1000 : 0;
-        document.getElementById("averageFrameRate").innerHTML = avgFps.toFixed(2);
+            map.on("load", () => {
+                document.getElementById("load").textContent =
+                    (performance.now() - createdAt).toFixed(0) + " ms";
+            });
 
-        if (lastFrameDurationMs !== undefined) {
-            document.getElementById("lastFrameDurationMs").innerHTML = lastFrameDurationMs.toFixed(2) + " ms";
-        }
-        document.getElementById("virtualDroppedFramesCount").innerHTML = virtualDroppedFrames;
-        document.getElementById("totalFramesCount").innerHTML = totalFrames;
-    }
+            map.once("idle", () => {
+                document.getElementById("idle").textContent =
+                    (performance.now() - createdAt).toFixed(0) + " ms";
+            });
 
-    map.on("load", updateMetricsDisplay);
-
-    const intervalId = setInterval(updateMetricsDisplay, 200);
-
-    map.on("remove", () => {
-        clearInterval(intervalId);
-    });
-
-    map.on("error", (e) => {
-        console.error("Map error:", e.error);
-        clearInterval(intervalId);
-    });
-</script>
-</body>
+            let frameCount = 0;
+            let fpsStart = performance.now();
+            map.on("render", () => {
+                frameCount++;
+                const now = performance.now();
+                const elapsed = now - fpsStart;
+                if (elapsed >= 100) {
+                    document.getElementById("fps").textContent = Math.round(
+                        (frameCount * 1000) / elapsed,
+                    );
+                    frameCount = 0;
+                    fpsStart = now;
+                }
+            });
+        </script>
+    </body>
 </html>
