@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.27">
+      <meta name="generator" content="zensical-0.0.28">
     
     
       
@@ -34,7 +34,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.50057488.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
       
         
           
@@ -10288,7 +10288,7 @@
 
 
 <h1 id="mapmouseevent">MapMouseEvent</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/109fa99ea55c16a26cf8ce294d96bf4b0b93524a/src/ui/events.ts#L498">ui/events.ts:498</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/ui/events.ts#L498">ui/events.ts:498</a></p>
 <p><code>MapMouseEvent</code> is the event type for mouse-related map events.</p>
 <h2 id="example">Example</h2>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// The `click` event is an example of a `MapMouseEvent`.</span>
@@ -10313,7 +10313,7 @@
 <blockquote>
 <p><strong>get</strong> <strong>defaultPrevented</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/109fa99ea55c16a26cf8ce294d96bf4b0b93524a/src/ui/events.ts#L542">ui/events.ts:542</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/ui/events.ts#L542">ui/events.ts:542</a></p>
 <p><code>true</code> if <code>preventDefault</code> has been called.</p>
 <h5 id="returns">Returns</h5>
 <p><code>boolean</code></p>
@@ -10322,7 +10322,7 @@
 <blockquote>
 <p><strong>preventDefault</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/109fa99ea55c16a26cf8ce294d96bf4b0b93524a/src/ui/events.ts#L535">ui/events.ts:535</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/ui/events.ts#L535">ui/events.ts:535</a></p>
 <p>Prevents subsequent default processing of the event by the map.</p>
 <p>Calling this method will prevent the following default map behaviors:</p>
 <ul>
@@ -10338,14 +10338,14 @@
 <blockquote>
 <p><strong>lngLat</strong>: <a href="../LngLat/"><code>LngLat</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/109fa99ea55c16a26cf8ce294d96bf4b0b93524a/src/ui/events.ts#L522">ui/events.ts:522</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/ui/events.ts#L522">ui/events.ts:522</a></p>
 <p>The geographic location on the map of the mouse cursor.</p>
 <hr />
 <h3 id="originalevent">originalEvent</h3>
 <blockquote>
 <p><strong>originalEvent</strong>: <code>MouseEvent</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/109fa99ea55c16a26cf8ce294d96bf4b0b93524a/src/ui/events.ts#L512">ui/events.ts:512</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/ui/events.ts#L512">ui/events.ts:512</a></p>
 <p>The DOM event which caused the map event.</p>
 <h4 id="implementation-of">Implementation of</h4>
 <p><code>MapLibreEvent.originalEvent</code></p>
@@ -10354,14 +10354,14 @@
 <blockquote>
 <p><strong>point</strong>: <code>Point</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/109fa99ea55c16a26cf8ce294d96bf4b0b93524a/src/ui/events.ts#L517">ui/events.ts:517</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/ui/events.ts#L517">ui/events.ts:517</a></p>
 <p>The pixel coordinates of the mouse cursor, relative to the map and measured from the top left corner.</p>
 <hr />
 <h3 id="target">target</h3>
 <blockquote>
 <p><strong>target</strong>: <a href="../Map/"><code>Map</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/109fa99ea55c16a26cf8ce294d96bf4b0b93524a/src/ui/events.ts#L507">ui/events.ts:507</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/ui/events.ts#L507">ui/events.ts:507</a></p>
 <p>The <code>Map</code> object that fired the event.</p>
 <h4 id="implementation-of_1">Implementation of</h4>
 <p><code>MapLibreEvent.target</code></p>
@@ -10370,7 +10370,7 @@
 <blockquote>
 <p><strong>type</strong>: <code>"click"</code> | <code>"contextmenu"</code> | <code>"dblclick"</code> | <code>"mousedown"</code> | <code>"mouseenter"</code> | <code>"mouseleave"</code> | <code>"mousemove"</code> | <code>"mouseout"</code> | <code>"mouseover"</code> | <code>"mouseup"</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/109fa99ea55c16a26cf8ce294d96bf4b0b93524a/src/ui/events.ts#L502">ui/events.ts:502</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/ui/events.ts#L502">ui/events.ts:502</a></p>
 <p>The event type</p>
 <h4 id="implementation-of_2">Implementation of</h4>
 <p><code>MapLibreEvent.type</code></p>
@@ -10506,11 +10506,10 @@
     
       
       
-      
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"search":"../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
       
     
   </body>
