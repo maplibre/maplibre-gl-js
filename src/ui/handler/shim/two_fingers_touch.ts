@@ -109,43 +109,4 @@ export class TwoFingersTouchZoomRotateHandler {
         this._rotationDisabled = false;
         if (this._touchZoom.isEnabled()) this._touchRotate.enable();
     }
-
-    /**
-    * Modify the speed of two fingers touch zoom
-    * @param zoomSpeedRatio - 1 The ratio used to multiply two fingers zoom delta value (resulting in speed changes).
-    * @example
-    * Speed up two fingers zoom
-    * ```ts
-    * map.touchZoomRotate.setTwoFingersZoomSpeed(1.25);
-    * ```
-    */
-    setTwoFingersZoomSpeed(zoomSpeedRatio: number) {
-        this._touchZoom._twoFingersZoomSpeed = zoomSpeedRatio;
-    }
-
-    /**
-    * Modify the speed of tap drag zoom
-    * @param zoomSpeedRatio - 1 The ratio used to multiply zoom delta value (resulting in speed changes).
-    * @example
-    * Speed up tap drag zoom
-    * ```ts
-    * map.touchZoomRotate.setTapDragZoomSpeed(1.25);
-    * ```
-    */
-    setTapDragZoomSpeed(zoomSpeedRatio: number) {
-        this._tapDragZoom._tapDragZoomSpeed = zoomSpeedRatio;
-    }
-
-    /**
-    * Modify the thershold to trigger two fingers zoom
-    * @param zoomThreshold - 0.1 The threshold value used to trigger two fingers zoom interaction depending on pinch move size.
-    * @example
-    * Increaze the two fingers zoom trigger threshold (a wider pinch gesture will be required to trigger the interaction)
-    * ```ts
-    * map.touchZoomRotate.setZoomThreshold(0.3);
-    * ```
-    */
-    setZoomThreshold(zoomThreshold: number) {
-        this._touchZoom._zoomThreshold = zoomThreshold;
-    }
 }
