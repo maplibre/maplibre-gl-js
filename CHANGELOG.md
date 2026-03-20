@@ -5,6 +5,8 @@
 - Remove Edge 18 WebP detection workaround; always send `Accept: image/webp` header for image requests ([#7293](https://github.com/maplibre/maplibre-gl-js/pull/7293)) (by [@johanrd](https://github.com/johanrd))
 - Remove legacy browser compatibility code targeting IE11 and pre-2016 browsers ([#7294](https://github.com/maplibre/maplibre-gl-js/pull/7294)) (by [@johanrd](https://github.com/johanrd))
 - Remove legacy `DOM.remove()` and `DOM.mouseButton()` wrappers; use native APIs directly (baseline 2015) ([#7295](https://github.com/maplibre/maplibre-gl-js/pull/7295)) (by [@johanrd](https://github.com/johanrd))
+- Make `setTransformRequest` accept an async function in addition to a sync function. ([#7184](https://github.com/maplibre/maplibre-gl-js/issues/7184)) (by [@kikuomax
+](https://github.com/kikuomax))
 
 ### 🐞 Bug fixes
 

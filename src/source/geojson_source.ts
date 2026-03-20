@@ -402,6 +402,7 @@ export class GeoJSONSource extends Evented implements Source {
         }
 
         const {data, diff, updateCluster} = this._pendingWorkerUpdate;
+        // delay awaiting params until _isUpdatingWorker is set, otherwise, a race condition could happen
         const params = this._getLoadGeoJSONParameters(data, diff, updateCluster);
 
         if (data !== undefined) {
@@ -418,12 +419,12 @@ export class GeoJSONSource extends Evented implements Source {
     /**
      * Create the parameters object that will be sent to the worker and used to load GeoJSON.
      */
-    private _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): LoadGeoJSONParameters | undefined {
+    private async _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): Promise<LoadGeoJSONParameters | undefined> {
         const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
 
         // Data comes from a remote url
         if (typeof data === 'string') {
-            params.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
+            params.request = await this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
             params.request.collectResourceTiming = this._collectResourceTiming;
             return params;
         }
@@ -450,11 +451,12 @@ export class GeoJSONSource extends Evented implements Source {
     /**
      * Send the worker update data from the main thread to the worker
      */
-    private async _dispatchWorkerUpdate(options: LoadGeoJSONParameters) {
+    private async _dispatchWorkerUpdate(optionsPromise: Promise<LoadGeoJSONParameters>) {
         this._isUpdatingWorker = true;
         this.fire(new Event('dataloading', {dataType: 'source'}));
 
         try {
+            const options = await optionsPromise;
             const result = await this.actor.sendAsync({type: MessageType.loadData, data: options});
             this._isUpdatingWorker = false;
 
