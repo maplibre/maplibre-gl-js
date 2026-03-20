@@ -22,7 +22,7 @@ import {Event, ErrorEvent, type Listener} from '../util/evented';
 import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSourceDataEvent, type MapStyleDataEvent} from './events';
 import {TaskQueue} from '../util/task_queue';
 import {throttle} from '../util/throttle';
-import {PerformanceSubject, type IPerformanceObserver} from '../util/performance_observer/observer';
+import {webpSupported} from '../util/webp_supported';
 import {type Source} from '../source/source';
 import {type StyleLayer} from '../style/style_layer';
 import {Terrain} from '../render/terrain';
@@ -364,12 +364,6 @@ export type MapOptions = {
      */
     pixelRatio?: number;
     /**
-     * Optional array of custom performance observers to monitor map performance events.
-     * These observers will be notified of events like map creation, load, fullLoad, and frame rendering.
-     * @defaultValue undefined
-     */
-    performanceObservers?: IPerformanceObserver[];
-    /**
      * If false, style validation will be skipped.
      * Useful in production environments due to enabling tree-shaking of the validation code in some environments and minor performance improvements.
      * Disabling this option comes at the cost of less clear error messages
@@ -588,7 +582,6 @@ export class Map extends Camera {
     _controls: Array<IControl> = [];
     _mapId = uniqueId();
     _localIdeographFontFamily: string | false;
-    _performanceSubject: PerformanceSubject;
     _validateStyle: boolean;
     _requestManager: RequestManager;
     _locale: Record<string, string>;
@@ -694,9 +687,6 @@ export class Map extends Camera {
     transformConstrain: TransformConstrainFunction | null;
 
     constructor(options: MapOptions) {
-        const performanceSubject = new PerformanceSubject(options.performanceObservers ?? []);
-        performanceSubject.notifyObservers('create', performance.now());
-
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
             ...options.canvasContextAttributes
@@ -828,7 +818,6 @@ export class Map extends Camera {
         this.resize(null, shouldConstrainUsingMercatorTransform);
 
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
-        this._performanceSubject = performanceSubject;
         this._validateStyle = resolvedOptions.validateStyle;
 
         if (resolvedOptions.style) this.setStyle(resolvedOptions.style, {localIdeographFontFamily: resolvedOptions.localIdeographFontFamily});
@@ -3687,7 +3676,6 @@ export class Map extends Camera {
 
         if (this.loaded() && !this._loaded) {
             this._loaded = true;
-            this._performanceSubject.notifyObservers('load', performance.now());
             this.fire(new Event('load'));
         }
 
@@ -3716,7 +3704,6 @@ export class Map extends Camera {
 
         if (this._loaded && !this._fullyLoaded && !somethingDirty) {
             this._fullyLoaded = true;
-            this._performanceSubject.notifyObservers('fullLoad', performance.now());
         }
 
         return this;
@@ -3781,8 +3768,6 @@ export class Map extends Camera {
         this._container.removeEventListener('scroll', this._onMapScroll, false);
         this._container.classList.remove('maplibregl-map');
 
-        this._performanceSubject?.remove();
-
         this._removed = true;
         this.fire(new Event('remove'));
     }
@@ -3804,7 +3789,6 @@ export class Map extends Camera {
             browser.frame(
                 this._frameRequest,
                 (paintStartTimeStamp) => {
-                    this._performanceSubject.notifyObservers('startOfFrame', paintStartTimeStamp);
                     this._frameRequest = null;
                     try {
                         this._render(paintStartTimeStamp);

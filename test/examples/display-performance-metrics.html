@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <title>Display Map Performance Metrics</title>
-<meta property="og:description" content="Display the performance metrics of a MapLibre GL JS map, including load times, FPS, and dropped frames." />
+<meta property="og:description" content="Display the performance metrics of a MapLibre GL JS map, including load times, FPS, and dropped frames using built-in map events." />
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
 <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
 <script src='../../dist/maplibre-gl-dev.js'></script>
@@ -75,8 +75,8 @@
             <td id="loadTimeMs">N/A</td>
         </tr>
         <tr>
-            <td><abbr title="Time taken for the map to fully load all its resources, measured from the map's creation until all tiles, sprites, and other assets are loaded">Full Load Time</abbr></td>
-            <td id="fullLoadTimeMs">N/A</td>
+            <td><abbr title="Time taken for the map to become fully idle, measured from the map's creation until all tiles, sprites, and other assets are loaded">Time to Idle</abbr></td>
+            <td id="idleTimeMs">N/A</td>
         </tr>
         <tr>
             <th colspan="2">Rendering Metrics</th>
@@ -86,11 +86,11 @@
             <td id="averageFrameRate">N/A</td>
         </tr>
         <tr>
-            <td><abbr title="Time taken for the last frame to render, measured from the last frame's frame-rendering start until the next frames rendering starts.">Last Frame Duration</abbr></td>
+            <td><abbr title="Time taken for the last frame to render">Last Frame Duration</abbr></td>
             <td id="lastFrameDurationMs">N/A</td>
         </tr>
         <tr>
-            <td><abbr title="number of 'ideal frames' that could have fit into the time lost by slow frames">Dropped Frames</abbr></td>
+            <td><abbr title="Number of 'ideal frames' lost to slow frames (frames exceeding 16.67ms at 60fps target)">Dropped Frames</abbr></td>
             <td id="virtualDroppedFramesCount">N/A</td>
         </tr>
         <tr>
@@ -102,45 +102,82 @@
 </div>
 
 <script>
-    const livecycleObserver = new maplibregl.LivecyclePerformanceObserver();
-    const renderingObserver = new maplibregl.RenderingPerformanceObserver();
-    const markingObserver = new maplibregl.MarkingPerformanceObserver();
+    // Track lifecycle timing using performance.now() and map events
+    const createdAt = performance.now();
+    let loadTimeMs = undefined;
+    let idleTimeMs = undefined;
 
-    // Create map with performance observers passed as an option.
-    // The observers will be automatically notified of relevant performance events.
+    // Track rendering metrics via the 'render' event
+    const TARGET_FRAME_MS = 1000 / 60; // ~16.67ms for 60fps
+    let lastRenderTime = undefined;
+    let totalFrames = 0;
+    let totalDurationMs = 0;
+    let lastFrameDurationMs = undefined;
+    let virtualDroppedFrames = 0;
+
     const map = new maplibregl.Map({
         container: "map",
         style: "https://demotiles.maplibre.org/style.json",
         center: [0, 0],
         zoom: 1,
-        performanceObservers: [livecycleObserver, renderingObserver, markingObserver],
+    });
+
+    map.on("load", () => {
+        loadTimeMs = performance.now() - createdAt;
+    });
+
+    map.once("idle", () => {
+        idleTimeMs = performance.now() - createdAt;
+    });
+
+    map.on("render", () => {
+        const now = performance.now();
+        if (lastRenderTime !== undefined) {
+            lastFrameDurationMs = now - lastRenderTime;
+            totalDurationMs += lastFrameDurationMs;
+            totalFrames++;
+
+            // Count "ideal frames" lost to slow frames
+            if (lastFrameDurationMs > TARGET_FRAME_MS) {
+                virtualDroppedFrames += Math.floor(lastFrameDurationMs / TARGET_FRAME_MS) - 1;
+            }
+        }
+        lastRenderTime = now;
     });
 
     function onResetButtonClick() {
-        renderingObserver.reset();
+        lastRenderTime = undefined;
+        lastFrameDurationMs = undefined;
+        totalFrames = 0;
+        totalDurationMs = 0;
+        virtualDroppedFrames = 0;
         updateMetricsDisplay();
     }
 
     function updateMetricsDisplay() {
-        const livecycleMetrics = livecycleObserver.takeRecords();
-        
-        if (livecycleMetrics.loadTimeMs !== undefined) document.getElementById("loadTimeMs").innerHTML =  livecycleMetrics.loadTimeMs.toFixed(2) + " ms";
-        if (livecycleMetrics.fullLoadTimeMs !== undefined) document.getElementById("fullLoadTimeMs").innerHTML =  livecycleMetrics.fullLoadTimeMs.toFixed(2) + " ms";
-        
-        const renderingMetrics = renderingObserver.takeRecords();
-        
-        document.getElementById("averageFrameRate").innerHTML = renderingMetrics.averageFramesPerSecond.toFixed(2);
-        if (renderingMetrics.lastFrameDurationMs !== undefined) document.getElementById("lastFrameDurationMs").innerHTML = renderingMetrics.lastFrameDurationMs.toFixed(2) + " ms";
-        document.getElementById("virtualDroppedFramesCount").innerHTML = renderingMetrics.virtualDroppedFramesCount;
-        document.getElementById("totalFramesCount").innerHTML = renderingMetrics.totalFramesCount;
+        if (loadTimeMs !== undefined) {
+            document.getElementById("loadTimeMs").innerHTML = loadTimeMs.toFixed(2) + " ms";
+        }
+        if (idleTimeMs !== undefined) {
+            document.getElementById("idleTimeMs").innerHTML = idleTimeMs.toFixed(2) + " ms";
+        }
+
+        const avgFps = totalDurationMs > 0 ? (totalFrames / totalDurationMs) * 1000 : 0;
+        document.getElementById("averageFrameRate").innerHTML = avgFps.toFixed(2);
+
+        if (lastFrameDurationMs !== undefined) {
+            document.getElementById("lastFrameDurationMs").innerHTML = lastFrameDurationMs.toFixed(2) + " ms";
+        }
+        document.getElementById("virtualDroppedFramesCount").innerHTML = virtualDroppedFrames;
+        document.getElementById("totalFramesCount").innerHTML = totalFrames;
     }
+
     map.on("load", updateMetricsDisplay);
 
-    // Continuous updates using setInterval
-    const intervalId = setInterval(updateMetricsDisplay, 200); // Update display every 200ms
+    const intervalId = setInterval(updateMetricsDisplay, 200);
 
     map.on("remove", () => {
-        clearInterval(intervalId); // Clear the interval when the map is removed
+        clearInterval(intervalId);
     });
 
     map.on("error", (e) => {

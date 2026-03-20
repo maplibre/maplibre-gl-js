@@ -15,10 +15,6 @@ import {LngLat, type LngLatLike} from './geo/lng_lat';
 import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
-import {type IPerformanceObserver, type PerformanceEventType} from './util/performance_observer/observer';
-import {LivecyclePerformanceObserver, type LivecyclePerformanceMetrics} from './util/performance_observer/livecycle';
-import {RenderingPerformanceObserver, type RenderingPerformanceMetrics} from './util/performance_observer/rendering';
-import {MarkingPerformanceObserver} from './util/performance_observer/marker';
 import {Evented, type ErrorEvent, Event, type Listener} from './util/evented';
 import {type AddProtocolAction, config} from './util/config';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
@@ -218,11 +214,9 @@ export {
     Popup,
     Marker,
     Style,
-    LivecyclePerformanceObserver,
     LngLat,
     LngLatBounds,
     Point,
-    MarkingPerformanceObserver,
     MercatorCoordinate,
     Evented,
     Event,
@@ -233,7 +227,6 @@ export {
     ImageSource,
     RasterDEMTileSource,
     RasterTileSource,
-    RenderingPerformanceObserver,
     VectorTileSource,
     LoadTileResult,
     VideoSource,
@@ -369,11 +362,7 @@ export {
     type GeoJSONFeature,
     type CoveringTilesOptions,
     type DashEntry,
-    type IPerformanceObserver,
-    type LivecyclePerformanceMetrics,
-    type RenderingPerformanceMetrics,
     type Painter,
-    type PerformanceEventType,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,
