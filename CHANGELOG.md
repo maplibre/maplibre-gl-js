@@ -9,8 +9,6 @@
 ### 🐞 Bug fixes
 
 - Fix incorrect popup location in case of terrain and `jumpTo` ([#7267](https://github.com/maplibre/maplibre-gl-js/issues/7267)) (by [@HarelM](https://github.com/HarelM))
-- Fix unhandled framebuffer error when tab wakes from sleep: move framebuffer completeness check to after attachments are set, and add error handling to `redraw()` matching `triggerRepaint()` ([#7303](https://github.com/maplibre/maplibre-gl-js/pull/7303)) (by [@johanrd](https://github.com/johanrd))
-- _...Add new stuff here..._
 - Fix memory leak in VideoSource: remove `playing` event listener and pause video on source removal ([#7279](https://github.com/maplibre/maplibre-gl-js/pull/7279)) (by [@johanrd](https://github.com/johanrd))
 - Fix memory leak where typed array views retained StructArray buffers after GPU upload, preventing garbage collection ([#7280](https://github.com/maplibre/maplibre-gl-js/pull/7280)) (by [@johanrd](https://github.com/johanrd))
 - Fix raster DEM tiles getting stuck in `"reloading"` state ([#7277](https://github.com/maplibre/maplibre-gl-js/pull/7277)) (by [@katemihalikova](https://github.com/katemihalikova))
@@ -18,6 +16,9 @@
 - Cap tile texture reuse pool to prevent unbounded VRAM growth during rapid zoom/pan ([#7289](https://github.com/maplibre/maplibre-gl-js/pull/7289)) (by [@johanrd](https://github.com/johanrd))
 - Fix Marker `click` listener not removed on `remove()`, leaking the handler added in #7028 ([#7287](https://github.com/maplibre/maplibre-gl-js/pull/7287)) (by [@johanrd](https://github.com/johanrd))
 - Fix Terrain GPU resource leak: free FBO, textures, and meshes when terrain is disabled via `setTerrain(null)` ([#7288](https://github.com/maplibre/maplibre-gl-js/pull/7288)) (by [@johanrd](https://github.com/johanrd))
+- Fix missing tile encoding for MLT queryRenderedFeatures ([#7056](https://github.com/maplibre/maplibre-gl-js/pull/7056)) (by [@dannote](https://github.com/dannote) and [@ted-piotrowski](https://github.com/ted-piotrowski))
+- Fix unhandled framebuffer error when tab wakes from sleep: move framebuffer completeness check to after attachments are set, and add error handling to `redraw()` matching `triggerRepaint()` ([#7303](https://github.com/maplibre/maplibre-gl-js/pull/7303)) (by [@johanrd](https://github.com/johanrd))
+- _...Add new stuff here..._
 
 ## 5.20.2
 
