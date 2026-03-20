@@ -22,8 +22,7 @@ export class TapDragZoomHandler implements Handler {
             numTouches: 1,
             numTaps: 1
         });
-        if (this._tapDragZoomSpeed === undefined) {
-            this._tapDragZoomSpeed = 1;}
+        this._tapDragZoomSpeed = 1;
         this.reset();
     }
 
