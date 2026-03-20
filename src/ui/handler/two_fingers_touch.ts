@@ -138,7 +138,7 @@ abstract class TwoFingersTouchHandler implements Handler {
     * @example
     * Speed up two fingers zoom
     * ```ts
-    * map.touchZoomRotate.setTwoFingersZoomSpeed(1.25);
+    * map.touchZoomRotate._touchZoom.setZoomSpeed(1.25);
     * ```
     */
     setZoomSpeed(zoomSpeedRatio: number) {
@@ -151,7 +151,7 @@ abstract class TwoFingersTouchHandler implements Handler {
     * @example
     * Increaze the two fingers zoom trigger threshold (a wider pinch gesture will be required to trigger the interaction)
     * ```ts
-    * map.touchZoomRotate.setZoomThreshold(0.3);
+    * map.touchZoomRotate._touchZoom.setZoomThreshold(0.3);
     * ```
     */
     setZoomThreshold(zoomThreshold: number) {
