@@ -1,4 +1,4 @@
-import {beforeEach, test, expect} from 'vitest';
+import {beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
 
 beforeEach(() => {
@@ -57,6 +57,34 @@ test('getMaxPitch', () => {
     expect(map.getMaxPitch()).toBe(10);
 });
 
+test('getAnisotropicFilterPitch default', () => {
+    const map = createMap({});
+    expect(map.getAnisotropicFilterPitch()).toBe(20);
+});
+
+test('getAnisotropicFilterPitch constructor option', () => {
+    const map = createMap({anisotropicFilterPitch: 90});
+    expect(map.getAnisotropicFilterPitch()).toBe(90);
+});
+
+test('setAnisotropicFilterPitch', () => {
+    const map = createMap({});
+    map.setAnisotropicFilterPitch(90);
+    expect(map.getAnisotropicFilterPitch()).toBe(90);
+});
+
+test('setAnisotropicFilterPitch undefined', () => {
+    const map = createMap({anisotropicFilterPitch: 90});
+    map.setAnisotropicFilterPitch(undefined);
+    expect(map.getAnisotropicFilterPitch()).toBe(20);
+});
+
+test('setAnisotropicFilterPitch null', () => {
+    const map = createMap({anisotropicFilterPitch: 90});
+    map.setAnisotropicFilterPitch(null);
+    expect(map.getAnisotropicFilterPitch()).toBe(20);
+});
+
 test('ignore maxPitchs over minPitch', () => {
     const map = createMap({minPitch: 10});
     expect(() => {
@@ -88,4 +116,46 @@ test('throw on minPitch less than valid minPitch at init', () => {
     expect(() => {
         createMap({minPitch: -10});
     }).toThrow(new Error('minPitch must be greater than or equal to 0'));
+});
+
+test('throw on anisotropicFilterPitch greater than valid maxPitch at init', () => {
+    expect(() => {
+        createMap({anisotropicFilterPitch: 190});
+    }).toThrow(new Error('anisotropicFilterPitch must be less than or equal to 180'));
+});
+
+test('throw on anisotropicFilterPitch less than valid minPitch at init', () => {
+    expect(() => {
+        createMap({anisotropicFilterPitch: -10});
+    }).toThrow(new Error('anisotropicFilterPitch must be greater than or equal to 0'));
+});
+
+test('fire move and pitch events when pitch is changed due to minPitch change', () => {
+    const map = createMap({minPitch: 0, pitch: 10});
+    const handleEvent = vi.fn();
+    map.on('movestart', handleEvent);
+    map.on('move', handleEvent);
+    map.on('moveend', handleEvent);
+    map.on('pitchstart', handleEvent);
+    map.on('pitch', handleEvent);
+    map.on('pitchend', handleEvent);
+    map.setMinPitch(11);
+    expect(map.getPitch()).toEqual(11);
+    expect(map.getMinPitch()).toEqual(11);
+    expect(handleEvent).toHaveBeenCalledTimes(6);
+});
+
+test('fire move and pitch events when pitch is changed due to maxPitch change', () => {
+    const map = createMap({maxPitch: 20, pitch: 20});
+    const handleEvent = vi.fn();
+    map.on('movestart', handleEvent);
+    map.on('move', handleEvent);
+    map.on('moveend', handleEvent);
+    map.on('pitchstart', handleEvent);
+    map.on('pitch', handleEvent);
+    map.on('pitchend', handleEvent);
+    map.setMaxPitch(10);
+    expect(map.getPitch()).toEqual(10);
+    expect(map.getMaxPitch()).toEqual(10);
+    expect(handleEvent).toHaveBeenCalledTimes(6);
 });

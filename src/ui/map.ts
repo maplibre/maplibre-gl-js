@@ -22,7 +22,6 @@ import {Event, ErrorEvent, type Listener} from '../util/evented';
 import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSourceDataEvent, type MapStyleDataEvent} from './events';
 import {TaskQueue} from '../util/task_queue';
 import {throttle} from '../util/throttle';
-import {webpSupported} from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
 import {type Source} from '../source/source';
 import {type StyleLayer} from '../style/style_layer';
@@ -45,7 +44,7 @@ import type {MapDataEvent} from './events';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image';
 import type {PointLike} from './camera';
 import type {ScrollZoomHandler} from './handler/scroll_zoom';
-import type {BoxZoomHandler} from './handler/box_zoom';
+import type {BoxZoomHandler, BoxZoomHandlerOptions} from './handler/box_zoom';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
 import type {DragRotateHandler} from './handler/shim/drag_rotate';
 import type {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan';
@@ -105,6 +104,13 @@ export type MapOptions = {
      */
     bearingSnap?: number;
     /**
+     * The step increment the zoom level will snap to.
+     * For example, if `zoomSnap` is 1, the map will snap to whole integers during discrete zoom operations.
+     * If set to 0, zooming is continuous.
+     * @defaultValue 0
+     */
+    zoomSnap?: number;
+    /**
      * If set, an {@link AttributionControl} will be added to the map with the provided options.
      * To disable the attribution control, pass `false`.
      * !!! note
@@ -163,10 +169,17 @@ export type MapOptions = {
      */
     maxPitch?: number | null;
     /**
+     * The pitch above which to apply anisotropic filtering to the map's raster layers (0-180).
+     * @defaultValue 20
+     */
+    anisotropicFilterPitch?: number | null;
+    /**
      * If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).
+     * An `Object` value configures {@link BoxZoomHandler} options.
+     * If `boxZoomEnd` is provided, the callback runs instead of the default fit-to-box zoom.
      * @defaultValue true
      */
-    boxZoom?: boolean;
+    boxZoom?: boolean | BoxZoomHandlerOptions;
     /**
      * If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}).
      * @defaultValue true
@@ -351,7 +364,9 @@ export type MapOptions = {
      */
     pixelRatio?: number;
     /**
-     * If false, style validation will be skipped. Useful in production environment.
+     * If false, style validation will be skipped.
+     * Useful in production environments due to enabling tree-shaking of the validation code in some environments and minor performance improvements.
+     * Disabling this option comes at the cost of less clear error messages
      * @defaultValue true
      */
     validateStyle?: boolean;
@@ -387,6 +402,15 @@ export type MapOptions = {
      * @experimental
      */
     experimentalZoomLevelsToOverscale?: number;
+    /**
+     * Determines the rotation interaction model:
+     * - When true: Uses "Orbital" logic where rotation is relative to the pivot center.
+     *   Dragging right at the top rotates clockwise, while dragging right at the bottom
+     *   rotates counter-clockwise (like spinning a physical globe).
+     * - When false: Uses "Linear" logic where horizontal mouse movement translates directly
+     *   to bearing change regardless of cursor position.
+     */
+    aroundCenter?: boolean;
 };
 
 export type AddImageOptions = {
@@ -415,14 +439,16 @@ const defaultMaxZoom = 22;
 // the default values, but also the valid range
 const defaultMinPitch = 0;
 const defaultMaxPitch = 60;
+const defaultAnisotropicFilterPitch = 20;
 
-// use this variable to check maxPitch for validity
+// use this variable to check maxPitch and anisotropicFilterPitch for validity
 const maxPitchThreshold = 180;
 
 const defaultOptions: Readonly<Partial<MapOptions>> = {
     hash: false,
     interactive: true,
     bearingSnap: 7,
+    zoomSnap: 0,
     attributionControl: defaultAttributionControlOptions,
     maplibreLogo: false,
     refreshExpiredTiles: true,
@@ -478,7 +504,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
     centerClampedToGround: true,
-    experimentalZoomLevelsToOverscale: undefined
+    experimentalZoomLevelsToOverscale: undefined,
+    anisotropicFilterPitch: defaultAnisotropicFilterPitch,
 };
 
 /**
@@ -535,6 +562,7 @@ export class Map extends Camera {
     _styleDirty: boolean;
     _sourcesDirty: boolean;
     _placementDirty: boolean;
+    _anisotropicFilterPitch: number;
 
     _loaded: boolean;
     _idleTriggered = false;
@@ -564,6 +592,16 @@ export class Map extends Camera {
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
     /** @internal */
     _zoomLevelsToOverscale: number | undefined;
+
+    /**
+     * @internal
+     * The window that owns the map container element, for cross-window support.
+     * Returns `typeof window` to include global constructors like ResizeObserver.
+     */
+    get _ownerWindow(): typeof window {
+        return this._container?.ownerDocument?.defaultView || window;
+    }
+
     /**
      * @internal
      * image queue throttling handle. To be used later when clean up
@@ -696,7 +734,10 @@ export class Map extends Camera {
             transform.setConstrainOverride(resolvedOptions.transformConstrain);
         }
 
-        super(transform, cameraHelper, {bearingSnap: resolvedOptions.bearingSnap});
+        super(transform, cameraHelper, {
+            bearingSnap: resolvedOptions.bearingSnap,
+            zoomSnap: resolvedOptions.zoomSnap
+        });
 
         this._interactive = resolvedOptions.interactive;
         this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;
@@ -704,6 +745,7 @@ export class Map extends Camera {
         this._canvasContextAttributes = {...resolvedOptions.canvasContextAttributes};
         this._trackResize = resolvedOptions.trackResize === true;
         this._bearingSnap = resolvedOptions.bearingSnap;
+        this._zoomSnap = resolvedOptions.zoomSnap;
         this._centerClampedToGround = resolvedOptions.centerClampedToGround;
         this._refreshExpiredTiles = resolvedOptions.refreshExpiredTiles === true;
         this._fadeDuration = resolvedOptions.fadeDuration;
@@ -717,6 +759,7 @@ export class Map extends Camera {
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
+        this.setAnisotropicFilterPitch(resolvedOptions.anisotropicFilterPitch);
 
         if (resolvedOptions.reduceMotion !== undefined) {
             browser.prefersReducedMotion = resolvedOptions.reduceMotion;
@@ -726,16 +769,7 @@ export class Map extends Camera {
 
         this._requestManager = new RequestManager(resolvedOptions.transformRequest);
 
-        if (typeof resolvedOptions.container === 'string') {
-            this._container = document.getElementById(resolvedOptions.container);
-            if (!this._container) {
-                throw new Error(`Container '${resolvedOptions.container}' not found.`);
-            }
-        } else if (resolvedOptions.container instanceof HTMLElement) {
-            this._container = resolvedOptions.container;
-        } else {
-            throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
-        }
+        this._container = this._resolveContainer(resolvedOptions.container);
 
         if (resolvedOptions.maxBounds) {
             this.setMaxBounds(resolvedOptions.maxBounds);
@@ -754,22 +788,8 @@ export class Map extends Camera {
         this.once('idle', () => { this._idleTriggered = true; });
 
         if (typeof window !== 'undefined') {
-            addEventListener('online', this._onWindowOnline, false);
-            let initialResizeEventCaptured = false;
-            const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
-                if (this._trackResize && !this._removed) {
-                    this.resize(entries);
-                    this.redraw();
-                }
-            }, 50);
-            this._resizeObserver = new ResizeObserver((entries) => {
-                if (!initialResizeEventCaptured) {
-                    initialResizeEventCaptured = true;
-                    return;
-                }
-                throttledResizeCallback(entries);
-            });
-            this._resizeObserver.observe(this._container);
+            this._ownerWindow.addEventListener('online', this._onWindowOnline, false);
+            this._setupResizeObserver();
         }
 
         this.handlers = new HandlerManager(this, resolvedOptions);
@@ -1143,7 +1163,8 @@ export class Map extends Camera {
     /**
      * Sets or clears the map's minimum zoom level.
      * If the map's current zoom level is lower than the new minimum,
-     * the map will zoom to the new minimum.
+     * the map will zoom to the new minimum and trigger the following events:
+     * `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
      * It is not always possible to zoom out and reach the set `minZoom`.
      * Other factors such as map height may restrict zooming. For example,
@@ -1164,10 +1185,19 @@ export class Map extends Camera {
         minZoom = minZoom === null || minZoom === undefined ? defaultMinZoom : minZoom;
 
         if (minZoom >= defaultMinZoom && minZoom <= this.transform.maxZoom) {
+            const zoomBefore = this.transform.zoom;
             const tr = this._getTransformForUpdate();
             tr.setMinZoom(minZoom);
             this._applyUpdatedTransform(tr);
             this._update();
+            if (zoomBefore !== this.transform.zoom) {
+                this.fire(new Event('zoomstart'))
+                    .fire(new Event('zoom'))
+                    .fire(new Event('zoomend'))
+                    .fire(new Event('movestart'))
+                    .fire(new Event('move'))
+                    .fire(new Event('moveend'));
+            }
 
             return this;
 
@@ -1188,7 +1218,8 @@ export class Map extends Camera {
     /**
      * Sets or clears the map's maximum zoom level.
      * If the map's current zoom level is higher than the new maximum,
-     * the map will zoom to the new maximum.
+     * the map will zoom to the new maximum and trigger the following events:
+     * `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
      * A {@link ErrorEvent} event will be fired if minZoom is out of bounds.
      *
@@ -1204,10 +1235,19 @@ export class Map extends Camera {
         maxZoom = maxZoom === null || maxZoom === undefined ? defaultMaxZoom : maxZoom;
 
         if (maxZoom >= this.transform.minZoom) {
+            const zoomBefore = this.transform.zoom;
             const tr = this._getTransformForUpdate();
             tr.setMaxZoom(maxZoom);
             this._applyUpdatedTransform(tr);
             this._update();
+            if (zoomBefore !== this.transform.zoom) {
+                this.fire(new Event('zoomstart'))
+                    .fire(new Event('zoom'))
+                    .fire(new Event('zoomend'))
+                    .fire(new Event('movestart'))
+                    .fire(new Event('move'))
+                    .fire(new Event('moveend'));
+            }
 
             return this;
 
@@ -1228,7 +1268,8 @@ export class Map extends Camera {
     /**
      * Sets or clears the map's minimum pitch.
      * If the map's current pitch is lower than the new minimum,
-     * the map will pitch to the new minimum.
+     * the map will pitch to the new minimum and trigger the following events:
+     * `movestart`, `move`, `moveend`, `pitchstart`, `pitch`, and `pitchend`.
      *
      * A {@link ErrorEvent} event will be fired if minPitch is out of bounds.
      *
@@ -1244,10 +1285,19 @@ export class Map extends Camera {
         }
 
         if (minPitch >= defaultMinPitch && minPitch <= this.transform.maxPitch) {
-            this.transform.setMinPitch(minPitch);
+            const pitchBefore = this.transform.pitch;
+            const tr = this._getTransformForUpdate();
+            tr.setMinPitch(minPitch);
+            this._applyUpdatedTransform(tr);
             this._update();
-
-            if (this.getPitch() < minPitch) this.setPitch(minPitch);
+            if (pitchBefore !== this.transform.pitch) {
+                this.fire(new Event('pitchstart'))
+                    .fire(new Event('pitch'))
+                    .fire(new Event('pitchend'))
+                    .fire(new Event('movestart'))
+                    .fire(new Event('move'))
+                    .fire(new Event('moveend'));
+            }
 
             return this;
 
@@ -1264,7 +1314,8 @@ export class Map extends Camera {
     /**
      * Sets or clears the map's maximum pitch.
      * If the map's current pitch is higher than the new maximum,
-     * the map will pitch to the new maximum.
+     * the map will pitch to the new maximum and trigger the following events:
+     * `movestart`, `move`, `moveend`, `pitchstart`, `pitch`, and `pitchend`.
      *
      * A {@link ErrorEvent} event will be fired if maxPitch is out of bounds.
      *
@@ -1280,10 +1331,19 @@ export class Map extends Camera {
         }
 
         if (maxPitch >= this.transform.minPitch) {
-            this.transform.setMaxPitch(maxPitch);
+            const pitchBefore = this.transform.pitch;
+            const tr = this._getTransformForUpdate();
+            tr.setMaxPitch(maxPitch);
+            this._applyUpdatedTransform(tr);
             this._update();
-
-            if (this.getPitch() > maxPitch) this.setPitch(maxPitch);
+            if (pitchBefore !== this.transform.pitch) {
+                this.fire(new Event('pitchstart'))
+                    .fire(new Event('pitch'))
+                    .fire(new Event('pitchend'))
+                    .fire(new Event('movestart'))
+                    .fire(new Event('move'))
+                    .fire(new Event('moveend'));
+            }
 
             return this;
 
@@ -1296,6 +1356,48 @@ export class Map extends Camera {
      * @returns The maxPitch
      */
     getMaxPitch(): number { return this.transform.maxPitch; }
+
+    /**
+     * Returns the map's anisotropic filter pitch.
+     * If the map is pitched beyond this threshold, anisotropic filtering will be applied to all raster layers.
+     *
+     * @returns The anisotropicFilterPitch
+     * @example
+     * ```ts
+     * let anisotropicFilterPitch = map.getAnisotropicFilterPitch();
+     * ```
+     */
+    getAnisotropicFilterPitch(): number { return this._anisotropicFilterPitch; }
+
+    /**
+     * Sets the map's anisotropic filter pitch or reverts it to its default.
+     *
+     * A {@link ErrorEvent} event will be fired if anisotropicFilterPitch is out of bounds.
+     *
+     * @param anisotropicFilterPitch - The pitch above which to apply anisotropic filtering to the map's raster layers (0-180).
+     * If `null` or `undefined` is provided, the function reverts to the default pitch threshold (20).
+     *
+     *
+     * @example
+     * ```ts
+     * map.setAnisotropicFilterPitch(85);
+     * ```
+     */
+    setAnisotropicFilterPitch(anisotropicFilterPitch?: number | null): Map {
+
+        anisotropicFilterPitch = anisotropicFilterPitch === null || anisotropicFilterPitch === undefined ? defaultAnisotropicFilterPitch : anisotropicFilterPitch;
+
+        if (anisotropicFilterPitch > maxPitchThreshold) {
+            throw new Error(`anisotropicFilterPitch must be less than or equal to ${maxPitchThreshold}`);
+        }
+
+        if (anisotropicFilterPitch < defaultMinPitch) {
+            throw new Error(`anisotropicFilterPitch must be greater than or equal to ${defaultMinPitch}`);
+        }
+
+        this._anisotropicFilterPitch = anisotropicFilterPitch;
+        return this._update();
+    }
 
     /**
      * Returns the state of `renderWorldCopies`. If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
@@ -2209,7 +2311,9 @@ export class Map extends Camera {
 
         if (!options) {
             // remove terrain
-            if (this.terrain) this.terrain.tileManager.destruct();
+            if (this.terrain) {
+                this.terrain.destroy();
+            }
             this.terrain = null;
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
@@ -3234,6 +3338,54 @@ export class Map extends Camera {
         return [width, height];
     }
 
+    /**
+     * @internal
+     * Sets up the ResizeObserver to track container size changes.
+     * Uses the owning window's ResizeObserver for cross-window support.
+     */
+    private _setupResizeObserver() {
+        let initialResizeEventCaptured = false;
+        const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
+            if (this._trackResize && !this._removed) {
+                this.resize(entries);
+                this.redraw();
+            }
+        }, 50);
+        // Use owning window's ResizeObserver for cross-window support
+        const ResizeObserverClass = this._ownerWindow.ResizeObserver ?? ResizeObserver;
+        this._resizeObserver = new ResizeObserverClass((entries: ResizeObserverEntry[]) => {
+            if (!initialResizeEventCaptured) {
+                initialResizeEventCaptured = true;
+                return;
+            }
+            throttledResizeCallback(entries);
+        });
+        this._resizeObserver.observe(this._container);
+    }
+
+    /**
+     * @internal
+     * Resolves the container option to an HTMLElement.
+     * Supports string ID, HTMLElement, or cross-window elements (using nodeType check).
+     */
+    private _resolveContainer(container: string | HTMLElement): HTMLElement {
+        if (typeof container === 'string') {
+            const element = document.getElementById(container);
+            if (!element) {
+                throw new Error(`Container '${container}' not found.`);
+            }
+            return element;
+        }
+        if (container instanceof HTMLElement) {
+            return container;
+        }
+        // Cross-window support: use nodeType check as instanceof fails across windows
+        if (container && typeof container === 'object' && (container as Node).nodeType === 1) {
+            return container as HTMLElement;
+        }
+        throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
+    }
+
     _setupContainer() {
         const container = this._container;
         container.classList.add('maplibregl-map');
@@ -3312,8 +3464,6 @@ export class Map extends Camera {
         }
 
         this.painter = new Painter(gl, this.transform);
-
-        webpSupported.testSupport(gl);
     }
 
     override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
@@ -3332,6 +3482,13 @@ export class Map extends Camera {
         }
         this.painter.destroy();
 
+        this._lostContextStyle = this._getStyleAndImages();
+
+        if (!this.style) {
+            this.fire(new Event('webglcontextlost', {originalEvent: event}));
+            return;
+        }
+
         // check if style contains custom layers to warn user that they can't be restored automatically
         for (const layer of Object.values(this.style._layers)) {
             if (layer.type === 'custom') {
@@ -3345,9 +3502,9 @@ export class Map extends Camera {
             }
         }
 
-        this._lostContextStyle = this._getStyleAndImages();
         this.style.destroy();
         this.style = null;
+
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
 
@@ -3513,6 +3670,7 @@ export class Map extends Camera {
             moving: this.isMoving(),
             fadeDuration,
             showPadding: this.showPadding,
+            anisotropicFilterPitch: this.getAnisotropicFilterPitch(),
         });
 
         this.fire(new Event('render'));
@@ -3598,7 +3756,7 @@ export class Map extends Camera {
         delete this.handlers;
         this.setStyle(null);
         if (typeof window !== 'undefined') {
-            removeEventListener('online', this._onWindowOnline, false);
+            this._ownerWindow.removeEventListener('online', this._onWindowOnline, false);
         }
 
         ImageRequest.removeThrottleControl(this._imageQueueHandle);
@@ -3608,12 +3766,12 @@ export class Map extends Camera {
         if (extension?.loseContext) extension.loseContext();
         this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
-        DOM.remove(this._canvasContainer);
-        DOM.remove(this._controlContainer);
+        this._canvasContainer.remove();
+        this._controlContainer.remove();
         this._container.removeEventListener('scroll', this._onMapScroll, false);
         this._container.classList.remove('maplibregl-map');
 
-        PerformanceUtils.clearMetrics();
+        PerformanceUtils.remove();
 
         this._removed = true;
         this.fire(new Event('remove'));
@@ -3636,7 +3794,7 @@ export class Map extends Camera {
             browser.frame(
                 this._frameRequest,
                 (paintStartTimeStamp) => {
-                    PerformanceUtils.frame(paintStartTimeStamp);
+                    PerformanceUtils.recordStartOfFrameAt(paintStartTimeStamp);
                     this._frameRequest = null;
                     try {
                         this._render(paintStartTimeStamp);
@@ -3646,7 +3804,8 @@ export class Map extends Camera {
                         }
                     }
                 },
-                () => {}
+                () => {},
+                this._ownerWindow
             );
         }
     }

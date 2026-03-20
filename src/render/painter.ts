@@ -72,6 +72,7 @@ type PainterOptions = {
     zooming: boolean;
     moving: boolean;
     fadeDuration: number;
+    anisotropicFilterPitch: number;
 };
 
 export type RenderOptions = {
@@ -684,12 +685,16 @@ export class Painter {
         }
     }
 
+    static readonly MAX_TEXTURE_POOL_SIZE_PER_BUCKET = 50;
+
     saveTileTexture(texture: Texture) {
         const textures = this._tileTextures[texture.size[0]];
         if (!textures) {
             this._tileTextures[texture.size[0]] = [texture];
-        } else {
+        } else if (textures.length < Painter.MAX_TEXTURE_POOL_SIZE_PER_BUCKET) {
             textures.push(texture);
+        } else {
+            texture.destroy();
         }
     }
 

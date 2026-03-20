@@ -49,18 +49,53 @@ describe('GlobeControl', () => {
     });
 
     test('toggles projection when clicked', async () => {
-        await new Promise(resolve => map.on('load', resolve));
+        await map.once('load');
 
         map.addControl(new GlobeControl());
         expect(map.style.projection.name).toBe('mercator');
         const button = map.getContainer().querySelector('.maplibregl-ctrl-globe');
 
         button.click();
-        await new Promise(resolve => setTimeout(resolve, 0));
         expect(map.style.projection.name).toBe('globe');
 
         button.click();
-        await new Promise(resolve => setTimeout(resolve, 0));
         expect(map.style.projection.name).toBe('mercator');
+    });
+
+    describe('updates control state when Map.setProjection is called', () => {
+        beforeEach(async () => {
+            map.addControl(new GlobeControl());
+            await map.once('load');
+        });
+
+        test('default without call to setProjection', () => {
+            const button = map.getContainer().querySelector('.maplibregl-ctrl-globe');
+            expect(map.style.projection.name).toBe('mercator');
+            expect(button.classList.contains('maplibregl-ctrl-globe')).toBeTruthy();
+            expect(button.classList.contains('maplibregl-ctrl-globe-enabled')).toBeFalsy();
+        });
+
+        test('setProjection({type: "mercator" -> "globe")', () => {
+            map.setProjection({type: 'mercator'});
+            map.setProjection({type: 'globe'});
+
+            // mercator = disabled state
+            const button = map.getContainer().querySelector('.maplibregl-ctrl-globe-enabled');
+            expect(map.style.projection.name).toBe('globe');
+            expect(button).not.toBeNull();
+            expect(button.classList.contains('maplibregl-ctrl-globe-enabled')).toBeTruthy();
+            expect(button.classList.contains('maplibregl-ctrl-globe')).toBeFalsy();
+        });
+
+        test('setProjection({type: "globe" -> "mercator")', () => {
+            map.setProjection({type: 'globe'});
+            map.setProjection({type: 'mercator'});
+
+            // mercator = disabled state
+            const button = map.getContainer().querySelector('.maplibregl-ctrl-globe');
+            expect(map.style.projection.name).toBe('mercator');
+            expect(button.classList.contains('maplibregl-ctrl-globe')).toBeTruthy();
+            expect(button.classList.contains('maplibregl-ctrl-globe-enabled')).toBeFalsy();
+        });
     });
 });

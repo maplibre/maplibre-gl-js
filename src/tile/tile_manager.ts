@@ -29,6 +29,7 @@ import type {ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-
 import type {MapSourceDataEvent} from '../ui/events';
 import type {Terrain} from '../render/terrain';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
+import type {LoadTileResult} from '../source/vector_tile_source';
 
 type TileResult = {
     tile: Tile;
@@ -186,10 +187,11 @@ export class TileManager extends Evented {
 
     async _loadTile(tile: Tile, id: string, state: TileState): Promise<void> {
         try {
-            await this._source.loadTile(tile);
-            this._tileLoaded(tile, id, state);
+            const result = await this._source.loadTile(tile) as LoadTileResult;
+            this._tileLoaded(tile, id, state, result);
         } catch (err) {
             tile.state = 'errored';
+
             if ((err as any).status !== 404) {
                 this._source.fire(new ErrorEvent(err, {tile}));
             } else {
@@ -295,7 +297,7 @@ export class TileManager extends Evented {
         await this._loadTile(tile, id, state);
     }
 
-    _tileLoaded(tile: Tile, id: string, previousState: TileState) {
+    _tileLoaded(tile: Tile, id: string, previousState: TileState, result: LoadTileResult) {
         tile.timeAdded = now();
         // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
         if (tile.selfFading) {
@@ -304,6 +306,9 @@ export class TileManager extends Evented {
 
         if (previousState === 'expired') tile.refreshedUponExpiration = true;
         this._setTileReloadTimer(id, tile);
+
+        if (result?.unmodified) return;
+
         if (this.getSource().type === 'raster-dem' && tile.dem) {
             backfillDEM(tile, this._inViewTiles);
         }
@@ -346,7 +351,7 @@ export class TileManager extends Evented {
      * Analogy: imagine two sheets of paper in 3D space:
      *   - one sheet = ideal tiles at varying overscaledZ
      *   - the second sheet = maxCoveringZoom
-     * 
+     *
      * @param retainTileMap - this parameters will be updated with the child tiles to keep
      * @param idealTilesWithoutData - which of the ideal tiles currently does not have loaded data
      * @return a set of tiles that need to be loaded
@@ -505,7 +510,7 @@ export class TileManager extends Evented {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.type === 'vector' && this.map._zoomLevelsToOverscale !== undefined
-                    ? transform.maxZoom - this.map._zoomLevelsToOverscale 
+                    ? transform.maxZoom - this.map._zoomLevelsToOverscale
                     : this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,

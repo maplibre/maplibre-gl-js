@@ -278,4 +278,35 @@ describe('ajax', () => {
         });
 
     });
+
+    describe('referrerPolicy', () => {
+
+        test('should pass referrerPolicy to fetch Request', async () => {
+            global.fetch = originalFetch;
+
+            const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response(new ArrayBuffer(1)));
+
+            await getArrayBuffer({url: 'http://example.com/test.json', referrerPolicy: 'origin-when-cross-origin'}, new AbortController());
+
+            expect(fetchSpy).toHaveBeenCalledTimes(1);
+            const request = fetchSpy.mock.calls[0][0] as Request;
+            expect(request.referrerPolicy).toBe('origin-when-cross-origin');
+
+            fetchSpy.mockRestore();
+        });
+
+        test('should default referrerPolicy to empty string when not provided', async () => {
+            global.fetch = originalFetch;
+
+            const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response(new ArrayBuffer(1)));
+
+            await getArrayBuffer({url: 'http://example.com/test.json'}, new AbortController());
+
+            expect(fetchSpy).toHaveBeenCalledTimes(1);
+            const request = fetchSpy.mock.calls[0][0] as Request;
+            expect(request.referrerPolicy).toBe('');
+
+            fetchSpy.mockRestore();
+        });
+    });
 });
