@@ -1,0 +1,44 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 128,
+      "height": 128
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "Point",
+        "coordinates": [0, 0]
+      }
+    }
+  },
+  "sprite": "local://sprites/sdf_icon_74x36",
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "symbol",
+      "type": "symbol",
+      "source": "geojson",
+      "paint": {
+        "icon-color": "#ff0000",
+        "icon-halo-color": "#000000",
+        "icon-halo-width": 2
+      },
+      "layout": {
+        "text-field": "WIDE",
+        "text-size": 24,
+        "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+        "icon-image": "sdf",
+        "icon-text-fit": "both",
+        "icon-text-fit-padding": [4, 4, 4, 4],
+        "text-allow-overlap": true,
+        "text-ignore-placement": true,
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true
+      }
+    }
+  ]
+}

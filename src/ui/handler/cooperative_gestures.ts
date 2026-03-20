@@ -71,7 +71,7 @@ export class CooperativeGesturesHandler implements Handler {
 
     _destroyUI() {
         if (this._container) {
-            DOM.remove(this._container);
+            this._container.remove();
             const mapCanvasContainer = this._map.getCanvasContainer();
             mapCanvasContainer.classList.remove('maplibregl-cooperative-gestures');
         }

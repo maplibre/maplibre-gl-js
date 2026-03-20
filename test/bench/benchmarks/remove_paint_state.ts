@@ -63,7 +63,7 @@ class RemovePaintState extends Benchmark {
     bench() {
         this.map._styleDirty = true;
         this.map._sourcesDirty = true;
-        this.map._render();
+        Benchmark.renderMap(this.map);
     }
 
     teardown() {
@@ -80,7 +80,7 @@ export class PropertyLevelRemove extends RemovePaintState {
         for (let i = 0; i < this.numFeatures; i += 50) {
             this.map.removeFeatureState({source: 'land', id: i}, 'bench');
         }
-        this.map._render();
+        Benchmark.renderMap(this.map);
 
     }
 }
@@ -94,7 +94,7 @@ export class FeatureLevelRemove extends RemovePaintState {
         for (let i = 0; i < this.numFeatures; i += 50) {
             this.map.removeFeatureState({source: 'land', id: i});
         }
-        this.map._render();
+        Benchmark.renderMap(this.map);
 
     }
 }
@@ -108,7 +108,7 @@ export class SourceLevelRemove extends RemovePaintState {
         for (let i = 0; i < this.numFeatures; i += 50) {
             this.map.removeFeatureState({source: 'land', id: i});
         }
-        this.map._render();
+        Benchmark.renderMap(this.map);
 
     }
 }

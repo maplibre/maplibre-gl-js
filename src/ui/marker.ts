@@ -123,6 +123,8 @@ export type MarkerOptions = {
  * **Event** `drag` of type {@link Event} will be fired while dragging.
  *
  * **Event** `dragend` of type {@link Event} will be fired when the marker is finished being dragged.
+ *
+ * **Event** `click` of type {@link Event} will be fired when the marker is clicked.
  */
 export class Marker extends Evented {
     _map: Map;
@@ -332,6 +334,7 @@ export class Marker extends Evented {
         map.on('terrain', this._update);
         map.on('projectiontransition', this._update);
 
+        this._element.addEventListener('click', this._onClick);
         this.setDraggable(this._draggable);
         this._update();
 
@@ -370,7 +373,8 @@ export class Marker extends Evented {
             this._map.off('touchmove', this._onMove);
             delete this._map;
         }
-        DOM.remove(this._element);
+        this._element.removeEventListener('click', this._onClick);
+        this._element.remove();
         if (this._popup) this._popup.remove();
         return this;
     }
@@ -493,14 +497,12 @@ export class Marker extends Evented {
         return this;
     }
 
-    _onKeyPress = (e: KeyboardEvent) => {
-        const code = e.code;
-        const legacyCode = e.charCode || e.keyCode;
+    _onClick = (e: MouseEvent) => {
+        this.fire(new Event('click', {originalEvent: e}));
+    };
 
-        if (
-            (code === 'Space') || (code === 'Enter') ||
-            (legacyCode === 32) || (legacyCode === 13) // space or enter
-        ) {
+    _onKeyPress = (e: KeyboardEvent) => {
+        if (e.code === 'Space' || e.code === 'Enter') {
             this.togglePopup();
         }
     };
@@ -635,7 +637,7 @@ export class Marker extends Evented {
             this._pos = this._pos.round();
         }
 
-        DOM.setTransform(this._element, `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`);
+        this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`;
 
         browser.frameAsync(new AbortController(), this._map._ownerWindow).then(() => { // Run _updateOpacity only after painter.render and drawDepth
             this._updateOpacity(e && e.type === 'moveend');
