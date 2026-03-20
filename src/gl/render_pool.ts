@@ -47,6 +47,7 @@ export class RenderPool {
         }
         fbo.depthAttachment.set(this._context.createRenderbuffer(this._context.gl.DEPTH_STENCIL, this._tileSize, this._tileSize));
         fbo.colorAttachment.set(texture.texture);
+        fbo.checkFramebufferStatus();
         return {id, fbo, texture, stamp: -1, inUse: false};
     }
 

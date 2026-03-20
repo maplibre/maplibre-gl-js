@@ -109,6 +109,7 @@ export class ProjectionErrorMeasurement {
 
         this._fbo = context.createFramebuffer(this._texWidth, this._texHeight, false, false);
         this._fbo.colorAttachment.set(texture);
+        this._fbo.checkFramebufferStatus();
 
         if (isWebGL2(gl)) {
             this._pbo = gl.createBuffer();

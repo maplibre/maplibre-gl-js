@@ -28,6 +28,10 @@ export class Framebuffer {
         } else if (hasStencil) {
             throw new Error('Stencil cannot be set without depth');
         }
+    }
+
+    checkFramebufferStatus() {
+        const gl = this.context.gl;
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
             throw createFramebufferNotCompleteError();
         }

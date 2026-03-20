@@ -3726,7 +3726,13 @@ export class Map extends Camera {
                 this._frameRequest.abort();
                 this._frameRequest = null;
             }
-            this._render(0);
+            try {
+                this._render(0);
+            } catch (error) {
+                if (!isAbortError(error) && !isFramebufferNotCompleteError(error)) {
+                    throw error;
+                }
+            }
         }
         return this;
     }

@@ -227,6 +227,7 @@ function createHeatmapFbo(context: Context, width: number, height: number): Fram
 
     const fbo = context.createFramebuffer(width, height, false, false);
     fbo.colorAttachment.set(texture);
+    fbo.checkFramebufferStatus();
 
     return fbo;
 }
