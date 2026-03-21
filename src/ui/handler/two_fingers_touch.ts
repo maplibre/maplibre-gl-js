@@ -198,7 +198,7 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
         if (!this._active && Math.abs(getZoomDelta(this._distance, this._startDistance!)) < this._zoomThreshold) return;
         this._active = true;
         return {
-            zoomDelta: (getZoomDelta(this._distance, lastDistance))*this._twoFingersZoomSpeed,
+            zoomDelta: (getZoomDelta(this._distance, lastDistance)) * this._twoFingersZoomSpeed,
             pinchAround
         };
     }
