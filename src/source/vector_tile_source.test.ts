@@ -249,12 +249,12 @@ describe('VectorTileSource', () => {
         });
         await waitForMetadataEvent(source);
 
-        const tile = {
+        const tile = createMockTile({
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
             loadVectorData() {},
             setExpiryData() {}
-        } as any as Tile;
+        });
         await source.loadTile(tile);
         expect((receivedMessage.data as WorkerTileParameters).request.url).toBe('http://example.com/10/5/5.png');
         expect((receivedMessage.data as WorkerTileParameters).request.headers.Authorization).toBe('Bearer token');
@@ -363,15 +363,19 @@ describe('VectorTileSource', () => {
         await expect(initialLoadPromise).resolves.toStrictEqual({});
     });
 
-    test('resolves all queued reload promises while tile is loading', async () => {
+    test('resolves every queued reload caller after a single queued worker reload', async () => {
         let resolveFirstRequest: (value: any) => void;
+        let resolveQueuedReloadRequest: (value: any) => void;
         const sendAsync = vi.fn((_message) => {
             if (!resolveFirstRequest) {
                 return new Promise((resolve) => {
                     resolveFirstRequest = resolve;
                 });
             }
-            return Promise.resolve({});
+
+            return new Promise((resolve) => {
+                resolveQueuedReloadRequest = resolve;
+            });
         });
 
         const source = createSource({
@@ -395,13 +399,30 @@ describe('VectorTileSource', () => {
         const queuedReloadA = source.loadTile(tile);
         const queuedReloadB = source.loadTile(tile);
 
+        let queuedReloadAResolved = false;
+        let queuedReloadBResolved = false;
+        queuedReloadA.then(() => {
+            queuedReloadAResolved = true;
+        });
+        queuedReloadB.then(() => {
+            queuedReloadBResolved = true;
+        });
+
+        await sleep(0);
+        expect(resolveFirstRequest).toBeTruthy();
+
         resolveFirstRequest({});
 
         await initialLoad;
-        await Promise.race([
-            Promise.all([queuedReloadA, queuedReloadB]),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('queued reload promises did not resolve')), 200))
-        ]);
+        await sleep(0);
+
+        expect(sendAsync).toHaveBeenCalledTimes(2);
+        expect(queuedReloadAResolved).toBe(false);
+        expect(queuedReloadBResolved).toBe(false);
+        expect(resolveQueuedReloadRequest).toBeTruthy();
+
+        resolveQueuedReloadRequest({});
+        await expect(Promise.all([queuedReloadA, queuedReloadB])).resolves.toEqual([undefined, undefined]);
 
         expect(sendAsync).toHaveBeenCalledTimes(2);
     });

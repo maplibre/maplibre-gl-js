@@ -422,6 +422,7 @@ describe('RasterTileSource', () => {
         source.map._refreshExpiredTiles = true;
 
         const sourcePromise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0);
         server.respond();
         await sourcePromise;
 
@@ -433,14 +434,17 @@ describe('RasterTileSource', () => {
 
         // First load: abort in-flight to simulate a real previous abort
         const firstPromise = source.loadTile(tile);
+        await sleep(0);
         tile.abortController.abort();
         tile.aborted = true;
+        server.respond();
         await firstPromise;
         expect(tile.state).toBe('unloaded');
 
         // Second load: should clear the stale abort flag and succeed
         tile.state = 'loading';
         const tilePromise = source.loadTile(tile);
+        await sleep(0);
         server.respond();
         await tilePromise;
 
@@ -521,6 +525,7 @@ describe('RasterTileSource', () => {
         const source = createSource({url: tileJSONUrl});
 
         const metadataPromise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0);
         server.respond();
         await metadataPromise;
 
@@ -528,6 +533,7 @@ describe('RasterTileSource', () => {
         source.on('error', onError);
 
         const loadPromise = source.load(true);
+        await sleep(0);
         server.respond();
         await loadPromise;
 
