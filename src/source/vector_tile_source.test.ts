@@ -14,10 +14,6 @@ import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_s
 import {type ActorMessage, MessageType} from '../util/actor_messages';
 import {type MapSourceDataEvent} from '../ui/events';
 
-function isAbortPendingTileRequestsEvent(e: any): boolean {
-    return e?.abortPendingTileRequests === true || e?.data?.abortPendingTileRequests === true;
-}
-
 function createSource(options, transformCallback?, clearTiles = () => {}, customActor?: {sendAsync: (...args: any[]) => Promise<any>}) {
     const dispatcher = customActor ? getWrapDispatcher()(customActor as any) : getMockDispatcher();
     const source = new VectorTileSource('id', options, dispatcher, options.eventedParent);
@@ -678,27 +674,20 @@ describe('VectorTileSource', () => {
         expect(tile.etag).toBe('test');
     });
 
-    test( 'setSourceProperty emits abortPendingTileRequests before callback and load(true)', () => {
+    test('setSourceProperty emits abortPendingTileRequests before callback and load(true)', () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.pbf']
         });
-
-        const loadSpy = vi.spyOn(source, 'load').mockResolvedValue(undefined as any);
+        const fireSpy = vi.spyOn(source, 'fire');
         const callback = vi.fn();
-        const onData = vi.fn();
+        const loadSpy = vi.spyOn(source, 'load').mockResolvedValue(undefined as any);
 
-        source.on('data', onData);
         source.setSourceProperty(callback);
 
-        const abortEventIndex = onData.mock.calls.findIndex(([e]) => isAbortPendingTileRequestsEvent(e));
-        expect(abortEventIndex).toBeGreaterThan(-1);
-
-        const abortEventOrder = onData.mock.invocationCallOrder[abortEventIndex];
-        const callbackOrder = callback.mock.invocationCallOrder[0];
-        const loadOrder = loadSpy.mock.invocationCallOrder[0];
-
-        expect(abortEventOrder).toBeLessThan(callbackOrder);
-        expect(callbackOrder).toBeLessThan(loadOrder);
+        // calls[0] is the abort signal; load() fires 'dataloading' synchronously afterwards
+        expect(fireSpy.mock.calls[0][0]).toMatchObject({type: 'data', abortPendingTileRequests: true});
+        expect(fireSpy.mock.invocationCallOrder[0]).toBeLessThan(callback.mock.invocationCallOrder[0]);
+        expect(callback.mock.invocationCallOrder[0]).toBeLessThan(loadSpy.mock.invocationCallOrder[0]);
 
         expect(callback).toHaveBeenCalledTimes(1);
         expect(loadSpy).toHaveBeenCalledTimes(1);
