@@ -23,6 +23,10 @@ function createSource(options, transformCallback?) {
     return source;
 }
 
+function isAbortPendingTileRequestsEvent(event: MapSourceDataEvent) {
+    return event.type === 'data' && event.abortPendingTileRequests === true;
+}
+
 describe('RasterTileSource', () => {
     let server: FakeServer;
     beforeEach(() => {
@@ -476,12 +480,13 @@ describe('RasterTileSource', () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
-        const fireSpy = vi.spyOn(source, 'fire');
         const loadSpy = vi.spyOn(source, 'load');
+        const events: Array<MapSourceDataEvent> = [];
+        source.on('data', (e: MapSourceDataEvent) => events.push(e));
 
         source.setUrl('http://localhost:2900/source2.json');
 
-        expect(fireSpy.mock.calls[0][0]).toMatchObject({type: 'data', abortPendingTileRequests: true});
+        expect(events.some((e) => isAbortPendingTileRequestsEvent(e))).toBe(true);
         expect(source.url).toBe('http://localhost:2900/source2.json');
         expect(loadSpy).toHaveBeenCalledWith(true);
     });
@@ -503,8 +508,8 @@ describe('RasterTileSource', () => {
         expect(onError).not.toHaveBeenCalled();
     });
 
-    test('load emits error event when TileJSON is malformed (parser rejection)', async () => {
-        const tileJSONUrl = '/source-malformed.json';
+    test('load emits error event on TileJSON network error (non-abort)', async () => {
+        const tileJSONUrl = '/source-network-error.json';
         let requestCount = 0;
         server.respondWith(tileJSONUrl, (xhr) => {
             requestCount++;
@@ -518,8 +523,7 @@ describe('RasterTileSource', () => {
                 return;
             }
 
-            // Invalid JSON body to trigger parser rejection in getJSON/loadTileJson.
-            xhr.respond(200, {'Content-Type': 'application/json'}, '{"tiles": [}');
+            xhr.respond(500, {'Content-Type': 'text/plain'}, 'server error');
         });
 
         const source = createSource({url: tileJSONUrl});
@@ -538,6 +542,7 @@ describe('RasterTileSource', () => {
         await loadPromise;
 
         expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError.mock.calls[0][0].error.status).toBe(500);
     });
 
 });
