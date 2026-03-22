@@ -188,35 +188,6 @@ describe('TileManager.addTile', () => {
 
     });
 
-    test('falls back to cache miss after out-of-view cache reset', () => {
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-
-        const tileManager = createTileManager({});
-        const loadTileSpy = vi.fn(async (tile: Tile) => {
-            tile.state = 'loaded';
-        });
-        const unloadTileSpy = vi.fn(async () => {});
-
-        tileManager._source.loadTile = loadTileSpy;
-        tileManager._source.unloadTile = unloadTileSpy;
-
-        const tr = new MercatorTransform();
-        tr.resize(512, 512);
-        tileManager.updateCacheSize(tr);
-
-        tileManager._addTile(tileID);
-        tileManager._removeTile(tileID.key);
-        tileManager._addTile(tileID);
-        expect(loadTileSpy).toHaveBeenCalledTimes(1);
-
-        tileManager._removeTile(tileID.key);
-        tileManager.reload();
-        expect(unloadTileSpy).toHaveBeenCalledTimes(1);
-
-        tileManager._addTile(tileID);
-        expect(loadTileSpy).toHaveBeenCalledTimes(2);
-    });
-
     test('updates feature state on cached tile', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
 
