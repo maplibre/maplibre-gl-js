@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Slope Layer Demo — MapLibre GL JS</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <script src="../../dist/maplibre-gl-dev.js"></script>
+    <style>
+        body { margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        #legend {
+            position: absolute; bottom: 30px; left: 10px;
+            background: rgba(255,255,255,0.92); padding: 12px 14px;
+            border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.3);
+            font-size: 13px; z-index: 1; min-width: 140px;
+        }
+        #legend h4 { margin: 0 0 8px; }
+        .legend-row { display: flex; align-items: center; margin: 3px 0; }
+        .legend-swatch { width: 20px; height: 14px; margin-right: 6px; border-radius: 2px; }
+        #controls {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(255,255,255,0.92); padding: 10px 14px;
+            border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.3);
+            font-size: 13px; z-index: 1;
+        }
+        #controls label { display: block; margin: 4px 0; }
+    </style>
+</head>
+<body>
+<div id="controls">
+    <label>Opacity: <input id="opacity" type="range" min="0" max="1" step="0.05" value="1">
+        <span id="opacity-val">1</span></label>
+</div>
+<div id="legend">
+    <h4>Slope (degrees)</h4>
+    <div class="legend-row"><div class="legend-swatch" style="background:#00ff00"></div> 0° — flat</div>
+    <div class="legend-row"><div class="legend-swatch" style="background:#ffff00"></div> 15°</div>
+    <div class="legend-row"><div class="legend-swatch" style="background:#ff8800"></div> 30°</div>
+    <div class="legend-row"><div class="legend-swatch" style="background:#ff0000"></div> 45°</div>
+    <div class="legend-row"><div class="legend-swatch" style="background:#aa0000"></div> 60°</div>
+    <div class="legend-row"><div class="legend-swatch" style="background:#550000"></div> 90° — cliff</div>
+</div>
+<div id="map"></div>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: {
+            version: 8,
+            sources: {
+                'dem': {
+                    type: 'raster-dem',
+                    url: 'https://tiles.mapterhorn.com/tilejson.json',
+                    tileSize: 256,
+                    maxzoom: 16
+                },
+                'osm': {
+                    type: 'raster',
+                    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tileSize: 256
+                }
+            },
+            layers: [
+                {
+                    id: 'background',
+                    type: 'raster',
+                    source: 'osm',
+                    paint: {
+                        'raster-opacity': 1
+                    }
+                },
+                {
+                    id: 'slope',
+                    type: 'slope',
+                    source: 'dem',
+                    paint: {
+                        'slope-opacity': 0.3,
+                        'slope-color': [
+                            'interpolate',
+                            ['linear'],
+                            ['elevation'],
+                            0,  '#ffffff',
+                            15, '#ffff00',
+                            30, '#ff8800',
+                            45, '#ff0000',
+                            60, '#aa0000',
+                            90, '#550000'
+                        ]
+                    }
+                }
+            ]
+        },
+        center: [6.8652, 45.8326],
+        zoom: 12
+    });
+
+    map.on('error', (e) => {
+        console.error('Map error:', e.error ? e.error.message : e);
+    });
+
+    // Opacity slider
+    const slider = document.getElementById('opacity');
+    const valSpan = document.getElementById('opacity-val');
+    slider.addEventListener('input', () => {
+        const v = parseFloat(slider.value);
+        valSpan.textContent = v.toFixed(2);
+        map.setPaintProperty('slope', 'slope-opacity', v);
+    });
+</script>
+</body>
+</html>
