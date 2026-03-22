@@ -322,14 +322,22 @@ export class TileManager extends Evented {
      * Get a specific tile by TileID
      */
     getTile(tileID: OverscaledTileID): Tile {
-        return this.getTileByID(tileID.key);
+        return this.getInViewTileByID(tileID.key);
     }
 
     /**
      * Get a specific tile by id
      */
-    getTileByID(id: string): Tile | undefined {
+    getInViewTileByID(id: string): Tile | undefined {
         return this._inViewTiles.getTileById(id);
+    }
+
+    /**
+     * Find a tile by its key, searching both in-view tiles and the
+     * out-of-view cache. Returns `undefined` when not found.
+     */
+    getAnyTileByID(key: string): Tile | undefined {
+        return this._inViewTiles.getTileById(key) ?? this._outOfViewCache.getByKey(key) ?? undefined;
     }
 
     /**

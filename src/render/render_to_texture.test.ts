@@ -78,7 +78,8 @@ describe('render to texture', () => {
     const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2), 512);
     const tileManager = {
         _source: {minzoom: 0, maxzoom: 2},
-        getTileByID: (_id) => tile,
+        getInViewTileByID: (_id) => tile,
+        getAnyTileByID: (_id) => tile,
         getVisibleCoordinates: () => [tile.tileID]
     } as TileManager;
 

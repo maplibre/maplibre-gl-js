@@ -3304,7 +3304,7 @@ describe('Style.query*Features', () => {
         const tileManager = style.tileManagers['geojson'];
         const querySourceFeatures = vi.fn().mockReturnValue([]);
         vi.spyOn(tileManager, 'getRenderableIds').mockReturnValue(['symbol']);
-        vi.spyOn(tileManager, 'getTileByID').mockReturnValue({
+        vi.spyOn(tileManager, 'getInViewTileByID').mockReturnValue({
             tileID: new OverscaledTileID(0, 0, 0, 0, 0),
             querySourceFeatures
         } as unknown as Tile);
