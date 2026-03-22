@@ -297,46 +297,34 @@ export class VectorTileSource extends Evented implements Source {
     }
 
     private _enqueueReloadForLoadingTile(tile: Tile): Promise<void> {
-        const previousQueuedReload = tile.reloadPromise;
         return new Promise<void>((resolve, reject) => {
-            if (!previousQueuedReload) {
-                tile.reloadPromise = {resolve, reject};
-                return;
-            }
-
-            // Keep all callers waiting for a reload while this tile is already loading.
-            // Resolve/reject cascades so every queued caller settles when the queued reload completes.
-            tile.reloadPromise = {
-                resolve: () => {
-                    previousQueuedReload.resolve();
-                    resolve();
-                },
-                reject: () => {
-                    previousQueuedReload.reject();
-                    reject();
-                }
-            };
+            tile.queuedReloadWaiters ??= [];
+            tile.queuedReloadWaiters.push({resolve, reject});
         });
     }
 
     private async _drainQueuedReloadIfTileRetained(tile: Tile): Promise<void> {
-        if (!tile.reloadPromise) return;
+        const queuedReloadWaiters = tile.queuedReloadWaiters;
+        if (!queuedReloadWaiters?.length) return;
 
-        const reloadPromise = tile.reloadPromise;
-        tile.reloadPromise = null;
+        tile.queuedReloadWaiters = [];
 
-        // Handle a reload request queued while this tile was already loading.
-        // Retry only if TileManager still retains the tile; otherwise resolve the queued request without reloading.
         if (tile.uses <= 0) {
-            reloadPromise.resolve();
+            for (const waiter of queuedReloadWaiters) {
+                waiter.resolve();
+            }
             return;
         }
 
         try {
             await this.loadTile(tile);
-            reloadPromise.resolve();
+            for (const waiter of queuedReloadWaiters) {
+                waiter.resolve();
+            }
         } catch  {
-            reloadPromise.reject();
+            for (const waiter of queuedReloadWaiters) {
+                waiter.reject();
+            }
         }
     }
 

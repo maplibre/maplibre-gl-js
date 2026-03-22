@@ -108,7 +108,7 @@ export class Tile {
     fbo: Framebuffer;
     demTexture: Texture;
     refreshedUponExpiration: boolean;
-    reloadPromise: {resolve: () => void; reject: () => void};
+    queuedReloadWaiters: Array<{resolve: () => void; reject: () => void}>;
     resourceTiming: Array<PerformanceResourceTiming>;
     queryPadding: number;
 
