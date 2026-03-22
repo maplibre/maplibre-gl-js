@@ -694,31 +694,6 @@ describe('VectorTileSource', () => {
         expect(loadSpy).toHaveBeenCalledWith(true);
     });
 
-    test('abortTile aborts controller and sends MessageType.abortTile', async () => {
-        const source = createSource({
-            tiles: ['http://example.com/{z}/{x}/{y}.pbf']
-        });
-
-        const abortController = new AbortController();
-        const abortSpy = vi.spyOn(abortController, 'abort');
-        const sendAsync = vi.fn().mockResolvedValue(undefined);
-        const tile = createMockTile({
-            uid: 42,
-            state: 'loading',
-            abortController,
-            actor: {sendAsync} as unknown as Tile['actor']
-        });
-
-        await source.abortTile(tile);
-
-        expect(abortSpy).toHaveBeenCalledTimes(1);
-        expect(tile.abortController).toBeUndefined();
-        expect(sendAsync).toHaveBeenCalledWith({
-            type: MessageType.abortTile,
-            data: {uid: 42, type: source.type, source: source.id}
-        });
-    });
-
     test('abortTile sets tile state to unloaded, aborts controller, and sends MessageType.abortTile', async () => {
         const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
 
