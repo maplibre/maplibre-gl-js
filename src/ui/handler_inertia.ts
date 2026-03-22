@@ -104,11 +104,18 @@ export class HandlerInertia {
         const easeOptions = {} as any;
 
         if (deltas.pan.mag()) {
+            const fixedBearing = typeof panInertiaOptions === 'object' ? panInertiaOptions?.fixedBearing : undefined;
             const result = calculateEasing(deltas.pan.mag(), duration, extend({}, defaultPanInertiaOptions, panInertiaOptions || {}));
             const finalPan = deltas.pan.mult(result.amount / deltas.pan.mag());
-            const computedEaseOptions = this._map.cameraHelper.handlePanInertia(finalPan, this._map.transform);
+            const computedEaseOptions = this._map.cameraHelper.handlePanInertia(finalPan, this._map.transform, deltas.around, fixedBearing);
             easeOptions.center = computedEaseOptions.easingCenter;
             easeOptions.offset = computedEaseOptions.easingOffset;
+            if (computedEaseOptions.easingBearing !== undefined) {
+                easeOptions.bearing = computedEaseOptions.easingBearing;
+            }
+            if (computedEaseOptions.panInertia) {
+                easeOptions._panInertia = computedEaseOptions.panInertia;
+            }
             extendDuration(easeOptions, result);
         }
 

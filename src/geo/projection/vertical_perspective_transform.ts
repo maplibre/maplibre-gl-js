@@ -1,4 +1,4 @@
-import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
+import {type mat2, mat4, vec3, vec4, quat} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat';
 import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce} from '../../util/util';
@@ -668,101 +668,131 @@ export class VerticalPerspectiveTransform implements ITransform {
      * Note: automatically adjusts zoom to keep planet size consistent
      * (same size before and after a {@link setLocationAtPoint} call).
      */
-    setLocationAtPoint(lnglat: LngLat, point: Point): void {
+    setLocationAtPoint(lngLat: LngLat, point: Point, fixedBearing = true): void {
         // This returns some fake coordinates for pixels that do not lie on the planet.
         // Whatever uses this `setLocationAtPoint` function will need to account for that.
         const pointLngLat = this.unprojectScreenPoint(point);
         const vecToPixelCurrent = angularCoordinatesToSurfaceVector(pointLngLat);
-        const vecToTarget = angularCoordinatesToSurfaceVector(lnglat);
+        const vecToTarget = angularCoordinatesToSurfaceVector(lngLat);
 
-        const zero = createVec3f64();
-        vec3.zero(zero);
+        if (fixedBearing) {
+            const zero = createVec3f64();
+            vec3.zero(zero);
 
-        const rotatedPixelVector = createVec3f64();
-        vec3.rotateY(rotatedPixelVector, vecToPixelCurrent, zero, -this.center.lng * Math.PI / 180.0);
-        vec3.rotateX(rotatedPixelVector, rotatedPixelVector, zero, this.center.lat * Math.PI / 180.0);
+            const rotatedPixelVector = createVec3f64();
+            vec3.rotateY(rotatedPixelVector, vecToPixelCurrent, zero, -this.center.lng * Math.PI / 180.0);
+            vec3.rotateX(rotatedPixelVector, rotatedPixelVector, zero, this.center.lat * Math.PI / 180.0);
 
-        // We are looking for the lng,lat that will rotate `vecToTarget`
-        // so that it is equal to `rotatedPixelVector`.
+            // We are looking for the lng,lat that will rotate `vecToTarget`
+            // so that it is equal to `rotatedPixelVector`.
 
-        // The second rotation around X axis cannot change the X component,
-        // so we first must find the longitude such that rotating `vecToTarget` with it
-        // will place it so its X component is equal to X component of `rotatedPixelVector`.
-        // There will exist zero, one or two longitudes that satisfy this.
+            // The second rotation around X axis cannot change the X component,
+            // so we first must find the longitude such that rotating `vecToTarget` with it
+            // will place it so its X component is equal to X component of `rotatedPixelVector`.
+            // There will exist zero, one or two longitudes that satisfy this.
 
-        //      x  |
-        //     /   |
-        //    /    | the line is the target X - rotatedPixelVector.x
-        //   /     | the x is vecToTarget projected to x,z plane
-        //  .      | the dot is origin
-        //
-        // We need to rotate vecToTarget so that it intersects the line.
-        // If vecToTarget is shorter than the distance to the line from origin, it is impossible.
+            //      x  |
+            //     /   |
+            //    /    | the line is the target X - rotatedPixelVector.x
+            //   /     | the x is vecToTarget projected to x,z plane
+            //  .      | the dot is origin
+            //
+            // We need to rotate vecToTarget so that it intersects the line.
+            // If vecToTarget is shorter than the distance to the line from origin, it is impossible.
 
-        // Otherwise, we compute the intersection of the line with a ring with radius equal to
-        // length of vecToTarget projected to XZ plane.
+            // Otherwise, we compute the intersection of the line with a ring with radius equal to
+            // length of vecToTarget projected to XZ plane.
 
-        const vecToTargetXZLengthSquared = vecToTarget[0] * vecToTarget[0] + vecToTarget[2] * vecToTarget[2];
-        const targetXSquared = rotatedPixelVector[0] * rotatedPixelVector[0];
-        if (vecToTargetXZLengthSquared < targetXSquared) {
-            // Zero solutions - setLocationAtPoint is impossible.
-            return;
-        }
+            const vecToTargetXZLengthSquared = vecToTarget[0] * vecToTarget[0] + vecToTarget[2] * vecToTarget[2];
+            const targetXSquared = rotatedPixelVector[0] * rotatedPixelVector[0];
+            if (vecToTargetXZLengthSquared < targetXSquared) {
+                // Zero solutions - setLocationAtPoint is impossible.
+                return;
+            }
 
-        // The intersection's Z coordinates
-        const intersectionA = Math.sqrt(vecToTargetXZLengthSquared - targetXSquared);
-        const intersectionB = -intersectionA; // the second solution
+            // The intersection's Z coordinates
+            const intersectionA = Math.sqrt(vecToTargetXZLengthSquared - targetXSquared);
+            const intersectionB = -intersectionA; // the second solution
 
-        const lngA = angleToRotateBetweenVectors2D(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionA);
-        const lngB = angleToRotateBetweenVectors2D(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionB);
+            const lngA = angleToRotateBetweenVectors2D(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionA);
+            const lngB = angleToRotateBetweenVectors2D(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionB);
 
-        const vecToTargetLngA = createVec3f64();
-        vec3.rotateY(vecToTargetLngA, vecToTarget, zero, -lngA);
-        const latA = angleToRotateBetweenVectors2D(vecToTargetLngA[1], vecToTargetLngA[2], rotatedPixelVector[1], rotatedPixelVector[2]);
-        const vecToTargetLngB = createVec3f64();
-        vec3.rotateY(vecToTargetLngB, vecToTarget, zero, -lngB);
-        const latB = angleToRotateBetweenVectors2D(vecToTargetLngB[1], vecToTargetLngB[2], rotatedPixelVector[1], rotatedPixelVector[2]);
-        // Is at least one of the needed latitudes valid?
+            const vecToTargetLngA = createVec3f64();
+            vec3.rotateY(vecToTargetLngA, vecToTarget, zero, -lngA);
+            const latA = angleToRotateBetweenVectors2D(vecToTargetLngA[1], vecToTargetLngA[2], rotatedPixelVector[1], rotatedPixelVector[2]);
+            const vecToTargetLngB = createVec3f64();
+            vec3.rotateY(vecToTargetLngB, vecToTarget, zero, -lngB);
+            const latB = angleToRotateBetweenVectors2D(vecToTargetLngB[1], vecToTargetLngB[2], rotatedPixelVector[1], rotatedPixelVector[2]);
+            // Is at least one of the needed latitudes valid?
 
-        const limit = Math.PI * 0.5;
+            const limit = Math.PI * 0.5;
 
-        const isValidA = latA >= -limit && latA <= limit;
-        const isValidB = latB >= -limit && latB <= limit;
+            const isValidA = latA >= -limit && latA <= limit;
+            const isValidB = latB >= -limit && latB <= limit;
 
-        let validLng: number;
-        let validLat: number;
-        if (isValidA && isValidB) {
-            // Pick the solution that is closer to current map center.
-            const centerLngRadians = this.center.lng * Math.PI / 180.0;
-            const centerLatRadians = this.center.lat * Math.PI / 180.0;
-            const lngDistA = distanceOfAnglesRadians(lngA, centerLngRadians);
-            const latDistA = distanceOfAnglesRadians(latA, centerLatRadians);
-            const lngDistB = distanceOfAnglesRadians(lngB, centerLngRadians);
-            const latDistB = distanceOfAnglesRadians(latB, centerLatRadians);
+            let validLng: number;
+            let validLat: number;
+            if (isValidA && isValidB) {
+                // Pick the solution that is closer to current map center.
+                const centerLngRadians = this.center.lng * Math.PI / 180.0;
+                const centerLatRadians = this.center.lat * Math.PI / 180.0;
+                const lngDistA = distanceOfAnglesRadians(lngA, centerLngRadians);
+                const latDistA = distanceOfAnglesRadians(latA, centerLatRadians);
+                const lngDistB = distanceOfAnglesRadians(lngB, centerLngRadians);
+                const latDistB = distanceOfAnglesRadians(latB, centerLatRadians);
 
-            if ((lngDistA + latDistA) < (lngDistB + latDistB)) {
+                if ((lngDistA + latDistA) < (lngDistB + latDistB)) {
+                    validLng = lngA;
+                    validLat = latA;
+                } else {
+                    validLng = lngB;
+                    validLat = latB;
+                }
+            } else if (isValidA) {
                 validLng = lngA;
                 validLat = latA;
-            } else {
+            } else if (isValidB) {
                 validLng = lngB;
                 validLat = latB;
+            } else {
+                // No solution.
+                return;
             }
-        } else if (isValidA) {
-            validLng = lngA;
-            validLat = latA;
-        } else if (isValidB) {
-            validLng = lngB;
-            validLat = latB;
-        } else {
-            // No solution.
-            return;
-        }
 
-        const newLng = validLng / Math.PI * 180;
-        const newLat = validLat / Math.PI * 180;
-        const oldLat = this.center.lat;
-        this.setCenter(new LngLat(newLng, clamp(newLat, -90, 90)));
-        this.setZoom(this.zoom + getZoomAdjustment(oldLat, this.center.lat));
+            const newLng = validLng / Math.PI * 180;
+            const newLat = validLat / Math.PI * 180;
+            const oldLat = this.center.lat;
+            this.setCenter(new LngLat(newLng, clamp(newLat, -90, 90)));
+            this.setZoom(this.zoom + getZoomAdjustment(oldLat, this.center.lat));
+        } else {
+            // Quaternion-based rotation that also changes bearing, enabling
+            // smooth panning near poles where the fixed-bearing approach breaks down.
+            const centerQuat = quat.fromEuler(createVec4f64(), -this.center.lng, -this.center.lat, this.bearing);
+
+            // Calculate the quaternion rotation that brings the source point to the target point
+            const w = vec3.cross(createVec3f64(), vecToTarget, vecToPixelCurrent);
+            const l = Math.sqrt(vec3.dot(w, w));
+            const t = Math.acos(Math.max(-1, Math.min(1, vec3.dot(vecToTarget, vecToPixelCurrent)))) / 2;
+            const s = Math.sin(t);
+
+            const delta = l ? quat.fromValues((w[1] / l) * s, (-w[0] / l) * s, (w[2] / l) * s, Math.cos(t)) : quat.fromValues(0, 0, 0, 1);
+
+            const newCenterQuat = quat.multiply(createVec4f64(), centerQuat, delta);
+            const [b, c, d, a] = newCenterQuat;
+
+            const newCenterLng = -(Math.atan2(2 * (a * b + c * d), 1 - 2 * (b * b + c * c)) * 180) / Math.PI;
+            const newCenterLat = -(Math.asin(Math.max(-1, Math.min(1, 2 * (a * c - d * b)))) * 180) / Math.PI;
+            const newBearing = (Math.atan2(2 * (a * d + b * c), 1 - 2 * (c * c + d * d)) * 180) / Math.PI;
+
+            if (isNaN(newCenterLng) || isNaN(newCenterLat) || isNaN(newBearing)) {
+                return;
+            }
+
+            const oldLat = this.center.lat;
+            this.setCenter(new LngLat(newCenterLng, clamp(newCenterLat, -90, 90)));
+            this.setBearing(newBearing);
+            this.setZoom(this.zoom + getZoomAdjustment(oldLat, this.center.lat));
+        }
     }
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
