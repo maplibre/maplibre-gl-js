@@ -537,23 +537,32 @@ describe('TileManager / Source lifecycle', () => {
     test('ignores content events after abortPendingTileRequests until metadata arrives', () => {
         const tileManager = createTileManager({});
         const abortAllSpy = vi.spyOn(tileManager, 'abortAllRequests');
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+
+        tileManager.onAdd(undefined);
+        tileManager.update(transform);
+
         const reloadSpy = vi.spyOn(tileManager, 'reload').mockImplementation(() => {});
-        const updateSpy = vi.spyOn(tileManager, 'update').mockImplementation(() => undefined as any);
+        const updateSpy = vi.spyOn(tileManager, 'update').mockImplementation(() => {});
 
-        tileManager._sourceLoaded = true;
-        tileManager._paused = false;
-        tileManager.transform = new MercatorTransform() as any;
-
-        (tileManager as any)._dataHandler({dataType: 'source', abortPendingTileRequests: true});
+        tileManager.getSource().fire(new Event('data', {dataType: 'source', abortPendingTileRequests: true}));
         expect(abortAllSpy).toHaveBeenCalledTimes(1);
-        expect(tileManager._sourceLoaded).toBe(false);
 
-        (tileManager as any)._dataHandler({dataType: 'source', sourceDataType: 'content', sourceDataChanged: true});
+        tileManager.getSource().fire(new Event('data', {
+            dataType: 'source',
+            sourceDataType: 'content',
+            sourceDataChanged: true
+        }));
         expect(reloadSpy).toHaveBeenCalledTimes(0);
         expect(updateSpy).toHaveBeenCalledTimes(0);
 
-        (tileManager as any)._dataHandler({dataType: 'source', sourceDataType: 'metadata'});
-        (tileManager as any)._dataHandler({dataType: 'source', sourceDataType: 'content', sourceDataChanged: true});
+        tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
+        tileManager.getSource().fire(new Event('data', {
+            dataType: 'source',
+            sourceDataType: 'content',
+            sourceDataChanged: true
+        }));
 
         expect(reloadSpy).toHaveBeenCalledTimes(1);
         expect(updateSpy).toHaveBeenCalledTimes(1);
@@ -561,20 +570,22 @@ describe('TileManager / Source lifecycle', () => {
 
     test('forwards sourceDataChanged and shouldReloadTileOptions to reload', () => {
         const tileManager = createTileManager({});
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+
+        tileManager.onAdd(undefined);
+        tileManager.update(transform);
+
         const reloadSpy = vi.spyOn(tileManager, 'reload').mockImplementation(() => {});
-        const updateSpy = vi.spyOn(tileManager, 'update').mockImplementation(() => undefined as any);
+        const updateSpy = vi.spyOn(tileManager, 'update').mockImplementation(() => {});
         const shouldReloadTileOptions = {affectedBounds: [{_sw: {lng: 0, lat: 0}, _ne: {lng: 1, lat: 1}}]};
 
-        tileManager._sourceLoaded = true;
-        tileManager._paused = false;
-        tileManager.transform = new MercatorTransform() as any;
-
-        (tileManager as any)._dataHandler({
+        tileManager.getSource().fire(new Event('data', {
             dataType: 'source',
             sourceDataType: 'content',
             sourceDataChanged: true,
             shouldReloadTileOptions
-        });
+        }));
 
         expect(reloadSpy).toHaveBeenCalledTimes(1);
         expect(reloadSpy).toHaveBeenCalledWith(true, shouldReloadTileOptions);
