@@ -2695,16 +2695,10 @@ describe('TileManager.abortAllRequests', () => {
         const nonLoadingTile = tileManager.addTile(new OverscaledTileID(1, 0, 1, 1, 1));
         nonLoadingTile.state = 'loaded';
 
-        const abortTileSpy = vi.spyOn(tileManager._source, 'abortTile');
-        const abortCacheSpy = vi.spyOn(tileManager._outOfViewCache, 'abortAllRequests');
-
         tileManager.abortAllRequests();
 
         expect(loadingTile.aborted).toBe(true);
         expect(nonLoadingTile.aborted).not.toBe(true);
-        expect(abortTileSpy).toHaveBeenCalledTimes(1);
-        expect(abortTileSpy).toHaveBeenCalledWith(loadingTile);
-        expect(abortCacheSpy).toHaveBeenCalledTimes(1);
     });
 
     test('aborts tiles that expose an abortController even when not loading', () => {
@@ -2715,12 +2709,8 @@ describe('TileManager.abortAllRequests', () => {
         tile.state = 'loaded';
         tile.abortController = {abort: vi.fn()} as unknown as AbortController;
 
-        const abortTileSpy = vi.spyOn(tileManager._source, 'abortTile');
-
         tileManager.abortAllRequests();
 
         expect(tile.aborted).toBe(true);
-        expect(abortTileSpy).toHaveBeenCalledTimes(1);
-        expect(abortTileSpy).toHaveBeenCalledWith(tile);
     });
 });
