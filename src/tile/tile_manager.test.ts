@@ -536,26 +536,27 @@ describe('TileManager / Source lifecycle', () => {
 
     test('ignores content events after abortPendingTileRequests until metadata arrives', () => {
         const tileManager = createTileManager({});
-        const abortAllSpy = vi.spyOn(tileManager, 'abortAllRequests');
+        const loadTileSpy = vi.fn(async (tile: Tile) => {
+            tile.state = 'loaded';
+        });
+        tileManager.getSource().loadTile = loadTileSpy;
         const transform = new MercatorTransform();
         transform.resize(512, 512);
+        transform.setZoom(0);
 
         tileManager.onAdd(undefined);
         tileManager.update(transform);
-
-        const reloadSpy = vi.spyOn(tileManager, 'reload').mockImplementation(() => {});
-        const updateSpy = vi.spyOn(tileManager, 'update').mockImplementation(() => {});
+        const loadCountAfterInitialUpdate = loadTileSpy.mock.calls.length;
 
         tileManager.getSource().fire(new Event('data', {dataType: 'source', abortPendingTileRequests: true}));
-        expect(abortAllSpy).toHaveBeenCalledTimes(1);
+        expect(tileManager.loaded()).toBe(false);
 
         tileManager.getSource().fire(new Event('data', {
             dataType: 'source',
             sourceDataType: 'content',
             sourceDataChanged: true
         }));
-        expect(reloadSpy).toHaveBeenCalledTimes(0);
-        expect(updateSpy).toHaveBeenCalledTimes(0);
+        expect(loadTileSpy).toHaveBeenCalledTimes(loadCountAfterInitialUpdate);
 
         tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
         tileManager.getSource().fire(new Event('data', {
@@ -564,20 +565,24 @@ describe('TileManager / Source lifecycle', () => {
             sourceDataChanged: true
         }));
 
-        expect(reloadSpy).toHaveBeenCalledTimes(1);
-        expect(updateSpy).toHaveBeenCalledTimes(1);
+        expect(loadTileSpy.mock.calls.length).toBeGreaterThan(loadCountAfterInitialUpdate);
     });
 
     test('forwards sourceDataChanged and shouldReloadTileOptions to reload', () => {
         const tileManager = createTileManager({});
+        const loadTileSpy = vi.fn(async (tile: Tile) => {
+            tile.state = 'loaded';
+        });
+        const shouldReloadTileSpy = vi.fn(() => true);
+        tileManager.getSource().loadTile = loadTileSpy;
+        tileManager.getSource().shouldReloadTile = shouldReloadTileSpy;
         const transform = new MercatorTransform();
         transform.resize(512, 512);
+        transform.setZoom(0);
 
         tileManager.onAdd(undefined);
         tileManager.update(transform);
-
-        const reloadSpy = vi.spyOn(tileManager, 'reload').mockImplementation(() => {});
-        const updateSpy = vi.spyOn(tileManager, 'update').mockImplementation(() => {});
+        const loadCountBeforeContentEvent = loadTileSpy.mock.calls.length;
         const shouldReloadTileOptions = {affectedBounds: [{_sw: {lng: 0, lat: 0}, _ne: {lng: 1, lat: 1}}]};
 
         tileManager.getSource().fire(new Event('data', {
@@ -587,9 +592,9 @@ describe('TileManager / Source lifecycle', () => {
             shouldReloadTileOptions
         }));
 
-        expect(reloadSpy).toHaveBeenCalledTimes(1);
-        expect(reloadSpy).toHaveBeenCalledWith(true, shouldReloadTileOptions);
-        expect(updateSpy).toHaveBeenCalledTimes(1);
+        expect(shouldReloadTileSpy).toHaveBeenCalled();
+        expect(shouldReloadTileSpy.mock.calls[0][1]).toEqual(shouldReloadTileOptions);
+        expect(loadTileSpy.mock.calls.length).toBeGreaterThan(loadCountBeforeContentEvent);
     });
 
     test('reloads tiles after a data event where source is updated', () => {
