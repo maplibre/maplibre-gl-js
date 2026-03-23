@@ -25,7 +25,7 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
         return;
     }
 
-    const {isRenderingToTexture} = renderOptions;
+    const {isRenderingToTexture, isRenderingGlobe} = renderOptions;
     const colorMode = painter.colorModeForRenderPass();
     const pattern = layer.paint.get('fill-pattern');
     const pass = painter.opaquePassEnabledForLayer() &&
@@ -37,7 +37,13 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
     if (painter.renderPass === pass) {
         const depthMode = painter.getDepthModeForSublayer(
             1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
-        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
+        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, isRenderingToTexture, isRenderingGlobe);
+
+        // For globe projection, the fill pass uses overdraw prevention on antimeridian tiles,
+        // which corrupts their stencil values. Restore them before the outline pass.
+        if (isRenderingGlobe) {
+            painter.restoreAntimeridianClippingMasks(coords, isRenderingToTexture);
+        }
     }
 
     // Draw stroke
@@ -53,7 +59,13 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
         // the (non-antialiased) fill.
         const depthMode = painter.getDepthModeForSublayer(
             layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
-        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
+
+        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, true, isRenderingToTexture, isRenderingGlobe);
+
+        // Restore masks after outline pass for subsequent layers
+        if (isRenderingGlobe) {
+            painter.restoreAntimeridianClippingMasks(coords, isRenderingToTexture);
+        }
     }
 }
 
@@ -65,7 +77,8 @@ function drawFillTiles(
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
     isOutline: boolean,
-    isRenderingToTexture: boolean) {
+    isRenderingToTexture: boolean,
+    isRenderingGlobe: boolean) {
     const gl = painter.context.gl;
     const fillPropertyName = 'fill-pattern';
     const patternProperty = layer.paint.get(fillPropertyName);
@@ -128,7 +141,16 @@ function drawFillTiles(
                 fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
         }
 
-        const stencil = painter.stencilModeForClipping(coord);
+        // For globe projection, tiles at the antimeridian (x=0 or x=2^z-1) share the same
+        // clipping mask ID to allow their overlapping geometry to be drawn. For fills,
+        // we need to prevent double-drawing at the seam using overdraw prevention.
+        const isAtAntimeridian = isRenderingGlobe && (
+            coord.canonical.x === 0 ||
+            coord.canonical.x === (1 << coord.canonical.z) - 1
+        );
+        const stencil = isAtAntimeridian
+            ? painter.stencilModeForClippingWithOverdrawPrevention(coord)
+            : painter.stencilModeForClipping(coord);
 
         program.draw(painter.context, drawMode, depthMode,
             stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData,
