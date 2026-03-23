@@ -14,6 +14,7 @@ export class TapDragZoomHandler implements Handler {
     _tapTime: number;
     _tapPoint: Point;
     _tap: TapRecognizer;
+    _tapDragZoomSpeed: number;
 
     constructor() {
 
@@ -21,7 +22,7 @@ export class TapDragZoomHandler implements Handler {
             numTouches: 1,
             numTaps: 1
         });
-
+        this._tapDragZoomSpeed = 1;
         this.reset();
     }
 
@@ -70,7 +71,7 @@ export class TapDragZoomHandler implements Handler {
             this._active = true;
 
             return {
-                zoomDelta: dist / 128
+                zoomDelta: (dist / 128) * this._tapDragZoomSpeed
             };
         }
     }
@@ -108,5 +109,18 @@ export class TapDragZoomHandler implements Handler {
 
     isActive() {
         return this._active;
+    }
+
+    /**
+    * Modify the speed of tap drag zoom
+    * @param zoomSpeedRatio - 1 The ratio used to multiply zoom delta value (resulting in speed changes).
+    * @example
+    * Speed up tap drag zoom
+    * ```ts
+    * map.touchZoomRotate._tapDragZoom.setZoomSpeed(1.25);
+    * ```
+    */
+    setZoomSpeed(zoomSpeedRatio: number) {
+        this._tapDragZoomSpeed = zoomSpeedRatio;
     }
 }

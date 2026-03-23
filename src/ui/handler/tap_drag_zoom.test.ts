@@ -112,4 +112,52 @@ describe('tap_drag_zoom', () => {
         expect(zoom).not.toHaveBeenCalled();
         expect(zoomend).not.toHaveBeenCalled();
     });
+
+    test('TwoFingersTouchZoomRotateHandler applies zoom speed multiplier', () => {
+        const map = createMap();
+        const target = map.getCanvas();
+
+        const pointTouchOptions = {
+            touches: [{target: target, clientX: 100, clientY: 100}]
+        };
+
+        simulate.touchstart(target, pointTouchOptions);
+        simulate.touchend(target);
+        simulate.touchstart(target, pointTouchOptions);
+        map._renderTaskQueue.run();
+
+        simulate.touchmove(target, {
+            touches: [{target: target, clientX: 100, clientY: 110}]
+        });
+        map._renderTaskQueue.run();
+
+        const zoomNormal = map.getZoom();
+
+        map.remove();
+
+        const map2 = createMap();
+        const target2 = map2.getCanvas();
+
+        map2.touchZoomRotate._tapDragZoom.setZoomSpeed(2);
+
+        const pointTouchOptions2 = {
+            touches: [{target: target2, clientX: 100, clientY: 100}]
+        };
+
+        simulate.touchstart(target2, pointTouchOptions2);
+        simulate.touchend(target2);
+        simulate.touchstart(target2, pointTouchOptions2);
+        map2._renderTaskQueue.run();
+
+        simulate.touchmove(target2, {
+            touches: [{target: target2, clientX: 100, clientY: 110}]
+        });
+        map2._renderTaskQueue.run();
+
+        const zoomFaster = map2.getZoom();
+
+        expect(zoomFaster).toBeGreaterThan(zoomNormal);
+
+        map2.remove();
+    });
 });

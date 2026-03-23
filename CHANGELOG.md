@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+- Add `_twoFingersZoomSpeed` & `_tapDragZoomSpeed` properties and expose methods to change it to control zoom speed. Add `_zoomThreshold` and relevant method to control sensitivity to pinch move that trigger zoom ([#7271](https://github.com/maplibre/maplibre-gl-js/issues/7271))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._

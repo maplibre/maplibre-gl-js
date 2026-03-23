@@ -25,10 +25,14 @@ abstract class TwoFingersTouchHandler implements Handler {
     _vector?: Point;
     _startVector?: Point;
     _aroundCenter?: boolean;
+    _twoFingersZoomSpeed?: number;
+    _zoomThreshold?: number;
 
     /** @internal */
     constructor() {
         this.reset();
+        this._twoFingersZoomSpeed = 1;
+        this._zoomThreshold = 0.1;
     }
 
     reset(): void {
@@ -127,6 +131,32 @@ abstract class TwoFingersTouchHandler implements Handler {
     isActive(): boolean {
         return !!this._active;
     }
+
+    /**
+    * Modify the speed of two fingers touch zoom
+    * @param zoomSpeedRatio - 1 The ratio used to multiply two fingers zoom delta value (resulting in speed changes).
+    * @example
+    * Speed up two fingers zoom
+    * ```ts
+    * map.touchZoomRotate._touchZoom.setZoomSpeed(1.25);
+    * ```
+    */
+    setZoomSpeed(zoomSpeedRatio: number) {
+        this._twoFingersZoomSpeed = zoomSpeedRatio;
+    }
+
+    /**
+    * Modify the threshold to trigger two fingers zoom
+    * @param zoomThreshold - 0.1 The threshold value used to trigger two fingers zoom interaction depending on pinch move size.
+    * @example
+    * Increaze the two fingers zoom trigger threshold (a wider pinch gesture will be required to trigger the interaction)
+    * ```ts
+    * map.touchZoomRotate._touchZoom.setZoomThreshold(0.3);
+    * ```
+    */
+    setZoomThreshold(zoomThreshold: number) {
+        this._zoomThreshold = zoomThreshold;
+    }
 }
 
 function getTouchById(mapTouches: Array<Touch>, points: Array<Point>, identifier: number): Point | undefined {
@@ -137,8 +167,6 @@ function getTouchById(mapTouches: Array<Touch>, points: Array<Point>, identifier
 }
 
 /* ZOOM */
-
-const ZOOM_THRESHOLD = 0.1;
 
 function getZoomDelta(distance: number, lastDistance: number): number {
     return Math.log(distance / lastDistance) / Math.LN2;
@@ -167,10 +195,10 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
     _move(points: [Point, Point], pinchAround: Point | null): HandlerResult | void {
         const lastDistance = this._distance!;
         this._distance = points[0].dist(points[1]);
-        if (!this._active && Math.abs(getZoomDelta(this._distance, this._startDistance!)) < ZOOM_THRESHOLD) return;
+        if (!this._active && Math.abs(getZoomDelta(this._distance, this._startDistance!)) < this._zoomThreshold) return;
         this._active = true;
         return {
-            zoomDelta: getZoomDelta(this._distance, lastDistance),
+            zoomDelta: (getZoomDelta(this._distance, lastDistance)) * this._twoFingersZoomSpeed,
             pinchAround
         };
     }
