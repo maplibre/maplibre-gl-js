@@ -593,7 +593,7 @@ describe('TileManager / Source lifecycle', () => {
         }));
 
         expect(shouldReloadTileSpy).toHaveBeenCalled();
-        expect(shouldReloadTileSpy.mock.calls[0][1]).toEqual(shouldReloadTileOptions);
+        expect(shouldReloadTileSpy).toHaveBeenCalledWith(expect.any(Tile), shouldReloadTileOptions);
         expect(loadTileSpy.mock.calls.length).toBeGreaterThan(loadCountBeforeContentEvent);
     });
 
