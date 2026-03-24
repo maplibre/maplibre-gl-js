@@ -331,7 +331,8 @@ export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONPar
     const options = extend(params.geojsonVtOptions || {}, {
         updateable: true,
         cluster: params.cluster,
-        clusterOptions: getSuperclusterOptions(params)
+        clusterOptions: getSuperclusterOptions(params),
+        promoteId: params.promoteId
     });
 
     return new GeoJSONVT(data, options);
