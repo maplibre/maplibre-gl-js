@@ -1,6 +1,5 @@
 import Point from '@mapbox/point-geometry';
 
-import {DOM} from '../../util/dom';
 import {type DragMoveHandler, type DragPanResult, type DragRotateResult, type DragPitchResult, DragHandler, type DragRollResult} from './drag_handler';
 import {MouseMoveStateManager} from './drag_move_state_manager';
 import {getAngleDelta} from '../../util/util';
@@ -39,7 +38,7 @@ export function generateMousePanHandler({enable, clickTolerance}: {
     enable?: boolean;
 }): MousePanHandler {
     const mouseMoveStateManager = new MouseMoveStateManager({
-        checkCorrectEvent: (e: MouseEvent) => DOM.mouseButton(e) === LEFT_BUTTON && !e.ctrlKey,
+        checkCorrectEvent: (e: MouseEvent) => e.button === LEFT_BUTTON && !e.ctrlKey,
     });
     return new DragHandler<DragPanResult, MouseEvent>({
         clickTolerance,
@@ -61,8 +60,8 @@ export function generateMouseRotationHandler({enable, clickTolerance, aroundCent
 }, getCenter: () => Point): MouseRotateHandler {
     const mouseMoveStateManager = new MouseMoveStateManager({
         checkCorrectEvent: (e: MouseEvent): boolean =>
-            (DOM.mouseButton(e) === LEFT_BUTTON && e.ctrlKey) ||
-            (DOM.mouseButton(e) === RIGHT_BUTTON && !e.ctrlKey),
+            (e.button === LEFT_BUTTON && e.ctrlKey) ||
+            (e.button === RIGHT_BUTTON && !e.ctrlKey),
     });
     return new DragHandler<DragRotateResult, MouseEvent>({
         clickTolerance,
@@ -93,8 +92,8 @@ export function generateMousePitchHandler({enable, clickTolerance, pitchDegreesP
 }): MousePitchHandler {
     const mouseMoveStateManager = new MouseMoveStateManager({
         checkCorrectEvent: (e: MouseEvent): boolean =>
-            (DOM.mouseButton(e) === LEFT_BUTTON && e.ctrlKey) ||
-            (DOM.mouseButton(e) === RIGHT_BUTTON),
+            (e.button === LEFT_BUTTON && e.ctrlKey) ||
+            (e.button === RIGHT_BUTTON),
     });
     return new DragHandler<DragPitchResult, MouseEvent>({
         clickTolerance,
@@ -115,7 +114,7 @@ export function generateMouseRollHandler({enable, clickTolerance, rollDegreesPer
 }, getCenter: () => Point): MouseRollHandler {
     const mouseMoveStateManager = new MouseMoveStateManager({
         checkCorrectEvent: (e: MouseEvent): boolean =>
-            (DOM.mouseButton(e) === RIGHT_BUTTON && e.ctrlKey),
+            (e.button === RIGHT_BUTTON && e.ctrlKey),
     });
     return new DragHandler<DragRollResult, MouseEvent>({
         clickTolerance,

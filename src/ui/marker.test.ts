@@ -805,7 +805,29 @@ describe('marker', () => {
         el.click();
 
         expect(clickSpy).toHaveBeenCalledTimes(1);
-        
+
+        map.remove();
+    });
+
+    test('Marker removes click listener on remove()', () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+        const el = marker.getElement();
+
+        const clickSpy = vi.fn();
+        marker.on('click', clickSpy);
+
+        el.click();
+        expect(clickSpy).toHaveBeenCalledTimes(1);
+
+        marker.remove();
+
+        // After remove(), clicking the element should not fire the marker's click event
+        el.click();
+        expect(clickSpy).toHaveBeenCalledTimes(1);
+
         map.remove();
     });
 

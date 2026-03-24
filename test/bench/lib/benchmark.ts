@@ -1,3 +1,5 @@
+import type {Map} from "../../../src/ui/map"
+
 // According to https://developer.mozilla.org/en-US/docs/Web/API/Performance/now,
 // performance.now() should be accurate to 0.005ms. Set the minimum running
 // time for a single measurement at 5ms, so that the error due to timer
@@ -118,6 +120,20 @@ class Benchmark {
     private async _end(): Promise<Array<Measurement>> {
         await this.teardown();
         return this._measurements;
+    }
+
+    /*
+     * Force the GPU to finish all pending work and sync with the CPU.
+     * Used for benchmarking.
+     * gl.finish() alone doesn't guarantee a full pipeline flush on all
+     * configurations (e.g. SwiftShader), so we also read a pixel to
+     * force the driver to complete all rendering.
+     */
+    public static renderMap(map: Map, paintStartTimeStamp?: number) {
+        map._render(paintStartTimeStamp);
+        const gl = map.painter.context.gl;
+        gl.finish();
+        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
     }
 }
 

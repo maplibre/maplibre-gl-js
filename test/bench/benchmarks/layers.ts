@@ -36,7 +36,7 @@ export class LayerBenchmark extends Benchmark {
     }
 
     bench() {
-        this.map._render();
+        Benchmark.renderMap(this.map);
     }
 
     teardown() {

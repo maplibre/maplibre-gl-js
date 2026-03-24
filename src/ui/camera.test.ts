@@ -2047,7 +2047,7 @@ describe('flyTo', () => {
         const stub = vi.spyOn(timeControl, 'now');
 
         const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
-        camera.terrain = {} as Terrain;
+        camera.terrain = {getElevationForLngLatZoom: () => 0} as any as Terrain;
         camera._prepareElevation = () => { terrainCallbacks.prepare++; };
         camera._updateElevation = () => { terrainCallbacks.update++; };
         camera._finalizeElevation = () => { terrainCallbacks.finalize++; };
@@ -2071,7 +2071,7 @@ describe('flyTo', () => {
         const stub = vi.spyOn(timeControl, 'now');
 
         const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
-        camera.terrain = {} as Terrain;
+        camera.terrain = {getElevationForLngLatZoom: () => 0} as any as Terrain;
         camera._prepareElevation = () => { terrainCallbacks.prepare++; };
         camera._updateElevation = () => { terrainCallbacks.update++; };
         camera._finalizeElevation = () => { terrainCallbacks.finalize++; };

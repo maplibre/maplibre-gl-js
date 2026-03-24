@@ -27,7 +27,7 @@ export class IndexBuffer {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, array.arrayBuffer, this.dynamicDraw ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
 
         if (!this.dynamicDraw) {
-            delete array.arrayBuffer;
+            array.freeBufferAfterUpload();
         }
     }
 

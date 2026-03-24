@@ -29,9 +29,7 @@ describe('Map cross-window support', () => {
         });
 
         afterEach(() => {
-            if (iframe && iframe.parentNode) {
-                iframe.parentNode.removeChild(iframe);
-            }
+            iframe?.remove();
         });
 
         test('initializes with cross-window container', () => {
