@@ -192,7 +192,6 @@ export class GeoJSONSource extends Evented implements Source {
         // third-party sources to hack/reuse GeoJSONSource.
         this.workerOptions = extend({
             source: this.id,
-            cluster: options.cluster || false,
             geojsonVtOptions: {
                 buffer: this._pixelsToTileUnits(options.buffer !== undefined ? options.buffer : 128),
                 tolerance: this._pixelsToTileUnits(options.tolerance !== undefined ? options.tolerance : 0.375),
@@ -201,6 +200,7 @@ export class GeoJSONSource extends Evented implements Source {
                 lineMetrics: options.lineMetrics || false,
                 generateId: options.generateId || false,
                 promoteId: typeof options.promoteId === 'string' ? options.promoteId : undefined,
+                cluster: options.cluster || false,
                 clusterOptions: {
                     maxZoom: this._getClusterMaxZoom(options.clusterMaxZoom),
                     minPoints: Math.max(2, options.clusterMinPoints || 2),
