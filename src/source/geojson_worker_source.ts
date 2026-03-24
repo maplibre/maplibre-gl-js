@@ -2,7 +2,7 @@ import {getJSON} from '../util/ajax';
 import {RequestPerformance} from '../util/performance';
 import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent';
-import {GeoJSONVT, type GeoJSONVTOptions, type SuperclusterOptions, type ClusterProperties} from '@maplibre/geojson-vt';
+import {GeoJSONVT, type GeoJSONVTOptions, type ClusterProperties} from '@maplibre/geojson-vt';
 import {createExpression, type FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error';
 import {toVirtualVectorTile} from './vector_tile_overzoomed';
@@ -23,12 +23,9 @@ import type {StyleLayerIndex} from '../style/style_layer_index';
  */
 export type GeoJSONWorkerOptions = {
     source?: string;
-    cluster?: boolean;
     geojsonVtOptions?: GeoJSONVTOptions;
-    superclusterOptions?: SuperclusterOptions;
     clusterProperties?: ClusterProperties;
     filter?: FilterSpecification;
-    promoteId?: string;
     collectResourceTiming?: boolean;
 };
 
@@ -271,7 +268,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         }
 
         if (params.updateCluster) {
-            this._geoJSONIndex.updateClusterOptions(params.cluster, getSuperclusterOptions(params));
+            this._geoJSONIndex.updateClusterOptions(params.geojsonVtOptions.cluster, getSuperclusterOptions(params));
         }
 
         if (this._geoJSONIndex == null) {
@@ -330,16 +327,14 @@ export class GeoJSONWorkerSource implements WorkerSource {
 export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONVT {
     const options = extend(params.geojsonVtOptions || {}, {
         updateable: true,
-        cluster: params.cluster,
         clusterOptions: getSuperclusterOptions(params),
-        promoteId: params.promoteId
     });
 
     return new GeoJSONVT(data, options);
 }
 
-function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
-    if (!clusterProperties || !superclusterOptions) return superclusterOptions;
+function getSuperclusterOptions({geojsonVtOptions, clusterProperties}: LoadGeoJSONParameters) {
+    if (!clusterProperties || !geojsonVtOptions.clusterOptions) return geojsonVtOptions.clusterOptions;
 
     const mapExpressions = {};
     const reduceExpressions = {};
@@ -358,7 +353,7 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGe
         reduceExpressions[key] = reduceExpressionParsed.value;
     }
 
-    superclusterOptions.map = (pointProperties) => {
+    geojsonVtOptions.clusterOptions.map = (pointProperties) => {
         feature.properties = pointProperties;
         const properties = {};
         for (const key of propertyNames) {
@@ -366,12 +361,12 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGe
         }
         return properties;
     };
-    superclusterOptions.reduce = (accumulated, clusterProperties) => {
+    geojsonVtOptions.clusterOptions.reduce = (accumulated, clusterProperties) => {
         feature.properties = clusterProperties;
         for (const key of propertyNames) {
             globals.accumulated = accumulated[key];
             accumulated[key] = reduceExpressions[key].evaluate(globals, feature);
         }
     };
-    return superclusterOptions;
+    return geojsonVtOptions.clusterOptions;
 }
