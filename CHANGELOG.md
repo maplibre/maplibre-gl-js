@@ -3,7 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Add missing `promoteId` parameter to geojson worker ([#7320](https://github.com/maplibre/maplibre-gl-js/issues/7320)) (by [@HarelM](https://github.com/HarelM))
+- Add missing `promoteId` parameter to geojson worker and refactor communication object ([#7320](https://github.com/maplibre/maplibre-gl-js/issues/7320)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 5.21.0
