@@ -304,7 +304,17 @@ describe('GeoJSONSource.update', () => {
             tolerance: 4,
             buffer: 256,
             lineMetrics: false,
-            generateId: true
+            generateId: true,
+            promoteId: undefined,
+            cluster: false,
+            clusterOptions: {
+                extent: 8192,
+                generateId: true,
+                log: false,
+                maxZoom: 9,
+                minPoints: 2,
+                radius: 800,
+            },
         });
     });
 
@@ -329,7 +339,7 @@ describe('GeoJSONSource.update', () => {
         await sleep(0);
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
-        expect(spy.mock.calls[0][0].data.superclusterOptions).toEqual({
+        expect(spy.mock.calls[0][0].data.geojsonVtOptions.clusterOptions).toEqual({
             maxZoom: 12,
             minPoints: 3,
             extent: EXTENT,
@@ -369,16 +379,16 @@ describe('GeoJSONSource.update', () => {
 
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
-        expect(spy.mock.calls[0][0].data.cluster).toBe(true);
-        expect(spy.mock.calls[0][0].data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
-        expect(spy.mock.calls[0][0].data.superclusterOptions.maxZoom).toBe(16);
+        expect(spy.mock.calls[0][0].data.geojsonVtOptions.cluster).toBe(true);
+        expect(spy.mock.calls[0][0].data.geojsonVtOptions.clusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
+        expect(spy.mock.calls[0][0].data.geojsonVtOptions.clusterOptions.maxZoom).toBe(16);
     });
 
     test('modifying cluster properties with pending data', async () => {
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
-                spy(message);
+                spy(structuredClone(message));
                 return Promise.resolve({});
             }
         });
@@ -411,17 +421,17 @@ describe('GeoJSONSource.update', () => {
 
         expect(spy).toHaveBeenCalledTimes(3);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
-        expect(spy.mock.calls[0][0].data.cluster).toBe(false);
-        expect(spy.mock.calls[0][0].data.data).toBe(sourceData1);
+        expect(spy.mock.calls[0][0].data.geojsonVtOptions.cluster).toBe(true);
+        expect(spy.mock.calls[0][0].data.data).toEqual(sourceData1);
         expect(spy.mock.calls[0][0].data.dataDiff).toBeUndefined();
-        expect(spy.mock.calls[1][0].data.cluster).toBe(true);
-        expect(spy.mock.calls[1][0].data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
-        expect(spy.mock.calls[1][0].data.superclusterOptions.maxZoom).toBe(16);
-        expect(spy.mock.calls[1][0].data.data).toBe(sourceData2);
+        expect(spy.mock.calls[1][0].data.geojsonVtOptions.cluster).toBe(true);
+        expect(spy.mock.calls[1][0].data.geojsonVtOptions.clusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
+        expect(spy.mock.calls[1][0].data.geojsonVtOptions.clusterOptions.maxZoom).toBe(16);
+        expect(spy.mock.calls[1][0].data.data).toEqual(sourceData2);
         expect(spy.mock.calls[1][0].data.dataDiff).toBeUndefined();
-        expect(spy.mock.calls[2][0].data.cluster).toBe(true);
-        expect(spy.mock.calls[2][0].data.superclusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
-        expect(spy.mock.calls[2][0].data.superclusterOptions.maxZoom).toBe(16);
+        expect(spy.mock.calls[2][0].data.geojsonVtOptions.cluster).toBe(true);
+        expect(spy.mock.calls[2][0].data.geojsonVtOptions.clusterOptions.radius).toBe(80 * EXTENT / source.tileSize);
+        expect(spy.mock.calls[2][0].data.geojsonVtOptions.clusterOptions.maxZoom).toBe(16);
         expect(spy.mock.calls[2][0].data.data).toBeUndefined();
         expect(spy.mock.calls[2][0].data.dataDiff).toBeUndefined();
     });
@@ -430,7 +440,7 @@ describe('GeoJSONSource.update', () => {
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
-                spy(message);
+                spy(structuredClone(message));
                 return Promise.resolve({});
             }
         });
@@ -467,14 +477,15 @@ describe('GeoJSONSource.update', () => {
 
         const diff = {remove: [1]};
         source.updateData(diff);
+        await sleep(0);
         source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
 
         await sleep(0);
 
         expect(spy).toHaveBeenCalledTimes(2);
-        expect(spy.mock.calls[0][0].data.cluster).toBe(false);
+        expect(spy.mock.calls[0][0].data.geojsonVtOptions.cluster).toBe(false);
         expect(spy.mock.calls[0][0].data.dataDiff).toEqual(diff);
-        expect(spy.mock.calls[1][0].data.cluster).toEqual(true);
+        expect(spy.mock.calls[1][0].data.geojsonVtOptions.cluster).toBe(true);
         expect(spy.mock.calls[1][0].data.data).not.toBeDefined();
         expect(spy.mock.calls[1][0].data.dataDiff).not.toBeDefined();
     });
@@ -502,7 +513,7 @@ describe('GeoJSONSource.update', () => {
         await sleep(0);
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
-        expect(spy.mock.calls[0][0].data.superclusterOptions).toEqual({
+        expect(spy.mock.calls[0][0].data.geojsonVtOptions.clusterOptions).toEqual({
             maxZoom: 12,
             minPoints: 3,
             extent: EXTENT,

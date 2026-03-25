@@ -192,31 +192,27 @@ export class GeoJSONSource extends Evented implements Source {
         // third-party sources to hack/reuse GeoJSONSource.
         this.workerOptions = extend({
             source: this.id,
-            cluster: options.cluster || false,
             geojsonVtOptions: {
                 buffer: this._pixelsToTileUnits(options.buffer !== undefined ? options.buffer : 128),
                 tolerance: this._pixelsToTileUnits(options.tolerance !== undefined ? options.tolerance : 0.375),
                 extent: EXTENT,
                 maxZoom: this.maxzoom,
                 lineMetrics: options.lineMetrics || false,
-                generateId: options.generateId || false
-            },
-            superclusterOptions: {
-                maxZoom: this._getClusterMaxZoom(options.clusterMaxZoom),
-                minPoints: Math.max(2, options.clusterMinPoints || 2),
-                extent: EXTENT,
-                radius: this._pixelsToTileUnits(options.clusterRadius || 50),
-                log: false,
-                generateId: options.generateId || false
+                generateId: options.generateId || false,
+                promoteId: typeof options.promoteId === 'string' ? options.promoteId : undefined,
+                cluster: options.cluster || false,
+                clusterOptions: {
+                    maxZoom: this._getClusterMaxZoom(options.clusterMaxZoom),
+                    minPoints: Math.max(2, options.clusterMinPoints || 2),
+                    extent: EXTENT,
+                    radius: this._pixelsToTileUnits(options.clusterRadius || 50),
+                    log: false,
+                    generateId: options.generateId || false
+                },
             },
             clusterProperties: options.clusterProperties,
             filter: options.filter
         }, options.workerOptions);
-
-        // send the promoteId to the worker to have more flexible updates, but only if it is a string
-        if (typeof this.promoteId === 'string') {
-            this.workerOptions.promoteId = this.promoteId;
-        }
     }
 
     private _hasPendingWorkerUpdate(): boolean {
@@ -321,12 +317,12 @@ export class GeoJSONSource extends Evented implements Source {
      * ```
      */
     setClusterOptions(options: SetClusterOptions): this {
-        this.workerOptions.cluster = options.cluster;
+        this.workerOptions.geojsonVtOptions.cluster = options.cluster;
         if (options.clusterRadius !== undefined) {
-            this.workerOptions.superclusterOptions.radius = this._pixelsToTileUnits(options.clusterRadius);
+            this.workerOptions.geojsonVtOptions.clusterOptions.radius = this._pixelsToTileUnits(options.clusterRadius);
         }
         if (options.clusterMaxZoom !== undefined) {
-            this.workerOptions.superclusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
+            this.workerOptions.geojsonVtOptions.clusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
         }
         this._pendingWorkerUpdate.updateCluster = true;
         this._updateWorkerData();
