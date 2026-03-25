@@ -2,7 +2,7 @@ import {getJSON} from '../util/ajax';
 import {RequestPerformance} from '../util/performance';
 import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent';
-import {GeoJSONVT, type GeoJSONVTOptions, type ClusterProperties} from '@maplibre/geojson-vt';
+import {GeoJSONVT, type GeoJSONVTOptions} from '@maplibre/geojson-vt';
 import {createExpression, type FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error';
 import {toVirtualVectorTile} from './vector_tile_overzoomed';
@@ -24,7 +24,7 @@ import type {StyleLayerIndex} from '../style/style_layer_index';
 export type GeoJSONWorkerOptions = {
     source?: string;
     geojsonVtOptions?: GeoJSONVTOptions;
-    clusterProperties?: ClusterProperties;
+    clusterProperties?: Record<string, [unknown, unknown]>;
     filter?: FilterSpecification;
     collectResourceTiming?: boolean;
 };
@@ -343,7 +343,7 @@ function getSuperclusterOptions({geojsonVtOptions, clusterProperties}: LoadGeoJS
     const propertyNames = Object.keys(clusterProperties);
 
     for (const key of propertyNames) {
-        const [operator, mapExpression] = clusterProperties[key] as [unknown, unknown];
+        const [operator, mapExpression] = clusterProperties[key];
 
         const mapExpressionParsed = createExpression(mapExpression);
         const reduceExpressionParsed = createExpression(

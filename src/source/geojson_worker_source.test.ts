@@ -547,14 +547,28 @@ describe('loadData', () => {
         await expect(worker.loadData({} as LoadGeoJSONParameters)).resolves.toBeDefined();
     });
 
-    test('loadData should process cluster change with no data', async () => {
+    test('loadData should process cluster change with no data and build relevant map and reduce methods', async () => {
+        const updateSpy = vi.fn();
         const mockGeoJSONIndex = {
-            updateClusterOptions: vi.fn()
+            updateClusterOptions: updateSpy
         } as any as GeoJSONVT;
         const worker = new GeoJSONWorkerSource(actor, layerIndex, [], () => mockGeoJSONIndex);
         await worker.loadData({source: 'source1', data: updateableFeatureCollection, geojsonVtOptions: {cluster: false}} as LoadGeoJSONParameters);
         expect(mockGeoJSONIndex.updateClusterOptions).not.toHaveBeenCalled();
-        await expect(worker.loadData({updateCluster: true, geojsonVtOptions: {}} as LoadGeoJSONParameters)).resolves.toBeDefined();
-        expect(mockGeoJSONIndex.updateClusterOptions).toHaveBeenCalled();
+        await expect(worker.loadData({
+            type: 'geojson',
+            updateCluster: true, 
+            geojsonVtOptions: {
+                cluster: true,
+                clusterOptions: {},
+            },
+            clusterProperties: {
+                "max": ["max", ["get", "scalerank"]],
+                "sum": ["+", ["get", "scalerank"]],
+            }
+        } as LoadGeoJSONParameters)).resolves.toBeDefined();
+        expect(updateSpy).toHaveBeenCalled();
+        expect(updateSpy.mock.calls[0][1].map).toBeInstanceOf(Function);
+        expect(updateSpy.mock.calls[0][1].reduce).toBeInstanceOf(Function);
     });
 });
