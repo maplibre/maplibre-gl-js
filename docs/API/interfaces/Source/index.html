@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.28">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -3636,7 +3636,7 @@
   <span class="md-ellipsis">
     
   
-    AddProtocolAction()
+    AddProtocolAction
   
 
     
@@ -3776,7 +3776,7 @@
   <span class="md-ellipsis">
     
   
-    BoxZoomEndHandler()
+    BoxZoomEndHandler
   
 
     
@@ -3832,7 +3832,7 @@
   <span class="md-ellipsis">
     
   
-    CalculateTileZoomFunction()
+    CalculateTileZoomFunction
   
 
     
@@ -3916,7 +3916,7 @@
   <span class="md-ellipsis">
     
   
-    CameraUpdateTransformFunction()
+    CameraUpdateTransformFunction
   
 
     
@@ -4112,7 +4112,7 @@
   <span class="md-ellipsis">
     
   
-    CustomRenderMethod()
+    CustomRenderMethod
   
 
     
@@ -4756,7 +4756,7 @@
   <span class="md-ellipsis">
     
   
-    Listener()
+    Listener
   
 
     
@@ -5624,7 +5624,7 @@
   <span class="md-ellipsis">
     
   
-    RequestTransformFunction()
+    RequestTransformFunction
   
 
     
@@ -5736,7 +5736,7 @@
   <span class="md-ellipsis">
     
   
-    SourceClass()
+    SourceClass
   
 
     
@@ -5988,7 +5988,7 @@
   <span class="md-ellipsis">
     
   
-    TransformConstrainFunction()
+    TransformConstrainFunction
   
 
     
@@ -6016,7 +6016,7 @@
   <span class="md-ellipsis">
     
   
-    TransformStyleFunction()
+    TransformStyleFunction
   
 
     
@@ -10474,7 +10474,7 @@
 
 
 <h1 id="source">Source</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L31">source/source.ts:31</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L31">source/source.ts:31</a></p>
 <p>The <code>Source</code> interface must be implemented by each source type, including "core" types (<code>vector</code>, <code>raster</code>,
 <code>video</code>, etc.) and all custom, third-party types.</p>
 <p><strong>Event</strong> <code>data</code> - Fired with <code>{dataType: 'source', sourceDataType: 'metadata'}</code> to indicate that any necessary metadata
@@ -10485,7 +10485,7 @@ to indicate that the source data has changed, so that any current caches should 
 <blockquote>
 <p><code>optional</code> <strong>abortTile</strong>(<code>tile</code>: <a href="../Tile/"><code>Tile</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L105">source/source.ts:105</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L105">source/source.ts:105</a></p>
 <p>Allows to abort a tile loading.</p>
 <h4 id="parameters">Parameters</h4>
 <table>
@@ -10511,7 +10511,7 @@ to indicate that the source data has changed, so that any current caches should 
 <blockquote>
 <p><strong>fire</strong>(<code>event</code>: <a href="../../classes/Event/"><code>Event</code></a>): <code>unknown</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L79">source/source.ts:79</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L79">source/source.ts:79</a></p>
 <p>An ability to fire an event to all the listeners, see <a href="../../classes/Evented/">Evented</a></p>
 <h4 id="parameters_1">Parameters</h4>
 <table>
@@ -10537,7 +10537,7 @@ to indicate that the source data has changed, so that any current caches should 
 <blockquote>
 <p><code>optional</code> <strong>hasTile</strong>(<code>tileID</code>: <a href="../OverscaledTileID/"><code>OverscaledTileID</code></a>): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L100">source/source.ts:100</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L100">source/source.ts:100</a></p>
 <p>True is the tile is part of the source, false otherwise.</p>
 <h4 id="parameters_2">Parameters</h4>
 <table>
@@ -10563,7 +10563,7 @@ to indicate that the source data has changed, so that any current caches should 
 <blockquote>
 <p><strong>hasTransition</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L70">source/source.ts:70</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L70">source/source.ts:70</a></p>
 <p>True if the source has transition, false otherwise.</p>
 <h4 id="returns_3">Returns</h4>
 <p><code>boolean</code></p>
@@ -10572,7 +10572,7 @@ to indicate that the source data has changed, so that any current caches should 
 <blockquote>
 <p><strong>loaded</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L74">source/source.ts:74</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L74">source/source.ts:74</a></p>
 <p>True if the source is loaded, false otherwise.</p>
 <h4 id="returns_4">Returns</h4>
 <p><code>boolean</code></p>
@@ -10581,7 +10581,7 @@ to indicate that the source data has changed, so that any current caches should 
 <blockquote>
 <p><strong>loadTile</strong>(<code>tile</code>: <a href="../Tile/"><code>Tile</code></a>): <code>Promise</code>&lt;<code>void</code> | <code>LoadTileResult</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L95">source/source.ts:95</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L95">source/source.ts:95</a></p>
 <p>This method does the heavy lifting of loading a tile.
 In most cases it will defer the work to the relevant worker source.</p>
 <h4 id="parameters_3">Parameters</h4>
@@ -10608,7 +10608,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><code>optional</code> <strong>onAdd</strong>(<code>map</code>: <a href="../../classes/Map/"><code>Map</code></a>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L84">source/source.ts:84</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L84">source/source.ts:84</a></p>
 <p>This method is called when the source is added to the map.</p>
 <h4 id="parameters_4">Parameters</h4>
 <table>
@@ -10634,7 +10634,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><code>optional</code> <strong>onRemove</strong>(<code>map</code>: <a href="../../classes/Map/"><code>Map</code></a>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L89">source/source.ts:89</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L89">source/source.ts:89</a></p>
 <p>This method is called when the source is removed from the map.</p>
 <h4 id="parameters_5">Parameters</h4>
 <table>
@@ -10660,7 +10660,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><code>optional</code> <strong>prepare</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L120">source/source.ts:120</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L120">source/source.ts:120</a></p>
 <p>Allows to execute a prepare step before the source is used.</p>
 <h4 id="returns_8">Returns</h4>
 <p><code>void</code></p>
@@ -10669,7 +10669,7 @@ In most cases it will defer the work to the relevant worker source.</p>
 <blockquote>
 <p><strong>serialize</strong>(): <code>any</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L116">source/source.ts:116</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L116">source/source.ts:116</a></p>
 <h4 id="returns_9">Returns</h4>
 <p><code>any</code></p>
 <p>A plain (stringifiable) JS object representing the current state of the source.
@@ -10680,7 +10680,7 @@ equivalent to this one.</p>
 <blockquote>
 <p><code>optional</code> <strong>unloadTile</strong>(<code>tile</code>: <a href="../Tile/"><code>Tile</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L110">source/source.ts:110</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L110">source/source.ts:110</a></p>
 <p>Allows to unload a tile.</p>
 <h4 id="parameters_6">Parameters</h4>
 <table>
@@ -10704,65 +10704,65 @@ equivalent to this one.</p>
 <h2 id="properties">Properties</h2>
 <h3 id="attribution">attribution?</h3>
 <blockquote>
-<p><code>optional</code> <strong>attribution</strong>: <code>string</code></p>
+<p><code>optional</code> <strong>attribution?</strong>: <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L52">source/source.ts:52</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L52">source/source.ts:52</a></p>
 <p>The attribution for the source.</p>
 <hr />
 <h3 id="calculatetilezoom">calculateTileZoom?</h3>
 <blockquote>
-<p><code>optional</code> <strong>calculateTileZoom</strong>: <a href="../../type-aliases/CalculateTileZoomFunction/"><code>CalculateTileZoomFunction</code></a></p>
+<p><code>optional</code> <strong>calculateTileZoom?</strong>: <a href="../../type-aliases/CalculateTileZoomFunction/"><code>CalculateTileZoomFunction</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L124">source/source.ts:124</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L124">source/source.ts:124</a></p>
 <p>Optional function to redefine how tiles are loaded at high pitch angles.</p>
 <hr />
 <h3 id="id">id</h3>
 <blockquote>
 <p><strong>id</strong>: <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L36">source/source.ts:36</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L36">source/source.ts:36</a></p>
 <p>The id for the source. Must not be used by any existing source.</p>
 <hr />
 <h3 id="istileclipped">isTileClipped?</h3>
 <blockquote>
-<p><code>optional</code> <strong>isTileClipped</strong>: <code>boolean</code></p>
+<p><code>optional</code> <strong>isTileClipped?</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L60">source/source.ts:60</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L60">source/source.ts:60</a></p>
 <p><code>false</code> if tiles can be drawn outside their boundaries, <code>true</code> if they cannot.</p>
 <hr />
 <h3 id="maxzoom">maxzoom</h3>
 <blockquote>
 <p><strong>maxzoom</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L44">source/source.ts:44</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L44">source/source.ts:44</a></p>
 <p>The maximum zoom level for the source.</p>
 <hr />
 <h3 id="minzoom">minzoom</h3>
 <blockquote>
 <p><strong>minzoom</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L40">source/source.ts:40</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L40">source/source.ts:40</a></p>
 <p>The minimum zoom level for the source.</p>
 <hr />
 <h3 id="reparseoverscaled">reparseOverscaled?</h3>
 <blockquote>
-<p><code>optional</code> <strong>reparseOverscaled</strong>: <code>boolean</code></p>
+<p><code>optional</code> <strong>reparseOverscaled?</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L65">source/source.ts:65</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L65">source/source.ts:65</a></p>
 <p><code>true</code> if tiles should be sent back to the worker for each overzoomed zoom level, <code>false</code> if not.</p>
 <hr />
 <h3 id="roundzoom">roundZoom?</h3>
 <blockquote>
-<p><code>optional</code> <strong>roundZoom</strong>: <code>boolean</code></p>
+<p><code>optional</code> <strong>roundZoom?</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L56">source/source.ts:56</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L56">source/source.ts:56</a></p>
 <p><code>true</code> if zoom levels are rounded to the nearest integer in the source data, <code>false</code> if they are floor-ed to the nearest integer.</p>
 <hr />
 <h3 id="tilesize">tileSize</h3>
 <blockquote>
 <p><strong>tileSize</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/source/source.ts#L48">source/source.ts:48</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/source/source.ts#L48">source/source.ts:48</a></p>
 <p>The tile size for the source.</p>
 
 

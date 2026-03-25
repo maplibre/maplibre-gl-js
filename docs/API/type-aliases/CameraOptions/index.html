@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.28">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -3334,7 +3334,7 @@
   <span class="md-ellipsis">
     
   
-    AddProtocolAction()
+    AddProtocolAction
   
 
     
@@ -3474,7 +3474,7 @@
   <span class="md-ellipsis">
     
   
-    BoxZoomEndHandler()
+    BoxZoomEndHandler
   
 
     
@@ -3530,7 +3530,7 @@
   <span class="md-ellipsis">
     
   
-    CalculateTileZoomFunction()
+    CalculateTileZoomFunction
   
 
     
@@ -3734,7 +3734,7 @@
   <span class="md-ellipsis">
     
   
-    CameraUpdateTransformFunction()
+    CameraUpdateTransformFunction
   
 
     
@@ -3930,7 +3930,7 @@
   <span class="md-ellipsis">
     
   
-    CustomRenderMethod()
+    CustomRenderMethod
   
 
     
@@ -4574,7 +4574,7 @@
   <span class="md-ellipsis">
     
   
-    Listener()
+    Listener
   
 
     
@@ -5442,7 +5442,7 @@
   <span class="md-ellipsis">
     
   
-    RequestTransformFunction()
+    RequestTransformFunction
   
 
     
@@ -5554,7 +5554,7 @@
   <span class="md-ellipsis">
     
   
-    SourceClass()
+    SourceClass
   
 
     
@@ -5806,7 +5806,7 @@
   <span class="md-ellipsis">
     
   
-    TransformConstrainFunction()
+    TransformConstrainFunction
   
 
     
@@ -5834,7 +5834,7 @@
   <span class="md-ellipsis">
     
   
-    TransformStyleFunction()
+    TransformStyleFunction
   
 
     
@@ -10113,19 +10113,19 @@
 <blockquote>
 <p><strong>CameraOptions</strong> = <a href="../CenterZoomBearing/"><code>CenterZoomBearing</code></a> &amp; <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/44a48f868c973aaa486d96cf899f15cb474257c9/src/ui/camera.ts#L55">ui/camera.ts:55</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/1fe69fd961d62c9b017debfc7eb49c32c53e5339/src/ui/camera.ts#L55">ui/camera.ts:55</a></p>
 <p>Options common to <a href="../../classes/Map/#jumpto">Map.jumpTo</a>, <a href="../../classes/Map/#easeto">Map.easeTo</a>, and <a href="../../classes/Map/#flyto">Map.flyTo</a>, controlling the desired location,
 zoom, bearing, pitch, and roll of the camera. All properties are optional, and when a property is omitted, the current
 camera value for that property will remain unchanged.</p>
 <h2 id="type-declaration">Type Declaration</h2>
 <h3 id="elevation">elevation?</h3>
 <blockquote>
-<p><code>optional</code> <strong>elevation</strong>: <code>number</code></p>
+<p><code>optional</code> <strong>elevation?</strong>: <code>number</code></p>
 </blockquote>
 <p>The elevation of the center point in meters above sea level.</p>
 <h3 id="pitch">pitch?</h3>
 <blockquote>
-<p><code>optional</code> <strong>pitch</strong>: <code>number</code></p>
+<p><code>optional</code> <strong>pitch?</strong>: <code>number</code></p>
 </blockquote>
 <p>The desired pitch in degrees. The pitch is the angle towards the horizon
 measured in degrees with a range between 0 and 60 degrees. For example, pitch: 0 provides the appearance
@@ -10133,7 +10133,7 @@ of looking straight down at the map, while pitch: 60 tilts the user's perspectiv
 Increasing the pitch value is often used to display 3D objects.</p>
 <h3 id="roll">roll?</h3>
 <blockquote>
-<p><code>optional</code> <strong>roll</strong>: <code>number</code></p>
+<p><code>optional</code> <strong>roll?</strong>: <code>number</code></p>
 </blockquote>
 <p>The desired roll in degrees. The roll is the angle about the camera boresight.</p>
 <h2 id="example">Example</h2>
