@@ -5,11 +5,10 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-- Add mguide to cspell dictionary ([#7308](https://github.com/maplibre/maplibre-gl-js/pull/7308)) (by [@masopuppy](https://github.com/masopuppy))
 ## 5.21.1
-### ✨ Features and improvements
 
 ### 🐞 Bug fixes
+
 - Add missing `promoteId` parameter to geojson worker and refactor communication object ([#7320](https://github.com/maplibre/maplibre-gl-js/issues/7320)) (by [@HarelM](https://github.com/HarelM))
 
 ## 5.21.0
