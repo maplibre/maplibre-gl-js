@@ -899,6 +899,7 @@ export class Style extends Evented {
                 case 'setBearing':
                 case 'setPitch':
                 case 'setRoll':
+                case 'setProjection':
                     continue;
                 case 'addLayer':
                     operations.push(() => this.addLayer.apply(this, op.args));
@@ -941,9 +942,6 @@ export class Style extends Evented {
                     break;
                 case 'setSky':
                     operations.push(() => this.setSky.apply(this, op.args));
-                    break;
-                case 'setProjection':
-                    this.setProjection.apply(this, op.args);
                     break;
                 case 'setGlobalState':
                     operations.push(() => this.setGlobalState.apply(this, op.args));
