@@ -1103,6 +1103,18 @@ describe('Style.setState', () => {
 
         expect(didChange).toBeTruthy();
     });
+
+    test('setState does not crash when target style has no projection', async () => {
+        const style = createStyle();
+        const initialStyle = createStyleJSON({
+            projection: {type: 'globe'}
+        });
+        style.loadJSON(initialStyle);
+        await style.once('style.load');
+
+        const targetStyle = createStyleJSON();
+        expect(() => style.setState(targetStyle)).not.toThrow();
+    });
 });
 
 describe('Style.addSource', () => {
