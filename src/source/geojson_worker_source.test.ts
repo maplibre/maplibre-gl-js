@@ -563,8 +563,8 @@ describe('loadData', () => {
                 clusterOptions: {},
             },
             clusterProperties: {
-                "max": ["max", ["get", "scalerank"]],
-                "sum": ["+", ["get", "scalerank"]],
+                'max': ['max', ['get', 'scalerank']],
+                'sum': ['+', ['get', 'scalerank']],
             }
         } as LoadGeoJSONParameters)).resolves.toBeDefined();
         expect(updateSpy).toHaveBeenCalled();
