@@ -3,7 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+- Fix `setState` crash when switching styles while globe projection is active ([#7314](https://github.com/maplibre/maplibre-gl-js/issues/7314))
 
 ## 5.21.1
 
