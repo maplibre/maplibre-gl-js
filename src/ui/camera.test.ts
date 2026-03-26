@@ -2434,6 +2434,37 @@ describe('fitBounds', () => {
         expect(fixedNum(camera.getZoom(), 3)).toBe(4.163);
     });
 
+    test('zoomSnap=0 does not change fitBounds behavior', () => {
+        const camera = createCamera({zoomSnap: 0});
+        const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
+        camera.fitBounds(bb, {duration: 0});
+
+        expect(fixedNum(camera.getZoom(), 3)).toBe(2.469);
+    });
+
+    test('zoomSnap=1 snaps zoom down', () => {
+        const camera = createCamera({zoomSnap: 1});
+        const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
+        camera.fitBounds(bb, {duration: 0});
+
+        expect(camera.getZoom()).toBe(2);
+    });
+
+    test('zoomSnap=0 does not change fitBounds behavior for which would round up', () => {
+        const camera = createCamera({zoomSnap: 0});
+        const bb = [[-120, 20], [-60, 45]] as [LngLatLike, LngLatLike];
+        camera.fitBounds(bb, {duration: 0});
+
+        expect(fixedNum(camera.getZoom(), 3)).toBe(2.585);
+    });
+
+    test('zoomSnap=0.5 snaps zoom half-down', () => {
+        const camera = createCamera({zoomSnap: 0.5});
+        const bb = [[-120, 20], [-60, 45]] as [LngLatLike, LngLatLike];
+        camera.fitBounds(bb, {duration: 0});
+
+        expect(camera.getZoom()).toBe(2.5);
+    });
 });
 
 describe('fitScreenCoordinates', () => {
@@ -2471,6 +2502,26 @@ describe('fitScreenCoordinates', () => {
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
         expect(fixedNum(camera.getZoom(), 3)).toBe(2);
         expect(camera.getBearing()).toBeCloseTo(0);
+    });
+
+    test('zoomSnap=1 snaps zoom down', () => {
+        const camera = createCamera({zoomSnap: 1});
+        const p0 = [128, 128] as PointLike;
+        const p1 = [256, 256] as PointLike;
+        const bearing = 225;
+        camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
+
+        expect(camera.getZoom()).toBe(1);
+    });
+
+    test('zoomSnap=0 does not affect zoom', () => {
+        const camera = createCamera({zoomSnap: 0});
+        const p0 = [128, 128] as PointLike;
+        const p1 = [256, 256] as PointLike;
+        const bearing = 225;
+        camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
+
+        expect(camera.getZoom()).toBeCloseTo(1.5);
     });
 });
 
