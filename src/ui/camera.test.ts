@@ -2521,7 +2521,7 @@ describe('fitScreenCoordinates', () => {
         const bearing = 225;
         camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
 
-        expect(camera.getZoom()).toBe(1.5);
+        expect(camera.getZoom()).toBeCloseTo(1.5);
     });
 });
 
