@@ -17,10 +17,10 @@ function createMap(options: Partial<MapOptions> = {}) {
     });
 }
 
-function scrollOutAtLat(map: Map, lat: number, timeControlNow: MockInstance<() => number>, deltaY: number = 5) {
+function scrollOutAtLat(map: Map, lat: number, timeControlNow: MockInstance<() => number>, deltaY: number = 5, iterations: number = 200) {
     map.setCenter([0, lat]);
     map.setZoom(1);
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < iterations; i++) {
         simulate.wheel(map.getCanvas(), {
             type: 'wheel',
             deltaY,
@@ -649,11 +649,16 @@ describe('ScrollZoomHandler', () => {
         map.setProjection({type: 'globe'});
         map.setMinZoom(0);
 
-        scrollOutAtLat(map, 80, timeControlNow, simulate.magicWheelZoomDelta);
+        // Use fewer iterations than the trackpad variant: the globe zoom
+        // constraint is reached well before 150 steps, and mouse-wheel
+        // rendering is heavier (easing path), so keeping iterations low
+        // prevents the test from exceeding the default 5 s vitest timeout
+        // on slow CI machines.
+        scrollOutAtLat(map, 80, timeControlNow, simulate.magicWheelZoomDelta, 150);
         expect(map.getZoom()).toBeCloseTo(-2.53, 2);
-        scrollOutAtLat(map, -80, timeControlNow, simulate.magicWheelZoomDelta);
+        scrollOutAtLat(map, -80, timeControlNow, simulate.magicWheelZoomDelta, 150);
         expect(map.getZoom()).toBeCloseTo(-2.53, 2);
-        scrollOutAtLat(map, 0, timeControlNow, simulate.magicWheelZoomDelta);
+        scrollOutAtLat(map, 0, timeControlNow, simulate.magicWheelZoomDelta, 150);
         expect(map.getZoom()).toBeCloseTo(0, 2);
 
         map.remove();

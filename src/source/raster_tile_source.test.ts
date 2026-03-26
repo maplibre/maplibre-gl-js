@@ -7,6 +7,7 @@ import {fakeServer, type FakeServer} from 'nise';
 import {type Tile} from '../tile/tile';
 import {sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util';
 import {type MapSourceDataEvent} from '../ui/events';
+import * as loadTileJSONModule from './load_tilejson';
 
 function createSource(options, transformCallback?) {
     const source = new RasterTileSource('id', options, {send() {}} as any as Dispatcher, options.eventedParent);
@@ -22,6 +23,10 @@ function createSource(options, transformCallback?) {
     return source;
 }
 
+function isAbortPendingTileRequestsEvent(event: MapSourceDataEvent) {
+    return event.type === 'data' && event.abortPendingTileRequests === true;
+}
+
 describe('RasterTileSource', () => {
     let server: FakeServer;
     beforeEach(() => {
@@ -31,6 +36,7 @@ describe('RasterTileSource', () => {
 
     afterEach(() => {
         server.restore();
+        vi.restoreAllMocks();
     });
 
     test('transforms request for TileJSON URL', () => {
@@ -402,4 +408,141 @@ describe('RasterTileSource', () => {
         await expect(loadPromise).resolves.toBeUndefined();
         expect(tile.state).toBe('unloaded');
     });
+
+    test('loads tile after previous abort flag was set', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            attribution: 'MapLibre',
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            bounds: [-47, -7, -45, -5]
+        }));
+        server.respondWith('http://example.com/10/5/5.png',
+            [200, {'Content-Type': 'image/png', 'Content-Length': 1}, '0']
+        );
+
+        const source = createSource({url: '/source.json'});
+        source.map.painter = {context: {}, getTileTexture: () => ({update: () => {}})} as any;
+        source.map._refreshExpiredTiles = true;
+
+        const sourcePromise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0);
+        server.respond();
+        await sourcePromise;
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {}
+        } as any as Tile;
+
+        // First load: abort in-flight to simulate a real previous abort
+        const firstPromise = source.loadTile(tile);
+        await sleep(0);
+        tile.abortController.abort();
+        tile.aborted = true;
+        server.respond();
+        await firstPromise;
+        expect(tile.state).toBe('unloaded');
+
+        // Second load: should clear the stale abort flag and succeed
+        tile.state = 'loading';
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('loaded');
+        expect(tile.aborted).toBe(false);
+    });
+
+    test('setSourceProperty emits abortPendingTileRequests before callback and load(true)', () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        const fireSpy = vi.spyOn(source, 'fire');
+        const callback = vi.fn();
+        const loadSpy = vi.spyOn(source, 'load');
+
+        source.setSourceProperty(callback);
+
+        // calls[0] is the abort signal; load() fires 'dataloading' synchronously as calls[1]
+        expect(fireSpy.mock.calls[0][0]).toMatchObject({type: 'data', abortPendingTileRequests: true});
+        expect(fireSpy.mock.invocationCallOrder[0]).toBeLessThan(callback.mock.invocationCallOrder[0]);
+        expect(callback.mock.invocationCallOrder[0]).toBeLessThan(loadSpy.mock.invocationCallOrder[0]);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(loadSpy).toHaveBeenCalledTimes(1);
+        expect(loadSpy).toHaveBeenCalledWith(true);
+    });
+
+    test('setUrl emits abortPendingTileRequests and calls load(true)', () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        const loadSpy = vi.spyOn(source, 'load');
+        const events: Array<MapSourceDataEvent> = [];
+        source.on('data', (e: MapSourceDataEvent) => events.push(e));
+
+        source.setUrl('http://localhost:2900/source2.json');
+
+        expect(events.some((e) => isAbortPendingTileRequestsEvent(e))).toBe(true);
+        expect(source.url).toBe('http://localhost:2900/source2.json');
+        expect(loadSpy).toHaveBeenCalledWith(true);
+    });
+
+    test('load ignores AbortError from TileJSON request', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+
+        const abortError = new Error('aborted');
+        abortError.name = 'AbortError';
+        vi.spyOn(loadTileJSONModule, 'loadTileJson').mockRejectedValueOnce(abortError);
+
+        const onError = vi.fn();
+        source.on('error', onError);
+
+        await source.load(true);
+
+        expect(onError).not.toHaveBeenCalled();
+    });
+
+    test('load emits error event on TileJSON network error (non-abort)', async () => {
+        const tileJSONUrl = '/source-network-error.json';
+        let requestCount = 0;
+        server.respondWith(tileJSONUrl, (xhr) => {
+            requestCount++;
+            if (requestCount === 1) {
+                xhr.respond(200, {'Content-Type': 'application/json'}, JSON.stringify({
+                    minzoom: 0,
+                    maxzoom: 22,
+                    attribution: 'MapLibre',
+                    tiles: ['http://example.com/{z}/{x}/{y}.png']
+                }));
+                return;
+            }
+
+            xhr.respond(500, {'Content-Type': 'text/plain'}, 'server error');
+        });
+
+        const source = createSource({url: tileJSONUrl});
+
+        const metadataPromise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0);
+        server.respond();
+        await metadataPromise;
+
+        const onError = vi.fn();
+        source.on('error', onError);
+
+        const loadPromise = source.load(true);
+        await sleep(0);
+        server.respond();
+        await loadPromise;
+
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError.mock.calls[0][0].error.status).toBe(500);
+    });
+
 });

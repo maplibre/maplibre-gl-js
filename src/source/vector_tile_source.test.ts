@@ -14,8 +14,9 @@ import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_s
 import {type ActorMessage, MessageType} from '../util/actor_messages';
 import {type MapSourceDataEvent} from '../ui/events';
 
-function createSource(options, transformCallback?, clearTiles = () => {}) {
-    const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
+function createSource(options, transformCallback?, clearTiles = () => {}, customActor?: {sendAsync: (...args: any[]) => Promise<any>}) {
+    const dispatcher = customActor ? getWrapDispatcher()(customActor as any) : getMockDispatcher();
+    const source = new VectorTileSource('id', options, dispatcher, options.eventedParent);
     source.onAdd({
         transform: {showCollisionBoxes: false},
         _getMapId: () => 1,
@@ -35,6 +36,12 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
     source.on('error', () => { }); // to prevent console log of errors
 
     return source;
+}
+
+function createMockTile(tile: Partial<Tile> & Pick<Tile, 'state'>): Tile {
+    const mockTile = tile as Tile;
+    mockTile.hasData = () => mockTile.state === 'loaded' || mockTile.state === 'reloading' || mockTile.state === 'expired';
+    return mockTile;
 }
 
 describe('VectorTileSource', () => {
@@ -186,10 +193,11 @@ describe('VectorTileSource', () => {
             });
 
             await waitForMetadataEvent(source);
-            await source.loadTile({
+            await source.loadTile(createMockTile({
                 loadVectorData() {},
+                state: 'loading',
                 tileID: new OverscaledTileID(10, 0, 10, 5, 5)
-            } as any as Tile);
+            }));
 
             expect(receivedMessage.type).toBe(MessageType.loadTile);
             expect(expectedURL).toBe((receivedMessage.data as WorkerTileParameters).request.url);
@@ -209,12 +217,12 @@ describe('VectorTileSource', () => {
         server.respond();
         await promise;
 
-        const tile = {
+        const tile = createMockTile({
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
             loadVectorData() {},
             setExpiryData() {}
-        } as any as Tile;
+        });
         source.loadTile(tile);
         expect(transformSpy).toHaveBeenCalledTimes(1);
         expect(transformSpy).toHaveBeenCalledWith('http://example.com/10/5/5.png', 'Tile');
@@ -237,12 +245,12 @@ describe('VectorTileSource', () => {
         });
         await waitForMetadataEvent(source);
 
-        const tile = {
+        const tile = createMockTile({
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
             loadVectorData() {},
             setExpiryData() {}
-        } as any as Tile;
+        });
         await source.loadTile(tile);
         expect((receivedMessage.data as WorkerTileParameters).request.url).toBe('http://example.com/10/5/5.png');
         expect((receivedMessage.data as WorkerTileParameters).request.headers.Authorization).toBe('Bearer token');
@@ -263,12 +271,12 @@ describe('VectorTileSource', () => {
         await sleep(0);
         server.respond();
         await promise;
-        const tile = {
+        const tile = createMockTile({
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
             loadVectorData: vi.fn(),
             setExpiryData() {}
-        } as any as Tile;
+        });
         await source.loadTile(tile);
         expect(tile.loadVectorData).toHaveBeenCalledTimes(1);
     });
@@ -286,12 +294,12 @@ describe('VectorTileSource', () => {
         await sleep(0);
         server.respond();
         await promise;
-        const tile = {
+        const tile = createMockTile({
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
             loadVectorData: vi.fn(),
             setExpiryData() {}
-        } as any as Tile;
+        });
         await expect(source.loadTile(tile)).rejects.toThrow('Error');
         expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
     });
@@ -311,12 +319,12 @@ describe('VectorTileSource', () => {
         server.respond();
         await promise;
 
-        const tile = {
+        const tile = createMockTile({
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
             loadVectorData: vi.fn(),
             setExpiryData() {}
-        } as any as Tile;
+        });
         await source.loadTile(tile);
         expect(tile.loadVectorData).toHaveBeenCalledTimes(1);
     });
@@ -334,7 +342,7 @@ describe('VectorTileSource', () => {
         });
 
         await waitForMetadataEvent(source);
-        const tile = {
+        const tile = createMockTile({
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
             loadVectorData () {
@@ -342,13 +350,108 @@ describe('VectorTileSource', () => {
                 events.push('tileLoaded');
             },
             setExpiryData() {}
-        } as any as Tile;
+        });
         const initialLoadPromise = source.loadTile(tile);
 
         expect(tile.state).toBe('loading');
         await source.loadTile(tile);
         expect(events).toEqual([MessageType.loadTile, 'tileLoaded', MessageType.reloadTile, 'tileLoaded']);
         await expect(initialLoadPromise).resolves.toStrictEqual({});
+    });
+
+    test('resolves every queued reload caller after a single queued worker reload', async () => {
+        let resolveFirstRequest: (value: any) => void;
+        let resolveQueuedReloadRequest: (value: any) => void;
+        const sendAsync = vi.fn((_message) => {
+            if (!resolveFirstRequest) {
+                return new Promise((resolve) => {
+                    resolveFirstRequest = resolve;
+                });
+            }
+
+            return new Promise((resolve) => {
+                resolveQueuedReloadRequest = resolve;
+            });
+        });
+
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }, undefined, undefined, {sendAsync});
+
+        await waitForMetadataEvent(source);
+
+        const tile = createMockTile({
+            uses: 1,
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            aborted: false,
+            loadVectorData() {
+                this.state = 'loaded';
+            },
+            setExpiryData() {}
+        });
+
+        const initialLoad = source.loadTile(tile);
+        const queuedReloadA = source.loadTile(tile);
+        const queuedReloadB = source.loadTile(tile);
+
+        let queuedReloadAResolved = false;
+        let queuedReloadBResolved = false;
+        queuedReloadA.then(() => {
+            queuedReloadAResolved = true;
+        });
+        queuedReloadB.then(() => {
+            queuedReloadBResolved = true;
+        });
+
+        await sleep(0);
+        expect(resolveFirstRequest).toBeTruthy();
+
+        resolveFirstRequest({});
+
+        await initialLoad;
+        await sleep(0);
+
+        expect(sendAsync).toHaveBeenCalledTimes(2);
+        expect(queuedReloadAResolved).toBe(false);
+        expect(queuedReloadBResolved).toBe(false);
+        expect(resolveQueuedReloadRequest).toBeTruthy();
+
+        resolveQueuedReloadRequest({});
+        await expect(Promise.all([queuedReloadA, queuedReloadB])).resolves.toEqual([undefined, undefined]);
+
+        expect(sendAsync).toHaveBeenCalledTimes(2);
+    });
+
+    test('keeps renderable tile state when aborted refresh request rejects with 404', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        await waitForMetadataEvent(source);
+
+        const tile = createMockTile({
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'expired',
+            aborted: false,
+            etag: 'old-etag',
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        });
+
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message, _abortController) {
+                tile.aborted = true;
+                const error: any = new Error('Not found');
+                error.status = 404;
+                return Promise.reject(error);
+            }
+        });
+
+        const result = await source.loadTile(tile);
+        expect(result).toBeUndefined();
+        expect(tile.state).toBe('expired');
+        expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
+        expect(tile.etag).toBe('old-etag');
     });
 
     test('respects TileJSON.bounds', async () => {
@@ -415,12 +518,12 @@ describe('VectorTileSource', () => {
         });
 
         await waitForMetadataEvent(source);
-        const tile = {
+        const tile = createMockTile({
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
             loadVectorData() {},
             setExpiryData() {}
-        } as any as Tile;
+        });
         await source.loadTile(tile);
 
         expect((receivedMessage.data as WorkerTileParameters).request.collectResourceTiming).toBeTruthy();
@@ -495,14 +598,14 @@ describe('VectorTileSource', () => {
         });
         await waitForMetadataEvent(source);
 
-        const tile = {
+        const tile = createMockTile({
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
             aborted: false,
             etag: undefined,
             loadVectorData: vi.fn(),
             setExpiryData() {}
-        } as any as Tile;
+        });
 
         source.dispatcher = getWrapDispatcher()({
             sendAsync(_message, _abortController) {
@@ -517,6 +620,35 @@ describe('VectorTileSource', () => {
         expect(tile.etag).toBeUndefined();
     });
 
+    test('keeps renderable tile state when refresh request is aborted', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        await waitForMetadataEvent(source);
+
+        const tile = createMockTile({
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'expired',
+            aborted: false,
+            etag: 'old-etag',
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        });
+
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message, _abortController) {
+                tile.aborted = true;
+                return Promise.resolve({etag: 'new-etag'} as any);
+            }
+        });
+
+        const result = await source.loadTile(tile);
+        expect(result).toBeUndefined();
+        expect(tile.state).toBe('expired');
+        expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
+        expect(tile.etag).toBe('old-etag');
+    });
+
     test('stores worker etag on tile when present', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
@@ -529,16 +661,75 @@ describe('VectorTileSource', () => {
         });
         await waitForMetadataEvent(source);
 
-        const tile = {
+        const tile = createMockTile({
             tileID: new OverscaledTileID(10, 0, 10, 5, 5),
             state: 'loading',
             aborted: false,
             etag: undefined,
             loadVectorData: vi.fn(),
             setExpiryData() {}
-        } as any as Tile;
+        });
 
         await source.loadTile(tile);
         expect(tile.etag).toBe('test');
     });
+
+    test('setSourceProperty emits abortPendingTileRequests before callback and load(true)', () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+        });
+        const fireSpy = vi.spyOn(source, 'fire');
+        const callback = vi.fn();
+        const loadSpy = vi.spyOn(source, 'load').mockResolvedValue(undefined as any);
+
+        source.setSourceProperty(callback);
+
+        // calls[0] is the abort signal; load() fires 'dataloading' synchronously afterwards
+        expect(fireSpy.mock.calls[0][0]).toMatchObject({type: 'data', abortPendingTileRequests: true});
+        expect(fireSpy.mock.invocationCallOrder[0]).toBeLessThan(callback.mock.invocationCallOrder[0]);
+        expect(callback.mock.invocationCallOrder[0]).toBeLessThan(loadSpy.mock.invocationCallOrder[0]);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(loadSpy).toHaveBeenCalledTimes(1);
+        expect(loadSpy).toHaveBeenCalledWith(true);
+    });
+
+    test('abortTile sets tile state to unloaded, aborts controller, and sends MessageType.abortTile', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
+
+        const abortController = new AbortController();
+        const abortSpy = vi.spyOn(abortController, 'abort');
+        const sendAsync = vi.fn().mockResolvedValue(undefined);
+        const tile = createMockTile({uid: 42, state: 'loading', abortController, actor: {sendAsync} as unknown as Tile['actor']});
+
+        await source.abortTile(tile);
+
+        expect(tile.state).toBe('unloaded');
+        expect(abortSpy).toHaveBeenCalledTimes(1);
+        expect(tile.abortController).toBeUndefined();
+        expect(sendAsync).toHaveBeenCalledWith({
+            type: MessageType.abortTile,
+            data: {uid: 42, type: source.type, source: source.id}
+        });
+    });
+
+    test('abortTile preserves renderable state for expired tiles', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
+
+        const abortController = new AbortController();
+        const abortSpy = vi.spyOn(abortController, 'abort');
+        const sendAsync = vi.fn().mockResolvedValue(undefined);
+        const tile = createMockTile({uid: 45, state: 'expired', abortController, actor: {sendAsync} as unknown as Tile['actor']});
+
+        await source.abortTile(tile);
+
+        expect(tile.state).toBe('expired');
+        expect(abortSpy).toHaveBeenCalledTimes(1);
+        expect(tile.abortController).toBeUndefined();
+        expect(sendAsync).toHaveBeenCalledWith({
+            type: MessageType.abortTile,
+            data: {uid: 45, type: source.type, source: source.id}
+        });
+    });
+
 });

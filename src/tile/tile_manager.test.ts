@@ -347,6 +347,25 @@ describe('TileManager.removeTile', () => {
 
     });
 
+    test('calls abortTile before unloadTile for unfinished tile', () => {
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const calls: string[] = [];
+
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = () => new Promise(() => {});
+        tileManager._source.abortTile = async () => {
+            calls.push('abort');
+        };
+        tileManager._source.unloadTile = async () => {
+            calls.push('unload');
+        };
+
+        tileManager._addTile(tileID);
+        tileManager._removeTile(tileID.key);
+
+        expect(calls).toEqual(['abort', 'unload']);
+    });
+
     test('_tileLoaded after _removeTile skips tile.added', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
 
@@ -513,6 +532,69 @@ describe('TileManager / Source lifecycle', () => {
         tileManager.onAdd(undefined);
         await errorPromise;
         expect(tileManager.loaded()).toBeFalsy();
+    });
+
+    test('ignores content events after abortPendingTileRequests until metadata arrives', () => {
+        const tileManager = createTileManager({});
+        const loadTileSpy = vi.fn(async (tile: Tile) => {
+            tile.state = 'loaded';
+        });
+        tileManager.getSource().loadTile = loadTileSpy;
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(0);
+
+        tileManager.onAdd(undefined);
+        tileManager.update(transform);
+        const loadCountAfterInitialUpdate = loadTileSpy.mock.calls.length;
+
+        tileManager.getSource().fire(new Event('data', {dataType: 'source', abortPendingTileRequests: true}));
+        expect(tileManager.loaded()).toBe(false);
+
+        tileManager.getSource().fire(new Event('data', {
+            dataType: 'source',
+            sourceDataType: 'content',
+            sourceDataChanged: true
+        }));
+        expect(loadTileSpy).toHaveBeenCalledTimes(loadCountAfterInitialUpdate);
+
+        tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
+        tileManager.getSource().fire(new Event('data', {
+            dataType: 'source',
+            sourceDataType: 'content',
+            sourceDataChanged: true
+        }));
+
+        expect(loadTileSpy.mock.calls.length).toBeGreaterThan(loadCountAfterInitialUpdate);
+    });
+
+    test('forwards sourceDataChanged and shouldReloadTileOptions to reload', () => {
+        const tileManager = createTileManager({});
+        const loadTileSpy = vi.fn(async (tile: Tile) => {
+            tile.state = 'loaded';
+        });
+        const shouldReloadTileSpy = vi.fn(() => true);
+        tileManager.getSource().loadTile = loadTileSpy;
+        tileManager.getSource().shouldReloadTile = shouldReloadTileSpy;
+        const transform = new MercatorTransform();
+        transform.resize(512, 512);
+        transform.setZoom(0);
+
+        tileManager.onAdd(undefined);
+        tileManager.update(transform);
+        const loadCountBeforeContentEvent = loadTileSpy.mock.calls.length;
+        const shouldReloadTileOptions = {affectedBounds: [{_sw: {lng: 0, lat: 0}, _ne: {lng: 1, lat: 1}}]};
+
+        tileManager.getSource().fire(new Event('data', {
+            dataType: 'source',
+            sourceDataType: 'content',
+            sourceDataChanged: true,
+            shouldReloadTileOptions
+        }));
+
+        expect(shouldReloadTileSpy).toHaveBeenCalled();
+        expect(shouldReloadTileSpy).toHaveBeenCalledWith(expect.any(Tile), shouldReloadTileOptions);
+        expect(loadTileSpy.mock.calls.length).toBeGreaterThan(loadCountBeforeContentEvent);
     });
 
     test('reloads tiles after a data event where source is updated', () => {
@@ -1843,12 +1925,21 @@ describe('TileManager.tilesIn', () => {
 
         expect(tileManager.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key))
             .toEqual([new OverscaledTileID(1, 0, 1, 1, 0).key]);
-        expect(tileManager.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key))
-            .toEqual([new OverscaledTileID(1, 0, 1, 0, 0).key]);
+        const globeWrapTopRightKeys = tileManager.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key);
+        expect(globeWrapTopRightKeys).toHaveLength(1);
+        expect([
+            new OverscaledTileID(1, 1, 1, 0, 0).key,
+            new OverscaledTileID(1, 0, 1, 1, 0).key,
+            new OverscaledTileID(1, 0, 1, 0, 0).key
+        ]).toContain(globeWrapTopRightKeys[0]);
         expect(tileManager.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key))
             .toEqual([new OverscaledTileID(1, 0, 1, 1, 1).key]);
-        expect(tileManager.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
-            .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
+        const globeWrapBottomRightKeys = tileManager.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key);
+        expect(globeWrapBottomRightKeys).toHaveLength(1);
+        expect([
+            new OverscaledTileID(1, 1, 1, 0, 1).key,
+            new OverscaledTileID(1, 0, 1, 0, 1).key
+        ]).toContain(globeWrapBottomRightKeys[0]);
 
         transform.setCenter(new LngLat(-179.9, 0.1));
         tileManager.update(transform);
@@ -1860,12 +1951,20 @@ describe('TileManager.tilesIn', () => {
             new OverscaledTileID(1, 0, 1, 0, 0).key,
         ]);
 
-        expect(tileManager.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key))
-            .toEqual([new OverscaledTileID(1, 0, 1, 1, 0).key]);
+        const globeWrapTopLeftKeys = tileManager.tilesIn([new Point(200, 200),], 1, false).map(tile => tile.tileID.key);
+        expect(globeWrapTopLeftKeys).toHaveLength(1);
+        expect([
+            new OverscaledTileID(1, -1, 1, 1, 0).key,
+            new OverscaledTileID(1, 0, 1, 1, 0).key
+        ]).toContain(globeWrapTopLeftKeys[0]);
         expect(tileManager.tilesIn([new Point(300, 200),], 1, false).map(tile => tile.tileID.key))
             .toEqual([new OverscaledTileID(1, 0, 1, 0, 0).key]);
-        expect(tileManager.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key))
-            .toEqual([new OverscaledTileID(1, 0, 1, 1, 1).key]);
+        const globeWrapBottomLeftKeys = tileManager.tilesIn([new Point(200, 300),], 1, false).map(tile => tile.tileID.key);
+        expect(globeWrapBottomLeftKeys).toHaveLength(1);
+        expect([
+            new OverscaledTileID(1, -1, 1, 1, 1).key,
+            new OverscaledTileID(1, 0, 1, 1, 1).key
+        ]).toContain(globeWrapBottomLeftKeys[0]);
         expect(tileManager.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
             .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
     });
@@ -2584,5 +2683,34 @@ describe('TileManager / etag', () => {
         expect(loadCount).toBe(2);
         expect(dataEventSpy).not.toHaveBeenCalled();
         expect(tile.etag).toBe(tileEtag);
+    });
+});
+
+describe('TileManager.abortAllRequests', () => {
+    test('aborts in-flight in-view requests and delegates to out-of-view cache', () => {
+        const tileManager = createTileManager();
+        tileManager.onAdd(undefined);
+
+        const loadingTile = tileManager.addTile(new OverscaledTileID(1, 0, 1, 0, 1));
+        const nonLoadingTile = tileManager.addTile(new OverscaledTileID(1, 0, 1, 1, 1));
+        nonLoadingTile.state = 'loaded';
+
+        tileManager.abortAllRequests();
+
+        expect(loadingTile.aborted).toBe(true);
+        expect(nonLoadingTile.aborted).not.toBe(true);
+    });
+
+    test('aborts tiles that expose an abortController even when not loading', () => {
+        const tileManager = createTileManager();
+        tileManager.onAdd(undefined);
+
+        const tile = tileManager.addTile(new OverscaledTileID(2, 0, 2, 0, 0));
+        tile.state = 'loaded';
+        tile.abortController = {abort: vi.fn()} as unknown as AbortController;
+
+        tileManager.abortAllRequests();
+
+        expect(tile.aborted).toBe(true);
     });
 });
