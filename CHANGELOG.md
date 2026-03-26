@@ -5,6 +5,7 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 - Make `fitBounds` and `fitScreenCoordinates` respect the `zoomSnap` map option by snapping the zoom level down to keep bounds fully visible ([#7332](https://github.com/maplibre/maplibre-gl-js/issues/7332) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Make `jumpTo`, `easeTo`, and `flyTo` respect the `zoomSnap` map option by snapping the zoom level to the nearest valid increment ([#7333](https://github.com/maplibre/maplibre-gl-js/issues/7333) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ## 5.21.1
 
