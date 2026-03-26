@@ -840,7 +840,11 @@ export abstract class Camera extends Evented {
         const tr = this.transform;
         const bounds = new LngLatBounds(p0, p1);
 
-        return this.cameraHelper.cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
+        const result = this.cameraHelper.cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
+        if (result && this._zoomSnap) {
+            result.zoom = evaluateZoomSnap(result.zoom, this._zoomSnap, -1);
+        }
+        return result;
     }
 
     /**
