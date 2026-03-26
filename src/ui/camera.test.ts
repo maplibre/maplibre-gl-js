@@ -393,6 +393,18 @@ describe('jumpTo', () => {
         camera.jumpTo({center: [1, 2]});
         expect(!camera.isEasing()).toBeTruthy();
     });
+
+    test('respects zoomSnap', () => {
+        const camera = createCamera({zoomSnap: 1});
+        camera.jumpTo({zoom: 2.3});
+        expect(camera.getZoom()).toBe(2);
+    });
+
+    test('zoomSnap=0 does not snap zoom', () => {
+        const camera = createCamera({zoomSnap: 0});
+        camera.jumpTo({zoom: 2.3});
+        expect(camera.getZoom()).toBe(2.3);
+    });
 });
 
 describe('setCenter', () => {
@@ -465,6 +477,12 @@ describe('setZoom', () => {
         expect(camera.isEasing()).toBeTruthy();
         camera.setZoom(5);
         expect(!camera.isEasing()).toBeTruthy();
+    });
+
+    test('respects zoomSnap', () => {
+        const camera = createCamera({zoomSnap: 0.5});
+        camera.setZoom(2.7);
+        expect(camera.getZoom()).toBe(2.5);
     });
 });
 
@@ -1303,6 +1321,18 @@ describe('easeTo', () => {
 
         expect(camera.getBearing()).toEqual(97);
     });
+
+    test('respects zoomSnap', () => {
+        const camera = createCamera({zoomSnap: 1});
+        camera.easeTo({zoom: 2.7, duration: 0});
+        expect(camera.getZoom()).toBe(3);
+    });
+
+    test('zoomSnap=0 does not snap zoom', () => {
+        const camera = createCamera({zoomSnap: 0});
+        camera.easeTo({zoom: 2.7, duration: 0});
+        expect(camera.getZoom()).toBe(2.7);
+    });
 });
 
 describe('flyTo', () => {
@@ -2116,6 +2146,18 @@ describe('flyTo', () => {
 
         camera._finalizeElevation();
         expect(camera._elevationFreeze).toBeFalsy();
+    });
+
+    test('respects zoomSnap', () => {
+        const camera = createCamera({zoomSnap: 1});
+        camera.flyTo({zoom: 2.7, animate: false});
+        expect(camera.getZoom()).toBe(3);
+    });
+
+    test('zoomSnap=0 does not snap zoom', () => {
+        const camera = createCamera({zoomSnap: 0});
+        camera.flyTo({zoom: 2.7, animate: false});
+        expect(camera.getZoom()).toBe(2.7);
     });
 });
 
