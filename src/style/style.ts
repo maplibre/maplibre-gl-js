@@ -899,7 +899,6 @@ export class Style extends Evented {
                 case 'setBearing':
                 case 'setPitch':
                 case 'setRoll':
-                case 'setProjection':
                     continue;
                 case 'addLayer':
                     operations.push(() => this.addLayer.apply(this, op.args));
@@ -942,6 +941,9 @@ export class Style extends Evented {
                     break;
                 case 'setSky':
                     operations.push(() => this.setSky.apply(this, op.args));
+                    break;
+                case 'setProjection':
+                    this.setProjection.apply(this, op.args);
                     break;
                 case 'setGlobalState':
                     operations.push(() => this.setGlobalState.apply(this, op.args));
@@ -1683,15 +1685,16 @@ export class Style extends Evented {
 
     setProjection(projection: ProjectionSpecification) {
         this._checkLoaded();
-        this.stylesheet.projection = projection;
+        const resolvedProjection = projection ?? {type: 'mercator'};
+        this.stylesheet.projection = resolvedProjection;
         if (this.projection) {
-            if (this.projection.name === projection.type) {
+            if (this.projection.name === resolvedProjection.type) {
                 return;
             }
             this.projection.destroy();
             delete this.projection;
         }
-        this._setProjectionInternal(projection.type);
+        this._setProjectionInternal(resolvedProjection.type);
     }
 
     getSky(): SkySpecification {

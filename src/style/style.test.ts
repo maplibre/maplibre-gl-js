@@ -858,6 +858,7 @@ describe('Style.setState', () => {
         spys.push(vi.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
         spys.push(vi.spyOn(style, 'setGlyphs').mockImplementation((() => {}) as any));
         spys.push(vi.spyOn(style, 'setSprite').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setProjection').mockImplementation((() => {}) as any));
         spys.push(vi.spyOn(style.map, 'setTerrain').mockImplementation((() => {}) as any));
         spys.push(vi.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
         spys.push(vi.spyOn(style, 'setGlobalState').mockImplementation((() => {}) as any));
@@ -889,6 +890,7 @@ describe('Style.setState', () => {
             exaggeration: 0.5
         };
         newStyle.zoom = 2;
+        newStyle.projection = {type: 'globe'};
 
         newStyle.sky = {
             'fog-color': '#000001',
