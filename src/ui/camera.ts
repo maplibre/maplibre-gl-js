@@ -840,7 +840,11 @@ export abstract class Camera extends Evented {
         const tr = this.transform;
         const bounds = new LngLatBounds(p0, p1);
 
-        return this.cameraHelper.cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
+        const result = this.cameraHelper.cameraForBoxAndBearing(options, padding, bounds, bearing, tr);
+        if (result && this._zoomSnap) {
+            result.zoom = evaluateZoomSnap(result.zoom, this._zoomSnap, -1);
+        }
+        return result;
     }
 
     /**
@@ -943,6 +947,10 @@ export abstract class Camera extends Evented {
      */
     jumpTo(options: JumpToOptions, eventData?: any): this {
         this.stop();
+
+        if ('zoom' in options && this._zoomSnap) {
+            options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
+        }
 
         const tr = this._getTransformForUpdate();
         let bearingChanged = false,
@@ -1115,6 +1123,10 @@ export abstract class Camera extends Evented {
             duration: 500,
             easing: defaultEasing
         }, options);
+
+        if ('zoom' in options && this._zoomSnap) {
+            options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
+        }
 
         if (options.animate === false || (!options.essential && browser.prefersReducedMotion)) {
             options.duration = 0;
@@ -1431,6 +1443,10 @@ export abstract class Camera extends Evented {
             curve: 1.42,
             easing: defaultEasing
         }, options);
+
+        if ('zoom' in options && this._zoomSnap) {
+            options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
+        }
 
         const tr = this._getTransformForUpdate(),
             startBearing = tr.bearing,
