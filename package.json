@@ -69,9 +69,9 @@
     "@typescript-eslint/eslint-plugin": "^8.57.1",
     "@typescript-eslint/parser": "^8.57.1",
     "@unicode/unicode-17.0.0": "^1.6.16",
-    "@vitest/coverage-v8": "4.1.0",
+    "@vitest/coverage-v8": "4.1.1",
     "@vitest/eslint-plugin": "^1.6.13",
-    "@vitest/ui": "4.1.0",
+    "@vitest/ui": "4.1.1",
     "address": "^2.0.3",
     "autoprefixer": "^10.4.27",
     "benchmark": "^2.1.4",
@@ -127,7 +127,7 @@
     "typedoc": "^0.28.18",
     "typedoc-plugin-markdown": "^4.11.0",
     "typescript": "^5.9.3",
-    "vitest": "4.1.0",
+    "vitest": "4.1.1",
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
   "scripts": {
