@@ -948,6 +948,10 @@ export abstract class Camera extends Evented {
     jumpTo(options: JumpToOptions, eventData?: any): this {
         this.stop();
 
+        if ('zoom' in options && this._zoomSnap) {
+            options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
+        }
+
         const tr = this._getTransformForUpdate();
         let bearingChanged = false,
             pitchChanged = false;
@@ -1119,6 +1123,10 @@ export abstract class Camera extends Evented {
             duration: 500,
             easing: defaultEasing
         }, options);
+
+        if ('zoom' in options && this._zoomSnap) {
+            options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
+        }
 
         if (options.animate === false || (!options.essential && browser.prefersReducedMotion)) {
             options.duration = 0;
@@ -1435,6 +1443,10 @@ export abstract class Camera extends Evented {
             curve: 1.42,
             easing: defaultEasing
         }, options);
+
+        if ('zoom' in options && this._zoomSnap) {
+            options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
+        }
 
         const tr = this._getTransformForUpdate(),
             startBearing = tr.bearing,
