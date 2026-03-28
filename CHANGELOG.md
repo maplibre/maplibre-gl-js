@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+
+- Add an option to auto hide the compass on neutral values
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
