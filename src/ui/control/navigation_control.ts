@@ -28,13 +28,18 @@ export type NavigationControlOptions = {
      * If `true` the roll is visualized by rotating the compass.
      */
     visualizeRoll?: boolean;
+    /**
+     * If `true` the compass with auto hide when on default.
+     */
+    hideCompassOnDefault?: boolean;
 };
 
 const defaultOptions: NavigationControlOptions = {
     showCompass: true,
     showZoom: true,
     visualizePitch: false,
-    visualizeRoll: true
+    visualizeRoll: true,
+    hideCompassOnDefault: false
 };
 
 /**
@@ -98,19 +103,52 @@ export class NavigationControl implements IControl {
     };
 
     _rotateCompassArrow = () => {
+        const transforms = this._rotateCompassArrowValues();
+        this._compassIcon.style.transform = transforms.map(([type, value, unit]) => `${type}(${value}${unit})`)
+            .join(' ');
+        if (this.options.hideCompassOnDefault) {
+            const epsilon = 1e-10;
+            const areNeutral = transforms.every(([type, value]) => {
+                if (type === 'scale') {
+                    return Math.abs(value - 1) < epsilon;
+                }
+                return Math.abs(value) < epsilon;
+            });
+            console.log({transforms, areNeutral});
+            if (areNeutral) {
+                this._compass.style.display = 'none';
+            }else{
+                this._compass.style.display = 'block';
+            }
+        }else{
+            this._compass.style.display = 'block';
+        }
+    };
+
+    _rotateCompassArrowValues = (): Array<[string, number, string]> => {
         if (this.options.visualizePitch && this.options.visualizeRoll) {
-            this._compassIcon.style.transform = `scale(${1 / Math.pow(Math.cos(this._map.transform.pitchInRadians), 0.5)}) rotateZ(${-this._map.transform.roll}deg) rotateX(${this._map.transform.pitch}deg) rotateZ(${-this._map.transform.bearing}deg)`;
-            return;
+            return [
+                ['scale', 1 / Math.pow(Math.cos(this._map.transform.pitchInRadians), 0.5), ''],
+                ['rotateZ', -this._map.transform.roll, 'deg'],
+                ['rotateX', this._map.transform.pitch, 'deg'],
+                ['rotateZ', -this._map.transform.bearing, 'deg'],
+            ];
         }
         if (this.options.visualizePitch) {
-            this._compassIcon.style.transform = `scale(${1 / Math.pow(Math.cos(this._map.transform.pitchInRadians), 0.5)}) rotateX(${this._map.transform.pitch}deg) rotateZ(${-this._map.transform.bearing}deg)`;
-            return;
+            return [
+                ['scale', 1 / Math.pow(Math.cos(this._map.transform.pitchInRadians), 0.5), 'deg'],
+                ['rotateX', this._map.transform.pitch, 'deg'],
+                ['rotateZ', -this._map.transform.bearing, 'deg'],
+            ];
         }
         if (this.options.visualizeRoll) {
-            this._compassIcon.style.transform = `rotate(${-this._map.transform.bearing - this._map.transform.roll}deg)`;
-            return;
+            return [
+                ['rotate', -this._map.transform.bearing - this._map.transform.roll, 'deg']
+            ];
         }
-        this._compassIcon.style.transform = `rotate(${-this._map.transform.bearing}deg)`;
+        return [
+            ['rotate',-this._map.transform.bearing, 'deg']
+        ];
     };
 
     /** {@inheritDoc IControl.onAdd} */
