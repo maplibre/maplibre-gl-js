@@ -1685,15 +1685,16 @@ export class Style extends Evented {
 
     setProjection(projection: ProjectionSpecification) {
         this._checkLoaded();
+        const resolvedProjection = projection ?? {type: 'mercator'};
         this.stylesheet.projection = projection;
         if (this.projection) {
-            if (this.projection.name === projection.type) {
+            if (this.projection.name === resolvedProjection.type) {
                 return;
             }
             this.projection.destroy();
             delete this.projection;
         }
-        this._setProjectionInternal(projection.type);
+        this._setProjectionInternal(resolvedProjection.type);
     }
 
     getSky(): SkySpecification {

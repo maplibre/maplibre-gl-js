@@ -1103,6 +1103,33 @@ describe('Style.setState', () => {
 
         expect(didChange).toBeTruthy();
     });
+
+    test('setState does not crash when target style has no projection', async () => {
+        const style = createStyle();
+        const initialStyle = createStyleJSON({
+            projection: {type: 'globe'}
+        });
+        style.loadJSON(initialStyle);
+        await style.once('style.load');
+
+        const targetStyle = createStyleJSON();
+        expect(() => style.setState(targetStyle)).not.toThrow();
+    });
+
+    test('setState preserves serialized style when target has no projection', async () => {
+        const style = createStyle();
+        const initialStyle = createStyleJSON({
+            projection: {type: 'globe'}
+        });
+        style.loadJSON(initialStyle);
+        await style.once('style.load');
+
+        const targetStyle = createStyleJSON();
+        style.setState(targetStyle);
+
+        const serialized = style.serialize();
+        expect(serialized).not.toHaveProperty('projection');
+    });
 });
 
 describe('Style.addSource', () => {
