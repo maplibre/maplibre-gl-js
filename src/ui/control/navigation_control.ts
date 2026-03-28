@@ -114,7 +114,6 @@ export class NavigationControl implements IControl {
                 }
                 return Math.abs(value) < epsilon;
             });
-            console.log({transforms, areNeutral});
             if (areNeutral) {
                 this._compass.style.display = 'none';
             }else{
@@ -222,7 +221,7 @@ class MouseRotateWrapper {
     constructor(map: Map, element: HTMLElement, pitch: boolean = false) {
         this._clickTolerance = 10;
         this.element = element;
-        
+
         const moveStateManager = new MouseOrTouchMoveStateManager();
         this._rotatePitchHandler = new DragHandler<DragRotateResult, MouseEvent | TouchEvent>({
             clickTolerance: 3,
