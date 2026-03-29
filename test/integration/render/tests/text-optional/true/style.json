@@ -43,6 +43,7 @@
             "layout": {
                 "icon-image": "dot.sdf",
                 "icon-size": 2,
+                "icon-overlap": "always",
                 "text-field": "{name}",
                 "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
                 "text-size": 20,
