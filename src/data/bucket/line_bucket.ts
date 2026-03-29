@@ -258,8 +258,8 @@ export class LineBucket implements Bucket {
         const layout = this.layers[0].layout;
         const join = layout.get('line-join').evaluate(feature, {});
         const cap = layout.get('line-cap').evaluate(feature, {});
-        const miterLimit = layout.get('line-miter-limit');
-        const roundLimit = layout.get('line-round-limit');
+        const miterLimit = layout.get('line-miter-limit').evaluate(feature, {});
+        const roundLimit = layout.get('line-round-limit').evaluate(feature, {});
         this.lineClips = this.lineFeatureClips(feature);
 
         for (const line of geometry) {

@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Make `line-cap`, `line-miter-limit`, and `line-round-limit` data-driven properties, allowing per-feature values ([#7351](https://github.com/maplibre/maplibre-gl-js/pull/7351)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
