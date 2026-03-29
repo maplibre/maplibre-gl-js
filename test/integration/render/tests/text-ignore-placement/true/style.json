@@ -1,63 +1,60 @@
 {
-  "version": 8,
-  "metadata": {
-    "test": {
-      "width": 128,
-      "height": 128
-    }
-  },
-  "sources": {
-    "geojson": {
-      "type": "geojson",
-      "data": {
-        "type": "FeatureCollection",
-        "features": [
-          {
-            "type": "Feature",
-            "properties": { "name": "Label A" },
-            "geometry": { "type": "Point", "coordinates": [0, 0] }
-          },
-          {
-            "type": "Feature",
-            "properties": { "name": "Label B" },
-            "geometry": { "type": "Point", "coordinates": [3, 3] }
-          }
-        ]
-      }
-    }
-  },
-  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
-  "sprite": "local://sprites/sprite",
-  "layers": [
-    {
-      "id": "background",
-      "type": "background",
-      "paint": {
-        "background-color": "white"
-      }
+    "version": 8,
+    "metadata": {
+        "test": {
+            "width": 256,
+            "height": 256
+        }
     },
-    {
-      "id": "labels",
-      "type": "symbol",
-      "source": "geojson",
-      "layout": {
-        "text-field": "{name}",
-        "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-        "text-overlap": "always",
-        "text-ignore-placement": true
-      }
+    "sources": {
+        "geojson": {
+            "type": "geojson",
+            "data": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": { "name": "Allows Icons" },
+                        "geometry": { "type": "Point", "coordinates": [0, 0] }
+                    }
+                ]
+            }
+        }
     },
-    {
-      "id": "icons",
-      "type": "symbol",
-      "source": "geojson",
-      "layout": {
-        "icon-image": "dot.sdf",
-        "icon-padding": 0
-      },
-      "paint": {
-        "icon-color": "red"
-      }
-    }
-  ]
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "sprite": "local://sprites/sprite",
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "white"
+            }
+        },
+        {
+            "id": "icons",
+            "type": "symbol",
+            "source": "geojson",
+            "layout": {
+                "icon-image": "dot.sdf",
+                "icon-size": 2,
+                "icon-padding": 0
+            },
+            "paint": {
+                "icon-color": "blue"
+            }
+        },
+        {
+            "id": "labels",
+            "type": "symbol",
+            "source": "geojson",
+            "layout": {
+                "text-field": "{name}",
+                "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+                "text-size": 24,
+                "text-overlap": "always",
+                "text-ignore-placement": true
+            }
+        }
+    ]
 }
