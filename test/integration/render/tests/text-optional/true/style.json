@@ -1,56 +1,56 @@
 {
-  "version": 8,
-  "metadata": {
-    "test": {
-      "width": 128,
-      "height": 128
-    }
-  },
-  "sources": {
-    "geojson": {
-      "type": "geojson",
-      "data": {
-        "type": "FeatureCollection",
-        "features": [
-          {
-            "type": "Feature",
-            "properties": { "name": "Test Label" },
-            "geometry": { "type": "Point", "coordinates": [0, 0] }
-          }
-        ]
-      }
-    }
-  },
-  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
-  "sprite": "local://sprites/sprite",
-  "layers": [
-    {
-      "id": "background",
-      "type": "background",
-      "paint": {
-        "background-color": "white"
-      }
+    "version": 8,
+    "metadata": {
+        "test": {
+            "width": 256,
+            "height": 256
+        }
     },
-    {
-      "id": "blocker",
-      "type": "symbol",
-      "source": "geojson",
-      "layout": {
-        "text-field": "Blocker Text",
-        "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-        "text-overlap": "always"
-      }
+    "sources": {
+        "geojson": {
+            "type": "geojson",
+            "data": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": { "name": "Label A" },
+                        "geometry": { "type": "Point", "coordinates": [-5, 0] }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": { "name": "Label B" },
+                        "geometry": { "type": "Point", "coordinates": [5, 0] }
+                    }
+                ]
+            }
+        }
     },
-    {
-      "id": "symbol",
-      "type": "symbol",
-      "source": "geojson",
-      "layout": {
-        "icon-image": "triangle-stroked-12",
-        "text-field": "{name}",
-        "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-        "text-optional": true
-      }
-    }
-  ]
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "sprite": "local://sprites/sprite",
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "white"
+            }
+        },
+        {
+            "id": "symbol",
+            "type": "symbol",
+            "source": "geojson",
+            "layout": {
+                "icon-image": "dot.sdf",
+                "icon-size": 2,
+                "text-field": "{name}",
+                "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+                "text-size": 20,
+                "text-optional": true
+            },
+            "paint": {
+                "icon-color": "blue"
+            }
+        }
+    ]
 }
