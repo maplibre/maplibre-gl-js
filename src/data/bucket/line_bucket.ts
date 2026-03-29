@@ -257,7 +257,7 @@ export class LineBucket implements Bucket {
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>, subdivisionGranularity: SubdivisionGranularitySetting) {
         const layout = this.layers[0].layout;
         const join = layout.get('line-join').evaluate(feature, {});
-        const cap = layout.get('line-cap');
+        const cap = layout.get('line-cap').evaluate(feature, {});
         const miterLimit = layout.get('line-miter-limit');
         const roundLimit = layout.get('line-round-limit');
         this.lineClips = this.lineFeatureClips(feature);
@@ -621,7 +621,7 @@ export class LineBucket implements Bucket {
                 continue;
             }
 
-            const round = layer.layout.get('line-cap') === 'round';
+            const round = layer.layout.get('line-cap').evaluate(bucketFeature, {}) === 'round';
 
             const min = {
                 dasharray: dasharrayProperty.value.evaluate({zoom: zoom - 1}, bucketFeature, {}),
