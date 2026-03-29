@@ -1,0 +1,47 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 256
+    }
+  },
+  "center": [13.418056, 52.499167],
+  "zoom": 14,
+  "sources": {
+    "maplibre": {
+      "type": "vector",
+      "maxzoom": 14,
+      "tiles": [
+        "local://tiles/{z}-{x}-{y}.mvt"
+      ]
+    }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "sprite": "local://sprites/sprite",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "symbol",
+      "type": "symbol",
+      "source": "maplibre",
+      "source-layer": "poi_label",
+      "filter": ["has", "maki"],
+      "layout": {
+        "icon-image": "{maki}-12",
+        "icon-size": 2,
+        "text-field": "{name_en}",
+        "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+        "text-size": 10,
+        "text-offset": [0, 1.5],
+        "icon-optional": false
+      }
+    }
+  ]
+}
