@@ -52,7 +52,7 @@
     "@types/earcut": "^3.0.0",
     "@types/eslint": "^9.6.1",
     "@types/gl": "^6.0.5",
-    "@types/jsdom": "^28.0.0",
+    "@types/jsdom": "^28.0.1",
     "@types/minimist": "^1.2.5",
     "@types/murmurhash-js": "^1.0.7",
     "@types/nise": "^1.4.5",
