@@ -1,0 +1,34 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": { "width": 64, "height": 64 }
+  },
+  "state": {
+    "strokeOpacity": { "default": 0.5 }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-10, 0] } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [10, 0] } }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "circle",
+      "type": "circle",
+      "source": "geojson",
+      "paint": {
+        "circle-color": "#fff",
+        "circle-radius": 10,
+        "circle-stroke-width": 2,
+        "circle-stroke-opacity": ["global-state", "strokeOpacity"]
+      }
+    }
+  ]
+}
