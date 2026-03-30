@@ -12,8 +12,8 @@
       "data": {
         "type": "FeatureCollection",
         "features": [
-          { "type": "Feature", "properties": {}, "geometry": { "type": "Point", "coordinates": [-10, 0] } },
-          { "type": "Feature", "properties": {}, "geometry": { "type": "Point", "coordinates": [10, 0] } }
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [-10, 0] } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [10, 0] } }
         ]
       }
     }
