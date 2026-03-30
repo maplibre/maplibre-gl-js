@@ -74,7 +74,7 @@
         "circle-color": ["get", "color"]
       },
       "layout": {
-        "circle-sort-key": ["get", "sort-key"]
+        "circle-sort-key": 1
       }
     }
   ]
