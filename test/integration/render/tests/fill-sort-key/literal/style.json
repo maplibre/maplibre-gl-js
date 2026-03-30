@@ -82,7 +82,7 @@
       "type": "fill",
       "source": "geojson",
       "layout": {
-        "fill-sort-key": ["get", "sort-key"]
+        "fill-sort-key": 1
       },
       "paint": {
         "fill-color": ["get", "color"],
