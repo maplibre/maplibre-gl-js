@@ -1,10 +1,10 @@
 {
   "version": 8,
   "metadata": {
-    "test": {
-      "width": 64,
-      "height": 64
-    }
+    "test": { "width": 64, "height": 64 }
+  },
+  "state": {
+    "opacity": { "default": 0.5 }
   },
   "sources": {
     "geojson": {
@@ -26,18 +26,7 @@
       "source": "geojson",
       "paint": {
         "circle-radius": 10,
-        "circle-opacity": {
-          "stops": [
-            [
-              0,
-              0.3
-            ],
-            [
-              1,
-              0.5
-            ]
-          ]
-        }
+        "circle-opacity": ["global-state", "opacity"]
       }
     }
   ]
