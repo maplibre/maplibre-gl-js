@@ -1,11 +1,9 @@
 {
   "version": 8,
   "metadata": {
-    "test": {
-      "width": 64,
-      "height": 64
-    }
+    "test": { "width": 64, "height": 64 }
   },
+  "bearing": 90,
   "sources": {
     "geojson": {
       "type": "geojson",
@@ -19,18 +17,14 @@
       }
     }
   },
-  "bearing": 90,
   "layers": [
     {
       "id": "circle",
       "type": "circle",
       "source": "geojson",
       "paint": {
-        "circle-translate": [
-          20,
-          0
-        ],
-        "circle-translate-anchor": "map"
+        "circle-radius": 10,
+        "circle-translate": [10, 10]
       }
     }
   ]
