@@ -36,7 +36,7 @@ describe('mercator utils', () => {
         transform.setPitch(90);
         const horizon = getMercatorHorizon(transform);
 
-        expect(horizon).toBeCloseTo(-9.818037813626313, 10);
+        expect(horizon).toBe(0);
     });
 
     test('getMercatorHorizon95', () => {
@@ -45,7 +45,7 @@ describe('mercator utils', () => {
         transform.setPitch(95);
         const horizon = getMercatorHorizon(transform);
 
-        expect(horizon).toBeCloseTo(-75.52102888757743, 10);
+        expect(horizon).toBe(0);
     });
     describe('getProjectionData', () => {
         test('return identity matrix when not passing overscaledTileID', () => {

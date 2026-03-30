@@ -69,8 +69,9 @@ export function unprojectFromWorldCoordinates(worldSize: number, point: Point): 
  * @returns Horizon above center in pixels.
  */
 export function getMercatorHorizon(transform: {pitch: number; cameraToCenterDistance: number}): number {
-    return transform.cameraToCenterDistance * Math.min(Math.tan(degreesToRadians(90 - transform.pitch)) * 0.85,
-        Math.tan(degreesToRadians(maxMercatorHorizonAngle - transform.pitch)));
+    const clampedPitch = Math.min(transform.pitch, maxMercatorHorizonAngle);
+    return transform.cameraToCenterDistance * Math.min(Math.tan(degreesToRadians(90 - clampedPitch)) * 0.85,
+        Math.tan(degreesToRadians(maxMercatorHorizonAngle - clampedPitch)));
 }
 
 export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldSize: number): mat4 {
