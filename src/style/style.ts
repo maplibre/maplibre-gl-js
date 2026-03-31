@@ -458,6 +458,12 @@ export class Style extends Evented {
     }
 
     _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification) {
+        // Bail out if the map was removed while the async style load was in flight.
+        // This happens in React StrictMode which double-invokes effects: the first
+        // map is created and immediately removed, but its style fetch resolves after
+        // removal and accesses destroyed state (this.map.style.projection, etc.).
+        if (this.map._removed) return;
+
         let nextState = options.transformStyle ? options.transformStyle(previousStyle, json) : json;
         if (options.validate && emitValidationErrors(this, validateStyle(nextState))) {
             return;
