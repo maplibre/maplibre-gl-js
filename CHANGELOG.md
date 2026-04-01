@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - _...Add new stuff here..._
+- Add example showing how to measure map performance using built-in events (`load`, `idle`, `render`) ([#7077](https://github.com/maplibre/maplibre-gl-js/pull/7077)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ### 🐞 Bug fixes
 - Make `fitBounds` and `fitScreenCoordinates` respect the `zoomSnap` map option by snapping the zoom level down to keep bounds fully visible ([#7332](https://github.com/maplibre/maplibre-gl-js/issues/7332) (by [@CommanderStorm](https://github.com/CommanderStorm))

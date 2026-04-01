@@ -1,5 +1,5 @@
 import {getJSON} from '../util/ajax';
-import {RequestPerformance} from '../util/performance';
+import {RequestPerformance} from '../util/request_performance';
 import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent';
 import {GeoJSONVT, type GeoJSONVTOptions} from '@maplibre/geojson-vt';
