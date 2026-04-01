@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - _...Add new stuff here..._
+-  Optimize matrix inversions and reduce GPU stalls ([#7367](https://github.com/maplibre/maplibre-gl-js/pull/7367)) (by [@xavierjs](https://github.com/xavierjs))
 - Add example showing how to measure map performance using built-in events (`load`, `idle`, `render`) ([#7077](https://github.com/maplibre/maplibre-gl-js/pull/7077)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ### 🐞 Bug fixes
