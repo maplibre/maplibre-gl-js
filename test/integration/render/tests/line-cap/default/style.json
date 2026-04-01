@@ -5,18 +5,13 @@
       "height": 256
     }
   },
-  "center": [
-    13.418056,
-    52.499167
-  ],
+  "center": [13.418056, 52.499167],
   "zoom": 14,
   "sources": {
     "maplibre": {
       "type": "vector",
       "maxzoom": 14,
-      "tiles": [
-        "local://tiles/{z}-{x}-{y}.mvt"
-      ]
+      "tiles": ["local://tiles/{z}-{x}-{y}.mvt"]
     }
   },
   "layers": [
@@ -28,13 +23,10 @@
       }
     },
     {
-      "id": "square",
+      "id": "road",
       "type": "line",
       "source": "maplibre",
       "source-layer": "road",
-      "layout": {
-        "line-cap": "square"
-      },
       "paint": {
         "line-width": 8,
         "line-color": "#000",
