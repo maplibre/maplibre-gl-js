@@ -1,10 +1,45 @@
 ## main
 ### ✨ Features and improvements
-- Add `referrerPolicy` option to `RequestParameters` to allow controlling the referrer policy for tile requests ([#7278](https://github.com/maplibre/maplibre-gl-js/issues/7278))
+- _...Add new stuff here..._
+- Add example showing how to measure map performance using built-in events (`load`, `idle`, `render`) ([#7077](https://github.com/maplibre/maplibre-gl-js/pull/7077)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ### 🐞 Bug fixes
+- Make `fitBounds` and `fitScreenCoordinates` respect the `zoomSnap` map option by snapping the zoom level down to keep bounds fully visible ([#7332](https://github.com/maplibre/maplibre-gl-js/issues/7332) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Make `jumpTo`, `easeTo`, and `flyTo` respect the `zoomSnap` map option by snapping the zoom level to the nearest valid increment ([#7333](https://github.com/maplibre/maplibre-gl-js/issues/7333) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Fix `setState` crash when switching styles while globe projection is active ([#7314](https://github.com/maplibre/maplibre-gl-js/issues/7314)) (by [@ashwinuae](https://github.com/ashwinuae))
+
+## 5.21.1
+
+### 🐞 Bug fixes
+
+- Add missing `promoteId` parameter to geojson worker and refactor communication object ([#7320](https://github.com/maplibre/maplibre-gl-js/issues/7320)) (by [@HarelM](https://github.com/HarelM))
+
+## 5.21.0
+
+### ✨ Features and improvements
+
+- Add compatibility for ES2020 ([#7283](https://github.com/maplibre/maplibre-gl-js/pull/7283)) (by [@claudiobgit](https://github.com/claudiobgit))
+- Add `referrerPolicy` option to `RequestParameters` to allow controlling the referrer policy for tile requests ([#7278](https://github.com/maplibre/maplibre-gl-js/issues/7278)) (by [@Bingtagui404](https://github.com/Bingtagui404))
+- Wait for the GPU to finish its callstack for rendering benchmarks ([#7285](https://github.com/maplibre/maplibre-gl-js/pull/7285)) (by [@xavierjs](https://github.com/xavierjs))
+- Remove Edge 18 WebP detection workaround; always send `Accept: image/webp` header for image requests ([#7293](https://github.com/maplibre/maplibre-gl-js/pull/7293)) (by [@johanrd](https://github.com/johanrd))
+- Remove legacy browser compatibility code targeting IE11 and pre-2016 browsers ([#7294](https://github.com/maplibre/maplibre-gl-js/pull/7294)) (by [@johanrd](https://github.com/johanrd))
+- Remove legacy `DOM.remove()` and `DOM.mouseButton()` wrappers; use native APIs directly (baseline 2015) ([#7295](https://github.com/maplibre/maplibre-gl-js/pull/7295)) (by [@johanrd](https://github.com/johanrd))
+- Make `setTransformRequest` accept an async function in addition to a sync function. ([#7184](https://github.com/maplibre/maplibre-gl-js/issues/7184)) (by [@kikuomax
+](https://github.com/kikuomax))
+
+### 🐞 Bug fixes
+
+- Fix incorrect popup location in case of terrain and `jumpTo` ([#7267](https://github.com/maplibre/maplibre-gl-js/issues/7267)) (by [@HarelM](https://github.com/HarelM))
 - Fix memory leak in VideoSource: remove `playing` event listener and pause video on source removal ([#7279](https://github.com/maplibre/maplibre-gl-js/pull/7279)) (by [@johanrd](https://github.com/johanrd))
 - Fix memory leak where typed array views retained StructArray buffers after GPU upload, preventing garbage collection ([#7280](https://github.com/maplibre/maplibre-gl-js/pull/7280)) (by [@johanrd](https://github.com/johanrd))
+- Fix raster DEM tiles getting stuck in `"reloading"` state ([#7284](https://github.com/maplibre/maplibre-gl-js/pull/7284)) (by [@katemihalikova](https://github.com/katemihalikova))
+- Fix `GeolocateControl` leaking a `movestart` listener on the map after removal, which could also crash if the control was in active tracking state when removed ([#7286](https://github.com/maplibre/maplibre-gl-js/pull/7286)) (by [@johanrd](https://github.com/johanrd))
+- Cap tile texture reuse pool to prevent unbounded VRAM growth during rapid zoom/pan ([#7289](https://github.com/maplibre/maplibre-gl-js/pull/7289)) (by [@johanrd](https://github.com/johanrd))
+- Fix Marker `click` listener not removed on `remove()`, leaking the handler added in #7028 ([#7287](https://github.com/maplibre/maplibre-gl-js/pull/7287)) (by [@johanrd](https://github.com/johanrd))
+- Fix Terrain GPU resource leak: free FBO, textures, and meshes when terrain is disabled via `setTerrain(null)` ([#7288](https://github.com/maplibre/maplibre-gl-js/pull/7288)) (by [@johanrd](https://github.com/johanrd))
+- Fix guard against partial layout in `PauseablePlacement` ([#7079](https://github.com/maplibre/maplibre-gl-js/pull/7079)) (by [@garethbowker](https://github.com/garethbowker))
+- Fix missing tile encoding for MLT queryRenderedFeatures ([#7056](https://github.com/maplibre/maplibre-gl-js/pull/7056)) (by [@dannote](https://github.com/dannote) and [@ted-piotrowski](https://github.com/ted-piotrowski))
+- Fix 3D Tiles example ([#7275](https://github.com/maplibre/maplibre-gl-js/pull/7275)) (by [@hh-hang](https://github.com/hh-hang))
 
 ## 5.20.2
 

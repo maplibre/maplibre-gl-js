@@ -3,6 +3,7 @@ import {fakeServer, type FakeServer} from 'nise';
 import {loadTileJson} from './load_tilejson';
 import {RequestManager} from '../util/request_manager';
 import {ABORT_ERROR} from '../util/abort_error';
+import {sleep} from '../util/test/util';
 
 import {type RasterSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
@@ -39,10 +40,45 @@ describe('loadTileJson', () => {
         });
 
         const promise = loadTileJson(options, requestManager, new AbortController());
+        await sleep(0);
         server.respond();
         const result = await promise;
 
         expect(result).toEqual(mockTileJSON);
+    });
+
+    test('fetches and returns TileJSON (async transformRequest)', async () => {
+        const options = {
+            type: 'raster',
+            url: 'http://example.com/test.json',
+        } satisfies RasterSourceSpecification;
+
+        const mockTileJSON = {
+            tiles: ['http://example.com/tile/{z}/{x}/{y}.png'],
+            minzoom: 0,
+            maxzoom: 14,
+            attribution: 'Test Attribution',
+            bounds: [-180, -85, 180, 85],
+            scheme: 'xyz',
+            tileSize: 256,
+        };
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify(mockTileJSON));
+        });
+
+        const requestManager = new RequestManager(async (url) => ({
+            url,
+            headers: {Authorization: 'Bearer token'}
+        }));
+        const promise = loadTileJson(options, requestManager, new AbortController());
+        await sleep(0);
+        server.respond();
+        const result = await promise;
+
+        expect(result).toEqual(mockTileJSON);
+        expect(server.requests[0].url).toBe('http://example.com/test.json');
+        expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
     });
 
     test('combines input and TileJSON', async () => {
@@ -68,6 +104,7 @@ describe('loadTileJson', () => {
         });
 
         const promise = loadTileJson(options, requestManager, new AbortController());
+        await sleep(0);
         server.respond();
         const result = await promise;
 
@@ -101,6 +138,7 @@ describe('loadTileJson', () => {
         });
 
         const promise = loadTileJson(options, requestManager, new AbortController());
+        await sleep(0);
         server.respond();
         const result: any = await promise;
 
@@ -130,6 +168,7 @@ describe('loadTileJson', () => {
         });
 
         const promise = loadTileJson(options, requestManager, new AbortController());
+        await sleep(0);
         server.respond();
         const result = await promise;
 
@@ -158,6 +197,7 @@ describe('loadTileJson', () => {
 
         const abortController = new AbortController();
         const promise = loadTileJson(options, requestManager, abortController);
+        await sleep(0);
         abortController.abort();
         server.respond();
 
@@ -175,6 +215,7 @@ describe('loadTileJson', () => {
         });
 
         const promise = loadTileJson(options, requestManager, new AbortController());
+        await sleep(0);
         server.respond();
 
         await expect(promise).rejects.toThrow('AJAXError: Not Found (404): http://example.com/test.json');

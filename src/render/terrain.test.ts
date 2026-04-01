@@ -383,4 +383,23 @@ describe('Terrain', () => {
         });
     });
 
+    test('destroy does not throw', () => {
+        const context = new Context(gl);
+        const painter = {
+            context,
+            width: 100,
+            height: 100,
+            pixelRatio: 1,
+            style: {projection: null},
+        } as any as Painter;
+        const tileManager = {_source: {tileSize: 512}, destruct: vi.fn()} as any as TileManager;
+        const terrain = new Terrain(painter, tileManager, {} as any as TerrainSpecification);
+
+        terrain.getCoordsTexture();
+        terrain.getFramebuffer('coords');
+        terrain.getTerrainMesh(new OverscaledTileID(0, 0, 0, 0, 0));
+
+        expect(() => terrain.destroy()).not.toThrow();
+    });
+
 });

@@ -192,31 +192,27 @@ export class GeoJSONSource extends Evented implements Source {
         // third-party sources to hack/reuse GeoJSONSource.
         this.workerOptions = extend({
             source: this.id,
-            cluster: options.cluster || false,
             geojsonVtOptions: {
                 buffer: this._pixelsToTileUnits(options.buffer !== undefined ? options.buffer : 128),
                 tolerance: this._pixelsToTileUnits(options.tolerance !== undefined ? options.tolerance : 0.375),
                 extent: EXTENT,
                 maxZoom: this.maxzoom,
                 lineMetrics: options.lineMetrics || false,
-                generateId: options.generateId || false
-            },
-            superclusterOptions: {
-                maxZoom: this._getClusterMaxZoom(options.clusterMaxZoom),
-                minPoints: Math.max(2, options.clusterMinPoints || 2),
-                extent: EXTENT,
-                radius: this._pixelsToTileUnits(options.clusterRadius || 50),
-                log: false,
-                generateId: options.generateId || false
+                generateId: options.generateId || false,
+                promoteId: typeof options.promoteId === 'string' ? options.promoteId : undefined,
+                cluster: options.cluster || false,
+                clusterOptions: {
+                    maxZoom: this._getClusterMaxZoom(options.clusterMaxZoom),
+                    minPoints: Math.max(2, options.clusterMinPoints || 2),
+                    extent: EXTENT,
+                    radius: this._pixelsToTileUnits(options.clusterRadius || 50),
+                    log: false,
+                    generateId: options.generateId || false
+                },
             },
             clusterProperties: options.clusterProperties,
             filter: options.filter
         }, options.workerOptions);
-
-        // send the promoteId to the worker to have more flexible updates, but only if it is a string
-        if (typeof this.promoteId === 'string') {
-            this.workerOptions.promoteId = this.promoteId;
-        }
     }
 
     private _hasPendingWorkerUpdate(): boolean {
@@ -321,12 +317,12 @@ export class GeoJSONSource extends Evented implements Source {
      * ```
      */
     setClusterOptions(options: SetClusterOptions): this {
-        this.workerOptions.cluster = options.cluster;
+        this.workerOptions.geojsonVtOptions.cluster = options.cluster;
         if (options.clusterRadius !== undefined) {
-            this.workerOptions.superclusterOptions.radius = this._pixelsToTileUnits(options.clusterRadius);
+            this.workerOptions.geojsonVtOptions.clusterOptions.radius = this._pixelsToTileUnits(options.clusterRadius);
         }
         if (options.clusterMaxZoom !== undefined) {
-            this.workerOptions.superclusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
+            this.workerOptions.geojsonVtOptions.clusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
         }
         this._pendingWorkerUpdate.updateCluster = true;
         this._updateWorkerData();
@@ -402,6 +398,7 @@ export class GeoJSONSource extends Evented implements Source {
         }
 
         const {data, diff, updateCluster} = this._pendingWorkerUpdate;
+        // delay awaiting params until _isUpdatingWorker is set, otherwise, a race condition could happen
         const params = this._getLoadGeoJSONParameters(data, diff, updateCluster);
 
         if (data !== undefined) {
@@ -418,12 +415,12 @@ export class GeoJSONSource extends Evented implements Source {
     /**
      * Create the parameters object that will be sent to the worker and used to load GeoJSON.
      */
-    private _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): LoadGeoJSONParameters | undefined {
+    private async _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): Promise<LoadGeoJSONParameters | undefined> {
         const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
 
         // Data comes from a remote url
         if (typeof data === 'string') {
-            params.request = this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
+            params.request = await this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
             params.request.collectResourceTiming = this._collectResourceTiming;
             return params;
         }
@@ -450,11 +447,12 @@ export class GeoJSONSource extends Evented implements Source {
     /**
      * Send the worker update data from the main thread to the worker
      */
-    private async _dispatchWorkerUpdate(options: LoadGeoJSONParameters) {
+    private async _dispatchWorkerUpdate(optionsPromise: Promise<LoadGeoJSONParameters>) {
         this._isUpdatingWorker = true;
         this.fire(new Event('dataloading', {dataType: 'source'}));
 
         try {
+            const options = await optionsPromise;
             const result = await this.actor.sendAsync({type: MessageType.loadData, data: options});
             this._isUpdatingWorker = false;
 

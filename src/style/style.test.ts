@@ -133,6 +133,26 @@ describe('Style.loadURL', () => {
         expect(spy.mock.calls[0][1]).toBe('Style');
     });
 
+    test('can asynchronously transform style request', async () => {
+        server.respondWith('style.json', JSON.stringify(createStyleJSON()));
+
+        const map = getStubMap();
+        map._requestManager.transformRequest = async (url, type) => ({
+            url,
+            type,
+            headers: {Authorization: 'Bearer token'}
+        });
+
+        const style = new Style(map);
+        style.loadURL('style.json');
+        await sleep(0);
+        server.respond();
+        await waitForEvent(style, 'data', (event) => event.dataType === 'style');
+
+        expect(server.requests[0].url).toBe('style.json');
+        expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
+    });
+
     test('validates the style', async () => {
         const style = new Style(getStubMap());
 
@@ -140,6 +160,7 @@ describe('Style.loadURL', () => {
 
         style.loadURL('style.json');
         server.respondWith(JSON.stringify(createStyleJSON({version: 'invalid'})));
+        await sleep(0);
         server.respond();
 
         const {error} = await errorPromise;
@@ -147,9 +168,10 @@ describe('Style.loadURL', () => {
         expect(error.message).toMatch(/version/);
     });
 
-    test('cancels pending requests if removed', () => {
+    test('cancels pending requests if removed', async () => {
         const style = new Style(getStubMap());
         style.loadURL('style.json');
+        await sleep(0);
         style._remove();
         expect((server.lastRequest as any).aborted).toBe(true);
     });
@@ -173,6 +195,7 @@ describe('Style.loadURL', () => {
         const promise = style.once('error');
         style.loadURL('style.json');
         server.respondWith(request => request.respond(errorStatus));
+        await sleep(0);
         server.respond();
         const {error} = await promise;
 
@@ -253,6 +276,7 @@ describe('Style.loadJSON', () => {
         expect(e.dataType).toBe('style');
 
         const promise = style.once('data');
+        await sleep(0);
         server.respond();
 
         await promise;
@@ -286,6 +310,7 @@ describe('Style.loadJSON', () => {
 
         const secondDataPromise = style.once('data');
 
+        await sleep(0);
         server.respond();
 
         const secondDateEvent = await secondDataPromise;
@@ -1078,6 +1103,33 @@ describe('Style.setState', () => {
 
         expect(didChange).toBeTruthy();
     });
+
+    test('setState does not crash when target style has no projection', async () => {
+        const style = createStyle();
+        const initialStyle = createStyleJSON({
+            projection: {type: 'globe'}
+        });
+        style.loadJSON(initialStyle);
+        await style.once('style.load');
+
+        const targetStyle = createStyleJSON();
+        expect(() => style.setState(targetStyle)).not.toThrow();
+    });
+
+    test('setState preserves serialized style when target has no projection', async () => {
+        const style = createStyle();
+        const initialStyle = createStyleJSON({
+            projection: {type: 'globe'}
+        });
+        style.loadJSON(initialStyle);
+        await style.once('style.load');
+
+        const targetStyle = createStyleJSON();
+        style.setState(targetStyle);
+
+        const serialized = style.serialize();
+        expect(serialized).not.toHaveProperty('projection');
+    });
 });
 
 describe('Style.addSource', () => {
@@ -1401,6 +1453,7 @@ describe('Style.addSprite', () => {
         style.on('error', errorHandler);
 
         style.addSprite('test', 'https://example.com/sprite');
+        await sleep(0);
         style._remove();
 
         await waitForEvent(style, 'data', (event) => event.dataType === 'style');
@@ -1502,6 +1555,7 @@ describe('Style.setSprite', () => {
 
         const errorPromise = style.once('error');
         style.setSprite('https://example.com/sprite');
+        await sleep(0);
         server.respond();
 
         const {error} = await errorPromise;

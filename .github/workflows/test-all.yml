@@ -190,7 +190,7 @@ jobs:
           node-version-file: '.nvmrc'
 
       - name: Download coverage reports
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           pattern: coverage-reports-*
           merge-multiple: true
@@ -208,14 +208,14 @@ jobs:
 
       - name: Code Coverage Annotation
         if: github.event.pull_request.head.repo.full_name == github.repository
-        uses: ggilder/codecoverage@ae4850f3af863bd0a54e9934478998385ffad725
+        uses: ggilder/codecoverage@9f2933bb9cc49ffb598575216e12c102b0716219
         with:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           COVERAGE_FILE_PATH: "./coverage-merged/lcov.info"
           COVERAGE_FORMAT: "lcov"
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+        uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5.5.3
         with:
           files: ${{ github.workspace }}/coverage-merged/coverage-final.json
           verbose: true

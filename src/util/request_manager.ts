@@ -18,7 +18,7 @@ export const enum ResourceType {
  * This function is used to tranform a request.
  * It is used just before executing the relevant request.
  */
-export type RequestTransformFunction = (url: string, resourceType?: ResourceType) => RequestParameters | undefined;
+export type RequestTransformFunction = (url: string, resourceType?: ResourceType) => RequestParameters | Promise<RequestParameters> | undefined;
 
 export class RequestManager {
     _transformRequestFn: RequestTransformFunction | null;
