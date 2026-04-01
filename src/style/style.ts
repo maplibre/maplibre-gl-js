@@ -427,6 +427,7 @@ export class Style extends Evented {
             options.validate : true;
 
         this._loadStyleRequest = new AbortController();
+        const abortController = this._loadStyleRequest;
         const request = await this.map._requestManager.transformRequest(url, ResourceType.Style);
         if (this._loadStyleRequest.signal.aborted) {
             this._loadStyleRequest = null;
@@ -439,7 +440,7 @@ export class Style extends Evented {
             this._load(response.data, options, previousStyle);
         } catch (error) {
             this._loadStyleRequest = null;
-            if (error && !this._loadStyleRequest.signal.aborted) { // ignore abort
+            if (error && !abortController.signal.aborted) { // ignore abort
                 this.fire(new ErrorEvent(error));
             }
         }
