@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {Map, type MapOptions} from '../map';
-import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
+import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '../../util/test/util';
 import {Tile} from '../../tile/tile';
 import {OverscaledTileID} from '../../tile/tile_id';
 import {fixedLngLat} from '../../../test/unit/lib/fixed';
@@ -154,6 +154,13 @@ describe('Map', () => {
 
         // Cleanup
         spyWorkerPoolRelease.mockClear();
+    });
+    
+    test('remove while style is loading via URL does not crash', async () => {
+        global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify(createStyle())));
+        const map = createMap({style: 'https://example.com/style.json'});
+        map.remove();
+        await sleep(10);
     });
 
     test('remove calls onRemove on added controls', () => {
