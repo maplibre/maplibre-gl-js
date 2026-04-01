@@ -159,8 +159,13 @@ describe('Map', () => {
     test('remove while style is loading via URL does not crash', async () => {
         global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify(createStyle())));
         const map = createMap({style: 'https://example.com/style.json'});
+        let errorFired = false;
+        map.on('error', () => {
+            errorFired = true;
+        });
         map.remove();
-        await sleep(10);
+        await sleep(0);
+        expect(errorFired).toBe(false);
     });
 
     test('remove calls onRemove on added controls', () => {
