@@ -6,6 +6,7 @@
       "height": 64
     }
   },
+  "zoom": 1,
   "sources": {},
   "layers": [
     {
@@ -16,7 +17,7 @@
         "background-opacity": {
           "stops": [
             [0, 0],
-            [1, 1]
+            [2, 1]
           ]
         }
       }
