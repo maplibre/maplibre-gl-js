@@ -49,7 +49,7 @@ export class GlyphManager {
     url: string;
     lang?: string;
 
-    // exposed as statics to enable stubbing in unit tests
+    // exposed as statistics to enable stubbing in unit tests
     static loadGlyphRange = loadGlyphRange;
     static TinySDF = TinySDF;
 
