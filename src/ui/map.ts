@@ -2154,6 +2154,9 @@ export class Map extends Camera {
             const request = await this._requestManager.transformRequest(url, ResourceType.Style);
             try {
                 const response = await getJSON<StyleSpecification>(request, new AbortController());
+                if(this._removed || !this.style){
+                    return;
+                }
                 this._updateDiff(response.data, options);
             } catch (error) {
                 if (error) {
