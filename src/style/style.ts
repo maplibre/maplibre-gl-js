@@ -11,6 +11,7 @@ import {LineAtlas} from '../render/line_atlas';
 import {clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
 import {getJSON, getReferrer} from '../util/ajax';
+import {isAbortError} from '../util/abort_error';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 import {now} from '../util/time_control';
@@ -440,7 +441,7 @@ export class Style extends Evented {
             this._load(response.data, options, previousStyle);
         } catch (error) {
             this._loadStyleRequest = null;
-            if (error && !abortController.signal.aborted) { // ignore abort
+            if (!isAbortError(error)) { // ignore abort
                 this.fire(new ErrorEvent(error));
             }
         }

@@ -1,12 +1,13 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {Map, type MapOptions} from '../map';
-import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '../../util/test/util';
+import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
 import {Tile} from '../../tile/tile';
 import {OverscaledTileID} from '../../tile/tile_id';
 import {fixedLngLat} from '../../../test/unit/lib/fixed';
 import {type RequestTransformFunction, ResourceType} from '../../util/request_manager';
 import {type MapSourceDataEvent} from '../events';
 import {MessageType} from '../../util/actor_messages';
+import {Style} from '../../style/style';
 
 beforeEach(() => {
     beforeMapTest();
@@ -158,13 +159,56 @@ describe('Map', () => {
     
     test('remove while style is loading via URL does not crash', async () => {
         global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify(createStyle())));
+        let loadURLPromise: Promise<void>;
+        const originalLoadURL = Style.prototype.loadURL;
+        const loadURLSpy = vi.spyOn(Style.prototype, 'loadURL').mockImplementation(function (...args) {
+            loadURLPromise = originalLoadURL.apply(this, args);
+            return loadURLPromise;
+        });
         const map = createMap({style: 'https://example.com/style.json'});
-        let errorFired = false;
         const onErrorFired = vi.fn();
         map.on('error', onErrorFired);
         map.remove();
-        await map.once('load');
+        await loadURLPromise;
         expect(onErrorFired).not.toHaveBeenCalled();
+        loadURLSpy.mockRestore();
+    });
+
+    test('remove while setStyle is fetching a new style via URL does not crash', async () => {
+        const style = createStyle();
+        let resolveFetch: (value: Response) => void;
+        const fetchPromise = new Promise<Response>(resolve => { resolveFetch = resolve; });
+        global.fetch = vi.fn()
+            .mockResolvedValueOnce(new Response(JSON.stringify(style)))
+            .mockReturnValueOnce(fetchPromise);
+        const map = createMap({style});
+        await map.once('style.load');
+        const onErrorFired = vi.fn();
+        map.on('error', onErrorFired);
+        map.setStyle('https://example.com/style.json');
+        map.remove();
+        resolveFetch(new Response(JSON.stringify(style)));
+        await fetchPromise;
+        expect(onErrorFired).not.toHaveBeenCalled();
+    });
+
+    test('second setStyle with URL aborts the first', async () => {
+        const style = createStyle();
+        const map = createMap({style});
+        await map.once('style.load');
+        const abortControllers: AbortController[] = [];
+        const getJSONSpy = vi.spyOn(await import('../../util/ajax'), 'getJSON')
+            .mockImplementation((_req, abortController) => {
+                abortControllers.push(abortController);
+                return Promise.resolve({data: style, cacheControl: null, expires: null});
+            });
+        map.setStyle('https://example.com/style1.json');
+        map.setStyle('https://example.com/style2.json');
+        // let microtasks settle
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(abortControllers).toHaveLength(1);
+        expect(abortControllers[0].signal.aborted).toBe(false);
+        getJSONSpy.mockRestore();
     });
 
     test('remove calls onRemove on added controls', () => {

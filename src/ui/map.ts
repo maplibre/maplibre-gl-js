@@ -585,6 +585,7 @@ export class Map extends Camera {
     _requestManager: RequestManager;
     _locale: Record<string, string>;
     _removed: boolean;
+    _diffStyleRequest: AbortController;
     _clickTolerance: number;
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
@@ -2151,12 +2152,21 @@ export class Map extends Camera {
     async _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
+            this._diffStyleRequest?.abort();
+            this._diffStyleRequest = new AbortController();
+            const abortController = this._diffStyleRequest;
             const request = await this._requestManager.transformRequest(url, ResourceType.Style);
+            if (abortController.signal.aborted) {
+                this._diffStyleRequest = null;
+                return;
+            }
             try {
-                const response = await getJSON<StyleSpecification>(request, new AbortController());
+                const response = await getJSON<StyleSpecification>(request, abortController);
+                this._diffStyleRequest = null;
                 this._updateDiff(response.data, options);
             } catch (error) {
-                if (error) {
+                this._diffStyleRequest = null;
+                if (!isAbortError(error)) {
                     this.fire(new ErrorEvent(error));
                 }
             }
@@ -3747,6 +3757,7 @@ export class Map extends Camera {
             this._frameRequest = null;
         }
         this._renderTaskQueue.clear();
+        this._diffStyleRequest?.abort();
         this.painter.destroy();
         this.handlers.destroy();
         delete this.handlers;
