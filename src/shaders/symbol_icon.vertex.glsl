@@ -24,7 +24,7 @@ uniform vec2 u_translation;
 uniform float u_pitched_scale;
 
 out vec2 v_tex;
-out float v_fade_opacity;
+out float v_total_opacity;
 
 #pragma mapbox: define lowp float opacity
 
@@ -55,6 +55,16 @@ void main() {
 
     vec2 translated_a_pos = a_pos + u_translation;
     vec4 projectedPoint = projectTileWithElevation(translated_a_pos, ele);
+
+    // compute opacity and exit if too transparent:
+    vec2 fade_opacity = unpack_opacity(a_fade_opacity);
+    float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
+    float visibility = calculate_visibility(projectedPoint);
+    v_total_opacity = opacity * max(0.0, min(visibility, fade_opacity[0] + fade_change));
+    if (v_total_opacity < 0.1){
+        gl_Position = vec4(-2., -2., -2., 1.);
+        return;
+    }
 
     highp float camera_to_anchor_distance = projectedPoint.w;
     // See comments in symbol_sdf.vertex
@@ -111,8 +121,4 @@ void main() {
     gl_Position = finalPos;
 
     v_tex = a_tex / u_texsize;
-    vec2 fade_opacity = unpack_opacity(a_fade_opacity);
-    float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
-    float visibility = calculate_visibility(projectedPoint);
-    v_fade_opacity = max(0.0, min(visibility, fade_opacity[0] + fade_change));
 }

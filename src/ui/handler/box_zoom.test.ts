@@ -90,7 +90,7 @@ describe('BoxZoomHandler', () => {
         map.remove();
     });
 
-    test('avoids conflicts with DragPanHandler when disabled and reenabled (#2237)', () => {
+    test('avoids conflicts with DragPanHandler when disabled and re-enabled (#2237)', () => {
         const map = createMap(undefined);
 
         map.boxZoom.disable();

@@ -60,7 +60,7 @@ export class EdgeInsets {
     }
 
     /**
-     * Utility method that computes the new apprent center or vanishing point after applying insets.
+     * Utility method that computes the new apparent center or vanishing point after applying insets.
      * This is in pixels and with the top left being (0.0) and +y being downwards.
      *
      * @param width - the width

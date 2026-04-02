@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Display Map Performance Metrics</title>
+<meta property="og:description" content="Measure map performance using built-in events." />
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+<script src='../../dist/maplibre-gl-dev.js'></script>
+<style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    #metrics {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: white;
+        padding: 10px 14px;
+        border-radius: .4rem;
+        font-family: sans-serif;
+        font-size: 14px;
+        z-index: 100;
+    }
+    #metrics div { margin: 4px 0; }
+    #metrics span { font-weight: bold; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="metrics">
+    <div>Load: <span id="load">—</span></div>
+    <div>Idle: <span id="idle">—</span></div>
+    <div>FPS: <span id="fps">—</span></div>
+</div>
+
+<script>
+    const createdAt = performance.now();
+
+    const map = new maplibregl.Map({
+        container: "map",
+        style: "https://demotiles.maplibre.org/style.json",
+        center: [0, 0],
+        zoom: 1,
+    });
+
+    map.on("load", () => {
+        document.getElementById("load").textContent = (performance.now() - createdAt).toFixed(0) + " ms";
+    });
+
+    map.once("idle", () => {
+        document.getElementById("idle").textContent = (performance.now() - createdAt).toFixed(0) + " ms";
+    });
+
+    let frameCount = 0;
+    let fpsStart = performance.now();
+    map.on("render", () => {
+        frameCount++;
+        const elapsed = performance.now() - fpsStart;
+        if (elapsed >= 1000) {
+            document.getElementById("fps").textContent = Math.round(frameCount * 1000 / elapsed);
+            frameCount = 0;
+            fpsStart = performance.now();
+        }
+    });
+</script>
+</body>
+</html>
