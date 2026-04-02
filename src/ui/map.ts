@@ -2125,6 +2125,10 @@ export class Map extends Camera {
         }
 
         if (!style) {
+            if (this._frameRequest) {
+                this._frameRequest.abort();
+                this._frameRequest = null;
+            }
             this.style?.projection?.destroy();
             delete this.style;
             return this;
