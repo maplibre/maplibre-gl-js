@@ -1,5 +1,5 @@
 /*
-(xbourry): this class implements fast mathematical operations
+This class implements fast mathematical operations to optimize or complement gl-matrix
 */
 import type {mat4} from 'gl-matrix';
 
@@ -86,14 +86,14 @@ dst and src are in column-major flat format
 */
 
 export function fastInvertSkewMat4(dst: mat4, src: mat4): mat4{
-    const det = src[0]*src[5] - src[1]*src[4];
-    dst[0] = src[5] / det;
-    dst[1] = -src[4] / det;
+    const invDetXY = 1.0 / (src[0]*src[5] - src[1]*src[4]);
+    dst[0] = src[5] * invDetXY;
+    dst[1] = -src[1] * invDetXY;
     dst[2] = 0;
     dst[3] = 0;
 
-    dst[4] = -src[1] / det;
-    dst[5] = src[0] / det;
+    dst[4] = -src[4] * invDetXY;
+    dst[5] = src[0] * invDetXY;
     dst[6] = 0;
     dst[7] = 0;
 
