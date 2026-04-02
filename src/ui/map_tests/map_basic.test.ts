@@ -164,7 +164,7 @@ describe('Map', () => {
         map.on('error', onErrorFired);
         map.remove();
         await map.once('load');
-        expect(onErrorFired).not.toHaveBeenCalled() 
+        expect(onErrorFired).not.toHaveBeenCalled();
     });
 
     test('remove calls onRemove on added controls', () => {
