@@ -391,7 +391,7 @@ describe('Style.loadJSON', () => {
         expect(transformSpy.mock.calls[1][1]).toBe('SpriteImage');
     });
 
-    test('emits an error on non-existant vector source layer', async () => {
+    test('emits an error on non-existent vector source layer', async () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON({
             sources: {
@@ -2149,7 +2149,7 @@ describe('Style.addLayer', () => {
         expect(e.mapLibre).toBeTruthy();
     });
 
-    test('throws on non-existant vector source layer', async () => {
+    test('throws on non-existent vector source layer', async () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON({
             sources: {
@@ -2391,7 +2391,7 @@ describe('Style.addLayer', () => {
         expect(error.message).toMatch(/Cannot add layer "c" before non-existing layer "z"./);
     });
 
-    test('fires an error on non-existant source layer', async () => {
+    test('fires an error on non-existent source layer', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(extend(createStyleJSON(), {
             sources: {
@@ -2894,9 +2894,9 @@ describe('Style.setFilter', () => {
 
         await style.once('style.load');
         const promise = style.once('error');
-        style.setFilter('non-existant', ['==', 'id', 1]);
+        style.setFilter('non-existent', ['==', 'id', 1]);
         const {error} = await promise;
-        expect(error.message).toMatch(/Cannot filter non-existing layer "non-existant"./);
+        expect(error.message).toMatch(/Cannot filter non-existing layer "non-existent"./);
     });
 
     test('validates filter by default', async () => {
@@ -2964,9 +2964,9 @@ describe('Style.setLayerZoomRange', () => {
         const style = createStyle();
         await style.once('style.load');
         const promise = style.once('error');
-        style.setLayerZoomRange('non-existant', 5, 12);
+        style.setLayerZoomRange('non-existent', 5, 12);
         const {error} = await promise;
-        expect(error.message).toMatch(/Cannot set the zoom range of non-existing layer "non-existant"./);
+        expect(error.message).toMatch(/Cannot set the zoom range of non-existing layer "non-existent"./);
     });
 
     test('does not reload raster source', async () => {

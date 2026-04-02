@@ -421,7 +421,7 @@ describe('getStyle', () => {
         }));
     });
 
-    test('fires an error on checking if non-existant source is loaded', async () => {
+    test('fires an error on checking if non-existent source is loaded', async () => {
         const style = createStyle();
         const map = createMap({style});
 
