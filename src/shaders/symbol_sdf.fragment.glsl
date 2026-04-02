@@ -11,14 +11,12 @@ in vec3 v_data1;
 
 #pragma mapbox: define highp vec4 fill_color
 #pragma mapbox: define highp vec4 halo_color
-#pragma mapbox: define lowp float opacity
 #pragma mapbox: define lowp float halo_width
 #pragma mapbox: define lowp float halo_blur
 
 void main() {
     #pragma mapbox: initialize highp vec4 fill_color
     #pragma mapbox: initialize highp vec4 halo_color
-    #pragma mapbox: initialize lowp float opacity
     #pragma mapbox: initialize lowp float halo_width
     #pragma mapbox: initialize lowp float halo_blur
 
@@ -27,7 +25,7 @@ void main() {
     vec2 tex = v_data0.xy;
     float gamma_scale = v_data1.x;
     float size = v_data1.y;
-    float fade_opacity = v_data1[2];
+    float total_opacity = v_data1[2];
 
     float fontScale = u_is_text ? size / 24.0 : size;
 
@@ -50,7 +48,7 @@ void main() {
         alpha = min(smoothstep(halo_edge - gamma_scaled, halo_edge + gamma_scaled, dist), 1.0 - alpha);
     }
 
-    fragColor = color * (alpha * opacity * fade_opacity);
+    fragColor = color * (alpha * total_opacity);
 
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);

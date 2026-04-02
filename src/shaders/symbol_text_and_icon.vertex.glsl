@@ -70,6 +70,17 @@ void main() {
     vec2 translated_a_pos = a_pos + u_translation;
     vec4 projectedPoint = projectTileWithElevation(translated_a_pos, ele);
 
+    // compute total opacity and early exit if too transparent:
+    vec2 fade_opacity = unpack_opacity(a_fade_opacity);
+    float visibility = calculate_visibility(projectedPoint);
+    float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
+    float interpolated_fade_opacity = max(0.0, min(visibility, fade_opacity[0] + fade_change));
+    float total_opacity = opacity * interpolated_fade_opacity;
+    if (total_opacity < 0.1){
+        gl_Position = vec4(-2., -2., -2., 1.);
+        return;
+    }
+
     highp float camera_to_anchor_distance = projectedPoint.w;
     // If the label is pitched with the map, layout is done in pitched space,
     // which makes labels in the distance smaller relative to viewport space.
@@ -130,12 +141,7 @@ void main() {
     float gamma_scale = finalPos.w;
     gl_Position = finalPos;
 
-    vec2 fade_opacity = unpack_opacity(a_fade_opacity);
-    float visibility = calculate_visibility(projectedPoint);
-    float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
-    float interpolated_fade_opacity = max(0.0, min(visibility, fade_opacity[0] + fade_change));
-
     v_data0.xy = a_tex / u_texsize;
     v_data0.zw = a_tex / u_texsize_icon;
-    v_data1 = vec4(gamma_scale, size, interpolated_fade_opacity, is_sdf);
+    v_data1 = vec4(gamma_scale, size, total_opacity, is_sdf);
 }
