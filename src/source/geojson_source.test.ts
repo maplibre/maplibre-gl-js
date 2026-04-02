@@ -1185,7 +1185,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
 });
 
 describe('GeoJSONSource.getClusterExpansionZoom', () => {
-    test('should send data to wroker and get response', async () => {
+    test('should send data to worker and get response', async () => {
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync: spy.mockResolvedValue({})
@@ -1201,7 +1201,7 @@ describe('GeoJSONSource.getClusterExpansionZoom', () => {
 });
 
 describe('GeoJSONSource.getClusterChildren', () => {
-    test('should send data to wroker and get response', async () => {
+    test('should send data to worker and get response', async () => {
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync: spy.mockResolvedValue({})
@@ -1217,7 +1217,7 @@ describe('GeoJSONSource.getClusterChildren', () => {
 });
 
 describe('GeoJSONSource.getClusterLeaves', () => {
-    test('should send data to wroker and get response', async () => {
+    test('should send data to worker and get response', async () => {
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync: spy.mockResolvedValue({})

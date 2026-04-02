@@ -576,7 +576,7 @@ describe('setPadding', () => {
         expect(currentPadding).toEqual(padding);
     });
 
-    test('doesn\'t change padding thats already present if new value isn\'t passed in', () => {
+    test('doesn\'t change padding that\'s already present if new value isn\'t passed in', () => {
         const camera = createCamera();
         const padding = {left: 300, top: 100, right: 50, bottom: 10};
         camera.setPadding(padding);
@@ -3952,6 +3952,22 @@ describe('fitBounds globe projection', () => {
             top: 0,
             bottom: 0
         });
+    });
+
+    test('maxZoom is respected', () => {
+        const camera = createCameraGlobe();
+        const bb = [[-0.01, -0.01], [0.01, 0.01]] as [LngLatLike, LngLatLike];
+        const result = camera.cameraForBounds(bb, {maxZoom: 10});
+
+        expect(result.zoom).toBeLessThanOrEqual(10);
+    });
+
+    test('maxZoom is respected with zoomSnap', () => {
+        const camera = createCameraGlobe({zoomSnap: 1});
+        const bb = [[-0.01, -0.01], [0.01, 0.01]] as [LngLatLike, LngLatLike];
+        const result = camera.cameraForBounds(bb, {maxZoom: 10.5});
+
+        expect(result.zoom).toBe(10);
     });
 });
 

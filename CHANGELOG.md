@@ -2,11 +2,15 @@
 ### ✨ Features and improvements
 - Make `line-cap`, `line-miter-limit`, and `line-round-limit` data-driven properties, allowing per-feature values ([#7351](https://github.com/maplibre/maplibre-gl-js/pull/7351)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
+-  GPU performance optimization: early culling of transparent symbols in vertex shaders ([#7364](https://github.com/maplibre/maplibre-gl-js/pull/7364)) (by [@xavierjs](https://github.com/xavierjs))
+- Add example showing how to measure map performance using built-in events (`load`, `idle`, `render`) ([#7077](https://github.com/maplibre/maplibre-gl-js/pull/7077)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ### 🐞 Bug fixes
 - Make `fitBounds` and `fitScreenCoordinates` respect the `zoomSnap` map option by snapping the zoom level down to keep bounds fully visible ([#7332](https://github.com/maplibre/maplibre-gl-js/issues/7332) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Make `jumpTo`, `easeTo`, and `flyTo` respect the `zoomSnap` map option by snapping the zoom level to the nearest valid increment ([#7333](https://github.com/maplibre/maplibre-gl-js/issues/7333) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Fix `setState` crash when switching styles while globe projection is active ([#7314](https://github.com/maplibre/maplibre-gl-js/issues/7314)) (by [@ashwinuae](https://github.com/ashwinuae))
+- Fixed symbol collision flickering by adding tolerance to GridIndex AABB comparison ([#7360](https://github.com/maplibre/maplibre-gl-js/issues/7360)) (by [@kkokkoejong](https://github.com/kkokkojeong))
+- Fix `fitBounds` ignoring `maxZoom` option in `vertical-perspective` projection ([#7372](https://github.com/maplibre/maplibre-gl-js/issues/7372)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ## 5.21.1
 
@@ -443,7 +447,7 @@
 - ⚠️ Remove unminified prod build ([#4906](https://github.com/maplibre/maplibre-gl-js/pull/4906)). You'll need to use a different build. (by [@birkskyum](https://github.com/birkskyum))
 - Allows setting the desired WebGL version to use ([#5236](https://github.com/maplibre/maplibre-gl-js/pull/5236)). You can now use `contextType` inside `canvasContextAttributes` to choose which WebGL version to use (by [@ibesora](https://github.com/ibesora))
 - Dual-Stack WebGL Runtime with WebGL2 to WebGL1 Fallback ([#5198](https://github.com/maplibre/maplibre-gl-js/pull/5198)) (by [@0xFA11](https://github.com/0xFA11))
-- Add support for projection type expression as part of a refactoring of the transfrom and projection classes ([#5139](https://github.com/maplibre/maplibre-gl-js/pull/5139)) (by [@HarelM](https://github.com/HarelM))
+- Add support for projection type expression as part of a refactoring of the transform and projection classes ([#5139](https://github.com/maplibre/maplibre-gl-js/pull/5139)) (by [@HarelM](https://github.com/HarelM))
 - Export `Event` class ([#5016](https://github.com/maplibre/maplibre-gl-js/pull/5016)) (by [@zdila](https://github.com/zdila))
 - Support Vertical Perspective projection ([#5023](https://github.com/maplibre/maplibre-gl-js/pull/5023)) (by [@birkskyum](https://github.com/birkskyum))
 - When clustering circles and the promoteId is set to some parameter, the promoted ID is used on non-clustered features and the cluster_id is used on clustered features. Previously the ID was undefined for non-clustered features ([#4899](https://github.com/maplibre/maplibre-gl-js/pull/4899)) (by [@popkinj](https://github.com/popkinj))
@@ -506,7 +510,7 @@
 
 ### ✨ Features and improvements
 
-- Add support for projection type expression as part of a refactoring of the transfrom and projection classes ([#5139](https://github.com/maplibre/maplibre-gl-js/pull/5139)) (by [@HarelM](https://github.com/HarelM))
+- Add support for projection type expression as part of a refactoring of the transform and projection classes ([#5139](https://github.com/maplibre/maplibre-gl-js/pull/5139)) (by [@HarelM](https://github.com/HarelM))
 - ⚠️ Support setting WebGL context options on map creation ([#5196](https://github.com/maplibre/maplibre-gl-js/pull/5196)). Previously supported WebGL context options like `antialias`, `preserveDrawingBuffer` and `failIfMajorPerformanceCaveat` must now be defined inside the `canvasContextAttributes` object on `MapOptions`. (by [@ibesora](https://github.com/ibesora))
 - Dual-Stack WebGL Runtime with WebGL2 to WebGL1 Fallback ([#5198](https://github.com/maplibre/maplibre-gl-js/pull/5198)) (by [@0xFA11](https://github.com/0xFA11))
 
@@ -1038,7 +1042,7 @@
 
 ### 🐞 Bug fixes
 
-- Fixed Interrupting a scroll zoom causes the next scroll zoom to return to the prior zoom level by reseting scroll handler state properly ([#2709](https://github.com/maplibre/maplibre-gl-js/issues/2709), [#3051](https://github.com/maplibre/maplibre-gl-js/pull/305)) (by [@HarelM](https://github.com/HarelM))
+- Fixed Interrupting a scroll zoom causes the next scroll zoom to return to the prior zoom level by resetting scroll handler state properly ([#2709](https://github.com/maplibre/maplibre-gl-js/issues/2709), [#3051](https://github.com/maplibre/maplibre-gl-js/pull/305)) (by [@HarelM](https://github.com/HarelM))
 - Fix unit test warning about duplicate module names ([#3049](https://github.com/maplibre/maplibre-gl-js/pull/3049)) (by [@miccou](https://github.com/miccou))
 - Correct marker position when switching between 2D and 3D view ([#2996](https://github.com/maplibre/maplibre-gl-js/pull/2996)) (by [@sebastianoscarlopez](https://github.com/sebastianoscarlopez))
 - Fix error thrown when unsetting line-gradient ([#2683](https://github.com/maplibre/maplibre-gl-js/issues/2683)) (by [@tangerine-orange](https://github.com/tangerine-orange))
@@ -3241,7 +3245,7 @@ August 16, 2018
 - Fix line rendering artifacts [#3627](https://github.com/mapbox/mapbox-gl-js/pull/3627)
 - Fix incorrect rendering of opaque fills on top of transparent fills [#2628](https://github.com/mapbox/mapbox-gl-js/pull/2628)
 - Prevent `AssertionErrors` from pitching raster layers by only calling `Worker#redoPlacement` on vector and GeoJSON sources [#3624](https://github.com/mapbox/mapbox-gl-js/pull/3624)
-- Restore IE11 compatability [#3635](https://github.com/mapbox/mapbox-gl-js/pull/3635)
+- Restore IE11 compatibility [#3635](https://github.com/mapbox/mapbox-gl-js/pull/3635)
 - Fix symbol placement for cached tiles [#3637](https://github.com/mapbox/mapbox-gl-js/pull/3637)
 
 ## 0.27.0 (November 11 2016)

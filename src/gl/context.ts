@@ -25,7 +25,7 @@ type ClearArgs = {
 
 /**
  * @internal
- * A webgl wrapper class to allow injection, mocking and abstaction
+ * A webgl wrapper class to allow injection, mocking and abstraction
  */
 export class Context {
     gl: WebGLRenderingContext | WebGL2RenderingContext;

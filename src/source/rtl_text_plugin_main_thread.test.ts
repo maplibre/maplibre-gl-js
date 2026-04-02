@@ -74,7 +74,7 @@ describe('RTLMainThreadPlugin', () => {
         expect(rtlMainThreadPlugin.status).toBe('loaded');
     });
 
-    it('should set the RTL text plugin but deffer downloading', async () => {
+    it('should set the RTL text plugin but defer downloading', async () => {
         await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
         expect(rtlMainThreadPlugin.status).toBe('deferred');
         expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'deferred', pluginURL: url});

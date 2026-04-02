@@ -8,7 +8,7 @@ import type {GetGlyphsResponse} from '../util/actor_messages';
 const padding = 1;
 
 /**
- * A rectangle type with postion, width and height.
+ * A rectangle type with position, width and height.
  */
 export type Rect = {
     x: number;
