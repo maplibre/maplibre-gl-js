@@ -426,15 +426,24 @@ export class Style extends Evented {
         options.validate = typeof options.validate === 'boolean' ?
             options.validate : true;
 
-        const request = await this.map._requestManager.transformRequest(url, ResourceType.Style);
         this._loadStyleRequest = new AbortController();
         const abortController = this._loadStyleRequest;
         try {
-            const response = await getJSON<StyleSpecification>(request, this._loadStyleRequest);
-            this._loadStyleRequest = null;
+            const request = await this.map._requestManager.transformRequest(url, ResourceType.Style);
+            abortController.signal.throwIfAborted();
+
+            const response = await getJSON<StyleSpecification>(request, abortController);
+            // Clear this request only if it is still the active style load. A stale
+            // request can finish after a newer loadURL() call has already installed
+            // another controller, and must not clear that newer abort handle.
+            if (this._loadStyleRequest === abortController) {
+                this._loadStyleRequest = null;
+            }
             this._load(response.data, options, previousStyle);
         } catch (error) {
-            this._loadStyleRequest = null;
+            if (this._loadStyleRequest === abortController) {
+                this._loadStyleRequest = null;
+            }
             if (error && !abortController.signal.aborted) { // ignore abort
                 this.fire(new ErrorEvent(error));
             }

@@ -346,6 +346,30 @@ describe('setStyle', () => {
         expect(loadedStyle.layers[0].id).toBe('layerId0');
     });
 
+    test('stale style URL load does not complete after style is cleared during async transformRequest', async () => {
+        server.respondWith('style.json', JSON.stringify(createStyle()));
+
+        let resolveTransformRequest: (value: {url: string}) => void;
+        const transformRequest = new Promise<{url: string}>((resolve) => {
+            resolveTransformRequest = resolve;
+        });
+
+        const map = createMap({deleteStyle: true});
+        const migrateProjectionSpy = vi.spyOn(map, 'migrateProjection');
+        map.setTransformRequest(() => transformRequest);
+
+        map.setStyle('style.json', {diff: false});
+        map.setStyle(null, {diff: false});
+
+        resolveTransformRequest({url: 'style.json'});
+        await sleep(0);
+        server.respond();
+        await sleep(0);
+
+        expect(map.style).toBeUndefined();
+        expect(migrateProjectionSpy).not.toHaveBeenCalled();
+    });
+
     test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', async () => {
         const map = createMap({deleteStyle: true});
         map.setStyle({version: 8, sources: {}, layers: []}, {
