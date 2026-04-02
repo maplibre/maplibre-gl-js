@@ -1686,7 +1686,7 @@ export class Style extends Evented {
     setProjection(projection: ProjectionSpecification) {
         this._checkLoaded();
         const resolvedProjection = projection ?? {type: 'mercator'};
-        this.stylesheet.projection = projection;
+        this.stylesheet.projection = resolvedProjection;
         if (this.projection) {
             if (this.projection.name === resolvedProjection.type) {
                 return;
