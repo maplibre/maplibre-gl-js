@@ -160,12 +160,11 @@ describe('Map', () => {
         global.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify(createStyle())));
         const map = createMap({style: 'https://example.com/style.json'});
         let errorFired = false;
-        map.on('error', () => {
-            errorFired = true;
-        });
+        const onErrorFired = vi.fn();
+        map.on('error', onErrorFired);
         map.remove();
-        await sleep(0);
-        expect(errorFired).toBe(false);
+        await map.once('load');
+        expect(onErrorFired).notToHaveBeenCalled() 
     });
 
     test('remove calls onRemove on added controls', () => {
