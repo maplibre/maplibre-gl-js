@@ -3953,6 +3953,22 @@ describe('fitBounds globe projection', () => {
             bottom: 0
         });
     });
+
+    test('maxZoom is respected', () => {
+        const camera = createCameraGlobe();
+        const bb = [[-0.01, -0.01], [0.01, 0.01]] as [LngLatLike, LngLatLike];
+        const result = camera.cameraForBounds(bb, {maxZoom: 10});
+
+        expect(result.zoom).toBeLessThanOrEqual(10);
+    });
+
+    test('maxZoom is respected with zoomSnap', () => {
+        const camera = createCameraGlobe({zoomSnap: 1});
+        const bb = [[-0.01, -0.01], [0.01, 0.01]] as [LngLatLike, LngLatLike];
+        const result = camera.cameraForBounds(bb, {maxZoom: 10.5});
+
+        expect(result.zoom).toBe(10);
+    });
 });
 
 describe('fitScreenCoordinates globe projection', () => {
