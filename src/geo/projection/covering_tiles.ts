@@ -100,7 +100,7 @@ export function isTileVisible(frustum: Frustum, tileBoundingVolume: IBoundingVol
 /**
  * Definite integral of cos(x)^p. The analytical solution is described in `developer-guides/covering-tiles.md`,
  * but here the integral is evaluated numerically.
- * @param p - the power to raise cos(x) to inside the itegral
+ * @param p - the power to raise cos(x) to inside the integral
  * @param x1 - the starting point of the integral.
  * @param x2 - the ending point of the integral.
  * @return the integral of cos(x)^p from x=x1 to x=x2

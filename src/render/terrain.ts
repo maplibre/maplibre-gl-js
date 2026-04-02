@@ -353,7 +353,7 @@ export class Terrain {
      *   - 8 lower bits for y
      *   - 4 higher bits for x
      *   - 4 higher bits for y
-     *   - 8 bits for coordsIndex (1 .. 255) (= number of terraintile), is later setted in draw_terrain uniform value
+     *   - 8 bits for coordsIndex (1 .. 255) (= number of terraintile), is later set in draw_terrain uniform value
      * @returns the texture
      */
     getCoordsTexture(): Texture {

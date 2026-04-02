@@ -54,7 +54,7 @@ For running a subset of tests, you may use vitest filters e.g.
 npm run test-integration -- browser
 ```
 
-Additionally, it may be helpful to use a visual frontend ([Vitest UI](https://vitest.dev/guide/ui.html)). Note that since render tests do not use Vitest, these will still have to be run from the command line. The UI can be started by replaceing `run` with `--ui` in package.json:
+Additionally, it may be helpful to use a visual frontend ([Vitest UI](https://vitest.dev/guide/ui.html)). Note that since render tests do not use Vitest, these will still have to be run from the command line. The UI can be started by replacing `run` with `--ui` in package.json:
 
 ```diff
 - "test-unit": "vitest run --config vitest.config.unit.ts",

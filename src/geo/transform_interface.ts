@@ -109,7 +109,7 @@ interface ITransformMutators {
     /**
      * Applies a transform to the current transform.
      * @param that - The transform to apply to the current transform.
-     * @param constrain - Whether to constrain the transform's center and zoom and recompute internal matricies once applied.
+     * @param constrain - Whether to constrain the transform's center and zoom and recompute internal matrices once applied.
      */
     apply(that: IReadonlyTransform, constrain: boolean): void;
 

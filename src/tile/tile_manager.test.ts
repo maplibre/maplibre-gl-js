@@ -1274,7 +1274,7 @@ describe('TileManager._updateRetainedTiles', () => {
         ]);
 
         // retained tiles include all ideal tiles and any parents that were loaded to cover
-        // non-existant tiles
+        // non-existent tiles
         expect(retained).toEqual({
             // 1/0/1
             '211': new OverscaledTileID(1, 0, 1, 0, 1),

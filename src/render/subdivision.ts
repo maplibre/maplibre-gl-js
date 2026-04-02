@@ -157,7 +157,7 @@ class Subdivider {
 
     /**
      * Takes a triangle and a cell row index, returns a subdivided vertex ring of the intersection of the triangle and the cell row.
-     * @param cellRow - Index of the cell row. A cell row of index `i` covert range from `i * granularityCellSize` to `(i + 1) * granularityCellSize`.
+     * @param cellRow - Index of the cell row. A cell row of index `i` convert range from `i * granularityCellSize` to `(i + 1) * granularityCellSize`.
      * @param triangleVertices - An array of 6 elements, contains flattened positions of the triangle's vertices: `[v0x, v0y, v1x, v1y, v2x, v2y]`.
      * @param triangleIndices - An array of 3 elements, contains the original indices of the triangle's vertices: `[index0, index1, index2]`.
      * @returns The resulting ring of vertex indices and the index (to the returned ring array) of the leftmost vertex in the ring.
@@ -203,7 +203,7 @@ class Subdivider {
                 // Skip this edge
                 // But make sure to add its endpoint vertex if needed.
                 if (bY >= cellRowYTop && bY <= cellRowYBottom) {
-                    // The edge endpoint is withing this row, add it to the ring
+                    // The edge endpoint is within this row, add it to the ring
                     ring.push(triangleIndices[(edgeIndex + 1) % 3]);
                 }
                 continue;
