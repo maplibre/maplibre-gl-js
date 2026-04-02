@@ -436,7 +436,7 @@ export class Style extends Evented {
         }
 
         try {
-            const response = await getJSON<StyleSpecification>(request, this._loadStyleRequest);
+            const response = await getJSON<StyleSpecification>(request, abortController);
             this._loadStyleRequest = null;
             this._load(response.data, options, previousStyle);
         } catch (error) {
