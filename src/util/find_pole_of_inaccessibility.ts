@@ -37,7 +37,8 @@ export function findPoleOfInaccessibility(
     }
 
     // take centroid as the first best guess
-    let bestCell = getCentroidCell(polygonRings);
+    const centroidCell = getCentroidCell(polygonRings);
+    let bestCell = centroidCell;
     let numProbes = cellQueue.length;
 
     while (cellQueue.length) {
@@ -67,6 +68,15 @@ export function findPoleOfInaccessibility(
         console.log(`best distance: ${bestCell.d}`);
     }
 
+    // For convex or nearly-convex polygons, the centroid provides visually
+    // better label placement than the mathematical POI.
+    // Coordinate rounding (e.g. in geojson-vt) can break polygon symmetry and cause the POI to
+    // drift far from center even though its distance-to-edge is only marginally better.
+    // Prefer the centroid when it is inside the polygon
+    // and its distance is within `precision` of the best found.
+    if (centroidCell.d > 0 && bestCell.d - centroidCell.d <= precision) {
+        return centroidCell.p;
+    }
     return bestCell.p;
 }
 
