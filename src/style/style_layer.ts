@@ -178,7 +178,7 @@ export abstract class StyleLayer extends Evented {
         if (name === 'visibility') {
             return this.visibility;
         }
-        if (this._transitionablePaint && this._transitionablePaint.hasProperty(name)) {
+        if (this._transitionablePaint?.hasProperty(name)) {
             throw new Error(name + ERR_PAINT_NOT_LAYOUT);
         }
         if (!this._unevaluatedLayout) {
@@ -255,7 +255,7 @@ export abstract class StyleLayer extends Evented {
             return;
         }
 
-        if (this._transitionablePaint && this._transitionablePaint.hasProperty(name)) {
+        if (this._transitionablePaint?.hasProperty(name)) {
             this.fire(new ErrorEvent(new Error(name + ERR_PAINT_NOT_LAYOUT)));
             return;
         }
@@ -268,12 +268,12 @@ export abstract class StyleLayer extends Evented {
     getPaintProperty(name: string) {
         if (name.endsWith(TRANSITION_SUFFIX)) {
             const baseName = name.slice(0, -TRANSITION_SUFFIX.length);
-            if (baseName === 'visibility' || (this._unevaluatedLayout && this._unevaluatedLayout.hasProperty(baseName))) {
+            if (baseName === 'visibility' || this._unevaluatedLayout?.hasProperty(baseName)) {
                 throw new Error(name + ERR_LAYOUT_NOT_PAINT);
             }
             return this._transitionablePaint.getTransition(baseName);
         } else {
-            if (name === 'visibility' || (this._unevaluatedLayout && this._unevaluatedLayout.hasProperty(name))) {
+            if (name === 'visibility' || this._unevaluatedLayout?.hasProperty(name)) {
                 throw new Error(name + ERR_LAYOUT_NOT_PAINT);
             }
             return this._transitionablePaint.getValue(name);
@@ -281,7 +281,7 @@ export abstract class StyleLayer extends Evented {
     }
 
     setPaintProperty(name: string, value: unknown, options: StyleSetterOptions = {}) {
-        if (name === 'visibility' || (this._unevaluatedLayout && this._unevaluatedLayout.hasProperty(name))) {
+        if (name === 'visibility' || (this._unevaluatedLayout?.hasProperty(name))) {
             this.fire(new ErrorEvent(new Error(name + ERR_LAYOUT_NOT_PAINT)));
             return false;
         }
@@ -360,8 +360,8 @@ export abstract class StyleLayer extends Evented {
             'minzoom': this.minzoom,
             'maxzoom': this.maxzoom,
             'filter': this.filter as FilterSpecification,
-            'layout': this._unevaluatedLayout && this._unevaluatedLayout.serialize(),
-            'paint': this._transitionablePaint && this._transitionablePaint.serialize()
+            'layout': this._unevaluatedLayout?.serialize(),
+            'paint': this._transitionablePaint?.serialize()
         };
 
         if (this.visibility) {
@@ -377,7 +377,7 @@ export abstract class StyleLayer extends Evented {
     }
 
     _validate(validate: Function, key: string, name: string, value: unknown, options: StyleSetterOptions = {}) {
-        if (options && options.validate === false) {
+        if (options?.validate === false) {
             return false;
         }
         return emitValidationErrors(this, validate.call(validateStyle, {
