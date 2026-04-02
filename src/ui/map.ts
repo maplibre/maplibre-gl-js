@@ -2156,9 +2156,9 @@ export class Map extends Camera {
     }
 
     async _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
+        this._diffStyleRequest?.abort();
         if (typeof style === 'string') {
             const url = style;
-            this._diffStyleRequest?.abort();
             this._diffStyleRequest = new AbortController();
             const abortController = this._diffStyleRequest;
             const request = await this._requestManager.transformRequest(url, ResourceType.Style);
@@ -2177,6 +2177,7 @@ export class Map extends Camera {
                 }
             }
         } else if (typeof style === 'object') {
+            this._diffStyleRequest = null;
             this._updateDiff(style, options);
         }
     }

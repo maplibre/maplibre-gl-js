@@ -212,6 +212,26 @@ describe('Map', () => {
         getJSONSpy.mockRestore();
     });
 
+    test('setStyle with object aborts a pending diff URL fetch', async () => {
+        const style = createStyle();
+        let resolveFetch: (value: Response) => void;
+        const fetchPromise = new Promise<Response>(resolve => { resolveFetch = resolve; });
+        global.fetch = vi.fn()
+            .mockResolvedValueOnce(new Response(JSON.stringify(style)))
+            .mockReturnValueOnce(fetchPromise);
+        const map = createMap({style});
+        await map.once('style.load');
+        const onError = vi.fn();
+        map.on('error', onError);
+        map.setStyle('https://example.com/style.json');
+        const diffRequest = map._diffStyleRequest;
+        map.setStyle(createStyle());
+        expect(diffRequest.signal.aborted).toBe(true);
+        resolveFetch(new Response(JSON.stringify(style)));
+        await fetchPromise;
+        expect(onError).not.toHaveBeenCalled();
+    });
+
     test('setStyle with diff:false aborts a pending diff fetch', async () => {
         const style = createStyle();
         let resolveFetch: (value: Response) => void;
