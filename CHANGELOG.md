@@ -1,8 +1,9 @@
 ## main
 ### ✨ Features and improvements
 - _...Add new stuff here..._
--  GPU performance optimization: early culling of transparent symbols in vertex shaders ([#7364](https://github.com/maplibre/maplibre-gl-js/pull/7364)) (by [@xavierjs](https://github.com/xavierjs))
+- GPU performance optimization: early culling of transparent symbols in vertex shaders ([#7364](https://github.com/maplibre/maplibre-gl-js/pull/7364)) (by [@xavierjs](https://github.com/xavierjs))
 - Add example showing how to measure map performance using built-in events (`load`, `idle`, `render`) ([#7077](https://github.com/maplibre/maplibre-gl-js/pull/7077)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- UX: Clarify error message language so if layout and paint properties are confused in `setPaintProperty` or `setLayoutProperty` ([#6954](https://github.com/maplibre/maplibre-gl-js/pull/6954)) (by [@Willjfield](https://github.com/Willjfield) and [@CommanderStorm](https://github.com/CommanderStorm))
 
 ### 🐞 Bug fixes
 - Make `fitBounds` and `fitScreenCoordinates` respect the `zoomSnap` map option by snapping the zoom level down to keep bounds fully visible ([#7332](https://github.com/maplibre/maplibre-gl-js/issues/7332) (by [@CommanderStorm](https://github.com/CommanderStorm))

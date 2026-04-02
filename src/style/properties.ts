@@ -150,6 +150,10 @@ export class Transitionable<Props> {
         this._globalState = globalState;
     }
 
+    hasProperty(name: string): boolean {
+        return name in this._properties.defaultTransitionablePropertyValues;
+    }
+
     getValue<S extends keyof Props, T>(name: S): PropertyValueSpecification<T> | void {
         return clone(this._values[name].value.value);
     }
@@ -329,6 +333,10 @@ export class Layout<Props> {
 
     hasValue<S extends keyof Props>(name: S) {
         return this._values[name].value !== undefined;
+    }
+
+    hasProperty(name: string): boolean {
+        return name in this._properties.properties;
     }
 
     getValue<S extends keyof Props>(name: S) {
