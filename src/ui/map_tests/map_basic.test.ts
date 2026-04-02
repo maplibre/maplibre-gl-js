@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {Map, type MapOptions} from '../map';
-import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
+import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '../../util/test/util';
 import {Tile} from '../../tile/tile';
 import {OverscaledTileID} from '../../tile/tile_id';
 import {fixedLngLat} from '../../../test/unit/lib/fixed';
@@ -183,13 +183,13 @@ describe('Map', () => {
             .mockReturnValueOnce(fetchPromise);
         const map = createMap({style});
         await map.once('style.load');
-        const onErrorFired = vi.fn();
-        map.on('error', onErrorFired);
+        const onError = vi.fn();
+        map.on('error', onError);
         map.setStyle('https://example.com/style.json');
         map.remove();
         resolveFetch(new Response(JSON.stringify(style)));
         await fetchPromise;
-        expect(onErrorFired).not.toHaveBeenCalled();
+        expect(onError).not.toHaveBeenCalled();
     });
 
     test('second setStyle with URL aborts the first', async () => {
@@ -203,12 +203,53 @@ describe('Map', () => {
                 return Promise.resolve({data: style, cacheControl: null, expires: null});
             });
         map.setStyle('https://example.com/style1.json');
+        const firstDiffRequest = map._diffStyleRequest;
         map.setStyle('https://example.com/style2.json');
-        // let microtasks settle
-        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(firstDiffRequest.signal.aborted).toBe(true);
+        await sleep(0);
         expect(abortControllers).toHaveLength(1);
         expect(abortControllers[0].signal.aborted).toBe(false);
         getJSONSpy.mockRestore();
+    });
+
+    test('setStyle with diff:false aborts a pending diff fetch', async () => {
+        const style = createStyle();
+        let resolveFetch: (value: Response) => void;
+        const fetchPromise = new Promise<Response>(resolve => { resolveFetch = resolve; });
+        global.fetch = vi.fn()
+            .mockResolvedValueOnce(new Response(JSON.stringify(style)))
+            .mockReturnValueOnce(fetchPromise);
+        const map = createMap({style});
+        await map.once('style.load');
+        const onError = vi.fn();
+        map.on('error', onError);
+        map.setStyle('https://example.com/style.json');
+        const diffRequest = map._diffStyleRequest;
+        map.setStyle(createStyle(), {diff: false});
+        expect(diffRequest.signal.aborted).toBe(true);
+        resolveFetch(new Response(JSON.stringify(style)));
+        await fetchPromise;
+        expect(onError).not.toHaveBeenCalled();
+    });
+
+    test('setStyle with null aborts a pending diff fetch', async () => {
+        const style = createStyle();
+        let resolveFetch: (value: Response) => void;
+        const fetchPromise = new Promise<Response>(resolve => { resolveFetch = resolve; });
+        global.fetch = vi.fn()
+            .mockResolvedValueOnce(new Response(JSON.stringify(style)))
+            .mockReturnValueOnce(fetchPromise);
+        const map = createMap({style});
+        await map.once('style.load');
+        const onError = vi.fn();
+        map.on('error', onError);
+        map.setStyle('https://example.com/style.json');
+        const diffRequest = map._diffStyleRequest;
+        map.setStyle(null);
+        expect(diffRequest.signal.aborted).toBe(true);
+        resolveFetch(new Response(JSON.stringify(style)));
+        await fetchPromise;
+        expect(onError).not.toHaveBeenCalled();
     });
 
     test('remove calls onRemove on added controls', () => {
