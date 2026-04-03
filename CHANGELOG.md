@@ -5,6 +5,7 @@
 - Make `line-cap`, `line-miter-limit`, and `line-round-limit` data-driven properties, allowing per-feature values ([#7351](https://github.com/maplibre/maplibre-gl-js/pull/7351)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - GPU performance optimization: early culling of transparent symbols in vertex shaders ([#7364](https://github.com/maplibre/maplibre-gl-js/pull/7364)) (by [@xavierjs](https://github.com/xavierjs))
 - Add example showing how to measure map performance using built-in events (`load`, `idle`, `render`) ([#7077](https://github.com/maplibre/maplibre-gl-js/pull/7077)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- UX: Clarify error message language so if layout and paint properties are confused in `setPaintProperty` or `setLayoutProperty` ([#6954](https://github.com/maplibre/maplibre-gl-js/pull/6954)) (by [@Willjfield](https://github.com/Willjfield) and [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
