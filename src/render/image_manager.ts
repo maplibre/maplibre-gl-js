@@ -266,7 +266,8 @@ export class ImageManager extends Evented {
             return null;
         }
 
-        if (pattern?.position.version === image.version) {
+        // eslint-disable-next-line @typescript-eslint/prefer-optional-chain -- pattern?.position.version would be undefined when pattern is nullish, making undefined === undefined true
+        if (pattern && pattern.position.version === image.version) {
             return pattern.position;
         }
 
