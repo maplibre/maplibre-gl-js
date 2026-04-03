@@ -110,6 +110,7 @@ export function createTileMeshWithBuffers(context: Context, options: CreateTileM
  *     extendToSouthPole: tileID.y === (1 << tileID.z) - 1,
  * }, '16bit');
  * ```
+ * @see [Add a custom layer with tiles to a globe](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-custom-layer-with-tiles-to-a-globe/)
  * @param options - Specify options for tile mesh creation such as granularity or border.
  * @param forceIndicesSize - Specifies what indices type to use. The values '32bit' and '16bit' force their respective indices size. If undefined, the mesh may use either size, and will pick 16 bit indices if possible. If '16bit' is specified and the mesh exceeds 65536 vertices, an exception is thrown.
  * @returns Typed arrays of the mesh vertices and indices.
