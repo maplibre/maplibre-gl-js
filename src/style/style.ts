@@ -612,7 +612,7 @@ export class Style extends Evented {
         }
 
         const source = tileManager.getSource();
-        if (source.type === 'geojson' || (source.vectorLayerIds?.indexOf(sourceLayer) === -1)) {
+        if (source.type === 'geojson' || (!source.vectorLayerIds?.includes(sourceLayer))) {
             this.fire(new ErrorEvent(new Error(
                 `Source layer "${sourceLayer}" ` +
                 `does not exist on source "${source.id}" ` +
@@ -1022,7 +1022,7 @@ export class Style extends Evented {
         }
 
         const builtIns = ['vector', 'raster', 'geojson', 'video', 'image'];
-        const shouldValidate = builtIns.indexOf(source.type) >= 0;
+        const shouldValidate = builtIns.includes(source.type);
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
         if (this.map?._collectResourceTiming) (source as any).collectResourceTiming = true;
         const tileManager = this.tileManagers[id] = new TileManager(id, source, this.dispatcher);

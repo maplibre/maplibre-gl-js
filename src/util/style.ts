@@ -16,7 +16,7 @@ export function coerceSpriteToArray(sprite?: SpriteSpecification): {id: string; 
         const dedupArray: string[] = [];
         for (const {id, url} of sprite) {
             const key = `${id}${url}`;
-            if (dedupArray.indexOf(key) === -1) {
+            if (!dedupArray.includes(key)) {
                 dedupArray.push(key);
                 resultArray.push({id, url});
             }
