@@ -128,6 +128,10 @@ function drawBackgroundDrawable(painter: Painter, layer: BackgroundStyleLayer, c
     }
 
     const visibleTileKeys = new Set<string>();
+
+    // Always rebuild drawables so paint property changes (e.g. setPaintProperty) take effect.
+    (layerGroup as any)._drawablesByTile.clear();
+
     const builder = new DrawableBuilder()
         .setShader('background')
         .setRenderPass(pass)
@@ -139,9 +143,6 @@ function drawBackgroundDrawable(painter: Painter, layer: BackgroundStyleLayer, c
 
     for (const tileID of tileIDs) {
         visibleTileKeys.add(tileID.key.toString());
-
-        // Reuse existing drawable if tile already has one (avoids GPU buffer churn)
-        if (layerGroup.hasDrawablesForTile(tileID)) continue;
 
         const mesh = projection.getMeshFromTileID(context, tileID.canonical, false, true, 'raster');
         const projectionData = transform.getProjectionData({
