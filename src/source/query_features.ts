@@ -217,7 +217,7 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
 
 export function querySourceFeatures(tileManager: TileManager, params: QuerySourceFeatureOptionsStrict | undefined): GeoJSONFeature[] {
     const tiles = tileManager.getRenderableIds().map((id) => {
-        return tileManager.getTileByID(id);
+        return tileManager.getInViewTileByID(id);
     });
 
     const result: GeoJSONFeature[] = [];

@@ -1823,7 +1823,7 @@ export class Style extends Evented {
             if (!layerTiles[styleLayer.source]) {
                 const tileManager = this.tileManagers[styleLayer.source];
                 layerTiles[styleLayer.source] = tileManager.getRenderableIds(true)
-                    .map((id) => tileManager.getTileByID(id))
+                    .map((id) => tileManager.getInViewTileByID(id))
                     .sort((a, b) => (b.tileID.overscaledZ - a.tileID.overscaledZ) || (a.tileID.isLessThan(b.tileID) ? -1 : 1));
             }
 
