@@ -22,3 +22,15 @@ export class AbortError extends Error {
 export function isAbortError(error: Error): boolean {
     return error.name === ABORT_ERROR;
 }
+
+/**
+ * Throws an AbortError if the provided abort signal has already been aborted.
+ *
+ * @param signal - The abort signal to check.
+ * @throws AbortError If the signal is aborted.
+ */
+export function throwIfAborted(signal: AbortSignal): void {
+    if (signal.aborted) {
+        throw new AbortError(signal.reason);
+    }
+}

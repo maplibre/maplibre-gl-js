@@ -355,7 +355,12 @@ describe('setStyle', () => {
         });
 
         const map = createMap({deleteStyle: true});
-        const migrateProjectionSpy = vi.spyOn(map, 'migrateProjection');
+        const initialTransform = map.transform;
+        const initialPainterTransform = map.painter.transform;
+        let projectionTransitionFired = false;
+        map.on('projectiontransition', () => {
+            projectionTransitionFired = true;
+        });
         map.setTransformRequest(() => transformRequest);
 
         map.setStyle('style.json', {diff: false});
@@ -367,7 +372,9 @@ describe('setStyle', () => {
         await sleep(0);
 
         expect(map.style).toBeUndefined();
-        expect(migrateProjectionSpy).not.toHaveBeenCalled();
+        expect(projectionTransitionFired).toBe(false);
+        expect(map.transform).toBe(initialTransform);
+        expect(map.painter.transform).toBe(initialPainterTransform);
     });
 
     test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', async () => {

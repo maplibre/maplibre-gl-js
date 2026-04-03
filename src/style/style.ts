@@ -1,3 +1,4 @@
+import {throwIfAborted} from '../util/abort_error';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {type StyleLayer} from './style_layer';
 import {isRasterStyleLayer} from './style_layer/raster_style_layer';
@@ -430,13 +431,13 @@ export class Style extends Evented {
         const abortController = this._loadStyleRequest;
         try {
             const request = await this.map._requestManager.transformRequest(url, ResourceType.Style);
-            abortController.signal.throwIfAborted();
+            throwIfAborted(abortController.signal);
 
             const response = await getJSON<StyleSpecification>(request, abortController);
-            // Clear this request only if it is still the active style load. A stale
-            // request can finish after a newer loadURL() call has already installed
-            // another controller, and must not clear that newer abort handle.
             if (this._loadStyleRequest === abortController) {
+                // Clear this request only if it is still the active style load. A stale
+                // request can finish after a newer loadURL() call has already installed
+                // another controller, and must not clear that newer abort handle.
                 this._loadStyleRequest = null;
             }
             this._load(response.data, options, previousStyle);
