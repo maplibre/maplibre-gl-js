@@ -3619,17 +3619,4 @@ describe('Style.serialize', () => {
         expect(typeof result['4,2,true'].height).toBe('number');
         expect(typeof result['4,2,true'].y).toBe('number');
     });
-
-    test('Style#_diffStyle should not throw if map is removed', () => {
-        const style = createStyle();
-        
-        const privateMethod = (style as any)._diffStyle || (style as any)[' _diffStyle'];
-        (style as any).map = undefined;
-
-        expect(() => {
-            if (typeof privateMethod === 'function') {
-                privateMethod.call(style, {});
-            }
-        }).not.toThrow();
-    });
 });

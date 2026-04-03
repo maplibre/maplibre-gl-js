@@ -225,4 +225,15 @@ describe('Map', () => {
             expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen')).toBeFalsy();
         });
     });
+    test('Map#remove should not throw if called during style loading', () => {
+        const map = createMap();
+        map.setStyle({
+            version: 8,
+            sources: {},
+            layers: []
+        });
+        expect(() => {
+            map.remove();
+        }).not.toThrow();
+    });
 });
