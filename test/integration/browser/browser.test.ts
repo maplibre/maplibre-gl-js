@@ -485,7 +485,7 @@ describe('Browser tests', () => {
             function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
             const canvas = map.getCanvas();
             const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-            const ext = gl && gl.getExtension('WEBGL_lose_context');
+            const ext = gl?.getExtension('WEBGL_lose_context');
             // Context loss and restore
             const restored: Promise<void> = new Promise(resolve => {
                 const onRestored = () => {
@@ -534,7 +534,7 @@ describe('Browser tests', () => {
         await page.evaluate(() => {
             const canvas = map.getCanvas();
             const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-            const ext = gl && gl.getExtension('WEBGL_lose_context');
+            const ext = gl?.getExtension('WEBGL_lose_context');
             if (ext) {
                 ext.loseContext();
                 setTimeout(() => ext.restoreContext(), 50);
@@ -554,7 +554,7 @@ describe('Browser tests', () => {
         await page.evaluate(async () => {
             const canvas = map.getCanvas();
             const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-            const ext = gl && gl.getExtension('WEBGL_lose_context');
+            const ext = gl?.getExtension('WEBGL_lose_context');
             (window as any).ext = ext;
             ext.loseContext();
         });
