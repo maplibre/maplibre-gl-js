@@ -37,6 +37,7 @@ export default [
 
             parserOptions: {
                 createDefaultProgram: true,
+                project: './tsconfig.json',
             },
         },
 
@@ -49,6 +50,7 @@ export default [
             '@typescript-eslint/no-unused-vars': ['warn', {
                 argsIgnorePattern: '^_',
             }],
+            '@typescript-eslint/prefer-optional-chain': 'error',
 
             '@stylistic/member-delimiter-style': ['error'],
             'no-useless-constructor': 'off',

@@ -381,10 +381,8 @@ export class Placement {
             let prevAnchor;
             // If this label was placed in the previous placement, record the anchor position
             // to allow us to animate the transition
-            if (this.prevPlacement &&
-                this.prevPlacement.variableOffsets[symbolInstance.crossTileID] &&
-                this.prevPlacement.placements[symbolInstance.crossTileID] &&
-                this.prevPlacement.placements[symbolInstance.crossTileID].text) {
+            if (this.prevPlacement?.variableOffsets[symbolInstance.crossTileID] &&
+                this.prevPlacement?.placements[symbolInstance.crossTileID]?.text) {
                 prevAnchor = this.prevPlacement.variableOffsets[symbolInstance.crossTileID].anchor;
             }
             if (symbolInstance.crossTileID === 0) throw new Error('symbolInstance.crossTileID can\'t be 0');
@@ -519,7 +517,7 @@ export class Placement {
                             } else {
                                 placed = placeHorizontalFn();
                             }
-                            if (placed && placed.placeable) break;
+                            if (placed?.placeable) break;
                         }
                     } else {
                         placed = placeHorizontalFn();
@@ -546,7 +544,7 @@ export class Placement {
                             undefined,
                             simpleProjectionMatrix,
                         );
-                        if (placedFeature && placedFeature.placeable) {
+                        if (placedFeature?.placeable) {
                             this.markUsedOrientation(bucket, orientation, symbolInstance);
                             this.placedOrientations[symbolInstance.crossTileID] = orientation;
                         }
@@ -566,7 +564,7 @@ export class Placement {
                     };
 
                     placeTextForPlacementModes(placeHorizontal, placeVertical);
-                    updatePreviousOrientationIfNotPlaced(placed && placed.placeable);
+                    updatePreviousOrientationIfNotPlaced(placed?.placeable);
 
                 } else {
                     // If this symbol was in the last placement, prefer placement using same anchor, if it's still available
@@ -601,7 +599,7 @@ export class Placement {
 
                                 if (result) {
                                     placedBox = result.placedGlyphBoxes;
-                                    if (placedBox && placedBox.placeable) {
+                                    if (placedBox?.placeable) {
                                         placeText = true;
                                         shift = result.shift;
                                         return placedBox;
@@ -650,7 +648,7 @@ export class Placement {
 
                     const placeVertical = () => {
                         const verticalTextBox = collisionArrays.verticalTextBox;
-                        const wasPlaced = placed && placed.placeable;
+                        const wasPlaced = placed?.placeable;
                         if (bucket.allowVerticalPlacement && !wasPlaced && symbolInstance.numVerticalGlyphVertices > 0 && verticalTextBox) {
                             return placeBoxForVariableAnchors(verticalTextBox, collisionArrays.verticalIconBox, WritingMode.vertical);
                         }
@@ -664,7 +662,7 @@ export class Placement {
                         offscreen = placed.offscreen;
                     }
 
-                    const prevOrientation = updatePreviousOrientationIfNotPlaced(placed && placed.placeable);
+                    const prevOrientation = updatePreviousOrientationIfNotPlaced(placed?.placeable);
 
                     // If we didn't get placed, we still need to copy our position from the last placement for
                     // fade animations
@@ -680,8 +678,8 @@ export class Placement {
             }
 
             placedGlyphBoxes = placed;
-            placeText = placedGlyphBoxes && placedGlyphBoxes.placeable;
-            offscreen = placedGlyphBoxes && placedGlyphBoxes.offscreen;
+            placeText = placedGlyphBoxes?.placeable;
+            offscreen = placedGlyphBoxes?.offscreen;
 
             if (symbolInstance.useRuntimeCollisionCircles && symbolInstance.centerJustifiedTextSymbolIndex >= 0) {
                 const placedSymbol = bucket.text.placedSymbolArray.get(symbolInstance.centerJustifiedTextSymbolIndex);
@@ -1156,7 +1154,7 @@ export class Placement {
                 }
             }
 
-            const realBoxes = (boxArrays && boxArrays.has(s)) ? boxArrays.get(s) : {
+            const realBoxes = (boxArrays?.has(s)) ? boxArrays.get(s) : {
                 text: null,
                 icon: null
             };

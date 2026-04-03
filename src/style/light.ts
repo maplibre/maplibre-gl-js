@@ -119,7 +119,7 @@ export class Light extends Evented {
     _validate(validate: Function, value: unknown, options?: {
         validate?: boolean;
     }) {
-        if (options && options.validate === false) {
+        if (options?.validate === false) {
             return false;
         }
 

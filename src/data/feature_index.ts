@@ -345,7 +345,7 @@ register(
 function evaluateProperties(serializedProperties, styleLayerProperties, feature, featureState, availableImages) {
     return mapObject(serializedProperties, (property, key) => {
         const prop = styleLayerProperties instanceof PossiblyEvaluated ? styleLayerProperties.get(key) : null;
-        return prop && prop.evaluate ? prop.evaluate(feature, featureState, availableImages) : prop;
+        return prop?.evaluate ? prop.evaluate(feature, featureState, availableImages) : prop;
     });
 }
 

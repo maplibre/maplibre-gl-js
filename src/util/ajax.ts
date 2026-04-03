@@ -131,7 +131,7 @@ export class AJAXError extends Error {
  * and we will set an empty referrer. Otherwise, we're using the document's URL.
  */
 export const getReferrer = () => isWorker(self) ?
-    self.worker && self.worker.referrer :
+    self.worker?.referrer :
     (window.location.protocol === 'blob:' ? window.parent : window).location.href;
 
 /**
@@ -257,7 +257,7 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
         if (protocolLoadFn) {
             return protocolLoadFn(requestParameters, abortController);
         }
-        if (isWorker(self) && self.worker && self.worker.actor) {
+        if (isWorker(self) && self.worker?.actor) {
             return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
         }
     }
@@ -265,7 +265,7 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
         if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
             return makeFetchRequest(requestParameters, abortController);
         }
-        if (isWorker(self) && self.worker && self.worker.actor) {
+        if (isWorker(self) && self.worker?.actor) {
             return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, mustQueue: true, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
         }
     }

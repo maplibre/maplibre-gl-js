@@ -74,7 +74,7 @@ function renderColorRelief(
             colorRampSize = elevationTexture.size[0];
         }
 
-        if (!dem || !dem.data) {
+        if (!dem?.data) {
             continue;
         }
 

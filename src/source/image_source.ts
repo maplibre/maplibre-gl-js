@@ -155,7 +155,7 @@ export class ImageSource extends Evented implements Source {
             this._request = null;
             this._loaded = true;
 
-            if (image && image.data) {
+            if (image?.data) {
                 this.image = image.data;
                 if (newCoordinates) {
                     this.coordinates = newCoordinates;
@@ -290,7 +290,7 @@ export class ImageSource extends Evented implements Source {
         // `errored` to indicate that we have no data for it.
         // If the world wraps, we may have multiple "wrapped" copies of the
         // single tile.
-        if (this.tileID && this.tileID.equals(tile.tileID.canonical)) {
+        if (this.tileID?.equals(tile.tileID.canonical)) {
             this.tiles[String(tile.tileID.wrap)] = tile;
             tile.buckets = {};
         } else {

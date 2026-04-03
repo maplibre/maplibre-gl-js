@@ -11,7 +11,7 @@ import type {Dispatcher} from '../util/dispatcher';
 import type {MapSourceDataEvent} from '../ui/events';
 
 function createSource(options?: { canvas?: any; eventedParent?: any} & Partial<CanvasSourceSpecification>) {
-    const c = options && options.canvas || window.document.createElement('canvas');
+    const c = options?.canvas || window.document.createElement('canvas');
     c.width = 20;
     c.height = 20;
 

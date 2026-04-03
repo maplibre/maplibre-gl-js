@@ -79,7 +79,7 @@ function getGlyphAdvance(
 ): number {
     if ('fontStack' in section) {
         const positions = glyphMap[section.fontStack];
-        const glyph = positions && positions[codePoint];
+        const glyph = positions?.[codePoint];
         if (!glyph) return 0;
         return glyph.metrics.advance * section.scale + spacing;
     } else {

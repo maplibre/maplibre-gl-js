@@ -129,7 +129,7 @@ export class TileManager extends Evented {
         this.map = map;
         this._maxTileCacheSize = map ? map._maxTileCacheSize : null;
         this._maxTileCacheZoomLevels = map ? map._maxTileCacheZoomLevels : null;
-        if (this._source && this._source.onAdd) {
+        if (this._source?.onAdd) {
             this._source.onAdd(map);
         }
     }
@@ -139,7 +139,7 @@ export class TileManager extends Evented {
             tile.unloadVectorData();
         }
         this.clearTiles();
-        if (this._source && this._source.onRemove) {
+        if (this._source?.onRemove) {
             this._source.onRemove(map);
         }
         this._inViewTiles = new InViewTiles();

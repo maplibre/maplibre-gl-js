@@ -61,7 +61,7 @@ export class FullscreenControl extends Evented implements IControl {
         this._fullscreen = false;
         this._pseudo = options.pseudo ?? false;
 
-        if (options && options.container) {
+        if (options?.container) {
             if (options.container instanceof HTMLElement) {
                 this._container = options.container;
             } else {

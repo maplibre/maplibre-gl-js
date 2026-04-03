@@ -90,7 +90,7 @@ for (const name in expressions) {
 
 function isArrayBuffer(value: any): value is ArrayBuffer {
     return value && typeof ArrayBuffer !== 'undefined' &&
-           (value instanceof ArrayBuffer || (value.constructor && value.constructor.name === 'ArrayBuffer'));
+           (value instanceof ArrayBuffer || (value.constructor?.name === 'ArrayBuffer'));
 }
 
 function getClassRegistryKey(input: Object|SerializedObject): string {
@@ -203,7 +203,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
             properties.message = input.message;
         }
     } else {
-        if (transferables && properties === transferables[transferables.length - 1]) {
+        if (properties === transferables?.[transferables.length - 1]) {
             throw new Error('statically serialized object won\'t survive transfer of $name property');
         }
     }

@@ -261,12 +261,12 @@ function getRectAndMetrics(
     section: TextSectionOptions,
     codePoint: number
 ): GlyphPosition | null {
-    if (glyphPosition && glyphPosition.rect) {
+    if (glyphPosition?.rect) {
         return glyphPosition;
     }
 
     const glyphs = glyphMap[section.fontStack];
-    const glyph = glyphs && glyphs[codePoint];
+    const glyph = glyphs?.[codePoint];
     if (!glyph) return null;
 
     const metrics = glyph.metrics;
@@ -435,7 +435,7 @@ function shapeTextSection(
     },
 ): ShapingSectionAttributes | null {
     const positions = glyphPositions[section.fontStack];
-    const glyphPosition = positions && positions[codePoint];
+    const glyphPosition = positions?.[codePoint];
 
     const rectAndMetrics = getRectAndMetrics(glyphPosition, glyphMap, section, codePoint);
 

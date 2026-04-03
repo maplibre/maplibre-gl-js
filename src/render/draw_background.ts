@@ -54,7 +54,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
         const uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(opacity, color);
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(tileID);
+        const terrainData = painter.style.map.terrain?.getTerrainData(tileID);
 
         // For globe rendering, background uses tile meshes *without* borders and no stencil clipping.
         // This works assuming the tileIDs list contains only tiles of the same zoom level.
