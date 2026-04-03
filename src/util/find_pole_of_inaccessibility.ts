@@ -10,13 +10,11 @@ import {Bounds} from '../geo/bounds';
  *
  * @param polygonRings - first item in array is the outer ring followed optionally by the list of holes, should be an element of the result of util/classify_rings
  * @param precision - Specified in input coordinate units. If 0 returns after first run, if `> 0` repeatedly narrows the search space until the radius of the area searched for the best pole is less than precision
- * @param debug - Print some statistics to the console during execution
  * @returns Pole of Inaccessibility.
  */
 export function findPoleOfInaccessibility(
     polygonRings: Array<Array<Point>>,
     precision: number = 1,
-    debug: boolean = false
 ): Point {
     const bounds = Bounds.fromPoints(polygonRings[0]);
 
@@ -39,7 +37,6 @@ export function findPoleOfInaccessibility(
     // take centroid as the first best guess
     const centroidCell = getCentroidCell(polygonRings);
     let bestCell = centroidCell;
-    let numProbes = cellQueue.length;
 
     while (cellQueue.length) {
         // pick the most promising cell from the queue
@@ -48,7 +45,6 @@ export function findPoleOfInaccessibility(
         // update the best cell if we found a better one
         if (cell.d > bestCell.d || !bestCell.d) {
             bestCell = cell;
-            if (debug) console.log('found best %d after %d probes', Math.round(1e4 * cell.d) / 1e4, numProbes);
         }
 
         // do not drill down further if there's no chance of a better solution
@@ -60,12 +56,6 @@ export function findPoleOfInaccessibility(
         cellQueue.push(new Cell(cell.p.x + h, cell.p.y - h, h, polygonRings));
         cellQueue.push(new Cell(cell.p.x - h, cell.p.y + h, h, polygonRings));
         cellQueue.push(new Cell(cell.p.x + h, cell.p.y + h, h, polygonRings));
-        numProbes += 4;
-    }
-
-    if (debug) {
-        console.log(`num probes: ${numProbes}`);
-        console.log(`best distance: ${bestCell.d}`);
     }
 
     // For convex or nearly-convex polygons, the centroid provides visually
