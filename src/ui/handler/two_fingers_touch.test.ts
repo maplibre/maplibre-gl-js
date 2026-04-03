@@ -9,6 +9,63 @@ function createMap() {
     return new Map({container: DOM.create('div', '', window.document.body)} as any as MapOptions);
 }
 
+function getPinchZoomDelta(configure?: (map: Map) => void) {
+    const map = createMap();
+    const target = map.getCanvas();
+
+    map.touchZoomRotate.disableRotation();
+    map.handlers._handlersById.tapZoom.disable();
+    map.touchPitch.disable();
+    configure?.(map);
+
+    const startZoom = map.getZoom();
+
+    simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -50}, {target, identifier: 2, clientX: 0, clientY: 50}]});
+    map._renderTaskQueue.run();
+    simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -100}, {target, identifier: 2, clientX: 0, clientY: 100}]});
+    map._renderTaskQueue.run();
+
+    const zoomDelta = map.getZoom() - startZoom;
+
+    simulate.touchend(map.getCanvas(), {touches: []});
+    map._renderTaskQueue.run();
+    map._renderTaskQueue.run();
+    map.remove();
+
+    return zoomDelta;
+}
+
+function getPinchZoomEventCounts(configure?: (map: Map) => void) {
+    const map = createMap();
+    const target = map.getCanvas();
+
+    map.touchZoomRotate.disableRotation();
+    map.handlers._handlersById.tapZoom.disable();
+    map.touchPitch.disable();
+    configure?.(map);
+
+    const zoomstart = vi.fn();
+    const zoom = vi.fn();
+    map.on('zoomstart', zoomstart);
+    map.on('zoom', zoom);
+
+    simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -50}, {target, identifier: 2, clientX: 0, clientY: 50}]});
+    map._renderTaskQueue.run();
+    simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -55}, {target, identifier: 2, clientX: 0, clientY: 55}]});
+    map._renderTaskQueue.run();
+
+    const result = {
+        zoomstart: zoomstart.mock.calls.length,
+        zoom: zoom.mock.calls.length
+    };
+
+    simulate.touchend(map.getCanvas(), {touches: []});
+    map._renderTaskQueue.run();
+    map.remove();
+
+    return result;
+}
+
 beforeEach(() => {
     beforeMapTest();
 });
@@ -96,6 +153,45 @@ describe('touch zoom rotate', () => {
         expect(rotateend).toHaveBeenCalledTimes(1);
 
         map.remove();
+    });
+
+    test('TwoFingersTouchZoomRotateHandler scales pinch zoom with setZoomRate', () => {
+        const defaultZoomDelta = getPinchZoomDelta();
+        const slowZoomDelta = getPinchZoomDelta((map) => map.touchZoomRotate.setZoomRate(0.5));
+
+        expect(defaultZoomDelta).toBeGreaterThan(slowZoomDelta);
+        expect(slowZoomDelta).toBeCloseTo(defaultZoomDelta * 0.5, 5);
+    });
+
+    test('TwoFingersTouchZoomRotateHandler restores the default pinch zoom rate', () => {
+        const defaultZoomDelta = getPinchZoomDelta();
+        const restoredZoomDelta = getPinchZoomDelta((map) => {
+            map.touchZoomRotate.setZoomRate(0.5);
+            map.touchZoomRotate.setZoomRate(undefined);
+        });
+
+        expect(restoredZoomDelta).toBeCloseTo(defaultZoomDelta, 5);
+    });
+
+    test('TwoFingersTouchZoomRotateHandler scales pinch sensitivity with setZoomThreshold', () => {
+        const defaultEvents = getPinchZoomEventCounts();
+        const insensitiveEvents = getPinchZoomEventCounts((map) => map.touchZoomRotate.setZoomThreshold(10));
+
+        expect(defaultEvents.zoomstart).toBe(1);
+        expect(defaultEvents.zoom).toBe(1);
+        expect(insensitiveEvents.zoomstart).toBe(0);
+        expect(insensitiveEvents.zoom).toBe(0);
+    });
+
+    test('TwoFingersTouchZoomRotateHandler restores the default pinch zoom threshold', () => {
+        const defaultEvents = getPinchZoomEventCounts();
+        const restoredEvents = getPinchZoomEventCounts((map) => {
+            map.touchZoomRotate.setZoomThreshold(10);
+            map.touchZoomRotate.setZoomThreshold(undefined);
+        });
+
+        expect(restoredEvents.zoomstart).toBe(defaultEvents.zoomstart);
+        expect(restoredEvents.zoom).toBe(defaultEvents.zoom);
     });
 
     test('TwoFingersTouchZoomRotateHandler does not begin a gesture if preventDefault is called on the touchstart event', () => {

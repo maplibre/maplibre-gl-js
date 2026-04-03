@@ -25,6 +25,37 @@ function setupEvents(map: Map) {
     };
 }
 
+function getTapDragZoomDelta(configure?: (map: Map) => void) {
+    const map = createMap();
+    const target = map.getCanvas();
+
+    map.handlers._handlersById.tapZoom.disable();
+    configure?.(map);
+
+    const startZoom = map.getZoom();
+    const pointTouchOptions = {
+        touches: [{target, clientX: 100, clientY: 100}]
+    };
+
+    simulate.touchstart(target, pointTouchOptions);
+    simulate.touchend(target);
+    simulate.touchstart(target, pointTouchOptions);
+    map._renderTaskQueue.run();
+
+    simulate.touchmove(target, {
+        touches: [{target, clientX: 100, clientY: 110}]
+    });
+    map._renderTaskQueue.run();
+
+    const zoomDelta = map.getZoom() - startZoom;
+
+    simulate.touchend(target);
+    map._renderTaskQueue.run();
+    map.remove();
+
+    return zoomDelta;
+}
+
 beforeEach(() => {
     beforeMapTest();
 });
@@ -88,6 +119,24 @@ describe('tap_drag_zoom', () => {
         expect(zoomstart).not.toHaveBeenCalled();
         expect(zoom).not.toHaveBeenCalled();
         expect(zoomend).not.toHaveBeenCalled();
+    });
+
+    test('TapDragZoomHandler scales double-tap drag zoom with setZoomRate', () => {
+        const defaultZoomDelta = getTapDragZoomDelta();
+        const slowZoomDelta = getTapDragZoomDelta((map) => map.touchZoomRotate.setZoomRate(0.5));
+
+        expect(defaultZoomDelta).toBeGreaterThan(slowZoomDelta);
+        expect(slowZoomDelta).toBeCloseTo(defaultZoomDelta * 0.5, 5);
+    });
+
+    test('TapDragZoomHandler restores the default double-tap drag zoom rate', () => {
+        const defaultZoomDelta = getTapDragZoomDelta();
+        const restoredZoomDelta = getTapDragZoomDelta((map) => {
+            map.touchZoomRotate.setZoomRate(0.5);
+            map.touchZoomRotate.setZoomRate(undefined);
+        });
+
+        expect(restoredZoomDelta).toBeCloseTo(defaultZoomDelta, 5);
     });
 
     test('TapDragZoomHandler does not zoom on double-tap and drag if touchstart events are in different locations (>30px apart)', () => {
