@@ -31,8 +31,8 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
         return;
     }
 
-    // Use drawable path if enabled
-    if (painter.useDrawables && painter.useDrawables.has('fill')) {
+    // Use drawable path if enabled (skip during RTT to avoid globe projection issues)
+    if (painter.useDrawables && painter.useDrawables.has('fill') && !renderOptions.isRenderingToTexture) {
         drawFillDrawable(painter, tileManager, layer, coords, renderOptions);
         return;
     }
