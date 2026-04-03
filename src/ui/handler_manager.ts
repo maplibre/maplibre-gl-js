@@ -364,7 +364,7 @@ export class HandlerManager {
     _blockedByActive(activeHandlers: {[x: string]: Handler}, allowed: Array<string>, myName: string) {
         for (const name in activeHandlers) {
             if (name === myName) continue;
-            if (!allowed || allowed.indexOf(name) < 0) {
+            if (!allowed?.includes(name)) {
                 return true;
             }
         }

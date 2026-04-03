@@ -231,7 +231,7 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
         })
         .filter(style => {
             const test = style.metadata.test;
-            if (tests.length !== 0 && !tests.some(t => test.id.indexOf(t) !== -1)) {
+            if (tests.length !== 0 && !tests.some(t => test.id.includes(t))) {
                 return false;
             }
 
