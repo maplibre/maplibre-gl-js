@@ -71,7 +71,7 @@ export class Frustum {
 function unprojectClipSpacePoint(point: vec4 | number[], invProj: mat4, worldSize: number, scale: number): vec4 {
     const v = vec4.transformMat4([] as any, point as any, invProj) as any;
     const s = 1.0 / v[3] / worldSize * scale;
-    return vec4.mul(v as any, v as any, [s, s, 1.0 / v[3], s] as vec4);
+    return vec4.mul(v, v, [s, s, 1.0 / v[3], s] as vec4);
 }
 
 /**

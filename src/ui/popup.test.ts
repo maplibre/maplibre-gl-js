@@ -523,7 +523,7 @@ describe('popup', () => {
             .addTo(map)
             .addTo(map);
 
-        (map.getContainer().querySelector('.maplibregl-popup-close-button') as HTMLButtonElement).click();
+        map.getContainer().querySelector<HTMLButtonElement>('.maplibregl-popup-close-button').click();
 
         expect(map.getContainer().querySelectorAll('.maplibregl-popup')).toHaveLength(0);
     });

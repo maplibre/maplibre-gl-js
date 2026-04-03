@@ -59,6 +59,7 @@ export default [
                 argsIgnorePattern: '^_',
             }],
             '@typescript-eslint/prefer-optional-chain': 'error',
+            '@typescript-eslint/no-unnecessary-type-assertion': 'error',
 
             '@stylistic/member-delimiter-style': ['error'],
             'no-useless-constructor': 'off',
