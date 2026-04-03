@@ -16,7 +16,7 @@
 - UX: Clarify error message language so if layout and paint properties are confused in `setPaintProperty` or `setLayoutProperty` ([#6954](https://github.com/maplibre/maplibre-gl-js/pull/6954)) (by [@Willjfield](https://github.com/Willjfield) and [@CommanderStorm](https://github.com/CommanderStorm))
 
 ### 🐞 Bug fixes
-- Fix polygon text label placement drifting far from center for convex polygons at high zoom due to coordinate rounding in geojson-vt ([#7380](https://github.com/maplibre/maplibre-gl-js/pull/7380)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+
 - Fix startup crash caused by a stale async style load completing after the style was cleared or replaced ([#7377](https://github.com/maplibre/maplibre-gl-js/issues/7377))
 - Make `fitBounds` and `fitScreenCoordinates` respect the `zoomSnap` map option by snapping the zoom level down to keep bounds fully visible ([#7332](https://github.com/maplibre/maplibre-gl-js/issues/7332) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Make `jumpTo`, `easeTo`, and `flyTo` respect the `zoomSnap` map option by snapping the zoom level to the nearest valid increment ([#7333](https://github.com/maplibre/maplibre-gl-js/issues/7333) (by [@CommanderStorm](https://github.com/CommanderStorm))
