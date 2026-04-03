@@ -3619,12 +3619,16 @@ describe('Style.serialize', () => {
         expect(typeof result['4,2,true'].height).toBe('number');
         expect(typeof result['4,2,true'].y).toBe('number');
     });
+
     test('Style#_diffStyle should not throw if map is removed', () => {
+        // @ts-ignore
         const style = new Style(getStubMap()); 
+        
+        // @ts-ignore
         style.map = undefined; 
 
         expect(() => {
+            // @ts-ignore
             style._diffStyle({}); 
         }).not.toThrow();
     });
-});
