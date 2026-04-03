@@ -35,7 +35,7 @@ export type FullscreenControlOptions = {
  * ```ts
  * map.addControl(new FullscreenControl({container: document.querySelector('body')}));
  * ```
- * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js/docs/examples/fullscreen/)
+ * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js/docs/examples/view-a-fullscreen-map/)
  *
  * ## Events
  *

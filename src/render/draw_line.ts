@@ -195,7 +195,7 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
 
         } else if (constantDasharray) {
-            const round = layer.layout.get('line-cap') === 'round';
+            const round = layer.layout.get('line-cap').constantOr(null) === 'round';
             const dashTo = painter.lineAtlas.getDash(constantDasharray.to, round);
             const dashFrom = painter.lineAtlas.getDash(constantDasharray.from, round);
             programConfiguration.setConstantDashPositions(dashTo, dashFrom);

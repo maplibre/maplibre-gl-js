@@ -15,6 +15,7 @@ import type {IControl} from './control';
  * ```
  *
  * @see [Display a globe with a fill extrusion layer](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-globe-with-a-fill-extrusion-layer/)
+ * @see [Sky, Fog, Terrain](https://maplibre.org/maplibre-gl-js/docs/examples/sky-fog-terrain/)
  */
 export class GlobeControl implements IControl {
     _map: Map;

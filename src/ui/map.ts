@@ -585,6 +585,7 @@ export class Map extends Camera {
     _requestManager: RequestManager;
     _locale: Record<string, string>;
     _removed: boolean;
+    _diffStyleRequest: AbortController;
     _clickTolerance: number;
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
@@ -2107,6 +2108,8 @@ export class Map extends Camera {
     }
 
     _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
+        this._diffStyleRequest?.abort();
+        this._diffStyleRequest = null;
         // transformStyle relies on having previous style serialized, if it is not loaded yet, delay _updateStyle until previous style is loaded
         if (options.transformStyle && this.style && !this.style._loaded) {
             this.style.once('style.load', () => this._updateStyle(style, options));
@@ -2122,6 +2125,10 @@ export class Map extends Camera {
         }
 
         if (!style) {
+            if (this._frameRequest) {
+                this._frameRequest.abort();
+                this._frameRequest = null;
+            }
             this.style?.projection?.destroy();
             delete this.style;
             return this;
@@ -2149,18 +2156,29 @@ export class Map extends Camera {
     }
 
     async _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
+        this._diffStyleRequest?.abort();
         if (typeof style === 'string') {
             const url = style;
-            const request = await this._requestManager.transformRequest(url, ResourceType.Style);
+            this._diffStyleRequest = new AbortController();
+            const abortController = this._diffStyleRequest;
             try {
-                const response = await getJSON<StyleSpecification>(request, new AbortController());
+                const request = await this._requestManager.transformRequest(url, ResourceType.Style);
+                if (abortController.signal.aborted) {
+                    this._diffStyleRequest = null;
+                    return;
+                }
+
+                const response = await getJSON<StyleSpecification>(request, abortController);
+                this._diffStyleRequest = null;
                 this._updateDiff(response.data, options);
             } catch (error) {
-                if (error) {
+                this._diffStyleRequest = null;
+                if (!isAbortError(error)) {
                     this.fire(new ErrorEvent(error));
                 }
             }
         } else if (typeof style === 'object') {
+            this._diffStyleRequest = null;
             this._updateDiff(style, options);
         }
     }
@@ -3747,6 +3765,7 @@ export class Map extends Camera {
             this._frameRequest = null;
         }
         this._renderTaskQueue.clear();
+        this._diffStyleRequest?.abort();
         this.painter.destroy();
         this.handlers.destroy();
         delete this.handlers;
