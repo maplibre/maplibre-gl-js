@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - _...Add new stuff here..._
+-  GPU performance optimization: early culling of transparent symbols in vertex shaders ([#7364](https://github.com/maplibre/maplibre-gl-js/pull/7364)) (by [@xavierjs](https://github.com/xavierjs))
 - Add example showing how to measure map performance using built-in events (`load`, `idle`, `render`) ([#7077](https://github.com/maplibre/maplibre-gl-js/pull/7077)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ### 🐞 Bug fixes
@@ -8,6 +9,8 @@
 - Make `fitBounds` and `fitScreenCoordinates` respect the `zoomSnap` map option by snapping the zoom level down to keep bounds fully visible ([#7332](https://github.com/maplibre/maplibre-gl-js/issues/7332) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Make `jumpTo`, `easeTo`, and `flyTo` respect the `zoomSnap` map option by snapping the zoom level to the nearest valid increment ([#7333](https://github.com/maplibre/maplibre-gl-js/issues/7333) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Fix `setState` crash when switching styles while globe projection is active ([#7314](https://github.com/maplibre/maplibre-gl-js/issues/7314)) (by [@ashwinuae](https://github.com/ashwinuae))
+- Fixed symbol collision flickering by adding tolerance to GridIndex AABB comparison ([#7360](https://github.com/maplibre/maplibre-gl-js/issues/7360)) (by [@kkokkoejong](https://github.com/kkokkojeong))
+- Fix `fitBounds` ignoring `maxZoom` option in `vertical-perspective` projection ([#7372](https://github.com/maplibre/maplibre-gl-js/issues/7372)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ## 5.21.1
 
