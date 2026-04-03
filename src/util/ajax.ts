@@ -1,5 +1,5 @@
 import {extend, isWorker} from './util';
-import {AbortError, isAbortError} from './abort_error';
+import {AbortError, isAbortError, throwIfAborted} from './abort_error';
 import {getProtocol} from '../source/protocol_crud';
 import {MessageType} from './actor_messages';
 
@@ -188,7 +188,7 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
         parsePromise = response.text();
     }
     const result = await parsePromise;
-    abortController.signal.throwIfAborted();
+    throwIfAborted(abortController.signal);
     return {data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires'), etag: response.headers.get('ETag')};
 }
 

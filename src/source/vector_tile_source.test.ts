@@ -115,17 +115,15 @@ describe('VectorTileSource', () => {
     test('fires "dataloading" event', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         const evented = new Evented();
-        let dataloadingFired = false;
-        evented.on('dataloading', () => {
-            dataloadingFired = true;
-        });
+        const dataloadingSpy = vi.fn();
+        evented.on('dataloading', dataloadingSpy);
         const source = createSource({url: '/source.json', eventedParent: evented});
         const promise = waitForMetadataEvent(source);
         await sleep(0);
         server.respond();
 
         await promise;
-        expect(dataloadingFired).toBeTruthy();
+        expect(dataloadingSpy).toHaveBeenCalled();
     });
 
     test('fires "error" event if TileJSON request fails', async () => {
