@@ -336,7 +336,7 @@ export class Layout<Props> {
     }
 
     hasProperty(name: string): boolean {
-        return name in this._properties.properties;
+        return name in this._properties.defaultPropertyValues;
     }
 
     getValue<S extends keyof Props>(name: S) {
