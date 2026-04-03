@@ -357,10 +357,8 @@ describe('setStyle', () => {
         const map = createMap({deleteStyle: true});
         const initialTransform = map.transform;
         const initialPainterTransform = map.painter.transform;
-        let projectionTransitionFired = false;
-        map.on('projectiontransition', () => {
-            projectionTransitionFired = true;
-        });
+        const projectionTransitionSpy = vi.fn();
+        map.on('projectiontransition', projectionTransitionSpy);
         map.setTransformRequest(() => transformRequest);
 
         map.setStyle('style.json', {diff: false});
@@ -372,7 +370,7 @@ describe('setStyle', () => {
         await sleep(0);
 
         expect(map.style).toBeUndefined();
-        expect(projectionTransitionFired).toBe(false);
+        expect(projectionTransitionSpy).not.toHaveBeenCalled();
         expect(map.transform).toBe(initialTransform);
         expect(map.painter.transform).toBe(initialPainterTransform);
     });
