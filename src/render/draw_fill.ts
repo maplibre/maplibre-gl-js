@@ -293,6 +293,7 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
                 .setStencilMode(stencil)
                 .setColorMode(colorMode)
                 .setCullFaceMode(CullFaceMode.backCCW)
+                .setDrawMode(gl.LINES)
                 .setLayerTweaker(tweaker);
 
             const outlineDrawable = outlineBuilder.flush({

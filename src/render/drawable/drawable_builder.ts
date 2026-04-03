@@ -124,6 +124,7 @@ export class DrawableBuilder {
         drawable.stencilMode = this._stencilMode!;
         drawable.colorMode = this._colorMode!;
         drawable.cullFaceMode = this._cullFaceMode!;
+        drawable.drawMode = this._drawMode;
 
         // Render pass & ordering
         drawable.renderPass = this._renderPass;

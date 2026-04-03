@@ -61,6 +61,9 @@ export class Drawable {
     colorMode: Readonly<ColorMode>;
     cullFaceMode: Readonly<CullFaceMode>;
 
+    // Draw mode: gl.TRIANGLES (default) or gl.LINES for outlines
+    drawMode: number | null;
+
     // Render pass & ordering
     renderPass: 'opaque' | 'translucent' | 'offscreen';
     drawPriority: number;
@@ -112,6 +115,7 @@ export class Drawable {
         this.stencilMode = null as any;
         this.colorMode = null as any;
         this.cullFaceMode = null as any;
+        this.drawMode = null; // null = gl.TRIANGLES (default)
         this.renderPass = 'translucent';
         this.drawPriority = 0;
         this.subLayerIndex = 0;
@@ -138,10 +142,6 @@ export class Drawable {
         if (!this.enabled) return;
 
         const isWebGPU = device && device.type === 'webgpu';
-        if (!(this as any)._loggedDraw2) {
-            (this as any)._loggedDraw2 = true;
-            console.warn(`[${this.shaderName} draw()] isWebGPU=${isWebGPU} device.type=${device?.type} enabled=${this.enabled} hasRP=${!!renderPass} rpType=${typeof renderPass}`);
-        }
         if (isWebGPU) {
             this._drawWebGPU(device, painter, renderPass);
         } else {
@@ -210,6 +210,8 @@ export class Drawable {
         }
 
         // Draw each segment
+        const mode = this.drawMode ?? gl.TRIANGLES;
+        const verticesPerPrimitive = mode === gl.LINES ? 2 : 3;
         for (const segment of this.segments.get()) {
             const vaos = segment.vaos || (segment.vaos = {});
             const vao: VertexArrayObject = vaos[this._layerID] || (vaos[this._layerID] = new VertexArrayObject());
@@ -226,10 +228,10 @@ export class Drawable {
             );
 
             gl.drawElements(
-                gl.TRIANGLES,
-                segment.primitiveLength * 3,
+                mode,
+                segment.primitiveLength * verticesPerPrimitive,
                 gl.UNSIGNED_SHORT,
-                segment.primitiveOffset * 3 * 2
+                segment.primitiveOffset * verticesPerPrimitive * 2
             );
         }
     }

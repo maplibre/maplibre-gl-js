@@ -752,15 +752,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             // Wait for map to fully initialize (painter is created async on luma.gl branch)
             await map.once('load');
 
-            // Wait for all sources to finish loading and rendering.
-            // On the luma.gl branch, device initialization is async, which can delay
-            // source loading. Wait for 'idle' to ensure all tiles are rendered.
-            if (!idle) {
-                map.repaint = false;
-                await map.once('idle');
-                map.repaint = typeof options.continuesRepaint === 'undefined' ? true : options.continuesRepaint;
-            }
-
             const gl = map.painter.context.gl;
             if (options.collisionDebug) {
                 map.showCollisionBoxes = true;
