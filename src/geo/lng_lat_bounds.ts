@@ -26,7 +26,7 @@ export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number
  *
  * If no arguments are provided to the constructor, a `null` bounding box is created.
  *
- * Note that any Mapbox GL method that accepts a `LngLatBounds` object as an argument or option
+ * Note that any MapLibre GL method that accepts a `LngLatBounds` object as an argument or option
  * can also accept an `Array` of two {@link LngLatLike} constructs and will perform an implicit conversion.
  * This flexible type is documented as {@link LngLatBoundsLike}.
  *
