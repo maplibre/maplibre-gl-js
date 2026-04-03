@@ -104,7 +104,7 @@ function pointToPolygonDist(p, polygon) {
 }
 
 // get polygon centroid
-function getCentroidCell(polygon) {
+export function getCentroidCell(polygon) {
     let area = 0;
     let x = 0;
     let y = 0;
