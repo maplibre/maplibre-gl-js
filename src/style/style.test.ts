@@ -3622,8 +3622,8 @@ describe('Style.serialize', () => {
 
     test('Style#_diffStyle should not throw if map is removed', () => {
         // @ts-ignore
-        const style = new Style(getStubMap()); 
-        
+        const style = new Style(createStyleJSON()); 
+
         style.map = undefined; 
 
         expect(() => {
