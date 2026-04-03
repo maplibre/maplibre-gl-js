@@ -116,8 +116,7 @@ export class TransferableGridIndex {
         if (cell !== null) {
             const keys = this.keys;
             const bboxes = this.bboxes;
-            for (let u = 0; u < cell.length; u++) {
-                const uid = cell[u];
+            for (const uid of cell) {
                 if (seenUids[uid] === undefined) {
                     const offset = uid * 4;
                     if (intersectionTest ?
@@ -169,8 +168,8 @@ export class TransferableGridIndex {
 
         const metadataLength = NUM_PARAMS + this.cells.length + 1 + 1;
         let totalCellLength = 0;
-        for (let i = 0; i < this.cells.length; i++) {
-            totalCellLength += this.cells[i].length;
+        for (const cell of this.cells) {
+            totalCellLength += cell.length;
         }
 
         const array = new Int32Array(metadataLength + totalCellLength + this.keys.length + this.bboxes.length);

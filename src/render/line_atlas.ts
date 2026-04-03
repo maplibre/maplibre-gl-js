@@ -166,7 +166,7 @@ export class LineAtlas {
         }
 
         let length = 0;
-        for (let i = 0; i < dasharray.length; i++) { length += dasharray[i]; }
+        for (const dash of dasharray) { length += dash; }
 
         if (length !== 0) {
             const stretch = this.width / length;

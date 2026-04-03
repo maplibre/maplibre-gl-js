@@ -23,9 +23,9 @@ export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContex
 function getTokenizedAttributesAndUniforms(array: Array<string>): Array<string> {
     const result = [];
 
-    for (let i = 0; i < array.length; i++) {
-        if (array[i] === null) continue;
-        const token = array[i].split(' ');
+    for (const entry of array) {
+        if (entry === null) continue;
+        const token = entry.split(' ');
         result.push(token.pop());
     }
     return result;
@@ -147,8 +147,7 @@ export class Program<Us extends UniformBindings> {
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);
 
-        for (let it = 0; it < allUniformsInfo.length; it++) {
-            const uniform = allUniformsInfo[it];
+        for (const uniform of allUniformsInfo) {
             if (uniform && !uniformLocations[uniform]) {
                 const uniformLocation = gl.getUniformLocation(this.program, uniform);
                 if (uniformLocation) {

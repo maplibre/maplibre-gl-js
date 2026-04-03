@@ -44,8 +44,8 @@ export class Aabb implements IBoundingVolume {
         // Each frustum plane together with 3 major axes define the separating axes
         let fullyInside = true;
 
-        for (let p = 0; p < frustum.planes.length; p++) {
-            const planeIntersection = this.intersectsPlane(frustum.planes[p]);
+        for (const plane of frustum.planes) {
+            const planeIntersection = this.intersectsPlane(plane);
 
             if (planeIntersection === IntersectionResult.None) {
                 return IntersectionResult.None;

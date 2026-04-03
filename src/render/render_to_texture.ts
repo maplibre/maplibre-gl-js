@@ -185,8 +185,8 @@ export class RenderToTexture {
                 painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
                 painter.context.clear({color: Color.transparent, stencil: 0});
                 painter.currentStencilSource = undefined;
-                for (let l = 0; l < layers.length; l++) {
-                    const layer = painter.style._layers[layers[l]];
+                for (const layerId of layers) {
+                    const layer = painter.style._layers[layerId];
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords, true);

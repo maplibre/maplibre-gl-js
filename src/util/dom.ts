@@ -79,8 +79,8 @@ export class DOM {
     public static touchPos(el: HTMLElement, touches: TouchList) {
         const points: Point[] = [];
         const scale = DOM.getScale(el);
-        for (let i = 0; i < touches.length; i++) {
-            points.push(DOM.getPoint(el, scale, touches[i]));
+        for (const touch of touches) {
+            points.push(DOM.getPoint(el, scale, touch));
         }
         return points;
     }

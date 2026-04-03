@@ -30,8 +30,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
     let circleCount = 0;
     let circleOffset = 0;
 
-    for (let i = 0; i < coords.length; i++) {
-        const coord = coords[i];
+    for (const coord of coords) {
         const tile = tileManager.getTile(coord);
         const bucket: SymbolBucket = (tile.getBucket(layer) as any);
         if (!bucket) {
