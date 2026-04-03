@@ -3624,7 +3624,6 @@ describe('Style.serialize', () => {
         // @ts-ignore
         const style = new Style(getStubMap()); 
         
-        // @ts-ignore
         style.map = undefined; 
 
         expect(() => {
@@ -3632,3 +3631,4 @@ describe('Style.serialize', () => {
             style._diffStyle({}); 
         }).not.toThrow();
     });
+});
