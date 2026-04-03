@@ -472,7 +472,7 @@ function drawLayerSymbols(
         }
 
         if (state.isSDF) {
-            const uniformValues = state.uniformValues;
+            const uniformValues = state.uniformValues as UniformValues<SymbolSDFUniformsType>;
             if (state.hasHalo) {
                 uniformValues.u_is_halo = 1;
                 drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues, state.projectionData, segmentState.terrainData);
