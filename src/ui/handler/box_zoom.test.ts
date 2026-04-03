@@ -135,7 +135,7 @@ describe('BoxZoomHandler', () => {
     test('does not begin a box zoom if preventDefault is called on the mousedown event', () => {
         const map = createMap(undefined);
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const boxzoomstart = vi.fn();
         const boxzoomend   = vi.fn();

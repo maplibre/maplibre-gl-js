@@ -19,7 +19,7 @@ describe('ImageRequest', () => {
     });
 
     test('getImage respects maxParallelImageRequests', async () => {
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
+        server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png'}, ''); });
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
@@ -39,7 +39,7 @@ describe('ImageRequest', () => {
     });
 
     test('getImage respects maxParallelImageRequests and continues to respond even when server returns 404', async () => {
-        server.respondWith(request => request.respond(404));
+        server.respondWith(request => { request.respond(404); });
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
@@ -57,7 +57,7 @@ describe('ImageRequest', () => {
 
         for (let i = 0; i < maxRequests + 1; i++) {
             const abortController = new AbortController();
-            ImageRequest.getImage({url: ''}, abortController).catch((e) => expect(isAbortError(e)).toBeTruthy());
+            ImageRequest.getImage({url: ''}, abortController).catch((e) => { expect(isAbortError(e)).toBeTruthy(); });
             abortController.abort();
             await sleep(0);
         }
@@ -79,7 +79,7 @@ describe('ImageRequest', () => {
 
         const queuedURL = 'this-is-the-queued-request';
         const abortController = new AbortController();
-        ImageRequest.getImage({url: queuedURL}, abortController).catch((e) => expect(isAbortError(e)).toBeTruthy());
+        ImageRequest.getImage({url: queuedURL}, abortController).catch((e) => { expect(isAbortError(e)).toBeTruthy(); });
 
         // the new requests is queued because the limit is reached
         expect(server.requests).toHaveLength(maxRequests);
@@ -111,9 +111,9 @@ describe('ImageRequest', () => {
     });
 
     test('getImage uses createImageBitmap when supported', async () => {
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+        server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''));
+            'Expires': 'expires'}, ''); });
 
         stubAjaxGetImage(() => Promise.resolve(new ImageBitmap()));
         const promise = ImageRequest.getImage({url: ''}, new AbortController());
@@ -127,9 +127,9 @@ describe('ImageRequest', () => {
     });
 
     test('getImage using createImageBitmap throws exception', async () => {
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+        server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''));
+            'Expires': 'expires'}, ''); });
 
         stubAjaxGetImage(() => Promise.reject(new Error('error')));
 
@@ -142,9 +142,9 @@ describe('ImageRequest', () => {
 
     test('getImage uses HTMLImageElement when createImageBitmap is not supported', async () => {
         const makeRequestSky = vi.spyOn(ajax, 'makeRequest');
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+        server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''));
+            'Expires': 'expires'}, ''); });
 
         const promise = ImageRequest.getImage({url: ''}, new AbortController());
 
@@ -205,7 +205,7 @@ describe('ImageRequest', () => {
     });
 
     test('getImage request returned 404 response for fetch request', async () => {
-        server.respondWith(request => request.respond(404));
+        server.respondWith(request => { request.respond(404); });
 
         const promise = ImageRequest.getImage({url: ''}, new AbortController());
 
@@ -239,9 +239,9 @@ describe('ImageRequest', () => {
     });
 
     test('Cancel: getImage request cancelled', async () => {
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+        server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''));
+            'Expires': 'expires'}, ''); });
 
         const abortController = new AbortController();
         let response = false;

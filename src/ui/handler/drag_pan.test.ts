@@ -395,7 +395,7 @@ describe('drag_pan', () => {
     test('DragPanHandler does not begin a drag if preventDefault is called on the mousedown event', () => {
         const map = createMap();
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const dragstart = vi.fn();
         const drag      = vi.fn();
@@ -425,7 +425,7 @@ describe('drag_pan', () => {
         const map = createMap();
         const target = map.getCanvas();
 
-        map.on('touchstart', e => e.preventDefault());
+        map.on('touchstart', e => { e.preventDefault(); });
 
         const dragstart = vi.fn();
         const drag      = vi.fn();

@@ -59,6 +59,9 @@ export default [
                 argsIgnorePattern: '^_',
             }],
             '@typescript-eslint/prefer-optional-chain': 'error',
+            '@typescript-eslint/prefer-reduce-type-parameter': 'error',
+            '@typescript-eslint/prefer-return-this-type': 'error',
+            '@typescript-eslint/no-confusing-void-expression': 'error',
 
             '@stylistic/member-delimiter-style': ['error'],
             'no-useless-constructor': 'off',

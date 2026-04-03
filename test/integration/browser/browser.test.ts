@@ -44,7 +44,7 @@ describe('Browser tests', () => {
                 if (map.loaded()) {
                     resolve();
                 } else {
-                    map.once('load', () => resolve());
+                    map.once('load', () => { resolve(); });
                 }
             });
         });
@@ -107,9 +107,9 @@ describe('Browser tests', () => {
                 zoom: 10
             });
             return new Promise<string>((resolve, _reject) => {
-                map2.once('resize', () => resolve('resize'));
-                map2.once('moveend', () => resolve('moveend'));
-                map2.once('load', () => resolve('load'));
+                map2.once('resize', () => { resolve('resize'); });
+                map2.once('moveend', () => { resolve('moveend'); });
+                map2.once('load', () => { resolve('load'); });
             });
         });
         expect(firstFiredEvent).toBe('load');
@@ -203,7 +203,7 @@ describe('Browser tests', () => {
         // Wait until the map has settled, then report the zoom level back.
         const zoom = await page.evaluate(() => {
             return new Promise((resolve, _reject) => {
-                map.once('idle', () => resolve(map.getZoom()));
+                map.once('idle', () => { resolve(map.getZoom()); });
             });
         });
 
@@ -537,7 +537,7 @@ describe('Browser tests', () => {
             const ext = gl?.getExtension('WEBGL_lose_context');
             if (ext) {
                 ext.loseContext();
-                setTimeout(() => ext.restoreContext(), 50);
+                setTimeout(() => { ext.restoreContext(); }, 50);
             }
         });
 

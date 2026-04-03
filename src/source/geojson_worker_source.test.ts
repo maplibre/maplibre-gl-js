@@ -25,11 +25,10 @@ describe('geojson tile worker source', () => {
             '0': {} as WorkerTile
         };
 
-        const res = await source.removeTile({
+        await source.removeTile({
             source: 'source',
             uid: 0
         } as any as TileParameters);
-        expect(res).toBeUndefined();
 
         expect(source.tileState.loaded).toEqual({});
     });
@@ -124,7 +123,7 @@ describe('geojson tile worker source', () => {
             uid: 0,
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
-        } as any as WorkerTileParameters).then(() => expect(false).toBeTruthy());
+        } as any as WorkerTileParameters).then(() => { expect(false).toBeTruthy(); });
 
         // allow promise to run
         await sleep(0);

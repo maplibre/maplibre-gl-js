@@ -38,8 +38,8 @@ class CameraMock extends Camera {
 function attachSimulateFrame(camera) {
     const queue = new TaskQueue();
     camera._requestRenderFrame = (cb) => queue.add(cb);
-    camera._cancelRenderFrame = (id) => queue.remove(id);
-    camera.simulateFrame = () => queue.run();
+    camera._cancelRenderFrame = (id) => { queue.remove(id); };
+    camera.simulateFrame = () => { queue.run(); };
     return camera;
 }
 

@@ -282,7 +282,7 @@ export class GeolocateControl extends Evented implements IControl {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
         this._setupUI();
-        checkGeolocationSupport().then((supported) => this._finishSetupUI(supported));
+        checkGeolocationSupport().then((supported) => { this._finishSetupUI(supported); });
         return this._container;
     }
 
@@ -551,7 +551,7 @@ export class GeolocateControl extends Evented implements IControl {
             return;
         }
 
-        this._container.addEventListener('contextmenu', (e: MouseEvent) => e.preventDefault());
+        this._container.addEventListener('contextmenu', (e: MouseEvent) => { e.preventDefault(); });
         this._geolocateButton = DOM.create('button', 'maplibregl-ctrl-geolocate', this._container);
         DOM.create('span', 'maplibregl-ctrl-icon', this._geolocateButton).setAttribute('aria-hidden', 'true');
         this._geolocateButton.type = 'button';

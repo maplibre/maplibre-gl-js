@@ -125,14 +125,14 @@ export class MouseOrTouchMoveStateManager implements DragMoveStateManager<MouseE
 
     startMove(e: MouseEvent | TouchEvent) {
         this._executeRelevantHandler(e,
-            e => this.mouseMoveStateManager.startMove(e),
-            e => this.oneFingerTouchMoveStateManager.startMove(e));
+            e => { this.mouseMoveStateManager.startMove(e); },
+            e => { this.oneFingerTouchMoveStateManager.startMove(e); });
     }
 
     endMove(e?: MouseEvent | TouchEvent) {
         this._executeRelevantHandler(e,
-            e => this.mouseMoveStateManager.endMove(e),
-            e => this.oneFingerTouchMoveStateManager.endMove(e));
+            e => { this.mouseMoveStateManager.endMove(e); },
+            e => { this.oneFingerTouchMoveStateManager.endMove(e); });
     }
 
     isValidStartEvent(e: MouseEvent | TouchEvent) {

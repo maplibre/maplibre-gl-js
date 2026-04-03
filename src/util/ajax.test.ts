@@ -12,8 +12,8 @@ import {fakeServer, type FakeServer} from 'nise';
 function readAsText(blob) {
     return new Promise((resolve, reject) => {
         const fileReader = new FileReader();
-        fileReader.onload = () => resolve(fileReader.result);
-        fileReader.onerror = () => reject(fileReader.error);
+        fileReader.onload = () => { resolve(fileReader.result); };
+        fileReader.onerror = () => { reject(fileReader.error); };
         fileReader.readAsText(blob);
     });
 }

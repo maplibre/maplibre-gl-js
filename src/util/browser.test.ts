@@ -13,7 +13,7 @@ describe('browser', () => {
         function flushAllRAFs() {
             const pending = [...rafCallbacks];
             rafCallbacks = [];
-            pending.forEach(({callback}) => callback(performance.now()));
+            pending.forEach(({callback}) => { callback(performance.now()); });
         }
 
         beforeEach(() => {

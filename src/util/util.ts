@@ -811,7 +811,7 @@ export const arrayBufferToImage = (data: ArrayBuffer): Promise<HTMLImageElement>
             img.onload = null;
             window.requestAnimationFrame(() => { img.src = transparentPngUrl; });
         };
-        img.onerror = () => reject(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
+        img.onerror = () => { reject(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.')); };
         const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
         img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
     });

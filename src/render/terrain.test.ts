@@ -399,7 +399,7 @@ describe('Terrain', () => {
         terrain.getFramebuffer('coords');
         terrain.getTerrainMesh(new OverscaledTileID(0, 0, 0, 0, 0));
 
-        expect(() => terrain.destroy()).not.toThrow();
+        expect(() => { terrain.destroy(); }).not.toThrow();
     });
 
 });

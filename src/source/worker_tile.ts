@@ -131,7 +131,7 @@ export class WorkerTile {
         // this line makes an object like: {"SomeFontName":[10,32]}
         const stacks: {[_: string]: Array<number>} = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
 
-        this.inFlightDependencies.forEach((request) => request?.abort());
+        this.inFlightDependencies.forEach((request) => { request?.abort(); });
         this.inFlightDependencies = [];
 
         let getGlyphsPromise = Promise.resolve<GetGlyphsResponse>({});

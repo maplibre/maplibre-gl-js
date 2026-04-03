@@ -99,7 +99,7 @@ describe('GeoJSONSource.setData', () => {
         return new GeoJSONSource('id', opts, wrapDispatcher({
             sendAsync(_message) {
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({}), 0);
+                    setTimeout(() => { resolve({}); }, 0);
                 });
             }
         }), undefined);
@@ -131,7 +131,7 @@ describe('GeoJSONSource.setData', () => {
         const source = new GeoJSONSource('id', {data: {}} as any, wrapDispatcher({
             sendAsync(_message) {
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({abandoned: true} as GeoJSONWorkerSourceLoadDataResult), 0);
+                    setTimeout(() => { resolve({abandoned: true} as GeoJSONWorkerSourceLoadDataResult); }, 0);
                 });
             }
         }), undefined);
@@ -151,7 +151,7 @@ describe('GeoJSONSource.setData', () => {
         source.actor.sendAsync = (message: ActorMessage<MessageType>) => {
             return new Promise((resolve, reject) => {
                 if (message.type === MessageType.loadData) {
-                    setTimeout(() => resolve({} as any), 0);
+                    setTimeout(() => { resolve({} as any); }, 0);
                     spy(message);
                 } else {
                     reject(new Error(`MessageType.loadData is expected but got ${message.type}`));
@@ -217,7 +217,7 @@ describe('GeoJSONSource.setData', () => {
         const source = new GeoJSONSource('id', {} as any, wrapDispatcher({
             sendAsync(_message: ActorMessage<MessageType>) {
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({abandoned: true} as GeoJSONWorkerSourceLoadDataResult), 0);
+                    setTimeout(() => { resolve({abandoned: true} as GeoJSONWorkerSourceLoadDataResult); }, 0);
                 });
             }
         }), undefined);
@@ -231,7 +231,7 @@ describe('GeoJSONSource.setData', () => {
         const source = new GeoJSONSource('id', {} as any, wrapDispatcher({
             sendAsync(_message: ActorMessage<MessageType>) {
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({abandoned: true} as GeoJSONWorkerSourceLoadDataResult), 0);
+                    setTimeout(() => { resolve({abandoned: true} as GeoJSONWorkerSourceLoadDataResult); }, 0);
                 });
             }
         }), undefined);
@@ -577,7 +577,7 @@ describe('GeoJSONSource.update', () => {
         const mockDispatcher = wrapDispatcher({
             sendAsync(_message: ActorMessage<MessageType>) {
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({}), 0);
+                    setTimeout(() => { resolve({}); }, 0);
                 });
             }
         });
@@ -596,7 +596,7 @@ describe('GeoJSONSource.update', () => {
         const mockDispatcher = wrapDispatcher({
             sendAsync(_message) {
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({abandoned: requestCount++ === 0} as GeoJSONWorkerSourceLoadDataResult));
+                    setTimeout(() => { resolve({abandoned: requestCount++ === 0} as GeoJSONWorkerSourceLoadDataResult); });
                 });
             }
         });
@@ -635,7 +635,7 @@ describe('GeoJSONSource.update', () => {
                 if (message.type === MessageType.loadData) {
                     spy();
                 }
-                return new Promise((resolve) => setTimeout(() => resolve({}), 0));
+                return new Promise((resolve) => setTimeout(() => { resolve({}); }, 0));
             }
         });
 
@@ -723,7 +723,7 @@ describe('GeoJSONSource.updateData', () => {
             sendAsync(message) {
                 spy(message);
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({}), 0);
+                    setTimeout(() => { resolve({}); }, 0);
                 });
             }
         });
@@ -761,7 +761,7 @@ describe('GeoJSONSource.updateData', () => {
             sendAsync(message) {
                 spy(message);
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({}), 0);
+                    setTimeout(() => { resolve({}); }, 0);
                 });
             }
         });
@@ -805,7 +805,7 @@ describe('GeoJSONSource.updateData', () => {
             sendAsync(message) {
                 spy(message);
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({}), 0);
+                    setTimeout(() => { resolve({}); }, 0);
                 });
             }
         });
@@ -843,7 +843,7 @@ describe('GeoJSONSource.updateData', () => {
             sendAsync(message) {
                 spy(message);
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({}), 0);
+                    setTimeout(() => { resolve({}); }, 0);
                 });
             }
         });
@@ -995,7 +995,7 @@ describe('GeoJSONSource.load', () => {
             sendAsync(message) {
                 spy(message);
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({}), 0);
+                    setTimeout(() => { resolve({}); }, 0);
                 });
             }
         });

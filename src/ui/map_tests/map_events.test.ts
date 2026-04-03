@@ -242,7 +242,7 @@ describe('map events', () => {
 
         vi.spyOn(handler, 'onMove');
 
-        map.on('move', (event) => handler.onMove(event));
+        map.on('move', (event) => { handler.onMove(event); });
         map.jumpTo({center: {lng: 10, lat: 10}});
 
         expect(handler.onMove).toHaveBeenCalledTimes(1);
@@ -406,7 +406,7 @@ describe('map events', () => {
 
         vi.spyOn(handler, 'onMove');
 
-        map.off('move', (event) => handler.onMove(event));
+        map.off('move', (event) => { handler.onMove(event); });
         map.jumpTo({center: {lng: 10, lat: 10}});
 
         expect(handler.onMove).toHaveBeenCalledTimes(0);
@@ -435,7 +435,7 @@ describe('map events', () => {
 
         vi.spyOn(handler, 'onMoveOnce');
 
-        map.once('move', (event) => handler.onMoveOnce(event));
+        map.once('move', (event) => { handler.onMoveOnce(event); });
         map.jumpTo({center: {lng: 10, lat: 10}});
 
         expect(handler.onMoveOnce).toHaveBeenCalledTimes(1);
@@ -848,7 +848,7 @@ describe('map events', () => {
     test('Map.on mousedown can have default behavior prevented and still fire subsequent click event', () => {
         const map = createMap();
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const click = vi.fn();
         map.on('click', click);
@@ -862,7 +862,7 @@ describe('map events', () => {
     test('Map.on mousedown doesn\'t fire subsequent click event if mousepos changes', () => {
         const map = createMap();
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const click = vi.fn();
         map.on('click', click);
@@ -877,7 +877,7 @@ describe('map events', () => {
     test('Map.on mousedown fires subsequent click event if mouse position changes less than click tolerance', () => {
         const map = createMap({clickTolerance: 4});
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const click = vi.fn();
         map.on('click', click);
@@ -892,7 +892,7 @@ describe('map events', () => {
     test('Map.on mousedown does not fire subsequent click event if mouse position changes more than click tolerance', () => {
         const map = createMap({clickTolerance: 4});
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const click = vi.fn();
         map.on('click', click);

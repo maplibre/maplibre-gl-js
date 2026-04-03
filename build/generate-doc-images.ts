@@ -53,7 +53,7 @@ async function createImage(exampleName) {
                 height: 250
             }
         })
-        .then(() => console.log(`Created ./docs/assets/examples/${exampleName}.png`))
+        .then(() => { console.log(`Created ./docs/assets/examples/${exampleName}.png`); })
         .catch((err) => {
             console.log(err);
         });

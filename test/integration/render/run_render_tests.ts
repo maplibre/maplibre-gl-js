@@ -886,10 +886,11 @@ function applyDebugParameter(options: RenderOptions, page: Page) {
             console.log(`${message.type().substring(0, 3).toUpperCase()} ${messages.filter(Boolean)}`);
         });
 
-        page.on('pageerror', ({message}) => console.error(message));
+        page.on('pageerror', ({message}) => { console.error(message); });
 
-        page.on('response', response =>
-            console.log(`${response.status()} ${response.url()}`));
+        page.on('response', response => {
+            console.log(`${response.status()} ${response.url()}`);
+        });
 
         page.on('requestfailed', request => {
             if (request) {

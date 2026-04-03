@@ -50,7 +50,7 @@ export class EdgeInsets {
      * @param t - interpolation step/weight
      * @returns the insets
      */
-    interpolate(start: PaddingOptions | EdgeInsets, target: PaddingOptions, t: number): EdgeInsets {
+    interpolate(start: PaddingOptions | EdgeInsets, target: PaddingOptions, t: number): this {
         if (target.top != null && start.top != null) this.top = interpolates.number(start.top, target.top, t);
         if (target.bottom != null && start.bottom != null) this.bottom = interpolates.number(start.bottom, target.bottom, t);
         if (target.left != null && start.left != null) this.left = interpolates.number(start.left, target.left, t);

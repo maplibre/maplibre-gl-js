@@ -79,8 +79,8 @@ export class Actor implements IActor {
         this.taskQueue = [];
         this.abortControllers = {};
         this.messageHandlers = {};
-        this.invoker = new ThrottledInvoker(() => this.process());
-        this.subscription = subscribe(this.target, 'message', (message) => this.receive(message), false);
+        this.invoker = new ThrottledInvoker(() => { this.process(); });
+        this.subscription = subscribe(this.target, 'message', (message) => { this.receive(message); }, false);
         this.globalScope = isWorker(self) ? target : window;
     }
 

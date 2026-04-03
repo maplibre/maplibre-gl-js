@@ -56,11 +56,10 @@ describe('vector tile worker source', () => {
             '0': {} as WorkerTile
         };
 
-        const res = await source.removeTile({
+        await source.removeTile({
             source: 'source',
             uid: 0
         } as any as TileParameters);
-        expect(res).toBeUndefined();
 
         expect(source.tileState.loaded).toEqual({});
     });
@@ -151,7 +150,7 @@ describe('vector tile worker source', () => {
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             request: {url: 'http://localhost:2900/faketile.pbf'},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
-        } as any as WorkerTileParameters).then(() => expect(false).toBeTruthy());
+        } as any as WorkerTileParameters).then(() => { expect(false).toBeTruthy(); });
 
         server.respond();
 
@@ -193,7 +192,7 @@ describe('vector tile worker source', () => {
             .mockImplementation(function(_data, _layerIndex, _availableImages, _actor) {
                 this.status = 'parsing';
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({} as WorkerTileResult), 20);
+                    setTimeout(() => { resolve({} as WorkerTileResult); }, 20);
                 });
             });
 

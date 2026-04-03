@@ -736,7 +736,7 @@ describe('drag rotate', () => {
     test('DragRotateHandler does not begin a drag if preventDefault is called on the mousedown event', () => {
         const map = createMap();
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();
