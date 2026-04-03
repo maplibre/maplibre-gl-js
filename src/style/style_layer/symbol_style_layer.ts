@@ -78,7 +78,7 @@ export class SymbolStyleLayer extends StyleLayer {
                 // remove duplicates, preserving order
                 const deduped = [];
                 for (const m of writingModes) {
-                    if (deduped.indexOf(m) < 0) deduped.push(m);
+                    if (!deduped.includes(m)) deduped.push(m);
                 }
                 this.layout._values['text-writing-mode'] = deduped;
             } else {

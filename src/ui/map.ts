@@ -910,7 +910,7 @@ export class Map extends Camera {
         this._controls.push(control);
 
         const positionContainer = this._controlPositions[position];
-        if (position.indexOf('bottom') !== -1) {
+        if (position.includes('bottom')) {
             positionContainer.insertBefore(controlElement, positionContainer.firstChild);
         } else {
             positionContainer.appendChild(controlElement);
@@ -961,7 +961,7 @@ export class Map extends Camera {
      * ```
      */
     hasControl(control: IControl): boolean {
-        return this._controls.indexOf(control) > -1;
+        return this._controls.includes(control);
     }
 
     /**
