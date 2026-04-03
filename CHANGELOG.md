@@ -20,7 +20,7 @@
 
 - Fix startup crash caused by a stale async style load completing after the style was cleared or replaced ([#7377](https://github.com/maplibre/maplibre-gl-js/issues/7377))
 - Make `fitBounds` and `fitScreenCoordinates` respect the `zoomSnap` map option by snapping the zoom level down to keep bounds fully visible ([#7332](https://github.com/maplibre/maplibre-gl-js/issues/7332) (by [@CommanderStorm](https://github.com/CommanderStorm))
-- Make `jumpTo`, `easeTo`, and `flyTo` respect the `zoomSnap` map option by snapping the zoom level to the nearest valid increment ([#7333](https://github.com/maplibre/maplibre-gl-js/issues/7333)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Make `jumpTo`, `easeTo`, and `flyTo` respect the `zoomSnap` map option by snapping the zoom level to the nearest valid increment ([#7333](https://github.com/maplibre/maplibre-gl-js/issues/7333) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Fix `setState` crash when switching styles while globe projection is active ([#7314](https://github.com/maplibre/maplibre-gl-js/issues/7314)) (by [@ashwinuae](https://github.com/ashwinuae))
 - Prevent crashes when calling `map.remove()` immediately after creation by canceling in-flight style URL loads ([#7368](https://github.com/maplibre/maplibre-gl-js/pull/7368)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Fixed symbol collision flickering by adding tolerance to GridIndex AABB comparison ([#7360](https://github.com/maplibre/maplibre-gl-js/issues/7360)) (by [@kkokkoejong](https://github.com/kkokkojeong))
@@ -30,7 +30,6 @@
 
 ## 5.21.1
 
-<<<<<<< HEAD
 ### 🐞 Bug fixes
 
 - Add missing `promoteId` parameter to geojson worker and refactor communication object ([#7320](https://github.com/maplibre/maplibre-gl-js/issues/7320)) (by [@HarelM](https://github.com/HarelM))
@@ -4295,6 +4294,3 @@ August 16, 2018
 ## 0.2.0 (Aug 6 2014)
 
 - First public release.
-=======
-### 🐞 Bug fixes
->>>>>>> b9ffa6454 (feat: add touch zoom controls)
