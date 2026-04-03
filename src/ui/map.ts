@@ -793,7 +793,7 @@ export class Map extends Camera {
         this.handlers = new HandlerManager(this, resolvedOptions);
 
         const hashName = (typeof resolvedOptions.hash === 'string' && resolvedOptions.hash) || undefined;
-        this._hash = resolvedOptions.hash && (new Hash(hashName)).addTo(this);
+        this._hash = resolvedOptions.hash ? (new Hash(hashName)).addTo(this) : undefined;
         // don't set position from options if set through hash
         if (!this._hash?._onHashChange()) {
             this.jumpTo({
