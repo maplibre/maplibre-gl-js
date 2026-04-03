@@ -135,6 +135,7 @@ export class TransformHelper implements ITransformGetters {
     _center: LngLat;
     _elevation: number;
     _minElevationForCurrentTile: number;
+    _pixelPerMeter: number;
     _edgeInsets: EdgeInsets;
     _unmodified: boolean;
 
@@ -181,10 +182,6 @@ export class TransformHelper implements ITransformGetters {
         this._edgeInsets = new EdgeInsets();
         this._minElevationForCurrentTile = 0;
         this._autoCalculateNearFarZ = true;
-    }
-
-    get _pixelPerMeter(): number {
-        return Math.max(mercatorZfromAltitude(1, this.center.lat) * this.worldSize, 1);
     }
 
     public apply(thatI: ITransformGetters, constrain: boolean, forceOverrideZ?: boolean): void {

@@ -173,4 +173,78 @@ export class Program<Us extends UniformBindings> {
         this.binderUniforms = configuration ? configuration.getUniforms(context, uniformLocations) : [];
     }
 
+    draw(context: Context,
+        drawMode: DrawMode,
+        depthMode: Readonly<DepthMode>,
+        stencilMode: Readonly<StencilMode>,
+        colorMode: Readonly<ColorMode>,
+        cullFaceMode: Readonly<CullFaceMode>,
+        uniformValues: UniformValues<Us>,
+        terrain: TerrainData,
+        projectionData: ProjectionData,
+        layerID: string,
+        layoutVertexBuffer: VertexBuffer,
+        indexBuffer: IndexBuffer,
+        segments: SegmentVector,
+        currentProperties?: any,
+        zoom?: number | null,
+        configuration?: ProgramConfiguration | null,
+        dynamicLayoutBuffer?: VertexBuffer | null,
+        dynamicLayoutBuffer2?: VertexBuffer | null,
+        dynamicLayoutBuffer3?: VertexBuffer | null) {
+
+        const gl = context.gl;
+        if (this.failedToCreate) return;
+
+        context.program.set(this.program);
+        context.setDepthMode(depthMode);
+        context.setStencilMode(stencilMode);
+        context.setColorMode(colorMode);
+        context.setCullFace(cullFaceMode);
+
+        if (terrain) {
+            context.activeTexture.set(gl.TEXTURE2);
+            gl.bindTexture(gl.TEXTURE_2D, terrain.depthTexture);
+            context.activeTexture.set(gl.TEXTURE3);
+            gl.bindTexture(gl.TEXTURE_2D, terrain.texture);
+            for (const name in this.terrainUniforms) {
+                this.terrainUniforms[name].set(terrain[name]);
+            }
+        }
+
+        if (projectionData) {
+            for (const fieldName in projectionData) {
+                const uniformName = projectionObjectToUniformMap[fieldName];
+                this.projectionUniforms[uniformName].set(projectionData[fieldName]);
+            }
+        }
+
+        if (uniformValues) {
+            for (const name in this.fixedUniforms) {
+                this.fixedUniforms[name].set(uniformValues[name]);
+            }
+        }
+
+        if (configuration) {
+            configuration.setUniforms(context, this.binderUniforms, currentProperties, {zoom: (zoom as any)});
+        }
+
+        let primitiveSize = 0;
+        switch (drawMode) {
+            case gl.LINES: primitiveSize = 2; break;
+            case gl.TRIANGLES: primitiveSize = 3; break;
+            case gl.LINE_STRIP: primitiveSize = 1; break;
+        }
+
+        for (const segment of segments.get()) {
+            const vaos = segment.vaos || (segment.vaos = {});
+            const vao: VertexArrayObject = vaos[layerID] || (vaos[layerID] = new VertexArrayObject());
+            vao.bind(context, this, layoutVertexBuffer,
+                configuration ? configuration.getPaintVertexBuffers() : [],
+                indexBuffer, segment.vertexOffset,
+                dynamicLayoutBuffer, dynamicLayoutBuffer2, dynamicLayoutBuffer3);
+            gl.drawElements(drawMode, segment.primitiveLength * primitiveSize,
+                gl.UNSIGNED_SHORT, segment.primitiveOffset * primitiveSize * 2);
+        }
+    }
 }
