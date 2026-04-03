@@ -35,6 +35,7 @@ export const defaultAttributionControlOptions: AttributionControlOptions = {
  *         compact: true
  *     }));
  * ```
+ * @see [Change the default position for attribution](https://maplibre.org/maplibre-gl-js/docs/examples/change-the-default-position-for-attribution/)
  */
 export class AttributionControl implements IControl {
     options: AttributionControlOptions;
