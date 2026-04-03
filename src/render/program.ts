@@ -70,7 +70,7 @@ export class Program<Us extends UniformBindings> {
         const uniformList = preludeUniformsInfo.concat(projectionPreludeUniformsInfo).concat(staticUniformsInfo).concat(dynamicUniformsInfo);
         const allUniformsInfo = [];
         for (const uniform of uniformList) {
-            if (allUniformsInfo.indexOf(uniform) < 0) allUniformsInfo.push(uniform);
+            if (!allUniformsInfo.includes(uniform)) allUniformsInfo.push(uniform);
         }
 
         const defines = configuration ? configuration.defines() : [];

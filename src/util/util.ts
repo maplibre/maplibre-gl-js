@@ -582,7 +582,7 @@ export function clone<T>(input: T): T {
  */
 export function arraysIntersect<T>(a: Array<T>, b: Array<T>): boolean {
     for (const element of a) {
-        if (b.indexOf(element) >= 0) return true;
+        if (b.includes(element)) return true;
     }
     return false;
 }
