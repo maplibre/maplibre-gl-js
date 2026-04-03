@@ -2161,12 +2161,13 @@ export class Map extends Camera {
             const url = style;
             this._diffStyleRequest = new AbortController();
             const abortController = this._diffStyleRequest;
-            const request = await this._requestManager.transformRequest(url, ResourceType.Style);
-            if (abortController.signal.aborted) {
-                this._diffStyleRequest = null;
-                return;
-            }
             try {
+                const request = await this._requestManager.transformRequest(url, ResourceType.Style);
+                if (abortController.signal.aborted) {
+                    this._diffStyleRequest = null;
+                    return;
+                }
+
                 const response = await getJSON<StyleSpecification>(request, abortController);
                 this._diffStyleRequest = null;
                 this._updateDiff(response.data, options);
