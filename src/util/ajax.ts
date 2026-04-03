@@ -141,7 +141,7 @@ export const getReferrer = () => isWorker(self) ?
  * @param url - The URL to check
  * @returns `true` if the URL is a file:// URL, `false` otherwise
  */
-const isFileURL = url => url.startsWith('file:') || (getReferrer().startsWith('file:') && !/^\w+:/.test(url));
+const isFileURL = url => url.startsWith('file:') || (getReferrer()?.startsWith('file:') && !/^\w+:/.test(url));
 
 async function makeFetchRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
     const request = new Request(requestParameters.url, {
