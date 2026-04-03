@@ -9,61 +9,29 @@ function createMap() {
     return new Map({container: DOM.create('div', '', window.document.body)} as any as MapOptions);
 }
 
-function getPinchZoomDelta(configure?: (map: Map) => void) {
+function createPinchZoomMap() {
     const map = createMap();
-    const target = map.getCanvas();
-
     map.touchZoomRotate.disableRotation();
     map.handlers._handlersById.tapZoom.disable();
     map.touchPitch.disable();
-    configure?.(map);
 
-    const startZoom = map.getZoom();
-
-    simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -50}, {target, identifier: 2, clientX: 0, clientY: 50}]});
-    map._renderTaskQueue.run();
-    simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -100}, {target, identifier: 2, clientX: 0, clientY: 100}]});
-    map._renderTaskQueue.run();
-
-    const zoomDelta = map.getZoom() - startZoom;
-
-    simulate.touchend(map.getCanvas(), {touches: []});
-    map._renderTaskQueue.run();
-    map._renderTaskQueue.run();
-    map.remove();
-
-    return zoomDelta;
+    return {map, target: map.getCanvas()};
 }
 
-function getPinchZoomEventCounts(configure?: (map: Map) => void) {
-    const map = createMap();
-    const target = map.getCanvas();
-
-    map.touchZoomRotate.disableRotation();
-    map.handlers._handlersById.tapZoom.disable();
-    map.touchPitch.disable();
-    configure?.(map);
-
-    const zoomstart = vi.fn();
-    const zoom = vi.fn();
-    map.on('zoomstart', zoomstart);
-    map.on('zoom', zoom);
-
+function startPinchGesture(map: Map, target: HTMLElement) {
     simulate.touchstart(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -50}, {target, identifier: 2, clientX: 0, clientY: 50}]});
     map._renderTaskQueue.run();
-    simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: -55}, {target, identifier: 2, clientX: 0, clientY: 55}]});
+}
+
+function movePinchGesture(map: Map, target: HTMLElement, topY: number, bottomY: number) {
+    simulate.touchmove(map.getCanvas(), {touches: [{target, identifier: 1, clientX: 0, clientY: topY}, {target, identifier: 2, clientX: 0, clientY: bottomY}]});
     map._renderTaskQueue.run();
+}
 
-    const result = {
-        zoomstart: zoomstart.mock.calls.length,
-        zoom: zoom.mock.calls.length
-    };
-
+function endPinchGesture(map: Map) {
     simulate.touchend(map.getCanvas(), {touches: []});
     map._renderTaskQueue.run();
-    map.remove();
-
-    return result;
+    map._renderTaskQueue.run();
 }
 
 beforeEach(() => {
@@ -156,42 +124,122 @@ describe('touch zoom rotate', () => {
     });
 
     test('TwoFingersTouchZoomRotateHandler scales pinch zoom with setZoomRate', () => {
-        const defaultZoomDelta = getPinchZoomDelta();
-        const slowZoomDelta = getPinchZoomDelta((map) => map.touchZoomRotate.setZoomRate(0.5));
+        const {map: defaultMap, target: defaultTarget} = createPinchZoomMap();
+        const defaultStartZoom = defaultMap.getZoom();
+
+        startPinchGesture(defaultMap, defaultTarget);
+        movePinchGesture(defaultMap, defaultTarget, -100, 100);
+
+        const defaultZoomDelta = defaultMap.getZoom() - defaultStartZoom;
+
+        endPinchGesture(defaultMap);
+        defaultMap.remove();
+
+        const {map: slowMap, target: slowTarget} = createPinchZoomMap();
+        slowMap.touchZoomRotate.setZoomRate(0.5);
+        const slowStartZoom = slowMap.getZoom();
+
+        startPinchGesture(slowMap, slowTarget);
+        movePinchGesture(slowMap, slowTarget, -100, 100);
+
+        const slowZoomDelta = slowMap.getZoom() - slowStartZoom;
+
+        endPinchGesture(slowMap);
+        slowMap.remove();
 
         expect(defaultZoomDelta).toBeGreaterThan(slowZoomDelta);
         expect(slowZoomDelta).toBeCloseTo(defaultZoomDelta * 0.5, 5);
     });
 
     test('TwoFingersTouchZoomRotateHandler restores the default pinch zoom rate', () => {
-        const defaultZoomDelta = getPinchZoomDelta();
-        const restoredZoomDelta = getPinchZoomDelta((map) => {
-            map.touchZoomRotate.setZoomRate(0.5);
-            map.touchZoomRotate.setZoomRate(undefined);
-        });
+        const {map: defaultMap, target: defaultTarget} = createPinchZoomMap();
+        const defaultStartZoom = defaultMap.getZoom();
+
+        startPinchGesture(defaultMap, defaultTarget);
+        movePinchGesture(defaultMap, defaultTarget, -100, 100);
+
+        const defaultZoomDelta = defaultMap.getZoom() - defaultStartZoom;
+
+        endPinchGesture(defaultMap);
+        defaultMap.remove();
+
+        const {map: restoredMap, target: restoredTarget} = createPinchZoomMap();
+        restoredMap.touchZoomRotate.setZoomRate(0.5);
+        restoredMap.touchZoomRotate.setZoomRate(undefined);
+        const restoredStartZoom = restoredMap.getZoom();
+
+        startPinchGesture(restoredMap, restoredTarget);
+        movePinchGesture(restoredMap, restoredTarget, -100, 100);
+
+        const restoredZoomDelta = restoredMap.getZoom() - restoredStartZoom;
+
+        endPinchGesture(restoredMap);
+        restoredMap.remove();
 
         expect(restoredZoomDelta).toBeCloseTo(defaultZoomDelta, 5);
     });
 
     test('TwoFingersTouchZoomRotateHandler scales pinch sensitivity with setZoomThreshold', () => {
-        const defaultEvents = getPinchZoomEventCounts();
-        const insensitiveEvents = getPinchZoomEventCounts((map) => map.touchZoomRotate.setZoomThreshold(10));
+        const {map: defaultMap, target: defaultTarget} = createPinchZoomMap();
+        const defaultZoomstart = vi.fn();
+        const defaultZoom = vi.fn();
+        defaultMap.on('zoomstart', defaultZoomstart);
+        defaultMap.on('zoom', defaultZoom);
 
-        expect(defaultEvents.zoomstart).toBe(1);
-        expect(defaultEvents.zoom).toBe(1);
-        expect(insensitiveEvents.zoomstart).toBe(0);
-        expect(insensitiveEvents.zoom).toBe(0);
+        startPinchGesture(defaultMap, defaultTarget);
+        movePinchGesture(defaultMap, defaultTarget, -55, 55);
+
+        endPinchGesture(defaultMap);
+        defaultMap.remove();
+
+        const {map: insensitiveMap, target: insensitiveTarget} = createPinchZoomMap();
+        insensitiveMap.touchZoomRotate.setZoomThreshold(10);
+        const insensitiveZoomstart = vi.fn();
+        const insensitiveZoom = vi.fn();
+        insensitiveMap.on('zoomstart', insensitiveZoomstart);
+        insensitiveMap.on('zoom', insensitiveZoom);
+
+        startPinchGesture(insensitiveMap, insensitiveTarget);
+        movePinchGesture(insensitiveMap, insensitiveTarget, -55, 55);
+
+        endPinchGesture(insensitiveMap);
+        insensitiveMap.remove();
+
+        expect(defaultZoomstart).toHaveBeenCalledTimes(1);
+        expect(defaultZoom).toHaveBeenCalledTimes(1);
+        expect(insensitiveZoomstart).not.toHaveBeenCalled();
+        expect(insensitiveZoom).not.toHaveBeenCalled();
     });
 
     test('TwoFingersTouchZoomRotateHandler restores the default pinch zoom threshold', () => {
-        const defaultEvents = getPinchZoomEventCounts();
-        const restoredEvents = getPinchZoomEventCounts((map) => {
-            map.touchZoomRotate.setZoomThreshold(10);
-            map.touchZoomRotate.setZoomThreshold(undefined);
-        });
+        const {map: defaultMap, target: defaultTarget} = createPinchZoomMap();
+        const defaultZoomstart = vi.fn();
+        const defaultZoom = vi.fn();
+        defaultMap.on('zoomstart', defaultZoomstart);
+        defaultMap.on('zoom', defaultZoom);
 
-        expect(restoredEvents.zoomstart).toBe(defaultEvents.zoomstart);
-        expect(restoredEvents.zoom).toBe(defaultEvents.zoom);
+        startPinchGesture(defaultMap, defaultTarget);
+        movePinchGesture(defaultMap, defaultTarget, -55, 55);
+
+        endPinchGesture(defaultMap);
+        defaultMap.remove();
+
+        const {map: restoredMap, target: restoredTarget} = createPinchZoomMap();
+        restoredMap.touchZoomRotate.setZoomThreshold(10);
+        restoredMap.touchZoomRotate.setZoomThreshold(undefined);
+        const restoredZoomstart = vi.fn();
+        const restoredZoom = vi.fn();
+        restoredMap.on('zoomstart', restoredZoomstart);
+        restoredMap.on('zoom', restoredZoom);
+
+        startPinchGesture(restoredMap, restoredTarget);
+        movePinchGesture(restoredMap, restoredTarget, -55, 55);
+
+        endPinchGesture(restoredMap);
+        restoredMap.remove();
+
+        expect(restoredZoomstart).toHaveBeenCalledTimes(defaultZoomstart.mock.calls.length);
+        expect(restoredZoom).toHaveBeenCalledTimes(defaultZoom.mock.calls.length);
     });
 
     test('TwoFingersTouchZoomRotateHandler does not begin a gesture if preventDefault is called on the touchstart event', () => {

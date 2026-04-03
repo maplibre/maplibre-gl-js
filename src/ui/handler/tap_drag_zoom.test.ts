@@ -25,14 +25,14 @@ function setupEvents(map: Map) {
     };
 }
 
-function getTapDragZoomDelta(configure?: (map: Map) => void) {
+function createTapDragZoomMap() {
     const map = createMap();
-    const target = map.getCanvas();
-
     map.handlers._handlersById.tapZoom.disable();
-    configure?.(map);
 
-    const startZoom = map.getZoom();
+    return {map, target: map.getCanvas()};
+}
+
+function startDoubleTapDragGesture(map: Map, target: HTMLElement) {
     const pointTouchOptions = {
         touches: [{target, clientX: 100, clientY: 100}]
     };
@@ -41,19 +41,18 @@ function getTapDragZoomDelta(configure?: (map: Map) => void) {
     simulate.touchend(target);
     simulate.touchstart(target, pointTouchOptions);
     map._renderTaskQueue.run();
+}
 
+function moveDoubleTapDragGesture(map: Map, target: HTMLElement, clientY: number) {
     simulate.touchmove(target, {
-        touches: [{target, clientX: 100, clientY: 110}]
+        touches: [{target, clientX: 100, clientY}]
     });
     map._renderTaskQueue.run();
+}
 
-    const zoomDelta = map.getZoom() - startZoom;
-
+function endDoubleTapDragGesture(map: Map, target: HTMLElement) {
     simulate.touchend(target);
     map._renderTaskQueue.run();
-    map.remove();
-
-    return zoomDelta;
 }
 
 beforeEach(() => {
@@ -122,19 +121,57 @@ describe('tap_drag_zoom', () => {
     });
 
     test('TapDragZoomHandler scales double-tap drag zoom with setZoomRate', () => {
-        const defaultZoomDelta = getTapDragZoomDelta();
-        const slowZoomDelta = getTapDragZoomDelta((map) => map.touchZoomRotate.setZoomRate(0.5));
+        const {map: defaultMap, target: defaultTarget} = createTapDragZoomMap();
+        const defaultStartZoom = defaultMap.getZoom();
+
+        startDoubleTapDragGesture(defaultMap, defaultTarget);
+        moveDoubleTapDragGesture(defaultMap, defaultTarget, 110);
+
+        const defaultZoomDelta = defaultMap.getZoom() - defaultStartZoom;
+
+        endDoubleTapDragGesture(defaultMap, defaultTarget);
+        defaultMap.remove();
+
+        const {map: slowMap, target: slowTarget} = createTapDragZoomMap();
+        slowMap.touchZoomRotate.setZoomRate(0.5);
+        const slowStartZoom = slowMap.getZoom();
+
+        startDoubleTapDragGesture(slowMap, slowTarget);
+        moveDoubleTapDragGesture(slowMap, slowTarget, 110);
+
+        const slowZoomDelta = slowMap.getZoom() - slowStartZoom;
+
+        endDoubleTapDragGesture(slowMap, slowTarget);
+        slowMap.remove();
 
         expect(defaultZoomDelta).toBeGreaterThan(slowZoomDelta);
         expect(slowZoomDelta).toBeCloseTo(defaultZoomDelta * 0.5, 5);
     });
 
     test('TapDragZoomHandler restores the default double-tap drag zoom rate', () => {
-        const defaultZoomDelta = getTapDragZoomDelta();
-        const restoredZoomDelta = getTapDragZoomDelta((map) => {
-            map.touchZoomRotate.setZoomRate(0.5);
-            map.touchZoomRotate.setZoomRate(undefined);
-        });
+        const {map: defaultMap, target: defaultTarget} = createTapDragZoomMap();
+        const defaultStartZoom = defaultMap.getZoom();
+
+        startDoubleTapDragGesture(defaultMap, defaultTarget);
+        moveDoubleTapDragGesture(defaultMap, defaultTarget, 110);
+
+        const defaultZoomDelta = defaultMap.getZoom() - defaultStartZoom;
+
+        endDoubleTapDragGesture(defaultMap, defaultTarget);
+        defaultMap.remove();
+
+        const {map: restoredMap, target: restoredTarget} = createTapDragZoomMap();
+        restoredMap.touchZoomRotate.setZoomRate(0.5);
+        restoredMap.touchZoomRotate.setZoomRate(undefined);
+        const restoredStartZoom = restoredMap.getZoom();
+
+        startDoubleTapDragGesture(restoredMap, restoredTarget);
+        moveDoubleTapDragGesture(restoredMap, restoredTarget, 110);
+
+        const restoredZoomDelta = restoredMap.getZoom() - restoredStartZoom;
+
+        endDoubleTapDragGesture(restoredMap, restoredTarget);
+        restoredMap.remove();
 
         expect(restoredZoomDelta).toBeCloseTo(defaultZoomDelta, 5);
     });
