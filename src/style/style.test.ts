@@ -3622,7 +3622,7 @@ describe('Style.serialize', () => {
 
     test('Style#_diffStyle should not throw if map is removed', () => {
         // @ts-ignore
-        const style = new Style(createStyleJSON()); 
+        const style = Object.create(Style.prototype); 
 
         style.map = undefined; 
 
