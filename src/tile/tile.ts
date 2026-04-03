@@ -358,7 +358,7 @@ export class Tile {
         pixelPosMatrix: mat4,
         getElevation: undefined | ((x: number, y: number) => number)
     ): QueryResults {
-        if (!this.latestFeatureIndex || !this.latestFeatureIndex.rawTileData)
+        if (!this.latestFeatureIndex?.rawTileData)
             return {};
 
         return this.latestFeatureIndex.query({
@@ -376,11 +376,11 @@ export class Tile {
 
     querySourceFeatures(result: Array<GeoJSONFeature>, params?: QuerySourceFeatureOptionsStrict) {
         const featureIndex = this.latestFeatureIndex;
-        if (!featureIndex || !featureIndex.rawTileData) return;
+        if (!featureIndex?.rawTileData) return;
 
         const vtLayers = featureIndex.loadVTLayers();
 
-        const sourceLayer = params && params.sourceLayer ? params.sourceLayer : '';
+        const sourceLayer = params?.sourceLayer ? params.sourceLayer : '';
         const layer = vtLayers[GEOJSON_TILE_LAYER_NAME] || vtLayers[sourceLayer];
 
         if (!layer) return;
@@ -473,8 +473,7 @@ export class Tile {
     }
 
     setFeatureState(states: LayerFeatureStates, painter: any) {
-        if (!this.latestFeatureIndex ||
-            !this.latestFeatureIndex.rawTileData ||
+        if (!this.latestFeatureIndex?.rawTileData ||
             Object.keys(states).length === 0) {
             return;
         }
@@ -491,8 +490,8 @@ export class Tile {
             const sourceLayerStates = states[sourceLayerId];
             if (!sourceLayer || !sourceLayerStates || Object.keys(sourceLayerStates).length === 0) continue;
 
-            bucket.update(sourceLayerStates, sourceLayer, this.imageAtlas && this.imageAtlas.patternPositions || {}, this.dashPositions || {});
-            const layer = painter && painter.style && painter.style.getLayer(id);
+            bucket.update(sourceLayerStates, sourceLayer, this.imageAtlas?.patternPositions || {}, this.dashPositions || {});
+            const layer = painter?.style?.getLayer(id);
             if (layer) {
                 this.queryPadding = Math.max(this.queryPadding, layer.queryRadius(bucket));
             }

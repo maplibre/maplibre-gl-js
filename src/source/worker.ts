@@ -131,9 +131,7 @@ export default class Worker {
         });
 
         this.actor.registerMessageHandler(MessageType.removeSource, async (mapId: string, params: RemoveSourceParams) => {
-            if (!this.workerSources[mapId] ||
-                !this.workerSources[mapId][params.type] ||
-                !this.workerSources[mapId][params.type][params.source]) {
+            if (!this.workerSources[mapId]?.[params.type]?.[params.source]) {
                 return;
             }
 

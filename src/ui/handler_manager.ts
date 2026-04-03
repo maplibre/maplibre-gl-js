@@ -137,7 +137,7 @@ export type MapControlsScenarioOptions = {
 };
 
 function hasChange(result: HandlerResult) {
-    return (result.panDelta && result.panDelta.mag()) || result.zoomDelta || result.bearingDelta || result.pitchDelta || result.rollDelta;
+    return result.panDelta?.mag() || result.zoomDelta || result.bearingDelta || result.pitchDelta || result.rollDelta;
 }
 
 export class HandlerManager {
@@ -427,7 +427,7 @@ export class HandlerManager {
                         data = handler[eventName || e.type](e);
                     }
                     this.mergeHandlerResult(mergedHandlerResult, eventsInProgress, data, handlerName, inputEvent);
-                    if (data && data.needsRenderFrame) {
+                    if (data?.needsRenderFrame) {
                         this._triggerRenderFrame();
                     }
                 }

@@ -276,7 +276,7 @@ export class Terrain {
         }
         // find covering dem tile and prepare demTexture
         const sourceTile = this.tileManager.getSourceTile(tileID, true);
-        if (sourceTile && sourceTile.dem && (!sourceTile.demTexture || sourceTile.needsTerrainPrepare)) {
+        if (sourceTile?.dem && (!sourceTile.demTexture || sourceTile.needsTerrainPrepare)) {
             const context = this.painter.context;
             sourceTile.demTexture = this.painter.getTileTexture(sourceTile.dem.stride);
             if (sourceTile.demTexture) sourceTile.demTexture.update(sourceTile.dem.getPixels(), {premultiply: false});
@@ -307,7 +307,7 @@ export class Terrain {
             'u_terrain_matrix': matrixKey ? this._demMatrixCache[matrixKey].matrix : this._emptyDemMatrix,
             'u_terrain_unpack': sourceTile?.dem?.getUnpackVector() || this._emptyDemUnpack,
             'u_terrain_exaggeration': this.exaggeration,
-            texture: (sourceTile && sourceTile.demTexture || this._emptyDemTexture).texture,
+            texture: (sourceTile?.demTexture || this._emptyDemTexture).texture,
             depthTexture: (this._fboDepthTexture || this._emptyDepthTexture).texture,
             tile: sourceTile
         };
@@ -525,7 +525,7 @@ export class Terrain {
     getMinMaxElevation(tileID: OverscaledTileID): {minElevation: number | null; maxElevation: number | null} {
         const tile = this.getTerrainData(tileID).tile;
         const minMax = {minElevation: null, maxElevation: null};
-        if (tile && tile.dem) {
+        if (tile?.dem) {
             minMax.minElevation = tile.dem.min * this.exaggeration;
             minMax.maxElevation = tile.dem.max * this.exaggeration;
         }

@@ -4,7 +4,7 @@ import {type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export function localizeURLs(style: any, port: number, baseTestsDir: string) {
     localizeStyleURLs(style, port);
-    if (style.metadata && style.metadata.test && style.metadata.test.operations) {
+    if (style.metadata?.test?.operations) {
         style.metadata.test.operations.forEach((op) => {
             if (op[0] === 'addSource') {
                 localizeSourceURLs(op[2], port);

@@ -9,7 +9,7 @@ import html from 'eslint-plugin-html';
 
 export default [
     {
-        ignores: ['build/*.js', 'staging/**', 'coverage/**', 'node_modules/**', 'docs/**', 'dist/**']
+        ignores: ['build/*.js', 'build/rollup/**', 'staging/**', 'coverage/**', 'node_modules/**', 'docs/**', 'dist/**']
     },
     {
         ignores: ['test/bench/**'],
@@ -37,6 +37,15 @@ export default [
 
             parserOptions: {
                 createDefaultProgram: true,
+                projectService: {
+                    allowDefaultProject: [
+                        'build/generate-*.ts',
+                        'test/build/*.ts',
+                        'eslint.config.js',
+                        'postcss.config.js',
+                    ],
+                    maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 20,
+                },
             },
         },
 
@@ -49,6 +58,7 @@ export default [
             '@typescript-eslint/no-unused-vars': ['warn', {
                 argsIgnorePattern: '^_',
             }],
+            '@typescript-eslint/prefer-optional-chain': 'error',
 
             '@stylistic/member-delimiter-style': ['error'],
             'no-useless-constructor': 'off',

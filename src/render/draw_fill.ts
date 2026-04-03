@@ -69,7 +69,7 @@ function drawFillTiles(
     const gl = painter.context.gl;
     const fillPropertyName = 'fill-pattern';
     const patternProperty = layer.paint.get(fillPropertyName);
-    const image = patternProperty && patternProperty.constantOr(1 as any);
+    const image = patternProperty?.constantOr(1 as any);
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
 
@@ -97,7 +97,7 @@ function drawFillTiles(
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(programName, programConfiguration);
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
 
         if (image) {
             painter.context.activeTexture.set(gl.TEXTURE0);

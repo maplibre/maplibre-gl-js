@@ -99,7 +99,7 @@ function queryIncludes3DLayer(layers: Set<string> | undefined, styleLayers: {[_:
     if (layers) {
         for (const layerID of layers) {
             const layer = styleLayers[layerID];
-            if (layer && layer.source === sourceID && layer.type === 'fill-extrusion') {
+            if (layer?.source === sourceID && layer.type === 'fill-extrusion') {
                 return true;
             }
         }

@@ -177,7 +177,7 @@ export interface StyleImageInterface {
 
 export function renderStyleImage(image: StyleImage) {
     const {userImage} = image;
-    if (userImage && userImage.render) {
+    if (userImage?.render) {
         const updated = userImage.render();
         if (updated) {
             image.data.replace(new Uint8Array(userImage.data.buffer));

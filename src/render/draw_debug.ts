@@ -75,12 +75,12 @@ function drawDebugTile(painter: Painter, tileManager: TileManager, coord: Oversc
     const stencilMode = StencilMode.disabled;
     const colorMode = painter.colorModeForRenderPass();
     const id = '$debug';
-    const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+    const terrainData = painter.style.map.terrain?.getTerrainData(coord);
 
     context.activeTexture.set(gl.TEXTURE0);
 
     const tileRawData = tileManager.getTileByID(coord.key).latestRawTileData;
-    const tileByteLength = (tileRawData && tileRawData.byteLength) || 0;
+    const tileByteLength = (tileRawData?.byteLength) || 0;
     const tileSizeKb = Math.floor(tileByteLength / 1024);
     const tileSize = tileManager.getTile(coord).tileSize;
     const scaleRatio = (512 / Math.min(tileSize, 512) * (coord.overscaledZ / painter.transform.zoom)) * 0.5;

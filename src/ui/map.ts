@@ -793,9 +793,9 @@ export class Map extends Camera {
         this.handlers = new HandlerManager(this, resolvedOptions);
 
         const hashName = (typeof resolvedOptions.hash === 'string' && resolvedOptions.hash) || undefined;
-        this._hash = resolvedOptions.hash && (new Hash(hashName)).addTo(this);
+        this._hash = resolvedOptions.hash ? (new Hash(hashName)).addTo(this) : undefined;
         // don't set position from options if set through hash
-        if (!this._hash || !this._hash._onHashChange()) {
+        if (!this._hash?._onHashChange()) {
             this.jumpTo({
                 center: resolvedOptions.center,
                 elevation: resolvedOptions.elevation,
@@ -902,7 +902,7 @@ export class Map extends Camera {
                 position = 'top-right';
             }
         }
-        if (!control || !control.onAdd) {
+        if (!control?.onAdd) {
             return this.fire(new ErrorEvent(new Error(
                 'Invalid argument to map.addControl(). Argument must be a control with onAdd and onRemove methods.')));
         }
@@ -935,7 +935,7 @@ export class Map extends Camera {
      * ```
      */
     removeControl(control: IControl): Map {
-        if (!control || !control.onRemove) {
+        if (!control?.onRemove) {
             return this.fire(new ErrorEvent(new Error(
                 'Invalid argument to map.removeControl(). Argument must be a control with onAdd and onRemove methods.')));
         }
@@ -1582,7 +1582,7 @@ export class Map extends Camera {
     }
 
     _removeDelegatedListener(type: string, layerIds: string[], listener: Listener) {
-        if (!this._delegatedListeners || !this._delegatedListeners[type]) {
+        if (!this._delegatedListeners?.[type]) {
             return;
         }
 
@@ -2300,7 +2300,7 @@ export class Map extends Camera {
      * ```
      */
     isSourceLoaded(id: string): boolean {
-        const tileManager = this.style && this.style.tileManagers[id];
+        const tileManager = this.style?.tileManagers[id];
         if (tileManager === undefined) {
             this.fire(new ErrorEvent(new Error(`There is no tile manager with ID '${id}'`)));
             return;
@@ -2405,7 +2405,7 @@ export class Map extends Camera {
      * ```
      */
     areTilesLoaded(): boolean {
-        const tileManagers = this.style && this.style.tileManagers;
+        const tileManagers = this.style?.tileManagers;
         for (const tileManager of Object.values(tileManagers)) {
             if (!tileManager.areTilesLoaded()) {
                 return false;
@@ -3572,7 +3572,7 @@ export class Map extends Camera {
      * well as its sources
      */
     _update(updateStyle?: boolean) {
-        if (!this.style || !this.style._loaded) return this;
+        if (!this.style?._loaded) return this;
 
         this._styleDirty = this._styleDirty || updateStyle;
         this._sourcesDirty = true;
@@ -3675,7 +3675,7 @@ export class Map extends Camera {
             }
         }
 
-        this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
+        this._placementDirty = this.style?._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
         // Actually draw
         this.painter.render(this.style, {

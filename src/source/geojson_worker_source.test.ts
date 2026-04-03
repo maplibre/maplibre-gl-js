@@ -472,9 +472,9 @@ describe('loadData', () => {
         server.respond();
 
         const firstCallResult = await p1;
-        expect(firstCallResult && firstCallResult.abandoned).toBeTruthy();
+        expect(firstCallResult?.abandoned).toBeTruthy();
         const result = await p2;
-        expect(result && result.abandoned).toBeFalsy();
+        expect(result?.abandoned).toBeFalsy();
     });
 
     test('removeSource aborts requests', async () => {
@@ -492,7 +492,7 @@ describe('loadData', () => {
         server.respond();
 
         const result = await loadPromise;
-        expect(result && result.abandoned).toBeTruthy();
+        expect(result?.abandoned).toBeTruthy();
         await removePromise;
     });
 

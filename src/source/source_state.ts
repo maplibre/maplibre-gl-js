@@ -40,7 +40,7 @@ export class SourceFeatureState {
                 if (ft !== feature) this.deletedStates[sourceLayer][ft] = null;
             }
         } else {
-            const featureDeletionQueued = this.deletedStates[sourceLayer] && this.deletedStates[sourceLayer][feature] === null;
+            const featureDeletionQueued = this.deletedStates[sourceLayer]?.[feature] === null;
             if (featureDeletionQueued) {
                 this.deletedStates[sourceLayer][feature] = {};
                 for (const prop in this.state[sourceLayer][feature]) {
@@ -48,7 +48,7 @@ export class SourceFeatureState {
                 }
             } else {
                 for (const key in newState) {
-                    const deletionInQueue = this.deletedStates[sourceLayer] && this.deletedStates[sourceLayer][feature] && this.deletedStates[sourceLayer][feature][key] === null;
+                    const deletionInQueue = this.deletedStates[sourceLayer]?.[feature]?.[key] === null;
                     if (deletionInQueue) delete this.deletedStates[sourceLayer][feature][key];
                 }
             }
@@ -69,7 +69,7 @@ export class SourceFeatureState {
                 this.deletedStates[sourceLayer][feature][key] = null;
             }
         } else if (featureId !== undefined) {
-            const updateInQueue = this.stateChanges[sourceLayer] && this.stateChanges[sourceLayer][feature];
+            const updateInQueue = this.stateChanges[sourceLayer]?.[feature];
             if (updateInQueue) {
                 this.deletedStates[sourceLayer][feature] = {};
                 for (key in this.stateChanges[sourceLayer][feature]) this.deletedStates[sourceLayer][feature][key] = null;

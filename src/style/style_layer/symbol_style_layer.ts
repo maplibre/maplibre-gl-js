@@ -147,7 +147,7 @@ export class SymbolStyleLayer extends StyleLayer {
 
         const checkSections = (sections) => {
             for (const section of sections) {
-                if (property.overrides && property.overrides.hasOverride(section)) {
+                if (property.overrides?.hasOverride(section)) {
                     hasOverrides = true;
                     return;
                 }
@@ -186,7 +186,7 @@ export type SymbolPadding = [number, number, number, number];
 export function getIconPadding(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, feature: SymbolFeature, canonical: CanonicalTileID, pixelRatio = 1): SymbolPadding {
     // Support text-padding in addition to icon-padding? Unclear how to apply asymmetric text-padding to the radius for collision circles.
     const result = layout.get('icon-padding').evaluate(feature, {}, canonical);
-    const values = result && result.values;
+    const values = result?.values;
 
     return [
         values[0] * pixelRatio,

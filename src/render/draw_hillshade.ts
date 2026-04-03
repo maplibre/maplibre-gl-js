@@ -109,7 +109,7 @@ function prepareHillshade(
         const tile = tileManager.getTile(coord);
         const dem = tile.dem;
 
-        if (!dem || !dem.data) {
+        if (!dem?.data) {
             continue;
         }
 

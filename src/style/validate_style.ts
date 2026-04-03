@@ -43,7 +43,7 @@ export function emitValidationErrors(
     }> | null
 ): boolean {
     let hasErrors = false;
-    if (errors && errors.length) {
+    if (errors?.length) {
         for (const error of errors) {
             emitter.fire(new ErrorEvent(new Error(error.message)));
             hasErrors = true;
