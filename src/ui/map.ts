@@ -882,7 +882,7 @@ export class Map extends Camera {
     /**
      * Adds an {@link IControl} to the map, calling `control.onAdd(this)`.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
+     * An {@link ErrorEvent} will be fired if the control is invalid.
      *
      * @param control - The {@link IControl} to add.
      * @param position - position on the map to which the control will be added.
@@ -910,7 +910,7 @@ export class Map extends Camera {
         this._controls.push(control);
 
         const positionContainer = this._controlPositions[position];
-        if (position.indexOf('bottom') !== -1) {
+        if (position.includes('bottom')) {
             positionContainer.insertBefore(controlElement, positionContainer.firstChild);
         } else {
             positionContainer.appendChild(controlElement);
@@ -921,7 +921,7 @@ export class Map extends Camera {
     /**
      * Removes the control from the map.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
+     * An {@link ErrorEvent} will be fired if the control is invalid.
      *
      * @param control - The {@link IControl} to remove.
      * @example
@@ -961,7 +961,7 @@ export class Map extends Camera {
      * ```
      */
     hasControl(control: IControl): boolean {
-        return this._controls.indexOf(control) > -1;
+        return this._controls.includes(control);
     }
 
     /**
@@ -2673,7 +2673,7 @@ export class Map extends Camera {
      * in the style's original sprite and any images
      * that have been added at runtime using {@link Map.addImage}.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
+     * An {@link ErrorEvent} will be fired if the image ID is missing.
      *
      * @param id - The ID of the image.
      *
@@ -2852,7 +2852,7 @@ export class Map extends Camera {
     /**
      * Removes the layer with the given ID from the map's style.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
+     * An {@link ErrorEvent} will be fired if no such layer exists.
      *
      * @param id - The ID of the layer to remove
      *

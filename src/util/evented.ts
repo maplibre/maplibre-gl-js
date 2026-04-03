@@ -8,7 +8,7 @@ export type Listener = (a: any) => any;
 type Listeners = {[_: string]: Array<Listener>};
 
 function _addEventListener(type: string, listener: Listener, listenerList: Listeners) {
-    const listenerExists = listenerList[type] && listenerList[type].indexOf(listener) !== -1;
+    const listenerExists = listenerList[type]?.includes(listener);
     if (!listenerExists) {
         listenerList[type] = listenerList[type] || [];
         listenerList[type].push(listener);

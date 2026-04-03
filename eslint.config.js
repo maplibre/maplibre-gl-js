@@ -60,6 +60,8 @@ export default [
             }],
             '@typescript-eslint/prefer-optional-chain': 'error',
             '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+            '@typescript-eslint/prefer-includes': 'error',
+            '@typescript-eslint/prefer-string-starts-ends-with': 'error',
 
             '@stylistic/member-delimiter-style': ['error'],
             'no-useless-constructor': 'off',

@@ -193,9 +193,9 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
     if (!klass.serialize) {
         for (const key in input) {
             if (!input.hasOwnProperty(key)) continue;
-            if (registry[classRegistryKey].omit.indexOf(key) >= 0) continue;
+            if (registry[classRegistryKey].omit.includes(key)) continue;
             const property = input[key];
-            properties[key] = registry[classRegistryKey].shallow.indexOf(key) >= 0 ?
+            properties[key] = registry[classRegistryKey].shallow.includes(key) ?
                 property :
                 serialize(property, transferables);
         }
@@ -248,7 +248,7 @@ export function deserialize(input: Serialized): unknown {
     for (const key of Object.keys(input)) {
         if (key === '$name') continue;
         const value = (input as SerializedObject)[key];
-        result[key] = registry[classRegistryKey].shallow.indexOf(key) >= 0 ? value : deserialize(value);
+        result[key] = registry[classRegistryKey].shallow.includes(key) ? value : deserialize(value);
     }
 
     return result;
