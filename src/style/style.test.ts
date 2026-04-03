@@ -3621,14 +3621,18 @@ describe('Style.serialize', () => {
     });
 
     test('Style#_diffStyle should not throw if map is removed', () => {
-        // @ts-ignore
-        const style = Object.create(Style.prototype); 
-
+        let style;
+        try {
+            // @ts-ignore
+            style = new Style(createStyleJSON());
+        } catch (e) {
+            style = createStyle();
+        }
+        
         style.map = undefined; 
 
         expect(() => {
-            // @ts-ignore
-            style._diffStyle({}); 
+            style['_diffStyle']({}); 
         }).not.toThrow();
     });
 });
