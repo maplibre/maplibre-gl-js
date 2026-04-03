@@ -106,7 +106,14 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Array<Tile>, ren
         const fogMatrix = tr.calculateFogMatrix(tile.tileID.toUnwrapped());
         const uniformValues = terrainUniformValues(eleDelta, fogMatrix, painter.style.sky, tr.pitch, isRenderingGlobe);
         const projectionData = tr.getProjectionData({overscaledTileID: tile.tileID, applyTerrainMatrix: false, applyGlobeMatrix: true});
-        program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+        const lumaModel = new LumaModel(
+            painter.device,
+            program,
+            mesh.vertexBuffer,
+            mesh.indexBuffer,
+            mesh.segments
+        );
+        lumaModel.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues as any, terrainData as any, projectionData as any, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
 
