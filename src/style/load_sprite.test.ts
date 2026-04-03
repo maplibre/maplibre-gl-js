@@ -81,7 +81,7 @@ describe('loadSprite', () => {
         expect(Object.keys(result)).toHaveLength(1);
         expect(Object.keys(result)[0]).toBe('default');
 
-        Object.values(result['default']).forEach(styleImage => {
+        Object.values(result.default).forEach(styleImage => {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
         });
@@ -107,7 +107,7 @@ describe('loadSprite', () => {
         expect(Object.keys(result)).toHaveLength(1);
         expect(Object.keys(result)[0]).toBe('default');
 
-        Object.values(result['default']).forEach(styleImage => {
+        Object.values(result.default).forEach(styleImage => {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
         });
@@ -146,12 +146,12 @@ describe('loadSprite', () => {
         expect(Object.keys(result)[0]).toBe('sprite1');
         expect(Object.keys(result)[1]).toBe('sprite2');
 
-        Object.values(result['sprite1']).forEach(styleImage => {
+        Object.values(result.sprite1).forEach(styleImage => {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
         });
 
-        Object.values(result['sprite2']).forEach(styleImage => {
+        Object.values(result.sprite2).forEach(styleImage => {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
         });
@@ -182,12 +182,12 @@ describe('loadSprite', () => {
         expect(Object.keys(result)[0]).toBe('sprite1');
         expect(Object.keys(result)[1]).toBe('sprite2');
 
-        Object.values(result['sprite1']).forEach(styleImage => {
+        Object.values(result.sprite1).forEach(styleImage => {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
         });
 
-        Object.values(result['sprite2']).forEach(styleImage => {
+        Object.values(result.sprite2).forEach(styleImage => {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
         });
@@ -264,7 +264,7 @@ describe('loadSprite', () => {
         expect(Object.keys(result)).toHaveLength(1);
         expect(Object.keys(result)[0]).toBe('default');
 
-        Object.values(result['default']).forEach(styleImage => {
+        Object.values(result.default).forEach(styleImage => {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
         });

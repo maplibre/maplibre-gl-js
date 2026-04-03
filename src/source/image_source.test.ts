@@ -99,7 +99,7 @@ describe('ImageSource', () => {
         server.respond();
         await promise;
         expect(server.requests[0].url).toBe('/image.png');
-        expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer token');
+        expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
     });
 
     test('updates url from updateImage', () => {

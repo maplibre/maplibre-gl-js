@@ -329,10 +329,10 @@ describe('marker', () => {
             .setPopup(new Popup().setText('Test'))
             .addTo(map);
 
-        expect(marker.getPopup().options.offset['bottom'][1] < 0).toBeTruthy();
-        expect(marker.getPopup().options.offset['top'][1] === 0).toBeTruthy();
-        expect(marker.getPopup().options.offset['left'][0] > 0).toBeTruthy();
-        expect(marker.getPopup().options.offset['right'][0] < 0).toBeTruthy();
+        expect(marker.getPopup().options.offset.bottom[1] < 0).toBeTruthy();
+        expect(marker.getPopup().options.offset.top[1] === 0).toBeTruthy();
+        expect(marker.getPopup().options.offset.left[0] > 0).toBeTruthy();
+        expect(marker.getPopup().options.offset.right[0] < 0).toBeTruthy();
 
         expect(marker.getPopup().options.offset['bottom-left'][0] > 0).toBeTruthy();
         expect(marker.getPopup().options.offset['bottom-left'][1] < 0).toBeTruthy();
@@ -359,8 +359,8 @@ describe('marker', () => {
         marker.togglePopup();
 
         const mapHeight = map.getContainer().clientHeight;
-        const markerTop = -marker.getPopup().options.offset['bottom'][1]; // vertical distance from tip of marker to the top in pixels
-        const markerRight = -marker.getPopup().options.offset['right'][0]; // horizontal distance from the tip of the marker to the right in pixels
+        const markerTop = -marker.getPopup().options.offset.bottom[1]; // vertical distance from tip of marker to the top in pixels
+        const markerRight = -marker.getPopup().options.offset.right[0]; // horizontal distance from the tip of the marker to the right in pixels
 
         // give the popup some height
         Object.defineProperty(marker.getPopup()._container, 'offsetWidth', {value: 100});

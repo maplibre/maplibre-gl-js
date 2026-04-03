@@ -98,13 +98,13 @@ describe('Style', () => {
         });
 
         await style.once('style.load');
-        vi.spyOn(style.tileManagers['raster'], 'reload');
-        vi.spyOn(style.tileManagers['vector'], 'reload');
+        vi.spyOn(style.tileManagers.raster, 'reload');
+        vi.spyOn(style.tileManagers.vector, 'reload');
 
         rtlMainThreadPluginFactory().fire(new Event(RTLPluginLoadedEventName));
 
-        expect(style.tileManagers['raster'].reload).not.toHaveBeenCalled();
-        expect(style.tileManagers['vector'].reload).toHaveBeenCalled();
+        expect(style.tileManagers.raster.reload).not.toHaveBeenCalled();
+        expect(style.tileManagers.vector.reload).toHaveBeenCalled();
     });
 });
 
@@ -317,7 +317,7 @@ describe('Style.loadJSON', () => {
         expect(secondDateEvent.target).toBe(style);
         expect(secondDateEvent.dataType).toBe('style');
         const response = await style.imageManager.getImages(['image1']);
-        const image = response['image1'];
+        const image = response.image1;
         expect(image.data).toBeInstanceOf(RGBAImage);
         expect(image.data.width).toBe(1);
         expect(image.data.height).toBe(1);
@@ -348,7 +348,7 @@ describe('Style.loadJSON', () => {
         }));
 
         await style.once('style.load');
-        expect(style.tileManagers['mapLibre'] instanceof TileManager).toBeTruthy();
+        expect(style.tileManagers.mapLibre instanceof TileManager).toBeTruthy();
     });
 
     test('creates layers', async () => {
@@ -404,7 +404,7 @@ describe('Style.loadJSON', () => {
         style.removeSource('-source-id-');
 
         const source = createSource();
-        source['vector_layers'] = [{id: 'green'}];
+        source.vector_layers = [{id: 'green'}];
         style.addSource('-source-id-', source);
         style.addLayer({
             'id': '-layer-id-',
@@ -777,8 +777,8 @@ describe('Style.update', () => {
 
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][0]).toBe(MessageType.updateLayers);
-        expect(spy.mock.calls[0][1]['layers'].map((layer) => { return layer.id; })).toEqual(['first', 'third']);
-        expect(spy.mock.calls[0][1]['removedIds']).toEqual(['second']);
+        expect(spy.mock.calls[0][1].layers.map((layer) => { return layer.id; })).toEqual(['first', 'third']);
+        expect(spy.mock.calls[0][1].removedIds).toEqual(['second']);
     });
 });
 
@@ -870,8 +870,8 @@ describe('Style.setState', () => {
         newStyle.layers[0].minzoom = 2;
         (newStyle.layers[0] as SymbolLayerSpecification).filter = ['==', 'id', 1];
         newStyle.layers.splice(1, 1);
-        newStyle.sources['foo'] = createSource();
-        delete newStyle.sources['sourceId1'];
+        newStyle.sources.foo = createSource();
+        delete newStyle.sources.sourceId1;
         newStyle.light = {
             anchor: 'map'
         };
@@ -1097,7 +1097,7 @@ describe('Style.setState', () => {
 
         style.addSource('abc', createSource());
         const nextState = {...styleSpec};
-        nextState.sources['def'] = {type: 'geojson'} as GeoJSONSourceSpecification;
+        nextState.sources.def = {type: 'geojson'} as GeoJSONSourceSpecification;
 
         const didChange = style.setState(nextState, {validate: false});
 
@@ -2027,13 +2027,13 @@ describe('Style.setGlobalStateProperty', () => {
 
         await style.once('style.load');
 
-        style.tileManagers['circle'].resume = vi.fn();
-        style.tileManagers['circle'].reload = vi.fn();
+        style.tileManagers.circle.resume = vi.fn();
+        style.tileManagers.circle.reload = vi.fn();
 
         style.setGlobalStateProperty('showCircle', true);
 
-        expect(style.tileManagers['circle'].resume).not.toHaveBeenCalled();
-        expect(style.tileManagers['circle'].reload).not.toHaveBeenCalled();
+        expect(style.tileManagers.circle.resume).not.toHaveBeenCalled();
+        expect(style.tileManagers.circle.reload).not.toHaveBeenCalled();
     });
 
     test('does not reload sources when state property is only used in paint properties', async () => {
@@ -2160,7 +2160,7 @@ describe('Style.addLayer', () => {
 
         await style.once('style.load');
         const source = createSource();
-        source['vector_layers'] = [{id: 'green'}];
+        source.vector_layers = [{id: 'green'}];
         style.addSource('-source-id-', source);
         style.addLayer({
             'id': '-layer-id-',
@@ -2233,7 +2233,7 @@ describe('Style.addLayer', () => {
         await waitForEvent(style, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'content');
 
         const spy = vi.fn();
-        style.tileManagers['mapLibre'].reload = spy;
+        style.tileManagers.mapLibre.reload = spy;
         style.addLayer(layer);
         style.update({} as EvaluationParameters);
         expect(spy).toHaveBeenCalled();
@@ -2266,8 +2266,8 @@ describe('Style.addLayer', () => {
 
         await waitForEvent(style, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'content');
         const spy = vi.fn();
-        style.tileManagers['mapLibre'].reload = spy;
-        style.tileManagers['mapLibre'].clearTiles =  () => { throw new Error('test failed'); };
+        style.tileManagers.mapLibre.reload = spy;
+        style.tileManagers.mapLibre.clearTiles =  () => { throw new Error('test failed'); };
         style.removeLayer('my-layer');
         style.addLayer(layer);
         style.update({} as EvaluationParameters);
@@ -2300,8 +2300,8 @@ describe('Style.addLayer', () => {
         }as LayerSpecification;
         await waitForEvent(style, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'content');
         const spy = vi.fn();
-        style.tileManagers['mapLibre'].reload =  () => { throw new Error('test failed'); };
-        style.tileManagers['mapLibre'].clearTiles = spy;
+        style.tileManagers.mapLibre.reload =  () => { throw new Error('test failed'); };
+        style.tileManagers.mapLibre.clearTiles = spy;
         style.removeLayer('my-layer');
         style.addLayer(layer);
         style.update({} as EvaluationParameters);
@@ -2596,7 +2596,7 @@ describe('Style.setPaintProperty', () => {
 
         await style.once('style.load');
         style.update({zoom: tr.zoom} as EvaluationParameters);
-        const tileManager = style.tileManagers['geojson'];
+        const tileManager = style.tileManagers.geojson;
         const source = style.getSource('geojson') as GeoJSONSource;
 
         await source.once('data');
@@ -2689,7 +2689,7 @@ describe('Style.getPaintProperty', () => {
         expect(style._changed).toBeFalsy();
 
         const value = style.getPaintProperty('background', 'background-color');
-        value['stops'][0][0] = 1;
+        value.stops[0][0] = 1;
         style.setPaintProperty('background', 'background-color', value);
         expect(style._changed).toBeTruthy();
     });
@@ -2837,8 +2837,8 @@ describe('Style.setFilter', () => {
         style.update({} as EvaluationParameters); // trigger dispatcher broadcast
 
         expect(spy.mock.calls[0][0]).toBe(MessageType.updateLayers);
-        expect(spy.mock.calls[0][1]['layers'][0].id).toBe('symbol');
-        expect(spy.mock.calls[0][1]['layers'][0].filter).toEqual(['==', 'id', 1]);
+        expect(spy.mock.calls[0][1].layers[0].id).toBe('symbol');
+        expect(spy.mock.calls[0][1].layers[0].filter).toEqual(['==', 'id', 1]);
     });
 
     test('gets a clone of the filter', async () => {
@@ -2869,15 +2869,15 @@ describe('Style.setFilter', () => {
         style.setFilter('symbol', filter);
         style.update({} as EvaluationParameters); // trigger dispatcher broadcast
         expect(spy.mock.calls[0][0]).toBe(MessageType.updateLayers);
-        expect(spy.mock.calls[0][1]['layers'][0].id).toBe('symbol');
-        expect(spy.mock.calls[0][1]['layers'][0].filter).toEqual(['==', 'id', 2]);
+        expect(spy.mock.calls[0][1].layers[0].id).toBe('symbol');
+        expect(spy.mock.calls[0][1].layers[0].filter).toEqual(['==', 'id', 2]);
     });
 
     test('unsets filter', async () => {
         const style = createStyle();
         await style.once('style.load');
         style.setFilter('symbol', null);
-        expect(style.getLayer('symbol').serialize()['filter']).toBeUndefined();
+        expect(style.getLayer('symbol').serialize().filter).toBeUndefined();
     });
 
     test('emits if invalid', async () => {
@@ -2886,7 +2886,7 @@ describe('Style.setFilter', () => {
         const promise = style.once('error');
         style.setFilter('symbol', ['==', '$type', 1]);
         await promise;
-        expect(style.getLayer('symbol').serialize()['filter']).toEqual(['==', 'id', 0]);
+        expect(style.getLayer('symbol').serialize().filter).toEqual(['==', 'id', 0]);
     });
 
     test('fires an error if layer not found', async () => {
@@ -2919,8 +2919,8 @@ describe('Style.setFilter', () => {
         expect(style.getFilter('symbol')).toBe('notafilter');
         style.update({} as EvaluationParameters); // trigger dispatcher broadcast
         expect(spy.mock.calls[0][0]).toBe(MessageType.updateLayers);
-        expect(spy.mock.calls[0][1]['layers'][0].id).toBe('symbol');
-        expect(spy.mock.calls[0][1]['layers'][0].filter).toBe('notafilter');
+        expect(spy.mock.calls[0][1].layers[0].id).toBe('symbol');
+        expect(spy.mock.calls[0][1].layers[0].filter).toBe('notafilter');
     });
 });
 
@@ -2957,7 +2957,7 @@ describe('Style.setLayerZoomRange', () => {
         expect(style.getLayer('symbol').maxzoom).toBe(12);
         style.update({} as EvaluationParameters); // trigger dispatcher broadcast
         expect(spy.mock.calls[0][0]).toBe(MessageType.updateLayers);
-        expect(spy.mock.calls[0][1]['layers'].map((layer) => { return layer.id; })).toEqual(['symbol']);
+        expect(spy.mock.calls[0][1].layers.map((layer) => { return layer.id; })).toEqual(['symbol']);
     });
 
     test('fires an error if layer not found', async () => {
@@ -3168,7 +3168,7 @@ describe('Style.queryRenderedFeatures', () => {
     test('checks type of `layers` option', () => {
         let errors = 0;
         vi.spyOn(style, 'fire').mockImplementation((event) => {
-            if (event['error']?.message.includes('parameters.layers must be an Array')) {
+            if (event.error?.message.includes('parameters.layers must be an Array')) {
                 errors++;
             }
             return style;
@@ -3210,7 +3210,7 @@ describe('Style.queryRenderedFeatures', () => {
     test('fires an error if layer included in params does not exist on the style', () => {
         let errors = 0;
         vi.spyOn(style, 'fire').mockImplementation((event) => {
-            if (event['error']?.message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
+            if (event.error?.message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
             return style;
         });
         const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['merp']}, transform);
@@ -3250,7 +3250,7 @@ describe('Style defers  ...', () => {
 
         style.update({} as EvaluationParameters);
 
-        expect(mockStyleFire.mock.calls[0][0]['type']).toBe('data');
+        expect(mockStyleFire.mock.calls[0][0].type).toBe('data');
 
         // called per source
         expect(style._reloadSource).toHaveBeenCalledTimes(2);
@@ -3308,7 +3308,7 @@ describe('Style.query*Features', () => {
     test('querySourceFeatures not raise validation errors if validation was disabled', () => {
         let errors = 0;
         vi.spyOn(style, 'fire').mockImplementation((event) => {
-            if (event['error']) {
+            if (event.error) {
                 errors++;
             }
             return style;
@@ -3320,7 +3320,7 @@ describe('Style.query*Features', () => {
     test('querySourceFeatures not raise validation errors if validation was disabled', () => {
         let errors = 0;
         vi.spyOn(style, 'fire').mockImplementation((event) => {
-            if (event['error']) errors++;
+            if (event.error) errors++;
             return style;
         });
         style.querySourceFeatures([{x: 0, y: 0}] as any, {filter: 'invalidFilter' as any, validate: false});
@@ -3328,7 +3328,7 @@ describe('Style.query*Features', () => {
     });
 
     test('style adds global-state to querySourceFeatures', async () => {
-        const tileManager = style.tileManagers['geojson'];
+        const tileManager = style.tileManagers.geojson;
         const querySourceFeatures = vi.fn().mockReturnValue([]);
         vi.spyOn(tileManager, 'getRenderableIds').mockReturnValue(['symbol']);
         vi.spyOn(tileManager, 'getTileByID').mockReturnValue({
@@ -3342,7 +3342,7 @@ describe('Style.query*Features', () => {
     });
 
     test('style adds global-state to queryRenderedFeatures', async () => {
-        const tileManager = style.tileManagers['geojson'];
+        const tileManager = style.tileManagers.geojson;
         tileManager.transform = transform;
         const queryRenderedFeatures = vi.fn().mockReturnValue([]);
         vi.spyOn(tileManager, 'tilesIn').mockReturnValue([{

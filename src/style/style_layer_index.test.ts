@@ -11,7 +11,7 @@ describe('StyleLayerIndex', () => {
             {id: '3', type: 'circle', source: 'source', 'source-layer': 'layer', paint: {'circle-color': 'blue'}}
         ]);
 
-        const families = index.familiesBySource['source']['layer'];
+        const families = index.familiesBySource.source.layer;
         expect(families).toHaveLength(2);
         expect(families[0]).toHaveLength(1);
         expect(families[0][0].id).toBe('1');
@@ -37,7 +37,7 @@ describe('StyleLayerIndex', () => {
             {id: '3', type: 'circle', source: 'bar', 'source-layer': 'layer', paint: {'circle-color': 'yellow'}}
         ], []);
 
-        const families = index.familiesBySource['bar']['layer'];
+        const families = index.familiesBySource.bar.layer;
         expect(families).toHaveLength(2);
         expect(families[0]).toHaveLength(1);
         expect(families[0][0].getPaintProperty('fill-color')).toBe('cyan');
@@ -94,7 +94,7 @@ describe('StyleLayerIndex', () => {
                 'layout': {'line-join': 'miter', 'line-cap': 'butt'}}
         ]);
 
-        const families = index.familiesBySource['source']['layer'];
+        const families = index.familiesBySource.source.layer;
         expect(families[0]).toHaveLength(2);
 
     });

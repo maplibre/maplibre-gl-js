@@ -735,15 +735,15 @@ function normalizeOffset(offset?: Offset | null) {
     } else {
         // input specifies an offset per position
         return {
-            'center': Point.convert(offset['center'] || [0, 0]),
-            'top': Point.convert(offset['top'] || [0, 0]),
+            'center': Point.convert(offset.center || [0, 0]),
+            'top': Point.convert(offset.top || [0, 0]),
             'top-left': Point.convert(offset['top-left'] || [0, 0]),
             'top-right': Point.convert(offset['top-right'] || [0, 0]),
-            'bottom': Point.convert(offset['bottom'] || [0, 0]),
+            'bottom': Point.convert(offset.bottom || [0, 0]),
             'bottom-left': Point.convert(offset['bottom-left'] || [0, 0]),
             'bottom-right': Point.convert(offset['bottom-right'] || [0, 0]),
-            'left': Point.convert(offset['left'] || [0, 0]),
-            'right': Point.convert(offset['right'] || [0, 0])
+            'left': Point.convert(offset.left || [0, 0]),
+            'right': Point.convert(offset.right || [0, 0])
         };
     }
 }

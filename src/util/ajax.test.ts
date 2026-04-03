@@ -193,7 +193,7 @@ describe('ajax', () => {
             expect(server.requests).toHaveLength(1);
             expect(server.requests[0].url).toBe('http://example.com/test-params.json');
             expect(server.requests[0].method).toBe('GET');
-            expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer 123');
+            expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer 123');
         });
 
         test('should be provided to fetch API in getJSON function', async () => {
@@ -209,7 +209,7 @@ describe('ajax', () => {
             expect(server.requests).toHaveLength(1);
             expect(server.requests[0].url).toBe('http://example.com/test-params.json');
             expect(server.requests[0].method).toBe('GET');
-            expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer 123');
+            expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer 123');
         });
 
         test('should preserve user-specified Accept header', async () => {
@@ -225,8 +225,8 @@ describe('ajax', () => {
             expect(server.requests).toHaveLength(1);
             expect(server.requests[0].url).toBe('http://example.com/test-params.json');
             expect(server.requests[0].method).toBe('GET');
-            expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer 123');
-            expect(server.requests[0].requestHeaders['Accept']).toBe('application/geo+json');
+            expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer 123');
+            expect(server.requests[0].requestHeaders.Accept).toBe('application/geo+json');
         });
 
         test('should add default Accept header when user has not specified one', async () => {
@@ -241,8 +241,8 @@ describe('ajax', () => {
             expect(server.requests).toHaveLength(1);
             expect(server.requests[0].url).toBe('http://example.com/test-params.json');
             expect(server.requests[0].method).toBe('GET');
-            expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer 123');
-            expect(server.requests[0].requestHeaders['Accept']).toBe('application/json');
+            expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer 123');
+            expect(server.requests[0].requestHeaders.Accept).toBe('application/json');
         });
 
         test('should add default Accept header when user has not specified one, even for file:// requests', async () => {
@@ -257,8 +257,8 @@ describe('ajax', () => {
             expect(server.requests).toHaveLength(1);
             expect(server.requests[0].url).toBe('file:///C:/Temp/abc.json');
             expect(server.requests[0].method).toBe('GET');
-            expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer 123');
-            expect(server.requests[0].requestHeaders['Accept']).toBe('application/json');
+            expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer 123');
+            expect(server.requests[0].requestHeaders.Accept).toBe('application/json');
         });
 
         test('should not add default Accept header when user has already specified one, even for file:// requests', async () => {
@@ -273,8 +273,8 @@ describe('ajax', () => {
             expect(server.requests).toHaveLength(1);
             expect(server.requests[0].url).toBe('file:///C:/Temp/abc.json');
             expect(server.requests[0].method).toBe('GET');
-            expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer 123');
-            expect(server.requests[0].requestHeaders['Accept']).toBe('application/geo+json');
+            expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer 123');
+            expect(server.requests[0].requestHeaders.Accept).toBe('application/geo+json');
         });
 
     });

@@ -485,7 +485,7 @@ describe('StyleLayer.serialize', () => {
         const layer = createStyleLayer(createSymbolLayer(), {});
         layer.setLayoutProperty('visibility', 'visible');
 
-        expect(layer.serialize().layout['visibility']).toBe('visible');
+        expect(layer.serialize().layout.visibility).toBe('visible');
 
     });
 
@@ -493,7 +493,7 @@ describe('StyleLayer.serialize', () => {
         const layer = createStyleLayer(createSymbolLayer(), {});
         layer.setLayoutProperty('visibility', 'none');
 
-        expect(layer.serialize().layout['visibility']).toBe('none');
+        expect(layer.serialize().layout.visibility).toBe('none');
 
     });
 
@@ -501,7 +501,7 @@ describe('StyleLayer.serialize', () => {
         const layer = createStyleLayer(createSymbolLayer(), {});
         layer.setLayoutProperty('visibility', undefined);
 
-        expect(layer.serialize().layout['visibility']).toBeUndefined();
+        expect(layer.serialize().layout.visibility).toBeUndefined();
 
     });
 

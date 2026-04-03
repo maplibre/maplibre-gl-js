@@ -50,8 +50,8 @@ describe('VertexBuffer', () => {
         const spy = vi.spyOn(context.gl, 'vertexAttribPointer').mockImplementation(() => {});
         buffer.setVertexAttribPointers(context.gl, {attributes: {map: 5, box: 6}} as any, 50);
         expect(spy.mock.calls).toEqual([
-            [5, 1, context.gl['SHORT'], false, 6, 300],
-            [6, 2, context.gl['SHORT'], false, 6, 304]
+            [5, 1, context.gl.SHORT, false, 6, 300],
+            [6, 2, context.gl.SHORT, false, 6, 304]
         ]);
     });
 

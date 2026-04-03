@@ -208,7 +208,7 @@ describe('render to texture', () => {
 
     test('should clear tile cache on source state update', () => {
         const state = {revision: 0};
-        (style.tileManagers['maine'].getState as Mock).mockReturnValue(state);
+        (style.tileManagers.maine.getState as Mock).mockReturnValue(state);
 
         tile.rtt = [{id: 1, stamp: 123}];
         tile.rttFingerprint = {maine: '923#0'};

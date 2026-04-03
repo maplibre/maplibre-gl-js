@@ -655,7 +655,7 @@ describe('TileManager.update', () => {
         await map.once('styledata');
 
         const style = map.style;
-        const tileManager = style.tileManagers['rasterSource'];
+        const tileManager = style.tileManagers.rasterSource;
 
         tileManager._loadTile = async () => {};
 

@@ -269,7 +269,7 @@ describe('reloadTile', () => {
         expect(Object.keys(featureLayers)).toHaveLength(1);
 
         // validate supported features are present in the index
-        expect(featureLayers[GEOJSON_TILE_LAYER_NAME].feature(0).properties['stringProperty']).toBeDefined();
+        expect(featureLayers[GEOJSON_TILE_LAYER_NAME].feature(0).properties.stringProperty).toBeDefined();
     });
 });
 

@@ -347,7 +347,7 @@ describe('worker tile', () => {
 
         const tile = createWorkerTile({});
         await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
-        const layer = layerIndex._layers['circle'];
+        const layer = layerIndex._layers.circle;
         layer.recalculate({zoom: 0} as EvaluationParameters, []);
         const paint = layer.paint as PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
         expect(paint.get('circle-color').evaluate({} as any, {})).toEqual(new Color(1, 0, 0, 1));

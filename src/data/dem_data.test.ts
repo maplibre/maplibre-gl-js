@@ -36,9 +36,9 @@ describe('DEMData', () => {
             const imageData0 = createMockClampImage(4, 4);
             const dem = new DEMData('0', imageData0, 'mapbox');
             expect(dem).not.toBeNull();
-            expect(dem['uid']).toBe('0');
-            expect(dem['dim']).toBe(2);
-            expect(dem['stride']).toBe(4);
+            expect(dem.uid).toBe('0');
+            expect(dem.dim).toBe(2);
+            expect(dem.stride).toBe(4);
         });
 
         test('otherEncoding', () => {

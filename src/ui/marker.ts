@@ -217,8 +217,8 @@ export class Marker extends Evented {
                 ellipse.setAttributeNS(null, 'opacity', '0.04');
                 ellipse.setAttributeNS(null, 'cx', '10.5');
                 ellipse.setAttributeNS(null, 'cy', '5.80029008');
-                ellipse.setAttributeNS(null, 'rx', data['rx']);
-                ellipse.setAttributeNS(null, 'ry', data['ry']);
+                ellipse.setAttributeNS(null, 'rx', data.rx);
+                ellipse.setAttributeNS(null, 'ry', data.ry);
                 shadow.appendChild(ellipse);
             }
 
