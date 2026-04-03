@@ -1,3 +1,4 @@
+import {throwIfAborted} from '../util/abort_error';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {type StyleLayer} from './style_layer';
 import {isRasterStyleLayer} from './style_layer/raster_style_layer';
@@ -426,15 +427,24 @@ export class Style extends Evented {
         options.validate = typeof options.validate === 'boolean' ?
             options.validate : true;
 
-        const request = await this.map._requestManager.transformRequest(url, ResourceType.Style);
         this._loadStyleRequest = new AbortController();
         const abortController = this._loadStyleRequest;
         try {
-            const response = await getJSON<StyleSpecification>(request, this._loadStyleRequest);
-            this._loadStyleRequest = null;
+            const request = await this.map._requestManager.transformRequest(url, ResourceType.Style);
+            throwIfAborted(abortController.signal);
+
+            const response = await getJSON<StyleSpecification>(request, abortController);
+            if (this._loadStyleRequest === abortController) {
+                // Clear this request only if it is still the active style load. A stale
+                // request can finish after a newer loadURL() call has already installed
+                // another controller, and must not clear that newer abort handle.
+                this._loadStyleRequest = null;
+            }
             this._load(response.data, options, previousStyle);
         } catch (error) {
-            this._loadStyleRequest = null;
+            if (this._loadStyleRequest === abortController) {
+                this._loadStyleRequest = null;
+            }
             if (error && !abortController.signal.aborted) { // ignore abort
                 this.fire(new ErrorEvent(error));
             }
@@ -1683,17 +1693,18 @@ export class Style extends Evented {
         return this.stylesheet?.projection;
     }
 
-    setProjection(projection: ProjectionSpecification) {
+    setProjection(projection?: ProjectionSpecification) {
         this._checkLoaded();
+        const resolvedProjection = projection ?? {type: 'mercator'};
         this.stylesheet.projection = projection;
         if (this.projection) {
-            if (this.projection.name === projection.type) {
+            if (this.projection.name === resolvedProjection.type) {
                 return;
             }
             this.projection.destroy();
             delete this.projection;
         }
-        this._setProjectionInternal(projection.type);
+        this._setProjectionInternal(resolvedProjection.type);
     }
 
     getSky(): SkySpecification {

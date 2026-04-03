@@ -202,7 +202,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         }
 
         // Compute target zoom from the obtained scale.
-        result.zoom = clonedTr.zoom + scaleZoom(smallestNeededScale);
+        result.zoom = Math.min(clonedTr.zoom + scaleZoom(smallestNeededScale), options.maxZoom);
         return result;
     }
 
