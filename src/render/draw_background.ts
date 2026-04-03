@@ -26,8 +26,8 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
 
     const image = layer.paint.get('background-pattern');
 
-    // Use WebGPU drawable path for solid-color backgrounds
-    if (painter.device?.type === 'webgpu' && !image) {
+    // Use drawable path for solid-color backgrounds (both WebGL2 and WebGPU)
+    if (painter.useDrawables && painter.useDrawables.has('background') && !image) {
         drawBackgroundDrawable(painter, layer, coords, renderOptions);
         return;
     }
@@ -107,8 +107,9 @@ function drawBackgroundDrawable(painter: Painter, layer: BackgroundStyleLayer, c
     const stencilMode = StencilMode.disabled;
     const depthMode = painter.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
-    // Skip WebGL program creation in WebGPU mode
-    const program = painter.device?.type === 'webgpu' ? null : painter.useProgram('background');
+    // Create WebGL program (null for WebGPU which uses WGSL shaders)
+    const isWebGPU = painter.device?.type === 'webgpu';
+    const program = isWebGPU ? null : painter.useProgram('background');
 
     const tileIDs = coords ? coords : coveringTiles(transform, {tileSize, terrain: painter.style.map.terrain});
 

@@ -301,20 +301,12 @@ function drawLineDrawable(painter: Painter, tileManager: TileManager, layer: Lin
     const visibleTileKeys = new Set<string>();
     let firstTile = true;
 
-    // In WebGPU mode, always rebuild drawables to match per-frame stencil state.
-    // Don't call destroy() — GPU may still reference old buffers; let GC handle them.
-    const isWebGPULine = painter.device?.type === 'webgpu';
-    if (isWebGPULine) {
-        (layerGroup as any)._drawablesByTile.clear();
-    }
+    // Always rebuild drawables to match per-frame stencil state.
+    // Stencil refs from _renderTileClippingMasks can change each frame as tiles reorder.
+    (layerGroup as any)._drawablesByTile.clear();
 
     for (const coord of coords) {
         visibleTileKeys.add(coord.key.toString());
-
-        // Reuse existing drawable if tile already has one (avoids GPU buffer churn)
-        if (!isWebGPULine && layerGroup.hasDrawablesForTile(coord)) {
-            continue;
-        }
 
         const tile = tileManager.getTile(coord);
         if (image && !tile.patternsLoaded()) continue;

@@ -3444,9 +3444,11 @@ export class Map extends Camera {
     async _setupPainterAsync() {
 
         // Maplibre WebGL context requires alpha, depth and stencil buffers. It also forces premultipliedAlpha: true.
-        // We use the values provided in the map constructor for the rest of context attributes
+        // We use the values provided in the map constructor for the rest of context attributes.
+        // Strip contextType since it's a MapLibre option, not a WebGL context attribute.
+        const {contextType: _, ...webglAttributes} = this._canvasContextAttributes;
         const attributes = {
-            ...this._canvasContextAttributes,
+            ...webglAttributes,
             alpha: true,
             depth: true,
             stencil: true,
@@ -3470,12 +3472,18 @@ export class Map extends Camera {
         } else {
             console.log('Trying WebGPU first...');
             try {
-                device = await webgpuAdapter.create({
+                // Race WebGPU initialization against a timeout to avoid hanging
+                // in environments where navigator.gpu exists but never resolves
+                const webgpuPromise = webgpuAdapter.create({
                     createCanvasContext: {
                         canvas: this._canvas,
                         ...attributes
                     }
                 });
+                const timeoutPromise = new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error('WebGPU initialization timed out')), 3000)
+                );
+                device = await Promise.race([webgpuPromise, timeoutPromise]);
                 console.log(`WebGPU initialization complete: !!device = ${!!device}`);
             } catch (e) {
                 console.warn('WebGPU uninitialized or unavailable. Falling back to WebGL...', e);

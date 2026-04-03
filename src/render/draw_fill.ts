@@ -201,18 +201,14 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
 
     const visibleTileKeys = new Set<string>();
 
-    // In WebGPU mode, always rebuild drawables to match per-frame stencil state.
+    // Always rebuild drawables to match per-frame stencil state.
+    // Stencil refs from _renderTileClippingMasks can change each frame as tiles reorder.
     // Don't call destroy() — GPU may still reference old buffers; let GC handle them.
     const isWebGPU = painter.device?.type === 'webgpu';
-    if (isWebGPU) {
-        (layerGroup as any)._drawablesByTile.clear();
-    }
+    (layerGroup as any)._drawablesByTile.clear();
 
     for (const coord of coords) {
         visibleTileKeys.add(coord.key.toString());
-
-        // Reuse existing drawable if tile already has one (avoids GPU buffer churn)
-        if (!isWebGPU && layerGroup.hasDrawablesForTile(coord)) continue;
 
         const tile = tileManager.getTile(coord);
         if (image && !tile.patternsLoaded()) continue;

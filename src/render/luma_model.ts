@@ -273,11 +273,11 @@ export class LumaModel {
 
         if (projectionData) {
             const projectionObjectToUniformMap: any = {
-                mainMatrix: 'u_matrix',
-                tileMercatorCoords: 'u_tile_mercator_coords',
-                clippingPlane: 'u_clipping_plane',
+                mainMatrix: 'u_projection_matrix',
+                tileMercatorCoords: 'u_projection_tile_mercator_coords',
+                clippingPlane: 'u_projection_clipping_plane',
                 projectionTransition: 'u_projection_transition',
-                fallbackMatrix: 'u_inv_rot_matrix'
+                fallbackMatrix: 'u_projection_fallback_matrix'
             };
             for (const fieldName in projectionData) {
                 const uniformName = projectionObjectToUniformMap[fieldName];

@@ -167,6 +167,13 @@ export class Painter {
         this._tileTextures = {};
         this.terrainFacilitator = {dirty: true, matrix: mat4.identity(new Float64Array(16) as any), renderTime: 0};
 
+        // Force MapLibre's GL state cache to dirty after luma.gl wraps the context.
+        // luma.gl's webgl2Adapter.attach() installs state-tracking interceptors with
+        // copyState:false, so its cache assumes GL defaults. By marking MapLibre's cache
+        // dirty, we ensure all subsequent state changes actually call through to GL
+        // (and luma.gl's interceptors), keeping both caches in sync.
+        this.context.setDirty();
+
         // Initialize drawable architecture
         this.layerGroups = new Map();
         this.layerTweakers = new Map();
@@ -174,12 +181,11 @@ export class Painter {
         this.globalUBO = new UniformBlock(64); // GlobalPaintParamsUBO size
         this.useDrawables = new Set(); // Enable per layer type: 'circle', 'fill', 'line'
 
-        // Enable drawable path for WebGPU
-        if (this.device && this.device.type === 'webgpu') {
-            this.useDrawables.add('circle');
-            this.useDrawables.add('fill');
-            this.useDrawables.add('line');
-        }
+        // Enable drawable path for all supported layers (both WebGL2 and WebGPU)
+        this.useDrawables.add('background');
+        this.useDrawables.add('circle');
+        this.useDrawables.add('fill');
+        this.useDrawables.add('line');
 
         this.setup();
 
