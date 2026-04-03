@@ -1,4 +1,19 @@
 ## main
+### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+- test: change `dataloadingFired` to a spy ([#7385](https://github.com/maplibre/maplibre-gl-js/pull/7385)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- fix: prevent stale async style loads from completing after style clear ([#7378](https://github.com/maplibre/maplibre-gl-js/pull/7378)) (by [@Lievesley](https://github.com/Lievesley))
+- add a testcase for the visibility global state ([#7383](https://github.com/maplibre/maplibre-gl-js/pull/7383)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- test: make circle-oppacity more meaningfull and rename a few tests ([#7370](https://github.com/maplibre/maplibre-gl-js/pull/7370)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- fix: typos ([#7371](https://github.com/maplibre/maplibre-gl-js/pull/7371)) (by [@mwtoews](https://github.com/mwtoews))
+- fix: handle undefined projection in setProjection to prevent setState crash ([#7330](https://github.com/maplibre/maplibre-gl-js/pull/7330)) (by [@ashwinuae](https://github.com/ashwinuae))
+- feat(camera): Make `jumpTo`, `easeTo`, and `flyTo` respect the `zoomSnap` map option by snapping the zoom level to the nearest valid increment ([#7338](https://github.com/maplibre/maplibre-gl-js/pull/7338)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- fix broken example for fill-pattern ([#7326](https://github.com/maplibre/maplibre-gl-js/pull/7326)) (by [@k-yle](https://github.com/k-yle))
+## 5.22.0
 
 ### ✨ Features and improvements
 
@@ -6,7 +21,6 @@
 - GPU performance optimization: early culling of transparent symbols in vertex shaders ([#7364](https://github.com/maplibre/maplibre-gl-js/pull/7364)) (by [@xavierjs](https://github.com/xavierjs))
 - Add example showing how to measure map performance using built-in events (`load`, `idle`, `render`) ([#7077](https://github.com/maplibre/maplibre-gl-js/pull/7077)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - UX: Clarify error message language so if layout and paint properties are confused in `setPaintProperty` or `setLayoutProperty` ([#6954](https://github.com/maplibre/maplibre-gl-js/pull/6954)) (by [@Willjfield](https://github.com/Willjfield) and [@CommanderStorm](https://github.com/CommanderStorm))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 
@@ -17,7 +31,6 @@
 - Prevent crashes when calling `map.remove()` immediately after creation by canceling in-flight style URL loads ([#7368](https://github.com/maplibre/maplibre-gl-js/pull/7368)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Fixed symbol collision flickering by adding tolerance to GridIndex AABB comparison ([#7360](https://github.com/maplibre/maplibre-gl-js/issues/7360)) (by [@kkokkoejong](https://github.com/kkokkojeong))
 - Fix `fitBounds` ignoring `maxZoom` option in `vertical-perspective` projection ([#7372](https://github.com/maplibre/maplibre-gl-js/issues/7372)) (by [@CommanderStorm](https://github.com/CommanderStorm))
-- _...Add new stuff here..._
 
 ## 5.21.1
 
