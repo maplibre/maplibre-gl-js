@@ -26,7 +26,6 @@
 - Fix `fitBounds` ignoring `maxZoom` option in `vertical-perspective` projection ([#7372](https://github.com/maplibre/maplibre-gl-js/issues/7372)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Prevent stale async style loads from completing after style clear ([#7378](https://github.com/maplibre/maplibre-gl-js/pull/7378)) (by [@Lievesley](https://github.com/Lievesley))
 - Fix broken example for `fill-pattern` ([#7326](https://github.com/maplibre/maplibre-gl-js/pull/7326)) (by [@k-yle](https://github.com/k-yle))
-- _...Add new stuff here..._
 
 ## 5.21.1
 
