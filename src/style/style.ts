@@ -1693,7 +1693,7 @@ export class Style extends Evented {
         return this.stylesheet?.projection;
     }
 
-    setProjection(projection: ProjectionSpecification) {
+    setProjection(projection?: ProjectionSpecification) {
         this._checkLoaded();
         const resolvedProjection = projection ?? {type: 'mercator'};
         this.stylesheet.projection = projection;
