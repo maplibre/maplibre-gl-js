@@ -12,7 +12,6 @@ import {LineAtlas} from '../render/line_atlas';
 import {clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
 import {getJSON, getReferrer} from '../util/ajax';
-import {isAbortError} from '../util/abort_error';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 import {now} from '../util/time_control';
