@@ -102,7 +102,8 @@ function drawBackgroundDrawable(painter: Painter, layer: BackgroundStyleLayer, c
     const color = layer.paint.get('background-color');
     const opacity = layer.paint.get('background-opacity');
     const pass = (color.a === 1 && opacity === 1 && painter.opaquePassEnabledForLayer()) ? 'opaque' : 'translucent';
-    if (painter.renderPass !== pass) return;
+    // When rendering to texture (terrain), draw regardless of pass since RTT skips the opaque pass
+    if (painter.renderPass !== pass && !isRenderingToTexture) return;
 
     const stencilMode = StencilMode.disabled;
     const depthMode = painter.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);

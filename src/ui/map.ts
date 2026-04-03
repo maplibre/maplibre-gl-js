@@ -2349,10 +2349,10 @@ export class Map extends Camera {
             }
             if (this.painter) {
                 this.terrain = new Terrain(this.painter, tileManager, options);
-                if (this.painter && this.painter.renderToTexture) {
+                if (this.painter.renderToTexture) {
                     this.painter.renderToTexture.destruct();
-                    this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
                 }
+                this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
                 this._update(true);
             }
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));

@@ -164,6 +164,20 @@ export class Drawable {
         context.setColorMode(this.colorMode);
         context.setCullFace(this.cullFaceMode);
 
+        // Bind textures (gradient, pattern, etc.)
+        for (const tex of this.textures) {
+            context.activeTexture.set(gl.TEXTURE0 + tex.textureUnit);
+            gl.bindTexture(gl.TEXTURE_2D, tex.texture);
+            if (tex.filter !== undefined) {
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, tex.filter);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, tex.filter);
+            }
+            if (tex.wrap !== undefined) {
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, tex.wrap);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, tex.wrap);
+            }
+        }
+
         // Terrain uniforms
         if (this.terrainData) {
             context.activeTexture.set(gl.TEXTURE2);

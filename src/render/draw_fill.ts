@@ -238,7 +238,8 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
         const stencil = isWebGPU ? null : painter.stencilModeForClipping(coord);
 
         // Draw fill triangles
-        if (painter.renderPass === pass) {
+        // When rendering to texture (terrain), draw regardless of pass since RTT skips the opaque pass
+        if (painter.renderPass === pass || isRenderingToTexture) {
             const depthMode = painter.getDepthModeForSublayer(
                 1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
             const programName = image ? 'fillPattern' : 'fill';

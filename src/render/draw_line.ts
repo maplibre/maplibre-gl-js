@@ -374,6 +374,39 @@ function drawLineDrawable(painter: Painter, tileManager: TileManager, layer: Lin
             .setCullFaceMode(CullFaceMode.disabled)
             .setLayerTweaker(tweaker);
 
+        // Store texture references for re-binding during draw
+        if (gradient) {
+            const layerGradient = bucket.gradients[layer.id];
+            const gradTex = layerGradient.texture;
+            if (gradTex) {
+                lineBuilder.addTexture({
+                    name: 'u_image',
+                    textureUnit: 0,
+                    texture: gradTex.texture,
+                    filter: layer.stepInterpolant ? gl.NEAREST : gl.LINEAR,
+                    wrap: gl.CLAMP_TO_EDGE
+                });
+            }
+        }
+        if (dasharray) {
+            lineBuilder.addTexture({
+                name: 'u_dash_image',
+                textureUnit: gradient ? 1 : 0,
+                texture: painter.lineAtlas.texture,
+                filter: gl.LINEAR,
+                wrap: gl.REPEAT
+            });
+        }
+        if (image && tile.imageAtlasTexture) {
+            lineBuilder.addTexture({
+                name: 'u_image',
+                textureUnit: 0,
+                texture: tile.imageAtlasTexture.texture,
+                filter: gl.LINEAR,
+                wrap: gl.CLAMP_TO_EDGE
+            });
+        }
+
         const drawable = lineBuilder.flush({
             tileID: coord,
             layer,
