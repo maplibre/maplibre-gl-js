@@ -304,21 +304,30 @@ function drawRasterDrawable(painter: Painter, tileManager: TileManager, layer: R
             .setLayerTweaker(tweaker);
 
         // Add tile texture (image0) and parent texture (image1)
-        const tileTexData = tile.texture as any;
-        if (tileTexData) {
+        const tileTexObj = tile.texture as any;
+        if (tileTexObj) {
+            // image0: current tile
             const texEntry: any = {
                 name: 'image0',
                 textureUnit: 0,
-                texture: tileTexData.texture || null,
+                texture: tileTexObj.texture || null,
                 filter: textureFilter,
-                wrap: 33071 /* CLAMP_TO_EDGE */
+                wrap: 33071 /* CLAMP_TO_EDGE */,
+                imageSource: tileTexObj.image || null // DOM image for WebGPU upload
             };
-            // Store source for WebGPU upload
-            if (tileTexData.size && tileTexData.texture) {
-                // The tile texture is already a WebGL texture — for WebGPU we need the pixel data
-                // This is handled by the texture infrastructure
-            }
             builder.addTexture(texEntry);
+
+            // image1: parent tile (for cross-fade) or same tile
+            const parentTexObj = parentTile?.texture as any || tileTexObj;
+            const texEntry1: any = {
+                name: 'image1',
+                textureUnit: 1,
+                texture: parentTexObj.texture || null,
+                filter: textureFilter,
+                wrap: 33071 /* CLAMP_TO_EDGE */,
+                imageSource: parentTexObj.image || null
+            };
+            builder.addTexture(texEntry1);
         }
 
         const drawable = builder.flush({

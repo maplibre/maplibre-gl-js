@@ -32,6 +32,9 @@ export class Texture {
     wrap: TextureWrap;
     useMipmap: boolean;
 
+    /** Original image source for WebGPU upload via copyExternalImageToTexture */
+    image: TextureImage;
+
     /** Tracks the original handle to detect corruption after context loss (#2811) */
     private _ownedHandle: WebGLTexture;
 
@@ -59,6 +62,7 @@ export class Texture {
         const {gl} = context;
 
         this.useMipmap = Boolean(options && options.useMipmap);
+        this.image = image;
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
         context.pixelStoreUnpackFlipY.set(false);

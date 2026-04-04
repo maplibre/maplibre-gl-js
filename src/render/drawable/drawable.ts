@@ -531,7 +531,25 @@ export class Drawable {
                             let gpuTex = tex ? (tex as any)._gpuTexture : null;
                             if (!gpuTex) {
                                 const source = (tex as any)?.source;
-                                if (source?.data) {
+                                const imgSrc = (tex as any)?.imageSource;
+                                if (imgSrc && typeof HTMLImageElement !== 'undefined' &&
+                                    (imgSrc instanceof HTMLImageElement || imgSrc instanceof HTMLCanvasElement ||
+                                     (typeof ImageBitmap !== 'undefined' && imgSrc instanceof ImageBitmap))) {
+                                    // DOM image/canvas — use copyExternalImageToTexture
+                                    const w = (imgSrc as any).naturalWidth || imgSrc.width || 1;
+                                    const h = (imgSrc as any).naturalHeight || imgSrc.height || 1;
+                                    gpuTex = gpuDevice.createTexture({
+                                        size: [w, h], format: 'rgba8unorm',
+                                        usage: 4 | 2 | 16, // TEXTURE_BINDING | COPY_DST | RENDER_ATTACHMENT
+                                    });
+                                    gpuDevice.queue.copyExternalImageToTexture(
+                                        {source: imgSrc, flipY: false},
+                                        {texture: gpuTex, premultipliedAlpha: true},
+                                        [w, h]
+                                    );
+                                    (tex as any)._gpuTexture = gpuTex;
+                                } else if (source?.data) {
+                                    // Raw pixel data upload (line atlas, etc.)
                                     const format = source.format || 'rgba8unorm';
                                     const bpp = source.bytesPerPixel || 4;
                                     gpuTex = gpuDevice.createTexture({
