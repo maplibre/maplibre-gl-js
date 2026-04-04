@@ -187,6 +187,11 @@ export class Painter {
         this.useDrawables.add('fill');
         this.useDrawables.add('line');
 
+        // Enable additional drawable layers for WebGPU (legacy path doesn't work without GL)
+        if (this.device && this.device.type === 'webgpu') {
+            this.useDrawables.add('raster');
+        }
+
         this.setup();
 
         // Within each layer there are multiple distinct z-planes that can be drawn to.

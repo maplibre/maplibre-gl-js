@@ -380,9 +380,9 @@ export class Drawable {
                     wgslSource = `${vertexInputStruct}\n${wgslSource}`;
                 }
 
-                // Cache which bindings are declared in the WGSL source
+                // Cache which bindings are declared in @group(0) of the WGSL source
                 const declaredBindings = new Set<number>();
-                const bindingRegex = /@binding\((\d+)\)/g;
+                const bindingRegex = /@group\(0\)\s*@binding\((\d+)\)/g;
                 let match: RegExpExecArray | null;
                 while ((match = bindingRegex.exec(wgslSource)) !== null) {
                     declaredBindings.add(parseInt(match[1]));
@@ -393,6 +393,16 @@ export class Drawable {
                 // Cache paint buffer count for setVertexBuffer calls later
                 if (!(painter as any)._rawPaintBufCounts) (painter as any)._rawPaintBufCounts = {};
                 (painter as any)._rawPaintBufCounts[cacheKey] = paintBuffers.length;
+
+                // Cache @group(1) binding layout for texture bind group creation
+                if (!(painter as any)._rawGroup1Bindings) (painter as any)._rawGroup1Bindings = {};
+                const group1Bindings: {binding: number; type: string}[] = [];
+                const g1Regex = /@group\(1\)\s*@binding\((\d+)\)\s*var\s*\S+\s*:\s*(\w+)/g;
+                let g1m: RegExpExecArray | null;
+                while ((g1m = g1Regex.exec(wgslSource)) !== null) {
+                    group1Bindings.push({binding: parseInt(g1m[1]), type: g1m[2]});
+                }
+                (painter as any)._rawGroup1Bindings[cacheKey] = group1Bindings;
 
                 const shaderModule = gpuDevice.createShaderModule({code: wgslSource});
                 shaderModule.getCompilationInfo().then((info: any) => {
@@ -473,70 +483,81 @@ export class Drawable {
             rpEncoder.setBindGroup(0, bindGroup);
 
             // Bind textures at @group(1) only for shaders that declare texture bindings
-            const shadersWithTextures = ['lineSDF', 'lineGradient', 'lineGradientSDF', 'linePattern', 'fillPattern', 'fillOutlinePattern'];
+            const shadersWithTextures = ['lineSDF', 'lineGradient', 'lineGradientSDF', 'linePattern', 'fillPattern', 'fillOutlinePattern', 'raster'];
             const hasGroup1 = shadersWithTextures.includes(this.shaderName);
 
             if (hasGroup1) {
                 try {
-                    // Get or create a dummy texture for fallback
+                    // Get or create dummy texture/sampler for fallback
                     if (!(painter as any)._dummyGPUTexture) {
                         (painter as any)._dummyGPUTexture = gpuDevice.createTexture({
-                            size: [1, 1], format: 'r8unorm', usage: 4 | 2,
+                            size: [1, 1], format: 'rgba8unorm', usage: 4 | 2,
                         });
                         gpuDevice.queue.writeTexture(
                             {texture: (painter as any)._dummyGPUTexture},
-                            new Uint8Array([128]), {bytesPerRow: 1}, [1, 1]
+                            new Uint8Array([128, 128, 128, 255]), {bytesPerRow: 4}, [1, 1]
                         );
                         (painter as any)._dummyGPUSampler = gpuDevice.createSampler({
                             minFilter: 'linear', magFilter: 'linear',
                         });
                     }
+                    const dummyTex = (painter as any)._dummyGPUTexture;
+                    const dummySampler = (painter as any)._dummyGPUSampler;
 
+                    // Use cached @group(1) binding layout
+                    const group1Bindings: {binding: number; type: string}[] =
+                        (painter as any)._rawGroup1Bindings?.[cacheKey] || [];
+
+                    // Build bind group entries matching shader declarations
                     const texEntries: any[] = [];
-                    for (let i = 0; i < Math.max(this.textures.length, 1); i++) {
-                        const tex = i < this.textures.length ? this.textures[i] : null;
-                        let gpuTex = tex ? (tex as any)._gpuTexture : null;
-                        let gpuSampler = tex ? (tex as any)._gpuSampler : null;
-
-                        if (!gpuTex) {
-                            const source = (tex as any)?.source;
-                            if (source?.data) {
-                                const format = source.format || 'rgba8unorm';
-                                const bpp = source.bytesPerPixel || 4;
-                                gpuTex = gpuDevice.createTexture({
-                                    size: [source.width, source.height], format,
-                                    usage: 4 | 2,
+                    let texIdx = 0;
+                    for (const {binding, type} of group1Bindings) {
+                        if (type === 'sampler') {
+                            const tex = texIdx < this.textures.length ? this.textures[texIdx] : null;
+                            let gpuSampler = tex ? (tex as any)._gpuSampler : null;
+                            if (!gpuSampler && tex) {
+                                const filterMode = tex.filter === 9729 ? 'linear' : 'nearest';
+                                const wrapMode = tex.wrap === 10497 ? 'repeat' : 'clamp-to-edge';
+                                gpuSampler = gpuDevice.createSampler({
+                                    minFilter: filterMode, magFilter: filterMode,
+                                    addressModeU: wrapMode, addressModeV: wrapMode,
                                 });
-                                gpuDevice.queue.writeTexture(
-                                    {texture: gpuTex}, source.data,
-                                    {bytesPerRow: source.width * bpp},
-                                    [source.width, source.height]
-                                );
-                                (tex as any)._gpuTexture = gpuTex;
+                                (tex as any)._gpuSampler = gpuSampler;
                             }
+                            texEntries.push({binding, resource: gpuSampler || dummySampler});
+                        } else {
+                            // texture_2d
+                            const tex = texIdx < this.textures.length ? this.textures[texIdx] : null;
+                            let gpuTex = tex ? (tex as any)._gpuTexture : null;
+                            if (!gpuTex) {
+                                const source = (tex as any)?.source;
+                                if (source?.data) {
+                                    const format = source.format || 'rgba8unorm';
+                                    const bpp = source.bytesPerPixel || 4;
+                                    gpuTex = gpuDevice.createTexture({
+                                        size: [source.width, source.height], format,
+                                        usage: 4 | 2,
+                                    });
+                                    gpuDevice.queue.writeTexture(
+                                        {texture: gpuTex}, source.data,
+                                        {bytesPerRow: source.width * bpp},
+                                        [source.width, source.height]
+                                    );
+                                    (tex as any)._gpuTexture = gpuTex;
+                                }
+                            }
+                            texEntries.push({binding, resource: (gpuTex || dummyTex).createView()});
+                            texIdx++; // advance to next texture for the next texture_2d binding
                         }
-                        if (!gpuSampler && tex) {
-                            const filterMode = tex.filter === 9729 ? 'linear' : 'nearest';
-                            const wrapMode = tex.wrap === 10497 ? 'repeat' : 'clamp-to-edge';
-                            gpuSampler = gpuDevice.createSampler({
-                                minFilter: filterMode, magFilter: filterMode,
-                                addressModeU: wrapMode, addressModeV: wrapMode,
-                            });
-                            (tex as any)._gpuSampler = gpuSampler;
-                        }
-
-                        // Use dummy texture/sampler as fallback
-                        const finalTex = gpuTex || (painter as any)._dummyGPUTexture;
-                        const finalSampler = gpuSampler || (painter as any)._dummyGPUSampler;
-                        texEntries.push({binding: i * 2, resource: finalSampler});
-                        texEntries.push({binding: i * 2 + 1, resource: finalTex.createView()});
                     }
 
-                    const texBindGroup = gpuDevice.createBindGroup({
-                        layout: pipeline.getBindGroupLayout(1),
-                        entries: texEntries,
-                    });
-                    rpEncoder.setBindGroup(1, texBindGroup);
+                    if (texEntries.length > 0) {
+                        const texBindGroup = gpuDevice.createBindGroup({
+                            layout: pipeline.getBindGroupLayout(1),
+                            entries: texEntries,
+                        });
+                        rpEncoder.setBindGroup(1, texBindGroup);
+                    }
                 } catch (e) {
                     if (!(this as any)._loggedTexErr) {
                         (this as any)._loggedTexErr = true;

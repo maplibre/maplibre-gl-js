@@ -5,11 +5,15 @@ import {now} from '../util/time_control';
 import {StencilMode} from '../gl/stencil_mode';
 import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
+import {ColorMode} from '../gl/color_mode';
 import {rasterUniformValues} from './program/raster_program';
 import {EXTENT} from '../data/extent';
 import {FadingDirections} from '../tile/tile';
 import Point from '@mapbox/point-geometry';
 import {LumaModel} from './luma_model';
+import {DrawableBuilder} from './drawable/drawable_builder';
+import {TileLayerGroup} from './drawable/tile_layer_group';
+import {RasterLayerTweaker} from './drawable/tweakers/raster_layer_tweaker';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
@@ -41,6 +45,12 @@ export function drawRaster(painter: Painter, tileManager: TileManager, layer: Ra
     if (painter.renderPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
+
+    // Use drawable path for WebGPU
+    if (painter.useDrawables && painter.useDrawables.has('raster')) {
+        drawRasterDrawable(painter, tileManager, layer, tileIDs, renderOptions);
+        return;
+    }
 
     const {isRenderingToTexture} = renderOptions;
     const source = tileManager.getSource();
@@ -228,4 +238,109 @@ function getSelfFadeValues(tile: Tile, fadeDuration: number): FadeValues {
     };
 
     return {tileOpacity, fadeMix};
+}
+
+/**
+ * Drawable-based rendering path for raster layers.
+ */
+function drawRasterDrawable(painter: Painter, tileManager: TileManager, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+    const {isRenderingToTexture} = renderOptions;
+    const context = painter.context;
+    const gl = context.gl;
+    const transform = painter.transform;
+    const projection = painter.style.projection;
+    const isTerrain = !!painter.style.map.terrain;
+
+    const colorMode = painter.colorModeForRenderPass();
+    const align = !painter.options.moving;
+    const rasterOpacity = layer.paint.get('raster-opacity');
+    const rasterResampling = layer.paint.get('raster-resampling');
+    const fadeDuration = layer.paint.get('raster-fade-duration');
+    const textureFilter = rasterResampling === 'nearest' ? 9728 /* NEAREST */ : 9729 /* LINEAR */;
+
+    // Get or create tweaker
+    let tweaker = painter.layerTweakers.get(layer.id) as RasterLayerTweaker;
+    if (!tweaker) {
+        tweaker = new RasterLayerTweaker(layer.id);
+        painter.layerTweakers.set(layer.id, tweaker);
+    }
+
+    // Get or create layer group
+    let layerGroup = painter.layerGroups.get(layer.id);
+    if (!layerGroup) {
+        layerGroup = new TileLayerGroup(layer.id);
+        painter.layerGroups.set(layer.id, layerGroup);
+    }
+
+    // Always rebuild drawables
+    (layerGroup as any)._drawablesByTile.clear();
+
+    const minTileZ = tileIDs[tileIDs.length - 1].overscaledZ;
+
+    for (const coord of tileIDs) {
+        const depthMode = painter.getDepthModeForSublayer(coord.overscaledZ - minTileZ,
+            rasterOpacity === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
+
+        const tile = tileManager.getTile(coord);
+        if (!tile || !tile.texture) continue;
+
+        const {parentTile, parentScaleBy, parentTopLeft, fadeValues} = getFadeProperties(tile, tileManager, fadeDuration, isTerrain);
+        tile.fadeOpacity = fadeValues.tileOpacity;
+        if (parentTile) parentTile.fadeOpacity = fadeValues.parentTileOpacity;
+
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const projectionData = transform.getProjectionData({overscaledTileID: coord, aligned: align, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
+        const uniformValues = rasterUniformValues(parentTopLeft, parentScaleBy, fadeValues.fadeMix, layer, cornerCoords);
+
+        const mesh = projection.getMeshFromTileID(context, coord.canonical, false, true, 'raster');
+
+        const builder = new DrawableBuilder()
+            .setShader('raster')
+            .setRenderPass('translucent')
+            .setDepthMode(depthMode)
+            .setStencilMode(StencilMode.disabled)
+            .setColorMode(colorMode)
+            .setCullFaceMode(CullFaceMode.backCCW)
+            .setLayerTweaker(tweaker);
+
+        // Add tile texture (image0) and parent texture (image1)
+        const tileTexData = tile.texture as any;
+        if (tileTexData) {
+            const texEntry: any = {
+                name: 'image0',
+                textureUnit: 0,
+                texture: tileTexData.texture || null,
+                filter: textureFilter,
+                wrap: 33071 /* CLAMP_TO_EDGE */
+            };
+            // Store source for WebGPU upload
+            if (tileTexData.size && tileTexData.texture) {
+                // The tile texture is already a WebGL texture — for WebGPU we need the pixel data
+                // This is handled by the texture infrastructure
+            }
+            builder.addTexture(texEntry);
+        }
+
+        const drawable = builder.flush({
+            tileID: coord,
+            layer,
+            program: null,
+            programConfiguration: null,
+            layoutVertexBuffer: mesh.vertexBuffer,
+            indexBuffer: mesh.indexBuffer,
+            segments: mesh.segments,
+            projectionData,
+            terrainData: terrainData || null,
+        });
+        drawable.uniformValues = uniformValues as any;
+        layerGroup.addDrawable(coord, drawable);
+    }
+
+    // Run tweaker and draw
+    const allDrawables = layerGroup.getAllDrawables();
+    tweaker.execute(allDrawables, painter, layer, tileIDs);
+
+    for (const drawable of allDrawables) {
+        drawable.draw(context, painter.device, painter, renderOptions.renderPass);
+    }
 }

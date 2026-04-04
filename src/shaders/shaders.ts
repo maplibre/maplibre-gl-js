@@ -14,7 +14,9 @@ import fillWgsl from './fill.wgsl.g';
 import fillOutlineWgsl from './fill_outline.wgsl.g';
 import lineWgsl from './line.wgsl.g';
 import lineGradientWgsl from './line_gradient.wgsl.g';
+import fillExtrusionWgsl from './fill_extrusion.wgsl.g';
 import lineSDFWgsl from './line_sdf.wgsl.g';
+import rasterWgsl from './raster.wgsl.g';
 import clippingMaskFrag from './clipping_mask.fragment.glsl.g';
 import clippingMaskVert from './clipping_mask.vertex.glsl.g';
 import heatmapFrag from './heatmap.fragment.glsl.g';
@@ -97,9 +99,11 @@ export const shaders = {
     backgroundWgsl: backgroundWgsl,
     fillWgsl: fillWgsl,
     fillOutlineWgsl: fillOutlineWgsl,
+    fillExtrusionWgsl: fillExtrusionWgsl,
     lineWgsl: lineWgsl,
     lineGradientWgsl: lineGradientWgsl,
     lineSDFWgsl: lineSDFWgsl,
+    rasterWgsl: rasterWgsl,
     clippingMask: prepare(clippingMaskFrag, clippingMaskVert),
     heatmap: prepare(heatmapFrag, heatmapVert),
     heatmapTexture: prepare(heatmapTextureFrag, heatmapTextureVert),
