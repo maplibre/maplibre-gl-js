@@ -725,6 +725,20 @@ function drawSymbolsDrawable(
                         bytesPerPixel: isAlpha ? 1 : 4,
                         format: isAlpha ? 'r8unorm' : 'rgba8unorm',
                     };
+                    // DEBUG: one-time log of glyph atlas data range
+                    if (isAlpha && !(drawSymbolsDrawable as any)._loggedAtlas) {
+                        (drawSymbolsDrawable as any)._loggedAtlas = true;
+                        const d = img.data as Uint8Array;
+                        let minV = 255, maxV = 0, nonZero = 0;
+                        for (let i = 0; i < d.length; i++) {
+                            if (d[i] > 0) nonZero++;
+                            if (d[i] < minV) minV = d[i];
+                            if (d[i] > maxV) maxV = d[i];
+                        }
+                        const hist = new Array(8).fill(0);
+                        for (let i = 0; i < d.length; i++) hist[Math.min(Math.floor(d[i] / 32), 7)]++;
+                        console.warn(`[GLYPH ATLAS] size=${img.width}x${img.height} len=${d.length} min=${minV} max=${maxV} nonZero=${nonZero}/${d.length} hist=[${hist.join(',')}]`);
+                    }
                 }
                 builder.addTexture(texEntry);
             }

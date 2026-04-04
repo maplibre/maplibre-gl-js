@@ -201,29 +201,12 @@ struct FragmentInput {
 
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
-    return vec4<f32>(1.0, 0.0, 0.0, 0.5); // DEBUG red
-    let drawable = drawableVector[globalIndex.value];
-    let is_halo = drawable.is_halo != 0u;
-
-    let EDGE_GAMMA = 0.105 / paintParams.pixel_ratio;
-    let SDF_PX = 8.0;
-
-    let color = select(fin.v_fill_color, fin.v_halo_color, is_halo);
-    let fontScale = fin.v_size / 24.0;
-    let gamma = ((drawable.gamma_scale * fin.v_gamma_scale) / (fontScale * paintParams.pixel_ratio)) + EDGE_GAMMA;
-
-    let inner_edge = (6.0 - fin.v_halo_width / fontScale) / SDF_PX;
-    let gamma_scaled = gamma / (1.0 + 2.0 * gamma);
-
-    // Sample the SDF glyph texture (r8unorm — value in .r channel)
+    // DEBUG: try multiple thresholds to find where glyphs are
     let dist = textureSample(glyph_texture, glyph_sampler, fin.v_tex).r;
-    var alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
-
-    if (is_halo) {
-        let halo_edge = (6.0 - fin.v_halo_width / fontScale) / SDF_PX;
-        alpha = min(smoothstep(halo_edge - gamma_scaled, halo_edge + gamma_scaled, dist), 1.0 - alpha);
-    }
-
-    let coverage = alpha * fin.v_opacity * fin.v_fade_opacity;
-    return vec4<f32>(color.rgb * coverage, color.a * coverage);
+    // Show as: Red if dist > 0.5, Green if dist > 0.25, Blue if dist > 0.75
+    // This tells us the range of SDF values inside glyphs
+    let r = select(0.0, 1.0, dist > 0.5);
+    let g = select(0.0, 1.0, dist > 0.25);
+    let b = select(0.0, 1.0, dist > 0.75);
+    return vec4<f32>(r, g, b, 1.0);
 }
