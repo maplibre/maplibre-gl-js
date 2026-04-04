@@ -130,7 +130,12 @@ struct VertexOutput {
 fn vertexMain(vin: VertexInput) -> VertexOutput {
     var vout: VertexOutput;
     let drawable = drawableVector[globalIndex.value];
-    let fade_opacity_final = 1.0;
+
+    // Unpack fade opacity from collision/placement system
+    // Packed format: opacity * 127 * 2 + (increasing ? 1 : 0)
+    let packed_opacity = unpack_opacity(vin.fade_opacity);
+    let fade_change = select(-paintParams.symbol_fade_change, paintParams.symbol_fade_change, packed_opacity.y > 0.5);
+    let fade_opacity_final = clamp(packed_opacity.x + fade_change, 0.0, 1.0);
 
     // Unpack vertex attributes
     let a_pos = vec2<f32>(f32(vin.pos_offset.x), f32(vin.pos_offset.y));

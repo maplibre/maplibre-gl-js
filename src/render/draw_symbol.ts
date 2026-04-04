@@ -581,6 +581,56 @@ class SymbolLayerTweaker extends LayerTweaker {
     }
 }
 
+/**
+ * Reformat the 1-byte-stride opacity buffer into a 4-byte-stride Float32 buffer
+ * that WebGPU can use as a vertex attribute.
+ */
+function getWebGPUOpacityBuffer(device: any, opacityArray: any): any {
+    if (!device || !opacityArray) return null;
+    // The opacityVertexArray stores one uint32 per 4 vertices (one glyph quad).
+    // Each byte within the uint32 is the same packed opacity value.
+    // GL reads with stride=1, so each byte maps to one vertex.
+    // We need to expand to Float32 per vertex for WebGPU.
+    const rawBuf = opacityArray.arrayBuffer;
+    if (!rawBuf) return null;
+    const src = new Uint8Array(rawBuf);
+    // opacityArray.length = number of uint32 entries = numVertices / 4
+    const numVertices = opacityArray.length * 4;
+    if (numVertices === 0) return null;
+
+    // Get or create cached Float32 buffer
+    let cached = (opacityArray as any)._webgpuOpacityBuf;
+    if (!cached || cached._numVertices !== numVertices) {
+        const f32Data = new Float32Array(numVertices);
+        cached = {
+            itemSize: 4,
+            attributes: [{name: 'a_fade_opacity', components: 1, type: 'Float32', offset: 0}],
+            webgpuBuffer: null,
+            _f32Data: f32Data,
+            _numVertices: numVertices,
+        };
+        (opacityArray as any)._webgpuOpacityBuf = cached;
+    }
+
+    // Update float data from raw bytes (1 byte per vertex)
+    const f32 = cached._f32Data;
+    for (let i = 0; i < numVertices; i++) {
+        f32[i] = src[i];
+    }
+
+    // Upload to GPU
+    if (!cached.webgpuBuffer) {
+        cached.webgpuBuffer = device.createBuffer({
+            usage: 0x0020 | 0x0008, // VERTEX | COPY_DST
+            data: new Uint8Array(f32.buffer),
+        });
+    } else {
+        cached.webgpuBuffer.write(new Uint8Array(f32.buffer));
+    }
+
+    return cached;
+}
+
 function drawSymbolsDrawable(
     painter: Painter,
     tileManager: TileManager,
@@ -738,7 +788,7 @@ function drawSymbolsDrawable(
                 indexBuffer: buffers.indexBuffer,
                 segments: buffers.segments,
                 dynamicLayoutBuffer: buffers.dynamicLayoutVertexBuffer,
-                dynamicLayoutBuffer2: buffers.opacityVertexBuffer,
+                dynamicLayoutBuffer2: getWebGPUOpacityBuffer(painter.device, isText ? bucket.text.opacityVertexArray : bucket.icon.opacityVertexArray),
                 projectionData,
                 terrainData: painter.style.map.terrain ? painter.style.map.terrain.getTerrainData(coord) : null,
                 paintProperties: layer.paint,
@@ -765,7 +815,7 @@ function drawSymbolsDrawable(
                 indexBuffer: buffers.indexBuffer,
                 segments: buffers.segments,
                 dynamicLayoutBuffer: buffers.dynamicLayoutVertexBuffer,
-                dynamicLayoutBuffer2: buffers.opacityVertexBuffer,
+                dynamicLayoutBuffer2: getWebGPUOpacityBuffer(painter.device, isText ? bucket.text.opacityVertexArray : bucket.icon.opacityVertexArray),
                 projectionData,
                 terrainData: painter.style.map.terrain ? painter.style.map.terrain.getTerrainData(coord) : null,
                 paintProperties: layer.paint,
