@@ -418,7 +418,7 @@ describe('ScrollZoomHandler', () => {
             [2, {type: 'trackpad', deltaY: -1}],
             [7, {type: 'trackpad', deltaY: -2}],
             [30, {type: 'wheel', deltaY: -5}]
-        ] as [number, any][];
+        ] as Array<[number, any]>;
 
         const end = now + 50;
         let lastWheelEvent = now;
@@ -468,7 +468,7 @@ describe('ScrollZoomHandler', () => {
             [2, {type: 'trackpad', deltaY: -1}],
             [7, {type: 'trackpad', deltaY: -2}],
             [30, {type: 'wheel', deltaY: -5}],
-        ] as [number, any][];
+        ] as Array<[number, any]>;
 
         const end = now + 50;
         let lastWheelEvent = now;

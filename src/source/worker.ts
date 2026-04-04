@@ -32,7 +32,7 @@ export default class Worker {
     self: WorkerGlobalScopeInterface & ActorTarget;
     actor: Actor;
     layerIndexes: {[_: string]: StyleLayerIndex};
-    availableImages: {[_: string]: Array<string>};
+    availableImages: {[_: string]: string[]};
     externalWorkerSourceTypes: { [_: string]: WorkerSourceConstructor };
     /**
      * This holds a cache for the already created worker source instances.
@@ -178,7 +178,7 @@ export default class Worker {
             }
         });
 
-        this.actor.registerMessageHandler(MessageType.setLayers, async (mapId: string, params: Array<LayerSpecification>) => {
+        this.actor.registerMessageHandler(MessageType.setLayers, async (mapId: string, params: LayerSpecification[]) => {
             this._getLayerIndex(mapId).replace(params, this._getGlobalState(mapId));
         });
     }
@@ -192,7 +192,7 @@ export default class Worker {
         return state;
     }
 
-    private async _setImages(mapId: string, images: Array<string>): Promise<void> {
+    private async _setImages(mapId: string, images: string[]): Promise<void> {
         this.availableImages[mapId] = images;
         for (const workerSource in this.workerSources[mapId]) {
             const ws = this.workerSources[mapId][workerSource];

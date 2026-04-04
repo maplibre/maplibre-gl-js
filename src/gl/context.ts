@@ -195,7 +195,7 @@ export class Context {
         return new IndexBuffer(this, array, dynamicDraw);
     }
 
-    createVertexBuffer(array: StructArray, attributes: ReadonlyArray<StructArrayMember>, dynamicDraw?: boolean) {
+    createVertexBuffer(array: StructArray, attributes: readonly StructArrayMember[], dynamicDraw?: boolean) {
         return new VertexBuffer(this, array, attributes, dynamicDraw);
     }
 

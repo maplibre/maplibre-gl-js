@@ -295,7 +295,7 @@ export function sameOrigin(inComingUrl: string) {
     return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
 }
 
-export const getVideo = (urls: Array<string>): Promise<HTMLVideoElement> => {
+export const getVideo = (urls: string[]): Promise<HTMLVideoElement> => {
     const video: HTMLVideoElement = window.document.createElement('video');
     video.muted = true;
     return new Promise((resolve) => {

@@ -226,7 +226,7 @@ interface ITransformMutators {
      * Used in mercator transform to precompute tile matrices (posMatrix).
      * @param coords - Array of tile IDs that will be rendered.
      */
-    populateCache(coords: Array<OverscaledTileID>): void;
+    populateCache(coords: OverscaledTileID[]): void;
 
     /**
      * @internal
@@ -293,7 +293,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Return any "wrapped" copies of a given tile coordinate that are visible
      * in the current view.
      */
-    getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID>;
+    getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[];
 
     /**
      * @internal
@@ -421,7 +421,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * screen where the *base* of a visible extrusion could be.
      *
      */
-    getCameraQueryGeometry(queryGeometry: Array<Point>): Array<Point>;
+    getCameraQueryGeometry(queryGeometry: Point[]): Point[];
 
     /**
      * Return the distance to the camera in clip space from a LngLat.

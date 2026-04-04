@@ -345,7 +345,7 @@ export class GeoJSONSource extends Evented implements Source {
      * @param clusterId - The value of the cluster's `cluster_id` property.
      * @returns a promise that is resolved when the features are retrieved
      */
-    getClusterChildren(clusterId: number): Promise<Array<GeoJSON.Feature>> {
+    getClusterChildren(clusterId: number): Promise<GeoJSON.Feature[]> {
         return this.actor.sendAsync({type: MessageType.getClusterChildren, data: {type: this.type, clusterId, source: this.id}});
     }
 
@@ -374,7 +374,7 @@ export class GeoJSONSource extends Evented implements Source {
      * });
      * ```
      */
-    getClusterLeaves(clusterId: number, limit: number, offset: number): Promise<Array<GeoJSON.Feature>> {
+    getClusterLeaves(clusterId: number, limit: number, offset: number): Promise<GeoJSON.Feature[]> {
         return this.actor.sendAsync({type: MessageType.getClusterLeaves, data: {
             type: this.type,
             source: this.id,

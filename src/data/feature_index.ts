@@ -33,14 +33,14 @@ type QueryParameters = {
     pixelPosMatrix: mat4;
     transform: IReadonlyTransform;
     tileSize: number;
-    queryGeometry: Array<Point>;
-    cameraQueryGeometry: Array<Point>;
+    queryGeometry: Point[];
+    cameraQueryGeometry: Point[];
     queryPadding: number;
     getElevation: undefined | ((x: number, y: number) => number);
     params: {
         filter?: FilterSpecification;
         layers?: Set<string> | null;
-        availableImages?: Array<string>;
+        availableImages?: string[];
         globalState?: Record<string, any>;
     };
 };
@@ -69,7 +69,7 @@ export class FeatureIndex {
     promoteId?: PromoteIdSpecification;
     encoding: string;
     rawTileData: ArrayBuffer;
-    bucketLayerIDs: Array<Array<string>>;
+    bucketLayerIDs: string[][];
 
     vtLayers: {[_: string]: VectorTileLayerLike};
     sourceLayerCoder: DictionaryCoder;
@@ -85,7 +85,7 @@ export class FeatureIndex {
         this.promoteId = promoteId;
     }
 
-    insert(feature: VectorTileFeatureLike, geometry: Array<Array<Point>>, featureIndex: number, sourceLayerIndex: number, bucketIndex: number, is3D?: boolean) {
+    insert(feature: VectorTileFeatureLike, geometry: Point[][], featureIndex: number, sourceLayerIndex: number, bucketIndex: number, is3D?: boolean) {
         const key = this.featureIndexArray.length;
         this.featureIndexArray.emplaceBack(featureIndex, sourceLayerIndex, bucketIndex);
 
@@ -204,7 +204,7 @@ export class FeatureIndex {
         featureIndex: number,
         filter: FeatureFilter,
         filterLayerIDs: Set<string> | undefined,
-        availableImages: Array<string>,
+        availableImages: string[],
         styleLayers: {[_: string]: StyleLayer},
         serializedLayers: {[_: string]: any},
         sourceFeatureState?: SourceFeatureState,
@@ -273,7 +273,7 @@ export class FeatureIndex {
 
     // Given a set of symbol indexes that have already been looked up,
     // return a matching set of GeoJSONFeatures
-    lookupSymbolFeatures(symbolFeatureIndexes: Array<number>,
+    lookupSymbolFeatures(symbolFeatureIndexes: number[],
         serializedLayers: {[_: string]: StyleLayer},
         bucketIndex: number,
         sourceLayerIndex: number,
@@ -282,7 +282,7 @@ export class FeatureIndex {
             globalState: Record<string, any>;
         },
         filterLayerIDs: Set<string> | null,
-        availableImages: Array<string>,
+        availableImages: string[],
         styleLayers: {[_: string]: StyleLayer}): QueryResults {
         const result: QueryResults = {};
         this.loadVTLayers();

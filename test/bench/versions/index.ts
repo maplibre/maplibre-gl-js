@@ -31,7 +31,7 @@ import GeoJSONSourceUpdateData from '../benchmarks/geojson_source_update_data';
 import GeoJSONSourceSetData from '../benchmarks/geojson_source_set_data';
 import TerrainRender from '../benchmarks/terrain_render';
 
-const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as GeoJSON.Feature<GeoJSON.Point>[]).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
+const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as Array<GeoJSON.Feature<GeoJSON.Point>>).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
 (window as any).maplibreglBenchmarks = (window as any).maplibreglBenchmarks || {};
 

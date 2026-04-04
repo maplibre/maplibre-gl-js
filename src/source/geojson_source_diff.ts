@@ -15,15 +15,15 @@ export type GeoJSONSourceDiff = {
     /**
      * An array of features IDs to remove
      */
-    remove?: Array<GeoJSONFeatureId>;
+    remove?: GeoJSONFeatureId[];
     /**
      * An array of features to add
      */
-    add?: Array<GeoJSON.Feature>;
+    add?: GeoJSON.Feature[];
     /**
      * An array of update objects
      */
-    update?: Array<GeoJSONFeatureDiff>;
+    update?: GeoJSONFeatureDiff[];
 };
 
 /**
@@ -46,7 +46,7 @@ export type GeoJSONFeatureDiff = {
     /**
      * The properties keys to remove
      */
-    removeProperties?: Array<string>;
+    removeProperties?: string[];
     /**
      * The properties to add or update along side their values
      */
@@ -320,7 +320,7 @@ function mergeFeatureDiffs(prev: GeoJSONFeatureDiff, next: GeoJSONFeatureDiff): 
 /**
  * Mutates diff.add and applies a feature id using the promoteId property
  */
-function promoteFeatureIds(add: Array<GeoJSON.Feature>, promoteId: string) {
+function promoteFeatureIds(add: GeoJSON.Feature[], promoteId: string) {
     if (!add) return;
 
     for (const feature of add) {
@@ -332,7 +332,7 @@ function promoteFeatureIds(add: Array<GeoJSON.Feature>, promoteId: string) {
 /**
  * Mutates diff.add and removes the feature id if using the promoteId property
  */
-function demoteFeatureIds(add: Array<GeoJSON.Feature>, promoteId: string) {
+function demoteFeatureIds(add: GeoJSON.Feature[], promoteId: string) {
     if (!add) return;
 
     for (const feature of add) {

@@ -17,7 +17,7 @@ export type AttributionControlOptions = {
     /**
      * Attributions to show in addition to any other attributions.
      */
-    customAttribution?: string | Array<string>;
+    customAttribution?: string | string[];
 };
 
 export const defaultAttributionControlOptions: AttributionControlOptions = {
@@ -123,7 +123,7 @@ export class AttributionControl implements IControl {
 
     _updateAttributions() {
         if (!this._map.style) return;
-        let attributions: Array<string> = [];
+        let attributions: string[] = [];
         if (this.options.customAttribution) {
             if (Array.isArray(this.options.customAttribution)) {
                 attributions = attributions.concat(

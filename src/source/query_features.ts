@@ -23,7 +23,7 @@ export type QueryRenderedFeaturesOptions = {
      * An array or set of [style layer IDs](https://maplibre.org/maplibre-style-spec/#layer-id) for the query to inspect.
      * Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
      */
-    layers?: Array<string> | Set<string>;
+    layers?: string[] | Set<string>;
     /**
      * A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter) to limit query results.
      */
@@ -31,7 +31,7 @@ export type QueryRenderedFeaturesOptions = {
     /**
      * An array of string representing the available images
      */
-    availableImages?: Array<string>;
+    availableImages?: string[];
     /**
      * Whether to check if the [options.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      */
@@ -118,7 +118,7 @@ export function queryRenderedFeatures(
     tileManager: TileManager,
     styleLayers: {[_: string]: StyleLayer},
     serializedLayers: {[_: string]: any},
-    queryGeometry: Array<Point>,
+    queryGeometry: Point[],
     params: QueryRenderedFeaturesOptionsStrict | undefined,
     transform: IReadonlyTransform,
     getElevation: undefined | ((id: OverscaledTileID, x: number, y: number) => number)
@@ -157,7 +157,7 @@ export function queryRenderedFeatures(
 export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     serializedLayers: {[_: string]: StyleLayer},
     tileManagers: {[_: string]: TileManager},
-    queryGeometry: Array<Point>,
+    queryGeometry: Point[],
     params: QueryRenderedFeaturesOptionsStrict,
     collisionIndex: CollisionIndex,
     retainedQueryData: {

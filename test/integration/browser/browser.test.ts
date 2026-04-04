@@ -78,7 +78,7 @@ describe('Browser tests', () => {
 
     test('Mousemove events are fired during scrollzoom', {retry: 3, timeout: 20000}, async () => {
         const mouseMoveFired = await page.evaluate(() => {
-            return new Promise<Array<number>>((resolve, _reject) => {
+            return new Promise<number[]>((resolve, _reject) => {
                 let mouseMoveCount = 0;
                 let wheelCount = 0;
                 map.on('mousemove', () => {mouseMoveCount++;});

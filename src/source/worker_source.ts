@@ -73,7 +73,7 @@ export type WorkerDEMTileParameters = TileParameters & {
  * The worker tile's result type
  */
 export type WorkerTileWithData = ExpiryData & {
-    buckets: Array<Bucket>;
+    buckets: Bucket[];
     imageAtlas: ImageAtlas;
     dashPositions: Record<string, DashEntry>;
     glyphAtlasImage: AlphaImage;
@@ -81,7 +81,7 @@ export type WorkerTileWithData = ExpiryData & {
     collisionBoxArray: CollisionBoxArray;
     rawTileData?: ArrayBuffer;
     encoding?: string;
-    resourceTiming?: Array<PerformanceResourceTiming>;
+    resourceTiming?: PerformanceResourceTiming[];
     // Only used for benchmarking:
     glyphMap?: {
         [_: string]: {
@@ -97,7 +97,7 @@ export type WorkerTileWithData = ExpiryData & {
 
 export type WorkerTileWithoutData = ExpiryData & {
     etagUnmodified: true;  // Strict for type narrowing
-    resourceTiming?: Array<PerformanceResourceTiming>;
+    resourceTiming?: PerformanceResourceTiming[];
 };
 
 export type WorkerTileResult = WorkerTileWithData | WorkerTileWithoutData;
@@ -106,7 +106,7 @@ export type WorkerTileResult = WorkerTileWithData | WorkerTileWithoutData;
  * This is how the @see {@link WorkerSource} constructor should look like.
  */
 export interface WorkerSourceConstructor {
-    new (actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>): WorkerSource;
+    new (actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[]): WorkerSource;
 }
 
 /**
@@ -115,7 +115,7 @@ export interface WorkerSourceConstructor {
  * @see {@link Map.addSourceType}
  */
 export interface WorkerSource {
-    availableImages: Array<string>;
+    availableImages: string[];
 
     /**
      * Loads a tile from the given params and parse it into buckets ready to send

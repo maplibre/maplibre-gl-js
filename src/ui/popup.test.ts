@@ -395,7 +395,7 @@ describe('popup', () => {
         ['bottom-left',  new Point(10, containerHeight - 10),                   'translate(0,-100%) translate(7px,-7px)'],
         ['left',         new Point(10, containerHeight / 2),                    'translate(0,-50%) translate(10px,0px)'],
         ['bottom',       new Point(containerWidth / 2, containerHeight / 2),    'translate(-50%,-100%) translate(0px,-10px)']
-    ] as [PositionAnchor, Point, string][]).forEach((args) => {
+    ] as Array<[PositionAnchor, Point, string]>).forEach((args) => {
         const anchor = args[0];
         const point = args[1];
         const transform = args[2];

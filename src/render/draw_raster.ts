@@ -36,7 +36,7 @@ const cornerCoords = [
     new Point(0, EXTENT),
 ];
 
-export function drawRaster(painter: Painter, tileManager: TileManager, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawRaster(painter: Painter, tileManager: TileManager, layer: RasterStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
@@ -76,11 +76,11 @@ function drawTiles(
     painter: Painter,
     tileManager: TileManager,
     layer: RasterStyleLayer,
-    coords: Array<OverscaledTileID>,
+    coords: OverscaledTileID[],
     stencilModes: {[_: number]: Readonly<StencilMode>} | null,
     useBorder: boolean,
     allowPoles: boolean,
-    corners: Array<Point>,
+    corners: Point[],
     flipCullfaceMode: boolean = false,
     isRenderingToTexture: boolean = false) {
     const minTileZ = coords[coords.length - 1].overscaledZ;

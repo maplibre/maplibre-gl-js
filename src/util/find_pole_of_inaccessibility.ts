@@ -13,7 +13,7 @@ import {Bounds} from '../geo/bounds';
  * @returns Pole of Inaccessibility.
  */
 export function findPoleOfInaccessibility(
-    polygonRings: Array<Array<Point>>,
+    polygonRings: Point[][],
     precision: number = 1,
 ): Point {
     const bounds = Bounds.fromPoints(polygonRings[0]);

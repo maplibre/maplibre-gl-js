@@ -7,10 +7,10 @@ type Task = {
 };
 
 export class TaskQueue {
-    _queue: Array<Task>;
+    _queue: Task[];
     _id: TaskID;
     _cleared: boolean;
-    _currentlyRunning: Array<Task> | false;
+    _currentlyRunning: Task[] | false;
 
     constructor()  {
         this._queue = [];

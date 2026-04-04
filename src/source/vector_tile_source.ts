@@ -78,7 +78,7 @@ export class VectorTileSource extends Evented implements Source {
     dispatcher: Dispatcher;
     map: Map;
     bounds: [number, number, number, number];
-    tiles: Array<string>;
+    tiles: string[];
     tileBounds: TileBounds;
     reparseOverscaled: boolean;
     isTileClipped: boolean;
@@ -168,7 +168,7 @@ export class VectorTileSource extends Evented implements Source {
      *
      * @param tiles - An array of one or more tile source URLs, as in the TileJSON spec.
      */
-    setTiles(tiles: Array<string>): this {
+    setTiles(tiles: string[]): this {
         this.setSourceProperty(() => {
             this._options.tiles = tiles;
         });

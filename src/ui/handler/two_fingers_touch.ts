@@ -39,7 +39,7 @@ abstract class TwoFingersTouchHandler implements Handler {
     abstract _start(points: [Point, Point]): void;
     abstract _move(points: [Point, Point], pinchAround: Point | null, e: TouchEvent): HandlerResult | void;
 
-    touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>): void {
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): void {
         if (this._firstTwoTouches || mapTouches.length < 2) return;
 
         this._firstTwoTouches = [
@@ -51,7 +51,7 @@ abstract class TwoFingersTouchHandler implements Handler {
         this._start([points[0], points[1]]);
     }
 
-    touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>): HandlerResult | void {
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): HandlerResult | void {
         if (!this._firstTwoTouches) return;
 
         e.preventDefault();
@@ -67,7 +67,7 @@ abstract class TwoFingersTouchHandler implements Handler {
 
     }
 
-    touchend(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>): void {
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]): void {
         if (!this._firstTwoTouches) return;
 
         const [idA, idB] = this._firstTwoTouches;
@@ -129,7 +129,7 @@ abstract class TwoFingersTouchHandler implements Handler {
     }
 }
 
-function getTouchById(mapTouches: Array<Touch>, points: Array<Point>, identifier: number): Point | undefined {
+function getTouchById(mapTouches: Touch[], points: Point[], identifier: number): Point | undefined {
     for (let i = 0; i < mapTouches.length; i++) {
         if (mapTouches[i].identifier === identifier) return points[i];
     }
@@ -270,7 +270,7 @@ export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
         delete this._lastPoints;
     }
 
-    touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>): void {
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): void {
         super.touchstart(e, points, mapTouches);
         this._currentTouchCount = mapTouches.length;
     }

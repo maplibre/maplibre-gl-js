@@ -510,7 +510,7 @@ export class TransformHelper implements ITransformGetters {
      * screen where the *base* of a visible extrusion could be.
      *
      */
-    getCameraQueryGeometry(cameraPoint: Point, queryGeometry: Array<Point>): Array<Point> {
+    getCameraQueryGeometry(cameraPoint: Point, queryGeometry: Point[]): Point[] {
         if (queryGeometry.length === 1) {
             return [queryGeometry[0], cameraPoint];
         } else {

@@ -18,7 +18,7 @@ const MIN = -MAX - 1;
  * used internally.
  * @param feature - the vector tile feature to load
  */
-export function loadGeometry(feature: VectorTileFeatureLike): Array<Array<Point>> {
+export function loadGeometry(feature: VectorTileFeatureLike): Point[][] {
     const scale = EXTENT / feature.extent;
     const geometry = feature.loadGeometry();
     for (const ring of geometry) {

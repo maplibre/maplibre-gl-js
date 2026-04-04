@@ -64,7 +64,7 @@ export class RasterTileSource extends Evented implements Source {
     roundZoom: boolean;
     dispatcher: Dispatcher;
     map: Map;
-    tiles: Array<string>;
+    tiles: string[];
 
     _loaded: boolean;
     _options: RasterSourceSpecification | RasterDEMSourceSpecification;
@@ -149,7 +149,7 @@ export class RasterTileSource extends Evented implements Source {
      *
      * @param tiles - An array of one or more tile source URLs, as in the raster tiles spec (See the [Style Specification](https://maplibre.org/maplibre-style-spec/)
      */
-    setTiles(tiles: Array<string>): this {
+    setTiles(tiles: string[]): this {
         this.setSourceProperty(() => {
             this._options.tiles = tiles;
         });

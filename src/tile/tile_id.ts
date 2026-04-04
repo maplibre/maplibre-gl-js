@@ -36,7 +36,7 @@ export class CanonicalTileID implements ICanonicalTileID {
     /**
      * given a list of urls, choose a url template and return a tile URL
      */
-    url(urls: Array<string>, pixelRatio: number, scheme?: string | null) {
+    url(urls: string[], pixelRatio: number, scheme?: string | null) {
         const bbox = getTileBBox(this.x, this.y, this.z);
         const quadkey = getQuadkey(this.z, this.x, this.y);
 

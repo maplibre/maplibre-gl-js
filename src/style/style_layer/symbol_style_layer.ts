@@ -45,7 +45,7 @@ export class SymbolStyleLayer extends StyleLayer {
         super(layer, properties, globalState);
     }
 
-    recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {
+    recalculate(parameters: EvaluationParameters, availableImages: string[]) {
         super.recalculate(parameters, availableImages);
 
         if (this.layout.get('icon-rotation-alignment') === 'auto') {
@@ -89,7 +89,7 @@ export class SymbolStyleLayer extends StyleLayer {
         this._setPaintOverrides();
     }
 
-    getValueAndResolveTokens(name: any, feature: Feature, canonical: CanonicalTileID, availableImages: Array<string>) {
+    getValueAndResolveTokens(name: any, feature: Feature, canonical: CanonicalTileID, availableImages: string[]) {
         const value = this.layout.get(name).evaluate(feature, {}, canonical, availableImages);
         const unevaluated = this._unevaluatedLayout._values[name];
         if (!unevaluated.isDataDriven() && !isExpression(unevaluated.value) && value) {

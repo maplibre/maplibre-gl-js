@@ -60,12 +60,12 @@ function overlapAllowed(overlapA: OverlapMode, overlapB: OverlapMode): boolean {
  * the number of comparisons necessary.
  */
 export class GridIndex<T extends GridKey> {
-    circleKeys: Array<T>;
-    boxKeys: Array<T>;
-    boxCells: Array<Array<number>>;
-    circleCells: Array<Array<number>>;
-    bboxes: Array<number>;
-    circles: Array<number>;
+    circleKeys: T[];
+    boxKeys: T[];
+    boxCells: number[][];
+    circleCells: number[][];
+    bboxes: number[];
+    circles: number[];
     xCellCount: number;
     yCellCount: number;
     width: number;
@@ -298,7 +298,7 @@ export class GridIndex<T extends GridKey> {
         return false;
     }
 
-    private _queryCellCircle(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: Array<boolean>, queryArgs: QueryArgs, predicate?: (key: T) => boolean): boolean {
+    private _queryCellCircle(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: boolean[], queryArgs: QueryArgs, predicate?: (key: T) => boolean): boolean {
         const {circle, seenUids, overlapMode} = queryArgs;
         const boxCell = this.boxCells[cellIndex];
 

@@ -82,7 +82,7 @@ export type SymbolFeature = {
     icon: ResolvedImage;
     index: number;
     sourceLayerIndex: number;
-    geometry: Array<Array<Point>>;
+    geometry: Point[][];
     properties: any;
     type: 'Unknown' | 'Point' | 'LineString' | 'Polygon';
     id?: any;
@@ -232,7 +232,7 @@ register('SymbolBuffers', SymbolBuffers);
 
 class CollisionBuffers {
     layoutVertexArray: StructArray;
-    layoutAttributes: Array<StructArrayMember>;
+    layoutAttributes: StructArrayMember[];
     layoutVertexBuffer: VertexBuffer;
 
     indexArray: TriangleIndexArray | LineIndexArray;
@@ -246,7 +246,7 @@ class CollisionBuffers {
     constructor(LayoutArray: {
         new (...args: any): StructArray;
     },
-    layoutAttributes: Array<StructArrayMember>,
+    layoutAttributes: StructArrayMember[],
     IndexArray: {
         new (...args: any): TriangleIndexArray | LineIndexArray;
     }) {
@@ -312,10 +312,10 @@ export class SymbolBucket implements Bucket {
     collisionBoxArray: CollisionBoxArray;
     zoom: number;
     overscaling: number;
-    layers: Array<SymbolStyleLayer>;
-    layerIds: Array<string>;
-    stateDependentLayers: Array<SymbolStyleLayer>;
-    stateDependentLayerIds: Array<string>;
+    layers: SymbolStyleLayer[];
+    layerIds: string[];
+    stateDependentLayers: SymbolStyleLayer[];
+    stateDependentLayerIds: string[];
 
     index: number;
     sdfIcons: boolean;
@@ -330,22 +330,22 @@ export class SymbolBucket implements Bucket {
 
     glyphOffsetArray: GlyphOffsetArray;
     lineVertexArray: SymbolLineVertexArray;
-    features: Array<SymbolFeature>;
+    features: SymbolFeature[];
     symbolInstances: SymbolInstanceArray;
     textAnchorOffsets: TextAnchorOffsetArray;
-    collisionArrays: Array<CollisionArrays>;
-    sortKeyRanges: Array<SortKeyRange>;
+    collisionArrays: CollisionArrays[];
+    sortKeyRanges: SortKeyRange[];
     pixelRatio: number;
     tilePixelRatio: number;
-    compareText: {[_: string]: Array<Point>};
+    compareText: {[_: string]: Point[]};
     fadeStartTime: number;
     sortFeaturesByKey: boolean;
     sortFeaturesByY: boolean;
     canOverlap: boolean;
     sortedAngle: number;
-    featureSortOrder: Array<number>;
+    featureSortOrder: number[];
 
-    collisionCircleArray: Array<number>;
+    collisionCircleArray: number[];
 
     text: SymbolBuffers;
     icon: SymbolBuffers;
@@ -354,7 +354,7 @@ export class SymbolBucket implements Bucket {
     uploaded: boolean;
     sourceLayerIndex: number;
     sourceID: string;
-    symbolInstanceIndexes: Array<number>;
+    symbolInstanceIndexes: number[];
     writingModes: WritingMode[];
     allowVerticalPlacement: boolean;
     hasRTLText: boolean;
@@ -429,7 +429,7 @@ export class SymbolBucket implements Bucket {
         }
     }
 
-    populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID) {
         const layer = this.layers[0];
         const layout = layer.layout;
 
@@ -601,7 +601,7 @@ export class SymbolBucket implements Bucket {
         }
     }
 
-    addToLineVertexArray(anchor: Anchor, line: Array<Point>) {
+    addToLineVertexArray(anchor: Anchor, line: Point[]) {
         const lineStartIndex = this.lineVertexArray.length;
         if (anchor.segment !== undefined) {
             let sumForwardLength = anchor.dist(line[anchor.segment + 1]);
@@ -631,7 +631,7 @@ export class SymbolBucket implements Bucket {
     }
 
     addSymbols(arrays: SymbolBuffers,
-        quads: Array<SymbolQuad>,
+        quads: SymbolQuad[],
         sizeVertex: any,
         lineOffset: [number, number],
         alongLine: boolean,

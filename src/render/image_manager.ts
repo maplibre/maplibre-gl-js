@@ -47,7 +47,7 @@ export class ImageManager extends Evented {
      * the requestors will be notified.
      */
     requestors: Array<{
-        ids: Array<string>;
+        ids: string[];
         promiseResolve: (value: GetImagesResponse) => void;
     }>;
 
@@ -191,11 +191,11 @@ export class ImageManager extends Evented {
         }
     }
 
-    listImages(): Array<string> {
+    listImages(): string[] {
         return Object.keys(this.images);
     }
 
-    getImages(ids: Array<string>): Promise<GetImagesResponse> {
+    getImages(ids: string[]): Promise<GetImagesResponse> {
         return new Promise<GetImagesResponse>((resolve, _reject) => {
             // If the sprite has been loaded, or if all the icon dependencies are already present
             // (i.e. if they've been added via runtime styling), then notify the requestor immediately.
@@ -217,7 +217,7 @@ export class ImageManager extends Evented {
         });
     }
 
-    _getImagesForIds(ids: Array<string>): GetImagesResponse {
+    _getImagesForIds(ids: string[]): GetImagesResponse {
         const response: GetImagesResponse = {};
 
         for (const id of ids) {
@@ -332,7 +332,7 @@ export class ImageManager extends Evented {
         this.callbackDispatchedThisFrame = {};
     }
 
-    dispatchRenderCallbacks(ids: Array<string>) {
+    dispatchRenderCallbacks(ids: string[]) {
         for (const id of ids) {
 
             // the callback for the image was already dispatched for a different frame
