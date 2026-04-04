@@ -448,9 +448,11 @@ export class Drawable {
                 });
                 const canvasFormat = (navigator as any).gpu.getPreferredCanvasFormat();
 
-                const needsStencilClip = this.shaderName === 'fill' || this.shaderName === 'line' ||
-                    this.shaderName === 'lineSDF' || this.shaderName === 'lineGradient' ||
-                    this.shaderName === 'linePattern' || this.shaderName === 'lineGradientSDF';
+                const needsStencilClip = this.shaderName === 'fill' || this.shaderName === 'fillOutline' ||
+                    this.shaderName === 'fillPattern' || this.shaderName === 'fillOutlinePattern' ||
+                    this.shaderName === 'line' || this.shaderName === 'lineSDF' ||
+                    this.shaderName === 'lineGradient' || this.shaderName === 'linePattern' ||
+                    this.shaderName === 'lineGradientSDF';
                 const needs3DDepth = this.shaderName === 'fillExtrusion' || this.shaderName === 'fillExtrusionPattern';
                 const depthStencilState: any = {
                     format: 'depth24plus-stencil8',
@@ -648,8 +650,11 @@ export class Drawable {
             }
 
             // Set stencil reference for tile clipping (only for layers that use stencil)
-            const needsStencil = this.shaderName === 'fill' || this.shaderName === 'fillOutline' || this.shaderName === 'line' ||
-                this.shaderName === 'lineSDF' || this.shaderName === 'lineGradient' || this.shaderName === 'linePattern';
+            const needsStencil = this.shaderName === 'fill' || this.shaderName === 'fillOutline' ||
+                this.shaderName === 'fillPattern' || this.shaderName === 'fillOutlinePattern' ||
+                this.shaderName === 'line' || this.shaderName === 'lineSDF' ||
+                this.shaderName === 'lineGradient' || this.shaderName === 'linePattern' ||
+                this.shaderName === 'lineGradientSDF';
             if (needsStencil && this.tileID) {
                 const stencilRef = painter.getWebGPUStencilRef(this.tileID);
                 if (stencilRef === 0) {
