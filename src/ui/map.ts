@@ -3467,10 +3467,12 @@ export class Map extends Camera {
             }
         }, {once: true});
 
-        if (this._canvasContextAttributes.contextType) {
+        if (this._canvasContextAttributes.contextType && (this._canvasContextAttributes.contextType as string) !== 'webgpu') {
             gl = this._canvas.getContext(this._canvasContextAttributes.contextType, attributes) as WebGL2RenderingContext | WebGLRenderingContext;
         } else {
-            console.log('Trying WebGPU first...');
+            const tryWebGPU = !this._canvasContextAttributes.contextType || (this._canvasContextAttributes.contextType as string) === 'webgpu';
+            if (!tryWebGPU) console.log('Skipping WebGPU (contextType specified)');
+            else console.log('Trying WebGPU first...');
             try {
                 // Race WebGPU initialization against a timeout to avoid hanging
                 // in environments where navigator.gpu exists but never resolves
@@ -3489,7 +3491,7 @@ export class Map extends Camera {
                 console.warn('WebGPU uninitialized or unavailable. Falling back to WebGL...', e);
             }
 
-            if (!device) {
+            if (!device && (this._canvasContextAttributes.contextType as string) !== 'webgpu') {
                 console.log('Attempting WebGL2 fallback...');
                 gl = this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext;
                 if (!gl) {

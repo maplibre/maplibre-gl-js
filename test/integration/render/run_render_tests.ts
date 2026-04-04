@@ -263,23 +263,21 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
     await page.setViewport({width, height, deviceScaleFactor: 2});
 
-    await page.setContent(`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Query Test Page</title>
-    <meta charset='utf-8'>
-    <link rel="icon" href="about:blank">
-    <style>#map {
-        box-sizing:content-box;
-        width:${width}px;
-        height:${height}px;
-    }</style>
-</head>
-<body>
-    <div id='map'></div>
-</body>
-</html>`);
+    // Navigate to localhost for secure context (needed for WebGPU)
+    await page.goto('http://localhost:2900/blank.html');
+    await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
+    await page.evaluate((w, h) => {
+        document.head.innerHTML = `
+            <title>Query Test Page</title>
+            <meta charset='utf-8'>
+            <link rel="icon" href="about:blank">
+            <style>#map {
+                box-sizing:content-box;
+                width:${w}px;
+                height:${h}px;
+            }</style>`;
+        document.body.innerHTML = '<div id="map"></div>';
+    }, width, height);
 
     const evaluatedArray = await page.evaluate(async (style: StyleWithTestData) => {
 
@@ -756,7 +754,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             // Wait for map to fully initialize (painter is created async on luma.gl branch)
             await map.once('load');
 
-            const gl = map.painter.context.gl;
             if (options.collisionDebug) {
                 map.showCollisionBoxes = true;
                 if (options.operations) {
@@ -767,22 +764,42 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
 
             await applyOperations(options, map as any, idle);
-            const viewport = gl.getParameter(gl.VIEWPORT);
-            const w = options.reportWidth ?? viewport[2];
-            const h = options.reportHeight ?? viewport[3];
 
-            const data = new Uint8Array(w * h * 4);
-            gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
+            const isWebGPU = (map.painter as any)?.device?.type === 'webgpu';
+            const canvas = map.getCanvas();
+            let data: Uint8Array;
 
-            // Flip the scanlines.
-            const stride = w * 4;
-            const tmp = new Uint8Array(stride);
-            for (let i = 0, j = h - 1; i < j; i++, j--) {
-                const start = i * stride;
-                const end = j * stride;
-                tmp.set(data.slice(start, start + stride), 0);
-                data.set(data.slice(end, end + stride), start);
-                data.set(tmp, end);
+            if (isWebGPU) {
+                // WebGPU: read pixels via 2D canvas drawImage
+                const w = options.reportWidth ?? canvas.width;
+                const h = options.reportHeight ?? canvas.height;
+                const tmpCanvas = document.createElement('canvas');
+                tmpCanvas.width = w;
+                tmpCanvas.height = h;
+                const ctx2d = tmpCanvas.getContext('2d');
+                ctx2d.drawImage(canvas, 0, 0, w, h);
+                const imageData = ctx2d.getImageData(0, 0, w, h);
+                data = new Uint8Array(imageData.data.buffer);
+            } else {
+                // WebGL: read pixels via gl.readPixels
+                const gl = map.painter.context.gl;
+                const viewport = gl.getParameter(gl.VIEWPORT);
+                const w = options.reportWidth ?? viewport[2];
+                const h = options.reportHeight ?? viewport[3];
+
+                data = new Uint8Array(w * h * 4);
+                gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+                // Flip the scanlines (WebGL reads bottom-to-top, 2D canvas is top-to-bottom)
+                const stride = w * 4;
+                const tmp = new Uint8Array(stride);
+                for (let i = 0, j = h - 1; i < j; i++, j--) {
+                    const start = i * stride;
+                    const end = j * stride;
+                    tmp.set(data.slice(start, start + stride), 0);
+                    data.set(data.slice(end, end + stride), start);
+                    data.set(tmp, end);
+                }
             }
 
             map.remove();
@@ -924,7 +941,6 @@ async function createPageAndStart(browser: Browser, testStyles: StyleWithTestDat
     const page = await browser.newPage();
     await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
     applyDebugParameter(options, page);
-    await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
     await runTests(page, testStyles, directory);
     return page;
 }
