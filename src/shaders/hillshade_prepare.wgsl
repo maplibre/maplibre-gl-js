@@ -47,7 +47,7 @@ struct FragmentInput {
 @group(1) @binding(1) var dem_texture: texture_2d<f32>;
 
 fn getElevation(ubo: HillshadePrepareUBO, coord: vec2<f32>) -> f32 {
-    var pixel = textureSample(dem_texture, dem_sampler, coord);
+    var pixel = textureSample(dem_texture, dem_sampler, coord) * 255.0;
     pixel.a = 1.0; // Some DEM sources don't properly encode alpha
     return dot(pixel, ubo.unpack) / 4.0;
 }
