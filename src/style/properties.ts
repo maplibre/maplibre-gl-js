@@ -146,7 +146,7 @@ export class Transitionable<Props> {
 
     constructor(properties: Properties<Props>, globalState: Record<string, any>) {
         this._properties = properties;
-        this._values = (Object.create(properties.defaultTransitionablePropertyValues) as any);
+        this._values = (Object.create(properties.defaultTransitionablePropertyValues));
         this._globalState = globalState;
     }
 
@@ -284,7 +284,7 @@ export class Transitioning<Props> {
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
-        this._values = (Object.create(properties.defaultTransitioningPropertyValues) as any);
+        this._values = (Object.create(properties.defaultTransitioningPropertyValues));
     }
 
     possiblyEvaluate(
@@ -327,7 +327,7 @@ export class Layout<Props> {
 
     constructor(properties: Properties<Props>, globalState: Record<string, any>) {
         this._properties = properties;
-        this._values = (Object.create(properties.defaultPropertyValues) as any);
+        this._values = (Object.create(properties.defaultPropertyValues));
         this._globalState = globalState;
     }
 

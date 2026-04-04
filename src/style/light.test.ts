@@ -12,7 +12,7 @@ test('Light with defaults', () => {
     light.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters);
 
     expect(light.properties.get('anchor')).toEqual(spec.anchor.default);
-    expect(light.properties.get('position')).toEqual(sphericalToCartesian(spec.position.default as any as [number, number, number]));
+    expect(light.properties.get('position')).toEqual(sphericalToCartesian(spec.position.default as [number, number, number]));
     expect(light.properties.get('intensity')).toEqual(spec.intensity.default);
     expect(light.properties.get('color')).toEqual(Color.parse(spec.color.default));
 });

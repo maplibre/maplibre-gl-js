@@ -571,7 +571,7 @@ export function clone<T>(input: T): T {
     if (Array.isArray(input)) {
         return input.map(clone) as any as T;
     } else if (typeof input === 'object' && input) {
-        return mapObject(input, clone) as any as T;
+        return mapObject(input, clone) as T;
     } else {
         return input;
     }

@@ -60,6 +60,7 @@ export default [
             }],
             '@typescript-eslint/prefer-optional-chain': 'error',
             '@typescript-eslint/prefer-for-of': 'error',
+            '@typescript-eslint/no-unnecessary-type-assertion': 'error',
             '@typescript-eslint/prefer-includes': 'error',
             '@typescript-eslint/prefer-string-starts-ends-with': 'error',
 
