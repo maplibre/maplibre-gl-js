@@ -204,30 +204,32 @@ struct FragmentInput {
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
     let is_halo = fin.v_is_halo > 0.5;
-    let color = select(fin.v_fill_color, fin.v_halo_color, is_halo);
+
+    let EDGE_GAMMA = 0.105 / max(paintParams.pixel_ratio, 1.0);
+    let fontScale = max(fin.v_size / 24.0, 0.001);
 
     // Sample the SDF glyph texture (r8unorm — value in .r channel)
     let dist = textureSample(glyph_texture, glyph_sampler, fin.v_tex).r;
 
-    // SDF edge: 6.0/8.0 = 0.75 in MapLibre convention (192/255 byte value = edge)
-    let fontScale = max(fin.v_size / 24.0, 0.001);
+    // Matches GL exactly: gamma = EDGE_GAMMA / (fontScale * u_gamma_scale)
+    // v_gamma_scale = drawable.gamma_scale (uniform: 1.0 for viewport, cos(pitch)*camDist for pitched)
+    var gamma = EDGE_GAMMA / (fontScale * max(fin.v_gamma_scale, 0.001));
+    var inner_edge = (256.0 - 64.0) / 256.0; // = 0.75
 
-    // Gamma for anti-aliasing — matches GL: EDGE_GAMMA + gamma_scale / (fontScale * pixelRatio)
-    let EDGE_GAMMA = 0.105 / max(paintParams.pixel_ratio, 1.0);
-    let gamma = EDGE_GAMMA + fin.v_gamma_scale / (fontScale * max(paintParams.pixel_ratio, 1.0));
-    let gamma_scaled = gamma / (1.0 + 2.0 * gamma);
+    var color = fin.v_fill_color;
+    if (is_halo) {
+        color = fin.v_halo_color;
+        gamma = (fin.v_halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * max(fin.v_gamma_scale, 0.001));
+        inner_edge = inner_edge + gamma; // push out for halo
+    }
 
-    // Fill edge at 0.75; halo extends outward by halo_width
-    let haloOffset = select(0.0, fin.v_halo_width, is_halo);
-    let inner_edge = (6.0 - haloOffset / fontScale) / SDF_PX;
-
+    // gamma_scaled = gamma * per_vertex_gamma_scale (≈ 1.0 for viewport-aligned text)
+    let gamma_scaled = gamma;
     var alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
 
     if (is_halo) {
-        // Halo: visible between halo_edge and fill_edge
-        let fill_edge = 6.0 / SDF_PX;
-        let fill_alpha = smoothstep(fill_edge - gamma_scaled, fill_edge + gamma_scaled, dist);
-        alpha = alpha * (1.0 - fill_alpha);
+        let halo_edge = (6.0 - fin.v_halo_width / fontScale) / SDF_PX;
+        alpha = min(smoothstep(halo_edge - gamma_scaled, halo_edge + gamma_scaled, dist), 1.0 - alpha);
     }
 
     let coverage = alpha * fin.v_opacity * fin.v_fade_opacity;
