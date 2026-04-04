@@ -934,11 +934,7 @@ export class Map extends Camera {
      * map.removeControl(navigation);
      * ```
      */
-<<<<<<< better-return-types
     removeControl(control: IControl): this {
-=======
-    removeControl(control: IControl): Map {
->>>>>>> main
         if (!control?.onRemove) {
             return this.fire(new ErrorEvent(new Error(
                 'Invalid argument to map.removeControl(). Argument must be a control with onAdd and onRemove methods.')));
