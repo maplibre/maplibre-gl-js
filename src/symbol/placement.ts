@@ -1108,15 +1108,16 @@ export class Placement {
                 // symbol instances appropriately so that symbols from buckets that have yet to be placed
                 // offset appropriately.
                 const symbolHidden = opacityState.text.isHidden();
-                [
+                const textSymbolIndexes = [
                     symbolInstance.rightJustifiedTextSymbolIndex,
                     symbolInstance.centerJustifiedTextSymbolIndex,
                     symbolInstance.leftJustifiedTextSymbolIndex
-                ].forEach(index => {
+                ];
+                for (const index of textSymbolIndexes) {
                     if (index >= 0) {
                         bucket.text.placedSymbolArray.get(index).hidden = symbolHidden || horizontalHidden ? 1 : 0;
                     }
-                });
+                }
 
                 if (symbolInstance.verticalPlacedTextSymbolIndex >= 0) {
                     bucket.text.placedSymbolArray.get(symbolInstance.verticalPlacedTextSymbolIndex).hidden = symbolHidden || verticalHidden ? 1 : 0;

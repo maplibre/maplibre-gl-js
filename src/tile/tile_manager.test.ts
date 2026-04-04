@@ -1735,7 +1735,9 @@ describe('TileManager.tilesIn', () => {
         ], 1, true);
 
         tiles.sort((a, b) => { return a.tile.tileID.canonical.x - b.tile.tileID.canonical.x; });
-        tiles.forEach((result) => { delete result.tile.uid; });
+        for (const result of tiles) {
+            delete result.tile.uid;
+        }
 
         expect(tiles[0].tile.tileID.key).toBe('011');
         expect(tiles[0].tile.tileSize).toBe(512);
@@ -1780,7 +1782,9 @@ describe('TileManager.tilesIn', () => {
                 ], 1, true);
 
                 tiles.sort((a, b) => { return a.tile.tileID.canonical.x - b.tile.tileID.canonical.x; });
-                tiles.forEach((result) => { delete result.tile.uid; });
+                for (const result of tiles) {
+                    delete result.tile.uid;
+                }
 
                 expect(tiles[0].tile.tileID.key).toBe('012');
                 expect(tiles[0].tile.tileSize).toBe(1024);

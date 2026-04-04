@@ -3427,9 +3427,9 @@ export class Map extends Camera {
 
         const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container', container);
         const positions = this._controlPositions = {};
-        ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach((positionName) => {
+        for (const positionName of ['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const) {
             positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName} `, controlContainer);
-        });
+        }
 
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }

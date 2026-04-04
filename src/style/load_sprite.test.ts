@@ -81,10 +81,10 @@ describe('loadSprite', () => {
         expect(Object.keys(result)).toHaveLength(1);
         expect(Object.keys(result)[0]).toBe('default');
 
-        Object.values(result['default']).forEach(styleImage => {
+        for (const styleImage of Object.values(result['default'])) {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
+        }
 
         expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
         expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
@@ -107,10 +107,10 @@ describe('loadSprite', () => {
         expect(Object.keys(result)).toHaveLength(1);
         expect(Object.keys(result)[0]).toBe('default');
 
-        Object.values(result['default']).forEach(styleImage => {
+        for (const styleImage of Object.values(result['default'])) {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
+        }
 
         expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
         expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
@@ -146,15 +146,15 @@ describe('loadSprite', () => {
         expect(Object.keys(result)[0]).toBe('sprite1');
         expect(Object.keys(result)[1]).toBe('sprite2');
 
-        Object.values(result['sprite1']).forEach(styleImage => {
+        for (const styleImage of Object.values(result['sprite1'])) {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
+        }
 
-        Object.values(result['sprite2']).forEach(styleImage => {
+        for (const styleImage of Object.values(result['sprite2'])) {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
+        }
 
         expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
         expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
@@ -182,15 +182,15 @@ describe('loadSprite', () => {
         expect(Object.keys(result)[0]).toBe('sprite1');
         expect(Object.keys(result)[1]).toBe('sprite2');
 
-        Object.values(result['sprite1']).forEach(styleImage => {
+        for (const styleImage of Object.values(result['sprite1'])) {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
+        }
 
-        Object.values(result['sprite2']).forEach(styleImage => {
+        for (const styleImage of Object.values(result['sprite2'])) {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
+        }
 
         expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
         expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
@@ -264,10 +264,10 @@ describe('loadSprite', () => {
         expect(Object.keys(result)).toHaveLength(1);
         expect(Object.keys(result)[0]).toBe('default');
 
-        Object.values(result['default']).forEach(styleImage => {
+        for (const styleImage of Object.values(result['default'])) {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
+        }
 
         expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1@2x.json');
         expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1@2x.png');

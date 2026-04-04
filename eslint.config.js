@@ -112,6 +112,13 @@ export default [
             indent: 'off',
             '@stylistic/indent': ['error'],
             '@stylistic/semi': ['error'],
+            'no-restricted-syntax': [
+                'error',
+                {
+                    'selector': 'CallExpression[callee.property.name=\'forEach\']',
+                    'message': 'Do not use forEach. Use for...of for iteration, map for mapping, or reduce for accumulation instead.'
+                }
+            ],
 
             'no-multiple-empty-lines': ['error', {
                 max: 1,
