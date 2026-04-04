@@ -61,8 +61,7 @@ function setGlobalWorker(MockWorker: { new(...args: any): any}) {
         parentBus.target = workerBus;
         workerBus.target = parentBus;
 
-        const worker = new MockWorker(workerBus);
-        parentBus.worker = worker;
+        parentBus.worker = new MockWorker(workerBus);
 
         return parentBus;
     };

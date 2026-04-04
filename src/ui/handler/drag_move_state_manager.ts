@@ -47,8 +47,7 @@ export class MouseMoveStateManager implements DragMoveStateManager<MouseEvent> {
     }
 
     startMove(e: MouseEvent) {
-        const eventButton = e.button;
-        this._eventButton = eventButton;
+        this._eventButton = e.button;
     }
 
     endMove(_e?: MouseEvent) {
@@ -91,8 +90,7 @@ export class OneFingerTouchMoveStateManager implements DragMoveStateManager<Touc
     }
 
     startMove(e: TouchEvent) {
-        const firstTouch = e.targetTouches[0].identifier;
-        this._firstTouch = firstTouch;
+        this._firstTouch = e.targetTouches[0].identifier;
     }
 
     endMove(_e?: TouchEvent) {
@@ -114,7 +112,7 @@ export class OneFingerTouchMoveStateManager implements DragMoveStateManager<Touc
 
 export class MouseOrTouchMoveStateManager implements DragMoveStateManager<MouseEvent | TouchEvent> {
     constructor(
-        private mouseMoveStateManager = new MouseMoveStateManager({checkCorrectEvent: () => true}), 
+        private mouseMoveStateManager = new MouseMoveStateManager({checkCorrectEvent: () => true}),
         private oneFingerTouchMoveStateManager = new OneFingerTouchMoveStateManager()
     ) {}
 
