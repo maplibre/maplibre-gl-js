@@ -44,7 +44,7 @@ describe('Dispatcher', () => {
         } as any as WorkerPool;
 
         let dispatcher = new Dispatcher(workerPool, mapId);
-        expect(dispatcher.actors.map((actor) => return actor.target)).toEqual(workers);
+        expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
 
         // Remove dispatcher, but map is not disposed (During style change)
         dispatcher.remove(false);
@@ -53,7 +53,7 @@ describe('Dispatcher', () => {
 
         // Create new instance of dispatcher
         dispatcher = new Dispatcher(workerPool, mapId);
-        expect(dispatcher.actors.map((actor) => return actor.target)).toEqual(workers);
+        expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
         dispatcher.remove(true); // mapRemoved = true
         expect(dispatcher.actors).toHaveLength(0);
         expect(releaseCalled).toEqual([mapId]);

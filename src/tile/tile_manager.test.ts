@@ -1299,13 +1299,13 @@ describe('TileManager._updateRetainedTiles', () => {
         const getTileSpy = vi.spyOn(tileManager, 'getTile');
 
         tileManager._updateRetainedTiles([idealTile], 2);
-        expect(getTileSpy.mock.calls.map((c) => return c[0])).toEqual([
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toEqual([
             // parents
             new OverscaledTileID(1, 0, 1, 0, 0), // not found
             new OverscaledTileID(0, 0, 0, 0, 0)  // not found
         ]);
 
-        expect(addTileSpy.mock.calls.map((c) => return c[0])).toEqual([
+        expect(addTileSpy.mock.calls.map((c) => c[0])).toEqual([
             // ideal tile
             new OverscaledTileID(2, 0, 2, 0, 0),
             // parents
@@ -1331,7 +1331,7 @@ describe('TileManager._updateRetainedTiles', () => {
 
         const retained = tileManager._updateRetainedTiles([idealTile], 1);
 
-        expect(getTileSpy.mock.calls.map((c) => return c[0])).toEqual([
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toEqual([
             // parents
             new OverscaledTileID(0, 0, 0, 0, 0), // found
         ]);
@@ -1391,7 +1391,7 @@ describe('TileManager._updateRetainedTiles', () => {
 
         const getTileSpy = vi.spyOn(tileManager, 'getTile');
         let retained = tileManager._updateRetainedTiles([idealTile], 1);
-        expect(getTileSpy.mock.calls.map((c) => return c[0])).toEqual([
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toEqual([
             // parent
             new OverscaledTileID(0, 0, 0, 0, 0)
         ]);
@@ -1438,7 +1438,7 @@ describe('TileManager._updateRetainedTiles', () => {
 
         sleep(10);
 
-        expect(getTileSpy.mock.calls.map((c) => return c[0])).toEqual([]);
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toEqual([]);
 
         expect(retained).toEqual({
             // ideal tile id (2, 0, 0)
@@ -1481,7 +1481,7 @@ describe('TileManager._updateRetainedTiles', () => {
 
         const getTileSpy = vi.spyOn(tileManager, 'getTile');
         tileManager._updateRetainedTiles(idealTiles, 8);
-        expect(getTileSpy.mock.calls.map((c) => return c[0])).toEqual([
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toEqual([
             // parent tile ascent
             new OverscaledTileID(7, 0, 7, 0, 0),
             new OverscaledTileID(6, 0, 6, 0, 0),
@@ -1502,7 +1502,7 @@ describe('TileManager._updateRetainedTiles', () => {
         }
 
         tileManager._updateRetainedTiles(idealTiles, 8);
-        expect(getTileSpy.mock.calls.map((c) => return c[0])).toEqual([
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toEqual([
             // parent tile ascent
             new OverscaledTileID(7, 0, 7, 0, 0),
             new OverscaledTileID(6, 0, 6, 0, 0),

@@ -2957,7 +2957,7 @@ describe('Style.setLayerZoomRange', () => {
         expect(style.getLayer('symbol').maxzoom).toBe(12);
         style.update({} as EvaluationParameters); // trigger dispatcher broadcast
         expect(spy.mock.calls[0][0]).toBe(MessageType.updateLayers);
-        expect(spy.mock.calls[0][1]['layers'].map((layer) => return layer.id)).toEqual(['symbol']);
+        expect(spy.mock.calls[0][1]['layers'].map((layer) => layer.id)).toEqual(['symbol']);
     });
 
     test('fires an error if layer not found', async () => {
