@@ -474,16 +474,9 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
                 'tiles:', tileIDs.map(t => `z${t.overscaledZ}(${t.canonical.x},${t.canonical.y})→ref${this._webgpuNextStencilID + tileIDs.indexOf(t)}`).join(' '));
         }
 
-        // Allocate per-tile UBO buffers
-        if (!this._webgpuClipUBOBuffers) this._webgpuClipUBOBuffers = [];
-        while (this._webgpuClipUBOBuffers.length < tileIDs.length) {
-            this._webgpuClipUBOBuffers.push(gpuDevice.createBuffer({
-                size: 64,
-                usage: 64 | 8, // UNIFORM | COPY_DST
-            }));
-        }
-
-        // Draw each tile's stencil mask with a unique ref
+        // Draw each tile's stencil mask with a unique ref.
+        // Create a fresh UBO buffer per tile (matching native's approach) to avoid
+        // writeBuffer race conditions with reused buffers.
         for (let i = 0; i < tileIDs.length; i++) {
             const tileID = tileIDs[i];
             const stencilRef = this._webgpuNextStencilID++;
@@ -496,8 +489,15 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
                 applyTerrainMatrix: true
             });
 
-            const clipUBOBuffer = this._webgpuClipUBOBuffers[i];
-            gpuDevice.queue.writeBuffer(clipUBOBuffer, 0, projectionData.mainMatrix as Float32Array);
+            // Create a mapped buffer with the matrix data baked in
+            const matrixData = projectionData.mainMatrix as Float32Array;
+            const clipUBOBuffer = gpuDevice.createBuffer({
+                size: 64,
+                usage: 64 | 8, // UNIFORM | COPY_DST
+                mappedAtCreation: true,
+            });
+            new Float32Array(clipUBOBuffer.getMappedRange()).set(matrixData);
+            clipUBOBuffer.unmap();
 
             const bindGroup = gpuDevice.createBindGroup({
                 layout: pipeline.getBindGroupLayout(0),
