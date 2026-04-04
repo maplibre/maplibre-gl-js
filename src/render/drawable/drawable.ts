@@ -1,6 +1,3 @@
-import type {Device, VertexFormat} from '@luma.gl/core';
-import {Model} from '@luma.gl/engine';
-import {getShaderLayoutFromWGSL} from '@luma.gl/shadertools';
 import type {OverscaledTileID} from '../../tile/tile_id';
 import type {VertexBuffer} from '../../gl/vertex_buffer';
 import type {IndexBuffer} from '../../gl/index_buffer';
@@ -142,10 +139,14 @@ export class Drawable {
         this._loggedDraw = false;
     }
 
+    destroy(): void {
+        // GPU resources are managed externally; this is a no-op placeholder
+    }
+
     /**
      * Draw this drawable. Branches based on WebGL vs WebGPU.
      */
-    draw(context: Context, device: Device | null, painter: Painter, renderPass?: any): void {
+    draw(context: Context, device: any | null, painter: Painter, renderPass?: any): void {
         if (!this.enabled) return;
 
         const isWebGPU = device && device.type === 'webgpu';
@@ -260,7 +261,7 @@ export class Drawable {
     /**
      * WebGPU draw path: raw GPURenderPipeline with dynamic bind group entries.
      */
-    private _drawWebGPU(device: Device, painter: Painter, renderPass?: any): void {
+    private _drawWebGPU(device: any, painter: Painter, renderPass?: any): void {
         if (!renderPass || !this.layoutVertexBuffer || !this.indexBuffer || !this.segments) {
             if (!(this as any)._loggedEarly) {
                 (this as any)._loggedEarly = true;
@@ -642,7 +643,7 @@ export class Drawable {
      * Upload a UniformBlock as a storage buffer (not uniform).
      * Storage buffers need STORAGE usage flag instead of UNIFORM.
      */
-    private _uploadAsStorage(device: Device, ubo: UniformBlock): any {
+    private _uploadAsStorage(device: any, ubo: UniformBlock): any {
         // Storage buffers need different usage flags than uniform buffers
         if (!(ubo as any)._storageBuffer) {
             (ubo as any)._storageBuffer = device.createBuffer({
@@ -654,157 +655,9 @@ export class Drawable {
         return (ubo as any)._storageBuffer;
     }
 
-    /**
-     * Get or create the cached luma.gl Model for this drawable's shader+state combo.
-     */
-    private _getOrCreateModel(device: Device, painter: Painter): Model | null {
-        const cacheKey = `${this.shaderName}|${renderStateHash(this.depthMode, this.stencilMode, this.colorMode, this.cullFaceMode)}`;
-
-        let model = painter.pipelineCache.get(cacheKey);
-        if (model) return model;
-
-        const wgslKey = `${this.shaderName}Wgsl`;
-        const rawWgsl = (shaders as any)[wgslKey];
-        if (!rawWgsl) {
-            console.warn(`[Drawable] No WGSL shader found for "${this.shaderName}"`);
-            return null;
-        }
-
-        // Build defines for preprocessor
-        const defines: Record<string, boolean> = {};
-
-        if (this.shaderName === 'circle' && this.programConfiguration) {
-            // Circle shader uses #ifndef for data-driven properties
-            const binderAttributes = this.programConfiguration.getBinderAttributes();
-            const paintProperties = ['color', 'radius', 'blur', 'opacity', 'stroke_color', 'stroke_width', 'stroke_opacity'];
-            for (const prop of paintProperties) {
-                const isDataDriven = binderAttributes.some(attr =>
-                    attr === `a_${prop}` || attr === `a_${prop}_from` || attr === `a_${prop}_to` || attr === `a_${prop}_t`
-                );
-                defines[`HAS_UNIFORM_u_${prop}`] = !isDataDriven;
-            }
-        }
-
-        // Preprocess WGSL (handle #ifdef/#ifndef)
-        let wgslSource = preprocessWGSL(rawWgsl, defines);
-
-        // Build VertexInput struct from layout vertex buffer attributes
-        const bufferLayout: any[] = [];
-        const attributes: any[] = [];
-        let locationIndex = 0;
-        let vertexInputStruct = 'struct VertexInput {\n';
-
-        for (const member of this.layoutVertexBuffer.attributes) {
-            const format = getWebGPUVertexFormat(member.type, member.components);
-            attributes.push({
-                attribute: member.name.replace('a_', ''),
-                format,
-                byteOffset: member.offset
-            });
-
-            let wgslType = 'vec4<f32>';
-            if (format.startsWith('float32')) {
-                wgslType = format === 'float32' ? 'f32' : `vec${format.charAt(format.length - 1)}<f32>`;
-            } else if (format.startsWith('sint16')) {
-                wgslType = format === 'sint16' ? 'i32' : `vec${format.charAt(format.length - 1)}<i32>`;
-            }
-
-            vertexInputStruct += `    @location(${locationIndex}) ${member.name.replace('a_', '')}: ${wgslType},\n`;
-            locationIndex++;
-        }
-
-        // Add binder attributes for circle (data-driven paint properties)
-        if (this.shaderName === 'circle' && this.programConfiguration) {
-            const binderAttributes = this.programConfiguration.getBinderAttributes();
-            for (const attrName of binderAttributes) {
-                let wgslType = 'vec2<f32>';
-                if (attrName.includes('color')) wgslType = 'vec4<f32>';
-
-                vertexInputStruct += `    @location(${locationIndex}) ${attrName.replace('a_', '')}: ${wgslType},\n`;
-                locationIndex++;
-            }
-        }
-
-        vertexInputStruct += '};\n';
-
-        // Replace or prepend VertexInput struct
-        if (wgslSource.includes('struct VertexInput {')) {
-            const regex = /struct\s+VertexInput\s*\{[^}]*\};/m;
-            wgslSource = wgslSource.replace(regex, vertexInputStruct);
-        } else {
-            wgslSource = `${vertexInputStruct}\n${wgslSource}`;
-        }
-
-        bufferLayout.push({
-            name: 'layout',
-            byteStride: this.layoutVertexBuffer.itemSize,
-            stepMode: 'vertex' as const,
-            attributes
-        });
-
-        // Extract shader layout and add storage buffer workaround
-        const shaderLayout = getShaderLayoutFromWGSL(wgslSource);
-        shaderLayout.bindings.push({
-            name: 'drawableVector',
-            type: 'read-only-storage',
-            group: 0,
-            location: 2
-        } as any);
-
-        // Dummy storage buffer for pipeline creation
-        const dummyStorageBuffer = device.createBuffer({
-            byteLength: Math.max(this.drawableUBO._byteLength, 16),
-            usage: 128 | 8 // STORAGE | COPY_DST
-        });
-
-        // Create initial bindings for Model creation
-        const initialBindings: Record<string, any> = {
-            globalIndex: device.createBuffer({byteLength: 32, usage: 64 | 8}),
-            drawableVector: dummyStorageBuffer,
-            props: device.createBuffer({byteLength: Math.max(this.layerUBO._byteLength, 16), usage: 64 | 8}),
-        };
-
-        if (wgslSource.includes('paintParams')) {
-            initialBindings.paintParams = device.createBuffer({byteLength: 64, usage: 64 | 8});
-        }
-
-        model = new Model(device, {
-            id: `${this.shaderName}-model`,
-            source: wgslSource,
-            topology: 'triangle-list',
-            bufferLayout,
-            shaderLayout,
-            vertexCount: 0,
-            bindings: initialBindings,
-            parameters: {
-                depthFormat: 'depth24plus',
-                depthWriteEnabled: true,
-                depthCompare: 'less-equal',
-            },
-        });
-
-        painter.pipelineCache.set(cacheKey, model);
-        return model;
-    }
-
-    destroy(): void {
-        if (this.drawableUBO) {
-            // Also destroy the storage buffer created by _uploadAsStorage
-            if ((this.drawableUBO as any)._storageBuffer) {
-                (this.drawableUBO as any)._storageBuffer.destroy();
-                (this.drawableUBO as any)._storageBuffer = null;
-            }
-            this.drawableUBO.destroy();
-            this.drawableUBO = null;
-        }
-        if (this._globalIndexUBO) {
-            this._globalIndexUBO.destroy();
-            this._globalIndexUBO = null;
-        }
-    }
 }
 
-function getWebGPUVertexFormat(type: string, components: number): VertexFormat {
+function getWebGPUVertexFormat(type: string, components: number): string {
     let baseType = '';
     switch (type) {
         case 'Int8': baseType = 'sint8'; break;
@@ -816,6 +669,6 @@ function getWebGPUVertexFormat(type: string, components: number): VertexFormat {
         case 'Float32': baseType = 'float32'; break;
         default: baseType = 'float32'; break;
     }
-    if (components === 1) return baseType as VertexFormat;
-    return `${baseType}x${components}` as VertexFormat;
+    if (components === 1) return baseType as string;
+    return `${baseType}x${components}` as string;
 }

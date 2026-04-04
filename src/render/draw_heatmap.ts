@@ -115,7 +115,7 @@ function renderHeatmapFlat(painter: Painter, layer: HeatmapStyleLayer) {
 
     const textureProgram = painter.useProgram('heatmapTexture');
 
-    program.draw(context, gl.TRIANGLES,
+    textureProgram.draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
         heatmapTextureUniformValues(painter, layer, 0, 1) as any, null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
@@ -185,7 +185,7 @@ function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord:
 
     const textureProgram = painter.useProgram('heatmapTexture');
 
-    program.draw(context, gl.TRIANGLES,
+    textureProgram.draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
         heatmapTextureUniformValues(painter, layer, 0, 1) as any, null, projectionData as any,
         layer.id, painter.rasterBoundsBuffer, painter.quadTriangleIndexBuffer,

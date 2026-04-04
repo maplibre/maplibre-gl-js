@@ -6,7 +6,6 @@ import type {
 
 import type {Program} from '../render/program';
 import type {Context} from '../gl/context';
-import {Buffer as LumaBuffer} from '@luma.gl/core';
 
 /**
  * An Enum for AttributeType
@@ -33,7 +32,7 @@ export class VertexBuffer {
     dynamicDraw: boolean;
     context: Context;
     buffer: WebGLBuffer;
-    webgpuBuffer: LumaBuffer | null = null;
+    webgpuBuffer: any | null = null;
 
     /**
      * @param dynamicDraw - Whether this buffer will be repeatedly updated.
@@ -50,7 +49,7 @@ export class VertexBuffer {
 
         if (context.device && context.device.type === 'webgpu') {
             this.webgpuBuffer = context.device.createBuffer({
-                usage: LumaBuffer.VERTEX | LumaBuffer.COPY_DST,
+                usage: 0x0020 | 0x0008,
                 data: new Uint8Array(array.arrayBuffer)
             });
         }

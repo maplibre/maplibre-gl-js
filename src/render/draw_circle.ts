@@ -134,8 +134,7 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues as any, terrainData as any, projectionData as any, layer.id,
             layoutVertexBuffer, indexBuffer, segments,
-            layer.paint, painter.transform.zoom, programConfiguration,
-            null, null, null, renderOptions);
+            layer.paint, painter.transform.zoom, programConfiguration);
     }
 }
 

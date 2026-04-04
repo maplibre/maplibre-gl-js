@@ -149,7 +149,7 @@ function prepareHillshade(
 
         const prepareProgram = painter.useProgram('hillshadePrepare');
 
-        program.draw(context, gl.TRIANGLES,
+        prepareProgram.draw(context, gl.TRIANGLES,
             depthMode, stencilMode, colorMode, CullFaceMode.disabled,
             hillshadeUniformPrepareValues(tile.tileID, dem) as any,
             null, null, layer.id, painter.rasterBoundsBuffer,

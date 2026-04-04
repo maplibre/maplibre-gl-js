@@ -2,7 +2,6 @@
 import type {StructArray} from '../util/struct_array';
 import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type';
 import type {Context} from '../gl/context';
-import {Buffer as LumaBuffer} from '@luma.gl/core';
 
 /**
  * @internal
@@ -11,7 +10,7 @@ import {Buffer as LumaBuffer} from '@luma.gl/core';
 export class IndexBuffer {
     context: Context;
     buffer: WebGLBuffer;
-    webgpuBuffer: LumaBuffer | null = null;
+    webgpuBuffer: any | null = null;
     dynamicDraw: boolean;
 
     constructor(context: Context, array: TriangleIndexArray | LineIndexArray | LineStripIndexArray, dynamicDraw?: boolean) {
@@ -22,8 +21,8 @@ export class IndexBuffer {
 
         if (context.device && context.device.type === 'webgpu') {
             this.webgpuBuffer = context.device.createBuffer({
-                usage: LumaBuffer.INDEX | LumaBuffer.COPY_DST,
-                indexType: 'uint16',
+                usage: 0x0010 | 0x0008,
+                
                 data: new Uint8Array(array.arrayBuffer)
             });
         }

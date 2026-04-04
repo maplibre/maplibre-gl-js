@@ -1,4 +1,3 @@
-import type {Device, Buffer as LumaBuffer} from '@luma.gl/core';
 
 /**
  * Typed buffer wrapper for GPU uniform blocks.
@@ -10,7 +9,7 @@ export class UniformBlock {
     _f32: Float32Array;
     _i32: Int32Array;
     _u32: Uint32Array;
-    _gpuBuffer: LumaBuffer | null;
+    _gpuBuffer: any | null;
     _dirty: boolean;
     _byteLength: number;
 
@@ -62,7 +61,7 @@ export class UniformBlock {
     /**
      * Creates or updates the GPU buffer. Returns the luma.gl Buffer.
      */
-    upload(device: Device): LumaBuffer {
+    upload(device: any): any {
         if (!this._gpuBuffer) {
             this._gpuBuffer = device.createBuffer({
                 byteLength: this._byteLength,

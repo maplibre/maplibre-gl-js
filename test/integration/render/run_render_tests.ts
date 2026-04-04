@@ -53,8 +53,8 @@ type TestData = {
     reportWidth: number;
     reportHeight: number;
 
-    // Rendering backend: 'webgl2' or 'webgpu'
-    backend: 'webgl2' | 'webgpu';
+    // Rendering backend: 'webgl', 'webgl2', or 'webgpu'
+    backend: 'webgl' | 'webgl2' | 'webgpu';
 
     // base64-encoded content of the PNG results
     actual: string;
@@ -69,7 +69,7 @@ type RenderOptions = {
     seed: string;
     debug: boolean;
     openBrowser: boolean;
-    backend: 'webgl2' | 'webgpu';
+    backend: 'webgl' | 'webgl2' | 'webgpu';
 };
 
 type StyleWithTestData = StyleSpecification & {
@@ -1010,7 +1010,7 @@ async function executeRenderTests() {
         options.debug = checkParameter(options, '--debug');
         options.openBrowser = checkParameter(options, '--open-browser');
         const backendValue = checkValueParameter(options, 'webgl2', '--backend');
-        if (backendValue === 'webgpu' || backendValue === 'webgl2') {
+        if (backendValue === 'webgpu' || backendValue === 'webgl2' || backendValue === 'webgl') {
             options.backend = backendValue;
         }
     }

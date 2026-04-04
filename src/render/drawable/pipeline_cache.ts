@@ -1,26 +1,24 @@
-import type {Device} from '@luma.gl/core';
-import type {Model} from '@luma.gl/engine';
 
 /**
- * Cache for WebGPU pipeline/Model objects.
+ * Cache for WebGPU pipeline/any objects.
  * Key: hash(shaderName + defines + renderState + vertexLayout)
- * Value: luma.gl Model
+ * Value: luma.gl any
  *
  * This avoids recreating render pipelines every frame, which is
  * expensive in WebGPU since pipeline state is immutable.
  */
 export class PipelineCache {
-    _cache: Map<string, Model>;
+    _cache: Map<string, any>;
 
     constructor() {
         this._cache = new Map();
     }
 
-    get(key: string): Model | undefined {
+    get(key: string): any | undefined {
         return this._cache.get(key);
     }
 
-    set(key: string, model: Model): void {
+    set(key: string, model: any): void {
         this._cache.set(key, model);
     }
 
@@ -29,7 +27,7 @@ export class PipelineCache {
     }
 
     invalidate(): void {
-        // Models are owned by luma.gl and will be GC'd
+        // anys are owned by luma.gl and will be GC'd
         this._cache.clear();
     }
 

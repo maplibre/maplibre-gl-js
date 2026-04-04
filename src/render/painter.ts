@@ -35,7 +35,6 @@ import {type OverscaledTileID} from '../tile/tile_id';
 import {drawSky, drawAtmosphere} from './draw_sky';
 import {Mesh} from './mesh';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection';
-import type {Device} from '@luma.gl/core';
 
 // Drawable architecture imports
 import {TileLayerGroup} from './drawable/tile_layer_group';
@@ -94,7 +93,7 @@ export type RenderOptions = {
  */
 export class Painter {
     context: Context;
-    device: Device;
+    device: any;
     transform: IReadonlyTransform;
     renderToTexture: RenderToTexture;
     _tileTextures: {
@@ -173,13 +172,16 @@ export class Painter {
         this.globalUBO = new UniformBlock(64); // GlobalPaintParamsUBO size
         this.useDrawables = new Set(); // Enable per layer type: 'circle', 'fill', 'line'
 
-        // Enable drawable path for ALL layers (both WebGL2 and WebGPU)
-        this.useDrawables.add('background');
-        this.useDrawables.add('circle');
-        this.useDrawables.add('fill');
-        this.useDrawables.add('line');
-        this.useDrawables.add('raster');
-        this.useDrawables.add('fill-extrusion');
+        // Drawables are ONLY used for WebGPU.
+        // WebGL1/2 uses the original program.draw() path from main branch — unchanged.
+        if (this.device && this.device.type === 'webgpu') {
+            this.useDrawables.add('background');
+            this.useDrawables.add('circle');
+            this.useDrawables.add('fill');
+            this.useDrawables.add('line');
+            this.useDrawables.add('raster');
+            this.useDrawables.add('fill-extrusion');
+        }
 
         this.setup();
 

@@ -36,9 +36,7 @@ import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
 import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id';
-import {WebGLDevice, webgl2Adapter} from '@luma.gl/webgl';
-import {webgpuAdapter} from '@luma.gl/webgpu';
-import type {Device} from '@luma.gl/core';
+// No luma.gl — WebGL uses raw context, WebGPU uses raw (navigator as any).gpu
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
@@ -3454,7 +3452,7 @@ export class Map extends Camera {
             premultipliedAlpha: true
         };
 
-        let device: Device;
+        let device: any;
         let gl: WebGL2RenderingContext | WebGLRenderingContext | null = null;
         let webglcontextcreationerrorDetailObject: any = null;
 
@@ -3473,20 +3471,46 @@ export class Map extends Camera {
             if (!tryWebGPU) console.log('Skipping WebGPU (contextType specified)');
             else console.log('Trying WebGPU first...');
             try {
-                // Race WebGPU initialization against a timeout to avoid hanging
-                // in environments where navigator.gpu exists but never resolves
-                const webgpuPromise = webgpuAdapter.create({
-                    createCanvasContext: {
-                        canvas: this._canvas,
-                        alphaMode: 'premultiplied',
-                        ...attributes
+                // Initialize WebGPU directly — no luma.gl
+                if (typeof navigator !== 'undefined' && (navigator as any).gpu) {
+                    const gpuAdapter = await Promise.race([
+                        (navigator as any).gpu.requestAdapter(),
+                        new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000))
+                    ]);
+                    if (gpuAdapter) {
+                        const gpuDevice = await gpuAdapter.requestDevice();
+                        const gpuContext = this._canvas.getContext('webgpu') as any;
+                        if (gpuContext && gpuDevice) {
+                            gpuContext.configure({
+                                device: gpuDevice,
+                                format: (navigator as any).gpu.getPreferredCanvasFormat(),
+                                alphaMode: 'premultiplied',
+                            });
+                            // Wrap in a minimal device-like object for the painter
+                            device = {
+                                type: 'webgpu',
+                                handle: gpuDevice,
+                                canvasContext: {handle: gpuContext},
+                                commandEncoder: {handle: null as any},
+                                preferredColorFormat: (navigator as any).gpu.getPreferredCanvasFormat(),
+                                createBuffer: (props: any) => {
+                                    const buf = gpuDevice.createBuffer({
+                                        size: props.byteLength || props.data?.byteLength || 64,
+                                        usage: props.usage || (64 | 8), // UNIFORM | COPY_DST
+                                        mappedAtCreation: !!props.data,
+                                    });
+                                    if (props.data) {
+                                        new Uint8Array(buf.getMappedRange()).set(new Uint8Array(props.data.buffer || props.data));
+                                        buf.unmap();
+                                    }
+                                    return {handle: buf, props, write: (data: ArrayBuffer) => { gpuDevice.queue.writeBuffer(buf, 0, data); }};
+                                },
+                                submit: () => {},
+                            } as any;
+                        }
                     }
-                });
-                const timeoutPromise = new Promise<never>((_, reject) =>
-                    setTimeout(() => reject(new Error('WebGPU initialization timed out')), 3000)
-                );
-                device = await Promise.race([webgpuPromise, timeoutPromise]);
-                console.log(`WebGPU initialization complete: !!device = ${!!device}`);
+                }
+                if (device) console.log('WebGPU initialization complete (raw API)');
             } catch (e) {
                 console.warn('WebGPU uninitialized or unavailable. Falling back to WebGL...', e);
             }
@@ -3519,8 +3543,8 @@ export class Map extends Camera {
             }
         }
 
-        // If device is WebGPU, gl is null. So we extract it from device if it's a WebGLDevice wrapper!
-        const finalGl = gl || (device as any).gl || null;
+        // For WebGPU, gl is null. For WebGL, device is null.
+        const finalGl = gl || null;
 
         this.painter = new Painter(finalGl, device, this.transform);
         if (this.transform.width && this.transform.height) {

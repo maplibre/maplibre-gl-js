@@ -1,6 +1,6 @@
 import puppeteer, {type Browser} from 'puppeteer';
 
-export async function launchPuppeteer(headless = true, backend: 'webgl2' | 'webgpu' = 'webgl2'): Promise<Browser> {
+export async function launchPuppeteer(headless = true, backend: 'webgl' | 'webgl2' | 'webgpu' = 'webgl2'): Promise<Browser> {
     const args = [
         '--enable-features=AllowSwiftShaderFallback,AllowSoftwareGLFallbackDueToCrashes',
         '--enable-unsafe-swiftshader',

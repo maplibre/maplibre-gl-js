@@ -15,7 +15,6 @@ import type {
     StructArrayMember
 } from '../util/struct_array';
 import type {Color} from '@maplibre/maplibre-gl-style-spec';
-import type {Device} from '@luma.gl/core';
 import {isWebGL2} from './webgl2';
 
 type ClearArgs = {
@@ -30,7 +29,7 @@ type ClearArgs = {
  */
 export class Context {
     gl: WebGLRenderingContext | WebGL2RenderingContext;
-    device: Device;
+    device: any;
 
     currentNumAttributes: number;
     maxTextureSize: number;
