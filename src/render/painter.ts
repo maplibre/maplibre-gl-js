@@ -664,8 +664,11 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
 
         if (this.device && this.device.type === 'webgpu') {
             try {
-                // Create render pass with depth24plus-stencil8 for stencil clipping support.
-                // We bypass luma.gl's beginRenderPass because it hardcodes hasStencilAspect=false.
+                // Create a fresh command encoder for this frame
+                if ((this.device as any).beginFrame) {
+                    (this.device as any).beginFrame();
+                }
+
                 const gpuDevice = (this.device as any).handle;
                 const canvasCtx = (this.device as any).canvasContext;
                 const currentTexture = canvasCtx.handle.getCurrentTexture();

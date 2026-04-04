@@ -3487,26 +3487,46 @@ export class Map extends Camera {
                                 alphaMode: 'premultiplied',
                             });
                             // Wrap in a minimal device-like object for the painter
-                            device = {
+                            const deviceWrapper: any = {
                                 type: 'webgpu',
                                 handle: gpuDevice,
                                 canvasContext: {handle: gpuContext},
                                 commandEncoder: {handle: null as any},
                                 preferredColorFormat: (navigator as any).gpu.getPreferredCanvasFormat(),
                                 createBuffer: (props: any) => {
+                                    // WebGPU requires buffer sizes aligned to 4 bytes
+                                    const rawSize = Math.max(props.byteLength || props.data?.byteLength || 64, 16);
+                                    const size = Math.ceil(rawSize / 4) * 4;
                                     const buf = gpuDevice.createBuffer({
-                                        size: props.byteLength || props.data?.byteLength || 64,
-                                        usage: props.usage || (64 | 8), // UNIFORM | COPY_DST
+                                        size,
+                                        usage: props.usage || (64 | 8),
                                         mappedAtCreation: !!props.data,
                                     });
                                     if (props.data) {
                                         new Uint8Array(buf.getMappedRange()).set(new Uint8Array(props.data.buffer || props.data));
                                         buf.unmap();
                                     }
-                                    return {handle: buf, props, write: (data: ArrayBuffer) => { gpuDevice.queue.writeBuffer(buf, 0, data); }};
+                                    return {
+                                        handle: buf, props, byteLength: size,
+                                        write: (data: ArrayBuffer) => { gpuDevice.queue.writeBuffer(buf, 0, data); },
+                                        destroy: () => { buf.destroy(); },
+                                    };
                                 },
-                                submit: () => {},
-                            } as any;
+                                // Called at start of each frame to create a fresh command encoder
+                                beginFrame: () => {
+                                    deviceWrapper.commandEncoder = {
+                                        handle: gpuDevice.createCommandEncoder(),
+                                    };
+                                },
+                                // Called at end of each frame to submit commands
+                                submit: () => {
+                                    if (deviceWrapper.commandEncoder?.handle) {
+                                        gpuDevice.queue.submit([deviceWrapper.commandEncoder.handle.finish()]);
+                                        deviceWrapper.commandEncoder = {handle: null};
+                                    }
+                                },
+                            };
+                            device = deviceWrapper;
                         }
                     }
                 }
