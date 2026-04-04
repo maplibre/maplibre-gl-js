@@ -190,6 +190,7 @@ export class Painter {
         // Enable additional drawable layers for WebGPU (legacy path doesn't work without GL)
         if (this.device && this.device.type === 'webgpu') {
             this.useDrawables.add('raster');
+            this.useDrawables.add('fill-extrusion');
         }
 
         this.setup();
