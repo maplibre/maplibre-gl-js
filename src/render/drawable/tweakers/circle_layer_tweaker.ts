@@ -133,16 +133,8 @@ export class CircleLayerTweaker extends LayerTweaker {
             }
             const ubo = drawable.drawableUBO;
 
-            // matrix: recalculate from current transform
-            const projectionData = transform.getProjectionData({
-                overscaledTileID: tileID,
-                applyGlobeMatrix: true,
-                applyTerrainMatrix: true
-            });
-            ubo.setMat4(0, projectionData.mainMatrix as Float32Array);
-
-            // Also update the drawable's projectionData for the WebGL path
-            drawable.projectionData = projectionData;
+            // projectionData is already set during drawable creation with correct RTT flags
+            ubo.setMat4(0, drawable.projectionData.mainMatrix as Float32Array);
 
             // extrude_scale
             const pitchWithMap = circleLayer.paint.get('circle-pitch-alignment') === 'map';

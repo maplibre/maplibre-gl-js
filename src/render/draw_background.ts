@@ -27,8 +27,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     const image = layer.paint.get('background-pattern');
 
     // Use drawable path for solid-color backgrounds (both WebGL2 and WebGPU)
-    // Skip drawable path during RTT (terrain) to avoid globe projection issues
-    if (painter.useDrawables && painter.useDrawables.has('background') && !image && !renderOptions.isRenderingToTexture) {
+    if (painter.useDrawables && painter.useDrawables.has('background') && !image) {
         drawBackgroundDrawable(painter, layer, coords, renderOptions);
         return;
     }

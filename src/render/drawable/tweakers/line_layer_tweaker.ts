@@ -92,20 +92,14 @@ export class LineLayerTweaker extends LayerTweaker {
         for (const drawable of drawables) {
             if (!drawable.enabled || !drawable.tileID) continue;
 
-            // Update projection data from current transform
-            const projectionData = transform.getProjectionData({
-                overscaledTileID: drawable.tileID,
-                applyGlobeMatrix: true,
-                applyTerrainMatrix: true
-            });
-            drawable.projectionData = projectionData;
+            // projectionData is already set during drawable creation with correct RTT flags
 
             // Set drawableUBO with matrix + line-specific uniforms for WebGPU path
             // LineDrawableUBO: matrix(64) + ratio(4) + device_pixel_ratio(4) + units_to_pixels(8) = 80 bytes
             if (!drawable.drawableUBO) {
                 drawable.drawableUBO = new UniformBlock(80);
             }
-            drawable.drawableUBO.setMat4(0, projectionData.mainMatrix as Float32Array);
+            drawable.drawableUBO.setMat4(0, drawable.projectionData.mainMatrix as Float32Array);
             const tileProxy = {tileID: drawable.tileID, tileSize: transform.tileSize};
             drawable.drawableUBO.setFloat(64, pixelScale / pixelsToTileUnits(tileProxy, 1, zoom));
             drawable.drawableUBO.setFloat(68, painter.pixelRatio);

@@ -49,13 +49,8 @@ export class BackgroundLayerTweaker extends LayerTweaker {
                 drawable.drawableUBO = new UniformBlock(BACKGROUND_DRAWABLE_UBO_SIZE);
             }
 
-            const projectionData = painter.transform.getProjectionData({
-                overscaledTileID: drawable.tileID,
-                applyGlobeMatrix: true,
-                applyTerrainMatrix: true
-            });
-            drawable.drawableUBO.setMat4(0, projectionData.mainMatrix as Float32Array);
-            drawable.projectionData = projectionData;
+            // projectionData is already set during drawable creation with correct RTT flags
+            drawable.drawableUBO.setMat4(0, drawable.projectionData.mainMatrix as Float32Array);
             drawable.layerUBO = this.evaluatedPropsUBO;
         }
     }

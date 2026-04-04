@@ -76,19 +76,13 @@ export class FillLayerTweaker extends LayerTweaker {
         for (const drawable of drawables) {
             if (!drawable.enabled || !drawable.tileID) continue;
 
-            // Update projection data from current transform
-            const projectionData = transform.getProjectionData({
-                overscaledTileID: drawable.tileID,
-                applyGlobeMatrix: true,
-                applyTerrainMatrix: true
-            });
-            drawable.projectionData = projectionData;
+            // projectionData is already set during drawable creation with correct RTT flags
 
             // Set drawableUBO with matrix for WebGPU path
             if (!drawable.drawableUBO) {
                 drawable.drawableUBO = new UniformBlock(64);
             }
-            drawable.drawableUBO.setMat4(0, projectionData.mainMatrix as Float32Array);
+            drawable.drawableUBO.setMat4(0, drawable.projectionData.mainMatrix as Float32Array);
 
             // Share the layer-level UBO reference
             drawable.layerUBO = this.evaluatedPropsUBO;
