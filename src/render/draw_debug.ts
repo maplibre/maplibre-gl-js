@@ -60,8 +60,8 @@ function drawDebugSSRect(painter: Painter, x: number, y: number, width: number, 
 }
 
 export function drawDebug(painter: Painter, tileManager: TileManager, coords: Array<OverscaledTileID>) {
-    for (let i = 0; i < coords.length; i++) {
-        drawDebugTile(painter, tileManager, coords[i]);
+    for (const coord of coords) {
+        drawDebugTile(painter, tileManager, coord);
     }
 }
 

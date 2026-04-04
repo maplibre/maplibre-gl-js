@@ -223,8 +223,7 @@ export function querySourceFeatures(tileManager: TileManager, params: QuerySourc
     const result: GeoJSONFeature[] = [];
 
     const dataTiles = {};
-    for (let i = 0; i < tiles.length; i++) {
-        const tile = tiles[i];
+    for (const tile of tiles) {
         const dataID = tile.tileID.canonical.key;
         if (!dataTiles[dataID]) {
             dataTiles[dataID] = true;

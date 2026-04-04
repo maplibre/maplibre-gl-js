@@ -45,8 +45,8 @@ export function getGeoJSONBounds(data: GeoJSON.GeoJSON): LngLatBounds {
         return bounds;
     }
 
-    for (let i = 0; i < coordinates.length; i++) {
-        const [lng, lat] = coordinates[i];
+    for (const coordinate of coordinates) {
+        const [lng, lat] = coordinate;
 
         bounds.extend([lng, lat]);
     }

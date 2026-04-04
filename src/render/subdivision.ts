@@ -630,9 +630,9 @@ class Subdivider {
      */
     private _convertIndices(vertices: Array<number>, oldIndices: Array<number>): Array<number> {
         const newIndices = [];
-        for (let i = 0; i < oldIndices.length; i++) {
-            const x = vertices[oldIndices[i] * 2];
-            const y = vertices[oldIndices[i] * 2 + 1];
+        for (const oldIndex of oldIndices) {
+            const x = vertices[oldIndex * 2];
+            const y = vertices[oldIndex * 2 + 1];
             newIndices.push(this._vertexToIndex(x, y));
         }
         return newIndices;
@@ -643,8 +643,7 @@ class Subdivider {
      */
     private _pointArrayToIndices(array: Array<Point>): Array<number> {
         const indices = [];
-        for (let i = 0; i < array.length; i++) {
-            const p = array[i];
+        for (const p of array) {
             indices.push(this._vertexToIndex(p.x, p.y));
         }
         return indices;
@@ -844,9 +843,9 @@ function flatten(polygon: Array<Array<Point>>): {
             holeIndices.push(flattened.length / 2);
         }
 
-        for (let i = 0; i < ring.length; i++) {
-            flattened.push(ring[i].x);
-            flattened.push(ring[i].y);
+        for (const vertex of ring) {
+            flattened.push(vertex.x);
+            flattened.push(vertex.y);
         }
     }
 

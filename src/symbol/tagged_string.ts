@@ -187,8 +187,7 @@ export class TaggedString {
 
     static fromFeature(text: Formatted, defaultFontStack: string) {
         const result = new TaggedString();
-        for (let i = 0; i < text.sections.length; i++) {
-            const section = text.sections[i];
+        for (const section of text.sections) {
             if (!section.image) {
                 result.addTextSection(section, defaultFontStack);
             } else {
