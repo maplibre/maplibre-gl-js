@@ -3466,7 +3466,7 @@ export class Map extends Camera {
         if (this._canvasContextAttributes.contextType) {
             gl = this._canvas.getContext(this._canvasContextAttributes.contextType, attributes) as WebGL2RenderingContext | WebGLRenderingContext;
         } else {
-            gl = this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext || this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+            gl = this._canvas.getContext('webgl2', attributes) || this._canvas.getContext('webgl', attributes);
         }
 
         if (!gl) {

@@ -47,7 +47,7 @@ describe('ScaleControl', () => {
         map.addControl(scale);
         map.setZoom(12.5);
 
-        const el = map.getContainer().querySelector(selector) as HTMLElement;
+        const el = map.getContainer().querySelector<HTMLElement>(selector);
         expect(parseFloat(el.style.width) <= maxWidth).toBeTruthy();
     });
 
@@ -174,7 +174,7 @@ describe('ScaleControl', () => {
         const selector = '.maplibregl-ctrl-bottom-left .maplibregl-ctrl-scale';
         map.addControl(scale);
 
-        const el = map.getContainer().querySelector(selector) as HTMLElement;
+        const el = map.getContainer().querySelector<HTMLElement>(selector);
         const width = parseFloat(el.style.width);
         expect(width).toBeLessThanOrEqual(customMaxWidth);
         expect(width).toBeGreaterThan(0);
@@ -187,10 +187,10 @@ describe('ScaleControl', () => {
         map.addControl(scale);
 
         map.setZoom(10);
-        const width1 = parseFloat((map.getContainer().querySelector(selector) as HTMLElement).style.width);
+        const width1 = parseFloat(map.getContainer().querySelector<HTMLElement>(selector).style.width);
 
         map.setZoom(12);
-        const width2 = parseFloat((map.getContainer().querySelector(selector) as HTMLElement).style.width);
+        const width2 = parseFloat(map.getContainer().querySelector<HTMLElement>(selector).style.width);
 
         expect(width1).toBeGreaterThan(0);
         expect(width2).toBeGreaterThan(0);

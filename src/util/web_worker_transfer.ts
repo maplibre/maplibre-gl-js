@@ -188,7 +188,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         // approach for objects whose members include instances of dynamic
         // StructArray types. Once we refactor StructArray to be static,
         // we can remove this complexity.
-        (klass.serialize(input, transferables) as SerializedObject) : {};
+        klass.serialize(input, transferables) : {};
 
     if (!klass.serialize) {
         for (const key in input) {

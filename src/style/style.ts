@@ -74,7 +74,7 @@ import {type Projection} from '../geo/projection/projection';
 import {createProjectionFromName} from '../geo/projection/projection_factory';
 import type {OverscaledTileID} from '../tile/tile_id';
 
-const empty = emptyStyle() as StyleSpecification;
+const empty = emptyStyle();
 /**
  * A feature identifier that is bound to a source
  */

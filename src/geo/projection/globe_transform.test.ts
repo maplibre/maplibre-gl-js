@@ -156,13 +156,13 @@ describe('GlobeTransform', () => {
 
         test('sphere point to coordinate', () => {
             const precisionDigits = 10;
-            let unprojected = sphereSurfacePointToCoordinates([0, 0, 1]) as LngLat;
+            let unprojected = sphereSurfacePointToCoordinates([0, 0, 1]);
             expect(unprojected.lng).toBeCloseTo(0, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(0, precisionDigits);
-            unprojected = sphereSurfacePointToCoordinates([0, 1, 0]) as LngLat;
+            unprojected = sphereSurfacePointToCoordinates([0, 1, 0]);
             expect(unprojected.lng).toBeCloseTo(0, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(90, precisionDigits);
-            unprojected = sphereSurfacePointToCoordinates([1, 0, 0]) as LngLat;
+            unprojected = sphereSurfacePointToCoordinates([1, 0, 0]);
             expect(unprojected.lng).toBeCloseTo(90, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(0, precisionDigits);
         });
