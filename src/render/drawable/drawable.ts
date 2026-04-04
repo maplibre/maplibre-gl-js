@@ -317,9 +317,10 @@ export class Drawable {
                     const shaderName = this.shaderName;
                     const prefix = shaderName === 'line' || shaderName === 'lineSDF' || shaderName === 'lineGradient' || shaderName === 'lineGradientSDF' || shaderName === 'linePattern' ? 'line' :
                         shaderName === 'circle' ? 'circle' :
-                        shaderName === 'fill' || shaderName === 'fillOutline' || shaderName === 'fillPattern' || shaderName === 'fillOutlinePattern' ? 'fill' : '';
+                        shaderName === 'fill' || shaderName === 'fillOutline' || shaderName === 'fillPattern' || shaderName === 'fillOutlinePattern' ? 'fill' :
+                        shaderName === 'fillExtrusion' || shaderName === 'fillExtrusionPattern' ? 'fill-extrusion' : '';
                     const paintProperties = ['color', 'radius', 'blur', 'opacity', 'stroke_color', 'stroke_width', 'stroke_opacity',
-                        'outline_color', 'width', 'gapwidth', 'offset', 'floorwidth'];
+                        'outline_color', 'width', 'gapwidth', 'offset', 'floorwidth', 'base', 'height'];
                     for (const prop of paintProperties) {
                         // Convert shader prop (e.g. 'color') to style prop (e.g. 'fill-color')
                         const styleProp = prefix ? `${prefix}-${prop.replace(/_/g, '-')}` : prop;
@@ -413,10 +414,11 @@ export class Drawable {
                 const canvasFormat = (navigator as any).gpu.getPreferredCanvasFormat();
 
                 const needsStencilClip = this.shaderName === 'fill' || this.shaderName === 'line';
+                const needs3DDepth = this.shaderName === 'fillExtrusion' || this.shaderName === 'fillExtrusionPattern';
                 const depthStencilState: any = {
                     format: 'depth24plus-stencil8',
-                    depthWriteEnabled: false,
-                    depthCompare: 'always',
+                    depthWriteEnabled: needs3DDepth,
+                    depthCompare: needs3DDepth ? 'less-equal' : 'always',
                 };
                 if (needsStencilClip) {
                     depthStencilState.stencilFront = {compare: 'equal', passOp: 'keep', failOp: 'keep', depthFailOp: 'keep'};
