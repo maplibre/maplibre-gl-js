@@ -15,6 +15,7 @@ import {HEATMAP_FULL_RENDER_FBO_KEY} from '../style/style_layer/heatmap_style_la
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import {shaders} from '../shaders/shaders';
 import {UniformBlock} from './drawable/uniform_block';
+import {mat4} from 'gl-matrix';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
@@ -27,10 +28,15 @@ export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: H
         return;
     }
 
-    // WebGPU drawable path: handle both passes in 'translucent'
+    // WebGPU drawable path: offscreen pass renders kernel density,
+    // translucent pass composites with color ramp
     if (painter.device && painter.device.type === 'webgpu') {
-        if (painter.renderPass === 'translucent') {
-            drawHeatmapWebGPU(painter, tileManager, layer, tileIDs);
+        if (painter.renderPass === 'offscreen') {
+            if (!(drawHeatmap as any)._logP1) { (drawHeatmap as any)._logP1 = true; console.warn('[HEATMAP] offscreen pass, tiles:', tileIDs.length); }
+            prepareHeatmapWebGPU(painter, tileManager, layer, tileIDs);
+        } else if (painter.renderPass === 'translucent') {
+            if (!(drawHeatmap as any)._logP2) { (drawHeatmap as any)._logP2 = true; console.warn('[HEATMAP] translucent pass, state:', !!(layer as any)._webgpuHeatmapState); }
+            compositeHeatmapWebGPU(painter, layer);
         }
         return;
     }
@@ -60,11 +66,10 @@ export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: H
 }
 
 /**
- * WebGPU heatmap rendering: two-pass pipeline using WebGPU render targets.
- * Pass 1: Render kernel density to offscreen texture with additive blending.
- * Pass 2: Composite with color ramp to the main render pass.
+ * WebGPU heatmap Pass 1: Render kernel density to offscreen texture.
+ * Called during 'offscreen' render pass (before main render pass starts).
  */
-function drawHeatmapWebGPU(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, tileIDs: Array<OverscaledTileID>) {
+function prepareHeatmapWebGPU(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, tileIDs: Array<OverscaledTileID>) {
     const device = painter.device as any;
     const gpuDevice = device.handle;
     const transform = painter.transform;
@@ -86,10 +91,9 @@ function drawHeatmapWebGPU(painter: Painter, tileManager: TileManager, layer: He
         (layer as any)._webgpuHeatmapState = heatmapState;
     }
 
-    // === Pass 1: Render kernel density to offscreen texture ===
-    // We need a SEPARATE render pass (not the main one) with additive blending
-    const commandEncoder = device.commandEncoder.handle;
-    const offscreenPass = commandEncoder.beginRenderPass({
+    // Create a separate command encoder for offscreen pass
+    const offscreenEncoder = gpuDevice.createCommandEncoder();
+    const offscreenPass = offscreenEncoder.beginRenderPass({
         colorAttachments: [{
             view: heatmapState.texture.createView(),
             clearValue: {r: 0, g: 0, b: 0, a: 0},
@@ -102,7 +106,7 @@ function drawHeatmapWebGPU(painter: Painter, tileManager: TileManager, layer: He
     let pipeline = (painter as any)._heatmapPipeline;
     if (!pipeline) {
         let wgslSource = (shaders as any).heatmapWgsl;
-        if (!wgslSource) { offscreenPass.end(); return; }
+        if (!wgslSource) { offscreenPass.end(); gpuDevice.queue.submit([offscreenEncoder.finish()]); return; }
 
         // Generate VertexInput from a typical heatmap bucket
         // Heatmap has: a_pos (Int16 x2) + optional paint attributes (weight, radius)
@@ -160,8 +164,7 @@ function drawHeatmapWebGPU(painter: Painter, tileManager: TileManager, layer: He
         // Drawable UBO (80 bytes: matrix + extrude_scale + _t factors)
         const drawableUBO = new UniformBlock(80);
         drawableUBO.setMat4(0, projectionData.mainMatrix as Float32Array);
-        const extrudeScale = (fboWidth / painter.width) / pixelsToTileUnits(tile, 1, transform.zoom);
-        drawableUBO.setFloat(64, extrudeScale);
+        drawableUBO.setFloat(64, pixelsToTileUnits(tile, 1, transform.zoom));
 
         // Props UBO (16 bytes: weight + radius + intensity + pad, padded to 32 for WebGPU min)
         const propsUBO = new UniformBlock(32);
@@ -199,8 +202,21 @@ function drawHeatmapWebGPU(painter: Painter, tileManager: TileManager, layer: He
     }
 
     offscreenPass.end();
+    gpuDevice.queue.submit([offscreenEncoder.finish()]);
+}
 
-    // === Pass 2: Composite offscreen texture with color ramp to main render target ===
+/**
+ * WebGPU heatmap Pass 2: Composite offscreen texture with color ramp.
+ * Called during 'translucent' render pass (main render pass is active).
+ */
+function compositeHeatmapWebGPU(painter: Painter, layer: HeatmapStyleLayer) {
+    const device = painter.device as any;
+    const gpuDevice = device.handle;
+    if (!gpuDevice) return;
+
+    const heatmapState = (layer as any)._webgpuHeatmapState;
+    if (!heatmapState) return;
+
     const mainRenderPass = (painter.renderPassWGSL as any)?.handle;
     if (!mainRenderPass) return;
 
@@ -268,10 +284,10 @@ function drawHeatmapWebGPU(painter: Painter, tileManager: TileManager, layer: He
 
     // Create UBO for the composite pass
     const compositeUBO = new UniformBlock(80);
-    // Identity-like ortho matrix for fullscreen quad
-    const ortho = new Float32Array(16);
-    ortho[0] = 2; ortho[5] = -2; ortho[10] = 1; ortho[12] = -1; ortho[13] = 1; ortho[15] = 1;
-    compositeUBO.setMat4(0, ortho);
+    // Ortho matrix: maps [0,width]x[0,height] to clip space (same as GL heatmapTextureUniformValues)
+    const ortho = mat4.create();
+    mat4.ortho(ortho, 0, painter.width, painter.height, 0, 0, 1);
+    compositeUBO.setMat4(0, ortho as Float32Array);
     compositeUBO.setVec2(64, painter.width, painter.height);
     const opacityRaw = layer.paint.get('heatmap-opacity');
     const opacityVal = typeof opacityRaw === 'number' ? opacityRaw : (opacityRaw as any)?.constantOr?.(1) ?? 1;
