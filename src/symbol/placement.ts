@@ -72,7 +72,7 @@ export class RetainedQueryData {
     sourceLayerIndex: number;
     bucketIndex: number;
     tileID: OverscaledTileID;
-    featureSortOrder: Array<number>;
+    featureSortOrder: number[];
     constructor(bucketInstanceId: number,
         featureIndex: FeatureIndex,
         sourceLayerIndex: number,
@@ -203,7 +203,7 @@ export class Placement {
     prevPlacement: Placement;
     zoomAtLastRecencyCheck: number;
     collisionCircleArrays: {
-        [k in any]: Array<number>;
+        [k in any]: number[];
     };
     collisionBoxArrays: Map<number, Map<number, {
         text: number[];
@@ -242,7 +242,7 @@ export class Placement {
         return (x: number, y: number) => terrain.getElevation(tileID, x, y);
     }
 
-    getBucketParts(results: Array<BucketPart>, styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean) {
+    getBucketParts(results: BucketPart[], styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean) {
         const symbolBucket = (tile.getBucket(styleLayer) as SymbolBucket);
         const bucketFeatureIndex = tile.latestFeatureIndex;
         if (!symbolBucket || !bucketFeatureIndex || styleLayer.id !== symbolBucket.layerIds[0])
@@ -1011,7 +1011,7 @@ export class Placement {
         }
     }
 
-    updateLayerOpacities(styleLayer: StyleLayer, tiles: Array<Tile>) {
+    updateLayerOpacities(styleLayer: StyleLayer, tiles: Tile[]) {
         const seenCrossTileIDs = {};
         for (const tile of tiles) {
             const symbolBucket = tile.getBucket(styleLayer) as SymbolBucket;
@@ -1282,7 +1282,7 @@ export class Placement {
     }
 }
 
-function updateCollisionVertices(collisionVertexArray: CollisionVertexArray, placed: boolean, notUsed: boolean | number, realBox: Array<number>, shiftX?: number, shiftY?: number) {
+function updateCollisionVertices(collisionVertexArray: CollisionVertexArray, placed: boolean, notUsed: boolean | number, realBox: number[], shiftX?: number, shiftY?: number) {
     if (!realBox || realBox.length === 0) {
         realBox = [0, 0, 0, 0];
     }

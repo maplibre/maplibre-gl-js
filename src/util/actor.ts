@@ -60,7 +60,7 @@ export class Actor implements IActor {
     resolveRejects: { [x: string]: ResolveReject};
     name: string;
     tasks: { [x: string]: MessageData };
-    taskQueue: Array<string>;
+    taskQueue: string[];
     abortControllers: { [x: number | string]: AbortController };
     invoker: ThrottledInvoker;
     globalScope: ActorTarget;
@@ -132,7 +132,7 @@ export class Actor implements IActor {
                 }
             };
 
-            const buffers: Array<Transferable> = [];
+            const buffers: Transferable[] = [];
             const messageToPost: MessageData = {
                 ...message,
                 id,
@@ -244,7 +244,7 @@ export class Actor implements IActor {
     }
 
     completeTask(id: string, err: Error, data?: RequestResponseMessageMap[MessageType][1]) {
-        const buffers: Array<Transferable> = [];
+        const buffers: Transferable[] = [];
         delete this.abortControllers[id];
         const responseMessage: MessageData = {
             id,

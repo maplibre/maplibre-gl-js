@@ -578,7 +578,7 @@ export class Map extends Camera {
     _crossFadingFactor = 1;
     _collectResourceTiming: boolean;
     _renderTaskQueue = new TaskQueue();
-    _controls: Array<IControl> = [];
+    _controls: IControl[] = [];
     _mapId = uniqueId();
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
@@ -2746,7 +2746,7 @@ export class Map extends Camera {
      * let allImages = map.listImages();
      * ```
      */
-    listImages(): Array<string> {
+    listImages(): string[] {
         return this.style.listImages();
     }
 
@@ -3104,7 +3104,7 @@ export class Map extends Camera {
      *
      * @returns style's sprite list of id-url pairs
      */
-    getSprite(): {id: string; url: string}[] {
+    getSprite(): Array<{id: string; url: string}> {
         return this.style.getSprite();
     }
 

@@ -60,7 +60,7 @@ type SymbolTileRenderState = {
 
 const identityMat4 = mat4.identity(new Float32Array(16));
 
-export function drawSymbols(painter: Painter, tileManager: TileManager, layer: SymbolStyleLayer, coords: Array<OverscaledTileID>, variableOffsets: {
+export function drawSymbols(painter: Painter, tileManager: TileManager, layer: SymbolStyleLayer, coords: OverscaledTileID[], variableOffsets: {
     [_ in CrossTileID]: VariableOffset;
 }, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
@@ -127,7 +127,7 @@ function calculateVariableRenderShift(
     );
 }
 
-function updateVariableAnchors(coords: Array<OverscaledTileID>,
+function updateVariableAnchors(coords: OverscaledTileID[],
     painter: Painter,
     layer:SymbolStyleLayer, tileManager: TileManager,
     rotationAlignment: SymbolLayerSpecification['layout']['text-rotation-alignment'],
@@ -296,7 +296,7 @@ function drawLayerSymbols(
     painter: Painter,
     tileManager: TileManager,
     layer: SymbolStyleLayer,
-    coords: Array<OverscaledTileID>,
+    coords: OverscaledTileID[],
     isText: boolean,
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
@@ -326,7 +326,7 @@ function drawLayerSymbols(
 
     const hasVariablePlacement = layer._unevaluatedLayout.hasValue('text-variable-anchor') || layer._unevaluatedLayout.hasValue('text-variable-anchor-offset');
 
-    const tileRenderState: Array<SymbolTileRenderState> = [];
+    const tileRenderState: SymbolTileRenderState[] = [];
 
     const pitchedTextRescaling = transform.getCircleRadiusCorrection();
 

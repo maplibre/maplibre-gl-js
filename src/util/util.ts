@@ -274,7 +274,7 @@ export function lerp(a: number, b: number, mix: number): number {
  * For a given collection of 2D points, returns their axis-aligned bounding box,
  * in the format [minX, minY, maxX, maxY].
  */
-export function getAABB(points: Array<Point>): [number, number, number, number] {
+export function getAABB(points: Point[]): [number, number, number, number] {
     let tlX = Infinity;
     let tlY = Infinity;
     let brX = -Infinity;
@@ -304,7 +304,7 @@ export function getEdgeTiles(tileIDs: OverscaledTileID[]): Set<OverscaledTileID>
     let minY = Infinity, maxY = -Infinity;
 
     // project all tiles to targetZ while maintaining the reference to the original tile
-    const projected: {id: OverscaledTileID; x: number; y: number}[] = [];
+    const projected: Array<{id: OverscaledTileID; x: number; y: number}> = [];
     for (const id of tileIDs) {
         const {x, y, z} = id.canonical;
         const scale = Math.pow(2, targetZ - z);
@@ -400,7 +400,7 @@ export function wrap(n: number, min: number, max: number): number {
 export function keysDifference<S, T>(
     obj: {[key: string]: S},
     other: {[key: string]: T}
-): Array<string> {
+): string[] {
     const difference = [];
     for (const i in obj) {
         if (!(i in other)) {
@@ -422,8 +422,8 @@ export function keysDifference<S, T>(
 export function extend<T extends {}, U>(dest: T, source: U): T & U;
 export function extend<T extends {}, U, V>(dest: T, source1: U, source2: V): T & U & V;
 export function extend<T extends {}, U, V, W>(dest: T, source1: U, source2: V, source3: W): T & U & V & W;
-export function extend(dest: object, ...sources: Array<any>): any;
-export function extend(dest: object, ...sources: Array<any>): any {
+export function extend(dest: object, ...sources: any[]): any;
+export function extend(dest: object, ...sources: any[]): any {
     for (const src of sources) {
         for (const k in src) {
             dest[k] = src[k];
@@ -580,7 +580,7 @@ export function clone<T>(input: T): T {
 /**
  * Check if two arrays have at least one common element.
  */
-export function arraysIntersect<T>(a: Array<T>, b: Array<T>): boolean {
+export function arraysIntersect<T>(a: T[], b: T[]): boolean {
     for (const element of a) {
         if (b.includes(element)) return true;
     }
@@ -1116,9 +1116,9 @@ export type TileJSON = {
     version?: string;
     attribution?: string;
     template?: string;
-    tiles: Array<string>;
-    grids?: Array<string>;
-    data?: Array<string>;
+    tiles: string[];
+    grids?: string[];
+    data?: string[];
     minzoom?: number;
     maxzoom?: number;
     bounds?: [number, number, number, number];

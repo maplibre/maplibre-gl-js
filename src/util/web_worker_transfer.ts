@@ -14,7 +14,7 @@ type SerializedObject<S extends Serialized = any> = {
 /**
  * All the possible values that can be serialized and sent to and from the worker
  */
-export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | ImageBitmap | Blob | Array<Serialized> | SerializedObject;
+export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | ImageBitmap | Blob | Serialized[] | SerializedObject;
 
 type Registry = {
     [_: string]: {
@@ -23,8 +23,8 @@ type Registry = {
             deserialize?: (input: Serialized) => unknown;
             serialize?: (input: any, transferables: Transferable[]) => SerializedObject;
         };
-        omit: ReadonlyArray<string>;
-        shallow: ReadonlyArray<string>;
+        omit: readonly string[];
+        shallow: readonly string[];
     };
 };
 
@@ -63,8 +63,8 @@ export function register<T extends any>(
     });
     registry[name] = {
         klass,
-        omit: options.omit as ReadonlyArray<string> || [],
-        shallow: options.shallow as ReadonlyArray<string> || []
+        omit: options.omit as readonly string[] || [],
+        shallow: options.shallow as readonly string[] || []
     };
 }
 
@@ -140,7 +140,7 @@ function isSerializeHandledByBuiltin(input: unknown) {
  * any ArrayBuffers or ArrayBuffer views) to the list. (If a copy is needed,
  * this should happen in the client code, before using serialize().)
  */
-export function serialize(input: unknown, transferables?: Array<Transferable> | null): Serialized {
+export function serialize(input: unknown, transferables?: Transferable[] | null): Serialized {
     if (isSerializeHandledByBuiltin(input)) {
         if (isArrayBuffer(input) || isImageBitmap(input)) {
             if (transferables) {
@@ -161,7 +161,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
     }
 
     if (Array.isArray(input)) {
-        const serialized: Array<Serialized> = [];
+        const serialized: Serialized[] = [];
         for (const item of input) {
             serialized.push(serialize(item, transferables));
         }

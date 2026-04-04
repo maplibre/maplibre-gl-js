@@ -20,7 +20,7 @@ import type {ProjectionData} from '../geo/projection/projection_data';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
 
-function getTokenizedAttributesAndUniforms(array: Array<string>): Array<string> {
+function getTokenizedAttributesAndUniforms(array: string[]): string[] {
     const result = [];
 
     for (const entry of array) {
@@ -42,7 +42,7 @@ export class Program<Us extends UniformBindings> {
     fixedUniforms: Us;
     terrainUniforms: TerrainPreludeUniformsType;
     projectionUniforms: ProjectionPreludeUniformsType;
-    binderUniforms: Array<BinderUniform>;
+    binderUniforms: BinderUniform[];
     failedToCreate: boolean;
 
     constructor(context: Context,
@@ -53,7 +53,7 @@ export class Program<Us extends UniformBindings> {
         hasTerrain: boolean,
         projectionPrelude: PreparedShader,
         projectionDefine: string,
-        extraDefines: Array<string> = []) {
+        extraDefines: string[] = []) {
 
         const gl = context.gl;
         this.program = gl.createProgram();

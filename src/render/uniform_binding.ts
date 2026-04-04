@@ -113,13 +113,13 @@ class UniformColor extends Uniform<Color> {
     }
 }
 
-class UniformColorArray extends Uniform<Array<Color>> {
+class UniformColorArray extends Uniform<Color[]> {
     constructor(context: Context, location: WebGLUniformLocation) {
         super(context, location);
         this.current = new Array<Color>();
     }
 
-    set(v: Array<Color>): void {
+    set(v: Color[]): void {
         if (v != this.current) {
             this.current = v;
             const values = new Float32Array(v.length*4);
@@ -134,13 +134,13 @@ class UniformColorArray extends Uniform<Array<Color>> {
     }
 }
 
-class UniformFloatArray extends Uniform<Array<number>> {
+class UniformFloatArray extends Uniform<number[]> {
     constructor(context: Context, location: WebGLUniformLocation) {
         super(context, location);
         this.current = new Array<number>();
     }
 
-    set(v: Array<number>): void {
+    set(v: number[]): void {
         if (v != this.current) {
             this.current = v;
             const values = new Float32Array(v);

@@ -29,7 +29,7 @@ export const KDBUSH_THRESHHOLD = 128;
 
 interface SymbolsByKeyEntry {
     index?: KDBush;
-    positions?: {x: number; y: number}[];
+    positions?: Array<{x: number; y: number}>;
     crossTileIDs: number[];
 }
 
@@ -316,7 +316,7 @@ export class CrossTileSymbolIndex {
         this.bucketsInCurrentPlacement = {};
     }
 
-    addLayer(styleLayer: StyleLayer, tiles: Array<Tile>, lng: number) {
+    addLayer(styleLayer: StyleLayer, tiles: Tile[], lng: number) {
         let layerIndex = this.layerIndexes[styleLayer.id];
         if (layerIndex === undefined) {
             layerIndex = this.layerIndexes[styleLayer.id] = new CrossTileSymbolLayerIndex();
@@ -349,7 +349,7 @@ export class CrossTileSymbolIndex {
         return symbolBucketsChanged;
     }
 
-    pruneUnusedLayers(usedLayers: Array<string>) {
+    pruneUnusedLayers(usedLayers: string[]) {
         const usedLayerMap = {};
         for (const usedLayer of usedLayers) {
             usedLayerMap[usedLayer] = true;

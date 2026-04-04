@@ -8,7 +8,7 @@ import type {
 } from '../bucket';
 import {type PossiblyEvaluated} from '../../style/properties';
 
-type PatternStyleLayers = Array<LineStyleLayer> | Array<FillStyleLayer> | Array<FillExtrusionStyleLayer>;
+type PatternStyleLayers = LineStyleLayer[] | FillStyleLayer[] | FillExtrusionStyleLayer[];
 
 export function hasPattern(type: string, layers: PatternStyleLayers, options: PopulateParameters) {
     const patterns = options.patternDependencies;

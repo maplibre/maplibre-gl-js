@@ -11,7 +11,7 @@ import * as regenerate from 'regenerate';
  */
 const unicodeVersion = '17.0.0';
 
-async function createSet(blocks: Array<string>, scripts: Array<string>): Promise<regenerate.regenerate> {
+async function createSet(blocks: string[], scripts: string[]): Promise<regenerate.regenerate> {
     const set = regenerate.default();
 
     for (const block of blocks) {

@@ -37,7 +37,7 @@ export type QueryIntersectsFeatureParams = {
      * The geometry to check intersection with.
      * This geometry is in tile coordinates.
      */
-    queryGeometry: Array<Point>;
+    queryGeometry: Point[];
     /**
      * The feature to allow expression evaluation.
      */
@@ -50,7 +50,7 @@ export type QueryIntersectsFeatureParams = {
      * The geometry of the feature.
      * This geometry is in tile coordinates.
      */
-    geometry: Array<Array<Point>>;
+    geometry: Point[][];
     /**
      * The current zoom level.
      */
@@ -338,7 +338,7 @@ export abstract class StyleLayer extends Evented {
         this._evaluatedVisibility = this._visibilityExpression.evaluate();
     }
 
-    recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {
+    recalculate(parameters: EvaluationParameters, availableImages: string[]) {
         if (parameters.getCrossfadeParameters) {
             this._crossfadeParameters = parameters.getCrossfadeParameters();
         }

@@ -34,7 +34,7 @@ export class RenderToTexture {
      * coordsAscending contains a list of all tiles which should be rendered for one render-to-texture tile
      * e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
      */
-    _coordsAscending: {[_: string]: {[_:string]: Array<OverscaledTileID>}};
+    _coordsAscending: {[_: string]: {[_:string]: OverscaledTileID[]}};
     /**
      * fingerprint string representing the unique state of source tiles and revision
      * for a given render-to-texture tile. Used to detect changes and trigger re-rendering.
@@ -47,7 +47,7 @@ export class RenderToTexture {
      * every stylesheet can have multiple stacks. A new stack is created if layers which should
      * not rendered to texture sit between layers which should rendered to texture. e.g. hillshading or symbols
      */
-    _stacks: Array<Array<string>>;
+    _stacks: string[][];
     /**
      * remember the previous processed layer to check if a new stack is needed
      */
@@ -55,15 +55,15 @@ export class RenderToTexture {
     /**
      * a list of tiles that can potentially rendered
      */
-    _renderableTiles: Array<Tile>;
+    _renderableTiles: Tile[];
     /**
      * a list of tiles that should be rendered to screen in the next render-call
      */
-    _rttTiles: Array<Tile>;
+    _rttTiles: Tile[];
     /**
      * a list of all layer-ids which should be rendered
      */
-    _renderableLayerIds: Array<string>;
+    _renderableLayerIds: string[];
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;

@@ -89,7 +89,7 @@ export class Painter {
     transform: IReadonlyTransform;
     renderToTexture: RenderToTexture;
     _tileTextures: {
-        [_: number]: Array<Texture>;
+        [_: number]: Texture[];
     };
     numSublayers: number;
     depthEpsilon: number;
@@ -267,7 +267,7 @@ export class Painter {
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }
 
-    _renderTileClippingMasks(layer: StyleLayer, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean) {
+    _renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean) {
         if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs?.length) {
             return;
         }
@@ -301,7 +301,7 @@ export class Painter {
         this._tileClippingMaskIDs = stencilRefs;
     }
 
-    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean, useBorders: boolean) {
+    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: OverscaledTileID[], renderToTexture: boolean, useBorders: boolean) {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.projection;
@@ -385,9 +385,9 @@ export class Painter {
      * values.
      * Returns [StencilMode for tile overscaleZ map, sortedCoords].
      */
-    getStencilConfigForOverlapAndUpdateStencilID(tileIDs: Array<OverscaledTileID>): [{
+    getStencilConfigForOverlapAndUpdateStencilID(tileIDs: OverscaledTileID[]): [{
         [_: number]: Readonly<StencilMode>;
-    }, Array<OverscaledTileID>] {
+    }, OverscaledTileID[]] {
         const gl = this.context.gl;
         const coords = tileIDs.sort((a, b) => b.overscaledZ - a.overscaledZ);
         const minTileZ = coords[coords.length - 1].overscaledZ;
@@ -407,10 +407,10 @@ export class Painter {
         return [{[minTileZ]: StencilMode.disabled}, coords];
     }
 
-    stencilConfigForOverlapTwoPass(tileIDs: Array<OverscaledTileID>): [
+    stencilConfigForOverlapTwoPass(tileIDs: OverscaledTileID[]): [
         { [_: number]: Readonly<StencilMode> }, // borderless tiles - high priority & high stencil values
         { [_: number]: Readonly<StencilMode> }, // tiles with border - low priority
-        Array<OverscaledTileID>
+        OverscaledTileID[]
     ] {
         const gl = this.context.gl;
         const coords = tileIDs.sort((a, b) => b.overscaledZ - a.overscaledZ);
@@ -492,9 +492,9 @@ export class Painter {
         const layerIds = this.style._order;
         const tileManagers = this.style.tileManagers;
 
-        const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
-        const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
-        const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
+        const coordsAscending: {[_: string]: OverscaledTileID[]} = {};
+        const coordsDescending: {[_: string]: OverscaledTileID[]} = {};
+        const coordsDescendingSymbol: {[_: string]: OverscaledTileID[]} = {};
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection?.transitionState > 0};
 
         for (const id in tileManagers) {
@@ -655,7 +655,7 @@ export class Painter {
         drawCoords(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
@@ -725,7 +725,7 @@ export class Painter {
      * False by default. Use true when drawing with a simple projection matrix is desired, eg. when drawing a fullscreen quad.
      * @returns
      */
-    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false, defines: Array<string> = []): Program<any> {
+    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false, defines: string[] = []): Program<any> {
         this.cache = this.cache || {};
         const useTerrain = !!this.style.map.terrain;
 

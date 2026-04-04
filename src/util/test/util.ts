@@ -213,7 +213,7 @@ export function createStyle(): StyleSpecification {
     };
 }
 
-export function expectToBeCloseToArray(actual: Array<number>, expected: Array<number>, precision?: number) {
+export function expectToBeCloseToArray(actual: number[], expected: number[], precision?: number) {
     expect(actual).toHaveLength(expected.length);
     for (let i = 0; i < expected.length; i++) {
         expect(actual[i]).toBeCloseTo(expected[i], precision);

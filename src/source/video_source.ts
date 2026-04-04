@@ -53,7 +53,7 @@ import type {VideoSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
  */
 export class VideoSource extends ImageSource {
     options: VideoSourceSpecification;
-    urls: Array<string>;
+    urls: string[];
     video: HTMLVideoElement;
     roundZoom: boolean;
 

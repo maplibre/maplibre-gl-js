@@ -27,7 +27,7 @@ export type GetClusterLeavesParams = ClusterIDAndSource & { limit: number; offse
  * The result of the call to load a geojson source
  */
 export type GeoJSONWorkerSourceLoadDataResult = {
-    resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
+    resourceTiming?: {[_: string]: PerformanceResourceTiming[]};
     abandoned?: boolean;
     data?: GeoJSON.GeoJSON;
 };
@@ -44,15 +44,15 @@ export type RemoveSourceParams = {
  * Parameters needed to update the layers
  */
 export type UpdateLayersParameters = {
-    layers: Array<LayerSpecification>;
-    removedIds: Array<string>;
+    layers: LayerSpecification[];
+    removedIds: string[];
 };
 
 /**
  * Parameters needed to get the images
  */
 export type GetImagesParameters = {
-    icons: Array<string>;
+    icons: string[];
     source: string;
     tileID: OverscaledTileID;
     type: string;
@@ -63,7 +63,7 @@ export type GetImagesParameters = {
  */
 export type GetGlyphsParameters = {
     type: string;
-    stacks: {[_: string]: Array<number>};
+    stacks: {[_: string]: number[]};
     source: string;
     tileID: OverscaledTileID;
 };
@@ -87,7 +87,7 @@ export type GetImagesResponse = {[_: string]: StyleImage};
  */
 export type GetDashesParameters = {
     dashes: {[key: string]: {
-        dasharray: Array<number>;
+        dasharray: number[];
         round: boolean;
     };};
 };
@@ -133,8 +133,8 @@ export const enum MessageType {
 export type RequestResponseMessageMap = {
     [MessageType.loadDEMTile]: [WorkerDEMTileParameters, DEMData];
     [MessageType.getClusterExpansionZoom]: [ClusterIDAndSource, number];
-    [MessageType.getClusterChildren]: [ClusterIDAndSource, Array<GeoJSON.Feature>];
-    [MessageType.getClusterLeaves]: [GetClusterLeavesParams, Array<GeoJSON.Feature>];
+    [MessageType.getClusterChildren]: [ClusterIDAndSource, GeoJSON.Feature[]];
+    [MessageType.getClusterLeaves]: [GetClusterLeavesParams, GeoJSON.Feature[]];
     [MessageType.loadData]: [LoadGeoJSONParameters, GeoJSONWorkerSourceLoadDataResult];
     [MessageType.loadTile]: [WorkerTileParameters, WorkerTileResult];
     [MessageType.reloadTile]: [WorkerTileParameters, WorkerTileResult];
@@ -142,7 +142,7 @@ export type RequestResponseMessageMap = {
     [MessageType.getImages]: [GetImagesParameters, GetImagesResponse];
     [MessageType.setImages]: [string[], void];
     [MessageType.updateGlobalState]: [Record<string, any>, void];
-    [MessageType.setLayers]: [Array<LayerSpecification>, void];
+    [MessageType.setLayers]: [LayerSpecification[], void];
     [MessageType.updateLayers]: [UpdateLayersParameters, void];
     [MessageType.syncRTLPluginState]: [PluginState, PluginState];
     [MessageType.setReferrer]: [string, void];

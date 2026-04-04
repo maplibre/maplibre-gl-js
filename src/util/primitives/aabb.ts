@@ -26,12 +26,12 @@ export class Aabb implements IBoundingVolume {
         return new Aabb(qMin, qMax);
     }
 
-    distanceX(point: Array<number>): number {
+    distanceX(point: number[]): number {
         const pointOnAabb = Math.max(Math.min(this.max[0], point[0]), this.min[0]);
         return pointOnAabb - point[0];
     }
 
-    distanceY(point: Array<number>): number {
+    distanceY(point: number[]): number {
         const pointOnAabb = Math.max(Math.min(this.max[1], point[1]), this.min[1]);
         return pointOnAabb - point[1];
     }

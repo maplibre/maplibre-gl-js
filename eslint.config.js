@@ -65,6 +65,7 @@ export default [
             '@typescript-eslint/no-unnecessary-type-assertion': 'error',
             '@typescript-eslint/prefer-includes': 'error',
             '@typescript-eslint/prefer-string-starts-ends-with': 'error',
+            '@typescript-eslint/array-type': ['error', {default: 'array-simple'}],
 
             '@stylistic/member-delimiter-style': ['error'],
             'no-useless-constructor': 'off',

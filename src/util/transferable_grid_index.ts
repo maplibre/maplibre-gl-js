@@ -196,7 +196,7 @@ export class TransferableGridIndex {
         return array.buffer;
     }
 
-    public static serialize(grid: TransferableGridIndex, transferables?: Array<Transferable>): SerializedGrid {
+    public static serialize(grid: TransferableGridIndex, transferables?: Transferable[]): SerializedGrid {
         const buffer = grid.toArrayBuffer();
         if (transferables) {
             transferables.push(buffer);

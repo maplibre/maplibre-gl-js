@@ -35,7 +35,7 @@ export function translateDistance(translate: [number, number]) {
  * @param pixelsToTileUnits - The scale factor from pixels to tile units
  * @returns the translated geometry in tile coordinates
  */
-export function translate(queryGeometry: Array<Point>,
+export function translate(queryGeometry: Point[],
     translate: [number, number],
     translateAnchor: 'viewport' | 'map',
     bearing: number,
@@ -59,8 +59,8 @@ export function translate(queryGeometry: Array<Point>,
 /**
  * Filter out consecutive duplicate points from a line
  */
-function _stripDuplicates(ring: Array<Point>): Array<Point> {
-    const filteredRing: Array<Point> = [];
+function _stripDuplicates(ring: Point[]): Point[] {
+    const filteredRing: Point[] = [];
     for (let index = 0; index < ring.length; index++) {
         const point = ring[index];
         const prevPoint = filteredRing.at(-1);
@@ -71,11 +71,11 @@ function _stripDuplicates(ring: Array<Point>): Array<Point> {
     return filteredRing;
 }
 
-export function offsetLine(rings: Array<Array<Point>>, offset: number) {
-    const newRings: Array<Array<Point>> = [];
+export function offsetLine(rings: Point[][], offset: number) {
+    const newRings: Point[][] = [];
     for (const rawRing of rings) {
         const ring = _stripDuplicates(rawRing);
-        const newRing: Array<Point> = [];
+        const newRing: Point[] = [];
         for (let index = 0; index < ring.length; index++) {
             const point = ring[index];
             const prevPoint = ring[index - 1];
@@ -98,7 +98,7 @@ export function offsetLine(rings: Array<Array<Point>>, offset: number) {
 }
 
 type CircleIntersectionTestParams = {
-    queryGeometry: Array<Point>;
+    queryGeometry: Point[];
     size: number;
     transform: IReadonlyTransform;
     unwrappedTileID: UnwrappedTileID;
@@ -161,7 +161,7 @@ function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrapped
     );
 }
 
-export function projectQueryGeometry(queryGeometry: Array<Point>, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)) {
+export function projectQueryGeometry(queryGeometry: Point[], transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)) {
     return queryGeometry.map((p) => {
         return projectPoint(p, transform, unwrappedTileID, getElevation);
     });

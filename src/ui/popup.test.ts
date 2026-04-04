@@ -396,6 +396,7 @@ describe('popup', () => {
         ['left',         new Point(10, containerHeight / 2),                    'translate(0,-50%) translate(10px,0px)'],
         ['bottom',       new Point(containerWidth / 2, containerHeight / 2),    'translate(-50%,-100%) translate(0px,-10px)']
     ] as const satisfies readonly [PositionAnchor, Point, string][];
+
     const anchorCases = cases.map(([anchor, point]) => [anchor, point] as const);
     test.each(anchorCases)(
         'Popup automatically anchors to %s',

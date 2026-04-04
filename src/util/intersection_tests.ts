@@ -4,11 +4,11 @@ import Point from '@mapbox/point-geometry';
 
 export {polygonIntersectsBufferedPoint, polygonIntersectsMultiPolygon, polygonIntersectsBufferedMultiLine, polygonIntersectsPolygon, distToSegmentSquared, polygonIntersectsBox};
 
-type Line = Array<Point>;
-type MultiLine = Array<Line>;
-type Ring = Array<Point>;
-type Polygon = Array<Point>;
-type MultiPolygon = Array<Polygon>;
+type Line = Point[];
+type MultiLine = Line[];
+type Ring = Point[];
+type Polygon = Point[];
+type MultiPolygon = Polygon[];
 
 function polygonIntersectsPolygon(polygonA: Polygon, polygonB: Polygon) {
     for (const point of polygonA) {
@@ -126,7 +126,7 @@ function distToSegmentSquared(p: Point, v: Point, w: Point) {
 }
 
 // point in polygon ray casting algorithm
-function multiPolygonContainsPoint(rings: Array<Ring>, p: Point) {
+function multiPolygonContainsPoint(rings: Ring[], p: Point) {
     let c = false,
         ring, p1, p2;
 
@@ -184,7 +184,7 @@ function polygonIntersectsBox(ring: Ring, boxX1: number, boxY1: number, boxX2: n
     return false;
 }
 
-function edgeIntersectsBox(e1: Point, e2: Point, corners: Array<Point>) {
+function edgeIntersectsBox(e1: Point, e2: Point, corners: Point[]) {
     const tl = corners[0];
     const br = corners[2];
     // the edge and box do not intersect in either the x or y dimensions

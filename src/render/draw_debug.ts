@@ -59,7 +59,7 @@ function drawDebugSSRect(painter: Painter, x: number, y: number, width: number, 
     gl.disable(gl.SCISSOR_TEST);
 }
 
-export function drawDebug(painter: Painter, tileManager: TileManager, coords: Array<OverscaledTileID>) {
+export function drawDebug(painter: Painter, tileManager: TileManager, coords: OverscaledTileID[]) {
     for (const coord of coords) {
         drawDebugTile(painter, tileManager, coord);
     }

@@ -28,11 +28,11 @@ export function fillLargeMeshArrays(
     segmentsTriangles: SegmentVector,
     vertexArray: StructArray,
     triangleIndexArray: TriangleIndexArray,
-    flattened: Array<number>,
-    triangleIndices: Array<number>,
+    flattened: number[],
+    triangleIndices: number[],
     segmentsLines?: SegmentVector,
     lineIndexArray?: LineIndexArray,
-    lineList?: Array<Array<number>>) {
+    lineList?: number[][]) {
 
     const numVertices = flattened.length / 2;
     const hasLines = segmentsLines && lineIndexArray && lineList;
@@ -119,8 +119,8 @@ export function fillLargeMeshArrays(
  * @returns Index of the vertex in the final vertex array.
  */
 function copyOrReuseVertex(
-    actualVertexIndices: Array<number>,
-    flattened: Array<number>,
+    actualVertexIndices: number[],
+    flattened: number[],
     addVertex: (x: number, y: number) => void,
     totalVerticesCreated: {count: number},
     oldIndex: number,
@@ -143,12 +143,12 @@ function fillSegmentsTriangles(
     segmentsTriangles: SegmentVector,
     vertexArray: StructArray,
     triangleIndexArray: TriangleIndexArray,
-    flattened: Array<number>,
-    triangleIndices: Array<number>,
+    flattened: number[],
+    triangleIndices: number[],
     addVertex: (x: number, y: number) => void
 ) {
     // Array, or rather a map of [vertex index in the original data] -> index of the latest copy of this vertex in the final vertex buffer.
-    const actualVertexIndices: Array<number> = [];
+    const actualVertexIndices: number[] = [];
     for (let i = 0; i < flattened.length / 2; i++) {
         actualVertexIndices.push(-1);
     }
@@ -205,12 +205,12 @@ function fillSegmentsLines(
     segmentsLines: SegmentVector,
     vertexArray: StructArray,
     lineIndexArray: LineIndexArray,
-    flattened: Array<number>,
-    lineList: Array<Array<number>>,
+    flattened: number[],
+    lineList: number[][],
     addVertex: (x: number, y: number) => void
 ) {
     // Array, or rather a map of [vertex index in the original data] -> index of the latest copy of this vertex in the final vertex buffer.
-    const actualVertexIndices: Array<number> = [];
+    const actualVertexIndices: number[] = [];
     for (let i = 0; i < flattened.length / 2; i++) {
         actualVertexIndices.push(-1);
     }

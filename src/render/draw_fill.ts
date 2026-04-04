@@ -17,7 +17,7 @@ import type {OverscaledTileID} from '../tile/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
 
-export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
 
@@ -61,7 +61,7 @@ function drawFillTiles(
     painter: Painter,
     tileManager: TileManager,
     layer: FillStyleLayer,
-    coords: Array<OverscaledTileID>,
+    coords: OverscaledTileID[],
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
     isOutline: boolean,

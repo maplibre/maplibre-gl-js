@@ -267,7 +267,7 @@ export class MercatorTransform implements ITransform {
     public get inverseProjectionMatrix(): mat4 { return this._invProjMatrix; }
     public get mercatorMatrix(): mat4 { return this._mercatorMatrix; } // Not part of ITransform interface
 
-    getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID> {
+    getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
         const result = [new UnwrappedTileID(0, tileID)];
         if (this._helper._renderWorldCopies) {
             const utl = this.screenPointToMercatorCoordinate(new Point(0, 0));
@@ -790,7 +790,7 @@ export class MercatorTransform implements ITransform {
         };
     }
 
-    populateCache(coords: Array<OverscaledTileID>): void {
+    populateCache(coords: OverscaledTileID[]): void {
         for (const coord of coords) {
             // Return value is thrown away, but this function will still
             // place the pos matrix into the transform's internal cache.

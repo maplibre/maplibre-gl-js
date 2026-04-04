@@ -134,7 +134,7 @@ function evaluateBreak(
     breakIndex: number,
     breakX: number,
     targetWidth: number,
-    potentialBreaks: Array<Break>,
+    potentialBreaks: Break[],
     penalty: number,
     isLastBreak: boolean
 ): Break {
@@ -164,7 +164,7 @@ function evaluateBreak(
     };
 }
 
-function leastBadBreaks(lastLineBreak?: Break | null): Array<number> {
+function leastBadBreaks(lastLineBreak?: Break | null): number[] {
     if (!lastLineBreak) {
         return [];
     }
@@ -173,12 +173,12 @@ function leastBadBreaks(lastLineBreak?: Break | null): Array<number> {
 
 export class TaggedString {
     text: string;
-    sections: Array<SectionOptions>;
+    sections: SectionOptions[];
     /** Maps each character in `text` to its corresponding entry in `sections`. */
-    sectionIndex: Array<number>;
+    sectionIndex: number[];
     imageSectionID: number | null;
 
-    constructor(text: string = '', sections: Array<SectionOptions> = [], sectionIndex: Array<number> = []) {
+    constructor(text: string = '', sections: SectionOptions[] = [], sectionIndex: number[] = []) {
         this.text = text;
         this.sections = sections;
         this.sectionIndex = sectionIndex;
@@ -326,7 +326,7 @@ export class TaggedString {
         },
         imagePositions: {[_: string]: ImagePosition},
         layoutTextSize: number
-    ): Array<number> {
+    ): number[] {
         const potentialLineBreaks = [];
         const targetWidth = this.determineAverageLineWidth(spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
 

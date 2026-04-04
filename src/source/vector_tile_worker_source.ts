@@ -31,11 +31,11 @@ export type LoadVectorTileResult = {
 export class VectorTileWorkerSource implements WorkerSource {
     actor: IActor;
     layerIndex: StyleLayerIndex;
-    availableImages: Array<string>;
+    availableImages: string[];
     tileState: WorkerTileState;
     overzoomedTileResultCache: BoundedLRUCache<string, LoadVectorTileResult>;
 
-    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>) {
+    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[]) {
         this.actor = actor;
         this.layerIndex = layerIndex;
         this.availableImages = availableImages;

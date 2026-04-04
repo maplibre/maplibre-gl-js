@@ -219,7 +219,7 @@ export class Style extends Evented {
     _spriteRequest: AbortController;
     _layers: {[_: string]: StyleLayer};
     _serializedLayers: {[_: string]: LayerSpecification};
-    _order: Array<string>;
+    _order: string[];
     tileManagers: {[_: string]: TileManager};
     zoomHistory: ZoomHistory;
     _loaded: boolean;
@@ -234,7 +234,7 @@ export class Style extends Evented {
     // image ids of images loaded from style's sprite
     _spritesImagesIds: {[spriteId: string]: string[]};
     // image ids of all images loaded (sprite + user)
-    _availableImages: Array<string>;
+    _availableImages: string[];
     _globalState: Record<string, any>;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     pauseablePlacement: PauseablePlacement;
@@ -642,7 +642,7 @@ export class Style extends Evented {
      * @param returnClone - if true, return a clone of the layer object
      * @returns generated result
      */
-    private _serializeByIds(ids: Array<string>, returnClone: boolean = false): Array<LayerSpecification> {
+    private _serializeByIds(ids: string[], returnClone: boolean = false): LayerSpecification[] {
 
         const serializedLayersDictionary = this._serializedAllLayers();
         if (!ids || ids.length === 0) {
@@ -831,7 +831,7 @@ export class Style extends Evented {
         }
     }
 
-    _updateWorkerLayers(updatedIds: Array<string>, removedIds: Array<string>) {
+    _updateWorkerLayers(updatedIds: string[], removedIds: string[]) {
         this.dispatcher.broadcast(MessageType.updateLayers, {
             layers: this._serializeByIds(updatedIds, false),
             removedIds
@@ -896,7 +896,7 @@ export class Style extends Evented {
         return true;
     }
 
-    _getOperationsToPerform(diff: DiffCommand<DiffOperations>[]) {
+    _getOperationsToPerform(diff: Array<DiffCommand<DiffOperations>>) {
         const operations: Function[] = [];
         const unimplemented: string[] = [];
         for (const op of diff) {

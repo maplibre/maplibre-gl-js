@@ -24,10 +24,10 @@ export type Segment = {
  */
 export class SegmentVector {
     static MAX_VERTEX_ARRAY_LENGTH: number;
-    segments: Array<Segment>;
+    segments: Segment[];
     private _forceNewSegmentOnNextPrepare: boolean = false;
 
-    constructor(segments: Array<Segment> = []) {
+    constructor(segments: Segment[] = []) {
         this.segments = segments;
     }
 

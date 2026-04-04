@@ -14,13 +14,13 @@ export class WorkerPool {
     active: {
         [_ in number | string]: boolean;
     };
-    workers: Array<ActorTarget>;
+    workers: ActorTarget[];
 
     constructor() {
         this.active = {};
     }
 
-    acquire(mapId: number | string): Array<ActorTarget> {
+    acquire(mapId: number | string): ActorTarget[] {
         if (!this.workers) {
             // Lazily look up the value of getWorkerCount so that
             // client code has had a chance to set it.

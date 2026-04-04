@@ -49,7 +49,7 @@ ${htmlContent}
 
 async function generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray: HtmlDoc[]): Promise<string> {
     let indexMarkdown = '# Overview \n\n';
-    const promises: Promise<any>[] = [];
+    const promises: Array<Promise<any>> = [];
     for (const indexArrayItem of indexArray) {
         const imagePath = `docs/assets/examples/${indexArrayItem.mdFileName.replace('.md', '.png')}`;
         const outputPath = imagePath.replace('.png', '.webp');
