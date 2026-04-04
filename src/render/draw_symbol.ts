@@ -554,28 +554,48 @@ class SymbolLayerTweaker extends LayerTweaker {
                 // _t factors at 252-268 are 0 by default (uniform-driven)
             }
 
-            // Props UBO for evaluated paint properties
+            // Props UBO for evaluated paint properties (update every frame for zoom-dependent values)
             if (!drawable.layerUBO) {
-                const propsUBO = new UniformBlock(48);
+                drawable.layerUBO = new UniformBlock(48);
+            }
+            {
+                const propsUBO = drawable.layerUBO;
                 const paint = (layer as SymbolStyleLayer).paint;
                 const isText = drawable.uniformValues?.u_is_text;
 
-                const fillColor = paint.get(isText ? 'text-color' : 'icon-color').constantOr(null);
+                const getColor = (prop: string) => {
+                    const val = paint.get(prop as any);
+                    if (val && typeof val === 'object' && 'r' in val) return val;
+                    const c = val?.constantOr?.(undefined);
+                    if (c && typeof c === 'object' && 'r' in c) return c;
+                    if (val && typeof (val as any).evaluate === 'function') return (val as any).evaluate({zoom: painter.transform.zoom});
+                    return null;
+                };
+                const getFloat = (prop: string) => {
+                    const val = paint.get(prop as any);
+                    if (typeof val === 'number') return val;
+                    if (val === null || val === undefined) return null;
+                    const c = val.constantOr(undefined);
+                    if (c !== undefined) return c as number;
+                    if (typeof (val as any).evaluate === 'function') return (val as any).evaluate({zoom: painter.transform.zoom});
+                    return null;
+                };
+
+                const fillColor = getColor(isText ? 'text-color' : 'icon-color');
                 if (fillColor) propsUBO.setVec4(0, fillColor.r, fillColor.g, fillColor.b, fillColor.a);
 
-                const haloColor = paint.get(isText ? 'text-halo-color' : 'icon-halo-color').constantOr(null);
+                const haloColor = getColor(isText ? 'text-halo-color' : 'icon-halo-color');
                 if (haloColor) propsUBO.setVec4(16, haloColor.r, haloColor.g, haloColor.b, haloColor.a);
 
-                const opacity = paint.get(isText ? 'text-opacity' : 'icon-opacity').constantOr(null);
+
+                const opacity = getFloat(isText ? 'text-opacity' : 'icon-opacity');
                 if (opacity !== null) propsUBO.setFloat(32, opacity);
 
-                const haloWidth = paint.get(isText ? 'text-halo-width' : 'icon-halo-width').constantOr(null);
+                const haloWidth = getFloat(isText ? 'text-halo-width' : 'icon-halo-width');
                 if (haloWidth !== null) propsUBO.setFloat(36, haloWidth);
 
-                const haloBlur = paint.get(isText ? 'text-halo-blur' : 'icon-halo-blur').constantOr(null);
+                const haloBlur = getFloat(isText ? 'text-halo-blur' : 'icon-halo-blur');
                 if (haloBlur !== null) propsUBO.setFloat(40, haloBlur);
-
-                drawable.layerUBO = propsUBO;
             }
         }
     }

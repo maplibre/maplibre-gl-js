@@ -238,19 +238,20 @@ fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
     // Sample the SDF glyph texture (r8unorm — value in .r channel)
     let dist = textureSample(glyph_texture, glyph_sampler, fin.v_tex).r;
 
-    // Matches GL exactly: gamma = EDGE_GAMMA / (fontScale * u_gamma_scale)
-    // v_gamma_scale = drawable.gamma_scale (uniform: 1.0 for viewport, cos(pitch)*camDist for pitched)
-    var gamma = EDGE_GAMMA / (fontScale * max(fin.v_gamma_scale, 0.001));
+    // GL uses: gamma = EDGE_GAMMA / (fontScale * u_gamma_scale), then gamma_scaled = gamma * finalPos.w
+    // For viewport text: u_gamma_scale=1, finalPos.w≈1 → gamma_scaled = EDGE_GAMMA/fontScale
+    // For pitched text: u_gamma_scale=camDist, finalPos.w≈camDist → gamma_scaled ≈ EDGE_GAMMA/fontScale
+    // Both cases simplify to the same result:
+    var gamma = EDGE_GAMMA / fontScale;
     var inner_edge = (256.0 - 64.0) / 256.0; // = 0.75
 
     var color = fin.v_fill_color;
     if (is_halo) {
         color = fin.v_halo_color;
-        gamma = (fin.v_halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * max(fin.v_gamma_scale, 0.001));
-        inner_edge = inner_edge + gamma; // push out for halo
+        gamma = (fin.v_halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / fontScale;
+        inner_edge = inner_edge + gamma;
     }
 
-    // gamma_scaled = gamma * per_vertex_gamma_scale (≈ 1.0 for viewport-aligned text)
     let gamma_scaled = gamma;
     var alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
 
