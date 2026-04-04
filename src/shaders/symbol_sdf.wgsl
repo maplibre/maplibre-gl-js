@@ -158,10 +158,12 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     let fontScale = symbol_size / 24.0;
 
     // Apply offset directly in clip space (simplified — bypasses label_plane/coord matrices)
-    // The offset is in 1/32 of a pixel, scale by fontScale and convert to NDC
+    // The offset is in 1/32 of a pixel (CSS), scale by fontScale and convert to NDC
     let pixelOffset = a_offset / 32.0 * fontScale;
-    // Convert pixel offset to clip space: divide by viewport half-size, multiply by w
-    let viewportScale = vec2<f32>(2.0 / paintParams.world_size.x, -2.0 / paintParams.world_size.y);
+    // world_size is in physical pixels; convert to CSS pixels for offset scaling
+    let cssWidth = paintParams.world_size.x / paintParams.pixel_ratio;
+    let cssHeight = paintParams.world_size.y / paintParams.pixel_ratio;
+    let viewportScale = vec2<f32>(2.0 / cssWidth, -2.0 / cssHeight);
 
     vout.position = vec4<f32>(
         projectedPoint.x + pixelOffset.x * viewportScale.x * projectedPoint.w,
