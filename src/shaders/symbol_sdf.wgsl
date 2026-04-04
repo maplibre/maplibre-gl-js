@@ -169,28 +169,20 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
         // projected_pos.z = segment angle
         let glyphPos = vec2<f32>(vin.projected_pos.x, vin.projected_pos.y);
 
-        // Get glyph center in clip space
-        let tilePos = drawable.coord_matrix * vec4<f32>(glyphPos, 0.0, 1.0);
-        let centerClip = drawable.matrix * vec4<f32>(tilePos.xy, 0.0, 1.0);
-
         // Rotate glyph offset to follow line direction
         let segment_angle = vin.projected_pos.z;
         let angle_sin = sin(segment_angle);
         let angle_cos = cos(segment_angle);
-        // Rotate in screen space (Y-down), then apply viewport scale
         let rotatedOffset = vec2<f32>(
             pixelOffset.x * angle_cos - pixelOffset.y * angle_sin,
             pixelOffset.x * angle_sin + pixelOffset.y * angle_cos
         );
 
-        // Apply offset in clip space
-        let viewportScale = vec2<f32>(2.0 / cssWidth, -2.0 / cssHeight);
-        vout.position = vec4<f32>(
-            centerClip.x + rotatedOffset.x * viewportScale.x * centerClip.w,
-            centerClip.y + rotatedOffset.y * viewportScale.y * centerClip.w,
-            (centerClip.z + centerClip.w) * 0.5,
-            centerClip.w
-        );
+        // Combined approach: position + offset in label plane, then transform together
+        let pos0 = glyphPos + rotatedOffset;
+        let tilePos = drawable.coord_matrix * vec4<f32>(pos0, 0.0, 1.0);
+        let finalPos = drawable.matrix * vec4<f32>(tilePos.xy, 0.0, 1.0);
+        vout.position = vec4<f32>(finalPos.xy, (finalPos.z + finalPos.w) * 0.5, finalPos.w);
     } else {
         // Point labels: project anchor and apply glyph offset in clip space
         let viewportScale = vec2<f32>(2.0 / cssWidth, -2.0 / cssHeight);
