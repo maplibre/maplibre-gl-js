@@ -82,6 +82,10 @@ export class LineLayerTweaker extends LayerTweaker {
                 propsUBO.setFloat(32, width);
             }
 
+            // floorwidth f32 = max(width, 1.0)
+            const floorwidth = Math.max(width || 0, 1.0);
+            propsUBO.setFloat(36, floorwidth);
+
             this.propertiesUpdated = false;
         }
 
@@ -122,15 +126,45 @@ export class LineLayerTweaker extends LayerTweaker {
                 drawable.drawableUBO.setFloat(88, ratio);
                 drawable.drawableUBO.setFloat(92, painter.pixelRatio);
                 drawable.drawableUBO.setVec2(96, 1 / transform.pixelsToGLUnits[0], 1 / transform.pixelsToGLUnits[1]);
-                // patternscale, tex_y, sdfgamma, mix are set from uniformValues in draw_line.ts
+
+                // Compute patternscale/tex_y from uniform values and dash positions
                 if (drawable.uniformValues) {
                     const uv = drawable.uniformValues as any;
-                    if (uv.u_patternscale_a) drawable.drawableUBO.setVec2(64, uv.u_patternscale_a[0], uv.u_patternscale_a[1]);
-                    if (uv.u_patternscale_b) drawable.drawableUBO.setVec2(72, uv.u_patternscale_b[0], uv.u_patternscale_b[1]);
-                    if (uv.u_tex_y_a !== undefined) drawable.drawableUBO.setFloat(80, uv.u_tex_y_a);
-                    if (uv.u_tex_y_b !== undefined) drawable.drawableUBO.setFloat(84, uv.u_tex_y_b);
-                    if (uv.u_sdfgamma !== undefined) drawable.drawableUBO.setFloat(104, uv.u_sdfgamma);
-                    if (uv.u_mix !== undefined) drawable.drawableUBO.setFloat(108, uv.u_mix);
+                    const tileratio = uv.u_tileratio || 1;
+                    const crossfadeFrom = uv.u_crossfade_from || 1;
+                    const crossfadeTo = uv.u_crossfade_to || 1;
+                    const atlasHeight = uv.u_lineatlas_height || 1;
+                    const mixVal = uv.u_mix || 0;
+
+                    // Get dash positions from ProgramConfiguration binders
+                    // dasharray_from/to = [0, y, height, width]
+                    let dashFrom = [0, 0, 0, 1];
+                    let dashTo = [0, 0, 0, 1];
+                    if (drawable.programConfiguration) {
+                        const binders = (drawable.programConfiguration as any).binders;
+                        for (const key in binders) {
+                            const b = binders[key];
+                            if (b && b.dashFrom) { dashFrom = b.dashFrom; }
+                            if (b && b.dashTo) { dashTo = b.dashTo; }
+                        }
+                    }
+
+                    // Compute patternscale_a/b (matching GLSL line_sdf.vertex.glsl)
+                    const psx_a = tileratio / Math.max(dashFrom[3], 1e-6) / Math.max(crossfadeFrom, 1e-6);
+                    const psy_a = -(dashFrom[2] || 0) / 2.0 / atlasHeight;
+                    const psx_b = tileratio / Math.max(dashTo[3], 1e-6) / Math.max(crossfadeTo, 1e-6);
+                    const psy_b = -(dashTo[2] || 0) / 2.0 / atlasHeight;
+
+                    drawable.drawableUBO.setVec2(64, psx_a, psy_a);
+                    drawable.drawableUBO.setVec2(72, psx_b, psy_b);
+
+                    // tex_y_a/b = (dashFrom/To.y + 0.5) / atlasHeight
+                    drawable.drawableUBO.setFloat(80, ((dashFrom[1] || 0) + 0.5) / atlasHeight);
+                    drawable.drawableUBO.setFloat(84, ((dashTo[1] || 0) + 0.5) / atlasHeight);
+
+                    // sdfgamma (matching native: 1.0 / (2.0 * pixelRatio))
+                    drawable.drawableUBO.setFloat(104, 1.0 / (2.0 * painter.pixelRatio));
+                    drawable.drawableUBO.setFloat(108, mixVal);
                 }
             } else {
                 // Basic line / lineGradient: 80-byte UBO

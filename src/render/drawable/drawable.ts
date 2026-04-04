@@ -498,8 +498,8 @@ export class Drawable {
                         let gpuTex = tex ? (tex as any)._gpuTexture : null;
                         let gpuSampler = tex ? (tex as any)._gpuSampler : null;
 
-                        if (!gpuTex && tex?.texture) {
-                            const source = (tex as any).source;
+                        if (!gpuTex) {
+                            const source = (tex as any)?.source;
                             if (source?.data) {
                                 const format = source.format || 'rgba8unorm';
                                 const bpp = source.bytesPerPixel || 4;
