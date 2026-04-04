@@ -47,7 +47,8 @@ struct FragmentInput {
 @group(1) @binding(1) var dem_texture: texture_2d<f32>;
 
 fn getElevation(ubo: HillshadePrepareUBO, coord: vec2<f32>) -> f32 {
-    let pixel = textureSample(dem_texture, dem_sampler, coord);
+    var pixel = textureSample(dem_texture, dem_sampler, coord);
+    pixel.a = 1.0; // Some DEM sources don't properly encode alpha
     return dot(pixel, ubo.unpack) / 4.0;
 }
 
@@ -55,7 +56,7 @@ fn getElevation(ubo: HillshadePrepareUBO, coord: vec2<f32>) -> f32 {
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
     let ubo = drawableVector[globalIndex.value];
 
-    let epsilon = 1.0 / 512.0;
+    let epsilon = 1.0 / ubo.dimension.x;
     let coord = fin.v_pos;
 
     // Compute the exaggeration factor based on zoom

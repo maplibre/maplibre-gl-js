@@ -82,34 +82,25 @@ fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
     let dzdy = (slopes.g - 0.5) * 2.0;
 
     // Compute slope and aspect
-    let slope = atan(sqrt(dzdx * dzdx + dzdy * dzdy));
+    let slope_val = atan(sqrt(dzdx * dzdx + dzdy * dzdy));
     let aspect = atan2(-dzdy, dzdx);
 
-    // Latitude-based scale correction for Mercator
-    let lat = mix(drawable.latrange.x, drawable.latrange.y, fin.v_pos.y);
-    let lat_correction = cos(lat * PI / 180.0);
-
     // Light direction
-    let altitude = props.altitude;
     let azimuth = props.azimuth;
+    let altitude = props.altitude;
 
-    // Standard hillshade illumination
-    let cos_zenith = cos((PI / 2.0 - altitude) * lat_correction);
-    let sin_zenith = sin((PI / 2.0 - altitude) * lat_correction);
+    // Standard hillshade: dot product of light direction and surface normal
+    let hillshade = cos(altitude) * cos(slope_val) +
+        sin(altitude) * sin(slope_val) * cos(azimuth - aspect);
 
-    let hillshade = cos_zenith * cos(slope) + sin_zenith * sin(slope) * cos(azimuth - aspect);
+    // Map to shadow/highlight
+    let shadow = props.shadow;
+    let highlight = props.highlight;
+    var color = mix(shadow, highlight, clamp(hillshade, 0.0, 1.0));
 
-    // Map hillshade value to shadow/highlight colors
-    var color: vec4<f32>;
-    if (hillshade > 0.0) {
-        color = mix(props.shadow, props.highlight, hillshade);
-    } else {
-        color = props.shadow;
-    }
-
-    // Blend with accent color based on slope steepness
-    let accent_mix = min(slope * drawable.exaggeration * 2.0, 1.0);
-    color = mix(color, props.accent, accent_mix * 0.5);
+    // Blend accent color based on slope
+    let accent_amount = min(slope_val * 2.0, 1.0) * 0.5;
+    color = mix(color, props.accent, accent_amount);
 
     return vec4<f32>(color.rgb * color.a, color.a);
 }

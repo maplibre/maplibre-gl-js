@@ -284,10 +284,10 @@ function drawHillshadeWebGPU(painter: Painter, tileManager: TileManager, layer: 
 
         const prepUBO2 = new UniformBlock(96);
         prepUBO2.setMat4(0, orthoMat as Float32Array);
-        prepUBO2.setVec2(32, textureStride, textureStride);
-        prepUBO2.setFloat(36, tile.tileID.overscaledZ);
-        prepUBO2.setFloat(40, 0);
-        prepUBO2.setVec4(48, unpack[0], unpack[1], unpack[2], unpack[3]);
+        prepUBO2.setVec2(64, textureStride, textureStride);
+        prepUBO2.setFloat(72, tile.tileID.overscaledZ);
+        prepUBO2.setFloat(76, 0);
+        prepUBO2.setVec4(80, unpack[0], unpack[1], unpack[2], unpack[3]);
 
         const globalIndexUBO = new UniformBlock(32);
         globalIndexUBO.setInt(0, 0);
