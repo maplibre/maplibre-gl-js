@@ -18,6 +18,8 @@ import fillExtrusionWgsl from './fill_extrusion.wgsl.g';
 import lineSDFWgsl from './line_sdf.wgsl.g';
 import rasterWgsl from './raster.wgsl.g';
 import symbolSDFWgsl from './symbol_sdf.wgsl.g';
+import heatmapWgsl from './heatmap.wgsl.g';
+import heatmapTextureWgsl from './heatmap_texture.wgsl.g';
 import clippingMaskFrag from './clipping_mask.fragment.glsl.g';
 import clippingMaskVert from './clipping_mask.vertex.glsl.g';
 import heatmapFrag from './heatmap.fragment.glsl.g';
@@ -106,6 +108,8 @@ export const shaders = {
     lineSDFWgsl: lineSDFWgsl,
     rasterWgsl: rasterWgsl,
     symbolSDFWgsl: symbolSDFWgsl,
+    heatmapWgsl: heatmapWgsl,
+    heatmapTextureWgsl: heatmapTextureWgsl,
     clippingMask: prepare(clippingMaskFrag, clippingMaskVert),
     heatmap: prepare(heatmapFrag, heatmapVert),
     heatmapTexture: prepare(heatmapTextureFrag, heatmapTextureVert),
