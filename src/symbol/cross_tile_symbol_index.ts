@@ -1,9 +1,8 @@
 import KDBush from 'kdbush';
 import {EXTENT} from '../data/extent';
 
-import {type SymbolInstanceArray} from '../data/array_types.g';
-
 import type {SymbolInstance} from '../data/array_types.g';
+import {type SymbolInstanceArray} from '../data/array_types.g';
 import type {OverscaledTileID} from '../tile/tile_id';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket';
 import type {StyleLayer} from '../style/style_layer';
@@ -91,12 +90,10 @@ class TileLayerIndex {
         const yWorld = (y * EXTENT + symbolInstance.anchorY) * scale;
         const xOffset = localX * EXTENT * roundingFactor;
         const yOffset = localY * EXTENT * roundingFactor;
-        const result =  {
+        return {
             x: Math.floor(xWorld - xOffset),
             y: Math.floor(yWorld - yOffset)
         };
-
-        return result;
     }
 
     findMatches(symbolInstances: SymbolInstanceArray, newTileID: OverscaledTileID, zoomCrossTileIDs: {

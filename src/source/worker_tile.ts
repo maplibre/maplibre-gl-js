@@ -19,7 +19,7 @@ import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {
     WorkerTileParameters,
     WorkerTileResult,
-} from '../source/worker_source';
+} from './worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileLike} from '@maplibre/vt-pbf';
 import {type GetDashesResponse, MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';

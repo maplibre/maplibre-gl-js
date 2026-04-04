@@ -1,16 +1,16 @@
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import {TileManager} from './tile_manager';
-import {type Source, addSourceType} from '../source/source';
-import {Tile, FadingRoles, FadingDirections} from './tile';
+import {addSourceType, type Source} from '../source/source';
+import {FadingDirections, FadingRoles, Tile} from './tile';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
-import {Event, ErrorEvent, Evented} from '../util/evented';
+import {ErrorEvent, Event, Evented} from '../util/evented';
 import {extend} from '../util/util';
 import {type Dispatcher} from '../util/dispatcher';
 import {TileBounds} from './tile_bounds';
-import {sleep, waitForEvent, beforeMapTest, createMap as globalCreateMap} from '../util/test/util';
+import {beforeMapTest, createMap as globalCreateMap, sleep, waitForEvent} from '../util/test/util';
 import {now} from '../util/time_control';
 
 import {type Map} from '../ui/map';
@@ -74,9 +74,7 @@ class SourceMock extends Evented implements Source {
 function createSource(id: string, sourceOptions: any, _dispatcher: any, eventedParent: Evented) {
     // allow tests to override mocked methods/properties by providing
     // them in the source definition object that's given to Source.create()
-    const source = new SourceMock(id, sourceOptions, _dispatcher, eventedParent);
-
-    return source;
+    return new SourceMock(id, sourceOptions, _dispatcher, eventedParent);
 }
 
 addSourceType('mock-source-type', createSource as any);
@@ -88,7 +86,7 @@ function createTileManager(options?, used?) {
         maxzoom: 14,
         type: 'mock-source-type'
     }, options), {} as Dispatcher);
-    const scWithTestLogic = extend(sc, {
+    return extend(sc, {
         used: typeof used === 'boolean' ? used : true,
         addTile(tileID: OverscaledTileID): Tile {
             return this._addTile(tileID);
@@ -100,7 +98,6 @@ function createTileManager(options?, used?) {
             return this._tiles;
         }
     });
-    return scWithTestLogic;
 }
 
 type MapOptions = {

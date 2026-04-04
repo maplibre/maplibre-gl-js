@@ -1,4 +1,4 @@
-import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {beforeEach, describe, expect, test, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import {RequestManager} from '../util/request_manager';
@@ -47,8 +47,7 @@ describe('loadSprite', () => {
     beforeEach(() => {
         vi.spyOn(util, 'arrayBufferToImageBitmap').mockImplementation(async (_data: ArrayBuffer) => {
             try {
-                const img = await createImageBitmap(new ImageData(1024, 824));
-                return img;
+                return await createImageBitmap(new ImageData(1024, 824));
             } catch (e) {
                 throw new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`);
             }
