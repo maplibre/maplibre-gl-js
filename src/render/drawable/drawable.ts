@@ -418,7 +418,7 @@ export class Drawable {
                 const depthStencilState: any = {
                     format: 'depth24plus-stencil8',
                     depthWriteEnabled: needs3DDepth,
-                    depthCompare: needs3DDepth ? 'less-equal' : 'always',
+                    depthCompare: needs3DDepth ? 'less' : 'always',
                 };
                 if (needsStencilClip) {
                     depthStencilState.stencilFront = {compare: 'equal', passOp: 'keep', failOp: 'keep', depthFailOp: 'keep'};
@@ -449,7 +449,10 @@ export class Drawable {
                             } : {}),
                         }],
                     },
-                    primitive: {topology: this.drawMode === 1 /* gl.LINES */ ? 'line-list' : 'triangle-list'},
+                    primitive: {
+                        topology: this.drawMode === 1 /* gl.LINES */ ? 'line-list' : 'triangle-list',
+                        cullMode: needs3DDepth ? 'back' : 'none',
+                    },
                     depthStencil: depthStencilState,
                 });
 
