@@ -8,6 +8,10 @@ import {
     hillshadeUniformPrepareValues
 } from './program/hillshade_program';
 
+import {shaders} from '../shaders/shaders';
+import {UniformBlock} from './drawable/uniform_block';
+import {mat4} from 'gl-matrix';
+
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
 import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
@@ -15,6 +19,14 @@ import type {OverscaledTileID} from '../tile/tile_id';
 
 export function drawHillshade(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
+
+    // WebGPU path
+    if (painter.device && painter.device.type === 'webgpu') {
+        if (painter.renderPass === 'translucent') {
+            drawHillshadeWebGPU(painter, tileManager, layer, tileIDs, renderOptions);
+        }
+        return;
+    }
 
     const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
@@ -156,5 +168,313 @@ function prepareHillshade(
             painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
 
         tile.needsHillshadePrepare = false;
+    }
+}
+
+function uploadAsStorage(device: any, ubo: UniformBlock): any {
+    if (!(ubo as any)._storageBuffer) {
+        (ubo as any)._storageBuffer = device.createBuffer({
+            byteLength: ubo._byteLength,
+            usage: 128 | 8, // STORAGE | COPY_DST
+        });
+    }
+    (ubo as any)._storageBuffer.write(new Uint8Array(ubo._data));
+    return (ubo as any)._storageBuffer;
+}
+
+function drawHillshadeWebGPU(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+    const device = painter.device as any;
+    const gpuDevice = device.handle;
+    const transform = painter.transform;
+    if (!gpuDevice) return;
+
+    const {isRenderingToTexture} = renderOptions;
+
+    // === Pass 1: Prepare slopes from DEM for each tile ===
+    for (const coord of tileIDs) {
+        const tile = tileManager.getTile(coord);
+        const dem = tile.dem;
+        if (!dem || !dem.data) continue;
+        if (!tile.needsHillshadePrepare) continue;
+
+        const tileSize = dem.dim;
+        const textureStride = dem.stride;
+
+        // Create offscreen slope texture for this tile
+        let gpuState = (tile as any)._webgpuHillshade;
+        if (!gpuState || gpuState.size !== tileSize) {
+            if (gpuState?.texture) gpuState.texture.destroy();
+            gpuState = {
+                texture: gpuDevice.createTexture({
+                    size: [tileSize, tileSize],
+                    format: 'rgba8unorm',
+                    usage: 0x10 | 0x04, // RENDER_ATTACHMENT | TEXTURE_BINDING
+                }),
+                size: tileSize,
+            };
+            (tile as any)._webgpuHillshade = gpuState;
+        }
+
+        // Upload DEM texture
+        const pixelData = dem.getPixels();
+        let demGPU = (tile as any)._webgpuDemTexture;
+        if (!demGPU) {
+            demGPU = gpuDevice.createTexture({
+                size: [textureStride, textureStride],
+                format: 'rgba8unorm',
+                usage: 0x04 | 0x02, // TEXTURE_BINDING | COPY_DST
+            });
+            (tile as any)._webgpuDemTexture = demGPU;
+        }
+        gpuDevice.queue.writeTexture(
+            {texture: demGPU},
+            pixelData.data,
+            {bytesPerRow: textureStride * 4},
+            [textureStride, textureStride]
+        );
+
+        // Get or create prepare pipeline
+        let preparePipeline = (painter as any)._hillshadePrepPipeline;
+        if (!preparePipeline) {
+            let wgslSource = (shaders as any).hillshadePrepareWgsl;
+            if (!wgslSource) continue;
+
+            const vertexInputStruct = 'struct VertexInput {\n    @location(0) pos: vec2<i32>,\n    @location(1) texture_pos: vec2<i32>,\n};\n';
+            wgslSource = `${vertexInputStruct}\n${wgslSource}`;
+
+            const shaderModule = gpuDevice.createShaderModule({code: wgslSource});
+            preparePipeline = gpuDevice.createRenderPipeline({
+                layout: 'auto',
+                vertex: {
+                    module: shaderModule,
+                    entryPoint: 'vertexMain',
+                    buffers: [{
+                        arrayStride: 8, // 2 x Int16 (pos) + 2 x Int16 (texcoord)
+                        stepMode: 'vertex',
+                        attributes: [
+                            {shaderLocation: 0, format: 'sint16x2', offset: 0},
+                            {shaderLocation: 1, format: 'sint16x2', offset: 4},
+                        ],
+                    }],
+                },
+                fragment: {
+                    module: shaderModule,
+                    entryPoint: 'fragmentMain',
+                    targets: [{format: 'rgba8unorm'}],
+                },
+                primitive: {topology: 'triangle-list', cullMode: 'none'},
+            });
+            (painter as any)._hillshadePrepPipeline = preparePipeline;
+        }
+
+        // Create UBOs
+        const prepUBO = new UniformBlock(48);
+        // Ortho matrix matching GL: maps [0,EXTENT]x[0,EXTENT] to clip space with Y flip
+        const EXTENT = 8192;
+        const orthoMat = mat4.create();
+        mat4.ortho(orthoMat, 0, EXTENT, -EXTENT, 0, 0, 1);
+        mat4.translate(orthoMat, orthoMat, [0, -EXTENT, 0]);
+        prepUBO.setMat4(0, orthoMat as Float32Array);
+        // dimension, zoom, maxzoom
+        prepUBO.setVec2(32, textureStride, textureStride);
+        prepUBO.setFloat(36, tile.tileID.overscaledZ);
+        prepUBO.setFloat(40, 0); // maxzoom
+        // unpack vector from DEM data
+        const unpack = dem.getUnpackVector();
+
+        const prepUBO2 = new UniformBlock(96);
+        prepUBO2.setMat4(0, orthoMat as Float32Array);
+        prepUBO2.setVec2(32, textureStride, textureStride);
+        prepUBO2.setFloat(36, tile.tileID.overscaledZ);
+        prepUBO2.setFloat(40, 0);
+        prepUBO2.setVec4(48, unpack[0], unpack[1], unpack[2], unpack[3]);
+
+        const globalIndexUBO = new UniformBlock(32);
+        globalIndexUBO.setInt(0, 0);
+
+        // Render prepare pass
+        const prepEncoder = gpuDevice.createCommandEncoder();
+        const prepPass = prepEncoder.beginRenderPass({
+            colorAttachments: [{
+                view: gpuState.texture.createView(),
+                clearValue: {r: 0, g: 0, b: 0, a: 1},
+                loadOp: 'clear',
+                storeOp: 'store',
+            }],
+        });
+
+        prepPass.setPipeline(preparePipeline);
+
+        const globalBuf = globalIndexUBO.upload(device);
+        const drawVecBuf = uploadAsStorage(device, prepUBO2);
+
+        const prepBindGroup = gpuDevice.createBindGroup({
+            layout: preparePipeline.getBindGroupLayout(0),
+            entries: [
+                {binding: 1, resource: {buffer: globalBuf.handle}},
+                {binding: 2, resource: {buffer: drawVecBuf.handle}},
+            ],
+        });
+        prepPass.setBindGroup(0, prepBindGroup);
+
+        // Texture bind group
+        const demSampler = gpuDevice.createSampler({minFilter: 'nearest', magFilter: 'nearest'});
+        const texBindGroup = gpuDevice.createBindGroup({
+            layout: preparePipeline.getBindGroupLayout(1),
+            entries: [
+                {binding: 0, resource: demSampler},
+                {binding: 1, resource: demGPU.createView()},
+            ],
+        });
+        prepPass.setBindGroup(1, texBindGroup);
+
+        if (!painter.rasterBoundsBuffer?.webgpuBuffer) { prepPass.end(); gpuDevice.queue.submit([prepEncoder.finish()]); continue; }
+        prepPass.setVertexBuffer(0, painter.rasterBoundsBuffer.webgpuBuffer.handle);
+        prepPass.setIndexBuffer(painter.quadTriangleIndexBuffer.webgpuBuffer.handle, 'uint16');
+        prepPass.drawIndexed(6, 1, 0, 0);
+        prepPass.end();
+        gpuDevice.queue.submit([prepEncoder.finish()]);
+
+        tile.needsHillshadePrepare = false;
+    }
+
+    // === Pass 2: Render hillshade to main render target ===
+    const mainRenderPass = (painter.renderPassWGSL as any)?.handle;
+    if (!mainRenderPass) return;
+
+    // Get or create render pipeline
+    let renderPipeline = (painter as any)._hillshadeRenderPipeline;
+    if (!renderPipeline) {
+        let wgslSource = (shaders as any).hillshadeWgsl;
+        if (!wgslSource) return;
+
+        const vertexInputStruct = 'struct VertexInput {\n    @location(0) pos: vec2<i32>,\n    @location(1) texture_pos: vec2<i32>,\n};\n';
+        wgslSource = `${vertexInputStruct}\n${wgslSource}`;
+
+        const canvasFormat = (navigator as any).gpu.getPreferredCanvasFormat();
+        const shaderModule = gpuDevice.createShaderModule({code: wgslSource});
+        renderPipeline = gpuDevice.createRenderPipeline({
+            layout: 'auto',
+            vertex: {
+                module: shaderModule,
+                entryPoint: 'vertexMain',
+                buffers: [{
+                    arrayStride: 8,
+                    stepMode: 'vertex',
+                    attributes: [
+                        {shaderLocation: 0, format: 'sint16x2', offset: 0},
+                        {shaderLocation: 1, format: 'sint16x2', offset: 4},
+                    ],
+                }],
+            },
+            fragment: {
+                module: shaderModule,
+                entryPoint: 'fragmentMain',
+                targets: [{
+                    format: canvasFormat,
+                    blend: {
+                        color: {srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add'},
+                        alpha: {srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add'},
+                    },
+                }],
+            },
+            primitive: {topology: 'triangle-list', cullMode: 'none'},
+            depthStencil: {
+                format: 'depth24plus-stencil8',
+                depthWriteEnabled: false,
+                depthCompare: 'always',
+            },
+        });
+        (painter as any)._hillshadeRenderPipeline = renderPipeline;
+    }
+
+    // Get hillshade paint properties
+    const paint = layer.paint;
+    const shadowColor = paint.get('hillshade-shadow-color').values?.[0] || paint.get('hillshade-shadow-color');
+    const highlightColor = paint.get('hillshade-highlight-color').values?.[0] || paint.get('hillshade-highlight-color');
+    const accentColor = paint.get('hillshade-accent-color');
+    const illuminationDir = paint.get('hillshade-illumination-direction');
+    const illuminationAnchor = paint.get('hillshade-illumination-anchor');
+    const exaggeration = paint.get('hillshade-exaggeration');
+
+    const azimuth = (typeof illuminationDir === 'number' ? illuminationDir : 335) / 180 * Math.PI;
+    const altitude = 1.0472; // ~60 degrees default
+
+    mainRenderPass.setPipeline(renderPipeline);
+
+    for (const coord of tileIDs) {
+        const tile = tileManager.getTile(coord);
+        const gpuState = (tile as any)._webgpuHillshade;
+        if (!gpuState) continue;
+
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: coord,
+            applyGlobeMatrix: !isRenderingToTexture,
+            applyTerrainMatrix: true,
+        });
+
+        // Compute latitude range for Mercator correction
+        const canonical = coord.canonical;
+        const n = Math.PI - 2 * Math.PI * canonical.y / (1 << canonical.z);
+        const s = Math.PI - 2 * Math.PI * (canonical.y + 1) / (1 << canonical.z);
+        const latN = Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))) * 180 / Math.PI;
+        const latS = Math.atan(0.5 * (Math.exp(s) - Math.exp(-s))) * 180 / Math.PI;
+
+        // Drawable UBO
+        const drawUBO = new UniformBlock(32);
+        drawUBO.setMat4(0, projectionData.mainMatrix as Float32Array);
+
+        // Expand to include latrange, exaggeration
+        const drawUBO2 = new UniformBlock(80);
+        drawUBO2.setMat4(0, projectionData.mainMatrix as Float32Array);
+        drawUBO2.setVec2(64, latN, latS);
+        drawUBO2.setFloat(72, typeof exaggeration === 'number' ? exaggeration : 0.5);
+
+        // Props UBO
+        const propsUBO = new UniformBlock(64);
+        const sc = typeof shadowColor === 'object' && 'r' in shadowColor ? shadowColor : {r: 0.075, g: 0.075, b: 0.075, a: 1};
+        const hc = typeof highlightColor === 'object' && 'r' in highlightColor ? highlightColor : {r: 1, g: 1, b: 1, a: 1};
+        const ac = typeof accentColor === 'object' && 'r' in accentColor ? accentColor : {r: 0, g: 0, b: 0, a: 1};
+        propsUBO.setVec4(0, sc.r, sc.g, sc.b, sc.a);
+        propsUBO.setVec4(16, hc.r, hc.g, hc.b, hc.a);
+        propsUBO.setVec4(32, ac.r, ac.g, ac.b, ac.a);
+        propsUBO.setFloat(48, altitude);
+        propsUBO.setFloat(52, azimuth);
+
+        const globalIndexUBO = new UniformBlock(32);
+        globalIndexUBO.setInt(0, 0);
+
+        const globalBuf = globalIndexUBO.upload(device);
+        const drawVecBuf = uploadAsStorage(device, drawUBO2);
+        const propsBuf = propsUBO.upload(device);
+        const globalPaintBuf = (painter.globalUBO as any).upload(device);
+
+        const bindGroup = gpuDevice.createBindGroup({
+            layout: renderPipeline.getBindGroupLayout(0),
+            entries: [
+                {binding: 0, resource: {buffer: globalPaintBuf.handle}},
+                {binding: 1, resource: {buffer: globalBuf.handle}},
+                {binding: 2, resource: {buffer: drawVecBuf.handle}},
+                {binding: 4, resource: {buffer: propsBuf.handle}},
+            ],
+        });
+        mainRenderPass.setBindGroup(0, bindGroup);
+
+        // Texture: slope texture from prepare pass
+        const slopeSampler = gpuDevice.createSampler({minFilter: 'linear', magFilter: 'linear'});
+        const texBindGroup = gpuDevice.createBindGroup({
+            layout: renderPipeline.getBindGroupLayout(1),
+            entries: [
+                {binding: 0, resource: slopeSampler},
+                {binding: 1, resource: gpuState.texture.createView()},
+            ],
+        });
+        mainRenderPass.setBindGroup(1, texBindGroup);
+
+        // Use rasterBounds for the tile quad
+        if (!painter.rasterBoundsBuffer?.webgpuBuffer) continue;
+        mainRenderPass.setVertexBuffer(0, painter.rasterBoundsBuffer.webgpuBuffer.handle);
+        mainRenderPass.setIndexBuffer(painter.quadTriangleIndexBuffer.webgpuBuffer.handle, 'uint16');
+        mainRenderPass.drawIndexed(6, 1, 0, 0);
     }
 }
