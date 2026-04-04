@@ -782,24 +782,6 @@ function drawSymbolsDrawable(
     // Run tweaker and draw
     const allDrawables = layerGroup.getAllDrawables();
     tweaker.execute(allDrawables, painter, layer, coords);
-    if (!(drawSymbolsDrawable as any)._logged2) {
-        (drawSymbolsDrawable as any)._logged2 = true;
-        for (const d of allDrawables) {
-            const uv = d.uniformValues;
-            const isAlong = uv?.u_is_along_line;
-            if (isAlong) {
-                const coordMat = uv?.u_coord_matrix;
-                const dynBuf = d.dynamicLayoutBuffer;
-                let sample = 'no-dynbuf';
-                if (dynBuf) {
-                    const arr = (dynBuf as any).arrayBuffer ? new Float32Array((dynBuf as any).arrayBuffer) : null;
-                    if (arr && arr.length >= 6) sample = `[${arr[0].toFixed(1)},${arr[1].toFixed(1)},${arr[2].toFixed(1)}],[${arr[3].toFixed(1)},${arr[4].toFixed(1)},${arr[5].toFixed(1)}]`;
-                }
-                console.warn(`[SYMBOL ALONG] is_along=${isAlong} coordMat=${coordMat ? `[${coordMat[0].toFixed(3)},${coordMat[5].toFixed(3)},${coordMat[12].toFixed(3)},${coordMat[13].toFixed(3)}]` : 'null'} dynBuf=${!!dynBuf} itemSize=${dynBuf?.itemSize} sample=${sample}`);
-                break;
-            }
-        }
-    }
     for (const drawable of allDrawables) {
         drawable.draw(context, painter.device, painter, renderOptions.renderPass);
     }

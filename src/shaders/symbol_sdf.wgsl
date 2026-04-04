@@ -164,19 +164,33 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     let pixelOffset = a_offset / 32.0 * fontScale;
 
     if (drawable.is_along_line != 0u) {
-        // Along-line labels: each glyph has pre-computed position in label plane
-        // from updateLineLabels(). coord_matrix converts back from label plane.
+        // Along-line labels: match native WebGPU approach.
+        // projected_pos.xy = glyph position in label plane (from updateLineLabels)
+        // projected_pos.z = segment angle
         let glyphPos = vec2<f32>(vin.projected_pos.x, vin.projected_pos.y);
-        let coordPos = drawable.coord_matrix * vec4<f32>(glyphPos + pixelOffset, 0.0, 1.0);
 
-        if (drawable.pitch_with_map != 0u) {
-            // pitch-with-map: coord_matrix gives tile coordinates, project to clip
-            let finalPos = drawable.matrix * vec4<f32>(coordPos.xy, 0.0, 1.0);
-            vout.position = vec4<f32>(finalPos.xy, (finalPos.z + finalPos.w) * 0.5, finalPos.w);
-        } else {
-            // viewport: coord_matrix (pixelsToClipSpaceMatrix) gives clip space directly
-            vout.position = vec4<f32>(coordPos.xy, (projectedPoint.z + projectedPoint.w) * 0.5, coordPos.w);
-        }
+        // Get glyph center in clip space
+        let tilePos = drawable.coord_matrix * vec4<f32>(glyphPos, 0.0, 1.0);
+        let centerClip = drawable.matrix * vec4<f32>(tilePos.xy, 0.0, 1.0);
+
+        // Rotate glyph offset to follow line direction
+        let segment_angle = vin.projected_pos.z;
+        let angle_sin = sin(segment_angle);
+        let angle_cos = cos(segment_angle);
+        // Rotate in screen space (Y-down), then apply viewport scale
+        let rotatedOffset = vec2<f32>(
+            pixelOffset.x * angle_cos - pixelOffset.y * angle_sin,
+            pixelOffset.x * angle_sin + pixelOffset.y * angle_cos
+        );
+
+        // Apply offset in clip space
+        let viewportScale = vec2<f32>(2.0 / cssWidth, -2.0 / cssHeight);
+        vout.position = vec4<f32>(
+            centerClip.x + rotatedOffset.x * viewportScale.x * centerClip.w,
+            centerClip.y + rotatedOffset.y * viewportScale.y * centerClip.w,
+            (centerClip.z + centerClip.w) * 0.5,
+            centerClip.w
+        );
     } else {
         // Point labels: project anchor and apply glyph offset in clip space
         let viewportScale = vec2<f32>(2.0 / cssWidth, -2.0 / cssHeight);
