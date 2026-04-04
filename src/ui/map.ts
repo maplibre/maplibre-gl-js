@@ -3527,7 +3527,8 @@ export class Map extends Camera {
 
         this.painter = new Painter(finalGl, device, this.transform);
         if (this.transform.width && this.transform.height) {
-            this.painter.resize(this.transform.width, this.transform.height, this.getPixelRatio());
+            const clampedPixelRatio = this._getClampedPixelRatio(this.transform.width, this.transform.height);
+            this.painter.resize(this.transform.width, this.transform.height, clampedPixelRatio);
         }
         this._update(true); // Catch up any missing updates
     }
