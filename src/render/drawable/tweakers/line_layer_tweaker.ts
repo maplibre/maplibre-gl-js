@@ -38,56 +38,56 @@ export class LineLayerTweaker extends LayerTweaker {
         const lineLayer = layer as LineStyleLayer;
         const transform = painter.transform;
 
-        // Update evaluated props UBO if properties changed
-        if (this.propertiesUpdated) {
-            if (!this.evaluatedPropsUBO) {
-                this.evaluatedPropsUBO = new UniformBlock(LINE_PROPS_UBO_SIZE);
-            }
-            const propsUBO = this.evaluatedPropsUBO;
-            const paint = lineLayer.paint;
-
-            // color vec4
-            const color = paint.get('line-color').constantOr(null);
-            if (color) {
-                propsUBO.setVec4(0, color.r, color.g, color.b, color.a);
-            }
-
-            // blur f32
-            const blur = paint.get('line-blur').constantOr(null);
-            if (blur !== null) {
-                propsUBO.setFloat(16, blur);
-            }
-
-            // opacity f32
-            const opacity = paint.get('line-opacity').constantOr(null);
-            if (opacity !== null) {
-                propsUBO.setFloat(20, opacity);
-            }
-
-            // gapwidth f32
-            const gapwidth = paint.get('line-gap-width').constantOr(null);
-            if (gapwidth !== null) {
-                propsUBO.setFloat(24, gapwidth);
-            }
-
-            // offset f32
-            const offset = paint.get('line-offset').constantOr(null);
-            if (offset !== null) {
-                propsUBO.setFloat(28, offset);
-            }
-
-            // width f32
-            const width = paint.get('line-width').constantOr(null);
-            if (width !== null) {
-                propsUBO.setFloat(32, width);
-            }
-
-            // floorwidth f32 = max(width, 1.0)
-            const floorwidth = Math.max(width || 0, 1.0);
-            propsUBO.setFloat(36, floorwidth);
-
-            this.propertiesUpdated = false;
+        // Update evaluated props UBO — must run every frame for zoom-dependent properties
+        if (!this.evaluatedPropsUBO) {
+            this.evaluatedPropsUBO = new UniformBlock(LINE_PROPS_UBO_SIZE);
         }
+        const propsUBO = this.evaluatedPropsUBO;
+        const paint = lineLayer.paint;
+        const evalParams = {zoom: transform.zoom};
+
+        // Helper: get constant or evaluate zoom-dependent value
+        const getFloat = (prop: string): number | null => {
+            const val = paint.get(prop as any);
+            const c = val.constantOr(undefined);
+            if (c !== undefined) return c as number;
+            if (val && typeof (val as any).evaluate === 'function') {
+                return (val as any).evaluate(evalParams);
+            }
+            return null;
+        };
+
+        // color vec4
+        const color = paint.get('line-color').constantOr(null);
+        if (color) {
+            propsUBO.setVec4(0, color.r, color.g, color.b, color.a);
+        }
+
+        // blur f32
+        const blur = getFloat('line-blur');
+        if (blur !== null) propsUBO.setFloat(16, blur);
+
+        // opacity f32 (often zoom-dependent!)
+        const opacity = getFloat('line-opacity');
+        if (opacity !== null) propsUBO.setFloat(20, opacity);
+
+        // gapwidth f32
+        const gapwidth = getFloat('line-gap-width');
+        if (gapwidth !== null) propsUBO.setFloat(24, gapwidth);
+
+        // offset f32
+        const offset = getFloat('line-offset');
+        if (offset !== null) propsUBO.setFloat(28, offset);
+
+        // width f32
+        const width = getFloat('line-width');
+        if (width !== null) propsUBO.setFloat(32, width);
+
+        // floorwidth f32 = max(width, 1.0)
+        const floorwidth = Math.max(width || 0, 1.0);
+        propsUBO.setFloat(36, floorwidth);
+
+        this.propertiesUpdated = false;
 
         // Update per-drawable data
         const zoom = transform.zoom;

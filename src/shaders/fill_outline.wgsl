@@ -93,6 +93,5 @@ struct FragmentInput {
 
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
-    // Output opaque outline color (matching native WebGPU approach)
     return fin.frag_color * fin.frag_opacity;
 }
