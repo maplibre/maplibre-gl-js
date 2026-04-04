@@ -104,7 +104,6 @@ function isRegistered(input: unknown): boolean {
     }
     const classRegistryKey = getClassRegistryKey(input);
     return classRegistryKey && classRegistryKey !== 'Object';
-
 }
 
 function isSerializeHandledByBuiltin(input: unknown) {
