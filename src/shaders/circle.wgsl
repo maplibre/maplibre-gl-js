@@ -94,10 +94,11 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     let scale_with_map = props.scale_with_map != 0;
     let pitch_with_map = props.pitch_with_map != 0;
 
-    let pos_f = vec2<f32>(f32(vin.pos.x), f32(vin.pos.y));
-    let extrude = glMod2v(pos_f, vec2<f32>(2.0, 2.0)) * 2.0 - vec2<f32>(1.0, 1.0);
+    // Unpack position: undo VERTEX_MIN_VALUE offset (-32768), then extract extrude and center
+    let pos_raw = vec2<f32>(f32(vin.pos.x), f32(vin.pos.y)) + vec2<f32>(32768.0);
+    let extrude = glMod2v(pos_raw, vec2<f32>(8.0)) / 7.0 * 2.0 - vec2<f32>(1.0, 1.0);
     let scaled_extrude = extrude * drawable.extrude_scale;
-    let circle_center = floor(pos_f * 0.5);
+    let circle_center = floor(pos_raw / 8.0);
 
     var color = props.color;
 #ifndef HAS_UNIFORM_u_color

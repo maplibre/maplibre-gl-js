@@ -292,12 +292,28 @@ export class Drawable {
             const propsBuf = this.layerUBO.upload(device);
 
             // Get or create pipeline (cached on painter, keyed by shader+stencil state)
-            const cacheKey = `raw_${this.shaderName}`;
+            const definesKey = this.programConfiguration ? this.programConfiguration.cacheKey : '';
+            const cacheKey = `raw_${this.shaderName}_${definesKey}`;
             if (!(painter as any)._rawPipelines) (painter as any)._rawPipelines = {};
             if (!(painter as any)._rawPipelines[cacheKey]) {
                 const wgslKey = `${this.shaderName}Wgsl`;
-                let wgslSource = (shaders as any)[wgslKey];
-                if (!wgslSource) return;
+                let rawWgsl = (shaders as any)[wgslKey];
+                if (!rawWgsl) return;
+
+                // Preprocess WGSL (handle #ifdef/#ifndef for data-driven properties)
+                const defines: Record<string, boolean> = {};
+                if (this.programConfiguration) {
+                    const binderAttributes = this.programConfiguration.getBinderAttributes();
+                    const paintProperties = ['color', 'radius', 'blur', 'opacity', 'stroke_color', 'stroke_width', 'stroke_opacity',
+                        'outline_color', 'width', 'gapwidth', 'offset', 'floorwidth'];
+                    for (const prop of paintProperties) {
+                        const isDataDriven = binderAttributes.some((attr: string) =>
+                            attr === `a_${prop}` || attr === `a_${prop}_from` || attr === `a_${prop}_to`
+                        );
+                        defines[`HAS_UNIFORM_u_${prop}`] = !isDataDriven;
+                    }
+                }
+                let wgslSource = preprocessWGSL(rawWgsl, defines);
 
                 // Generate VertexInput struct from layout buffer attributes
                 let vertexInputStruct = 'struct VertexInput {\n';
@@ -374,7 +390,13 @@ export class Drawable {
                     fragment: {
                         module: shaderModule,
                         entryPoint: 'fragmentMain',
-                        targets: [{format: canvasFormat}],
+                        targets: [{
+                            format: canvasFormat,
+                            blend: {
+                                color: {srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add'},
+                                alpha: {srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add'},
+                            },
+                        }],
                     },
                     primitive: {topology: 'triangle-list'},
                     depthStencil: depthStencilState,
