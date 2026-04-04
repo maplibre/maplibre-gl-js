@@ -447,14 +447,6 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         const pipeline = this._webgpuStencilClipPipeline;
         rpEncoder.setPipeline(pipeline);
 
-        // DEBUG: Log when tiles span multiple zoom levels (zoom transition)
-        const zoomLevels = new Set(tileIDs.map(t => t.overscaledZ));
-        if (zoomLevels.size > 1) {
-            const byZoom: {[z: number]: number} = {};
-            for (const t of tileIDs) byZoom[t.overscaledZ] = (byZoom[t.overscaledZ] || 0) + 1;
-            console.warn('[STENCIL DEBUG] Multi-zoom transition:', JSON.stringify(byZoom),
-                'tiles:', tileIDs.map(t => `z${t.overscaledZ}(${t.canonical.x},${t.canonical.y})→ref${this._webgpuNextStencilID + tileIDs.indexOf(t)}`).join(' '));
-        }
 
         // Draw each tile's stencil mask with a unique ref.
         // Create a fresh UBO buffer per tile (matching native's approach) to avoid

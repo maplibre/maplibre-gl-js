@@ -49,9 +49,11 @@ export class LineLayerTweaker extends LayerTweaker {
         // Helper: get constant or evaluate zoom-dependent value
         const getFloat = (prop: string): number | null => {
             const val = paint.get(prop as any);
+            if (typeof val === 'number') return val;
+            if (val === null || val === undefined) return null;
             const c = val.constantOr(undefined);
             if (c !== undefined) return c as number;
-            if (val && typeof (val as any).evaluate === 'function') {
+            if (typeof (val as any).evaluate === 'function') {
                 return (val as any).evaluate(evalParams);
             }
             return null;
@@ -86,6 +88,7 @@ export class LineLayerTweaker extends LayerTweaker {
         // floorwidth f32 = max(width, 1.0)
         const floorwidth = Math.max(width || 0, 1.0);
         propsUBO.setFloat(36, floorwidth);
+
 
         this.propertiesUpdated = false;
 
@@ -168,9 +171,12 @@ export class LineLayerTweaker extends LayerTweaker {
                 }
             } else {
                 // Basic line / lineGradient: 80-byte UBO
-                drawable.drawableUBO.setFloat(64, pixelScale / pixelsToTileUnits(tileProxy, 1, zoom));
+                const ptu = pixelsToTileUnits(tileProxy, 1, zoom);
+                const ratio = pixelScale / ptu;
+                drawable.drawableUBO.setFloat(64, ratio);
                 drawable.drawableUBO.setFloat(68, painter.pixelRatio);
                 drawable.drawableUBO.setVec2(72, 1 / transform.pixelsToGLUnits[0], 1 / transform.pixelsToGLUnits[1]);
+
             }
 
             // Share the layer-level UBO reference
