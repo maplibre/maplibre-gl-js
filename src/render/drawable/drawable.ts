@@ -448,7 +448,9 @@ export class Drawable {
                 });
                 const canvasFormat = (navigator as any).gpu.getPreferredCanvasFormat();
 
-                const needsStencilClip = this.shaderName === 'fill' || this.shaderName === 'line';
+                const needsStencilClip = this.shaderName === 'fill' || this.shaderName === 'line' ||
+                    this.shaderName === 'lineSDF' || this.shaderName === 'lineGradient' ||
+                    this.shaderName === 'linePattern' || this.shaderName === 'lineGradientSDF';
                 const needs3DDepth = this.shaderName === 'fillExtrusion' || this.shaderName === 'fillExtrusionPattern';
                 const depthStencilState: any = {
                     format: 'depth24plus-stencil8',
