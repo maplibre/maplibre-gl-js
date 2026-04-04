@@ -771,12 +771,15 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
             if (isWebGPU) {
                 // WebGPU: read pixels via 2D canvas drawImage
-                const w = options.reportWidth ?? canvas.width;
-                const h = options.reportHeight ?? canvas.height;
+                // Use reportWidth/reportHeight (matches expected image dimensions),
+                // falling back to the test width/height (container size)
+                const w = options.reportWidth ?? options.width;
+                const h = options.reportHeight ?? options.height;
                 const tmpCanvas = document.createElement('canvas');
                 tmpCanvas.width = w;
                 tmpCanvas.height = h;
                 const ctx2d = tmpCanvas.getContext('2d');
+                // Draw from the source canvas, scaling from full resolution to report size
                 ctx2d.drawImage(canvas, 0, 0, w, h);
                 const imageData = ctx2d.getImageData(0, 0, w, h);
                 data = new Uint8Array(imageData.data.buffer);
