@@ -155,11 +155,10 @@ function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrapped
     // Convert `tilePoint` from tile coordinates to clip coordinates.
     const clipPoint = transform.projectTileCoordinates(tilePoint.x, tilePoint.y, unwrappedTileID, getElevation).point;
     // Convert `clipPoint` from clip coordinates into pixel/screen coordinates.
-    const pixelPoint = new Point(
+    return new Point(
         (clipPoint.x * 0.5 + 0.5) * transform.width,
         (-clipPoint.y * 0.5 + 0.5) * transform.height
     );
-    return pixelPoint;
 }
 
 export function projectQueryGeometry(queryGeometry: Array<Point>, transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)) {

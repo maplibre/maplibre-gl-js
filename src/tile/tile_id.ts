@@ -197,8 +197,8 @@ export class OverscaledTileID {
         if (this.canonical.x < rhs.canonical.x) return true;
         if (this.canonical.x > rhs.canonical.x) return false;
 
-        if (this.canonical.y < rhs.canonical.y) return true;
-        return false;
+        return this.canonical.y < rhs.canonical.y;
+
     }
 
     wrapped() {

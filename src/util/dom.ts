@@ -21,8 +21,7 @@ export class DOM {
     }
 
     public static createNS(namespaceURI: string, tagName: string) {
-        const el = window.document.createElementNS(namespaceURI, tagName);
-        return el;
+        return window.document.createElementNS(namespaceURI, tagName);
     }
 
     public static disableDrag() {

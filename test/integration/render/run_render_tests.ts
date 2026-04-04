@@ -210,7 +210,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 function getTestStyles(options: RenderOptions, directory: string, port: number): StyleWithTestData[] {
     const tests = options.tests || [];
 
-    const sequence = globSync('**/style.json', {cwd: directory})
+    return globSync('**/style.json', {cwd: directory})
         .map(fixture => {
             const id = path.dirname(fixture);
             const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8')) as StyleWithTestData;
@@ -242,7 +242,6 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
             localizeURLs(style, port, path.join(__dirname, '../'));
             return true;
         });
-    return sequence;
 }
 
 /**

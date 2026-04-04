@@ -211,11 +211,9 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, padding:
         nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom)
     );
 
-    const result = {
+    return {
         center,
         zoom,
         bearing
     };
-
-    return result;
 }

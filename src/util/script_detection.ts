@@ -143,10 +143,8 @@ export function charInSupportedScript(char: number, canRenderRTL: boolean) {
     if (!canRenderRTL && charInRTLScript(char)) {
         return false;
     }
-    if (codePointRequiresComplexTextShaping(char)) {
-        return false;
-    }
-    return true;
+    return !codePointRequiresComplexTextShaping(char);
+
 }
 
 export function stringContainsRTLText(chars: string): boolean {

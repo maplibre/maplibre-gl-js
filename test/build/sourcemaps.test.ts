@@ -62,18 +62,14 @@ describe('main sourcemap', () => {
                 return false;
             if (f.startsWith(path.join('src', 'style-spec')))
                 return false;
-            if (f.startsWith(`build${path.sep}`))
-                return false;
-            return true;
+            return !f.startsWith(`build${path.sep}`);
         }).sort();
 
         // actual files from *.js.map
         const actualEntriesInSourcemapJSON = sourcemapEntriesNormalized.filter(f => {
             if (f.startsWith('node_modules'))
                 return false;
-            if (f.startsWith(path.join('src', 'style-spec')))
-                return false;
-            return true;
+            return !f.startsWith(path.join('src', 'style-spec'));
         }).sort();
 
         function setMinus<T>(a: T[], b: T[]) : T[] {

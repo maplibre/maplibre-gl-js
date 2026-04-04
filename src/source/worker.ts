@@ -203,8 +203,7 @@ export default class Worker {
     }
 
     private async _syncRTLPluginState(mapId: string, incomingState: PluginState): Promise<PluginState> {
-        const state = await rtlWorkerPlugin.syncState(incomingState, this.self.importScripts);
-        return state;
+        return await rtlWorkerPlugin.syncState(incomingState, this.self.importScripts);
     }
 
     private _getAvailableImages(mapId: string) {

@@ -74,7 +74,7 @@
 
         function getModelTransform(coord, rotate= [Math.PI / 2, 0, 0]) {
             const modelAsMercatorCoordinate = maplibregl.MercatorCoordinate.fromLngLat([coord[0], coord[1]], coord[2]);
-            const modelTransform = {
+            return {
                 translateX: modelAsMercatorCoordinate.x,
                 translateY: modelAsMercatorCoordinate.y,
                 translateZ: modelAsMercatorCoordinate.z,
@@ -83,7 +83,6 @@
                 rotateZ: rotate[2],
                 scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits(),
             };
-            return modelTransform;
         }
 
         function updateLocalTransform(modelOrigin= [0, 0, 0]) {

@@ -6,8 +6,7 @@ import type Point from '@mapbox/point-geometry';
 
 export function getGlobeCircumferencePixels(transform: {worldSize: number; center: {lat: number}}): number {
     const radius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
-    const circumference = 2.0 * Math.PI * radius;
-    return circumference;
+    return 2.0 * Math.PI * radius;
 }
 
 export function globeDistanceOfLocationsPixels(transform: {worldSize: number; center: {lat: number}}, a: LngLat, b: LngLat): number {
