@@ -17,6 +17,7 @@ import lineGradientWgsl from './line_gradient.wgsl.g';
 import fillExtrusionWgsl from './fill_extrusion.wgsl.g';
 import lineSDFWgsl from './line_sdf.wgsl.g';
 import rasterWgsl from './raster.wgsl.g';
+import symbolSDFWgsl from './symbol_sdf.wgsl.g';
 import clippingMaskFrag from './clipping_mask.fragment.glsl.g';
 import clippingMaskVert from './clipping_mask.vertex.glsl.g';
 import heatmapFrag from './heatmap.fragment.glsl.g';
@@ -104,6 +105,7 @@ export const shaders = {
     lineGradientWgsl: lineGradientWgsl,
     lineSDFWgsl: lineSDFWgsl,
     rasterWgsl: rasterWgsl,
+    symbolSDFWgsl: symbolSDFWgsl,
     clippingMask: prepare(clippingMaskFrag, clippingMaskVert),
     heatmap: prepare(heatmapFrag, heatmapVert),
     heatmapTexture: prepare(heatmapTextureFrag, heatmapTextureVert),

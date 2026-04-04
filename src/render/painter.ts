@@ -181,6 +181,7 @@ export class Painter {
             this.useDrawables.add('line');
             this.useDrawables.add('raster');
             this.useDrawables.add('fill-extrusion');
+            this.useDrawables.add('symbol');
         }
 
         this.setup();

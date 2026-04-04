@@ -22,6 +22,9 @@ import {renderStateHash} from './render_state';
 
 function wgslTypeFromFormat(format: string): string {
     if (format.startsWith('sint16')) return format === 'sint16' ? 'i32' : `vec${format.charAt(format.length - 1)}<i32>`;
+    if (format.startsWith('uint16')) return format === 'uint16' ? 'u32' : `vec${format.charAt(format.length - 1)}<u32>`;
+    if (format.startsWith('sint32')) return format === 'sint32' ? 'i32' : `vec${format.charAt(format.length - 1)}<i32>`;
+    if (format.startsWith('uint32')) return format === 'uint32' ? 'u32' : `vec${format.charAt(format.length - 1)}<u32>`;
     if (format.startsWith('uint8')) return format === 'uint8' ? 'u32' : `vec${format.charAt(format.length - 1)}<u32>`;
     if (format.startsWith('float32')) return format === 'float32' ? 'f32' : `vec${format.charAt(format.length - 1)}<f32>`;
     return 'vec4<f32>';
@@ -356,7 +359,36 @@ export class Drawable {
                     attributes: layoutAttrs,
                 });
 
-                // Slots 1+: paint vertex buffers (for data-driven properties)
+                // Slots 1+: dynamic vertex buffers (projected_pos, fade_opacity, etc.)
+                const dynamicBuffers = [this.dynamicLayoutBuffer, this.dynamicLayoutBuffer2].filter(Boolean) as any[];
+                for (const dynBuf of dynamicBuffers) {
+                    const dynAttrs: any[] = [];
+                    for (const member of dynBuf.attributes) {
+                        const format = getWebGPUVertexFormat(member.type, member.components);
+                        dynAttrs.push({shaderLocation: locationIndex, format, offset: member.offset});
+                        const wgslType = wgslTypeFromFormat(format);
+                        vertexInputStruct += `    @location(${locationIndex}) ${member.name.replace('a_', '')}: ${wgslType},\n`;
+                        locationIndex++;
+                    }
+                    // WebGPU requires stride aligned to 4; compute actual stride from attributes
+                    let stride = dynBuf.itemSize;
+                    if (stride < 4) {
+                        // Compute from attribute format sizes
+                        let maxEnd = 0;
+                        for (const member of dynBuf.attributes) {
+                            const bytes = member.components * (member.type === 'Float32' ? 4 : member.type === 'Int16' || member.type === 'Uint16' ? 2 : member.type === 'Int8' || member.type === 'Uint8' ? 1 : 4);
+                            maxEnd = Math.max(maxEnd, member.offset + bytes);
+                        }
+                        stride = Math.max(Math.ceil(maxEnd / 4) * 4, 4);
+                    }
+                    vertexBufferLayouts.push({
+                        arrayStride: stride,
+                        stepMode: 'vertex',
+                        attributes: dynAttrs,
+                    });
+                }
+
+                // Next slots: paint vertex buffers (for data-driven properties)
                 const paintBuffers = this.programConfiguration ? this.programConfiguration.getPaintVertexBuffers() : [];
                 for (const paintBuf of paintBuffers) {
                     const paintAttrs: any[] = [];
@@ -489,7 +521,7 @@ export class Drawable {
             rpEncoder.setBindGroup(0, bindGroup);
 
             // Bind textures at @group(1) only for shaders that declare texture bindings
-            const shadersWithTextures = ['lineSDF', 'lineGradient', 'lineGradientSDF', 'linePattern', 'fillPattern', 'fillOutlinePattern', 'raster'];
+            const shadersWithTextures = ['lineSDF', 'lineGradient', 'lineGradientSDF', 'linePattern', 'fillPattern', 'fillOutlinePattern', 'raster', 'symbolSDF', 'symbolIcon', 'symbolTextAndIcon'];
             const hasGroup1 = shadersWithTextures.includes(this.shaderName);
 
             if (hasGroup1) {
@@ -555,18 +587,39 @@ export class Drawable {
                                     );
                                     (tex as any)._gpuTexture = gpuTex;
                                 } else if (source?.data) {
-                                    // Raw pixel data upload (line atlas, etc.)
+                                    // Raw pixel data upload (line atlas, glyph atlas, etc.)
                                     const format = source.format || 'rgba8unorm';
                                     const bpp = source.bytesPerPixel || 4;
+                                    const srcBytesPerRow = source.width * bpp;
+                                    // WebGPU requires bytesPerRow aligned to 256
+                                    const alignedBytesPerRow = Math.ceil(srcBytesPerRow / 256) * 256;
                                     gpuTex = gpuDevice.createTexture({
                                         size: [source.width, source.height], format,
                                         usage: 4 | 2,
                                     });
-                                    gpuDevice.queue.writeTexture(
-                                        {texture: gpuTex}, source.data,
-                                        {bytesPerRow: source.width * bpp},
-                                        [source.width, source.height]
-                                    );
+                                    if (alignedBytesPerRow === srcBytesPerRow) {
+                                        gpuDevice.queue.writeTexture(
+                                            {texture: gpuTex}, source.data,
+                                            {bytesPerRow: srcBytesPerRow},
+                                            [source.width, source.height]
+                                        );
+                                    } else {
+                                        // Pad each row to 256-byte aligned stride
+                                        const padded = new Uint8Array(alignedBytesPerRow * source.height);
+                                        const srcData = source.data instanceof Uint8Array ? source.data : new Uint8Array(source.data);
+                                        for (let row = 0; row < source.height; row++) {
+                                            const srcOffset = row * srcBytesPerRow;
+                                            const dstOffset = row * alignedBytesPerRow;
+                                            for (let b = 0; b < srcBytesPerRow; b++) {
+                                                padded[dstOffset + b] = srcData[srcOffset + b];
+                                            }
+                                        }
+                                        gpuDevice.queue.writeTexture(
+                                            {texture: gpuTex}, padded,
+                                            {bytesPerRow: alignedBytesPerRow},
+                                            [source.width, source.height]
+                                        );
+                                    }
                                     (tex as any)._gpuTexture = gpuTex;
                                 }
                             }
@@ -605,11 +658,21 @@ export class Drawable {
             if (!this.layoutVertexBuffer.webgpuBuffer) return;
             rpEncoder.setVertexBuffer(0, this.layoutVertexBuffer.webgpuBuffer.handle);
 
-            // Bind paint vertex buffers (data-driven properties) at slots 1+
+            // Bind dynamic vertex buffers (projected_pos, fade_opacity, etc.) at slots 1+
+            let nextSlot = 1;
+            const dynBufs = [this.dynamicLayoutBuffer, this.dynamicLayoutBuffer2].filter(Boolean);
+            for (const dynBuf of dynBufs) {
+                if ((dynBuf as any)?.webgpuBuffer) {
+                    rpEncoder.setVertexBuffer(nextSlot, (dynBuf as any).webgpuBuffer.handle);
+                }
+                nextSlot++;
+            }
+
+            // Bind paint vertex buffers (data-driven properties) at subsequent slots
             const paintBufs = this.programConfiguration ? this.programConfiguration.getPaintVertexBuffers() : [];
             for (let i = 0; i < paintBufs.length; i++) {
                 if (paintBufs[i]?.webgpuBuffer) {
-                    rpEncoder.setVertexBuffer(i + 1, paintBufs[i].webgpuBuffer.handle);
+                    rpEncoder.setVertexBuffer(nextSlot + i, paintBufs[i].webgpuBuffer.handle);
                 }
             }
 
