@@ -12,7 +12,6 @@ import posAttributes from '../../data/pos_attributes';
 import {type Framebuffer} from '../../gl/framebuffer';
 import {isWebGL2} from '../../gl/webgl2';
 import {type ProjectionGPUContext} from './projection';
-import {LumaModel} from '../../render/luma_model';
 
 /**
  * For vector globe the vertex shader projects mercator coordinates to angular coordinates on a sphere.
@@ -169,15 +168,7 @@ export class ProjectionErrorMeasurement {
 
         const program = this._cachedRenderContext.useProgram('projectionErrorMeasurement');
 
-        const lumaModel = new LumaModel(
-            (this._cachedRenderContext.context as any).device,
-            program,
-            this._fullscreenTriangle.vertexBuffer,
-            this._fullscreenTriangle.indexBuffer,
-            this._fullscreenTriangle.segments
-        );
-
-        lumaModel.draw(context, gl.TRIANGLES,
+        program.draw(context, gl.TRIANGLES,
             DepthMode.disabled, StencilMode.disabled,
             ColorMode.unblended, CullFaceMode.disabled,
             projectionErrorMeasurementUniformValues(input, outputExpected) as any, null, null,
