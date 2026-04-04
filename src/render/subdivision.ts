@@ -951,10 +951,8 @@ export function scanlineTriangulateVertexRing(vertexBuffer: Array<number>, ring:
             pickA = false;
         } else {
             // Pick the candidate that is more "right" of the last edge's line
-            const ex = lastEdgeBx - lastEdgeAx;
-            const ey = lastEdgeBy - lastEdgeAy;
-            const nx = ey;
-            const ny = -ex;
+            const nx = lastEdgeBy - lastEdgeAy;
+            const ny = -(lastEdgeBx - lastEdgeAx);
             const sign = (lastEdgeAy < lastEdgeBy) ? 1 : -1;
             // dot( (candidateA <-- lastEdgeA), normal )
             const aRight = ((candidateAx - lastEdgeAx) * nx + (candidateAy - lastEdgeAy) * ny) * sign;
