@@ -853,8 +853,8 @@ export class TileManager extends Evented {
 
         const cameraBounds = Bounds.fromPoints(cameraQueryGeometry);
 
-        for (let i = 0; i < ids.length; i++) {
-            const tile = this._inViewTiles.getTileById(ids[i]);
+        for (const id of ids) {
+            const tile = this._inViewTiles.getTileById(id);
             if (tile.holdingForSymbolFade()) {
                 // Tiles held for fading are covered by tiles that are closer to ideal
                 continue;

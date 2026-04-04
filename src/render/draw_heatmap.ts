@@ -65,8 +65,7 @@ function prepareHeatmapFlat(painter: Painter, tileManager: TileManager, layer: H
 
     context.clear({color: Color.transparent});
 
-    for (let i = 0; i < coords.length; i++) {
-        const coord = coords[i];
+    for (const coord of coords) {
 
         // Skip tiles that have uncovered parents to avoid flickering; we don't need
         // to use complex tile masking here because the change between zoom levels is subtle,

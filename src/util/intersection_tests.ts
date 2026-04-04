@@ -11,12 +11,12 @@ type Polygon = Array<Point>;
 type MultiPolygon = Array<Polygon>;
 
 function polygonIntersectsPolygon(polygonA: Polygon, polygonB: Polygon) {
-    for (let i = 0; i < polygonA.length; i++) {
-        if (polygonContainsPoint(polygonB, polygonA[i])) return true;
+    for (const point of polygonA) {
+        if (polygonContainsPoint(polygonB, point)) return true;
     }
 
-    for (let i = 0; i < polygonB.length; i++) {
-        if (polygonContainsPoint(polygonA, polygonB[i])) return true;
+    for (const point of polygonB) {
+        if (polygonContainsPoint(polygonA, point)) return true;
     }
 
     if (lineIntersectsLine(polygonA, polygonB)) return true;
@@ -36,31 +36,29 @@ function polygonIntersectsMultiPolygon(polygon: Polygon, multiPolygon: MultiPoly
         return multiPolygonContainsPoint(multiPolygon, polygon[0]);
     }
 
-    for (let m = 0; m < multiPolygon.length; m++) {
-        const ring = multiPolygon[m];
-        for (let n = 0; n < ring.length; n++) {
-            if (polygonContainsPoint(polygon, ring[n])) return true;
+    for (const ring of multiPolygon) {
+        for (const point of ring) {
+            if (polygonContainsPoint(polygon, point)) return true;
         }
     }
 
-    for (let i = 0; i < polygon.length; i++) {
-        if (multiPolygonContainsPoint(multiPolygon, polygon[i])) return true;
+    for (const point of polygon) {
+        if (multiPolygonContainsPoint(multiPolygon, point)) return true;
     }
 
-    for (let k = 0; k < multiPolygon.length; k++) {
-        if (lineIntersectsLine(polygon, multiPolygon[k])) return true;
+    for (const ring of multiPolygon) {
+        if (lineIntersectsLine(polygon, ring)) return true;
     }
 
     return false;
 }
 
 function polygonIntersectsBufferedMultiLine(polygon: Polygon, multiLine: MultiLine, radius: number) {
-    for (let i = 0; i < multiLine.length; i++) {
-        const line = multiLine[i];
+    for (const line of multiLine) {
 
         if (polygon.length >= 3) {
-            for (let k = 0; k < line.length; k++) {
-                if (polygonContainsPoint(polygon, line[k])) return true;
+            for (const point of line) {
+                if (polygonContainsPoint(polygon, point)) return true;
             }
         }
 
@@ -75,13 +73,13 @@ function lineIntersectsBufferedLine(lineA: Line, lineB: Line, radius: number) {
         if (lineIntersectsLine(lineA, lineB)) return true;
 
         // Check whether any point in either line is within radius of the other line
-        for (let j = 0; j < lineB.length; j++) {
-            if (pointIntersectsBufferedLine(lineB[j], lineA, radius)) return true;
+        for (const point of lineB) {
+            if (pointIntersectsBufferedLine(point, lineA, radius)) return true;
         }
     }
 
-    for (let k = 0; k < lineA.length; k++) {
-        if (pointIntersectsBufferedLine(lineA[k], lineB, radius)) return true;
+    for (const point of lineA) {
+        if (pointIntersectsBufferedLine(point, lineB, radius)) return true;
     }
 
     return false;
@@ -135,8 +133,8 @@ function multiPolygonContainsPoint(rings: Array<Ring>, p: Point) {
     let c = false,
         ring, p1, p2;
 
-    for (let k = 0; k < rings.length; k++) {
-        ring = rings[k];
+    for (const currentRing of rings) {
+        ring = currentRing;
         for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
             p1 = ring[i];
             p2 = ring[j];

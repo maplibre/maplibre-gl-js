@@ -282,11 +282,10 @@ describe('TileManager.addTile', () => {
             new OverscaledTileID(1, 0, 1, 1, 1)
         ];
 
-        for (let i = 0; i < tileIDs.length; i++)
-            tileManager._addTile(tileIDs[i]);
+        for (const tileID of tileIDs)
+            tileManager._addTile(tileID);
 
-        for (let i = 0; i < tileIDs.length; i++) {
-            const id = tileIDs[i];
+        for (const id of tileIDs) {
             const key = id.key;
 
             expect(tileManager._inViewTiles.getTileById(key)).toBeTruthy();
@@ -2312,8 +2311,8 @@ describe('tile manager get ids', () => {
 
         const tileManager = createTileManager({});
         tileManager.transform = new MercatorTransform();
-        for (let i = 0; i < ids.length; i++) {
-            tileManager._inViewTiles.setTile(ids[i].key, {tileID: ids[i]} as any as Tile);
+        for (const id of ids) {
+            tileManager._inViewTiles.setTile(id.key, {tileID: id} as any as Tile);
         }
         expect(tileManager.getIds()).toEqual([
             new OverscaledTileID(0, 0, 0, 0, 0).key,

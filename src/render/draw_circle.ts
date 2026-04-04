@@ -63,8 +63,7 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
     // Note: due to how the shader is written, this value only has effect when globe rendering is enabled and `circle-pitch-alignment` is set to 'map'.
     const radiusCorrectionFactor = transform.getCircleRadiusCorrection();
 
-    for (let i = 0; i < coords.length; i++) {
-        const coord = coords[i];
+    for (const coord of coords) {
 
         const tile = tileManager.getTile(coord);
         const bucket: CircleBucket<any> = (tile.getBucket(layer) as any);

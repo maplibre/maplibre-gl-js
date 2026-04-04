@@ -86,8 +86,7 @@ function pointToPolygonDist(p, polygon) {
     let inside = false;
     let minDistSq = Infinity;
 
-    for (let k = 0; k < polygon.length; k++) {
-        const ring = polygon[k];
+    for (const ring of polygon) {
 
         for (let i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
             const a = ring[i];
