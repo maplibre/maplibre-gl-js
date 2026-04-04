@@ -33,8 +33,11 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     vout.position = ubo.matrix * vec4<f32>(pos, 0.0, 1.0);
     vout.position.z = (vout.position.z + vout.position.w) * 0.5;
 
+    // Scale UV to skip 1-pixel border in DEM texture (matches GL JS and native)
+    let epsilon = vec2<f32>(1.0, 1.0) / ubo.dimension;
+    let scale = (ubo.dimension.x - 2.0) / ubo.dimension.x;
     let texcoord = vec2<f32>(f32(vin.texture_pos.x), f32(vin.texture_pos.y));
-    vout.v_pos = texcoord / 8192.0;
+    vout.v_pos = texcoord / 8192.0 * scale + epsilon;
 
     return vout;
 }
@@ -48,8 +51,8 @@ struct FragmentInput {
 
 fn getElevation(ubo: HillshadePrepareUBO, coord: vec2<f32>) -> f32 {
     var pixel = textureSample(dem_texture, dem_sampler, coord) * 255.0;
-    pixel.a = 1.0; // Some DEM sources don't properly encode alpha
-    return dot(pixel, ubo.unpack) / 4.0;
+    pixel.a = -1.0;
+    return dot(pixel, ubo.unpack);
 }
 
 @fragment
@@ -58,17 +61,7 @@ fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
 
     let epsilon = 1.0 / ubo.dimension.x;
     let coord = fin.v_pos;
-
-    // Compute the exaggeration factor based on zoom
-    var exaggeration: f32;
     let zoom = ubo.zoom;
-    if (zoom < 2.0) {
-        exaggeration = 0.4;
-    } else if (zoom < 4.5) {
-        exaggeration = 0.35;
-    } else {
-        exaggeration = 0.3;
-    }
 
     // Sample 3x3 neighborhood for Sobel-like derivatives
     let a = getElevation(ubo, coord + vec2<f32>(-epsilon, -epsilon));
@@ -76,20 +69,25 @@ fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
     let c = getElevation(ubo, coord + vec2<f32>(epsilon, -epsilon));
     let d = getElevation(ubo, coord + vec2<f32>(-epsilon, 0.0));
     let e = getElevation(ubo, coord);
-    let f = getElevation(ubo, coord + vec2<f32>(epsilon, 0.0));
+    let f_val = getElevation(ubo, coord + vec2<f32>(epsilon, 0.0));
     let g = getElevation(ubo, coord + vec2<f32>(-epsilon, epsilon));
     let h = getElevation(ubo, coord + vec2<f32>(0.0, epsilon));
     let i = getElevation(ubo, coord + vec2<f32>(epsilon, epsilon));
 
-    // Sobel filters for x and y slope
-    let dzdx = ((c + 2.0 * f + i) - (a + 2.0 * d + g)) / 8.0 * exaggeration;
-    let dzdy = ((g + 2.0 * h + i) - (a + 2.0 * b + c)) / 8.0 * exaggeration;
+    // Zoom-dependent exaggeration (matches GL exactly)
+    let tileSize = ubo.dimension.x - 2.0;
+    let exaggerationFactor = select(select(0.3, 0.35, zoom < 4.5), 0.4, zoom < 2.0);
+    let exag = select((zoom - 15.0) * exaggerationFactor, 0.0, zoom >= 15.0);
 
-    // Encode slopes in r,g channels (offset by 0.5, scale by 0.5)
-    return vec4<f32>(
-        dzdx * 0.5 + 0.5,
-        dzdy * 0.5 + 0.5,
+    let deriv = vec2<f32>(
+        (c + f_val + f_val + i) - (a + d + d + g),
+        (g + h + h + i) - (a + b + b + c)
+    ) * tileSize / pow(2.0, exag + (28.2562 - zoom));
+
+    return clamp(vec4<f32>(
+        deriv.x / 8.0 + 0.5,
+        deriv.y / 8.0 + 0.5,
         1.0,
         1.0
-    );
+    ), vec4<f32>(0.0), vec4<f32>(1.0));
 }

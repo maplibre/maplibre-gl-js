@@ -195,7 +195,8 @@ function drawHillshadeWebGPU(painter: Painter, tileManager: TileManager, layer: 
         const tile = tileManager.getTile(coord);
         const dem = tile.dem;
         if (!dem || !dem.data) continue;
-        if (!tile.needsHillshadePrepare) continue;
+        // Only prepare if needed (first time or DEM data changed)
+        if (!tile.needsHillshadePrepare && (tile as any)._webgpuHillshade) continue;
 
         const tileSize = dem.dim;
         const textureStride = dem.stride;
@@ -207,7 +208,7 @@ function drawHillshadeWebGPU(painter: Painter, tileManager: TileManager, layer: 
             gpuState = {
                 texture: gpuDevice.createTexture({
                     size: [tileSize, tileSize],
-                    format: 'rgba8unorm',
+                    format: 'rgba16float',
                     usage: 0x10 | 0x04, // RENDER_ATTACHMENT | TEXTURE_BINDING
                 }),
                 size: tileSize,
@@ -260,7 +261,7 @@ function drawHillshadeWebGPU(painter: Painter, tileManager: TileManager, layer: 
                 fragment: {
                     module: shaderModule,
                     entryPoint: 'fragmentMain',
-                    targets: [{format: 'rgba8unorm'}],
+                    targets: [{format: 'rgba16float'}],
                 },
                 primitive: {topology: 'triangle-list', cullMode: 'none'},
             });
@@ -388,17 +389,17 @@ function drawHillshadeWebGPU(painter: Painter, tileManager: TileManager, layer: 
         (painter as any)._hillshadeRenderPipeline = renderPipeline;
     }
 
-    // Get hillshade paint properties
-    const paint = layer.paint;
-    const shadowColor = paint.get('hillshade-shadow-color').values?.[0] || paint.get('hillshade-shadow-color');
-    const highlightColor = paint.get('hillshade-highlight-color').values?.[0] || paint.get('hillshade-highlight-color');
-    const accentColor = paint.get('hillshade-accent-color');
-    const illuminationDir = paint.get('hillshade-illumination-direction');
-    const illuminationAnchor = paint.get('hillshade-illumination-anchor');
-    const exaggeration = paint.get('hillshade-exaggeration');
-
-    const azimuth = (typeof illuminationDir === 'number' ? illuminationDir : 335) / 180 * Math.PI;
-    const altitude = 1.0472; // ~60 degrees default
+    // Get hillshade paint properties using the same path as GL
+    const illumination = layer.getIlluminationProperties();
+    let azimuth = illumination.directionRadians[0];
+    if (layer.paint.get('hillshade-illumination-anchor') === 'viewport') {
+        azimuth += painter.transform.bearingInRadians;
+    }
+    const altitude = illumination.altitudeRadians[0];
+    const shadowColor = illumination.shadowColor[0];
+    const highlightColor = illumination.highlightColor[0];
+    const accentColor = layer.paint.get('hillshade-accent-color');
+    const exaggeration = layer.paint.get('hillshade-exaggeration');
 
     mainRenderPass.setPipeline(renderPipeline);
 
@@ -424,20 +425,31 @@ function drawHillshadeWebGPU(painter: Painter, tileManager: TileManager, layer: 
         const drawUBO = new UniformBlock(32);
         drawUBO.setMat4(0, projectionData.mainMatrix as Float32Array);
 
-        // Expand to include latrange, exaggeration
-        const drawUBO2 = new UniformBlock(80);
+        // Expand to include latrange, exaggeration, tex_offset, tex_scale
+        const drawUBO2 = new UniformBlock(96);
         drawUBO2.setMat4(0, projectionData.mainMatrix as Float32Array);
         drawUBO2.setVec2(64, latN, latS);
         drawUBO2.setFloat(72, typeof exaggeration === 'number' ? exaggeration : 0.5);
 
+        // Compute sub-tile UV offset/scale for overscaled tiles
+        const demTile = tile.tileID;
+        const zoomDiff = coord.overscaledZ - demTile.overscaledZ;
+        if (zoomDiff > 0) {
+            const scale = 1 / (1 << zoomDiff);
+            const xOffset = (coord.canonical.x - (demTile.canonical.x << zoomDiff)) * scale;
+            const yOffset = (coord.canonical.y - (demTile.canonical.y << zoomDiff)) * scale;
+            drawUBO2.setVec2(80, xOffset, yOffset); // tex_offset
+            drawUBO2.setVec2(88, scale, scale);      // tex_scale
+        } else {
+            drawUBO2.setVec2(80, 0, 0);   // tex_offset = (0,0)
+            drawUBO2.setVec2(88, 1, 1);   // tex_scale = (1,1)
+        }
+
         // Props UBO
         const propsUBO = new UniformBlock(64);
-        const sc = typeof shadowColor === 'object' && 'r' in shadowColor ? shadowColor : {r: 0.075, g: 0.075, b: 0.075, a: 1};
-        const hc = typeof highlightColor === 'object' && 'r' in highlightColor ? highlightColor : {r: 1, g: 1, b: 1, a: 1};
-        const ac = typeof accentColor === 'object' && 'r' in accentColor ? accentColor : {r: 0, g: 0, b: 0, a: 1};
-        propsUBO.setVec4(0, sc.r, sc.g, sc.b, sc.a);
-        propsUBO.setVec4(16, hc.r, hc.g, hc.b, hc.a);
-        propsUBO.setVec4(32, ac.r, ac.g, ac.b, ac.a);
+        propsUBO.setVec4(0, shadowColor.r, shadowColor.g, shadowColor.b, shadowColor.a);
+        propsUBO.setVec4(16, highlightColor.r, highlightColor.g, highlightColor.b, highlightColor.a);
+        propsUBO.setVec4(32, accentColor.r, accentColor.g, accentColor.b, accentColor.a);
         propsUBO.setFloat(48, altitude);
         propsUBO.setFloat(52, azimuth);
 

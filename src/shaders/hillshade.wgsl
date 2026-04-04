@@ -1,10 +1,13 @@
 // Hillshade shader — Pass 2: Render shaded terrain from prepared slope texture
+// Implements the "standard" hillshade illumination model matching GL JS and native.
 
 struct HillshadeDrawableUBO {
     matrix: mat4x4<f32>,
     latrange: vec2<f32>,
     exaggeration: f32,
     pad1: f32,
+    tex_offset: vec2<f32>,   // UV offset for overscaled sub-tile
+    tex_scale: vec2<f32>,    // UV scale for overscaled sub-tile
 };
 
 struct HillshadePropsUBO {
@@ -56,7 +59,8 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     vout.position.z = (vout.position.z + vout.position.w) * 0.5;
 
     let texcoord = vec2<f32>(f32(vin.texture_pos.x), f32(vin.texture_pos.y));
-    vout.v_pos = texcoord / 8192.0;
+    // Apply sub-tile offset/scale for overscaled tiles
+    vout.v_pos = texcoord / 8192.0 * drawable.tex_scale + drawable.tex_offset;
 
     return vout;
 }
@@ -70,37 +74,53 @@ struct FragmentInput {
 
 const PI: f32 = 3.141592653589793;
 
+fn glMod(x: f32, y: f32) -> f32 {
+    return x - y * floor(x / y);
+}
+
+fn get_aspect(deriv: vec2<f32>) -> f32 {
+    let aspectDefault = 0.5 * PI * select(-1.0, 1.0, deriv.y > 0.0);
+    return select(aspectDefault, atan2(deriv.y, -deriv.x), deriv.x != 0.0);
+}
+
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
     let drawable = drawableVector[globalIndex.value];
-    // Reference paintParams to prevent it from being stripped
+    // Reference paintParams to prevent binding from being stripped
     let dummy_pr = paintParams.pixel_ratio;
 
     // Sample the prepared slope texture
-    let slopes = textureSample(slope_texture, slope_sampler, fin.v_pos);
-    let dzdx = (slopes.r - 0.5) * 2.0;
-    let dzdy = (slopes.g - 0.5) * 2.0;
+    let pixel = textureSample(slope_texture, slope_sampler, fin.v_pos);
 
-    // Compute slope and aspect
-    let slope_val = atan(sqrt(dzdx * dzdx + dzdy * dzdy));
-    let aspect = atan2(-dzdy, dzdx);
+    // Latitude correction for Mercator distortion (see maplibre-gl-js #4807)
+    let latRange = drawable.latrange;
+    let latitude = (latRange.x - latRange.y) * (1.0 - fin.v_pos.y) + latRange.y;
+    let scaleFactor = cos(radians(latitude));
 
-    // Light direction
-    let azimuth = props.azimuth;
-    let altitude = props.altitude;
+    // Decode derivative from prepared texture: stored as deriv/8 + 0.5
+    let deriv = ((pixel.rg * 8.0) - vec2<f32>(4.0, 4.0)) / scaleFactor;
 
-    // Standard hillshade: dot product of light direction and surface normal
-    let hillshade = cos(altitude) * cos(slope_val) +
-        sin(altitude) * sin(slope_val) * cos(azimuth - aspect);
+    // Standard hillshade illumination (MapLibre's default method)
+    let azimuth = props.azimuth + PI;
+    let slope = atan(0.625 * length(deriv));
+    let aspect = get_aspect(deriv);
 
-    // Map to shadow/highlight
-    let shadow = props.shadow;
-    let highlight = props.highlight;
-    var color = mix(shadow, highlight, clamp(hillshade, 0.0, 1.0));
+    let intensity = drawable.exaggeration;
 
-    // Blend accent color based on slope
-    let accent_amount = min(slope_val * 2.0, 1.0) * 0.5;
-    color = mix(color, props.accent, accent_amount);
+    // Exponential slope scaling based on intensity
+    let base = 1.875 - intensity * 1.75;
+    let maxValue = 0.5 * PI;
+    let denom = pow(base, maxValue) - 1.0;
+    let useNonLinear = abs(intensity - 0.5) > 1e-6;
+    let scaledSlope = select(slope, ((pow(base, slope) - 1.0) / denom) * maxValue, useNonLinear);
 
-    return vec4<f32>(color.rgb * color.a, color.a);
+    // Accent color from slope cosine
+    let accentFactor = cos(scaledSlope);
+    let accentColor = (1.0 - accentFactor) * props.accent * clamp(intensity * 2.0, 0.0, 1.0);
+
+    // Shade color from aspect relative to light direction
+    let shade = abs(glMod((aspect + azimuth) / PI + 0.5, 2.0) - 1.0);
+    let shadeColor = mix(props.shadow, props.highlight, shade) * sin(scaledSlope) * clamp(intensity * 2.0, 0.0, 1.0);
+
+    return accentColor * (1.0 - shadeColor.a) + shadeColor;
 }
