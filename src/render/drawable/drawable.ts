@@ -466,18 +466,25 @@ export class Drawable {
             rpEncoder.setPipeline(pipeline);
             rpEncoder.setBindGroup(0, bindGroup);
 
-            // Set stencil reference for tile clipping
-            if (this.tileID) {
+            // Set stencil reference for tile clipping (only for layers that use stencil)
+            const needsStencil = this.shaderName === 'fill' || this.shaderName === 'fillOutline' || this.shaderName === 'line' ||
+                this.shaderName === 'lineSDF' || this.shaderName === 'lineGradient' || this.shaderName === 'linePattern';
+            if (needsStencil && this.tileID) {
                 const stencilRef = painter.getWebGPUStencilRef(this.tileID);
+                if (stencilRef === 0) {
+                    // No stencil mask written for this tile — skip drawing to avoid inverted clipping
+                    return;
+                }
                 rpEncoder.setStencilReference(stencilRef);
             }
 
+            if (!this.layoutVertexBuffer.webgpuBuffer) return;
             rpEncoder.setVertexBuffer(0, this.layoutVertexBuffer.webgpuBuffer.handle);
 
             // Bind paint vertex buffers (data-driven properties) at slots 1+
             const paintBufs = this.programConfiguration ? this.programConfiguration.getPaintVertexBuffers() : [];
             for (let i = 0; i < paintBufs.length; i++) {
-                if (paintBufs[i].webgpuBuffer) {
+                if (paintBufs[i]?.webgpuBuffer) {
                     rpEncoder.setVertexBuffer(i + 1, paintBufs[i].webgpuBuffer.handle);
                 }
             }

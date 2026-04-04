@@ -395,11 +395,9 @@ export class Painter {
         if (!this.renderPassWGSL || !tileIDs || !tileIDs.length) return;
         if (!layer.isTileClipped()) return;
 
-        // Re-render stencil masks for EVERY tile-clipped layer (matching native's
-        // per-layer-group approach). Each layer gets fresh stencil values drawn
-        // RIGHT BEFORE its drawables, ensuring stencil-fill consistency.
-        // The per-source guard was removed because it caused stale stencil state
-        // during zoom level transitions.
+        // Skip if we already rendered stencil masks for this source (same tiles)
+        if (this._webgpuCurrentStencilSource === layer.source) return;
+        this._webgpuCurrentStencilSource = layer.source;
 
         if (this._webgpuNextStencilID + tileIDs.length > 256) {
             this._webgpuNextStencilID = 1;
@@ -464,18 +462,6 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
             });
         }
 
-        // Ensure we have enough per-tile UBO buffers (each tile needs its own buffer
-        // because writeBuffer + render pass commands are deferred — a single buffer
-        // would only contain the last tile's matrix when the GPU executes).
-        const needed = tileIDs.length;
-        if (!this._webgpuClipUBOBuffers) this._webgpuClipUBOBuffers = [];
-        while (this._webgpuClipUBOBuffers.length < needed) {
-            this._webgpuClipUBOBuffers.push(gpuDevice.createBuffer({
-                size: 64, // mat4x4<f32>
-                usage: 64 | 8, // GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-            }));
-        }
-
         const pipeline = this._webgpuStencilClipPipeline;
         rpEncoder.setPipeline(pipeline);
 
@@ -488,11 +474,16 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
                 'tiles:', tileIDs.map(t => `z${t.overscaledZ}(${t.canonical.x},${t.canonical.y})→ref${this._webgpuNextStencilID + tileIDs.indexOf(t)}`).join(' '));
         }
 
-        // Single pass: draw each tile's stencil mask with a unique ref.
-        // For mercator, getMeshFromTileID ignores the border parameter,
-        // so the two-pass approach used in WebGL is unnecessary.
-        // Tiles in ascending z order means higher-zoom tiles get higher refs
-        // and overwrite parent tiles in overlap areas.
+        // Allocate per-tile UBO buffers
+        if (!this._webgpuClipUBOBuffers) this._webgpuClipUBOBuffers = [];
+        while (this._webgpuClipUBOBuffers.length < tileIDs.length) {
+            this._webgpuClipUBOBuffers.push(gpuDevice.createBuffer({
+                size: 64,
+                usage: 64 | 8, // UNIFORM | COPY_DST
+            }));
+        }
+
+        // Draw each tile's stencil mask with a unique ref
         for (let i = 0; i < tileIDs.length; i++) {
             const tileID = tileIDs[i];
             const stencilRef = this._webgpuNextStencilID++;
@@ -505,7 +496,6 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
                 applyTerrainMatrix: true
             });
 
-            // Each tile gets its own buffer so the GPU sees the correct matrix
             const clipUBOBuffer = this._webgpuClipUBOBuffers[i];
             gpuDevice.queue.writeBuffer(clipUBOBuffer, 0, projectionData.mainMatrix as Float32Array);
 
@@ -531,7 +521,11 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
      * Get the WebGPU stencil reference for a tile (set during clipping mask pass).
      */
     getWebGPUStencilRef(tileID: OverscaledTileID): number {
-        return this._webgpuTileStencilRefs?.[tileID.key] ?? 0;
+        const ref = this._webgpuTileStencilRefs?.[tileID.key];
+        if (ref === undefined) {
+            console.warn(`[STENCIL MISS] key=${tileID.key} z=${tileID.canonical.z} oZ=${tileID.overscaledZ} avail=[${Object.keys(this._webgpuTileStencilRefs || {}).slice(0, 8).join(',')}]`);
+        }
+        return ref ?? 0;
     }
 
     /**
@@ -960,7 +954,6 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
     renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
-        console.log(`[Painter.renderLayer] id=${layer.id} type=${layer.type} coords=${coords?.length}`);
         this.id = layer.id;
 
         if (isSymbolStyleLayer(layer)) {

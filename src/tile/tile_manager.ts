@@ -490,10 +490,8 @@ export class TileManager extends Evented {
      */
     update(transform: ITransform, terrain?: Terrain) {
         if (!this._sourceLoaded || this._paused) {
-            console.log(`[TileManager.update] BAIL: _sourceLoaded=${this._sourceLoaded} _paused=${this._paused} id=${this.id}`);
             return;
         }
-        console.log(`[TileManager.update] id=${this.id} transform=${transform.width}x${transform.height}`);
         this.transform = transform;
         this.terrain = terrain;
 
@@ -525,7 +523,6 @@ export class TileManager extends Evented {
             }
         }
 
-        console.log(`[TileManager.update] id=${this.id} idealTileIDs.length=${idealTileIDs?.length}`);
 
         // When tilemanager is used for terrain also load parent tiles for complete rendering of 3d terrain levels
         if (this.usedForTerrain) {

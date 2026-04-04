@@ -1051,7 +1051,6 @@ export class Map extends Camera {
      */
     _resizeInternal(constrainTransform = true) {
         const [width, height] = this._containerDimensions();
-        console.log(`[Map._resizeInternal] container dimensions: ${width}x${height}`);
 
         const clampedPixelRatio = this._getClampedPixelRatio(width, height);
         this._resizeCanvas(width, height, clampedPixelRatio);
@@ -3669,7 +3668,6 @@ export class Map extends Camera {
      * @param paintStartTimeStamp - The time when the animation frame began executing.
      */
     _render(paintStartTimeStamp: number) {
-        console.log(`[Map._render EARLY] START: zoom=${this.transform.zoom} w=${this.transform.width} h=${this.transform.height} proj=${Array.from(this.transform.projectionMatrix || []).slice(0,4)}`);
         const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
 
         const isGlobeRendering = this.style.projection?.transitionState > 0;
@@ -3741,7 +3739,6 @@ export class Map extends Camera {
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
         if (!this.painter) {
-            console.warn('[Map._render] painter is not initialized yet. Skipping render pass.');
             return;
         }
 
@@ -3757,12 +3754,6 @@ export class Map extends Camera {
         });
 
         // Debug projection data
-        try {
-            console.log(`[Map._render DEBUG] _loaded=${this.loaded()} layerCount=${this.style._order?.length} zoom=${this.transform.zoom} w=${this.transform.width} h=${this.transform.height} center=(${this.transform.center.lng.toFixed(2)},${this.transform.center.lat.toFixed(2)}) dToC=${this.transform.cameraToCenterDistance} proj=${Array.from(this.transform.projectionMatrix).slice(0,4)}`);
-        } catch(e) {
-            console.log(`[Map._render DEBUG error] ${e}`);
-        }
-
         this.fire(new Event('render'));
 
         if (this.loaded() && !this._loaded) {
