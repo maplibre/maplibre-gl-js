@@ -78,8 +78,7 @@ describe('FeatureIndex', () => {
             const layer = new CircleStyleLayer({source: 'source', paint: {}} as LayerSpecification, {});
             layer.recalculate({} as EvaluationParameters, []);
             const featureIndex = new FeatureIndex(tileID);
-            const mltRawData = readFileSync(path.join(__dirname, '../../test/integration/assets/tiles/mlt/5/17/10.mlt')).buffer.slice(0);
-            featureIndex.rawTileData = mltRawData;
+            featureIndex.rawTileData = readFileSync(path.join(__dirname, '../../test/integration/assets/tiles/mlt/5/17/10.mlt')).buffer.slice(0);
             featureIndex.encoding = 'mlt';
             featureIndex.bucketLayerIDs = [['layer']];
             featureIndex.insert({} as any, [[new Point(1, 1)]], 0, 0, 0);

@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest';
 import {Context} from '../gl/context';
 import {Texture} from './texture';
-import {RGBAImage, premultiplyAlpha} from '../util/image';
+import {premultiplyAlpha, RGBAImage} from '../util/image';
 
 describe('Texture', () => {
     describe('glPixelStore state is reset after texture creation', () => {
@@ -45,8 +45,7 @@ describe('Texture', () => {
         const texture = new Texture(context, image, gl.RGBA);
 
         const originalHandle = texture.texture;
-        const bogusHandle = gl.createTexture();
-        texture.texture = bogusHandle;
+        texture.texture = gl.createTexture();
 
         texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
         expect(texture.texture).toBe(originalHandle);

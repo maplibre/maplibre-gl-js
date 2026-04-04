@@ -128,8 +128,7 @@ export class GlyphManager {
 
         // Start downloading this range unless we’re currently downloading it.
         if (!entry.requests[range]) {
-            const promise = GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager);
-            entry.requests[range] = promise;
+            entry.requests[range] = GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager);
         }
 
         try {
