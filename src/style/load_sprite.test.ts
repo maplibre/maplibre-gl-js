@@ -208,7 +208,7 @@ describe('loadSprite', () => {
 
         const manager = new RequestManager(transform);
 
-        server.respondWith((xhr) => { xhr.respond(500); });
+        server.respondWith((xhr) => xhr.respond(500));
         const promise = loadSprite([{id: 'sprite1', url: 'http://localhost:9966/test/unit/assets/sprite1'}], manager, 1, new AbortController());
         await sleep(0);
         server.respond();

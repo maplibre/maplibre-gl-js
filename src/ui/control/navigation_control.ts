@@ -66,7 +66,7 @@ export class NavigationControl implements IControl {
         this.options = extend({}, defaultOptions, options);
 
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
-        this._container.addEventListener('contextmenu', (e) => { e.preventDefault(); });
+        this._container.addEventListener('contextmenu', (e) => e.preventDefault());
 
         if (this.options.showZoom) {
             this._zoomInButton = this._createButton('maplibregl-ctrl-zoom-in', (e) => this._map.zoomIn({}, {originalEvent: e}));
@@ -184,7 +184,7 @@ class MouseRotateWrapper {
     constructor(map: Map, element: HTMLElement, pitch: boolean = false) {
         this._clickTolerance = 10;
         this.element = element;
-        
+
         const moveStateManager = new MouseOrTouchMoveStateManager();
         this._rotatePitchHandler = new DragHandler<DragRotateResult, MouseEvent | TouchEvent>({
             clickTolerance: 3,

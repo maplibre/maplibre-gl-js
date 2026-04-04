@@ -282,7 +282,7 @@ export class GeolocateControl extends Evented implements IControl {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
         this._setupUI();
-        checkGeolocationSupport().then((supported) => { this._finishSetupUI(supported); });
+        checkGeolocationSupport().then((supported) => this._finishSetupUI(supported));
         return this._container;
     }
 

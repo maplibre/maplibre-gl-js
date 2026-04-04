@@ -242,7 +242,7 @@ describe('map events', () => {
 
         vi.spyOn(handler, 'onMove');
 
-        map.on('move', (event) => { handler.onMove(event); });
+        map.on('move', (event) => handler.onMove(event));
         map.jumpTo({center: {lng: 10, lat: 10}});
 
         expect(handler.onMove).toHaveBeenCalledTimes(1);
@@ -406,7 +406,7 @@ describe('map events', () => {
 
         vi.spyOn(handler, 'onMove');
 
-        map.off('move', (event) => { handler.onMove(event); });
+        map.off('move', (event) => handler.onMove(event));
         map.jumpTo({center: {lng: 10, lat: 10}});
 
         expect(handler.onMove).toHaveBeenCalledTimes(0);
@@ -435,7 +435,7 @@ describe('map events', () => {
 
         vi.spyOn(handler, 'onMoveOnce');
 
-        map.once('move', (event) => { handler.onMoveOnce(event); });
+        map.once('move', (event) => handler.onMoveOnce(event));
         map.jumpTo({center: {lng: 10, lat: 10}});
 
         expect(handler.onMoveOnce).toHaveBeenCalledTimes(1);

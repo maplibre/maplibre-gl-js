@@ -57,7 +57,7 @@ describe('ImageRequest', () => {
 
         for (let i = 0; i < maxRequests + 1; i++) {
             const abortController = new AbortController();
-            ImageRequest.getImage({url: ''}, abortController).catch((e) => { expect(isAbortError(e)).toBeTruthy(); });
+            ImageRequest.getImage({url: ''}, abortController).catch((e) => expect(isAbortError(e)).toBeTruthy());
             abortController.abort();
             await sleep(0);
         }
@@ -79,7 +79,7 @@ describe('ImageRequest', () => {
 
         const queuedURL = 'this-is-the-queued-request';
         const abortController = new AbortController();
-        ImageRequest.getImage({url: queuedURL}, abortController).catch((e) => { expect(isAbortError(e)).toBeTruthy(); });
+        ImageRequest.getImage({url: queuedURL}, abortController).catch((e) => expect(isAbortError(e)).toBeTruthy());
 
         // the new requests is queued because the limit is reached
         expect(server.requests).toHaveLength(maxRequests);

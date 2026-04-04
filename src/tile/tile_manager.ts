@@ -113,7 +113,7 @@ export class TileManager extends Evented {
         this._source = createSource(id, options, dispatcher, this);
 
         this._inViewTiles = new InViewTiles();
-        this._outOfViewCache = new TileCache(0, (tile) => { this._unloadTile(tile); });
+        this._outOfViewCache = new TileCache(0, (tile) => this._unloadTile(tile));
         this._timers = {};
         this._maxTileCacheSize = null;
         this._maxTileCacheZoomLevels = null;

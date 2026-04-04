@@ -102,7 +102,7 @@ function checkParameter(options: RenderOptions, param: string): boolean {
 }
 
 function checkValueParameter(options: RenderOptions, defaultValue: any, param: string) {
-    const index = options.tests.findIndex((elem) => { return String(elem).startsWith(param); });
+    const index = options.tests.findIndex((elem) => String(elem).startsWith(param));
     if (index === -1)
         return defaultValue;
 

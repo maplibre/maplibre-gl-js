@@ -269,7 +269,7 @@ describe('Style.loadJSON', () => {
             'sprite': 'http://example.com/sprite'
         });
 
-        style.once('error', (e) => { expect(e).toBeFalsy(); });
+        style.once('error', (e) => expect(e).toBeFalsy());
 
         const e = await style.once('data');
         expect(e.target).toBe(style);
@@ -763,7 +763,7 @@ describe('Style.update', () => {
             }]
         });
 
-        style.on('error', (error) => { expect(error).toBeFalsy(); });
+        style.on('error', (error) => expect(error).toBeFalsy());
 
         await style.once('style.load');
         style.addLayer({id: 'first', source: 'source', type: 'fill', 'source-layer': 'source-layer'}, 'second');
@@ -777,7 +777,7 @@ describe('Style.update', () => {
 
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][0]).toBe(MessageType.updateLayers);
-        expect(spy.mock.calls[0][1]['layers'].map((layer) => { return layer.id; })).toEqual(['first', 'third']);
+        expect(spy.mock.calls[0][1]['layers'].map((layer) => layer.id)).toEqual(['first', 'third']);
         expect(spy.mock.calls[0][1]['removedIds']).toEqual(['second']);
     });
 });
@@ -1176,10 +1176,10 @@ describe('Style.addSource', () => {
     test('sets up source event forwarding', async () => {
         const promisesResolve = {} as any;
         const promises = [
-            new Promise((resolve) => { promisesResolve.error = resolve; }),
-            new Promise((resolve) => { promisesResolve.metadata = resolve; }),
-            new Promise((resolve) => { promisesResolve.content = resolve; }),
-            new Promise((resolve) => { promisesResolve.other = resolve; }),
+            new Promise((resolve) => promisesResolve.error = resolve),
+            new Promise((resolve) => promisesResolve.metadata = resolve),
+            new Promise((resolve) => promisesResolve.content = resolve),
+            new Promise((resolve) => promisesResolve.other = resolve),
         ];
 
         const style = createStyle();
@@ -2957,7 +2957,7 @@ describe('Style.setLayerZoomRange', () => {
         expect(style.getLayer('symbol').maxzoom).toBe(12);
         style.update({} as EvaluationParameters); // trigger dispatcher broadcast
         expect(spy.mock.calls[0][0]).toBe(MessageType.updateLayers);
-        expect(spy.mock.calls[0][1]['layers'].map((layer) => { return layer.id; })).toEqual(['symbol']);
+        expect(spy.mock.calls[0][1]['layers'].map((layer) => return layer.id)).toEqual(['symbol']);
     });
 
     test('fires an error if layer not found', async () => {

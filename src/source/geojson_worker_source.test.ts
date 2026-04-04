@@ -343,7 +343,7 @@ describe('resourceTiming', () => {
         const sampleMarks = [100, 350];
         const marks = {};
         const measures = {};
-        window.performance.getEntriesByName = vi.fn().mockImplementation((name) => { return measures[name] || []; });
+        window.performance.getEntriesByName = vi.fn().mockImplementation((name) => measures[name] || []);
         vi.spyOn(performance, 'mark').mockImplementation((name) => {
             marks[name] = sampleMarks.shift();
             return null;

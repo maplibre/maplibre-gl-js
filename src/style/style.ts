@@ -1488,7 +1488,7 @@ export class Style extends Evented {
             layers,
             terrain
         },
-        (value) => { return value !== undefined; });
+        (value) => value !== undefined);
     }
 
     _updateLayer(layer: StyleLayer) {

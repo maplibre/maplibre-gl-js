@@ -41,7 +41,7 @@ export async function loadTileJson(
     ) as LoadTileJsonResponse;
 
     if ('vector_layers' in tileJSON && tileJSON.vector_layers) {
-        result.vectorLayerIds = tileJSON.vector_layers.map((layer) => { return layer.id; });
+        result.vectorLayerIds = tileJSON.vector_layers.map((layer) => layer.id);
     }
 
     return result;
