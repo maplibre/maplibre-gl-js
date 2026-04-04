@@ -472,6 +472,79 @@ export class Drawable {
             rpEncoder.setPipeline(pipeline);
             rpEncoder.setBindGroup(0, bindGroup);
 
+            // Bind textures at @group(1) only for shaders that declare texture bindings
+            const shadersWithTextures = ['lineSDF', 'lineGradient', 'lineGradientSDF', 'linePattern', 'fillPattern', 'fillOutlinePattern'];
+            const hasGroup1 = shadersWithTextures.includes(this.shaderName);
+
+            if (hasGroup1) {
+                try {
+                    // Get or create a dummy texture for fallback
+                    if (!(painter as any)._dummyGPUTexture) {
+                        (painter as any)._dummyGPUTexture = gpuDevice.createTexture({
+                            size: [1, 1], format: 'r8unorm', usage: 4 | 2,
+                        });
+                        gpuDevice.queue.writeTexture(
+                            {texture: (painter as any)._dummyGPUTexture},
+                            new Uint8Array([128]), {bytesPerRow: 1}, [1, 1]
+                        );
+                        (painter as any)._dummyGPUSampler = gpuDevice.createSampler({
+                            minFilter: 'linear', magFilter: 'linear',
+                        });
+                    }
+
+                    const texEntries: any[] = [];
+                    for (let i = 0; i < Math.max(this.textures.length, 1); i++) {
+                        const tex = i < this.textures.length ? this.textures[i] : null;
+                        let gpuTex = tex ? (tex as any)._gpuTexture : null;
+                        let gpuSampler = tex ? (tex as any)._gpuSampler : null;
+
+                        if (!gpuTex && tex?.texture) {
+                            const source = (tex as any).source;
+                            if (source?.data) {
+                                const format = source.format || 'rgba8unorm';
+                                const bpp = source.bytesPerPixel || 4;
+                                gpuTex = gpuDevice.createTexture({
+                                    size: [source.width, source.height], format,
+                                    usage: 4 | 2,
+                                });
+                                gpuDevice.queue.writeTexture(
+                                    {texture: gpuTex}, source.data,
+                                    {bytesPerRow: source.width * bpp},
+                                    [source.width, source.height]
+                                );
+                                (tex as any)._gpuTexture = gpuTex;
+                            }
+                        }
+                        if (!gpuSampler && tex) {
+                            const filterMode = tex.filter === 9729 ? 'linear' : 'nearest';
+                            const wrapMode = tex.wrap === 10497 ? 'repeat' : 'clamp-to-edge';
+                            gpuSampler = gpuDevice.createSampler({
+                                minFilter: filterMode, magFilter: filterMode,
+                                addressModeU: wrapMode, addressModeV: wrapMode,
+                            });
+                            (tex as any)._gpuSampler = gpuSampler;
+                        }
+
+                        // Use dummy texture/sampler as fallback
+                        const finalTex = gpuTex || (painter as any)._dummyGPUTexture;
+                        const finalSampler = gpuSampler || (painter as any)._dummyGPUSampler;
+                        texEntries.push({binding: i * 2, resource: finalSampler});
+                        texEntries.push({binding: i * 2 + 1, resource: finalTex.createView()});
+                    }
+
+                    const texBindGroup = gpuDevice.createBindGroup({
+                        layout: pipeline.getBindGroupLayout(1),
+                        entries: texEntries,
+                    });
+                    rpEncoder.setBindGroup(1, texBindGroup);
+                } catch (e) {
+                    if (!(this as any)._loggedTexErr) {
+                        (this as any)._loggedTexErr = true;
+                        console.warn('[_drawWebGPU] texture bind error:', this.shaderName, e);
+                    }
+                }
+            }
+
             // Set stencil reference for tile clipping (only for layers that use stencil)
             const needsStencil = this.shaderName === 'fill' || this.shaderName === 'fillOutline' || this.shaderName === 'line' ||
                 this.shaderName === 'lineSDF' || this.shaderName === 'lineGradient' || this.shaderName === 'linePattern';

@@ -389,13 +389,23 @@ function drawLineDrawable(painter: Painter, tileManager: TileManager, layer: Lin
             }
         }
         if (dasharray) {
-            lineBuilder.addTexture({
+            const dashTex: any = {
                 name: 'u_dash_image',
                 textureUnit: gradient ? 1 : 0,
                 texture: painter.lineAtlas.texture,
                 filter: gl.LINEAR,
                 wrap: gl.REPEAT
-            });
+            };
+            // Store source data for WebGPU texture creation
+            // Line atlas uses ALPHA format (1 byte/pixel) — WebGPU uses r8unorm
+            dashTex.source = {
+                data: painter.lineAtlas.data,
+                width: painter.lineAtlas.width,
+                height: painter.lineAtlas.height,
+                bytesPerPixel: 1,
+                format: 'r8unorm'
+            };
+            lineBuilder.addTexture(dashTex);
         }
         if (image && tile.imageAtlasTexture) {
             lineBuilder.addTexture({

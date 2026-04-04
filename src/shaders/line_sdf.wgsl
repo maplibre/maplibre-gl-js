@@ -291,6 +291,9 @@ struct FragmentInput {
     @location(10) v_mix: f32,
 };
 
+@group(1) @binding(0) var sdf_sampler: sampler;
+@group(1) @binding(1) var sdf_texture: texture_2d<f32>;
+
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
     // Distance of pixel from line center in pixels
@@ -300,14 +303,13 @@ fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
     let blur2 = (fin.v_blur + 1.0 / paintParams.pixel_ratio) * fin.v_gamma_scale;
     let alpha = clamp(min(dist - (fin.v_width2.y - blur2), fin.v_width2.x - dist) / blur2, 0.0, 1.0);
 
-    // SDF dash texture sampling would go here:
-    //   let sdfdist_a = textureSample(sdf_texture, sdf_sampler, fin.v_tex_a).a;
-    //   let sdfdist_b = textureSample(sdf_texture, sdf_sampler, fin.v_tex_b).a;
-    //   let sdfdist = mix(sdfdist_a, sdfdist_b, fin.v_mix);
-    //   let sdf_alpha = smoothstep(0.5 - fin.v_sdfgamma / fin.v_floorwidth,
-    //                              0.5 + fin.v_sdfgamma / fin.v_floorwidth, sdfdist);
-    //   return fin.v_color * (alpha * fin.v_opacity * sdf_alpha);
+    // SDF dash texture sampling (r8unorm format — SDF value in .r channel)
+    let sdfdist_a = textureSample(sdf_texture, sdf_sampler, fin.v_tex_a).r;
+    let sdfdist_b = textureSample(sdf_texture, sdf_sampler, fin.v_tex_b).r;
+    let sdfdist = mix(sdfdist_a, sdfdist_b, fin.v_mix);
+    let safe_floorwidth = max(fin.v_floorwidth, 1e-6);
+    let sdf_alpha = smoothstep(0.5 - fin.v_sdfgamma / safe_floorwidth,
+                               0.5 + fin.v_sdfgamma / safe_floorwidth, sdfdist);
 
-    // For now, output solid line (no dash pattern applied)
-    return fin.v_color * (alpha * fin.v_opacity);
+    return fin.v_color * (alpha * fin.v_opacity * sdf_alpha);
 }
