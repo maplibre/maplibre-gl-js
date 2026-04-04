@@ -6,7 +6,6 @@ import {type ColorMode} from '../gl/color_mode';
 import {
     colorReliefUniformValues
 } from './program/color_relief_program';
-import {LumaModel} from './luma_model';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
@@ -103,15 +102,7 @@ function renderColorRelief(
             applyGlobeMatrix: !isRenderingToTexture,
             applyTerrainMatrix: true
         });
-
-        const lumaModel = new LumaModel(
-            painter.device,
-            program,
-            mesh.vertexBuffer,
-            mesh.indexBuffer,
-            mesh.segments
-        );
-        lumaModel.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
+        program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
             colorReliefUniformValues(layer, tile.dem, colorRampSize) as any, terrainData as any, projectionData as any, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }

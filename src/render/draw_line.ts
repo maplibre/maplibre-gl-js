@@ -17,7 +17,6 @@ import type {OverscaledTileID} from '../tile/tile_id';
 import type {Tile} from '../tile/tile';
 import type {Context} from '../gl/context';
 import type {ProgramConfiguration} from '../data/program_configuration';
-import {LumaModel} from './luma_model';
 import {clamp, nextPowerOfTwo} from '../util/util';
 import {renderColorRamp} from '../util/color_ramp';
 import {EXTENT} from '../data/extent';
@@ -240,15 +239,7 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
 
         const stencil = painter.stencilModeForClipping(coord);
 
-        const lumaModel = new LumaModel(
-            painter.device,
-            program,
-            bucket.layoutVertexBuffer,
-            bucket.indexBuffer,
-            bucket.segments
-        );
-
-        lumaModel.draw(context, gl.TRIANGLES, depthMode,
+        program.draw(context, gl.TRIANGLES, depthMode,
             stencil, colorMode, CullFaceMode.disabled, uniformValues as any, terrainData as any, projectionData as any,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
             layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);

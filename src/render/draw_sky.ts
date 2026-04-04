@@ -15,7 +15,6 @@ import {ColorMode} from '../gl/color_mode';
 import type {Painter} from './painter';
 import {type Context} from '../gl/context';
 import {getGlobeRadiusPixels} from '../geo/projection/globe_utils';
-import {LumaModel} from './luma_model';
 
 function getMesh(context: Context, sky: Sky): Mesh {
     // Create the Sky mesh the first time we need it
@@ -53,15 +52,7 @@ export function drawSky(painter: Painter, sky: Sky) {
 
     const mesh = getMesh(context, sky);
 
-    const lumaModel = new LumaModel(
-        painter.device,
-        program,
-        mesh.vertexBuffer,
-        mesh.indexBuffer,
-        mesh.segments
-    );
-
-    lumaModel.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode,
+    program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode,
         CullFaceMode.disabled, skyUniforms as any, null, undefined, 'sky', mesh.vertexBuffer,
         mesh.indexBuffer, mesh.segments);
 }
@@ -122,13 +113,5 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
 
     const mesh = getMesh(context, sky);
 
-    const lumaModel = new LumaModel(
-        painter.device,
-        program,
-        mesh.vertexBuffer,
-        mesh.indexBuffer,
-        mesh.segments
-    );
-
-    lumaModel.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.alphaBlended, CullFaceMode.disabled, uniformValues as any, null, null, 'atmosphere', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+    program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.alphaBlended, CullFaceMode.disabled, uniformValues as any, null, null, 'atmosphere', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
 }

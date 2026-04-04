@@ -3506,14 +3506,9 @@ export class Map extends Camera {
             webpSupported.testSupport(null);
             console.log('Successfully initialized WebGPU device');
         } else if (gl) {
-            device = await webgl2Adapter.attach(gl as WebGL2RenderingContext, {
-                createCanvasContext: {
-                    canvas: this._canvas,
-                    ...attributes
-                }
-            });
+            // WebGL2: no luma.gl wrapping — use raw GL context directly
             webpSupported.testSupport(gl);
-            console.log('Successfully initialized WebGL device');
+            console.log('Successfully initialized WebGL2 device (no luma.gl)');
         } else {
             const msg = 'Failed to initialize WebGL and WebGPU';
             if (webglcontextcreationerrorDetailObject) {

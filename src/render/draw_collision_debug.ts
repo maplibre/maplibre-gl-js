@@ -12,7 +12,6 @@ import {collisionCircleLayout} from '../data/bucket/symbol_attributes';
 import {SegmentVector} from '../data/segment';
 import {type VertexBuffer} from '../gl/vertex_buffer';
 import {type IndexBuffer} from '../gl/index_buffer';
-import {LumaModel} from './luma_model';
 
 type TileBatch = {
     circleArray: Array<number>;
@@ -56,15 +55,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
         if (!buffers) {
             continue;
         }
-
-        const lumaModel = new LumaModel(
-            painter.device,
-            program,
-            buffers.layoutVertexBuffer,
-            buffers.indexBuffer,
-            buffers.segments
-        );
-        lumaModel.draw(context, gl.LINES,
+        program.draw(context, gl.LINES,
             DepthMode.disabled, StencilMode.disabled,
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
@@ -116,15 +107,8 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
     for (const batch of tileBatches) {
         const uniforms = collisionCircleUniformValues(painter.transform);
         const segments = SegmentVector.simpleSegment(0, batch.circleOffset * 2, batch.circleArray.length, batch.circleArray.length / 2);
-        const circleLumaModel = new LumaModel(
-            painter.device,
-            circleProgram,
-            vertexBuffer,
-            indexBuffer,
-            segments
-        );
 
-        circleLumaModel.draw(
+        program.draw(
             context,
             gl.TRIANGLES,
             DepthMode.disabled,

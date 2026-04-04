@@ -10,7 +10,6 @@ import {rasterUniformValues} from './program/raster_program';
 import {EXTENT} from '../data/extent';
 import {FadingDirections} from '../tile/tile';
 import Point from '@mapbox/point-geometry';
-import {LumaModel} from './luma_model';
 import {DrawableBuilder} from './drawable/drawable_builder';
 import {TileLayerGroup} from './drawable/tile_layer_group';
 import {RasterLayerTweaker} from './drawable/tweakers/raster_layer_tweaker';
@@ -149,15 +148,7 @@ function drawTiles(
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
         const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
 
-        const lumaModel = new LumaModel(
-            painter.device,
-            program,
-            mesh.vertexBuffer,
-            mesh.indexBuffer,
-            mesh.segments
-        );
-
-        lumaModel.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, flipCullfaceMode ? CullFaceMode.frontCCW : CullFaceMode.backCCW,
+        program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, flipCullfaceMode ? CullFaceMode.frontCCW : CullFaceMode.backCCW,
             uniformValues as any, terrainData as any, projectionData as any, layer.id, mesh.vertexBuffer,
             mesh.indexBuffer, mesh.segments);
     }

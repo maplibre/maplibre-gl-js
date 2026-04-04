@@ -73,7 +73,7 @@ export class Context {
     RGBA16F?: GLenum;
     RGB16F?: GLenum;
 
-    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext | null, device: Device) {
+    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext | null, device?: any) {
         this.gl = gl || new Proxy({} as WebGL2RenderingContext, {
             get: (target, prop) => {
                 if (typeof prop === 'string') {

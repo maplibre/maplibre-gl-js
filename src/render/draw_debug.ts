@@ -4,7 +4,6 @@ import {CullFaceMode} from '../gl/cull_face_mode';
 import {debugUniformValues} from './program/debug_program';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../gl/color_mode';
-import {LumaModel} from './luma_model';
 
 import type {Painter} from './painter';
 import type {TileManager} from '../tile/tile_manager';
@@ -93,26 +92,10 @@ function drawDebugTile(painter: Painter, tileManager: TileManager, coord: Oversc
     drawTextToOverlay(painter, tileLabel);
 
     const projectionData = painter.transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true});
-
-    const lumaModel1 = new LumaModel(
-        painter.device,
-        program,
-        painter.debugBuffer,
-        painter.quadTriangleIndexBuffer,
-        painter.debugSegments
-    );
-    lumaModel1.draw(context, gl.TRIANGLES, depthMode, stencilMode, ColorMode.alphaBlended, CullFaceMode.disabled,
+    program.draw(context, gl.TRIANGLES, depthMode, stencilMode, ColorMode.alphaBlended, CullFaceMode.disabled,
         debugUniformValues(Color.transparent, scaleRatio) as any, null, projectionData as any, id,
         painter.debugBuffer, painter.quadTriangleIndexBuffer, painter.debugSegments);
-
-    const lumaModel2 = new LumaModel(
-        painter.device,
-        program,
-        painter.debugBuffer,
-        painter.tileBorderIndexBuffer,
-        painter.debugSegments
-    );
-    lumaModel2.draw(context, gl.LINE_STRIP, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
+    program.draw(context, gl.LINE_STRIP, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
         debugUniformValues(Color.red) as any, terrainData as any, projectionData as any, id,
         painter.debugBuffer, painter.tileBorderIndexBuffer, painter.debugSegments);
 }

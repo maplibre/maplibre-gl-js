@@ -4,7 +4,6 @@ import {CullFaceMode} from '../gl/cull_face_mode';
 import {type Program} from './program';
 import {circleUniformValues} from './program/circle_program';
 import {SegmentVector} from '../data/segment';
-import {LumaModel} from './luma_model';
 import {type OverscaledTileID} from '../tile/tile_id';
 
 import type {Painter, RenderOptions} from './painter';
@@ -132,16 +131,7 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
     for (const segmentsState of segmentsRenderStates) {
         const {programConfiguration, program, layoutVertexBuffer, indexBuffer, uniformValues, terrainData, projectionData} = segmentsState.state;
         const segments = segmentsState.segments;
-
-        const lumaModel = new LumaModel(
-            painter.device,
-            program,
-            layoutVertexBuffer,
-            indexBuffer,
-            segments,
-            programConfiguration
-        );
-        lumaModel.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
+        program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues as any, terrainData as any, projectionData as any, layer.id,
             layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration,

@@ -16,7 +16,6 @@ import type {FillBucket} from '../data/bucket/fill_bucket';
 import type {OverscaledTileID} from '../tile/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
-import {LumaModel} from './luma_model';
 
 // Drawable imports
 import {DrawableBuilder} from './drawable/drawable_builder';
@@ -142,15 +141,7 @@ function drawFillTiles(
 
         const stencil = painter.stencilModeForClipping(coord);
 
-        const lumaModel = new LumaModel(
-            painter.device,
-            program,
-            bucket.layoutVertexBuffer,
-            indexBuffer,
-            segments
-        );
-
-        lumaModel.draw(painter.context, drawMode, depthMode,
+        program.draw(painter.context, drawMode, depthMode,
             stencil, colorMode, CullFaceMode.backCCW, uniformValues as any, terrainData as any, projectionData as any,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);

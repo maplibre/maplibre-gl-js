@@ -15,7 +15,6 @@ import type {OverscaledTileID} from '../tile/tile_id';
 
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
-import {LumaModel} from './luma_model';
 import {DrawableBuilder} from './drawable/drawable_builder';
 import {TileLayerGroup} from './drawable/tile_layer_group';
 import {UniformBlock} from './drawable/uniform_block';
@@ -107,15 +106,7 @@ function drawExtrusionTiles(
             fillExtrusionPatternUniformValues(painter, shouldUseVerticalGradient, opacity, translate, coord, crossfade, tile) :
             fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate);
 
-        const lumaModel = new LumaModel(
-            painter.device,
-            program,
-            bucket.layoutVertexBuffer,
-            bucket.indexBuffer,
-            bucket.segments
-        );
-
-        lumaModel.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
+        program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues as any, terrainData as any, projectionData as any, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
             bucket.segments, layer.paint, painter.transform.zoom,
             programConfiguration, painter.style.map.terrain && bucket.centroidVertexBuffer);

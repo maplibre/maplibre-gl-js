@@ -36,7 +36,6 @@ import {drawSky, drawAtmosphere} from './draw_sky';
 import {Mesh} from './mesh';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection';
 import type {Device} from '@luma.gl/core';
-import {LumaModel} from './luma_model';
 
 // Drawable architecture imports
 import {TileLayerGroup} from './drawable/tile_layer_group';
@@ -160,19 +159,12 @@ export class Painter {
     _webgpuNextStencilID: number;
     _webgpuCurrentStencilSource: string;
 
-    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext | null, device: Device, transform: IReadonlyTransform) {
+    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext | null, device: any, transform: IReadonlyTransform) {
         this.context = new Context(gl, device);
         this.device = device;
         this.transform = transform;
         this._tileTextures = {};
         this.terrainFacilitator = {dirty: true, matrix: mat4.identity(new Float64Array(16) as any), renderTime: 0};
-
-        // Force MapLibre's GL state cache to dirty after luma.gl wraps the context.
-        // luma.gl's webgl2Adapter.attach() installs state-tracking interceptors with
-        // copyState:false, so its cache assumes GL defaults. By marking MapLibre's cache
-        // dirty, we ensure all subsequent state changes actually call through to GL
-        // (and luma.gl's interceptors), keeping both caches in sync.
-        this.context.setDirty();
 
         // Initialize drawable architecture
         this.layerGroups = new Map();
@@ -181,17 +173,13 @@ export class Painter {
         this.globalUBO = new UniformBlock(64); // GlobalPaintParamsUBO size
         this.useDrawables = new Set(); // Enable per layer type: 'circle', 'fill', 'line'
 
-        // Enable drawable path for all supported layers (both WebGL2 and WebGPU)
+        // Enable drawable path for ALL layers (both WebGL2 and WebGPU)
         this.useDrawables.add('background');
         this.useDrawables.add('circle');
         this.useDrawables.add('fill');
         this.useDrawables.add('line');
-
-        // Enable additional drawable layers for WebGPU (legacy path doesn't work without GL)
-        if (this.device && this.device.type === 'webgpu') {
-            this.useDrawables.add('raster');
-            this.useDrawables.add('fill-extrusion');
-        }
+        this.useDrawables.add('raster');
+        this.useDrawables.add('fill-extrusion');
 
         this.setup();
 
@@ -312,14 +300,7 @@ export class Painter {
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.
         const program = this.useProgram('clippingMask', null, true);
-        const lumaModel = new LumaModel(
-            this.device,
-            program,
-            this.viewportBuffer,
-            this.quadTriangleIndexBuffer,
-            this.viewportSegments
-        );
-        lumaModel.draw(context, gl.TRIANGLES,
+        program.draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
             null, null, projectionData,
             '$clipping', this.viewportBuffer,
@@ -376,15 +357,7 @@ export class Painter {
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
             const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: !renderToTexture, applyTerrainMatrix: true});
-
-            const lumaModel = new LumaModel(
-                this.device,
-                program,
-                mesh.vertexBuffer,
-                mesh.indexBuffer,
-                mesh.segments
-            );
-            lumaModel.draw(context, gl.TRIANGLES, DepthMode.disabled,
+            program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
                 new StencilMode({func: gl.ALWAYS, mask: 0}, stencilRef, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
                 ColorMode.disabled, renderToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null,
@@ -554,15 +527,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
 
             const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
-
-            const lumaModel = new LumaModel(
-                this.device,
-                program,
-                mesh.vertexBuffer,
-                mesh.indexBuffer,
-                mesh.segments
-            );
-            lumaModel.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled,
+            program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled,
                 ColorMode.disabled, CullFaceMode.backCCW, null,
                 terrainData as any, projectionData as any, '$clipping', mesh.vertexBuffer,
                 mesh.indexBuffer, mesh.segments);

@@ -19,7 +19,6 @@ import {
     symbolSDFUniformValues,
     symbolTextAndIconUniformValues
 } from './program/symbol_program';
-import {LumaModel} from './luma_model';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
@@ -498,14 +497,7 @@ function drawSymbolElements(
     terrainData: TerrainData) {
     const context = painter.context;
     const gl = context.gl;
-    const lumaModel = new LumaModel(
-        painter.device,
-        program,
-        buffers.layoutVertexBuffer,
-        buffers.indexBuffer,
-        segments
-    );
-    lumaModel.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
+    program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
         uniformValues as any, terrainData as any, projectionData as any, layer.id, buffers.layoutVertexBuffer,
         buffers.indexBuffer, segments, layer.paint,
         painter.transform.zoom, buffers.programConfigurations.get(layer.id),

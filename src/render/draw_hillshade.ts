@@ -7,7 +7,6 @@ import {
     hillshadeUniformValues,
     hillshadeUniformPrepareValues
 } from './program/hillshade_program';
-import {LumaModel} from './luma_model';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
@@ -85,15 +84,7 @@ function renderHillshade(
             applyTerrainMatrix: true
         });
 
-        const lumaModel = new LumaModel(
-            painter.device,
-            program,
-            mesh.vertexBuffer,
-            mesh.indexBuffer,
-            mesh.segments
-        );
-
-        lumaModel.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
+        program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
             hillshadeUniformValues(painter, tile, layer) as any, terrainData as any, projectionData as any, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
@@ -157,15 +148,8 @@ function prepareHillshade(
         context.viewport.set([0, 0, tileSize, tileSize]);
 
         const prepareProgram = painter.useProgram('hillshadePrepare');
-        const prepareLumaModel = new LumaModel(
-            painter.device,
-            prepareProgram,
-            painter.rasterBoundsBuffer,
-            painter.quadTriangleIndexBuffer,
-            painter.rasterBoundsSegments
-        );
 
-        prepareLumaModel.draw(context, gl.TRIANGLES,
+        program.draw(context, gl.TRIANGLES,
             depthMode, stencilMode, colorMode, CullFaceMode.disabled,
             hillshadeUniformPrepareValues(tile.tileID, dem) as any,
             null, null, layer.id, painter.rasterBoundsBuffer,
