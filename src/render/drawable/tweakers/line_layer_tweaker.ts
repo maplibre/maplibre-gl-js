@@ -93,17 +93,51 @@ export class LineLayerTweaker extends LayerTweaker {
             if (!drawable.enabled || !drawable.tileID) continue;
 
             // projectionData is already set during drawable creation with correct RTT flags
+            const isLineSDF = drawable.shaderName === 'lineSDF';
+            const isLineGradient = drawable.shaderName === 'lineGradient' || drawable.shaderName === 'lineGradientSDF';
 
-            // Set drawableUBO with matrix + line-specific uniforms for WebGPU path
             // LineDrawableUBO: matrix(64) + ratio(4) + device_pixel_ratio(4) + units_to_pixels(8) = 80 bytes
-            if (!drawable.drawableUBO) {
-                drawable.drawableUBO = new UniformBlock(80);
+            // LineSDFDrawableUBO: extends to 160 bytes with patternscale, tex_y, sdfgamma, mix, _t factors
+            // LineGradientDrawableUBO: same as LineDrawableUBO (80 bytes)
+            const uboSize = isLineSDF ? 160 : 80;
+            if (!drawable.drawableUBO || (drawable.drawableUBO as any)._byteLength < uboSize) {
+                drawable.drawableUBO = new UniformBlock(uboSize);
             }
             drawable.drawableUBO.setMat4(0, drawable.projectionData.mainMatrix as Float32Array);
             const tileProxy = {tileID: drawable.tileID, tileSize: transform.tileSize};
-            drawable.drawableUBO.setFloat(64, pixelScale / pixelsToTileUnits(tileProxy, 1, zoom));
-            drawable.drawableUBO.setFloat(68, painter.pixelRatio);
-            drawable.drawableUBO.setVec2(72, 1 / transform.pixelsToGLUnits[0], 1 / transform.pixelsToGLUnits[1]);
+
+            if (isLineSDF) {
+                // LineSDFDrawableUBO layout:
+                // matrix: mat4x4 @ 0 (64)
+                // patternscale_a: vec2 @ 64 (8)
+                // patternscale_b: vec2 @ 72 (8)
+                // tex_y_a: f32 @ 80 (4)
+                // tex_y_b: f32 @ 84 (4)
+                // ratio: f32 @ 88 (4)
+                // device_pixel_ratio: f32 @ 92 (4)
+                // units_to_pixels: vec2 @ 96 (8)
+                // sdfgamma, mix: f32 @ 104, 108
+                // _t factors: @ 112+
+                const ratio = pixelScale / pixelsToTileUnits(tileProxy, 1, zoom);
+                drawable.drawableUBO.setFloat(88, ratio);
+                drawable.drawableUBO.setFloat(92, painter.pixelRatio);
+                drawable.drawableUBO.setVec2(96, 1 / transform.pixelsToGLUnits[0], 1 / transform.pixelsToGLUnits[1]);
+                // patternscale, tex_y, sdfgamma, mix are set from uniformValues in draw_line.ts
+                if (drawable.uniformValues) {
+                    const uv = drawable.uniformValues as any;
+                    if (uv.u_patternscale_a) drawable.drawableUBO.setVec2(64, uv.u_patternscale_a[0], uv.u_patternscale_a[1]);
+                    if (uv.u_patternscale_b) drawable.drawableUBO.setVec2(72, uv.u_patternscale_b[0], uv.u_patternscale_b[1]);
+                    if (uv.u_tex_y_a !== undefined) drawable.drawableUBO.setFloat(80, uv.u_tex_y_a);
+                    if (uv.u_tex_y_b !== undefined) drawable.drawableUBO.setFloat(84, uv.u_tex_y_b);
+                    if (uv.u_sdfgamma !== undefined) drawable.drawableUBO.setFloat(104, uv.u_sdfgamma);
+                    if (uv.u_mix !== undefined) drawable.drawableUBO.setFloat(108, uv.u_mix);
+                }
+            } else {
+                // Basic line / lineGradient: 80-byte UBO
+                drawable.drawableUBO.setFloat(64, pixelScale / pixelsToTileUnits(tileProxy, 1, zoom));
+                drawable.drawableUBO.setFloat(68, painter.pixelRatio);
+                drawable.drawableUBO.setVec2(72, 1 / transform.pixelsToGLUnits[0], 1 / transform.pixelsToGLUnits[1]);
+            }
 
             // Share the layer-level UBO reference
             drawable.layerUBO = this.evaluatedPropsUBO;

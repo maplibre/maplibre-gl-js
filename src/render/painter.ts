@@ -1113,7 +1113,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
             1 / transform.pixelsToGLUnits[0],
             1 / transform.pixelsToGLUnits[1]
         );
-        ubo.setVec2(16, transform.worldSize, transform.worldSize);
+        ubo.setVec2(16, this.width, this.height);
         ubo.setFloat(24, transform.cameraToCenterDistance);
         ubo.setFloat(28, this.symbolFadeChange || 0);
         ubo.setFloat(32, transform.width / transform.height);

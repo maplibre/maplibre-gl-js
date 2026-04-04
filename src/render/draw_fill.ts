@@ -275,8 +275,8 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
             layerGroup.addDrawable(coord, fillDrawable);
         }
 
-        // Draw outline (skip in WebGPU mode — no fillOutline WGSL shader yet)
-        if (painter.renderPass === 'translucent' && layer.paint.get('fill-antialias') && painter.device?.type !== 'webgpu') {
+        // Draw outline
+        if (painter.renderPass === 'translucent' && layer.paint.get('fill-antialias')) {
             const depthMode = painter.getDepthModeForSublayer(
                 layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
             const outlineProgramName = image && !layer.getPaintProperty('fill-outline-color') ? 'fillOutlinePattern' : 'fillOutline';
@@ -294,7 +294,7 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
                 .setStencilMode(stencil)
                 .setColorMode(colorMode)
                 .setCullFaceMode(CullFaceMode.backCCW)
-                .setDrawMode(gl.LINES)
+                .setDrawMode(1) // gl.LINES = 1
                 .setLayerTweaker(tweaker);
 
             const outlineDrawable = outlineBuilder.flush({

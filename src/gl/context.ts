@@ -77,6 +77,17 @@ export class Context {
         this.gl = gl || new Proxy({} as WebGL2RenderingContext, {
             get: (target, prop) => {
                 if (typeof prop === 'string') {
+                    // Return correct GL enum values for WebGPU-only mode
+                    const glEnums: Record<string, number> = {
+                        'LINES': 1, 'LINE_STRIP': 3, 'TRIANGLES': 4,
+                        'TEXTURE_2D': 3553, 'TEXTURE0': 33984,
+                        'RGBA': 6408, 'UNSIGNED_BYTE': 5121,
+                        'LINEAR': 9729, 'NEAREST': 9728,
+                        'CLAMP_TO_EDGE': 33071, 'REPEAT': 10497,
+                        'TEXTURE_MIN_FILTER': 10241, 'TEXTURE_MAG_FILTER': 10240,
+                        'TEXTURE_WRAP_S': 10242, 'TEXTURE_WRAP_T': 10243,
+                    };
+                    if (prop in glEnums) return glEnums[prop];
                     if (prop === prop.toUpperCase()) return 0;
                     return () => null;
                 }

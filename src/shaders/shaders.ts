@@ -11,7 +11,10 @@ import circleVert from './circle.vertex.glsl.g';
 import circleWgsl from './circle.wgsl.g';
 import backgroundWgsl from './background.wgsl.g';
 import fillWgsl from './fill.wgsl.g';
+import fillOutlineWgsl from './fill_outline.wgsl.g';
 import lineWgsl from './line.wgsl.g';
+import lineGradientWgsl from './line_gradient.wgsl.g';
+import lineSDFWgsl from './line_sdf.wgsl.g';
 import clippingMaskFrag from './clipping_mask.fragment.glsl.g';
 import clippingMaskVert from './clipping_mask.vertex.glsl.g';
 import heatmapFrag from './heatmap.fragment.glsl.g';
@@ -93,7 +96,10 @@ export const shaders = {
     circleWgsl: circleWgsl,
     backgroundWgsl: backgroundWgsl,
     fillWgsl: fillWgsl,
+    fillOutlineWgsl: fillOutlineWgsl,
     lineWgsl: lineWgsl,
+    lineGradientWgsl: lineGradientWgsl,
+    lineSDFWgsl: lineSDFWgsl,
     clippingMask: prepare(clippingMaskFrag, clippingMaskVert),
     heatmap: prepare(heatmapFrag, heatmapVert),
     heatmapTexture: prepare(heatmapTextureFrag, heatmapTextureVert),

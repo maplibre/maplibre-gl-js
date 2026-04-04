@@ -300,7 +300,9 @@ export class Drawable {
 
             // Get or create pipeline (cached on painter, keyed by shader+stencil state)
             const definesKey = this.programConfiguration ? this.programConfiguration.cacheKey : '';
-            const cacheKey = `raw_${this.shaderName}_${definesKey}`;
+            const topologyKey = this.drawMode === 1 ? 'L' : 'T';
+            const blendKey = this.renderPass === 'translucent' ? 'B' : 'O';
+            const cacheKey = `raw_${this.shaderName}_${definesKey}_${topologyKey}_${blendKey}`;
             if (!(painter as any)._rawPipelines) (painter as any)._rawPipelines = {};
             if (!(painter as any)._rawPipelines[cacheKey]) {
                 const wgslKey = `${this.shaderName}Wgsl`;
@@ -425,13 +427,17 @@ export class Drawable {
                         entryPoint: 'fragmentMain',
                         targets: [{
                             format: canvasFormat,
-                            blend: {
-                                color: {srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add'},
-                                alpha: {srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add'},
-                            },
+                            // Fill body renders opaque (no blend) to avoid tile-boundary bands.
+                            // Lines, circles, outlines need premultiplied alpha blending.
+                            ...(this.shaderName !== 'fill' && this.shaderName !== 'fillPattern' ? {
+                                blend: {
+                                    color: {srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add'},
+                                    alpha: {srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add'},
+                                },
+                            } : {}),
                         }],
                     },
-                    primitive: {topology: 'triangle-list'},
+                    primitive: {topology: this.drawMode === 1 /* gl.LINES */ ? 'line-list' : 'triangle-list'},
                     depthStencil: depthStencilState,
                 });
 
@@ -491,10 +497,20 @@ export class Drawable {
 
             rpEncoder.setIndexBuffer(this.indexBuffer.webgpuBuffer.handle, 'uint16');
 
+            const verticesPerPrimitive = this.drawMode === 1 /* gl.LINES */ ? 2 : 3;
             const segs = this.segments.get();
+            const ibByteLen = this.indexBuffer.webgpuBuffer?.props?.byteLength ?? this.indexBuffer.webgpuBuffer?.byteLength ?? -1;
+            const ibSize = ibByteLen > 0 ? ibByteLen / 2 : -1; // uint16 = 2 bytes per index
             for (const segment of segs) {
-                const indexCount = segment.primitiveLength * 3;
-                const firstIndex = segment.primitiveOffset * 3;
+                const indexCount = segment.primitiveLength * verticesPerPrimitive;
+                const firstIndex = segment.primitiveOffset * verticesPerPrimitive;
+                if (firstIndex + indexCount > ibSize && ibSize > 0) {
+                    if (!(this as any)._loggedOOB) {
+                        (this as any)._loggedOOB = true;
+                        console.warn(`[OOB] ${this.shaderName} firstIndex=${firstIndex} indexCount=${indexCount} ibSize=${ibSize} vpp=${verticesPerPrimitive} primLen=${segment.primitiveLength} primOff=${segment.primitiveOffset} vertOff=${segment.vertexOffset}`);
+                    }
+                    continue; // skip out-of-bounds draws
+                }
                 rpEncoder.drawIndexed(indexCount, 1, firstIndex, segment.vertexOffset);
             }
         } catch (e) {

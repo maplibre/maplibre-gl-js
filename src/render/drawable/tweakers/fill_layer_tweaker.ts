@@ -48,10 +48,11 @@ export class FillLayerTweaker extends LayerTweaker {
                 propsUBO.setVec4(0, color.r, color.g, color.b, color.a);
             }
 
-            // outline_color vec4
+            // outline_color vec4 (falls back to fill-color if not explicitly set)
             const outlineColor = paint.get('fill-outline-color').constantOr(null);
-            if (outlineColor) {
-                propsUBO.setVec4(16, outlineColor.r, outlineColor.g, outlineColor.b, outlineColor.a);
+            const effectiveOutlineColor = outlineColor || color;
+            if (effectiveOutlineColor) {
+                propsUBO.setVec4(16, effectiveOutlineColor.r, effectiveOutlineColor.g, effectiveOutlineColor.b, effectiveOutlineColor.a);
             }
 
             // opacity f32
@@ -78,7 +79,6 @@ export class FillLayerTweaker extends LayerTweaker {
 
             // projectionData is already set during drawable creation with correct RTT flags
 
-            // Set drawableUBO with matrix + data-driven _t values for WebGPU path
             // FillDrawableUBO: matrix(64) + color_t(4) + opacity_t(4) + pad(8) = 80 bytes
             if (!drawable.drawableUBO) {
                 drawable.drawableUBO = new UniformBlock(80);
@@ -90,7 +90,7 @@ export class FillLayerTweaker extends LayerTweaker {
                 const binders = (drawable.programConfiguration as any).binders;
                 if (binders) {
                     const zoom = transform.zoom;
-                    for (const [prop, offset] of [['fill-color', 64], ['fill-opacity', 68]] as const) {
+                    for (const [prop, offset] of [['fill-color', 64], ['fill-opacity', 68], ['fill-outline-color', 64], ['fill-opacity', 68]] as const) {
                         const binder = binders[prop];
                         if (binder && binder.expression && binder.expression.interpolationFactor) {
                             const currentZoom = binder.useIntegerZoom ? Math.floor(zoom) : zoom;
