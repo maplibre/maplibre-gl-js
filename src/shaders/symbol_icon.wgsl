@@ -155,6 +155,9 @@ struct FragmentInput {
 
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
+    let color = textureSample(icon_texture, icon_sampler, fin.v_tex);
     let alpha = props.opacity * fin.v_fade_opacity;
-    return textureSample(icon_texture, icon_sampler, fin.v_tex) * alpha;
+    // Premultiply alpha: raw upload doesn't premultiply like GL does,
+    // but blending expects premultiplied (srcFactor: one)
+    return vec4<f32>(color.rgb * color.a * alpha, color.a * alpha);
 }
