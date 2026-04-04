@@ -687,7 +687,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
                 }
                 const dsView = this._webgpuDepthStencilTexture.createView();
 
-                // Use luma.gl's command encoder so device.submit() still works
+                // Use the device command encoder
                 const commandEncoder = (this.device as any).commandEncoder.handle;
                 const rpEncoder = commandEncoder.beginRenderPass({
                     colorAttachments: [{
@@ -879,7 +879,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         // End the WebGPU render pass to submit GPU commands
         if (this.renderPassWGSL) {
             if (this.renderPassWGSL._isRawEncoder) {
-                // Raw GPURenderPassEncoder — end and submit via luma.gl device
+                // Raw GPURenderPassEncoder — end and submit
                 this.renderPassWGSL.handle.end();
                 this.renderPassWGSL = null;
                 if (this.device && (this.device as any).submit) {

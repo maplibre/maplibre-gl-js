@@ -59,7 +59,7 @@ export class UniformBlock {
     }
 
     /**
-     * Creates or updates the GPU buffer. Returns the luma.gl Buffer.
+     * Creates or updates the GPU buffer.
      */
     upload(device: any): any {
         if (!this._gpuBuffer) {

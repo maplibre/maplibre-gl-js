@@ -751,7 +751,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             if (options.showOverdrawInspector) map.showOverdrawInspector = true;
             if (options.showPadding) map.showPadding = true;
 
-            // Wait for map to fully initialize (painter is created async on luma.gl branch)
             await map.once('load');
 
             if (options.collisionDebug) {

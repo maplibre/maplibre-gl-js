@@ -101,7 +101,7 @@ function glBlendFactorToWebGPU(factor: number): BlendFactor {
 }
 
 /**
- * Convert GL-style render state to luma.gl RenderPipelineParameters.
+ * Convert GL-style render state to pipeline parameters.
  */
 export function renderStateToLumaParameters(
     depthMode: Readonly<DepthMode>,

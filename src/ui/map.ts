@@ -36,7 +36,6 @@ import {isAbortError} from '../util/abort_error';
 import {isFramebufferNotCompleteError} from '../util/framebuffer_error';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles';
 import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id';
-// No luma.gl — WebGL uses raw context, WebGPU uses raw (navigator as any).gpu
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
@@ -3471,7 +3470,6 @@ export class Map extends Camera {
             if (!tryWebGPU) console.log('Skipping WebGPU (contextType specified)');
             else console.log('Trying WebGPU first...');
             try {
-                // Initialize WebGPU directly — no luma.gl
                 if (typeof navigator !== 'undefined' && (navigator as any).gpu) {
                     const gpuAdapter = await Promise.race([
                         (navigator as any).gpu.requestAdapter(),
@@ -3550,9 +3548,8 @@ export class Map extends Camera {
             webpSupported.testSupport(null);
             console.log('Successfully initialized WebGPU device');
         } else if (gl) {
-            // WebGL2: no luma.gl wrapping — use raw GL context directly
             webpSupported.testSupport(gl);
-            console.log('Successfully initialized WebGL2 device (no luma.gl)');
+            console.log('Successfully initialized WebGL2 device');
         } else {
             const msg = 'Failed to initialize WebGL and WebGPU';
             if (webglcontextcreationerrorDetailObject) {

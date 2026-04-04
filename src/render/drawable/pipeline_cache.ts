@@ -2,7 +2,7 @@
 /**
  * Cache for WebGPU pipeline/any objects.
  * Key: hash(shaderName + defines + renderState + vertexLayout)
- * Value: luma.gl any
+ * Value: cached pipeline
  *
  * This avoids recreating render pipelines every frame, which is
  * expensive in WebGPU since pipeline state is immutable.
@@ -27,7 +27,7 @@ export class PipelineCache {
     }
 
     invalidate(): void {
-        // anys are owned by luma.gl and will be GC'd
+        // pipelines will be GC'd
         this._cache.clear();
     }
 
