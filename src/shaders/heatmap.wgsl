@@ -46,11 +46,11 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     let radius = props.radius;
 
     // Decode position and extrusion from packed data
-    // Position is encoded as: floor(pos/2)*2 + extrude_bit
-    let pos_raw = vec2<f32>(f32(vin.pos.x), f32(vin.pos.y));
+    // Encoding: a_pos = -32768 + point*8 + extrude (extrude 0-7)
+    let pos_raw = vec2<f32>(f32(vin.pos.x) + 32768.0, f32(vin.pos.y) + 32768.0);
     let unscaled_extrude = vec2<f32>(
-        f32(vin.pos.x & 1) * 2.0 - 1.0,
-        f32(vin.pos.y & 1) * 2.0 - 1.0
+        (pos_raw.x % 8.0) / 7.0 * 2.0 - 1.0,
+        (pos_raw.y % 8.0) / 7.0 * 2.0 - 1.0
     );
 
     // Gaussian kernel size from weight and intensity
@@ -58,7 +58,7 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     let extrude = S * unscaled_extrude;
     let scaled_extrude = extrude * radius * drawable.extrude_scale;
 
-    let base = floor(pos_raw * 0.5);
+    let base = floor(pos_raw / 8.0);
     vout.position = drawable.matrix * vec4<f32>(base + scaled_extrude, 0.0, 1.0);
     // Remap z from WebGL NDC [-1,1] to WebGPU NDC [0,1]
     vout.position.z = (vout.position.z + vout.position.w) * 0.5;

@@ -35,7 +35,7 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     // Remap z
     vout.position.z = (vout.position.z + vout.position.w) * 0.5;
 
-    vout.v_pos = vec2<f32>(quad_pos.x, 1.0 - quad_pos.y);
+    vout.v_pos = vec2<f32>(quad_pos.x, quad_pos.y);
 
     return vout;
 }

@@ -28,14 +28,11 @@ export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: H
         return;
     }
 
-    // WebGPU drawable path: offscreen pass renders kernel density,
-    // translucent pass composites with color ramp
+    // WebGPU drawable path: both passes happen during 'translucent'
+    // (offscreen uses a separate command encoder, then composite uses the main render pass)
     if (painter.device && painter.device.type === 'webgpu') {
-        if (painter.renderPass === 'offscreen') {
-            if (!(drawHeatmap as any)._logP1) { (drawHeatmap as any)._logP1 = true; console.warn('[HEATMAP] offscreen pass, tiles:', tileIDs.length); }
+        if (painter.renderPass === 'translucent') {
             prepareHeatmapWebGPU(painter, tileManager, layer, tileIDs);
-        } else if (painter.renderPass === 'translucent') {
-            if (!(drawHeatmap as any)._logP2) { (drawHeatmap as any)._logP2 = true; console.warn('[HEATMAP] translucent pass, state:', !!(layer as any)._webgpuHeatmapState); }
             compositeHeatmapWebGPU(painter, layer);
         }
         return;
