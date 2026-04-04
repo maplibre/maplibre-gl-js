@@ -46,7 +46,7 @@ describe('TaskQueue', () => {
         const no = vi.fn();
         q.add(yes);
         let id; // eslint-disable-line prefer-const
-        q.add(() => { q.remove(id); });
+        q.add(() => q.remove(id));
         id = q.add(no);
         q.run();
         expect(yes).toHaveBeenCalledTimes(1);
@@ -84,8 +84,8 @@ describe('TaskQueue', () => {
 
     test('TaskQueue.run() throws on attempted re-entrance', () => {
         const q = new TaskQueue();
-        q.add(() => { q.run(); });
-        expect(() => { q.run(); }).toThrow();
+        q.add(() => q.run());
+        expect(() => q.run()).toThrow();
     });
 
     test('TaskQueue.clear() prevents queued task from being executed', () => {
@@ -105,7 +105,7 @@ describe('TaskQueue', () => {
         const before = vi.fn();
         const after = vi.fn();
         q.add(() => q.add(after));
-        q.add(() => { q.clear(); });
+        q.add(() => q.clear());
         q.add(before);
         q.run();
         expect(before).not.toHaveBeenCalled();

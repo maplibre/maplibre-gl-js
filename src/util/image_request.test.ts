@@ -246,8 +246,8 @@ describe('ImageRequest', () => {
         const abortController = new AbortController();
         let response = false;
         ImageRequest.getImage({url: ''}, abortController)
-            .then(() => { response = true; })
-            .catch(() => { response = true; });
+            .then(() => response = true)
+            .catch(() => response = true);
 
         abortController.abort();
 
@@ -260,7 +260,7 @@ describe('ImageRequest', () => {
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
         let callbackCounter = 0;
-        const promiseCallback = () => { callbackCounter++; };
+        const promiseCallback = () => callbackCounter++;
 
         const abortConstollers: {url: string; abortController: AbortController}[] = [];
         for (let i = 0; i < maxRequests + 100; i++) {
@@ -305,7 +305,7 @@ describe('ImageRequest', () => {
         callbackHandles.push(ImageRequest.addThrottleControl(() => true));
 
         let callbackCounter = 0;
-        const promiseCallback = () => { callbackCounter++; };
+        const promiseCallback = () => callbackCounter++;
 
         for (let i = 0; i < maxRequestsPerFrame + 1; i++) {
             ImageRequest.getImage({url: ''}, new AbortController()).then(promiseCallback);
@@ -327,7 +327,7 @@ describe('ImageRequest', () => {
         const controlId = ImageRequest.addThrottleControl(() => true);
 
         let callbackCounter = 0;
-        const promiseCallback = () => { callbackCounter++; };
+        const promiseCallback = () => callbackCounter++;
 
         for (let i = 0; i < maxRequests; i++) {
             ImageRequest.getImage({url: ''}, new AbortController()).then(promiseCallback);
@@ -347,7 +347,7 @@ describe('ImageRequest', () => {
         const controlId = ImageRequest.addThrottleControl(() => false);
 
         let callbackCounter = 0;
-        const promiseCallback = () => { callbackCounter++; };
+        const promiseCallback = () => callbackCounter++;
 
         for (let i = 0; i < maxRequests + 100; i++) {
             ImageRequest.getImage({url: ''}, new AbortController()).then(promiseCallback);
@@ -379,7 +379,7 @@ describe('ImageRequest', () => {
         for (let i = 0; i < requestsMade; i++) {
             const promise = ImageRequest.getImage(requestParameter, new AbortController());
             promise.catch(() => {});
-            promise.then(() => { completedMap[i] = true; });
+            promise.then(() => completedMap[i] = true);
         }
 
         // up to the config value

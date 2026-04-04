@@ -313,7 +313,7 @@ export class HandlerManager {
 
         this._add('blockableMapEvent', new BlockableMapEventHandler(map));
 
-        const scrollZoom = map.scrollZoom = new ScrollZoomHandler(map, () => { this._triggerRenderFrame(); });
+        const scrollZoom = map.scrollZoom = new ScrollZoomHandler(map, () => this._triggerRenderFrame());
         this._add('scrollZoom', scrollZoom, ['mousePan']);
         if (options.interactive && options.scrollZoom) {
             map.scrollZoom.enable(options.scrollZoom);

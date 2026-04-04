@@ -783,7 +783,7 @@ export class Map extends Camera {
             this.painter.terrainFacilitator.dirty = true;
             this._update(true);
         });
-        this.once('idle', () => { this._idleTriggered = true; });
+        this.once('idle', () => this._idleTriggered = true);
 
         if (typeof window !== 'undefined') {
             this._ownerWindow.addEventListener('online', this._onWindowOnline, false);

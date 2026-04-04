@@ -916,9 +916,9 @@ describe('map events', () => {
     test('Map.isMoving() returns false in mousedown/mouseup/click with no movement', () => {
         const map = createMap({interactive: true, clickTolerance: 4});
         let mousedown, mouseup, click;
-        map.on('mousedown', () => { mousedown = map.isMoving(); });
-        map.on('mouseup', () => { mouseup = map.isMoving(); });
-        map.on('click', () => { click = map.isMoving(); });
+        map.on('mousedown', () => mousedown = map.isMoving());
+        map.on('mouseup', () => mouseup = map.isMoving());
+        map.on('click', () => click = map.isMoving());
 
         const canvas = map.getCanvas();
 

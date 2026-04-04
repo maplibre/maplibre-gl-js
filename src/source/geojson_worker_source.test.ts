@@ -123,7 +123,7 @@ describe('geojson tile worker source', () => {
             uid: 0,
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
-        } as any as WorkerTileParameters).then(() => { expect(false).toBeTruthy(); });
+        } as any as WorkerTileParameters).then(() => expect(false).toBeTruthy());
 
         // allow promise to run
         await sleep(0);
@@ -358,8 +358,8 @@ describe('resourceTiming', () => {
             });
             return null;
         });
-        vi.spyOn(performance, 'clearMarks').mockImplementation(() => { return null; });
-        vi.spyOn(performance, 'clearMeasures').mockImplementation(() => { return null; });
+        vi.spyOn(performance, 'clearMarks').mockImplementation(() => null);
+        vi.spyOn(performance, 'clearMeasures').mockImplementation(() => null);
 
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
@@ -556,7 +556,7 @@ describe('loadData', () => {
         expect(mockGeoJSONIndex.updateClusterOptions).not.toHaveBeenCalled();
         await expect(worker.loadData({
             type: 'geojson',
-            updateCluster: true, 
+            updateCluster: true,
             geojsonVtOptions: {
                 cluster: true,
                 clusterOptions: {},

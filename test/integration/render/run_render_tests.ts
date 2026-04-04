@@ -740,7 +740,10 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             });
 
             let idle = false;
-            map.on('idle', () => { console.log('idle'); idle = true; });
+            map.on('idle', () => {
+                console.log('idle');
+                idle = true;
+            });
             // Configure the map to never stop the render loop
             map.repaint = typeof options.continuesRepaint === 'undefined' ? true : options.continuesRepaint;
 

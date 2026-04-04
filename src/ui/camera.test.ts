@@ -39,7 +39,7 @@ function attachSimulateFrame(camera) {
     const queue = new TaskQueue();
     camera._requestRenderFrame = (cb) => queue.add(cb);
     camera._cancelRenderFrame = (id) => { queue.remove(id); };
-    camera.simulateFrame = () => { queue.run(); };
+    camera.simulateFrame = () => queue.run();
     return camera;
 }
 
@@ -146,7 +146,7 @@ describe('calculateCameraOptionsFromTo', () => {
     });
 
     test('same To as From error', () => {
-        expect(() => { camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 0); }).toThrow();
+        expect(() => camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 0)).toThrow();
     });
 });
 
@@ -628,7 +628,7 @@ describe('panBy', () => {
         // fire once in advance to satisfy assertions that moveend only comes after movestart
         camera.fire('movestart');
 
-        camera.on('movestart', () => { started = true; });
+        camera.on('movestart', () => started = true);
         const promise = camera.once('moveend');
 
         camera.panBy([100, 0], {duration: 0, noMoveStart: true});
@@ -688,7 +688,7 @@ describe('panTo', () => {
         // fire once in advance to satisfy assertions that moveend only comes after movestart
         camera.fire('movestart');
 
-        camera.on('movestart', () => { started = true; });
+        camera.on('movestart', () => started = true);
         const promise = camera.once('moveend');
 
         camera.panTo([100, 0], {duration: 0, noMoveStart: true});
@@ -1196,7 +1196,7 @@ describe('easeTo', () => {
         const max = 300;
 
         let startTime;
-        camera.on('movestart', () => { startTime = timeControl.now(); });
+        camera.on('movestart', () => startTime = timeControl.now());
         const promise = camera.once('moveend');
 
         setTimeout(() => {
@@ -1222,7 +1222,7 @@ describe('easeTo', () => {
         Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
 
         let startTime;
-        camera.on('movestart', () => { startTime = new Date(); });
+        camera.on('movestart', () => startTime = new Date());
         const promise = camera.once('moveend');
 
         camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 1000});
@@ -2037,7 +2037,7 @@ describe('flyTo', () => {
         let startTime: number;
         const camera = createCamera({center: [37.63454, 55.75868], zoom: 18});
 
-        camera.on('movestart', () => { startTime = new Date().getTime(); });
+        camera.on('movestart', () => startTime = new Date().getTime());
         const promise = camera.once('moveend');
 
         camera.flyTo({center: [-122.3998631, 37.7884307], maxDuration: 100});
@@ -2052,7 +2052,7 @@ describe('flyTo', () => {
         const camera = createCamera();
         Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
         let startTime;
-        camera.on('movestart', () => { startTime = new Date(); });
+        camera.on('movestart', () => startTime = new Date());
         const promise = camera.once('moveend');
 
         camera.flyTo({center: [100, 0], bearing: 90, animate: true});
@@ -2078,9 +2078,9 @@ describe('flyTo', () => {
 
         const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
         camera.terrain = {getElevationForLngLatZoom: () => 0} as any as Terrain;
-        camera._prepareElevation = () => { terrainCallbacks.prepare++; };
-        camera._updateElevation = () => { terrainCallbacks.update++; };
-        camera._finalizeElevation = () => { terrainCallbacks.finalize++; };
+        camera._prepareElevation = () => terrainCallbacks.prepare++;
+        camera._updateElevation = () => terrainCallbacks.update++;
+        camera._finalizeElevation = () => terrainCallbacks.finalize++;
         camera.setCenter([-10, 0]);
         const moveEnded = camera.once('moveend');
 
@@ -2102,9 +2102,9 @@ describe('flyTo', () => {
 
         const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
         camera.terrain = {getElevationForLngLatZoom: () => 0} as any as Terrain;
-        camera._prepareElevation = () => { terrainCallbacks.prepare++; };
-        camera._updateElevation = () => { terrainCallbacks.update++; };
-        camera._finalizeElevation = () => { terrainCallbacks.finalize++; };
+        camera._prepareElevation = () => terrainCallbacks.prepare++;
+        camera._updateElevation = () => terrainCallbacks.update++;
+        camera._finalizeElevation = () => terrainCallbacks.finalize++;
         camera.setCenter([-10, 0]);
         const moveEnded = camera.once('moveend');
 
@@ -3898,7 +3898,7 @@ describe('flyTo globe projection', () => {
             let startTime: number;
             const camera = createCameraGlobe({center: [37.63454, 55.75868], zoom: 18});
 
-            camera.on('movestart', () => { startTime = new Date().getTime(); });
+            camera.on('movestart', () => startTime = new Date().getTime());
             const promise = camera.once('moveend');
 
             camera.flyTo({center: [-122.3998631, 37.7884307], maxDuration: 100});

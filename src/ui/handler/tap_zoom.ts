@@ -54,7 +54,7 @@ export class TapZoomHandler implements Handler {
         if (zoomInPoint) {
             this._active = true;
             e.preventDefault();
-            setTimeout(() => { this.reset(); }, 0);
+            setTimeout(() => this.reset(), 0);
             return {
                 cameraAnimation: (map: Map) => map.easeTo({
                     duration: 300,
@@ -65,7 +65,7 @@ export class TapZoomHandler implements Handler {
         } else if (zoomOutPoint) {
             this._active = true;
             e.preventDefault();
-            setTimeout(() => { this.reset(); }, 0);
+            setTimeout(() => this.reset(), 0);
             return {
                 cameraAnimation: (map: Map) => map.easeTo({
                     duration: 300,

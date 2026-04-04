@@ -117,12 +117,12 @@ describe('marker', () => {
         marker.toggleClassName('toggle');
         expect(!markerElement.classList.contains('toggle')).toBeTruthy();
 
-        expect(() => { marker.addClassName('should throw exception'); }).toThrow(window.DOMException);
-        expect(() => { marker.removeClassName('should throw exception'); }).toThrow(window.DOMException);
+        expect(() => marker.addClassName('should throw exception')).toThrow(window.DOMException);
+        expect(() => marker.removeClassName('should throw exception')).toThrow(window.DOMException);
         expect(() => marker.toggleClassName('should throw exception')).toThrow(window.DOMException);
 
-        expect(() => { marker.addClassName(''); }).toThrow(window.DOMException);
-        expect(() => { marker.removeClassName(''); }).toThrow(window.DOMException);
+        expect(() => marker.addClassName('')).toThrow(window.DOMException);
+        expect(() => marker.removeClassName('')).toThrow(window.DOMException);
         expect(() => marker.toggleClassName('')).toThrow(window.DOMException);
     });
 
@@ -168,7 +168,7 @@ describe('marker', () => {
             .setLngLat([0,0])
             .setPopup(popup)
             .addTo(map);
-        
+
         // open popup
         marker.togglePopup();
         const spy = vi.fn();

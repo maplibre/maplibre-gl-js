@@ -224,7 +224,7 @@ describe('RasterDEMTileSource', () => {
             [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': 'max-age=100'}, '0']
         );
         const source = createSource({url: '/source.json'});
-        source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
+        source.map.painter = {context: {}, getTileTexture: () => ({update: () => {}})} as any;
         source.map._refreshExpiredTiles = true;
 
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
@@ -257,7 +257,7 @@ describe('RasterDEMTileSource', () => {
             [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Expires': 'Wed, 21 Oct 2015 07:28:00 GMT'}, '0']
         );
         const source = createSource({url: '/source.json'});
-        source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
+        source.map.painter = {context: {}, getTileTexture: () => ({update: () => {}})} as any;
         source.map._refreshExpiredTiles = true;
 
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
@@ -290,7 +290,7 @@ describe('RasterDEMTileSource', () => {
             [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': '', 'Expires': 'Wed, 21 Oct 2015 07:28:00 GMT'}, '0']
         );
         const source = createSource({url: '/source.json'});
-        source.map.painter = {context: {}, getTileTexture: () => { return {update: () => {}}; }} as any;
+        source.map.painter = {context: {}, getTileTexture: () => ({update: () => {}})} as any;
         source.map._refreshExpiredTiles = true;
 
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');

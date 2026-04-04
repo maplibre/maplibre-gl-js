@@ -1135,7 +1135,7 @@ describe('Style.setState', () => {
 describe('Style.addSource', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
-        expect(() => { style.addSource('source-id', createSource()); }).toThrow(/load/i);
+        expect(() => style.addSource('source-id', createSource())).toThrow(/load/i);
     });
 
     test('throw if missing source type', async () => {
@@ -1147,7 +1147,7 @@ describe('Style.addSource', () => {
 
         await style.once('style.load');
 
-        expect(() => { style.addSource('source-id', source); }).toThrow(/type/i);
+        expect(() => style.addSource('source-id', source)).toThrow(/type/i);
     });
 
     test('fires "data" event', async () => {
@@ -1303,8 +1303,8 @@ describe('Style.removeSource', () => {
         // Suppress error reporting
         tileManager.on('error', () => {});
 
-        style.on('data', () => { expect(false).toBeTruthy(); });
-        style.on('error', () => { expect(false).toBeTruthy(); });
+        style.on('data', () => expect(false).toBeTruthy());
+        style.on('error', () => expect(false).toBeTruthy());
         tileManager.fire(new Event('data'));
         tileManager.fire(new Event('error'));
     });
@@ -1386,7 +1386,7 @@ describe('Style.setGlyphs', () => {
 describe('Style.addSprite', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
-        expect(() => { style.addSprite('test', 'https://example.com/sprite'); }).toThrow(/load/i);
+        expect(() => style.addSprite('test', 'https://example.com/sprite')).toThrow(/load/i);
     });
 
     test('validates input and fires an error if there\'s already an existing sprite with the same id', async () => {
@@ -1465,7 +1465,7 @@ describe('Style.addSprite', () => {
 describe('Style.removeSprite', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
-        expect(() => { style.removeSprite('test'); }).toThrow(/load/i);
+        expect(() => style.removeSprite('test')).toThrow(/load/i);
     });
 
     test('fires an error when trying to delete an non-existing sprite (sprite: undefined)', async () => {
@@ -1568,21 +1568,21 @@ describe('Style.setGeoJSONSourceData', () => {
 
     test('throws before loaded', () => {
         const style = new Style(getStubMap());
-        expect(() => { style.setGeoJSONSourceData('source-id', geoJSON); }).toThrow(/load/i);
+        expect(() => style.setGeoJSONSourceData('source-id', geoJSON)).toThrow(/load/i);
     });
 
     test('throws on non-existence', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         await style.once('style.load');
-        expect(() => { style.setGeoJSONSourceData('source-id', geoJSON); }).toThrow(/There is no source with this ID/);
+        expect(() => style.setGeoJSONSourceData('source-id', geoJSON)).toThrow(/There is no source with this ID/);
     });
 });
 
 describe('Style.setGlobalState', () => {
     test('throws before loaded', () => {
         const style = new Style(getStubMap());
-        expect(() => { style.setGlobalState({}); }).toThrow(/load/i);
+        expect(() => style.setGlobalState({})).toThrow(/load/i);
     });
     test('sets global state', async () => {
         const style = new Style(getStubMap());
@@ -2267,7 +2267,7 @@ describe('Style.addLayer', () => {
         await waitForEvent(style, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'content');
         const spy = vi.fn();
         style.tileManagers['mapLibre'].reload = spy;
-        style.tileManagers['mapLibre'].clearTiles =  () => { throw new Error('test failed'); };
+        style.tileManagers['mapLibre'].clearTiles = () => { throw new Error('test failed'); };
         style.removeLayer('my-layer');
         style.addLayer(layer);
         style.update({} as EvaluationParameters);
@@ -2421,7 +2421,7 @@ describe('Style.addLayer', () => {
 describe('Style.removeLayer', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
-        expect(() => { style.removeLayer('background'); }).toThrow(/load/i);
+        expect(() => style.removeLayer('background')).toThrow(/load/i);
     });
 
     test('fires "data" event', async () => {
@@ -2513,7 +2513,7 @@ describe('Style.removeLayer', () => {
 describe('Style.moveLayer', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
-        expect(() => { style.moveLayer('background'); }).toThrow(/load/i);
+        expect(() => style.moveLayer('background')).toThrow(/load/i);
     });
 
     test('fires "data" event', async () => {
@@ -2808,7 +2808,7 @@ describe('Style.getLayoutProperty', () => {
 describe('Style.setFilter', () => {
     test('throws if style is not loaded', () => {
         const style = new Style(getStubMap());
-        expect(() => { style.setFilter('symbol', ['==', 'id', 1]); }).toThrow(/load/i);
+        expect(() => style.setFilter('symbol', ['==', 'id', 1])).toThrow(/load/i);
     });
 
     function createStyle() {
@@ -2927,7 +2927,7 @@ describe('Style.setFilter', () => {
 describe('Style.setLayerZoomRange', () => {
     test('throw before loaded', () => {
         const style = new Style(getStubMap());
-        expect(() => { style.setLayerZoomRange('symbol', 5, 12); }).toThrow(/load/i);
+        expect(() => style.setLayerZoomRange('symbol', 5, 12)).toThrow(/load/i);
     });
 
     function createStyle() {

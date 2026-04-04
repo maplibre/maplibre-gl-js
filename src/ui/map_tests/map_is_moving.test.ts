@@ -69,7 +69,7 @@ describe('Map.isMoving', () => {
 
     test('returns true when drag rotating', async () => {
         // Prevent inertial rotation.
-        vi.spyOn(timeControl, 'now').mockImplementation(() => { return 0; });
+        vi.spyOn(timeControl, 'now').mockImplementation(() => 0);
 
         map.on('movestart', () => {
             expect(map.isMoving()).toBe(true);
@@ -98,7 +98,7 @@ describe('Map.isMoving', () => {
         simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 2});
         map._renderTaskQueue.run();
 
-        await expect(moveEndPromise).resolves.toBeDefined();        
+        await expect(moveEndPromise).resolves.toBeDefined();
     });
 
     test('returns true when scroll zooming', async () => {
@@ -109,7 +109,7 @@ describe('Map.isMoving', () => {
         const moveEndPromise = map.once('zoomend');
 
         let now = 0;
-        vi.spyOn(timeControl, 'now').mockImplementation(() => { return now; });
+        vi.spyOn(timeControl, 'now').mockImplementation(() => now);
 
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
@@ -148,7 +148,7 @@ describe('Map.isMoving', () => {
         map._renderTaskQueue.run();
 
         let now = 0;
-        vi.spyOn(timeControl, 'now').mockImplementation(() => { return now; });
+        vi.spyOn(timeControl, 'now').mockImplementation(() => now);
 
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();

@@ -69,7 +69,7 @@ describe('render to texture', () => {
         transform: {zoom: 10, calculatePosMatrix: () => {}, getProjectionData(_a) {}, calculateFogMatrix: () => {}},
         colorModeForRenderPass: () => ColorMode.alphaBlended,
         getDepthModeFor3D: () => DepthMode.disabled,
-        useProgram: () => { return {draw: () => { layersDrawn++; }}; },
+        useProgram: () => ({draw: () => { layersDrawn++; }}),
         _renderTileClippingMasks: vi.fn(),
         renderLayer: vi.fn()
     } as any as Painter;

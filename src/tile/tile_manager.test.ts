@@ -171,7 +171,7 @@ describe('TileManager.addTile', () => {
             tile.state = 'loaded';
             load++;
         };
-        tileManager.on('dataloading', () => { add++; });
+        tileManager.on('dataloading', () => add++);
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
@@ -257,7 +257,7 @@ describe('TileManager.addTile', () => {
             tile.state = 'loaded';
             load++;
         };
-        tileManager.on('dataloading', () => { add++; });
+        tileManager.on('dataloading', () => add++);
 
         const t1 = tileManager._addTile(tileID);
         const t2 = tileManager._addTile(new OverscaledTileID(0, 1, 0, 0, 0));
