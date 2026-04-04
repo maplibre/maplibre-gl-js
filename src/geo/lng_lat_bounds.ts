@@ -38,6 +38,7 @@ export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number
  * let ne = new LngLat(-73.9397, 40.8002);
  * let llb = new LngLatBounds(sw, ne);
  * ```
+ * @see [Fit to the bounds of a LineString](https://maplibre.org/maplibre-gl-js/docs/examples/fit-to-the-bounds-of-a-linestring/)
  */
 export class LngLatBounds {
     _ne: LngLat;

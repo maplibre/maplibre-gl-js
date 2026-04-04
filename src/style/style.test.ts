@@ -3168,7 +3168,7 @@ describe('Style.queryRenderedFeatures', () => {
     test('checks type of `layers` option', () => {
         let errors = 0;
         vi.spyOn(style, 'fire').mockImplementation((event) => {
-            if (event['error'] && event['error'].message.includes('parameters.layers must be an Array')) {
+            if (event['error']?.message.includes('parameters.layers must be an Array')) {
                 errors++;
             }
             return style;
@@ -3210,7 +3210,7 @@ describe('Style.queryRenderedFeatures', () => {
     test('fires an error if layer included in params does not exist on the style', () => {
         let errors = 0;
         vi.spyOn(style, 'fire').mockImplementation((event) => {
-            if (event['error'] && event['error'].message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
+            if (event['error']?.message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
             return style;
         });
         const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['merp']}, transform);

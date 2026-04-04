@@ -103,7 +103,7 @@ describe('InViewTiles', () => {
         expect(updatedTile1?.tileID.wrap).toBe(-1);
         expect(updatedTile2?.tileID.wrap).toBe(0);
         
-        expect(inViewTiles.getTileById(updatedTile1!.tileID.key)).toBe(updatedTile1);
-        expect(inViewTiles.getTileById(updatedTile2!.tileID.key)).toBe(updatedTile2);
+        expect(inViewTiles.getTileById(updatedTile1.tileID.key)).toBe(updatedTile1);
+        expect(inViewTiles.getTileById(updatedTile2.tileID.key)).toBe(updatedTile2);
     });
 });

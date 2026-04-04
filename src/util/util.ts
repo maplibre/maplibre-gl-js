@@ -451,8 +451,7 @@ type KeysOfUnion<T> = T extends T ? keyof T: never;
  */
 export function pick<T extends object>(src: T, properties: Array<KeysOfUnion<T>>): Partial<T> {
     const result: Partial<T> = {};
-    for (let i = 0; i < properties.length; i++) {
-        const k = properties[i];
+    for (const k of properties) {
         if (k in src) {
             result[k] = src[k];
         }
@@ -572,7 +571,7 @@ export function clone<T>(input: T): T {
     if (Array.isArray(input)) {
         return input.map(clone) as any as T;
     } else if (typeof input === 'object' && input) {
-        return mapObject(input, clone) as any as T;
+        return mapObject(input, clone) as T;
     } else {
         return input;
     }
@@ -582,8 +581,8 @@ export function clone<T>(input: T): T {
  * Check if two arrays have at least one common element.
  */
 export function arraysIntersect<T>(a: Array<T>, b: Array<T>): boolean {
-    for (let l = 0; l < a.length; l++) {
-        if (b.indexOf(a[l]) >= 0) return true;
+    for (const element of a) {
+        if (b.includes(element)) return true;
     }
     return false;
 }

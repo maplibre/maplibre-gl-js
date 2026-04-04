@@ -143,7 +143,7 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);
         const bucket = tile.getBucket(layer) as SymbolBucket;
-        if (!bucket || !bucket.text || !bucket.text.segments.get().length) continue;
+        if (!bucket?.text?.segments.get().length) continue;
 
         const sizeData = bucket.textSizeData;
         const size = evaluateSizeForZoom(sizeData, transform.zoom);
@@ -336,7 +336,7 @@ function drawLayerSymbols(
         if (!bucket) continue;
         const buffers = isText ? bucket.text : bucket.icon;
 
-        if (!buffers || !buffers.segments.get().length || !buffers.hasVisibleVertices) continue;
+        if (!buffers?.segments.get().length || !buffers.hasVisibleVertices) continue;
         const programConfiguration = buffers.programConfigurations.get(layer.id);
 
         const isSDF = isText || bucket.sdfIcons;
@@ -346,7 +346,7 @@ function drawLayerSymbols(
 
         const program = painter.useProgram(getSymbolProgramName(isSDF, isText, bucket), programConfiguration);
         const size = evaluateSizeForZoom(sizeData, transform.zoom);
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
 
         let texSize: [number, number];
         let texSizeIcon: [number, number] = [0, 0];

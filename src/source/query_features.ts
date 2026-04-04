@@ -99,7 +99,7 @@ function queryIncludes3DLayer(layers: Set<string> | undefined, styleLayers: {[_:
     if (layers) {
         for (const layerID of layers) {
             const layer = styleLayers[layerID];
-            if (layer && layer.source === sourceID && layer.type === 'fill-extrusion') {
+            if (layer?.source === sourceID && layer.type === 'fill-extrusion') {
                 return true;
             }
         }
@@ -223,8 +223,7 @@ export function querySourceFeatures(tileManager: TileManager, params: QuerySourc
     const result: GeoJSONFeature[] = [];
 
     const dataTiles = {};
-    for (let i = 0; i < tiles.length; i++) {
-        const tile = tiles[i];
+    for (const tile of tiles) {
         const dataID = tile.tileID.canonical.key;
         if (!dataTiles[dataID]) {
             dataTiles[dataID] = true;

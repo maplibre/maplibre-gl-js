@@ -11,7 +11,7 @@ async function getSourceMapForFile(url: string|URL) {
     const content = await fs.readFile(url, {encoding: 'utf-8'});
     const result = new RegExp('^//# sourceMappingURL=(.*)$', 'm').exec(content);
     expect(result).toBeTruthy();
-    const sourcemapUrl = result![1];
+    const sourcemapUrl = result[1];
     expect(sourcemapUrl).toBeTruthy();
     const resolvedSourcemapURL = new URL(sourcemapUrl, url);
     const text = await fs.readFile(resolvedSourcemapURL, {encoding: 'utf-8'});

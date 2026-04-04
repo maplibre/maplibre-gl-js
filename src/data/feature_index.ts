@@ -91,12 +91,10 @@ export class FeatureIndex {
 
         const grid = is3D ? this.grid3D : this.grid;
 
-        for (let r = 0; r < geometry.length; r++) {
-            const ring = geometry[r];
+        for (const ring of geometry) {
 
             const bbox = [Infinity, Infinity, -Infinity, -Infinity];
-            for (let i = 0; i < ring.length; i++) {
-                const p = ring[i];
+            for (const p of ring) {
                 bbox[0] = Math.min(bbox[0], p.x);
                 bbox[1] = Math.min(bbox[1], p.y);
                 bbox[2] = Math.max(bbox[2], p.x);
@@ -156,8 +154,7 @@ export class FeatureIndex {
 
         const result: QueryResults = {};
         let previousIndex;
-        for (let k = 0; k < matching.length; k++) {
-            const index = matching[k];
+        for (const index of matching) {
 
             // don't check the same feature more than once
             if (index === previousIndex) continue;
@@ -237,8 +234,7 @@ export class FeatureIndex {
 
         const id = this.getId(feature, sourceLayerName);
 
-        for (let l = 0; l < layerIDs.length; l++) {
-            const layerID = layerIDs[l];
+        for (const layerID of layerIDs) {
 
             if (filterLayerIDs && !filterLayerIDs.has(layerID)) {
                 continue;
@@ -345,7 +341,7 @@ register(
 function evaluateProperties(serializedProperties, styleLayerProperties, feature, featureState, availableImages) {
     return mapObject(serializedProperties, (property, key) => {
         const prop = styleLayerProperties instanceof PossiblyEvaluated ? styleLayerProperties.get(key) : null;
-        return prop && prop.evaluate ? prop.evaluate(feature, featureState, availableImages) : prop;
+        return prop?.evaluate ? prop.evaluate(feature, featureState, availableImages) : prop;
     });
 }
 

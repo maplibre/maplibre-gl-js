@@ -732,7 +732,7 @@ export class MercatorTransform implements ITransform {
         const tilePosMatrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID, aligned, true) : null;
         
         let mainMatrix: mat4;
-        if (overscaledTileID && overscaledTileID.terrainRttPosMatrix32f && applyTerrainMatrix) {
+        if (overscaledTileID?.terrainRttPosMatrix32f && applyTerrainMatrix) {
             mainMatrix = overscaledTileID.terrainRttPosMatrix32f;
         } else if (tilePosMatrix) {
             mainMatrix = tilePosMatrix; // This matrix should be float32

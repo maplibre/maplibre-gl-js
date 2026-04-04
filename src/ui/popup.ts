@@ -688,7 +688,7 @@ export class Popup extends Evented {
     _focusFirstElement() {
         if (!this.options.focusAfterOpen || !this._container) return;
 
-        const firstFocusable = this._container.querySelector(focusQuerySelector) as HTMLElement;
+        const firstFocusable = this._container.querySelector<HTMLElement>(focusQuerySelector);
 
         if (firstFocusable) firstFocusable.focus();
     }

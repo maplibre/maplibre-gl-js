@@ -220,8 +220,7 @@ class CrossTileSymbolLayerIndex {
     }
 
     addBucket(tileID: OverscaledTileID, bucket: SymbolBucket, crossTileIDs: CrossTileIDs) {
-        if (this.indexes[tileID.overscaledZ] &&
-            this.indexes[tileID.overscaledZ][tileID.key]) {
+        if (this.indexes[tileID.overscaledZ]?.[tileID.key]) {
             if (this.indexes[tileID.overscaledZ][tileID.key].bucketInstanceId ===
                 bucket.bucketInstanceId) {
                 return false;
@@ -333,7 +332,7 @@ export class CrossTileSymbolIndex {
 
         for (const tile of tiles) {
             const symbolBucket = (tile.getBucket(styleLayer) as any as SymbolBucket);
-            if (!symbolBucket || styleLayer.id !== symbolBucket.layerIds[0])
+            if (styleLayer.id !== symbolBucket?.layerIds[0])
                 continue;
 
             if (!symbolBucket.bucketInstanceId) {

@@ -19,7 +19,7 @@ export async function loadGlyphRange(fontstack: string,
     );
 
     const response = await getArrayBuffer(request, new AbortController());
-    if (!response || !response.data) {
+    if (!response?.data) {
         throw new Error(`Could not load glyph range. range: ${range}, ${begin}-${end}`);
     }
     const glyphs = {};

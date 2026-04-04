@@ -39,7 +39,7 @@ const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
     message: string;
     identifier?: string;
 }> | null) =>
-    _emitValidationErrors(evented, errors && errors.filter(error => error.identifier !== 'source.canvas'));
+    _emitValidationErrors(evented, errors?.filter(error => error.identifier !== 'source.canvas'));
 
 import type {Map} from '../ui/map';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
@@ -74,7 +74,7 @@ import {type Projection} from '../geo/projection/projection';
 import {createProjectionFromName} from '../geo/projection/projection_factory';
 import type {OverscaledTileID} from '../tile/tile_id';
 
-const empty = emptyStyle() as StyleSpecification;
+const empty = emptyStyle();
 /**
  * A feature identifier that is bound to a source
  */
@@ -280,7 +280,7 @@ export class Style extends Evented {
             }
 
             const source = tileManager.getSource();
-            if (!source || !source.vectorLayerIds) {
+            if (!source?.vectorLayerIds) {
                 return;
             }
 
@@ -612,7 +612,7 @@ export class Style extends Evented {
         }
 
         const source = tileManager.getSource();
-        if (source.type === 'geojson' || (source.vectorLayerIds && source.vectorLayerIds.indexOf(sourceLayer) === -1)) {
+        if (source.type === 'geojson' || (source.vectorLayerIds && !source.vectorLayerIds.includes(sourceLayer))) {
             this.fire(new ErrorEvent(new Error(
                 `Source layer "${sourceLayer}" ` +
                 `does not exist on source "${source.id}" ` +
@@ -1022,9 +1022,9 @@ export class Style extends Evented {
         }
 
         const builtIns = ['vector', 'raster', 'geojson', 'video', 'image'];
-        const shouldValidate = builtIns.indexOf(source.type) >= 0;
+        const shouldValidate = builtIns.includes(source.type);
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
-        if (this.map && this.map._collectResourceTiming) (source as any).collectResourceTiming = true;
+        if (this.map?._collectResourceTiming) (source as any).collectResourceTiming = true;
         const tileManager = this.tileManagers[id] = new TileManager(id, source, this.dispatcher);
         tileManager.style = this;
         tileManager.setEventedParent(this, () => ({
@@ -1085,7 +1085,7 @@ export class Style extends Evented {
      * @returns source
      */
     getSource(id: string): Source | undefined {
-        return this.tileManagers[id] && this.tileManagers[id].getSource();
+        return this.tileManagers[id]?.getSource();
     }
 
     /**
@@ -1458,7 +1458,7 @@ export class Style extends Evented {
     }
 
     getTransition() {
-        return extend({duration: 300, delay: 0}, this.stylesheet && this.stylesheet.transition);
+        return extend({duration: 300, delay: 0}, this.stylesheet?.transition);
     }
 
     serialize(): StyleSpecification | undefined {
@@ -1578,12 +1578,12 @@ export class Style extends Evented {
     }
 
     queryRenderedFeatures(queryGeometry: Point[], params: QueryRenderedFeaturesOptions, transform: IReadonlyTransform): MapGeoJSONFeature[] {
-        if (params && params.filter) {
+        if (params?.filter) {
             this._validate(validateStyle.filter, 'queryRenderedFeatures.filter', params.filter, null, params);
         }
 
         const includedSources = {};
-        if (params && params.layers) {
+        if (params?.layers) {
             const isArrayOrSet = Array.isArray(params.layers) || params.layers instanceof Set;
             if (!isArrayOrSet) {
                 this.fire(new ErrorEvent(new Error('parameters.layers must be an Array or a Set of strings')));
@@ -1757,7 +1757,7 @@ export class Style extends Evented {
     _validate(validate: Validator, key: string, value: any, props: any, options: {
         validate?: boolean;
     } = {}) {
-        if (options && options.validate === false) {
+        if (options?.validate === false) {
             return false;
         }
         return emitValidationErrors(this, validate.call(validateStyle, extend({

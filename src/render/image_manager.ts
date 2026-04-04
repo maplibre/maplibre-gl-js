@@ -132,11 +132,11 @@ export class ImageManager extends Evented {
     _validate(id: string, image: StyleImage) {
         let valid = true;
         const data = image.data || image.spriteData;
-        if (!this._validateStretch(image.stretchX, data && data.width)) {
+        if (!this._validateStretch(image.stretchX, data?.width)) {
             this.fire(new ErrorEvent(new Error(`Image "${id}" has invalid "stretchX" value`)));
             valid = false;
         }
-        if (!this._validateStretch(image.stretchY, data && data.height)) {
+        if (!this._validateStretch(image.stretchY, data?.height)) {
             this.fire(new ErrorEvent(new Error(`Image "${id}" has invalid "stretchY" value`)));
             valid = false;
         }
@@ -161,8 +161,8 @@ export class ImageManager extends Evented {
         if (!content) return true;
         if (content.length !== 4) return false;
         const spriteData = image.spriteData;
-        const width = (spriteData && spriteData.width) || image.data.width;
-        const height = (spriteData && spriteData.height) || image.data.height;
+        const width = (spriteData?.width) || image.data.width;
+        const height = (spriteData?.height) || image.data.height;
         if (content[0] < 0 || width < content[0]) return false;
         if (content[1] < 0 || height < content[1]) return false;
         if (content[2] < 0 || width < content[2]) return false;
@@ -187,7 +187,7 @@ export class ImageManager extends Evented {
         delete this.images[id];
         delete this.patterns[id];
 
-        if (image.userImage && image.userImage.onRemove) {
+        if (image.userImage?.onRemove) {
             image.userImage.onRemove();
         }
     }
@@ -242,7 +242,7 @@ export class ImageManager extends Evented {
                     content: image.content,
                     textFitWidth: image.textFitWidth,
                     textFitHeight: image.textFitHeight,
-                    hasRenderCallback: Boolean(image.userImage && image.userImage.render)
+                    hasRenderCallback: Boolean(image.userImage?.render)
                 };
             } else {
                 warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image with map.addImage() or a "sprite" property in your style. You can provide missing images by listening for the "styleimagemissing" map event.`);
@@ -266,6 +266,7 @@ export class ImageManager extends Evented {
             return null;
         }
 
+        // eslint-disable-next-line @typescript-eslint/prefer-optional-chain -- pattern?.position.version would be undefined when pattern is nullish, making undefined === undefined true
         if (pattern && pattern.position.version === image.version) {
             return pattern.position;
         }

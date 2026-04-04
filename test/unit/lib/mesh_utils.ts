@@ -182,9 +182,9 @@ export function getDebugSvg(flattened: Array<number>, triangles?: Array<number>,
     let maxX = -Infinity;
     let maxY = -Infinity;
 
-    for (let i = 0; i < triangles.length; i++) {
-        const x = flattened[triangles[i] * 2];
-        const y = flattened[triangles[i] * 2 + 1];
+    for (const triangle of triangles) {
+        const x = flattened[triangle * 2];
+        const y = flattened[triangle * 2 + 1];
         minX = Math.min(minX, x);
         minY = Math.min(minY, y);
         maxX = Math.max(maxX, x);

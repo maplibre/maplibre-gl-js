@@ -30,8 +30,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
     let circleCount = 0;
     let circleOffset = 0;
 
-    for (let i = 0; i < coords.length; i++) {
-        const coord = coords[i];
+    for (const coord of coords) {
         const tile = tileManager.getTile(coord);
         const bucket: SymbolBucket = (tile.getBucket(layer) as any);
         if (!bucket) {
@@ -61,7 +60,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
             collisionUniformValues(painter.transform),
-            painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord),
+            painter.style.map.terrain?.getTerrainData(coord),
             transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true}),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
@@ -116,7 +115,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
             uniforms,
-            painter.style.map.terrain && painter.style.map.terrain.getTerrainData(batch.coord),
+            painter.style.map.terrain?.getTerrainData(batch.coord),
             null,
             layer.id,
             vertexBuffer,

@@ -68,8 +68,7 @@ export function fillLargeMeshArrays(
         }
 
         if (hasLines) {
-            for (let listIndex = 0; listIndex < lineList.length; listIndex++) {
-                const lineIndices = lineList[listIndex];
+            for (const lineIndices of lineList) {
 
                 for (let i = 1; i < lineIndices.length; i += 2) {
                     lineIndexArray.emplaceBack(
@@ -222,9 +221,8 @@ function fillSegmentsLines(
     let segment = segmentsLines.getOrCreateLatestSegment(vertexArray, lineIndexArray);
     let baseVertex = segment.vertexLength;
 
-    for (let lineListIndex = 0; lineListIndex < lineList.length; lineListIndex++) {
-        const currentLine = lineList[lineListIndex];
-        for (let lineVertex = 1; lineVertex < lineList[lineListIndex].length; lineVertex += 2) {
+    for (const currentLine of lineList) {
+        for (let lineVertex = 1; lineVertex < currentLine.length; lineVertex += 2) {
             const i0 = currentLine[lineVertex - 1];
             const i1 = currentLine[lineVertex];
 

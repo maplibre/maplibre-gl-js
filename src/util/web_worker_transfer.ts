@@ -90,7 +90,7 @@ for (const name in expressions) {
 
 function isArrayBuffer(value: any): value is ArrayBuffer {
     return value && typeof ArrayBuffer !== 'undefined' &&
-           (value instanceof ArrayBuffer || (value.constructor && value.constructor.name === 'ArrayBuffer'));
+           (value instanceof ArrayBuffer || (value.constructor?.name === 'ArrayBuffer'));
 }
 
 function getClassRegistryKey(input: Object|SerializedObject): string {
@@ -188,14 +188,14 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         // approach for objects whose members include instances of dynamic
         // StructArray types. Once we refactor StructArray to be static,
         // we can remove this complexity.
-        (klass.serialize(input, transferables) as SerializedObject) : {};
+        klass.serialize(input, transferables) : {};
 
     if (!klass.serialize) {
         for (const key in input) {
             if (!input.hasOwnProperty(key)) continue;
-            if (registry[classRegistryKey].omit.indexOf(key) >= 0) continue;
+            if (registry[classRegistryKey].omit.includes(key)) continue;
             const property = input[key];
-            properties[key] = registry[classRegistryKey].shallow.indexOf(key) >= 0 ?
+            properties[key] = registry[classRegistryKey].shallow.includes(key) ?
                 property :
                 serialize(property, transferables);
         }
@@ -203,7 +203,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
             properties.message = input.message;
         }
     } else {
-        if (transferables && properties === transferables[transferables.length - 1]) {
+        if (properties === transferables?.[transferables.length - 1]) {
             throw new Error('statically serialized object won\'t survive transfer of $name property');
         }
     }
@@ -248,7 +248,7 @@ export function deserialize(input: Serialized): unknown {
     for (const key of Object.keys(input)) {
         if (key === '$name') continue;
         const value = (input as SerializedObject)[key];
-        result[key] = registry[classRegistryKey].shallow.indexOf(key) >= 0 ? value : deserialize(value);
+        result[key] = registry[classRegistryKey].shallow.includes(key) ? value : deserialize(value);
     }
 
     return result;

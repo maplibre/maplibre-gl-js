@@ -173,7 +173,7 @@ describe('marker', () => {
         marker.togglePopup();
         const spy = vi.fn();
         popup.on('close', spy);
-        (map.getContainer().querySelector('.maplibregl-popup-close-button') as HTMLButtonElement).click();
+        map.getContainer().querySelector<HTMLButtonElement>('.maplibregl-popup-close-button').click();
 
         expect(spy).toHaveBeenCalled();
     });

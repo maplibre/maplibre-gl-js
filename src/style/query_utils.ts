@@ -50,8 +50,7 @@ export function translate(queryGeometry: Array<Point>,
     }
 
     const translated: Point[] = [];
-    for (let i = 0; i < queryGeometry.length; i++) {
-        const point = queryGeometry[i];
+    for (const point of queryGeometry) {
         translated.push(point.sub(pt));
     }
     return translated;
@@ -74,8 +73,8 @@ function _stripDuplicates(ring: Array<Point>): Array<Point> {
 
 export function offsetLine(rings: Array<Array<Point>>, offset: number) {
     const newRings: Array<Array<Point>> = [];
-    for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
-        const ring = _stripDuplicates(rings[ringIndex]);
+    for (const rawRing of rings) {
+        const ring = _stripDuplicates(rawRing);
         const newRing: Array<Point> = [];
         for (let index = 0; index < ring.length; index++) {
             const point = ring[index];

@@ -245,7 +245,7 @@ class SourceExpressionBinder implements AttributeBinder {
 
     upload(context: Context) {
         if (this.paintVertexArray?.arrayBuffer.byteLength) {
-            if (this.paintVertexBuffer && this.paintVertexBuffer.buffer) {
+            if (this.paintVertexBuffer?.buffer) {
                 this.paintVertexBuffer.updateData(this.paintVertexArray);
             } else {
                 this.paintVertexBuffer = context.createVertexBuffer(this.paintVertexArray, this.paintVertexAttributes, this.expression.isStateDependent);
@@ -321,7 +321,7 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
 
     upload(context: Context) {
         if (this.paintVertexArray?.arrayBuffer.byteLength) {
-            if (this.paintVertexBuffer && this.paintVertexBuffer.buffer) {
+            if (this.paintVertexBuffer?.buffer) {
                 this.paintVertexBuffer.updateData(this.paintVertexArray);
             } else {
                 this.paintVertexBuffer = context.createVertexBuffer(this.paintVertexArray, this.paintVertexAttributes, this.expression.isStateDependent);
@@ -426,7 +426,7 @@ class CrossFadedPatternBinder extends CrossFadedBinder<ImagePosition> {
     }
 
     protected getPositionIds(feature: Feature) {
-        return feature.patterns && feature.patterns[this.layerId];
+        return feature.patterns?.[this.layerId];
     }
 
     getVertexAttributes(): Array<StructArrayMember> {
@@ -449,7 +449,7 @@ class CrossFadedDasharrayBinder extends CrossFadedBinder<DashEntry> {
     }
 
     protected getPositionIds(feature: Feature) {
-        return feature.dashes && feature.dashes[this.layerId];
+        return feature.dashes?.[this.layerId];
     }
 
     getVertexAttributes(): Array<StructArrayMember> {
@@ -607,8 +607,8 @@ export class ProgramConfiguration {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder) {
-                for (let i = 0; i < binder.paintVertexAttributes.length; i++) {
-                    result.push(binder.paintVertexAttributes[i].name);
+                for (const attribute of binder.paintVertexAttributes) {
+                    result.push(attribute.name);
                 }
             } else if (binder instanceof CrossFadedBinder) {
                 const attributes = binder.getVertexAttributes();
@@ -811,7 +811,7 @@ function layoutType(property: string, type: string, binderType: string) {
     };
 
     const layoutException = getLayoutException(property);
-    return  layoutException && layoutException[binderType] || defaultLayouts[type][binderType];
+    return  layoutException?.[binderType] || defaultLayouts[type][binderType];
 }
 
 register('ConstantBinder', ConstantBinder);

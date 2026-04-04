@@ -267,7 +267,7 @@ class ${structArrayLayoutClass} extends StructArray {`);
     const argNamesTyped = [];
 
     for (const member of members) {
-        if (usedTypeSizes.indexOf(member.size) < 0) {
+        if (!usedTypeSizes.includes(member.size)) {
             usedTypeSizes.push(member.size);
         }
         for (let c = 0; c < member.components; c++) {

@@ -268,7 +268,7 @@ export class Painter {
     }
 
     _renderTileClippingMasks(layer: StyleLayer, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean) {
-        if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs || !tileIDs.length) {
+        if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs?.length) {
             return;
         }
 
@@ -312,7 +312,7 @@ export class Painter {
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const stencilRef = tileStencilRefs[tileID.key];
-            const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
+            const terrainData = this.style.map.terrain?.getTerrainData(tileID);
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
@@ -343,7 +343,7 @@ export class Painter {
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
-            const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
+            const terrainData = this.style.map.terrain?.getTerrainData(tileID);
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
 
             const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
@@ -586,7 +586,7 @@ export class Painter {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const tileManager = tileManagers[layer.source];
 
-            if (this.renderToTexture && this.renderToTexture.renderLayer(layer, renderOptions)) continue;
+            if (this.renderToTexture?.renderLayer(layer, renderOptions)) continue;
 
             if (!this.opaquePassEnabledForLayer() && !globeDepthRendered) {
                 globeDepthRendered = true;
@@ -633,7 +633,7 @@ export class Painter {
      * to accurate (that is, the camera has not moved much since it was updated last).
      */
     maybeDrawDepthAndCoords(requireExact: boolean) {
-        if (!this.style || !this.style.map || !this.style.map.terrain) {
+        if (!this.style?.map?.terrain) {
             return;
         }
         const prevMatrix = this.terrainFacilitator.matrix;
@@ -827,7 +827,7 @@ export class Painter {
         if (this.cache) {
             for (const key in this.cache) {
                 const program = this.cache[key];
-                if (program && program.program) {
+                if (program?.program) {
                     this.context.gl.deleteProgram(program.program);
                 }
             }

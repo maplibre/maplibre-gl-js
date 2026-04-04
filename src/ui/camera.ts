@@ -786,7 +786,7 @@ export abstract class Camera extends Evented {
      */
     cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
         bounds = LngLatBounds.convert(bounds).adjustAntiMeridian();
-        const bearing = options && options.bearing || 0;
+        const bearing = options?.bearing || 0;
 
         return this._cameraForBoxAndBearing(bounds.getNorthWest(), bounds.getSouthEast(), bearing, options);
     }
@@ -1554,7 +1554,7 @@ export abstract class Camera extends Evented {
         this._rotating = (startBearing !== bearing);
         this._pitching = (pitch !== startPitch);
         this._rolling = (roll !== startRoll);
-        this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
+        this._padding = !tr.isPaddingEqual(padding);
 
         this._prepareEase(eventData, false);
         if (this.terrain) this._prepareElevation(flyToHandler.targetCenter);
@@ -1574,7 +1574,7 @@ export abstract class Camera extends Evented {
                 tr.setRoll(interpolates.number(startRoll, roll, k));
             }
             if (this._padding) {
-                tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
+                tr.interpolatePadding(startPadding, padding, k);
                 // When padding is being applied, Transform.centerPoint is changing continuously,
                 // thus we need to recalculate offsetPoint every frame
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);

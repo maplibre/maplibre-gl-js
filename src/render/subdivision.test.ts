@@ -971,10 +971,10 @@ describe('Fill subdivision', () => {
  */
 function toSimplePoints(a: Array<Point>): Array<{x: number; y: number}> {
     const result = [];
-    for (let i = 0; i < a.length; i++) {
+    for (const point of a) {
         result.push({
-            x: a[i].x,
-            y: a[i].y,
+            x: point.x,
+            y: point.y,
         });
     }
     return result;

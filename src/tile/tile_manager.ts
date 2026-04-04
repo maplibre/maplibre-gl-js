@@ -129,7 +129,7 @@ export class TileManager extends Evented {
         this.map = map;
         this._maxTileCacheSize = map ? map._maxTileCacheSize : null;
         this._maxTileCacheZoomLevels = map ? map._maxTileCacheZoomLevels : null;
-        if (this._source && this._source.onAdd) {
+        if (this._source?.onAdd) {
             this._source.onAdd(map);
         }
     }
@@ -139,7 +139,7 @@ export class TileManager extends Evented {
             tile.unloadVectorData();
         }
         this.clearTiles();
-        if (this._source && this._source.onRemove) {
+        if (this._source?.onRemove) {
             this._source.onRemove(map);
         }
         this._inViewTiles = new InViewTiles();
@@ -192,7 +192,7 @@ export class TileManager extends Evented {
         } catch (err) {
             tile.state = 'errored';
 
-            if ((err as any).status !== 404) {
+            if (err.status !== 404) {
                 this._source.fire(new ErrorEvent(err, {tile}));
             } else {
                 // continue to try loading parent/children tiles if a tile doesn't exist (404)
@@ -853,8 +853,8 @@ export class TileManager extends Evented {
 
         const cameraBounds = Bounds.fromPoints(cameraQueryGeometry);
 
-        for (let i = 0; i < ids.length; i++) {
-            const tile = this._inViewTiles.getTileById(ids[i]);
+        for (const id of ids) {
+            const tile = this._inViewTiles.getTileById(id);
             if (tile.holdingForSymbolFade()) {
                 // Tiles held for fading are covered by tiles that are closer to ideal
                 continue;

@@ -65,7 +65,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 tile.state = 'unloaded';
                 return;
             }
-            if (response && response.data) {
+            if (response?.data) {
                 const img = response.data;
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
