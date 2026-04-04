@@ -101,37 +101,58 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     let circle_center = floor(pos_raw / 8.0);
 
     var color = props.color;
-#ifndef HAS_UNIFORM_u_color
+#ifdef HAS_DATA_DRIVEN_u_color
+    color = decode_color(vin.color);
+#endif
+#ifdef HAS_COMPOSITE_u_color
     color = unpack_mix_color(vin.color, drawable.color_t);
 #endif
 
     var radius = props.radius;
-#ifndef HAS_UNIFORM_u_radius
+#ifdef HAS_DATA_DRIVEN_u_radius
+    radius = vin.radius;
+#endif
+#ifdef HAS_COMPOSITE_u_radius
     radius = unpack_mix_float(vin.radius, drawable.radius_t);
 #endif
 
     var blur = props.blur;
-#ifndef HAS_UNIFORM_u_blur
+#ifdef HAS_DATA_DRIVEN_u_blur
+    blur = vin.blur;
+#endif
+#ifdef HAS_COMPOSITE_u_blur
     blur = unpack_mix_float(vin.blur, drawable.blur_t);
 #endif
 
     var opacity = props.opacity;
-#ifndef HAS_UNIFORM_u_opacity
+#ifdef HAS_DATA_DRIVEN_u_opacity
+    opacity = vin.opacity;
+#endif
+#ifdef HAS_COMPOSITE_u_opacity
     opacity = unpack_mix_float(vin.opacity, drawable.opacity_t);
 #endif
 
     var stroke_color = props.stroke_color;
-#ifndef HAS_UNIFORM_u_stroke_color
+#ifdef HAS_DATA_DRIVEN_u_stroke_color
+    stroke_color = decode_color(vin.stroke_color);
+#endif
+#ifdef HAS_COMPOSITE_u_stroke_color
     stroke_color = unpack_mix_color(vin.stroke_color, drawable.stroke_color_t);
 #endif
 
     var stroke_width = props.stroke_width;
-#ifndef HAS_UNIFORM_u_stroke_width
+#ifdef HAS_DATA_DRIVEN_u_stroke_width
+    stroke_width = vin.stroke_width;
+#endif
+#ifdef HAS_COMPOSITE_u_stroke_width
     stroke_width = unpack_mix_float(vin.stroke_width, drawable.stroke_width_t);
 #endif
 
     var stroke_opacity = props.stroke_opacity;
-#ifndef HAS_UNIFORM_u_stroke_opacity
+#ifdef HAS_DATA_DRIVEN_u_stroke_opacity
+    stroke_opacity = vin.stroke_opacity;
+#endif
+#ifdef HAS_COMPOSITE_u_stroke_opacity
     stroke_opacity = unpack_mix_float(vin.stroke_opacity, drawable.stroke_opacity_t);
 #endif
 

@@ -78,11 +78,28 @@ export class FillLayerTweaker extends LayerTweaker {
 
             // projectionData is already set during drawable creation with correct RTT flags
 
-            // Set drawableUBO with matrix for WebGPU path
+            // Set drawableUBO with matrix + data-driven _t values for WebGPU path
+            // FillDrawableUBO: matrix(64) + color_t(4) + opacity_t(4) + pad(8) = 80 bytes
             if (!drawable.drawableUBO) {
-                drawable.drawableUBO = new UniformBlock(64);
+                drawable.drawableUBO = new UniformBlock(80);
             }
             drawable.drawableUBO.setMat4(0, drawable.projectionData.mainMatrix as Float32Array);
+
+            // Set interpolation _t factors for data-driven (composite) properties
+            if (drawable.programConfiguration) {
+                const binders = (drawable.programConfiguration as any).binders;
+                if (binders) {
+                    const zoom = transform.zoom;
+                    for (const [prop, offset] of [['fill-color', 64], ['fill-opacity', 68]] as const) {
+                        const binder = binders[prop];
+                        if (binder && binder.expression && binder.expression.interpolationFactor) {
+                            const currentZoom = binder.useIntegerZoom ? Math.floor(zoom) : zoom;
+                            const t = Math.max(0, Math.min(1, binder.expression.interpolationFactor(currentZoom, binder.zoom, binder.zoom + 1)));
+                            drawable.drawableUBO.setFloat(offset, t);
+                        }
+                    }
+                }
+            }
 
             // Share the layer-level UBO reference
             drawable.layerUBO = this.evaluatedPropsUBO;

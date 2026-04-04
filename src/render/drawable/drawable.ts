@@ -23,6 +23,13 @@ import {shaders} from '../../shaders/shaders';
 import {preprocessWGSL} from '../wgsl_preprocessor';
 import {renderStateHash} from './render_state';
 
+function wgslTypeFromFormat(format: string): string {
+    if (format.startsWith('sint16')) return format === 'sint16' ? 'i32' : `vec${format.charAt(format.length - 1)}<i32>`;
+    if (format.startsWith('uint8')) return format === 'uint8' ? 'u32' : `vec${format.charAt(format.length - 1)}<u32>`;
+    if (format.startsWith('float32')) return format === 'float32' ? 'f32' : `vec${format.charAt(format.length - 1)}<f32>`;
+    return 'vec4<f32>';
+}
+
 let nextDrawableId = 0;
 
 export interface DrawableTexture {
@@ -303,36 +310,66 @@ export class Drawable {
                 // Preprocess WGSL (handle #ifdef/#ifndef for data-driven properties)
                 const defines: Record<string, boolean> = {};
                 if (this.programConfiguration) {
-                    const binderAttributes = this.programConfiguration.getBinderAttributes();
+                    const binders = (this.programConfiguration as any).binders || {};
+                    // Map shader property names to style property names per layer type
+                    const shaderName = this.shaderName;
+                    const prefix = shaderName === 'line' || shaderName === 'lineSDF' || shaderName === 'lineGradient' || shaderName === 'lineGradientSDF' || shaderName === 'linePattern' ? 'line' :
+                        shaderName === 'circle' ? 'circle' :
+                        shaderName === 'fill' || shaderName === 'fillOutline' || shaderName === 'fillPattern' || shaderName === 'fillOutlinePattern' ? 'fill' : '';
                     const paintProperties = ['color', 'radius', 'blur', 'opacity', 'stroke_color', 'stroke_width', 'stroke_opacity',
                         'outline_color', 'width', 'gapwidth', 'offset', 'floorwidth'];
                     for (const prop of paintProperties) {
-                        const isDataDriven = binderAttributes.some((attr: string) =>
-                            attr === `a_${prop}` || attr === `a_${prop}_from` || attr === `a_${prop}_to`
-                        );
-                        defines[`HAS_UNIFORM_u_${prop}`] = !isDataDriven;
+                        // Convert shader prop (e.g. 'color') to style prop (e.g. 'fill-color')
+                        const styleProp = prefix ? `${prefix}-${prop.replace(/_/g, '-')}` : prop;
+                        const binder = binders[styleProp] || null;
+                        const hasPaintBuffer = binder && binder.paintVertexBuffer;
+                        const isComposite = hasPaintBuffer && binder.uniformNames && binder.uniformNames.length > 0;
+                        const isSource = hasPaintBuffer && !isComposite;
+                        defines[`HAS_UNIFORM_u_${prop}`] = !isSource && !isComposite;
+                        defines[`HAS_DATA_DRIVEN_u_${prop}`] = !!isSource;
+                        defines[`HAS_COMPOSITE_u_${prop}`] = !!isComposite;
                     }
                 }
                 let wgslSource = preprocessWGSL(rawWgsl, defines);
 
-                // Generate VertexInput struct from layout buffer attributes
+                // Generate VertexInput struct and vertex buffer layouts
                 let vertexInputStruct = 'struct VertexInput {\n';
-                const vbAttributes: any[] = [];
+                const vertexBufferLayouts: any[] = [];
                 let locationIndex = 0;
+
+                // Slot 0: layout vertex buffer
+                const layoutAttrs: any[] = [];
                 for (const member of this.layoutVertexBuffer.attributes) {
                     const format = getWebGPUVertexFormat(member.type, member.components);
-                    vbAttributes.push({shaderLocation: locationIndex, format, offset: member.offset});
-                    let wgslType = 'vec4<f32>';
-                    if (format.startsWith('sint16')) {
-                        wgslType = format === 'sint16' ? 'i32' : `vec${format.charAt(format.length - 1)}<i32>`;
-                    } else if (format.startsWith('uint8')) {
-                        wgslType = format === 'uint8' ? 'u32' : `vec${format.charAt(format.length - 1)}<u32>`;
-                    } else if (format.startsWith('float32')) {
-                        wgslType = format === 'float32' ? 'f32' : `vec${format.charAt(format.length - 1)}<f32>`;
-                    }
+                    layoutAttrs.push({shaderLocation: locationIndex, format, offset: member.offset});
+                    const wgslType = wgslTypeFromFormat(format);
                     vertexInputStruct += `    @location(${locationIndex}) ${member.name.replace('a_', '')}: ${wgslType},\n`;
                     locationIndex++;
                 }
+                vertexBufferLayouts.push({
+                    arrayStride: this.layoutVertexBuffer.itemSize,
+                    stepMode: 'vertex',
+                    attributes: layoutAttrs,
+                });
+
+                // Slots 1+: paint vertex buffers (for data-driven properties)
+                const paintBuffers = this.programConfiguration ? this.programConfiguration.getPaintVertexBuffers() : [];
+                for (const paintBuf of paintBuffers) {
+                    const paintAttrs: any[] = [];
+                    for (const member of paintBuf.attributes) {
+                        const format = getWebGPUVertexFormat(member.type, member.components);
+                        paintAttrs.push({shaderLocation: locationIndex, format, offset: member.offset});
+                        const wgslType = wgslTypeFromFormat(format);
+                        vertexInputStruct += `    @location(${locationIndex}) ${member.name.replace('a_', '')}: ${wgslType},\n`;
+                        locationIndex++;
+                    }
+                    vertexBufferLayouts.push({
+                        arrayStride: paintBuf.itemSize,
+                        stepMode: 'vertex',
+                        attributes: paintAttrs,
+                    });
+                }
+
                 vertexInputStruct += '};\n';
 
                 if (wgslSource.includes('struct VertexInput {')) {
@@ -351,15 +388,16 @@ export class Drawable {
                 if (!(painter as any)._rawBindings) (painter as any)._rawBindings = {};
                 (painter as any)._rawBindings[cacheKey] = declaredBindings;
 
+                // Cache paint buffer count for setVertexBuffer calls later
+                if (!(painter as any)._rawPaintBufCounts) (painter as any)._rawPaintBufCounts = {};
+                (painter as any)._rawPaintBufCounts[cacheKey] = paintBuffers.length;
+
                 const shaderModule = gpuDevice.createShaderModule({code: wgslSource});
                 shaderModule.getCompilationInfo().then((info: any) => {
                     for (const msg of info.messages) {
                         console.warn(`[WGSL ${msg.type}] ${this.shaderName}: ${msg.message} (line ${msg.lineNum})`);
                     }
                 });
-                if (this.shaderName === 'fill') {
-                    console.warn('[FILL WGSL]', wgslSource.substring(0, 300));
-                }
                 const canvasFormat = (navigator as any).gpu.getPreferredCanvasFormat();
 
                 const needsStencilClip = this.shaderName === 'fill' || this.shaderName === 'line';
@@ -369,7 +407,6 @@ export class Drawable {
                     depthCompare: 'always',
                 };
                 if (needsStencilClip) {
-                    // Content reads stencil (Equal test), masks written by _renderTileClippingMasksWebGPU
                     depthStencilState.stencilFront = {compare: 'equal', passOp: 'keep', failOp: 'keep', depthFailOp: 'keep'};
                     depthStencilState.stencilBack = {compare: 'equal', passOp: 'keep', failOp: 'keep', depthFailOp: 'keep'};
                     depthStencilState.stencilReadMask = 0xFF;
@@ -381,11 +418,7 @@ export class Drawable {
                     vertex: {
                         module: shaderModule,
                         entryPoint: 'vertexMain',
-                        buffers: [{
-                            arrayStride: this.layoutVertexBuffer.itemSize,
-                            stepMode: 'vertex',
-                            attributes: vbAttributes,
-                        }],
+                        buffers: vertexBufferLayouts,
                     },
                     fragment: {
                         module: shaderModule,
@@ -440,6 +473,15 @@ export class Drawable {
             }
 
             rpEncoder.setVertexBuffer(0, this.layoutVertexBuffer.webgpuBuffer.handle);
+
+            // Bind paint vertex buffers (data-driven properties) at slots 1+
+            const paintBufs = this.programConfiguration ? this.programConfiguration.getPaintVertexBuffers() : [];
+            for (let i = 0; i < paintBufs.length; i++) {
+                if (paintBufs[i].webgpuBuffer) {
+                    rpEncoder.setVertexBuffer(i + 1, paintBufs[i].webgpuBuffer.handle);
+                }
+            }
+
             rpEncoder.setIndexBuffer(this.indexBuffer.webgpuBuffer.handle, 'uint16');
 
             const segs = this.segments.get();
