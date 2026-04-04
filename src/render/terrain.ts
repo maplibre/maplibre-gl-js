@@ -1,4 +1,3 @@
-
 import {mat4, vec2} from 'gl-matrix';
 import {OverscaledTileID} from '../tile/tile_id';
 import {RGBAImage} from '../util/image';
@@ -10,7 +9,7 @@ import {Texture} from '../render/texture';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {TerrainTileManager} from '../tile/terrain_tile_manager';
 import {EXTENT} from '../data/extent';
-import {type LngLat, earthRadius} from '../geo/lng_lat';
+import {earthRadius, type LngLat} from '../geo/lng_lat';
 import {Mesh} from './mesh';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision';
