@@ -55,8 +55,7 @@ describe('getCameraTargetElevation', () => {
     test('Elevation is zero without terrain, and matches any given terrain', () => {
         expect(map.getCameraTargetElevation()).toBe(0);
 
-        const terrainStub = {} as Terrain;
-        map.terrain = terrainStub;
+        map.terrain = {} as Terrain;
 
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setElevation(200);

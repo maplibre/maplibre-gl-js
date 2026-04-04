@@ -168,8 +168,7 @@ export class ImageManager extends Evented {
         if (content[2] < 0 || width < content[2]) return false;
         if (content[3] < 0 || height < content[3]) return false;
         if (content[2] < content[0]) return false;
-        if (content[3] < content[1]) return false;
-        return true;
+        return content[3] >= content[1];
     }
 
     updateImage(id: string, image: StyleImage, validate = true) {
