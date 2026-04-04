@@ -53,6 +53,9 @@ type TestData = {
     reportWidth: number;
     reportHeight: number;
 
+    // Rendering backend: 'webgl2' or 'webgpu'
+    backend: 'webgl2' | 'webgpu';
+
     // base64-encoded content of the PNG results
     actual: string;
     diff: string;
@@ -66,6 +69,7 @@ type RenderOptions = {
     seed: string;
     debug: boolean;
     openBrowser: boolean;
+    backend: 'webgl2' | 'webgpu';
 };
 
 type StyleWithTestData = StyleSpecification & {
@@ -733,7 +737,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 attributionControl: false,
                 maxPitch: options.maxPitch,
                 pixelRatio: options.pixelRatio,
-                canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default', contextType: 'webgl2'},
+                canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default', contextType: (options.backend || 'webgl2') as any},
                 fadeDuration: options.fadeDuration || 0,
                 localIdeographFontFamily: options.localIdeographFontFamily || false as any,
                 crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
@@ -975,7 +979,8 @@ async function executeRenderTests() {
         skipreport: false,
         seed: makeHash(),
         debug: false,
-        openBrowser: false
+        openBrowser: false,
+        backend: 'webgl2'
     };
 
     if (process.argv.length > 2) {
@@ -985,9 +990,13 @@ async function executeRenderTests() {
         options.seed = checkValueParameter(options, options.seed, '--seed');
         options.debug = checkParameter(options, '--debug');
         options.openBrowser = checkParameter(options, '--open-browser');
+        const backendValue = checkValueParameter(options, 'webgl2', '--backend');
+        if (backendValue === 'webgpu' || backendValue === 'webgl2') {
+            options.backend = backendValue;
+        }
     }
 
-    const browser = await launchPuppeteer(!options.openBrowser);
+    const browser = await launchPuppeteer(!options.openBrowser, options.backend);
 
     const mount = st({
         path: 'test/integration/assets',
@@ -1021,6 +1030,13 @@ async function executeRenderTests() {
 
     const directory = path.join(__dirname);
     let testStyles = getTestStyles(options, directory, (server.address() as any).port);
+
+    // Inject backend option into each test's metadata so it's available inside page.evaluate
+    for (const style of testStyles) {
+        (style.metadata.test as any).backend = options.backend;
+    }
+
+    console.log(`Running render tests with backend: ${options.backend}`);
 
     if (process.env.SPLIT_COUNT && process.env.CURRENT_SPLIT_INDEX) {
         const numberOfTestsForThisPart = Math.ceil(testStyles.length / +process.env.SPLIT_COUNT);
