@@ -420,7 +420,7 @@ export class GeoJSONSource extends Evented implements Source {
 
         // Data comes from a remote url
         if (typeof data === 'string') {
-            params.request = await this.map._requestManager.transformRequest(browser.resolveURL(data as string), ResourceType.Source);
+            params.request = await this.map._requestManager.transformRequest(browser.resolveURL(data), ResourceType.Source);
             params.request.collectResourceTiming = this._collectResourceTiming;
             return params;
         }

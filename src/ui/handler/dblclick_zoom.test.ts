@@ -7,7 +7,7 @@ function createMap(options: any = {}) {
     return new Map({
         container: window.document.createElement('div'),
         ...options
-    } as any as MapOptions);
+    } as MapOptions);
 }
 
 async function simulateDoubleTap(map, delay = 100) {

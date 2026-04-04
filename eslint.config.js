@@ -62,6 +62,7 @@ export default [
             '@typescript-eslint/prefer-reduce-type-parameter': 'error',
             '@typescript-eslint/prefer-return-this-type': 'error',
             '@typescript-eslint/no-confusing-void-expression': 'error',
+            '@typescript-eslint/no-unnecessary-type-assertion': 'error',
             '@typescript-eslint/prefer-includes': 'error',
             '@typescript-eslint/prefer-string-starts-ends-with': 'error',
 

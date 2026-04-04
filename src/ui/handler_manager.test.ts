@@ -16,7 +16,7 @@ let manager: HandlerManager;
 beforeEach(() => {
     beforeMapTest();
     map = createMap();
-    manager = map.handlers as HandlerManager;
+    manager = map.handlers;
 });
 
 afterEach(() => {
