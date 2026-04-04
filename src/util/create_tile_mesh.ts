@@ -86,13 +86,11 @@ export function createTileMeshWithBuffers(context: Context, options: CreateTileM
         arrayBuffer: tileMesh.indices,
         length: tileMesh.indices.byteLength / 2 / 3, // Three values per triangle, 16 bit
     });
-    const mesh = new Mesh(
+    return new Mesh(
         context.createVertexBuffer(vertices, posAttributes.members),
         context.createIndexBuffer(indices),
         SegmentVector.simpleSegment(0, 0, vertices.length, indices.length)
     );
-
-    return mesh;
 }
 
 /**

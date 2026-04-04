@@ -110,8 +110,8 @@ describe('Actor', () => {
         let received = false;
         const abortController = new AbortController();
         const p1 = m1.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: 'geojson', source: '', clusterId: 1729}}, abortController)
-            .then(() => { received = true; })
-            .catch(() => { received = true; });
+            .then(() => received = true)
+            .catch(() => received = true);
 
         abortController.abort();
 
@@ -139,8 +139,8 @@ describe('Actor', () => {
         let received = false;
         const abortController = new AbortController();
         m1.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: 'geojson', source: '', clusterId: 1729}}, abortController)
-            .then(() => { received = true; })
-            .catch(() => { received = true; });
+            .then(() => received = true)
+            .catch(() => received = true);
 
         abortController.abort();
 
@@ -166,8 +166,8 @@ describe('Actor', () => {
         let received = false;
         const abortController = new AbortController();
         const p1 = actor.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: 'geojson', source: '', clusterId: 1729}, mustQueue: true}, abortController)
-            .then(() => { received = true; })
-            .catch(() => { received = true; });
+            .then(() => received = true)
+            .catch(() => received = true);
 
         abortController.abort();
 

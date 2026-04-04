@@ -102,7 +102,7 @@ describe('touch zoom rotate', () => {
         const map = createMap();
         const target = map.getCanvas();
 
-        map.on('touchstart', e => e.preventDefault());
+        map.on('touchstart', e => { e.preventDefault(); });
 
         const move = vi.fn();
         map.on('move', move);

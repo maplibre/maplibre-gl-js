@@ -4,7 +4,7 @@ import {members as layoutAttributes} from './line_attributes';
 import {members as layoutAttributesExt} from './line_attributes_ext';
 import {SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
-import {TriangleIndexArray} from '../index_array_type';
+import {TriangleIndexArray} from '../array_types.g';
 import {EXTENT} from '../extent';
 import {VectorTileFeature} from '@mapbox/vector-tile';
 import {register} from '../../util/web_worker_transfer';
@@ -131,9 +131,9 @@ export class LineBucket implements Bucket {
         this.patternFeatures = [];
         this.lineClipsArray = [];
         this.gradients = {};
-        this.layers.forEach(layer => {
+        for (const layer of this.layers) {
             this.gradients[layer.id] = {};
-        });
+        }
 
         this.layoutVertexArray = new LineLayoutArray();
         this.layoutVertexArray2 = new LineExtLayoutArray();

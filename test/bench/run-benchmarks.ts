@@ -83,8 +83,7 @@ try {
             if (v && results[v]) {
                 const trimmedMean = results[v].summary?.trimmedMean;
                 const regression = results[v].regression;
-                const result = formatTime(trimmedMean).padStart(timeWidth) + formatRegression(regression);
-                return result;
+                return formatTime(trimmedMean).padStart(timeWidth) + formatRegression(regression);
             } else {
                 return ''.padStart(timeWidth + 1);
             }

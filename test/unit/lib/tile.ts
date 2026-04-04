@@ -17,8 +17,7 @@ export type CreateBucketParameters = {
 };
 
 export function loadVectorTile(name = 'mbsv5-6-18-23.vector.pbf'): VectorTile {
-    const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets', name))));
-    return vt;
+    return new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets', name))));
 }
 
 export function getFeaturesFromLayer(sourceLayer: VectorTileLayerLike): IndexedFeature[] {

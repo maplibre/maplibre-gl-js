@@ -192,7 +192,7 @@ export class ImageSource extends Evented implements Source {
         }
 
         this.options.url = options.url;
-        this.load(options.coordinates).finally(() => { this.texture = null; });
+        this.load(options.coordinates).finally(() => this.texture = null);
         return this;
     }
 

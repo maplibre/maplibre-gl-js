@@ -528,7 +528,7 @@ export class HandlerManager {
         const terrain = map.terrain;
 
         if (!hasChange(combinedResult) && !(terrain && this._terrainMovement)) {
-            return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
+            this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true); return;
         }
 
         // stop any ongoing camera animations (easeTo, flyTo)

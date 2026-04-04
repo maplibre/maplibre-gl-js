@@ -303,9 +303,11 @@ export class Context {
     }
 
     deleteVertexArray(x: WebGLVertexArrayObject | undefined) {
-        if (isWebGL2(this.gl))
-            return this.gl.deleteVertexArray(x);
-        return this.gl.getExtension('OES_vertex_array_object')?.deleteVertexArrayOES(x);
+        if (isWebGL2(this.gl)) {
+            this.gl.deleteVertexArray(x);
+            return;
+        }
+        this.gl.getExtension('OES_vertex_array_object')?.deleteVertexArrayOES(x);
     }
 
     unbindVAO() {

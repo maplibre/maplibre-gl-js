@@ -17,8 +17,7 @@ function createSource(options) {
         coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]]
     }, options);
 
-    const source = new ImageSource('id', options, {} as any, options.eventedParent);
-    return source;
+    return new ImageSource('id', options, {} as any, options.eventedParent);
 }
 
 class StubMap extends Evented {

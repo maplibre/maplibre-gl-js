@@ -632,10 +632,7 @@ export class Style extends Evented {
             if (!this.tileManagers[id].loaded())
                 return false;
 
-        if (!this.imageManager.isLoaded())
-            return false;
-
-        return true;
+        return this.imageManager.isLoaded();
     }
 
     /**
@@ -1491,7 +1488,7 @@ export class Style extends Evented {
             layers,
             terrain
         },
-        (value) => { return value !== undefined; });
+        (value) => value !== undefined);
     }
 
     _updateLayer(layer: StyleLayer) {
@@ -1885,9 +1882,8 @@ export class Style extends Evented {
             }
         }
 
-        // needsRender is false when we have just finished a placement that didn't change the visibility of any symbols
-        const needsRerender = !this.pauseablePlacement.isDone() || this.placement.hasTransitions(now());
-        return needsRerender;
+        // false when we have just finished a placement that didn't change the visibility of any symbols
+        return !this.pauseablePlacement.isDone() || this.placement.hasTransitions(now());
     }
 
     _releaseSymbolFadeTiles() {

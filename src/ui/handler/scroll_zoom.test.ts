@@ -383,7 +383,7 @@ describe('ScrollZoomHandler', () => {
 
         const map = createMap();
 
-        map.on('wheel', e => e.preventDefault());
+        map.on('wheel', e => { e.preventDefault(); });
 
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();

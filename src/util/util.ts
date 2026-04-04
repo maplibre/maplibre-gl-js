@@ -808,7 +808,7 @@ export const arrayBufferToImage = (data: ArrayBuffer): Promise<HTMLImageElement>
             // but don't free the image immediately because it might be uploaded in the next frame
             // https://github.com/mapbox/mapbox-gl-js/issues/10226
             img.onload = null;
-            window.requestAnimationFrame(() => { img.src = transparentPngUrl; });
+            window.requestAnimationFrame(() => img.src = transparentPngUrl);
         };
         img.onerror = () => reject(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
         const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});

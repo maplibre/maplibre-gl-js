@@ -59,6 +59,8 @@ export default [
                 argsIgnorePattern: '^_',
             }],
             '@typescript-eslint/prefer-optional-chain': 'error',
+            '@typescript-eslint/prefer-reduce-type-parameter': 'error',
+            '@typescript-eslint/prefer-return-this-type': 'error',
             '@typescript-eslint/prefer-for-of': 'error',
             '@typescript-eslint/no-unnecessary-type-assertion': 'error',
             '@typescript-eslint/prefer-includes': 'error',
@@ -111,6 +113,13 @@ export default [
             indent: 'off',
             '@stylistic/indent': ['error'],
             '@stylistic/semi': ['error'],
+            'no-restricted-syntax': [
+                'error',
+                {
+                    'selector': 'CallExpression[callee.property.name=\'forEach\']',
+                    'message': 'Do not use forEach. Use for...of for iteration, map for mapping, or reduce for accumulation instead.'
+                }
+            ],
 
             'no-multiple-empty-lines': ['error', {
                 max: 1,

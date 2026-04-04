@@ -99,7 +99,7 @@ export class TileManager extends Evented {
         this.id = id;
         this.dispatcher = dispatcher;
 
-        this.on('data', (e: MapSourceDataEvent) => this._dataHandler(e));
+        this.on('data', (e: MapSourceDataEvent) => { this._dataHandler(e); });
 
         this.on('dataloading', () => {
             this._sourceErrored = false;
@@ -923,11 +923,7 @@ export class TileManager extends Evented {
             return true;
         }
 
-        if (isRasterType(this._source.type) && hasRasterTransition(this._inViewTiles, this._rasterFadeDuration)) {
-            return true;
-        }
-
-        return false;
+        return isRasterType(this._source.type) && hasRasterTransition(this._inViewTiles, this._rasterFadeDuration);
     }
 
     setRasterFadeDuration(fadeDuration: number) {

@@ -103,10 +103,7 @@ function isRegistered(input: unknown): boolean {
         return false;
     }
     const classRegistryKey = getClassRegistryKey(input);
-    if (classRegistryKey && classRegistryKey !== 'Object') {
-        return true;
-    }
-    return false;
+    return classRegistryKey && classRegistryKey !== 'Object';
 }
 
 function isSerializeHandledByBuiltin(input: unknown) {
@@ -150,9 +147,8 @@ export function serialize(input: unknown, transferables?: Transferable[] | null)
             }
         }
         if (ArrayBuffer.isView(input)) {
-            const view = input;
             if (transferables) {
-                transferables.push(view.buffer);
+                transferables.push(input.buffer);
             }
         }
         if (input instanceof ImageData) {

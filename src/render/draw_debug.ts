@@ -141,9 +141,13 @@ export function selectDebugSource(style: Style, zoom: number): TileManager | nul
             selectedSource = source;
         }
     };
-    vectorSources.forEach((source) => considerSource(source));
+    for (const source of vectorSources) {
+        considerSource(source);
+    }
     if (!selectedSource) {
-        otherSources.forEach((source) => considerSource(source));
+        for (const source of otherSources) {
+            considerSource(source);
+        }
     }
     return selectedSource;
 }
