@@ -212,8 +212,8 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     };
 
     // Do a depth-first traversal to find visible tiles and proper levels of detail
-    const stack: Array<CoveringTilesStackEntry> = [];
-    const result: Array<CoveringTilesResult> = [];
+    const stack: CoveringTilesStackEntry[] = [];
+    const result: CoveringTilesResult[] = [];
 
     if (transform.renderWorldCopies && detailsProvider.allowWorldCopies()) {
         // Render copy of the globe thrice on both sides

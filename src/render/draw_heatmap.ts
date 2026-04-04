@@ -19,7 +19,7 @@ import type {HeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer';
 import type {HeatmapBucket} from '../data/bucket/heatmap_bucket';
 import type {OverscaledTileID} from '../tile/tile_id';
 
-export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions) {
     if (layer.paint.get('heatmap-opacity') === 0) {
         return;
     }
@@ -50,7 +50,7 @@ export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: H
     }
 }
 
-function prepareHeatmapFlat(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, coords: Array<OverscaledTileID>) {
+function prepareHeatmapFlat(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, coords: OverscaledTileID[]) {
     const context = painter.context;
     const gl = context.gl;
     const transform = painter.transform;

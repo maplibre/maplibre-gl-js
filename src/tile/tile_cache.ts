@@ -19,7 +19,7 @@ export class TileCache {
             timeout: ReturnType<typeof setTimeout>;
         }>;
     };
-    order: Array<string>;
+    order: string[];
     onRemove: (element: Tile) => void;
     /**
      * @param max - number of permitted values

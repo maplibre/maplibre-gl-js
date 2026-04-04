@@ -27,7 +27,7 @@ const AttributeType = {
  */
 export class VertexBuffer {
     length: number;
-    attributes: ReadonlyArray<StructArrayMember>;
+    attributes: readonly StructArrayMember[];
     itemSize: number;
     dynamicDraw: boolean;
     context: Context;
@@ -36,7 +36,7 @@ export class VertexBuffer {
     /**
      * @param dynamicDraw - Whether this buffer will be repeatedly updated.
      */
-    constructor(context: Context, array: StructArray, attributes: ReadonlyArray<StructArrayMember>, dynamicDraw?: boolean) {
+    constructor(context: Context, array: StructArray, attributes: readonly StructArrayMember[], dynamicDraw?: boolean) {
         this.length = array.length;
         this.attributes = attributes;
         this.itemSize = array.bytesPerElement;

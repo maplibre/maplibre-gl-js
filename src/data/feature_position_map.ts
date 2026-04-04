@@ -14,8 +14,8 @@ type FeaturePosition = {
 
 // A transferable data structure that maps feature ids to their indices and buffer offsets
 export class FeaturePositionMap {
-    ids: Array<number>;
-    positions: Array<number>;
+    ids: number[];
+    positions: number[];
     indexed: boolean;
 
     constructor() {
@@ -29,7 +29,7 @@ export class FeaturePositionMap {
         this.positions.push(index, start, end);
     }
 
-    getPositions(id: unknown): Array<FeaturePosition> {
+    getPositions(id: unknown): FeaturePosition[] {
         if (!this.indexed) throw new Error('Trying to get index, but feature positions are not indexed');
 
         const intId = getNumericId(id);
@@ -57,7 +57,7 @@ export class FeaturePositionMap {
         return positions;
     }
 
-    static serialize(map: FeaturePositionMap, transferables: Array<ArrayBuffer>): SerializedFeaturePositionMap {
+    static serialize(map: FeaturePositionMap, transferables: ArrayBuffer[]): SerializedFeaturePositionMap {
         const ids = new Float64Array(map.ids);
         const positions = new Uint32Array(map.positions);
 

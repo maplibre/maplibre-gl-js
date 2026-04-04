@@ -56,7 +56,7 @@ export default class GeoJSONSourceUpdateData extends Benchmark {
     }
 
     async bench() {
-        const source = this.map.getSource('points') as GeoJSONSource;
+        const source = this.map.getSource<GeoJSONSource>('points');
 
         source.updateData({
             update: [{

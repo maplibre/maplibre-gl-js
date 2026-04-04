@@ -47,7 +47,7 @@ export class LineAtlas {
      * @param round - whether to add circle caps in between dash segments
      * @returns position of dash texture in {@link DashEntry}
      */
-    getDash(dasharray: Array<number>, round: boolean) {
+    getDash(dasharray: number[], round: boolean) {
         const key = dasharray.join(',') + String(round);
 
         if (!this.dashEntry[key]) {
@@ -56,7 +56,7 @@ export class LineAtlas {
         return this.dashEntry[key];
     }
 
-    getDashRanges(dasharray: Array<number>, lineAtlasWidth: number, stretch: number) {
+    getDashRanges(dasharray: number[], lineAtlasWidth: number, stretch: number) {
         // If dasharray has an odd length, both the first and last parts
         // are dashes and should be joined seamlessly.
         const oddDashArray = dasharray.length % 2 === 1;
@@ -156,7 +156,7 @@ export class LineAtlas {
         }
     }
 
-    addDash(dasharray: Array<number>, round: boolean): DashEntry {
+    addDash(dasharray: number[], round: boolean): DashEntry {
         const n = round ? 7 : 0;
         const height = 2 * n + 1;
 

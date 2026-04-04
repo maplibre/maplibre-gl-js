@@ -23,7 +23,7 @@ describe('ImageRequest', () => {
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
-        const promises: Promise<any>[] = [];
+        const promises: Array<Promise<any>> = [];
         for (let i = 0; i < maxRequests + 5; i++) {
             promises.push(ImageRequest.getImage({url: ''}, new AbortController()));
 
@@ -262,7 +262,7 @@ describe('ImageRequest', () => {
         let callbackCounter = 0;
         const promiseCallback = () => { callbackCounter++; };
 
-        const abortConstollers: {url: string; abortController: AbortController}[] = [];
+        const abortConstollers: Array<{url: string; abortController: AbortController}> = [];
         for (let i = 0; i < maxRequests + 100; i++) {
             const url = `${i}`;
             const abortController = new AbortController();

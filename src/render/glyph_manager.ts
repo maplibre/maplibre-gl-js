@@ -64,8 +64,8 @@ export class GlyphManager {
         this.url = url;
     }
 
-    async getGlyphs(glyphs: {[stack: string]: Array<number>}): Promise<GetGlyphsResponse> {
-        const glyphsPromises: Promise<{stack: string; id: number; glyph: StyleGlyph}>[] = [];
+    async getGlyphs(glyphs: {[stack: string]: number[]}): Promise<GetGlyphsResponse> {
+        const glyphsPromises: Array<Promise<{stack: string; id: number; glyph: StyleGlyph}>> = [];
 
         for (const stack in glyphs) {
             for (const id of glyphs[stack]) {

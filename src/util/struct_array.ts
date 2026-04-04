@@ -59,7 +59,7 @@ export type StructArrayMember = {
 };
 
 export type StructArrayLayout = {
-    members: Array<StructArrayMember>;
+    members: StructArrayMember[];
     size: number;
     alignment: number;
 };
@@ -100,7 +100,7 @@ abstract class StructArray {
     uint8: Uint8Array;
 
     // The following properties are defined on the prototype.
-    members: Array<StructArrayMember>;
+    members: StructArrayMember[];
     bytesPerElement: number;
     abstract emplaceBack(...v: number[]);
     abstract emplace(i: number, ...v: number[]);
@@ -116,7 +116,7 @@ abstract class StructArray {
      * metadata needed to reconstruct the StructArray base class during
      * deserialization.
      */
-    static serialize(array: StructArray, transferables?: Array<Transferable>): SerializedStructArray {
+    static serialize(array: StructArray, transferables?: Transferable[]): SerializedStructArray {
 
         array._trim();
 

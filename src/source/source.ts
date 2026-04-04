@@ -63,7 +63,7 @@ export interface Source {
      * `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
      */
     reparseOverscaled?: boolean;
-    vectorLayerIds?: Array<string>;
+    vectorLayerIds?: string[];
     /**
      * True if the source has transition, false otherwise.
      */

@@ -47,7 +47,7 @@ const rasterUniformValues = (
         opacity: number;
     },
     layer: RasterStyleLayer,
-    cornerCoords: Array<Point>,
+    cornerCoords: Point[],
 ): UniformValues<RasterUniformsType> => ({
     'u_tl_parent': parentTL,
     'u_scale_parent': parentScaleBy,

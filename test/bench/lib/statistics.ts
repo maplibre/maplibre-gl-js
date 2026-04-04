@@ -4,8 +4,8 @@ export type RegressionResults = {
     correlation:number;
     slope:number;
     intercept: number;
-    data: [number, number][];
-}
+    data: Array<[number, number]>;
+};
 
 export type Summary = {
     mean: number;
@@ -21,7 +21,7 @@ export type Summary = {
     min: number;
     argmax: number;
     max: number;
-}
+};
 
 export function probabilitiesOfSuperiority(before, after) {
     const timerPrecision = 0.005;
@@ -113,7 +113,7 @@ function leastSquaresRegression(data): RegressionResults {
     return {correlation, slope, intercept, data};
 }
 
-export function kde(samples, summary, ticks): [number, number][] {
+export function kde(samples, summary, ticks): Array<[number, number]> {
     const kernel = kernelEpanechnikov;
 
     if (samples.length === 0) {

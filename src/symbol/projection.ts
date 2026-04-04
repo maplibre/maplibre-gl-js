@@ -773,7 +773,7 @@ type PlacedGlyph = {
     /**
      * The label-plane path used to reach this glyph: used only for collision detection
      */
-    path: Array<Point>;
+    path: Point[];
 };
 
 /*
@@ -833,7 +833,7 @@ export function placeGlyphAlongLine(
     let distanceFromAnchor = 0;
     let currentSegmentDistance = 0;
     const absOffsetX = Math.abs(combinedOffsetX);
-    const pathVertices: Array<Point> = [];
+    const pathVertices: Point[] = [];
 
     let currentLineSegment: Point;
     while (distanceFromAnchor + currentSegmentDistance <= absOffsetX) {
@@ -930,7 +930,7 @@ export function xyTransformMat4(out: vec4, a: vec4, m: mat4) {
  * Returns a new array of the projected points.
  * Does not modify the input array.
  */
-export function projectPathSpecialProjection(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext): Array<PointProjection> {
+export function projectPathSpecialProjection(projectedPath: Point[], projectionContext: SymbolProjectionContext): PointProjection[] {
     const inverseLabelPlaneMatrix = mat4.create();
     mat4.invert(inverseLabelPlaneMatrix, projectionContext.pitchedLabelPlaneMatrix);
     return projectedPath.map(p => {
@@ -952,7 +952,7 @@ export function projectPathSpecialProjection(projectedPath: Array<Point>, projec
  * and returns it.
  * Does not modify the input array.
  */
-export function pathSlicedToLongestUnoccluded(path: Array<PointProjection>): Array<PointProjection> {
+export function pathSlicedToLongestUnoccluded(path: PointProjection[]): PointProjection[] {
     let longestUnoccludedStart = 0;
     let longestUnoccludedLength = 0;
     let currentUnoccludedStart = 0;

@@ -23,9 +23,9 @@ export default class QueryPoint extends Benchmark {
         zoom: number;
         center: LngLatLike;
     }>;
-    maps: Array<Map>;
+    maps: Map[];
 
-    constructor(style: string, locations: Array<any>) {
+    constructor(style: string, locations: any[]) {
         super();
         this.style = style;
         this.locations = locations;

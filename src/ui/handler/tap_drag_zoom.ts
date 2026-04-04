@@ -34,7 +34,7 @@ export class TapDragZoomHandler implements Handler {
         this._tap.reset();
     }
 
-    touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         if (this._swipePoint) return;
 
         if (!this._tapTime) {
@@ -54,7 +54,7 @@ export class TapDragZoomHandler implements Handler {
         }
     }
 
-    touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         if (!this._tapTime) {
             this._tap.touchmove(e, points, mapTouches);
         } else if (this._swipePoint) {
@@ -75,7 +75,7 @@ export class TapDragZoomHandler implements Handler {
         }
     }
 
-    touchend(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         if (!this._tapTime) {
             const point = this._tap.touchend(e, points, mapTouches);
             if (point) {

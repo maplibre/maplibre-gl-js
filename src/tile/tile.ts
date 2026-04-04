@@ -109,7 +109,7 @@ export class Tile {
     demTexture: Texture;
     refreshedUponExpiration: boolean;
     reloadPromise: {resolve: () => void; reject: () => void};
-    resourceTiming: Array<PerformanceResourceTiming>;
+    resourceTiming: PerformanceResourceTiming[];
     queryPadding: number;
 
     symbolFadeHoldUntil: number;
@@ -349,8 +349,8 @@ export class Tile {
         layers: {[_: string]: StyleLayer},
         serializedLayers: {[_: string]: any},
         sourceFeatureState: SourceFeatureState,
-        queryGeometry: Array<Point>,
-        cameraQueryGeometry: Array<Point>,
+        queryGeometry: Point[],
+        cameraQueryGeometry: Point[],
         scale: number,
         params: Pick<QueryRenderedFeaturesOptionsStrict, 'filter' | 'layers' | 'availableImages'> | undefined,
         transform: IReadonlyTransform,
@@ -374,7 +374,7 @@ export class Tile {
         }, layers, serializedLayers, sourceFeatureState);
     }
 
-    querySourceFeatures(result: Array<GeoJSONFeature>, params?: QuerySourceFeatureOptionsStrict) {
+    querySourceFeatures(result: GeoJSONFeature[], params?: QuerySourceFeatureOptionsStrict) {
         const featureIndex = this.latestFeatureIndex;
         if (!featureIndex?.rawTileData) return;
 
@@ -514,7 +514,7 @@ export class Tile {
         this.symbolFadeHoldUntil = now() + duration;
     }
 
-    setDependencies(namespace: string, dependencies: Array<string>) {
+    setDependencies(namespace: string, dependencies: string[]) {
         const index = {};
         for (const dep of dependencies) {
             index[dep] = true;
@@ -522,7 +522,7 @@ export class Tile {
         this.dependencies[namespace] = index;
     }
 
-    hasDependency(namespaces: Array<string>, keys: Array<string>) {
+    hasDependency(namespaces: string[], keys: string[]) {
         for (const namespace of namespaces) {
             const dependencies = this.dependencies[namespace];
             if (dependencies) {

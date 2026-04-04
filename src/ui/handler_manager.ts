@@ -56,11 +56,11 @@ export interface Handler {
     reset(): void;
     // Handlers can optionally implement these methods.
     // They are called with dom events whenever those dom evens are received.
-    readonly touchstart?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-    readonly touchmove?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-    readonly touchmoveWindow?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-    readonly touchend?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-    readonly touchcancel?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
+    readonly touchstart?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
+    readonly touchmove?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
+    readonly touchmoveWindow?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
+    readonly touchend?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
+    readonly touchcancel?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
     readonly mousedown?: (e: MouseEvent, point: Point) => HandlerResult | void;
     readonly mousemove?: (e: MouseEvent, point: Point) => HandlerResult | void;
     readonly mousemoveWindow?: (e: MouseEvent, point: Point) => HandlerResult | void;
@@ -146,7 +146,7 @@ export class HandlerManager {
     _handlers: Array<{
         handlerName: string;
         handler: Handler;
-        allowed: Array<string>;
+        allowed: string[];
     }>;
     _eventsInProgress: EventsInProgress;
     _frameId: number;
@@ -326,7 +326,7 @@ export class HandlerManager {
         }
     }
 
-    _add(handlerName: string, handler: Handler, allowed?: Array<string>) {
+    _add(handlerName: string, handler: Handler, allowed?: string[]) {
         this._handlers.push({handlerName, handler, allowed});
         this._handlersById[handlerName] = handler;
     }
@@ -361,7 +361,7 @@ export class HandlerManager {
         return Boolean(isMoving(this._eventsInProgress)) || this.isZooming();
     }
 
-    _blockedByActive(activeHandlers: {[x: string]: Handler}, allowed: Array<string>, myName: string) {
+    _blockedByActive(activeHandlers: {[x: string]: Handler}, allowed: string[], myName: string) {
         for (const name in activeHandlers) {
             if (name === myName) continue;
             if (!allowed?.includes(name)) {

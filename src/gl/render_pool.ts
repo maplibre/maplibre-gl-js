@@ -14,12 +14,12 @@ export type PoolObject = {
  * `RenderPool` is a resource pool for textures and framebuffers
  */
 export class RenderPool {
-    private _objects: Array<PoolObject>;
+    private _objects: PoolObject[];
     /**
      * An index array of recently used pool objects.
      * Items that are used recently are last in the array
      */
-    private _recentlyUsed: Array<number>;
+    private _recentlyUsed: number[];
     private _stamp: number;
 
     constructor(

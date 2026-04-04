@@ -117,7 +117,7 @@ export class Terrain {
      * the tile via the alpha-cannel in the coords-texture.
      * As the alpha-channel has 1 Byte a max of 255 tiles can rendered without an error.
      */
-    coordsIndex: Array<string>;
+    coordsIndex: string[];
     /**
      * tile-coords encoded in the rgb channel, _coordsIndex is in the alpha-channel.
      */

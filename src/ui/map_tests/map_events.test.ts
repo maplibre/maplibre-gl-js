@@ -470,7 +470,7 @@ describe('map events', () => {
         expect(spy).not.toHaveBeenCalled();
     });
 
-    (['mouseenter', 'mouseover'] as (keyof MapLayerEventType)[]).forEach((event) => {
+    (['mouseenter', 'mouseover'] as Array<keyof MapLayerEventType>).forEach((event) => {
         test(`Map.on ${event} does not fire if the specified layer does not exist`, () => {
             const map = createMap();
 
@@ -734,7 +734,7 @@ describe('map events', () => {
         });
     });
 
-    (['mouseleave', 'mouseout'] as (keyof MapLayerEventType)[]).forEach((event) => {
+    (['mouseleave', 'mouseout'] as Array<keyof MapLayerEventType>).forEach((event) => {
         test(`Map.on ${event} does not fire if the specified layer does not exist`, () => {
             const map = createMap();
 

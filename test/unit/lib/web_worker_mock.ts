@@ -3,8 +3,8 @@ import type {WorkerGlobalScopeInterface} from '../../../src/util/web_worker';
 import type {ActorTarget} from '../../../src/util/actor';
 
 export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
-    addListeners: Array<EventListener>;
-    postListeners: Array<EventListener>;
+    addListeners: EventListener[];
+    postListeners: EventListener[];
     target: MessageBus;
 
     registerWorkerSource: any;
@@ -13,7 +13,7 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
     removeProtocol: any;
     worker: any;
 
-    constructor(addListeners: Array<EventListener>, postListeners: Array<EventListener>) {
+    constructor(addListeners: EventListener[], postListeners: EventListener[]) {
         this.addListeners = addListeners;
         this.postListeners = postListeners;
     }

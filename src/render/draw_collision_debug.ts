@@ -14,19 +14,19 @@ import {type VertexBuffer} from '../gl/vertex_buffer';
 import {type IndexBuffer} from '../gl/index_buffer';
 
 type TileBatch = {
-    circleArray: Array<number>;
+    circleArray: number[];
     circleOffset: number;
     coord: OverscaledTileID;
 };
 
 let quadTriangles: QuadTriangleArray;
 
-export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: Array<OverscaledTileID>, isText: boolean) {
+export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean) {
     const context = painter.context;
     const transform = painter.transform;
     const gl = context.gl;
     const program = painter.useProgram('collisionBox');
-    const tileBatches: Array<TileBatch> = [];
+    const tileBatches: TileBatch[] = [];
     let circleCount = 0;
     let circleOffset = 0;
 
@@ -38,7 +38,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
         }
         const buffers = isText ? bucket.textCollisionBox : bucket.iconCollisionBox;
         // Get collision circle data of this bucket
-        const circleArray: Array<number> = bucket.collisionCircleArray;
+        const circleArray: number[] = bucket.collisionCircleArray;
         if (circleArray.length > 0) {
             tileBatches.push({
                 circleArray,

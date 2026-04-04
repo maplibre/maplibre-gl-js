@@ -507,7 +507,7 @@ function getDefaultHorizontalShaping(
  */
 function addSymbol(bucket: SymbolBucket,
     anchor: Anchor,
-    line: Array<Point>,
+    line: Point[],
     shapedTextOrientations: ShapedTextOrientations,
     shapedIcon: PositionedIcon | undefined,
     imageMap: {[_: string]: StyleImage},

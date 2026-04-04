@@ -63,14 +63,14 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
 export class GeoJSONWorkerSource implements WorkerSource {
     actor: IActor;
     layerIndex: StyleLayerIndex;
-    availableImages: Array<string>;
+    availableImages: string[];
     tileState: WorkerTileState;
 
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONVT;
     _createGeoJSONIndex: typeof createGeoJSONIndex;
 
-    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>, createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
+    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[], createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
         this.actor = actor;
         this.layerIndex = layerIndex;
         this.availableImages = availableImages;
@@ -311,7 +311,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         return this._geoJSONIndex.getClusterExpansionZoom(params.clusterId);
     }
 
-    getClusterChildren(params: ClusterIDAndSource): Array<GeoJSON.Feature> {
+    getClusterChildren(params: ClusterIDAndSource): GeoJSON.Feature[] {
         return this._geoJSONIndex.getClusterChildren(params.clusterId);
     }
 
@@ -319,7 +319,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         clusterId: number;
         limit: number;
         offset: number;
-    }): Array<GeoJSON.Feature> {
+    }): GeoJSON.Feature[] {
         return this._geoJSONIndex.getClusterLeaves(params.clusterId, params.limit, params.offset);
     }
 }

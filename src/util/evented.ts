@@ -5,7 +5,7 @@ import {extend, type Subscription} from './util';
  */
 export type Listener = (a: any) => any;
 
-type Listeners = {[_: string]: Array<Listener>};
+type Listeners = {[_: string]: Listener[]};
 
 function _addEventListener(type: string, listener: Listener, listenerList: Listeners) {
     const listenerExists = listenerList[type]?.includes(listener);
