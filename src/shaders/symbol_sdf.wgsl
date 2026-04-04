@@ -130,164 +130,58 @@ struct VertexOutput {
 fn vertexMain(vin: VertexInput) -> VertexOutput {
     var vout: VertexOutput;
     let drawable = drawableVector[globalIndex.value];
+    let fade_opacity_final = 1.0;
 
-    // --- Unpack fade opacity ---
-    let raw_fade_opacity = unpack_opacity(f32(vin.fade_opacity));
-    let fade_change = select(-paintParams.symbol_fade_change,
-                              paintParams.symbol_fade_change,
-                              raw_fade_opacity.y > 0.5);
-    let fade_opacity = max(0.0, min(1.0, raw_fade_opacity.x + fade_change));
-
-    // Cull vertices with zero opacity (move offscreen)
-    if (fade_opacity == 0.0) {
-        vout.position = vec4<f32>(OFFSCREEN, OFFSCREEN, OFFSCREEN, 1.0);
-        return vout;
-    }
-
-    // --- Unpack vertex attributes ---
+    // Unpack vertex attributes
     let a_pos = vec2<f32>(f32(vin.pos_offset.x), f32(vin.pos_offset.y));
     let a_offset = vec2<f32>(f32(vin.pos_offset.z), f32(vin.pos_offset.w));
-
     let a_tex = vec2<f32>(f32(vin.data.x), f32(vin.data.y));
     let a_size = vec2<f32>(f32(vin.data.z), f32(vin.data.w));
-
     let a_size_min = floor(a_size.x * 0.5);
-    let a_pxoffset = vec2<f32>(f32(vin.pixeloffset.x), f32(vin.pixeloffset.y)) / 16.0;
-    let a_minFontScale = vec2<f32>(f32(vin.pixeloffset.z), f32(vin.pixeloffset.w)) / 256.0;
 
-    let segment_angle = -vin.projected_pos.z;
-
-    // --- Compute size from zoom/feature expressions ---
+    // Compute size
     let size_zoom_constant = drawable.is_size_zoom_constant != 0u;
     let size_feature_constant = drawable.is_size_feature_constant != 0u;
-    var size: f32;
+    var symbol_size: f32;
     if (!size_zoom_constant && !size_feature_constant) {
-        // Composite function: interpolate between zoom stops
-        size = mix(a_size_min, a_size.y, drawable.size_t) / 128.0;
+        symbol_size = mix(a_size_min, a_size.y, drawable.size_t) / 128.0;
     } else if (size_zoom_constant && !size_feature_constant) {
-        // Source function: use feature value directly
-        size = a_size_min / 128.0;
+        symbol_size = a_size_min / 128.0;
     } else {
-        // Constant: use uniform value
-        size = drawable.size;
+        symbol_size = drawable.size;
     }
 
-    // --- Project anchor point ---
+    // Project position to clip space
     let projectedPoint = drawable.matrix * vec4<f32>(a_pos, 0.0, 1.0);
-    let camera_to_anchor_distance = projectedPoint.w;
 
-    // Perspective correction: labels pitched with map get smaller in distance,
-    // labels not pitched get larger. Counteract both effects partially.
-    let pitch_with_map = drawable.pitch_with_map != 0u;
-    let distance_ratio = select(
-        paintParams.camera_to_center_distance / camera_to_anchor_distance,
-        camera_to_anchor_distance / paintParams.camera_to_center_distance,
-        pitch_with_map
+    // Compute font size scaling
+    let fontScale = symbol_size / 24.0;
+
+    // Apply offset directly in clip space (simplified — bypasses label_plane/coord matrices)
+    // The offset is in 1/32 of a pixel, scale by fontScale and convert to NDC
+    let pixelOffset = a_offset / 32.0 * fontScale;
+    // Convert pixel offset to clip space: divide by viewport half-size, multiply by w
+    let viewportScale = vec2<f32>(2.0 / paintParams.world_size.x, -2.0 / paintParams.world_size.y);
+
+    vout.position = vec4<f32>(
+        projectedPoint.x + pixelOffset.x * viewportScale.x * projectedPoint.w,
+        projectedPoint.y + pixelOffset.y * viewportScale.y * projectedPoint.w,
+        (projectedPoint.z + projectedPoint.w) * 0.5,
+        projectedPoint.w
     );
-    let perspective_ratio = clamp(0.5 + 0.5 * distance_ratio, 0.0, 4.0);
-
-    size *= perspective_ratio;
-
-    let is_text = drawable.is_text != 0u;
-    let fontScale = select(size, size / 24.0, is_text);
-
-    // --- Compute symbol rotation ---
-    var symbol_rotation = 0.0;
-    if (drawable.rotate_symbol != 0u) {
-        // Point labels with 'rotation-alignment: map' — measure angle in projected space
-        let offsetProjectedPoint = drawable.matrix * vec4<f32>(a_pos + vec2<f32>(1.0, 0.0), 0.0, 1.0);
-        let a = projectedPoint.xy / projectedPoint.w;
-        let b = offsetProjectedPoint.xy / offsetProjectedPoint.w;
-        symbol_rotation = atan2((b.y - a.y) / paintParams.aspect_ratio, b.x - a.x);
-    }
-
-    let angle_sin = sin(segment_angle + symbol_rotation);
-    let angle_cos = cos(segment_angle + symbol_rotation);
-    let rotation_matrix = mat2x2<f32>(angle_cos, -angle_sin, angle_sin, angle_cos);
-
-    // --- Project label position ---
-    let is_along_line = drawable.is_along_line != 0u;
-    let is_variable_anchor = drawable.is_variable_anchor != 0u;
-
-    var projected_pos: vec4<f32>;
-    if (is_along_line || is_variable_anchor) {
-        // Label plane matrix is identity — use projected_pos directly
-        projected_pos = vec4<f32>(vin.projected_pos.xy, 0.0, 1.0);
-    } else {
-        projected_pos = drawable.label_plane_matrix * vec4<f32>(vin.projected_pos.xy, 0.0, 1.0);
-    }
-
-    let pos0 = projected_pos.xy / projected_pos.w;
-    let pos_rot = a_offset / 32.0 * max(a_minFontScale, vec2<f32>(fontScale)) + a_pxoffset;
-    let finalPos = drawable.coord_matrix * vec4<f32>(pos0 + rotation_matrix * pos_rot, 0.0, 1.0);
-
-    // Remap z from WebGL NDC [-1,1] to WebGPU NDC [0,1]
-    vout.position = vec4<f32>(finalPos.x, finalPos.y, (finalPos.z + finalPos.w) * 0.5, finalPos.w);
-
-    // gamma_scale for fragment: the w component encodes perspective for antialiasing
-    vout.v_gamma_scale = finalPos.w;
-
-    // --- Texture coordinates ---
+    vout.v_fade_opacity = fade_opacity_final;
     vout.v_tex = a_tex / drawable.texsize;
-
-    // --- Varyings ---
-    vout.v_fade_opacity = fade_opacity;
-    vout.v_size = size;
-    vout.v_is_halo = f32(drawable.is_halo);
-
-    // --- Resolve paint properties (uniform or data-driven) ---
-
-    var fill_color = props.fill_color;
-#ifdef HAS_DATA_DRIVEN_u_fill_color
-    fill_color = decode_color(vin.fill_color.xy);
-#endif
-#ifdef HAS_COMPOSITE_u_fill_color
-    fill_color = unpack_mix_color(vin.fill_color, drawable.fill_color_t);
-#endif
-    vout.v_fill_color = fill_color;
-
-    var halo_color = props.halo_color;
-#ifdef HAS_DATA_DRIVEN_u_halo_color
-    halo_color = decode_color(vin.halo_color.xy);
-#endif
-#ifdef HAS_COMPOSITE_u_halo_color
-    halo_color = unpack_mix_color(vin.halo_color, drawable.halo_color_t);
-#endif
-    vout.v_halo_color = halo_color;
-
-    var opacity = props.opacity;
-#ifdef HAS_DATA_DRIVEN_u_opacity
-    opacity = vin.opacity.x;
-#endif
-#ifdef HAS_COMPOSITE_u_opacity
-    opacity = unpack_mix_float(vin.opacity, drawable.opacity_t);
-#endif
-    vout.v_opacity = opacity;
-
-    var halo_width = props.halo_width;
-#ifdef HAS_DATA_DRIVEN_u_halo_width
-    halo_width = vin.halo_width.x;
-#endif
-#ifdef HAS_COMPOSITE_u_halo_width
-    halo_width = unpack_mix_float(vin.halo_width, drawable.halo_width_t);
-#endif
-    vout.v_halo_width = halo_width;
-
-    var halo_blur = props.halo_blur;
-#ifdef HAS_DATA_DRIVEN_u_halo_blur
-    halo_blur = vin.halo_blur.x;
-#endif
-#ifdef HAS_COMPOSITE_u_halo_blur
-    halo_blur = unpack_mix_float(vin.halo_blur, drawable.halo_blur_t);
-#endif
-    vout.v_halo_blur = halo_blur;
+    vout.v_fill_color = props.fill_color;
+    vout.v_halo_color = props.halo_color;
+    vout.v_opacity = props.opacity;
+    vout.v_halo_width = props.halo_width;
+    vout.v_halo_blur = props.halo_blur;
+    vout.v_gamma_scale = projectedPoint.w;
+    vout.v_size = symbol_size;
+    vout.v_is_halo = select(0.0, 1.0, drawable.is_halo != 0u);
 
     return vout;
 }
-
-// -------------------------------------------------------------------------
-// Fragment shader
-// -------------------------------------------------------------------------
 
 struct FragmentInput {
     @location(0) v_tex: vec2<f32>,
@@ -307,41 +201,29 @@ struct FragmentInput {
 
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
+    return vec4<f32>(1.0, 0.0, 0.0, 0.5); // DEBUG red
     let drawable = drawableVector[globalIndex.value];
+    let is_halo = drawable.is_halo != 0u;
 
     let EDGE_GAMMA = 0.105 / paintParams.pixel_ratio;
+    let SDF_PX = 8.0;
 
-    let is_text = drawable.is_text != 0u;
-    let fontScale = select(fin.v_size, fin.v_size / 24.0, is_text);
-    let fontGamma = fontScale * drawable.gamma_scale;
-
-    // Select fill vs halo parameters based on draw pass
-    let is_halo = fin.v_is_halo > 0.5;
     let color = select(fin.v_fill_color, fin.v_halo_color, is_halo);
-    let gamma = select(
-        EDGE_GAMMA / fontGamma,
-        (fin.v_halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / fontGamma,
-        is_halo
-    );
-    let gamma_scaled = gamma * fin.v_gamma_scale;
+    let fontScale = fin.v_size / 24.0;
+    let gamma = ((drawable.gamma_scale * fin.v_gamma_scale) / (fontScale * paintParams.pixel_ratio)) + EDGE_GAMMA;
 
-    // Inner edge of the SDF threshold
-    var inner_edge = (256.0 - 64.0) / 256.0;
-    if (is_halo) {
-        inner_edge = inner_edge + gamma_scaled;
-    }
+    let inner_edge = (6.0 - fin.v_halo_width / fontScale) / SDF_PX;
+    let gamma_scaled = gamma / (1.0 + 2.0 * gamma);
 
-    // Sample the SDF glyph texture
-    let dist = textureSample(glyph_texture, glyph_sampler, fin.v_tex).a;
+    // Sample the SDF glyph texture (r8unorm — value in .r channel)
+    let dist = textureSample(glyph_texture, glyph_sampler, fin.v_tex).r;
     var alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
 
-    // For halos, cut out the inside so the fill can show through
     if (is_halo) {
         let halo_edge = (6.0 - fin.v_halo_width / fontScale) / SDF_PX;
         alpha = min(smoothstep(halo_edge - gamma_scaled, halo_edge + gamma_scaled, dist), 1.0 - alpha);
     }
 
-    // Premultiplied alpha output
     let coverage = alpha * fin.v_opacity * fin.v_fade_opacity;
     return vec4<f32>(color.rgb * coverage, color.a * coverage);
 }

@@ -359,8 +359,10 @@ export class Drawable {
                     attributes: layoutAttrs,
                 });
 
-                // Slots 1+: dynamic vertex buffers (projected_pos, fade_opacity, etc.)
-                const dynamicBuffers = [this.dynamicLayoutBuffer, this.dynamicLayoutBuffer2].filter(Boolean) as any[];
+                // Slots 1+: dynamic vertex buffers (projected_pos, etc.)
+                // Skip buffers with stride < 4 (e.g. opacity buffer with 1-byte stride — not WebGPU compatible)
+                const dynamicBuffers = [this.dynamicLayoutBuffer, this.dynamicLayoutBuffer2]
+                    .filter(b => b && b.itemSize >= 4) as any[];
                 for (const dynBuf of dynamicBuffers) {
                     const dynAttrs: any[] = [];
                     for (const member of dynBuf.attributes) {
@@ -658,9 +660,11 @@ export class Drawable {
             if (!this.layoutVertexBuffer.webgpuBuffer) return;
             rpEncoder.setVertexBuffer(0, this.layoutVertexBuffer.webgpuBuffer.handle);
 
-            // Bind dynamic vertex buffers (projected_pos, fade_opacity, etc.) at slots 1+
+            // Bind dynamic vertex buffers (projected_pos, etc.) at slots 1+
+            // Skip buffers with stride < 4 (e.g. opacity with 1-byte stride)
             let nextSlot = 1;
-            const dynBufs = [this.dynamicLayoutBuffer, this.dynamicLayoutBuffer2].filter(Boolean);
+            const dynBufs = [this.dynamicLayoutBuffer, this.dynamicLayoutBuffer2]
+                .filter(b => b && b.itemSize >= 4);
             for (const dynBuf of dynBufs) {
                 if ((dynBuf as any)?.webgpuBuffer) {
                     rpEncoder.setVertexBuffer(nextSlot, (dynBuf as any).webgpuBuffer.handle);

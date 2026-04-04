@@ -528,26 +528,30 @@ class SymbolLayerTweaker extends LayerTweaker {
             // is_along_line(4) + is_size_zoom_constant(4) + is_size_feature_constant(4) +
             // size_t(4) + size(4) + rotate_symbol(4) + is_halo(4) + pad(12) = 256
             if (!drawable.drawableUBO) {
-                drawable.drawableUBO = new UniformBlock(288);
+                drawable.drawableUBO = new UniformBlock(272);
             }
             drawable.drawableUBO.setMat4(0, drawable.projectionData.mainMatrix as Float32Array);
 
             // Set remaining fields from uniformValues
             if (drawable.uniformValues) {
                 const uv = drawable.uniformValues as any;
+                // Offsets must match SymbolDrawableUBO struct layout exactly:
                 if (uv.u_label_plane_matrix) drawable.drawableUBO.setMat4(64, uv.u_label_plane_matrix);
                 if (uv.u_coord_matrix) drawable.drawableUBO.setMat4(128, uv.u_coord_matrix);
                 if (uv.u_texsize) drawable.drawableUBO.setVec2(192, uv.u_texsize[0], uv.u_texsize[1]);
                 if (uv.u_texsize_icon) drawable.drawableUBO.setVec2(200, uv.u_texsize_icon[0], uv.u_texsize_icon[1]);
-                drawable.drawableUBO.setFloat(208, uv.u_gamma_scale || 0);
-                drawable.drawableUBO.setInt(212, uv.u_is_text ? 1 : 0);
-                drawable.drawableUBO.setInt(216, uv.u_is_along_line ? 1 : 0);
-                drawable.drawableUBO.setInt(220, uv.u_is_size_zoom_constant ? 1 : 0);
-                drawable.drawableUBO.setInt(224, uv.u_is_size_feature_constant ? 1 : 0);
-                drawable.drawableUBO.setFloat(228, uv.u_size_t || 0);
-                drawable.drawableUBO.setFloat(232, uv.u_size || 0);
-                drawable.drawableUBO.setInt(236, uv.u_rotate_symbol ? 1 : 0);
-                drawable.drawableUBO.setInt(240, uv.u_is_halo || 0);
+                drawable.drawableUBO.setFloat(208, uv.u_gamma_scale || 0);           // gamma_scale
+                drawable.drawableUBO.setInt(212, uv.u_is_text ? 1 : 0);              // is_text
+                drawable.drawableUBO.setInt(216, uv.u_is_along_line ? 1 : 0);        // is_along_line
+                drawable.drawableUBO.setInt(220, uv.u_is_variable_anchor ? 1 : 0);   // is_variable_anchor
+                drawable.drawableUBO.setInt(224, uv.u_is_size_zoom_constant ? 1 : 0); // is_size_zoom_constant
+                drawable.drawableUBO.setInt(228, uv.u_is_size_feature_constant ? 1 : 0); // is_size_feature_constant
+                drawable.drawableUBO.setFloat(232, uv.u_size_t || 0);                // size_t
+                drawable.drawableUBO.setFloat(236, uv.u_size || 0);                  // size
+                drawable.drawableUBO.setInt(240, uv.u_rotate_symbol ? 1 : 0);        // rotate_symbol
+                drawable.drawableUBO.setInt(244, uv.u_pitch_with_map ? 1 : 0);       // pitch_with_map
+                drawable.drawableUBO.setInt(248, uv.u_is_halo || 0);                 // is_halo
+                // _t factors at 252-268 are 0 by default (uniform-driven)
             }
 
             // Props UBO for evaluated paint properties
@@ -778,6 +782,13 @@ function drawSymbolsDrawable(
     // Run tweaker and draw
     const allDrawables = layerGroup.getAllDrawables();
     tweaker.execute(allDrawables, painter, layer, coords);
+    if (!(drawSymbolsDrawable as any)._logged) {
+        (drawSymbolsDrawable as any)._logged = true;
+        const d = allDrawables[0];
+        if (d) {
+            console.warn(`[SYMBOL] after tweaker: ubo=${!!d.drawableUBO} lubo=${!!d.layerUBO} projData=${!!d.projectionData} uniformValues=${!!d.uniformValues} uv_keys=${d.uniformValues ? Object.keys(d.uniformValues).slice(0,5).join(',') : 'null'}`);
+        }
+    }
     for (const drawable of allDrawables) {
         drawable.draw(context, painter.device, painter, renderOptions.renderPass);
     }
