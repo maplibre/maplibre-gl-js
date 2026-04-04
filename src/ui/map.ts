@@ -3479,6 +3479,7 @@ export class Map extends Camera {
                 const webgpuPromise = webgpuAdapter.create({
                     createCanvasContext: {
                         canvas: this._canvas,
+                        alphaMode: 'premultiplied',
                         ...attributes
                     }
                 });
