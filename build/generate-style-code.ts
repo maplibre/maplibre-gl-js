@@ -46,7 +46,7 @@ function nativeType(property) {
                 return `[${new Array(property.length).fill(nativeType({type: property.value})).join(', ')}]`;
             } else {
                 const inner = nativeType({type: property.value, values: property.values});
-                return inner.includes('|') ? `(${inner})[]` : `${inner}[]`;
+                return inner.includes('|') ? `Array<${inner}>` : `${inner}[]`;
             }
         default: throw new Error(`unknown type "${property.type}" for "${property.name}"`);
     }
