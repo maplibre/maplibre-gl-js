@@ -59,8 +59,11 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     vout.position.z = (vout.position.z + vout.position.w) * 0.5;
 
     let texcoord = vec2<f32>(f32(vin.texture_pos.x), f32(vin.texture_pos.y));
-    // Apply sub-tile offset/scale for overscaled tiles
-    vout.v_pos = texcoord / 8192.0 * drawable.tex_scale + drawable.tex_offset;
+    // Apply sub-tile offset/scale for overscaled tiles, then flip Y
+    // WebGPU framebuffer origin is top-left, so slope texture is Y-flipped vs GL
+    var uv = texcoord / 8192.0 * drawable.tex_scale + drawable.tex_offset;
+    uv.y = 1.0 - uv.y;
+    vout.v_pos = uv;
 
     return vout;
 }
@@ -93,8 +96,9 @@ fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
     let pixel = textureSample(slope_texture, slope_sampler, fin.v_pos);
 
     // Latitude correction for Mercator distortion (see maplibre-gl-js #4807)
+    // v_pos.y is already flipped in vertex shader, so use directly (matches native)
     let latRange = drawable.latrange;
-    let latitude = (latRange.x - latRange.y) * (1.0 - fin.v_pos.y) + latRange.y;
+    let latitude = (latRange.x - latRange.y) * fin.v_pos.y + latRange.y;
     let scaleFactor = cos(radians(latitude));
 
     // Decode derivative from prepared texture: stored as deriv/8 + 0.5
