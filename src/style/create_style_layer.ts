@@ -2,6 +2,7 @@ import {CircleStyleLayer} from './style_layer/circle_style_layer';
 import {HeatmapStyleLayer} from './style_layer/heatmap_style_layer';
 import {HillshadeStyleLayer} from './style_layer/hillshade_style_layer';
 import {ColorReliefStyleLayer} from './style_layer/color_relief_style_layer';
+import {SlopeStyleLayer} from './style_layer/slope_style_layer';
 import {FillStyleLayer} from './style_layer/fill_style_layer';
 import {FillExtrusionStyleLayer} from './style_layer/fill_extrusion_style_layer';
 import {LineStyleLayer} from './style_layer/line_style_layer';
@@ -31,6 +32,8 @@ export function createStyleLayer(layer: LayerSpecification | CustomLayerInterfac
             return new HeatmapStyleLayer(layer, globalState);
         case 'hillshade':
             return new HillshadeStyleLayer(layer, globalState);
+        case 'slope':
+            return new SlopeStyleLayer(layer, globalState);
         case 'line':
             return new LineStyleLayer(layer, globalState);
         case 'raster':

@@ -1,0 +1,44 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 256,
+      "timeout": 60000,
+      "operations": [["wait"]]
+    }
+  },
+  "center": [-113.26903, 35.9654],
+  "zoom": 11,
+  "sources": {
+    "source": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/{z}-{x}-{y}.terrain.png"
+      ],
+      "maxzoom": 15,
+      "tileSize": 256
+    }
+  },
+  "layers": [
+    {
+      "id": "slope",
+      "type": "slope",
+      "source": "source",
+      "paint": {
+        "slope-opacity": 1,
+        "slope-color": [
+          "interpolate",
+          ["linear"],
+          ["elevation"],
+          0, "#0F0",
+          15, "#FF0",
+          30, "#F80",
+          45, "#F00",
+          60, "#A00",
+          90, "#500"
+        ]
+      }
+    }
+  ]
+}
