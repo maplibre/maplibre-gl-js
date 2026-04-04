@@ -176,7 +176,7 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     vout.v_opacity = props.opacity;
     vout.v_halo_width = props.halo_width;
     vout.v_halo_blur = props.halo_blur;
-    vout.v_gamma_scale = projectedPoint.w;
+    vout.v_gamma_scale = drawable.gamma_scale;
     vout.v_size = symbol_size;
     vout.v_is_halo = select(0.0, 1.0, drawable.is_halo != 0u);
 
