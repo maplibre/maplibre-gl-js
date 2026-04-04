@@ -201,12 +201,33 @@ struct FragmentInput {
 
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
-    // DEBUG: try multiple thresholds to find where glyphs are
+    let is_halo = fin.v_is_halo > 0.5;
+    let color = select(fin.v_fill_color, fin.v_halo_color, is_halo);
+
+    // Sample the SDF glyph texture (r8unorm — value in .r channel)
     let dist = textureSample(glyph_texture, glyph_sampler, fin.v_tex).r;
-    // Show as: Red if dist > 0.5, Green if dist > 0.25, Blue if dist > 0.75
-    // This tells us the range of SDF values inside glyphs
-    let r = select(0.0, 1.0, dist > 0.5);
-    let g = select(0.0, 1.0, dist > 0.25);
-    let b = select(0.0, 1.0, dist > 0.75);
-    return vec4<f32>(r, g, b, 1.0);
+
+    // SDF edge: 6.0/8.0 = 0.75 in MapLibre convention (192/255 byte value = edge)
+    let fontScale = max(fin.v_size / 24.0, 0.001);
+
+    // Gamma for anti-aliasing — matches GL: EDGE_GAMMA + gamma_scale / (fontScale * pixelRatio)
+    let EDGE_GAMMA = 0.105 / max(paintParams.pixel_ratio, 1.0);
+    let gamma = EDGE_GAMMA + fin.v_gamma_scale / (fontScale * max(paintParams.pixel_ratio, 1.0));
+    let gamma_scaled = gamma / (1.0 + 2.0 * gamma);
+
+    // Fill edge at 0.75; halo extends outward by halo_width
+    let haloOffset = select(0.0, fin.v_halo_width, is_halo);
+    let inner_edge = (6.0 - haloOffset / fontScale) / SDF_PX;
+
+    var alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
+
+    if (is_halo) {
+        // Halo: visible between halo_edge and fill_edge
+        let fill_edge = 6.0 / SDF_PX;
+        let fill_alpha = smoothstep(fill_edge - gamma_scaled, fill_edge + gamma_scaled, dist);
+        alpha = alpha * (1.0 - fill_alpha);
+    }
+
+    let coverage = alpha * fin.v_opacity * fin.v_fade_opacity;
+    return vec4<f32>(color.rgb * coverage, color.a * coverage);
 }
