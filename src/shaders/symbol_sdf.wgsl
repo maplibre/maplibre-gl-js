@@ -151,26 +151,42 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
         symbol_size = drawable.size;
     }
 
-    // Project position to clip space
+    // Project anchor to clip space (for Z depth)
     let projectedPoint = drawable.matrix * vec4<f32>(a_pos, 0.0, 1.0);
 
     // Compute font size scaling
     let fontScale = symbol_size / 24.0;
 
-    // Apply offset directly in clip space (simplified — bypasses label_plane/coord matrices)
-    // The offset is in 1/32 of a pixel (CSS), scale by fontScale and convert to NDC
-    let pixelOffset = a_offset / 32.0 * fontScale;
-    // world_size is in physical pixels; convert to CSS pixels for offset scaling
+    // CSS viewport dimensions (world_size is in physical pixels)
     let cssWidth = paintParams.world_size.x / paintParams.pixel_ratio;
     let cssHeight = paintParams.world_size.y / paintParams.pixel_ratio;
-    let viewportScale = vec2<f32>(2.0 / cssWidth, -2.0 / cssHeight);
 
-    vout.position = vec4<f32>(
-        projectedPoint.x + pixelOffset.x * viewportScale.x * projectedPoint.w,
-        projectedPoint.y + pixelOffset.y * viewportScale.y * projectedPoint.w,
-        (projectedPoint.z + projectedPoint.w) * 0.5,
-        projectedPoint.w
-    );
+    let pixelOffset = a_offset / 32.0 * fontScale;
+
+    if (drawable.is_along_line != 0u) {
+        // Along-line labels: each glyph has pre-computed position in label plane
+        // from updateLineLabels(). coord_matrix converts back from label plane.
+        let glyphPos = vec2<f32>(vin.projected_pos.x, vin.projected_pos.y);
+        let coordPos = drawable.coord_matrix * vec4<f32>(glyphPos + pixelOffset, 0.0, 1.0);
+
+        if (drawable.pitch_with_map != 0u) {
+            // pitch-with-map: coord_matrix gives tile coordinates, project to clip
+            let finalPos = drawable.matrix * vec4<f32>(coordPos.xy, 0.0, 1.0);
+            vout.position = vec4<f32>(finalPos.xy, (finalPos.z + finalPos.w) * 0.5, finalPos.w);
+        } else {
+            // viewport: coord_matrix (pixelsToClipSpaceMatrix) gives clip space directly
+            vout.position = vec4<f32>(coordPos.xy, (projectedPoint.z + projectedPoint.w) * 0.5, coordPos.w);
+        }
+    } else {
+        // Point labels: project anchor and apply glyph offset in clip space
+        let viewportScale = vec2<f32>(2.0 / cssWidth, -2.0 / cssHeight);
+        vout.position = vec4<f32>(
+            projectedPoint.x + pixelOffset.x * viewportScale.x * projectedPoint.w,
+            projectedPoint.y + pixelOffset.y * viewportScale.y * projectedPoint.w,
+            (projectedPoint.z + projectedPoint.w) * 0.5,
+            projectedPoint.w
+        );
+    }
     vout.v_fade_opacity = fade_opacity_final;
     vout.v_tex = a_tex / drawable.texsize;
     vout.v_fill_color = props.fill_color;
