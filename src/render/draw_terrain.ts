@@ -121,8 +121,9 @@ function drawTerrainWebGPU(painter: Painter, terrain: Terrain, tiles: Array<Tile
     if (!terrainPipeline) {
         let wgslSource = (shaders as any).terrainWgsl;
         if (!wgslSource) return;
-        // Prepend VertexInput struct
-        const vertexInputStruct = 'struct VertexInput {\n    @location(0) pos3d: vec3<i32>,\n};\n';
+        // Prepend VertexInput struct. Pos3d is 3 x Int16 but WebGPU doesn't support sint16x3,
+        // so we pad to 4 components (sint16x4) — see buffer repacking below.
+        const vertexInputStruct = 'struct VertexInput {\n    @location(0) pos3d: vec4<i32>,\n};\n';
         wgslSource = `${vertexInputStruct}\n${wgslSource}`;
         const shaderModule = gpuDevice.createShaderModule({code: wgslSource});
         const canvasFormat = (navigator as any).gpu.getPreferredCanvasFormat();
@@ -132,7 +133,7 @@ function drawTerrainWebGPU(painter: Painter, terrain: Terrain, tiles: Array<Tile
                 module: shaderModule,
                 entryPoint: 'vertexMain',
                 buffers: [{
-                    // Terrain mesh vertex: 3 x Int16 = 6 bytes, padded to 8
+                    // Repacked terrain vertex: 4 x Int16 = 8 bytes
                     arrayStride: 8,
                     stepMode: 'vertex',
                     attributes: [{shaderLocation: 0, format: 'sint16x4', offset: 0}],
@@ -222,11 +223,30 @@ function drawTerrainWebGPU(painter: Painter, terrain: Terrain, tiles: Array<Tile
         const surfaceSampler = gpuDevice.createSampler({minFilter: 'linear', magFilter: 'linear'});
         const demSampler = gpuDevice.createSampler({minFilter: 'nearest', magFilter: 'nearest'});
 
-        // Get DEM texture from terrain data
-        const demTexSource = (terrainData as any).u_terrain;
+        // Get/create DEM WebGPU texture from the source tile's DEM data
         let demGpuTex = null;
-        // The terrain dem texture is a GL texture; we need the WebGPU version.
-        // Fallback: use a dummy 1x1 texture if unavailable.
+        const sourceTile = (terrainData as any).tile;
+        if (sourceTile?.dem) {
+            // Cache the WebGPU DEM texture on the source tile
+            if (!(sourceTile as any)._webgpuDemTex) {
+                const pixels = sourceTile.dem.getPixels();
+                const w = pixels.width;
+                const h = pixels.height;
+                const tex = gpuDevice.createTexture({
+                    size: [w, h],
+                    format: 'rgba8unorm',
+                    usage: 4 | 2, // TEXTURE_BINDING | COPY_DST
+                });
+                gpuDevice.queue.writeTexture(
+                    {texture: tex},
+                    pixels.data,
+                    {bytesPerRow: w * 4},
+                    [w, h]
+                );
+                (sourceTile as any)._webgpuDemTex = tex;
+            }
+            demGpuTex = (sourceTile as any)._webgpuDemTex;
+        }
         if (!demGpuTex) {
             if (!(painter as any)._dummyDemTex) {
                 (painter as any)._dummyDemTex = gpuDevice.createTexture({
@@ -251,10 +271,10 @@ function drawTerrainWebGPU(painter: Painter, terrain: Terrain, tiles: Array<Tile
         });
         rp.setBindGroup(1, texBindGroup);
 
-        // Set vertex buffer and draw
-        const vertBuf = (mesh.vertexBuffer as any).webgpuBuffer;
-        if (!vertBuf) continue;
-        rp.setVertexBuffer(0, vertBuf.handle);
+        // Set vertex buffer — use the pre-padded 8-byte stride buffer created in Terrain.getTerrainMesh
+        const paddedBuf = (mesh as any)._webgpuPaddedVertexBuf;
+        if (!paddedBuf) continue;
+        rp.setVertexBuffer(0, paddedBuf);
         const idxBuf = (mesh.indexBuffer as any).webgpuBuffer;
         if (!idxBuf) continue;
         rp.setIndexBuffer(idxBuf.handle, 'uint16');

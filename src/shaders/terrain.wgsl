@@ -65,6 +65,7 @@ struct VertexOutput {
     @builtin(position) position: vec4<f32>,
     @location(0) v_texture_pos: vec2<f32>,
     @location(1) v_fog_depth: f32,
+    @location(2) v_debug_elevation: f32,
 };
 
 @vertex
@@ -85,6 +86,7 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
 
     let fog_pos = drawable.fog_matrix * vec4<f32>(a_pos, elevation, 1.0);
     vout.v_fog_depth = fog_pos.z / fog_pos.w * 0.5 + 0.5;
+    vout.v_debug_elevation = elevation;
 
     return vout;
 }
@@ -92,6 +94,7 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
 struct FragmentInput {
     @location(0) v_texture_pos: vec2<f32>,
     @location(1) v_fog_depth: f32,
+    @location(2) v_debug_elevation: f32,
 };
 
 const GAMMA: f32 = 2.2;
@@ -107,7 +110,9 @@ fn linearToGamma(color: vec4<f32>) -> vec4<f32> {
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
     let drawable = drawableVector[globalIndex.value];
-    let surface_uv = vec2<f32>(fin.v_texture_pos.x, 1.0 - fin.v_texture_pos.y);
+    // WebGPU render targets have origin at top-left (no Y flip needed),
+    // unlike GL which flips Y when reading back from a framebuffer texture.
+    let surface_uv = fin.v_texture_pos;
     let surface_color = textureSample(surface_texture, surface_sampler, surface_uv);
 
     let is_globe = drawable.is_globe_mode != 0u;

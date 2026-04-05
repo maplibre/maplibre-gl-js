@@ -506,8 +506,9 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         const gpuDevice = (this.device as any).handle;
         if (!gpuDevice) return null;
 
-        // Save main render pass
-        if (!this._webgpuMainRenderPass) {
+        // Save current (main) render pass. Always overwrite since it changes each frame.
+        // But only save if the current pass is NOT itself an RTT pass (nested RTT not supported).
+        if (this.renderPassWGSL && !this.renderPassWGSL._isRtt) {
             this._webgpuMainRenderPass = this.renderPassWGSL;
         }
 
@@ -980,12 +981,14 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
                 // Raw GPURenderPassEncoder — end and submit
                 this.renderPassWGSL.handle.end();
                 this.renderPassWGSL = null;
+                this._webgpuMainRenderPass = null;
                 if (this.device && (this.device as any).submit) {
                     (this.device as any).submit();
                 }
             } else {
                 this.renderPassWGSL.end();
                 this.renderPassWGSL = null;
+                this._webgpuMainRenderPass = null;
                 if (this.device && (this.device as any).submit) {
                     (this.device as any).submit();
                 }
@@ -1004,6 +1007,10 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
      */
     maybeDrawDepthAndCoords(requireExact: boolean) {
         if (!this.style || !this.style.map || !this.style.map.terrain) {
+            return;
+        }
+        // WebGPU: depth/coords framebuffers not yet implemented (used for terrain picking)
+        if (this.device?.type === 'webgpu') {
             return;
         }
         const prevMatrix = this.terrainFacilitator.matrix;
