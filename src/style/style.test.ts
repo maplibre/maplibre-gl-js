@@ -928,7 +928,7 @@ describe('Style.setState', () => {
         await style.once('style.load', spy);
 
         style.setState(newStyleJSON);
-        expect(spy).toHaveBeenCalledWith(expect.objectContaining({style: style, type: 'style.load'}));
+        expect(spy).toHaveBeenCalledWith(expect.objectContaining({style, type: 'style.load'}));
     });
 
     test('change transition doesn\'t change the style, but is considered a change', async () => {

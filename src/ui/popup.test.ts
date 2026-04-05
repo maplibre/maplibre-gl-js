@@ -894,7 +894,7 @@ describe('popup', () => {
         test('accepts object padding value', () => {
             const map = createMap();
             const padding = {top: 10, right: 20, bottom: 30, left: 40};
-            const popup = new Popup({padding: padding})
+            const popup = new Popup({padding})
                 .setText('Test')
                 .setLngLat([0, 0])
                 .addTo(map);

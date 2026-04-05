@@ -262,7 +262,7 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
         }
     }
     if (!isFileURL(requestParameters.url)) {
-        if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
+        if (fetch && Request && AbortController && Object.hasOwn(Request.prototype, 'signal')) {
             return makeFetchRequest(requestParameters, abortController);
         }
         if (isWorker(self) && self.worker?.actor) {

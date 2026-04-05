@@ -247,7 +247,7 @@ export class LineBucket implements Bucket {
     }
 
     lineFeatureClips(feature: BucketFeature): LineClips | undefined {
-        if (!!feature.properties && Object.prototype.hasOwnProperty.call(feature.properties, GEOJSONVT_CLIP_START) && Object.prototype.hasOwnProperty.call(feature.properties, GEOJSONVT_CLIP_END)) {
+        if (!!feature.properties && Object.hasOwn(feature.properties, GEOJSONVT_CLIP_START) && Object.hasOwn(feature.properties, GEOJSONVT_CLIP_END)) {
             const start = +feature.properties[GEOJSONVT_CLIP_START];
             const end = +feature.properties[GEOJSONVT_CLIP_END];
             return {start, end};

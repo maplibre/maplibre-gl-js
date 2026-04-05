@@ -69,7 +69,7 @@ describe('FeatureIndex', () => {
                 },
                 transform
             } as any, {
-                layer: layer,
+                layer,
             }, [], undefined);
             expect(result.layer[0].feature.properties).toEqual(features[0].tags);
         });
@@ -91,7 +91,7 @@ describe('FeatureIndex', () => {
                 params: {},
                 transform
             } as any, {
-                layer: layer,
+                layer,
             }, [], undefined);
             expect(result.layer[0].feature.properties.admin_level).toBeDefined();
             expect(result.layer[0].feature.geometry.type).toBe('LineString');

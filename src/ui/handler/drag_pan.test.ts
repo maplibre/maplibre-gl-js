@@ -219,7 +219,7 @@ describe('drag_pan', () => {
         expect(dragend).toHaveBeenCalledTimes(0);
 
         // simulate a scroll zoom
-        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
         expect(dragstart).toHaveBeenCalledTimes(1);
         expect(drag).toHaveBeenCalledTimes(1);

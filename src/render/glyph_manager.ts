@@ -210,7 +210,7 @@ export class GlyphManager {
             buffer: 3 * textureScale,
             radius: 8 * textureScale,
             cutoff: 0.25,
-            fontFamily: fontFamily,
+            fontFamily,
             fontWeight: this._fontWeight(fontFamilies[0]),
             fontStyle: this._fontStyle(fontFamilies[0]),
             lang: this.lang
