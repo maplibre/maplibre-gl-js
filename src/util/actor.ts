@@ -1,4 +1,4 @@
-import {type Subscription, isWorker, subscribe} from './util';
+import {type Subscription, ensureError, isWorker, subscribe} from './util';
 import {serialize, deserialize, type Serialized} from './web_worker_transfer';
 import {ThrottledInvoker} from './throttled_invoker';
 
