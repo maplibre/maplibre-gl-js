@@ -570,7 +570,18 @@ export class Drawable {
                         } else {
                             // texture_2d
                             const tex = texIdx < this.textures.length ? this.textures[texIdx] : null;
+                            // Cache GPU textures on stable source data objects so they persist across
+                            // frames when drawables are recreated (otherwise textures upload every frame).
+                            if (!(painter as any)._webgpuTextureCache) {
+                                (painter as any)._webgpuTextureCache = new WeakMap<object, any>();
+                            }
+                            const texCache: WeakMap<object, any> = (painter as any)._webgpuTextureCache;
+                            const cacheKeyObj = (tex as any)?.source?.data ?? (tex as any)?.imageSource ?? (tex as any)?.texture;
                             let gpuTex = tex ? (tex as any)._gpuTexture : null;
+                            if (!gpuTex && cacheKeyObj) {
+                                gpuTex = texCache.get(cacheKeyObj);
+                                if (gpuTex && tex) (tex as any)._gpuTexture = gpuTex;
+                            }
                             if (!gpuTex) {
                                 const source = (tex as any)?.source;
                                 const imgSrc = (tex as any)?.imageSource;
@@ -625,6 +636,10 @@ export class Drawable {
                                         );
                                     }
                                     (tex as any)._gpuTexture = gpuTex;
+                                }
+                                // Store in WeakMap cache so next frame's fresh texEntry can reuse it
+                                if (gpuTex && cacheKeyObj) {
+                                    texCache.set(cacheKeyObj, gpuTex);
                                 }
                             }
                             texEntries.push({binding, resource: (gpuTex || dummyTex).createView()});
