@@ -478,14 +478,12 @@ export class Drawable {
                         entryPoint: 'fragmentMain',
                         targets: [{
                             format: canvasFormat,
-                            // Fill body and fill outline render opaque (no blend) to avoid tile-boundary bands.
-                            // Lines, circles, symbols need premultiplied alpha blending.
-                            ...(this.shaderName !== 'fill' && this.shaderName !== 'fillPattern' && this.shaderName !== 'fillOutline' && this.shaderName !== 'fillOutlinePattern' ? {
-                                blend: {
-                                    color: {srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add'},
-                                    alpha: {srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add'},
-                                },
-                            } : {}),
+                            // Premultiplied alpha blending for all layers.
+                            // Stencil clipping prevents tile-boundary artifacts.
+                            blend: {
+                                color: {srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add'},
+                                alpha: {srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add'},
+                            },
                         }],
                     },
                     primitive: {

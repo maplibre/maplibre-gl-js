@@ -164,11 +164,15 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
     const pattern = layer.paint.get('fill-pattern');
     const image = pattern && pattern.constantOr(1 as any);
     const crossfade = layer.getCrossfadeParameters();
+    const isWebGPU = painter.device?.type === 'webgpu';
 
-    const pass = painter.opaquePassEnabledForLayer() &&
+    // WebGPU: always use translucent pass. The opaque pass draws top-to-bottom
+    // without depth testing, causing lower layers (water) to be overwritten by
+    // layers below them. Translucent pass draws bottom-to-top with blending.
+    const pass = isWebGPU ? 'translucent' as const : (painter.opaquePassEnabledForLayer() &&
         (!pattern.constantOr(1 as any) &&
             color.constantOr(Color.transparent).a === 1 &&
-            opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
+            opacity.constantOr(0) === 1) ? 'opaque' : 'translucent');
 
     // Get or create tweaker
     let tweaker = painter.layerTweakers.get(layer.id) as FillLayerTweaker;
@@ -193,9 +197,7 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
     const visibleTileKeys = new Set<string>();
 
     // Always rebuild drawables to match per-frame stencil state.
-    // Stencil refs from _renderTileClippingMasks can change each frame as tiles reorder.
     // Don't call destroy() — GPU may still reference old buffers; let GC handle them.
-    const isWebGPU = painter.device?.type === 'webgpu';
     (layerGroup as any)._drawablesByTile.clear();
 
     for (const coord of coords) {
