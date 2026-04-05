@@ -330,8 +330,10 @@ export class CrossTileSymbolIndex {
             if (styleLayer.id !== symbolBucket?.layerIds[0])
                 continue;
 
-            ++this.maxBucketInstanceId;
-            symbolBucket.bucketInstanceId ||= this.maxBucketInstanceId;
+             if (!symbolBucket.bucketInstanceId) {
+                 this.maxBucketInstanceId += 1;
+                 symbolBucket.bucketInstanceId = this.maxBucketInstanceId;
+             }
 
             if (layerIndex.addBucket(tile.tileID, symbolBucket, this.crossTileIDs)) {
                 symbolBucketsChanged = true;
