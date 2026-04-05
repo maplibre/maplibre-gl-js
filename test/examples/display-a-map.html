@@ -8,9 +8,8 @@
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
     <script src='../../dist/maplibre-gl-dev.js'></script>
     <style>
-        body { margin: 0; padding: 0; background-color: magenta !important; }
+        body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
-        #map { background: transparent !important; }
     </style>
 </head>
 <body>
@@ -21,7 +20,8 @@
         style: 'https://demotiles.maplibre.org/style.json', // style URL
         center: [0, 0], // starting position [lng, lat]
         zoom: 1, // starting zoom
-        maplibreLogo: true
+        maplibreLogo: true,
+        hash: true
     });
 </script>
 </body>
