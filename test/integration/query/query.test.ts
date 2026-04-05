@@ -20,7 +20,7 @@ async function performQueryOnFixture(fixture)  {
 
     async function handleOperation(map: maplibregl.Map, operation) {
         const opName = operation[0];
-        
+
         switch (opName) {
             case 'wait':
                 while (!map.loaded()) {
@@ -114,7 +114,7 @@ describe('query tests', () => {
             <html lang="en">
             <head>
                 <meta charset='utf-8'>
-                
+
             </head>
             <body id='map'></body>
             </html>`);
@@ -138,7 +138,7 @@ describe('query tests', () => {
             }
             return entry;
         });
-        
+
         const coverageReport = new CoverageReport({
             name: 'MapLibre Coverage Report',
             outputDir: './coverage/query',
@@ -148,9 +148,9 @@ describe('query tests', () => {
             }
         });
         coverageReport.cleanCache();
-        
+
         await coverageReport.add(rawV8CoverageData);
-        
+
         await coverageReport.generate();
     }, 60000);
 
@@ -224,7 +224,7 @@ function processStyle(testName:string, style: unknown, port:number) {
     const clone = JSON.parse(JSON.stringify(style));
     localizeURLs(clone, port, 'test/integration');
 
-    clone.metadata = clone.metadata || {};
+    clone.metadata ||= {};
 
     clone.metadata.test = {
         testName,
