@@ -47,7 +47,7 @@ export const plugins = (production: boolean): Plugin[] => [
     // generate bundle stats in multiple formats (treemap, sunburst, etc...)
     ...(stats ? (['treemap', 'sunburst', 'flamegraph', 'network'] as const).map(template =>
         visualizer({
-            template: template,
+            template,
             title: `gl-js-${template}`,
             filename: `staging/${template}.html`,
             gzipSize: true,

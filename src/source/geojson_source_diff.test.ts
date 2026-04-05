@@ -325,7 +325,7 @@ describe('applySourceDiff', () => {
         const affectedGeometries = applySourceDiff(updateable, {
             update: [{
                 id: point.id,
-                newGeometry: newGeometry,
+                newGeometry,
             }]
         });
         expect(updateable.size).toBe(1);
