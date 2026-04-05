@@ -120,40 +120,41 @@ export class FillLayerTweaker extends LayerTweaker {
     private _updatePattern(drawables: Drawable[], painter: Painter, fillLayer: FillStyleLayer): void {
         const transform = painter.transform;
         const paint = fillLayer.paint;
-        const image = paint.get('fill-pattern') as any;
-        const imageValue = image?.constantOr ? image.constantOr(null) : image;
-        if (!imageValue) return;
-
         const crossfade = fillLayer.getCrossfadeParameters();
         if (!crossfade) return;
 
-        const imagePosA = painter.imageManager.getPattern(imageValue.from.toString());
-        const imagePosB = painter.imageManager.getPattern(imageValue.to.toString());
-        if (!imagePosA || !imagePosB) return;
-
-        const {width: texW, height: texH} = painter.imageManager.getPixelSize();
-
-        // Pattern props UBO (shared across pattern drawables)
-        if (!this._patternPropsUBO || (this._patternPropsUBO as any)._byteLength !== FILL_PATTERN_PROPS_UBO_SIZE) {
-            this._patternPropsUBO = new UniformBlock(FILL_PATTERN_PROPS_UBO_SIZE);
-        }
-        const propsUBO = this._patternPropsUBO;
-
-        const tlA = (imagePosA as any).tl;
-        const brA = (imagePosA as any).br;
-        const tlB = (imagePosB as any).tl;
-        const brB = (imagePosB as any).br;
-        const sizeA = (imagePosA as any).displaySize;
-        const sizeB = (imagePosB as any).displaySize;
         const opacity = (paint.get('fill-opacity') as any).constantOr(1.0);
 
-        propsUBO.setVec4(0, tlA[0], tlA[1], brA[0], brA[1]);                                  // pattern_from
-        propsUBO.setVec4(16, tlB[0], tlB[1], brB[0], brB[1]);                                 // pattern_to
-        propsUBO.setVec4(32, sizeA[0], sizeA[1], sizeB[0], sizeB[1]);                         // display_sizes
-        propsUBO.setVec4(48, crossfade.fromScale, crossfade.toScale, crossfade.t, opacity);   // scales_fade_opacity
-        propsUBO.setVec4(64, texW, texH, 0, 0);                                               // texsize
+        // Each drawable has its own props UBO because pattern positions and texsize are per-tile
+        for (const drawable of drawables) {
+            const patternData = (drawable as any)._patternData;
+            if (!patternData) continue;
 
-        // Update per-drawable UBOs
+            // Create a per-drawable props UBO (patterns are per-tile, so can't share)
+            if (!(drawable as any)._patternPropsUBO) {
+                (drawable as any)._patternPropsUBO = new UniformBlock(FILL_PATTERN_PROPS_UBO_SIZE);
+            }
+            const propsUBO = (drawable as any)._patternPropsUBO as UniformBlock;
+
+            const tlA = patternData.patternFrom.tl;
+            const brA = patternData.patternFrom.br;
+            const tlB = patternData.patternTo.tl;
+            const brB = patternData.patternTo.br;
+            const sizeA = patternData.patternFrom.displaySize;
+            const sizeB = patternData.patternTo.displaySize;
+            const texW = patternData.texsize[0];
+            const texH = patternData.texsize[1];
+
+            propsUBO.setVec4(0, tlA[0], tlA[1], brA[0], brA[1]);                                  // pattern_from
+            propsUBO.setVec4(16, tlB[0], tlB[1], brB[0], brB[1]);                                 // pattern_to
+            propsUBO.setVec4(32, sizeA[0], sizeA[1], sizeB[0], sizeB[1]);                         // display_sizes
+            propsUBO.setVec4(48, crossfade.fromScale, crossfade.toScale, crossfade.t, opacity);   // scales_fade_opacity
+            propsUBO.setVec4(64, texW, texH, 0, 0);                                               // texsize
+
+            drawable.layerUBO = propsUBO;
+        }
+
+        // Update per-drawable drawable UBOs (matrix, pixel coords, tile_ratio)
         for (const drawable of drawables) {
             if (!drawable.drawableUBO || (drawable.drawableUBO as any)._byteLength !== FILL_PATTERN_DRAWABLE_UBO_SIZE) {
                 drawable.drawableUBO = new UniformBlock(FILL_PATTERN_DRAWABLE_UBO_SIZE);
@@ -182,8 +183,7 @@ export class FillLayerTweaker extends LayerTweaker {
             const pixelsToTileUnitsVal = 8192 / (tileSize * overscale);
             const tile_ratio = pixelsToTileUnitsVal === 0 ? 0 : 1 / pixelsToTileUnitsVal;
             drawable.drawableUBO.setFloat(80, tile_ratio);
-
-            drawable.layerUBO = propsUBO;
+            // drawable.layerUBO already set in previous loop
         }
     }
 }

@@ -287,6 +287,23 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
                 zoom: painter.transform.zoom,
             });
             fillDrawable.uniformValues = uniformValues as any;
+
+            // Store per-tile pattern data for the tweaker (WebGPU path)
+            if (image && isWebGPU && tile.imageAtlas) {
+                const atlas = tile.imageAtlas;
+                const constantPattern = image;
+                const posFrom = atlas.patternPositions[constantPattern.from.toString()];
+                const posTo = atlas.patternPositions[constantPattern.to.toString()];
+                const atlasTex = (tile as any).imageAtlasTexture;
+                if (posFrom && posTo && atlasTex) {
+                    (fillDrawable as any)._patternData = {
+                        patternFrom: posFrom,
+                        patternTo: posTo,
+                        texsize: atlasTex.size,
+                    };
+                }
+            }
+
             layerGroup.addDrawable(coord, fillDrawable);
         }
 
