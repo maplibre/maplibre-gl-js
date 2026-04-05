@@ -2,37 +2,22 @@
 // Reference: maplibre-native FillPatternShader (webgpu/fill.hpp)
 
 struct FillPatternDrawableUBO {
-    matrix: mat4x4<f32>,
-    pixel_coord_upper: vec2<f32>,
-    pixel_coord_lower: vec2<f32>,
-    tile_ratio: f32,
-    pattern_from_t: f32,
-    pattern_to_t: f32,
-    opacity_t: f32,
+    matrix: mat4x4<f32>,                // offset 0,  size 64
+    pixel_coord_upper: vec2<f32>,       // offset 64, size 8
+    pixel_coord_lower: vec2<f32>,       // offset 72, size 8
+    tile_ratio: f32,                    // offset 80, size 4
+    pad0: f32,                          // offset 84
+    pad1: f32,                          // offset 88
+    pad2: f32,                          // offset 92
 };
 
 struct FillPatternPropsUBO {
-    pattern_from: vec4<f32>,
-    pattern_to: vec4<f32>,
-    texsize: vec2<f32>,
-    from_scale: f32,
-    to_scale: f32,
-    fade: f32,
-    opacity: f32,
-    pad1: f32,
-    pad2: f32,
-};
-
-struct GlobalPaintParamsUBO {
-    pattern_atlas_texsize: vec2<f32>,
-    units_to_pixels: vec2<f32>,
-    world_size: vec2<f32>,
-    camera_to_center_distance: f32,
-    symbol_fade_change: f32,
-    aspect_ratio: f32,
-    pixel_ratio: f32,
-    map_zoom: f32,
-    pad1: f32,
+    pattern_from: vec4<f32>,            // offset 0  — tl.x, tl.y, br.x, br.y
+    pattern_to: vec4<f32>,              // offset 16 — tl.x, tl.y, br.x, br.y
+    display_sizes: vec4<f32>,           // offset 32 — sizeFromX, sizeFromY, sizeToX, sizeToY
+    scales_fade_opacity: vec4<f32>,     // offset 48 — fromScale, toScale, fade, opacity
+    texsize: vec4<f32>,                 // offset 64 — texsizeX, texsizeY, pad, pad
+    pad0: vec4<f32>,                    // offset 80
 };
 
 struct GlobalIndexUBO {
@@ -40,7 +25,6 @@ struct GlobalIndexUBO {
     pad0: vec3<u32>,
 };
 
-@group(0) @binding(0) var<uniform> paintParams: GlobalPaintParamsUBO;
 @group(0) @binding(1) var<uniform> globalIndex: GlobalIndexUBO;
 @group(0) @binding(2) var<storage, read> drawableVector: array<FillPatternDrawableUBO>;
 @group(0) @binding(4) var<uniform> props: FillPatternPropsUBO;
@@ -73,27 +57,10 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     var vout: VertexOutput;
     let drawable = drawableVector[globalIndex.value];
 
-    let pattern_from = props.pattern_from;
-    let pattern_to = props.pattern_to;
-
-    let pattern_tl_a = pattern_from.xy;
-    let pattern_br_a = pattern_from.zw;
-    let pattern_tl_b = pattern_to.xy;
-    let pattern_br_b = pattern_to.zw;
-
-    let pixelRatio = paintParams.pixel_ratio;
-    let tileZoomRatio = drawable.tile_ratio;
-    let fromScale = props.from_scale;
-    let toScale = props.to_scale;
-
-    let display_size_a = vec2<f32>(
-        (pattern_br_a.x - pattern_tl_a.x) / pixelRatio,
-        (pattern_br_a.y - pattern_tl_a.y) / pixelRatio
-    );
-    let display_size_b = vec2<f32>(
-        (pattern_br_b.x - pattern_tl_b.x) / pixelRatio,
-        (pattern_br_b.y - pattern_tl_b.y) / pixelRatio
-    );
+    let display_size_a = vec2<f32>(props.display_sizes.x, props.display_sizes.y);
+    let display_size_b = vec2<f32>(props.display_sizes.z, props.display_sizes.w);
+    let fromScale = props.scales_fade_opacity.x;
+    let toScale = props.scales_fade_opacity.y;
 
     let pos = vec2<f32>(f32(vin.pos.x), f32(vin.pos.y));
     vout.position = drawable.matrix * vec4<f32>(pos, 0.0, 1.0);
@@ -103,14 +70,14 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
         drawable.pixel_coord_upper,
         drawable.pixel_coord_lower,
         fromScale * display_size_a,
-        tileZoomRatio,
+        drawable.tile_ratio,
         pos
     );
     vout.v_pos_b = get_pattern_pos(
         drawable.pixel_coord_upper,
         drawable.pixel_coord_lower,
         toScale * display_size_b,
-        tileZoomRatio,
+        drawable.tile_ratio,
         pos
     );
 
@@ -127,23 +94,23 @@ struct FragmentInput {
 
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
-    let pattern_from = props.pattern_from;
-    let pattern_to = props.pattern_to;
-
-    let pattern_tl_a = pattern_from.xy;
-    let pattern_br_a = pattern_from.zw;
-    let pattern_tl_b = pattern_to.xy;
-    let pattern_br_b = pattern_to.zw;
+    let pattern_tl_a = props.pattern_from.xy;
+    let pattern_br_a = props.pattern_from.zw;
+    let pattern_tl_b = props.pattern_to.xy;
+    let pattern_br_b = props.pattern_to.zw;
+    let texsize = vec2<f32>(props.texsize.x, props.texsize.y);
+    let fade = props.scales_fade_opacity.z;
+    let opacity = props.scales_fade_opacity.w;
 
     // Sample pattern A
     let imagecoord_a = glMod2(fin.v_pos_a, vec2<f32>(1.0));
-    let pos_a = mix(pattern_tl_a / props.texsize, pattern_br_a / props.texsize, imagecoord_a);
+    let pos_a = mix(pattern_tl_a / texsize, pattern_br_a / texsize, imagecoord_a);
     let color_a = textureSample(pattern_texture, pattern_sampler, pos_a);
 
     // Sample pattern B
     let imagecoord_b = glMod2(fin.v_pos_b, vec2<f32>(1.0));
-    let pos_b = mix(pattern_tl_b / props.texsize, pattern_br_b / props.texsize, imagecoord_b);
+    let pos_b = mix(pattern_tl_b / texsize, pattern_br_b / texsize, imagecoord_b);
     let color_b = textureSample(pattern_texture, pattern_sampler, pos_b);
 
-    return mix(color_a, color_b, props.fade) * props.opacity;
+    return mix(color_a, color_b, fade) * opacity;
 }

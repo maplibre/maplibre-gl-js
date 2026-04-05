@@ -12,6 +12,7 @@ import circleWgsl from './circle.wgsl.g';
 import backgroundWgsl from './background.wgsl.g';
 import backgroundPatternWgsl from './background_pattern.wgsl.g';
 import fillWgsl from './fill.wgsl.g';
+import fillPatternWgsl from './fill_pattern.wgsl.g';
 import fillOutlineWgsl from './fill_outline.wgsl.g';
 import lineWgsl from './line.wgsl.g';
 import lineGradientWgsl from './line_gradient.wgsl.g';
@@ -106,6 +107,7 @@ export const shaders = {
     backgroundWgsl: backgroundWgsl,
     backgroundPatternWgsl: backgroundPatternWgsl,
     fillWgsl: fillWgsl,
+    fillPatternWgsl: fillPatternWgsl,
     fillOutlineWgsl: fillOutlineWgsl,
     fillExtrusionWgsl: fillExtrusionWgsl,
     lineWgsl: lineWgsl,

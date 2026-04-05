@@ -141,9 +141,10 @@ export class BackgroundLayerTweaker extends LayerTweaker {
             drawable.drawableUBO.setVec2(64, pixel_upper_x, pixel_upper_y);     // pixel_coord_upper
             drawable.drawableUBO.setVec2(72, pixel_lower_x, pixel_lower_y);     // pixel_coord_lower
 
-            // tile_units_to_pixels = 1 / pixelsToTileUnits
-            const pixelsPerTileUnit = tileSize * Math.pow(2, transform.tileZoom) / (Math.pow(2, tileID.canonical.z) * 8192);
-            const tile_units_to_pixels = pixelsPerTileUnit === 0 ? 0 : 1 / pixelsPerTileUnit;
+            // tile_units_to_pixels = 1 / pixelsToTileUnits, matching GL's bgPatternUniformValues
+            const overscale = Math.pow(2, transform.tileZoom - tileID.overscaledZ);
+            const pixelsToTileUnitsVal = tileSize / overscale;
+            const tile_units_to_pixels = pixelsToTileUnitsVal === 0 ? 0 : 1 / pixelsToTileUnitsVal;
             drawable.drawableUBO.setFloat(80, tile_units_to_pixels);
 
             drawable.layerUBO = this.evaluatedPropsUBO;

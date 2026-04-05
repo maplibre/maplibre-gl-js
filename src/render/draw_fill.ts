@@ -251,6 +251,28 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
                 .setCullFaceMode(CullFaceMode.backCCW)
                 .setLayerTweaker(tweaker);
 
+            // Bind pattern atlas texture for fillPattern in WebGPU
+            if (image && isWebGPU && tile.imageAtlas) {
+                const atlasTex = (tile as any).imageAtlasTexture;
+                const atlasImg = tile.imageAtlas.image;
+                if (atlasImg?.data) {
+                    fillBuilder.addTexture({
+                        name: 'pattern_texture',
+                        textureUnit: 0,
+                        texture: atlasTex?.texture || null,
+                        filter: gl.LINEAR,
+                        wrap: gl.CLAMP_TO_EDGE,
+                        source: {
+                            data: atlasImg.data,
+                            width: atlasImg.width,
+                            height: atlasImg.height,
+                            bytesPerPixel: 4,
+                            format: 'rgba8unorm',
+                        },
+                    } as any);
+                }
+            }
+
             const fillDrawable = fillBuilder.flush({
                 tileID: coord,
                 layer,
