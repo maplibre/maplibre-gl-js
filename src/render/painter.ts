@@ -130,6 +130,11 @@ export class Painter {
     opaquePassCutoff: number;
     renderPass: RenderPass;
     renderPassWGSL?: any;
+    // Saved main render pass (swapped with tile-RTT passes when terrain is active)
+    _webgpuMainRenderPass?: any;
+    // Per-tile RTT color textures (GPUTexture) keyed by stack+tile
+    _webgpuRttTextures?: Map<string, any>;
+    _webgpuRttDepthTexture?: any;
     currentLayer: number;
     currentStencilSource: string;
     nextStencilID: number;
@@ -489,6 +494,106 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
                 rpEncoder.drawIndexed(indexCount, 1, firstIndex, segment.vertexOffset);
             }
         }
+    }
+
+    /**
+     * Begin a WebGPU render pass targeting a tile's RTT texture.
+     * The main render pass is saved and this tile pass becomes the active painter.renderPassWGSL.
+     * Call endWebGPURttPass() when done.
+     */
+    beginWebGPURttPass(key: string, size: number): any | null {
+        if (!this.device || this.device.type !== 'webgpu') return null;
+        const gpuDevice = (this.device as any).handle;
+        if (!gpuDevice) return null;
+
+        // Save main render pass
+        if (!this._webgpuMainRenderPass) {
+            this._webgpuMainRenderPass = this.renderPassWGSL;
+        }
+
+        if (!this._webgpuRttTextures) this._webgpuRttTextures = new Map();
+
+        // Get or create RTT color texture for this key
+        let colorTex = this._webgpuRttTextures.get(key);
+        if (!colorTex || colorTex._size !== size) {
+            if (colorTex) colorTex.destroy();
+            colorTex = gpuDevice.createTexture({
+                size: [size, size],
+                format: (navigator as any).gpu.getPreferredCanvasFormat(),
+                usage: 0x10 | 0x04, // RENDER_ATTACHMENT | TEXTURE_BINDING
+            });
+            colorTex._size = size;
+            this._webgpuRttTextures.set(key, colorTex);
+        }
+
+        // Shared depth-stencil texture (reused across tiles since we clear each pass)
+        if (!this._webgpuRttDepthTexture || this._webgpuRttDepthTexture._size !== size) {
+            if (this._webgpuRttDepthTexture) this._webgpuRttDepthTexture.destroy();
+            this._webgpuRttDepthTexture = gpuDevice.createTexture({
+                size: [size, size],
+                format: 'depth24plus-stencil8',
+                usage: 0x10,
+            });
+            this._webgpuRttDepthTexture._size = size;
+        }
+
+        // Create a separate command encoder for this tile's RTT pass
+        const cmdEncoder = gpuDevice.createCommandEncoder();
+        const rpEncoder = cmdEncoder.beginRenderPass({
+            colorAttachments: [{
+                view: colorTex.createView(),
+                clearValue: {r: 0, g: 0, b: 0, a: 0},
+                loadOp: 'clear',
+                storeOp: 'store',
+            }],
+            depthStencilAttachment: {
+                view: this._webgpuRttDepthTexture.createView(),
+                depthClearValue: 1.0,
+                depthLoadOp: 'clear',
+                depthStoreOp: 'store',
+                stencilClearValue: 0,
+                stencilLoadOp: 'clear',
+                stencilStoreOp: 'store',
+            },
+        });
+
+        // Swap the active render pass so subsequent draws target this tile
+        this.renderPassWGSL = {handle: rpEncoder, _isRawEncoder: true, _cmdEncoder: cmdEncoder, _isRtt: true};
+
+        // Reset stencil tracking for this isolated pass
+        this._webgpuNextStencilID = 1;
+        this._webgpuCurrentStencilSource = '';
+        this._webgpuTileStencilRefs = {};
+
+        return colorTex;
+    }
+
+    /**
+     * End the current RTT render pass, submit it, and restore the main render pass.
+     */
+    endWebGPURttPass(): void {
+        if (!this.renderPassWGSL || !this.renderPassWGSL._isRtt) return;
+        const gpuDevice = (this.device as any).handle;
+        try {
+            this.renderPassWGSL.handle.end();
+            const cmdBuffer = this.renderPassWGSL._cmdEncoder.finish();
+            gpuDevice.queue.submit([cmdBuffer]);
+        } catch (e) {
+            console.error('[endWebGPURttPass] failed', e);
+        }
+        // Restore main render pass
+        this.renderPassWGSL = this._webgpuMainRenderPass;
+        // Restore main stencil tracking — masks will be re-written on demand
+        this._webgpuNextStencilID = 1;
+        this._webgpuCurrentStencilSource = '';
+        this._webgpuTileStencilRefs = {};
+    }
+
+    /**
+     * Get the WebGPU RTT texture for a given key (set by beginWebGPURttPass).
+     */
+    getWebGPURttTexture(key: string): any | null {
+        return this._webgpuRttTextures?.get(key) || null;
     }
 
     /**

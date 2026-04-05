@@ -27,6 +27,7 @@ import heatmapWgsl from './heatmap.wgsl.g';
 import heatmapTextureWgsl from './heatmap_texture.wgsl.g';
 import hillshadeWgsl from './hillshade.wgsl.g';
 import hillshadePrepareWgsl from './hillshade_prepare.wgsl.g';
+import terrainWgsl from './terrain.wgsl.g';
 import clippingMaskFrag from './clipping_mask.fragment.glsl.g';
 import clippingMaskVert from './clipping_mask.vertex.glsl.g';
 import heatmapFrag from './heatmap.fragment.glsl.g';
@@ -124,6 +125,7 @@ export const shaders = {
     heatmapTextureWgsl: heatmapTextureWgsl,
     hillshadeWgsl: hillshadeWgsl,
     hillshadePrepareWgsl: hillshadePrepareWgsl,
+    terrainWgsl: terrainWgsl,
     clippingMask: prepare(clippingMaskFrag, clippingMaskVert),
     heatmap: prepare(heatmapFrag, heatmapVert),
     heatmapTexture: prepare(heatmapTextureFrag, heatmapTextureVert),

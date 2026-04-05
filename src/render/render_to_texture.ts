@@ -160,6 +160,7 @@ export class RenderToTexture {
         if (LAYERS_TO_TEXTURES[this._prevType] || (LAYERS_TO_TEXTURES[type] && isLastLayer)) {
             this._prevType = type;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
+            const isWebGPU = painter.device?.type === 'webgpu';
             for (const tile of this._renderableTiles) {
                 // if render pool is full draw current tiles to screen and free pool
                 if (this.pool.isFull()) {
@@ -182,16 +183,30 @@ export class RenderToTexture {
                 this.pool.stampObject(obj);
                 tile.rtt[stack] = {id: obj.id, stamp: obj.stamp};
                 // prepare PoolObject for rendering
-                painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
-                painter.context.clear({color: Color.transparent, stencil: 0});
+                if (isWebGPU) {
+                    // Begin a WebGPU render pass targeting the tile's RTT texture
+                    const rttKey = `${stack}_${tile.tileID.key}`;
+                    painter.beginWebGPURttPass(rttKey, obj.fbo.width);
+                    (tile as any)._webgpuRttKey = rttKey;
+                } else {
+                    painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
+                    painter.context.clear({color: Color.transparent, stencil: 0});
+                }
                 painter.currentStencilSource = undefined;
                 for (let l = 0; l < layers.length; l++) {
                     const layer = painter.style._layers[layers[l]];
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
-                    painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
-                    painter._renderTileClippingMasks(layer, coords, true);
+                    if (!isWebGPU) {
+                        painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
+                        painter._renderTileClippingMasks(layer, coords, true);
+                    } else {
+                        (painter as any)._renderTileClippingMasksWebGPU(layer, coords, true);
+                    }
                     painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
                     if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
+                }
+                if (isWebGPU) {
+                    painter.endWebGPURttPass();
                 }
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles, options);
