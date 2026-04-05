@@ -118,10 +118,10 @@ export class LineLayerTweaker extends LayerTweaker {
                 continue;
             }
 
-            // LineDrawableUBO: matrix(64) + ratio(4) + device_pixel_ratio(4) + units_to_pixels(8) = 80 bytes
+            // LineDrawableUBO: matrix(64) + ratio(4) + dpr(4) + units_to_pixels(8) + _t factors(24) + pad(24) = 128 bytes
             // LineSDFDrawableUBO: extends to 160 bytes with patternscale, tex_y, sdfgamma, mix, _t factors
-            // LineGradientDrawableUBO: same as LineDrawableUBO (80 bytes)
-            const uboSize = isLineSDF ? 160 : 80;
+            // LineGradientDrawableUBO: same as LineDrawableUBO (128 bytes)
+            const uboSize = isLineSDF ? 160 : 128;
             if (!drawable.drawableUBO || (drawable.drawableUBO as any)._byteLength < uboSize) {
                 drawable.drawableUBO = new UniformBlock(uboSize);
             }
@@ -185,13 +185,35 @@ export class LineLayerTweaker extends LayerTweaker {
                     drawable.drawableUBO.setFloat(108, mixVal);
                 }
             } else {
-                // Basic line / lineGradient: 80-byte UBO
+                // Basic line / lineGradient: 128-byte UBO
                 const ptu = pixelsToTileUnits(tileProxy, 1, zoom);
                 const ratio = pixelScale / ptu;
                 drawable.drawableUBO.setFloat(64, ratio);
                 drawable.drawableUBO.setFloat(68, painter.pixelRatio);
                 drawable.drawableUBO.setVec2(72, 1 / transform.pixelsToGLUnits[0], 1 / transform.pixelsToGLUnits[1]);
 
+                // _t factors for composite properties at offsets 80-100
+                if (drawable.programConfiguration) {
+                    const binders = (drawable.programConfiguration as any).binders;
+                    if (binders) {
+                        const props: [string, number][] = [
+                            ['line-color', 80],
+                            ['line-opacity', 84],
+                            ['line-blur', 88],
+                            ['line-width', 92],
+                            ['line-gapwidth', 96],
+                            ['line-offset', 100],
+                        ];
+                        for (const [prop, offset] of props) {
+                            const binder = binders[prop];
+                            if (binder?.expression?.interpolationFactor) {
+                                const currentZoom = binder.useIntegerZoom ? Math.floor(zoom) : zoom;
+                                const t = Math.max(0, Math.min(1, binder.expression.interpolationFactor(currentZoom, binder.zoom, binder.zoom + 1)));
+                                drawable.drawableUBO.setFloat(offset, t);
+                            }
+                        }
+                    }
+                }
             }
 
             // Share the layer-level UBO reference

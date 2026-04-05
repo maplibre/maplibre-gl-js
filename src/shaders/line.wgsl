@@ -4,10 +4,20 @@
 const LINE_SCALE: f32 = 0.015873016;
 
 struct LineDrawableUBO {
-    matrix: mat4x4<f32>,          // 64 bytes
-    ratio: f32,                    // 1/pixelsToTileUnits
-    device_pixel_ratio: f32,
-    units_to_pixels: vec2<f32>,    // transform.pixelsToGLUnits
+    matrix: mat4x4<f32>,          // 0-63
+    ratio: f32,                    // 64
+    device_pixel_ratio: f32,       // 68
+    units_to_pixels: vec2<f32>,    // 72-79
+    // Composite expression interpolation factors
+    color_t: f32,                  // 80
+    opacity_t: f32,                // 84
+    blur_t: f32,                   // 88
+    width_t: f32,                  // 92
+    gapwidth_t: f32,               // 96
+    offset_t: f32,                 // 100
+    pad0: f32,                     // 104
+    pad1: f32,                     // 108
+    pad2: vec4<f32>,               // 112 — padding to 128
 };
 
 struct LinePropsUBO {
