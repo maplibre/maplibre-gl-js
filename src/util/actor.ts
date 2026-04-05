@@ -64,7 +64,7 @@ export class Actor implements IActor {
     abortControllers: { [x: number | string]: AbortController };
     invoker: ThrottledInvoker;
     globalScope: ActorTarget;
-    messageHandlers: { [x in MessageType]?: MessageHandler<MessageType>};
+    messageHandlers: { [K in MessageType]?: MessageHandler<K>};
     subscription: Subscription;
 
     /**
@@ -85,7 +85,7 @@ export class Actor implements IActor {
     }
 
     registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>) {
-        this.messageHandlers[type] = handler;
+        (this.messageHandlers as Record<T, MessageHandler<T>>)[type] = handler;
     }
 
     unregisterMessageHandler<T extends MessageType>(type: T) {
