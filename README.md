@@ -110,6 +110,8 @@ Silver:
 
 <a href="https://aws.amazon.com/location"><img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/></a>
 
+<a href="https://www.caltopo.com/"><img src="https://maplibre.org/img/caltopo-logo.svg" alt="Caltopo AWS" width="25%"/></a>
+
 Backers and Supporters:
 
 <a href="https://opencollective.com/maplibre/backer/0/website?requireActive=false" target="_blank"><img src="https://opencollective.com/maplibre/backer/0/avatar.svg?requireActive=false"></a>
