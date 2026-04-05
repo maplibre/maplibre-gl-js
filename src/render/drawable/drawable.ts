@@ -302,6 +302,12 @@ export class Drawable {
             const drawableVecBuf = this._uploadAsStorage(device, this.drawableUBO);
             const propsBuf = this.layerUBO.upload(device);
 
+            if (this.shaderName === 'fill' && !(painter as any)._fillDrawLogged) {
+                (painter as any)._fillDrawLogged = true;
+                const f32 = new Float32Array(this.layerUBO._data);
+                console.log(`[FILL DRAW] propsBuf=${!!propsBuf} handle=${!!propsBuf?.handle} dirty=${this.layerUBO._dirty} color=[${f32[0].toFixed(3)},${f32[1].toFixed(3)},${f32[2].toFixed(3)},${f32[3].toFixed(3)}] opacity=${f32[8].toFixed(3)} tileID=${this.tileID?.key} renderPass=${this.renderPass}`);
+            }
+
             // Get or create pipeline (cached on painter, keyed by shader+stencil state)
             const definesKey = this.programConfiguration ? this.programConfiguration.cacheKey : '';
             const topologyKey = this.drawMode === 1 ? 'L' : 'T';

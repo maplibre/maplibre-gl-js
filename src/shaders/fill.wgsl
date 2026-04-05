@@ -91,5 +91,7 @@ struct FragmentInput {
 
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
-    return vec4<f32>(fin.frag_color.rgb * fin.frag_opacity, fin.frag_color.a * fin.frag_opacity);
+    // DEBUG: output raw UBO props to see what shader reads
+    // props.color should be at offset 0, props.opacity at offset 32
+    return vec4<f32>(props.color.r, props.color.g, props.color.b, 1.0);
 }

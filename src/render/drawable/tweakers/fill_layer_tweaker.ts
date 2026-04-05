@@ -34,35 +34,39 @@ export class FillLayerTweaker extends LayerTweaker {
         const fillLayer = layer as FillStyleLayer;
         const transform = painter.transform;
 
-        // Update evaluated props UBO if properties changed
-        if (this.propertiesUpdated) {
-            if (!this.evaluatedPropsUBO) {
-                this.evaluatedPropsUBO = new UniformBlock(FILL_PROPS_UBO_SIZE);
-            }
-            const propsUBO = this.evaluatedPropsUBO;
-            const paint = fillLayer.paint;
+        // Evaluate paint properties every frame — camera functions re-evaluate
+        // on zoom change via layer.recalculate(), so constantOr picks up new values.
+        // Data-driven properties use vertex attributes, not the UBO.
+        if (!this.evaluatedPropsUBO) {
+            this.evaluatedPropsUBO = new UniformBlock(FILL_PROPS_UBO_SIZE);
+        }
+        const propsUBO = this.evaluatedPropsUBO;
+        const paint = fillLayer.paint;
 
-            // color vec4
-            const color = paint.get('fill-color').constantOr(null);
-            if (color) {
-                propsUBO.setVec4(0, color.r, color.g, color.b, color.a);
-            }
+        // color vec4
+        const colorVal = paint.get('fill-color') as any;
+        const color = colorVal.constantOr ? colorVal.constantOr(null) : (colorVal && typeof colorVal === 'object' && 'r' in colorVal ? colorVal : null);
+        if (color) {
+            propsUBO.setVec4(0, color.r, color.g, color.b, color.a);
+        }
+        // outline_color vec4 (falls back to fill-color if not explicitly set)
+        const outlineColorVal = paint.get('fill-outline-color') as any;
+        const outlineColor = outlineColorVal.constantOr ? outlineColorVal.constantOr(null) : (outlineColorVal && typeof outlineColorVal === 'object' && 'r' in outlineColorVal ? outlineColorVal : null);
+        const effectiveOutlineColor = outlineColor || color;
+        if (effectiveOutlineColor) {
+            propsUBO.setVec4(16, effectiveOutlineColor.r, effectiveOutlineColor.g, effectiveOutlineColor.b, effectiveOutlineColor.a);
+        }
 
-            // outline_color vec4 (falls back to fill-color if not explicitly set)
-            const outlineColor = paint.get('fill-outline-color').constantOr(null);
-            const effectiveOutlineColor = outlineColor || color;
-            if (effectiveOutlineColor) {
-                propsUBO.setVec4(16, effectiveOutlineColor.r, effectiveOutlineColor.g, effectiveOutlineColor.b, effectiveOutlineColor.a);
-            }
+        // opacity f32 — constantOr(null) may return null for DataDrivenProperty defaults,
+        // so fall back to 1.0 (the spec default for fill-opacity)
+        const opacityVal = paint.get('fill-opacity') as any;
+        const opacity = opacityVal.constantOr ? opacityVal.constantOr(1.0) : (typeof opacityVal === 'number' ? opacityVal : 1.0);
+        propsUBO.setFloat(32, opacity as number);
 
-            // opacity f32
-            const opacity = paint.get('fill-opacity').constantOr(null);
-            if (opacity !== null) {
-                propsUBO.setFloat(32, opacity);
-            }
-
-            // fade, from_scale, to_scale set from crossfade (per-frame, below)
-            this.propertiesUpdated = false;
+        if (!(this as any)._logged) {
+            const f32 = new Float32Array(propsUBO._data);
+            console.log(`[FILL TWEAKER v2] layer=${this.layerId} opacity_raw=${opacity} ubo_opacity=${f32[8].toFixed(3)} ubo_color=[${f32[0].toFixed(3)},${f32[1].toFixed(3)},${f32[2].toFixed(3)},${f32[3].toFixed(3)}]`);
+            (this as any)._logged = true;
         }
 
         // Update crossfade parameters
