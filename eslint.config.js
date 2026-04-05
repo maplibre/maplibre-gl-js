@@ -67,6 +67,8 @@ export default [
             '@typescript-eslint/prefer-string-starts-ends-with': 'error',
             '@typescript-eslint/array-type': ['error', {default: 'array-simple'}],
 
+            'logical-assignment-operators': ['error', 'always', {enforceForIfStatements: true}],
+
             '@stylistic/member-delimiter-style': ['error'],
             'no-useless-constructor': 'off',
             '@typescript-eslint/no-useless-constructor': ['error'],

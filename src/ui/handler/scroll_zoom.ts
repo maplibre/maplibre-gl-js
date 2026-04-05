@@ -236,9 +236,7 @@ export class ScrollZoomHandler implements Handler {
     _start(e: MouseEvent) {
         if (!this._delta) return;
 
-        if (this._frameId) {
-            this._frameId = null;
-        }
+        this._frameId &&= null;
 
         this._active = true;
         if (!this.isZooming()) {
@@ -333,9 +331,7 @@ export class ScrollZoomHandler implements Handler {
             const k = easing(t);
             zoom = interpolates.number(startZoom, targetZoom, k);
             if (t < 1) {
-                if (!this._frameId) {
-                    this._frameId = true;
-                }
+                this._frameId ||= true;
             } else {
                 finished = true;
             }

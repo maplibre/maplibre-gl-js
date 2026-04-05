@@ -78,9 +78,7 @@ export class GlyphManager {
         const result: GetGlyphsResponse = {};
 
         for (const {stack, id, glyph} of updatedGlyphs) {
-            if (!result[stack]) {
-                result[stack] = {};
-            }
+            result[stack] ||= {};
             // Clone the glyph so that our own copy of its ArrayBuffer doesn't get transferred.
             result[stack][id] = glyph && {
                 id: glyph.id,
@@ -95,13 +93,11 @@ export class GlyphManager {
     async _getAndCacheGlyphsPromise(stack: string, id: number): Promise<{stack: string; id: number; glyph: StyleGlyph}> {
         // Create an entry for this fontstack if it doesn’t already exist.
         let entry = this.entries[stack];
-        if (!entry) {
-            entry = this.entries[stack] = {
-                glyphs: {},
-                requests: {},
-                ranges: {}
-            };
-        }
+        entry ||= this.entries[stack] = {
+            glyphs: {},
+            requests: {},
+            ranges: {}
+        };
 
         // Try to get the glyph from the cache of client-side glyphs by codepoint.
         let glyph = entry.glyphs[id];
@@ -127,9 +123,7 @@ export class GlyphManager {
         }
 
         // Start downloading this range unless we’re currently downloading it.
-        if (!entry.requests[range]) {
-            entry.requests[range] = GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager);
-        }
+        entry.requests[range] ||= GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager);
 
         try {
             // Get the response and cache the glyphs from it.
@@ -269,12 +263,8 @@ export class GlyphManager {
     destroy() {
         for (const stack in this.entries) {
             const entry = this.entries[stack];
-            if (entry.tinySDF) {
-                entry.tinySDF = null;
-            }
-            if (entry.ideographTinySDF) {
-                entry.ideographTinySDF = null;
-            }
+            entry.tinySDF = null;
+            entry.ideographTinySDF = null;
             entry.glyphs = {};
             entry.requests = {};
             entry.ranges = {};

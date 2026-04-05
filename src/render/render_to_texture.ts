@@ -94,7 +94,7 @@ export class RenderToTexture {
             for (const tileID of tileIDs) {
                 const keys = this.terrain.tileManager.getTerrainCoords(tileID, terrainTileRanges);
                 for (const key in keys) {
-                    if (!this._coordsAscending[id][key]) this._coordsAscending[id][key] = [];
+                    this._coordsAscending[id][key] ||= [];
                     this._coordsAscending[id][key].push(keys[key]);
                 }
             }

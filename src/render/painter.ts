@@ -726,7 +726,7 @@ export class Painter {
      * @returns
      */
     useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false, defines: string[] = []): Program<any> {
-        this.cache = this.cache || {};
+        this.cache ||= {};
         const useTerrain = !!this.style.map.terrain;
 
         const projection = this.style.projection;
@@ -742,19 +742,17 @@ export class Painter {
 
         const key = name + configurationKey + projectionKey + overdrawKey + terrainKey + definesKey;
 
-        if (!this.cache[key]) {
-            this.cache[key] = new Program(
-                this.context,
-                shaders[name],
-                programConfiguration,
-                programUniforms[name],
-                this._showOverdrawInspector,
-                useTerrain,
-                projectionPrelude,
-                projectionDefine,
-                defines
-            );
-        }
+        this.cache[key] ||= new Program(
+            this.context,
+            shaders[name],
+            programConfiguration,
+            programUniforms[name],
+            this._showOverdrawInspector,
+            useTerrain,
+            projectionPrelude,
+            projectionDefine,
+            defines
+        );
         return this.cache[key];
     }
 

@@ -237,9 +237,7 @@ class CrossTileSymbolLayerIndex {
             symbolInstance.crossTileID = 0;
         }
 
-        if (!this.usedCrossTileIDs[tileID.overscaledZ]) {
-            this.usedCrossTileIDs[tileID.overscaledZ] = {};
-        }
+        this.usedCrossTileIDs[tileID.overscaledZ] ||= {};
         const zoomCrossTileIDs = this.usedCrossTileIDs[tileID.overscaledZ];
 
         for (const zoom in this.indexes) {
@@ -332,9 +330,8 @@ export class CrossTileSymbolIndex {
             if (styleLayer.id !== symbolBucket?.layerIds[0])
                 continue;
 
-            if (!symbolBucket.bucketInstanceId) {
-                symbolBucket.bucketInstanceId = ++this.maxBucketInstanceId;
-            }
+            ++this.maxBucketInstanceId;
+            symbolBucket.bucketInstanceId ||= this.maxBucketInstanceId;
 
             if (layerIndex.addBucket(tile.tileID, symbolBucket, this.crossTileIDs)) {
                 symbolBucketsChanged = true;

@@ -714,7 +714,7 @@ export class Placement {
                 // in this case, but for now quirks in text-anchor
                 // and text-offset may prevent that from being true.
                 placeText = textAlwaysOverlap || (placedGlyphCircles.circles.length > 0 && !placedGlyphCircles.collisionDetected);
-                offscreen = offscreen && placedGlyphCircles.offscreen;
+                offscreen &&= placedGlyphCircles.offscreen;
             }
 
             if (collisionArrays.iconFeatureIndex) {
@@ -746,7 +746,7 @@ export class Placement {
                     placedIconBoxes = placeIconFeature(collisionArrays.iconBox);
                     placeIcon = placedIconBoxes.placeable;
                 }
-                offscreen = offscreen && placedIconBoxes.offscreen;
+                offscreen &&= placedIconBoxes.offscreen;
             }
 
             const iconWithoutText = textOptional ||
@@ -759,7 +759,7 @@ export class Placement {
             } else if (!textWithoutIcon) {
                 placeText = placeIcon && placeText;
             } else if (!iconWithoutText) {
-                placeIcon = placeIcon && placeText;
+                placeIcon &&= placeText;
             }
 
             const hasTextBox = placeText && placedGlyphBoxes.placeable;
@@ -966,12 +966,11 @@ export class Placement {
             const prevOpacity = prevOpacities[crossTileID];
             if (prevOpacity) {
                 this.opacities[crossTileID] = new JointOpacityState(prevOpacity, increment, jointPlacement.text, jointPlacement.icon);
-                placementChanged = placementChanged ||
-                    jointPlacement.text !== prevOpacity.text.placed ||
-                    jointPlacement.icon !== prevOpacity.icon.placed;
+                placementChanged ||= jointPlacement.text !== prevOpacity.text.placed;
+                placementChanged ||= jointPlacement.icon !== prevOpacity.icon.placed;
             } else {
                 this.opacities[crossTileID] = new JointOpacityState(null, increment, jointPlacement.text, jointPlacement.icon, jointPlacement.skipFade);
-                placementChanged = placementChanged || jointPlacement.text || jointPlacement.icon;
+                placementChanged ||= jointPlacement.text || jointPlacement.icon;
             }
         }
 
@@ -982,7 +981,8 @@ export class Placement {
                 const jointOpacity = new JointOpacityState(prevOpacity, increment, false, false);
                 if (!jointOpacity.isHidden()) {
                     this.opacities[crossTileID] = jointOpacity;
-                    placementChanged = placementChanged || prevOpacity.text.placed || prevOpacity.icon.placed;
+                    placementChanged ||= prevOpacity.text.placed;
+                    placementChanged ||= prevOpacity.icon.placed;
                 }
             }
         }
@@ -1061,7 +1061,7 @@ export class Placement {
             for (let i = 0; i < numVertices / 4; i++) {
                 iconOrText.opacityVertexArray.emplaceBack(opacity);
             }
-            iconOrText.hasVisibleVertices = iconOrText.hasVisibleVertices || (opacity !== PACKED_HIDDEN_OPACITY);
+            iconOrText.hasVisibleVertices ||= (opacity !== PACKED_HIDDEN_OPACITY);
         };
 
         const boxArrays = this.collisionBoxArrays.get(bucket.bucketInstanceId);

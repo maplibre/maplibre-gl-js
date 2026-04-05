@@ -1576,8 +1576,8 @@ export class Map extends Camera {
     }
 
     _saveDelegatedListener(type: keyof MapEventType | string, delegatedListener: DelegatedListener): void {
-        this._delegatedListeners = this._delegatedListeners || {};
-        this._delegatedListeners[type] = this._delegatedListeners[type] || [];
+        this._delegatedListeners ||= {};
+        this._delegatedListeners[type] ||= [];
         this._delegatedListeners[type].push(delegatedListener);
     }
 
@@ -1972,7 +1972,7 @@ export class Map extends Camera {
         let queryGeometry: Point[];
         const isGeometry = geometryOrOptions instanceof Point || Array.isArray(geometryOrOptions);
         const geometry = isGeometry ? geometryOrOptions : [[0, 0], [this.transform.width, this.transform.height]];
-        options = options || (isGeometry ? {} : geometryOrOptions) || {};
+        options ||= (isGeometry ? {} : geometryOrOptions) || {};
 
         if (geometry instanceof Point || typeof geometry[0] === 'number') {
             queryGeometry = [Point.convert(geometry as PointLike)];
@@ -3577,7 +3577,7 @@ export class Map extends Camera {
     _update(updateStyle?: boolean) {
         if (!this.style?._loaded) return this;
 
-        this._styleDirty = this._styleDirty || updateStyle;
+        this._styleDirty ||= updateStyle;
         this._sourcesDirty = true;
         this.triggerRepaint();
 

@@ -59,15 +59,11 @@ export class StyleLayerIndex {
 
             const sourceId = layer.source || '';
             let sourceGroup = this.familiesBySource[sourceId];
-            if (!sourceGroup) {
-                sourceGroup = this.familiesBySource[sourceId] = {};
-            }
+            sourceGroup ||= this.familiesBySource[sourceId] = {};
 
             const sourceLayerId = layer.sourceLayer || GEOJSON_TILE_LAYER_NAME;
             let sourceLayerFamilies = sourceGroup[sourceLayerId];
-            if (!sourceLayerFamilies) {
-                sourceLayerFamilies = sourceGroup[sourceLayerId] = [];
-            }
+            sourceLayerFamilies ||= sourceGroup[sourceLayerId] = [];
 
             sourceLayerFamilies.push(layers);
         }

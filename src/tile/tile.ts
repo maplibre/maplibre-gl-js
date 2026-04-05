@@ -297,17 +297,13 @@ export class Tile {
             this.imageAtlasTexture.destroy();
         }
 
-        if (this.imageAtlas) {
-            this.imageAtlas = null;
-        }
+        this.imageAtlas &&= null;
 
         if (this.glyphAtlasTexture) {
             this.glyphAtlasTexture.destroy();
         }
 
-        if (this.dashPositions) {
-            this.dashPositions = null;
-        }
+        this.dashPositions &&= null;
 
         this.latestFeatureIndex = null;
         this.state = 'unloaded';
