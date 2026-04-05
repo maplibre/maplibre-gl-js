@@ -111,7 +111,7 @@ describe('Map.isMoving', () => {
         let now = 0;
         vi.spyOn(timeControl, 'now').mockImplementation(() => now);
 
-        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
 
         now += 400;
@@ -150,7 +150,7 @@ describe('Map.isMoving', () => {
         let now = 0;
         vi.spyOn(timeControl, 'now').mockImplementation(() => now);
 
-        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
 
         now += 400;
