@@ -96,7 +96,7 @@ export function regression(measurements) {
     return leastSquaresRegression(result);
 }
 
-function leastSquaresRegression(data): RegressionResults {
+function leastSquaresRegression(data: Array<[number, number]>): RegressionResults {
     const meanX = d3.sum(data, d => d[0]) / data.length;
     const meanY = d3.sum(data, d => d[1]) / data.length;
     const varianceX = d3.variance(data, d => d[0]);
