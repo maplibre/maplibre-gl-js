@@ -4,6 +4,11 @@ import type {Map} from '../ui/map';
 
 type FeatureLayerSettings = { [layerName: string]: boolean };
 
+/**
+ * LayerRegistry manages the lifecycle of feature layers and their associated map resources.
+ * It ensures that layers are loaded and unloaded in the correct order, and that sources are available before layers are loaded.
+ * This helps manage the lifecycle of multiple complex features and their associated map resources.
+ */
 export class LayerRegistry<T extends FeatureLayerSettings> {
     private sources: MapResource[] = [];
     private featureLayers: FeatureLayer[] = [];
