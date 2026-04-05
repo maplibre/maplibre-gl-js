@@ -403,7 +403,8 @@ export class TileManager extends Evented {
             // determine if the loaded tile (hasData) is a qualified descendent of any target tile
             for (const targetID of targetTileIDs) {
                 if (tile.tileID.isChildOf(targetID)) {
-                    (loadedDescendents[targetID.key] ||= []).push(tile);
+                    loadedDescendents[targetID.key] ||= [];
+                    loadedDescendents[targetID.key].push(tile);
                 }
             }
         }

@@ -92,12 +92,8 @@ export class GlyphManager {
 
     async _getAndCacheGlyphsPromise(stack: string, id: number): Promise<{stack: string; id: number; glyph: StyleGlyph}> {
         // Create an entry for this fontstack if it doesn’t already exist.
-        let entry = this.entries[stack];
-        entry ||= this.entries[stack] = {
-            glyphs: {},
-            requests: {},
-            ranges: {}
-        };
+        this.entries[stack] ??= {glyphs: {}, requests: {}, ranges: {}};
+        const entry = this.entries[stack];
 
         // Try to get the glyph from the cache of client-side glyphs by codepoint.
         let glyph = entry.glyphs[id];
