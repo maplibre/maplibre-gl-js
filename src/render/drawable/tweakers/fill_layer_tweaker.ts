@@ -177,9 +177,9 @@ export class FillLayerTweaker extends LayerTweaker {
             drawable.drawableUBO.setVec2(72, pixel_lower_x, pixel_lower_y);     // pixel_coord_lower
 
             // tile_ratio = 1 / pixelsToTileUnits, matching GL's patternUniformValues
-            // pixelsToTileUnits(tile, 1, z) = tileSize / 2^(z - overscaledZ)
+            // pixelsToTileUnits(tile, 1, z) = EXTENT / (tileSize * 2^(z - overscaledZ))
             const overscale = Math.pow(2, transform.tileZoom - tileID.overscaledZ);
-            const pixelsToTileUnitsVal = tileSize / overscale;
+            const pixelsToTileUnitsVal = 8192 / (tileSize * overscale);
             const tile_ratio = pixelsToTileUnitsVal === 0 ? 0 : 1 / pixelsToTileUnitsVal;
             drawable.drawableUBO.setFloat(80, tile_ratio);
 
