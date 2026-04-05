@@ -19,6 +19,13 @@ import {pixelsToTileUnits} from '../../../source/pixels_to_tile_units';
 // pad2:        f32           offset 44
 const LINE_PROPS_UBO_SIZE = 48;
 
+// LinePatternPropsUBO: 96 bytes (6 × vec4)
+// color(16) + pattern_from(16) + pattern_to(16) + display_sizes(16) + scales_fade_opacity(16) + texsize_width(16)
+const LINE_PATTERN_PROPS_UBO_SIZE = 96;
+// LinePatternDrawableUBO: 128 bytes
+// matrix(64) + ratio(4) + dpr(4) + units_to_pixels(8) + pixel_coord_upper(8) + pixel_coord_lower(8) + tile_ratio(4) + pad(12) + pad_vec4(16)
+const LINE_PATTERN_DRAWABLE_UBO_SIZE = 128;
+
 /**
  * Per-frame uniform updater for line layers.
  * Handles 5 shader variants: line, lineSDF, linePattern, lineGradient, lineGradientSDF.
@@ -28,6 +35,8 @@ export class LineLayerTweaker extends LayerTweaker {
     constructor(layerId: string) {
         super(layerId);
     }
+
+    _patternPropsUBOByKey: {[key: string]: UniformBlock} = {};
 
     execute(
         drawables: Drawable[],
@@ -39,7 +48,7 @@ export class LineLayerTweaker extends LayerTweaker {
         const transform = painter.transform;
 
         // Update evaluated props UBO — must run every frame for zoom-dependent properties
-        if (!this.evaluatedPropsUBO) {
+        if (!this.evaluatedPropsUBO || (this.evaluatedPropsUBO as any)._byteLength !== LINE_PROPS_UBO_SIZE) {
             this.evaluatedPropsUBO = new UniformBlock(LINE_PROPS_UBO_SIZE);
         }
         const propsUBO = this.evaluatedPropsUBO;
@@ -102,6 +111,12 @@ export class LineLayerTweaker extends LayerTweaker {
             // projectionData is already set during drawable creation with correct RTT flags
             const isLineSDF = drawable.shaderName === 'lineSDF';
             const isLineGradient = drawable.shaderName === 'lineGradient' || drawable.shaderName === 'lineGradientSDF';
+            const isLinePattern = drawable.shaderName === 'linePattern';
+
+            if (isLinePattern) {
+                this._updateLinePatternDrawable(drawable, painter, lineLayer);
+                continue;
+            }
 
             // LineDrawableUBO: matrix(64) + ratio(4) + device_pixel_ratio(4) + units_to_pixels(8) = 80 bytes
             // LineSDFDrawableUBO: extends to 160 bytes with patternscale, tex_y, sdfgamma, mix, _t factors
@@ -182,5 +197,79 @@ export class LineLayerTweaker extends LayerTweaker {
             // Share the layer-level UBO reference
             drawable.layerUBO = this.evaluatedPropsUBO;
         }
+    }
+
+    private _updateLinePatternDrawable(drawable: Drawable, painter: Painter, lineLayer: LineStyleLayer): void {
+        const transform = painter.transform;
+        const zoom = transform.zoom;
+        const pixelScale = transform.getPixelScale();
+        const patternData = (drawable as any)._patternData;
+        if (!patternData || !drawable.tileID) return;
+
+        const crossfade = lineLayer.getCrossfadeParameters();
+        if (!crossfade) return;
+
+        const paint = lineLayer.paint;
+
+        // Drawable UBO (128 bytes)
+        if (!drawable.drawableUBO || (drawable.drawableUBO as any)._byteLength !== LINE_PATTERN_DRAWABLE_UBO_SIZE) {
+            drawable.drawableUBO = new UniformBlock(LINE_PATTERN_DRAWABLE_UBO_SIZE);
+        }
+        const drawableUBO = drawable.drawableUBO;
+        drawableUBO.setMat4(0, drawable.projectionData.mainMatrix as Float32Array);
+
+        const tileProxy = {tileID: drawable.tileID, tileSize: transform.tileSize};
+        const ptu = pixelsToTileUnits(tileProxy, 1, zoom);
+        const ratio = pixelScale / ptu;
+        drawableUBO.setFloat(64, ratio);                                            // ratio
+        drawableUBO.setFloat(68, painter.pixelRatio);                               // device_pixel_ratio
+        drawableUBO.setVec2(72, 1 / transform.pixelsToGLUnits[0], 1 / transform.pixelsToGLUnits[1]);  // units_to_pixels
+
+        // Pixel coords for pattern positioning
+        const tileID = drawable.tileID;
+        const tileSize = transform.tileSize;
+        const numTiles = Math.pow(2, tileID.overscaledZ);
+        const tileSizeAtNearestZoom = tileSize * Math.pow(2, transform.tileZoom) / numTiles;
+        const pixelX = tileSizeAtNearestZoom * (tileID.canonical.x + tileID.wrap * numTiles);
+        const pixelY = tileSizeAtNearestZoom * tileID.canonical.y;
+        drawableUBO.setVec2(80, (pixelX >> 16) & 0xFFFF, (pixelY >> 16) & 0xFFFF);
+        drawableUBO.setVec2(88, pixelX & 0xFFFF, pixelY & 0xFFFF);
+
+        // tile_ratio using canonical.z (matches fill pattern)
+        const overscale = Math.pow(2, transform.tileZoom - tileID.canonical.z);
+        const pixelsToTileUnitsVal = 8192 / (tileSize * overscale);
+        const tile_ratio = pixelsToTileUnitsVal === 0 ? 0 : 1 / pixelsToTileUnitsVal;
+        drawableUBO.setFloat(96, tile_ratio);
+
+        // Pattern props UBO (per-drawable since pattern data varies per tile)
+        let patternPropsUBO = (drawable as any)._patternPropsUBO as UniformBlock;
+        if (!patternPropsUBO || (patternPropsUBO as any)._byteLength !== LINE_PATTERN_PROPS_UBO_SIZE) {
+            patternPropsUBO = new UniformBlock(LINE_PATTERN_PROPS_UBO_SIZE);
+            (drawable as any)._patternPropsUBO = patternPropsUBO;
+        }
+
+        // Fetch paint values
+        const color = (paint.get('line-color') as any).constantOr(null);
+        const opacity = (paint.get('line-opacity') as any).constantOr(1.0);
+        const blur = (paint.get('line-blur') as any).constantOr(0.0);
+        const widthVal = (paint.get('line-width') as any).constantOr(1.0);
+
+        const tlA = patternData.patternFrom.tl;
+        const brA = patternData.patternFrom.br;
+        const tlB = patternData.patternTo.tl;
+        const brB = patternData.patternTo.br;
+        const sizeA = patternData.patternFrom.displaySize;
+        const sizeB = patternData.patternTo.displaySize;
+        const texW = patternData.texsize[0];
+        const texH = patternData.texsize[1];
+
+        patternPropsUBO.setVec4(0, color?.r || 0, color?.g || 0, color?.b || 0, color?.a || 1);       // color
+        patternPropsUBO.setVec4(16, tlA[0], tlA[1], brA[0], brA[1]);                                  // pattern_from
+        patternPropsUBO.setVec4(32, tlB[0], tlB[1], brB[0], brB[1]);                                  // pattern_to
+        patternPropsUBO.setVec4(48, sizeA[0], sizeA[1], sizeB[0], sizeB[1]);                          // display_sizes
+        patternPropsUBO.setVec4(64, crossfade.fromScale, crossfade.toScale, crossfade.t, opacity);    // scales_fade_opacity
+        patternPropsUBO.setVec4(80, texW, texH, widthVal, blur);                                      // texsize_width_blur
+
+        drawable.layerUBO = patternPropsUBO;
     }
 }

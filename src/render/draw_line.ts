@@ -411,13 +411,24 @@ function drawLineDrawable(painter: Painter, tileManager: TileManager, layer: Lin
             lineBuilder.addTexture(dashTex);
         }
         if (image && tile.imageAtlasTexture) {
-            lineBuilder.addTexture({
-                name: 'u_image',
+            const patternTex: any = {
+                name: 'pattern_texture',
                 textureUnit: 0,
                 texture: tile.imageAtlasTexture.texture,
                 filter: gl.LINEAR,
-                wrap: gl.CLAMP_TO_EDGE
-            });
+                wrap: gl.CLAMP_TO_EDGE,
+            };
+            // WebGPU needs raw source data to create a texture
+            if (isWebGPU && tile.imageAtlas?.image?.data) {
+                patternTex.source = {
+                    data: tile.imageAtlas.image.data,
+                    width: tile.imageAtlas.image.width,
+                    height: tile.imageAtlas.image.height,
+                    bytesPerPixel: 4,
+                    format: 'rgba8unorm',
+                };
+            }
+            lineBuilder.addTexture(patternTex);
         }
 
         const drawable = lineBuilder.flush({
@@ -435,6 +446,25 @@ function drawLineDrawable(painter: Painter, tileManager: TileManager, layer: Lin
             zoom: painter.transform.zoom,
         });
         drawable.uniformValues = uniformValues as any;
+
+        // Store per-tile pattern data for WebGPU linePattern tweaker
+        if (image && isWebGPU && tile.imageAtlas) {
+            const atlas = tile.imageAtlas;
+            const patternImage = patternProperty.constantOr(null);
+            if (patternImage) {
+                const posFrom = atlas.patternPositions[patternImage.from.toString()];
+                const posTo = atlas.patternPositions[patternImage.to.toString()];
+                const atlasTex = tile.imageAtlasTexture;
+                if (posFrom && posTo && atlasTex) {
+                    (drawable as any)._patternData = {
+                        patternFrom: posFrom,
+                        patternTo: posTo,
+                        texsize: atlasTex.size,
+                    };
+                }
+            }
+        }
+
         layerGroup.addDrawable(coord, drawable);
 
         firstTile = false;
