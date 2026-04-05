@@ -177,9 +177,10 @@ export class FillLayerTweaker extends LayerTweaker {
             drawable.drawableUBO.setVec2(64, pixel_upper_x, pixel_upper_y);     // pixel_coord_upper
             drawable.drawableUBO.setVec2(72, pixel_lower_x, pixel_lower_y);     // pixel_coord_lower
 
-            // tile_ratio = 1 / pixelsToTileUnits, matching GL's patternUniformValues
-            // pixelsToTileUnits(tile, 1, z) = EXTENT / (tileSize * 2^(z - overscaledZ))
-            const overscale = Math.pow(2, transform.tileZoom - tileID.overscaledZ);
+            // tile_ratio = 1 / pixelsToTileUnits
+            // Use canonical.z (not overscaledZ) for correct pattern scaling across zoom levels,
+            // matching maplibre-native's pattern tile_ratio calculation.
+            const overscale = Math.pow(2, transform.tileZoom - tileID.canonical.z);
             const pixelsToTileUnitsVal = 8192 / (tileSize * overscale);
             const tile_ratio = pixelsToTileUnitsVal === 0 ? 0 : 1 / pixelsToTileUnitsVal;
             drawable.drawableUBO.setFloat(80, tile_ratio);
