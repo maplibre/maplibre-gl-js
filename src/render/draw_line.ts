@@ -370,13 +370,25 @@ function drawLineDrawable(painter: Painter, tileManager: TileManager, layer: Lin
             const layerGradient = bucket.gradients[layer.id];
             const gradTex = layerGradient.texture;
             if (gradTex) {
-                lineBuilder.addTexture({
+                const gradEntry: any = {
                     name: 'u_image',
                     textureUnit: 0,
                     texture: gradTex.texture,
                     filter: layer.stepInterpolant ? gl.NEAREST : gl.LINEAR,
                     wrap: gl.CLAMP_TO_EDGE
-                });
+                };
+                // Add raw pixel data for WebGPU texture creation
+                const gradImg = layerGradient.gradient;
+                if (gradImg?.data) {
+                    gradEntry.source = {
+                        data: gradImg.data,
+                        width: gradImg.width,
+                        height: gradImg.height,
+                        bytesPerPixel: 4,
+                        format: 'rgba8unorm'
+                    };
+                }
+                lineBuilder.addTexture(gradEntry);
             }
         }
         if (dasharray) {

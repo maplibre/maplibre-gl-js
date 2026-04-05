@@ -169,12 +169,13 @@ struct FragmentInput {
     @location(3) v_lineprogress: f32,
 };
 
+@group(1) @binding(0) var gradient_sampler: sampler;
+@group(1) @binding(1) var gradient_texture: texture_2d<f32>;
+
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
-    // TODO: When texture binding is available, sample gradient texture here:
-    //   let color = textureSample(gradient_texture, gradient_sampler, vec2<f32>(fin.v_lineprogress, 0.5));
-    // For now, use the solid color from props as a placeholder.
-    let color = props.color;
+    // Sample gradient texture using line progress as U coordinate
+    let color = textureSample(gradient_texture, gradient_sampler, vec2<f32>(fin.v_lineprogress, 0.5));
     let blur = props.blur;
     let opacity = props.opacity;
 

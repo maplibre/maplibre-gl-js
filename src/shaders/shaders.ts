@@ -10,6 +10,7 @@ import circleFrag from './circle.fragment.glsl.g';
 import circleVert from './circle.vertex.glsl.g';
 import circleWgsl from './circle.wgsl.g';
 import backgroundWgsl from './background.wgsl.g';
+import backgroundPatternWgsl from './background_pattern.wgsl.g';
 import fillWgsl from './fill.wgsl.g';
 import fillOutlineWgsl from './fill_outline.wgsl.g';
 import lineWgsl from './line.wgsl.g';
@@ -103,6 +104,7 @@ export const shaders = {
     circle: prepare(circleFrag, circleVert),
     circleWgsl: circleWgsl,
     backgroundWgsl: backgroundWgsl,
+    backgroundPatternWgsl: backgroundPatternWgsl,
     fillWgsl: fillWgsl,
     fillOutlineWgsl: fillOutlineWgsl,
     fillExtrusionWgsl: fillExtrusionWgsl,

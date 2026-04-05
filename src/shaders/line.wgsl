@@ -1,5 +1,4 @@
 // Line shader — basic solid-color lines (no patterns/SDF/gradients)
-// Ported from line.vertex.glsl + line.fragment.glsl
 
 // floor(127 / 2) == 63.0 → scale = 1/63
 const LINE_SCALE: f32 = 0.015873016;
@@ -45,16 +44,38 @@ struct GlobalIndexUBO {
 @group(0) @binding(2) var<storage, read> drawableVector: array<LineDrawableUBO>;
 @group(0) @binding(4) var<uniform> props: LinePropsUBO;
 
+fn unpack_float(packedValue: f32) -> vec2<f32> {
+    let packedIntValue = i32(packedValue);
+    let v0 = packedIntValue / 256;
+    return vec2<f32>(f32(v0), f32(packedIntValue - v0 * 256));
+}
+
+fn decode_color(encodedColor: vec2<f32>) -> vec4<f32> {
+    return vec4<f32>(
+        unpack_float(encodedColor.x) / 255.0,
+        unpack_float(encodedColor.y) / 255.0
+    );
+}
+
+fn unpack_mix_color(packedColors: vec4<f32>, t: f32) -> vec4<f32> {
+    let minColor = decode_color(vec2<f32>(packedColors.x, packedColors.y));
+    let maxColor = decode_color(vec2<f32>(packedColors.z, packedColors.w));
+    return mix(minColor, maxColor, t);
+}
+
+fn unpack_mix_float(packedValue: vec2<f32>, t: f32) -> f32 {
+    return mix(packedValue.x, packedValue.y, t);
+}
+
 // VertexInput is generated dynamically in JS
-// Expected attributes:
-//   @location(0) pos_normal: vec2<i32>   — a_pos_normal (Int16 x2)
-//   @location(1) data: vec4<u32>         — a_data (Uint8 x4)
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
     @location(0) v_normal: vec2<f32>,
     @location(1) v_width2: vec2<f32>,
     @location(2) v_gamma_scale: f32,
+    @location(3) v_color: vec4<f32>,
+    @location(4) v_opacity: f32,
 };
 
 @vertex
@@ -74,13 +95,56 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     // Unpack a_data: extrude = xy - 128, direction = mod(z, 4) - 1
     let a_extrude = vec2<f32>(f32(vin.data.x) - 128.0, f32(vin.data.y) - 128.0);
 
-    // Uniform-path line properties (no data-driven)
-    let width = props.width;
-    let blur = props.blur;
-    let opacity = props.opacity;
+    // Resolve data-driven properties
+    var color = props.color;
+#ifdef HAS_DATA_DRIVEN_u_color
+    color = decode_color(vin.color);
+#endif
+#ifdef HAS_COMPOSITE_u_color
+    color = unpack_mix_color(vin.color, drawable.color_t);
+#endif
+
+    var width = props.width;
+#ifdef HAS_DATA_DRIVEN_u_width
+    width = vin.width;
+#endif
+#ifdef HAS_COMPOSITE_u_width
+    width = unpack_mix_float(vin.width, drawable.width_t);
+#endif
+
+    var opacity = props.opacity;
+#ifdef HAS_DATA_DRIVEN_u_opacity
+    opacity = vin.opacity;
+#endif
+#ifdef HAS_COMPOSITE_u_opacity
+    opacity = unpack_mix_float(vin.opacity, drawable.opacity_t);
+#endif
+
+    var blur = props.blur;
+#ifdef HAS_DATA_DRIVEN_u_blur
+    blur = vin.blur;
+#endif
+#ifdef HAS_COMPOSITE_u_blur
+    blur = unpack_mix_float(vin.blur, drawable.blur_t);
+#endif
+
     var gapwidth = props.gapwidth / 2.0;
-    let halfwidth = width / 2.0;
+#ifdef HAS_DATA_DRIVEN_u_gapwidth
+    gapwidth = vin.gapwidth / 2.0;
+#endif
+#ifdef HAS_COMPOSITE_u_gapwidth
+    gapwidth = unpack_mix_float(vin.gapwidth, drawable.gapwidth_t) / 2.0;
+#endif
+
     var offset = -1.0 * props.offset;
+#ifdef HAS_DATA_DRIVEN_u_offset
+    offset = -1.0 * vin.offset;
+#endif
+#ifdef HAS_COMPOSITE_u_offset
+    offset = -1.0 * unpack_mix_float(vin.offset, drawable.offset_t);
+#endif
+
+    let halfwidth = width / 2.0;
 
     var inset: f32;
     if (gapwidth > 0.0) {
@@ -107,22 +171,20 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     // Scale extrusion to line width
     let dist = outset * a_extrude * LINE_SCALE;
 
-    // Offset for offset lines
+    // Direction for round/bevel joins
     let a_direction = f32(vin.data.z % 4u) - 1.0;
     let u = 0.5 * a_direction;
     let t = 1.0 - abs(u);
-    // mat2 multiply: (t, -u; u, t) * (a_extrude * scale * normal.y)
+
+    // Offset perpendicular to line direction
     let base_offset = offset * a_extrude * LINE_SCALE * normal.y;
     let offset2 = vec2<f32>(
         base_offset.x * t - base_offset.y * u,
         base_offset.x * u + base_offset.y * t
     );
 
-    // Project base position (without extrusion) to clip space
+    // Clip-space line extrusion
     let projected_no_extrude = drawable.matrix * vec4<f32>(pos + offset2 / drawable.ratio, 0.0, 1.0);
-
-    // Apply extrusion in clip space (dist is in CSS pixels)
-    // Convert pixel offset to clip space: 2/viewport_css_width, scaled by w for perspective
     let cssWidth = paintParams.world_size.x / paintParams.pixel_ratio;
     let cssHeight = paintParams.world_size.y / paintParams.pixel_ratio;
     let clipScale = vec2<f32>(2.0 / cssWidth, -2.0 / cssHeight);
@@ -132,11 +194,10 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
         projected_no_extrude.z,
         projected_no_extrude.w
     );
-    // Remap z from WebGL NDC [-1,1] to WebGPU NDC [0,1]
     position.z = (position.z + position.w) * 0.5;
     vout.position = position;
 
-    // Gamma scale: perspective correction for antialiasing
+    // Gamma scale for antialiasing
     let extrude_length_without_perspective = length(dist);
     let projected_with_extrude_xy = vec2<f32>(
         projected_no_extrude.x + dist.x * clipScale.x * projected_no_extrude.w,
@@ -148,6 +209,8 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     vout.v_gamma_scale = extrude_length_without_perspective / max(extrude_length_with_perspective, 1e-6);
 
     vout.v_width2 = vec2<f32>(outset, inset);
+    vout.v_color = color;
+    vout.v_opacity = opacity;
 
     return vout;
 }
@@ -156,13 +219,15 @@ struct FragmentInput {
     @location(0) v_normal: vec2<f32>,
     @location(1) v_width2: vec2<f32>,
     @location(2) v_gamma_scale: f32,
+    @location(3) v_color: vec4<f32>,
+    @location(4) v_opacity: f32,
 };
 
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
-    let color = props.color;
+    let color = fin.v_color;
     let blur = props.blur;
-    let opacity = props.opacity;
+    let opacity = fin.v_opacity;
 
     // Distance of pixel from line center in pixels
     let dist = length(fin.v_normal) * fin.v_width2.x;

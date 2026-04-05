@@ -306,7 +306,7 @@ export class Drawable {
             const definesKey = this.programConfiguration ? this.programConfiguration.cacheKey : '';
             const topologyKey = this.drawMode === 1 ? 'L' : 'T';
             const blendKey = this.renderPass === 'translucent' ? 'B' : 'O';
-            const cacheKey = `raw_v4_${this.shaderName}_${definesKey}_${topologyKey}_${blendKey}`;
+            const cacheKey = `raw_${this.shaderName}_${definesKey}_${topologyKey}_${blendKey}`;
             if (!(painter as any)._rawPipelines) (painter as any)._rawPipelines = {};
             if (!(painter as any)._rawPipelines[cacheKey]) {
                 const wgslKey = `${this.shaderName}Wgsl`;
@@ -525,7 +525,7 @@ export class Drawable {
             rpEncoder.setBindGroup(0, bindGroup);
 
             // Bind textures at @group(1) only for shaders that declare texture bindings
-            const shadersWithTextures = ['lineSDF', 'lineGradient', 'lineGradientSDF', 'linePattern', 'fillPattern', 'fillOutlinePattern', 'raster', 'symbolSDF', 'symbolIcon', 'symbolTextAndIcon'];
+            const shadersWithTextures = ['lineSDF', 'lineGradient', 'lineGradientSDF', 'linePattern', 'fillPattern', 'fillOutlinePattern', 'raster', 'symbolSDF', 'symbolIcon', 'symbolTextAndIcon', 'backgroundPattern'];
             const hasGroup1 = shadersWithTextures.includes(this.shaderName);
 
             if (hasGroup1) {
