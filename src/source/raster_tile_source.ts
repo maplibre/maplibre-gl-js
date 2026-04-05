@@ -1,4 +1,4 @@
-import {extend, pick} from '../util/util';
+import {ensureError, extend, pick} from '../util/util';
 
 import {ImageRequest} from '../util/image_request';
 
@@ -112,7 +112,7 @@ export class RasterTileSource extends Evented implements Source {
 
             // only fire error event if it is not due to aborting the request
             if (!isAbortError(err)) {
-                this.fire(new ErrorEvent(err));
+                this.fire(new ErrorEvent(ensureError(err)));
             }
         }
     }

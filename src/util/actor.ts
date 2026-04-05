@@ -222,7 +222,7 @@ export class Actor implements IActor {
                 return;
             }
             if (task.error) {
-                resolveReject.reject(deserialize(task.error) as Error);
+                resolveReject.reject(ensureError(deserialize(task.error)));
             } else {
                 resolveReject.resolve(deserialize(task.data));
             }
@@ -239,7 +239,7 @@ export class Actor implements IActor {
             const data = await this.messageHandlers[task.type](task.sourceMapId, params, abortController);
             this.completeTask(id, null, data);
         } catch (err) {
-            this.completeTask(id, err);
+            this.completeTask(id, ensureError(err));
         }
     }
 
