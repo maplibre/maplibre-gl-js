@@ -312,7 +312,8 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
             const depthMode = painter.getDepthModeForSublayer(
                 layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
             const outlineProgramName = image && !layer.getPaintProperty('fill-outline-color') ? 'fillOutlinePattern' : 'fillOutline';
-            const outlineProgram = painter.useProgram(outlineProgramName, programConfiguration);
+            // Skip WebGL program creation in WebGPU mode
+            const outlineProgram = isWebGPU ? null : painter.useProgram(outlineProgramName, programConfiguration);
 
             const drawingBufferSize = [gl.drawingBufferWidth, gl.drawingBufferHeight] as [number, number];
             const outlineUniformValues = (outlineProgramName === 'fillOutlinePattern' && image) ?
@@ -329,6 +330,28 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
                 .setDrawMode(1) // gl.LINES = 1
                 .setLayerTweaker(tweaker);
 
+            // Bind pattern atlas texture for fillOutlinePattern in WebGPU
+            if (outlineProgramName === 'fillOutlinePattern' && isWebGPU && tile.imageAtlas) {
+                const atlasTex = (tile as any).imageAtlasTexture;
+                const atlasImg = tile.imageAtlas.image;
+                if (atlasImg?.data) {
+                    outlineBuilder.addTexture({
+                        name: 'pattern_texture',
+                        textureUnit: 0,
+                        texture: atlasTex?.texture || null,
+                        filter: gl.LINEAR,
+                        wrap: gl.CLAMP_TO_EDGE,
+                        source: {
+                            data: atlasImg.data,
+                            width: atlasImg.width,
+                            height: atlasImg.height,
+                            bytesPerPixel: 4,
+                            format: 'rgba8unorm',
+                        },
+                    } as any);
+                }
+            }
+
             const outlineDrawable = outlineBuilder.flush({
                 tileID: coord,
                 layer,
@@ -343,6 +366,22 @@ function drawFillDrawable(painter: Painter, tileManager: TileManager, layer: Fil
                 zoom: painter.transform.zoom,
             });
             outlineDrawable.uniformValues = outlineUniformValues as any;
+
+            // Store per-tile pattern data for fillOutlinePattern (WebGPU tweaker reads this)
+            if (outlineProgramName === 'fillOutlinePattern' && isWebGPU && tile.imageAtlas && image) {
+                const atlas = tile.imageAtlas;
+                const posFrom = atlas.patternPositions[image.from.toString()];
+                const posTo = atlas.patternPositions[image.to.toString()];
+                const atlasTex = (tile as any).imageAtlasTexture;
+                if (posFrom && posTo && atlasTex) {
+                    (outlineDrawable as any)._patternData = {
+                        patternFrom: posFrom,
+                        patternTo: posTo,
+                        texsize: atlasTex.size,
+                    };
+                }
+            }
+
             layerGroup.addDrawable(coord, outlineDrawable);
         }
     }

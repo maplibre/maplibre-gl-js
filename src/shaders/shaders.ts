@@ -14,6 +14,7 @@ import backgroundPatternWgsl from './background_pattern.wgsl.g';
 import fillWgsl from './fill.wgsl.g';
 import fillPatternWgsl from './fill_pattern.wgsl.g';
 import fillOutlineWgsl from './fill_outline.wgsl.g';
+import fillOutlinePatternWgsl from './fill_outline_pattern.wgsl.g';
 import lineWgsl from './line.wgsl.g';
 import lineGradientWgsl from './line_gradient.wgsl.g';
 import fillExtrusionWgsl from './fill_extrusion.wgsl.g';
@@ -109,6 +110,7 @@ export const shaders = {
     fillWgsl: fillWgsl,
     fillPatternWgsl: fillPatternWgsl,
     fillOutlineWgsl: fillOutlineWgsl,
+    fillOutlinePatternWgsl: fillOutlinePatternWgsl,
     fillExtrusionWgsl: fillExtrusionWgsl,
     lineWgsl: lineWgsl,
     lineGradientWgsl: lineGradientWgsl,
