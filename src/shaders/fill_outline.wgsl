@@ -51,8 +51,19 @@ fn unpack_mix_float(packedValue: vec2<f32>, t: f32) -> f32 {
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
-    @location(0) frag_color: vec4<f32>,
-    @location(1) frag_opacity: f32,
+    @location(0) _pad: f32,
+#ifdef HAS_DATA_DRIVEN_u_outline_color
+    @location(1) frag_color: vec4<f32>,
+#endif
+#ifdef HAS_COMPOSITE_u_outline_color
+    @location(1) frag_color: vec4<f32>,
+#endif
+#ifdef HAS_DATA_DRIVEN_u_opacity
+    @location(2) frag_opacity: f32,
+#endif
+#ifdef HAS_COMPOSITE_u_opacity
+    @location(2) frag_opacity: f32,
+#endif
 };
 
 @vertex
@@ -62,36 +73,59 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     let pos = vec2<f32>(f32(vin.pos.x), f32(vin.pos.y));
     let clip = drawable.matrix * vec4<f32>(pos, 0.0, 1.0);
     vout.position = clip;
-    // Remap z from WebGL NDC [-1,1] to WebGPU NDC [0,1]
     vout.position.z = (vout.position.z + vout.position.w) * 0.5;
+    vout._pad = 0.0;
 
-    var color = props.outline_color;
 #ifdef HAS_DATA_DRIVEN_u_outline_color
-    color = decode_color(vin.outline_color);
+    vout.frag_color = decode_color(vin.outline_color);
 #endif
 #ifdef HAS_COMPOSITE_u_outline_color
-    color = unpack_mix_color(vin.outline_color, drawable.outline_color_t);
+    vout.frag_color = unpack_mix_color(vin.outline_color, drawable.outline_color_t);
 #endif
 
-    var opacity = props.opacity;
 #ifdef HAS_DATA_DRIVEN_u_opacity
-    opacity = vin.opacity;
+    vout.frag_opacity = vin.opacity;
 #endif
 #ifdef HAS_COMPOSITE_u_opacity
-    opacity = unpack_mix_float(vin.opacity, drawable.opacity_t);
+    vout.frag_opacity = unpack_mix_float(vin.opacity, drawable.opacity_t);
 #endif
 
-    vout.frag_color = color;
-    vout.frag_opacity = opacity;
     return vout;
 }
 
 struct FragmentInput {
-    @location(0) frag_color: vec4<f32>,
-    @location(1) frag_opacity: f32,
+    @location(0) _pad: f32,
+#ifdef HAS_DATA_DRIVEN_u_outline_color
+    @location(1) frag_color: vec4<f32>,
+#endif
+#ifdef HAS_COMPOSITE_u_outline_color
+    @location(1) frag_color: vec4<f32>,
+#endif
+#ifdef HAS_DATA_DRIVEN_u_opacity
+    @location(2) frag_opacity: f32,
+#endif
+#ifdef HAS_COMPOSITE_u_opacity
+    @location(2) frag_opacity: f32,
+#endif
 };
 
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
-    return fin.frag_color * fin.frag_opacity;
+    var color = props.outline_color;
+#ifdef HAS_DATA_DRIVEN_u_outline_color
+    color = fin.frag_color;
+#endif
+#ifdef HAS_COMPOSITE_u_outline_color
+    color = fin.frag_color;
+#endif
+
+    var opacity = props.opacity;
+#ifdef HAS_DATA_DRIVEN_u_opacity
+    opacity = fin.frag_opacity;
+#endif
+#ifdef HAS_COMPOSITE_u_opacity
+    opacity = fin.frag_opacity;
+#endif
+
+    return color * opacity;
 }
