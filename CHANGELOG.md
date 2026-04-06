@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `fill-outline-color` expressions using `feature-state` so missing state falls back to `fill-color` instead of breaking fill rendering ([#4234](https://github.com/maplibre/maplibre-gl-js/issues/4234))
 - _...Add new stuff here..._
 
 ## 5.23.0
