@@ -2,7 +2,7 @@ import {type Painter, type RenderOptions} from './painter';
 import {type Tile} from '../tile/tile';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {type OverscaledTileID} from '../tile/tile_id';
-import {drawTerrain} from './draw_terrain';
+import {drawTerrain} from '../webgl/draw/draw_terrain';
 import {type Style} from '../style/style';
 import {type Terrain} from './terrain';
 import {RenderPool} from '../webgl/render_pool';

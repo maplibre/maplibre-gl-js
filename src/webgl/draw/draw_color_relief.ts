@@ -1,16 +1,16 @@
-import {Texture} from '../webgl/texture';
-import type {StencilMode} from '../webgl/stencil_mode';
-import {DepthMode} from '../webgl/depth_mode';
-import {CullFaceMode} from '../webgl/cull_face_mode';
-import {type ColorMode} from '../webgl/color_mode';
+import {Texture} from '../texture';
+import type {StencilMode} from '../stencil_mode';
+import {DepthMode} from '../depth_mode';
+import {CullFaceMode} from '../cull_face_mode';
+import {type ColorMode} from '../color_mode';
 import {
     colorReliefUniformValues
-} from '../webgl/program/color_relief_program';
+} from '../program/color_relief_program';
 
-import type {Painter, RenderOptions} from './painter';
-import type {TileManager} from '../tile/tile_manager';
-import type {ColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer';
-import type {OverscaledTileID} from '../tile/tile_id';
+import type {Painter, RenderOptions} from '../../render/painter';
+import type {TileManager} from '../../tile/tile_manager';
+import type {ColorReliefStyleLayer} from '../../style/style_layer/color_relief_style_layer';
+import type {OverscaledTileID} from '../../tile/tile_id';
 
 export function drawColorRelief(painter: Painter, tileManager: TileManager, layer: ColorReliefStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;

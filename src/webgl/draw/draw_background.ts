@@ -1,16 +1,16 @@
-import {StencilMode} from '../webgl/stencil_mode';
-import {DepthMode} from '../webgl/depth_mode';
-import {CullFaceMode} from '../webgl/cull_face_mode';
+import {StencilMode} from '../stencil_mode';
+import {DepthMode} from '../depth_mode';
+import {CullFaceMode} from '../cull_face_mode';
 import {
     backgroundUniformValues,
     backgroundPatternUniformValues
-} from '../webgl/program/background_program';
+} from '../program/background_program';
 
-import type {Painter, RenderOptions} from './painter';
-import type {TileManager} from '../tile/tile_manager';
-import type {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
-import {type OverscaledTileID} from '../tile/tile_id';
-import {coveringTiles} from '../geo/projection/covering_tiles';
+import type {Painter, RenderOptions} from '../../render/painter';
+import type {TileManager} from '../../tile/tile_manager';
+import type {BackgroundStyleLayer} from '../../style/style_layer/background_style_layer';
+import {type OverscaledTileID} from '../../tile/tile_id';
+import {coveringTiles} from '../../geo/projection/covering_tiles';
 
 export function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
     const color = layer.paint.get('background-color');

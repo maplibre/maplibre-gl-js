@@ -1,20 +1,20 @@
-import {StencilMode} from '../webgl/stencil_mode';
-import {DepthMode} from '../webgl/depth_mode';
-import {CullFaceMode} from '../webgl/cull_face_mode';
-import {PosArray, TriangleIndexArray} from '../data/array_types.g';
-import posAttributes from '../data/pos_attributes';
-import {SegmentVector} from '../data/segment';
-import {skyUniformValues} from '../webgl/program/sky_program';
-import {atmosphereUniformValues} from '../webgl/program/atmosphere_program';
-import {type Sky} from '../style/sky';
-import {type Light} from '../style/light';
-import {Mesh} from './mesh';
+import {StencilMode} from '../stencil_mode';
+import {DepthMode} from '../depth_mode';
+import {CullFaceMode} from '../cull_face_mode';
+import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
+import posAttributes from '../../data/pos_attributes';
+import {SegmentVector} from '../../data/segment';
+import {skyUniformValues} from '../program/sky_program';
+import {atmosphereUniformValues} from '../program/atmosphere_program';
+import {type Sky} from '../../style/sky';
+import {type Light} from '../../style/light';
+import {Mesh} from '../../render/mesh';
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {type IReadonlyTransform} from '../geo/transform_interface';
-import {ColorMode} from '../webgl/color_mode';
-import type {Painter} from './painter';
-import {type Context} from '../webgl/context';
-import {getGlobeRadiusPixels} from '../geo/projection/globe_utils';
+import {type IReadonlyTransform} from '../../geo/transform_interface';
+import {ColorMode} from '../color_mode';
+import type {Painter} from '../../render/painter';
+import {type Context} from '../context';
+import {getGlobeRadiusPixels} from '../../geo/projection/globe_utils';
 
 function getMesh(context: Context, sky: Sky): Mesh {
     // Create the Sky mesh the first time we need it

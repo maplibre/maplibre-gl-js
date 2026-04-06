@@ -7,7 +7,7 @@ import {Tile} from '../tile/tile';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import {Painter, type RenderOptions} from './painter';
 import {Program} from '../webgl/program';
-import {drawSymbols} from './draw_symbol';
+import {drawSymbols} from '../webgl/draw/draw_symbol';
 import * as symbolProjection from '../symbol/projection';
 import type {ZoomHistory} from '../style/zoom_history';
 import type {Map} from '../ui/map';

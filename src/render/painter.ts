@@ -18,21 +18,21 @@ import {ColorMode} from '../webgl/color_mode';
 import {CullFaceMode} from '../webgl/cull_face_mode';
 import {Texture} from '../webgl/texture';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {drawSymbols} from './draw_symbol';
-import {drawCircles} from './draw_circle';
-import {drawHeatmap} from './draw_heatmap';
-import {drawLine} from './draw_line';
-import {drawFill} from './draw_fill';
-import {drawFillExtrusion} from './draw_fill_extrusion';
-import {drawHillshade} from './draw_hillshade';
-import {drawColorRelief} from './draw_color_relief';
-import {drawRaster} from './draw_raster';
-import {drawBackground} from './draw_background';
-import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug';
-import {drawCustom} from './draw_custom';
-import {drawDepth, drawCoords} from './draw_terrain';
+import {drawSymbols} from '../webgl/draw/draw_symbol';
+import {drawCircles} from '../webgl/draw/draw_circle';
+import {drawHeatmap} from '../webgl/draw/draw_heatmap';
+import {drawLine} from '../webgl/draw/draw_line';
+import {drawFill} from '../webgl/draw/draw_fill';
+import {drawFillExtrusion} from '../webgl/draw/draw_fill_extrusion';
+import {drawHillshade} from '../webgl/draw/draw_hillshade';
+import {drawColorRelief} from '../webgl/draw/draw_color_relief';
+import {drawRaster} from '../webgl/draw/draw_raster';
+import {drawBackground} from '../webgl/draw/draw_background';
+import {drawDebug, drawDebugPadding, selectDebugSource} from '../webgl/draw/draw_debug';
+import {drawCustom} from '../webgl/draw/draw_custom';
+import {type drawTerrain, drawDepth, drawCoords} from '../webgl/draw/draw_terrain';
 import {type OverscaledTileID} from '../tile/tile_id';
-import {drawSky, drawAtmosphere} from './draw_sky';
+import {drawSky, drawAtmosphere} from '../webgl/draw/draw_sky';
 import {Mesh} from './mesh';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection';
 
@@ -84,7 +84,30 @@ export type RenderOptions = {
  * @internal
  * Initialize a new painter object.
  */
+export type DrawFunctions = {
+    symbol: typeof drawSymbols;
+    circle: typeof drawCircles;
+    heatmap: typeof drawHeatmap;
+    line: typeof drawLine;
+    fill: typeof drawFill;
+    fillExtrusion: typeof drawFillExtrusion;
+    hillshade: typeof drawHillshade;
+    colorRelief: typeof drawColorRelief;
+    raster: typeof drawRaster;
+    background: typeof drawBackground;
+    sky: typeof drawSky;
+    atmosphere: typeof drawAtmosphere;
+    custom: typeof drawCustom;
+    debug: typeof drawDebug;
+    debugPadding: typeof drawDebugPadding;
+    terrain: typeof drawTerrain | null;
+    terrainDepth: typeof drawDepth;
+    terrainCoords: typeof drawCoords;
+};
+
 export class Painter {
+    device: {type: string};
+    drawFunctions: DrawFunctions;
     context: Context;
     transform: IReadonlyTransform;
     renderToTexture: RenderToTexture;
@@ -137,6 +160,27 @@ export class Painter {
     terrainFacilitator: {dirty: boolean; matrix: mat4; renderTime: number};
 
     constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: IReadonlyTransform) {
+        this.device = {type: 'webgl'};
+        this.drawFunctions = {
+            symbol: drawSymbols,
+            circle: drawCircles,
+            heatmap: drawHeatmap,
+            line: drawLine,
+            fill: drawFill,
+            fillExtrusion: drawFillExtrusion,
+            hillshade: drawHillshade,
+            colorRelief: drawColorRelief,
+            raster: drawRaster,
+            background: drawBackground,
+            sky: drawSky,
+            atmosphere: drawAtmosphere,
+            custom: drawCustom,
+            debug: drawDebug,
+            debugPadding: drawDebugPadding,
+            terrain: null, // set via render_to_texture when terrain is active
+            terrainDepth: drawDepth,
+            terrainCoords: drawCoords,
+        };
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
@@ -556,7 +600,7 @@ export class Painter {
         this.clearStencil();
 
         // draw sky first to not overwrite symbols
-        if (this.style.sky) drawSky(this, this.style.sky);
+        if (this.style.sky) this.drawFunctions.sky(this, this.style.sky);
 
         this._showOverdrawInspector = options.showOverdrawInspector;
         this.depthRangeFor3D = [0, 1 - ((style._order.length + 2) * this.numSublayers * this.depthEpsilon)];
@@ -608,18 +652,18 @@ export class Painter {
 
         // Render atmosphere, only for Globe projection
         if (renderOptions.isRenderingGlobe) {
-            drawAtmosphere(this, this.style.sky, this.style.light);
+            this.drawFunctions.atmosphere(this, this.style.sky, this.style.light);
         }
 
         if (this.options.showTileBoundaries) {
             const selectedSource = selectDebugSource(this.style, this.transform.zoom);
             if (selectedSource) {
-                drawDebug(this, selectedSource, selectedSource.getVisibleCoordinates());
+                this.drawFunctions.debug(this, selectedSource, selectedSource.getVisibleCoordinates());
             }
         }
 
         if (this.options.showPadding) {
-            drawDebugPadding(this);
+            this.drawFunctions.debugPadding(this);
         }
 
         // Set defaults for most GL values so that anyone using the state after the render
@@ -651,8 +695,8 @@ export class Painter {
         mat4.copy(prevMatrix, currMatrix);
         this.terrainFacilitator.renderTime = Date.now();
         this.terrainFacilitator.dirty = false;
-        drawDepth(this, this.style.map.terrain);
-        drawCoords(this, this.style.map.terrain);
+        this.drawFunctions.terrainDepth(this, this.style.map.terrain);
+        this.drawFunctions.terrainCoords(this, this.style.map.terrain);
     }
 
     renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
@@ -660,28 +704,29 @@ export class Painter {
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
+        const draw = this.drawFunctions;
         if (isSymbolStyleLayer(layer)) {
-            drawSymbols(painter, tileManager, layer, coords, this.style.placement.variableOffsets, renderOptions);
+            draw.symbol(painter, tileManager, layer, coords, this.style.placement.variableOffsets, renderOptions);
         } else if (isCircleStyleLayer(layer)) {
-            drawCircles(painter, tileManager, layer, coords, renderOptions);
+            draw.circle(painter, tileManager, layer, coords, renderOptions);
         } else if (isHeatmapStyleLayer(layer)) {
-            drawHeatmap(painter, tileManager, layer, coords, renderOptions);
+            draw.heatmap(painter, tileManager, layer, coords, renderOptions);
         } else if (isLineStyleLayer(layer)) {
-            drawLine(painter, tileManager, layer, coords, renderOptions);
+            draw.line(painter, tileManager, layer, coords, renderOptions);
         } else if (isFillStyleLayer(layer)) {
-            drawFill(painter, tileManager, layer, coords, renderOptions);
+            draw.fill(painter, tileManager, layer, coords, renderOptions);
         } else if (isFillExtrusionStyleLayer(layer)) {
-            drawFillExtrusion(painter, tileManager, layer, coords, renderOptions);
+            draw.fillExtrusion(painter, tileManager, layer, coords, renderOptions);
         } else if (isHillshadeStyleLayer(layer)) {
-            drawHillshade(painter, tileManager, layer, coords, renderOptions);
+            draw.hillshade(painter, tileManager, layer, coords, renderOptions);
         } else if (isColorReliefStyleLayer(layer)) {
-            drawColorRelief(painter, tileManager, layer, coords, renderOptions);
+            draw.colorRelief(painter, tileManager, layer, coords, renderOptions);
         } else if (isRasterStyleLayer(layer)) {
-            drawRaster(painter, tileManager, layer, coords, renderOptions);
+            draw.raster(painter, tileManager, layer, coords, renderOptions);
         } else if (isBackgroundStyleLayer(layer)) {
-            drawBackground(painter, tileManager, layer, coords, renderOptions);
+            draw.background(painter, tileManager, layer, coords, renderOptions);
         } else if (isCustomStyleLayer(layer)) {
-            drawCustom(painter, tileManager, layer, renderOptions);
+            draw.custom(painter, tileManager, layer, renderOptions);
         }
     }
 

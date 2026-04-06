@@ -4,7 +4,7 @@ import {TileManager} from '../tile/tile_manager';
 import {Tile} from '../tile/tile';
 import {Painter, type RenderOptions} from './painter';
 import type {Map} from '../ui/map';
-import {drawCustom} from './draw_custom';
+import {drawCustom} from '../webgl/draw/draw_custom';
 import {CustomStyleLayer} from '../style/style_layer/custom_style_layer';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {MercatorProjection} from '../geo/projection/mercator_projection';

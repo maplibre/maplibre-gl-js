@@ -1,21 +1,21 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {DepthMode} from '../webgl/depth_mode';
-import {CullFaceMode} from '../webgl/cull_face_mode';
-import {type ColorMode} from '../webgl/color_mode';
+import {DepthMode} from '../depth_mode';
+import {CullFaceMode} from '../cull_face_mode';
+import {type ColorMode} from '../color_mode';
 import {
     fillUniformValues,
     fillPatternUniformValues,
     fillOutlineUniformValues,
     fillOutlinePatternUniformValues
-} from '../webgl/program/fill_program';
+} from '../program/fill_program';
 
-import type {Painter, RenderOptions} from './painter';
-import type {TileManager} from '../tile/tile_manager';
-import type {FillStyleLayer} from '../style/style_layer/fill_style_layer';
-import type {FillBucket} from '../data/bucket/fill_bucket';
-import type {OverscaledTileID} from '../tile/tile_id';
-import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
-import {translatePosition} from '../util/util';
+import type {Painter, RenderOptions} from '../../render/painter';
+import type {TileManager} from '../../tile/tile_manager';
+import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer';
+import type {FillBucket} from '../../data/bucket/fill_bucket';
+import type {OverscaledTileID} from '../../tile/tile_id';
+import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program';
+import {translatePosition} from '../../util/util';
 
 export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
     const color = layer.paint.get('fill-color');

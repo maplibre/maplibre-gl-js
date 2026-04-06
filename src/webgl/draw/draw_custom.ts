@@ -1,9 +1,9 @@
-import {DepthMode} from '../webgl/depth_mode';
-import {StencilMode} from '../webgl/stencil_mode';
+import {DepthMode} from '../depth_mode';
+import {StencilMode} from '../stencil_mode';
 
-import type {Painter, RenderOptions} from './painter';
-import type {TileManager} from '../tile/tile_manager';
-import type {CustomRenderMethodInput, CustomStyleLayer} from '../style/style_layer/custom_style_layer';
+import type {Painter, RenderOptions} from '../../render/painter';
+import type {TileManager} from '../../tile/tile_manager';
+import type {CustomRenderMethodInput, CustomStyleLayer} from '../../style/style_layer/custom_style_layer';
 
 export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, renderOptions: RenderOptions) {
 

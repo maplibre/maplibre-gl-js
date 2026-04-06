@@ -1,17 +1,17 @@
-import type {Painter} from './painter';
-import type {TileManager} from '../tile/tile_manager';
-import type {StyleLayer} from '../style/style_layer';
-import type {OverscaledTileID} from '../tile/tile_id';
-import type {SymbolBucket} from '../data/bucket/symbol_bucket';
-import {DepthMode} from '../webgl/depth_mode';
-import {StencilMode} from '../webgl/stencil_mode';
-import {CullFaceMode} from '../webgl/cull_face_mode';
-import {collisionUniformValues, collisionCircleUniformValues} from '../webgl/program/collision_program';
-import {QuadTriangleArray, CollisionCircleLayoutArray} from '../data/array_types.g';
-import {collisionCircleLayout} from '../data/bucket/symbol_attributes';
-import {SegmentVector} from '../data/segment';
-import {type VertexBuffer} from '../webgl/vertex_buffer';
-import {type IndexBuffer} from '../webgl/index_buffer';
+import type {Painter} from '../../render/painter';
+import type {TileManager} from '../../tile/tile_manager';
+import type {StyleLayer} from '../../style/style_layer';
+import type {OverscaledTileID} from '../../tile/tile_id';
+import type {SymbolBucket} from '../../data/bucket/symbol_bucket';
+import {DepthMode} from '../depth_mode';
+import {StencilMode} from '../stencil_mode';
+import {CullFaceMode} from '../cull_face_mode';
+import {collisionUniformValues, collisionCircleUniformValues} from '../program/collision_program';
+import {QuadTriangleArray, CollisionCircleLayoutArray} from '../../data/array_types.g';
+import {collisionCircleLayout} from '../../data/bucket/symbol_attributes';
+import {SegmentVector} from '../../data/segment';
+import {type VertexBuffer} from '../vertex_buffer';
+import {type IndexBuffer} from '../index_buffer';
 
 type TileBatch = {
     circleArray: number[];

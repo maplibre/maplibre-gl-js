@@ -12,7 +12,7 @@ import type {EvaluationParameters} from '../style/evaluation_parameters';
 import type {FillLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type Style} from '../style/style';
 import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
-import {drawFill} from './draw_fill';
+import {drawFill} from '../webgl/draw/draw_fill';
 import {FillBucket} from '../data/bucket/fill_bucket';
 import {type ProgramConfiguration, type ProgramConfigurationSet} from '../data/program_configuration';
 import type {ProjectionData} from '../geo/projection/projection_data';

@@ -1,23 +1,23 @@
-import {Texture} from '../webgl/texture';
+import {Texture} from '../texture';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {DepthMode} from '../webgl/depth_mode';
-import {StencilMode} from '../webgl/stencil_mode';
-import {ColorMode} from '../webgl/color_mode';
-import {CullFaceMode} from '../webgl/cull_face_mode';
-import {type Context} from '../webgl/context';
-import {type Framebuffer} from '../webgl/framebuffer';
-import {type Tile} from '../tile/tile';
+import {DepthMode} from '../depth_mode';
+import {StencilMode} from '../stencil_mode';
+import {ColorMode} from '../color_mode';
+import {CullFaceMode} from '../cull_face_mode';
+import {type Context} from '../context';
+import {type Framebuffer} from '../framebuffer';
+import {type Tile} from '../../tile/tile';
 import {
     heatmapUniformValues,
     heatmapTextureUniformValues
-} from '../webgl/program/heatmap_program';
-import {HEATMAP_FULL_RENDER_FBO_KEY} from '../style/style_layer/heatmap_style_layer';
+} from '../program/heatmap_program';
+import {HEATMAP_FULL_RENDER_FBO_KEY} from '../../style/style_layer/heatmap_style_layer';
 
-import type {Painter, RenderOptions} from './painter';
-import type {TileManager} from '../tile/tile_manager';
-import type {HeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer';
-import type {HeatmapBucket} from '../data/bucket/heatmap_bucket';
-import type {OverscaledTileID} from '../tile/tile_id';
+import type {Painter, RenderOptions} from '../../render/painter';
+import type {TileManager} from '../../tile/tile_manager';
+import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer';
+import type {HeatmapBucket} from '../../data/bucket/heatmap_bucket';
+import type {OverscaledTileID} from '../../tile/tile_id';
 
 export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions) {
     if (layer.paint.get('heatmap-opacity') === 0) {

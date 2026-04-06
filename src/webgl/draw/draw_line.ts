@@ -1,26 +1,26 @@
-import {DepthMode} from '../webgl/depth_mode';
-import {CullFaceMode} from '../webgl/cull_face_mode';
-import {Texture} from '../webgl/texture';
+import {DepthMode} from '../depth_mode';
+import {CullFaceMode} from '../cull_face_mode';
+import {Texture} from '../texture';
 import {
     lineUniformValues,
     linePatternUniformValues,
     lineSDFUniformValues,
     lineGradientUniformValues,
     lineGradientSDFUniformValues
-} from '../webgl/program/line_program';
+} from '../program/line_program';
 
-import type {Painter, RenderOptions} from './painter';
-import type {TileManager} from '../tile/tile_manager';
-import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
-import type {LineBucket} from '../data/bucket/line_bucket';
-import type {OverscaledTileID} from '../tile/tile_id';
-import type {Tile} from '../tile/tile';
-import type {Context} from '../webgl/context';
-import type {ProgramConfiguration} from '../data/program_configuration';
-import {clamp, nextPowerOfTwo} from '../util/util';
-import {renderColorRamp} from '../util/color_ramp';
-import {EXTENT} from '../data/extent';
-import type {RGBAImage} from '../util/image';
+import type {Painter, RenderOptions} from '../../render/painter';
+import type {TileManager} from '../../tile/tile_manager';
+import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
+import type {LineBucket} from '../../data/bucket/line_bucket';
+import type {OverscaledTileID} from '../../tile/tile_id';
+import type {Tile} from '../../tile/tile';
+import type {Context} from '../context';
+import type {ProgramConfiguration} from '../../data/program_configuration';
+import {clamp, nextPowerOfTwo} from '../../util/util';
+import {renderColorRamp} from '../../util/color_ramp';
+import {EXTENT} from '../../data/extent';
+import type {RGBAImage} from '../../util/image';
 
 type GradientTexture = {
     texture?: Texture;

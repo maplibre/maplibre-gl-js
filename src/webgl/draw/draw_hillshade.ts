@@ -1,17 +1,17 @@
-import {Texture} from '../webgl/texture';
-import {StencilMode} from '../webgl/stencil_mode';
-import {DepthMode} from '../webgl/depth_mode';
-import {CullFaceMode} from '../webgl/cull_face_mode';
-import {type ColorMode} from '../webgl/color_mode';
+import {Texture} from '../texture';
+import {StencilMode} from '../stencil_mode';
+import {DepthMode} from '../depth_mode';
+import {CullFaceMode} from '../cull_face_mode';
+import {type ColorMode} from '../color_mode';
 import {
     hillshadeUniformValues,
     hillshadeUniformPrepareValues
-} from '../webgl/program/hillshade_program';
+} from '../program/hillshade_program';
 
-import type {Painter, RenderOptions} from './painter';
-import type {TileManager} from '../tile/tile_manager';
-import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
-import type {OverscaledTileID} from '../tile/tile_id';
+import type {Painter, RenderOptions} from '../../render/painter';
+import type {TileManager} from '../../tile/tile_manager';
+import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer';
+import type {OverscaledTileID} from '../../tile/tile_id';
 
 export function drawHillshade(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions) {
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;

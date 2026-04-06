@@ -1,20 +1,20 @@
-import {clamp} from '../util/util';
+import {clamp} from '../../util/util';
 
-import {ImageSource} from '../source/image_source';
-import {now} from '../util/time_control';
-import {StencilMode} from '../webgl/stencil_mode';
-import {DepthMode} from '../webgl/depth_mode';
-import {CullFaceMode} from '../webgl/cull_face_mode';
-import {rasterUniformValues} from '../webgl/program/raster_program';
-import {EXTENT} from '../data/extent';
-import {FadingDirections} from '../tile/tile';
+import {ImageSource} from '../../source/image_source';
+import {now} from '../../util/time_control';
+import {StencilMode} from '../stencil_mode';
+import {DepthMode} from '../depth_mode';
+import {CullFaceMode} from '../cull_face_mode';
+import {rasterUniformValues} from '../program/raster_program';
+import {EXTENT} from '../../data/extent';
+import {FadingDirections} from '../../tile/tile';
 import Point from '@mapbox/point-geometry';
 
-import type {Painter, RenderOptions} from './painter';
-import type {TileManager} from '../tile/tile_manager';
-import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
-import type {OverscaledTileID} from '../tile/tile_id';
-import type {Tile} from '../tile/tile';
+import type {Painter, RenderOptions} from '../../render/painter';
+import type {TileManager} from '../../tile/tile_manager';
+import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer';
+import type {OverscaledTileID} from '../../tile/tile_id';
+import type {Tile} from '../../tile/tile';
 
 type FadeProperties = {
     parentTile: Tile;

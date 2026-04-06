@@ -4,7 +4,7 @@ import {type RasterSourceSpecification, type SourceSpecification, type VectorSou
 import {Style} from '../style/style';
 import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
-import {selectDebugSource} from './draw_debug';
+import {selectDebugSource} from '../webgl/draw/draw_debug';
 
 vi.mock('../style/style');
 
