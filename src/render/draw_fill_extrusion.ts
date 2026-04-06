@@ -15,10 +15,10 @@ import type {OverscaledTileID} from '../tile/tile_id';
 
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
-import {DrawableBuilder} from './drawable/drawable_builder';
-import {TileLayerGroup} from './drawable/tile_layer_group';
-import {UniformBlock} from './drawable/uniform_block';
-import {LayerTweaker} from './drawable/layer_tweaker';
+import {DrawableBuilder} from '../gfx/drawable_builder';
+import {TileLayerGroup} from '../gfx/tile_layer_group';
+import {UniformBlock} from '../gfx/uniform_block';
+import {LayerTweaker} from '../gfx/layer_tweaker';
 
 export function drawFillExtrusion(painter: Painter, tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const opacity = layer.paint.get('fill-extrusion-opacity');

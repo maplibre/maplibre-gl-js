@@ -37,10 +37,10 @@ import {Mesh} from './mesh';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection';
 
 // Drawable architecture imports
-import {TileLayerGroup} from './drawable/tile_layer_group';
-import {PipelineCache} from './drawable/pipeline_cache';
-import {UniformBlock} from './drawable/uniform_block';
-import type {LayerTweaker} from './drawable/layer_tweaker';
+import {TileLayerGroup} from '../gfx/tile_layer_group';
+import {PipelineCache} from '../gfx/pipeline_cache';
+import {UniformBlock} from '../gfx/uniform_block';
+import type {LayerTweaker} from '../gfx/layer_tweaker';
 
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {Style} from '../style/style';

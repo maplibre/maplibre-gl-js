@@ -1,9 +1,9 @@
 import Point from '@mapbox/point-geometry';
 import {drawCollisionDebug} from './draw_collision_debug';
-import {DrawableBuilder} from './drawable/drawable_builder';
-import {TileLayerGroup} from './drawable/tile_layer_group';
-import {UniformBlock} from './drawable/uniform_block';
-import {LayerTweaker} from './drawable/layer_tweaker';
+import {DrawableBuilder} from '../gfx/drawable_builder';
+import {TileLayerGroup} from '../gfx/tile_layer_group';
+import {UniformBlock} from '../gfx/uniform_block';
+import {LayerTweaker} from '../gfx/layer_tweaker';
 
 import {SegmentVector} from '../data/segment';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';

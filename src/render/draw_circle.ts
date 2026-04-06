@@ -20,9 +20,9 @@ import {translatePosition} from '../util/util';
 import type {ProjectionData} from '../geo/projection/projection_data';
 
 // Drawable imports
-import {DrawableBuilder} from './drawable/drawable_builder';
-import {TileLayerGroup} from './drawable/tile_layer_group';
-import {CircleLayerTweaker} from './drawable/tweakers/circle_layer_tweaker';
+import {DrawableBuilder} from '../gfx/drawable_builder';
+import {TileLayerGroup} from '../gfx/tile_layer_group';
+import {CircleLayerTweaker} from '../gfx/tweakers/circle_layer_tweaker';
 
 type TileRenderState = {
     programConfiguration: ProgramConfiguration;

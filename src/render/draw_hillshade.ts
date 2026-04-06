@@ -9,7 +9,7 @@ import {
 } from './program/hillshade_program';
 
 import {shaders} from '../shaders/shaders';
-import {UniformBlock} from './drawable/uniform_block';
+import {UniformBlock} from '../gfx/uniform_block';
 import {mat4} from 'gl-matrix';
 
 import type {Painter, RenderOptions} from './painter';

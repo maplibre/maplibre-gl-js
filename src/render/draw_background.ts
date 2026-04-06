@@ -13,9 +13,9 @@ import {type OverscaledTileID} from '../tile/tile_id';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 
 // Drawable imports
-import {DrawableBuilder} from './drawable/drawable_builder';
-import {TileLayerGroup} from './drawable/tile_layer_group';
-import {BackgroundLayerTweaker} from './drawable/tweakers/background_layer_tweaker';
+import {DrawableBuilder} from '../gfx/drawable_builder';
+import {TileLayerGroup} from '../gfx/tile_layer_group';
+import {BackgroundLayerTweaker} from '../gfx/tweakers/background_layer_tweaker';
 
 export function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const color = layer.paint.get('background-color');

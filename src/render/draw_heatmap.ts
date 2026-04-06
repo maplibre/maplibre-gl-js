@@ -14,7 +14,7 @@ import {
 import {HEATMAP_FULL_RENDER_FBO_KEY} from '../style/style_layer/heatmap_style_layer';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import {shaders} from '../shaders/shaders';
-import {UniformBlock} from './drawable/uniform_block';
+import {UniformBlock} from '../gfx/uniform_block';
 import {mat4} from 'gl-matrix';
 
 import type {Painter, RenderOptions} from './painter';

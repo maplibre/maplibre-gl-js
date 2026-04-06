@@ -18,9 +18,9 @@ import {updatePatternPositionsInProgram} from './update_pattern_positions_in_pro
 import {translatePosition} from '../util/util';
 
 // Drawable imports
-import {DrawableBuilder} from './drawable/drawable_builder';
-import {TileLayerGroup} from './drawable/tile_layer_group';
-import {FillLayerTweaker} from './drawable/tweakers/fill_layer_tweaker';
+import {DrawableBuilder} from '../gfx/drawable_builder';
+import {TileLayerGroup} from '../gfx/tile_layer_group';
+import {FillLayerTweaker} from '../gfx/tweakers/fill_layer_tweaker';
 
 export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const color = layer.paint.get('fill-color');

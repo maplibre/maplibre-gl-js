@@ -23,9 +23,9 @@ import {EXTENT} from '../data/extent';
 import type {RGBAImage} from '../util/image';
 
 // Drawable imports
-import {DrawableBuilder} from './drawable/drawable_builder';
-import {TileLayerGroup} from './drawable/tile_layer_group';
-import {LineLayerTweaker} from './drawable/tweakers/line_layer_tweaker';
+import {DrawableBuilder} from '../gfx/drawable_builder';
+import {TileLayerGroup} from '../gfx/tile_layer_group';
+import {LineLayerTweaker} from '../gfx/tweakers/line_layer_tweaker';
 
 type GradientTexture = {
     texture?: Texture;

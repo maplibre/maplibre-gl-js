@@ -7,7 +7,7 @@ import {CullFaceMode} from '../gl/cull_face_mode';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../gl/color_mode';
 import {type Terrain} from './terrain';
-import {UniformBlock} from './drawable/uniform_block';
+import {UniformBlock} from '../gfx/uniform_block';
 import {shaders} from '../shaders/shaders';
 
 /**

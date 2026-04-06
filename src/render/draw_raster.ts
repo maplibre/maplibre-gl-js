@@ -10,9 +10,9 @@ import {rasterUniformValues} from './program/raster_program';
 import {EXTENT} from '../data/extent';
 import {FadingDirections} from '../tile/tile';
 import Point from '@mapbox/point-geometry';
-import {DrawableBuilder} from './drawable/drawable_builder';
-import {TileLayerGroup} from './drawable/tile_layer_group';
-import {RasterLayerTweaker} from './drawable/tweakers/raster_layer_tweaker';
+import {DrawableBuilder} from '../gfx/drawable_builder';
+import {TileLayerGroup} from '../gfx/tile_layer_group';
+import {RasterLayerTweaker} from '../gfx/tweakers/raster_layer_tweaker';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
