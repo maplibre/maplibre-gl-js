@@ -51,8 +51,19 @@ fn unpack_mix_float(packedValue: vec2<f32>, t: f32) -> f32 {
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
-    @location(0) frag_color: vec4<f32>,
-    @location(1) frag_opacity: f32,
+    @location(0) _pad: f32,
+#ifdef HAS_DATA_DRIVEN_u_color
+    @location(1) frag_color: vec4<f32>,
+#endif
+#ifdef HAS_COMPOSITE_u_color
+    @location(1) frag_color: vec4<f32>,
+#endif
+#ifdef HAS_DATA_DRIVEN_u_opacity
+    @location(2) frag_opacity: f32,
+#endif
+#ifdef HAS_COMPOSITE_u_opacity
+    @location(2) frag_opacity: f32,
+#endif
 };
 
 @vertex
@@ -62,34 +73,60 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
     let pos = vec2<f32>(f32(vin.pos.x), f32(vin.pos.y));
     vout.position = drawable.matrix * vec4<f32>(pos, 0.0, 1.0);
     vout.position.z = (vout.position.z + vout.position.w) * 0.5;
+    vout._pad = 0.0;
 
-    var color = props.color;
 #ifdef HAS_DATA_DRIVEN_u_color
-    color = decode_color(vin.color);
+    vout.frag_color = decode_color(vin.color);
 #endif
 #ifdef HAS_COMPOSITE_u_color
-    color = unpack_mix_color(vin.color, drawable.color_t);
+    vout.frag_color = unpack_mix_color(vin.color, drawable.color_t);
 #endif
 
-    var opacity = props.opacity;
 #ifdef HAS_DATA_DRIVEN_u_opacity
-    opacity = vin.opacity;
+    vout.frag_opacity = vin.opacity;
 #endif
 #ifdef HAS_COMPOSITE_u_opacity
-    opacity = unpack_mix_float(vin.opacity, drawable.opacity_t);
+    vout.frag_opacity = unpack_mix_float(vin.opacity, drawable.opacity_t);
 #endif
 
-    vout.frag_color = color;
-    vout.frag_opacity = opacity;
     return vout;
 }
 
 struct FragmentInput {
-    @location(0) frag_color: vec4<f32>,
-    @location(1) frag_opacity: f32,
+    @location(0) _pad: f32,
+#ifdef HAS_DATA_DRIVEN_u_color
+    @location(1) frag_color: vec4<f32>,
+#endif
+#ifdef HAS_COMPOSITE_u_color
+    @location(1) frag_color: vec4<f32>,
+#endif
+#ifdef HAS_DATA_DRIVEN_u_opacity
+    @location(2) frag_opacity: f32,
+#endif
+#ifdef HAS_COMPOSITE_u_opacity
+    @location(2) frag_opacity: f32,
+#endif
 };
 
 @fragment
 fn fragmentMain(fin: FragmentInput) -> @location(0) vec4<f32> {
-    return vec4<f32>(fin.frag_color.rgb * fin.frag_opacity, fin.frag_color.a * fin.frag_opacity);
+    // Read color/opacity from UBO for uniform properties,
+    // from varyings for data-driven/composite properties
+    var color = props.color;
+#ifdef HAS_DATA_DRIVEN_u_color
+    color = fin.frag_color;
+#endif
+#ifdef HAS_COMPOSITE_u_color
+    color = fin.frag_color;
+#endif
+
+    var opacity = props.opacity;
+#ifdef HAS_DATA_DRIVEN_u_opacity
+    opacity = fin.frag_opacity;
+#endif
+#ifdef HAS_COMPOSITE_u_opacity
+    opacity = fin.frag_opacity;
+#endif
+
+    return vec4<f32>(color.rgb * opacity, color.a * opacity);
 }

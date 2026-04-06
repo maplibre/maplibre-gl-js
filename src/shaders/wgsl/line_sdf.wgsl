@@ -239,19 +239,31 @@ fn vertexMain(vin: VertexInput) -> VertexOutput {
         base_offset.x * u + base_offset.y * t
     );
 
-    // Project position without and with extrusion
+    // Project base position to clip space
     let projected_no_extrude = drawable.matrix * vec4<f32>(pos + offset2 / drawable.ratio, 0.0, 1.0);
-    let projected_with_extrude = drawable.matrix * vec4<f32>(pos + offset2 / drawable.ratio + dist / drawable.ratio, 0.0, 1.0);
 
-    var position = projected_with_extrude;
+    // Apply extrusion in clip space (dist is in CSS pixels)
+    let cssWidth = paintParams.world_size.x / paintParams.pixel_ratio;
+    let cssHeight = paintParams.world_size.y / paintParams.pixel_ratio;
+    let clipScale = vec2<f32>(2.0 / cssWidth, -2.0 / cssHeight);
+    var position = vec4<f32>(
+        projected_no_extrude.x + dist.x * clipScale.x * projected_no_extrude.w,
+        projected_no_extrude.y + dist.y * clipScale.y * projected_no_extrude.w,
+        projected_no_extrude.z,
+        projected_no_extrude.w
+    );
     // Remap z from WebGL NDC [-1,1] to WebGPU NDC [0,1]
     position.z = (position.z + position.w) * 0.5;
     vout.position = position;
 
     // Gamma scale: perspective correction for antialiasing
     let extrude_length_without_perspective = length(dist);
+    let projected_with_extrude_xy = vec2<f32>(
+        projected_no_extrude.x + dist.x * clipScale.x * projected_no_extrude.w,
+        projected_no_extrude.y + dist.y * clipScale.y * projected_no_extrude.w
+    );
     let extrude_length_with_perspective = length(
-        (projected_with_extrude.xy - projected_no_extrude.xy) / projected_with_extrude.w * drawable.units_to_pixels
+        (projected_with_extrude_xy - projected_no_extrude.xy) / projected_no_extrude.w * drawable.units_to_pixels
     );
     vout.v_gamma_scale = extrude_length_without_perspective / max(extrude_length_with_perspective, 1e-6);
 
