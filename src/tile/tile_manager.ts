@@ -194,7 +194,7 @@ export class TileManager extends Evented {
         } catch (err) {
             tile.state = 'errored';
 
-            if (!(err instanceof AJAXError) || err.status !== 404) {
+            if (err.status !== 404) {
                 this._source.fire(new ErrorEvent(ensureError(err), {tile}));
             } else {
                 // continue to try loading parent/children tiles if a tile doesn't exist (404)
