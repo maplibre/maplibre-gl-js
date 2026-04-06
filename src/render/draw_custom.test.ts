@@ -10,7 +10,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {MercatorProjection} from '../geo/projection/mercator_projection';
 
 vi.mock('./painter');
-vi.mock('./program');
+vi.mock('../webgl/program');
 vi.mock('../tile/tile_manager');
 vi.mock('../tile/tile');
 vi.mock('../data/bucket/symbol_bucket', () => {
