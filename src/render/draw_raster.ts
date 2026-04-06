@@ -229,4 +229,3 @@ function getSelfFadeValues(tile: Tile, fadeDuration: number): FadeValues {
     return {tileOpacity, fadeMix};
 }
 
-// Drawable-based rendering path moved to src/webgpu/draw/draw_raster_webgpu.ts

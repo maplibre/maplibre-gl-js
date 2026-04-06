@@ -12,7 +12,6 @@ import type {BackgroundStyleLayer} from '../style/style_layer/background_style_l
 import {type OverscaledTileID} from '../tile/tile_id';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 
-// WebGPU drawable path
 import {drawBackgroundWebGPU} from '../webgpu/draw/draw_background_webgpu';
 
 export function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
@@ -26,7 +25,6 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
 
     // Use drawable path:
     // - WebGL2 + solid color: drawable path
-    // - WebGPU: drawable path for both solid and pattern
     if (painter.useDrawables && painter.useDrawables.has('background') && (!image || isWebGPU)) {
         drawBackgroundWebGPU(painter, layer, coords, renderOptions);
         return;
@@ -85,4 +83,3 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     }
 }
 
-// drawBackgroundDrawable() moved to src/webgpu/draw/draw_background_webgpu.ts

@@ -25,7 +25,7 @@ export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: H
         return;
     }
 
-    // WebGPU drawable path: both passes happen during 'translucent'
+    // WebGPU path
     // (offscreen uses a separate command encoder, then composite uses the main render pass)
     if (painter.device && painter.device.type === 'webgpu') {
         if (painter.renderPass === 'translucent') {

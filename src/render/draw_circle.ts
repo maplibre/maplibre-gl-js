@@ -134,4 +134,3 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
     }
 }
 
-// Drawable-based rendering path moved to src/webgpu/draw/draw_circle_webgpu.ts

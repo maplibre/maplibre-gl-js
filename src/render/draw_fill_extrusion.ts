@@ -110,4 +110,3 @@ function drawExtrusionTiles(
     }
 }
 
-// FillExtrusionLayerTweaker and drawable rendering path moved to src/webgpu/draw/draw_fill_extrusion_webgpu.ts
