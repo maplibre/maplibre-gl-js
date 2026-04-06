@@ -889,7 +889,7 @@ function applyDebugParameter(options: RenderOptions, page: Page) {
             console.log(`${message.type().substring(0, 3).toUpperCase()} ${messages.filter(Boolean)}`);
         });
 
-        page.on('pageerror', (error) => { console.error(error instanceof Error ? error.message : String(error)); });
+        page.on('pageerror', (e) => { console.error(ensureError(e).message); });
 
         page.on('response', response => {
             console.log(`${response.status()} ${response.url()}`);
