@@ -1,11 +1,11 @@
 import {beforeEach, describe, test, expect, vi, type Mock} from 'vitest';
 import {RenderToTexture} from './render_to_texture';
-import type {Painter} from './painter';
+import type {Painter} from '../render/painter';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import {Context} from '../webgl/context';
 import {ColorMode} from '../webgl/color_mode';
-import {Terrain} from './terrain';
+import {Terrain} from '../render/terrain';
 import {type Style} from '../style/style';
 import {Tile} from '../tile/tile';
 import {type Map} from '../ui/map';
