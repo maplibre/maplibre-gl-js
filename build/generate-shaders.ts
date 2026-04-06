@@ -30,13 +30,13 @@ function glslToTs(code: string, isWgsl: boolean = false): string {
 export default ${JSON.stringify(code).replaceAll('"', '\'')};\n`;
 }
 
-const shaderFiles = [...globSync('./src/shaders/*.glsl'), ...globSync('./src/shaders/wgsl/*.wgsl')];
+const shaderFiles = [...globSync('./src/shaders/glsl/*.glsl'), ...globSync('./src/shaders/wgsl/*.wgsl')];
 for (const file of shaderFiles) {
     const shaderSource = fs.readFileSync(file, 'utf8');
     const isWgsl = file.endsWith('.wgsl');
     const tsSource = glslToTs(shaderSource, isWgsl);
-    // Output WGSL .g.ts files into src/shaders/wgsl/, GLSL into src/shaders/
-    const outDir = isWgsl ? path.join('.', 'src', 'shaders', 'wgsl') : path.join('.', 'src', 'shaders');
+    // Output .g.ts files alongside the sources: glsl/ for GLSL, wgsl/ for WGSL
+    const outDir = path.dirname(file);
     const fileName = path.join(outDir, `${path.basename(file)}.g.ts`);
     fs.writeFileSync(fileName, tsSource);
 }
