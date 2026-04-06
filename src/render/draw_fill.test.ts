@@ -18,7 +18,7 @@ import {type ProgramConfiguration, type ProgramConfigurationSet} from '../data/p
 import type {ProjectionData} from '../geo/projection/projection_data';
 
 vi.mock('./painter');
-vi.mock('./program');
+vi.mock('../webgl/program');
 vi.mock('../tile/tile_manager');
 vi.mock('../tile/tile');
 

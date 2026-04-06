@@ -19,7 +19,7 @@ import {MercatorProjection} from '../geo/projection/mercator_projection';
 import type {ProjectionData} from '../geo/projection/projection_data';
 
 vi.mock('./painter');
-vi.mock('./program');
+vi.mock('../webgl/program');
 vi.mock('../tile/tile_manager');
 vi.mock('../tile/tile');
 vi.mock('../data/bucket/symbol_bucket', () => {
