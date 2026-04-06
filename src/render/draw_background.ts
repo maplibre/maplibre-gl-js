@@ -12,10 +12,8 @@ import type {BackgroundStyleLayer} from '../style/style_layer/background_style_l
 import {type OverscaledTileID} from '../tile/tile_id';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 
-// Drawable imports
-import {DrawableBuilder} from '../gfx/drawable_builder';
-import {TileLayerGroup} from '../gfx/tile_layer_group';
-import {BackgroundLayerTweaker} from '../gfx/tweakers/background_layer_tweaker';
+// WebGPU drawable path
+import {drawBackgroundWebGPU} from '../webgpu/draw/draw_background_webgpu';
 
 export function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
     const color = layer.paint.get('background-color');
@@ -30,7 +28,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     // - WebGL2 + solid color: drawable path
     // - WebGPU: drawable path for both solid and pattern
     if (painter.useDrawables && painter.useDrawables.has('background') && (!image || isWebGPU)) {
-        drawBackgroundDrawable(painter, layer, coords, renderOptions);
+        drawBackgroundWebGPU(painter, layer, coords, renderOptions);
         return;
     }
 
@@ -87,121 +85,4 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     }
 }
 
-function drawBackgroundDrawable(painter: Painter, layer: BackgroundStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
-    const {isRenderingToTexture} = renderOptions;
-    const context = painter.context;
-    const gl = context.gl;
-    const transform = painter.transform;
-    const tileSize = transform.tileSize;
-    const projection = painter.style.projection;
-
-    const color = layer.paint.get('background-color');
-    const opacity = layer.paint.get('background-opacity');
-    const image = layer.paint.get('background-pattern');
-    const hasPattern = !!image;
-    const isWebGPU = painter.device?.type === 'webgpu';
-
-    // Pattern backgrounds always render in translucent pass
-    const pass = hasPattern ? 'translucent' :
-        ((color.a === 1 && opacity === 1 && painter.opaquePassEnabledForLayer()) ? 'opaque' : 'translucent');
-    // When rendering to texture (terrain), draw regardless of pass since RTT skips the opaque pass
-    if (painter.renderPass !== pass && !isRenderingToTexture) return;
-
-    const stencilMode = StencilMode.disabled;
-    const depthMode = painter.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
-    const colorMode = painter.colorModeForRenderPass();
-    const shaderName = hasPattern ? 'backgroundPattern' : 'background';
-    // Create WebGL program (null for WebGPU which uses WGSL shaders)
-    const program = isWebGPU ? null : painter.useProgram(shaderName);
-
-    const tileIDs = coords ? coords : coveringTiles(transform, {tileSize, terrain: painter.style.map.terrain});
-
-    // Get or create tweaker
-    let tweaker = painter.layerTweakers.get(layer.id) as BackgroundLayerTweaker;
-    if (!tweaker) {
-        tweaker = new BackgroundLayerTweaker(layer.id);
-        painter.layerTweakers.set(layer.id, tweaker);
-    }
-
-    // Get or create layer group
-    let layerGroup = painter.layerGroups.get(layer.id);
-    if (!layerGroup) {
-        layerGroup = new TileLayerGroup(layer.id);
-        painter.layerGroups.set(layer.id, layerGroup);
-    }
-
-    const visibleTileKeys = new Set<string>();
-
-    // Always rebuild drawables so paint property changes (e.g. setPaintProperty) take effect.
-    (layerGroup as any)._drawablesByTile.clear();
-
-    const builder = new DrawableBuilder()
-        .setShader(shaderName)
-        .setRenderPass(pass)
-        .setDepthMode(depthMode)
-        .setStencilMode(stencilMode)
-        .setColorMode(colorMode)
-        .setCullFaceMode(CullFaceMode.backCCW)
-        .setLayerTweaker(tweaker);
-
-    // Bind pattern atlas texture for pattern rendering
-    if (hasPattern && isWebGPU) {
-        // Ensure atlas texture is created (GL side) and atlas image data is current
-        painter.imageManager.bind(context);
-        const atlasImage = (painter.imageManager as any).atlasImage;
-        const atlasTexture = (painter.imageManager as any).atlasTexture;
-        if (atlasImage?.data && atlasImage.width > 0 && atlasImage.height > 0) {
-            builder.addTexture({
-                name: 'pattern_texture',
-                textureUnit: 0,
-                texture: atlasTexture?.texture || null,
-                filter: gl.LINEAR,
-                wrap: gl.CLAMP_TO_EDGE,
-                source: {
-                    data: atlasImage.data,
-                    width: atlasImage.width,
-                    height: atlasImage.height,
-                    bytesPerPixel: 4,
-                    format: 'rgba8unorm',
-                },
-            } as any);
-        }
-    }
-
-    for (const tileID of tileIDs) {
-        visibleTileKeys.add(tileID.key.toString());
-
-        const mesh = projection.getMeshFromTileID(context, tileID.canonical, false, true, 'raster');
-        const projectionData = transform.getProjectionData({
-            overscaledTileID: tileID,
-            applyGlobeMatrix: !isRenderingToTexture,
-            applyTerrainMatrix: true
-        });
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(tileID);
-
-        const drawable = builder.flush({
-            tileID,
-            layer,
-            program,
-            programConfiguration: null,
-            layoutVertexBuffer: mesh.vertexBuffer,
-            indexBuffer: mesh.indexBuffer,
-            segments: mesh.segments,
-            projectionData,
-            terrainData: terrainData || null,
-        });
-
-        const uniformValues = backgroundUniformValues(opacity, color);
-        drawable.uniformValues = uniformValues as any;
-        layerGroup.addDrawable(tileID, drawable);
-    }
-
-    layerGroup.removeDrawablesIf(d => d.tileID !== null && !visibleTileKeys.has(d.tileID.key.toString()));
-
-    const allDrawables = layerGroup.getAllDrawables();
-    tweaker.execute(allDrawables, painter, layer, tileIDs);
-
-    for (const drawable of allDrawables) {
-        drawable.draw(context, painter.device, painter, renderOptions.renderPass);
-    }
-}
+// drawBackgroundDrawable() moved to src/webgpu/draw/draw_background_webgpu.ts
