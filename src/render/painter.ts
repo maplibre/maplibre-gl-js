@@ -106,7 +106,6 @@ export type DrawFunctions = {
 };
 
 export class Painter {
-    device: {type: string};
     drawFunctions: DrawFunctions;
     context: Context;
     transform: IReadonlyTransform;
@@ -160,7 +159,6 @@ export class Painter {
     terrainFacilitator: {dirty: boolean; matrix: mat4; renderTime: number};
 
     constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: IReadonlyTransform) {
-        this.device = {type: 'webgl'};
         this.drawFunctions = {
             symbol: drawSymbols,
             circle: drawCircles,
