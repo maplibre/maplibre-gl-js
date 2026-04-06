@@ -1,7 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {drawCollisionDebug} from './draw_collision_debug';
 
-import {updateVariableAnchors} from '../symbol/variable_anchors';
 import {drawSymbolsWebGPU} from '../webgpu/draw/draw_symbol_webgpu';
 
 import {SegmentVector} from '../data/segment';
@@ -13,7 +12,7 @@ import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
 
-import {WritingMode} from '../symbol/shaping';
+import {getAnchorAlignment, WritingMode} from '../symbol/shaping';
 import ONE_EM from '../symbol/one_em';
 
 import {

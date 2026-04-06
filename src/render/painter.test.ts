@@ -31,7 +31,7 @@ describe('tile texture pool', () => {
     function createPainterWithPool() {
         const gl = document.createElement('canvas').getContext('webgl');
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
-        return new Painter(gl, transform);
+        return new Painter(gl, null, transform);
     }
 
     function createTexture(painter: Painter, size: number): Texture {

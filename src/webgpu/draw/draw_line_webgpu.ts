@@ -92,7 +92,7 @@ export function drawLineWebGPU(painter: Painter, tileManager: TileManager, layer
             const posFrom = atlas.patternPositions[constantPattern.from.toString()];
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         } else if (constantDasharray) {
-            const round = layer.layout.get('line-cap') === 'round';
+            const round = (layer.layout.get('line-cap') as any) === 'round';
             const dashTo = painter.lineAtlas.getDash(constantDasharray.to, round);
             const dashFrom = painter.lineAtlas.getDash(constantDasharray.from, round);
             programConfiguration.setConstantDashPositions(dashTo, dashFrom);

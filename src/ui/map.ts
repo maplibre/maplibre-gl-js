@@ -686,7 +686,6 @@ export class Map extends Camera {
     transformConstrain: TransformConstrainFunction | null;
 
     constructor(options: MapOptions) {
-        PerformanceUtils.mark(PerformanceMarkers.create);
 
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
@@ -3565,10 +3564,8 @@ export class Map extends Camera {
         }
 
         if (device && device.type === 'webgpu') {
-            webpSupported.testSupport(null);
             console.log('Successfully initialized WebGPU device');
         } else if (gl) {
-            webpSupported.testSupport(gl);
             console.log('Successfully initialized WebGL2 device');
         } else {
             const msg = 'Failed to initialize WebGL and WebGPU';
