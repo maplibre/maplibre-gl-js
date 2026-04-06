@@ -25,8 +25,7 @@ import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer'
 import type {OverscaledTileID} from '../../tile/tile_id';
 import type {CrossTileID, VariableOffset} from '../../symbol/placement';
 import type {SymbolBucket} from '../../data/bucket/symbol_bucket';
-// Note: circular import with draw_symbol.ts — safe since both sides are function imports
-import {updateVariableAnchors} from '../../render/draw_symbol';
+import {updateVariableAnchors} from '../../symbol/variable_anchors';
 
 const identityMat4 = mat4.identity(new Float32Array(16));
 
