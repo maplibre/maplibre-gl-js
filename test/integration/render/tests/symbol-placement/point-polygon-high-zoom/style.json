@@ -1,0 +1,100 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "width": 512,
+            "height": 512,
+            "description": "Regression test: text labels on adjacent MultiPolygon features should both be centered. Previously, coordinate rounding in geojson-vt could shift the POI far from center for certain polygons."
+        }
+    },
+    "center": [20.021289755, 20.273477541],
+    "zoom": 21,
+    "sources": {
+        "polygons": {
+            "type": "geojson",
+            "data": {
+              "type": "FeatureCollection",
+              "features": [
+                {
+                  "type": "Feature",
+                  "geometry": {
+                    "type": "MultiPolygon",
+                    "coordinates": [
+                      [
+                        [
+                          [20.021289755, 20.273477541],
+                          [20.021281727, 20.273530134],
+                          [20.021307438, 20.273533023],
+                          [20.021315667, 20.273480438],
+                          [20.021289755, 20.273477541]
+                        ]
+                      ]
+                    ]
+                  },
+                  "properties": {
+                    "name": "A"
+                  }
+                },
+                {
+                  "type": "Feature",
+                  "geometry": {
+                    "type": "MultiPolygon",
+                    "coordinates": [
+                      [
+                        [
+                          [20.021315667, 20.273480438],
+                          [20.021307438, 20.273533023],
+                          [20.021333203, 20.273535917],
+                          [20.021341342, 20.273483309],
+                          [20.021315667, 20.273480438]
+                        ]
+                      ]
+                    ]
+                  },
+                  "properties": {
+                    "name": "B"
+                  }
+                }
+              ]
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "white"
+            }
+        },
+        {
+            "id": "polygon-fill",
+            "type": "fill",
+            "source": "polygons",
+            "paint": {
+                "fill-color": "black"
+            }
+        },
+        {
+            "id": "polygon-outline",
+            "type": "line",
+            "source": "polygons",
+            "paint": {
+                "line-color": "red",
+                "line-width": 3
+            }
+        },
+        {
+            "id": "polygon-label",
+            "type": "symbol",
+            "source": "polygons",
+            "layout": {
+                "symbol-placement": "point",
+                "text-field": ["get", "name"]
+            },
+            "paint": {
+              "text-color": "white"
+            }
+        }
+    ]
+}

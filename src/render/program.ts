@@ -20,12 +20,12 @@ import type {ProjectionData} from '../geo/projection/projection_data';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
 
-function getTokenizedAttributesAndUniforms(array: Array<string>): Array<string> {
+function getTokenizedAttributesAndUniforms(array: string[]): string[] {
     const result = [];
 
-    for (let i = 0; i < array.length; i++) {
-        if (array[i] === null) continue;
-        const token = array[i].split(' ');
+    for (const entry of array) {
+        if (entry === null) continue;
+        const token = entry.split(' ');
         result.push(token.pop());
     }
     return result;
@@ -42,7 +42,7 @@ export class Program<Us extends UniformBindings> {
     fixedUniforms: Us;
     terrainUniforms: TerrainPreludeUniformsType;
     projectionUniforms: ProjectionPreludeUniformsType;
-    binderUniforms: Array<BinderUniform>;
+    binderUniforms: BinderUniform[];
     failedToCreate: boolean;
 
     constructor(context: Context,
@@ -53,7 +53,7 @@ export class Program<Us extends UniformBindings> {
         hasTerrain: boolean,
         projectionPrelude: PreparedShader,
         projectionDefine: string,
-        extraDefines: Array<string> = []) {
+        extraDefines: string[] = []) {
 
         const gl = context.gl;
         this.program = gl.createProgram();
@@ -70,7 +70,7 @@ export class Program<Us extends UniformBindings> {
         const uniformList = preludeUniformsInfo.concat(projectionPreludeUniformsInfo).concat(staticUniformsInfo).concat(dynamicUniformsInfo);
         const allUniformsInfo = [];
         for (const uniform of uniformList) {
-            if (allUniformsInfo.indexOf(uniform) < 0) allUniformsInfo.push(uniform);
+            if (!allUniformsInfo.includes(uniform)) allUniformsInfo.push(uniform);
         }
 
         const defines = configuration ? configuration.defines() : [];
@@ -147,8 +147,7 @@ export class Program<Us extends UniformBindings> {
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);
 
-        for (let it = 0; it < allUniformsInfo.length; it++) {
-            const uniform = allUniformsInfo[it];
+        for (const uniform of allUniformsInfo) {
             if (uniform && !uniformLocations[uniform]) {
                 const uniformLocation = gl.getUniformLocation(this.program, uniform);
                 if (uniformLocation) {

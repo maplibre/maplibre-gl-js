@@ -25,7 +25,7 @@ type ClearArgs = {
 
 /**
  * @internal
- * A webgl wrapper class to allow injection, mocking and abstaction
+ * A webgl wrapper class to allow injection, mocking and abstraction
  */
 export class Context {
     gl: WebGLRenderingContext | WebGL2RenderingContext;
@@ -195,7 +195,7 @@ export class Context {
         return new IndexBuffer(this, array, dynamicDraw);
     }
 
-    createVertexBuffer(array: StructArray, attributes: ReadonlyArray<StructArrayMember>, dynamicDraw?: boolean) {
+    createVertexBuffer(array: StructArray, attributes: readonly StructArrayMember[], dynamicDraw?: boolean) {
         return new VertexBuffer(this, array, attributes, dynamicDraw);
     }
 
@@ -303,9 +303,11 @@ export class Context {
     }
 
     deleteVertexArray(x: WebGLVertexArrayObject | undefined) {
-        if (isWebGL2(this.gl))
-            return this.gl.deleteVertexArray(x);
-        return this.gl.getExtension('OES_vertex_array_object')?.deleteVertexArrayOES(x);
+        if (isWebGL2(this.gl)) {
+            this.gl.deleteVertexArray(x);
+            return;
+        }
+        this.gl.getExtension('OES_vertex_array_object')?.deleteVertexArrayOES(x);
     }
 
     unbindVAO() {

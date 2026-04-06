@@ -63,7 +63,7 @@ export class CircleStyleLayer extends StyleLayer {
         const pitchScale = this.paint.get('circle-pitch-scale');
         const pitchAlignment = this.paint.get('circle-pitch-alignment');
 
-        let transformedPolygon: Array<Point>;
+        let transformedPolygon: Point[];
         let transformedSize: number;
         if (pitchAlignment === 'map') {
             transformedPolygon = translatedPolygon;

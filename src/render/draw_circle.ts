@@ -35,7 +35,7 @@ type SegmentsTileRenderState = {
     state: TileRenderState;
 };
 
-export function drawCircles(painter: Painter, tileManager: TileManager, layer: CircleStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawCircles(painter: Painter, tileManager: TileManager, layer: CircleStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
 
     const {isRenderingToTexture} = renderOptions;
@@ -58,13 +58,12 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
     const stencilMode = StencilMode.disabled;
     const colorMode = painter.colorModeForRenderPass();
 
-    const segmentsRenderStates: Array<SegmentsTileRenderState> = [];
+    const segmentsRenderStates: SegmentsTileRenderState[] = [];
 
     // Note: due to how the shader is written, this value only has effect when globe rendering is enabled and `circle-pitch-alignment` is set to 'map'.
     const radiusCorrectionFactor = transform.getCircleRadiusCorrection();
 
-    for (let i = 0; i < coords.length; i++) {
-        const coord = coords[i];
+    for (const coord of coords) {
 
         const tile = tileManager.getTile(coord);
         const bucket: CircleBucket<any> = (tile.getBucket(layer) as any);
@@ -78,7 +77,7 @@ export function drawCircles(painter: Painter, tileManager: TileManager, layer: C
         const program = painter.useProgram('circle', programConfiguration);
         const layoutVertexBuffer = bucket.layoutVertexBuffer;
         const indexBuffer = bucket.indexBuffer;
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
         const uniformValues = circleUniformValues(painter, tile, layer, translateForUniforms, radiusCorrectionFactor);
 
         const projectionData = transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});

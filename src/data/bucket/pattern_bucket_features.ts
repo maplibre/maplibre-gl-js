@@ -8,7 +8,7 @@ import type {
 } from '../bucket';
 import {type PossiblyEvaluated} from '../../style/properties';
 
-type PatternStyleLayers = Array<LineStyleLayer> | Array<FillStyleLayer> | Array<FillExtrusionStyleLayer>;
+type PatternStyleLayers = LineStyleLayer[] | FillStyleLayer[] | FillExtrusionStyleLayer[];
 
 export function hasPattern(type: string, layers: PatternStyleLayers, options: PopulateParameters) {
     const patterns = options.patternDependencies;
@@ -42,9 +42,9 @@ export function addPatternDependencies(type: string, layers: PatternStyleLayers,
             let min = patternPropertyValue.evaluate({zoom: zoom - 1}, patternFeature, {}, options.availableImages);
             let mid = patternPropertyValue.evaluate({zoom}, patternFeature, {}, options.availableImages);
             let max = patternPropertyValue.evaluate({zoom: zoom + 1}, patternFeature, {}, options.availableImages);
-            min = min && min.name ? min.name : min;
-            mid = mid && mid.name ? mid.name : mid;
-            max = max && max.name ? max.name : max;
+            min = min?.name ? min.name : min;
+            mid = mid?.name ? mid.name : mid;
+            max = max?.name ? max.name : max;
             // add to patternDependencies
             patterns[min] = true;
             patterns[mid] = true;

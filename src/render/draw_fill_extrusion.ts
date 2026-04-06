@@ -16,7 +16,7 @@ import type {OverscaledTileID} from '../tile/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
 
-export function drawFillExtrusion(painter: Painter, tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawFillExtrusion(painter: Painter, tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
     const opacity = layer.paint.get('fill-extrusion-opacity');
     if (opacity === 0) {
         return;
@@ -71,7 +71,7 @@ function drawExtrusionTiles(
         const bucket: FillExtrusionBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram(image ? 'fillExtrusionPattern' : 'fillExtrusion', programConfiguration);
 

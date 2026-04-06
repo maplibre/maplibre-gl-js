@@ -11,7 +11,7 @@ import {MessageType} from './actor_messages';
  */
 export class Dispatcher {
     workerPool: WorkerPool;
-    actors: Array<Actor>;
+    actors: Actor[];
     currentActor: number;
     id: string | number;
 
@@ -33,8 +33,8 @@ export class Dispatcher {
     /**
      * Broadcast a message to all Workers.
      */
-    broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<RequestResponseMessageMap[T][1][]> {
-        const promises: Promise<RequestResponseMessageMap[T][1]>[] = [];
+    broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>> {
+        const promises: Array<Promise<RequestResponseMessageMap[T][1]>> = [];
         for (const actor of this.actors) {
             promises.push(actor.sendAsync({type, data}));
         }
@@ -51,7 +51,9 @@ export class Dispatcher {
     }
 
     remove(mapRemoved: boolean = true) {
-        this.actors.forEach((actor) => { actor.remove(); });
+        for (const actor of this.actors) {
+            actor.remove();
+        }
         this.actors = [];
         if (mapRemoved) this.workerPool.release(this.id);
     }

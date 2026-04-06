@@ -13,7 +13,7 @@ import type {TileManager} from '../tile/tile_manager';
 import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
 import type {OverscaledTileID} from '../tile/tile_id';
 
-export function drawHillshade(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawHillshade(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions) {
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
 
     const {isRenderingToTexture} = renderOptions;
@@ -48,7 +48,7 @@ function renderHillshade(
     painter: Painter,
     tileManager: TileManager,
     layer: HillshadeStyleLayer,
-    coords: Array<OverscaledTileID>,
+    coords: OverscaledTileID[],
     stencilModes: {[_: number]: Readonly<StencilMode>},
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
@@ -94,7 +94,7 @@ function renderHillshade(
 function prepareHillshade(
     painter: Painter,
     tileManager: TileManager,
-    tileIDs: Array<OverscaledTileID>,
+    tileIDs: OverscaledTileID[],
     layer: HillshadeStyleLayer,
     depthMode: Readonly<DepthMode>,
     stencilMode: Readonly<StencilMode>,
@@ -109,7 +109,7 @@ function prepareHillshade(
         const tile = tileManager.getTile(coord);
         const dem = tile.dem;
 
-        if (!dem || !dem.data) {
+        if (!dem?.data) {
             continue;
         }
 

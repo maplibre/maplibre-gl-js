@@ -1,4 +1,3 @@
-
 import {mat4, vec2} from 'gl-matrix';
 import {OverscaledTileID} from '../tile/tile_id';
 import {RGBAImage} from '../util/image';
@@ -10,7 +9,7 @@ import {Texture} from '../render/texture';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {TerrainTileManager} from '../tile/terrain_tile_manager';
 import {EXTENT} from '../data/extent';
-import {type LngLat, earthRadius} from '../geo/lng_lat';
+import {earthRadius, type LngLat} from '../geo/lng_lat';
 import {Mesh} from './mesh';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision';
@@ -117,7 +116,7 @@ export class Terrain {
      * the tile via the alpha-cannel in the coords-texture.
      * As the alpha-channel has 1 Byte a max of 255 tiles can rendered without an error.
      */
-    coordsIndex: Array<string>;
+    coordsIndex: string[];
     /**
      * tile-coords encoded in the rgb channel, _coordsIndex is in the alpha-channel.
      */
@@ -276,7 +275,7 @@ export class Terrain {
         }
         // find covering dem tile and prepare demTexture
         const sourceTile = this.tileManager.getSourceTile(tileID, true);
-        if (sourceTile && sourceTile.dem && (!sourceTile.demTexture || sourceTile.needsTerrainPrepare)) {
+        if (sourceTile?.dem && (!sourceTile.demTexture || sourceTile.needsTerrainPrepare)) {
             const context = this.painter.context;
             sourceTile.demTexture = this.painter.getTileTexture(sourceTile.dem.stride);
             if (sourceTile.demTexture) sourceTile.demTexture.update(sourceTile.dem.getPixels(), {premultiply: false});
@@ -297,17 +296,17 @@ export class Terrain {
             const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
             const demMatrix = mat4.fromScaling(new Float64Array(16) as any, [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
             mat4.translate(demMatrix, demMatrix, [dx * EXTENT, dy * EXTENT, 0]);
-            this._demMatrixCache[tileID.key] = {matrix: demMatrix, coord: tileID};
+            this._demMatrixCache[matrixKey] = {matrix: demMatrix, coord: tileID};
         }
         // return uniform values & textures
         return {
             'u_depth': 2,
             'u_terrain': 3,
-            'u_terrain_dim': sourceTile && sourceTile.dem && sourceTile.dem.dim || 1,
-            'u_terrain_matrix': matrixKey ? this._demMatrixCache[tileID.key].matrix : this._emptyDemMatrix,
-            'u_terrain_unpack': sourceTile && sourceTile.dem && sourceTile.dem.getUnpackVector() || this._emptyDemUnpack,
+            'u_terrain_dim': sourceTile?.dem?.dim || 1,
+            'u_terrain_matrix': matrixKey ? this._demMatrixCache[matrixKey].matrix : this._emptyDemMatrix,
+            'u_terrain_unpack': sourceTile?.dem?.getUnpackVector() || this._emptyDemUnpack,
             'u_terrain_exaggeration': this.exaggeration,
-            texture: (sourceTile && sourceTile.demTexture || this._emptyDemTexture).texture,
+            texture: (sourceTile?.demTexture || this._emptyDemTexture).texture,
             depthTexture: (this._fboDepthTexture || this._emptyDepthTexture).texture,
             tile: sourceTile
         };
@@ -353,7 +352,7 @@ export class Terrain {
      *   - 8 lower bits for y
      *   - 4 higher bits for x
      *   - 4 higher bits for y
-     *   - 8 bits for coordsIndex (1 .. 255) (= number of terraintile), is later setted in draw_terrain uniform value
+     *   - 8 bits for coordsIndex (1 .. 255) (= number of terraintile), is later set in draw_terrain uniform value
      * @returns the texture
      */
     getCoordsTexture(): Texture {
@@ -423,8 +422,7 @@ export class Terrain {
         gl.readPixels(p.x, this.painter.height / devicePixelRatio - p.y - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
         context.bindFramebuffer.set(null);
         // decode coordinates (encoding see terran_depth.fragment.glsl)
-        const depthValue = (rgba[0] / (256 * 256 * 256) + rgba[1] / (256 * 256) + rgba[2] / 256 + rgba[3]) / 256;
-        return depthValue;
+        return (rgba[0] / (256 * 256 * 256) + rgba[1] / (256 * 256) + rgba[2] / 256 + rgba[3]) / 256;
     }
 
     /**
@@ -525,7 +523,7 @@ export class Terrain {
     getMinMaxElevation(tileID: OverscaledTileID): {minElevation: number | null; maxElevation: number | null} {
         const tile = this.getTerrainData(tileID).tile;
         const minMax = {minElevation: null, maxElevation: null};
-        if (tile && tile.dem) {
+        if (tile?.dem) {
             minMax.minElevation = tile.dem.min * this.exaggeration;
             minMax.maxElevation = tile.dem.max * this.exaggeration;
         }

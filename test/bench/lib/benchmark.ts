@@ -1,4 +1,4 @@
-import type {Map} from "../../../src/ui/map"
+import type {Map} from '../../../src/ui/map';
 
 // According to https://developer.mozilla.org/en-US/docs/Web/API/Performance/now,
 // performance.now() should be accurate to 0.005ms. Set the minimum running
@@ -37,12 +37,12 @@ class Benchmark {
     /**
      * The minimum number of measurements affects how many statistical observations can be made on the benchmark e.g,
      * 210 measurement `samples => 20` observations for regression because the sum of 1 to 20 = 210. See regression() in statistics.ts.
-     * The minimum number of measurements also affects the runtime: more measurements means a longer running beanchmark.
+     * The minimum number of measurements also affects the runtime: more measurements means a longer running benchmark.
      */
     public minimumMeasurements = 210;
 
     _elapsed: number;
-    _measurements: Array<Measurement>;
+    _measurements: Measurement[];
     _iterationsPerMeasurement: number;
     _start: number;
 
@@ -50,7 +50,7 @@ class Benchmark {
      * Run the benchmark by executing `setup` once, sampling the execution time of `bench` some number of
      * times, and then executing `teardown`. Yields an array of execution times.
      */
-    async run(): Promise<Array<Measurement>> {
+    async run(): Promise<Measurement[]> {
         try {
             await this.setup();
             return this._begin();
@@ -64,7 +64,7 @@ class Benchmark {
         return this._elapsed >= 500 && this._measurements.length > this.minimumMeasurements;
     }
 
-    private _begin(): Promise<Array<Measurement>> {
+    private _begin(): Promise<Measurement[]> {
         this._measurements = [];
         this._elapsed = 0;
         this._iterationsPerMeasurement = 1;
@@ -78,7 +78,7 @@ class Benchmark {
         }
     }
 
-    private _measureSync(): Promise<Array<Measurement>> {
+    private _measureSync(): Promise<Measurement[]> {
         // Avoid Promise overhead for sync benchmarks.
         while (true) {
             const time = performance.now() - this._start;
@@ -98,7 +98,7 @@ class Benchmark {
         }
     }
 
-    private async _measureAsync(): Promise<Array<Measurement>> {
+    private async _measureAsync(): Promise<Measurement[]> {
         while (true) {
             const time = performance.now() - this._start;
             this._elapsed += time;
@@ -117,7 +117,7 @@ class Benchmark {
         }
     }
 
-    private async _end(): Promise<Array<Measurement>> {
+    private async _end(): Promise<Measurement[]> {
         await this.teardown();
         return this._measurements;
     }

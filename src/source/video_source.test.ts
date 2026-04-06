@@ -30,7 +30,7 @@ class StubMap extends Evented {
 }
 
 function createSource(options) {
-    const c = options && options.video || window.document.createElement('video');
+    const c = options?.video || window.document.createElement('video');
 
     options = extend({coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]]}, options);
 

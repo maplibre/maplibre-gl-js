@@ -16,6 +16,10 @@ import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
  *         source: "terrain"
  *     }));
  * ```
+ * @see [3D Terrain](https://maplibre.org/maplibre-gl-js/docs/examples/3d-terrain/)
+ * @see [Create a Heatmap layer on a globe with terrain elevation](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-heatmap-layer-on-a-globe-with-terrain-elevation/)
+ * @see [Display a hybrid satellite map with terrain elevation](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-hybrid-satellite-map-with-terrain-elevation/)
+ * @see [Sky, Fog, Terrain](https://maplibre.org/maplibre-gl-js/docs/examples/sky-fog-terrain/)
  */
 export class TerrainControl implements IControl {
     options: TerrainSpecification;

@@ -36,17 +36,17 @@ export class TapZoomHandler implements Handler {
         this._zoomOut.reset();
     }
 
-    touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         this._zoomIn.touchstart(e, points, mapTouches);
         this._zoomOut.touchstart(e, points, mapTouches);
     }
 
-    touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         this._zoomIn.touchmove(e, points, mapTouches);
         this._zoomOut.touchmove(e, points, mapTouches);
     }
 
-    touchend(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         const zoomInPoint = this._zoomIn.touchend(e, points, mapTouches);
         const zoomOutPoint = this._zoomOut.touchend(e, points, mapTouches);
         const tr = this._tr;

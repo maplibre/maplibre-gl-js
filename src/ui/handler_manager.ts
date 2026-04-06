@@ -56,11 +56,11 @@ export interface Handler {
     reset(): void;
     // Handlers can optionally implement these methods.
     // They are called with dom events whenever those dom evens are received.
-    readonly touchstart?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-    readonly touchmove?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-    readonly touchmoveWindow?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-    readonly touchend?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-    readonly touchcancel?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
+    readonly touchstart?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
+    readonly touchmove?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
+    readonly touchmoveWindow?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
+    readonly touchend?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
+    readonly touchcancel?: (e: TouchEvent, points: Point[], mapTouches: Touch[]) => HandlerResult | void;
     readonly mousedown?: (e: MouseEvent, point: Point) => HandlerResult | void;
     readonly mousemove?: (e: MouseEvent, point: Point) => HandlerResult | void;
     readonly mousemoveWindow?: (e: MouseEvent, point: Point) => HandlerResult | void;
@@ -137,7 +137,7 @@ export type MapControlsScenarioOptions = {
 };
 
 function hasChange(result: HandlerResult) {
-    return (result.panDelta && result.panDelta.mag()) || result.zoomDelta || result.bearingDelta || result.pitchDelta || result.rollDelta;
+    return result.panDelta?.mag() || result.zoomDelta || result.bearingDelta || result.pitchDelta || result.rollDelta;
 }
 
 export class HandlerManager {
@@ -146,7 +146,7 @@ export class HandlerManager {
     _handlers: Array<{
         handlerName: string;
         handler: Handler;
-        allowed: Array<string>;
+        allowed: string[];
     }>;
     _eventsInProgress: EventsInProgress;
     _frameId: number;
@@ -326,7 +326,7 @@ export class HandlerManager {
         }
     }
 
-    _add(handlerName: string, handler: Handler, allowed?: Array<string>) {
+    _add(handlerName: string, handler: Handler, allowed?: string[]) {
         this._handlers.push({handlerName, handler, allowed});
         this._handlersById[handlerName] = handler;
     }
@@ -361,10 +361,10 @@ export class HandlerManager {
         return Boolean(isMoving(this._eventsInProgress)) || this.isZooming();
     }
 
-    _blockedByActive(activeHandlers: {[x: string]: Handler}, allowed: Array<string>, myName: string) {
+    _blockedByActive(activeHandlers: {[x: string]: Handler}, allowed: string[], myName: string) {
         for (const name in activeHandlers) {
             if (name === myName) continue;
-            if (!allowed || allowed.indexOf(name) < 0) {
+            if (!allowed?.includes(name)) {
                 return true;
             }
         }
@@ -427,7 +427,7 @@ export class HandlerManager {
                         data = handler[eventName || e.type](e);
                     }
                     this.mergeHandlerResult(mergedHandlerResult, eventsInProgress, data, handlerName, inputEvent);
-                    if (data && data.needsRenderFrame) {
+                    if (data?.needsRenderFrame) {
                         this._triggerRenderFrame();
                     }
                 }
@@ -528,7 +528,7 @@ export class HandlerManager {
         const terrain = map.terrain;
 
         if (!hasChange(combinedResult) && !(terrain && this._terrainMovement)) {
-            return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
+            this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true); return;
         }
 
         // stop any ongoing camera animations (easeTo, flyTo)

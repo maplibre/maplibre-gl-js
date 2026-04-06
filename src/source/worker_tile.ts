@@ -19,7 +19,7 @@ import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {
     WorkerTileParameters,
     WorkerTileResult,
-} from '../source/worker_source';
+} from './worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileLike} from '@maplibre/vt-pbf';
 import {type GetDashesResponse, MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
@@ -60,7 +60,7 @@ export class WorkerTile {
         this.inFlightDependencies = [];
     }
 
-    async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
+    async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: string[], actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
         this.status = 'parsing';
         this.data = data;
 
@@ -129,9 +129,11 @@ export class WorkerTile {
 
         // options.glyphDependencies looks like: {"SomeFontName":{"10":true,"32":true}}
         // this line makes an object like: {"SomeFontName":[10,32]}
-        const stacks: {[_: string]: Array<number>} = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
+        const stacks: {[_: string]: number[]} = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
 
-        this.inFlightDependencies.forEach((request) => request?.abort());
+        for (const request of this.inFlightDependencies) {
+            request?.abort();
+        }
         this.inFlightDependencies = [];
 
         let getGlyphsPromise = Promise.resolve<GetGlyphsResponse>({});
@@ -206,7 +208,7 @@ export class WorkerTile {
     }
 }
 
-function recalculateLayers(layers: ReadonlyArray<StyleLayer>, zoom: number, availableImages: Array<string>) {
+function recalculateLayers(layers: readonly StyleLayer[], zoom: number, availableImages: string[]) {
     // Layers are shared and may have been used by a WorkerTile with a different zoom.
     const parameters = new EvaluationParameters(zoom);
     for (const layer of layers) {

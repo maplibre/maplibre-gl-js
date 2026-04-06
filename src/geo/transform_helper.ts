@@ -479,8 +479,8 @@ export class TransformHelper implements ITransformGetters {
      * @returns max bounds
      */
     getMaxBounds(): LngLatBounds | null {
-        if (!this._latRange || this._latRange.length !== 2 ||
-            !this._lngRange || this._lngRange.length !== 2) return null;
+        if (this._latRange?.length !== 2 ||
+            this._lngRange?.length !== 2) return null;
 
         return new LngLatBounds([this._lngRange[0], this._latRange[0]], [this._lngRange[1], this._latRange[1]]);
     }
@@ -510,7 +510,7 @@ export class TransformHelper implements ITransformGetters {
      * screen where the *base* of a visible extrusion could be.
      *
      */
-    getCameraQueryGeometry(cameraPoint: Point, queryGeometry: Array<Point>): Array<Point> {
+    getCameraQueryGeometry(cameraPoint: Point, queryGeometry: Point[]): Point[] {
         if (queryGeometry.length === 1) {
             return [queryGeometry[0], cameraPoint];
         } else {

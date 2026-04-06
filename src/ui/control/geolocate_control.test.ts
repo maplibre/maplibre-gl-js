@@ -31,9 +31,9 @@ function createResizeObserverEntryMock() {
     global.ResizeObserverEntry = class ResizeObserverEntry {
         target: Element;
         contentRect: DOMRectReadOnly;
-        borderBoxSize: ReadonlyArray<ResizeObserverSize>;
-        contentBoxSize: ReadonlyArray<ResizeObserverSize>;
-        devicePixelContentBoxSize: ReadonlyArray<ResizeObserverSize>;
+        borderBoxSize: readonly ResizeObserverSize[];
+        contentBoxSize: readonly ResizeObserverSize[];
+        devicePixelContentBoxSize: readonly ResizeObserverSize[];
 
         constructor() {
             this.target = document.createElement('div'); // Default target

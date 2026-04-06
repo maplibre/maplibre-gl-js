@@ -27,13 +27,10 @@ const handlerNames = [
     'doubleClickZoom',
     'touchZoomRotate'
 ];
-handlerNames.forEach((handlerName) => {
-    test(`disable "${handlerName}" handler`, () => {
-        const options = {};
-        options[handlerName] = false;
-        const map = createMap(options);
+test.each(handlerNames)('disable "%s" handler', (handlerName) => {
+    const options = {};
+    options[handlerName] = false;
+    const map = createMap(options);
 
-        expect(map[handlerName].isEnabled()).toBeFalsy();
-
-    });
+    expect(map[handlerName].isEnabled()).toBeFalsy();
 });

@@ -63,8 +63,8 @@ export class InViewTiles {
         return this.getTileById(id)?.isRenderable(symbolLayer);
     }
 
-    public getRenderableIds(bearingInRadians: number = 0, symbolLayer?: boolean): Array<string> {
-        const renderables: Array<Tile> = [];
+    public getRenderableIds(bearingInRadians: number = 0, symbolLayer?: boolean): string[] {
+        const renderables: Tile[] = [];
         for (const id of this.getAllIds()) {
             if (this.isIdRenderable(id, symbolLayer)) {
                 renderables.push(this.getTileById(id));

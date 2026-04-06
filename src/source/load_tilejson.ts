@@ -7,7 +7,7 @@ import type {RequestManager} from '../util/request_manager';
 import type {RasterDEMSourceSpecification, RasterSourceSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type LoadTileJsonResponse = {
-    tiles: Array<string>;
+    tiles: string[];
     minzoom: number;
     maxzoom: number;
     attribution: string;
@@ -15,7 +15,7 @@ export type LoadTileJsonResponse = {
     scheme: RasterSourceSpecification['scheme'];
     tileSize: number;
     encoding: RasterDEMSourceSpecification['encoding'];
-    vectorLayerIds?: Array<string>;
+    vectorLayerIds?: string[];
 };
 
 export async function loadTileJson(
@@ -41,7 +41,7 @@ export async function loadTileJson(
     ) as LoadTileJsonResponse;
 
     if ('vector_layers' in tileJSON && tileJSON.vector_layers) {
-        result.vectorLayerIds = tileJSON.vector_layers.map((layer) => { return layer.id; });
+        result.vectorLayerIds = tileJSON.vector_layers.map((layer) => layer.id);
     }
 
     return result;

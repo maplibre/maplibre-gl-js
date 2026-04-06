@@ -29,13 +29,13 @@ import {Bounds} from '../geo/bounds';
 export const viewportPadding = 100;
 
 export type PlacedCircles = {
-    circles: Array<number>;
+    circles: number[];
     offscreen: boolean;
     collisionDetected: boolean;
 };
 
 export type PlacedBox = {
-    box: Array<number>;
+    box: number[];
     placeable: boolean;
     offscreen: boolean;
     occluded: boolean;
@@ -249,7 +249,7 @@ export class CollisionIndex {
             const first = firstAndLastGlyph.first;
             const last = firstAndLastGlyph.last;
 
-            let projectedPath: Array<Point> = [];
+            let projectedPath: Point[] = [];
             for (let i = first.path.length - 1; i >= 1; i--) {
                 projectedPath.push(first.path[i]);
             }
@@ -353,7 +353,7 @@ export class CollisionIndex {
         };
     }
 
-    projectPathToScreenSpace(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext): Array<PointProjection> {
+    projectPathToScreenSpace(projectedPath: Point[], projectionContext: SymbolProjectionContext): PointProjection[] {
         const screenSpacePath = projectPathSpecialProjection(projectedPath, projectionContext);
         // We don't want to generate screenspace collision circles for parts of the line that
         // are occluded by the planet itself. Find the longest segment of the path that is
@@ -366,7 +366,7 @@ export class CollisionIndex {
      * symbols on the map, we use the CollisionIndex to look up the symbol part of
      * `queryRenderedFeatures`.
      */
-    queryRenderedSymbols(viewportQueryGeometry: Array<Point>) {
+    queryRenderedSymbols(viewportQueryGeometry: Point[]) {
         if (viewportQueryGeometry.length === 0 || (this.grid.keysLength() === 0 && this.ignoredGrid.keysLength() === 0)) {
             return {};
         }
@@ -421,14 +421,14 @@ export class CollisionIndex {
         return result;
     }
 
-    insertCollisionBox(collisionBox: Array<number>, overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
+    insertCollisionBox(collisionBox: number[], overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
         const grid = ignorePlacement ? this.ignoredGrid : this.grid;
 
         const key = {bucketInstanceId, featureIndex, collisionGroupID, overlapMode};
         grid.insert(key, collisionBox[0], collisionBox[1], collisionBox[2], collisionBox[3]);
     }
 
-    insertCollisionCircles(collisionCircles: Array<number>, overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
+    insertCollisionCircles(collisionCircles: number[], overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
         const grid = ignorePlacement ? this.ignoredGrid : this.grid;
 
         const key = {bucketInstanceId, featureIndex, collisionGroupID, overlapMode};
@@ -606,7 +606,7 @@ export class CollisionIndex {
             {offsetX: offsetXmin,  offsetY: offsetYhalf}
         ];
 
-        let points: Array<Point> = [];
+        let points: Point[] = [];
 
         for (const {offsetX, offsetY} of offsetsArray) {
             points.push(new Point(

@@ -9,7 +9,7 @@ export type LayerConfigs = {[_: string]: LayerSpecification};
 export class StyleLayerIndex {
     familiesBySource: {
         [source: string]: {
-            [sourceLayer: string]: Array<Array<StyleLayer>>;
+            [sourceLayer: string]: StyleLayer[][];
         };
     };
     keyCache: {[source: string]: string};
@@ -17,20 +17,20 @@ export class StyleLayerIndex {
     _layerConfigs: LayerConfigs;
     _layers: {[_: string]: StyleLayer};
 
-    constructor(layerConfigs?: Array<LayerSpecification> | null, globalState?: Record<string, any>) {
+    constructor(layerConfigs?: LayerSpecification[] | null, globalState?: Record<string, any>) {
         this.keyCache = {};
         if (layerConfigs) {
             this.replace(layerConfigs, globalState);
         }
     }
 
-    replace(layerConfigs: Array<LayerSpecification>, globalState?: Record<string, any>) {
+    replace(layerConfigs: LayerSpecification[], globalState?: Record<string, any>) {
         this._layerConfigs = {};
         this._layers = {};
         this.update(layerConfigs, [], globalState);
     }
 
-    update(layerConfigs: Array<LayerSpecification>, removedIds: Array<string>, globalState?: Record<string, any>) {
+    update(layerConfigs: LayerSpecification[], removedIds: string[], globalState?: Record<string, any>) {
         for (const layerConfig of layerConfigs) {
             this._layerConfigs[layerConfig.id] = layerConfig;
 

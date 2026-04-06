@@ -119,7 +119,7 @@ export class ImageSource extends Evented implements Source {
     texture: Texture | null;
     image: HTMLImageElement | ImageBitmap;
     tileID: CanonicalTileID;
-    tileCoords: Array<Point>;
+    tileCoords: Point[];
     flippedWindingOrder: boolean = false;
     _loaded: boolean;
     _request: AbortController;
@@ -155,7 +155,7 @@ export class ImageSource extends Evented implements Source {
             this._request = null;
             this._loaded = true;
 
-            if (image && image.data) {
+            if (image?.data) {
                 this.image = image.data;
                 if (newCoordinates) {
                     this.coordinates = newCoordinates;
@@ -192,7 +192,7 @@ export class ImageSource extends Evented implements Source {
         }
 
         this.options.url = options.url;
-        this.load(options.coordinates).finally(() => { this.texture = null; });
+        this.load(options.coordinates).finally(() => this.texture = null);
         return this;
     }
 
@@ -290,7 +290,7 @@ export class ImageSource extends Evented implements Source {
         // `errored` to indicate that we have no data for it.
         // If the world wraps, we may have multiple "wrapped" copies of the
         // single tile.
-        if (this.tileID && this.tileID.equals(tile.tileID.canonical)) {
+        if (this.tileID?.equals(tile.tileID.canonical)) {
             this.tiles[String(tile.tileID.wrap)] = tile;
             tile.buckets = {};
         } else {
@@ -317,7 +317,7 @@ export class ImageSource extends Evented implements Source {
      * @internal
      */
     private _getOverlappingTileRanges(
-        coords: Array<MercatorCoordinate>
+        coords: MercatorCoordinate[]
     ): {[zoom: string]: CanonicalTileRange} {
         const {minX, minY, maxX, maxY} = Bounds.fromPoints(coords);
 
@@ -355,7 +355,7 @@ export class ImageSource extends Evented implements Source {
  * @returns centerpoint
  * @internal
  */
-export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
+export function getCoordinatesCenterTileID(coords: MercatorCoordinate[]) {
     const bounds = Bounds.fromPoints(coords);
 
     const dx = bounds.width();
@@ -370,7 +370,7 @@ export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
         Math.floor((bounds.minY + bounds.maxY) / 2 * tilesAtZoom));
 }
 
-function hasWrongWindingOrder(coords: Array<Point>) {
+function hasWrongWindingOrder(coords: Point[]) {
     const e0x = coords[1].x - coords[0].x;
     const e0y = coords[1].y - coords[0].y;
     const e1x = coords[2].x - coords[0].x;

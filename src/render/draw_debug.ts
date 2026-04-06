@@ -59,9 +59,9 @@ function drawDebugSSRect(painter: Painter, x: number, y: number, width: number, 
     gl.disable(gl.SCISSOR_TEST);
 }
 
-export function drawDebug(painter: Painter, tileManager: TileManager, coords: Array<OverscaledTileID>) {
-    for (let i = 0; i < coords.length; i++) {
-        drawDebugTile(painter, tileManager, coords[i]);
+export function drawDebug(painter: Painter, tileManager: TileManager, coords: OverscaledTileID[]) {
+    for (const coord of coords) {
+        drawDebugTile(painter, tileManager, coord);
     }
 }
 
@@ -75,12 +75,12 @@ function drawDebugTile(painter: Painter, tileManager: TileManager, coord: Oversc
     const stencilMode = StencilMode.disabled;
     const colorMode = painter.colorModeForRenderPass();
     const id = '$debug';
-    const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+    const terrainData = painter.style.map.terrain?.getTerrainData(coord);
 
     context.activeTexture.set(gl.TEXTURE0);
 
     const tileRawData = tileManager.getTileByID(coord.key).latestRawTileData;
-    const tileByteLength = (tileRawData && tileRawData.byteLength) || 0;
+    const tileByteLength = (tileRawData?.byteLength) || 0;
     const tileSizeKb = Math.floor(tileByteLength / 1024);
     const tileSize = tileManager.getTile(coord).tileSize;
     const scaleRatio = (512 / Math.min(tileSize, 512) * (coord.overscaledZ / painter.transform.zoom)) * 0.5;
@@ -141,9 +141,13 @@ export function selectDebugSource(style: Style, zoom: number): TileManager | nul
             selectedSource = source;
         }
     };
-    vectorSources.forEach((source) => considerSource(source));
+    for (const source of vectorSources) {
+        considerSource(source);
+    }
     if (!selectedSource) {
-        otherSources.forEach((source) => considerSource(source));
+        for (const source of otherSources) {
+            considerSource(source);
+        }
     }
     return selectedSource;
 }

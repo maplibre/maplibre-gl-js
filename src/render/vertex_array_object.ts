@@ -12,7 +12,7 @@ export class VertexArrayObject {
     context: Context;
     boundProgram: Program<any>;
     boundLayoutVertexBuffer: VertexBuffer;
-    boundPaintVertexBuffers: Array<VertexBuffer>;
+    boundPaintVertexBuffers: VertexBuffer[];
     boundIndexBuffer: IndexBuffer;
     boundVertexOffset: number;
     boundDynamicVertexBuffer: VertexBuffer;
@@ -33,7 +33,7 @@ export class VertexArrayObject {
     bind(context: Context,
         program: Program<any>,
         layoutVertexBuffer: VertexBuffer,
-        paintVertexBuffers: Array<VertexBuffer>,
+        paintVertexBuffers: VertexBuffer[],
         indexBuffer?: IndexBuffer | null,
         vertexOffset?: number | null,
         dynamicVertexBuffer?: VertexBuffer | null,
@@ -71,7 +71,7 @@ export class VertexArrayObject {
                 dynamicVertexBuffer.bind();
             }
 
-            if (indexBuffer && indexBuffer.dynamicDraw) {
+            if (indexBuffer?.dynamicDraw) {
                 indexBuffer.bind();
             }
 
@@ -87,7 +87,7 @@ export class VertexArrayObject {
 
     freshBind(program: Program<any>,
         layoutVertexBuffer: VertexBuffer,
-        paintVertexBuffers: Array<VertexBuffer>,
+        paintVertexBuffers: VertexBuffer[],
         indexBuffer?: IndexBuffer | null,
         vertexOffset?: number | null,
         dynamicVertexBuffer?: VertexBuffer | null,

@@ -1,5 +1,5 @@
 import {extend, isWorker} from './util';
-import {AbortError, isAbortError} from './abort_error';
+import {AbortError, isAbortError, throwIfAborted} from './abort_error';
 import {getProtocol} from '../source/protocol_crud';
 import {MessageType} from './actor_messages';
 
@@ -131,7 +131,7 @@ export class AJAXError extends Error {
  * and we will set an empty referrer. Otherwise, we're using the document's URL.
  */
 export const getReferrer = () => isWorker(self) ?
-    self.worker && self.worker.referrer :
+    self.worker?.referrer :
     (window.location.protocol === 'blob:' ? window.parent : window).location.href;
 
 /**
@@ -141,7 +141,7 @@ export const getReferrer = () => isWorker(self) ?
  * @param url - The URL to check
  * @returns `true` if the URL is a file:// URL, `false` otherwise
  */
-const isFileURL = url => /^file:/.test(url) || (/^file:/.test(getReferrer()) && !/^\w+:/.test(url));
+const isFileURL = url => url.startsWith('file:') || (getReferrer()?.startsWith('file:') && !/^\w+:/.test(url));
 
 async function makeFetchRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
     const request = new Request(requestParameters.url, {
@@ -188,7 +188,7 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
         parsePromise = response.text();
     }
     const result = await parsePromise;
-    abortController.signal.throwIfAborted();
+    throwIfAborted(abortController.signal);
     return {data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires'), etag: response.headers.get('ETag')};
 }
 
@@ -252,20 +252,20 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
  * @returns a promise resolving to the response, including cache control and expiry data
  */
 export const makeRequest = function(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
-    if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
+    if (requestParameters.url.includes('://') && !(/^https?:|^file:/.test(requestParameters.url))) {
         const protocolLoadFn = getProtocol(requestParameters.url);
         if (protocolLoadFn) {
             return protocolLoadFn(requestParameters, abortController);
         }
-        if (isWorker(self) && self.worker && self.worker.actor) {
+        if (isWorker(self) && self.worker?.actor) {
             return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
         }
     }
     if (!isFileURL(requestParameters.url)) {
-        if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
+        if (fetch && Request && AbortController && Object.hasOwn(Request.prototype, 'signal')) {
             return makeFetchRequest(requestParameters, abortController);
         }
-        if (isWorker(self) && self.worker && self.worker.actor) {
+        if (isWorker(self) && self.worker?.actor) {
             return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, mustQueue: true, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
         }
     }
@@ -286,8 +286,8 @@ export function sameOrigin(inComingUrl: string) {
     // also check data URL
     if (!inComingUrl ||
         inComingUrl.indexOf('://') <= 0 || // relative URL
-        inComingUrl.indexOf('data:image/') === 0 || // data image URL
-        inComingUrl.indexOf('blob:') === 0) { // blob
+        inComingUrl.startsWith('data:image/') || // data image URL
+        inComingUrl.startsWith('blob:')) { // blob
         return true;
     }
     const urlObj = new URL(inComingUrl);
@@ -295,7 +295,7 @@ export function sameOrigin(inComingUrl: string) {
     return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
 }
 
-export const getVideo = (urls: Array<string>): Promise<HTMLVideoElement> => {
+export const getVideo = (urls: string[]): Promise<HTMLVideoElement> => {
     const video: HTMLVideoElement = window.document.createElement('video');
     video.muted = true;
     return new Promise((resolve) => {

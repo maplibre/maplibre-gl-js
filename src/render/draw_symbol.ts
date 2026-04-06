@@ -61,7 +61,7 @@ type SymbolTileRenderState = {
 
 const identityMat4 = mat4.identity(new Float32Array(16));
 
-export function drawSymbols(painter: Painter, tileManager: TileManager, layer: SymbolStyleLayer, coords: Array<OverscaledTileID>, variableOffsets: {
+export function drawSymbols(painter: Painter, tileManager: TileManager, layer: SymbolStyleLayer, coords: OverscaledTileID[], variableOffsets: {
     [_ in CrossTileID]: VariableOffset;
 }, renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
@@ -128,7 +128,7 @@ function calculateVariableRenderShift(
     );
 }
 
-function updateVariableAnchors(coords: Array<OverscaledTileID>,
+function updateVariableAnchors(coords: OverscaledTileID[],
     painter: Painter,
     layer:SymbolStyleLayer, tileManager: TileManager,
     rotationAlignment: SymbolLayerSpecification['layout']['text-rotation-alignment'],
@@ -144,7 +144,7 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);
         const bucket = tile.getBucket(layer) as SymbolBucket;
-        if (!bucket || !bucket.text || !bucket.text.segments.get().length) continue;
+        if (!bucket?.text?.segments.get().length) continue;
 
         const sizeData = bucket.textSizeData;
         const size = evaluateSizeForZoom(sizeData, transform.zoom);
@@ -297,7 +297,7 @@ function drawLayerSymbols(
     painter: Painter,
     tileManager: TileManager,
     layer: SymbolStyleLayer,
-    coords: Array<OverscaledTileID>,
+    coords: OverscaledTileID[],
     isText: boolean,
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
@@ -327,7 +327,7 @@ function drawLayerSymbols(
 
     const hasVariablePlacement = layer._unevaluatedLayout.hasValue('text-variable-anchor') || layer._unevaluatedLayout.hasValue('text-variable-anchor-offset');
 
-    const tileRenderState: Array<SymbolTileRenderState> = [];
+    const tileRenderState: SymbolTileRenderState[] = [];
 
     const pitchedTextRescaling = transform.getCircleRadiusCorrection();
 
@@ -337,7 +337,7 @@ function drawLayerSymbols(
         if (!bucket) continue;
         const buffers = isText ? bucket.text : bucket.icon;
 
-        if (!buffers || !buffers.segments.get().length || !buffers.hasVisibleVertices) continue;
+        if (!buffers?.segments.get().length || !buffers.hasVisibleVertices) continue;
         const programConfiguration = buffers.programConfigurations.get(layer.id);
 
         const isSDF = isText || bucket.sdfIcons;
@@ -347,7 +347,7 @@ function drawLayerSymbols(
 
         const program = painter.useProgram(getSymbolProgramName(isSDF, isText, bucket), programConfiguration);
         const size = evaluateSizeForZoom(sizeData, transform.zoom);
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
 
         let texSize: [number, number];
         let texSizeIcon: [number, number] = [0, 0];

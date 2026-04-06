@@ -14,7 +14,7 @@ interface DataT {
 }
 
 class ExpressionBenchmark extends Benchmark {
-    data: Array<DataT>;
+    data: DataT[];
     style: string | StyleSpecification;
 
     constructor(style: string | StyleSpecification) {

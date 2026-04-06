@@ -9,7 +9,7 @@ import html from 'eslint-plugin-html';
 
 export default [
     {
-        ignores: ['build/*.js', 'staging/**', 'coverage/**', 'node_modules/**', 'docs/**', 'dist/**']
+        ignores: ['build/*.js', 'build/rollup/**', 'staging/**', 'coverage/**', 'node_modules/**', 'docs/**', 'dist/**']
     },
     {
         ignores: ['test/bench/**'],
@@ -37,6 +37,15 @@ export default [
 
             parserOptions: {
                 createDefaultProgram: true,
+                projectService: {
+                    allowDefaultProject: [
+                        'build/generate-*.ts',
+                        'test/build/*.ts',
+                        'eslint.config.js',
+                        'postcss.config.js',
+                    ],
+                    maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 20,
+                },
             },
         },
 
@@ -49,7 +58,20 @@ export default [
             '@typescript-eslint/no-unused-vars': ['warn', {
                 argsIgnorePattern: '^_',
             }],
+            '@typescript-eslint/prefer-optional-chain': 'error',
+            '@typescript-eslint/prefer-reduce-type-parameter': 'error',
+            '@typescript-eslint/prefer-return-this-type': 'error',
+            '@typescript-eslint/prefer-for-of': 'error',
+            '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+            '@typescript-eslint/prefer-includes': 'error',
+            '@typescript-eslint/prefer-string-starts-ends-with': 'error',
+            '@typescript-eslint/array-type': ['error', {default: 'array-simple'}],
 
+            'prefer-object-spread': 'error',
+            'prefer-object-has-own': 'error',
+            'object-shorthand': 'error',
+            'no-useless-computed-key': 'error',
+            'no-object-constructor': 'error',
             '@stylistic/member-delimiter-style': ['error'],
             'no-useless-constructor': 'off',
             '@typescript-eslint/no-useless-constructor': ['error'],
@@ -96,6 +118,13 @@ export default [
             indent: 'off',
             '@stylistic/indent': ['error'],
             '@stylistic/semi': ['error'],
+            'no-restricted-syntax': [
+                'error',
+                {
+                    'selector': 'CallExpression[callee.property.name=\'forEach\']',
+                    'message': 'Do not use forEach. Use for...of for iteration, map for mapping, or reduce for accumulation instead.'
+                }
+            ],
 
             'no-multiple-empty-lines': ['error', {
                 max: 1,

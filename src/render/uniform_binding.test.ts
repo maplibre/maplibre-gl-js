@@ -20,7 +20,7 @@ describe('Uniform Binding', () => {
 
         const context = {
             gl: {
-                uniform1i: () => { expect(true).toBeTruthy(); }
+                uniform1i: () => expect(true).toBeTruthy()
             }
         } as any as Context;
 
@@ -38,7 +38,7 @@ describe('Uniform Binding', () => {
 
         const context = {
             gl: {
-                uniform1f: () => { expect(true).toBeTruthy(); }
+                uniform1f: () => expect(true).toBeTruthy()
             }
         } as any as Context;
 
@@ -56,7 +56,7 @@ describe('Uniform Binding', () => {
 
         const context = {
             gl: {
-                uniform2f: () => { expect(true).toBeTruthy(); }
+                uniform2f: () => expect(true).toBeTruthy()
             }
         } as any as Context;
 
@@ -74,7 +74,7 @@ describe('Uniform Binding', () => {
 
         const context = {
             gl: {
-                uniform3f: () => { expect(true).toBeTruthy(); }
+                uniform3f: () => expect(true).toBeTruthy()
             }
         } as any as Context;
 
@@ -92,7 +92,7 @@ describe('Uniform Binding', () => {
 
         const context = {
             gl: {
-                uniform4f: () => { expect(true).toBeTruthy(); }
+                uniform4f: () => expect(true).toBeTruthy()
             }
         } as any as Context;
 
@@ -110,7 +110,7 @@ describe('Uniform Binding', () => {
 
         const context = {
             gl: {
-                uniformMatrix4fv: () => { expect(true).toBeTruthy(); }
+                uniformMatrix4fv: () => expect(true).toBeTruthy()
             }
         } as any as Context;
 
@@ -128,7 +128,7 @@ describe('Uniform Binding', () => {
 
         const context = {
             gl: {
-                uniform4fv: () => { expect(true).toBeTruthy(); }
+                uniform4fv: () => expect(true).toBeTruthy()
             }
         } as any as Context;
 
@@ -146,7 +146,7 @@ describe('Uniform Binding', () => {
 
         const context = {
             gl: {
-                uniform1fv: () => { expect(true).toBeTruthy(); }
+                uniform1fv: () => expect(true).toBeTruthy()
             }
         } as any as Context;
 

@@ -1,3 +1,4 @@
+import {throwIfAborted} from '../util/abort_error';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {type StyleLayer} from './style_layer';
 import {isRasterStyleLayer} from './style_layer/raster_style_layer';
@@ -38,7 +39,7 @@ const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
     message: string;
     identifier?: string;
 }> | null) =>
-    _emitValidationErrors(evented, errors && errors.filter(error => error.identifier !== 'source.canvas'));
+    _emitValidationErrors(evented, errors?.filter(error => error.identifier !== 'source.canvas'));
 
 import type {Map} from '../ui/map';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
@@ -73,7 +74,7 @@ import {type Projection} from '../geo/projection/projection';
 import {createProjectionFromName} from '../geo/projection/projection_factory';
 import type {OverscaledTileID} from '../tile/tile_id';
 
-const empty = emptyStyle() as StyleSpecification;
+const empty = emptyStyle();
 /**
  * A feature identifier that is bound to a source
  */
@@ -218,7 +219,7 @@ export class Style extends Evented {
     _spriteRequest: AbortController;
     _layers: {[_: string]: StyleLayer};
     _serializedLayers: {[_: string]: LayerSpecification};
-    _order: Array<string>;
+    _order: string[];
     tileManagers: {[_: string]: TileManager};
     zoomHistory: ZoomHistory;
     _loaded: boolean;
@@ -233,7 +234,7 @@ export class Style extends Evented {
     // image ids of images loaded from style's sprite
     _spritesImagesIds: {[spriteId: string]: string[]};
     // image ids of all images loaded (sprite + user)
-    _availableImages: Array<string>;
+    _availableImages: string[];
     _globalState: Record<string, any>;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     pauseablePlacement: PauseablePlacement;
@@ -279,7 +280,7 @@ export class Style extends Evented {
             }
 
             const source = tileManager.getSource();
-            if (!source || !source.vectorLayerIds) {
+            if (!source?.vectorLayerIds) {
                 return;
             }
 
@@ -426,15 +427,24 @@ export class Style extends Evented {
         options.validate = typeof options.validate === 'boolean' ?
             options.validate : true;
 
-        const request = await this.map._requestManager.transformRequest(url, ResourceType.Style);
         this._loadStyleRequest = new AbortController();
         const abortController = this._loadStyleRequest;
         try {
-            const response = await getJSON<StyleSpecification>(request, this._loadStyleRequest);
-            this._loadStyleRequest = null;
+            const request = await this.map._requestManager.transformRequest(url, ResourceType.Style);
+            throwIfAborted(abortController.signal);
+
+            const response = await getJSON<StyleSpecification>(request, abortController);
+            if (this._loadStyleRequest === abortController) {
+                // Clear this request only if it is still the active style load. A stale
+                // request can finish after a newer loadURL() call has already installed
+                // another controller, and must not clear that newer abort handle.
+                this._loadStyleRequest = null;
+            }
             this._load(response.data, options, previousStyle);
         } catch (error) {
-            this._loadStyleRequest = null;
+            if (this._loadStyleRequest === abortController) {
+                this._loadStyleRequest = null;
+            }
             if (error && !abortController.signal.aborted) { // ignore abort
                 this.fire(new ErrorEvent(error));
             }
@@ -602,7 +612,7 @@ export class Style extends Evented {
         }
 
         const source = tileManager.getSource();
-        if (source.type === 'geojson' || (source.vectorLayerIds && source.vectorLayerIds.indexOf(sourceLayer) === -1)) {
+        if (source.type === 'geojson' || (source.vectorLayerIds && !source.vectorLayerIds.includes(sourceLayer))) {
             this.fire(new ErrorEvent(new Error(
                 `Source layer "${sourceLayer}" ` +
                 `does not exist on source "${source.id}" ` +
@@ -622,20 +632,17 @@ export class Style extends Evented {
             if (!this.tileManagers[id].loaded())
                 return false;
 
-        if (!this.imageManager.isLoaded())
-            return false;
-
-        return true;
+        return this.imageManager.isLoaded();
     }
 
     /**
      * @hidden
      * take an array of string IDs, and based on this._layers, generate an array of LayerSpecification
      * @param ids - an array of string IDs, for which serialized layers will be generated. If omitted, all serialized layers will be returned
-     * @param returnClose - if true, return a clone of the layer object
+     * @param returnClone - if true, return a clone of the layer object
      * @returns generated result
      */
-    private _serializeByIds(ids: Array<string>, returnClone: boolean = false): Array<LayerSpecification> {
+    private _serializeByIds(ids: string[], returnClone: boolean = false): LayerSpecification[] {
 
         const serializedLayersDictionary = this._serializedAllLayers();
         if (!ids || ids.length === 0) {
@@ -824,7 +831,7 @@ export class Style extends Evented {
         }
     }
 
-    _updateWorkerLayers(updatedIds: Array<string>, removedIds: Array<string>) {
+    _updateWorkerLayers(updatedIds: string[], removedIds: string[]) {
         this.dispatcher.broadcast(MessageType.updateLayers, {
             layers: this._serializeByIds(updatedIds, false),
             removedIds
@@ -889,7 +896,7 @@ export class Style extends Evented {
         return true;
     }
 
-    _getOperationsToPerform(diff: DiffCommand<DiffOperations>[]) {
+    _getOperationsToPerform(diff: Array<DiffCommand<DiffOperations>>) {
         const operations: Function[] = [];
         const unimplemented: string[] = [];
         for (const op of diff) {
@@ -1012,9 +1019,9 @@ export class Style extends Evented {
         }
 
         const builtIns = ['vector', 'raster', 'geojson', 'video', 'image'];
-        const shouldValidate = builtIns.indexOf(source.type) >= 0;
+        const shouldValidate = builtIns.includes(source.type);
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
-        if (this.map && this.map._collectResourceTiming) (source as any).collectResourceTiming = true;
+        if (this.map?._collectResourceTiming) (source as any).collectResourceTiming = true;
         const tileManager = this.tileManagers[id] = new TileManager(id, source, this.dispatcher);
         tileManager.style = this;
         tileManager.setEventedParent(this, () => ({
@@ -1075,7 +1082,7 @@ export class Style extends Evented {
      * @returns source
      */
     getSource(id: string): Source | undefined {
-        return this.tileManagers[id] && this.tileManagers[id].getSource();
+        return this.tileManagers[id]?.getSource();
     }
 
     /**
@@ -1448,7 +1455,7 @@ export class Style extends Evented {
     }
 
     getTransition() {
-        return extend({duration: 300, delay: 0}, this.stylesheet && this.stylesheet.transition);
+        return extend({duration: 300, delay: 0}, this.stylesheet?.transition);
     }
 
     serialize(): StyleSpecification | undefined {
@@ -1481,7 +1488,7 @@ export class Style extends Evented {
             layers,
             terrain
         },
-        (value) => { return value !== undefined; });
+        (value) => value !== undefined);
     }
 
     _updateLayer(layer: StyleLayer) {
@@ -1568,12 +1575,12 @@ export class Style extends Evented {
     }
 
     queryRenderedFeatures(queryGeometry: Point[], params: QueryRenderedFeaturesOptions, transform: IReadonlyTransform): MapGeoJSONFeature[] {
-        if (params && params.filter) {
+        if (params?.filter) {
             this._validate(validateStyle.filter, 'queryRenderedFeatures.filter', params.filter, null, params);
         }
 
         const includedSources = {};
-        if (params && params.layers) {
+        if (params?.layers) {
             const isArrayOrSet = Array.isArray(params.layers) || params.layers instanceof Set;
             if (!isArrayOrSet) {
                 this.fire(new ErrorEvent(new Error('parameters.layers must be an Array or a Set of strings')));
@@ -1683,7 +1690,7 @@ export class Style extends Evented {
         return this.stylesheet?.projection;
     }
 
-    setProjection(projection: ProjectionSpecification) {
+    setProjection(projection?: ProjectionSpecification) {
         this._checkLoaded();
         const resolvedProjection = projection ?? {type: 'mercator'};
         this.stylesheet.projection = projection;
@@ -1747,7 +1754,7 @@ export class Style extends Evented {
     _validate(validate: Validator, key: string, value: any, props: any, options: {
         validate?: boolean;
     } = {}) {
-        if (options && options.validate === false) {
+        if (options?.validate === false) {
             return false;
         }
         return emitValidationErrors(this, validate.call(validateStyle, extend({
@@ -1875,9 +1882,8 @@ export class Style extends Evented {
             }
         }
 
-        // needsRender is false when we have just finished a placement that didn't change the visibility of any symbols
-        const needsRerender = !this.pauseablePlacement.isDone() || this.placement.hasTransitions(now());
-        return needsRerender;
+        // false when we have just finished a placement that didn't change the visibility of any symbols
+        return !this.pauseablePlacement.isDone() || this.placement.hasTransitions(now());
     }
 
     _releaseSymbolFadeTiles() {

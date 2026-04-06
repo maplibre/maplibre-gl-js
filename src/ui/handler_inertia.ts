@@ -114,8 +114,7 @@ export class HandlerInertia {
 
         if (deltas.zoom) {
             const result = calculateEasing(deltas.zoom, duration, defaultZoomInertiaOptions);
-            const zoom = evaluateZoomSnap(this._map.transform.zoom + result.amount, this._map.getZoomSnap(), result.amount);
-            easeOptions.zoom = zoom;
+            easeOptions.zoom = evaluateZoomSnap(this._map.transform.zoom + result.amount, this._map.getZoomSnap(), result.amount);
             extendDuration(easeOptions, result);
         }
 

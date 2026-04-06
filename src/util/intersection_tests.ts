@@ -4,30 +4,27 @@ import Point from '@mapbox/point-geometry';
 
 export {polygonIntersectsBufferedPoint, polygonIntersectsMultiPolygon, polygonIntersectsBufferedMultiLine, polygonIntersectsPolygon, distToSegmentSquared, polygonIntersectsBox};
 
-type Line = Array<Point>;
-type MultiLine = Array<Line>;
-type Ring = Array<Point>;
-type Polygon = Array<Point>;
-type MultiPolygon = Array<Polygon>;
+type Line = Point[];
+type MultiLine = Line[];
+type Ring = Point[];
+type Polygon = Point[];
+type MultiPolygon = Polygon[];
 
 function polygonIntersectsPolygon(polygonA: Polygon, polygonB: Polygon) {
-    for (let i = 0; i < polygonA.length; i++) {
-        if (polygonContainsPoint(polygonB, polygonA[i])) return true;
+    for (const point of polygonA) {
+        if (polygonContainsPoint(polygonB, point)) return true;
     }
 
-    for (let i = 0; i < polygonB.length; i++) {
-        if (polygonContainsPoint(polygonA, polygonB[i])) return true;
+    for (const point of polygonB) {
+        if (polygonContainsPoint(polygonA, point)) return true;
     }
 
-    if (lineIntersectsLine(polygonA, polygonB)) return true;
-
-    return false;
+    return lineIntersectsLine(polygonA, polygonB);
 }
 
 function polygonIntersectsBufferedPoint(polygon: Polygon, point: Point, radius: number) {
     if (polygonContainsPoint(polygon, point)) return true;
-    if (pointIntersectsBufferedLine(point, polygon, radius)) return true;
-    return false;
+    return pointIntersectsBufferedLine(point, polygon, radius);
 }
 
 function polygonIntersectsMultiPolygon(polygon: Polygon, multiPolygon: MultiPolygon) {
@@ -36,31 +33,29 @@ function polygonIntersectsMultiPolygon(polygon: Polygon, multiPolygon: MultiPoly
         return multiPolygonContainsPoint(multiPolygon, polygon[0]);
     }
 
-    for (let m = 0; m < multiPolygon.length; m++) {
-        const ring = multiPolygon[m];
-        for (let n = 0; n < ring.length; n++) {
-            if (polygonContainsPoint(polygon, ring[n])) return true;
+    for (const ring of multiPolygon) {
+        for (const point of ring) {
+            if (polygonContainsPoint(polygon, point)) return true;
         }
     }
 
-    for (let i = 0; i < polygon.length; i++) {
-        if (multiPolygonContainsPoint(multiPolygon, polygon[i])) return true;
+    for (const point of polygon) {
+        if (multiPolygonContainsPoint(multiPolygon, point)) return true;
     }
 
-    for (let k = 0; k < multiPolygon.length; k++) {
-        if (lineIntersectsLine(polygon, multiPolygon[k])) return true;
+    for (const ring of multiPolygon) {
+        if (lineIntersectsLine(polygon, ring)) return true;
     }
 
     return false;
 }
 
 function polygonIntersectsBufferedMultiLine(polygon: Polygon, multiLine: MultiLine, radius: number) {
-    for (let i = 0; i < multiLine.length; i++) {
-        const line = multiLine[i];
+    for (const line of multiLine) {
 
         if (polygon.length >= 3) {
-            for (let k = 0; k < line.length; k++) {
-                if (polygonContainsPoint(polygon, line[k])) return true;
+            for (const point of line) {
+                if (polygonContainsPoint(polygon, point)) return true;
             }
         }
 
@@ -75,13 +70,13 @@ function lineIntersectsBufferedLine(lineA: Line, lineB: Line, radius: number) {
         if (lineIntersectsLine(lineA, lineB)) return true;
 
         // Check whether any point in either line is within radius of the other line
-        for (let j = 0; j < lineB.length; j++) {
-            if (pointIntersectsBufferedLine(lineB[j], lineA, radius)) return true;
+        for (const point of lineB) {
+            if (pointIntersectsBufferedLine(point, lineA, radius)) return true;
         }
     }
 
-    for (let k = 0; k < lineA.length; k++) {
-        if (pointIntersectsBufferedLine(lineA[k], lineB, radius)) return true;
+    for (const point of lineA) {
+        if (pointIntersectsBufferedLine(point, lineB, radius)) return true;
     }
 
     return false;
@@ -131,12 +126,12 @@ function distToSegmentSquared(p: Point, v: Point, w: Point) {
 }
 
 // point in polygon ray casting algorithm
-function multiPolygonContainsPoint(rings: Array<Ring>, p: Point) {
+function multiPolygonContainsPoint(rings: Ring[], p: Point) {
     let c = false,
         ring, p1, p2;
 
-    for (let k = 0; k < rings.length; k++) {
-        ring = rings[k];
+    for (const currentRing of rings) {
+        ring = currentRing;
         for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
             p1 = ring[i];
             p2 = ring[j];
@@ -189,7 +184,7 @@ function polygonIntersectsBox(ring: Ring, boxX1: number, boxY1: number, boxX2: n
     return false;
 }
 
-function edgeIntersectsBox(e1: Point, e2: Point, corners: Array<Point>) {
+function edgeIntersectsBox(e1: Point, e2: Point, corners: Point[]) {
     const tl = corners[0];
     const br = corners[2];
     // the edge and box do not intersect in either the x or y dimensions

@@ -109,8 +109,7 @@
             async function loadModel() {
                 const loader = new GLTFLoader();
                 const gltf = await loader.loadAsync('https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf');
-                const model = gltf.scene;
-                return model;
+                return gltf.scene;
             }
 
             // Known locations. We'll infer the elevation of those locations once terrain is loaded.

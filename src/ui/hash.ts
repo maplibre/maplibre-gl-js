@@ -90,13 +90,12 @@ export class Hash {
         if (this._hashName) {
             // Split the parameter-styled hash into parts and find the value we need
             let keyval;
-            hash.split('&').map(
-                part => part.split('=')
-            ).forEach(part => {
+            const parts = hash.split('&').map(part => part.split('='));
+            for (const part of parts) {
                 if (part[0] === this._hashName) {
                     keyval = part;
                 }
-            });
+            }
             return (keyval ? keyval[1] || '' : '').split('/');
         }
         return hash.split('/');

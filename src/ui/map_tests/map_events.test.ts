@@ -3,7 +3,7 @@ import simulate from '../../../test/unit/lib/simulate_interaction';
 import {type StyleLayer} from '../../style/style_layer';
 import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util';
 import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
-import {type MapLayerEventType, type MapLibreEvent} from '../events';
+import {type MapLibreEvent} from '../events';
 import {Map, type MapOptions} from '../map';
 import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
 import {GlobeProjection} from '../../geo/projection/globe_projection';
@@ -470,385 +470,380 @@ describe('map events', () => {
         expect(spy).not.toHaveBeenCalled();
     });
 
-    (['mouseenter', 'mouseover'] as (keyof MapLayerEventType)[]).forEach((event) => {
-        test(`Map.on ${event} does not fire if the specified layer does not exist`, () => {
-            const map = createMap();
+    const mouseInteractionEvents = ['mouseenter', 'mouseover'] as const;
+    test.each(mouseInteractionEvents)('Map.on %s does not fire if the specified layer does not exist', (event) => {
+        const map = createMap();
 
-            vi.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);
+        vi.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);
 
-            const spy = vi.fn();
+        const spy = vi.fn();
 
-            map.on(event, 'layer', spy);
-            simulate.mousemove(map.getCanvas());
-            simulate.mousemove(map.getCanvas());
+        map.on(event, 'layer', spy);
+        simulate.mousemove(map.getCanvas());
+        simulate.mousemove(map.getCanvas());
 
-            expect(spy).not.toHaveBeenCalled();
-
-        });
-
-        test(`Map.on ${event} fires when entering the specified layer`, () => {
-            const map = createMap();
-            const features = [{} as MapGeoJSONFeature];
-
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
-                expect(options).toEqual({layers: ['layer']});
-                return features;
-            });
-
-            const spy = vi.fn(function (e) {
-                expect(this).toBe(map);
-                expect(e.type).toBe(event);
-                expect(e.target).toBe(map);
-                expect(e.features).toBe(features);
-            });
-
-            map.on(event, 'layer', spy);
-            simulate.mousemove(map.getCanvas());
-
-            expect(spy).toHaveBeenCalledTimes(1);
-        });
-
-        test(`Map.on ${event} does not fire on mousemove within the specified layer`, () => {
-            const map = createMap();
-
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
-
-            const spy = vi.fn();
-
-            map.on(event, 'layer', spy);
-            simulate.mousemove(map.getCanvas());
-            simulate.mousemove(map.getCanvas());
-
-            expect(spy).toHaveBeenCalledTimes(1);
-        });
-
-        test(`Map.on ${event} fires when reentering the specified layer`, () => {
-            const map = createMap();
-
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures')
-                .mockReturnValueOnce([{} as MapGeoJSONFeature])
-                .mockReturnValueOnce([])
-                .mockReturnValueOnce([{} as MapGeoJSONFeature]);
-
-            const spy = vi.fn();
-
-            map.on(event, 'layer', spy);
-            simulate.mousemove(map.getCanvas());
-            simulate.mousemove(map.getCanvas());
-            simulate.mousemove(map.getCanvas());
-
-            expect(spy).toHaveBeenCalledTimes(2);
-        });
-
-        test(`Map.on ${event} fires when reentering the specified layer after leaving the canvas`, () => {
-            const map = createMap();
-
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
-
-            const spy = vi.fn();
-
-            map.on(event, 'layer', spy);
-            simulate.mousemove(map.getCanvas());
-            simulate.mouseout(map.getCanvas());
-            simulate.mousemove(map.getCanvas());
-
-            expect(spy).toHaveBeenCalledTimes(2);
-        });
-
-        test(`Map.on ${event} distinguishes distinct layers`, () => {
-            const map = createMap();
-            const featuresA = [{} as MapGeoJSONFeature];
-            const featuresB = [{} as MapGeoJSONFeature];
-
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
-                return (options as any).layers[0] === 'A' ? featuresA : featuresB;
-            });
-
-            const spyA = vi.fn((e) => {
-                expect(e.features).toBe(featuresA);
-            });
-
-            const spyB = vi.fn((e) => {
-                expect(e.features).toBe(featuresB);
-            });
-
-            map.on(event, 'A', spyA);
-            map.on(event, 'B', spyB);
-
-            simulate.mousemove(map.getCanvas());
-            simulate.mousemove(map.getCanvas());
-
-            expect(spyA).toHaveBeenCalledTimes(1);
-            expect(spyB).toHaveBeenCalledTimes(1);
-        });
-
-        test(`Map.on ${event} distinguishes distinct layers when multiple layers provided`, () => {
-            const map = createMap();
-
-            const nonEmptyFeatures = [{} as MapGeoJSONFeature];
-            const emptyFeatures = [];
-
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
-                const layers = (options as any).layers as string[];
-                if (layers.includes('A')) {
-                    return nonEmptyFeatures;
-                }
-                return emptyFeatures;
-            });
-
-            const spyA = vi.fn();
-            const spyAB = vi.fn();
-            const spyC = vi.fn();
-
-            map.on(event, 'A', spyA);
-            map.on(event, ['A', 'B'], spyAB);
-            map.on(event, 'C', spyC);
-
-            simulate.mousemove(map.getCanvas());
-            simulate.mousemove(map.getCanvas());
-
-            expect(spyA).toHaveBeenCalledTimes(1);
-            expect(spyAB).toHaveBeenCalledTimes(1);
-            expect(spyC).not.toHaveBeenCalled();
-        });
-
-        test(`Map.on ${event} filters non-existing layers`, () => {
-            const map = createMap();
-
-            vi.spyOn(map, 'getLayer').mockImplementation((id: string) => id === 'B' ? undefined : {} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
-                expect((options as any).layers).toStrictEqual(['A', 'C']);
-                return [{} as MapGeoJSONFeature];
-            });
-
-            const spyAC = vi.fn();
-
-            map.on(event, ['A', 'B', 'C'], spyAC);
-
-            simulate.mousemove(map.getCanvas());
-
-            expect(map.queryRenderedFeatures).toHaveBeenCalled();
-            expect(spyAC).toHaveBeenCalledTimes(1);
-        });
-
-        test(`Map.on ${event} distinguishes distinct listeners`, () => {
-            const map = createMap();
-
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
-
-            const spyA = vi.fn();
-            const spyB = vi.fn();
-
-            map.on(event, 'layer', spyA);
-            map.on(event, 'layer', spyB);
-            simulate.mousemove(map.getCanvas());
-
-            expect(spyA).toHaveBeenCalledTimes(1);
-            expect(spyB).toHaveBeenCalledTimes(1);
-        });
-
-        test(`Map.off ${event} removes a delegated event listener`, () => {
-            const map = createMap();
-
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
-
-            const spy = vi.fn();
-
-            map.on(event, 'layer', spy);
-            map.off(event, 'layer', spy);
-            simulate.mousemove(map.getCanvas());
-
-            expect(spy).not.toHaveBeenCalled();
-
-        });
-
-        test(`Map.off ${event} distinguishes distinct layers`, () => {
-            const map = createMap();
-            const featuresA = [{} as MapGeoJSONFeature];
-
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
-                expect(options).toEqual({layers: ['A']});
-                return featuresA;
-            });
-
-            const spy = vi.fn((e) => {
-                expect(e.features).toBe(featuresA);
-            });
-
-            map.on(event, 'A', spy);
-            map.on(event, 'B', spy);
-            map.off(event, 'B', spy);
-            simulate.mousemove(map.getCanvas());
-
-            expect(spy).toHaveBeenCalledTimes(1);
-        });
-
-        test(`Map.off ${event} distinguishes distinct layers when multiple layers provided`, () => {
-            const map = createMap();
-            const featuresAB = [{} as MapGeoJSONFeature];
-
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
-                expect(options).toEqual({layers: ['A', 'B']});
-                return featuresAB;
-            });
-
-            const spy = vi.fn((e) => {
-                expect(e.features).toBe(featuresAB);
-            });
-
-            map.on(event, ['A', 'B'], spy);
-            map.on(event, ['B', 'C'], spy);
-            map.off(event, ['B', 'C'], spy);
-            simulate.mousemove(map.getCanvas());
-
-            expect(spy).toHaveBeenCalledTimes(1);
-            expect(map.queryRenderedFeatures).toHaveBeenCalledTimes(1);
-        });
-
-        test(`Map.off ${event} distinguishes distinct listeners`, () => {
-            const map = createMap();
-
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
-
-            const spyA = vi.fn();
-            const spyB = vi.fn();
-
-            map.on(event, 'layer', spyA);
-            map.on(event, 'layer', spyB);
-            map.off(event, 'layer', spyB);
-            simulate.mousemove(map.getCanvas());
-
-            expect(spyA).toHaveBeenCalledTimes(1);
-            expect(spyB).not.toHaveBeenCalled();
-        });
+        expect(spy).not.toHaveBeenCalled();
     });
 
-    (['mouseleave', 'mouseout'] as (keyof MapLayerEventType)[]).forEach((event) => {
-        test(`Map.on ${event} does not fire if the specified layer does not exist`, () => {
-            const map = createMap();
+    test.each(mouseInteractionEvents)('Map.on %s fires when entering the specified layer', (event) => {
+        const map = createMap();
+        const features = [{} as MapGeoJSONFeature];
 
-            vi.spyOn(map, 'getLayer').mockReturnValue(undefined);
-            vi.spyOn(map, 'queryRenderedFeatures');
-
-            const spy = vi.fn();
-
-            map.on(event, 'layer', spy);
-            simulate.mousemove(map.getCanvas());
-            simulate.mousemove(map.getCanvas());
-
-            expect(spy).not.toHaveBeenCalled();
-            expect(map.queryRenderedFeatures).not.toHaveBeenCalled();
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
+            expect(options).toEqual({layers: ['layer']});
+            return features;
         });
 
-        test(`Map.on ${event} fires if one of specified layers exists`, () => {
-            const map = createMap();
-
-            vi.spyOn(map, 'getLayer').mockImplementation((id: string) => id === 'A' ? {} as StyleLayer : undefined);
-            vi.spyOn(map, 'queryRenderedFeatures')
-                .mockReturnValueOnce([{} as MapGeoJSONFeature])
-                .mockReturnValueOnce([]);
-
-            const spy = vi.fn();
-
-            map.on(event, ['A', 'B'], spy);
-            simulate.mousemove(map.getCanvas());
-            simulate.mousemove(map.getCanvas());
-
-            expect(spy).toHaveBeenCalledTimes(1);
+        const spy = vi.fn(function (e) {
+            expect(this).toBe(map);
+            expect(e.type).toBe(event);
+            expect(e.target).toBe(map);
+            expect(e.features).toBe(features);
         });
 
-        test(`Map.on ${event} does not fire on mousemove when entering or within the specified layer`, () => {
-            const map = createMap();
+        map.on(event, 'layer', spy);
+        simulate.mousemove(map.getCanvas());
 
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
 
-            const spy = vi.fn();
+    test.each(mouseInteractionEvents)('Map.on %s does not fire on mousemove within the specified layer', (event) => {
+        const map = createMap();
 
-            map.on(event, 'layer', spy);
-            simulate.mousemove(map.getCanvas());
-            simulate.mousemove(map.getCanvas());
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
 
-            expect(spy).not.toHaveBeenCalled();
+        const spy = vi.fn();
 
+        map.on(event, 'layer', spy);
+        simulate.mousemove(map.getCanvas());
+        simulate.mousemove(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test.each(mouseInteractionEvents)('Map.on %s fires when reentering the specified layer', (event) => {
+        const map = createMap();
+
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures')
+            .mockReturnValueOnce([{} as MapGeoJSONFeature])
+            .mockReturnValueOnce([])
+            .mockReturnValueOnce([{} as MapGeoJSONFeature]);
+
+        const spy = vi.fn();
+
+        map.on(event, 'layer', spy);
+        simulate.mousemove(map.getCanvas());
+        simulate.mousemove(map.getCanvas());
+        simulate.mousemove(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(2);
+    });
+
+    test.each(mouseInteractionEvents)('Map.on %s fires when reentering the specified layer after leaving the canvas', (event) => {
+        const map = createMap();
+
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
+
+        const spy = vi.fn();
+
+        map.on(event, 'layer', spy);
+        simulate.mousemove(map.getCanvas());
+        simulate.mouseout(map.getCanvas());
+        simulate.mousemove(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(2);
+    });
+
+    test.each(mouseInteractionEvents)('Map.on %s distinguishes distinct layers', (event) => {
+        const map = createMap();
+        const featuresA = [{} as MapGeoJSONFeature];
+        const featuresB = [{} as MapGeoJSONFeature];
+
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
+            return (options as any).layers[0] === 'A' ? featuresA : featuresB;
         });
 
-        test(`Map.on ${event} fires when exiting the specified layer`, () => {
-            const map = createMap();
-
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures')
-                .mockReturnValueOnce([{} as MapGeoJSONFeature])
-                .mockReturnValueOnce([]);
-
-            const spy = vi.fn(function (e) {
-                expect(this).toBe(map);
-                expect(e.type).toBe(event);
-                expect(e.features).toBeUndefined();
-            });
-
-            map.on(event, 'layer', spy);
-            simulate.mousemove(map.getCanvas());
-            simulate.mousemove(map.getCanvas());
-
-            expect(spy).toHaveBeenCalledTimes(1);
+        const spyA = vi.fn((e) => {
+            expect(e.features).toBe(featuresA);
         });
 
-        test(`Map.on ${event} fires when exiting the canvas`, () => {
-            const map = createMap();
-
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
-
-            const spy = vi.fn(function (e) {
-                expect(this).toBe(map);
-                expect(e.type).toBe(event);
-                expect(e.features).toBeUndefined();
-            });
-
-            map.on(event, 'layer', spy);
-            simulate.mousemove(map.getCanvas());
-            simulate.mouseout(map.getCanvas());
-
-            expect(spy).toHaveBeenCalledTimes(1);
+        const spyB = vi.fn((e) => {
+            expect(e.features).toBe(featuresB);
         });
 
-        test(`Map.off ${event} removes a delegated event listener`, () => {
-            const map = createMap();
+        map.on(event, 'A', spyA);
+        map.on(event, 'B', spyB);
 
-            vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
-            vi.spyOn(map, 'queryRenderedFeatures')
-                .mockReturnValueOnce([{} as MapGeoJSONFeature])
-                .mockReturnValueOnce([]);
+        simulate.mousemove(map.getCanvas());
+        simulate.mousemove(map.getCanvas());
 
-            const spy = vi.fn();
+        expect(spyA).toHaveBeenCalledTimes(1);
+        expect(spyB).toHaveBeenCalledTimes(1);
+    });
 
-            map.on(event, 'layer', spy);
-            map.off(event, 'layer', spy);
-            simulate.mousemove(map.getCanvas());
-            simulate.mousemove(map.getCanvas());
-            simulate.mouseout(map.getCanvas());
+    test.each(mouseInteractionEvents)('Map.on %s distinguishes distinct layers when multiple layers provided', (event) => {
+        const map = createMap();
 
-            expect(spy).not.toHaveBeenCalled();
+        const nonEmptyFeatures = [{} as MapGeoJSONFeature];
+        const emptyFeatures = [];
 
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
+            const layers = (options as any).layers as string[];
+            if (layers.includes('A')) {
+                return nonEmptyFeatures;
+            }
+            return emptyFeatures;
         });
+
+        const spyA = vi.fn();
+        const spyAB = vi.fn();
+        const spyC = vi.fn();
+
+        map.on(event, 'A', spyA);
+        map.on(event, ['A', 'B'], spyAB);
+        map.on(event, 'C', spyC);
+
+        simulate.mousemove(map.getCanvas());
+        simulate.mousemove(map.getCanvas());
+
+        expect(spyA).toHaveBeenCalledTimes(1);
+        expect(spyAB).toHaveBeenCalledTimes(1);
+        expect(spyC).not.toHaveBeenCalled();
+    });
+
+    test.each(mouseInteractionEvents)('Map.on %s filters non-existing layers', (event) => {
+        const map = createMap();
+
+        vi.spyOn(map, 'getLayer').mockImplementation((id: string) => id === 'B' ? undefined : {} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
+            expect((options as any).layers).toStrictEqual(['A', 'C']);
+            return [{} as MapGeoJSONFeature];
+        });
+
+        const spyAC = vi.fn();
+
+        map.on(event, ['A', 'B', 'C'], spyAC);
+
+        simulate.mousemove(map.getCanvas());
+
+        expect(map.queryRenderedFeatures).toHaveBeenCalled();
+        expect(spyAC).toHaveBeenCalledTimes(1);
+    });
+
+    test.each(mouseInteractionEvents)('Map.on %s distinguishes distinct listeners', (event) => {
+        const map = createMap();
+
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
+
+        const spyA = vi.fn();
+        const spyB = vi.fn();
+
+        map.on(event, 'layer', spyA);
+        map.on(event, 'layer', spyB);
+        simulate.mousemove(map.getCanvas());
+
+        expect(spyA).toHaveBeenCalledTimes(1);
+        expect(spyB).toHaveBeenCalledTimes(1);
+    });
+
+    test.each(mouseInteractionEvents)('Map.off %s removes a delegated event listener', (event) => {
+        const map = createMap();
+
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
+
+        const spy = vi.fn();
+
+        map.on(event, 'layer', spy);
+        map.off(event, 'layer', spy);
+        simulate.mousemove(map.getCanvas());
+
+        expect(spy).not.toHaveBeenCalled();
+
+    });
+
+    test.each(mouseInteractionEvents)('Map.off %s distinguishes distinct layers', (event) => {
+        const map = createMap();
+        const featuresA = [{} as MapGeoJSONFeature];
+
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
+            expect(options).toEqual({layers: ['A']});
+            return featuresA;
+        });
+
+        const spy = vi.fn((e) => {
+            expect(e.features).toBe(featuresA);
+        });
+
+        map.on(event, 'A', spy);
+        map.on(event, 'B', spy);
+        map.off(event, 'B', spy);
+        simulate.mousemove(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test.each(mouseInteractionEvents)('Map.off %s distinguishes distinct layers when multiple layers provided', (event) => {
+        const map = createMap();
+        const featuresAB = [{} as MapGeoJSONFeature];
+
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures').mockImplementation((_point, options) => {
+            expect(options).toEqual({layers: ['A', 'B']});
+            return featuresAB;
+        });
+
+        const spy = vi.fn((e) => {
+            expect(e.features).toBe(featuresAB);
+        });
+
+        map.on(event, ['A', 'B'], spy);
+        map.on(event, ['B', 'C'], spy);
+        map.off(event, ['B', 'C'], spy);
+        simulate.mousemove(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(map.queryRenderedFeatures).toHaveBeenCalledTimes(1);
+    });
+
+    test.each(mouseInteractionEvents)('Map.off %s distinguishes distinct listeners', (event) => {
+        const map = createMap();
+
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
+
+        const spyA = vi.fn();
+        const spyB = vi.fn();
+
+        map.on(event, 'layer', spyA);
+        map.on(event, 'layer', spyB);
+        map.off(event, 'layer', spyB);
+        simulate.mousemove(map.getCanvas());
+
+        expect(spyA).toHaveBeenCalledTimes(1);
+        expect(spyB).not.toHaveBeenCalled();
+    });
+
+    const mouseoutEvents = ['mouseleave', 'mouseout'] as const;
+    test.each(mouseoutEvents)('Map.on %s does not fire if the specified layer does not exist', (event) => {
+        const map = createMap();
+
+        vi.spyOn(map, 'getLayer').mockReturnValue(undefined);
+        vi.spyOn(map, 'queryRenderedFeatures');
+
+        const spy = vi.fn();
+
+        map.on(event, 'layer', spy);
+        simulate.mousemove(map.getCanvas());
+        simulate.mousemove(map.getCanvas());
+
+        expect(spy).not.toHaveBeenCalled();
+        expect(map.queryRenderedFeatures).not.toHaveBeenCalled();
+    });
+
+    test.each(mouseoutEvents)('Map.on %s fires if one of specified layers exists', (event) => {
+        const map = createMap();
+
+        vi.spyOn(map, 'getLayer').mockImplementation((id: string) => id === 'A' ? {} as StyleLayer : undefined);
+        vi.spyOn(map, 'queryRenderedFeatures')
+            .mockReturnValueOnce([{} as MapGeoJSONFeature])
+            .mockReturnValueOnce([]);
+
+        const spy = vi.fn();
+
+        map.on(event, ['A', 'B'], spy);
+        simulate.mousemove(map.getCanvas());
+        simulate.mousemove(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test.each(mouseoutEvents)('Map.on %s does not fire on mousemove when entering or within the specified layer', (event) => {
+        const map = createMap();
+
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
+
+        const spy = vi.fn();
+
+        map.on(event, 'layer', spy);
+        simulate.mousemove(map.getCanvas());
+        simulate.mousemove(map.getCanvas());
+
+        expect(spy).not.toHaveBeenCalled();
+    });
+
+    test.each(mouseoutEvents)('Map.on %s fires when exiting the specified layer', (event) => {
+        const map = createMap();
+
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures')
+            .mockReturnValueOnce([{} as MapGeoJSONFeature])
+            .mockReturnValueOnce([]);
+
+        const spy = vi.fn(function (e) {
+            expect(this).toBe(map);
+            expect(e.type).toBe(event);
+            expect(e.features).toBeUndefined();
+        });
+
+        map.on(event, 'layer', spy);
+        simulate.mousemove(map.getCanvas());
+        simulate.mousemove(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test.each(mouseoutEvents)('Map.on %s fires when exiting the canvas', (event) => {
+        const map = createMap();
+
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures').mockReturnValue([{} as MapGeoJSONFeature]);
+
+        const spy = vi.fn(function (e) {
+            expect(this).toBe(map);
+            expect(e.type).toBe(event);
+            expect(e.features).toBeUndefined();
+        });
+
+        map.on(event, 'layer', spy);
+        simulate.mousemove(map.getCanvas());
+        simulate.mouseout(map.getCanvas());
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test.each(mouseoutEvents)('Map.off %s removes a delegated event listener', (event) => {
+        const map = createMap();
+
+        vi.spyOn(map, 'getLayer').mockReturnValue({} as StyleLayer);
+        vi.spyOn(map, 'queryRenderedFeatures')
+            .mockReturnValueOnce([{} as MapGeoJSONFeature])
+            .mockReturnValueOnce([]);
+
+        const spy = vi.fn();
+
+        map.on(event, 'layer', spy);
+        map.off(event, 'layer', spy);
+        simulate.mousemove(map.getCanvas());
+        simulate.mousemove(map.getCanvas());
+        simulate.mouseout(map.getCanvas());
+
+        expect(spy).not.toHaveBeenCalled();
     });
 
     test('Map.on mousedown can have default behavior prevented and still fire subsequent click event', () => {
         const map = createMap();
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const click = vi.fn();
         map.on('click', click);
@@ -862,7 +857,7 @@ describe('map events', () => {
     test('Map.on mousedown doesn\'t fire subsequent click event if mousepos changes', () => {
         const map = createMap();
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const click = vi.fn();
         map.on('click', click);
@@ -877,7 +872,7 @@ describe('map events', () => {
     test('Map.on mousedown fires subsequent click event if mouse position changes less than click tolerance', () => {
         const map = createMap({clickTolerance: 4});
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const click = vi.fn();
         map.on('click', click);
@@ -892,7 +887,7 @@ describe('map events', () => {
     test('Map.on mousedown does not fire subsequent click event if mouse position changes more than click tolerance', () => {
         const map = createMap({clickTolerance: 4});
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const click = vi.fn();
         map.on('click', click);
@@ -921,9 +916,9 @@ describe('map events', () => {
     test('Map.isMoving() returns false in mousedown/mouseup/click with no movement', () => {
         const map = createMap({interactive: true, clickTolerance: 4});
         let mousedown, mouseup, click;
-        map.on('mousedown', () => { mousedown = map.isMoving(); });
-        map.on('mouseup', () => { mouseup = map.isMoving(); });
-        map.on('click', () => { click = map.isMoving(); });
+        map.on('mousedown', () => mousedown = map.isMoving());
+        map.on('mouseup', () => mouseup = map.isMoving());
+        map.on('click', () => click = map.isMoving());
 
         const canvas = map.getCanvas();
 
