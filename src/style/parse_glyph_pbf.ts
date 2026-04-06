@@ -5,7 +5,7 @@ const border = 3;
 
 import type {StyleGlyph} from './style_glyph';
 
-interface RawGlyph {
+type RawGlyph = {
     id: number;
     bitmap: Uint8Array;
     width: number;
@@ -13,7 +13,7 @@ interface RawGlyph {
     left: number;
     top: number;
     advance: number;
-}
+};
 
 function readFontstacks(tag: number, glyphs: StyleGlyph[], pbf: Protobuf) {
     if (tag === 1) {
