@@ -6,7 +6,7 @@ import {ResourceType} from '../util/request_manager';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {loadTileJson} from './load_tilejson';
 import {TileBounds} from '../tile/tile_bounds';
-import {Texture} from '../render/texture';
+import {Texture} from '../webgl/texture';
 import {isAbortError} from '../util/abort_error';
 
 import type {Source} from './source';

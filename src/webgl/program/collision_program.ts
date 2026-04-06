@@ -1,5 +1,5 @@
 import {Uniform2f} from '../uniform_binding';
-import type {Context} from '../../gl/context';
+import type {Context} from '../../webgl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {IReadonlyTransform} from '../../geo/transform_interface';
 

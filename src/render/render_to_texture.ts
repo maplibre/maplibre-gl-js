@@ -5,8 +5,8 @@ import {type OverscaledTileID} from '../tile/tile_id';
 import {drawTerrain} from './draw_terrain';
 import {type Style} from '../style/style';
 import {type Terrain} from './terrain';
-import {RenderPool} from '../gl/render_pool';
-import {type Texture} from './texture';
+import {RenderPool} from '../webgl/render_pool';
+import {type Texture} from '../webgl/texture';
 import type {StyleLayer} from '../style/style_layer';
 import {ImageSource} from '../source/image_source';
 

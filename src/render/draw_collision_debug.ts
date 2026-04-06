@@ -3,15 +3,15 @@ import type {TileManager} from '../tile/tile_manager';
 import type {StyleLayer} from '../style/style_layer';
 import type {OverscaledTileID} from '../tile/tile_id';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket';
-import {DepthMode} from '../gl/depth_mode';
-import {StencilMode} from '../gl/stencil_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {collisionUniformValues, collisionCircleUniformValues} from './program/collision_program';
+import {DepthMode} from '../webgl/depth_mode';
+import {StencilMode} from '../webgl/stencil_mode';
+import {CullFaceMode} from '../webgl/cull_face_mode';
+import {collisionUniformValues, collisionCircleUniformValues} from '../webgl/program/collision_program';
 import {QuadTriangleArray, CollisionCircleLayoutArray} from '../data/array_types.g';
 import {collisionCircleLayout} from '../data/bucket/symbol_attributes';
 import {SegmentVector} from '../data/segment';
-import {type VertexBuffer} from '../gl/vertex_buffer';
-import {type IndexBuffer} from '../gl/index_buffer';
+import {type VertexBuffer} from '../webgl/vertex_buffer';
+import {type IndexBuffer} from '../webgl/index_buffer';
 
 type TileBatch = {
     circleArray: number[];

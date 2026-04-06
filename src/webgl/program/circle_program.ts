@@ -1,11 +1,11 @@
 import {Uniform1i, Uniform1f, Uniform2f} from '../uniform_binding';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 
-import type {Context} from '../../gl/context';
+import type {Context} from '../../webgl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {Tile} from '../../tile/tile';
 import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer';
-import type {Painter} from '../painter';
+import type {Painter} from '../../render/painter';
 import {EXTENT} from '../../data/extent';
 
 export type CircleUniformsType = {

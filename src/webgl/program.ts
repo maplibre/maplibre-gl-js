@@ -1,16 +1,16 @@
 import {type PreparedShader, shaders, transpileVertexShaderToWebGL1, transpileFragmentShaderToWebGL1} from '../shaders/shaders';
 import {type ProgramConfiguration} from '../data/program_configuration';
 import {VertexArrayObject} from './vertex_array_object';
-import {type Context} from '../gl/context';
-import {isWebGL2} from '../gl/webgl2';
+import {type Context} from './context';
+import {isWebGL2} from './webgl2';
 
 import type {SegmentVector} from '../data/segment';
-import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {IndexBuffer} from '../gl/index_buffer';
-import type {DepthMode} from '../gl/depth_mode';
-import type {StencilMode} from '../gl/stencil_mode';
-import type {ColorMode} from '../gl/color_mode';
-import type {CullFaceMode} from '../gl/cull_face_mode';
+import type {VertexBuffer} from './vertex_buffer';
+import type {IndexBuffer} from './index_buffer';
+import type {DepthMode} from './depth_mode';
+import type {StencilMode} from './stencil_mode';
+import type {ColorMode} from './color_mode';
+import type {CullFaceMode} from './cull_face_mode';
 import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding';
 import type {BinderUniform} from '../data/program_configuration';
 import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program';

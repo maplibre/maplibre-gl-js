@@ -18,7 +18,7 @@ import {hasRasterTransition, isRasterType, updateFadingTiles} from './tile_manag
 import {backfillDEM} from './tile_manager_raster_dem';
 import {InViewTiles} from './tile_manager_in_view_tiles';
 
-import type {Context} from '../gl/context';
+import type {Context} from '../webgl/context';
 import type {Source} from '../source/source';
 import type {Map} from '../ui/map';
 import type {Style} from '../style/style';

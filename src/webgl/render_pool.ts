@@ -1,4 +1,4 @@
-import {Texture} from '../render/texture';
+import {Texture} from './texture';
 import {type Context} from './context';
 import {type Framebuffer} from './framebuffer';
 

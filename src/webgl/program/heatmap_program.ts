@@ -8,10 +8,10 @@ import {
 } from '../uniform_binding';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 
-import type {Context} from '../../gl/context';
+import type {Context} from '../../webgl/context';
 import type {Tile} from '../../tile/tile';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {Painter} from '../painter';
+import type {Painter} from '../../render/painter';
 import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer';
 import {EXTENT} from '../../data/extent';
 

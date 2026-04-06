@@ -6,7 +6,7 @@ import {
 } from '../uniform_binding';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 
-import type {Painter} from '../painter';
+import type {Painter} from '../../render/painter';
 import type {OverscaledTileID} from '../../tile/tile_id';
 import type {CrossFaded} from '../../style/properties';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';

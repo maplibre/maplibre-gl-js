@@ -5,7 +5,7 @@ import {
     Uniform4f
 } from '../uniform_binding';
 
-import type {Context} from '../../gl/context';
+import type {Context} from '../../webgl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {ColorReliefStyleLayer} from '../../style/style_layer/color_relief_style_layer';
 import type {DEMData} from '../../data/dem_data';

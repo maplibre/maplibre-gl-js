@@ -1,6 +1,6 @@
 import {Uniform1f} from '../uniform_binding';
-import type {Context} from '../../gl/context';
-import type {UniformValues, UniformLocations} from '../../render/uniform_binding';
+import type {Context} from '../../webgl/context';
+import type {UniformValues, UniformLocations} from '../uniform_binding';
 
 export type ProjectionErrorMeasurementUniformsType = {
     'u_input': Uniform1f;

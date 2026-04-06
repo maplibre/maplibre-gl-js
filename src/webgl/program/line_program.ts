@@ -2,12 +2,12 @@ import {Uniform1i, Uniform1f, Uniform2f, Uniform3f} from '../uniform_binding';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {extend, translatePosition} from '../../util/util';
 
-import type {Context} from '../../gl/context';
+import type {Context} from '../../webgl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {IReadonlyTransform} from '../../geo/transform_interface';
 import type {Tile} from '../../tile/tile';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
-import type {Painter} from '../painter';
+import type {Painter} from '../../render/painter';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 
 export type LineUniformsType = {

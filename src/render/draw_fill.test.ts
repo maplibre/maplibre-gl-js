@@ -4,7 +4,7 @@ import {OverscaledTileID} from '../tile/tile_id';
 import {TileManager} from '../tile/tile_manager';
 import {Tile} from '../tile/tile';
 import {Painter, type RenderOptions} from './painter';
-import {Program} from './program';
+import {Program} from '../webgl/program';
 import type {ZoomHistory} from '../style/zoom_history';
 import type {Map} from '../ui/map';
 import {type IReadonlyTransform} from '../geo/transform_interface';

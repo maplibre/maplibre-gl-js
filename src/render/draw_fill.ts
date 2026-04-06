@@ -1,13 +1,13 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {DepthMode} from '../gl/depth_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {type ColorMode} from '../gl/color_mode';
+import {DepthMode} from '../webgl/depth_mode';
+import {CullFaceMode} from '../webgl/cull_face_mode';
+import {type ColorMode} from '../webgl/color_mode';
 import {
     fillUniformValues,
     fillPatternUniformValues,
     fillOutlineUniformValues,
     fillOutlinePatternUniformValues
-} from './program/fill_program';
+} from '../webgl/program/fill_program';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';

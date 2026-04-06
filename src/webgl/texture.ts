@@ -1,4 +1,4 @@
-import type {Context} from '../gl/context';
+import type {Context} from './context';
 import type {RGBAImage, AlphaImage} from '../util/image';
 import {premultiplyAlpha} from '../util/image';
 

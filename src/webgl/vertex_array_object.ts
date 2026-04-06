@@ -1,8 +1,8 @@
 
 import type {Program} from './program';
-import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {IndexBuffer} from '../gl/index_buffer';
-import type {Context} from '../gl/context';
+import type {VertexBuffer} from './vertex_buffer';
+import type {IndexBuffer} from './index_buffer';
+import type {Context} from './context';
 
 /**
  * @internal

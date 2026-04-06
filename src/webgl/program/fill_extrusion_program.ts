@@ -9,8 +9,8 @@ import {
 import {mat3, vec3} from 'gl-matrix';
 import {extend} from '../../util/util';
 
-import type {Context} from '../../gl/context';
-import type {Painter} from '../painter';
+import type {Context} from '../../webgl/context';
+import type {Painter} from '../../render/painter';
 import type {OverscaledTileID} from '../../tile/tile_id';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';

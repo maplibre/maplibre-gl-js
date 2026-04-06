@@ -4,8 +4,8 @@ import type {
     StructArrayMember
 } from '../util/struct_array';
 
-import type {Program} from '../render/program';
-import type {Context} from '../gl/context';
+import type {Program} from './program';
+import type {Context} from './context';
 
 /**
  * An Enum for AttributeType

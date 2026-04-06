@@ -7,7 +7,7 @@ import {VerticalPerspectiveProjection} from './vertical_perspective_projection';
 import {type Projection, type ProjectionGPUContext, type TileMeshUsage} from './projection';
 import {type PreparedShader} from '../../shaders/shaders';
 import {type SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {type Context} from '../../gl/context';
+import {type Context} from '../../webgl/context';
 import {type CanonicalTileID} from '../../tile/tile_id';
 import {type Mesh} from '../../render/mesh';
 

@@ -1,11 +1,11 @@
-import {DepthMode} from '../gl/depth_mode';
-import {StencilMode} from '../gl/stencil_mode';
-import {ColorMode} from '../gl/color_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
+import {DepthMode} from '../webgl/depth_mode';
+import {StencilMode} from '../webgl/stencil_mode';
+import {ColorMode} from '../webgl/color_mode';
+import {CullFaceMode} from '../webgl/cull_face_mode';
 import {
     fillExtrusionUniformValues,
     fillExtrusionPatternUniformValues,
-} from './program/fill_extrusion_program';
+} from '../webgl/program/fill_extrusion_program';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';

@@ -1,8 +1,8 @@
-import {StencilMode} from '../gl/stencil_mode';
-import {DepthMode} from '../gl/depth_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {type Program} from './program';
-import {circleUniformValues} from './program/circle_program';
+import {StencilMode} from '../webgl/stencil_mode';
+import {DepthMode} from '../webgl/depth_mode';
+import {CullFaceMode} from '../webgl/cull_face_mode';
+import {type Program} from '../webgl/program';
+import {circleUniformValues} from '../webgl/program/circle_program';
 import {SegmentVector} from '../data/segment';
 import {type OverscaledTileID} from '../tile/tile_id';
 
@@ -11,10 +11,10 @@ import type {TileManager} from '../tile/tile_manager';
 import type {CircleStyleLayer} from '../style/style_layer/circle_style_layer';
 import type {CircleBucket} from '../data/bucket/circle_bucket';
 import type {ProgramConfiguration} from '../data/program_configuration';
-import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {IndexBuffer} from '../gl/index_buffer';
-import type {UniformValues} from './uniform_binding';
-import type {CircleUniformsType} from './program/circle_program';
+import type {VertexBuffer} from '../webgl/vertex_buffer';
+import type {IndexBuffer} from '../webgl/index_buffer';
+import type {UniformValues} from '../webgl/uniform_binding';
+import type {CircleUniformsType} from '../webgl/program/circle_program';
 import type {TerrainData} from '../render/terrain';
 import {translatePosition} from '../util/util';
 import type {ProjectionData} from '../geo/projection/projection_data';

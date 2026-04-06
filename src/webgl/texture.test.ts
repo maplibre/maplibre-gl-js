@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest';
-import {Context} from '../gl/context';
+import {Context} from './context';
 import {Texture} from './texture';
 import {premultiplyAlpha, RGBAImage} from '../util/image';
 

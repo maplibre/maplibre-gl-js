@@ -2,10 +2,10 @@ import {clamp} from '../util/util';
 
 import {ImageSource} from '../source/image_source';
 import {now} from '../util/time_control';
-import {StencilMode} from '../gl/stencil_mode';
-import {DepthMode} from '../gl/depth_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {rasterUniformValues} from './program/raster_program';
+import {StencilMode} from '../webgl/stencil_mode';
+import {DepthMode} from '../webgl/depth_mode';
+import {CullFaceMode} from '../webgl/cull_face_mode';
+import {rasterUniformValues} from '../webgl/program/raster_program';
 import {EXTENT} from '../data/extent';
 import {FadingDirections} from '../tile/tile';
 import Point from '@mapbox/point-geometry';

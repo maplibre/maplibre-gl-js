@@ -1,19 +1,19 @@
-import {StencilMode} from '../gl/stencil_mode';
-import {DepthMode} from '../gl/depth_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
+import {StencilMode} from '../webgl/stencil_mode';
+import {DepthMode} from '../webgl/depth_mode';
+import {CullFaceMode} from '../webgl/cull_face_mode';
 import {PosArray, TriangleIndexArray} from '../data/array_types.g';
 import posAttributes from '../data/pos_attributes';
 import {SegmentVector} from '../data/segment';
-import {skyUniformValues} from './program/sky_program';
-import {atmosphereUniformValues} from './program/atmosphere_program';
+import {skyUniformValues} from '../webgl/program/sky_program';
+import {atmosphereUniformValues} from '../webgl/program/atmosphere_program';
 import {type Sky} from '../style/sky';
 import {type Light} from '../style/light';
 import {Mesh} from './mesh';
 import {mat4, vec3, vec4} from 'gl-matrix';
 import {type IReadonlyTransform} from '../geo/transform_interface';
-import {ColorMode} from '../gl/color_mode';
+import {ColorMode} from '../webgl/color_mode';
 import type {Painter} from './painter';
-import {type Context} from '../gl/context';
+import {type Context} from '../webgl/context';
 import {getGlobeRadiusPixels} from '../geo/projection/globe_utils';
 
 function getMesh(context: Context, sky: Sky): Mesh {

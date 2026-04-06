@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {type mat4} from 'gl-matrix';
-import {type Context} from '../gl/context';
+import {type Context} from './context';
 import {
     Uniform1i,
     Uniform1f,

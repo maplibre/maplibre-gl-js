@@ -1,9 +1,9 @@
-import {DepthMode} from '../gl/depth_mode';
-import {StencilMode} from '../gl/stencil_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {debugUniformValues} from './program/debug_program';
+import {DepthMode} from '../webgl/depth_mode';
+import {StencilMode} from '../webgl/stencil_mode';
+import {CullFaceMode} from '../webgl/cull_face_mode';
+import {debugUniformValues} from '../webgl/program/debug_program';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {ColorMode} from '../gl/color_mode';
+import {ColorMode} from '../webgl/color_mode';
 
 import type {Painter} from './painter';
 import type {TileManager} from '../tile/tile_manager';

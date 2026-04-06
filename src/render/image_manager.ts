@@ -4,12 +4,12 @@ import potpack from 'potpack';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {RGBAImage} from '../util/image';
 import {ImagePosition} from './image_atlas';
-import {Texture} from './texture';
+import {Texture} from '../webgl/texture';
 import {renderStyleImage} from '../style/style_image';
 import {warnOnce} from '../util/util';
 
 import type {StyleImage} from '../style/style_image';
-import type {Context} from '../gl/context';
+import type {Context} from '../webgl/context';
 import type {PotpackBox} from 'potpack';
 import type {GetImagesResponse} from '../util/actor_messages';
 

@@ -1,11 +1,11 @@
-import {Texture} from './texture';
-import type {StencilMode} from '../gl/stencil_mode';
-import {DepthMode} from '../gl/depth_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {type ColorMode} from '../gl/color_mode';
+import {Texture} from '../webgl/texture';
+import type {StencilMode} from '../webgl/stencil_mode';
+import {DepthMode} from '../webgl/depth_mode';
+import {CullFaceMode} from '../webgl/cull_face_mode';
+import {type ColorMode} from '../webgl/color_mode';
 import {
     colorReliefUniformValues
-} from './program/color_relief_program';
+} from '../webgl/program/color_relief_program';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';

@@ -1,8 +1,8 @@
 import {Uniform1i, Uniform1f, Uniform2f, UniformMatrix4f} from '../uniform_binding';
 import {extend} from '../../util/util';
 
-import type {Context} from '../../gl/context';
-import type {Painter} from '../painter';
+import type {Context} from '../../webgl/context';
+import type {Painter} from '../../render/painter';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import {type mat4} from 'gl-matrix';
 

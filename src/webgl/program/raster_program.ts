@@ -1,6 +1,6 @@
 import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, Uniform4f} from '../uniform_binding';
 
-import type {Context} from '../../gl/context';
+import type {Context} from '../../webgl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer';
 import type Point from '@mapbox/point-geometry';

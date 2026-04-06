@@ -1,16 +1,16 @@
-import {Texture} from './texture';
+import {Texture} from '../webgl/texture';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {DepthMode} from '../gl/depth_mode';
-import {StencilMode} from '../gl/stencil_mode';
-import {ColorMode} from '../gl/color_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {type Context} from '../gl/context';
-import {type Framebuffer} from '../gl/framebuffer';
+import {DepthMode} from '../webgl/depth_mode';
+import {StencilMode} from '../webgl/stencil_mode';
+import {ColorMode} from '../webgl/color_mode';
+import {CullFaceMode} from '../webgl/cull_face_mode';
+import {type Context} from '../webgl/context';
+import {type Framebuffer} from '../webgl/framebuffer';
 import {type Tile} from '../tile/tile';
 import {
     heatmapUniformValues,
     heatmapTextureUniformValues
-} from './program/heatmap_program';
+} from '../webgl/program/heatmap_program';
 import {HEATMAP_FULL_RENDER_FBO_KEY} from '../style/style_layer/heatmap_style_layer';
 
 import type {Painter, RenderOptions} from './painter';

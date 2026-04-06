@@ -3,8 +3,8 @@ import {RenderToTexture} from './render_to_texture';
 import type {Painter} from './painter';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
-import {Context} from '../gl/context';
-import {ColorMode} from '../gl/color_mode';
+import {Context} from '../webgl/context';
+import {ColorMode} from '../webgl/color_mode';
 import {Terrain} from './terrain';
 import {type Style} from '../style/style';
 import {Tile} from '../tile/tile';
@@ -16,7 +16,7 @@ import {type FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {type RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import {type HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
 import {type BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
-import {DepthMode} from '../gl/depth_mode';
+import {DepthMode} from '../webgl/depth_mode';
 
 describe('render to texture', () => {
     const gl = document.createElement('canvas').getContext('webgl');

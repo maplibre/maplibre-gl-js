@@ -3,7 +3,7 @@ import {Painter} from './painter';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {Style} from '../style/style';
 import {StubMap} from '../util/test/util';
-import {Texture} from './texture';
+import {Texture} from '../webgl/texture';
 
 const getStubMap = () => new StubMap() as any;
 

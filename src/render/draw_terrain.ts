@@ -1,11 +1,11 @@
-import {StencilMode} from '../gl/stencil_mode';
-import {DepthMode} from '../gl/depth_mode';
-import {terrainUniformValues, terrainDepthUniformValues, terrainCoordsUniformValues} from './program/terrain_program';
+import {StencilMode} from '../webgl/stencil_mode';
+import {DepthMode} from '../webgl/depth_mode';
+import {terrainUniformValues, terrainDepthUniformValues, terrainCoordsUniformValues} from '../webgl/program/terrain_program';
 import type {Painter, RenderOptions} from './painter';
 import type {Tile} from '../tile/tile';
-import {CullFaceMode} from '../gl/cull_face_mode';
+import {CullFaceMode} from '../webgl/cull_face_mode';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {ColorMode} from '../gl/color_mode';
+import {ColorMode} from '../webgl/color_mode';
 import {type Terrain} from './terrain';
 
 /**

@@ -47,9 +47,9 @@ import type {
 import type {CollisionBoxArray, CollisionBox, SymbolInstance} from '../array_types.g';
 import type {StructArray, StructArrayMember, ViewType} from '../../util/struct_array';
 import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer';
-import type {Context} from '../../gl/context';
-import type {IndexBuffer} from '../../gl/index_buffer';
-import type {VertexBuffer} from '../../gl/vertex_buffer';
+import type {Context} from '../../webgl/context';
+import type {IndexBuffer} from '../../webgl/index_buffer';
+import type {VertexBuffer} from '../../webgl/vertex_buffer';
 import type {SymbolQuad} from '../../symbol/quads';
 import type {SizeData} from '../../symbol/symbol_size';
 import type {FeatureStates} from '../../source/source_state';

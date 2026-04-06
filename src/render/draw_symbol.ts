@@ -5,9 +5,9 @@ import {SegmentVector} from '../data/segment';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import {type EvaluatedZoomSize, evaluateSizeForFeature, evaluateSizeForZoom} from '../symbol/symbol_size';
 import {mat4} from 'gl-matrix';
-import {StencilMode} from '../gl/stencil_mode';
-import {DepthMode} from '../gl/depth_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
+import {StencilMode} from '../webgl/stencil_mode';
+import {DepthMode} from '../webgl/depth_mode';
+import {CullFaceMode} from '../webgl/cull_face_mode';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
 
 import {getAnchorAlignment, WritingMode} from '../symbol/shaping';
@@ -18,23 +18,23 @@ import {
     symbolIconUniformValues,
     symbolSDFUniformValues,
     symbolTextAndIconUniformValues
-} from './program/symbol_program';
+} from '../webgl/program/symbol_program';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 
-import type {Texture, TextureFilter} from '../render/texture';
+import type {Texture, TextureFilter} from '../webgl/texture';
 import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id';
-import type {UniformValues} from './uniform_binding';
-import type {SymbolSDFUniformsType} from '../render/program/symbol_program';
+import type {UniformValues} from '../webgl/uniform_binding';
+import type {SymbolSDFUniformsType} from '../webgl/program/symbol_program';
 import type {CrossTileID, VariableOffset} from '../symbol/placement';
 import type {SymbolBucket, SymbolBuffers} from '../data/bucket/symbol_bucket';
 import type {TerrainData} from '../render/terrain';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {ColorMode} from '../gl/color_mode';
-import type {Program} from './program';
+import type {ColorMode} from '../webgl/color_mode';
+import type {Program} from '../webgl/program';
 import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
 import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, type SymbolProjectionContext, updateLineLabels} from '../symbol/projection';
 import {translatePosition} from '../util/util';

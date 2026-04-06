@@ -1,7 +1,7 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {VertexBuffer} from './vertex_buffer';
 import {StructArrayLayout3i6} from '../data/array_types.g';
-import {Context} from '../gl/context';
+import {Context} from './context';
 import {type StructArrayMember} from '../util/struct_array';
 
 describe('VertexBuffer', () => {
