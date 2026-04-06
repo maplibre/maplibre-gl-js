@@ -17,7 +17,7 @@ import type {ProjectionData} from '../geo/projection/projection_data';
 import type {TerrainData} from '../render/terrain';
 import {VertexArrayObject} from '../render/vertex_array_object';
 import {shaders} from '../shaders/shaders';
-import {preprocessWGSL} from '../render/wgsl_preprocessor';
+import {preprocessWGSL} from '../webgpu/wgsl_preprocessor';
 import {renderStateHash} from './render_state';
 
 function wgslTypeFromFormat(format: string): string {
