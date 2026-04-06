@@ -2,6 +2,7 @@ import {type Painter, type RenderOptions} from '../render/painter';
 import {type Tile} from '../tile/tile';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {type OverscaledTileID} from '../tile/tile_id';
+import {drawTerrain} from './draw/draw_terrain';
 import {type Style} from '../style/style';
 import {type Terrain} from '../render/terrain';
 import {RenderPool} from './render_pool';
@@ -162,7 +163,7 @@ export class RenderToTexture {
             for (const tile of this._renderableTiles) {
                 // if render pool is full draw current tiles to screen and free pool
                 if (this.pool.isFull()) {
-                    this.painter.drawFunctions.terrain(this.painter, this.terrain, this._rttTiles, options);
+                    drawTerrain(this.painter, this.terrain, this._rttTiles, options);
                     this._rttTiles = [];
                     this.pool.freeAllObjects();
                 }
@@ -193,7 +194,7 @@ export class RenderToTexture {
                     if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
                 }
             }
-            this.painter.drawFunctions.terrain(this.painter, this.terrain, this._rttTiles, options);
+            drawTerrain(this.painter, this.terrain, this._rttTiles, options);
             this._rttTiles = [];
             this.pool.freeAllObjects();
 

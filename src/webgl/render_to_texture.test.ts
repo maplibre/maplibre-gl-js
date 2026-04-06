@@ -73,7 +73,6 @@ describe('render to texture', () => {
         _renderTileClippingMasks: vi.fn(),
         renderLayer: vi.fn(),
         drawFunctions: {
-            terrain: vi.fn(),
             terrainDepth: vi.fn(),
             terrainCoords: vi.fn(),
         }

@@ -30,7 +30,7 @@ import {drawRaster} from '../webgl/draw/draw_raster';
 import {drawBackground} from '../webgl/draw/draw_background';
 import {drawDebug, drawDebugPadding, selectDebugSource} from '../webgl/draw/draw_debug';
 import {drawCustom} from '../webgl/draw/draw_custom';
-import {type drawTerrain, drawDepth, drawCoords} from '../webgl/draw/draw_terrain';
+import {drawDepth, drawCoords} from '../webgl/draw/draw_terrain';
 import {type OverscaledTileID} from '../tile/tile_id';
 import {drawSky, drawAtmosphere} from '../webgl/draw/draw_sky';
 import {Mesh} from './mesh';
@@ -100,7 +100,6 @@ export type DrawFunctions = {
     custom: typeof drawCustom;
     debug: typeof drawDebug;
     debugPadding: typeof drawDebugPadding;
-    terrain: typeof drawTerrain | null;
     terrainDepth: typeof drawDepth;
     terrainCoords: typeof drawCoords;
 };
@@ -175,7 +174,6 @@ export class Painter {
             custom: drawCustom,
             debug: drawDebug,
             debugPadding: drawDebugPadding,
-            terrain: null, // set via render_to_texture when terrain is active
             terrainDepth: drawDepth,
             terrainCoords: drawCoords,
         };
