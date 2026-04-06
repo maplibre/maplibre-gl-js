@@ -1,24 +1,24 @@
 import {describe, test, expect, vi, type Mock} from 'vitest';
-import {OverscaledTileID} from '../tile/tile_id';
-import {TileManager} from '../tile/tile_manager';
-import {Tile} from '../tile/tile';
-import {Painter, type RenderOptions} from './painter';
-import type {Map} from '../ui/map';
-import {drawCustom} from '../webgl/draw/draw_custom';
-import {CustomStyleLayer} from '../style/style_layer/custom_style_layer';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {MercatorProjection} from '../geo/projection/mercator_projection';
+import {OverscaledTileID} from '../../tile/tile_id';
+import {TileManager} from '../../tile/tile_manager';
+import {Tile} from '../../tile/tile';
+import {Painter, type RenderOptions} from '../../render/painter';
+import type {Map} from '../../ui/map';
+import {drawCustom} from './draw_custom';
+import {CustomStyleLayer} from '../../style/style_layer/custom_style_layer';
+import {MercatorTransform} from '../../geo/projection/mercator_transform';
+import {MercatorProjection} from '../../geo/projection/mercator_projection';
 
-vi.mock('./painter');
-vi.mock('../webgl/program');
-vi.mock('../tile/tile_manager');
-vi.mock('../tile/tile');
-vi.mock('../data/bucket/symbol_bucket', () => {
+vi.mock('../../render/painter');
+vi.mock('../program');
+vi.mock('../../tile/tile_manager');
+vi.mock('../../tile/tile');
+vi.mock('../../data/bucket/symbol_bucket', () => {
     return {
         SymbolBucket: vi.fn()
     };
 });
-vi.mock('../symbol/projection');
+vi.mock('../../symbol/projection');
 
 describe('drawCustom', () => {
     test('should return custom render method inputs', () => {

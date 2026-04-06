@@ -1,33 +1,33 @@
 import {describe, test, expect, vi, type Mock} from 'vitest';
 import {mat4} from 'gl-matrix';
-import {OverscaledTileID} from '../tile/tile_id';
-import {TileManager} from '../tile/tile_manager';
-import {Tile} from '../tile/tile';
-import {Painter, type RenderOptions} from './painter';
-import {Program} from '../webgl/program';
-import type {ZoomHistory} from '../style/zoom_history';
-import type {Map} from '../ui/map';
-import {type IReadonlyTransform} from '../geo/transform_interface';
-import type {EvaluationParameters} from '../style/evaluation_parameters';
+import {OverscaledTileID} from '../../tile/tile_id';
+import {TileManager} from '../../tile/tile_manager';
+import {Tile} from '../../tile/tile';
+import {Painter, type RenderOptions} from '../../render/painter';
+import {Program} from '../program';
+import type {ZoomHistory} from '../../style/zoom_history';
+import type {Map} from '../../ui/map';
+import {type IReadonlyTransform} from '../../geo/transform_interface';
+import type {EvaluationParameters} from '../../style/evaluation_parameters';
 import type {FillLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type Style} from '../style/style';
-import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
-import {drawFill} from '../webgl/draw/draw_fill';
-import {FillBucket} from '../data/bucket/fill_bucket';
-import {type ProgramConfiguration, type ProgramConfigurationSet} from '../data/program_configuration';
-import type {ProjectionData} from '../geo/projection/projection_data';
+import {type Style} from '../../style/style';
+import {FillStyleLayer} from '../../style/style_layer/fill_style_layer';
+import {drawFill} from './draw_fill';
+import {FillBucket} from '../../data/bucket/fill_bucket';
+import {type ProgramConfiguration, type ProgramConfigurationSet} from '../../data/program_configuration';
+import type {ProjectionData} from '../../geo/projection/projection_data';
 
-vi.mock('./painter');
-vi.mock('../webgl/program');
-vi.mock('../tile/tile_manager');
-vi.mock('../tile/tile');
+vi.mock('../../render/painter');
+vi.mock('../program');
+vi.mock('../../tile/tile_manager');
+vi.mock('../../tile/tile');
 
-vi.mock('../data/bucket/symbol_bucket', () => {
+vi.mock('../../data/bucket/symbol_bucket', () => {
     return {
         SymbolBucket: vi.fn()
     };
 });
-vi.mock('../symbol/projection');
+vi.mock('../../symbol/projection');
 
 describe('drawFill', () => {
     test('should call programConfiguration.setConstantPatternPositions for transitioning fill-pattern', () => {

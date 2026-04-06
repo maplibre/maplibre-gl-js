@@ -1,34 +1,34 @@
 import {describe, test, expect, vi, type Mock} from 'vitest';
 import {mat4} from 'gl-matrix';
-import {OverscaledTileID} from '../tile/tile_id';
-import {SymbolBucket} from '../data/bucket/symbol_bucket';
-import {TileManager} from '../tile/tile_manager';
-import {Tile} from '../tile/tile';
-import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
-import {Painter, type RenderOptions} from './painter';
-import {Program} from '../webgl/program';
-import {drawSymbols} from '../webgl/draw/draw_symbol';
-import * as symbolProjection from '../symbol/projection';
-import type {ZoomHistory} from '../style/zoom_history';
-import type {Map} from '../ui/map';
-import {type IReadonlyTransform} from '../geo/transform_interface';
-import type {EvaluationParameters} from '../style/evaluation_parameters';
+import {OverscaledTileID} from '../../tile/tile_id';
+import {SymbolBucket} from '../../data/bucket/symbol_bucket';
+import {TileManager} from '../../tile/tile_manager';
+import {Tile} from '../../tile/tile';
+import {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer';
+import {Painter, type RenderOptions} from '../../render/painter';
+import {Program} from '../program';
+import {drawSymbols} from './draw_symbol';
+import * as symbolProjection from '../../symbol/projection';
+import type {ZoomHistory} from '../../style/zoom_history';
+import type {Map} from '../../ui/map';
+import {type IReadonlyTransform} from '../../geo/transform_interface';
+import type {EvaluationParameters} from '../../style/evaluation_parameters';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type Style} from '../style/style';
-import {MercatorProjection} from '../geo/projection/mercator_projection';
-import type {ProjectionData} from '../geo/projection/projection_data';
+import {type Style} from '../../style/style';
+import {MercatorProjection} from '../../geo/projection/mercator_projection';
+import type {ProjectionData} from '../../geo/projection/projection_data';
 
-vi.mock('./painter');
-vi.mock('../webgl/program');
-vi.mock('../tile/tile_manager');
-vi.mock('../tile/tile');
-vi.mock('../data/bucket/symbol_bucket', () => {
+vi.mock('../../render/painter');
+vi.mock('../program');
+vi.mock('../../tile/tile_manager');
+vi.mock('../../tile/tile');
+vi.mock('../../data/bucket/symbol_bucket', () => {
     return {
         SymbolBucket: vi.fn()
     };
 });
 
-vi.mock('../symbol/projection');
+vi.mock('../../symbol/projection');
 (symbolProjection.getPitchedLabelPlaneMatrix as Mock).mockReturnValue(mat4.create());
 
 function createMockTransform() {
