@@ -10,10 +10,7 @@ function compare_matrix(mat: mat4, matRef: mat4){
 
 describe('fast_maths', () => {
     test('invert a transform matrix', () => {
-        const m = mat4.create();
-        const mInv = mat4.create();
-        const mInvRef = mat4.create();
-        [{
+        const testParams = [{
             translate: [1, 2, -3],
             scaleXY: 10,
             rotAxis: [5, 6, 7],
@@ -48,8 +45,11 @@ describe('fast_maths', () => {
             scaleXY: 4,
             rotAxis: [1, -2, 3],
             rotAngle: 2.1
-        }].forEach(({translate, scaleXY, rotAxis, rotAngle}) => {
-            console.log(translate, scaleXY, rotAxis, rotAngle);
+        }];
+        const m = mat4.create();
+        const mInv = mat4.create();
+        const mInvRef = mat4.create();
+        for (const {translate, scaleXY, rotAxis, rotAngle} of testParams) {
             // translation vector:
             const v = vec3.create();
             vec3.copy(v, translate);
@@ -75,15 +75,11 @@ describe('fast_maths', () => {
             mat4.invert(mInvRef, m);
 
             compare_matrix(mInv, mInvRef);
-        });
+        };
     });
 
     test('invert a projection matrix', () => {
-        // forge a projection matrix:
-        const m = mat4.create();
-        const mInv = mat4.create();
-        const mInvRef = mat4.create();
-        [
+        const testParams = [
             {
                 fov: Math.PI/4,
                 aspect: 16/9,
@@ -108,22 +104,22 @@ describe('fast_maths', () => {
                 zNear: 1,
                 zFar: 1000
             }
-        ].forEach(({fov, aspect, zNear, zFar}) => {
+        ];
+        const m = mat4.create();
+        const mInv = mat4.create();
+        const mInvRef = mat4.create();
+        for (const {fov, aspect, zNear, zFar} of testParams) {
             mat4.perspective(m, fov, aspect, zNear, zFar);
             // compute inv:
             fastInvertProjMat4(mInv, m);
             // compute ref:
             mat4.invert(mInvRef, m);
             compare_matrix(mInv, mInvRef);
-        });
+        };
     });
 
     test('invert a skew matrix', () => {
-        const m = mat4.create();
-        const mInv = mat4.create();
-        const mInvRef = mat4.create();
-
-        [{
+        const testParams = [{
             diag: [1, 1, 1, 1],
             counterDiagXY: [0, 0]
         },{
@@ -156,7 +152,11 @@ describe('fast_maths', () => {
         },{
             diag: [0.3, 0.7, 1.5, 1],
             counterDiagXY: [0.1, -0.2]
-        }].forEach(({diag, counterDiagXY}) => {
+        }];
+        const m = mat4.create();
+        const mInv = mat4.create();
+        const mInvRef = mat4.create();
+        for(const {diag, counterDiagXY} of testParams) {
             // forge a skew matrix:
             m[0] = diag[0];
             m[5] = diag[1];
@@ -172,6 +172,6 @@ describe('fast_maths', () => {
             mat4.invert(mInvRef, m);
 
             compare_matrix(mInv, mInvRef);
-        });
+        };
     });
 });
