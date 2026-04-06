@@ -4,7 +4,6 @@ import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
-import strip from '@rollup/plugin-strip';
 import {type Plugin} from 'rollup';
 import json from '@rollup/plugin-json';
 import {visualizer} from 'rollup-plugin-visualizer';
@@ -31,10 +30,6 @@ export const plugins = (production: boolean): Plugin[] => [
             '_token_stack:': ''
         }
     }),
-    production && strip({
-        sourceMap: true,
-        functions: ['PerformanceUtils.*']
-    }),
     production && terser({
         compress: {
             pure_getters: true,
@@ -52,7 +47,7 @@ export const plugins = (production: boolean): Plugin[] => [
     // generate bundle stats in multiple formats (treemap, sunburst, etc...)
     ...(stats ? (['treemap', 'sunburst', 'flamegraph', 'network'] as const).map(template =>
         visualizer({
-            template: template,
+            template,
             title: `gl-js-${template}`,
             filename: `staging/${template}.html`,
             gzipSize: true,
@@ -61,7 +56,7 @@ export const plugins = (production: boolean): Plugin[] => [
             open: true
         })
     ) : [])
-].filter(Boolean) as Plugin[];
+].filter(Boolean);
 
 export const watchStagingPlugin: Plugin = {
     name: 'watch-external',

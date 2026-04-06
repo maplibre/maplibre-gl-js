@@ -47,7 +47,7 @@ export class ImageManager extends Evented {
      * the requestors will be notified.
      */
     requestors: Array<{
-        ids: Array<string>;
+        ids: string[];
         promiseResolve: (value: GetImagesResponse) => void;
     }>;
 
@@ -132,11 +132,11 @@ export class ImageManager extends Evented {
     _validate(id: string, image: StyleImage) {
         let valid = true;
         const data = image.data || image.spriteData;
-        if (!this._validateStretch(image.stretchX, data && data.width)) {
+        if (!this._validateStretch(image.stretchX, data?.width)) {
             this.fire(new ErrorEvent(new Error(`Image "${id}" has invalid "stretchX" value`)));
             valid = false;
         }
-        if (!this._validateStretch(image.stretchY, data && data.height)) {
+        if (!this._validateStretch(image.stretchY, data?.height)) {
             this.fire(new ErrorEvent(new Error(`Image "${id}" has invalid "stretchY" value`)));
             valid = false;
         }
@@ -161,15 +161,14 @@ export class ImageManager extends Evented {
         if (!content) return true;
         if (content.length !== 4) return false;
         const spriteData = image.spriteData;
-        const width = (spriteData && spriteData.width) || image.data.width;
-        const height = (spriteData && spriteData.height) || image.data.height;
+        const width = (spriteData?.width) || image.data.width;
+        const height = (spriteData?.height) || image.data.height;
         if (content[0] < 0 || width < content[0]) return false;
         if (content[1] < 0 || height < content[1]) return false;
         if (content[2] < 0 || width < content[2]) return false;
         if (content[3] < 0 || height < content[3]) return false;
         if (content[2] < content[0]) return false;
-        if (content[3] < content[1]) return false;
-        return true;
+        return content[3] >= content[1];
     }
 
     updateImage(id: string, image: StyleImage, validate = true) {
@@ -187,16 +186,16 @@ export class ImageManager extends Evented {
         delete this.images[id];
         delete this.patterns[id];
 
-        if (image.userImage && image.userImage.onRemove) {
+        if (image.userImage?.onRemove) {
             image.userImage.onRemove();
         }
     }
 
-    listImages(): Array<string> {
+    listImages(): string[] {
         return Object.keys(this.images);
     }
 
-    getImages(ids: Array<string>): Promise<GetImagesResponse> {
+    getImages(ids: string[]): Promise<GetImagesResponse> {
         return new Promise<GetImagesResponse>((resolve, _reject) => {
             // If the sprite has been loaded, or if all the icon dependencies are already present
             // (i.e. if they've been added via runtime styling), then notify the requestor immediately.
@@ -218,7 +217,7 @@ export class ImageManager extends Evented {
         });
     }
 
-    _getImagesForIds(ids: Array<string>): GetImagesResponse {
+    _getImagesForIds(ids: string[]): GetImagesResponse {
         const response: GetImagesResponse = {};
 
         for (const id of ids) {
@@ -242,7 +241,7 @@ export class ImageManager extends Evented {
                     content: image.content,
                     textFitWidth: image.textFitWidth,
                     textFitHeight: image.textFitHeight,
-                    hasRenderCallback: Boolean(image.userImage && image.userImage.render)
+                    hasRenderCallback: Boolean(image.userImage?.render)
                 };
             } else {
                 warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image with map.addImage() or a "sprite" property in your style. You can provide missing images by listening for the "styleimagemissing" map event.`);
@@ -266,6 +265,7 @@ export class ImageManager extends Evented {
             return null;
         }
 
+        // eslint-disable-next-line @typescript-eslint/prefer-optional-chain -- pattern?.position.version would be undefined when pattern is nullish, making undefined === undefined true
         if (pattern && pattern.position.version === image.version) {
             return pattern.position;
         }
@@ -332,7 +332,7 @@ export class ImageManager extends Evented {
         this.callbackDispatchedThisFrame = {};
     }
 
-    dispatchRenderCallbacks(ids: Array<string>) {
+    dispatchRenderCallbacks(ids: string[]) {
         for (const id of ids) {
 
             // the callback for the image was already dispatched for a different frame

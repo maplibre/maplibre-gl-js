@@ -15,7 +15,7 @@ import type {TileManager} from '../tile/tile_manager';
 import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
 import type {OverscaledTileID} from '../tile/tile_id';
 
-export function drawHillshade(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawHillshade(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions) {
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
 
     // WebGPU path
@@ -58,8 +58,8 @@ function renderHillshade(
     painter: Painter,
     tileManager: TileManager,
     layer: HillshadeStyleLayer,
-    coords: Array<OverscaledTileID>,
-    stencilModes: { [_: number]: Readonly<StencilMode> },
+    coords: OverscaledTileID[],
+    stencilModes: {[_: number]: Readonly<StencilMode>},
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
     useBorder: boolean,
@@ -104,7 +104,7 @@ function renderHillshade(
 function prepareHillshade(
     painter: Painter,
     tileManager: TileManager,
-    tileIDs: Array<OverscaledTileID>,
+    tileIDs: OverscaledTileID[],
     layer: HillshadeStyleLayer,
     depthMode: Readonly<DepthMode>,
     stencilMode: Readonly<StencilMode>,
@@ -113,11 +113,13 @@ function prepareHillshade(
     const context = painter.context;
     const gl = context.gl;
 
+    const textureFilter = layer.paint.get('resampling') === 'nearest' ?  gl.NEAREST : gl.LINEAR;
+
     for (const coord of tileIDs) {
         const tile = tileManager.getTile(coord);
         const dem = tile.dem;
 
-        if (!dem || !dem.data) {
+        if (!dem?.data) {
             continue;
         }
 
@@ -148,7 +150,7 @@ function prepareHillshade(
 
         if (!fbo) {
             const renderTexture = new Texture(context, {width: tileSize, height: tileSize, data: null}, gl.RGBA);
-            renderTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+            renderTexture.bind(textureFilter, gl.CLAMP_TO_EDGE);
 
             fbo = tile.fbo = context.createFramebuffer(tileSize, tileSize, true, false);
             fbo.colorAttachment.set(renderTexture.texture);

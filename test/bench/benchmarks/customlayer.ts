@@ -1,7 +1,7 @@
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
-import {CustomLayerInterface} from '../../../src/style/style_layer/custom_style_layer';
-import {Map} from '../../../src/ui/map';
+import {type CustomLayerInterface} from '../../../src/style/style_layer/custom_style_layer';
+import {type Map} from '../../../src/ui/map';
 
 class Tent3D implements CustomLayerInterface {
     id: string;
@@ -133,7 +133,7 @@ export default class CustomLayer extends Benchmark {
         this.map.addLayer(customLayer);
         this.map._styleDirty = true;
         this.map._sourcesDirty = true;
-        this.map._render(Date.now());
+        Benchmark.renderMap(this.map, Date.now());
     }
     teardown() {
         this.map.remove();

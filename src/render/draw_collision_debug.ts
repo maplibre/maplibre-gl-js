@@ -14,24 +14,23 @@ import {type VertexBuffer} from '../gl/vertex_buffer';
 import {type IndexBuffer} from '../gl/index_buffer';
 
 type TileBatch = {
-    circleArray: Array<number>;
+    circleArray: number[];
     circleOffset: number;
     coord: OverscaledTileID;
 };
 
 let quadTriangles: QuadTriangleArray;
 
-export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: Array<OverscaledTileID>, isText: boolean) {
+export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean) {
     const context = painter.context;
     const transform = painter.transform;
     const gl = context.gl;
     const program = painter.useProgram('collisionBox');
-    const tileBatches: Array<TileBatch> = [];
+    const tileBatches: TileBatch[] = [];
     let circleCount = 0;
     let circleOffset = 0;
 
-    for (let i = 0; i < coords.length; i++) {
-        const coord = coords[i];
+    for (const coord of coords) {
         const tile = tileManager.getTile(coord);
         const bucket: SymbolBucket = (tile.getBucket(layer) as any);
         if (!bucket) {
@@ -39,7 +38,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
         }
         const buffers = isText ? bucket.textCollisionBox : bucket.iconCollisionBox;
         // Get collision circle data of this bucket
-        const circleArray: Array<number> = bucket.collisionCircleArray;
+        const circleArray: number[] = bucket.collisionCircleArray;
         if (circleArray.length > 0) {
             tileBatches.push({
                 circleArray,
@@ -59,9 +58,9 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             DepthMode.disabled, StencilMode.disabled,
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
-            collisionUniformValues(painter.transform) as any,
-            (painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord)) as any,
-            transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true}) as any,
+            collisionUniformValues(painter.transform),
+            painter.style.map.terrain?.getTerrainData(coord),
+            transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true}),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
             buffers.collisionVertexBuffer);
@@ -115,8 +114,8 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             StencilMode.disabled,
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
-            uniforms as any,
-            (painter.style.map.terrain && painter.style.map.terrain.getTerrainData(batch.coord)) as any,
+            uniforms,
+            painter.style.map.terrain?.getTerrainData(batch.coord),
             null,
             layer.id,
             vertexBuffer,

@@ -63,7 +63,7 @@ function getSizeData(
 
         // We'd like to be able to use CameraExpression or CompositeExpression in these
         // return types rather than ExpressionSpecification, but the former are not
-        // transferrable across Web Worker boundaries.
+        // transferable across Web Worker boundaries.
         if (expression.kind === 'composite') {
             return {kind: 'composite', minZoom, maxZoom, interpolationType};
         }

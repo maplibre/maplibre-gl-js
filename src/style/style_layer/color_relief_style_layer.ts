@@ -13,7 +13,7 @@ import {packDEMData} from '../../data/dem_data';
 
 export const isColorReliefStyleLayer = (layer: StyleLayer): layer is ColorReliefStyleLayer => layer.type === 'color-relief';
 
-export type ColorRamp = {elevationStops: Array<number>; colorStops: Array<Color>};
+export type ColorRamp = {elevationStops: number[]; colorStops: Color[]};
 export type ColorRampTextures = {elevationTexture: Texture; colorTexture: Texture};
 
 export class ColorReliefStyleLayer extends StyleLayer {

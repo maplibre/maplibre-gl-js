@@ -34,7 +34,7 @@ export class TerrainTileManager extends Evented {
     /**
      * contains a list of tileID-keys for the current scene. (only for performance)
      */
-    _renderableTilesKeys: Array<string>;
+    _renderableTilesKeys: string[];
     /**
      * raster-dem-tile for a TileID cache.
      */
@@ -133,7 +133,7 @@ export class TerrainTileManager extends Evented {
      * get a list of tiles, which are loaded and should be rendered in the current scene
      * @returns the renderable tiles
      */
-    getRenderableTiles(): Array<Tile> {
+    getRenderableTiles(): Tile[] {
         return this._renderableTilesKeys.map(key => this.getTileByID(key));
     }
 

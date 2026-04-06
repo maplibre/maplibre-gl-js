@@ -140,7 +140,7 @@ function bindGradientAndDashTextures(
     programConfiguration.updatePaintBuffers(crossfade);
 }
 
-export function drawLine(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawLine(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
 
     const {isRenderingToTexture} = renderOptions;
@@ -191,10 +191,10 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
         const prevProgram = painter.context.program.get();
         const program = painter.useProgram(programId, programConfiguration);
         const programChanged = firstTile || program.program !== prevProgram;
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
 
         const constantPattern = patternProperty.constantOr(null);
-        const constantDasharray = dasharrayProperty && dasharrayProperty.constantOr(null);
+        const constantDasharray = dasharrayProperty?.constantOr(null);
 
         if (constantPattern && tile.imageAtlas) {
             const atlas = tile.imageAtlas;
@@ -203,7 +203,7 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
 
         } else if (constantDasharray) {
-            const round = layer.layout.get('line-cap') === 'round';
+            const round = layer.layout.get('line-cap').constantOr(null) === 'round';
             const dashTo = painter.lineAtlas.getDash(constantDasharray.to, round);
             const dashFrom = painter.lineAtlas.getDash(constantDasharray.from, round);
             programConfiguration.setConstantDashPositions(dashTo, dashFrom);

@@ -90,7 +90,8 @@ export type * from '@maplibre/maplibre-gl-style-spec';
  * ```ts
  * setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js', false);
  * ```
- * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-rtl-text/)
+ * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js/docs/examples/add-support-for-right-to-left-scripts/)
+ * @see [Display and style rich text labels](https://maplibre.org/maplibre-gl-js/docs/examples/display-and-style-rich-text-labels/)
  */
 function setRTLTextPlugin(pluginURL: string, lazy: boolean): Promise<void> {
     return rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy);

@@ -219,7 +219,7 @@ describe('drag_pan', () => {
         expect(dragend).toHaveBeenCalledTimes(0);
 
         // simulate a scroll zoom
-        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
         expect(dragstart).toHaveBeenCalledTimes(1);
         expect(drag).toHaveBeenCalledTimes(1);
@@ -240,72 +240,71 @@ describe('drag_pan', () => {
         map.remove();
     });
 
-    ['ctrl', 'shift'].forEach((modifier) => {
-        test(`DragPanHandler does not begin a drag if the ${modifier} key is down on mousedown`, () => {
-            const map = createMap();
-            expect(map.dragRotate.isEnabled()).toBeTruthy();
+    const modifiers = ['ctrl', 'shift'];
+    test.each(modifiers)('DragPanHandler does not begin a drag if the %s key is down on mousedown', (modifier) => {
+        const map = createMap();
+        expect(map.dragRotate.isEnabled()).toBeTruthy();
 
-            const dragstart = vi.fn();
-            const drag      = vi.fn();
-            const dragend   = vi.fn();
+        const dragstart = vi.fn();
+        const drag      = vi.fn();
+        const dragend   = vi.fn();
 
-            map.on('dragstart', dragstart);
-            map.on('drag',      drag);
-            map.on('dragend',   dragend);
+        map.on('dragstart', dragstart);
+        map.on('drag',      drag);
+        map.on('dragend',   dragend);
 
-            simulate.mousedown(map.getCanvas(), {buttons, [`${modifier}Key`]: true});
-            map._renderTaskQueue.run();
-            expect(dragstart).toHaveBeenCalledTimes(0);
-            expect(drag).toHaveBeenCalledTimes(0);
-            expect(dragend).toHaveBeenCalledTimes(0);
+        simulate.mousedown(map.getCanvas(), {buttons, [`${modifier}Key`]: true});
+        map._renderTaskQueue.run();
+        expect(dragstart).toHaveBeenCalledTimes(0);
+        expect(drag).toHaveBeenCalledTimes(0);
+        expect(dragend).toHaveBeenCalledTimes(0);
 
-            simulate.mousemove(map.getCanvas(), {buttons, [`${modifier}Key`]: true, clientX: 10, clientY: 10});
-            map._renderTaskQueue.run();
-            expect(dragstart).toHaveBeenCalledTimes(0);
-            expect(drag).toHaveBeenCalledTimes(0);
-            expect(dragend).toHaveBeenCalledTimes(0);
+        simulate.mousemove(map.getCanvas(), {buttons, [`${modifier}Key`]: true, clientX: 10, clientY: 10});
+        map._renderTaskQueue.run();
+        expect(dragstart).toHaveBeenCalledTimes(0);
+        expect(drag).toHaveBeenCalledTimes(0);
+        expect(dragend).toHaveBeenCalledTimes(0);
 
-            simulate.mouseup(map.getCanvas(), {[`${modifier}Key`]: true});
-            map._renderTaskQueue.run();
-            expect(dragstart).toHaveBeenCalledTimes(0);
-            expect(drag).toHaveBeenCalledTimes(0);
-            expect(dragend).toHaveBeenCalledTimes(0);
+        simulate.mouseup(map.getCanvas(), {[`${modifier}Key`]: true});
+        map._renderTaskQueue.run();
+        expect(dragstart).toHaveBeenCalledTimes(0);
+        expect(drag).toHaveBeenCalledTimes(0);
+        expect(dragend).toHaveBeenCalledTimes(0);
 
-            map.remove();
-        });
+        map.remove();
+    });
 
-        test(`DragPanHandler still ends a drag if the ${modifier} key is down on mouseup`, () => {
-            const map = createMap();
-            expect(map.dragRotate.isEnabled()).toBeTruthy();
+    test.each(modifiers)('DragPanHandler still ends a drag if the %s key is down on mouseup', (modifier) => {
+        const map = createMap();
+        expect(map.dragRotate.isEnabled()).toBeTruthy();
 
-            const dragstart = vi.fn();
-            const drag      = vi.fn();
-            const dragend   = vi.fn();
+        const dragstart = vi.fn();
+        const drag      = vi.fn();
+        const dragend   = vi.fn();
 
-            map.on('dragstart', dragstart);
-            map.on('drag',      drag);
-            map.on('dragend',   dragend);
+        map.on('dragstart', dragstart);
+        map.on('drag',      drag);
+        map.on('dragend',   dragend);
 
-            simulate.mousedown(map.getCanvas());
-            map._renderTaskQueue.run();
-            expect(dragstart).toHaveBeenCalledTimes(0);
-            expect(drag).toHaveBeenCalledTimes(0);
-            expect(dragend).toHaveBeenCalledTimes(0);
+        simulate.mousedown(map.getCanvas());
+        map._renderTaskQueue.run();
+        expect(dragstart).toHaveBeenCalledTimes(0);
+        expect(drag).toHaveBeenCalledTimes(0);
+        expect(dragend).toHaveBeenCalledTimes(0);
 
-            simulate.mouseup(map.getCanvas(), {[`${modifier}Key`]: true});
-            map._renderTaskQueue.run();
-            expect(dragstart).toHaveBeenCalledTimes(0);
-            expect(drag).toHaveBeenCalledTimes(0);
-            expect(dragend).toHaveBeenCalledTimes(0);
+        simulate.mouseup(map.getCanvas(), {[`${modifier}Key`]: true});
+        map._renderTaskQueue.run();
+        expect(dragstart).toHaveBeenCalledTimes(0);
+        expect(drag).toHaveBeenCalledTimes(0);
+        expect(dragend).toHaveBeenCalledTimes(0);
 
-            simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
-            map._renderTaskQueue.run();
-            expect(dragstart).toHaveBeenCalledTimes(0);
-            expect(drag).toHaveBeenCalledTimes(0);
-            expect(dragend).toHaveBeenCalledTimes(0);
+        simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
+        map._renderTaskQueue.run();
+        expect(dragstart).toHaveBeenCalledTimes(0);
+        expect(drag).toHaveBeenCalledTimes(0);
+        expect(dragend).toHaveBeenCalledTimes(0);
 
-            map.remove();
-        });
+        map.remove();
     });
 
     test('DragPanHandler does not begin a drag on right button mousedown', () => {
@@ -395,7 +394,7 @@ describe('drag_pan', () => {
     test('DragPanHandler does not begin a drag if preventDefault is called on the mousedown event', () => {
         const map = createMap();
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const dragstart = vi.fn();
         const drag      = vi.fn();
@@ -425,7 +424,7 @@ describe('drag_pan', () => {
         const map = createMap();
         const target = map.getCanvas();
 
-        map.on('touchstart', e => e.preventDefault());
+        map.on('touchstart', e => { e.preventDefault(); });
 
         const dragstart = vi.fn();
         const drag      = vi.fn();

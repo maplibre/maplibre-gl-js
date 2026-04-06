@@ -38,7 +38,7 @@ const cornerCoords = [
     new Point(0, EXTENT),
 ];
 
-export function drawRaster(painter: Painter, tileManager: TileManager, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawRaster(painter: Painter, tileManager: TileManager, layer: RasterStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
@@ -84,11 +84,11 @@ function drawTiles(
     painter: Painter,
     tileManager: TileManager,
     layer: RasterStyleLayer,
-    coords: Array<OverscaledTileID>,
-    stencilModes: { [_: number]: Readonly<StencilMode> } | null,
+    coords: OverscaledTileID[],
+    stencilModes: {[_: number]: Readonly<StencilMode>} | null,
     useBorder: boolean,
     allowPoles: boolean,
-    corners: Array<Point>,
+    corners: Point[],
     flipCullfaceMode: boolean = false,
     isRenderingToTexture: boolean = false) {
     const minTileZ = coords[coords.length - 1].overscaledZ;
@@ -103,7 +103,8 @@ function drawTiles(
     const colorMode = painter.colorModeForRenderPass();
     const align = !painter.options.moving;
     const rasterOpacity = layer.paint.get('raster-opacity');
-    const rasterResampling = layer.paint.get('raster-resampling');
+    const useNearest = layer.paint.get('resampling') === 'nearest' || layer.paint.get('raster-resampling') === 'nearest';
+    const textureFilter = useNearest ?  gl.NEAREST : gl.LINEAR;
     const fadeDuration = layer.paint.get('raster-fade-duration');
     const isTerrain = !!painter.style.map.terrain;
 
@@ -115,7 +116,6 @@ function drawTiles(
             rasterOpacity === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
 
         const tile = tileManager.getTile(coord);
-        const textureFilter = rasterResampling === 'nearest' ? gl.NEAREST : gl.LINEAR;
 
         // create and bind first texture
         context.activeTexture.set(gl.TEXTURE0);
@@ -139,7 +139,7 @@ function drawTiles(
                 context.extTextureFilterAnisotropicMax);
         }
 
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
         const projectionData = transform.getProjectionData({overscaledTileID: coord, aligned: align, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
         const uniformValues = rasterUniformValues(parentTopLeft, parentScaleBy, fadeValues.fadeMix, layer, corners);
 

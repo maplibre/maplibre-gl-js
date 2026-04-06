@@ -71,7 +71,7 @@ export class Frustum {
 function unprojectClipSpacePoint(point: vec4 | number[], invProj: mat4, worldSize: number, scale: number): vec4 {
     const v = vec4.transformMat4([] as any, point as any, invProj) as any;
     const s = 1.0 / v[3] / worldSize * scale;
-    return vec4.mul(v as any, v as any, [s, s, 1.0 / v[3], s] as vec4);
+    return vec4.mul(v, v, [s, s, 1.0 / v[3], s] as vec4);
 }
 
 /**
@@ -126,13 +126,12 @@ function adjustFarPlaneByHorizonPlane(frustumCoords: vec4[], nearPlanePointsIndi
 
     for (let i = 0; i < 4; i++) {
         const targetLength = Math.min(maxDist, cornerRayLengths[i]);
-        const newPoint = [
+        frustumCoords[i + farPlanePointsOffset] = [
             frustumCoords[i + nearPlanePointsOffset][0] + cornerRayNormalizedDirections[i][0] * targetLength,
             frustumCoords[i + nearPlanePointsOffset][1] + cornerRayNormalizedDirections[i][1] * targetLength,
             frustumCoords[i + nearPlanePointsOffset][2] + cornerRayNormalizedDirections[i][2] * targetLength,
             1,
         ] as vec4;
-        frustumCoords[i + farPlanePointsOffset] = newPoint;
     }
 }
 
@@ -161,7 +160,7 @@ function getIdealNearFarPlaneDistance(horizonPlane: vec4, nearPlaneNormalized: v
     // Project the view vector onto the horizon plane
     const projectedViewDirection = vec3.sub([] as any, nearPlaneNormalized as vec3, vec3.scale([] as any, normalizedHorizonPlane as vec3, vec3.dot(nearPlaneNormalized as vec3, normalizedHorizonPlane as vec3)));
     const projectedViewLength = vec3.len(projectedViewDirection);
-    
+
     // projectedViewLength will be 0 if the camera is looking straight down
     if (projectedViewLength > 0) {
         // Find the radius and center of the horizon circle (the horizon circle is the intersection of the planet's sphere and the horizon plane).

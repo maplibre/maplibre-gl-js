@@ -24,15 +24,15 @@ const createMap = (options: any): Promise<Map> => {
         }, options));
 
         map.on(options.idle ? 'idle' : 'load', () => {
-                if (options.stubRender) {
-                    // If there's a pending rerender, cancel it.
-                    if (map._frameRequest) {
-                        map._frameRequest.abort();
-                        map._frameRequest = null;
-                    }
+            if (options.stubRender) {
+                // If there's a pending rerender, cancel it.
+                if (map._frameRequest) {
+                    map._frameRequest.abort();
+                    map._frameRequest = null;
                 }
-                resolve(map);
-            });
+            }
+            resolve(map);
+        });
         map.on('error', (e) => reject(e.error));
         map.on('remove', () => container.remove());
     });

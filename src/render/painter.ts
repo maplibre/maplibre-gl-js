@@ -97,7 +97,7 @@ export class Painter {
     transform: IReadonlyTransform;
     renderToTexture: RenderToTexture;
     _tileTextures: {
-        [_: number]: Array<Texture>;
+        [_: number]: Texture[];
     };
     numSublayers: number;
     depthEpsilon: number;
@@ -315,8 +315,8 @@ export class Painter {
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }
 
-    _renderTileClippingMasks(layer: StyleLayer, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean) {
-        if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs || !tileIDs.length) {
+    _renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean) {
+        if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs?.length) {
             return;
         }
 
@@ -349,7 +349,7 @@ export class Painter {
         this._tileClippingMaskIDs = stencilRefs;
     }
 
-    _renderTileMasks(tileStencilRefs: { [_: string]: number }, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean, useBorders: boolean) {
+    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: OverscaledTileID[], renderToTexture: boolean, useBorders: boolean) {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.projection;
@@ -360,7 +360,7 @@ export class Painter {
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const stencilRef = tileStencilRefs[tileID.key];
-            const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
+            const terrainData = this.style.map.terrain?.getTerrainData(tileID);
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
@@ -624,7 +624,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
-            const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
+            const terrainData = this.style.map.terrain?.getTerrainData(tileID);
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
 
             const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
@@ -665,9 +665,9 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
      * values.
      * Returns [StencilMode for tile overscaleZ map, sortedCoords].
      */
-    getStencilConfigForOverlapAndUpdateStencilID(tileIDs: Array<OverscaledTileID>): [{
+    getStencilConfigForOverlapAndUpdateStencilID(tileIDs: OverscaledTileID[]): [{
         [_: number]: Readonly<StencilMode>;
-    }, Array<OverscaledTileID>] {
+    }, OverscaledTileID[]] {
         const gl = this.context.gl;
         const coords = tileIDs.sort((a, b) => b.overscaledZ - a.overscaledZ);
         const minTileZ = coords[coords.length - 1].overscaledZ;
@@ -687,10 +687,10 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         return [{[minTileZ]: StencilMode.disabled}, coords];
     }
 
-    stencilConfigForOverlapTwoPass(tileIDs: Array<OverscaledTileID>): [
+    stencilConfigForOverlapTwoPass(tileIDs: OverscaledTileID[]): [
         { [_: number]: Readonly<StencilMode> }, // borderless tiles - high priority & high stencil values
         { [_: number]: Readonly<StencilMode> }, // tiles with border - low priority
-        Array<OverscaledTileID>
+        OverscaledTileID[]
     ] {
         const gl = this.context.gl;
         const coords = tileIDs.sort((a, b) => b.overscaledZ - a.overscaledZ);
@@ -834,9 +834,9 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         const layerIds = this.style._order;
         const tileManagers = this.style.tileManagers;
 
-        const coordsAscending: { [_: string]: Array<OverscaledTileID> } = {};
-        const coordsDescending: { [_: string]: Array<OverscaledTileID> } = {};
-        const coordsDescendingSymbol: { [_: string]: Array<OverscaledTileID> } = {};
+        const coordsAscending: {[_: string]: OverscaledTileID[]} = {};
+        const coordsDescending: {[_: string]: OverscaledTileID[]} = {};
+        const coordsDescendingSymbol: {[_: string]: OverscaledTileID[]} = {};
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection?.transitionState > 0};
 
         for (const id in tileManagers) {
@@ -939,7 +939,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const tileManager = tileManagers[layer.source];
 
-            if (this.renderToTexture && this.renderToTexture.renderLayer(layer, renderOptions)) continue;
+            if (this.renderToTexture?.renderLayer(layer, renderOptions)) continue;
 
             if (!this.opaquePassEnabledForLayer() && !globeDepthRendered) {
                 globeDepthRendered = true;
@@ -1006,7 +1006,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
      * to accurate (that is, the camera has not moved much since it was updated last).
      */
     maybeDrawDepthAndCoords(requireExact: boolean) {
-        if (!this.style || !this.style.map || !this.style.map.terrain) {
+        if (!this.style?.map?.terrain) {
             return;
         }
         // WebGPU: depth/coords framebuffers not yet implemented (used for terrain picking)
@@ -1032,7 +1032,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         drawCoords(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
@@ -1062,12 +1062,16 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         }
     }
 
+    static readonly MAX_TEXTURE_POOL_SIZE_PER_BUCKET = 50;
+
     saveTileTexture(texture: Texture) {
         const textures = this._tileTextures[texture.size[0]];
         if (!textures) {
             this._tileTextures[texture.size[0]] = [texture];
-        } else {
+        } else if (textures.length < Painter.MAX_TEXTURE_POOL_SIZE_PER_BUCKET) {
             textures.push(texture);
+        } else {
+            texture.destroy();
         }
     }
 
@@ -1098,7 +1102,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
      * False by default. Use true when drawing with a simple projection matrix is desired, eg. when drawing a fullscreen quad.
      * @returns
      */
-    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false, defines: Array<string> = []): Program<any> {
+    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false, defines: string[] = []): Program<any> {
         this.cache = this.cache || {};
         const useTerrain = !!this.style.map.terrain;
 
@@ -1232,7 +1236,7 @@ struct VertexOutput { @builtin(position) position: vec4<f32> };
         if (this.cache) {
             for (const key in this.cache) {
                 const program = this.cache[key];
-                if (program && program.program) {
+                if (program?.program) {
                     this.context.gl.deleteProgram(program.program);
                 }
             }

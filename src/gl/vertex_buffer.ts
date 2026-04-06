@@ -27,7 +27,7 @@ const AttributeType = {
  */
 export class VertexBuffer {
     length: number;
-    attributes: ReadonlyArray<StructArrayMember>;
+    attributes: readonly StructArrayMember[];
     itemSize: number;
     dynamicDraw: boolean;
     context: Context;
@@ -37,7 +37,7 @@ export class VertexBuffer {
     /**
      * @param dynamicDraw - Whether this buffer will be repeatedly updated.
      */
-    constructor(context: Context, array: StructArray, attributes: ReadonlyArray<StructArrayMember>, dynamicDraw?: boolean) {
+    constructor(context: Context, array: StructArray, attributes: readonly StructArrayMember[], dynamicDraw?: boolean) {
         this.length = array.length;
         this.attributes = attributes;
         this.itemSize = array.bytesPerElement;
@@ -58,7 +58,7 @@ export class VertexBuffer {
         gl.bufferData(gl.ARRAY_BUFFER, array.arrayBuffer, this.dynamicDraw ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
 
         if (!this.dynamicDraw) {
-            delete array.arrayBuffer;
+            array.freeBufferAfterUpload();
         }
     }
 
@@ -77,8 +77,7 @@ export class VertexBuffer {
     }
 
     enableAttributes(gl: WebGLRenderingContext|WebGL2RenderingContext, program: Program<any>) {
-        for (let j = 0; j < this.attributes.length; j++) {
-            const member = this.attributes[j];
+        for (const member of this.attributes) {
             const attribIndex: number | void = program.attributes[member.name];
             if (attribIndex !== undefined) {
                 gl.enableVertexAttribArray(attribIndex);
@@ -93,8 +92,7 @@ export class VertexBuffer {
      * @param vertexOffset - Index of the starting vertex of the segment
      */
     setVertexAttribPointers(gl: WebGLRenderingContext|WebGL2RenderingContext, program: Program<any>, vertexOffset?: number | null) {
-        for (let j = 0; j < this.attributes.length; j++) {
-            const member = this.attributes[j];
+        for (const member of this.attributes) {
             const attribIndex: number | void = program.attributes[member.name];
 
             if (attribIndex !== undefined) {

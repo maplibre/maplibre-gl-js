@@ -269,6 +269,50 @@ describe('setStyle', () => {
         expect(loadedStyle.layers).toHaveLength(1);
     });
 
+    // in this special case, retrieval of the style JSON is not done by style but by map
+    test('can asynchronously transform style JSON request specified to setStyle with diffing', async () => {
+        server.respondWith('style.json', JSON.stringify(createStyle()));
+
+        const style = extend(createStyle(), {
+            sources: {
+                maplibre: {
+                    type: 'vector',
+                    minzoom: 1,
+                    maxzoom: 10,
+                    tiles: ['http://example.com/{z}/{x}/{y}.png']
+                }
+            },
+            layers: [{
+                id: 'layerId0',
+                type: 'circle',
+                source: 'maplibre',
+                'source-layer': 'sourceLayer'
+            }, {
+                id: 'layerId1',
+                type: 'circle',
+                source: 'maplibre',
+                'source-layer': 'sourceLayer'
+            }]
+        });
+
+        const map = createMap({style});
+        const transformRequestSpy = vi.fn(async (url) => ({
+            url,
+            headers: {Authorization: 'Bearer token'}
+        }));
+        map.setTransformRequest(transformRequestSpy);
+        await map.once('style.load');
+
+        map.setStyle('style.json', {diff: true});
+        await sleep(0);
+        server.respond();
+        await map.once('style.load');
+
+        expect(transformRequestSpy).toHaveBeenCalledWith('style.json', 'Style');
+        expect(server.requests[0].url).toBe('style.json');
+        expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
+    });
+
     test('transformStyle should get called when passed to setStyle after the map is initialised without a style', async () => {
         const map = createMap({deleteStyle: true});
         map.setStyle(createStyle(), {
@@ -300,6 +344,35 @@ describe('setStyle', () => {
         const loadedStyle = map.style.serialize();
         expect('maplibre' in loadedStyle.sources).toBeTruthy();
         expect(loadedStyle.layers[0].id).toBe('layerId0');
+    });
+
+    test('stale style URL load does not complete after style is cleared during async transformRequest', async () => {
+        server.respondWith('style.json', JSON.stringify(createStyle()));
+
+        let resolveTransformRequest: (value: {url: string}) => void;
+        const transformRequest = new Promise<{url: string}>((resolve) => {
+            resolveTransformRequest = resolve;
+        });
+
+        const map = createMap({deleteStyle: true});
+        const initialTransform = map.transform;
+        const initialPainterTransform = map.painter.transform;
+        const projectionTransitionSpy = vi.fn();
+        map.on('projectiontransition', projectionTransitionSpy);
+        map.setTransformRequest(() => transformRequest);
+
+        map.setStyle('style.json', {diff: false});
+        map.setStyle(null, {diff: false});
+
+        resolveTransformRequest({url: 'style.json'});
+        await sleep(0);
+        server.respond();
+        await sleep(0);
+
+        expect(map.style).toBeUndefined();
+        expect(projectionTransitionSpy).not.toHaveBeenCalled();
+        expect(map.transform).toBe(initialTransform);
+        expect(map.painter.transform).toBe(initialPainterTransform);
     });
 
     test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', async () => {
@@ -377,7 +450,7 @@ describe('getStyle', () => {
         }));
     });
 
-    test('fires an error on checking if non-existant source is loaded', async () => {
+    test('fires an error on checking if non-existent source is loaded', async () => {
         const style = createStyle();
         const map = createMap({style});
 

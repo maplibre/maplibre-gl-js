@@ -168,12 +168,12 @@ describe('marker', () => {
             .setLngLat([0,0])
             .setPopup(popup)
             .addTo(map);
-        
+
         // open popup
         marker.togglePopup();
         const spy = vi.fn();
         popup.on('close', spy);
-        (map.getContainer().querySelector('.maplibregl-popup-close-button') as HTMLButtonElement).click();
+        map.getContainer().querySelector<HTMLButtonElement>('.maplibregl-popup-close-button').click();
 
         expect(spy).toHaveBeenCalled();
     });
@@ -805,7 +805,29 @@ describe('marker', () => {
         el.click();
 
         expect(clickSpy).toHaveBeenCalledTimes(1);
-        
+
+        map.remove();
+    });
+
+    test('Marker removes click listener on remove()', () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+        const el = marker.getElement();
+
+        const clickSpy = vi.fn();
+        marker.on('click', clickSpy);
+
+        el.click();
+        expect(clickSpy).toHaveBeenCalledTimes(1);
+
+        marker.remove();
+
+        // After remove(), clicking the element should not fire the marker's click event
+        el.click();
+        expect(clickSpy).toHaveBeenCalledTimes(1);
+
         map.remove();
     });
 

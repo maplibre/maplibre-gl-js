@@ -12,7 +12,7 @@ import type {TileManager} from '../tile/tile_manager';
 import type {ColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer';
 import type {OverscaledTileID} from '../tile/tile_id';
 
-export function drawColorRelief(painter: Painter, tileManager: TileManager, layer: ColorReliefStyleLayer, tileIDs: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+export function drawColorRelief(painter: Painter, tileManager: TileManager, layer: ColorReliefStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions) {
     if (painter.renderPass !== 'translucent') return;
     if (!tileIDs.length) return;
 
@@ -41,8 +41,8 @@ function renderColorRelief(
     painter: Painter,
     tileManager: TileManager,
     layer: ColorReliefStyleLayer,
-    coords: Array<OverscaledTileID>,
-    stencilModes: { [_: number]: Readonly<StencilMode> },
+    coords: OverscaledTileID[],
+    stencilModes: {[_: number]: Readonly<StencilMode>},
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
     useBorder: boolean,
@@ -54,6 +54,8 @@ function renderColorRelief(
     const gl = context.gl;
     const program = painter.useProgram('colorRelief');
     const align = !painter.options.moving;
+
+    const textureFilter = layer.paint.get('resampling') === 'nearest' ?  gl.NEAREST : gl.LINEAR;
 
     let firstTile = true;
     let colorRampSize = 0;
@@ -72,7 +74,7 @@ function renderColorRelief(
             colorRampSize = elevationTexture.size[0];
         }
 
-        if (!dem || !dem.data) {
+        if (!dem?.data) {
             continue;
         }
 
@@ -86,10 +88,10 @@ function renderColorRelief(
         if (tile.demTexture) {
             const demTexture = tile.demTexture;
             demTexture.update(pixelData, {premultiply: false});
-            demTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+            demTexture.bind(textureFilter, gl.CLAMP_TO_EDGE);
         } else {
             tile.demTexture = new Texture(context, pixelData, gl.RGBA, {premultiply: false});
-            tile.demTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+            tile.demTexture.bind(textureFilter, gl.CLAMP_TO_EDGE);
         }
 
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');

@@ -96,8 +96,8 @@ import skyVert from './glsl/sky.vertex.glsl.g';
 export type PreparedShader = {
     fragmentSource: string;
     vertexSource: string;
-    staticAttributes: Array<string>;
-    staticUniforms: Array<string>;
+    staticAttributes: string[];
+    staticUniforms: string[];
 };
 
 export const shaders = {

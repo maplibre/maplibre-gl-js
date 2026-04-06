@@ -80,7 +80,7 @@ describe('querySourceFeatures', () => {
         geojsonWrapper.name = GEOJSON_TILE_LAYER_NAME;
 
         result = [];
-        expect(() => { tile.querySourceFeatures(result); }).not.toThrow();
+        expect(() => tile.querySourceFeatures(result)).not.toThrow();
         expect(result).toHaveLength(0);
     });
 

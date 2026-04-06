@@ -36,7 +36,7 @@ export class LayerBenchmark extends Benchmark {
     }
 
     bench() {
-        this.map._render();
+        Benchmark.renderMap(this.map);
     }
 
     teardown() {
@@ -186,9 +186,9 @@ export class LayerColorRelief2Colors extends LayerBenchmark {
                 'source': 'terrain-rgb',
                 'paint': {
                     'color-relief-color': [
-                        "interpolate",
-                        ["linear"],
-                        ["elevation"],
+                        'interpolate',
+                        ['linear'],
+                        ['elevation'],
                         0, 'rgb(112, 209, 255)',
                         3724, 'rgb(255, 178, 129)'
                     ]
@@ -202,7 +202,7 @@ export class LayerColorRelief256Colors extends LayerBenchmark {
     constructor() {
         super();
 
-        const colorSpec: any[] = ["interpolate", ["linear"], ["elevation"]];
+        const colorSpec: any[] = ['interpolate', ['linear'], ['elevation']];
         for (let i = 0; i < 256; i++) {
             colorSpec.push(i);
             colorSpec.push(`rgb(${i}, 0, ${255-i})`);

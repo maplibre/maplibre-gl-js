@@ -28,7 +28,6 @@ export class TileBounds {
             maxX: Math.ceil(mercatorXfromLng(this.bounds.getEast()) * worldSize),
             maxY: Math.ceil(mercatorYfromLat(this.bounds.getSouth()) * worldSize)
         };
-        const hit = tileID.x >= level.minX && tileID.x < level.maxX && tileID.y >= level.minY && tileID.y < level.maxY;
-        return hit;
+        return tileID.x >= level.minX && tileID.x < level.maxX && tileID.y >= level.minY && tileID.y < level.maxY;
     }
 }

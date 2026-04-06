@@ -11,9 +11,9 @@ export default class Layout extends Benchmark {
     }>;
     parser: TileParser;
     style: string | StyleSpecification;
-    tileIDs: Array<OverscaledTileID>;
+    tileIDs: OverscaledTileID[];
 
-    constructor(style: string | StyleSpecification, tileIDs?: Array<OverscaledTileID>) {
+    constructor(style: string | StyleSpecification, tileIDs?: OverscaledTileID[]) {
         super();
         this.style = style;
         this.tileIDs = tileIDs || [

@@ -5,13 +5,13 @@ const border = 3;
 
 import type {StyleGlyph} from './style_glyph';
 
-function readFontstacks(tag: number, glyphs: Array<StyleGlyph>, pbf: Protobuf) {
+function readFontstacks(tag: number, glyphs: StyleGlyph[], pbf: Protobuf) {
     if (tag === 1) {
         pbf.readMessage(readFontstack, glyphs);
     }
 }
 
-function readFontstack(tag: number, glyphs: Array<StyleGlyph>, pbf: Protobuf) {
+function readFontstack(tag: number, glyphs: StyleGlyph[], pbf: Protobuf) {
     if (tag === 3) {
         const {id, bitmap, width, height, left, top, advance} = pbf.readMessage(readGlyph, {});
         glyphs.push({
@@ -35,7 +35,7 @@ function readGlyph(tag: number, glyph: any, pbf: Protobuf) {
     else if (tag === 7) glyph.advance = pbf.readVarint();
 }
 
-export function parseGlyphPbf(data: ArrayBuffer | Uint8Array): Array<StyleGlyph> {
+export function parseGlyphPbf(data: ArrayBuffer | Uint8Array): StyleGlyph[] {
     return new Protobuf(data).readFields(readFontstacks, []);
 }
 

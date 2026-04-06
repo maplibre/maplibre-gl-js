@@ -61,10 +61,10 @@ export class FillExtrusionBucket implements Bucket {
     index: number;
     zoom: number;
     overscaling: number;
-    layers: Array<FillExtrusionStyleLayer>;
-    layerIds: Array<string>;
-    stateDependentLayers: Array<FillExtrusionStyleLayer>;
-    stateDependentLayerIds: Array<string>;
+    layers: FillExtrusionStyleLayer[];
+    layerIds: string[];
+    stateDependentLayers: FillExtrusionStyleLayer[];
+    stateDependentLayerIds: string[];
 
     layoutVertexArray: FillExtrusionLayoutArray;
     layoutVertexBuffer: VertexBuffer;
@@ -79,7 +79,7 @@ export class FillExtrusionBucket implements Bucket {
     programConfigurations: ProgramConfigurationSet<FillExtrusionStyleLayer>;
     segments: SegmentVector;
     uploaded: boolean;
-    features: Array<BucketFeature>;
+    features: BucketFeature[];
 
     constructor(options: BucketParameters<FillExtrusionStyleLayer>) {
         this.zoom = options.zoom;
@@ -97,7 +97,7 @@ export class FillExtrusionBucket implements Bucket {
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
     }
 
-    populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID) {
         this.features = [];
         this.hasDependencies = hasPattern('fill-extrusion', this.layers, options);
 
@@ -168,7 +168,7 @@ export class FillExtrusionBucket implements Bucket {
         this.centroidVertexBuffer.destroy();
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting) {
+    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting) {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             // Compute polygon centroid to calculate elevation in GPU
             const centroid: CentroidAccumulator = {x: 0, y: 0, sampleCount: 0};
@@ -195,7 +195,7 @@ export class FillExtrusionBucket implements Bucket {
         centroid: CentroidAccumulator,
         canonical: CanonicalTileID,
         feature: BucketFeature,
-        polygon: Array<Array<Point>>,
+        polygon: Point[][],
         subdivisionGranularity: SubdivisionGranularitySetting
     ): void {
         if (polygon.length < 1) {
@@ -260,7 +260,7 @@ export class FillExtrusionBucket implements Bucket {
      * Generates side faces for the supplied geometry. Assumes `geometry` to be a line string, like the output of {@link subdivideVertexLine}.
      * For rings, it is assumed that the first and last vertex of `geometry` are equal.
      */
-    private _generateSideFaces(geometry: Array<Point>, segmentReference: {segment: Segment}) {
+    private _generateSideFaces(geometry: Point[], segmentReference: {segment: Segment}) {
         let edgeDistance = 0;
 
         for (let p = 1; p < geometry.length; p++) {
@@ -307,7 +307,7 @@ export class FillExtrusionBucket implements Bucket {
  * Accumulates geometry to centroid. Geometry can be either a polygon ring, a line string or a closed line string.
  * In case of a polygon ring or line ring, the last vertex is ignored if it is the same as the first vertex.
  */
-function accumulatePointsToCentroid(centroid: CentroidAccumulator, geometry: Array<Point>): void {
+function accumulatePointsToCentroid(centroid: CentroidAccumulator, geometry: Point[]): void {
     for (let i = 0; i < geometry.length; i++) {
         const p = geometry[i];
 

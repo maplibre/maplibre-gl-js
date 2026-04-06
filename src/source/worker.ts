@@ -32,7 +32,7 @@ export default class Worker {
     self: WorkerGlobalScopeInterface & ActorTarget;
     actor: Actor;
     layerIndexes: {[_: string]: StyleLayerIndex};
-    availableImages: {[_: string]: Array<string>};
+    availableImages: {[_: string]: string[]};
     externalWorkerSourceTypes: { [_: string]: WorkerSourceConstructor };
     /**
      * This holds a cache for the already created worker source instances.
@@ -131,9 +131,7 @@ export default class Worker {
         });
 
         this.actor.registerMessageHandler(MessageType.removeSource, async (mapId: string, params: RemoveSourceParams) => {
-            if (!this.workerSources[mapId] ||
-                !this.workerSources[mapId][params.type] ||
-                !this.workerSources[mapId][params.type][params.source]) {
+            if (!this.workerSources[mapId]?.[params.type]?.[params.source]) {
                 return;
             }
 
@@ -180,7 +178,7 @@ export default class Worker {
             }
         });
 
-        this.actor.registerMessageHandler(MessageType.setLayers, async (mapId: string, params: Array<LayerSpecification>) => {
+        this.actor.registerMessageHandler(MessageType.setLayers, async (mapId: string, params: LayerSpecification[]) => {
             this._getLayerIndex(mapId).replace(params, this._getGlobalState(mapId));
         });
     }
@@ -194,7 +192,7 @@ export default class Worker {
         return state;
     }
 
-    private async _setImages(mapId: string, images: Array<string>): Promise<void> {
+    private async _setImages(mapId: string, images: string[]): Promise<void> {
         this.availableImages[mapId] = images;
         for (const workerSource in this.workerSources[mapId]) {
             const ws = this.workerSources[mapId][workerSource];
@@ -205,8 +203,7 @@ export default class Worker {
     }
 
     private async _syncRTLPluginState(mapId: string, incomingState: PluginState): Promise<PluginState> {
-        const state = await rtlWorkerPlugin.syncState(incomingState, this.self.importScripts);
-        return state;
+        return await rtlWorkerPlugin.syncState(incomingState, this.self.importScripts);
     }
 
     private _getAvailableImages(mapId: string) {

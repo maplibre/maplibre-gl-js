@@ -158,7 +158,7 @@ describe('setLayoutProperty', () => {
         await map.once('style.load');
         map.style.dispatcher.broadcast = function (key, value: any) {
             expect(key).toBe(MessageType.updateLayers);
-            expect(value.layers.map((layer) => { return layer.id; })).toEqual(['symbol']);
+            expect(value.layers.map((layer) => layer.id)).toEqual(['symbol']);
             return Promise.resolve({} as any);
         };
 
@@ -193,9 +193,9 @@ describe('setLayoutProperty', () => {
 
         await map.once('style.load');
         const errorPromise = map.once('error');
-        map.setLayoutProperty('non-existant', 'text-transform', 'lowercase');
+        map.setLayoutProperty('non-existent', 'text-transform', 'lowercase');
         const error = await errorPromise;
-        expect(error.error.message).toMatch(/Cannot style non-existing layer "non-existant"./);
+        expect(error.error.message).toMatch(/Cannot style non-existing layer "non-existent"./);
     });
 
     test('fires a data event', async () => {
@@ -348,9 +348,9 @@ describe('getLayoutProperty', () => {
 
         await map.once('style.load');
         const errorPromise = map.once('error');
-        map.getLayoutProperty('non-existant', 'text-transform');
+        map.getLayoutProperty('non-existent', 'text-transform');
         const error = await errorPromise;
-        expect(error.error.message).toMatch(/Cannot get style of non-existing layer "non-existant"./);
+        expect(error.error.message).toMatch(/Cannot get style of non-existing layer "non-existent"./);
     });
 });
 
@@ -423,8 +423,8 @@ describe('setPaintProperty', () => {
 
         await map.once('style.load');
         const errorPromise = map.once('error');
-        map.setPaintProperty('non-existant', 'background-color', 'red');
+        map.setPaintProperty('non-existent', 'background-color', 'red');
         const error = await errorPromise;
-        expect(error.error.message).toMatch(/Cannot style non-existing layer "non-existant"./);
+        expect(error.error.message).toMatch(/Cannot style non-existing layer "non-existent"./);
     });
 });

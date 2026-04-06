@@ -113,8 +113,11 @@ export type MarkerOptions = {
  *   }).setLngLat([30.5, 50.5])
  *   .addTo(map);
  * ```
+ * @see [Add a default marker](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-default-marker/)
  * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/add-custom-icons-with-markers/)
  * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-marker/)
+ * @see [Animate a marker](https://maplibre.org/maplibre-gl-js/docs/examples/animate-a-marker/)
+ * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/attach-a-popup-to-a-marker-instance/)
  *
  * ## Events
  *
@@ -159,20 +162,20 @@ export class Marker extends Evented {
     constructor(options?: MarkerOptions) {
         super();
 
-        this._anchor = options && options.anchor || 'center';
-        this._color = options && options.color || '#3FB1CE';
-        this._scale = options && options.scale || 1;
-        this._draggable = options && options.draggable || false;
-        this._clickTolerance = options && options.clickTolerance || 0;
-        this._subpixelPositioning = options && options.subpixelPositioning || false;
+        this._anchor = options?.anchor || 'center';
+        this._color = options?.color || '#3FB1CE';
+        this._scale = options?.scale || 1;
+        this._draggable = options?.draggable || false;
+        this._clickTolerance = options?.clickTolerance || 0;
+        this._subpixelPositioning = options?.subpixelPositioning || false;
         this._isDragging = false;
         this._state = 'inactive';
-        this._rotation = options && options.rotation || 0;
-        this._rotationAlignment = options && options.rotationAlignment || 'auto';
-        this._pitchAlignment = options && options.pitchAlignment && options.pitchAlignment !== 'auto' ?  options.pitchAlignment : this._rotationAlignment;
+        this._rotation = options?.rotation || 0;
+        this._rotationAlignment = options?.rotationAlignment || 'auto';
+        this._pitchAlignment = options?.pitchAlignment && options.pitchAlignment !== 'auto' ?  options.pitchAlignment : this._rotationAlignment;
         this.setOpacity(options?.opacity, options?.opacityWhenCovered);
 
-        if (!options || !options.element) {
+        if (!options?.element) {
             this._defaultMarker = true;
             this._element = DOM.create('div');
 
@@ -279,10 +282,10 @@ export class Marker extends Evented {
             // the y value of the center of the shadow ellipse relative to the svg top left is "shadow transform translate-y (29.0) + ellipse cy (5.80029008)"
             // offset to the svg center "height (41 / 2)" gives (29.0 + 5.80029008) - (41 / 2) and rounded for an integer pixel offset gives 14
             // negative is used to move the marker up from the center so the tip is at the Marker lngLat
-            this._offset = Point.convert(options && options.offset || [0, -14]);
+            this._offset = Point.convert(options?.offset || [0, -14]);
         } else {
             this._element = options.element;
-            this._offset = Point.convert(options && options.offset || [0, 0]);
+            this._offset = Point.convert(options?.offset || [0, 0]);
         }
 
         this._element.classList.add('maplibregl-marker');
@@ -294,9 +297,8 @@ export class Marker extends Evented {
             e.preventDefault();
         });
         applyAnchorClass(this._element, this._anchor, 'marker');
-        this._element.addEventListener('click', this._onClick);
 
-        if (options && options.className) {
+        if (options?.className) {
             for (const name of options.className.split(' ')) {
                 this._element.classList.add(name);
             }
@@ -335,6 +337,7 @@ export class Marker extends Evented {
         map.on('terrain', this._update);
         map.on('projectiontransition', this._update);
 
+        this._element.addEventListener('click', this._onClick);
         this.setDraggable(this._draggable);
         this._update();
 
@@ -373,7 +376,8 @@ export class Marker extends Evented {
             this._map.off('touchmove', this._onMove);
             delete this._map;
         }
-        DOM.remove(this._element);
+        this._element.removeEventListener('click', this._onClick);
+        this._element.remove();
         if (this._popup) this._popup.remove();
         return this;
     }
@@ -501,13 +505,7 @@ export class Marker extends Evented {
     };
 
     _onKeyPress = (e: KeyboardEvent) => {
-        const code = e.code;
-        const legacyCode = e.charCode || e.keyCode;
-
-        if (
-            (code === 'Space') || (code === 'Enter') ||
-            (legacyCode === 32) || (legacyCode === 13) // space or enter
-        ) {
+        if (e.code === 'Space' || e.code === 'Enter') {
             this.togglePopup();
         }
     };
@@ -642,10 +640,10 @@ export class Marker extends Evented {
             this._pos = this._pos.round();
         }
 
-        DOM.setTransform(this._element, `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`);
+        this._element.style.transform = `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`;
 
         browser.frameAsync(new AbortController(), this._map._ownerWindow).then(() => { // Run _updateOpacity only after painter.render and drawDepth
-            this._updateOpacity(e && e.type === 'moveend');
+            this._updateOpacity(e?.type === 'moveend');
         }).catch(() => {});
     };
 

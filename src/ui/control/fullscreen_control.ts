@@ -35,7 +35,7 @@ export type FullscreenControlOptions = {
  * ```ts
  * map.addControl(new FullscreenControl({container: document.querySelector('body')}));
  * ```
- * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js/docs/examples/fullscreen/)
+ * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js/docs/examples/view-a-fullscreen-map/)
  *
  * ## Events
  *
@@ -61,7 +61,7 @@ export class FullscreenControl extends Evented implements IControl {
         this._fullscreen = false;
         this._pseudo = options.pseudo ?? false;
 
-        if (options && options.container) {
+        if (options?.container) {
             if (options.container instanceof HTMLElement) {
                 this._container = options.container;
             } else {
@@ -91,7 +91,7 @@ export class FullscreenControl extends Evented implements IControl {
 
     /** {@inheritDoc IControl.onRemove} */
     onRemove() {
-        DOM.remove(this._controlContainer);
+        this._controlContainer.remove();
         this._map = null;
         window.document.removeEventListener(this._fullscreenchange, this._onFullscreenChange);
     }

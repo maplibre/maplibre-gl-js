@@ -8,7 +8,7 @@ import type {Shaping, PositionedIcon} from './shaping';
 
 export {getAnchors, getCenterAnchor};
 
-function getLineLength(line: Array<Point>): number {
+function getLineLength(line: Point[]): number {
     let lineLength = 0;
     for (let k = 0; k < line.length - 1; k++) {
         lineLength += line[k].dist(line[k + 1]);
@@ -32,7 +32,7 @@ function getShapedLabelLength(shapedText?: Shaping | null, shapedIcon?: Position
         shapedIcon ? shapedIcon.right - shapedIcon.left : 0);
 }
 
-function getCenterAnchor(line: Array<Point>,
+function getCenterAnchor(line: Point[],
     maxAngle: number,
     shapedText: Shaping,
     shapedIcon: PositionedIcon,
@@ -70,7 +70,7 @@ function getCenterAnchor(line: Array<Point>,
     }
 }
 
-function getAnchors(line: Array<Point>,
+function getAnchors(line: Point[],
     spacing: number,
     maxAngle: number,
     shapedText: Shaping,

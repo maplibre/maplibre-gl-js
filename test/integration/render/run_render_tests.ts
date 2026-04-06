@@ -106,7 +106,7 @@ function checkParameter(options: RenderOptions, param: string): boolean {
 }
 
 function checkValueParameter(options: RenderOptions, defaultValue: any, param: string) {
-    const index = options.tests.findIndex((elem) => { return String(elem).startsWith(param); });
+    const index = options.tests.findIndex((elem) => String(elem).startsWith(param));
     if (index === -1)
         return defaultValue;
 
@@ -214,7 +214,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 function getTestStyles(options: RenderOptions, directory: string, port: number): StyleWithTestData[] {
     const tests = options.tests || [];
 
-    const sequence = globSync('**/style.json', {cwd: directory})
+    return globSync('**/style.json', {cwd: directory})
         .map(fixture => {
             const id = path.dirname(fixture);
             const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8')) as StyleWithTestData;
@@ -235,7 +235,7 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
         })
         .filter(style => {
             const test = style.metadata.test;
-            if (tests.length !== 0 && !tests.some(t => test.id.indexOf(t) !== -1)) {
+            if (tests.length !== 0 && !tests.some(t => test.id.includes(t))) {
                 return false;
             }
 
@@ -246,7 +246,6 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
             localizeURLs(style, port, path.join(__dirname, '../'));
             return true;
         });
-    return sequence;
 }
 
 /**
@@ -743,7 +742,10 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             });
 
             let idle = false;
-            map.on('idle', () => { console.log('idle'); idle = true; });
+            map.on('idle', () => {
+                console.log('idle');
+                idle = true;
+            });
             // Configure the map to never stop the render loop
             map.repaint = typeof options.continuesRepaint === 'undefined' ? true : options.continuesRepaint;
 
@@ -910,10 +912,11 @@ function applyDebugParameter(options: RenderOptions, page: Page) {
             console.log(`${message.type().substring(0, 3).toUpperCase()} ${messages.filter(Boolean)}`);
         });
 
-        page.on('pageerror', ({message}) => console.error(message));
+        page.on('pageerror', ({message}) => { console.error(message); });
 
-        page.on('response', response =>
-            console.log(`${response.status()} ${response.url()}`));
+        page.on('response', response => {
+            console.log(`${response.status()} ${response.url()}`);
+        });
 
         page.on('requestfailed', request => {
             if (request) {

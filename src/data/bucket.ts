@@ -14,7 +14,7 @@ import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf'
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
-    layers: Array<Layer>;
+    layers: Layer[];
     zoom: number;
     pixelRatio: number;
     overscaling: number;
@@ -28,8 +28,8 @@ export type PopulateParameters = {
     iconDependencies: {};
     patternDependencies: {};
     glyphDependencies: {};
-    dashDependencies: Record<string, {round: boolean; dasharray: Array<number>}>;
-    availableImages: Array<string>;
+    dashDependencies: Record<string, {round: boolean; dasharray: number[]}>;
+    availableImages: string[];
     subdivisionGranularity: SubdivisionGranularitySetting;
 };
 
@@ -43,7 +43,7 @@ export type IndexedFeature = {
 export type BucketFeature = {
     index: number;
     sourceLayerIndex: number;
-    geometry: Array<Array<Point>>;
+    geometry: Point[][];
     properties: any;
     type: 0 | 1 | 2 | 3;
     id?: any;
@@ -81,12 +81,12 @@ export type BucketFeature = {
  * hold the same data as ArrayGroups, but are tuned for consumption by WebGL.
  */
 export interface Bucket {
-    layerIds: Array<string>;
+    layerIds: string[];
     hasDependencies: boolean;
-    readonly layers: Array<any>;
-    readonly stateDependentLayers: Array<any>;
-    readonly stateDependentLayerIds: Array<string>;
-    populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID): void;
+    readonly layers: any[];
+    readonly stateDependentLayers: any[];
+    readonly stateDependentLayerIds: string[];
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void;
     update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>): void;
     isEmpty(): boolean;
     upload(context: Context): void;
@@ -99,7 +99,7 @@ export interface Bucket {
     destroy(): void;
 }
 
-export function deserialize(input: Array<Bucket>, style: Style): {[_: string]: Bucket} {
+export function deserialize(input: Bucket[], style: Style): {[_: string]: Bucket} {
     const output = {};
 
     // Guard against the case where the map's style has been set to null while

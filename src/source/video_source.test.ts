@@ -1,4 +1,4 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {VideoSource} from './video_source';
 import {extend} from '../util/util';
 import {getMockDispatcher, waitForEvent} from '../util/test/util';
@@ -30,7 +30,7 @@ class StubMap extends Evented {
 }
 
 function createSource(options) {
-    const c = options && options.video || window.document.createElement('video');
+    const c = options?.video || window.document.createElement('video');
 
     options = extend({coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]]}, options);
 
@@ -115,5 +115,23 @@ describe('VideoSource', () => {
         source.prepare();
         await dataEvent;
         expect(tile.state).toBe('loaded');
+    });
+
+    test('onRemove removes playing listener and pauses video', () => {
+        const video = window.document.createElement('video');
+        const removeListenerSpy = vi.spyOn(video, 'removeEventListener');
+        const pauseSpy = vi.spyOn(video, 'pause');
+
+        const source = createSource({
+            type: 'video',
+            urls: [],
+            coordinates: [[-76.54, 39.18], [-76.52, 39.18], [-76.52, 39.17], [-76.54, 39.17]]
+        });
+        source.video = video;
+
+        source.onRemove();
+
+        expect(removeListenerSpy).toHaveBeenCalledWith('playing', expect.any(Function));
+        expect(pauseSpy).toHaveBeenCalled();
     });
 });

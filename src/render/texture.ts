@@ -57,18 +57,18 @@ export class Texture {
         y: number;
     }) {
         const {width, height} = image as {width: number; height: number};
-        const resize = (!this.size || this.size[0] !== width || this.size[1] !== height) && !position;
+        const resize = (this.size?.[0] !== width || this.size[1] !== height) && !position;
         const {context} = this;
         const {gl} = context;
 
-        this.useMipmap = Boolean(options && options.useMipmap);
+        this.useMipmap = Boolean(options?.useMipmap);
         this.image = image;
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
         context.pixelStoreUnpackFlipY.set(false);
         context.pixelStoreUnpack.set(1);
 
-        const wantPremultiply = this.format === gl.RGBA && (!options || options.premultiply !== false);
+        const wantPremultiply = this.format === gl.RGBA && (options?.premultiply !== false);
 
         if (resize) {
             this.size = [width, height];

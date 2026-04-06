@@ -13,13 +13,13 @@ export async function loadGlyphRange(fontstack: string,
     const begin = range * 256;
     const end = begin + 255;
 
-    const request = requestManager.transformRequest(
+    const request = await requestManager.transformRequest(
         urlTemplate.replace('{fontstack}', fontstack).replace('{range}', `${begin}-${end}`),
         ResourceType.Glyphs
     );
 
     const response = await getArrayBuffer(request, new AbortController());
-    if (!response || !response.data) {
+    if (!response?.data) {
         throw new Error(`Could not load glyph range. range: ${range}, ${begin}-${end}`);
     }
     const glyphs = {};

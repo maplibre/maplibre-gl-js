@@ -1,6 +1,5 @@
 import {type RequestParameters, makeRequest, sameOrigin, type GetResourceResponse} from './ajax';
 import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
-import {webpSupported} from './webp_supported';
 import {config} from './config';
 import {AbortError} from './abort_error';
 import {getProtocol} from '../source/protocol_crud';
@@ -106,12 +105,10 @@ export namespace ImageRequest {
      */
     export const getImage = (requestParameters: RequestParameters, abortController: AbortController, supportImageRefresh: boolean = true): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> => {
         return new Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>>((resolve, reject) => {
-            if (webpSupported.supported) {
-                if (!requestParameters.headers) {
-                    requestParameters.headers = {};
-                }
-                requestParameters.headers.accept = 'image/webp,*/*';
+            if (!requestParameters.headers) {
+                requestParameters.headers = {};
             }
+            requestParameters.headers.accept = 'image/webp,*/*';
             extend(requestParameters, {type: 'image'});
             const request: ImageRequestQueueItem = {
                 abortController,

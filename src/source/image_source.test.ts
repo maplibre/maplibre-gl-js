@@ -17,8 +17,7 @@ function createSource(options) {
         coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]]
     }, options);
 
-    const source = new ImageSource('id', options, {} as any, options.eventedParent);
-    return source;
+    return new ImageSource('id', options, {} as any, options.eventedParent);
 }
 
 class StubMap extends Evented {
@@ -67,6 +66,7 @@ describe('ImageSource', () => {
             expect(e.dataType).toBe('source');
         });
         source.onAdd(new StubMap() as any);
+        await sleep(0);
         server.respond();
         await sleep(0);
         expect(source.image).toBeTruthy();
@@ -81,6 +81,24 @@ describe('ImageSource', () => {
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0]).toBe('/image.png');
         expect(spy.mock.calls[0][1]).toBe('Image');
+    });
+
+    test('can asynchronously transform request', async () => {
+        const source = createSource({url: '/image.png'});
+        const map = new StubMap() as any;
+        map._requestManager = {
+            transformRequest: async (url) => ({
+                url,
+                headers: {Authorization: 'Bearer token'}
+            })
+        };
+        const promise = source.once('data');
+        source.onAdd(map);
+        await sleep(0);
+        server.respond();
+        await promise;
+        expect(server.requests[0].url).toBe('/image.png');
+        expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer token');
     });
 
     test('updates url from updateImage', () => {
@@ -122,6 +140,7 @@ describe('ImageSource', () => {
             url: '/image2.png',
             coordinates: [[0, 0], [-1, 0], [-1, -1], [0, -1]]
         });
+        await sleep(0);
         server.respond();
         await sleep(0);
         const afterSerialized = source.serialize();
@@ -132,6 +151,7 @@ describe('ImageSource', () => {
         const source = createSource({url: '/image.png'});
         const promise = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'content');
         source.onAdd(new StubMap() as any);
+        await sleep(0);
         server.respond();
         await promise;
         expect(typeof source.tileID == 'object').toBeTruthy();
@@ -141,6 +161,7 @@ describe('ImageSource', () => {
         const source = createSource({url: '/image.png'});
         const promise = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'metadata');
         source.onAdd(new StubMap() as any);
+        await sleep(0);
         server.respond();
         await expect(promise).resolves.toBeDefined();
     });
@@ -179,19 +200,21 @@ describe('ImageSource', () => {
         source.onAdd(map);
         expect(source.image).toBeUndefined();
         source.updateImage({url: '/image2.png'});
+        await sleep(0);
         server.respond();
         await sleep(10);
 
         expect(source.image).toBeTruthy();
     });
 
-    test('cancels request if updateImage is used', () => {
+    test('cancels request if updateImage is used', async () => {
         const map = new StubMap() as any;
         const source = createSource({url: '/image.png', eventedParent: map});
 
         // Suppress errors because we're aborting.
         map.on('error', () => {});
         source.onAdd(map);
+        await sleep(0);
 
         const spy = vi.spyOn(server.requests[0] as any, 'abort');
 
@@ -205,6 +228,7 @@ describe('ImageSource', () => {
 
         expect(source.loaded()).toBe(false);
         source.onAdd(map);
+        await sleep(0);
         server.respond();
         await sleep(0);
         expect(source.loaded()).toBe(true);
@@ -216,6 +240,7 @@ describe('ImageSource', () => {
 
         expect(missingImagesource.loaded()).toBe(false);
         missingImagesource.onAdd(map);
+        await sleep(0);
         server.respond();
         await sleep(0);
 
