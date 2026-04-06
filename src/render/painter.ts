@@ -47,7 +47,7 @@ import type {VertexBuffer} from '../webgl/vertex_buffer';
 import type {IndexBuffer} from '../webgl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../webgl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import type {RenderToTexture} from './render_to_texture';
+import type {IRenderToTexture} from './render_to_texture_interface';
 import type {ProjectionData} from '../geo/projection/projection_data';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
@@ -110,7 +110,7 @@ export class Painter {
     drawFunctions: DrawFunctions;
     context: Context;
     transform: IReadonlyTransform;
-    renderToTexture: RenderToTexture;
+    renderToTexture: IRenderToTexture;
     _tileTextures: {
         [_: number]: Texture[];
     };
