@@ -71,7 +71,12 @@ describe('render to texture', () => {
         getDepthModeFor3D: () => DepthMode.disabled,
         useProgram: () => ({draw: () => { layersDrawn++; }}),
         _renderTileClippingMasks: vi.fn(),
-        renderLayer: vi.fn()
+        renderLayer: vi.fn(),
+        drawFunctions: {
+            terrain: vi.fn(),
+            terrainDepth: vi.fn(),
+            terrainCoords: vi.fn(),
+        }
     } as any as Painter;
     const map = {painter} as Map;
 
