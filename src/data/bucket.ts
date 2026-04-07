@@ -2,7 +2,7 @@ import type {CollisionBoxArray} from './array_types.g';
 import type {Style} from '../style/style';
 import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
 import type {FeatureIndex} from './feature_index';
-import type {Context} from '../gl/context';
+import type {Context} from '../webgl/context';
 import type {FeatureStates} from '../source/source_state';
 import type {ImagePosition} from '../render/image_atlas';
 import type {CanonicalTileID} from '../tile/tile_id';

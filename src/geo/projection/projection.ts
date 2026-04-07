@@ -1,8 +1,8 @@
 import type {CanonicalTileID} from '../../tile/tile_id';
 import type {PreparedShader} from '../../shaders/shaders';
-import type {Context} from '../../gl/context';
+import type {Context} from '../../webgl/context';
 import type {Mesh} from '../../render/mesh';
-import type {Program} from '../../render/program';
+import type {Program} from '../../webgl/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../../style/evaluation_parameters';

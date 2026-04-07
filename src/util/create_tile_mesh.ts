@@ -1,4 +1,4 @@
-import {type Context} from '../gl/context';
+import {type Context} from '../webgl/context';
 import {Mesh} from '../render/mesh';
 import {PosArray, TriangleIndexArray} from '../data/array_types.g';
 import {SegmentVector} from '../data/segment';

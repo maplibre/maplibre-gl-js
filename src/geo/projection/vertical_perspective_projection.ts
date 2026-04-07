@@ -1,4 +1,4 @@
-import type {Context} from '../../gl/context';
+import type {Context} from '../../webgl/context';
 import type {CanonicalTileID} from '../../tile/tile_id';
 import {type Mesh} from '../../render/mesh';
 import {now} from '../../util/time_control';

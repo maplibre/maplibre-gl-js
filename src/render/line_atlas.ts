@@ -1,6 +1,6 @@
 import {warnOnce} from '../util/util';
 
-import type {Context} from '../gl/context';
+import type {Context} from '../webgl/context';
 
 /**
  * A dash entry

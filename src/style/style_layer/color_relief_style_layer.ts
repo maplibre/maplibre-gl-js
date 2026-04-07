@@ -6,9 +6,9 @@ import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '.
 import type {ColorReliefPaintProps} from './color_relief_style_layer_properties.g';
 import {Color, Interpolate, ZoomConstantExpression, type LayerSpecification, type EvaluationContext, type StylePropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {warnOnce} from '../../util/util';
-import {Texture} from '../../render/texture';
+import {Texture} from '../../webgl/texture';
 import {RGBAImage} from '../../util/image';
-import {type Context} from '../../gl/context';
+import {type Context} from '../../webgl/context';
 import {packDEMData} from '../../data/dem_data';
 
 export const isColorReliefStyleLayer = (layer: StyleLayer): layer is ColorReliefStyleLayer => layer.type === 'color-relief';
