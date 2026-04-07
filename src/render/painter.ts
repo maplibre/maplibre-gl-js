@@ -18,21 +18,8 @@ import {ColorMode} from '../webgl/color_mode';
 import {CullFaceMode} from '../webgl/cull_face_mode';
 import {Texture} from '../webgl/texture';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {drawSymbols} from '../webgl/draw/draw_symbol';
-import {drawCircles} from '../webgl/draw/draw_circle';
-import {drawHeatmap} from '../webgl/draw/draw_heatmap';
-import {drawLine} from '../webgl/draw/draw_line';
-import {drawFill} from '../webgl/draw/draw_fill';
-import {drawFillExtrusion} from '../webgl/draw/draw_fill_extrusion';
-import {drawHillshade} from '../webgl/draw/draw_hillshade';
-import {drawColorRelief} from '../webgl/draw/draw_color_relief';
-import {drawRaster} from '../webgl/draw/draw_raster';
-import {drawBackground} from '../webgl/draw/draw_background';
-import {drawDebug, drawDebugPadding, selectDebugSource} from '../webgl/draw/draw_debug';
-import {drawCustom} from '../webgl/draw/draw_custom';
-import {drawDepth, drawCoords} from '../webgl/draw/draw_terrain';
+import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webgl/draw';
 import {type OverscaledTileID} from '../tile/tile_id';
-import {drawSky, drawAtmosphere} from '../webgl/draw/draw_sky';
 import {Mesh} from './mesh';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection';
 
@@ -84,25 +71,6 @@ export type RenderOptions = {
  * @internal
  * Initialize a new painter object.
  */
-export type DrawFunctions = {
-    symbol: typeof drawSymbols;
-    circle: typeof drawCircles;
-    heatmap: typeof drawHeatmap;
-    line: typeof drawLine;
-    fill: typeof drawFill;
-    fillExtrusion: typeof drawFillExtrusion;
-    hillshade: typeof drawHillshade;
-    colorRelief: typeof drawColorRelief;
-    raster: typeof drawRaster;
-    background: typeof drawBackground;
-    sky: typeof drawSky;
-    atmosphere: typeof drawAtmosphere;
-    custom: typeof drawCustom;
-    debug: typeof drawDebug;
-    debugPadding: typeof drawDebugPadding;
-    terrainDepth: typeof drawDepth;
-    terrainCoords: typeof drawCoords;
-};
 
 export class Painter {
     drawFunctions: DrawFunctions;
@@ -158,25 +126,7 @@ export class Painter {
     terrainFacilitator: {dirty: boolean; matrix: mat4; renderTime: number};
 
     constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: IReadonlyTransform) {
-        this.drawFunctions = {
-            symbol: drawSymbols,
-            circle: drawCircles,
-            heatmap: drawHeatmap,
-            line: drawLine,
-            fill: drawFill,
-            fillExtrusion: drawFillExtrusion,
-            hillshade: drawHillshade,
-            colorRelief: drawColorRelief,
-            raster: drawRaster,
-            background: drawBackground,
-            sky: drawSky,
-            atmosphere: drawAtmosphere,
-            custom: drawCustom,
-            debug: drawDebug,
-            debugPadding: drawDebugPadding,
-            terrainDepth: drawDepth,
-            terrainCoords: drawCoords,
-        };
+        this.drawFunctions = webglDrawFunctions;
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
