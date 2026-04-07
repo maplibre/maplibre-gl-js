@@ -8,16 +8,16 @@ import {patternAttributes} from './bucket/pattern_attributes';
 import {dashAttributes} from './bucket/dash_attributes';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {FeaturePositionMap} from './feature_position_map';
-import {type Uniform, Uniform1f, UniformColor, Uniform4f} from '../render/uniform_binding';
+import {type Uniform, Uniform1f, UniformColor, Uniform4f} from '../webgl/uniform_binding';
 
-import type {UniformLocations} from '../render/uniform_binding';
+import type {UniformLocations} from '../webgl/uniform_binding';
 
 import type {CanonicalTileID} from '../tile/tile_id';
-import type {Context} from '../gl/context';
+import type {Context} from '../webgl/context';
 import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
 import type {CrossfadeParameters} from '../style/evaluation_parameters';
 import type {StructArray, StructArrayMember} from '../util/struct_array';
-import type {VertexBuffer} from '../gl/vertex_buffer';
+import type {VertexBuffer} from '../webgl/vertex_buffer';
 import type {ImagePosition} from '../render/image_atlas';
 import type {
     Feature,

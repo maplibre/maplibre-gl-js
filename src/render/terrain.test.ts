@@ -2,7 +2,7 @@ import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 import {Terrain} from './terrain';
-import {Context} from '../gl/context';
+import {Context} from '../webgl/context';
 import {RGBAImage} from '../util/image';
 import {OverscaledTileID} from '../tile/tile_id';
 import {Tile} from '../tile/tile';
