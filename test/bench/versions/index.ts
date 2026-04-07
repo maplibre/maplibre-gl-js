@@ -29,8 +29,9 @@ import CoveringTilesGlobe from '../benchmarks/covering_tiles_globe';
 import CoveringTilesMercator from '../benchmarks/covering_tiles_mercator';
 import GeoJSONSourceUpdateData from '../benchmarks/geojson_source_update_data';
 import GeoJSONSourceSetData from '../benchmarks/geojson_source_set_data';
+import TerrainRender from '../benchmarks/terrain_render';
 
-const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as GeoJSON.Feature<GeoJSON.Point>[]).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
+const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as Array<GeoJSON.Feature<GeoJSON.Point>>).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
 (window as any).maplibreglBenchmarks = (window as any).maplibreglBenchmarks || {};
 
@@ -95,6 +96,7 @@ register('CoveringTilesGlobe', new CoveringTilesGlobe(0));
 register('CoveringTilesGlobePitched', new CoveringTilesGlobe(60));
 register('CoveringTilesMercator', new CoveringTilesMercator(0));
 register('CoveringTilesMercatorPitched', new CoveringTilesMercator(60));
+register('TerrainRender', new TerrainRender());
 
 Promise.resolve().then(() => {
     // Ensure the global worker pool is never drained. Browsers have resource limits

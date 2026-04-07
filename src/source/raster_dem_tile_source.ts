@@ -65,7 +65,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 tile.state = 'unloaded';
                 return;
             }
-            if (response && response.data) {
+            if (response?.data) {
                 const img = response.data;
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
@@ -90,8 +90,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 if (!tile.actor || tile.state === 'expired') {
                     tile.actor = this.dispatcher.getActor();
                 }
-                const data = await tile.actor.sendAsync({type: MessageType.loadDEMTile, data: params});
-                tile.dem = data;
+                tile.dem = await tile.actor.sendAsync({type: MessageType.loadDEMTile, data: params});
                 tile.needsHillshadePrepare = true;
                 tile.needsTerrainPrepare = true;
                 tile.state = 'loaded';

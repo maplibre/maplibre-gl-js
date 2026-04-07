@@ -7,7 +7,7 @@ type ScaleReturnValue = {
 };
 
 export class DOM {
-    private static readonly docStyle = typeof window !== 'undefined' && window.document && window.document.documentElement.style;
+    private static readonly docStyle = typeof window !== 'undefined' && window.document?.documentElement.style;
 
     private static userSelect: string;
 
@@ -21,8 +21,7 @@ export class DOM {
     }
 
     public static createNS(namespaceURI: string, tagName: string) {
-        const el = window.document.createElementNS(namespaceURI, tagName);
-        return el;
+        return window.document.createElementNS(namespaceURI, tagName);
     }
 
     public static disableDrag() {
@@ -79,8 +78,8 @@ export class DOM {
     public static touchPos(el: HTMLElement, touches: TouchList) {
         const points: Point[] = [];
         const scale = DOM.getScale(el);
-        for (let i = 0; i < touches.length; i++) {
-            points.push(DOM.getPoint(el, scale, touches[i]));
+        for (const touch of touches) {
+            points.push(DOM.getPoint(el, scale, touch));
         }
         return points;
     }

@@ -49,7 +49,7 @@ export class GlyphManager {
     url: string;
     lang?: string;
 
-    // exposed as statics to enable stubbing in unit tests
+    // exposed as statistics to enable stubbing in unit tests
     static loadGlyphRange = loadGlyphRange;
     static TinySDF = TinySDF;
 
@@ -64,8 +64,8 @@ export class GlyphManager {
         this.url = url;
     }
 
-    async getGlyphs(glyphs: {[stack: string]: Array<number>}): Promise<GetGlyphsResponse> {
-        const glyphsPromises: Promise<{stack: string; id: number; glyph: StyleGlyph}>[] = [];
+    async getGlyphs(glyphs: {[stack: string]: number[]}): Promise<GetGlyphsResponse> {
+        const glyphsPromises: Array<Promise<{stack: string; id: number; glyph: StyleGlyph}>> = [];
 
         for (const stack in glyphs) {
             for (const id of glyphs[stack]) {
@@ -128,8 +128,7 @@ export class GlyphManager {
 
         // Start downloading this range unless we’re currently downloading it.
         if (!entry.requests[range]) {
-            const promise = GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager);
-            entry.requests[range] = promise;
+            entry.requests[range] = GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager);
         }
 
         try {
@@ -221,7 +220,7 @@ export class GlyphManager {
             buffer: 3 * textureScale,
             radius: 8 * textureScale,
             cutoff: 0.25,
-            fontFamily: fontFamily,
+            fontFamily,
             fontWeight: this._fontWeight(fontFamilies[0]),
             fontStyle: this._fontStyle(fontFamilies[0]),
             lang: this.lang

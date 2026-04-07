@@ -49,9 +49,9 @@ ${htmlContent}
 
 async function generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray: HtmlDoc[]): Promise<string> {
     let indexMarkdown = '# Overview \n\n';
-    const promises: Promise<any>[] = [];
+    const promises: Array<Promise<any>> = [];
     for (const indexArrayItem of indexArray) {
-        const imagePath = `docs/assets/examples/${indexArrayItem.mdFileName!.replace('.md', '.png')}`;
+        const imagePath = `docs/assets/examples/${indexArrayItem.mdFileName.replace('.md', '.png')}`;
         const outputPath = imagePath.replace('.png', '.webp');
         promises.push(sharp(imagePath).webp({quality: 90, lossless: false}).toFile(outputPath));
         indexMarkdown += `
@@ -73,7 +73,7 @@ function generateReadme() {
     const globalsFile = path.join(typedocConfig.out, 'globals.md');
     const content = fs.readFileSync(globalsFile, 'utf-8');
     let lines = content.split('\n');
-    const classesLineIndex = lines.indexOf(lines.find(l => l.endsWith('Classes')) as string);
+    const classesLineIndex = lines.indexOf(lines.find(l => l.endsWith('Classes')));
     lines = lines.splice(2, classesLineIndex - 2);
     const contentString = generateAPIIntroMarkdown(lines);
     fs.writeFileSync(path.join(typedocConfig.out, 'README.md'), contentString);
@@ -100,8 +100,8 @@ async function generateExamplesFolder() {
         htmlContent = htmlContent.replace(/\.\.\/\.\.\//g, maplibreUnpkg);
         htmlContent = htmlContent.replace(/-dev.js/g, '.js');
         const htmlContentLines = htmlContent.split('\n');
-        const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim()!;
-        const description = htmlContentLines.find(l => l.includes('og:description'))?.replace(/.*content=\"(.*)\".*/, '$1')!;
+        const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim();
+        const description = htmlContentLines.find(l => l.includes('og:description'))?.replace(/.*content=\"(.*)\".*/, '$1');
         fs.writeFileSync(path.join(examplesDocsFolder, file), htmlContent);
         const mdFileName = file.replace('.html', '.md');
         indexArray.push({

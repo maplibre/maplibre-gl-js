@@ -6,9 +6,9 @@ export type LocationsWithTileID = {
     tileID: OverscaledTileID[];
     zoom: number;
     center: GeoJSON.Position;
-}
+};
 
-export default function locationsWithTileID(locations: GeoJSON.Feature<GeoJSON.Point>[]): LocationsWithTileID[] {
+export default function locationsWithTileID(locations: Array<GeoJSON.Feature<GeoJSON.Point>>): LocationsWithTileID[] {
     return locations.map(feature => {
         const {coordinates} = feature.geometry;
         const {zoom} = feature.properties;

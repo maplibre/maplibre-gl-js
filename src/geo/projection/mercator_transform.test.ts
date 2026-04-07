@@ -170,7 +170,7 @@ describe('transform', () => {
         transform.resize(500, 500);
 
         // equivalent ranges
-        const lngRanges: [number, number][] = [
+        const lngRanges: Array<[number, number]> = [
             [175, -175], [175, 185], [-185, -175], [-185, 185]
         ];
 

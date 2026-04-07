@@ -38,9 +38,9 @@ export default class ColorReliefLoad extends Benchmark {
                     'layout': {},
                     'paint': {
                         'color-relief-color': [
-                            "interpolate",
-                            ["linear"],
-                            ["elevation"],
+                            'interpolate',
+                            ['linear'],
+                            ['elevation'],
                             0, 'rgb(112, 209, 255)',
                             12.88581315, 'rgb(113, 211, 247)',
                             51.5432526, 'rgb(114, 212, 234)',

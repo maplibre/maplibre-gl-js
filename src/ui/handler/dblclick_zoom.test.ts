@@ -7,7 +7,7 @@ function createMap(options: any = {}) {
     return new Map({
         container: window.document.createElement('div'),
         ...options
-    } as any as MapOptions);
+    } as MapOptions);
 }
 
 async function simulateDoubleTap(map, delay = 100) {
@@ -45,7 +45,7 @@ describe('dbclick_zoom', () => {
     test('DoubleClickZoomHandler does not zoom if preventDefault is called on the dblclick event', () => {
         const map = createMap();
 
-        map.on('dblclick', e => e.preventDefault());
+        map.on('dblclick', e => { e.preventDefault(); });
 
         const zoom = vi.fn();
         map.on('zoomstart', zoom);

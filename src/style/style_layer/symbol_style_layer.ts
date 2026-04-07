@@ -45,7 +45,7 @@ export class SymbolStyleLayer extends StyleLayer {
         super(layer, properties, globalState);
     }
 
-    recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {
+    recalculate(parameters: EvaluationParameters, availableImages: string[]) {
         super.recalculate(parameters, availableImages);
 
         if (this.layout.get('icon-rotation-alignment') === 'auto') {
@@ -78,7 +78,7 @@ export class SymbolStyleLayer extends StyleLayer {
                 // remove duplicates, preserving order
                 const deduped = [];
                 for (const m of writingModes) {
-                    if (deduped.indexOf(m) < 0) deduped.push(m);
+                    if (!deduped.includes(m)) deduped.push(m);
                 }
                 this.layout._values['text-writing-mode'] = deduped;
             } else {
@@ -89,7 +89,7 @@ export class SymbolStyleLayer extends StyleLayer {
         this._setPaintOverrides();
     }
 
-    getValueAndResolveTokens(name: any, feature: Feature, canonical: CanonicalTileID, availableImages: Array<string>) {
+    getValueAndResolveTokens(name: any, feature: Feature, canonical: CanonicalTileID, availableImages: string[]) {
         const value = this.layout.get(name).evaluate(feature, {}, canonical, availableImages);
         const unevaluated = this._unevaluatedLayout._values[name];
         if (!unevaluated.isDataDriven() && !isExpression(unevaluated.value) && value) {
@@ -147,7 +147,7 @@ export class SymbolStyleLayer extends StyleLayer {
 
         const checkSections = (sections) => {
             for (const section of sections) {
-                if (property.overrides && property.overrides.hasOverride(section)) {
+                if (property.overrides?.hasOverride(section)) {
                     hasOverrides = true;
                     return;
                 }
@@ -186,7 +186,7 @@ export type SymbolPadding = [number, number, number, number];
 export function getIconPadding(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, feature: SymbolFeature, canonical: CanonicalTileID, pixelRatio = 1): SymbolPadding {
     // Support text-padding in addition to icon-padding? Unclear how to apply asymmetric text-padding to the radius for collision circles.
     const result = layout.get('icon-padding').evaluate(feature, {}, canonical);
-    const values = result && result.values;
+    const values = result?.values;
 
     return [
         values[0] * pixelRatio,

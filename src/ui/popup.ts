@@ -167,6 +167,7 @@ const focusQuerySelector = [
  * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-popup-on-hover/)
  * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-popup-on-click/)
  * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/attach-a-popup-to-a-marker-instance/)
+ * @see [Show polygon information on click](https://maplibre.org/maplibre-gl-js/docs/examples/show-polygon-information-on-click/)
  *
  * ## Events
  *
@@ -687,7 +688,7 @@ export class Popup extends Evented {
     _focusFirstElement() {
         if (!this.options.focusAfterOpen || !this._container) return;
 
-        const firstFocusable = this._container.querySelector(focusQuerySelector) as HTMLElement;
+        const firstFocusable = this._container.querySelector<HTMLElement>(focusQuerySelector);
 
         if (firstFocusable) firstFocusable.focus();
     }

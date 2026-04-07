@@ -95,7 +95,7 @@ export class GlobeTransform implements ITransform {
         this._helper.setPadding(padding);
     }
     interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number): void {
-        return this._helper.interpolatePadding(start, target, t);
+        this._helper.interpolatePadding(start, target, t);
     }
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
@@ -209,14 +209,14 @@ export class GlobeTransform implements ITransform {
     get constrainOverride(): TransformConstrainFunction {
         return this._helper.constrainOverride;
     }
-    public get nearZ(): number { 
-        return this._helper.nearZ; 
+    public get nearZ(): number {
+        return this._helper.nearZ;
     }
-    public get farZ(): number { 
-        return this._helper.farZ; 
+    public get farZ(): number {
+        return this._helper.farZ;
     }
-    public get autoCalculateNearFarZ(): boolean { 
-        return this._helper.autoCalculateNearFarZ; 
+    public get autoCalculateNearFarZ(): boolean {
+        return this._helper.autoCalculateNearFarZ;
     }
     //
     // Implementation of globe transform
@@ -255,7 +255,7 @@ export class GlobeTransform implements ITransform {
 
     public constructor(options?: TransformOptions) {
         this._helper = new TransformHelper({
-            calcMatrices: () => { this._calcMatrices(); },
+            calcMatrices: () => this._calcMatrices(),
             defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.

@@ -159,7 +159,7 @@ export class NavigationControl implements IControl {
     }
 
     _createButton(className: string, fn: (e?: any) => unknown) {
-        const a = DOM.create('button', className, this._container) as HTMLButtonElement;
+        const a = DOM.create('button', className, this._container);
         a.type = 'button';
         a.addEventListener('click', fn);
         return a;
@@ -184,7 +184,7 @@ class MouseRotateWrapper {
     constructor(map: Map, element: HTMLElement, pitch: boolean = false) {
         this._clickTolerance = 10;
         this.element = element;
-        
+
         const moveStateManager = new MouseOrTouchMoveStateManager();
         this._rotatePitchHandler = new DragHandler<DragRotateResult, MouseEvent | TouchEvent>({
             clickTolerance: 3,

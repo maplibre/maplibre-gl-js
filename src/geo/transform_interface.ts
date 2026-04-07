@@ -109,7 +109,7 @@ interface ITransformMutators {
     /**
      * Applies a transform to the current transform.
      * @param that - The transform to apply to the current transform.
-     * @param constrain - Whether to constrain the transform's center and zoom and recompute internal matricies once applied.
+     * @param constrain - Whether to constrain the transform's center and zoom and recompute internal matrices once applied.
      */
     apply(that: IReadonlyTransform, constrain: boolean): void;
 
@@ -226,7 +226,7 @@ interface ITransformMutators {
      * Used in mercator transform to precompute tile matrices (posMatrix).
      * @param coords - Array of tile IDs that will be rendered.
      */
-    populateCache(coords: Array<OverscaledTileID>): void;
+    populateCache(coords: OverscaledTileID[]): void;
 
     /**
      * @internal
@@ -293,7 +293,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Return any "wrapped" copies of a given tile coordinate that are visible
      * in the current view.
      */
-    getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID>;
+    getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[];
 
     /**
      * @internal
@@ -421,7 +421,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * screen where the *base* of a visible extrusion could be.
      *
      */
-    getCameraQueryGeometry(queryGeometry: Array<Point>): Array<Point>;
+    getCameraQueryGeometry(queryGeometry: Point[]): Point[];
 
     /**
      * Return the distance to the camera in clip space from a LngLat.

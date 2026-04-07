@@ -69,7 +69,7 @@ function dot(a, b) {
     return a.x * b.x + a.y * b.y;
 }
 
-export function getIntersectionDistance(projectedQueryGeometry: Array<Point3D>, projectedFace: Array<Point3D>) {
+export function getIntersectionDistance(projectedQueryGeometry: Point3D[], projectedFace: Point3D[]) {
 
     if (projectedQueryGeometry.length === 1) {
         // For point queries calculate the z at which the point intersects the face
@@ -132,7 +132,7 @@ export function getIntersectionDistance(projectedQueryGeometry: Array<Point3D>, 
     }
 }
 
-function checkIntersection(projectedBase: Array<Array<Point3D>>, projectedTop: Array<Array<Point3D>>, projectedQueryGeometry: Array<Point3D>) {
+function checkIntersection(projectedBase: Point3D[][], projectedTop: Point3D[][], projectedQueryGeometry: Point3D[]) {
     let closestDistance = Infinity;
 
     if (polygonIntersectsMultiPolygon(projectedQueryGeometry, projectedTop)) {
@@ -164,9 +164,9 @@ function checkIntersection(projectedBase: Array<Array<Point3D>>, projectedTop: A
  * different points can only be done once. This produced a measurable
  * performance improvement.
  */
-function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: number, m: mat4): [Array<Array<Point3D>>, Array<Array<Point3D>>] {
-    const projectedBase = [] as Array<Array<Point3D>>;
-    const projectedTop = [] as Array<Array<Point3D>>;
+function projectExtrusion(geometry: Point[][], zBase: number, zTop: number, m: mat4): [Point3D[][], Point3D[][]] {
+    const projectedBase = [] as Point3D[][];
+    const projectedTop = [] as Point3D[][];
     const baseXZ = m[8] * zBase;
     const baseYZ = m[9] * zBase;
     const baseZZ = m[10] * zBase;
@@ -177,8 +177,8 @@ function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: nu
     const topWZ = m[11] * zTop;
 
     for (const r of geometry) {
-        const ringBase = [] as Array<Point3D>;
-        const ringTop = [] as Array<Point3D>;
+        const ringBase = [] as Point3D[];
+        const ringTop = [] as Point3D[];
         for (const p of r) {
             const x = p.x;
             const y = p.y;
@@ -212,7 +212,7 @@ function projectExtrusion(geometry: Array<Array<Point>>, zBase: number, zTop: nu
     return [projectedBase, projectedTop];
 }
 
-function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: mat4, z: number) {
+function projectQueryGeometry(queryGeometry: Point[], pixelPosMatrix: mat4, z: number) {
     const projectedQueryGeometry = [];
     for (const p of queryGeometry) {
         const v = [p.x, p.y, z, 1] as vec4;

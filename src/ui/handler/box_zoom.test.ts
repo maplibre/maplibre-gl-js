@@ -90,7 +90,7 @@ describe('BoxZoomHandler', () => {
         map.remove();
     });
 
-    test('avoids conflicts with DragPanHandler when disabled and reenabled (#2237)', () => {
+    test('avoids conflicts with DragPanHandler when disabled and re-enabled (#2237)', () => {
         const map = createMap(undefined);
 
         map.boxZoom.disable();
@@ -135,7 +135,7 @@ describe('BoxZoomHandler', () => {
     test('does not begin a box zoom if preventDefault is called on the mousedown event', () => {
         const map = createMap(undefined);
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const boxzoomstart = vi.fn();
         const boxzoomend   = vi.fn();

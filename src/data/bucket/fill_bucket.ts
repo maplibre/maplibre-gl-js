@@ -21,9 +21,9 @@ import type {
     PopulateParameters
 } from '../bucket';
 import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer';
-import type {Context} from '../../gl/context';
-import type {IndexBuffer} from '../../gl/index_buffer';
-import type {VertexBuffer} from '../../gl/vertex_buffer';
+import type {Context} from '../../webgl/context';
+import type {IndexBuffer} from '../../webgl/index_buffer';
+import type {VertexBuffer} from '../../webgl/vertex_buffer';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
@@ -36,11 +36,11 @@ export class FillBucket implements Bucket {
     index: number;
     zoom: number;
     overscaling: number;
-    layers: Array<FillStyleLayer>;
-    layerIds: Array<string>;
-    stateDependentLayers: Array<FillStyleLayer>;
-    stateDependentLayerIds: Array<string>;
-    patternFeatures: Array<BucketFeature>;
+    layers: FillStyleLayer[];
+    layerIds: string[];
+    stateDependentLayers: FillStyleLayer[];
+    stateDependentLayerIds: string[];
+    patternFeatures: BucketFeature[];
 
     layoutVertexArray: FillLayoutArray;
     layoutVertexBuffer: VertexBuffer;
@@ -75,7 +75,7 @@ export class FillBucket implements Bucket {
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
     }
 
-    populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID) {
         this.hasDependencies = hasPattern('fill', this.layers, options);
         const fillSortKey = this.layers[0].layout.get('fill-sort-key');
         const sortFeaturesByKey = !fillSortKey.isConstant();
@@ -170,7 +170,7 @@ export class FillBucket implements Bucket {
         this.segments2.destroy();
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {
+    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {
         [_: string]: ImagePosition;
     }, subdivisionGranularity: SubdivisionGranularitySetting) {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {

@@ -3,7 +3,7 @@
 This folder holds common build scripts accessed via the various `npm run` commands.
 Codegen is executed when calling `npm install` in order to generate all artifacts needed for the build to pass
 
-## Bundeling all the code
+## Bundling all the code
 
 The bundling process can be split into several steps:
 
@@ -17,7 +17,7 @@ These commands will use rollup to bundle the code. This is where the magic happe
 
 `rollup_plugins.ts` is used to define common plugins for rollup configurations
 
-`rollup_plugin_minify_style_spec.ts` is used to specify the plugin used in style spec bundeling
+`rollup_plugin_minify_style_spec.ts` is used to specify the plugin used in style spec bundling
 
 In the `rollup` folder there are some files that are used as linking files as they link to other files for rollup to pick when bundling.
 

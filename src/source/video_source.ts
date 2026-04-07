@@ -2,7 +2,7 @@ import {getVideo} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 
 import {ImageSource} from './image_source';
-import {Texture} from '../render/texture';
+import {Texture} from '../webgl/texture';
 import {Event, ErrorEvent} from '../util/evented';
 import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
 
@@ -53,7 +53,7 @@ import type {VideoSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
  */
 export class VideoSource extends ImageSource {
     options: VideoSourceSpecification;
-    urls: Array<string>;
+    urls: string[];
     video: HTMLVideoElement;
     roundZoom: boolean;
 

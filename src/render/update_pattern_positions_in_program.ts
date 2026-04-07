@@ -25,7 +25,7 @@ export function updatePatternPositionsInProgram(
     tile: Tile,
     layer: FillStyleLayer | FillExtrusionStyleLayer): void {
 
-    if (!constantPattern || !tile || !tile.imageAtlas) {
+    if (!constantPattern || !tile?.imageAtlas) {
         return;
     }
 

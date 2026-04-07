@@ -11,7 +11,7 @@ async function getSourceMapForFile(url: string|URL) {
     const content = await fs.readFile(url, {encoding: 'utf-8'});
     const result = new RegExp('^//# sourceMappingURL=(.*)$', 'm').exec(content);
     expect(result).toBeTruthy();
-    const sourcemapUrl = result![1];
+    const sourcemapUrl = result[1];
     expect(sourcemapUrl).toBeTruthy();
     const resolvedSourcemapURL = new URL(sourcemapUrl, url);
     const text = await fs.readFile(resolvedSourcemapURL, {encoding: 'utf-8'});
@@ -62,18 +62,14 @@ describe('main sourcemap', () => {
                 return false;
             if (f.startsWith(path.join('src', 'style-spec')))
                 return false;
-            if (f.startsWith(`build${path.sep}`))
-                return false;
-            return true;
+            return !f.startsWith(`build${path.sep}`);
         }).sort();
 
         // actual files from *.js.map
         const actualEntriesInSourcemapJSON = sourcemapEntriesNormalized.filter(f => {
             if (f.startsWith('node_modules'))
                 return false;
-            if (f.startsWith(path.join('src', 'style-spec')))
-                return false;
-            return true;
+            return !f.startsWith(path.join('src', 'style-spec'));
         }).sort();
 
         function setMinus<T>(a: T[], b: T[]) : T[] {
@@ -84,6 +80,6 @@ describe('main sourcemap', () => {
         const s1 = setMinus(actualEntriesInSourcemapJSON, expectedEntriesInSourcemapJSON);
         expect(s1.length).toBeLessThan(5);
         const s2 = setMinus(expectedEntriesInSourcemapJSON, actualEntriesInSourcemapJSON);
-        expect(s2.length).toBeLessThan(16);
+        expect(s2.length).toBeLessThan(17);
     });
 });

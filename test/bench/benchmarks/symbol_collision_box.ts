@@ -1,13 +1,13 @@
 import Point from '@mapbox/point-geometry';
-import {ITransform} from '../../../src/geo/transform_interface';
+import {type ITransform} from '../../../src/geo/transform_interface';
 import {CollisionIndex} from '../../../src/symbol/collision_index';
 import Benchmark from '../lib/benchmark';
-import {OverlapMode} from '../../../src/style/style_layer/overlap_mode';
-import {OverscaledTileID, UnwrappedTileID} from '../../../src/tile/tile_id';
-import {SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
+import {type OverlapMode} from '../../../src/style/style_layer/overlap_mode';
+import {OverscaledTileID, type UnwrappedTileID} from '../../../src/tile/tile_id';
+import {type SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
 import {EXTENT} from '../../../src/data/extent';
 import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
-import {mat4} from 'gl-matrix';
+import {type mat4} from 'gl-matrix';
 import {GlobeProjection} from '../../../src/geo/projection/globe_projection';
 import {GlobeTransform} from '../../../src/geo/projection/globe_transform';
 
@@ -22,7 +22,7 @@ type TestSymbol = {
     translation: [number, number];
     shift?: Point;
     simpleProjectionMatrix?: mat4;
-}
+};
 
 // For this benchmark we need a deterministic random number generator. This function provides one.
 // It returns random floats in range 0..1.
@@ -41,7 +41,7 @@ function splitmix32(a) {
 
 export default class SymbolCollisionBox extends Benchmark {
     private _transform: ITransform;
-    private _symbols: Array<TestSymbol>;
+    private _symbols: TestSymbol[];
     private _useGlobeProjection: boolean = false;
 
     constructor(useGlobeProjection: boolean) {

@@ -194,7 +194,7 @@ describe('Style.loadURL', () => {
 
         const promise = style.once('error');
         style.loadURL('style.json');
-        server.respondWith(request => request.respond(errorStatus));
+        server.respondWith(request => { request.respond(errorStatus); });
         await sleep(0);
         server.respond();
         const {error} = await promise;
@@ -391,7 +391,7 @@ describe('Style.loadJSON', () => {
         expect(transformSpy.mock.calls[1][1]).toBe('SpriteImage');
     });
 
-    test('emits an error on non-existant vector source layer', async () => {
+    test('emits an error on non-existent vector source layer', async () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON({
             sources: {
@@ -763,7 +763,7 @@ describe('Style.update', () => {
             }]
         });
 
-        style.on('error', (error) => { expect(error).toBeFalsy(); });
+        style.on('error', (error) => expect(error).toBeFalsy());
 
         await style.once('style.load');
         style.addLayer({id: 'first', source: 'source', type: 'fill', 'source-layer': 'source-layer'}, 'second');
@@ -777,7 +777,7 @@ describe('Style.update', () => {
 
         expect(spy).toHaveBeenCalled();
         expect(spy.mock.calls[0][0]).toBe(MessageType.updateLayers);
-        expect(spy.mock.calls[0][1]['layers'].map((layer) => { return layer.id; })).toEqual(['first', 'third']);
+        expect(spy.mock.calls[0][1]['layers'].map((layer) => layer.id)).toEqual(['first', 'third']);
         expect(spy.mock.calls[0][1]['removedIds']).toEqual(['second']);
     });
 });
@@ -928,7 +928,7 @@ describe('Style.setState', () => {
         await style.once('style.load', spy);
 
         style.setState(newStyleJSON);
-        expect(spy).toHaveBeenCalledWith(expect.objectContaining({style: style, type: 'style.load'}));
+        expect(spy).toHaveBeenCalledWith(expect.objectContaining({style, type: 'style.load'}));
     });
 
     test('change transition doesn\'t change the style, but is considered a change', async () => {
@@ -1176,10 +1176,10 @@ describe('Style.addSource', () => {
     test('sets up source event forwarding', async () => {
         const promisesResolve = {} as any;
         const promises = [
-            new Promise((resolve) => { promisesResolve.error = resolve; }),
-            new Promise((resolve) => { promisesResolve.metadata = resolve; }),
-            new Promise((resolve) => { promisesResolve.content = resolve; }),
-            new Promise((resolve) => { promisesResolve.other = resolve; }),
+            new Promise((resolve) => promisesResolve.error = resolve),
+            new Promise((resolve) => promisesResolve.metadata = resolve),
+            new Promise((resolve) => promisesResolve.content = resolve),
+            new Promise((resolve) => promisesResolve.other = resolve),
         ];
 
         const style = createStyle();
@@ -1303,8 +1303,8 @@ describe('Style.removeSource', () => {
         // Suppress error reporting
         tileManager.on('error', () => {});
 
-        style.on('data', () => { expect(false).toBeTruthy(); });
-        style.on('error', () => { expect(false).toBeTruthy(); });
+        style.on('data', () => expect(false).toBeTruthy());
+        style.on('error', () => expect(false).toBeTruthy());
         tileManager.fire(new Event('data'));
         tileManager.fire(new Event('error'));
     });
@@ -2149,7 +2149,7 @@ describe('Style.addLayer', () => {
         expect(e.mapLibre).toBeTruthy();
     });
 
-    test('throws on non-existant vector source layer', async () => {
+    test('throws on non-existent vector source layer', async () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON({
             sources: {
@@ -2267,7 +2267,7 @@ describe('Style.addLayer', () => {
         await waitForEvent(style, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'content');
         const spy = vi.fn();
         style.tileManagers['mapLibre'].reload = spy;
-        style.tileManagers['mapLibre'].clearTiles =  () => { throw new Error('test failed'); };
+        style.tileManagers['mapLibre'].clearTiles = () => { throw new Error('test failed'); };
         style.removeLayer('my-layer');
         style.addLayer(layer);
         style.update({} as EvaluationParameters);
@@ -2391,7 +2391,7 @@ describe('Style.addLayer', () => {
         expect(error.message).toMatch(/Cannot add layer "c" before non-existing layer "z"./);
     });
 
-    test('fires an error on non-existant source layer', async () => {
+    test('fires an error on non-existent source layer', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(extend(createStyleJSON(), {
             sources: {
@@ -2894,9 +2894,9 @@ describe('Style.setFilter', () => {
 
         await style.once('style.load');
         const promise = style.once('error');
-        style.setFilter('non-existant', ['==', 'id', 1]);
+        style.setFilter('non-existent', ['==', 'id', 1]);
         const {error} = await promise;
-        expect(error.message).toMatch(/Cannot filter non-existing layer "non-existant"./);
+        expect(error.message).toMatch(/Cannot filter non-existing layer "non-existent"./);
     });
 
     test('validates filter by default', async () => {
@@ -2957,16 +2957,16 @@ describe('Style.setLayerZoomRange', () => {
         expect(style.getLayer('symbol').maxzoom).toBe(12);
         style.update({} as EvaluationParameters); // trigger dispatcher broadcast
         expect(spy.mock.calls[0][0]).toBe(MessageType.updateLayers);
-        expect(spy.mock.calls[0][1]['layers'].map((layer) => { return layer.id; })).toEqual(['symbol']);
+        expect(spy.mock.calls[0][1]['layers'].map((layer) => layer.id)).toEqual(['symbol']);
     });
 
     test('fires an error if layer not found', async () => {
         const style = createStyle();
         await style.once('style.load');
         const promise = style.once('error');
-        style.setLayerZoomRange('non-existant', 5, 12);
+        style.setLayerZoomRange('non-existent', 5, 12);
         const {error} = await promise;
-        expect(error.message).toMatch(/Cannot set the zoom range of non-existing layer "non-existant"./);
+        expect(error.message).toMatch(/Cannot set the zoom range of non-existing layer "non-existent"./);
     });
 
     test('does not reload raster source', async () => {
@@ -3168,7 +3168,7 @@ describe('Style.queryRenderedFeatures', () => {
     test('checks type of `layers` option', () => {
         let errors = 0;
         vi.spyOn(style, 'fire').mockImplementation((event) => {
-            if (event['error'] && event['error'].message.includes('parameters.layers must be an Array')) {
+            if (event['error']?.message.includes('parameters.layers must be an Array')) {
                 errors++;
             }
             return style;
@@ -3210,7 +3210,7 @@ describe('Style.queryRenderedFeatures', () => {
     test('fires an error if layer included in params does not exist on the style', () => {
         let errors = 0;
         vi.spyOn(style, 'fire').mockImplementation((event) => {
-            if (event['error'] && event['error'].message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
+            if (event['error']?.message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
             return style;
         });
         const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['merp']}, transform);

@@ -1,53 +1,151 @@
 {
-  "version": 8,
-  "metadata": {
-    "test": {
-      "height": 256
-    }
-  },
-  "center": [
-    13.420466,
-    52.4988
-  ],
-  "zoom": 18,
-  "sources": {
-    "maplibre": {
-      "type": "vector",
-      "maxzoom": 14,
-      "tiles": [
-        "local://tiles/{z}-{x}-{y}.mvt"
-      ]
-    }
-  },
-  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
-  "layers": [
-    {
-      "id": "background",
-      "type": "background",
-      "paint": {
-        "background-color": "white"
-      }
+    "version": 8,
+    "metadata": {
+        "test": {
+            "width": 512,
+            "height": 512
+        }
     },
-    {
-      "id": "lines_pole_of_inaccessibility",
-      "type": "line",
-      "source": "maplibre",
-      "source-layer": "building"
+    "center": [0, 0],
+    "zoom": 3,
+    "sources": {
+        "shapes": {
+            "type": "geojson",
+            "data": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": { "name": "Rect" },
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[
+                                [-12, 3], [-12, 6], [-7, 6], [-7, 3], [-12, 3]
+                            ]]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": { "name": "Trap" },
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[
+                                [-4, 3], [-5, 6], [3, 6], [2, 3], [-4, 3]
+                            ]]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": { "name": "Tri" },
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[
+                                [7, 3], [5, 6], [9, 6], [7, 3]
+                            ]]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": { "name": "Ring" },
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [
+                                [
+                                    [13,4.5],[12.9616,4.8902],[12.8478,5.2654],[12.6629,5.6111],[12.4142,5.9142],[12.1111,6.1629],[11.7654,6.3478],[11.3902,6.4616],[11,6.5],[10.6098,6.4616],[10.2346,6.3478],[9.8889,6.1629],[9.5858,5.9142],[9.3371,5.6111],[9.1522,5.2654],[9.0384,4.8902],[9,4.5],[9.0384,4.1098],[9.1522,3.7346],[9.3371,3.3889],[9.5858,3.0858],[9.8889,2.8371],[10.2346,2.6522],[10.6098,2.5384],[11,2.5],[11.3902,2.5384],[11.7654,2.6522],[12.1111,2.8371],[12.4142,3.0858],[12.6629,3.3889],[12.8478,3.7346],[12.9616,4.1098],[13,4.5]
+                                ],
+                                [
+                                    [12,4.5],[11.9659,4.7588],[11.866,5],[11.7071,5.2071],[11.5,5.366],[11.2588,5.4659],[11,5.5],[10.7412,5.4659],[10.5,5.366],[10.2929,5.2071],[10.134,5],[10.0341,4.7588],[10,4.5],[10.0341,4.2412],[10.134,4],[10.2929,3.7929],[10.5,3.634],[10.7412,3.5341],[11,3.5],[11.2588,3.5341],[11.5,3.634],[11.7071,3.7929],[11.866,4],[11.9659,4.2412],[12,4.5]
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": { "name": "Union" },
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[
+                                [17.6,5.4079],[18.0302,5.2143],[18.403,4.9253],[18.6978,4.5571],[18.8982,4.13],[18.9929,3.6679],[18.9768,3.1965],[18.8508,2.7419],[18.6217,2.3295],[18.3025,1.9823],[17.9108,1.7194],[17.4684,1.5556],[17,1.5],[16.5316,1.5556],[16.0892,1.7194],[15.6975,1.9823],[15.3783,2.3295],[15.1492,2.7419],[15.0232,3.1965],[15.0071,3.6679],[15.1018,4.13],[15.3022,4.5571],[15.597,4.9253],[15.9698,5.2143],[16.4,5.4079],[16.4,6.2],[16.1832,6.423],[16.0455,6.7018],[16,7.0095],[16.0513,7.3162],[16.1943,7.5924],[16.4153,7.8112],[16.6928,7.9516],[17,8],[17.3072,7.9516],[17.5847,7.8112],[17.8057,7.5924],[17.9487,7.3162],[18,7.0095],[17.9545,6.7018],[17.8168,6.423],[17.6,6.2],[17.6,5.4079]
+                            ]]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": { "name": "L" },
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[
+                                [-12, -6], [-12, -1], [-8, -1], [-8, -3],
+                                [-6, -3], [-6, -6], [-12, -6]
+                            ]]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": { "name": "U" },
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[
+                                [-3, -6], [-3, -1], [0, -1], [0, -3],
+                                [3, -3], [3, -1], [6, -1], [6, -6], [-3, -6]
+                            ]]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": { "name": "C" },
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[
+                                [8, -6], [8, -1], [13, -1], [13, -2.5],
+                                [10, -2.5], [10, -4.5], [13, -4.5], [13, -6], [8, -6]
+                            ]]
+                        }
+                    }
+                ]
+            }
+        }
     },
-    {
-      "id": "pole_of_inaccessibility",
-      "type": "symbol",
-      "source": "maplibre",
-      "source-layer": "building",
-      "layout": {
-        "symbol-placement": "point",
-        "text-field": "Test",
-        "text-font": [
-          "Open Sans Semibold",
-          "Arial Unicode MS Bold"
-        ],
-        "text-size": 10
-      }
-    }
-  ]
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "white"
+            }
+        },
+        {
+            "id": "polygon-fill",
+            "type": "fill",
+            "source": "shapes",
+            "paint": {
+                "fill-color": "#dddddd"
+            }
+        },
+        {
+            "id": "polygon-outline",
+            "type": "line",
+            "source": "shapes",
+            "paint": {
+                "line-color": "black",
+                "line-width": 1
+            }
+        },
+        {
+            "id": "polygon-label",
+            "type": "symbol",
+            "source": "shapes",
+            "layout": {
+                "symbol-placement": "point",
+                "text-field": ["get", "name"],
+                "text-font": [
+                    "Open Sans Semibold",
+                    "Arial Unicode MS Bold"
+                ],
+                "text-size": 12,
+                "text-allow-overlap": true
+            }
+        }
+    ]
 }

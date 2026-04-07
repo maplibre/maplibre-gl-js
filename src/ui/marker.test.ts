@@ -168,12 +168,12 @@ describe('marker', () => {
             .setLngLat([0,0])
             .setPopup(popup)
             .addTo(map);
-        
+
         // open popup
         marker.togglePopup();
         const spy = vi.fn();
         popup.on('close', spy);
-        (map.getContainer().querySelector('.maplibregl-popup-close-button') as HTMLButtonElement).click();
+        map.getContainer().querySelector<HTMLButtonElement>('.maplibregl-popup-close-button').click();
 
         expect(spy).toHaveBeenCalled();
     });
