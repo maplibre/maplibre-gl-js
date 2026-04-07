@@ -8,6 +8,8 @@ import {
     hillshadeUniformPrepareValues
 } from './program/hillshade_program';
 
+import {drawHillshadeWebGPU} from '../webgpu/draw/draw_hillshade_webgpu';
+
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
 import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
@@ -15,6 +17,14 @@ import type {OverscaledTileID} from '../tile/tile_id';
 
 export function drawHillshade(painter: Painter, tileManager: TileManager, layer: HillshadeStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions) {
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
+
+    // WebGPU path
+    if (painter.device && painter.device.type === 'webgpu') {
+        if (painter.renderPass === 'translucent') {
+            drawHillshadeWebGPU(painter, tileManager, layer, tileIDs, renderOptions);
+        }
+        return;
+    }
 
     const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
@@ -85,7 +95,7 @@ function renderHillshade(
         });
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
-            hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+            hillshadeUniformValues(painter, tile, layer) as any, terrainData as any, projectionData as any, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
 
@@ -149,9 +159,11 @@ function prepareHillshade(
         context.bindFramebuffer.set(fbo.framebuffer);
         context.viewport.set([0, 0, tileSize, tileSize]);
 
-        painter.useProgram('hillshadePrepare').draw(context, gl.TRIANGLES,
+        const prepareProgram = painter.useProgram('hillshadePrepare');
+
+        prepareProgram.draw(context, gl.TRIANGLES,
             depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-            hillshadeUniformPrepareValues(tile.tileID, dem),
+            hillshadeUniformPrepareValues(tile.tileID, dem) as any,
             null, null, layer.id, painter.rasterBoundsBuffer,
             painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
 

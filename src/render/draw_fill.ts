@@ -17,11 +17,19 @@ import type {OverscaledTileID} from '../tile/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
 
+import {drawFillWebGPU} from '../webgpu/draw/draw_fill_webgpu';
+
 export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
 
     if (opacity.constantOr(1) === 0) {
+        return;
+    }
+
+    // Use drawable path if enabled
+    if (painter.useDrawables && painter.useDrawables.has('fill')) {
+        drawFillWebGPU(painter, tileManager, layer, coords, renderOptions);
         return;
     }
 
@@ -131,8 +139,9 @@ function drawFillTiles(
         const stencil = painter.stencilModeForClipping(coord);
 
         program.draw(painter.context, drawMode, depthMode,
-            stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData,
+            stencil, colorMode, CullFaceMode.backCCW, uniformValues as any, terrainData as any, projectionData as any,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }
 }
+

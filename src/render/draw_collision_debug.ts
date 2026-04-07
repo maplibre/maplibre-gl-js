@@ -54,7 +54,6 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
         if (!buffers) {
             continue;
         }
-
         program.draw(context, gl.LINES,
             DepthMode.disabled, StencilMode.disabled,
             painter.colorModeForRenderPass(),
@@ -106,8 +105,9 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
     // Render batches
     for (const batch of tileBatches) {
         const uniforms = collisionCircleUniformValues(painter.transform);
+        const segments = SegmentVector.simpleSegment(0, batch.circleOffset * 2, batch.circleArray.length, batch.circleArray.length / 2);
 
-        circleProgram.draw(
+        program.draw(
             context,
             gl.TRIANGLES,
             DepthMode.disabled,
@@ -120,7 +120,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
             layer.id,
             vertexBuffer,
             indexBuffer,
-            SegmentVector.simpleSegment(0, batch.circleOffset * 2, batch.circleArray.length, batch.circleArray.length / 2),
+            segments,
             null,
             painter.transform.zoom,
             null,

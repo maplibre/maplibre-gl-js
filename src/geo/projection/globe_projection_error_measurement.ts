@@ -171,7 +171,7 @@ export class ProjectionErrorMeasurement {
         program.draw(context, gl.TRIANGLES,
             DepthMode.disabled, StencilMode.disabled,
             ColorMode.unblended, CullFaceMode.disabled,
-            projectionErrorMeasurementUniformValues(input, outputExpected), null, null,
+            projectionErrorMeasurementUniformValues(input, outputExpected) as any, null, null,
             '$clipping', this._fullscreenTriangle.vertexBuffer, this._fullscreenTriangle.indexBuffer,
             this._fullscreenTriangle.segments);
 

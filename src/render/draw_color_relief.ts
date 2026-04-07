@@ -63,7 +63,7 @@ function renderColorRelief(
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);
         const dem = tile.dem;
-        if(firstTile) {
+        if (firstTile) {
             const maxLength = gl.getParameter(gl.MAX_TEXTURE_SIZE);
             const {elevationTexture, colorTexture} = layer.getColorRampTextures(context, maxLength, dem.getUnpackVector());
             context.activeTexture.set(gl.TEXTURE1);
@@ -104,8 +104,7 @@ function renderColorRelief(
             applyGlobeMatrix: !isRenderingToTexture,
             applyTerrainMatrix: true
         });
-
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
-            colorReliefUniformValues(layer, tile.dem, colorRampSize), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+            colorReliefUniformValues(layer, tile.dem, colorRampSize) as any, terrainData as any, projectionData as any, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }

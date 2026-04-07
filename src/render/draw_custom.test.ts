@@ -27,7 +27,7 @@ describe('drawCustom', () => {
         transform.resize(500, 500);
         transform.setMinPitch(10);
         transform.setMaxPitch(10);
-        const mockPainter = new Painter(null, null);
+        const mockPainter = new Painter(null, null, null);
         mockPainter.style = {
             projection: new MercatorProjection(),
         } as any;

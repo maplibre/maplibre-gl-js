@@ -5,10 +5,12 @@ import {now} from '../util/time_control';
 import {StencilMode} from '../gl/stencil_mode';
 import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
+import {ColorMode} from '../gl/color_mode';
 import {rasterUniformValues} from './program/raster_program';
 import {EXTENT} from '../data/extent';
 import {FadingDirections} from '../tile/tile';
 import Point from '@mapbox/point-geometry';
+import {drawRasterWebGPU} from '../webgpu/draw/draw_raster_webgpu';
 
 import type {Painter, RenderOptions} from './painter';
 import type {TileManager} from '../tile/tile_manager';
@@ -26,7 +28,7 @@ type FadeProperties = {
 type FadeValues = {
     tileOpacity: number;
     parentTileOpacity?: number;
-    fadeMix: {opacity: number; mix: number};
+    fadeMix: { opacity: number; mix: number };
 };
 
 const cornerCoords = [
@@ -40,6 +42,12 @@ export function drawRaster(painter: Painter, tileManager: TileManager, layer: Ra
     if (painter.renderPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
+
+    // Use drawable path for WebGPU
+    if (painter.useDrawables && painter.useDrawables.has('raster')) {
+        drawRasterWebGPU(painter, tileManager, layer, tileIDs, renderOptions);
+        return;
+    }
 
     const {isRenderingToTexture} = renderOptions;
     const source = tileManager.getSource();
@@ -139,7 +147,7 @@ function drawTiles(
         const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, flipCullfaceMode ? CullFaceMode.frontCCW : CullFaceMode.backCCW,
-            uniformValues, terrainData, projectionData, layer.id, mesh.vertexBuffer,
+            uniformValues as any, terrainData as any, projectionData as any, layer.id, mesh.vertexBuffer,
             mesh.indexBuffer, mesh.segments);
     }
 }
@@ -220,3 +228,4 @@ function getSelfFadeValues(tile: Tile, fadeDuration: number): FadeValues {
 
     return {tileOpacity, fadeMix};
 }
+

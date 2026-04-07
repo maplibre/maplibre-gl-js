@@ -1,0 +1,274 @@
+// WebGPU drawable path for fill layers.
+// Extracted from src/render/draw_fill.ts
+
+import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {DepthMode} from '../../gl/depth_mode';
+import {CullFaceMode} from '../../gl/cull_face_mode';
+import {
+    fillUniformValues,
+    fillPatternUniformValues,
+    fillOutlineUniformValues,
+    fillOutlinePatternUniformValues
+} from '../../render/program/fill_program';
+import {DrawableBuilder} from '../../gfx/drawable_builder';
+import {TileLayerGroup} from '../../gfx/tile_layer_group';
+import {FillLayerTweaker} from '../../gfx/tweakers/fill_layer_tweaker';
+import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program';
+import {translatePosition} from '../../util/util';
+
+import type {Painter, RenderOptions} from '../../render/painter';
+import type {TileManager} from '../../tile/tile_manager';
+import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer';
+import type {FillBucket} from '../../data/bucket/fill_bucket';
+import type {OverscaledTileID} from '../../tile/tile_id';
+
+/**
+ * Drawable-based rendering path for fills.
+ * Creates drawables for both fill triangles and outline lines per tile.
+ */
+export function drawFillWebGPU(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+    const {isRenderingToTexture} = renderOptions;
+    const context = painter.context;
+    const gl = context.gl;
+    const transform = painter.transform;
+
+    const color = layer.paint.get('fill-color');
+    const opacity = layer.paint.get('fill-opacity');
+    const colorMode = painter.colorModeForRenderPass();
+    const pattern = layer.paint.get('fill-pattern');
+    const image = pattern && pattern.constantOr(1 as any);
+    const crossfade = layer.getCrossfadeParameters();
+    const isWebGPU = painter.device?.type === 'webgpu';
+
+    // WebGPU: always use translucent pass. The opaque pass draws top-to-bottom
+    // without depth testing, causing lower layers (water) to be overwritten by
+    // layers below them. Translucent pass draws bottom-to-top with blending.
+    const pass = isWebGPU ? 'translucent' as const : (painter.opaquePassEnabledForLayer() &&
+        (!pattern.constantOr(1 as any) &&
+            color.constantOr(Color.transparent).a === 1 &&
+            opacity.constantOr(0) === 1) ? 'opaque' : 'translucent');
+
+    // Get or create tweaker
+    let tweaker = painter.layerTweakers.get(layer.id) as FillLayerTweaker;
+    if (!tweaker) {
+        tweaker = new FillLayerTweaker(layer.id);
+        painter.layerTweakers.set(layer.id, tweaker);
+    }
+
+    // Get or create layer group
+    let layerGroup = painter.layerGroups.get(layer.id);
+    if (!layerGroup) {
+        layerGroup = new TileLayerGroup(layer.id);
+        painter.layerGroups.set(layer.id, layerGroup);
+    }
+
+    const propertyFillTranslate = layer.paint.get('fill-translate');
+    const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
+    const fillPropertyName = 'fill-pattern';
+    const patternProperty = layer.paint.get(fillPropertyName);
+    const constantPattern = patternProperty.constantOr(null);
+
+    const visibleTileKeys = new Set<string>();
+
+    // Always rebuild drawables to match per-frame stencil state.
+    // Don't call destroy() — GPU may still reference old buffers; let GC handle them.
+    (layerGroup as any)._drawablesByTile.clear();
+
+    for (const coord of coords) {
+        visibleTileKeys.add(coord.key.toString());
+
+        const tile = tileManager.getTile(coord);
+        if (image && !tile.patternsLoaded()) continue;
+
+        const bucket: FillBucket = (tile.getBucket(layer) as any);
+        if (!bucket) continue;
+
+        const programConfiguration = bucket.programConfigurations.get(layer.id);
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+
+        if (image) {
+            context.activeTexture.set(gl.TEXTURE0);
+            tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+            programConfiguration.updatePaintBuffers(crossfade);
+        }
+
+        updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
+
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: coord,
+            applyGlobeMatrix: !isRenderingToTexture,
+            applyTerrainMatrix: true
+        });
+
+        const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
+        // In WebGPU mode, stencil clipping is handled by _drawWebGPU via setStencilReference
+        const stencil = isWebGPU ? null : painter.stencilModeForClipping(coord);
+
+        // Draw fill triangles
+        // When rendering to texture (terrain), draw regardless of pass since RTT skips the opaque pass
+        if (painter.renderPass === pass || isRenderingToTexture) {
+            const depthMode = painter.getDepthModeForSublayer(
+                1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
+            const programName = image ? 'fillPattern' : 'fill';
+            // Skip WebGL program creation in WebGPU mode (would fail and log noise)
+            const program = isWebGPU ? null : painter.useProgram(programName, programConfiguration);
+            const uniformValues = image ?
+                fillPatternUniformValues(painter, crossfade, tile, translateForUniforms) :
+                fillUniformValues(translateForUniforms);
+
+            const fillBuilder = new DrawableBuilder()
+                .setShader(programName)
+                .setRenderPass(pass as 'opaque' | 'translucent')
+                .setDepthMode(depthMode)
+                .setStencilMode(stencil)
+                .setColorMode(colorMode)
+                .setCullFaceMode(CullFaceMode.backCCW)
+                .setLayerTweaker(tweaker);
+
+            // Bind pattern atlas texture for fillPattern in WebGPU
+            if (image && isWebGPU && tile.imageAtlas) {
+                const atlasTex = (tile as any).imageAtlasTexture;
+                const atlasImg = tile.imageAtlas.image;
+                if (atlasImg?.data) {
+                    fillBuilder.addTexture({
+                        name: 'pattern_texture',
+                        textureUnit: 0,
+                        texture: atlasTex?.texture || null,
+                        filter: gl.LINEAR,
+                        wrap: gl.CLAMP_TO_EDGE,
+                        source: {
+                            data: atlasImg.data,
+                            width: atlasImg.width,
+                            height: atlasImg.height,
+                            bytesPerPixel: 4,
+                            format: 'rgba8unorm',
+                        },
+                    } as any);
+                }
+            }
+
+            const fillDrawable = fillBuilder.flush({
+                tileID: coord,
+                layer,
+                program,
+                programConfiguration,
+                layoutVertexBuffer: bucket.layoutVertexBuffer,
+                indexBuffer: bucket.indexBuffer,
+                segments: bucket.segments,
+                projectionData,
+                terrainData: terrainData || null,
+                paintProperties: layer.paint,
+                zoom: painter.transform.zoom,
+            });
+            fillDrawable.uniformValues = uniformValues as any;
+
+            // Store per-tile pattern data for the tweaker (WebGPU path)
+            if (image && isWebGPU && tile.imageAtlas) {
+                const atlas = tile.imageAtlas;
+                const constantPattern = image;
+                const posFrom = atlas.patternPositions[constantPattern.from.toString()];
+                const posTo = atlas.patternPositions[constantPattern.to.toString()];
+                const atlasTex = (tile as any).imageAtlasTexture;
+                if (posFrom && posTo && atlasTex) {
+                    (fillDrawable as any)._patternData = {
+                        patternFrom: posFrom,
+                        patternTo: posTo,
+                        texsize: atlasTex.size,
+                    };
+                }
+            }
+
+            layerGroup.addDrawable(coord, fillDrawable);
+        }
+
+        // Draw outline
+        if (painter.renderPass === 'translucent' && layer.paint.get('fill-antialias')) {
+            const depthMode = painter.getDepthModeForSublayer(
+                layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
+            const outlineProgramName = image && !layer.getPaintProperty('fill-outline-color') ? 'fillOutlinePattern' : 'fillOutline';
+            // Skip WebGL program creation in WebGPU mode
+            const outlineProgram = isWebGPU ? null : painter.useProgram(outlineProgramName, programConfiguration);
+
+            const drawingBufferSize = [gl.drawingBufferWidth, gl.drawingBufferHeight] as [number, number];
+            const outlineUniformValues = (outlineProgramName === 'fillOutlinePattern' && image) ?
+                fillOutlinePatternUniformValues(painter, crossfade, tile, drawingBufferSize, translateForUniforms) :
+                fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
+
+            const outlineBuilder = new DrawableBuilder()
+                .setShader(outlineProgramName)
+                .setRenderPass('translucent')
+                .setDepthMode(depthMode)
+                .setStencilMode(stencil)
+                .setColorMode(colorMode)
+                .setCullFaceMode(CullFaceMode.backCCW)
+                .setDrawMode(1) // gl.LINES = 1
+                .setLayerTweaker(tweaker);
+
+            // Bind pattern atlas texture for fillOutlinePattern in WebGPU
+            if (outlineProgramName === 'fillOutlinePattern' && isWebGPU && tile.imageAtlas) {
+                const atlasTex = (tile as any).imageAtlasTexture;
+                const atlasImg = tile.imageAtlas.image;
+                if (atlasImg?.data) {
+                    outlineBuilder.addTexture({
+                        name: 'pattern_texture',
+                        textureUnit: 0,
+                        texture: atlasTex?.texture || null,
+                        filter: gl.LINEAR,
+                        wrap: gl.CLAMP_TO_EDGE,
+                        source: {
+                            data: atlasImg.data,
+                            width: atlasImg.width,
+                            height: atlasImg.height,
+                            bytesPerPixel: 4,
+                            format: 'rgba8unorm',
+                        },
+                    } as any);
+                }
+            }
+
+            const outlineDrawable = outlineBuilder.flush({
+                tileID: coord,
+                layer,
+                program: outlineProgram,
+                programConfiguration,
+                layoutVertexBuffer: bucket.layoutVertexBuffer,
+                indexBuffer: bucket.indexBuffer2,
+                segments: bucket.segments2,
+                projectionData,
+                terrainData: terrainData || null,
+                paintProperties: layer.paint,
+                zoom: painter.transform.zoom,
+            });
+            outlineDrawable.uniformValues = outlineUniformValues as any;
+
+            // Store per-tile pattern data for fillOutlinePattern (WebGPU tweaker reads this)
+            if (outlineProgramName === 'fillOutlinePattern' && isWebGPU && tile.imageAtlas && image) {
+                const atlas = tile.imageAtlas;
+                const posFrom = atlas.patternPositions[image.from.toString()];
+                const posTo = atlas.patternPositions[image.to.toString()];
+                const atlasTex = (tile as any).imageAtlasTexture;
+                if (posFrom && posTo && atlasTex) {
+                    (outlineDrawable as any)._patternData = {
+                        patternFrom: posFrom,
+                        patternTo: posTo,
+                        texsize: atlasTex.size,
+                    };
+                }
+            }
+
+            layerGroup.addDrawable(coord, outlineDrawable);
+        }
+    }
+
+    // Remove stale tiles
+    layerGroup.removeDrawablesIf(d => d.tileID !== null && !visibleTileKeys.has(d.tileID.key.toString()));
+
+    // Run tweaker
+    const allDrawables = layerGroup.getAllDrawables();
+    tweaker.execute(allDrawables, painter, layer, coords);
+
+    // Draw
+    for (const drawable of allDrawables) {
+        drawable.draw(context, painter.device, painter, renderOptions.renderPass);
+    }
+}

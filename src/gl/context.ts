@@ -29,6 +29,7 @@ type ClearArgs = {
  */
 export class Context {
     gl: WebGLRenderingContext | WebGL2RenderingContext;
+    device: any;
 
     currentNumAttributes: number;
     maxTextureSize: number;
@@ -71,8 +72,29 @@ export class Context {
     RGBA16F?: GLenum;
     RGB16F?: GLenum;
 
-    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext) {
-        this.gl = gl;
+    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext | null, device?: any) {
+        this.gl = gl || new Proxy({} as WebGL2RenderingContext, {
+            get: (target, prop) => {
+                if (typeof prop === 'string') {
+                    // Return correct GL enum values for WebGPU-only mode
+                    const glEnums: Record<string, number> = {
+                        'LINES': 1, 'LINE_STRIP': 3, 'TRIANGLES': 4,
+                        'TEXTURE_2D': 3553, 'TEXTURE0': 33984,
+                        'RGBA': 6408, 'ALPHA': 6406, 'LUMINANCE': 6409, 'LUMINANCE_ALPHA': 6410,
+                        'UNSIGNED_BYTE': 5121,
+                        'LINEAR': 9729, 'NEAREST': 9728, 'LINEAR_MIPMAP_NEAREST': 9985,
+                        'CLAMP_TO_EDGE': 33071, 'REPEAT': 10497, 'MIRRORED_REPEAT': 33648,
+                        'TEXTURE_MIN_FILTER': 10241, 'TEXTURE_MAG_FILTER': 10240,
+                        'TEXTURE_WRAP_S': 10242, 'TEXTURE_WRAP_T': 10243,
+                    };
+                    if (prop in glEnums) return glEnums[prop];
+                    if (prop === prop.toUpperCase()) return 0;
+                    return () => null;
+                }
+                return undefined;
+            }
+        });
+        this.device = device;
         this.clearColor = new ClearColor(this);
         this.clearDepth = new ClearDepth(this);
         this.clearStencil = new ClearStencil(this);
@@ -105,24 +127,29 @@ export class Context {
         this.pixelStoreUnpackPremultiplyAlpha = new PixelStoreUnpackPremultiplyAlpha(this);
         this.pixelStoreUnpackFlipY = new PixelStoreUnpackFlipY(this);
 
-        this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic');
+        const glContext = this.gl;
+        this.extTextureFilterAnisotropic = (
+            glContext.getExtension('EXT_texture_filter_anisotropic') ||
+            glContext.getExtension('MOZ_EXT_texture_filter_anisotropic') ||
+            glContext.getExtension('WEBKIT_EXT_texture_filter_anisotropic')
+        );
 
         if (this.extTextureFilterAnisotropic) {
-            this.extTextureFilterAnisotropicMax = gl.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+            this.extTextureFilterAnisotropicMax = glContext.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
         }
 
-        this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+        this.maxTextureSize = glContext.getParameter(glContext.MAX_TEXTURE_SIZE);
 
-        if (isWebGL2(gl)) {
-            this.HALF_FLOAT = gl.HALF_FLOAT;
-            const extColorBufferHalfFloat = gl.getExtension('EXT_color_buffer_half_float');
-            this.RGBA16F = gl.RGBA16F ?? extColorBufferHalfFloat?.RGBA16F_EXT;
-            this.RGB16F = gl.RGB16F ?? extColorBufferHalfFloat?.RGB16F_EXT;
-            gl.getExtension('EXT_color_buffer_float');
+        if (isWebGL2(glContext)) {
+            this.HALF_FLOAT = glContext.HALF_FLOAT;
+            const extColorBufferHalfFloat = glContext.getExtension('EXT_color_buffer_half_float');
+            this.RGBA16F = glContext.RGBA16F ?? extColorBufferHalfFloat?.RGBA16F_EXT;
+            this.RGB16F = glContext.RGB16F ?? extColorBufferHalfFloat?.RGB16F_EXT;
+            glContext.getExtension('EXT_color_buffer_float');
         } else {
-            gl.getExtension('EXT_color_buffer_half_float');
-            gl.getExtension('OES_texture_half_float_linear');
-            const extTextureHalfFloat = gl.getExtension('OES_texture_half_float');
+            glContext.getExtension('EXT_color_buffer_half_float');
+            glContext.getExtension('OES_texture_half_float_linear');
+            const extTextureHalfFloat = glContext.getExtension('OES_texture_half_float');
             this.HALF_FLOAT = extTextureHalfFloat?.HALF_FLOAT_OES;
         }
     }

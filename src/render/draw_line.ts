@@ -22,6 +22,8 @@ import {renderColorRamp} from '../util/color_ramp';
 import {EXTENT} from '../data/extent';
 import type {RGBAImage} from '../util/image';
 
+import {drawLineWebGPU} from '../webgpu/draw/draw_line_webgpu';
+
 type GradientTexture = {
     texture?: Texture;
     gradient?: RGBAImage;
@@ -147,6 +149,12 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     const width = layer.paint.get('line-width');
     if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0) return;
 
+    // Use drawable path if enabled
+    if (painter.useDrawables && painter.useDrawables.has('line')) {
+        drawLineWebGPU(painter, tileManager, layer, coords, renderOptions);
+        return;
+    }
+
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
 
@@ -229,7 +237,7 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
         const stencil = painter.stencilModeForClipping(coord);
 
         program.draw(context, gl.TRIANGLES, depthMode,
-            stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
+            stencil, colorMode, CullFaceMode.disabled, uniformValues as any, terrainData as any, projectionData as any,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
             layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
 
@@ -237,3 +245,4 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic
     }
 }
+

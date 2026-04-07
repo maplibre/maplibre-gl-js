@@ -8,6 +8,27 @@ import backgroundPatternFrag from './glsl/background_pattern.fragment.glsl.g';
 import backgroundPatternVert from './glsl/background_pattern.vertex.glsl.g';
 import circleFrag from './glsl/circle.fragment.glsl.g';
 import circleVert from './glsl/circle.vertex.glsl.g';
+// WGSL shaders — imported from shaders/wgsl/ subdirectory
+import circleWgsl from './wgsl/circle.wgsl.g';
+import backgroundWgsl from './wgsl/background.wgsl.g';
+import backgroundPatternWgsl from './wgsl/background_pattern.wgsl.g';
+import fillWgsl from './wgsl/fill.wgsl.g';
+import fillPatternWgsl from './wgsl/fill_pattern.wgsl.g';
+import fillOutlineWgsl from './wgsl/fill_outline.wgsl.g';
+import fillOutlinePatternWgsl from './wgsl/fill_outline_pattern.wgsl.g';
+import lineWgsl from './wgsl/line.wgsl.g';
+import linePatternWgsl from './wgsl/line_pattern.wgsl.g';
+import lineGradientWgsl from './wgsl/line_gradient.wgsl.g';
+import fillExtrusionWgsl from './wgsl/fill_extrusion.wgsl.g';
+import lineSDFWgsl from './wgsl/line_sdf.wgsl.g';
+import rasterWgsl from './wgsl/raster.wgsl.g';
+import symbolSDFWgsl from './wgsl/symbol_sdf.wgsl.g';
+import symbolIconWgsl from './wgsl/symbol_icon.wgsl.g';
+import heatmapWgsl from './wgsl/heatmap.wgsl.g';
+import heatmapTextureWgsl from './wgsl/heatmap_texture.wgsl.g';
+import hillshadeWgsl from './wgsl/hillshade.wgsl.g';
+import hillshadePrepareWgsl from './wgsl/hillshade_prepare.wgsl.g';
+import terrainWgsl from './wgsl/terrain.wgsl.g';
 import clippingMaskFrag from './glsl/clipping_mask.fragment.glsl.g';
 import clippingMaskVert from './glsl/clipping_mask.vertex.glsl.g';
 import heatmapFrag from './glsl/heatmap.fragment.glsl.g';
@@ -86,6 +107,26 @@ export const shaders = {
     background: prepare(backgroundFrag, backgroundVert),
     backgroundPattern: prepare(backgroundPatternFrag, backgroundPatternVert),
     circle: prepare(circleFrag, circleVert),
+    circleWgsl,
+    backgroundWgsl,
+    backgroundPatternWgsl,
+    fillWgsl,
+    fillPatternWgsl,
+    fillOutlineWgsl,
+    fillOutlinePatternWgsl,
+    fillExtrusionWgsl,
+    lineWgsl,
+    linePatternWgsl,
+    lineGradientWgsl,
+    lineSDFWgsl,
+    rasterWgsl,
+    symbolSDFWgsl,
+    symbolIconWgsl,
+    heatmapWgsl,
+    heatmapTextureWgsl,
+    hillshadeWgsl,
+    hillshadePrepareWgsl,
+    terrainWgsl,
     clippingMask: prepare(clippingMaskFrag, clippingMaskVert),
     heatmap: prepare(heatmapFrag, heatmapVert),
     heatmapTexture: prepare(heatmapTextureFrag, heatmapTextureVert),

@@ -15,10 +15,17 @@ import type {OverscaledTileID} from '../tile/tile_id';
 
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 import {translatePosition} from '../util/util';
+import {drawFillExtrusionWebGPU} from '../webgpu/draw/draw_fill_extrusion_webgpu';
 
 export function drawFillExtrusion(painter: Painter, tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
     const opacity = layer.paint.get('fill-extrusion-opacity');
     if (opacity === 0) {
+        return;
+    }
+
+    // Use drawable path for WebGPU
+    if (painter.useDrawables && painter.useDrawables.has('fill-extrusion')) {
+        drawFillExtrusionWebGPU(painter, tileManager, layer, coords, renderOptions);
         return;
     }
 
@@ -97,8 +104,9 @@ function drawExtrusionTiles(
             fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate);
 
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
-            uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
+            uniformValues as any, terrainData as any, projectionData as any, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
             bucket.segments, layer.paint, painter.transform.zoom,
             programConfiguration, painter.style.map.terrain && bucket.centroidVertexBuffer);
     }
 }
+

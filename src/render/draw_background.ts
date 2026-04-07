@@ -12,11 +12,23 @@ import type {BackgroundStyleLayer} from '../style/style_layer/background_style_l
 import {type OverscaledTileID} from '../tile/tile_id';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 
+import {drawBackgroundWebGPU} from '../webgpu/draw/draw_background_webgpu';
+
 export function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
     const color = layer.paint.get('background-color');
     const opacity = layer.paint.get('background-opacity');
 
     if (opacity === 0) return;
+
+    const image = layer.paint.get('background-pattern');
+    const isWebGPU = painter.device?.type === 'webgpu';
+
+    // Use drawable path:
+    // - WebGL2 + solid color: drawable path
+    if (painter.useDrawables && painter.useDrawables.has('background') && (!image || isWebGPU)) {
+        drawBackgroundWebGPU(painter, layer, coords, renderOptions);
+        return;
+    }
 
     const {isRenderingToTexture} = renderOptions;
     const context = painter.context;
@@ -24,7 +36,6 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     const projection = painter.style.projection;
     const transform = painter.transform;
     const tileSize = transform.tileSize;
-    const image = layer.paint.get('background-pattern');
 
     if (painter.isPatternMissing(image)) return;
 
@@ -43,7 +54,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     }
 
     const crossfade = layer.getCrossfadeParameters();
-    
+
     for (const tileID of tileIDs) {
         const projectionData = transform.getProjectionData({
             overscaledTileID: tileID,
@@ -67,7 +78,8 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
 
         const mesh = projection.getMeshFromTileID(context, tileID.canonical, false, true, 'raster');
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
-            uniformValues, terrainData, projectionData, layer.id,
+            uniformValues as any, terrainData as any, projectionData as any, layer.id,
             mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
+

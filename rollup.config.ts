@@ -29,6 +29,9 @@ const config: RollupOptions[] = [{
         minifyInternalExports: production
     },
     onwarn: (message) => {
+        if (message.code === 'CIRCULAR_DEPENDENCY' && message.ids && message.ids.some(id => id.includes('@luma.gl'))) {
+            return;
+        }
         console.error(message);
         throw message;
     },

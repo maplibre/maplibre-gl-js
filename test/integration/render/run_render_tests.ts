@@ -53,6 +53,9 @@ type TestData = {
     reportWidth: number;
     reportHeight: number;
 
+    // Rendering backend: 'webgl', 'webgl2', or 'webgpu'
+    backend: 'webgl' | 'webgl2' | 'webgpu';
+
     // base64-encoded content of the PNG results
     actual: string;
     diff: string;
@@ -66,6 +69,7 @@ type RenderOptions = {
     seed: string;
     debug: boolean;
     openBrowser: boolean;
+    backend: 'webgl' | 'webgl2' | 'webgpu';
 };
 
 type StyleWithTestData = StyleSpecification & {
@@ -258,23 +262,21 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
     await page.setViewport({width, height, deviceScaleFactor: 2});
 
-    await page.setContent(`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Query Test Page</title>
-    <meta charset='utf-8'>
-    <link rel="icon" href="about:blank">
-    <style>#map {
-        box-sizing:content-box;
-        width:${width}px;
-        height:${height}px;
-    }</style>
-</head>
-<body>
-    <div id='map'></div>
-</body>
-</html>`);
+    // Navigate to localhost for secure context (needed for WebGPU)
+    await page.goto('http://localhost:2900/blank.html');
+    await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
+    await page.evaluate((w, h) => {
+        document.head.innerHTML = `
+            <title>Query Test Page</title>
+            <meta charset='utf-8'>
+            <link rel="icon" href="about:blank">
+            <style>#map {
+                box-sizing:content-box;
+                width:${w}px;
+                height:${h}px;
+            }</style>`;
+        document.body.innerHTML = '<div id="map"></div>';
+    }, width, height);
 
     const evaluatedArray = await page.evaluate(async (style: StyleWithTestData) => {
 
@@ -732,7 +734,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 attributionControl: false,
                 maxPitch: options.maxPitch,
                 pixelRatio: options.pixelRatio,
-                canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
+                canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default', contextType: (options.backend || 'webgl2') as any},
                 fadeDuration: options.fadeDuration || 0,
                 localIdeographFontFamily: options.localIdeographFontFamily || false as any,
                 crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
@@ -751,9 +753,8 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             if (options.showOverdrawInspector) map.showOverdrawInspector = true;
             if (options.showPadding) map.showPadding = true;
 
-            const gl = map.painter.context.gl;
-
             await map.once('load');
+
             if (options.collisionDebug) {
                 map.showCollisionBoxes = true;
                 if (options.operations) {
@@ -764,26 +765,49 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
 
             await applyOperations(options, map as any, idle);
-            const viewport = gl.getParameter(gl.VIEWPORT);
-            const w = options.reportWidth ?? viewport[2];
-            const h = options.reportHeight ?? viewport[3];
 
-            const data = new Uint8Array(w * h * 4);
-            gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
+            const isWebGPU = (map.painter as any)?.device?.type === 'webgpu';
+            const canvas = map.getCanvas();
+            let data: Uint8Array;
 
-            // Flip the scanlines.
-            const stride = w * 4;
-            const tmp = new Uint8Array(stride);
-            for (let i = 0, j = h - 1; i < j; i++, j--) {
-                const start = i * stride;
-                const end = j * stride;
-                tmp.set(data.slice(start, start + stride), 0);
-                data.set(data.slice(end, end + stride), start);
-                data.set(tmp, end);
+            if (isWebGPU) {
+                // WebGPU: read pixels via 2D canvas drawImage
+                // Use reportWidth/reportHeight (matches expected image dimensions),
+                // falling back to the test width/height (container size)
+                const w = options.reportWidth ?? options.width;
+                const h = options.reportHeight ?? options.height;
+                const tmpCanvas = document.createElement('canvas');
+                tmpCanvas.width = w;
+                tmpCanvas.height = h;
+                const ctx2d = tmpCanvas.getContext('2d');
+                // Draw from the source canvas, scaling from full resolution to report size
+                ctx2d.drawImage(canvas, 0, 0, w, h);
+                const imageData = ctx2d.getImageData(0, 0, w, h);
+                data = new Uint8Array(imageData.data.buffer);
+            } else {
+                // WebGL: read pixels via gl.readPixels
+                const gl = map.painter.context.gl;
+                const viewport = gl.getParameter(gl.VIEWPORT);
+                const w = options.reportWidth ?? viewport[2];
+                const h = options.reportHeight ?? viewport[3];
+
+                data = new Uint8Array(w * h * 4);
+                gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+                // Flip the scanlines (WebGL reads bottom-to-top, 2D canvas is top-to-bottom)
+                const stride = w * 4;
+                const tmp = new Uint8Array(stride);
+                for (let i = 0, j = h - 1; i < j; i++, j--) {
+                    const start = i * stride;
+                    const end = j * stride;
+                    tmp.set(data.slice(start, start + stride), 0);
+                    data.set(data.slice(end, end + stride), start);
+                    data.set(tmp, end);
+                }
             }
 
             map.remove();
-            delete map.painter.context.gl;
+            if (map.painter?.context) delete map.painter.context.gl;
 
             if (options.addFakeCanvas) {
                 const fakeCanvas = window.document.getElementById(options.addFakeCanvas.id);
@@ -922,7 +946,6 @@ async function createPageAndStart(browser: Browser, testStyles: StyleWithTestDat
     const page = await browser.newPage();
     await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
     applyDebugParameter(options, page);
-    await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
     await runTests(page, testStyles, directory);
     return page;
 }
@@ -977,7 +1000,8 @@ async function executeRenderTests() {
         skipreport: false,
         seed: makeHash(),
         debug: false,
-        openBrowser: false
+        openBrowser: false,
+        backend: 'webgl2'
     };
 
     if (process.argv.length > 2) {
@@ -987,9 +1011,13 @@ async function executeRenderTests() {
         options.seed = checkValueParameter(options, options.seed, '--seed');
         options.debug = checkParameter(options, '--debug');
         options.openBrowser = checkParameter(options, '--open-browser');
+        const backendValue = checkValueParameter(options, 'webgl2', '--backend');
+        if (backendValue === 'webgpu' || backendValue === 'webgl2' || backendValue === 'webgl') {
+            options.backend = backendValue;
+        }
     }
 
-    const browser = await launchPuppeteer(!options.openBrowser);
+    const browser = await launchPuppeteer(!options.openBrowser, options.backend);
 
     const mount = st({
         path: 'test/integration/assets',
@@ -1023,6 +1051,13 @@ async function executeRenderTests() {
 
     const directory = path.join(__dirname);
     let testStyles = getTestStyles(options, directory, (server.address() as any).port);
+
+    // Inject backend option into each test's metadata so it's available inside page.evaluate
+    for (const style of testStyles) {
+        (style.metadata.test as any).backend = options.backend;
+    }
+
+    console.log(`Running render tests with backend: ${options.backend}`);
 
     if (process.env.SPLIT_COUNT && process.env.CURRENT_SPLIT_INDEX) {
         const numberOfTestsForThisPart = Math.ceil(testStyles.length / +process.env.SPLIT_COUNT);

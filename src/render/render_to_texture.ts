@@ -145,6 +145,7 @@ export class RenderToTexture {
         const painter = this.painter;
         const isLastLayer = this._renderableLayerIds[this._renderableLayerIds.length - 1] === layer.id;
 
+
         // remember background, fill, line & raster layer to render into a stack
         if (LAYERS_TO_TEXTURES[type]) {
             // create a new stack if previous layer was not rendered to texture (f.e. symbols)
@@ -160,6 +161,43 @@ export class RenderToTexture {
         if (LAYERS_TO_TEXTURES[this._prevType] || (LAYERS_TO_TEXTURES[type] && isLastLayer)) {
             this._prevType = type;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
+            const isWebGPU = painter.device?.type === 'webgpu';
+
+            if (isWebGPU) {
+                // WebGPU path: skip the GL RenderPool entirely, use per-tile WebGPU render passes.
+                const tileSize = this.terrain.tileManager.tileSize * this.terrain.qualityFactor;
+                const savedMainRenderPass = (options as any).renderPass;
+                for (const tile of this._renderableTiles) {
+                    this._rttTiles.push(tile);
+                    try {
+                        const rttKey = `${stack}_${tile.tileID.key}`;
+                        painter.beginWebGPURttPass(rttKey, tileSize);
+                        // Route draw functions that use options.renderPass to the RTT pass
+                        (options as any).renderPass = painter.renderPassWGSL;
+                        (tile as any)._webgpuRttKey = rttKey;
+                        painter.currentStencilSource = undefined;
+                        for (let l = 0; l < layers.length; l++) {
+                            const layer = painter.style._layers[layers[l]];
+                            const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
+                            (painter as any)._renderTileClippingMasksWebGPU(layer, coords, true);
+                            painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
+                            if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
+                        }
+                        painter.endWebGPURttPass();
+                        (options as any).renderPass = savedMainRenderPass;
+                    } catch (e) {
+                        console.error('[RTT WebGPU] error rendering tile', e);
+                        painter.endWebGPURttPass();
+                        (options as any).renderPass = savedMainRenderPass;
+                    }
+                }
+                // Also restore on renderOptions (the caller's reference)
+                (renderOptions as any).renderPass = savedMainRenderPass;
+                drawTerrain(this.painter, this.terrain, this._rttTiles, options);
+                this._rttTiles = [];
+                return LAYERS_TO_TEXTURES[type];
+            }
+
             for (const tile of this._renderableTiles) {
                 // if render pool is full draw current tiles to screen and free pool
                 if (this.pool.isFull()) {

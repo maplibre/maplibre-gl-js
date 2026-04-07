@@ -781,6 +781,7 @@ export class VerticalPerspectiveTransform implements ITransform {
      * and returns its coordinates on screen in pixels.
      */
     private _projectSurfacePointToScreen(pos: vec3): Point {
+        if (!this.width || !this.height) return new Point(0, 0);
         const projected = createVec4f64();
         vec4.transformMat4(projected, [...pos, 1] as vec4, this._globeViewProjMatrixNoCorrection);
         projected[0] /= projected[3];
@@ -917,6 +918,9 @@ export class VerticalPerspectiveTransform implements ITransform {
      * @param terrain - Optional terrain.
      */
     private unprojectScreenPoint(p: Point): LngLat {
+        if (!this.width || !this.height) {
+            return new LngLat(0, 0);
+        }
         // Here we compute the intersection of the ray towards the pixel at `p` and the planet sphere.
         // As always, we assume that the planet is centered at 0,0,0 and has radius 1.
         // Ray origin is `_cameraPosition` and direction is `rayNormalized`.

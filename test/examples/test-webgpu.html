@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display a map</title>
+    <meta charset='utf-8'>
+</head>
+<body>
+<div id="log"></div>
+<script type="module">
+    function logMsg(msg) {
+        document.getElementById('log').innerHTML += msg + '<br>';
+        console.log(msg);
+    }
+
+    async function testWebGPU() {
+        if (!navigator.gpu) {
+            logMsg("navigator.gpu is not available");
+            return;
+        }
+
+        try {
+            logMsg("Calling navigator.gpu.requestAdapter()");
+            const adapter = await navigator.gpu.requestAdapter();
+            if (!adapter) {
+               logMsg("Adapter request returned null");
+               return;
+            }
+            logMsg("Got adapter, calling requestDevice()");
+            const device = await adapter.requestDevice();
+            logMsg("Successfully got device: " + !!device);
+        } catch (e) {
+            logMsg("Error caught: " + e.message);
+        }
+    }
+
+    testWebGPU();
+</script>
+</body>
+</html>

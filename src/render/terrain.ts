@@ -378,6 +378,10 @@ export class Terrain {
      * @returns Mercator coordinate for a screen pixel, or null, if the pixel is not covered by terrain (is in the sky).
      */
     pointCoordinate(p: Point): MercatorCoordinate {
+        // WebGPU: terrain picking not yet supported — return null to fall back to flat projection
+        if (this.painter.device?.type === 'webgpu') {
+            return null;
+        }
         // First, ensure the coords framebuffer is up to date.
         this.painter.maybeDrawDepthAndCoords(true);
 
@@ -486,11 +490,38 @@ export class Terrain {
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
         }
 
+        // For WebGPU: create a padded 8-byte-stride version of the vertex data
+        // (WebGPU doesn't support sint16x3 vertex format).
+        const isWebGPU = context.device?.type === 'webgpu';
+        let webgpuPaddedBuffer: any = null;
+        if (isWebGPU) {
+            const src = new Int16Array(vertexArray.arrayBuffer);
+            const numVerts = src.length / 3;
+            const padded = new Int16Array(numVerts * 4);
+            for (let i = 0; i < numVerts; i++) {
+                padded[i * 4 + 0] = src[i * 3 + 0];
+                padded[i * 4 + 1] = src[i * 3 + 1];
+                padded[i * 4 + 2] = src[i * 3 + 2];
+                padded[i * 4 + 3] = 0;
+            }
+            const gpuDevice = (context.device as any).handle;
+            if (gpuDevice) {
+                webgpuPaddedBuffer = gpuDevice.createBuffer({
+                    size: padded.byteLength,
+                    usage: 0x0020 | 0x0008, // VERTEX | COPY_DST
+                });
+                gpuDevice.queue.writeBuffer(webgpuPaddedBuffer, 0, padded.buffer);
+            }
+        }
+
         const mesh = new Mesh(
             context.createVertexBuffer(vertexArray, pos3dAttributes.members),
             context.createIndexBuffer(indexArray),
             SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
         );
+        if (webgpuPaddedBuffer) {
+            (mesh as any)._webgpuPaddedVertexBuf = webgpuPaddedBuffer;
+        }
         this._meshCache[key] = mesh;
         return mesh;
     }

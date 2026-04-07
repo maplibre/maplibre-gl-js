@@ -10,7 +10,7 @@ describe('Value classes', () => {
     // Remove when https://github.com/Adamfsk/jest-webgl-canvas-mock/pull/5 is merged
     gl.createVertexArray = gl.getExtension('OES_vertex_array_object')?.createVertexArrayOES;
     gl.bindVertexArray = gl.getExtension('OES_vertex_array_object')?.bindVertexArrayOES;
-    const context = new Context(gl);
+    const context = new Context(gl, null);
 
     const valueTest = <T>(Constructor: new (...args:any[]) => IValue<T>,
         options: {

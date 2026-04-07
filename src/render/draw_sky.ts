@@ -53,7 +53,7 @@ export function drawSky(painter: Painter, sky: Sky) {
     const mesh = getMesh(context, sky);
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode,
-        CullFaceMode.disabled, skyUniforms, null, undefined, 'sky', mesh.vertexBuffer,
+        CullFaceMode.disabled, skyUniforms as any, null, undefined, 'sky', mesh.vertexBuffer,
         mesh.indexBuffer, mesh.segments);
 }
 
@@ -113,5 +113,5 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
 
     const mesh = getMesh(context, sky);
 
-    program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.alphaBlended, CullFaceMode.disabled, uniformValues, null, null, 'atmosphere', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+    program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.alphaBlended, CullFaceMode.disabled, uniformValues as any, null, null, 'atmosphere', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
 }
