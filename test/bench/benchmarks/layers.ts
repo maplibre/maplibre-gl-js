@@ -282,6 +282,31 @@ export class LayerSymbol extends LayerBenchmark {
     }
 }
 
+export class LayerSymbolWithHalo extends LayerBenchmark {
+    constructor() {
+        super();
+
+        this.layerStyle = Object.assign({}, style, {
+            layers: generateLayers({
+                'id': 'symbollayer',
+                'type': 'symbol',
+                'source': 'openmaptiles',
+                'source-layer': 'poi',
+                'layout': {
+                    'icon-image': 'dot_11',
+                    'text-field': '{name_en}'
+                },
+                'paint': {
+                    'text-color': '#000000',
+                    'text-halo-color': '#ff0000',
+                    'text-halo-width': 2,
+                    'text-halo-blur': 1
+                }
+            })
+        });
+    }
+}
+
 export class LayerSymbolWithIcons extends LayerBenchmark {
     constructor() {
         super();

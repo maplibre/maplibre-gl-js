@@ -70,8 +70,7 @@ void main() {
         color.a = mix(halo_color.a, color.a, alpha);
         alpha = 1. - (1. - alpha) * (1. - alpha_halo);
         //fragColor = color * (alpha * opacity * fade_opacity);
-        //fragColor = vec4(1., 0., 0., 1.);
-        //return;
+        fragColor = vec4(1., 0., 0., 1.); return;
     }
 
     fragColor = color * (alpha * opacity * fade_opacity);
