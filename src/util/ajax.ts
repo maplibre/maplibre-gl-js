@@ -255,7 +255,13 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
     if (requestParameters.url.includes('://') && !(/^https?:|^file:/.test(requestParameters.url))) {
         const protocolLoadFn = getProtocol(requestParameters.url);
         if (protocolLoadFn) {
-            return protocolLoadFn(requestParameters, abortController);
+            return protocolLoadFn(requestParameters, abortController).then((response) => {
+                // A successful array buffer request should always return data
+                if (!response.data && requestParameters.type === 'arrayBuffer') {
+                    return extend(response, {data: new Uint8Array()});
+                }
+                return response;
+            });
         }
         if (isWorker(self) && self.worker?.actor) {
             return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
