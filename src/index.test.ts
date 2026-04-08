@@ -60,6 +60,20 @@ describe('maplibre', () => {
         expect(protocolCallbackCalled).toBeTruthy();
     });
 
+    test('addProtocol - returning null for getArrayBuffer results in empty array buffer', async () => {
+        let protocolCallbackCalled = false;
+        addProtocol('custom', () => {
+            protocolCallbackCalled = true;
+            return Promise.resolve({data: null, cacheControl: 'cache-control', expires: 'expires'});
+        });
+        const response = await getArrayBuffer({url: 'custom://test/url/getArrayBuffer'}, new AbortController());
+        expect(response.data).toBeInstanceOf(ArrayBuffer);
+        expect(response.data.byteLength).toBe(0);
+        expect(response.cacheControl).toBe('cache-control');
+        expect(response.expires).toBe('expires');
+        expect(protocolCallbackCalled).toBeTruthy();
+    });
+
     test('addProtocol - returning ImageBitmap for getImage', async () => {
         let protocolCallbackCalled = false;
         addProtocol('custom', () => {

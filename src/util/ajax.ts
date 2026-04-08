@@ -256,9 +256,9 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
         const protocolLoadFn = getProtocol(requestParameters.url);
         if (protocolLoadFn) {
             return protocolLoadFn(requestParameters, abortController).then((response) => {
-                // A successful array buffer request should always return data
+                // A successful array buffer request should always return data even if empty
                 if (!response.data && requestParameters.type === 'arrayBuffer') {
-                    return extend(response, {data: new Uint8Array()});
+                    return extend(response, {data: new ArrayBuffer(0)});
                 }
                 return response;
             });
