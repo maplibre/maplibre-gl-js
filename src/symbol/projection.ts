@@ -20,6 +20,11 @@ import {type StructArray} from '../util/struct_array';
 import {fastInvertSkewMat4} from '../util/fast_maths';
 
 /**
+ * Pre-allocate objects to avoid online allocation
+ */
+const tmpMat4 = mat4.create();
+
+/**
  * The result of projecting a point to the screen, with some additional information about the projection.
  */
 export type PointProjection = {
@@ -931,8 +936,8 @@ export function xyTransformMat4(out: vec4, a: vec4, m: mat4) {
  * Returns a new array of the projected points.
  * Does not modify the input array.
  */
-const inverseLabelPlaneMatrix = mat4.create();
 export function projectPathSpecialProjection(projectedPath: Point[], projectionContext: SymbolProjectionContext): PointProjection[] {
+    const inverseLabelPlaneMatrix = tmpMat4;
     fastInvertSkewMat4(inverseLabelPlaneMatrix, projectionContext.pitchedLabelPlaneMatrix);
     return projectedPath.map(p => {
         const backProjected = projectWithMatrix(p.x, p.y, inverseLabelPlaneMatrix, projectionContext.getElevation);
