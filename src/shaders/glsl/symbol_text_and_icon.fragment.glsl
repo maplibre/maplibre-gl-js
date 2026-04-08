@@ -44,20 +44,29 @@ void main() {
 
     float fontScale = size / 24.0;
 
-    lowp vec4 color = fill_color;
     highp float gamma = EDGE_GAMMA / (fontScale * u_gamma_scale);
     lowp float buff = (256.0 - 64.0) / 256.0;
-    if (u_is_halo) {
-        color = halo_color;
-        gamma = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * u_gamma_scale);
-        buff = (6.0 - halo_width / fontScale) / SDF_PX;
-    }
 
     lowp float dist = texture(u_texture, tex).a;
+
     highp float gamma_scaled = gamma * gamma_scale;
     highp float alpha = smoothstep(buff - gamma_scaled, buff + gamma_scaled, dist);
 
-    fragColor = color * (alpha * total_opacity);
+    lowp vec4 color_alpha_out = fill_color * (alpha * total_opacity);
+
+    if (u_is_halo) {
+        highp float gamma_halo = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * u_gamma_scale);
+        lowp float buff_halo = (6.0 - halo_width / fontScale) / SDF_PX;
+
+        highp float gamma_scaled_halo = gamma_halo * gamma_scale;
+        highp float alpha_halo = smoothstep(buff_halo - gamma_scaled_halo, buff_halo + gamma_scaled_halo, dist);
+
+        lowp vec4 color_alpha_out_halo = halo_color * (alpha_halo * total_opacity);
+
+        fragColor = color_alpha_out + (1. - color_alpha_out.a) * color_alpha_out_halo;
+    } else {
+        fragColor = color_alpha_out;
+    }
 
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);
