@@ -32,15 +32,12 @@ void main() {
     lowp vec4 color = fill_color;
     highp float gamma = EDGE_GAMMA / (fontScale * u_gamma_scale);
     lowp float inner_edge = (256.0 - 64.0) / 256.0;
-    /*if (u_is_halo) {
-        //color = halo_color;
-        float gamma_halo = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * u_gamma_scale);
-        float inner_edge_halo = inner_edge + gamma_halo * gamma_scale;
-    }*/
 
     lowp float dist = texture(u_texture, tex).a;
     highp float gamma_scaled = gamma * gamma_scale;
     highp float alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
+
+    vec4 color_alpha_out_text = total_opacity * alpha * color;
 
     if (u_is_halo) {
         float gamma_halo = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * u_gamma_scale);
@@ -51,27 +48,15 @@ void main() {
         // When drawing halos, we want the inside of the halo to be transparent as well
         // in case the text fill is transparent.
         lowp float halo_edge = (6.0 - halo_width / fontScale) / SDF_PX;
-        alpha_halo = min(smoothstep(halo_edge - gamma_scaled_halo, halo_edge + gamma_scaled_halo, dist), 1.0 - alpha_halo);
+        alpha_halo =  min(smoothstep(halo_edge - gamma_scaled_halo, halo_edge + gamma_scaled_halo, dist), 1.0 - alpha_halo);
 
-        /*color.rgb = mix(halo_color.rgb * (1. - alpha), color.rgb, vec3(alpha));
-        color.a = mix(halo_color.a, color.a, alpha);
-        alpha = 1. - (1. - alpha) * (1. - alpha_halo);*/
+        vec4 color_alpha_out_halo = total_opacity * alpha_halo * halo_color;
 
-        /*vec4 out_color = color * (alpha * opacity * fade_opacity);
-        vec4 out_color_halo = vec4(fill_color.rgb, fill_color.a * alpha_halo * opacity * fade_opacity);
-
-        fragColor = vec4(mix(out_color_halo.rgb, out_color.rgb, alpha), 1. - (1. - alpha) * (1. - alpha_halo));
-        //fragColor = vec4(1., 0., 0., 1.);
-
-        fragColor = out_color_halo;*/
-        color.rgb = mix(halo_color.rgb * (1. - alpha), color.rgb, vec3(alpha));
-        color.a = mix(halo_color.a, color.a, alpha);
-        alpha = 1. - (1. - alpha) * (1. - alpha_halo);
-        //fragColor = color * (alpha * opacity * fade_opacity);
-        fragColor = vec4(1., 0., 0., 1.); return;
+        fragColor = color_alpha_out_text + (1. - color_alpha_out_text.a) * color_alpha_out_halo;
+    } else {
+        fragColor = color_alpha_out_text;
     }
 
-    fragColor = color * (alpha * total_opacity);
 
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);
