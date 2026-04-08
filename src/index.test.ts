@@ -60,7 +60,7 @@ describe('maplibre', () => {
         expect(protocolCallbackCalled).toBeTruthy();
     });
 
-    test('addProtocol - returning null for getArrayBuffer results in empty array buffer', async () => {
+    test('addProtocol - null response for getArrayBuffer results in empty array buffer', async () => {
         let protocolCallbackCalled = false;
         addProtocol('custom', () => {
             protocolCallbackCalled = true;
