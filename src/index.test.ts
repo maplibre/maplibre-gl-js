@@ -87,12 +87,15 @@ describe('maplibre', () => {
     });
 
     test('addProtocol - error', async () => {
-        const mockProtocol = vi.fn().mockReturnValue(Promise.reject(new Error('test error')));
+        const mockError = new Error('test error');
+        const mockProtocol = vi.fn().mockReturnValue(Promise.reject(mockError));
         addProtocol('custom', mockProtocol);
 
-        await getJSON({url: 'custom://test/url/json'}, new AbortController()).catch((error) => {
-            expect(error).toBeTruthy();
-        });
+        const successCallback = vi.fn();
+        const errorCallback = vi.fn();
+        await getJSON({url: 'custom://test/url/json'}, new AbortController()).then(successCallback, errorCallback);
+        expect(successCallback).not.toHaveBeenCalled();
+        expect(errorCallback).toHaveBeenCalledExactlyOnceWith(mockError);
         expect(mockProtocol).toHaveBeenCalled();
     });
 

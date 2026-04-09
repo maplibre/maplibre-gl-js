@@ -251,17 +251,17 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
  * @param abortController - The abort controller allowing to cancel the request
  * @returns a promise resolving to the response, including cache control and expiry data
  */
-export const makeRequest = function(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
+export const makeRequest = async function(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
     if (requestParameters.url.includes('://') && !(/^https?:|^file:/.test(requestParameters.url))) {
         const protocolLoadFn = getProtocol(requestParameters.url);
         if (protocolLoadFn) {
-            return protocolLoadFn(requestParameters, abortController).then((response) => {
-                // A successful array buffer request should always return data even if empty
-                if (!response.data && requestParameters.type === 'arrayBuffer') {
-                    return extend(response, {data: new ArrayBuffer(0)});
-                }
-                return response;
-            });
+            const response = await protocolLoadFn(requestParameters, abortController);
+
+            // A successful array buffer request should always return data even if empty
+            if (!response.data && requestParameters.type === 'arrayBuffer') {
+                return extend(response, {data: new ArrayBuffer(0)});
+            }
+            return response;
         }
         if (isWorker(self) && self.worker?.actor) {
             return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
