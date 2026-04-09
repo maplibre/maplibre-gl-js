@@ -1,4 +1,4 @@
-import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util';
+import {ensureError, extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util';
 import {browser} from '../util/browser';
 import {now} from '../util/time_control';
 import {DOM} from '../util/dom';
@@ -2174,7 +2174,7 @@ export class Map extends Camera {
             } catch (error) {
                 this._diffStyleRequest = null;
                 if (!isAbortError(error)) {
-                    this.fire(new ErrorEvent(error));
+                    this.fire(new ErrorEvent(ensureError(error)));
                 }
             }
         } else if (typeof style === 'object') {
@@ -2190,7 +2190,7 @@ export class Map extends Camera {
             }
         } catch (e) {
             warnOnce(
-                `Unable to perform style diff: ${e.message || e.error || e}.  Rebuilding the style from scratch.`
+                `Unable to perform style diff: ${ensureError(e).message}.  Rebuilding the style from scratch.`
             );
             this._updateStyle(style, options);
         }

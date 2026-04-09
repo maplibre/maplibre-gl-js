@@ -36,9 +36,9 @@ export class Event {
     }
 }
 
-interface ErrorLike {
+type ErrorLike = {
     message: string;
-}
+};
 
 /**
  * An error event

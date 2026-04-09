@@ -1,4 +1,4 @@
-import {extend, isWorker} from './util';
+import {ensureError, extend, isWorker} from './util';
 import {AbortError, isAbortError, throwIfAborted} from './abort_error';
 import {getProtocol} from '../source/protocol_crud';
 import {MessageType} from './actor_messages';
@@ -172,7 +172,7 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
         // When the error is due to CORS policy, DNS issue or malformed URL, the fetch call does not resolve but throws a generic TypeError instead.
         // It is preferable to throw an AJAXError so that the Map event "error" can catch it and still have
         // access to the faulty url. In such case, we provide the arbitrary HTTP error code of `0`.
-        throw new AJAXError(0, e.message, requestParameters.url, new Blob());
+        throw new AJAXError(0, ensureError(e).message, requestParameters.url, new Blob());
     }
 
     if (!response.ok) {

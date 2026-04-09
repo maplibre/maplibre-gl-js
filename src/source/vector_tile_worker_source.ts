@@ -4,7 +4,7 @@ import {type ExpiryData, getArrayBuffer} from '../util/ajax';
 import {WorkerTile} from './worker_tile';
 import {WorkerTileState, type ParsingState} from './worker_tile_state';
 import {BoundedLRUCache} from '../tile/tile_cache';
-import {extend} from '../util/util';
+import {ensureError, extend} from '../util/util';
 import {RequestPerformance} from '../util/request_performance';
 import {VectorTileOverzoomed, sliceVectorTileLayer, toVirtualVectorTile} from './vector_tile_overzoomed';
 import {MLTVectorTile} from './vector_tile_mlt';
@@ -60,7 +60,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             if (isGzipped) {
                 errorMessage += 'please make sure the data is not gzipped and that you have configured the relevant header in the server';
             } else {
-                errorMessage += `got error: ${ex.message}`;
+                errorMessage += `got error: ${ensureError(ex).message}`;
             }
             throw new Error(errorMessage);
         }

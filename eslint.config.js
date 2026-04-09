@@ -6,6 +6,7 @@ import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
 import react from 'eslint-plugin-react';
 import html from 'eslint-plugin-html';
+import preferTypeForDataShapes from './build/eslint-rules/prefer-type-for-data-shapes.js';
 
 export default [
     {
@@ -19,6 +20,7 @@ export default [
             '@stylistic': stylisticTs,
             tsdoc,
             vitest,
+            'local': {rules: {'prefer-type-for-data-shapes': preferTypeForDataShapes}},
         },
 
         linterOptions: {
@@ -40,6 +42,7 @@ export default [
                 projectService: {
                     allowDefaultProject: [
                         'build/generate-*.ts',
+                        'build/eslint-rules/*.js',
                         'test/build/*.ts',
                         'eslint.config.js',
                         'postcss.config.js',
@@ -66,6 +69,7 @@ export default [
             '@typescript-eslint/prefer-includes': 'error',
             '@typescript-eslint/prefer-string-starts-ends-with': 'error',
             '@typescript-eslint/array-type': ['error', {default: 'array-simple'}],
+            'local/prefer-type-for-data-shapes': 'error',
 
             'prefer-object-spread': 'error',
             'prefer-object-has-own': 'error',

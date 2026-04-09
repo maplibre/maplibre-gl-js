@@ -4,6 +4,7 @@ import {ResourceType} from '../util/request_manager';
 import {ImageSource} from './image_source';
 import {Texture} from '../webgl/texture';
 import {Event, ErrorEvent} from '../util/evented';
+import {ensureError} from '../util/util';
 import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
 
 import type {Map} from '../ui/map';
@@ -95,7 +96,7 @@ export class VideoSource extends ImageSource {
 
             this._finishLoading();
         } catch (err) {
-            this.fire(new ErrorEvent(err));
+            this.fire(new ErrorEvent(ensureError(err)));
         }
     }
 

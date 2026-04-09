@@ -6,6 +6,7 @@ import {
     sameOrigin
 } from './ajax';
 import {isAbortError} from './abort_error';
+import {ensureError} from './util';
 
 import {fakeServer, type FakeServer} from 'nise';
 
@@ -104,7 +105,7 @@ describe('ajax', () => {
         try {
             await promise;
         } catch (error) {
-            expect(error.name).toBe('AbortError');
+            expect(ensureError(error).name).toBe('AbortError');
             expect(isAbortError(error)).toBe(true);
         }
     });
@@ -127,7 +128,7 @@ describe('ajax', () => {
         try {
             await promise;
         } catch (error) {
-            expect(error.name).toBe('AbortError');
+            expect(ensureError(error).name).toBe('AbortError');
             expect(isAbortError(error)).toBe(true);
         }
     });

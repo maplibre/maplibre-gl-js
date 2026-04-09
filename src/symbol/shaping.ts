@@ -559,12 +559,12 @@ function shapeIcon(
     return {image, top: y1, bottom: y2, left: x1, right: x2};
 }
 
-export interface Box {
+export type Box = {
     x1: number;
     y1: number;
     x2: number;
     y2: number;
-}
+};
 
 /**
  * Called after a PositionedIcon has already been run through fitIconToText,
