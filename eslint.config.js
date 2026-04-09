@@ -42,6 +42,7 @@ export default [
                 projectService: {
                     allowDefaultProject: [
                         'build/generate-*.ts',
+                        'build/eslint-rules/*.js',
                         'test/build/*.ts',
                         'eslint.config.js',
                         'postcss.config.js',
