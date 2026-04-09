@@ -34,7 +34,7 @@
         document.getElementById('max-zoom-levels-value').textContent = document.getElementById('max-zoom-levels-slider').value;
         document.getElementById('tile-count-ratio-value').textContent = document.getElementById('tile-count-ratio-slider').value;
     }
-    const map = (window.map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         zoom: 12,
         center: [0,0],
@@ -60,7 +60,7 @@
         },
         maxZoom: 22,
         maxPitch: 85
-    }));
+    });
     map.on('load', () => {
         document.getElementById('max-zoom-levels-slider').addEventListener('change', setLodParamsFromUi);
         document.getElementById('tile-count-ratio-slider').addEventListener('change', setLodParamsFromUi);

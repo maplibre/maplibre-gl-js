@@ -49,7 +49,7 @@
         });
     }
 
-    const map = (window.map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         zoom: 12,
         center: [11.2953, 47.5479],
@@ -98,7 +98,7 @@
         },
         maxZoom: 18,
         maxPitch: 85
-    }));
+    });
 
     map.addControl(
         new maplibregl.NavigationControl({
