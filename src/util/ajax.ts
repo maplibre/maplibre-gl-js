@@ -255,9 +255,9 @@ export const makeRequest = async function(requestParameters: RequestParameters, 
     if (requestParameters.url.includes('://') && !(/^https?:|^file:/.test(requestParameters.url))) {
         const protocolLoadFn = getProtocol(requestParameters.url);
         if (protocolLoadFn) {
-            // A successful array buffer request should always return data even if empty
             const response = await protocolLoadFn(requestParameters, abortController);
             if (!response.data && requestParameters.type === 'arrayBuffer') {
+                // A successful array buffer request should always return data even if empty
                 return extend(response, {data: new ArrayBuffer(0)});
             }
             return response;
