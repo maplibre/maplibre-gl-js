@@ -148,12 +148,12 @@ export type MapOptions = {
      */
     scrollZoom?: boolean | AroundCenterOptions;
     /**
-     * The minimum zoom level of the map (0-24).
+     * The minimum zoom level of the map. Users cannot zoom out beyond this level. (0–24)
      * @defaultValue 0
      */
     minZoom?: number | null;
     /**
-     * The maximum zoom level of the map (0-24).
+     * The maximum zoom level of the map. Users cannot zoom in beyond this level. (0–24)
      * @defaultValue 22
      */
     maxZoom?: number | null;
