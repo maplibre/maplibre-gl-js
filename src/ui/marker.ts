@@ -76,14 +76,16 @@ export type MarkerOptions = {
     pitchAlignment?: Alignment;
     /**
      * Marker's opacity when it's in clear view (not behind 3d terrain)
+     * Accepts any valid CSS opacity value as a number or string.
      * @defaultValue 1
      */
-    opacity?: string;
+    opacity?: string | number;
     /**
      * Marker's opacity when it's behind 3d terrain
+     * Accepts any valid CSS opacity value as a number or string.
      * @defaultValue 0.2
      */
-    opacityWhenCovered?: string;
+    opacityWhenCovered?: string | number;
     /**
       * If `true`, rounding is disabled for placement of the marker, allowing for
       * subpixel positioning and smoother movement when the marker is translated.
@@ -861,10 +863,10 @@ export class Marker extends Evented {
     /**
      * Sets the `opacity` and `opacityWhenCovered` properties of the marker.
      * When called without arguments, resets opacity and opacityWhenCovered to defaults
-     * @param opacity - Sets the `opacity` property of the marker.
-     * @param opacityWhenCovered - Sets the `opacityWhenCovered` property of the marker.
+     * @param opacity - Sets the `opacity` property of the marker. Accepts any valid CSS opacity value as a number or string. Defaults to `1`.
+     * @param opacityWhenCovered - Sets the `opacityWhenCovered` property of the marker. Accepts any valid CSS opacity value as a number or string. Defaults to `0.2`.
      */
-    setOpacity(opacity?: string, opacityWhenCovered?: string): this {
+    setOpacity(opacity?: string | number, opacityWhenCovered?: string | number): this {
         // Reset opacity when called without params or from constructor
         if (this._opacity === undefined || (opacity === undefined && opacityWhenCovered === undefined)) {
             this._opacity = '1';
@@ -872,10 +874,10 @@ export class Marker extends Evented {
         }
 
         if (opacity !== undefined) {
-            this._opacity = opacity;
+            this._opacity = String(opacity);
         }
         if (opacityWhenCovered !== undefined) {
-            this._opacityWhenCovered = opacityWhenCovered;
+            this._opacityWhenCovered = String(opacityWhenCovered);
         }
 
         if (this._map) {

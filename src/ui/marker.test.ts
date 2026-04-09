@@ -1246,4 +1246,40 @@ describe('marker', () => {
         expect(adjustedTransform)
             .toContain('translate(262.4px, 235.5934100987358px)');
     });
+
+    test('Sets opacity according to options.opacity when provided a number', async () => {
+        const map = createMap();
+        const marker = new Marker({opacity: 0.7})
+            .setLngLat([0, 0])
+            .addTo(map);
+        await sleep(100);
+        expect(marker.getElement().style.opacity).toMatch('.7');
+        map.remove();
+    });
+
+    test('Changes opacity to a new number value provided by setOpacity', () => {
+        const map = createMap();
+        const marker = new Marker({opacity: 0.7})
+            .setLngLat([0, 0])
+            .addTo(map);
+        marker.setOpacity(0.6);
+        expect(marker.getElement().style.opacity).toMatch('.6');
+        map.remove();
+    });
+
+    test('Applies new "opacityWhenCovered" provided by setOpacity when provided a number', () => {
+        const map = createMap();
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        const marker = new Marker({opacityWhenCovered: 0.15})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        map.terrain = createTerrain();
+        map.fire('terrain');
+
+        marker.setOpacity(undefined, 0.35);
+
+        expect(marker.getElement().style.opacity).toMatch('0.35');
+        map.remove();
+    });
 });
