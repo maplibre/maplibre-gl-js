@@ -156,9 +156,6 @@ async function generateExamplesFolder() {
     const files = fs.readdirSync(examplesFolder).filter(f => f.endsWith('html'));
     const maplibreUnpkg = `https://unpkg.com/maplibre-gl@${packageJson.version}/`;
     const newExamples = getNewExamples();
-    if (newExamples.size > 0) {
-        console.log(`${newExamples.size} of ${files.length} examples marked as "new": ${newExamples.map(f => path.basename(f).join(', ')}`);
-    }
     const indexArray = [] as HtmlDoc[];
     for (const file of files) {
         const htmlFile = path.join(examplesFolder, file);
