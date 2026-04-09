@@ -5,7 +5,7 @@ import {warnOnce} from '../util/util';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
 import pos3dAttributes from '../data/pos3d_attributes';
 import {SegmentVector} from '../data/segment';
-import {Texture} from '../render/texture';
+import {Texture} from '../webgl/texture';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {TerrainTileManager} from '../tile/terrain_tile_manager';
 import {EXTENT} from '../data/extent';
@@ -16,7 +16,7 @@ import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 import type Point from '@mapbox/point-geometry';
 import type {Tile} from '../tile/tile';
-import type {Framebuffer} from '../gl/framebuffer';
+import type {Framebuffer} from '../webgl/framebuffer';
 import type {TileManager} from '../tile/tile_manager';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Painter} from './painter';
@@ -379,7 +379,8 @@ export class Terrain {
      */
     pointCoordinate(p: Point): MercatorCoordinate {
         // First, ensure the coords framebuffer is up to date.
-        this.painter.maybeDrawDepthAndCoords(true);
+        this.painter.maybeDrawDepth(true);
+        this.painter.maybeDrawCoords();
 
         const rgba = new Uint8Array(4);
         const context = this.painter.context, gl = context.gl;

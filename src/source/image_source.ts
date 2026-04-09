@@ -2,7 +2,7 @@ import {CanonicalTileID} from '../tile/tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
-import {Texture} from '../render/texture';
+import {Texture} from '../webgl/texture';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
 import type {Source} from './source';

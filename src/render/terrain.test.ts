@@ -2,7 +2,7 @@ import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 import {Terrain} from './terrain';
-import {Context} from '../gl/context';
+import {Context} from '../webgl/context';
 import {RGBAImage} from '../util/image';
 import {OverscaledTileID} from '../tile/tile_id';
 import {Tile} from '../tile/tile';
@@ -34,14 +34,15 @@ describe('Terrain', () => {
     });
 
     test('pointCoordinate should not return null', () => {
-        expect.assertions(2);
+        expect.assertions(3);
         const painter = {
             context: new Context(gl),
             width: 1,
             height: 1,
             pixelRatio: 1,
             transform: {center: {lng: 0}},
-            maybeDrawDepthAndCoords: vi.fn(),
+            maybeDrawDepth: vi.fn(),
+            maybeDrawCoords: vi.fn(),
         } as any as Painter;
         const tileManager = {_source: {tileSize: 512}} as TileManager;
         const getTileByID = (tileID) : Tile => {
@@ -59,7 +60,8 @@ describe('Terrain', () => {
         const coordinate = terrain.pointCoordinate(new Point(0, 0));
 
         expect(coordinate).not.toBeNull();
-        expect(painter.maybeDrawDepthAndCoords).toHaveBeenCalled();
+        expect(painter.maybeDrawDepth).toHaveBeenCalled();
+        expect(painter.maybeDrawCoords).toHaveBeenCalled();
 
     });
 
@@ -69,7 +71,8 @@ describe('Terrain', () => {
             context: new Context(gl),
             width: WORLD_WIDTH,
             height: 1,
-            maybeDrawDepthAndCoords: vi.fn(),
+            maybeDrawDepth: vi.fn(),
+            maybeDrawCoords: vi.fn(),
             pixelRatio,
         } as any as Painter;
         const tileManager = {_source: {tileSize: 512}} as TileManager;
@@ -98,26 +101,20 @@ describe('Terrain', () => {
         `pointCoordinate should return negative mercator x
         if the point is on the LEFT outside the central globe`,
         () => {
-            expect.assertions(2);
-            const pointX = 0;
             const terrain = setupMercatorOverflow();
-            const coordinate = terrain.pointCoordinate(new Point(pointX, 0));
+            const coordinate = terrain.pointCoordinate(new Point(0, 0));
 
             expect(coordinate.x).toBe(-1);
-            expect(terrain.painter.maybeDrawDepthAndCoords).toHaveBeenCalled();
         });
 
     test(
         `pointCoordinate should return mercator x greater than 1
         if the point is on the RIGHT outside the central globe`,
         () => {
-            expect.assertions(2);
-            const pointX = 3;
             const terrain = setupMercatorOverflow();
-            const coordinate = terrain.pointCoordinate(new Point(pointX, 0));
+            const coordinate = terrain.pointCoordinate(new Point(3, 0));
 
             expect(coordinate.x).toBe(2);
-            expect(terrain.painter.maybeDrawDepthAndCoords).toHaveBeenCalled();
         });
 
     test(
@@ -125,15 +122,8 @@ describe('Terrain', () => {
         () => {
             const terrain = setupMercatorOverflow(2);
 
-            let pointX = 0;
-            let coordinate = terrain.pointCoordinate(new Point(pointX, 0));
-            expect(coordinate.x).toBe(-1);
-            expect(terrain.painter.maybeDrawDepthAndCoords).toHaveBeenCalled();
-
-            pointX = 3;
-            coordinate = terrain.pointCoordinate(new Point(pointX, 0));
-            expect(coordinate.x).toBe(2);
-            expect(terrain.painter.maybeDrawDepthAndCoords).toHaveBeenCalled();
+            expect(terrain.pointCoordinate(new Point(0, 0)).x).toBe(-1);
+            expect(terrain.pointCoordinate(new Point(3, 0)).x).toBe(2);
         });
 
     test('Calculate tile minimum and maximum elevation', () => {

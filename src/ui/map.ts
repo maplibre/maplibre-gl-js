@@ -25,7 +25,7 @@ import {throttle} from '../util/throttle';
 import {type Source} from '../source/source';
 import {type StyleLayer} from '../style/style_layer';
 import {Terrain} from '../render/terrain';
-import {RenderToTexture} from '../render/render_to_texture';
+import {RenderToTexture} from '../webgl/render_to_texture';
 import {config} from '../util/config';
 import {defaultLocale} from './default_locale';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
@@ -780,7 +780,7 @@ export class Map extends Camera {
         this.on('moveend', () => this._update(false));
         this.on('zoom', () => this._update(true));
         this.on('terrain', () => {
-            this.painter.terrainFacilitator.dirty = true;
+            this.painter.terrainFacilitator.depthDirty = true;
             this._update(true);
         });
         this.once('idle', () => this._idleTriggered = true);
