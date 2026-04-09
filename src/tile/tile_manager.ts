@@ -2,7 +2,6 @@ import {create as createSource} from '../source/source';
 
 import {Tile} from './tile';
 import {ErrorEvent, Event, Evented} from '../util/evented';
-import {AJAXError} from '../util/ajax';
 import {ensureError} from '../util/util';
 import {TileCache} from './tile_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
