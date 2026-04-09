@@ -640,7 +640,6 @@ export class Painter {
         mat4.copy(prevMatrix, currMatrix);
         this.terrainFacilitator.renderTime = Date.now();
         this.terrainFacilitator.depthDirty = false;
-        
         this.terrainFacilitator.coordsDirty = true;
         this.drawFunctions.terrainDepth(this, this.style.map.terrain);
     }
