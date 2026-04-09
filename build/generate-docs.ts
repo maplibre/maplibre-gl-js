@@ -44,7 +44,7 @@ function getNewExamples(): Set<string> {
         const filenames = new Set<string>();
         for (const line of output.split('\n')) {
             const trimmed = line.trim();
-            if (trimmed && trimmed.startsWith('test/examples/')) {
+            if (trimmed?.startsWith('test/examples/')) {
                 filenames.add(path.basename(trimmed));
             }
         }
@@ -91,11 +91,11 @@ function generateMarkdownForExample(title: string, description: string, file: st
 
     let codeBlock: string;
     if (jsContent) {
-        const jsBlock = indentBlock('```js\n' + jsContent + '\n```');
-        const htmlBlock = indentBlock('```html\n' + htmlContent.trimEnd() + '\n```');
+        const jsBlock = indentBlock(`\`\`\`js\n${jsContent}\n\`\`\``);
+        const htmlBlock = indentBlock(`\`\`\`html\n${htmlContent.trimEnd()}\n\`\`\``);
         codeBlock = `=== "Only JS"\n\n${jsBlock}\n\n=== "Full HTML"\n\n${htmlBlock}`;
     } else {
-        codeBlock = '```html\n' + htmlContent + '\n```';
+        codeBlock = `\`\`\`html\n${htmlContent}\n\`\`\``;
     }
 
     return `${frontmatter}
