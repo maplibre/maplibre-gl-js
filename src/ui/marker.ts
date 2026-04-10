@@ -120,6 +120,7 @@ export type MarkerOptions = {
  * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-marker/)
  * @see [Animate a marker](https://maplibre.org/maplibre-gl-js/docs/examples/animate-a-marker/)
  * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/attach-a-popup-to-a-marker-instance/)
+ * @see [Style markers when occluded](https://maplibre.org/maplibre-gl-js/docs/examples/style-markers-when-occluded/)
  *
  * ## Events
  *
@@ -569,7 +570,10 @@ export class Marker extends Evented {
         const occluded = this._map.transform.isLocationOccluded(this._lngLat);
         if (!terrain || occluded) {
             const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
-            if (this._element.style.opacity !== targetOpacity) { this._element.style.opacity = targetOpacity; }
+            if (this._element.style.opacity !== targetOpacity) {
+                this._element.style.opacity = targetOpacity;
+                this._element.classList.toggle('maplibregl-marker-occluded', occluded);
+            }
             return;
         }
         if (force) {
@@ -603,6 +607,7 @@ export class Marker extends Evented {
 
         if (this._popup?.isOpen() && centerIsInvisible) this._popup.remove();
         this._element.style.opacity = centerIsInvisible ? this._opacityWhenCovered : this._opacity;
+        this._element.classList.toggle('maplibregl-marker-occluded', centerIsInvisible);
     }
 
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }) => {
