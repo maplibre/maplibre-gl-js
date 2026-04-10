@@ -595,6 +595,7 @@ export class Marker extends Evented {
         const forgiveness = .006;
         if (markerDistance - terrainDistance < forgiveness) {
             this._element.style.opacity = this._opacity;
+            this._element.classList.remove('maplibregl-marker-covered');
             return;
         }
         // If the base is obscured, use the offset to check if the marker's center is obscured.
