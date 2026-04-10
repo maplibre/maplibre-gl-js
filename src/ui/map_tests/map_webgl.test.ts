@@ -42,8 +42,6 @@ test('handles "webglcontextlost" when map is created without style', () => {
 });
 
 test('handles "webglcontextrestored" when map is created without style', async () => {
-    // This test verifies fix for #7432 - map should not throw when WebGL context
-    // is restored but this.style is null (map initialized without style)
     const map = createMap({deleteStyle: true});
     const canvas = map.getCanvas();
 
