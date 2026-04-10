@@ -120,7 +120,6 @@ export type MarkerOptions = {
  * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-marker/)
  * @see [Animate a marker](https://maplibre.org/maplibre-gl-js/docs/examples/animate-a-marker/)
  * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/attach-a-popup-to-a-marker-instance/)
- * @see [Style markers when occluded](https://maplibre.org/maplibre-gl-js/docs/examples/style-markers-when-occluded/)
  *
  * ## Events
  *
@@ -131,6 +130,20 @@ export type MarkerOptions = {
  * **Event** `dragend` of type {@link Event} will be fired when the marker is finished being dragged.
  *
  * **Event** `click` of type {@link Event} will be fired when the marker is clicked.
+ *
+ * ## CSS Classes
+ *
+ * **CSS class** `maplibregl-marker-covered` is toggled on the marker element when the marker
+ * is hidden behind 3D terrain or on the back of a globe.
+ * Use this class to apply custom styles to covered markers.
+ *
+ * @example
+ * ```css
+ * .maplibregl-marker-covered {
+ *     pointer-events: none;
+ *     cursor: default;
+ * }
+ * ```
  */
 export class Marker extends Evented {
     _map: Map;
