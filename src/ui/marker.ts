@@ -572,7 +572,7 @@ export class Marker extends Evented {
             const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
             if (this._element.style.opacity !== targetOpacity) {
                 this._element.style.opacity = targetOpacity;
-                this._element.classList.toggle('maplibregl-marker-occluded', occluded);
+                this._element.classList.toggle('maplibregl-marker-covered', occluded);
             }
             return;
         }
@@ -607,7 +607,7 @@ export class Marker extends Evented {
 
         if (this._popup?.isOpen() && centerIsInvisible) this._popup.remove();
         this._element.style.opacity = centerIsInvisible ? this._opacityWhenCovered : this._opacity;
-        this._element.classList.toggle('maplibregl-marker-occluded', centerIsInvisible);
+        this._element.classList.toggle('maplibregl-marker-covered', centerIsInvisible);
     }
 
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }) => {
