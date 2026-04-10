@@ -868,8 +868,8 @@ export class Marker extends Evented {
     /**
      * Sets the `opacity` and `opacityWhenCovered` properties of the marker.
      * When called without arguments, resets opacity and opacityWhenCovered to defaults
-     * @param opacity - Sets the `opacity` property of the marker. Accepts any valid CSS opacity value as a number or string. Defaults to `1`.
-     * @param opacityWhenCovered - Sets the `opacityWhenCovered` property of the marker. Accepts any valid CSS opacity value as a number or string. Defaults to `0.2`.
+     * @param opacity - Sets the `opacity` property of the marker.
+     * @param opacityWhenCovered - Sets the `opacityWhenCovered` property of the marker.
      */
     setOpacity(opacity?: string | number, opacityWhenCovered?: string | number): this {
         // Reset opacity when called without params or from constructor
