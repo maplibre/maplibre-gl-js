@@ -193,7 +193,16 @@ export class GeoJSONWorkerSource implements WorkerSource {
         try {
             await this.loadAndProcessGeoJSON(params, this._pendingRequest);
             delete this._pendingRequest;
-            this.tileState.clearLoaded();
+            // For a full data reset (`data` or `request`), all cached tiles are stale — clear them
+            // so reloadTile triggers fresh loads against the new index.
+            // For a diff update (`dataDiff`), the index is patched in-place: cached tiles that
+            // were in-flight or evicted mid-update must remain in tileState so that reloadTile
+            // can re-parse them from the updated index when the main thread requests them.
+            // Clearing all tiles on a diff causes features added near the viewport boundary to
+            // silently disappear from evicted tiles (regression since 5.19 — issue #7443).
+            if (!params.dataDiff) {
+                this.tileState.clearLoaded();
+            }
 
             // Sending a large GeoJSON payload from the worker to the main thread is slow so only do if necessary.
             // Send data only if it was loaded from a URL, otherwise the main thread already has a copy of this data.

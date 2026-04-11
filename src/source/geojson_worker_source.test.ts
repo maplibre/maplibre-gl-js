@@ -502,6 +502,30 @@ describe('loadData', () => {
         await expect(worker.loadData({source: 'source1', dataDiff: {removeAll: true}, geojsonVtOptions: {}} as LoadGeoJSONParameters)).resolves.toBeDefined();
     });
 
+    // Regression test for issue #7443:
+    // loadData with dataDiff must NOT clear loaded tiles, so that tiles evicted
+    // mid-update (e.g. during a pan) can be re-parsed against the updated index
+    // when reloadTile is called. Clearing on full data reset is still required.
+    test('loadData with dataDiff preserves loaded tile state; loadData with data clears it', async () => {
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+        const fakeLoadedTile = {status: 'done'} as any as WorkerTile;
+
+        // Initial full load.
+        await worker.loadData({source: 'source1', data: updateableGeoJson, geojsonVtOptions: {}} as LoadGeoJSONParameters);
+
+        // Simulate a tile that was loaded and cached.
+        worker.tileState.loaded = {'42': fakeLoadedTile};
+
+        // A dataDiff update must NOT clear the loaded tile cache (fix for #7443).
+        await worker.loadData({source: 'source1', dataDiff: {add: []}, geojsonVtOptions: {}} as LoadGeoJSONParameters);
+        expect(worker.tileState.loaded).toHaveProperty('42');
+
+        // A full data update (params.data) MUST clear the loaded tile cache.
+        worker.tileState.loaded = {'42': fakeLoadedTile};
+        await worker.loadData({source: 'source1', data: updateableGeoJson, geojsonVtOptions: {}} as LoadGeoJSONParameters);
+        expect(worker.tileState.loaded).not.toHaveProperty('42');
+    });
+
     test('loadData with geojson network call creates an updateable source', async () => {
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
