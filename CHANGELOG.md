@@ -2,6 +2,7 @@
 ### ✨ Features and improvements
 - _...Add new stuff here..._
 - Add `touchZoomRotate.setZoomRate()` and `touchZoomRotate.setZoomThreshold()` to customize touch zoom speed and pinch sensitivity ([#7271](https://github.com/maplibre/maplibre-gl-js/issues/7271))
+- Allow `opacity` and `opacityWhenCovered` in `Marker` and `MarkerOptions` to accept `number` in addition to `string`, and add `maplibregl-marker-covered` CSS class to `Marker` element when covered by 3D terrain or a globe ([#7433](https://github.com/maplibre/maplibre-gl-js/issues/7433)) (by [@YuChunTsao](https://github.com/YuChunTsao))
 
 ### 🐞 Bug fixes
 - Fix polygon text label placement drifting far from center for convex polygons at high zoom due to coordinate rounding in geojson-vt ([#7380](https://github.com/maplibre/maplibre-gl-js/pull/7380)) (by [@CommanderStorm](https://github.com/CommanderStorm))
