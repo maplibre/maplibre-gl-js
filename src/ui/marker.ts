@@ -76,14 +76,16 @@ export type MarkerOptions = {
     pitchAlignment?: Alignment;
     /**
      * Marker's opacity when it's in clear view (not behind 3d terrain)
+     * Accepts any valid CSS opacity value as a number or string.
      * @defaultValue 1
      */
-    opacity?: string;
+    opacity?: string | number;
     /**
      * Marker's opacity when it's behind 3d terrain
+     * Accepts any valid CSS opacity value as a number or string.
      * @defaultValue 0.2
      */
-    opacityWhenCovered?: string;
+    opacityWhenCovered?: string | number;
     /**
       * If `true`, rounding is disabled for placement of the marker, allowing for
       * subpixel positioning and smoother movement when the marker is translated.
@@ -128,6 +130,20 @@ export type MarkerOptions = {
  * **Event** `dragend` of type {@link Event} will be fired when the marker is finished being dragged.
  *
  * **Event** `click` of type {@link Event} will be fired when the marker is clicked.
+ *
+ * ## CSS Classes
+ *
+ * **CSS class** `maplibregl-marker-covered` is toggled on the marker element when the marker
+ * is hidden behind 3D terrain or on the back of a globe.
+ * Use this class to apply custom styles to covered markers.
+ *
+ * @example
+ * ```css
+ * .maplibregl-marker-covered {
+ *     pointer-events: none;
+ *     cursor: default;
+ * }
+ * ```
  */
 export class Marker extends Evented {
     _map: Map;
@@ -567,7 +583,10 @@ export class Marker extends Evented {
         const occluded = this._map.transform.isLocationOccluded(this._lngLat);
         if (!terrain || occluded) {
             const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
-            if (this._element.style.opacity !== targetOpacity) { this._element.style.opacity = targetOpacity; }
+            if (this._element.style.opacity !== targetOpacity) {
+                this._element.style.opacity = targetOpacity;
+                this._element.classList.toggle('maplibregl-marker-covered', occluded);
+            }
             return;
         }
         if (force) {
@@ -589,6 +608,7 @@ export class Marker extends Evented {
         const forgiveness = .006;
         if (markerDistance - terrainDistance < forgiveness) {
             this._element.style.opacity = this._opacity;
+            this._element.classList.remove('maplibregl-marker-covered');
             return;
         }
         // If the base is obscured, use the offset to check if the marker's center is obscured.
@@ -601,6 +621,7 @@ export class Marker extends Evented {
 
         if (this._popup?.isOpen() && centerIsInvisible) this._popup.remove();
         this._element.style.opacity = centerIsInvisible ? this._opacityWhenCovered : this._opacity;
+        this._element.classList.toggle('maplibregl-marker-covered', centerIsInvisible);
     }
 
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }) => {
@@ -864,7 +885,7 @@ export class Marker extends Evented {
      * @param opacity - Sets the `opacity` property of the marker.
      * @param opacityWhenCovered - Sets the `opacityWhenCovered` property of the marker.
      */
-    setOpacity(opacity?: string, opacityWhenCovered?: string): this {
+    setOpacity(opacity?: string | number, opacityWhenCovered?: string | number): this {
         // Reset opacity when called without params or from constructor
         if (this._opacity === undefined || (opacity === undefined && opacityWhenCovered === undefined)) {
             this._opacity = '1';
@@ -872,10 +893,10 @@ export class Marker extends Evented {
         }
 
         if (opacity !== undefined) {
-            this._opacity = opacity;
+            this._opacity = String(opacity);
         }
         if (opacityWhenCovered !== undefined) {
-            this._opacityWhenCovered = opacityWhenCovered;
+            this._opacityWhenCovered = String(opacityWhenCovered);
         }
 
         if (this._map) {
