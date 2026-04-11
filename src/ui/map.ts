@@ -3532,7 +3532,7 @@ export class Map extends Camera {
             this.setStyle(this._lostContextStyle.style, {diff: false});
         }
 
-        if (this._lostContextStyle.images) {
+        if (this._lostContextStyle.images && this.style) {
             this.style.imageManager.images = this._lostContextStyle.images;
         }
 
