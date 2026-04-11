@@ -11,6 +11,7 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
     registerRTLTextPlugin: any;
     addProtocol: any;
     removeProtocol: any;
+    makeRequest: any;
     worker: any;
 
     constructor(addListeners: EventListener[], postListeners: EventListener[]) {

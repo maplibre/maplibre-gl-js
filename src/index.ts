@@ -384,5 +384,6 @@ export {
     setNow,
     restoreNow,
     isTimeFrozen,
+    getGlobalDispatcher,
     EXTENT
 };
