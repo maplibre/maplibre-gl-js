@@ -923,6 +923,7 @@ a.maplibregl-ctrl-logo.maplibregl-compact {
     box-sizing: border-box;
 }
 
+/* stylelint-disable-next-line no-descending-specificity */
 .maplibregl-webgl-error a {
     color: #0078a8;
 }

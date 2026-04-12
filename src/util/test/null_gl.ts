@@ -244,7 +244,6 @@ for (const [k, v] of Object.entries(allEnums)) {
     (NullWebGL2RenderingContext.prototype as any)[k] = v;
 }
 
-
 // Configurable getters so vi.spyOn(..., 'get') works in tests.
 Object.defineProperty(NullWebGL2RenderingContext.prototype, 'drawingBufferWidth', {
     get() { return this.canvas?.width ?? 300; },
