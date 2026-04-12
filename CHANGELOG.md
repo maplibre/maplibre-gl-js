@@ -20,6 +20,7 @@
 - Ensure that a successful ArrayBuffer response from a custom protocol that is null/undefined is set to an empty ArrayBuffer ([#7427](https://github.com/maplibre/maplibre-gl-js/pull/7427)) (by [@neodescis](https://github.com/neodescis))
 - Fix error in `_contextRestored` when map was initialized without a style ([#7432](https://github.com/maplibre/maplibre-gl-js/issues/7432)) (by [@mvanhorn](https://github.com/mvanhorn))
 - Fix issue with the cache used for zoomLevelsToOverscale feature ([#7450](https://github.com/maplibre/maplibre-gl-js/issues/7450)) (by [@HarelM](https://github.com/HarelM))
+- Update stylelint and fix old issues with the CSS (mainly change rgb to use spaces) ([#7365](https://github.com/maplibre/maplibre-gl-js/issues/7365)) (by [@HarelM](https://github.com/HarelM))
 
 ## 5.22.0
 
