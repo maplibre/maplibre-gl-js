@@ -23,7 +23,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
       - run: npm ci
-      - run: npm run lint
+      - run: npm run lint -- --max-warnings 0
         if: '!cancelled()'
       - run: npm run lint-css
         if: '!cancelled()'
