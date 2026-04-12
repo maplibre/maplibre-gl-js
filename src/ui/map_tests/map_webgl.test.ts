@@ -41,6 +41,20 @@ test('handles "webglcontextlost" when map is created without style', () => {
     map.remove();
 });
 
+test('handles "webglcontextrestored" when map is created without style', async () => {
+    const map = createMap({deleteStyle: true});
+    const canvas = map.getCanvas();
+
+    const contextLostPromise = map.once('webglcontextlost');
+    canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    await contextLostPromise;
+
+    expect(() => {
+        canvas.dispatchEvent(new window.Event('webglcontextrestored'));
+    }).not.toThrow();
+    map.remove();
+});
+
 test('does not fire "webglcontextrestored" after remove has been called', async () => {
     const map = createMap();
     const canvas = map.getCanvas();
