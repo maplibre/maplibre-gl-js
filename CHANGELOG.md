@@ -1,6 +1,30 @@
 ## main
 ### ✨ Features and improvements
 - _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+- chore: fix warning in CI ([#7452](https://github.com/maplibre/maplibre-gl-js/pull/7452)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- fix: guard against null style in _contextRestored ([#7446](https://github.com/maplibre/maplibre-gl-js/pull/7446)) (by [@mvanhorn](https://github.com/mvanhorn))
+- chore: better internal types ([#7413](https://github.com/maplibre/maplibre-gl-js/pull/7413)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- docs: simplify a few examples ([#7439](https://github.com/maplibre/maplibre-gl-js/pull/7439)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- docs: document zoom direction clearer ([#7438](https://github.com/maplibre/maplibre-gl-js/pull/7438)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- perf(terrain): reuse the `get_elevation` result ([#7428](https://github.com/maplibre/maplibre-gl-js/pull/7428)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- refactor: webgl isolation ([#7422](https://github.com/maplibre/maplibre-gl-js/pull/7422)) (by [@birkskyum](https://github.com/birkskyum))
+- refactor: move .glsl files to /glsl ([#7418](https://github.com/maplibre/maplibre-gl-js/pull/7418)) (by [@birkskyum](https://github.com/birkskyum))
+- Remove Bounties section from README ([#7414](https://github.com/maplibre/maplibre-gl-js/pull/7414)) (by [@mizmay](https://github.com/mizmay))
+- Add Caltopo logo to README ([#7408](https://github.com/maplibre/maplibre-gl-js/pull/7408)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- chore: lints around objects ([#7410](https://github.com/maplibre/maplibre-gl-js/pull/7410)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- chore: resolve a few lints around return types ([#7397](https://github.com/maplibre/maplibre-gl-js/pull/7397)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- chore: remove misc no-op assignments ([#7402](https://github.com/maplibre/maplibre-gl-js/pull/7402)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- chore: enable `@typescript-eslint/prefer-for-of` ([#7398](https://github.com/maplibre/maplibre-gl-js/pull/7398)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- chore: enable `@typescript-eslint/no-unnecessary-type-assertion` ([#7395](https://github.com/maplibre/maplibre-gl-js/pull/7395)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- chore: add @typescript-eslint/prefer-optional-chain ([#7392](https://github.com/maplibre/maplibre-gl-js/pull/7392)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- perf: add a bench for terrain rendering and fix `_demMatrixCache` lookup being wasted cycles by actually using the cache ([#7400](https://github.com/maplibre/maplibre-gl-js/pull/7400)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- docs: fix typos ([#7394](https://github.com/maplibre/maplibre-gl-js/pull/7394)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+## 5.23.0
+### ✨ Features and improvements
 - Add `touchZoomRotate.setZoomRate()` and `touchZoomRotate.setZoomThreshold()` to customize touch zoom speed and pinch sensitivity ([#7271](https://github.com/maplibre/maplibre-gl-js/issues/7271))
 - Improve ability to communicate with imported scripts in workers and use `makeRequest` in workres as well ([#7451](https://github.com/maplibre/maplibre-gl-js/issues/7451)) (by [@HarelM](https://github.com/HarelM))
 - Allow `opacity` and `opacityWhenCovered` in `Marker` and `MarkerOptions` to accept `number` in addition to `string`, and add `maplibregl-marker-covered` CSS class to `Marker` element when covered by 3D terrain or a globe ([#7433](https://github.com/maplibre/maplibre-gl-js/issues/7433)) (by [@YuChunTsao](https://github.com/YuChunTsao))
@@ -10,7 +34,6 @@
 - Ensure that a successful ArrayBuffer response from a custom protocol that is null/undefined is set to an empty ArrayBuffer ([#7427](https://github.com/maplibre/maplibre-gl-js/pull/7427)) (by [@neodescis](https://github.com/neodescis))
 - Fix error in `_contextRestored` when map was initialized without a style ([#7432](https://github.com/maplibre/maplibre-gl-js/issues/7432)) (by [@mvanhorn](https://github.com/mvanhorn))
 - Fix issue with the cache used for zoomLevelsToOverscale feature ([#7450](https://github.com/maplibre/maplibre-gl-js/issues/7450)) (by [@HarelM](https://github.com/HarelM))
-- _...Add new stuff here..._
 
 ## 5.22.0
 
