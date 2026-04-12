@@ -66,9 +66,6 @@ export class Context {
 
     extTextureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
     extTextureFilterAnisotropicMax?: GLfloat;
-    HALF_FLOAT?: GLenum;
-    RGBA16F?: GLenum;
-    RGB16F?: GLenum;
 
     constructor(gl: WebGL2RenderingContext) {
         this.gl = gl;
@@ -112,9 +109,7 @@ export class Context {
 
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
 
-        const extColorBufferHalfFloat = gl.getExtension('EXT_color_buffer_half_float');
-        this.RGBA16F = gl.RGBA16F ?? extColorBufferHalfFloat?.RGBA16F_EXT;
-        this.RGB16F = gl.RGB16F ?? extColorBufferHalfFloat?.RGB16F_EXT;
+        gl.getExtension('EXT_color_buffer_half_float');
         gl.getExtension('EXT_color_buffer_float');
     }
 
