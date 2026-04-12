@@ -47,7 +47,7 @@ void main() {
 
         // When drawing halos, we want the inside of the halo to be transparent as well
         // in case the text fill is transparent.
-        lowp float halo_edge = (6.0 - halo_width / fontScale) / SDF_PX;
+        highp float halo_edge = (6.0 - halo_width / fontScale) / SDF_PX;
         alpha_halo =  min(smoothstep(halo_edge - gamma_scaled_halo, halo_edge + gamma_scaled_halo, dist), 1.0 - alpha_halo);
 
         vec4 color_alpha_out_halo = total_opacity * alpha_halo * halo_color;
