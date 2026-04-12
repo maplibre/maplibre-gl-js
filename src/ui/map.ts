@@ -777,6 +777,7 @@ export class Map extends Camera {
 
         this._setupContainer();
         this._setupPainter();
+        if (!this.painter) return;
 
         this.on('move', () => this._update(false));
         this.on('moveend', () => this._update(false));
@@ -3568,6 +3569,7 @@ export class Map extends Camera {
         this._lostContextStyle = {style: null, images: null};
 
         this._setupPainter();
+        if (!this.painter) return;
         this.resize();
         this._update();
         this._resizeInternal();
