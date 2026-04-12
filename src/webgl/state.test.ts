@@ -3,13 +3,11 @@ import {type IValue, ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask,
 import {Context} from './context';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {deepEqual} from '../util/util';
+import {createNullGL} from '../util/test/null_gl';
 
 describe('Value classes', () => {
 
-    const gl = document.createElement('canvas').getContext('webgl') as WebGL2RenderingContext;
-    // Remove when https://github.com/Adamfsk/jest-webgl-canvas-mock/pull/5 is merged
-    gl.createVertexArray = gl.getExtension('OES_vertex_array_object')?.createVertexArrayOES;
-    gl.bindVertexArray = gl.getExtension('OES_vertex_array_object')?.bindVertexArrayOES;
+    const gl = createNullGL();
     const context = new Context(gl);
 
     const valueTest = <T>(Constructor: new (...args:any[]) => IValue<T>,

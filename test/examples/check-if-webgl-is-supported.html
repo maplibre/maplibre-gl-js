@@ -16,28 +16,28 @@
 <div id="map"></div>
 
 <script>
-    function isWebglSupported() {
-        if (window.WebGLRenderingContext) {
+    function isWebgl2Supported() {
+        if (window.WebGL2RenderingContext) {
             const canvas = document.createElement('canvas');
             try {
                 // Note that { failIfMajorPerformanceCaveat: true } can be passed as a second argument
                 // to canvas.getContext(), causing the check to fail if hardware rendering is not available. See
                 // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
                 // for more details.
-                const context = canvas.getContext('webgl2') || canvas.getContext('webgl');
+                const context = canvas.getContext('webgl2');
                 if (context && typeof context.getParameter == 'function') {
                     return true;
                 }
             } catch (e) {
-                // WebGL is supported, but disabled
+                // WebGL 2 is supported, but disabled
             }
             return false;
         }
-        // WebGL not supported
+        // WebGL 2 not supported
         return false;
     }
-    if (!isWebglSupported()) {
-        alert('Your browser does not support WebGL');
+    if (!isWebgl2Supported()) {
+        alert('Your browser does not support WebGL 2');
     } else {
         const map = new maplibregl.Map({
             container: 'map',

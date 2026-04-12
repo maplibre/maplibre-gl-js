@@ -70,8 +70,10 @@ import type {ICameraHelper} from '../geo/projection/camera_helper';
 
 const version = packageJSON.version;
 
-export type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined;
-export type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
+export type ContextType = 'webgl2';
+/** @deprecated Use {@link ContextType} instead. */
+export type WebGLSupportedVersions = ContextType | undefined;
+export type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: ContextType};
 
 /**
  * The {@link Map} options object.
@@ -129,8 +131,8 @@ export type MapOptions = {
     /**
      * Set of WebGLContextAttributes that are applied to the WebGL context of the map.
      * See https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext for more details.
-     * `contextType` can be set to `webgl2` or `webgl` to force a WebGL version. Not setting it, Maplibre will do it's best to get a suitable context.
-     * @defaultValue antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false, failIfMajorPerformanceCaveat: false, desynchronized: false, contextType: 'webgl2withfallback'
+     * `contextType` is restricted to `'webgl2'`. This option is kept as a forward-looking API for future WebGPU support.
+     * @defaultValue antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false, failIfMajorPerformanceCaveat: false, desynchronized: false, contextType: 'webgl2'
      */
     canvasContextAttributes?: WebGLContextAttributesWithType;
     /**
@@ -3465,24 +3467,51 @@ export class Map extends Camera {
             }
         }, {once: true});
 
-        let gl: WebGL2RenderingContext | WebGLRenderingContext | null = null;
-        if (this._canvasContextAttributes.contextType) {
-            gl = this._canvas.getContext(this._canvasContextAttributes.contextType, attributes) as WebGL2RenderingContext | WebGLRenderingContext;
-        } else {
-            gl = this._canvas.getContext('webgl2', attributes) || this._canvas.getContext('webgl', attributes);
-        }
+        const gl: WebGL2RenderingContext | null = this._canvas.getContext('webgl2', attributes);
 
         if (!gl) {
-            const msg = 'Failed to initialize WebGL';
-            if (webglcontextcreationerrorDetailObject) {
-                webglcontextcreationerrorDetailObject.message = msg;
-                throw new Error(JSON.stringify(webglcontextcreationerrorDetailObject));
-            } else {
-                throw new Error(msg);
-            }
+            this._showWebGL2Error(webglcontextcreationerrorDetailObject);
+            return;
         }
 
         this.painter = new Painter(gl, this.transform);
+    }
+
+    _showWebGL2Error(webglcontextcreationerrorDetailObject: any) {
+        const webglLink = 'https://wiki.openstreetmap.org/wiki/This_map_requires_WebGL';
+
+        const fullText = this._getUIString('Map.WebGL2NotSupported.Full');
+        const shortText = this._getUIString('Map.WebGL2NotSupported.Short');
+        const learnMore = this._getUIString('Map.WebGL2NotSupported.LearnMore');
+
+        const errorDiv = DOM.create('div', 'maplibregl-webgl-error', this._container);
+
+        const fullMsg = DOM.create('p', 'maplibregl-webgl-error-full', errorDiv);
+        fullMsg.textContent = `${fullText} ${shortText} `;
+        const fullLink = DOM.create('a', undefined, fullMsg);
+        fullLink.href = webglLink;
+        fullLink.target = '_blank';
+        fullLink.rel = 'noopener noreferrer';
+        fullLink.textContent = learnMore;
+
+        const shortMsg = DOM.create('p', 'maplibregl-webgl-error-short', errorDiv);
+        shortMsg.textContent = `${shortText} `;
+        const shortLink = DOM.create('a', undefined, shortMsg);
+        shortLink.href = webglLink;
+        shortLink.target = '_blank';
+        shortLink.rel = 'noopener noreferrer';
+        shortLink.textContent = learnMore;
+
+        const msg = 'Failed to initialize WebGL';
+        if (webglcontextcreationerrorDetailObject) {
+            webglcontextcreationerrorDetailObject.message = msg;
+        }
+
+        this.fire(new ErrorEvent(new Error(
+            webglcontextcreationerrorDetailObject
+                ? JSON.stringify(webglcontextcreationerrorDetailObject)
+                : msg
+        )));
     }
 
     override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
