@@ -3479,11 +3479,10 @@ export class Map extends Camera {
     }
 
     _showWebGL2Error(webglcontextcreationerrorDetailObject: any) {
-        const webglLink = 'https://wiki.openstreetmap.org/wiki/This_map_requires_WebGL';
-
         const fullText = this._getUIString('Map.WebGL2NotSupported.Full');
         const shortText = this._getUIString('Map.WebGL2NotSupported.Short');
         const learnMore = this._getUIString('Map.WebGL2NotSupported.LearnMore');
+        const webglLink = this._getUIString('Map.WebGL2NotSupported.LearnMoreUrl');
 
         const errorDiv = DOM.create('div', 'maplibregl-webgl-error', this._container);
 
