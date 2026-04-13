@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.31">
+      <meta name="generator" content="zensical-0.0.32">
     
     
       
@@ -2191,6 +2191,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../functions/getGlobalDispatcher/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    getGlobalDispatcher()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../functions/getMaxParallelImageRequests/" class="md-nav__link">
         
   
@@ -3162,34 +3190,6 @@
     
   
     ImageAtlas
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../MapEventType/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    MapEventType
   
 
     
@@ -4765,6 +4765,34 @@
     
   
     MapDataEvent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MapEventType
   
 
     
@@ -10251,7 +10279,7 @@
 
 
 <h1 id="customlayerinterface">CustomLayerInterface</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/style/style_layer/custom_style_layer.ts#L188">style/style_layer/custom_style_layer.ts:188</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/style/style_layer/custom_style_layer.ts#L188">style/style_layer/custom_style_layer.ts:188</a></p>
 <p>Interface for custom style layers. This is a specification for
 implementers to model: it is not an exported method or class.</p>
 <p>Custom layers allow a user to render directly into the map's GL context using the map's camera.
@@ -10323,7 +10351,7 @@ and they should appropriately handle <a href="../../type-aliases/MapContextEvent
 <blockquote>
 <p><code>optional</code> <strong>onAdd</strong>(<code>map</code>: <a href="../../classes/Map/"><code>Map</code></a>, <code>gl</code>: <code>WebGLRenderingContext</code> | <code>WebGL2RenderingContext</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/style/style_layer/custom_style_layer.ts#L231">style/style_layer/custom_style_layer.ts:231</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/style/style_layer/custom_style_layer.ts#L231">style/style_layer/custom_style_layer.ts:231</a></p>
 <p>Optional method called when the layer has been added to the Map with <a href="../../classes/Map/#addlayer">Map.addLayer</a>. This
 gives the layer a chance to initialize gl resources and register event listeners.</p>
 <h4 id="parameters">Parameters</h4>
@@ -10355,7 +10383,7 @@ gives the layer a chance to initialize gl resources and register event listeners
 <blockquote>
 <p><code>optional</code> <strong>onRemove</strong>(<code>map</code>: <a href="../../classes/Map/"><code>Map</code></a>, <code>gl</code>: <code>WebGLRenderingContext</code> | <code>WebGL2RenderingContext</code>): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/style/style_layer/custom_style_layer.ts#L239">style/style_layer/custom_style_layer.ts:239</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/style/style_layer/custom_style_layer.ts#L239">style/style_layer/custom_style_layer.ts:239</a></p>
 <p>Optional method called when the layer has been removed from the Map with <a href="../../classes/Map/#removelayer">Map.removeLayer</a>. This
 gives the layer a chance to clean up gl resources and event listeners.</p>
 <h4 id="parameters_1">Parameters</h4>
@@ -10387,14 +10415,14 @@ gives the layer a chance to clean up gl resources and event listeners.</p>
 <blockquote>
 <p><strong>id</strong>: <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/style/style_layer/custom_style_layer.ts#L192">style/style_layer/custom_style_layer.ts:192</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/style/style_layer/custom_style_layer.ts#L192">style/style_layer/custom_style_layer.ts:192</a></p>
 <p>A unique layer id.</p>
 <hr />
 <h3 id="prerender">prerender?</h3>
 <blockquote>
 <p><code>optional</code> <strong>prerender?</strong>: <a href="../../type-aliases/CustomRenderMethod/"><code>CustomRenderMethod</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/style/style_layer/custom_style_layer.ts#L223">style/style_layer/custom_style_layer.ts:223</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/style/style_layer/custom_style_layer.ts#L223">style/style_layer/custom_style_layer.ts:223</a></p>
 <p>Optional method called during a render frame to allow a layer to prepare resources or render into a texture.</p>
 <p>The layer cannot make any assumptions about the current GL state and must bind a framebuffer before rendering.</p>
 <hr />
@@ -10402,7 +10430,7 @@ gives the layer a chance to clean up gl resources and event listeners.</p>
 <blockquote>
 <p><strong>render</strong>: <a href="../../type-aliases/CustomRenderMethod/"><code>CustomRenderMethod</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/style/style_layer/custom_style_layer.ts#L217">style/style_layer/custom_style_layer.ts:217</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/style/style_layer/custom_style_layer.ts#L217">style/style_layer/custom_style_layer.ts:217</a></p>
 <p>Called during a render frame allowing the layer to draw into the GL context.</p>
 <p>The layer can assume blending and depth state is set to allow the layer to properly
 blend and clip other layers. The layer cannot make any other assumptions about the
@@ -10419,14 +10447,14 @@ may want to change the blend function to
 <blockquote>
 <p><code>optional</code> <strong>renderingMode?</strong>: <code>"2d"</code> | <code>"3d"</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/style/style_layer/custom_style_layer.ts#L200">style/style_layer/custom_style_layer.ts:200</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/style/style_layer/custom_style_layer.ts#L200">style/style_layer/custom_style_layer.ts:200</a></p>
 <p>Either <code>"2d"</code> or <code>"3d"</code>. Defaults to <code>"2d"</code>.</p>
 <hr />
 <h3 id="type">type</h3>
 <blockquote>
 <p><strong>type</strong>: <code>"custom"</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/style/style_layer/custom_style_layer.ts#L196">style/style_layer/custom_style_layer.ts:196</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/style/style_layer/custom_style_layer.ts#L196">style/style_layer/custom_style_layer.ts:196</a></p>
 <p>The layer's type. Must be <code>"custom"</code>.</p>
 
 

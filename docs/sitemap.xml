@@ -163,6 +163,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/functions/createTileMesh/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/functions/getGlobalDispatcher/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/functions/getMaxParallelImageRequests/</loc>
       </url>
       <url>
@@ -242,9 +245,6 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/ImageAtlas/</loc>
-      </url>
-      <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/MapEventType/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/OverscaledTileID/</loc>
@@ -407,6 +407,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapDataEvent/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapGeoJSONFeature/</loc>

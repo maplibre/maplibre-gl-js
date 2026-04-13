@@ -5,8 +5,8 @@
     <meta property="og:description" content="Allows changing the sky, fog and horizon color and blends." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.22.0/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.22.0/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -49,7 +49,7 @@
         });
     }
 
-    const map = (window.map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         zoom: 12,
         center: [11.2953, 47.5479],
@@ -68,12 +68,12 @@
                 // Use a different source for terrain and hillshade layers, to improve render quality
                 terrainSource: {
                     type: 'raster-dem',
-                    url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                    url: 'https://tiles.mapterhorn.com/tilejson.json',
                     tileSize: 256
                 },
                 hillshadeSource: {
                     type: 'raster-dem',
-                    url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                    url: 'https://tiles.mapterhorn.com/tilejson.json',
                     tileSize: 256
                 }
             },
@@ -98,7 +98,7 @@
         },
         maxZoom: 18,
         maxPitch: 85
-    }));
+    });
 
     map.addControl(
         new maplibregl.NavigationControl({

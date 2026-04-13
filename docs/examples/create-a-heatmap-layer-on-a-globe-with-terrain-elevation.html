@@ -6,8 +6,8 @@
     <meta property="og:description" content="Create a Heatmap layer on a globe with terrain elevation." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.22.0/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.22.0/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js'></script>
     <style>
         body {
             margin: 0;
@@ -44,12 +44,12 @@
                 nextStyle.sources = {
                     ...nextStyle.sources, terrainSource: {
                         type: 'raster-dem',
-                        url: 'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                        url: 'https://tiles.mapterhorn.com/tilejson.json',
                         tileSize: 256
                     },
                     hillshadeSource: {
                         type: 'raster-dem',
-                        url: 'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                        url: 'https://tiles.mapterhorn.com/tilejson.json',
                         tileSize: 256
                     }
                 }

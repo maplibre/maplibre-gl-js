@@ -5,8 +5,8 @@
     <meta property="og:description" content="Use the line-gradient and line-dasharray paint properties together to create a dashed line with gradient colors." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.22.0/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.22.0/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -16,12 +16,12 @@
 <div id="map"></div>
 
 <script>
-    const map = (window.map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style: 'https://tiles.openfreemap.org/styles/bright',
         center: [-77.035, 38.875],
         zoom: 12
-    }));
+    });
 
     const geojson = {
         'type': 'FeatureCollection',

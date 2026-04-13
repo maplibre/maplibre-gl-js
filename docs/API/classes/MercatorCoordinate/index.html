@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.31">
+      <meta name="generator" content="zensical-0.0.32">
     
     
       
@@ -2363,6 +2363,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../functions/getGlobalDispatcher/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    getGlobalDispatcher()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../functions/getMaxParallelImageRequests/" class="md-nav__link">
         
   
@@ -3162,34 +3190,6 @@
     
   
     ImageAtlas
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../interfaces/MapEventType/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    MapEventType
   
 
     
@@ -4765,6 +4765,34 @@
     
   
     MapDataEvent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MapEventType
   
 
     
@@ -10251,7 +10279,7 @@
 
 
 <h1 id="mercatorcoordinate">MercatorCoordinate</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/geo/mercator_coordinate.ts#L78">geo/mercator_coordinate.ts:78</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/geo/mercator_coordinate.ts#L80">geo/mercator_coordinate.ts:80</a></p>
 <p>A <code>MercatorCoordinate</code> object represents a projected three dimensional position.</p>
 <p><code>MercatorCoordinate</code> uses the web mercator projection (<a href="https://epsg.io/3857">EPSG:3857</a>) with slightly different units:</p>
 <ul>
@@ -10267,7 +10295,11 @@ of the coordinate space as the <code>0/0/0</code> tile with an extent of <code>1
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">nullIsland</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">MercatorCoordinate</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">);</span>
 </span></code></pre></div>
 <h2 id="see">See</h2>
-<p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/custom-style-layer/">Add a custom style layer</a></p>
+<ul>
+<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/add-a-custom-style-layer/">Add a custom style layer</a></li>
+<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/">Add a 3D model using three.js</a></li>
+<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/add-a-simple-custom-layer-on-a-globe/">Add a simple custom layer on a globe</a></li>
+</ul>
 <h2 id="implements">Implements</h2>
 <ul>
 <li><code>IMercatorCoordinate</code></li>
@@ -10277,7 +10309,7 @@ of the coordinate space as the <code>0/0/0</code> tile with an extent of <code>1
 <blockquote>
 <p><strong>new MercatorCoordinate</strong>(<code>x</code>: <code>number</code>, <code>y</code>: <code>number</code>, <code>z?</code>: <code>number</code>): <code>MercatorCoordinate</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/geo/mercator_coordinate.ts#L88">geo/mercator_coordinate.ts:88</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/geo/mercator_coordinate.ts#L90">geo/mercator_coordinate.ts:90</a></p>
 <h4 id="parameters">Parameters</h4>
 <table>
 <thead>
@@ -10316,7 +10348,7 @@ of the coordinate space as the <code>0/0/0</code> tile with an extent of <code>1
 <blockquote>
 <p><strong>meterInMercatorCoordinateUnits</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/geo/mercator_coordinate.ts#L153">geo/mercator_coordinate.ts:153</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/geo/mercator_coordinate.ts#L155">geo/mercator_coordinate.ts:155</a></p>
 <p>Returns the distance of 1 meter in <code>MercatorCoordinate</code> units at this latitude.</p>
 <p>For coordinates in real world units using meters, this naturally provides the scale
 to transform into <code>MercatorCoordinate</code>s.</p>
@@ -10330,7 +10362,7 @@ to transform into <code>MercatorCoordinate</code>s.</p>
 <blockquote>
 <p><strong>toAltitude</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/geo/mercator_coordinate.ts#L141">geo/mercator_coordinate.ts:141</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/geo/mercator_coordinate.ts#L143">geo/mercator_coordinate.ts:143</a></p>
 <p>Returns the altitude in meters of the coordinate.</p>
 <h4 id="returns_2">Returns</h4>
 <p><code>number</code></p>
@@ -10346,7 +10378,7 @@ to transform into <code>MercatorCoordinate</code>s.</p>
 <blockquote>
 <p><strong>toLngLat</strong>(): <a href="../LngLat/"><code>LngLat</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/geo/mercator_coordinate.ts#L125">geo/mercator_coordinate.ts:125</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/geo/mercator_coordinate.ts#L127">geo/mercator_coordinate.ts:127</a></p>
 <p>Returns the <code>LngLat</code> for the coordinate.</p>
 <h4 id="returns_3">Returns</h4>
 <p><a href="../LngLat/"><code>LngLat</code></a></p>
@@ -10362,7 +10394,7 @@ to transform into <code>MercatorCoordinate</code>s.</p>
 <blockquote>
 <p><code>static</code> <strong>fromLngLat</strong>(<code>lngLatLike</code>: <a href="../../type-aliases/LngLatLike/"><code>LngLatLike</code></a>, <code>altitude?</code>: <code>number</code>): <code>MercatorCoordinate</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/geo/mercator_coordinate.ts#L106">geo/mercator_coordinate.ts:106</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/geo/mercator_coordinate.ts#L108">geo/mercator_coordinate.ts:108</a></p>
 <p>Project a <code>LngLat</code> to a <code>MercatorCoordinate</code>.</p>
 <h4 id="parameters_1">Parameters</h4>
 <table>

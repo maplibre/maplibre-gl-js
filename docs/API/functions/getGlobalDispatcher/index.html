@@ -10,24 +10,24 @@
       
       
       
-        <link rel="canonical" href="https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/MapEventType/">
+        <link rel="canonical" href="https://www.maplibre.org/maplibre-gl-js/docs/API/functions/getGlobalDispatcher/">
       
       
-        <link rel="prev" href="../ImageAtlas/">
+        <link rel="prev" href="../createTileMesh/">
       
       
-        <link rel="next" href="../OverscaledTileID/">
+        <link rel="next" href="../getMaxParallelImageRequests/">
       
       
         
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.31">
+      <meta name="generator" content="zensical-0.0.32">
     
     
       
-        <title>MapEventType - MapLibre GL JS</title>
+        <title>getGlobalDispatcher() - MapLibre GL JS</title>
       
     
     
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mapeventtype" class="md-skip">
+        <a href="#getglobaldispatcher" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              MapEventType
+              getGlobalDispatcher()
             
           </span>
         </div>
@@ -2021,6 +2021,8 @@
                 
   
   
+    
+  
   
   
     
@@ -2036,11 +2038,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" checked>
         
           
           <label class="md-nav__link" for="__nav_5_5" id="__nav_5_5_label" tabindex="">
@@ -2061,7 +2063,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -2079,7 +2081,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/addProtocol/" class="md-nav__link">
+      <a href="../addProtocol/" class="md-nav__link">
         
   
   
@@ -2107,7 +2109,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/addSourceType/" class="md-nav__link">
+      <a href="../addSourceType/" class="md-nav__link">
         
   
   
@@ -2135,7 +2137,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/clearPrewarmedResources/" class="md-nav__link">
+      <a href="../clearPrewarmedResources/" class="md-nav__link">
         
   
   
@@ -2163,7 +2165,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../functions/createTileMesh/" class="md-nav__link">
+      <a href="../createTileMesh/" class="md-nav__link">
         
   
   
@@ -2171,827 +2173,6 @@
     
   
     createTileMesh()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/getMaxParallelImageRequests/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    getMaxParallelImageRequests()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/getRTLTextPluginStatus/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    getRTLTextPluginStatus()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/getVersion/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    getVersion()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/getWorkerCount/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    getWorkerCount()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/getWorkerUrl/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    getWorkerUrl()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/importScriptInWorkers/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    importScriptInWorkers()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/isTimeFrozen/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    isTimeFrozen()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/now/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    now()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/prewarm/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    prewarm()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/removeProtocol/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    removeProtocol()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/restoreNow/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    restoreNow()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/setMaxParallelImageRequests/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    setMaxParallelImageRequests()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/setNow/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    setNow()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/setRTLTextPlugin/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    setRTLTextPlugin()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/setWorkerCount/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    setWorkerCount()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../functions/setWorkerUrl/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    setWorkerUrl()
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-          
-          
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_5_6" id="__nav_5_6_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Interfaces
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5_6">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Interfaces
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../Actor/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Actor
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../AlphaImage/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    AlphaImage
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../CustomLayerInterface/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    CustomLayerInterface
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../Dispatcher/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Dispatcher
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../ErrorEvent/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ErrorEvent
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../FeatureIndex/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    FeatureIndex
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../GeoJSONFeature/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    GeoJSONFeature
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../Handler/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Handler
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../IActor/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    IActor
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../IControl/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    IControl
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../ImageAtlas/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ImageAtlas
   
 
     
@@ -3028,7 +2209,7 @@
   <span class="md-ellipsis">
     
   
-    MapEventType
+    getGlobalDispatcher()
   
 
     
@@ -3046,7 +2227,7 @@
   <span class="md-ellipsis">
     
   
-    MapEventType
+    getGlobalDispatcher()
   
 
     
@@ -3073,591 +2254,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
+  <a href="#returns" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example
+        Returns
       
     </span>
   </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Properties
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Properties">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#boxzoomcancel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        boxzoomcancel
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#boxzoomend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        boxzoomend
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#boxzoomstart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        boxzoomstart
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#click" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        click
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#contextmenu" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        contextmenu
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cooperativegestureprevented" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        cooperativegestureprevented
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#data" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        data
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dataabort" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        dataabort
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dataloading" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        dataloading
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dblclick" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        dblclick
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#drag" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        drag
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dragend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        dragend
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dragstart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        dragstart
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#error" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        error
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#idle" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        idle
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#load" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        load
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mousedown" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        mousedown
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mousemove" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        mousemove
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mouseout" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        mouseout
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mouseover" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        mouseover
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mouseup" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        mouseup
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#move" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        move
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#moveend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        moveend
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#movestart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        movestart
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pitch" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        pitch
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pitchend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        pitchend
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pitchstart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        pitchstart
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#projectiontransition" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        projectiontransition
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#remove" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        remove
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#render" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        render
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#resize" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        resize
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rotate" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        rotate
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rotateend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        rotateend
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rotatestart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        rotatestart
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sourcedata" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        sourcedata
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sourcedataabort" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        sourcedataabort
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sourcedataloading" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        sourcedataloading
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#styledata" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        styledata
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#styledataloading" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        styledataloading
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#styleimagemissing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        styleimagemissing
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#terrain" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        terrain
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#touchcancel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        touchcancel
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#touchend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        touchend
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#touchmove" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        touchmove
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#touchstart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        touchstart
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#webglcontextlost" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        webglcontextlost
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#webglcontextrestored" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        webglcontextrestored
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#wheel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        wheel
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zoom" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        zoom
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zoomend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        zoomend
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zoomstart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        zoomstart
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -3677,7 +2280,826 @@
   
   
     <li class="md-nav__item">
-      <a href="../OverscaledTileID/" class="md-nav__link">
+      <a href="../getMaxParallelImageRequests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    getMaxParallelImageRequests()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getRTLTextPluginStatus/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    getRTLTextPluginStatus()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getVersion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    getVersion()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getWorkerCount/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    getWorkerCount()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getWorkerUrl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    getWorkerUrl()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../importScriptInWorkers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    importScriptInWorkers()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../isTimeFrozen/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    isTimeFrozen()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../now/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    now()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prewarm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    prewarm()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../removeProtocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    removeProtocol()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../restoreNow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    restoreNow()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setMaxParallelImageRequests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    setMaxParallelImageRequests()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setNow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    setNow()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setRTLTextPlugin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    setRTLTextPlugin()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setWorkerCount/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    setWorkerCount()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setWorkerUrl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    setWorkerUrl()
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_6" id="__nav_5_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interfaces
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Interfaces
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/Actor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/AlphaImage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AlphaImage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/CustomLayerInterface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CustomLayerInterface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/Dispatcher/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dispatcher
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/ErrorEvent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ErrorEvent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/FeatureIndex/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FeatureIndex
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/GeoJSONFeature/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GeoJSONFeature
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/Handler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/IActor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IActor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/IControl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IControl
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/ImageAtlas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImageAtlas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/OverscaledTileID/" class="md-nav__link">
         
   
   
@@ -3705,7 +3127,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Source/" class="md-nav__link">
+      <a href="../../interfaces/Source/" class="md-nav__link">
         
   
   
@@ -3733,7 +3155,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../StyleImageInterface/" class="md-nav__link">
+      <a href="../../interfaces/StyleImageInterface/" class="md-nav__link">
         
   
   
@@ -3761,7 +3183,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../StyleLayer/" class="md-nav__link">
+      <a href="../../interfaces/StyleLayer/" class="md-nav__link">
         
   
   
@@ -3789,7 +3211,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Subscription/" class="md-nav__link">
+      <a href="../../interfaces/Subscription/" class="md-nav__link">
         
   
   
@@ -3817,7 +3239,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Tile/" class="md-nav__link">
+      <a href="../../interfaces/Tile/" class="md-nav__link">
         
   
   
@@ -5232,6 +4654,34 @@
     
   
     MapDataEvent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/MapEventType/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MapEventType
   
 
     
@@ -10578,591 +10028,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
+  <a href="#returns" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example
+        Returns
       
     </span>
   </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Properties
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Properties">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#boxzoomcancel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        boxzoomcancel
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#boxzoomend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        boxzoomend
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#boxzoomstart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        boxzoomstart
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#click" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        click
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#contextmenu" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        contextmenu
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cooperativegestureprevented" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        cooperativegestureprevented
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#data" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        data
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dataabort" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        dataabort
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dataloading" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        dataloading
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dblclick" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        dblclick
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#drag" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        drag
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dragend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        dragend
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dragstart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        dragstart
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#error" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        error
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#idle" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        idle
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#load" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        load
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mousedown" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        mousedown
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mousemove" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        mousemove
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mouseout" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        mouseout
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mouseover" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        mouseover
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mouseup" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        mouseup
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#move" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        move
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#moveend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        moveend
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#movestart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        movestart
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pitch" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        pitch
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pitchend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        pitchend
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pitchstart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        pitchstart
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#projectiontransition" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        projectiontransition
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#remove" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        remove
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#render" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        render
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#resize" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        resize
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rotate" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        rotate
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rotateend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        rotateend
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rotatestart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        rotatestart
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sourcedata" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        sourcedata
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sourcedataabort" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        sourcedataabort
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sourcedataloading" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        sourcedataloading
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#styledata" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        styledata
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#styledataloading" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        styledataloading
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#styleimagemissing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        styleimagemissing
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#terrain" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        terrain
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#touchcancel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        touchcancel
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#touchend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        touchend
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#touchmove" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        touchmove
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#touchstart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        touchstart
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#webglcontextlost" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        webglcontextlost
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#webglcontextrestored" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        webglcontextrestored
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#wheel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        wheel
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zoom" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        zoom
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zoomend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        zoomend
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zoomstart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        zoomstart
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -11184,468 +10056,18 @@
   
 
 
-<h1 id="mapeventtype">MapEventType</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L152">ui/events.ts:152</a></p>
-<p><code>MapEventType</code> - a mapping between the event name and the event value.
-These events are used with the <a href="../../classes/Map/#on">Map.on</a> method.
-When using a <code>layerId</code> with <a href="../../classes/Map/#on">Map.on</a> method, please refer to <a href="../../type-aliases/MapLayerEventType/">MapLayerEventType</a>.
-The following example can be used for all the events.</p>
-<h2 id="example">Example</h2>
-<div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// Initialize the map</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">let</span><span class="w"> </span><span class="nx">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">({</span><span class="w"> </span><span class="c1">// map options });</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1">// Set an event listener</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="nx">map</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;the-event-name&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;An event has occurred!&#39;</span><span class="p">);</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">});</span>
-</span></code></pre></div>
-<h2 id="properties">Properties</h2>
-<h3 id="boxzoomcancel">boxzoomcancel</h3>
+<h1 id="getglobaldispatcher">getGlobalDispatcher()</h1>
 <blockquote>
-<p><strong>boxzoomcancel</strong>: <a href="../../type-aliases/MapLibreZoomEvent/"><code>MapLibreZoomEvent</code></a></p>
+<p><strong>getGlobalDispatcher</strong>(): <a href="../../interfaces/Dispatcher/"><code>Dispatcher</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L254">ui/events.ts:254</a></p>
-<p>Fired when the user cancels a "box zoom" interaction, or when the bounding box does not meet the minimum size threshold.
-See <a href="../../classes/BoxZoomHandler/">BoxZoomHandler</a>.</p>
-<hr />
-<h3 id="boxzoomend">boxzoomend</h3>
-<blockquote>
-<p><strong>boxzoomend</strong>: <a href="../../type-aliases/MapLibreZoomEvent/"><code>MapLibreZoomEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L262">ui/events.ts:262</a></p>
-<p>Fired when a "box zoom" interaction ends.  See <a href="../../classes/BoxZoomHandler/">BoxZoomHandler</a>.</p>
-<hr />
-<h3 id="boxzoomstart">boxzoomstart</h3>
-<blockquote>
-<p><strong>boxzoomstart</strong>: <a href="../../type-aliases/MapLibreZoomEvent/"><code>MapLibreZoomEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L258">ui/events.ts:258</a></p>
-<p>Fired when a "box zoom" interaction starts. See <a href="../../classes/BoxZoomHandler/">BoxZoomHandler</a>.</p>
-<hr />
-<h3 id="click">click</h3>
-<blockquote>
-<p><strong>click</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L288">ui/events.ts:288</a></p>
-<p>Fired when a pointing device (usually a mouse) is pressed and released at the same point on the map.</p>
-<h4 id="see">See</h4>
-<ul>
-<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/measure-distances/">Measure distances</a></li>
-<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/center-the-map-on-a-clicked-symbol/">Center the map on a clicked symbol</a></li>
-</ul>
-<hr />
-<h3 id="contextmenu">contextmenu</h3>
-<blockquote>
-<p><strong>contextmenu</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L292">ui/events.ts:292</a></p>
-<p>Fired when the right button of the mouse is clicked or the context menu key is pressed within the map.</p>
-<hr />
-<h3 id="cooperativegestureprevented">cooperativegestureprevented</h3>
-<blockquote>
-<p><strong>cooperativegestureprevented</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>TouchEvent</code> | <code>WheelEvent</code>&gt; &amp; <code>object</code></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L423">ui/events.ts:423</a></p>
-<p>Fired whenever the cooperativeGestures option prevents a gesture from being handled by the map.
-This is useful for showing your own UI when this happens.</p>
-<h4 id="type-declaration">Type Declaration</h4>
-<h5 id="gesturetype">gestureType</h5>
-<blockquote>
-<p><strong>gestureType</strong>: <code>"wheel_zoom"</code> | <code>"touch_pan"</code></p>
-</blockquote>
-<hr />
-<h3 id="data">data</h3>
-<blockquote>
-<p><strong>data</strong>: <a href="../../type-aliases/MapDataEvent/"><code>MapDataEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L213">ui/events.ts:213</a></p>
-<p>Fired when any map data loads or changes. See <a href="../../type-aliases/MapDataEvent/">MapDataEvent</a> for more information.</p>
-<h4 id="see_1">See</h4>
-<p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/">Display HTML clusters with custom properties</a></p>
-<hr />
-<h3 id="dataabort">dataabort</h3>
-<blockquote>
-<p><strong>dataabort</strong>: <a href="../../type-aliases/MapDataEvent/"><code>MapDataEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L245">ui/events.ts:245</a></p>
-<p>Fired when a request for one of the map's sources' tiles or data is aborted.</p>
-<hr />
-<h3 id="dataloading">dataloading</h3>
-<blockquote>
-<p><strong>dataloading</strong>: <a href="../../type-aliases/MapDataEvent/"><code>MapDataEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L208">ui/events.ts:208</a></p>
-<p>Fired when any map data (style, source, tile, etc) begins loading or
-changing asynchronously. All <code>dataloading</code> events are followed by a <code>data</code>,
-<code>dataabort</code> or <code>error</code> event.</p>
-<hr />
-<h3 id="dblclick">dblclick</h3>
-<blockquote>
-<p><strong>dblclick</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L299">ui/events.ts:299</a></p>
-<p>Fired when a pointing device (usually a mouse) is pressed and released twice at the same point on the map in rapid succession.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Under normal conditions, this event will be preceded by two <code>click</code> events.</p>
-</div>
-<hr />
-<h3 id="drag">drag</h3>
-<blockquote>
-<p><strong>drag</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L389">ui/events.ts:389</a></p>
-<p>Fired repeatedly during a "drag to pan" interaction. See <a href="../../classes/DragPanHandler/">DragPanHandler</a>.</p>
-<hr />
-<h3 id="dragend">dragend</h3>
-<blockquote>
-<p><strong>dragend</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L394">ui/events.ts:394</a></p>
-<p>Fired when a "drag to pan" interaction ends. See <a href="../../classes/DragPanHandler/">DragPanHandler</a>.</p>
-<h4 id="see_2">See</h4>
-<p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-marker/">Create a draggable marker</a></p>
-<hr />
-<h3 id="dragstart">dragstart</h3>
-<blockquote>
-<p><strong>dragstart</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L385">ui/events.ts:385</a></p>
-<p>Fired when a "drag to pan" interaction starts. See <a href="../../classes/DragPanHandler/">DragPanHandler</a>.</p>
-<hr />
-<h3 id="error">error</h3>
-<blockquote>
-<p><strong>error</strong>: <code>ErrorEvent</code></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L159">ui/events.ts:159</a></p>
-<p>Fired when an error occurs. This is GL JS's primary error reporting
-mechanism. We use an event instead of <code>throw</code> to better accommodate
-asynchronous operations. If no listeners are bound to the <code>error</code> event, the
-error will be printed to the console.</p>
-<hr />
-<h3 id="idle">idle</h3>
-<blockquote>
-<p><strong>idle</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L177">ui/events.ts:177</a></p>
-<p>Fired after the last frame rendered before the map enters an
-"idle" state:</p>
-<ul>
-<li>No camera transitions are in progress</li>
-<li>All currently requested tiles have loaded</li>
-<li>All fade/transition animations have completed</li>
-</ul>
-<hr />
-<h3 id="load">load</h3>
-<blockquote>
-<p><strong>load</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L168">ui/events.ts:168</a></p>
-<p>Fired immediately after all necessary resources have been downloaded
-and the first visually complete rendering of the map has occurred.</p>
-<h4 id="see_3">See</h4>
-<ul>
-<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/draw-geojson-points/">Draw GeoJSON points</a></li>
-<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/add-live-realtime-data/">Add live realtime data</a></li>
-<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/animate-a-point/">Animate a point</a></li>
-</ul>
-<hr />
-<h3 id="mousedown">mousedown</h3>
-<blockquote>
-<p><strong>mousedown</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L320">ui/events.ts:320</a></p>
-<p>Fired when a pointing device (usually a mouse) is pressed within the map.</p>
-<h4 id="see_4">See</h4>
-<p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/">Create a draggable point</a></p>
-<hr />
-<h3 id="mousemove">mousemove</h3>
-<blockquote>
-<p><strong>mousemove</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L308">ui/events.ts:308</a></p>
-<p>Fired when a pointing device (usually a mouse) is moved while the cursor is inside the map.
-As you move the cursor across the map, the event will fire every time the cursor changes position within the map.</p>
-<h4 id="see_5">See</h4>
-<ul>
-<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/get-coordinates-of-the-mouse-pointer/">Get coordinates of the mouse pointer</a></li>
-<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/">Highlight features under the mouse pointer</a></li>
-<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/display-a-popup-on-hover/">Display a popup on over</a></li>
-</ul>
-<hr />
-<h3 id="mouseout">mouseout</h3>
-<blockquote>
-<p><strong>mouseout</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L324">ui/events.ts:324</a></p>
-<p>Fired when a point device (usually a mouse) leaves the map's canvas.</p>
-<hr />
-<h3 id="mouseover">mouseover</h3>
-<blockquote>
-<p><strong>mouseover</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L334">ui/events.ts:334</a></p>
-<p>Fired when a pointing device (usually a mouse) is moved within the map.
-As you move the cursor across a web page containing a map,
-the event will fire each time it enters the map or any child elements.</p>
-<h4 id="see_6">See</h4>
-<ul>
-<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/get-coordinates-of-the-mouse-pointer/">Get coordinates of the mouse pointer</a></li>
-<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/">Highlight features under the mouse pointer</a></li>
-<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/display-a-popup-on-hover/">Display a popup on hover</a></li>
-</ul>
-<hr />
-<h3 id="mouseup">mouseup</h3>
-<blockquote>
-<p><strong>mouseup</strong>: <a href="../../classes/MapMouseEvent/"><code>MapMouseEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L314">ui/events.ts:314</a></p>
-<p>Fired when a pointing device (usually a mouse) is released within the map.</p>
-<h4 id="see_7">See</h4>
-<p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/">Create a draggable point</a></p>
-<hr />
-<h3 id="move">move</h3>
-<blockquote>
-<p><strong>move</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>WheelEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L347">ui/events.ts:347</a></p>
-<p>Fired repeatedly during an animated transition from one view to
-another, as the result of either user interaction or methods such as <a href="../../classes/Map/#flyto">Map.flyTo</a>.</p>
-<h4 id="see_8">See</h4>
-<p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/">Display HTML clusters with custom properties</a></p>
-<hr />
-<h3 id="moveend">moveend</h3>
-<blockquote>
-<p><strong>moveend</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>WheelEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L354">ui/events.ts:354</a></p>
-<p>Fired just after the map completes a transition from one
-view to another, as the result of either user interaction or methods such as <a href="../../classes/Map/#jumpto">Map.jumpTo</a>.</p>
-<h4 id="see_9">See</h4>
-<p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/">Display HTML clusters with custom properties</a></p>
-<hr />
-<h3 id="movestart">movestart</h3>
-<blockquote>
-<p><strong>movestart</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>WheelEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L340">ui/events.ts:340</a></p>
-<p>Fired just before the map begins a transition from one
-view to another, as the result of either user interaction or methods such as <a href="../../classes/Map/#jumpto">Map.jumpTo</a>.</p>
-<hr />
-<h3 id="pitch">pitch</h3>
-<blockquote>
-<p><strong>pitch</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L405">ui/events.ts:405</a></p>
-<p>Fired repeatedly during the map's pitch (tilt) animation between
-one state and another as the result of either user interaction
-or methods such as <a href="../../classes/Map/#flyto">Map.flyTo</a>.</p>
-<hr />
-<h3 id="pitchend">pitchend</h3>
-<blockquote>
-<p><strong>pitchend</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L410">ui/events.ts:410</a></p>
-<p>Fired immediately after the map's pitch (tilt) finishes changing as
-the result of either user interaction or methods such as <a href="../../classes/Map/#flyto">Map.flyTo</a>.</p>
-<hr />
-<h3 id="pitchstart">pitchstart</h3>
-<blockquote>
-<p><strong>pitchstart</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L399">ui/events.ts:399</a></p>
-<p>Fired whenever the map's pitch (tilt) begins a change as
-the result of either user interaction or methods such as <a href="../../classes/Map/#flyto">Map.flyTo</a> .</p>
-<hr />
-<h3 id="projectiontransition">projectiontransition</h3>
-<blockquote>
-<p><strong>projectiontransition</strong>: <a href="../../type-aliases/MapProjectionEvent/"><code>MapProjectionEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L429">ui/events.ts:429</a></p>
-<p>Fired when map's projection is modified in other ways than by map being moved.</p>
-<hr />
-<h3 id="remove">remove</h3>
-<blockquote>
-<p><strong>remove</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L181">ui/events.ts:181</a></p>
-<p>Fired immediately after the map has been removed with <a href="../../classes/Map/#remove">Map.remove</a>.</p>
-<hr />
-<h3 id="render">render</h3>
-<blockquote>
-<p><strong>render</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L190">ui/events.ts:190</a></p>
-<p>Fired whenever the map is drawn to the screen, as the result of</p>
-<ul>
-<li>a change to the map's position, zoom, pitch, or bearing</li>
-<li>a change to the map's style</li>
-<li>a change to a GeoJSON source</li>
-<li>the loading of a vector tile, GeoJSON file, glyph, or sprite</li>
-</ul>
-<hr />
-<h3 id="resize">resize</h3>
-<blockquote>
-<p><strong>resize</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L194">ui/events.ts:194</a></p>
-<p>Fired immediately after the map has been resized.</p>
-<hr />
-<h3 id="rotate">rotate</h3>
-<blockquote>
-<p><strong>rotate</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L377">ui/events.ts:377</a></p>
-<p>Fired repeatedly during a "drag to rotate" interaction. See <a href="../../classes/DragRotateHandler/">DragRotateHandler</a>.</p>
-<hr />
-<h3 id="rotateend">rotateend</h3>
-<blockquote>
-<p><strong>rotateend</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L381">ui/events.ts:381</a></p>
-<p>Fired when a "drag to rotate" interaction ends. See <a href="../../classes/DragRotateHandler/">DragRotateHandler</a>.</p>
-<hr />
-<h3 id="rotatestart">rotatestart</h3>
-<blockquote>
-<p><strong>rotatestart</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L373">ui/events.ts:373</a></p>
-<p>Fired when a "drag to rotate" interaction starts. See <a href="../../classes/DragRotateHandler/">DragRotateHandler</a>.</p>
-<hr />
-<h3 id="sourcedata">sourcedata</h3>
-<blockquote>
-<p><strong>sourcedata</strong>: <a href="../../type-aliases/MapSourceDataEvent/"><code>MapSourceDataEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L230">ui/events.ts:230</a></p>
-<p>Fired when one of the map's sources loads or changes, including if a tile belonging
-to a source loads or changes.</p>
-<hr />
-<h3 id="sourcedataabort">sourcedataabort</h3>
-<blockquote>
-<p><strong>sourcedataabort</strong>: <a href="../../type-aliases/MapSourceDataEvent/"><code>MapSourceDataEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L249">ui/events.ts:249</a></p>
-<p>Fired when a request for one of the map's sources' data is aborted.</p>
-<hr />
-<h3 id="sourcedataloading">sourcedataloading</h3>
-<blockquote>
-<p><strong>sourcedataloading</strong>: <a href="../../type-aliases/MapSourceDataEvent/"><code>MapSourceDataEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L219">ui/events.ts:219</a></p>
-<p>Fired when one of the map's sources begins loading or changing asynchronously.
-All <code>sourcedataloading</code> events are followed by a <code>sourcedata</code>, <code>sourcedataabort</code> or <code>error</code> event.</p>
-<hr />
-<h3 id="styledata">styledata</h3>
-<blockquote>
-<p><strong>styledata</strong>: <a href="../../type-aliases/MapStyleDataEvent/"><code>MapStyleDataEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L234">ui/events.ts:234</a></p>
-<p>Fired when the map's style loads or changes.</p>
-<hr />
-<h3 id="styledataloading">styledataloading</h3>
-<blockquote>
-<p><strong>styledataloading</strong>: <a href="../../type-aliases/MapStyleDataEvent/"><code>MapStyleDataEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L225">ui/events.ts:225</a></p>
-<p>Fired when the map's style begins loading or changing asynchronously.
-All <code>styledataloading</code> events are followed by a <code>styledata</code>
-or <code>error</code> event.</p>
-<hr />
-<h3 id="styleimagemissing">styleimagemissing</h3>
-<blockquote>
-<p><strong>styleimagemissing</strong>: <a href="../../type-aliases/MapStyleImageMissingEvent/"><code>MapStyleImageMissingEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L241">ui/events.ts:241</a></p>
-<p>Fired when an icon or pattern needed by the style is missing. The missing image can
-be added with <a href="../../classes/Map/#addimage">Map.addImage</a> within this event listener callback to prevent the image from
-being skipped. This event can be used to dynamically generate icons and patterns.</p>
-<h4 id="see_10">See</h4>
-<p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/generate-and-add-a-missing-icon-to-the-map/">Generate and add a missing icon to the map</a></p>
-<hr />
-<h3 id="terrain">terrain</h3>
-<blockquote>
-<p><strong>terrain</strong>: <a href="../../type-aliases/MapTerrainEvent/"><code>MapTerrainEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L418">ui/events.ts:418</a></p>
-<p>Fired when terrain is changed</p>
-<hr />
-<h3 id="touchcancel">touchcancel</h3>
-<blockquote>
-<p><strong>touchcancel</strong>: <a href="../../classes/MapTouchEvent/"><code>MapTouchEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L266">ui/events.ts:266</a></p>
-<p>Fired when a <a href="https://developer.mozilla.org/en-US/docs/Web/Events/touchcancel"><code>touchcancel</code></a> event occurs within the map.</p>
-<hr />
-<h3 id="touchend">touchend</h3>
-<blockquote>
-<p><strong>touchend</strong>: <a href="../../classes/MapTouchEvent/"><code>MapTouchEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L276">ui/events.ts:276</a></p>
-<p>Fired when a <a href="https://developer.mozilla.org/en-US/docs/Web/Events/touchend"><code>touchend</code></a> event occurs within the map.</p>
-<h4 id="see_11">See</h4>
-<p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/">Create a draggable point</a></p>
-<hr />
-<h3 id="touchmove">touchmove</h3>
-<blockquote>
-<p><strong>touchmove</strong>: <a href="../../classes/MapTouchEvent/"><code>MapTouchEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L271">ui/events.ts:271</a></p>
-<p>Fired when a <a href="https://developer.mozilla.org/en-US/docs/Web/Events/touchmove"><code>touchmove</code></a> event occurs within the map.</p>
-<h4 id="see_12">See</h4>
-<p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/">Create a draggable point</a></p>
-<hr />
-<h3 id="touchstart">touchstart</h3>
-<blockquote>
-<p><strong>touchstart</strong>: <a href="../../classes/MapTouchEvent/"><code>MapTouchEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L281">ui/events.ts:281</a></p>
-<p>Fired when a <a href="https://developer.mozilla.org/en-US/docs/Web/Events/touchstart"><code>touchstart</code></a> event occurs within the map.</p>
-<h4 id="see_13">See</h4>
-<p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/">Create a draggable point</a></p>
-<hr />
-<h3 id="webglcontextlost">webglcontextlost</h3>
-<blockquote>
-<p><strong>webglcontextlost</strong>: <a href="../../type-aliases/MapContextEvent/"><code>MapContextEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L198">ui/events.ts:198</a></p>
-<p>Fired when the WebGL context is lost.</p>
-<hr />
-<h3 id="webglcontextrestored">webglcontextrestored</h3>
-<blockquote>
-<p><strong>webglcontextrestored</strong>: <a href="../../type-aliases/MapContextEvent/"><code>MapContextEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L202">ui/events.ts:202</a></p>
-<p>Fired when the WebGL context is restored.</p>
-<hr />
-<h3 id="wheel">wheel</h3>
-<blockquote>
-<p><strong>wheel</strong>: <a href="../../classes/MapWheelEvent/"><code>MapWheelEvent</code></a></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L414">ui/events.ts:414</a></p>
-<p>Fired when a <a href="https://developer.mozilla.org/en-US/docs/Web/Events/wheel"><code>wheel</code></a> event occurs within the map.</p>
-<hr />
-<h3 id="zoom">zoom</h3>
-<blockquote>
-<p><strong>zoom</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>WheelEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L364">ui/events.ts:364</a></p>
-<p>Fired repeatedly during an animated transition from one zoom level to another,
-as the result of either user interaction or methods such as <a href="../../classes/Map/#flyto">Map.flyTo</a>.</p>
-<hr />
-<h3 id="zoomend">zoomend</h3>
-<blockquote>
-<p><strong>zoomend</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>WheelEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L369">ui/events.ts:369</a></p>
-<p>Fired just after the map completes a transition from one zoom level to another,
-as the result of either user interaction or methods such as <a href="../../classes/Map/#flyto">Map.flyTo</a>.</p>
-<hr />
-<h3 id="zoomstart">zoomstart</h3>
-<blockquote>
-<p><strong>zoomstart</strong>: <a href="../../type-aliases/MapLibreEvent/"><code>MapLibreEvent</code></a>&lt;<code>MouseEvent</code> | <code>TouchEvent</code> | <code>WheelEvent</code>&gt;</p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/48caed8321a8e90b4579f37a08219df2c4e590ae/src/ui/events.ts#L359">ui/events.ts:359</a></p>
-<p>Fired just before the map begins a transition from one zoom level to another,
-as the result of either user interaction or methods such as <a href="../../classes/Map/#flyto">Map.flyTo</a>.</p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/util/dispatcher.ts#L83">util/dispatcher.ts:83</a></p>
+<p>This function is used to get the global dispatcher that is shared across all maps instances.
+It is used by the main thread to send messages to the workers, and by the workers to send messages back to the main thread.
+If you import a script into the worker and need to send a message to the workers to pass some parameters for example, 
+you can use this function to get the global dispatcher and send a message to the workers.</p>
+<h2 id="returns">Returns</h2>
+<p><a href="../../interfaces/Dispatcher/"><code>Dispatcher</code></a></p>
+<p>The global dispatcher instance.</p>
 
 
 
