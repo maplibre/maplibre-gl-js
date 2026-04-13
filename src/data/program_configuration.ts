@@ -19,13 +19,15 @@ import type {CrossfadeParameters} from '../style/evaluation_parameters';
 import type {StructArray, StructArrayMember} from '../util/struct_array';
 import type {VertexBuffer} from '../webgl/vertex_buffer';
 import type {ImagePosition} from '../render/image_atlas';
+import type {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import type {
     Feature,
     FeatureState,
     GlobalProperties,
-    SourceExpression,
     CompositeExpression,
-    FormattedSection
+    FormattedSection,
+    ZoomConstantExpression,
+    ZoomDependentExpression
 } from '@maplibre/maplibre-gl-style-spec';
 import type {FeatureStates} from '../source/source_state';
 import type {DashEntry} from '../render/line_atlas';
@@ -55,6 +57,28 @@ type PaintOptions = {
     formattedSection?: FormattedSection;
     globalState?: Record<string, any>;
 };
+
+type FillColorFallback = PossiblyEvaluatedPropertyValue<Color>['value'] | null;
+
+type SourceExpressionWithRawEvaluation = ZoomConstantExpression<'source'>;
+
+type CompositeExpressionWithRawEvaluation = ZoomDependentExpression<'composite'>;
+
+function getFillColorFallback(layer: TypedStyleLayer, property: string): FillColorFallback {
+    if (property !== 'fill-outline-color' || !isFillStyleLayer(layer)) {
+        return null;
+    }
+
+    return layer.paint.get('fill-color').value;
+}
+
+function isFillStyleLayer(layer: TypedStyleLayer): layer is FillStyleLayer {
+    return layer.type === 'fill';
+}
+
+function isNullColorEvaluationError(error: unknown): boolean {
+    return error instanceof Error && error.message === 'Could not parse color from value \'null\'';
+}
 
 /**
  *  `Binder` is the interface definition for the strategies for constructing,
@@ -194,19 +218,22 @@ class CrossFadedConstantBinder implements UniformBinder {
 }
 
 class SourceExpressionBinder implements AttributeBinder {
-    expression: SourceExpression;
+    expression: SourceExpressionWithRawEvaluation;
     type: string;
+    zoom: number;
     maxValue: number;
 
+    fillColorFallback: FillColorFallback;
     paintVertexArray: StructArray;
     paintVertexAttributes: StructArrayMember[];
     paintVertexBuffer: VertexBuffer;
 
-    constructor(expression: SourceExpression, names: string[], type: string, PaintVertexArray: {
+    constructor(expression: SourceExpressionWithRawEvaluation, names: string[], type: string, zoom: number, fillColorFallback: FillColorFallback, PaintVertexArray: {
         new (...args: any): StructArray;
     }) {
         this.expression = expression;
         this.type = type;
+        this.zoom = zoom;
         this.maxValue = 0;
         this.paintVertexAttributes = names.map((name) => ({
             name: `a_${name}`,
@@ -214,18 +241,19 @@ class SourceExpressionBinder implements AttributeBinder {
             components: type === 'color' ? 2 : 1,
             offset: 0
         }));
+        this.fillColorFallback = fillColorFallback;
         this.paintVertexArray = new PaintVertexArray();
     }
 
     populatePaintArray(newLength: number, feature: Feature, options: PaintOptions) {
         const start = this.paintVertexArray.length;
-        const value = this.expression.evaluate(new EvaluationParameters(0, options), feature, {}, options.canonical, [], options.formattedSection);
+        const value = this._evaluateValue(feature, {}, options, options.canonical, options.formattedSection);
         this.paintVertexArray.resize(newLength);
         this._setPaintValue(start, newLength, value);
     }
 
     updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, options: PaintOptions) {
-        const value = this.expression.evaluate(new EvaluationParameters(0, options), feature, featureState);
+        const value = this._evaluateValue(feature, featureState, options);
         this._setPaintValue(start, end, value);
     }
 
@@ -240,6 +268,32 @@ class SourceExpressionBinder implements AttributeBinder {
                 this.paintVertexArray.emplace(i, value);
             }
             this.maxValue = Math.max(this.maxValue, Math.abs(value));
+        }
+    }
+
+    _evaluateFillColorFallback(feature: Feature, featureState: FeatureState, options: PaintOptions, canonical?: CanonicalTileID, formattedSection?: FormattedSection): Color | null | undefined {
+        if (!this.fillColorFallback) return null;
+        if (this.fillColorFallback.kind === 'constant') {
+            return this.fillColorFallback.value;
+        }
+        return this.fillColorFallback.evaluate(new EvaluationParameters(this.zoom, options), feature, featureState, canonical, [], formattedSection);
+    }
+
+    _evaluateValue(feature: Feature, featureState: FeatureState, options: PaintOptions, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
+        if (this.type !== 'color' || !this.fillColorFallback) {
+            return this.expression.evaluate(new EvaluationParameters(0, options), feature, featureState, canonical, [], formattedSection);
+        }
+
+        try {
+            const value = this.expression.evaluateWithoutErrorHandling(new EvaluationParameters(0, options), feature, featureState, canonical, [], formattedSection);
+            return value == null ? this._evaluateFillColorFallback(feature, featureState, options, canonical, formattedSection) : value;
+        } catch (error) {
+            if (isNullColorEvaluationError(error)) {
+                return this._evaluateFillColorFallback(feature, featureState, options, canonical, formattedSection);
+            }
+
+            const value = this.expression.evaluate(new EvaluationParameters(0, options), feature, featureState, canonical, [], formattedSection);
+            return value == null ? this._evaluateFillColorFallback(feature, featureState, options, canonical, formattedSection) : value;
         }
     }
 
@@ -261,18 +315,19 @@ class SourceExpressionBinder implements AttributeBinder {
 }
 
 class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
-    expression: CompositeExpression;
+    expression: CompositeExpressionWithRawEvaluation;
     uniformNames: string[];
     type: string;
     useIntegerZoom: boolean;
     zoom: number;
     maxValue: number;
 
+    fillColorFallback: FillColorFallback;
     paintVertexArray: StructArray;
     paintVertexAttributes: StructArrayMember[];
     paintVertexBuffer: VertexBuffer;
 
-    constructor(expression: CompositeExpression, names: string[], type: string, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {
+    constructor(expression: CompositeExpressionWithRawEvaluation, names: string[], type: string, useIntegerZoom: boolean, zoom: number, fillColorFallback: FillColorFallback, PaintVertexArray: {
         new (...args: any): StructArray;
     }) {
         this.expression = expression;
@@ -281,6 +336,7 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
         this.useIntegerZoom = useIntegerZoom;
         this.zoom = zoom;
         this.maxValue = 0;
+        this.fillColorFallback = fillColorFallback;
         this.paintVertexAttributes = names.map((name) => ({
             name: `a_${name}`,
             type: 'Float32',
@@ -290,17 +346,43 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
         this.paintVertexArray = new PaintVertexArray();
     }
 
+    _evaluateFillColorFallback(zoom: number, feature: Feature, featureState: FeatureState, options: PaintOptions, canonical?: CanonicalTileID, formattedSection?: FormattedSection): Color | null | undefined {
+        if (!this.fillColorFallback) return null;
+        if (this.fillColorFallback.kind === 'constant') {
+            return this.fillColorFallback.value;
+        }
+        return this.fillColorFallback.evaluate(new EvaluationParameters(zoom, options), feature, featureState, canonical, [], formattedSection);
+    }
+
+    _evaluateValue(zoom: number, feature: Feature, featureState: FeatureState, options: PaintOptions, canonical?: CanonicalTileID, formattedSection?: FormattedSection) {
+        if (this.type !== 'color' || !this.fillColorFallback) {
+            return this.expression.evaluate(new EvaluationParameters(zoom, options), feature, featureState, canonical, [], formattedSection);
+        }
+
+        try {
+            const value = this.expression.evaluateWithoutErrorHandling(new EvaluationParameters(zoom, options), feature, featureState, canonical, [], formattedSection);
+            return value == null ? this._evaluateFillColorFallback(zoom, feature, featureState, options, canonical, formattedSection) : value;
+        } catch (error) {
+            if (isNullColorEvaluationError(error)) {
+                return this._evaluateFillColorFallback(zoom, feature, featureState, options, canonical, formattedSection);
+            }
+
+            const value = this.expression.evaluate(new EvaluationParameters(zoom, options), feature, featureState, canonical, [], formattedSection);
+            return value == null ? this._evaluateFillColorFallback(zoom, feature, featureState, options, canonical, formattedSection) : value;
+        }
+    }
+
     populatePaintArray(newLength: number, feature: Feature, options: PaintOptions) {
-        const min = this.expression.evaluate(new EvaluationParameters(this.zoom, options), feature, {}, options.canonical, [], options.formattedSection);
-        const max = this.expression.evaluate(new EvaluationParameters(this.zoom + 1, options), feature, {}, options.canonical, [], options.formattedSection);
+        const min = this._evaluateValue(this.zoom, feature, {}, options, options.canonical, options.formattedSection);
+        const max = this._evaluateValue(this.zoom + 1, feature, {}, options, options.canonical, options.formattedSection);
         const start = this.paintVertexArray.length;
         this.paintVertexArray.resize(newLength);
         this._setPaintValue(start, newLength, min, max);
     }
 
     updatePaintArray(start: number, end: number, feature: Feature, featureState: FeatureState, options: PaintOptions) {
-        const min = this.expression.evaluate(new EvaluationParameters(this.zoom, options), feature, featureState);
-        const max = this.expression.evaluate(new EvaluationParameters(this.zoom + 1, options), feature, featureState);
+        const min = this._evaluateValue(this.zoom, feature, featureState, options);
+        const max = this._evaluateValue(this.zoom + 1, feature, featureState, options);
         this._setPaintValue(start, end, min, max);
     }
 
@@ -498,7 +580,10 @@ export class ProgramConfiguration {
         for (const property in layer.paint._values) {
             if (!filterProperties(property)) continue;
             const value = (layer.paint as any).get(property);
-            if (!(value instanceof PossiblyEvaluatedPropertyValue) || !supportsPropertyExpression(value.property.specification)) {
+            if (
+                !(value instanceof PossiblyEvaluatedPropertyValue) ||
+                !supportsPropertyExpression(value.property.specification)
+            ) {
                 continue;
             }
             const names = paintAttributeNames(property, layer.type);
@@ -507,25 +592,24 @@ export class ProgramConfiguration {
             const useIntegerZoom = (value.property as any).useIntegerZoom;
             const propType = value.property.specification['property-type'];
             const isCrossFaded = propType === 'cross-faded' || propType === 'cross-faded-data-driven';
+            const fillColorFallback = getFillColorFallback(layer, property);
 
             if (expression.kind === 'constant') {
                 this.binders[property] = isCrossFaded ?
                     new CrossFadedConstantBinder(expression.value, names) :
                     new ConstantBinder(expression.value, names, type);
                 keys.push(`/u_${property}`);
-
             } else if (expression.kind === 'source' || isCrossFaded) {
                 const StructArrayLayout = layoutType(property, type, 'source');
                 this.binders[property] = isCrossFaded ?
                     property === 'line-dasharray' ?
                         new CrossFadedDasharrayBinder(expression as CompositeExpression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
                         new CrossFadedPatternBinder(expression as CompositeExpression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
-                    new SourceExpressionBinder(expression as SourceExpression, names, type, StructArrayLayout);
+                    new SourceExpressionBinder(expression as SourceExpressionWithRawEvaluation, names, type, zoom, fillColorFallback, StructArrayLayout);
                 keys.push(`/a_${property}`);
-
             } else {
                 const StructArrayLayout = layoutType(property, type, 'composite');
-                this.binders[property] = new CompositeExpressionBinder(expression, names, type, useIntegerZoom, zoom, StructArrayLayout);
+                this.binders[property] = new CompositeExpressionBinder(expression as CompositeExpressionWithRawEvaluation, names, type, useIntegerZoom, zoom, fillColorFallback, StructArrayLayout);
                 keys.push(`/z_${property}`);
             }
         }
@@ -581,6 +665,9 @@ export class ProgramConfiguration {
                          binder instanceof CrossFadedBinder) && binder.expression.isStateDependent === true) {
                         //AHM: Remove after https://github.com/mapbox/mapbox-gl-js/issues/6255
                         const value = (layer.paint as any).get(property);
+                        if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder) {
+                            binder.fillColorFallback = getFillColorFallback(layer, property);
+                        }
                         binder.expression = value.value;
                         binder.updatePaintArray(pos.start, pos.end, feature, featureStates[id], options);
                         dirty = true;
@@ -811,7 +898,7 @@ function layoutType(property: string, type: string, binderType: string) {
     };
 
     const layoutException = getLayoutException(property);
-    return  layoutException?.[binderType] || defaultLayouts[type][binderType];
+    return layoutException?.[binderType] || defaultLayouts[type][binderType];
 }
 
 register('ConstantBinder', ConstantBinder);
