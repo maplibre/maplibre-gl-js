@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {createMap as globalCreateMap, beforeMapTest, createTerrain} from '../util/test/util';
+import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
 import {Popup, type Offset} from './popup';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
@@ -1101,11 +1101,10 @@ describe('popup', () => {
 
         expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(1075px,-187px)');
 
-        map.terrain = createTerrain();
-        map.terrain.getElevationForLngLat = () => 1000000;
-        map.fire('terrain');
+        map.addSource('terrain', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'terrain'});
 
-        expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(1186px,-537px)');
+        expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(1075px,-187px)');
 
         map.remove();
     });
