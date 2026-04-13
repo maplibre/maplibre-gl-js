@@ -3,13 +3,13 @@ import type Point from '@mapbox/point-geometry';
 import {type DragMoveStateManager} from './drag_move_state_manager';
 import {type Handler} from '../handler_manager';
 
-interface DragMovementResult {
+type DragMovementResult = {
     bearingDelta?: number;
     pitchDelta?: number;
     rollDelta?: number;
     around?: Point;
     panDelta?: Point;
-}
+};
 
 export interface DragPanResult extends DragMovementResult {
     around: Point;
