@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import {execSync} from 'child_process';
+
 import typedocConfig from '../typedoc.json' with {type: 'json'};
 import packageJson from '../package.json' with {type: 'json'};
 import {get} from 'https';
@@ -35,23 +35,15 @@ Import declarations are omitted from the examples for brevity.
     return intro;
 }
 
-function getNewExamples(): Set<string> {
-    try {
-        const output = execSync(
-            'git log --diff-filter=A --name-only --format="" --since="6 months ago" -- test/examples/',
-            {encoding: 'utf-8'}
-        );
-        const filenames = new Set<string>();
-        for (const line of output.split('\n')) {
-            const trimmed = line.trim();
-            if (trimmed?.startsWith('test/examples/')) {
-                filenames.add(path.basename(trimmed));
-            }
-        }
-        return filenames;
-    } catch {
-        return new Set<string>();
-    }
+function isNewExample(htmlContentLines: string[]): boolean {
+    const createdLine = htmlContentLines.find(l => l.includes('og:created'));
+    if (!createdLine) return false;
+    const match = createdLine.match(/content=["'](\d{4}-\d{2}-\d{2})["']/);
+    if (!match) return false;
+    const createdDate = new Date(match[1]);
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    return createdDate >= sixMonthsAgo;
 }
 
 function extractJsFromHtml(htmlContent: string): string | null {
@@ -155,7 +147,6 @@ async function generateExamplesFolder() {
     const examplesFolder = path.join('test', 'examples');
     const files = fs.readdirSync(examplesFolder).filter(f => f.endsWith('html'));
     const maplibreUnpkg = `https://unpkg.com/maplibre-gl@${packageJson.version}/`;
-    const newExamples = getNewExamples();
     const indexArray = [] as HtmlDoc[];
     for (const file of files) {
         const htmlFile = path.join(examplesFolder, file);
@@ -167,7 +158,7 @@ async function generateExamplesFolder() {
         const description = htmlContentLines.find(l => l.includes('og:description'))?.replace(/.*content=\"(.*)\".*/, '$1');
         fs.writeFileSync(path.join(examplesDocsFolder, file), htmlContent);
         const mdFileName = file.replace('.html', '.md');
-        const isNew = newExamples.has(file);
+        const isNew = isNewExample(htmlContentLines);
         indexArray.push({
             title,
             description,
