@@ -1,5 +1,5 @@
 import {type RequestParameters, makeRequest, sameOrigin, type GetResourceResponse} from './ajax';
-import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
+import {arrayBufferToImageBitmap, arrayBufferToImage, ensureError, extend, isWorker, isImageBitmap} from './util';
 import {config} from './config';
 import {AbortError} from './abort_error';
 import {getProtocol} from '../source/protocol_crud';
@@ -175,7 +175,7 @@ export namespace ImageRequest {
             }
         } catch (err) {
             delete itemInQueue.abortController;
-            onError(err);
+            onError(ensureError(err));
         } finally {
             currentParallelImageRequests--;
             processQueue();

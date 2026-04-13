@@ -149,7 +149,7 @@ export type MapLayerEventType = {
  * });
  * ```
  */
-export interface MapEventType {
+export type MapEventType = {
     /**
      * Fired when an error occurs. This is GL JS's primary error reporting
      * mechanism. We use an event instead of `throw` to better accommodate

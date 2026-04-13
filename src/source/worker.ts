@@ -6,6 +6,8 @@ import {rtlWorkerPlugin, type RTLTextPlugin} from './rtl_text_plugin_worker';
 import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
 import {isWorker} from '../util/util';
 import {addProtocol, removeProtocol} from './protocol_crud';
+import {makeRequest} from '../util/ajax';
+
 import {type PluginState} from './rtl_text_plugin_status';
 import type {
     WorkerSource,
@@ -14,7 +16,6 @@ import type {
     WorkerDEMTileParameters,
     TileParameters
 } from '../source/worker_source';
-
 import type {WorkerGlobalScopeInterface} from '../util/web_worker';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {
@@ -86,9 +87,10 @@ export default class Worker {
 
         // This is invoked by the RTL text plugin when the download via the `importScripts` call has finished, and the code has been parsed.
         this.self.registerRTLTextPlugin = (rtlTextPlugin: RTLTextPlugin) => {
-
             rtlWorkerPlugin.setMethods(rtlTextPlugin);
         };
+
+        this.self.makeRequest = makeRequest;
 
         this.actor.registerMessageHandler(MessageType.loadDEMTile, (mapId: string, params: WorkerDEMTileParameters) => {
             return this._getDEMWorkerSource(mapId, params.source).loadTile(params);
