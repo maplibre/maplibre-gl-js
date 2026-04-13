@@ -10,6 +10,7 @@ import {CoverageReport} from 'monocart-coverage-reports';
 import junitReportBuilder, {type TestSuite} from 'junit-report-builder';
 import type {Page, Browser} from 'puppeteer';
 
+import {ensureError} from '../../../src/util/util';
 import {localizeURLs} from '../lib/localize-urls';
 import {launchPuppeteer} from '../lib/puppeteer_config';
 import type {default as MapLibreGL, Map as MaplibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
@@ -888,7 +889,7 @@ function applyDebugParameter(options: RenderOptions, page: Page) {
             console.log(`${message.type().substring(0, 3).toUpperCase()} ${messages.filter(Boolean)}`);
         });
 
-        page.on('pageerror', ({message}) => { console.error(message); });
+        page.on('pageerror', (e) => { console.error(ensureError(e).message); });
 
         page.on('response', response => {
             console.log(`${response.status()} ${response.url()}`);
@@ -912,7 +913,7 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
             const data = await getImageFromStyle(style, page);
             compareRenderResults(directory, style.metadata.test, data);
         } catch (ex) {
-            style.metadata.test.error = ex;
+            style.metadata.test.error = ensureError(ex);
         }
         printProgress(style.metadata.test, testStyles.length, ++index);
     }
