@@ -40,6 +40,28 @@ describe('mouse handler tests', () => {
         expect(mouseRotate.isActive()).toBe(false);
     });
 
+    test('MouseRotateHandler accepts Firefox control-click events when roll is disabled', () => {
+        const mouseRotate = generateMouseRotationHandler({clickTolerance: 2}, () => new Point(10, 10));
+        mouseRotate.enable();
+
+        mouseRotate.dragStart(new MouseEvent('mousedown', {buttons: 2, button: 2, ctrlKey: true}), new Point(0, 0));
+        const overToleranceMove = new MouseEvent('mousemove', {buttons: 2, ctrlKey: true, clientX: 10, clientY: 10});
+
+        expect((mouseRotate.dragMove(overToleranceMove, new Point(10, 10)) as DragRotateResult).bearingDelta).toBeCloseTo(8);
+        expect(mouseRotate.isActive()).toBe(true);
+    });
+
+    test('MouseRotateHandler leaves control-right-click available for roll when roll is enabled', () => {
+        const mouseRotate = generateMouseRotationHandler({clickTolerance: 2, rollEnabled: true}, () => new Point(10, 10));
+        mouseRotate.enable();
+
+        mouseRotate.dragStart(new MouseEvent('mousedown', {buttons: 2, button: 2, ctrlKey: true}), new Point(0, 0));
+        const overToleranceMove = new MouseEvent('mousemove', {buttons: 2, ctrlKey: true, clientX: 10, clientY: 10});
+
+        expect(mouseRotate.dragMove(overToleranceMove, new Point(10, 10))).toBeUndefined();
+        expect(mouseRotate.isActive()).toBe(false);
+    });
+
     test('MousePitchHandler', () => {
         const mousePitch = generateMousePitchHandler({clickTolerance: 2});
 

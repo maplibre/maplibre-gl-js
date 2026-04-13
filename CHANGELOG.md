@@ -7,6 +7,7 @@
 
 ### 🐞 Bug fixes
 - Fix polygon text label placement drifting far from center for convex polygons at high zoom due to coordinate rounding in geojson-vt ([#7380](https://github.com/maplibre/maplibre-gl-js/pull/7380)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Fix Ctrl-click drag rotation in Firefox on macOS while preserving Ctrl-right-click roll gestures when roll is enabled ([#6565](https://github.com/maplibre/maplibre-gl-js/issues/6565))
 - Ensure that a successful ArrayBuffer response from a custom protocol that is null/undefined is set to an empty ArrayBuffer ([#7427](https://github.com/maplibre/maplibre-gl-js/pull/7427)) (by [@neodescis](https://github.com/neodescis))
 - Fix error in `_contextRestored` when map was initialized without a style ([#7432](https://github.com/maplibre/maplibre-gl-js/issues/7432)) (by [@mvanhorn](https://github.com/mvanhorn))
 - Fix issue with the cache used for zoomLevelsToOverscale feature ([#7450](https://github.com/maplibre/maplibre-gl-js/issues/7450)) (by [@HarelM](https://github.com/HarelM))

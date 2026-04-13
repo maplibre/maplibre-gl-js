@@ -51,17 +51,18 @@ export function generateMousePanHandler({enable, clickTolerance}: {
     });
 };
 
-export function generateMouseRotationHandler({enable, clickTolerance, aroundCenter = true, minPixelCenterThreshold = 100, rotateDegreesPerPixelMoved = 0.8}: {
+export function generateMouseRotationHandler({enable, clickTolerance, aroundCenter = true, minPixelCenterThreshold = 100, rotateDegreesPerPixelMoved = 0.8, rollEnabled = false}: {
     clickTolerance: number;
     enable?: boolean;
     aroundCenter?: boolean;
     minPixelCenterThreshold?: number;
     rotateDegreesPerPixelMoved?: number;
+    rollEnabled?: boolean;
 }, getCenter: () => Point): MouseRotateHandler {
     const mouseMoveStateManager = new MouseMoveStateManager({
         checkCorrectEvent: (e: MouseEvent): boolean =>
             (e.button === LEFT_BUTTON && e.ctrlKey) ||
-            (e.button === RIGHT_BUTTON && !e.ctrlKey),
+            (e.button === RIGHT_BUTTON && (!e.ctrlKey || !rollEnabled)),
     });
     return new DragHandler<DragRotateResult, MouseEvent>({
         clickTolerance,
