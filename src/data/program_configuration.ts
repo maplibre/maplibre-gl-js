@@ -19,6 +19,7 @@ import type {CrossfadeParameters} from '../style/evaluation_parameters';
 import type {StructArray, StructArrayMember} from '../util/struct_array';
 import type {VertexBuffer} from '../webgl/vertex_buffer';
 import type {ImagePosition} from '../render/image_atlas';
+import type {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import type {
     Feature,
     FeatureState,
@@ -64,11 +65,15 @@ type SourceExpressionWithRawEvaluation = ZoomConstantExpression<'source'>;
 type CompositeExpressionWithRawEvaluation = ZoomDependentExpression<'composite'>;
 
 function getFillColorFallback(layer: TypedStyleLayer, property: string): FillColorFallback {
-    if (property !== 'fill-outline-color' || layer.type !== 'fill') {
+    if (property !== 'fill-outline-color' || !isFillStyleLayer(layer)) {
         return null;
     }
 
     return layer.paint.get('fill-color').value;
+}
+
+function isFillStyleLayer(layer: TypedStyleLayer): layer is FillStyleLayer {
+    return layer.type === 'fill';
 }
 
 function isNullColorEvaluationError(error: unknown): boolean {
