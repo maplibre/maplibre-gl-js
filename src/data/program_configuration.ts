@@ -64,7 +64,11 @@ type SourceExpressionWithRawEvaluation = ZoomConstantExpression<'source'>;
 type CompositeExpressionWithRawEvaluation = ZoomDependentExpression<'composite'>;
 
 function getFillColorFallback(layer: TypedStyleLayer, property: string): FillColorFallback {
-    return property === 'fill-outline-color' ? (layer.paint as any).get('fill-color').value : null;
+    if (property !== 'fill-outline-color' || layer.type !== 'fill') {
+        return null;
+    }
+
+    return layer.paint.get('fill-color').value;
 }
 
 function isNullColorEvaluationError(error: unknown): boolean {
