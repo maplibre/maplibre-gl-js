@@ -4,6 +4,7 @@
 #define ICON 0.0
 
 uniform bool u_is_halo;
+uniform bool u_is_text;
 uniform sampler2D u_texture;
 uniform sampler2D u_texture_icon;
 uniform highp float u_gamma_scale;
@@ -46,14 +47,14 @@ void main() {
 
     highp float gamma = EDGE_GAMMA / (fontScale * u_gamma_scale);
     lowp float buff = (256.0 - 64.0) / 256.0;
-
     lowp float dist = texture(u_texture, tex).a;
 
-    highp float gamma_scaled = gamma * gamma_scale;
-    highp float alpha = smoothstep(buff - gamma_scaled, buff + gamma_scaled, dist);
-
-    lowp vec4 color_alpha_out = fill_color * (alpha * total_opacity);
-
+    lowp vec4 color_alpha_out, color_alpha_out_halo;
+    if (u_is_text) {
+        highp float gamma_scaled = gamma * gamma_scale;
+        highp float alpha = smoothstep(buff - gamma_scaled, buff + gamma_scaled, dist);
+        color_alpha_out = fill_color * (alpha * total_opacity);
+    }
     if (u_is_halo) {
         highp float gamma_halo = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * u_gamma_scale);
         lowp float buff_halo = (6.0 - halo_width / fontScale) / SDF_PX;
@@ -61,9 +62,13 @@ void main() {
         highp float gamma_scaled_halo = gamma_halo * gamma_scale;
         highp float alpha_halo = smoothstep(buff_halo - gamma_scaled_halo, buff_halo + gamma_scaled_halo, dist);
 
-        lowp vec4 color_alpha_out_halo = halo_color * (alpha_halo * total_opacity);
+        color_alpha_out_halo = halo_color * (alpha_halo * total_opacity);
+    }
 
+    if (u_is_text && u_is_halo) {
         fragColor = color_alpha_out + (1. - color_alpha_out.a) * color_alpha_out_halo;
+    } else if (u_is_halo) {
+        fragColor = color_alpha_out_halo;
     } else {
         fragColor = color_alpha_out;
     }

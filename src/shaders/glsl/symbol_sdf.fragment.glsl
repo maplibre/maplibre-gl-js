@@ -1,6 +1,7 @@
 #define SDF_PX 8.0
 
 uniform bool u_is_halo;
+uniform bool u_is_plain;
 uniform sampler2D u_texture;
 uniform highp float u_gamma_scale;
 uniform lowp float u_device_pixel_ratio;
@@ -29,16 +30,18 @@ void main() {
 
     float fontScale = u_is_text ? size / 24.0 : size;
 
-    lowp vec4 color = fill_color;
     highp float gamma = EDGE_GAMMA / (fontScale * u_gamma_scale);
     lowp float inner_edge = (256.0 - 64.0) / 256.0;
 
     lowp float dist = texture(u_texture, tex).a;
-    highp float gamma_scaled = gamma * gamma_scale;
-    highp float alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
 
-    vec4 color_alpha_out_text = total_opacity * alpha * color;
+    lowp vec4 color_alpha_out_text, color_alpha_out_halo;
 
+    if (u_is_plain){
+        highp float gamma_scaled = gamma * gamma_scale;
+        highp float alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
+        color_alpha_out_text = total_opacity * alpha * fill_color;
+    }
     if (u_is_halo) {
         float gamma_halo = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * u_gamma_scale);
         float inner_edge_halo = inner_edge + gamma_halo * gamma_scale;
@@ -50,9 +53,12 @@ void main() {
         highp float halo_edge = (6.0 - halo_width / fontScale) / SDF_PX;
         alpha_halo =  min(smoothstep(halo_edge - gamma_scaled_halo, halo_edge + gamma_scaled_halo, dist), 1.0 - alpha_halo);
 
-        vec4 color_alpha_out_halo = total_opacity * alpha_halo * halo_color;
-
+        color_alpha_out_halo = total_opacity * alpha_halo * halo_color;
+    }
+    if (u_is_plain && u_is_halo) {
         fragColor = color_alpha_out_text + (1. - color_alpha_out_text.a) * color_alpha_out_halo;
+    } else if (u_is_halo){
+        fragColor = color_alpha_out_halo;
     } else {
         fragColor = color_alpha_out_text;
     }
