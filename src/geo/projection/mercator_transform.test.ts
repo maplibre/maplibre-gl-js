@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
-import {CanonicalTileID, UnwrappedTileID} from '../../tile/tile_id';
+import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id';
 import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed';
 import type {Terrain} from '../../render/terrain';
 import {MercatorTransform} from './mercator_transform';
@@ -9,6 +9,7 @@ import {LngLatBounds} from '../lng_lat_bounds';
 import {getMercatorHorizon} from './mercator_utils';
 import {mat4} from 'gl-matrix';
 import {expectToBeCloseToArray} from '../../util/test/util';
+import {EXTENT} from '../../data/extent';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -615,5 +616,50 @@ describe('transform', () => {
         expect(transform.getCameraAltitude()).toBeCloseTo(camAlt, 10);
         expect(transform.getCameraLngLat().lng).toBeCloseTo(camLngLat.lng, 10);
         expect(transform.getCameraLngLat().lat).toBeCloseTo(camLngLat.lat, 10);
+    });
+
+    describe('getProjectionData', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
+        transform.resize(512, 512);
+        test('parses a custom object', () => {
+            const projectionData = transform.getProjectionData({overscaledTileID: {
+                canonical: {
+                    x: 1,
+                    y: 0,
+                    z: 1,
+                },
+            }});
+            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+            expectToBeCloseToArray([...projectionData.mainMatrix], [
+                0.09375,
+                0,
+                0,
+                0,
+                0,
+                -0.09375,
+                0,
+                0,
+                0,
+                0,
+                -0.000013132550520822406,
+                -0.000012790334039891604,
+                0,
+                768,
+                767.7944946289062,
+                768
+            ]);
+        });
+        test('parses OverscaledTileID', () => {
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
+            transform.resize(512, 512);
+            const projectionData = transform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0)});
+            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+        });
+        test('parses null', () => {
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
+            transform.resize(512, 512);
+            const projectionData = transform.getProjectionData({overscaledTileID: null});
+            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0, 0, 1, 1]);
+        });
     });
 });
