@@ -3,7 +3,7 @@ import {loadGlyphRange} from '../style/load_glyph_range';
 import TinySDF from '@mapbox/tiny-sdf';
 import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g';
 import {AlphaImage} from '../util/image';
-import {warnOnce} from '../util/util';
+import {ensureError, warnOnce} from '../util/util';
 
 import type {StyleGlyph} from '../style/style_glyph';
 import type {RequestManager} from '../util/request_manager';
@@ -132,7 +132,7 @@ export class GlyphManager {
         } catch (e) {
             // Fall back to drawing the glyph locally and caching it.
             const glyph = entry.glyphs[id] = this._drawGlyph(entry, stack, id);
-            this._warnOnMissingGlyphRange(glyph, range, id, e);
+            this._warnOnMissingGlyphRange(glyph, range, id, ensureError(e));
             return {stack, id, glyph};
         }
     }

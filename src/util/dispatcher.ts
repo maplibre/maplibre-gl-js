@@ -73,6 +73,13 @@ export class Dispatcher {
 
 let globalDispatcher: Dispatcher;
 
+/**
+ * This function is used to get the global dispatcher that is shared across all maps instances.
+ * It is used by the main thread to send messages to the workers, and by the workers to send messages back to the main thread.
+ * If you import a script into the worker and need to send a message to the workers to pass some parameters for example, 
+ * you can use this function to get the global dispatcher and send a message to the workers.
+ * @returns The global dispatcher instance.
+ */
 export function getGlobalDispatcher(): Dispatcher {
     if (!globalDispatcher) {
         globalDispatcher = new Dispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);

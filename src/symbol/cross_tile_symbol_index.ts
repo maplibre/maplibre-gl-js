@@ -27,11 +27,11 @@ const roundingFactor = 512 / EXTENT / 2;
 
 export const KDBUSH_THRESHHOLD = 128;
 
-interface SymbolsByKeyEntry {
+type SymbolsByKeyEntry = {
     index?: KDBush;
     positions?: Array<{x: number; y: number}>;
     crossTileIDs: number[];
-}
+};
 
 class TileLayerIndex {
     _symbolsByKey: Record<number, SymbolsByKeyEntry> = {};

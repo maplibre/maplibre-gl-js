@@ -2,6 +2,7 @@ import {create as createSource} from '../source/source';
 
 import {Tile} from './tile';
 import {ErrorEvent, Event, Evented} from '../util/evented';
+import {ensureError} from '../util/util';
 import {TileCache} from './tile_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {EXTENT} from '../data/extent';
@@ -18,7 +19,7 @@ import {hasRasterTransition, isRasterType, updateFadingTiles} from './tile_manag
 import {backfillDEM} from './tile_manager_raster_dem';
 import {InViewTiles} from './tile_manager_in_view_tiles';
 
-import type {Context} from '../gl/context';
+import type {Context} from '../webgl/context';
 import type {Source} from '../source/source';
 import type {Map} from '../ui/map';
 import type {Style} from '../style/style';
@@ -193,7 +194,7 @@ export class TileManager extends Evented {
             tile.state = 'errored';
 
             if (err.status !== 404) {
-                this._source.fire(new ErrorEvent(err, {tile}));
+                this._source.fire(new ErrorEvent(ensureError(err), {tile}));
             } else {
                 // continue to try loading parent/children tiles if a tile doesn't exist (404)
                 this.update(this.transform, this.terrain);

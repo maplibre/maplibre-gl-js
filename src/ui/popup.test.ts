@@ -1069,4 +1069,43 @@ describe('popup', () => {
             popup.remove();
         });
     });
+
+    test('Popup updates position when switching projection', async () => {
+        const map = createMap({width: 1024, renderWorldCopies: true});
+        await map.once('load');
+
+        const popup = new Popup()
+            .setLngLat(new LngLat(20, 30))
+            .setText('Test')
+            .addTo(map);
+
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(540px,211px)');
+
+        map.setProjection({type: 'globe'});
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(536px,216px)');
+
+        map.setProjection({type: 'mercator'});
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(540px,211px)');
+
+        map.remove();
+    });
+
+    test('Popup updates position when terrain is enabled', async () => {
+        const map = createMap({width: 1024, renderWorldCopies: true, pitch: 60, zoom: 14});
+        await map.once('load');
+
+        const popup = new Popup()
+            .setLngLat(new LngLat(20, 30))
+            .setText('Test')
+            .addTo(map);
+
+        expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(1075px,-187px)');
+
+        map.addSource('terrain', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'terrain'});
+
+        expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(1075px,-187px)');
+
+        map.remove();
+    });
 });

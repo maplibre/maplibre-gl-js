@@ -87,7 +87,7 @@
             // and must be injected into custom layer shaders in order to draw on a globe.
             // We simply use string interpolation for that here.
             //
-            // See MapLibre source code for more details, especially src/shaders/_projection_globe.vertex.glsl
+            // See MapLibre source code for more details, especially src/shaders/glsl/_projection_globe.vertex.glsl
             const vertexSource = `#version 300 es
             // Inject MapLibre projection code
             ${shaderDescription.vertexShaderPrelude}

@@ -7,6 +7,7 @@ import {type FakeServer, fakeServer} from 'nise';
 import {bufferToArrayBuffer, sleep} from '../util/test/util';
 import {ABORT_ERROR} from '../util/abort_error';
 import * as util from '../util/util';
+import {ensureError} from '../util/util';
 
 describe('normalizeSpriteURL', () => {
     test('concantenates path, ratio, and extension for non-mapbox:// scheme', () => {
@@ -49,7 +50,7 @@ describe('loadSprite', () => {
             try {
                 return await createImageBitmap(new ImageData(1024, 824));
             } catch (e) {
-                throw new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`);
+                throw new Error(`Could not load image because of ${ensureError(e).message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`);
             }
         });
         global.fetch = null;

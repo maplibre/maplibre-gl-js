@@ -9,7 +9,7 @@ import {GlyphManager} from '../render/glyph_manager';
 import {Light} from './light';
 import {Sky} from './sky';
 import {LineAtlas} from '../render/line_atlas';
-import {clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
+import {clone, ensureError, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
 import {getJSON, getReferrer} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
@@ -446,7 +446,7 @@ export class Style extends Evented {
                 this._loadStyleRequest = null;
             }
             if (error && !abortController.signal.aborted) { // ignore abort
-                this.fire(new ErrorEvent(error));
+                this.fire(new ErrorEvent(ensureError(error)));
             }
         }
     }

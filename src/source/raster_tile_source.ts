@@ -1,4 +1,4 @@
-import {extend, pick} from '../util/util';
+import {ensureError, extend, pick} from '../util/util';
 
 import {ImageRequest} from '../util/image_request';
 
@@ -6,7 +6,7 @@ import {ResourceType} from '../util/request_manager';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {loadTileJson} from './load_tilejson';
 import {TileBounds} from '../tile/tile_bounds';
-import {Texture} from '../render/texture';
+import {Texture} from '../webgl/texture';
 import {isAbortError} from '../util/abort_error';
 
 import type {Source} from './source';
@@ -112,7 +112,7 @@ export class RasterTileSource extends Evented implements Source {
 
             // only fire error event if it is not due to aborting the request
             if (!isAbortError(err)) {
-                this.fire(new ErrorEvent(err));
+                this.fire(new ErrorEvent(ensureError(err)));
             }
         }
     }

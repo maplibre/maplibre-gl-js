@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import type {Page, Browser} from 'puppeteer';
 import type {Server} from 'node:http';
 import type {AddressInfo} from 'node:net';
+import {ensureError} from '../../../src/util/util';
 
 import {deepEqual} from '../lib/json-diff';
 import {localizeURLs} from '../lib/localize-urls';
@@ -213,7 +214,7 @@ async function dirToJson(dir: string, port: number) {
                 console.warn(`Ignoring file with unexpected extension. ${pp.ext}`);
             }
         } catch (e) {
-            console.warn(`Error parsing file: ${file} ${e.message}`);
+            console.warn(`Error parsing file: ${file} ${ensureError(e).message}`);
             throw e;
         }
     }

@@ -189,7 +189,7 @@ describe('vector tile worker source', () => {
 
         const parseWorkerTileMock = vi
             .spyOn(WorkerTile.prototype, 'parse')
-            .mockImplementation(function(_data, _layerIndex, _availableImages, _actor) {
+            .mockImplementation(function(this: WorkerTile, _data, _layerIndex, _availableImages, _actor) {
                 this.status = 'parsing';
                 return new Promise((resolve) => {
                     setTimeout(() => resolve({} as WorkerTileResult), 20);
