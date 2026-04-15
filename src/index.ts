@@ -63,7 +63,7 @@ import type {RequestTransformFunction, ResourceType} from './util/request_manage
 import {EXTENT} from './data/extent';
 import type {OverscaledTileID} from './tile/tile_id';
 import type {PositionAnchor} from './ui/anchor';
-import type {ProjectionData} from './geo/projection/projection_data';
+import type {ProjectionData, ProjectionDataParams} from './geo/projection/projection_data';
 import type {WorkerTileResult} from './source/worker_source';
 import type {Actor, IActor} from './util/actor';
 import type {Bucket} from './data/bucket';
@@ -312,6 +312,7 @@ export {
     type ExpiryData,
     type PositionAnchor,
     type ProjectionData,
+    type ProjectionDataParams,
     type GeoJSONFeatureId,
     type GeoJSONFeatureDiff,
     type TextFit,

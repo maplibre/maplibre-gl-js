@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - _...Add new stuff here..._
+- Expose `getProjectionData` function in custom layer args objects ([#7471](https://github.com/maplibre/maplibre-gl-js/pull/7471))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._

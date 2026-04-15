@@ -2,7 +2,7 @@ import {StyleLayer} from '../style_layer';
 import type {Map} from '../../ui/map';
 import {type mat4} from 'gl-matrix';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {ProjectionData} from '../../geo/projection/projection_data';
+import type {ProjectionData, ProjectionDataParams} from '../../geo/projection/projection_data';
 
 /**
 * Input arguments exposed by custom render function.
@@ -25,14 +25,14 @@ export type CustomRenderMethodInput = {
      */
     fov: number;
     /**
-    * model view projection matrix
-    * represents the matrix converting from world space to clip space
+    * Model view projection matrix.
+    * Represents the matrix converting from world space to clip space.
     * https://learnopengl.com/Getting-started/Coordinate-Systems
     * **/
     modelViewProjectionMatrix: mat4;
     /**
-    * projection matrix
-    * represents the matrix converting from view space to clip space
+    * Projection matrix.
+    * Represents the matrix converting from view space to clip space.
     * https://learnopengl.com/Getting-started/Coordinate-Systems
     */
     projectionMatrix: mat4;
@@ -105,6 +105,15 @@ export type CustomRenderMethodInput = {
      * or more accurately for globe, elevation above the surface of the perfect sphere used to render the planet.
      */
     defaultProjectionData: ProjectionData;
+
+    /**
+     * Generates a `ProjectionData` instance to be used while rendering a given tile.
+     * In custom layers, this function is only needed when rendering tiles in a completely custom way and with shaders that are compatible with both projections.
+     *
+     * Please see the example "Add a custom layer with tiles to a globe" for more details.
+     * @param params - Parameters for the projection data generation.
+     */
+    getProjectionData: (params: ProjectionDataParams) => ProjectionData;
 };
 
 /**

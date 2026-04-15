@@ -27,6 +27,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
             define: projection.shaderDefine,
         },
         defaultProjectionData: projectionData,
+        getProjectionData: transform.getProjectionData.bind(transform),
     };
 
     const renderingMode = implementation.renderingMode ? implementation.renderingMode : '2d';
