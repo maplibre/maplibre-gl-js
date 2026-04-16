@@ -2626,7 +2626,7 @@ describe('Style.setPaintProperty', () => {
         });
 
         await style.once('style.load');
-        const value: AllPaintProperties['background-color'] = {type: 'exponential', stops: [[0, 'red'], [10, 'blue']]};
+        const value = {type: 'exponential' as const, stops: [[0, 'red'], [10, 'blue']] as Array<[number, string]>};
         style.setPaintProperty('background', 'background-color', value);
         expect(style.getPaintProperty('background', 'background-color')).not.toBe(value);
         expect(style._changed).toBeTruthy();
@@ -2688,7 +2688,7 @@ describe('Style.getPaintProperty', () => {
         style.update({} as EvaluationParameters);
         expect(style._changed).toBeFalsy();
 
-        const value = style.getPaintProperty('background', 'background-color') as {type: string; stops: [number, string][]};
+        const value = style.getPaintProperty('background', 'background-color') as {type: string; stops: Array<[number, string]>};
         value.stops[0][0] = 1;
         style.setPaintProperty('background', 'background-color', value as AllPaintProperties['background-color']);
         expect(style._changed).toBeTruthy();
@@ -2798,9 +2798,9 @@ describe('Style.getLayoutProperty', () => {
         style.update({} as EvaluationParameters);
         expect(style._changed).toBeFalsy();
 
-        const value: AllLayoutProperties['line-cap'] = style.getLayoutProperty('line', 'line-cap');
+        const value = style.getLayoutProperty('line', 'line-cap') as {type: string; stops: Array<[number, string]>};
         value.stops[0][0] = 1;
-        style.setLayoutProperty('line', 'line-cap', value);
+        style.setLayoutProperty('line', 'line-cap', value as AllLayoutProperties['line-cap']);
         expect(style._changed).toBeTruthy();
     });
 });

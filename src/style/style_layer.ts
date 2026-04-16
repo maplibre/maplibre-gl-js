@@ -225,8 +225,8 @@ export abstract class StyleLayer extends Evented {
      * This is used to determine if layer needs to be repainted when global state property changes.
      *
      */
-    getPaintAffectingGlobalStateRefs(): globalThis.Map<string, Array<PaintPropertyEntry>> {
-        const globalStateRefs = new globalThis.Map<string, Array<PaintPropertyEntry>>();
+    getPaintAffectingGlobalStateRefs(): globalThis.Map<string, PaintPropertyEntry[]> {
+        const globalStateRefs = new globalThis.Map<string, PaintPropertyEntry[]>();
 
         if (this._transitionablePaint) {
             for (const propertyName in this._transitionablePaint._values) {
@@ -301,7 +301,7 @@ export abstract class StyleLayer extends Evented {
             const wasDataDriven = transitionable.value.isDataDriven();
             const oldValue = transitionable.value;
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Transitionable.setValue uses a free-floating T that can't unify with the AllPaintProperties union
+            // FIXME: Transitionable.setValue uses a free-floating T that can't unify with the AllPaintProperties union
             this._transitionablePaint.setValue(name, value as any);
             this._handleSpecialPaintPropertyUpdate(name);
 
