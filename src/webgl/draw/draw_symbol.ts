@@ -488,7 +488,9 @@ function drawLayerSymbols(
                 uniformValues['u_is_plain'] = 1;
             }
         }
+
         drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, state.uniformValues, state.projectionData, segmentState.terrainData);
+
         if (isHalo && !isGlyphOverlap) {
             // for 1 pass halo rendering, restore the uniforms state
             state.uniformValues['u_is_halo'] = 0;
