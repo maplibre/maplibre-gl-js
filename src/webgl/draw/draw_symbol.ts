@@ -459,7 +459,9 @@ function drawLayerSymbols(
         tileRenderState.sort((a, b) => a.sortKey - b.sortKey);
     }
 
-    const isGlyphOverlap = layer.layout.get('text-letter-spacing').constantOr(0) * ONE_EM < 2 * layer.paint.get(isText ? 'text-halo-width' : 'icon-halo-width').constantOr(0);
+    const haloWidthProperty = layer.paint.get(isText ? 'text-halo-width' : 'icon-halo-width');
+    const haloWidth = haloWidthProperty.constantOr(null) ?? Infinity;
+    const isGlyphOverlap = layer.layout.get('text-letter-spacing').constantOr(0) * ONE_EM < 0 || haloWidth > 1;
 
     for (const segmentState of tileRenderState) {
         const state = segmentState.state;

@@ -225,7 +225,7 @@ const symbolSDFUniformValues = (
         glCoordMatrix, translation, isText, texSize, pitchedScale), {
         'u_gamma_scale': (pitchWithMap ? Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance : 1),
         'u_device_pixel_ratio': painter.pixelRatio,
-        'u_is_halo': +isHalo,
+        'u_is_halo': + ((isHalo) ? 1 : 0 ),
         'u_is_plain': 1
     });
 };
