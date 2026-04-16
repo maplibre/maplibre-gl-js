@@ -132,7 +132,7 @@ describe('Terrain', () => {
         tile.dem = {
             min: 0,
             max: 100,
-            getPixels: () => new RGBAImage({width: 1, height: 1}, new Uint8Array(4)),
+            getPixels: () => new RGBAImage({width: 1, height: 1}, new Uint8Array(1 * 4)),
             getUnpackVector: () => [6553.6, 25.6, 0.1, 10000.0],
         } as any as DEMData;
         const painter = {

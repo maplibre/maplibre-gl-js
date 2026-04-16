@@ -272,7 +272,7 @@ export class Terrain {
         if (!this._emptyDemTexture) {
             const context = this.painter.context;
             const gl2 = context.gl as WebGL2RenderingContext;
-            const image = new RGBAImage({width: 1, height: 1}, new Uint8Array(4));
+            const image = new RGBAImage({width: 1, height: 1}, new Uint8Array(1 * 4));
             this._emptyDepthTexture = new Texture(context, image, context.gl.RGBA, {premultiply: false});
             this._emptyDemUnpack = [0, 0, 0, 0];
             // 1x1 R16F texture with elevation=0 as fallback (matches decoded elevation texture format)
@@ -417,7 +417,7 @@ export class Terrain {
         if (this._coordsTexture) return this._coordsTexture;
         const data = new Uint8Array(this._coordsTextureSize * this._coordsTextureSize * 4);
         for (let y = 0, i = 0; y < this._coordsTextureSize; y++) for (let x = 0; x < this._coordsTextureSize; x++, i += 4) {
-            data[i] = x & 255;
+            data[i + 0] = x & 255;
             data[i + 1] = y & 255;
             data[i + 2] = ((x >> 8) << 4) | (y >> 8);
             data[i + 3] = 0;
