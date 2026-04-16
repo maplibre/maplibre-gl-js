@@ -301,7 +301,8 @@ export abstract class StyleLayer extends Evented {
             const wasDataDriven = transitionable.value.isDataDriven();
             const oldValue = transitionable.value;
 
-            this._transitionablePaint.setValue(name, value);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Transitionable.setValue uses a free-floating T that can't unify with the AllPaintProperties union
+            this._transitionablePaint.setValue(name, value as any);
             this._handleSpecialPaintPropertyUpdate(name);
 
             const newValue = this._transitionablePaint._values[name].value;
