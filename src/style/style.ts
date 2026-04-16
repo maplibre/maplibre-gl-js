@@ -56,7 +56,9 @@ import type {
     DiffOperations,
     ProjectionSpecification,
     SkySpecification,
-    StateSpecification
+    StateSpecification,
+    AllPaintProperties,
+    AllLayoutProperties,
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
@@ -1315,7 +1317,7 @@ export class Style extends Evented {
         return clone(this.getLayer(layer).filter);
     }
 
-    setLayoutProperty(layerId: string, name: string, value: any,  options: StyleSetterOptions = {}) {
+    setLayoutProperty<K extends keyof AllLayoutProperties>(layerId: string, name: K, value: AllLayoutProperties[K],  options: StyleSetterOptions = {}) {
         this._checkLoaded();
 
         const layer = this.getLayer(layerId);
@@ -1336,7 +1338,7 @@ export class Style extends Evented {
      * @param name - the name of the layout property
      * @returns the property value
      */
-    getLayoutProperty(layerId: string, name: string) {
+    getLayoutProperty<K extends keyof AllLayoutProperties>(layerId: string, name: K): AllLayoutProperties[K] | undefined {
         const layer = this.getLayer(layerId);
         if (!layer) {
             this.fire(new ErrorEvent(new Error(`Cannot get style of non-existing layer "${layerId}".`)));
@@ -1346,7 +1348,7 @@ export class Style extends Evented {
         return layer.getLayoutProperty(name);
     }
 
-    setPaintProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}) {
+    setPaintProperty<K extends keyof AllPaintProperties>(layerId: string, name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}) {
         this._checkLoaded();
 
         const layer = this.getLayer(layerId);
@@ -1360,14 +1362,14 @@ export class Style extends Evented {
         this._updatePaintProperty(layer, name, value, options);
     }
 
-    _updatePaintProperty(layer: StyleLayer, name: string, value: any, options: StyleSetterOptions = {}) {
+    _updatePaintProperty<K extends keyof AllPaintProperties>(layer: StyleLayer, name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}) {
         const requiresRelayout = layer.setPaintProperty(name, value, options);
         if (requiresRelayout) {
             this._updateLayer(layer);
         }
 
         if (isRasterStyleLayer(layer) && name === 'raster-fade-duration') {
-            this.tileManagers[layer.source].setRasterFadeDuration(value);
+            this.tileManagers[layer.source].setRasterFadeDuration(value as number);
         }
 
         this._changed = true;
@@ -1376,7 +1378,7 @@ export class Style extends Evented {
         this._serializedLayers = null;
     }
 
-    getPaintProperty(layer: string, name: string) {
+    getPaintProperty<K extends keyof AllPaintProperties>(layer: string, name: K): AllPaintProperties[K] {
         return this.getLayer(layer).getPaintProperty(name);
     }
 

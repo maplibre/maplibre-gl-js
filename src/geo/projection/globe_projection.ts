@@ -12,7 +12,7 @@ import {type CanonicalTileID} from '../../tile/tile_id';
 import {type Mesh} from '../../render/mesh';
 
 type ProjectionProps = {
-    type: DataConstantProperty<ProjectionDefinition>;
+    type: DataConstantProperty<ProjectionDefinitionSpecification>;
 };
 
 type ProjectionPossiblyEvaluated = {

@@ -60,6 +60,8 @@ import type {
     TerrainSpecification,
     ProjectionSpecification,
     SkySpecification,
+    AllPaintProperties,
+    AllLayoutProperties,
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
@@ -2992,7 +2994,7 @@ export class Map extends Camera {
      * @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/change-a-layers-color-with-buttons/)
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
      */
-    setPaintProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}): this {
+    setPaintProperty<K extends keyof AllPaintProperties>(layerId: string, name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}): this {
         this.style.setPaintProperty(layerId, name, value, options);
         return this._update(true);
     }
@@ -3004,7 +3006,7 @@ export class Map extends Camera {
      * @param name - The name of a paint property to get.
      * @returns The value of the specified paint property.
      */
-    getPaintProperty(layerId: string, name: string) {
+    getPaintProperty<K extends keyof AllPaintProperties>(layerId: string, name: K): AllPaintProperties[K] {
         return this.style.getPaintProperty(layerId, name);
     }
 
@@ -3020,7 +3022,7 @@ export class Map extends Camera {
      * map.setLayoutProperty('my-layer', 'visibility', 'none');
      * ```
      */
-    setLayoutProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}): this {
+    setLayoutProperty<K extends keyof AllLayoutProperties>(layerId: string, name: K, value: AllLayoutProperties[K], options: StyleSetterOptions = {}): this {
         this.style.setLayoutProperty(layerId, name, value, options);
         return this._update(true);
     }
@@ -3032,7 +3034,7 @@ export class Map extends Camera {
      * @param name - The name of the layout property to get.
      * @returns The value of the specified layout property.
      */
-    getLayoutProperty(layerId: string, name: string) {
+    getLayoutProperty<K extends keyof AllLayoutProperties>(layerId: string, name: K): AllLayoutProperties[K] | undefined {
         return this.style.getLayoutProperty(layerId, name);
     }
 
