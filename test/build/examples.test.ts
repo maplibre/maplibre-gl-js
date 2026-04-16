@@ -37,36 +37,14 @@ function findLine(lines: string[], pattern: RegExp): number | null {
 describe('Example HTML files', () => {
     const exampleFiles = globSync('test/examples/*.html').sort();
 
-    test.each(exampleFiles)('%s has required meta tags', (file) => {
+    test.each(exampleFiles)('%s has og:created meta tag', (file) => {
         const content = fs.readFileSync(file, 'utf-8');
         const lines = content.split('\n');
-        const errors: string[] = [];
 
-        // Check og:description
-        const descriptionMatch = content.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']*)["']/);
-        if (!descriptionMatch) {
-            const loc = findLine(lines, /<head/i);
-            errors.push(
-                `error: missing \`og:description\` meta tag\n${
-                    snippet(lines, loc, file)}\n` +
-                '  = help: add inside <head>:\n' +
-                '          <meta property="og:description" content="A short description of what this example demonstrates." />'
-            );
-        } else if (!descriptionMatch[1].trim()) {
-            const loc = findLine(lines, /og:description/);
-            errors.push(
-                `error: \`og:description\` content is empty\n${
-                    snippet(lines, loc, file)}\n` +
-                '  = help: provide a meaningful description, e.g.:\n' +
-                '          <meta property="og:description" content="Demonstrates how to ..." />'
-            );
-        }
-
-        // Check og:created
         const createdMatch = content.match(/<meta\s+property=["']og:created["']\s+content=["']([^"']*)["']/);
         if (!createdMatch) {
             const descLine = findLine(lines, /og:description/);
-            errors.push(
+            expect.fail(
                 `error: missing \`og:created\` meta tag\n${
                     snippet(lines, descLine, file)}\n` +
                 '  = help: add right after og:description:\n' +
@@ -74,17 +52,35 @@ describe('Example HTML files', () => {
             );
         } else if (!/^\d{4}-\d{2}-\d{2}$/.test(createdMatch[1])) {
             const loc = findLine(lines, /og:created/);
-            errors.push(
+            expect.fail(
                 `error: \`og:created\` has invalid date format "${createdMatch[1]}"\n${
                     snippet(lines, loc, file)}\n` +
                 '  = help: use YYYY-MM-DD format, e.g.:\n' +
                 '          <meta property="og:created" content="2025-10-31" />'
             );
         }
+    });
 
-        if (errors.length > 0) {
+    test.each(exampleFiles)('%s has og:description meta tag', (file) => {
+        const content = fs.readFileSync(file, 'utf-8');
+        const lines = content.split('\n');
+
+        const descriptionMatch = content.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']*)["']/);
+        if (!descriptionMatch) {
+            const loc = findLine(lines, /<head/i);
             expect.fail(
-                `\n${errors.join('\n\n')}\n`
+                `error: missing \`og:description\` meta tag\n${
+                    snippet(lines, loc, file)}\n` +
+                '  = help: add inside <head>:\n' +
+                '          <meta property="og:description" content="A short description of what this example demonstrates." />'
+            );
+        } else if (!descriptionMatch[1].trim()) {
+            const loc = findLine(lines, /og:description/);
+            expect.fail(
+                `error: \`og:description\` content is empty\n${
+                    snippet(lines, loc, file)}\n` +
+                '  = help: provide a meaningful description, e.g.:\n' +
+                '          <meta property="og:description" content="Demonstrates how to ..." />'
             );
         }
     });
