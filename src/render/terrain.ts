@@ -130,7 +130,7 @@ export class Terrain {
      * variables for an empty dem texture, which is used while the raster-dem tile is loading.
      */
     _emptyDemUnpack: number[];
-    _emptyDemTexture: Texture;
+    _emptyDemTexture: WebGLTexture;
     _emptyDemMatrix: mat4;
     /**
      * as of overzooming of raster-dem tiles in high zoomlevels, this cache contains
@@ -167,7 +167,7 @@ export class Terrain {
             this._fboDepthTexture = null;
         }
         if (this._emptyDemTexture) {
-            this._emptyDemTexture.destroy();
+            this.painter.context.gl.deleteTexture(this._emptyDemTexture);
             this._emptyDemTexture = null;
         }
         if (this._emptyDepthTexture) {
@@ -276,14 +276,7 @@ export class Terrain {
             this._emptyDepthTexture = new Texture(context, image, context.gl.RGBA, {premultiply: false});
             this._emptyDemUnpack = [0, 0, 0, 0];
             // 1x1 R16F texture with elevation=0 as fallback (matches decoded elevation texture format)
-            const emptyTex = gl2.createTexture();
-            gl2.bindTexture(gl2.TEXTURE_2D, emptyTex);
-            gl2.texParameteri(gl2.TEXTURE_2D, gl2.TEXTURE_MIN_FILTER, gl2.LINEAR);
-            gl2.texParameteri(gl2.TEXTURE_2D, gl2.TEXTURE_MAG_FILTER, gl2.LINEAR);
-            gl2.texParameteri(gl2.TEXTURE_2D, gl2.TEXTURE_WRAP_S, gl2.CLAMP_TO_EDGE);
-            gl2.texParameteri(gl2.TEXTURE_2D, gl2.TEXTURE_WRAP_T, gl2.CLAMP_TO_EDGE);
-            gl2.texImage2D(gl2.TEXTURE_2D, 0, gl2.R16F, 1, 1, 0, gl2.RED, gl2.FLOAT, new Float32Array([0]));
-            this._emptyDemTexture = {texture: emptyTex, destroy: () => gl2.deleteTexture(emptyTex)} as any as Texture;
+            this._emptyDemTexture = this._createR16FTexture(1, 1, new Float32Array([0]));
             this._emptyDemMatrix = mat4.identity([] as any);
         }
         // find covering dem tile and prepare textures
@@ -296,7 +289,7 @@ export class Terrain {
             else sourceTile.demTexture = new Texture(context, sourceTile.dem.getPixels(), context.gl.RGBA, {premultiply: false});
             sourceTile.demTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
             // Create/update decoded R16F elevation texture for terrain vertex shaders
-            sourceTile.demElevationTexture = this._createElevationTexture(sourceTile.dem, sourceTile.demElevationTexture);
+            sourceTile.demElevationTexture = this._getElevationTexture(sourceTile.dem, sourceTile.demElevationTexture);
             sourceTile.needsTerrainPrepare = false;
         }
         // create matrix for lookup in dem data
@@ -322,51 +315,62 @@ export class Terrain {
             'u_terrain_matrix': matrixKey ? this._demMatrixCache[matrixKey].matrix : this._emptyDemMatrix,
             'u_terrain_unpack': sourceTile?.dem?.getUnpackVector() || this._emptyDemUnpack,
             'u_terrain_exaggeration': this.exaggeration,
-            texture: sourceTile?.demElevationTexture || (this._emptyDemTexture as any).texture,
+            texture: sourceTile?.demElevationTexture || this._emptyDemTexture,
             depthTexture: (this._fboDepthTexture || this._emptyDepthTexture).texture,
             tile: sourceTile
         };
     }
 
     /**
-     * Decode DEM pixel data to a float elevation texture (R16F) with hardware accelerated gl.LINEAR filtering.
-     * Reuses a scratch buffer for the decode and the GL texture for same-size updates.
-     * The texture is stored on the source tile and cleaned up via tile.clearTextures().
+     * Create a new R16F texture with gl.LINEAR filtering for hardware bilinear interpolation.
+     * Used for both the per-tile decoded elevation textures and the empty fallback.
      */
-    private _createElevationTexture(dem: DEMData, existing: WebGLTexture | null): WebGLTexture {
-        if (!dem.data) return existing;
+    private _createR16FTexture(width: number, height: number, data: Float32Array): WebGLTexture {
         const gl = this.painter.context.gl as WebGL2RenderingContext;
-        if (!gl.texImage2D) return existing;
-        const stride = dem.stride;
-        const pixelCount = stride * stride;
-        const pixels = new Uint8Array(dem.data.buffer);
+        const texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.R16F, width, height, 0, gl.RED, gl.FLOAT, data);
+        return texture;
+    }
 
-        // Reuse scratch buffer across tiles (all DEM tiles share the same stride)
+    /**
+     * Decode DEM RGBA8 pixel data to float elevations in a reusable scratch buffer.
+     */
+    private _decodeDemToFloat(dem: DEMData): Float32Array {
+        const pixelCount = dem.stride * dem.stride;
+        const pixels = new Uint8Array(dem.data.buffer);
         if (!this._elevationDecodeBuffer || this._elevationDecodeBuffer.length < pixelCount) {
             this._elevationDecodeBuffer = new Float32Array(pixelCount);
         }
         const elevations = this._elevationDecodeBuffer;
         const {redFactor, greenFactor, blueFactor, baseShift} = dem;
         for (let i = 0; i < pixelCount; i++) {
-            const j = i * 4;
-            elevations[i] = pixels[j] * redFactor + pixels[j + 1] * greenFactor + pixels[j + 2] * blueFactor - baseShift;
+            const offset = i * 4;
+            elevations[i] = pixels[offset] * redFactor + pixels[offset + 1] * greenFactor + pixels[offset + 2] * blueFactor - baseShift;
         }
+        return elevations;
+    }
+
+    /**
+     * Create or update the decoded R16F elevation texture for a DEM tile.
+     * The texture is stored on the source tile and cleaned up via tile.clearTextures().
+     */
+    private _getElevationTexture(dem: DEMData, existing: WebGLTexture | null): WebGLTexture {
+        if (!dem.data) return existing;
+        const gl = this.painter.context.gl as WebGL2RenderingContext;
+        const elevations = this._decodeDemToFloat(dem);
+        const stride = dem.stride;
 
         if (existing) {
-            // Reuse texture — just update data
             gl.bindTexture(gl.TEXTURE_2D, existing);
             gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, stride, stride, gl.RED, gl.FLOAT, elevations);
             return existing;
         }
-
-        const tex = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, tex);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.R16F, stride, stride, 0, gl.RED, gl.FLOAT, elevations);
-        return tex;
+        return this._createR16FTexture(stride, stride, elevations);
     }
 
     /**
