@@ -338,7 +338,7 @@ export class Terrain {
     }
 
     /**
-     * Decode DEM pixel data to a float elevation texture (R16F) with hardware accelaerted gl.LINEAR filtering
+     * Decode DEM pixel data to a float elevation texture (R16F) with hardware accelerated gl.LINEAR filtering
      */
     private _updateElevationTexture(dem: DEMData): void {
         if (!dem.data) return;
