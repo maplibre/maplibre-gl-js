@@ -107,6 +107,8 @@ export class Tile {
     texture: any;
     fbo: Framebuffer;
     demTexture: Texture;
+    /** Decoded R16F elevation texture for terrain vertex shaders (hardware bilinear) */
+    demElevationTexture: WebGLTexture;
     refreshedUponExpiration: boolean;
     reloadPromise: {resolve: () => void; reject: () => void};
     resourceTiming: PerformanceResourceTiming[];
@@ -194,6 +196,10 @@ export class Tile {
     clearTextures(painter: any) {
         if (this.demTexture) painter.saveTileTexture(this.demTexture);
         this.demTexture = null;
+        if (this.demElevationTexture) {
+            painter.context.gl.deleteTexture(this.demElevationTexture);
+            this.demElevationTexture = null;
+        }
     }
 
     /**
