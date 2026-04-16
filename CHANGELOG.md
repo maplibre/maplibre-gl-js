@@ -1,10 +1,16 @@
 ## main
 ### ✨ Features and improvements
 - _...Add new stuff here..._
+<<<<<<< HEAD
 - GPU performance optimization: Render halo and glyph in a single pass (-40% Time Reduction) ([#7436](https://github.com/maplibre/maplibre-gl-js/pull/7436)) (by [@xavierjs](https://github.com/xavierjs))
+=======
+-  Optimize matrix inversions and reduce GPU stalls ([#7367](https://github.com/maplibre/maplibre-gl-js/pull/7367)) (by [@xavierjs](https://github.com/xavierjs))
+- Add example showing how to measure map performance using built-in events (`load`, `idle`, `render`) ([#7077](https://github.com/maplibre/maplibre-gl-js/pull/7077)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Add `touchZoomRotate.setZoomRate()` and `touchZoomRotate.setZoomThreshold()` to customize touch zoom speed and pinch sensitivity ([#7271](https://github.com/maplibre/maplibre-gl-js/issues/7271))
+>>>>>>> main
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+- Fix `Popup` not updating its position when switching between terrain/globe projections ([#7468](https://github.com/maplibre/maplibre-gl-js/pull/7468)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ## 5.23.0
 

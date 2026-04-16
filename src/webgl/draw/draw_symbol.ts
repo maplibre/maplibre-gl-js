@@ -9,7 +9,7 @@ import {StencilMode} from '../stencil_mode';
 import {DepthMode} from '../depth_mode';
 import {CullFaceMode} from '../cull_face_mode';
 import {addDynamicAttributes} from '../../data/bucket/symbol_bucket';
-
+import {fastInvertTransformMat4} from '../../util/fast_maths';
 import {getAnchorAlignment, WritingMode} from '../../symbol/shaping';
 import ONE_EM from '../../symbol/one_em';
 
@@ -376,8 +376,6 @@ function drawLayerSymbols(
         // See the comment at the beginning of src/symbol/projection.ts for an overview of the symbol projection process
         const s = pixelsToTileUnits(tile, 1, painter.transform.zoom);
         const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.transform, s);
-        const pitchedLabelPlaneMatrixInverse = mat4.create();
-        mat4.invert(pitchedLabelPlaneMatrixInverse, pitchedLabelPlaneMatrix);
         const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = translatePosition(transform, tile, translate, translateAnchor);
@@ -389,6 +387,9 @@ function drawLayerSymbols(
             bucket.hasIconData();
 
         if (alongLine) {
+            const pitchedLabelPlaneMatrixInverse = mat4.create();
+            fastInvertTransformMat4(pitchedLabelPlaneMatrixInverse, pitchedLabelPlaneMatrix);
+
             const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
             const rotateToLine = layer.layout.get('text-rotation-alignment') === 'map';
             updateLineLabels(bucket, painter, isText, pitchedLabelPlaneMatrix, pitchedLabelPlaneMatrixInverse, pitchWithMap, keepUpright, rotateToLine, coord.toUnwrapped(), transform.width, transform.height, translation, getElevation);
