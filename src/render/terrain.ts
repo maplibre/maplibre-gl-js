@@ -271,7 +271,6 @@ export class Terrain {
         // creates an empty depth-buffer texture which is needed, during the initialization process of the 3d mesh..
         if (!this._emptyDemTexture) {
             const context = this.painter.context;
-            const gl2 = context.gl as WebGL2RenderingContext;
             const image = new RGBAImage({width: 1, height: 1}, new Uint8Array(4));
             this._emptyDepthTexture = new Texture(context, image, context.gl.RGBA, {premultiply: false});
             this._emptyDemUnpack = [0, 0, 0, 0];
