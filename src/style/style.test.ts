@@ -11,7 +11,7 @@ import {OverscaledTileID} from '../tile/tile_id';
 import {fakeServer, type FakeServer} from 'nise';
 
 import {type EvaluationParameters} from './evaluation_parameters';
-import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification, type AllPaintProperties, type AllLayoutProperties} from '@maplibre/maplibre-gl-style-spec';
 import {type GeoJSONSource} from '../source/geojson_source';
 import {StubMap, sleep, waitForEvent} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
@@ -2626,7 +2626,7 @@ describe('Style.setPaintProperty', () => {
         });
 
         await style.once('style.load');
-        const value = {stops: [[0, 'red'], [10, 'blue']]};
+        const value: AllPaintProperties['background-color'] = {type: 'exponential', stops: [[0, 'red'], [10, 'blue']]};
         style.setPaintProperty('background', 'background-color', value);
         expect(style.getPaintProperty('background', 'background-color')).not.toBe(value);
         expect(style._changed).toBeTruthy();
@@ -2684,13 +2684,13 @@ describe('Style.getPaintProperty', () => {
         });
 
         await style.once('style.load');
-        style.setPaintProperty('background', 'background-color', {stops: [[0, 'red'], [10, 'blue']]});
+        style.setPaintProperty('background', 'background-color', {type: 'exponential', stops: [[0, 'red'], [10, 'blue']]});
         style.update({} as EvaluationParameters);
         expect(style._changed).toBeFalsy();
 
-        const value = style.getPaintProperty('background', 'background-color');
-        value['stops'][0][0] = 1;
-        style.setPaintProperty('background', 'background-color', value);
+        const value = style.getPaintProperty('background', 'background-color') as {type: string; stops: [number, string][]};
+        value.stops[0][0] = 1;
+        style.setPaintProperty('background', 'background-color', value as AllPaintProperties['background-color']);
         expect(style._changed).toBeTruthy();
     });
 });
@@ -2719,7 +2719,7 @@ describe('Style.setLayoutProperty', () => {
         });
 
         await style.once('style.load');
-        const value = {stops: [[0, 'butt'], [10, 'round']]};
+        const value: AllLayoutProperties['line-cap'] = {type: 'exponential', stops: [[0, 'butt'], [10, 'round']]};
         style.setLayoutProperty('line', 'line-cap', value);
         expect(style.getLayoutProperty('line', 'line-cap')).not.toBe(value);
         expect(style._changed).toBeTruthy();
@@ -2758,13 +2758,13 @@ describe('Style.setLayoutProperty', () => {
         const lineLayer = style.getLayer('line');
         const validate = vi.spyOn(lineLayer, '_validate');
 
-        style.setLayoutProperty('line', 'line-cap', 'invalidcap', {validate: false});
+        style.setLayoutProperty('line', 'line-cap', 'invalidcap' as any, {validate: false});
         expect(validate.mock.calls[0][4]).toEqual({validate: false});
         expect(mockConsoleError).not.toHaveBeenCalled();
         expect(style._changed).toBeTruthy();
         style.update({} as EvaluationParameters);
 
-        style.setLayoutProperty('line', 'line-cap', 'differentinvalidcap');
+        style.setLayoutProperty('line', 'line-cap', 'differentinvalidcap' as any);
         expect(mockConsoleError).toHaveBeenCalledTimes(1);
         expect(validate.mock.calls[1][4]).toEqual({});
     });
@@ -2794,11 +2794,11 @@ describe('Style.getLayoutProperty', () => {
         });
 
         await style.once('style.load');
-        style.setLayoutProperty('line', 'line-cap', {stops: [[0, 'butt'], [10, 'round']]});
+        style.setLayoutProperty('line', 'line-cap', {type: 'exponential', stops: [[0, 'butt'], [10, 'round']]});
         style.update({} as EvaluationParameters);
         expect(style._changed).toBeFalsy();
 
-        const value = style.getLayoutProperty('line', 'line-cap');
+        const value: AllLayoutProperties['line-cap'] = style.getLayoutProperty('line', 'line-cap');
         value.stops[0][0] = 1;
         style.setLayoutProperty('line', 'line-cap', value);
         expect(style._changed).toBeTruthy();

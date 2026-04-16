@@ -74,9 +74,9 @@ describe('drawFill', () => {
         // 'fill-pattern': 'pattern0'
         // so tile.imageAtlas.patternPositions['pattern0'] would return nothing
         // mimicking the transitioning fill-pattern value
-        layer.getPaintProperty = () => {
+        layer.getPaintProperty = (() => {
             return 'pattern1';
-        };
+        }) as any;
 
         return layer;
     }

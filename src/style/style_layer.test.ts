@@ -196,7 +196,7 @@ describe('StyleLayer.setPaintProperty', () => {
         } as LayerSpecification, {});
 
         const errorPromise = layer.once('error');
-        layer.setPaintProperty('visibility', 'visible');
+        layer.setPaintProperty('visibility' as any, 'visible');
         const {error} = await errorPromise;
         expect(error.message).toContain('Use get/setLayoutProperty instead?');
     });
@@ -212,7 +212,7 @@ describe('StyleLayer.getPaintProperty', () => {
             }
         } as LayerSpecification, {});
 
-        expect(() => layer.getPaintProperty('text-transform')).toThrow(
+        expect(() => layer.getPaintProperty('text-transform' as any)).toThrow(
             'Use get/setLayoutProperty instead?'
         );
     });
@@ -226,7 +226,7 @@ describe('StyleLayer.getPaintProperty', () => {
             }
         } as LayerSpecification, {});
 
-        expect(() => layer.getPaintProperty('text-transform-transition')).toThrow(
+        expect(() => layer.getPaintProperty('text-transform-transition' as any)).toThrow(
             'Use get/setLayoutProperty instead?'
         );
     });
@@ -237,7 +237,7 @@ describe('StyleLayer.getPaintProperty', () => {
             'type': 'symbol',
         } as LayerSpecification, {});
 
-        expect(() => layer.getPaintProperty('visibility')).toThrow(
+        expect(() => layer.getPaintProperty('visibility' as any)).toThrow(
             'Use get/setLayoutProperty instead?'
         );
     });
@@ -250,7 +250,7 @@ describe('StyleLayer.getLayoutProperty', () => {
             'type': 'background',
         } as LayerSpecification, {});
 
-        expect(() => layer.getLayoutProperty('some-property')).toThrow(
+        expect(() => layer.getLayoutProperty('some-property' as any)).toThrow(
             'Cannot get layout property "some-property" on layer type "background" which has no layout properties.'
         );
     });
@@ -264,7 +264,7 @@ describe('StyleLayer.getLayoutProperty', () => {
             }
         } as LayerSpecification, {});
 
-        expect(() => layer.getLayoutProperty('text-color')).toThrow(
+        expect(() => layer.getLayoutProperty('text-color' as any)).toThrow(
             'Use get/setPaintProperty instead?'
         );
     });
@@ -290,7 +290,7 @@ describe('StyleLayer.setLayoutProperty', () => {
 
         const errorPromise = layer.once('error');
 
-        layer.setLayoutProperty('text-transform', 'invalidValue');
+        layer.setLayoutProperty('text-transform', 'invalidValue' as any);
         await expect(errorPromise).resolves.toBeDefined();
     });
 
@@ -333,7 +333,7 @@ describe('StyleLayer.setLayoutProperty', () => {
         } as LayerSpecification, {});
 
         const errorPromise = layer.once('error');
-        layer.setLayoutProperty('text-color', 'blue');
+        layer.setPaintProperty('text-color', 'blue');
         const {error} = await errorPromise;
         expect(error.message).toContain('Use get/setPaintProperty instead?');
     });
