@@ -277,7 +277,7 @@ export abstract class StyleLayer extends Evented {
             }
             return this._transitionablePaint.getTransition(baseName) as AllPaintProperties[K];
         } else {
-            if (this._unevaluatedLayout?.hasProperty(name)) {
+            if (name as any === 'visibility' || this._unevaluatedLayout?.hasProperty(name)) {
                 throw new Error(name + ERROR_LAYOUT_NOT_PAINT);
             }
             return this._transitionablePaint.getValue(name) as AllPaintProperties[K];
