@@ -17,6 +17,12 @@ import {WritingMode} from '../symbol/shaping';
 import {findLineIntersection} from '../util/util';
 import {type UnwrappedTileID} from '../tile/tile_id';
 import {type StructArray} from '../util/struct_array';
+import {fastInvertSkewMat4} from '../util/fast_maths';
+
+/**
+ * Pre-allocate objects to avoid online allocation
+ */
+const tmpMat4 = mat4.create();
 
 /**
  * The result of projecting a point to the screen, with some additional information about the projection.
@@ -931,8 +937,8 @@ export function xyTransformMat4(out: vec4, a: vec4, m: mat4) {
  * Does not modify the input array.
  */
 export function projectPathSpecialProjection(projectedPath: Point[], projectionContext: SymbolProjectionContext): PointProjection[] {
-    const inverseLabelPlaneMatrix = mat4.create();
-    mat4.invert(inverseLabelPlaneMatrix, projectionContext.pitchedLabelPlaneMatrix);
+    const inverseLabelPlaneMatrix = tmpMat4;
+    fastInvertSkewMat4(inverseLabelPlaneMatrix, projectionContext.pitchedLabelPlaneMatrix);
     return projectedPath.map(p => {
         const backProjected = projectWithMatrix(p.x, p.y, inverseLabelPlaneMatrix, projectionContext.getElevation);
         const projected = projectionContext.transform.projectTileCoordinates(
