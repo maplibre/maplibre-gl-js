@@ -72,7 +72,7 @@
     "@vitest/eslint-plugin": "^1.6.15",
     "@vitest/ui": "4.1.4",
     "address": "^2.0.3",
-    "autoprefixer": "^10.4.27",
+    "autoprefixer": "^10.5.0",
     "benchmark": "^2.1.4",
     "canvas": "^3.2.3",
     "cspell": "^10.0.0",
