@@ -301,7 +301,7 @@ export abstract class StyleLayer extends Evented {
             const wasDataDriven = transitionable.value.isDataDriven();
             const oldValue = transitionable.value;
 
-            // FIXME: Transitionable.setValue uses a free-floating T that can't unify with the AllPaintProperties union
+            // Transitionable.setValue uses a free-floating T that can't unify with the AllPaintProperties union -> better types downstream of this code needed
             this._transitionablePaint.setValue(name, value as any);
             this._handleSpecialPaintPropertyUpdate(name);
 
