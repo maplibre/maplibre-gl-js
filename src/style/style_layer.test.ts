@@ -333,7 +333,7 @@ describe('StyleLayer.setLayoutProperty', () => {
         } as LayerSpecification, {});
 
         const errorPromise = layer.once('error');
-        layer.setPaintProperty('text-color', 'blue');
+        layer.setLayoutProperty('text-color' as any, 'blue' as any);
         const {error} = await errorPromise;
         expect(error.message).toContain('Use get/setPaintProperty instead?');
     });
