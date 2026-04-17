@@ -13,6 +13,7 @@ import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from '../tile/tile';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {RequestParameters} from '../util/ajax';
 import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult} from './worker_source';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
@@ -219,6 +220,7 @@ export class VectorTileSource extends Evented implements Source {
             overzoomParameters: await this._getOverzoomParameters(tile),
             etag: tile.etag
         };
+        this._setAcceptHeader(params.request);
         params.request.collectResourceTiming = this._collectResourceTiming;
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
         if (!tile.actor || tile.state === 'expired') {
@@ -269,10 +271,19 @@ export class VectorTileSource extends Evented implements Source {
         const maxZoomTileID = tile.tileID.scaledTo(this.maxzoom).canonical;
         const maxZoomTileUrl = maxZoomTileID.url(this.tiles, this.map.getPixelRatio(), this.scheme);
 
+        const overzoomRequest = await this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile);
+        this._setAcceptHeader(overzoomRequest);
         return {
             maxZoomTileID,
-            overzoomRequest: await this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile)
+            overzoomRequest
         };
+    }
+
+    private _setAcceptHeader(request: RequestParameters) {
+        request.headers ??= {};
+        request.headers.Accept ??= this.encoding === 'mlt'
+            ? 'application/vnd.maplibre-tile'
+            : 'application/vnd.mapbox-vector-tile';
     }
 
     private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {
