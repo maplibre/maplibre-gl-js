@@ -69,7 +69,7 @@ describe('Example HTML files', () => {
         if (!descriptionMatch) {
             const loc = findLine(lines, /<head/i);
             expect.fail(
-                ++missing \`og:description\` meta tag\n${
+                `missing \`og:description\` meta tag\n${
                     snippet(lines, loc, file)}\n` +
                 '  = help: add inside <head>:\n' +
                 '          <meta property="og:description" content="A short description of what this example demonstrates." />'
