@@ -177,9 +177,7 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
 function drawLineOffscreen(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
     const context = painter.context;
 
-    if (!layer.lineFbo) {
-        layer.lineFbo = createLineFbo(context, painter.width, painter.height);
-    }
+    layer.lineFbo ??= createLineFbo(context, painter.width, painter.height);
 
     context.bindFramebuffer.set(layer.lineFbo.framebuffer);
     context.viewport.set([0, 0, painter.width, painter.height]);
