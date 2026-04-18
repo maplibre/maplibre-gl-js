@@ -15,7 +15,7 @@ import type {
     VideoSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
-import {MAX_TILE_ZOOM} from '../util/util';
+import {ensureError, MAX_TILE_ZOOM} from '../util/util';
 import {Bounds} from '../geo/bounds';
 import {isAbortError} from '../util/abort_error';
 
@@ -166,7 +166,7 @@ export class ImageSource extends Evented implements Source {
             this._request = null;
             this._loaded = true;
             if (!isAbortError(err)) {
-                this.fire(new ErrorEvent(err));
+                this.fire(new ErrorEvent(ensureError(err)));
             }
         }
     }

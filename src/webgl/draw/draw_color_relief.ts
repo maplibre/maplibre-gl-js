@@ -37,6 +37,7 @@ export function drawColorRelief(painter: Painter, tileManager: TileManager, laye
     }
 }
 
+let textureMaxSize = 0;
 function renderColorRelief(
     painter: Painter,
     tileManager: TileManager,
@@ -64,7 +65,9 @@ function renderColorRelief(
         const tile = tileManager.getTile(coord);
         const dem = tile.dem;
         if(firstTile) {
-            const maxLength = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+            // we should avoid calling gl.getParameter at runtime (GPU stall risk)
+            textureMaxSize = textureMaxSize || gl.getParameter(gl.MAX_TEXTURE_SIZE);
+            const maxLength = textureMaxSize;
             const {elevationTexture, colorTexture} = layer.getColorRampTextures(context, maxLength, dem.getUnpackVector());
             context.activeTexture.set(gl.TEXTURE1);
             elevationTexture.bind(gl.NEAREST, gl.CLAMP_TO_EDGE);

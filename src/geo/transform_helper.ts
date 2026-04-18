@@ -65,11 +65,13 @@ export type TransformHelperCallbacks = {
 
 export type TransformOptions = {
     /**
-     * The minimum zoom level of the map.
+     * The minimum zoom level of the map. Users cannot zoom out beyond this level. (0–24)
+     * @defaultValue 0
      */
     minZoom?: number;
     /**
-     * The maximum zoom level of the map.
+     * The maximum zoom level of the map. Users cannot zoom in beyond this level. (0–24)
+     * @defaultValue 22
      */
     maxZoom?: number;
     /**

@@ -86,7 +86,7 @@ describe('util', () => {
         expect.assertions(6);
         expect(filterObject({}, () => expect(false).toBeTruthy())).toEqual({});
         const that = {};
-        filterObject({map: 'box'}, function(value, key, object) {
+        filterObject({map: 'box'}, function(this: Record<string, never>, value: string, key: string, object: Record<string, string>) {
             expect(value).toBe('box');
             expect(key).toBe('map');
             expect(object).toEqual({map: 'box'});

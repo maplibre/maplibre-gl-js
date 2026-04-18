@@ -30,7 +30,7 @@
     // tile for each tile request from maplibre
     demSource.setupMaplibre(maplibregl);
 
-    const map = (window.map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         zoom: 13,
         center: [11.3229, 47.2738],
@@ -111,7 +111,7 @@
                 }
             ]
         }
-    }));
+    });
 </script>
 </body>
 </html>

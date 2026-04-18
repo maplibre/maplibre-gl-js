@@ -1,5 +1,6 @@
 import {beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
+import {ensureError} from '../../util/util';
 
 let originalGetContext: typeof HTMLCanvasElement.prototype.getContext;
 beforeEach(() => {
@@ -40,6 +41,20 @@ test('handles "webglcontextlost" when map is created without style', () => {
     map.remove();
 });
 
+test('handles "webglcontextrestored" when map is created without style', async () => {
+    const map = createMap({deleteStyle: true});
+    const canvas = map.getCanvas();
+
+    const contextLostPromise = map.once('webglcontextlost');
+    canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    await contextLostPromise;
+
+    expect(() => {
+        canvas.dispatchEvent(new window.Event('webglcontextrestored'));
+    }).not.toThrow();
+    map.remove();
+});
+
 test('does not fire "webglcontextrestored" after remove has been called', async () => {
     const map = createMap();
     const canvas = map.getCanvas();
@@ -70,7 +85,7 @@ test('WebGL error while creating map', () => {
     try {
         createMap();
     } catch (e) {
-        const errorMessageObject = JSON.parse(e.message);
+        const errorMessageObject = JSON.parse(ensureError(e).message);
 
         // this message is from map code
         expect(errorMessageObject.message).toBe('Failed to initialize WebGL');
@@ -91,14 +106,14 @@ test('Check Map is being created with desired WebGL version', () => {
     try {
         createMap({canvasContextAttributes: {contextType: 'webgl2'}});
     } catch (e) {
-        const errorMessageObject = JSON.parse(e.message);
+        const errorMessageObject = JSON.parse(ensureError(e).message);
         expect(errorMessageObject.statusMessage).toBe('webgl2 is not supported');
     }
   
     try {
         createMap({canvasContextAttributes: {contextType: 'webgl'}});
     } catch (e) {
-        const errorMessageObject = JSON.parse(e.message);
+        const errorMessageObject = JSON.parse(ensureError(e).message);
         expect(errorMessageObject.statusMessage).toBe('webgl is not supported');
     }
 

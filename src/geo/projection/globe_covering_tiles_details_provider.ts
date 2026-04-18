@@ -9,6 +9,7 @@ import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provid
 import {OverscaledTileID} from '../../tile/tile_id';
 import {earthRadius} from '../lng_lat';
 import {ConvexVolume} from '../../util/primitives/convex_volume';
+import type {IBoundingVolume} from '../../util/primitives/bounding_volume';
 import {threePlaneIntersection} from '../../util/util';
 
 /**
@@ -57,7 +58,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
      * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
      * when crossing the poles Y is mirrored and X is shifted by half world size.
      */
-    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _bv: ConvexVolume): number {
+    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _bv: IBoundingVolume): number {
         const scale = 1 << tileID.z;
         const tileMercatorSize = 1.0 / scale;
         const tileCornerX = tileID.x / scale; // In range 0..1

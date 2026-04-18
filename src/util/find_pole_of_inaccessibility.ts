@@ -70,19 +70,26 @@ export function findPoleOfInaccessibility(
     return bestCell.p;
 }
 
-function compareMax(a, b) {
+function compareMax(a: Cell, b: Cell) {
     return b.max - a.max;
 }
 
-function Cell(x, y, h, polygon) {
-    this.p = new Point(x, y);
-    this.h = h; // half the cell size
-    this.d = pointToPolygonDist(this.p, polygon); // distance from cell center to polygon
-    this.max = this.d + this.h * Math.SQRT2; // max distance to polygon within a cell
+class Cell {
+    p: Point;
+    h: number;
+    d: number;
+    max: number;
+
+    constructor(x: number, y: number, h: number, polygon: Point[][]) {
+        this.p = new Point(x, y);
+        this.h = h; // half the cell size
+        this.d = pointToPolygonDist(this.p, polygon); // distance from cell center to polygon
+        this.max = this.d + this.h * Math.SQRT2; // max distance to polygon within a cell
+    }
 }
 
 // signed distance from point to polygon outline (negative if point is outside)
-function pointToPolygonDist(p, polygon) {
+function pointToPolygonDist(p: Point, polygon: Point[][]) {
     let inside = false;
     let minDistSq = Infinity;
 
@@ -103,7 +110,7 @@ function pointToPolygonDist(p, polygon) {
 }
 
 // get polygon centroid
-export function getCentroidCell(polygon) {
+export function getCentroidCell(polygon: Point[][]) {
     let area = 0;
     let x = 0;
     let y = 0;

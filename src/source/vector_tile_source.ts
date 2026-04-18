@@ -1,6 +1,6 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
 
-import {extend, pick} from '../util/util';
+import {ensureError, extend, pick} from '../util/util';
 import {loadTileJson} from './load_tilejson';
 import {TileBounds} from '../tile/tile_bounds';
 import {ResourceType} from '../util/request_manager';
@@ -135,7 +135,7 @@ export class VectorTileSource extends Evented implements Source {
 
             // only fire error event if it is not due to aborting the request
             if (!isAbortError(err)) {
-                this.fire(new ErrorEvent(err));
+                this.fire(new ErrorEvent(ensureError(err)));
             }
         }
     }

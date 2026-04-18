@@ -1,4 +1,4 @@
-import {extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util';
+import {ensureError, extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util';
 import {browser} from '../util/browser';
 import {now} from '../util/time_control';
 import {DOM} from '../util/dom';
@@ -148,12 +148,12 @@ export type MapOptions = {
      */
     scrollZoom?: boolean | AroundCenterOptions;
     /**
-     * The minimum zoom level of the map (0-24).
+     * The minimum zoom level of the map. Users cannot zoom out beyond this level. (0–24)
      * @defaultValue 0
      */
     minZoom?: number | null;
     /**
-     * The maximum zoom level of the map (0-24).
+     * The maximum zoom level of the map. Users cannot zoom in beyond this level. (0–24)
      * @defaultValue 22
      */
     maxZoom?: number | null;
@@ -2174,7 +2174,7 @@ export class Map extends Camera {
             } catch (error) {
                 this._diffStyleRequest = null;
                 if (!isAbortError(error)) {
-                    this.fire(new ErrorEvent(error));
+                    this.fire(new ErrorEvent(ensureError(error)));
                 }
             }
         } else if (typeof style === 'object') {
@@ -2190,7 +2190,7 @@ export class Map extends Camera {
             }
         } catch (e) {
             warnOnce(
-                `Unable to perform style diff: ${e.message || e.error || e}.  Rebuilding the style from scratch.`
+                `Unable to perform style diff: ${ensureError(e).message}.  Rebuilding the style from scratch.`
             );
             this._updateStyle(style, options);
         }
@@ -3532,7 +3532,7 @@ export class Map extends Camera {
             this.setStyle(this._lostContextStyle.style, {diff: false});
         }
 
-        if (this._lostContextStyle.images) {
+        if (this._lostContextStyle.images && this.style) {
             this.style.imageManager.images = this._lostContextStyle.images;
         }
 
