@@ -102,21 +102,27 @@ ${codeBlock}
 }
 
 async function generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray: HtmlDoc[]): Promise<string> {
-    let indexMarkdown = '# Overview \n\n';
+    let indexMarkdown = '# Overview\n\n<div class="examples-grid">\n';
     const promises: Array<Promise<any>> = [];
     for (const indexArrayItem of indexArray) {
         const imagePath = `docs/assets/examples/${indexArrayItem.mdFileName.replace('.md', '.png')}`;
         const outputPath = imagePath.replace('.png', '.webp');
         promises.push(sharp(imagePath).webp({quality: 90, lossless: false}).toFile(outputPath));
-        indexMarkdown += `
-## [${indexArrayItem.title}](./${indexArrayItem.mdFileName})
-
-![${indexArrayItem.description}](${outputPath.replace('docs/', '../')}){ loading=lazy }
-
-${indexArrayItem.description}
+        const desc = indexArrayItem.description || '';
+        indexMarkdown += `<a class="example-card" href="./${indexArrayItem.mdFileName}">
+<div class="example-card-image">
+<img src="${outputPath.replace('docs/', '../')}" loading="lazy" alt="${escapeHtml(desc)}">
+${indexArrayItem.isNew ? '<span class="example-card-badge">new</span>' : '';}
+</div>
+<div class="example-card-content">
+<h3>${escapeHtml(indexArrayItem.title || '')}</h3>
+<p>${escapeHtml(desc)}</p>
+</div>
+</a>
 `;
     }
     await Promise.all(promises);
+    indexMarkdown += '</div>\n';
     return indexMarkdown;
 }
 

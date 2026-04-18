@@ -7,6 +7,7 @@
 
 ### 🐞 Bug fixes
 - Fix `Popup` not updating its position when switching between terrain/globe projections ([#7468](https://github.com/maplibre/maplibre-gl-js/pull/7468)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- _...Add new stuff here..._
 
 ## 5.23.0
 
