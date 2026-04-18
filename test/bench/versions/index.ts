@@ -42,7 +42,7 @@ function register(name, bench) {
     (window as any).maplibreglBenchmarks[name][version] = bench;
 }
 
-const style = 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL';
+const style = 'https://tiles.openfreemap.org/styles/liberty';
 const center = [-77.032194, 38.912753];
 const zooms = [4, 8, 11, 13, 15, 17];
 const locations = zooms.map(zoom => ({center, zoom}));

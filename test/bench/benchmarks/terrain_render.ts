@@ -14,34 +14,30 @@ export default class TerrainRender extends Benchmark {
                 height: 768,
                 center: [10.5, 46.9],
                 pitch: 60,
-                style: {
-                    version: 8,
-                    sources: {
-                        'terrain-rgb': {
-                            'type': 'raster-dem',
-                            'url': 'https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
-                        }
-                    },
-                    terrain: {
-                        source: 'terrain-rgb',
-                        exaggeration: 1
-                    },
-                    layers: [
-                        {
-                            'id': 'background',
-                            'type': 'background',
-                            'paint': {'background-color': '#f8f4f0'}
-                        }
-                    ]
-                },
+                style: 'https://tiles.openfreemap.org/styles/liberty',
                 idle: true
             });
+
+            this.map.addSource('terrain-dem', {
+                type: 'raster-dem',
+                url: 'https://tiles.mapterhorn.com/tilejson.json'
+            });
+            this.map.setTerrain({source: 'terrain-dem', exaggeration: 1.5});
+
+            // Wait for DEM tiles to load
+            await this.map.once('idle');
         } catch (error) {
             console.error(error);
         }
     }
 
+    _bearing: number = 0;
+
     bench() {
+        // Rotate the camera slightly each frame to force depth pre-pass to re-run
+        // and symbol layers to recalculate visibility against terrain depth
+        this._bearing = (this._bearing + 0.5) % 360;
+        this.map.setBearing(this._bearing);
         Benchmark.renderMap(this.map);
     }
 

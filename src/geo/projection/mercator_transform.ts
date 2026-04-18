@@ -12,6 +12,7 @@ import {EXTENT} from '../../data/extent';
 import {TransformHelper} from '../transform_helper';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider';
 import {Frustum} from '../../util/primitives/frustum';
+import {fastInvertProjMat4} from '../../util/fast_maths';
 
 import type {Terrain} from '../../render/terrain';
 import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface';
@@ -611,7 +612,7 @@ export class MercatorTransform implements ITransform {
         m = new Float64Array(16) as any;
         mat4.perspective(m, this.fovInRadians, this._helper._width / this._helper._height, this._helper._nearZ, this._helper._farZ);
         this._invProjMatrix = new Float64Array(16) as any as mat4;
-        mat4.invert(this._invProjMatrix, m);
+        fastInvertProjMat4(this._invProjMatrix, m);
 
         // Apply center of perspective offset
         m[8] = -offset.x * 2 / this._helper._width;
