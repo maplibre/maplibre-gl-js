@@ -6,7 +6,7 @@ describe('Example HTML files', () => {
     const exampleFiles = globSync('test/examples/*.html').sort();
 
     for (const exampleFile of exampleFiles) {
-        const content = fs.readFileSync(file, 'utf-8');
+        const content = fs.readFileSync(exampleFile, 'utf-8');
         test(`${exampleFile} has og:created meta tag`, () => {
             const createdMatch = content.match(/<meta\s+property=["']og:created["']\s+content=["']([^"']*)["']/);
             if (!createdMatch) {
