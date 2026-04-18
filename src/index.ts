@@ -55,7 +55,7 @@ import type {Complete, RequireAtLeastOne, Subscription} from './util/util';
 import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles';
 import type {TransformConstrainFunction} from './geo/transform_interface';
 import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, TextFit} from './style/style_image';
-import type {StyleLayer} from './style/style_layer';
+import type {StyleLayer, PaintPropertyEntry} from './style/style_layer';
 import type {Tile} from './tile/tile';
 import type {GeoJSONFeatureDiff, GeoJSONFeatureId, GeoJSONSourceDiff} from './source/geojson_source_diff';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from './source/query_features';
@@ -264,6 +264,7 @@ export {
     type StyleImageData,
     type StyleImageMetadata,
     type StyleLayer,
+    type PaintPropertyEntry,
     type GetResourceResponse,
     type MapGeoJSONFeature,
     type Alignment,
