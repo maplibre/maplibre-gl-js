@@ -23,7 +23,7 @@ import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSource
 import {TaskQueue} from '../util/task_queue';
 import {throttle} from '../util/throttle';
 import {type Source} from '../source/source';
-import {type StyleLayer} from '../style/style_layer';
+import type {StyleLayer, PaintPropertyEntry} from '../style/style_layer';
 import {Terrain} from '../render/terrain';
 import {RenderToTexture} from '../webgl/render_to_texture';
 import {config} from '../util/config';
