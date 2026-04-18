@@ -1,4 +1,6 @@
-import {Uniform1i, Uniform1f, Uniform2f, Uniform3f} from '../uniform_binding';
+import {mat4} from 'gl-matrix';
+
+import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, UniformMatrix4f} from '../uniform_binding';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {extend, translatePosition} from '../../util/util';
 
@@ -49,6 +51,13 @@ export type LineSDFUniformsType = {
     'u_mix': Uniform1f;
     'u_lineatlas_width': Uniform1f;
     'u_lineatlas_height': Uniform1f;
+};
+
+export type LineTextureUniformsType = {
+    'u_matrix': UniformMatrix4f;
+    'u_world': Uniform2f;
+    'u_image': Uniform1i;
+    'u_opacity': Uniform1f;
 };
 
 export type LineGradientSDFUniformsType = {
@@ -106,6 +115,13 @@ const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDF
     'u_crossfade_to': new Uniform1f(context, locations.u_crossfade_to),
     'u_lineatlas_width': new Uniform1f(context, locations.u_lineatlas_width),
     'u_lineatlas_height': new Uniform1f(context, locations.u_lineatlas_height)
+});
+
+const lineTextureUniforms = (context: Context, locations: UniformLocations): LineTextureUniformsType => ({
+    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
+    'u_world': new Uniform2f(context, locations.u_world),
+    'u_image': new Uniform1i(context, locations.u_image),
+    'u_opacity': new Uniform1f(context, locations.u_opacity)
 });
 
 const lineGradientSDFUniforms = (context: Context, locations: UniformLocations): LineGradientSDFUniformsType => ({
@@ -226,6 +242,24 @@ const lineGradientSDFUniformValues = (
     });
 };
 
+const lineTextureUniformValues = (
+    painter: Painter,
+    layer: LineStyleLayer,
+    textureUnit: number
+): UniformValues<LineTextureUniformsType> => {
+    const matrix = mat4.create();
+    mat4.ortho(matrix, 0, painter.width, painter.height, 0, 0, 1);
+
+    const gl = painter.context.gl;
+
+    return {
+        'u_matrix': matrix,
+        'u_world': [gl.drawingBufferWidth, gl.drawingBufferHeight],
+        'u_image': textureUnit,
+        'u_opacity': layer.paint.get('line-opacity').constantOr(1)
+    };
+};
+
 function calculateTileRatio(tile: Tile, transform: IReadonlyTransform) {
     return 1 / pixelsToTileUnits(tile, 1, transform.tileZoom);
 }
@@ -246,9 +280,11 @@ export {
     linePatternUniforms,
     lineSDFUniforms,
     lineGradientSDFUniforms,
+    lineTextureUniforms,
     lineUniformValues,
     lineGradientUniformValues,
     linePatternUniformValues,
     lineSDFUniformValues,
-    lineGradientSDFUniformValues
+    lineGradientSDFUniformValues,
+    lineTextureUniformValues
 };
