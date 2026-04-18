@@ -160,7 +160,7 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
         layer.lineFbo = null;
     }
 
-    // if the oppacity is not constant (full/tansparent), we need to render to an offscreen FBO at full oppacity and the 
+    // if the opacity is not constant (full/tansparent), we need to render to an offscreen FBO at full opacity and the 
     // composite pass will apply the opacity.
     // If we do this any other way, there will be really ugly artifacts
     if (useOffscreen) {
