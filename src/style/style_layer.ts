@@ -34,7 +34,7 @@ import {type mat4} from 'gl-matrix';
 import type {UnwrappedTileID} from '../tile/tile_id';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
-type PaintPropertyEntry = { [K in keyof AllPaintProperties]: {name: K; value: AllPaintProperties[K]} }[keyof AllPaintProperties];
+export type PaintPropertyEntry = { [K in keyof AllPaintProperties]: {name: K; value: AllPaintProperties[K]} }[keyof AllPaintProperties];
 
 export type QueryIntersectsFeatureParams = {
     /**
