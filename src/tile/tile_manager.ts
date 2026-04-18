@@ -404,7 +404,8 @@ export class TileManager extends Evented {
             // determine if the loaded tile (hasData) is a qualified descendent of any target tile
             for (const targetID of targetTileIDs) {
                 if (tile.tileID.isChildOf(targetID)) {
-                    (loadedDescendents[targetID.key] ||= []).push(tile);
+                    loadedDescendents[targetID.key] ||= [];
+                    loadedDescendents[targetID.key].push(tile);
                 }
             }
         }
@@ -935,7 +936,7 @@ export class TileManager extends Evented {
      * Set the value of a particular state for a feature
      */
     setFeatureState(sourceLayer: string, featureId: number | string, state: any) {
-        sourceLayer = sourceLayer || GEOJSON_TILE_LAYER_NAME;
+        sourceLayer ||= GEOJSON_TILE_LAYER_NAME;
         this._state.updateState(sourceLayer, featureId, state);
     }
 
@@ -943,7 +944,7 @@ export class TileManager extends Evented {
      * Resets the value of a particular state key for a feature
      */
     removeFeatureState(sourceLayer?: string, featureId?: number | string, key?: string) {
-        sourceLayer = sourceLayer || GEOJSON_TILE_LAYER_NAME;
+        sourceLayer ||= GEOJSON_TILE_LAYER_NAME;
         this._state.removeFeatureState(sourceLayer, featureId, key);
     }
 
@@ -951,7 +952,7 @@ export class TileManager extends Evented {
      * Get the entire state object for a feature
      */
     getFeatureState(sourceLayer: string, featureId: number | string) {
-        sourceLayer = sourceLayer || GEOJSON_TILE_LAYER_NAME;
+        sourceLayer ||= GEOJSON_TILE_LAYER_NAME;
         return this._state.getState(sourceLayer, featureId);
     }
 
