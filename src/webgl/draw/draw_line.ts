@@ -151,18 +151,20 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     const width = layer.paint.get('line-width');
     if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0) return;
 
-    const constantOpacity = opacity.constantOr(-1);
-    const useOffscreen = constantOpacity > 0 && constantOpacity < 1 && !painter.style.map.terrain;
+    const useOffscreen = layer.hasOffscreenPass() && !painter.style.map.terrain;
 
-    // Free FBO when offscreen path is no longer needed
+    // GC the FBO if style is transtitoned from having opacity to not having oppacity
     if (!useOffscreen && layer.lineFbo) {
         layer.lineFbo.destroy();
         layer.lineFbo = null;
     }
 
-    // if the opacity is not constant (full/tansparent), we need to render to an offscreen FBO at full opacity and the 
+    // if the opacity is not constant (full/tansparent), we need to render to an offscreen FBO at full opacity and the
     // composite pass will apply the opacity.
-    // If we do this any other way, there will be really ugly artifacts
+    // If we do this any other way, there will be hideous artifacts
+    //
+    // Because terrain may have cases where we snake and thus need the oppacity, we are currently accepting the artefacts.
+    // Needs more looking into how to solve this.
     if (useOffscreen) {
         if (painter.renderPass === 'offscreen') {
             drawLineOffscreen(painter, tileManager, layer, coords, renderOptions);
