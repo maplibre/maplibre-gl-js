@@ -1,41 +1,42 @@
-
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
+import {
+    installTerrainBenchProtocols,
+    buildTerrainBenchStyle,
+    TERRAIN_BENCH_CAMERA,
+} from '../lib/terrain_style';
+import type {Map} from '../../../src/ui/map';
 
+// Measures steady-state per-render cost with terrain enabled and a
+// contrived many-layer style. The map is created once, loaded to idle,
+// then each iteration rotates the camera slightly and renders. Tiles
+// and shaders are already warm so this measures the fast path.
+// For full load-to-idle cost see terrain_load.ts.
 export default class TerrainRender extends Benchmark {
-
-    map: any;
+    map: Map;
+    uninstallProtocols: () => void;
+    _bearing = TERRAIN_BENCH_CAMERA.bearing;
 
     async setup() {
-        try {
-            this.map = await createMap({
-                zoom: 12,
-                width: 1024,
-                height: 768,
-                center: [10.5, 46.9],
-                pitch: 60,
-                style: 'https://tiles.openfreemap.org/styles/liberty',
-                idle: true
-            });
+        this.uninstallProtocols = await installTerrainBenchProtocols();
 
-            this.map.addSource('terrain-dem', {
-                type: 'raster-dem',
-                url: 'https://tiles.mapterhorn.com/tilejson.json'
-            });
-            this.map.setTerrain({source: 'terrain-dem', exaggeration: 1.5});
+        this.map = await createMap({
+            ...TERRAIN_BENCH_CAMERA,
+            style: buildTerrainBenchStyle(),
+            fadeDuration: 0,
+            stubRender: false,
+            showMap: true,
+            idle: true,
+        });
 
-            // Wait for DEM tiles to load
-            await this.map.once('idle');
-        } catch (error) {
-            console.error(error);
-        }
+        this.map.setTerrain({source: 'dem', exaggeration: 1});
+        await new Promise(resolve => this.map.once('idle', resolve));
     }
 
-    _bearing: number = 0;
-
     bench() {
-        // Rotate the camera slightly each frame to force depth pre-pass to re-run
-        // and symbol layers to recalculate visibility against terrain depth
+        // Rotate the camera slightly each frame to force the depth
+        // pre-pass to re-run and symbol layers to recalculate visibility
+        // against terrain depth.
         this._bearing = (this._bearing + 0.5) % 360;
         this.map.setBearing(this._bearing);
         Benchmark.renderMap(this.map);
@@ -43,5 +44,6 @@ export default class TerrainRender extends Benchmark {
 
     teardown() {
         this.map.remove();
+        this.uninstallProtocols?.();
     }
 }
