@@ -11,7 +11,7 @@ import {OverscaledTileID} from '../tile/tile_id';
 import {fakeServer, type FakeServer} from 'nise';
 
 import {type EvaluationParameters} from './evaluation_parameters';
-import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification, type AllPaintProperties, type AllLayoutProperties} from '@maplibre/maplibre-gl-style-spec';
+import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification, type CameraFunctionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type GeoJSONSource} from '../source/geojson_source';
 import {StubMap, sleep, waitForEvent} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
@@ -2626,7 +2626,7 @@ describe('Style.setPaintProperty', () => {
         });
 
         await style.once('style.load');
-        const value = {type: 'exponential' as const, stops: [[0, 'red'], [10, 'blue']] as Array<[number, string]>};
+        const value: CameraFunctionSpecification<string> = {type: 'exponential', stops: [[0, 'red'], [10, 'blue']]};
         style.setPaintProperty('background', 'background-color', value);
         expect(style.getPaintProperty('background', 'background-color')).not.toBe(value);
         expect(style._changed).toBeTruthy();
@@ -2688,9 +2688,9 @@ describe('Style.getPaintProperty', () => {
         style.update({} as EvaluationParameters);
         expect(style._changed).toBeFalsy();
 
-        const value = style.getPaintProperty('background', 'background-color') as {type: string; stops: Array<[number, string]>};
+        const value = style.getPaintProperty('background', 'background-color') as CameraFunctionSpecification<string>;
         value.stops[0][0] = 1;
-        style.setPaintProperty('background', 'background-color', value as AllPaintProperties['background-color']);
+        style.setPaintProperty('background', 'background-color', value);
         expect(style._changed).toBeTruthy();
     });
 });
@@ -2719,7 +2719,7 @@ describe('Style.setLayoutProperty', () => {
         });
 
         await style.once('style.load');
-        const value: AllLayoutProperties['line-cap'] = {type: 'exponential', stops: [[0, 'butt'], [10, 'round']]};
+        const value: CameraFunctionSpecification<'butt' | 'round' | 'square'> = {type: 'interval', stops: [[0, 'butt'], [10, 'round']]};
         style.setLayoutProperty('line', 'line-cap', value);
         expect(style.getLayoutProperty('line', 'line-cap')).not.toBe(value);
         expect(style._changed).toBeTruthy();
@@ -2794,13 +2794,13 @@ describe('Style.getLayoutProperty', () => {
         });
 
         await style.once('style.load');
-        style.setLayoutProperty('line', 'line-cap', {type: 'exponential', stops: [[0, 'butt'], [10, 'round']]});
+        style.setLayoutProperty('line', 'line-cap', {type: 'interval', stops: [[0, 'butt'], [10, 'round']]} as CameraFunctionSpecification<'butt' | 'round' | 'square'>);
         style.update({} as EvaluationParameters);
         expect(style._changed).toBeFalsy();
 
-        const value = style.getLayoutProperty('line', 'line-cap') as {type: string; stops: Array<[number, string]>};
+        const value = style.getLayoutProperty('line', 'line-cap') as CameraFunctionSpecification<'butt' | 'round' | 'square'>;
         value.stops[0][0] = 1;
-        style.setLayoutProperty('line', 'line-cap', value as AllLayoutProperties['line-cap']);
+        style.setLayoutProperty('line', 'line-cap', value);
         expect(style._changed).toBeTruthy();
     });
 });

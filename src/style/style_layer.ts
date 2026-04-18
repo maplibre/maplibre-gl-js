@@ -285,7 +285,7 @@ export abstract class StyleLayer extends Evented {
     }
 
     setPaintProperty<K extends keyof AllPaintProperties>(name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}) {
-        if (this._unevaluatedLayout?.hasProperty(name)) {
+        if (name as any === 'visibility' || this._unevaluatedLayout?.hasProperty(name)) {
             this.fire(new ErrorEvent(new Error(name + ERROR_LAYOUT_NOT_PAINT)));
             return false;
         }
