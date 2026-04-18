@@ -26,8 +26,6 @@ import {renderColorRamp} from '../../util/color_ramp';
 import {EXTENT} from '../../data/extent';
 import type {RGBAImage} from '../../util/image';
 
-const FULL_OPACITY = {constantOr: () => 1.0};
-
 type GradientTexture = {
     texture?: Texture;
     gradient?: RGBAImage;
@@ -153,7 +151,7 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
 
     const useOffscreen = layer.hasOffscreenPass() && !painter.style.map.terrain;
 
-    // GC the FBO if style is transtitoned from having opacity to not having oppacity
+    // GC the FBO if style is transtitoned from having opacity to not having opacity
     if (!useOffscreen && layer.lineFbo) {
         layer.lineFbo.destroy();
         layer.lineFbo = null;
@@ -163,7 +161,7 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     // composite pass will apply the opacity.
     // If we do this any other way, there will be hideous artifacts
     //
-    // Because terrain may have cases where we snake and thus need the oppacity, we are currently accepting the artefacts.
+    // Because terrain may have cases where we snake and thus need the opacity, we are currently accepting the artefacts.
     // Needs more looking into how to solve this.
     if (useOffscreen) {
         if (painter.renderPass === 'offscreen') {
@@ -172,7 +170,7 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
             drawLineComposite(painter, layer);
         }
     } else if (painter.renderPass === 'translucent') {
-        drawLineTiles(painter, tileManager, layer, coords, renderOptions, layer.paint, true);
+        drawLineTiles(painter, tileManager, layer, coords, renderOptions, false, true);
     }
 }
 
@@ -191,14 +189,7 @@ function drawLineOffscreen(painter: Painter, tileManager: TileManager, layer: Li
     painter.currentStencilSource = undefined;
     painter._renderTileClippingMasks(layer, coords, false);
 
-    const paintOverride = {
-        get(property: string) {
-            if (property === 'line-opacity') return FULL_OPACITY;
-            return layer.paint.get(property as any);
-        }
-    };
-
-    drawLineTiles(painter, tileManager, layer, coords, renderOptions, paintOverride, false);
+    drawLineTiles(painter, tileManager, layer, coords, renderOptions, true, false);
 }
 
 function drawLineComposite(painter: Painter, layer: LineStyleLayer) {
@@ -224,7 +215,7 @@ function drawLineTiles(
     layer: LineStyleLayer,
     coords: OverscaledTileID[],
     renderOptions: RenderOptions,
-    paint: any,
+    forceFullOpacity: boolean,
     useTerrain: boolean
 ) {
     const {isRenderingToTexture} = renderOptions;
@@ -292,19 +283,19 @@ function drawLineTiles(
 
         let uniformValues;
         if (image) {
-            uniformValues = linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade);
+            uniformValues = linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade, forceFullOpacity);
             bindImagePatternTextures(context, gl, tile, programConfiguration, crossfade);
         } else if (dasharray && gradient) {
-            uniformValues = lineGradientSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, bucket.lineClipsArray.length);
+            uniformValues = lineGradientSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, bucket.lineClipsArray.length, forceFullOpacity);
             bindGradientAndDashTextures(painter, tileManager, context, gl, layer, bucket, coord, programConfiguration, crossfade);
         } else if (dasharray) {
-            uniformValues = lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade);
+            uniformValues = lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, forceFullOpacity);
             bindDasharrayTextures(painter, context, gl, programConfiguration, programChanged, crossfade);
         } else if (gradient) {
-            uniformValues = lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length);
+            uniformValues = lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length, forceFullOpacity);
             bindGradientTextures(painter, tileManager, context, gl, layer, bucket, coord);
         } else {
-            uniformValues = lineUniformValues(painter, tile, layer, pixelRatio);
+            uniformValues = lineUniformValues(painter, tile, layer, pixelRatio, forceFullOpacity);
         }
 
         const stencil = painter.stencilModeForClipping(coord);
@@ -312,7 +303,7 @@ function drawLineTiles(
         program.draw(context, gl.TRIANGLES, depthMode,
             stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
-            paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
+            layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
 
         firstTile = false;
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic
