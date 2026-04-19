@@ -181,7 +181,11 @@ function drawLineOffscreen(painter: Painter, tileManager: TileManager, layer: Li
 
     context.bindFramebuffer.set(layer.lineFbo.framebuffer);
     context.viewport.set([0, 0, painter.width, painter.height]);
-    context.clear({color: Color.transparent});
+    context.clear({color: Color.transparent, depth: 1, stencil: 0});
+
+    // Force stencil masks to render into the FBO
+    painter.currentStencilSource = undefined;
+    painter._renderTileClippingMasks(layer, coords, false);
 
     drawLineTiles(painter, tileManager, layer, coords, renderOptions, true, false);
 }
@@ -214,7 +218,7 @@ function drawLineTiles(
 ) {
     const {isRenderingToTexture} = renderOptions;
 
-    const depthMode = forceFullOpacity ? DepthMode.disabled : painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
+    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
 
     const dasharrayProperty = layer.paint.get('line-dasharray');
@@ -292,7 +296,7 @@ function drawLineTiles(
             uniformValues = lineUniformValues(painter, tile, layer, pixelRatio, forceFullOpacity);
         }
 
-        const stencil = forceFullOpacity ? StencilMode.disabled : painter.stencilModeForClipping(coord);
+        const stencil = painter.stencilModeForClipping(coord);
 
         program.draw(context, gl.TRIANGLES, depthMode,
             stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
@@ -315,8 +319,9 @@ function createLineFbo(context: Context, width: number, height: number): Framebu
 
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 
-    const fbo = context.createFramebuffer(width, height, false, false);
+    const fbo = context.createFramebuffer(width, height, true, true);
     fbo.colorAttachment.set(texture);
+    fbo.depthAttachment.set(context.createRenderbuffer(gl.DEPTH_STENCIL, width, height));
 
     return fbo;
 }
