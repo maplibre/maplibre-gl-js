@@ -97,7 +97,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
             sortFeaturesByKey = !circleSortKey.isConstant();
 
             // Circles that are "printed" onto the map surface should be tessellated to follow the globe's curvature.
-            subdivide = subdivide || circleStyle.paint.get('circle-pitch-alignment') === 'map';
+            subdivide ||= circleStyle.paint.get('circle-pitch-alignment') === 'map';
         }
 
         const granularity = subdivide ? options.subdivisionGranularity.circle : 1;

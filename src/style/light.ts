@@ -74,7 +74,7 @@ export class Light extends Evented {
 
     constructor(lightOptions?: LightSpecification) {
         super();
-        lightProperties = lightProperties || new Properties({
+        lightProperties ||= new Properties({
             'anchor': new DataConstantProperty(styleSpec.light.anchor as StylePropertySpecification),
             'position': new LightPositionProperty(),
             'color': new DataConstantProperty(styleSpec.light.color as StylePropertySpecification),

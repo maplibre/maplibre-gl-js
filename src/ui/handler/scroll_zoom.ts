@@ -60,7 +60,7 @@ export class ScrollZoomHandler implements Handler {
         easing: (_: number) => number;
     };
 
-    _frameId: boolean;
+    _needsRerender: boolean;
     _triggerRenderFrame: () => void;
 
     _defaultZoomRate: number;
@@ -236,9 +236,7 @@ export class ScrollZoomHandler implements Handler {
     _start(e: MouseEvent) {
         if (!this._delta) return;
 
-        if (this._frameId) {
-            this._frameId = null;
-        }
+        this._needsRerender = false;
 
         this._active = true;
         if (!this.isZooming()) {
@@ -260,15 +258,15 @@ export class ScrollZoomHandler implements Handler {
             this._aroundPoint = pos;
         }
 
-        if (!this._frameId) {
-            this._frameId = true;
+        if (!this._needsRerender) {
+            this._needsRerender = true;
             this._triggerRenderFrame();
         }
     }
 
     renderFrame() {
-        if (!this._frameId) return;
-        this._frameId = null;
+        if (!this._needsRerender) return;
+        this._needsRerender = false;
 
         if (!this.isActive()) return;
         const tr = this._tr.transform;
@@ -333,9 +331,7 @@ export class ScrollZoomHandler implements Handler {
             const k = easing(t);
             zoom = interpolates.number(startZoom, targetZoom, k);
             if (t < 1) {
-                if (!this._frameId) {
-                    this._frameId = true;
-                }
+                this._needsRerender = true;
             } else {
                 finished = true;
             }
