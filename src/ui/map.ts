@@ -82,7 +82,7 @@ export type MapOptions = {
      * For example, `https://example.com#2.59/39.26/53.07/-24.1/60`.
      * 
      * An additional string may optionally be provided as an alternative to indicate a parameter-styled hash.
-     * For example, passing `hash: "foo"` can be used to `https://example.com#foo=2.59/39.26/53.07/-24.1/60`.
+     * For example, passing `hash: "foo"` will produce a hash like `https://example.com#foo=2.59/39.26/53.07/-24.1/60`.
      * This is usefull for allowing multiple maps or other state.
      * @defaultValue false
      */
