@@ -12,3 +12,7 @@
  - [ ] Document any changes to public APIs.
  - [ ] Post benchmark scores.
  - [ ] Add an entry to `CHANGELOG.md` under the `## main` section.
+ - [ ] Confirm you have read our AI policy [here](https://github.com/maplibre/maplibre/blob/main/AI_POLICY.md).
+<!--
+  Add one of:    Assisted-By: | Generated-By:     and the model/version
+-->
