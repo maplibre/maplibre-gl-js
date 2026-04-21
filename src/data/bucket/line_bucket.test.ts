@@ -9,6 +9,8 @@ import {type ZoomHistory} from '../../../src/style/zoom_history';
 import {type BucketFeature, type BucketParameters} from '../bucket';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile';
+import {CanonicalTileID} from '../../tile/tile_id';
+import {EXTENT} from '../extent';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const {noSubdivision} = SubdivisionGranularitySetting;
@@ -171,6 +173,98 @@ describe('LineBucket', () => {
         expect(bucket.patternFeatures.length).toBeGreaterThan(0);
         expect(bucket.patternFeatures[0].patterns).toEqual({
             test: {min: 'test-pattern', mid: 'test-pattern', max: 'test-pattern'}
+        });
+    });
+
+    describe('antimeridian ring splitting', () => {
+        const {noSubdivision} = SubdivisionGranularitySetting;
+
+        // Rectangle with one vertical edge on x=0 (the antimeridian on a
+        // left-edge tile) and one on x=EXTENT (right-edge).
+        const polygonLeft = [new Point(0, 100), new Point(0, 7000), new Point(4000, 7000), new Point(4000, 100)];
+        const polygonRight = [new Point(EXTENT, 100), new Point(EXTENT, 7000), new Point(4000, 7000), new Point(4000, 100)];
+        const polygonInterior = [new Point(200, 100), new Point(200, 7000), new Point(4000, 7000), new Point(4000, 100)];
+
+        const polygonFeature = {type: 3, properties: {}} as BucketFeature;
+        const lineFeature = {type: 2, properties: {}} as BucketFeature;
+
+        // Filter only runs when the active projection disables world copies
+        // (globe / vertical perspective). populate() sets this from options;
+        // these tests go straight to addFeature, so we flip it manually.
+        function render(feature: BucketFeature, ring: Point[], tile: CanonicalTileID) {
+            const bucket = createLineBucket({id: 'test'});
+            bucket.worldCopies = false;
+            bucket.addFeature(feature, [ring], undefined, tile, undefined, undefined, noSubdivision);
+            return {
+                vertices: bucket.layoutVertexArray.length,
+                indices: bucket.indexArray.length,
+            };
+        }
+
+        test('polygon ring with an x=0 edge is drawn open on a left-edge tile', () => {
+            const interior = render(polygonFeature, polygonLeft, new CanonicalTileID(4, 5, 5));
+            const border = render(polygonFeature, polygonLeft, new CanonicalTileID(4, 0, 5));
+            expect(border.vertices).toBeLessThan(interior.vertices);
+            expect(border.indices).toBeLessThan(interior.indices);
+        });
+
+        test('polygon ring with an x=EXTENT edge is drawn open on a right-edge tile', () => {
+            const interior = render(polygonFeature, polygonRight, new CanonicalTileID(4, 5, 5));
+            const border = render(polygonFeature, polygonRight, new CanonicalTileID(4, 15, 5));
+            expect(border.vertices).toBeLessThan(interior.vertices);
+            expect(border.indices).toBeLessThan(interior.indices);
+        });
+
+        test('polygon ring without an antimeridian edge is unchanged on a border tile', () => {
+            const interior = render(polygonFeature, polygonInterior, new CanonicalTileID(4, 5, 5));
+            const border = render(polygonFeature, polygonInterior, new CanonicalTileID(4, 0, 5));
+            expect(border).toEqual(interior);
+        });
+
+        test('LineString feature on a border tile is never split', () => {
+            const interior = render(lineFeature, polygonLeft, new CanonicalTileID(4, 5, 5));
+            const border = render(lineFeature, polygonLeft, new CanonicalTileID(4, 0, 5));
+            expect(border).toEqual(interior);
+        });
+
+        test('polygon ring on an interior tile is unchanged regardless of coordinates', () => {
+            const a = render(polygonFeature, polygonLeft, new CanonicalTileID(4, 5, 5));
+            const b = render(polygonFeature, polygonLeft, new CanonicalTileID(4, 7, 5));
+            expect(a).toEqual(b);
+        });
+
+        test('does not split when worldCopies is true (mercator)', () => {
+            // A left-edge tile with worldCopies left at its default (true):
+            // the polygon ring should render as a full closed ring.
+            const mercator = createLineBucket({id: 'test'});
+            mercator.addFeature(polygonFeature, [polygonLeft], undefined, new CanonicalTileID(4, 0, 5), undefined, undefined, noSubdivision);
+            const interior = render(polygonFeature, polygonLeft, new CanonicalTileID(4, 5, 5));
+            expect(mercator.layoutVertexArray.length).toBe(interior.vertices);
+            expect(mercator.indexArray.length).toBe(interior.indices);
+        });
+
+        test('matches explicit open-segment rendering for the split case', () => {
+            // A left-edge tile should produce the same geometry as calling
+            // addLine manually with the ring rotated so the antimeridian edge
+            // is removed and the line is drawn with butt caps.
+            const split = createLineBucket({id: 'test'});
+            split.worldCopies = false;
+            split.addFeature(polygonFeature, [polygonLeft], undefined, new CanonicalTileID(4, 0, 5), undefined, undefined, noSubdivision);
+
+            const manual = createLineBucket({id: 'test'});
+            // polygonLeft = [(0,100),(0,7000),(4000,7000),(4000,100)].
+            // Edge 0 (0,100)→(0,7000) is the antimeridian clip edge. Removing
+            // it leaves one open segment that traces every remaining edge,
+            // starting at the vertex after the clip and ending at the vertex
+            // before it: [(0,7000),(4000,7000),(4000,100),(0,100)]. addLine is
+            // called with butt caps and forceOpenLine=true.
+            manual.addLine(
+                [new Point(0, 7000), new Point(4000, 7000), new Point(4000, 100), new Point(0, 100)],
+                polygonFeature, 'miter', 'butt', 2, 1, new CanonicalTileID(4, 0, 5), noSubdivision, true,
+            );
+
+            expect(split.layoutVertexArray.length).toBe(manual.layoutVertexArray.length);
+            expect(split.indexArray.length).toBe(manual.indexArray.length);
         });
     });
 

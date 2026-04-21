@@ -40,6 +40,8 @@ export type WorkerTileParameters = TileParameters & {
     collectResourceTiming?: boolean;
     returnDependencies?: boolean;
     subdivisionGranularity: SubdivisionGranularitySetting;
+    /** See {@link PopulateParameters.worldCopies}. */
+    worldCopies?: boolean;
     encoding?: string;
     /**
      * Provide this property when the requested tile has a higher canonical Z than source maxzoom.

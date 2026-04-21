@@ -1747,6 +1747,11 @@ export class Style extends Evented {
         this.projection = projectionObjects.projection;
         this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
         for (const key in this.tileManagers) {
+            // Update GeoJSON sources' options to match the new projection
+            const source = this.tileManagers[key].getSource();
+            if (source?.type === 'geojson') {
+                (source as GeoJSONSource)._updateOptionsForProjection();
+            }
             this.tileManagers[key].reload();
         }
     }

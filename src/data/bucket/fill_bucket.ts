@@ -11,6 +11,7 @@ import {hasPattern, addPatternDependencies} from './pattern_bucket_features';
 import {loadGeometry} from '../load_geometry';
 import {toEvaluationFeature} from '../evaluation_feature';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {getAntimeridianEdgePredicate} from './antimeridian_bucket_features';
 
 import type {CanonicalTileID} from '../../tile/tile_id';
 import type {
@@ -56,6 +57,7 @@ export class FillBucket implements Bucket {
     segments: SegmentVector;
     segments2: SegmentVector;
     uploaded: boolean;
+    worldCopies: boolean;
 
     constructor(options: BucketParameters<FillStyleLayer>) {
         this.zoom = options.zoom;
@@ -73,6 +75,7 @@ export class FillBucket implements Bucket {
         this.segments = new SegmentVector();
         this.segments2 = new SegmentVector();
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
+        this.worldCopies = options.worldCopies ?? true;
     }
 
     populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID) {
@@ -178,6 +181,24 @@ export class FillBucket implements Bucket {
 
             const vertexArray = this.layoutVertexArray;
 
+            // Filter out outline edges that lie on the antimeridian tile boundary
+            // (geojson-vt clip artifacts that would otherwise draw a visible seam).
+            // Only relevant when the active projection disables world copies;
+            // otherwise there are no synthetic edges to suppress.
+            const isClipEdge = this.worldCopies ? null : getAntimeridianEdgePredicate(canonical);
+            const lineList = isClipEdge ?
+                subdivided.indicesLineList.map(indices => {
+                    const filtered: number[] = [];
+                    for (let i = 0; i < indices.length; i += 2) {
+                        const i0 = indices[i];
+                        const i1 = indices[i + 1];
+                        if (isClipEdge(subdivided.verticesFlattened[i0 * 2], subdivided.verticesFlattened[i1 * 2])) continue;
+                        filtered.push(i0, i1);
+                    }
+                    return filtered;
+                }) :
+                subdivided.indicesLineList;
+
             fillLargeMeshArrays(
                 (x, y) => {
                     vertexArray.emplaceBack(x, y);
@@ -189,7 +210,7 @@ export class FillBucket implements Bucket {
                 subdivided.indicesTriangles,
                 this.segments2,
                 this.indexArray2,
-                subdivided.indicesLineList,
+                lineList,
             );
         }
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, canonical});

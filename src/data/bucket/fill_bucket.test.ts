@@ -10,6 +10,7 @@ import {type ZoomHistory} from '../../style/zoom_history';
 import {type BucketFeature, type BucketParameters} from '../bucket';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {CanonicalTileID} from '../../tile/tile_id';
+import {EXTENT} from '../extent';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 function createPolygon(numPoints) {
@@ -101,6 +102,75 @@ describe('FillBucket', () => {
             primitiveLength: 126
         });
 
+    });
+
+    describe('antimeridian outline filter', () => {
+        // Clockwise rectangle in tile space. One vertical edge sits on x=0
+        // (antimeridian on the left-most tile), and one on x=EXTENT
+        // (antimeridian on the right-most tile). classifyRings treats clockwise
+        // rings as exterior in MapLibre's tile convention.
+        const leftEdgeRing = [
+            new Point(0, 100),
+            new Point(4000, 100),
+            new Point(4000, 7000),
+            new Point(0, 7000),
+        ];
+        const rightEdgeRing = [
+            new Point(EXTENT, 100),
+            new Point(EXTENT, 7000),
+            new Point(4000, 7000),
+            new Point(4000, 100),
+        ];
+
+        // Filter only runs when the active projection disables world copies
+        // (globe / vertical perspective). populate() sets this from options;
+        // these tests go straight to addFeature, so we flip it manually.
+        function outlineEdgeCount(ring: Point[], tile: CanonicalTileID): number {
+            const bucket = createFillBucket({id: 'test', layout: {}});
+            bucket.worldCopies = false;
+            bucket.addFeature({} as BucketFeature, [ring], undefined, tile, undefined, SubdivisionGranularitySetting.noSubdivision);
+            return bucket.indexArray2.length;
+        }
+
+        function triangleCount(ring: Point[], tile: CanonicalTileID): number {
+            const bucket = createFillBucket({id: 'test', layout: {}});
+            bucket.worldCopies = false;
+            bucket.addFeature({} as BucketFeature, [ring], undefined, tile, undefined, SubdivisionGranularitySetting.noSubdivision);
+            return bucket.indexArray.length;
+        }
+
+        test('drops the x=0 outline edge on a left-edge tile', () => {
+            const interior = outlineEdgeCount(leftEdgeRing, new CanonicalTileID(4, 5, 5));
+            const border = outlineEdgeCount(leftEdgeRing, new CanonicalTileID(4, 0, 5));
+            expect(border).toBe(interior - 1);
+        });
+
+        test('drops the x=EXTENT outline edge on a right-edge tile', () => {
+            const interior = outlineEdgeCount(rightEdgeRing, new CanonicalTileID(4, 5, 5));
+            const border = outlineEdgeCount(rightEdgeRing, new CanonicalTileID(4, 15, 5));
+            expect(border).toBe(interior - 1);
+        });
+
+        test('does not affect the fill triangulation', () => {
+            const interior = triangleCount(leftEdgeRing, new CanonicalTileID(4, 5, 5));
+            const border = triangleCount(leftEdgeRing, new CanonicalTileID(4, 0, 5));
+            expect(border).toBe(interior);
+        });
+
+        test('does not suppress edges on the non-matching border', () => {
+            const leftTileWithRightEdge = outlineEdgeCount(rightEdgeRing, new CanonicalTileID(4, 0, 5));
+            const interior = outlineEdgeCount(rightEdgeRing, new CanonicalTileID(4, 5, 5));
+            expect(leftTileWithRightEdge).toBe(interior);
+        });
+
+        test('does not run when worldCopies is true (mercator)', () => {
+            // Same ring on a left-edge tile but with worldCopies left at its
+            // default (true): the x=0 edge must be preserved.
+            const bucket = createFillBucket({id: 'test', layout: {}});
+            bucket.addFeature({} as BucketFeature, [leftEdgeRing], undefined, new CanonicalTileID(4, 0, 5), undefined, SubdivisionGranularitySetting.noSubdivision);
+            const interior = outlineEdgeCount(leftEdgeRing, new CanonicalTileID(4, 5, 5));
+            expect(bucket.indexArray2.length).toBe(interior);
+        });
     });
 
     test('FillBucket fill-pattern with global-state', () => {

@@ -13,6 +13,7 @@ import {loadGeometry} from '../load_geometry';
 import {toEvaluationFeature} from '../evaluation_feature';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {subdivideVertexLine} from '../../render/subdivision';
+import {getAntimeridianEdgePredicate} from './antimeridian_bucket_features';
 
 import type {CanonicalTileID} from '../../tile/tile_id';
 import type {
@@ -120,6 +121,7 @@ export class LineBucket implements Bucket {
     programConfigurations: ProgramConfigurationSet<LineStyleLayer>;
     segments: SegmentVector;
     uploaded: boolean;
+    worldCopies: boolean;
 
     constructor(options: BucketParameters<LineStyleLayer>) {
         this.zoom = options.zoom;
@@ -143,6 +145,7 @@ export class LineBucket implements Bucket {
         this.maxLineLength = 0;
 
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
+        this.worldCopies = options.worldCopies ?? true;
     }
 
     populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID) {
@@ -262,14 +265,30 @@ export class LineBucket implements Bucket {
         const roundLimit = layout.get('line-round-limit').evaluate(feature, {});
         this.lineClips = this.lineFeatureClips(feature);
 
+        const isPolygon = VectorTileFeature.types[feature.type] === 'Polygon';
+        // The antimeridian split only matters when geojson-vt has clipped the
+        // feature at the world boundary (worldCopies: false). Skipping it in
+        // mercator mode avoids incidentally suppressing real user edges that
+        // happen to sit exactly on x=0 or x=EXTENT.
+        const splitAtAntimeridian = isPolygon && !this.worldCopies;
+
         for (const line of geometry) {
+            if (splitAtAntimeridian) {
+                const segments = splitRingAtAntimeridian(line, canonical);
+                if (segments) {
+                    for (const segment of segments) {
+                        this.addLine(segment, feature, join, 'butt', miterLimit, roundLimit, canonical, subdivisionGranularity, true);
+                    }
+                    continue;
+                }
+            }
             this.addLine(line, feature, join, cap, miterLimit, roundLimit, canonical, subdivisionGranularity);
         }
 
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, dashPositions, canonical});
     }
 
-    addLine(vertices: Point[], feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting) {
+    addLine(vertices: Point[], feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting, forceOpenLine: boolean = false) {
         this.distance = 0;
         this.scaledDistance = 0;
         this.totalDistance = 0;
@@ -288,7 +307,7 @@ export class LineBucket implements Bucket {
             this.maxLineLength = Math.max(this.maxLineLength, this.totalDistance);
         }
 
-        const isPolygon = VectorTileFeature.types[feature.type] === 'Polygon';
+        const isPolygon = !forceOpenLine && VectorTileFeature.types[feature.type] === 'Polygon';
 
         // If the line has duplicate vertices at the ends, adjust start/length to remove them.
         let len = vertices.length;
@@ -647,6 +666,45 @@ export class LineBucket implements Bucket {
             bucketFeature.dashes[layer.id] = {min: minKey, mid: midKey, max: maxKey};
         }
     }
+}
+
+/**
+ * Splits a polygon ring at edges that lie on the antimeridian tile boundary.
+ * Returns an array of open line segments, or null if no antimeridian edges were found.
+ *
+ * When geojson-vt clips polygons at the antimeridian, artificial edges are created
+ * along the clip boundary. By splitting the ring at these edges and drawing the
+ * segments as open lines, we avoid rendering visible strokes at the antimeridian seam.
+ */
+function splitRingAtAntimeridian(ring: Point[], canonical: CanonicalTileID): Point[][] | null {
+    const isClipEdge = getAntimeridianEdgePredicate(canonical);
+    if (!isClipEdge) return null;
+
+    const n = ring.length;
+    const edgeIsClip = (i: number) => isClipEdge(ring[i].x, ring[(i + 1) % n].x);
+
+    // Locate the first clip edge and start the walk at the vertex *after* it,
+    // so that every non-clip edge — including the one closing the final segment
+    // back to the clip edge's start vertex — is emitted exactly once.
+    let start = -1;
+    for (let i = 0; i < n; i++) {
+        if (edgeIsClip(i)) { start = (i + 1) % n; break; }
+    }
+    if (start < 0) return null;
+
+    const segments: Point[][] = [];
+    let current: Point[] = [];
+    for (let k = 0; k < n; k++) {
+        const i = (start + k) % n;
+        current.push(ring[i]);
+        if (edgeIsClip(i)) {
+            if (current.length >= 2) segments.push(current);
+            current = [];
+        }
+    }
+    if (current.length >= 2) segments.push(current);
+
+    return segments;
 }
 
 register('LineBucket', LineBucket, {omit: ['layers', 'patternFeatures']});

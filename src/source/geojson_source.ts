@@ -237,7 +237,38 @@ export class GeoJSONSource extends Evented implements Source {
 
     onAdd(map: Map) {
         this.map = map;
+        this._updateOptionsForProjection();
         this.load();
+    }
+
+    /**
+     * Updates geojson-vt options based on the current map projection. Globe and
+     * verticalperspective don't have world copies, so features near the antimeridian
+     * must not be wrapped into duplicate copies — otherwise they render twice.
+     * @internal
+     */
+    _updateOptionsForProjection() {
+        const worldCopies = this.map?.transform?.getCoveringTilesDetailsProvider().allowWorldCopies() ?? true;
+
+        // `worldCopies` is supported at runtime by @maplibre/geojson-vt but isn't
+        // yet exposed in the published type. Cast locally.
+        const opts = this.workerOptions.geojsonVtOptions as typeof this.workerOptions.geojsonVtOptions & {worldCopies?: boolean};
+        if (opts.worldCopies === worldCopies) return;
+        opts.worldCopies = worldCopies;
+
+        // Re-seed pending data so the worker rebuilds the geojson-vt index with the
+        // new option. Without this, a projection switch would reload against an
+        // index still built with the previous worldCopies setting.
+        if (!this._hasPendingWorkerUpdate()) {
+            this._pendingWorkerUpdate.data = this._getCurrentData();
+        }
+        this._updateWorkerData();
+    }
+
+    private _getCurrentData(): GeoJSON.GeoJSON | string {
+        return this._data.updateable ?
+            {type: 'FeatureCollection', features: Array.from(this._data.updateable.values())} :
+            this._data.url || this._data.geojson;
     }
 
     /**
@@ -598,7 +629,9 @@ export class GeoJSONSource extends Evented implements Source {
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId,
-            subdivisionGranularity: this.map.style.projection.subdivisionGranularity
+            subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
+            // Already kept in sync with the projection by _updateOptionsForProjection.
+            worldCopies: (this.workerOptions.geojsonVtOptions as {worldCopies?: boolean}).worldCopies,
         };
 
         tile.abortController = new AbortController();
@@ -632,12 +665,7 @@ export class GeoJSONSource extends Evented implements Source {
     serialize(): GeoJSONSourceSpecification {
         return extend({}, this._options, {
             type: this.type,
-            data: this._data.updateable ?
-                {
-                    type: 'FeatureCollection',
-                    features: Array.from(this._data.updateable.values())
-                } :
-                this._data.url || this._data.geojson
+            data: this._getCurrentData()
         });
     }
 
