@@ -1,6 +1,6 @@
 ## Launch Checklist
 
-<!-- Thanks for the PR! Feel free to add or remove items from the checklist. -->
+<!-- Thanks for the PR! Feel free to add or remove items that are not relevant. -->
 
 
  - [ ] Confirm **your changes do not include backports from Mapbox projects** (unless with compliant license) - if you are not sure about this, please ask!
