@@ -102,21 +102,27 @@ ${codeBlock}
 }
 
 async function generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray: HtmlDoc[]): Promise<string> {
-    let indexMarkdown = '# Overview \n\n';
+    let indexMarkdown = '# Overview\n\n<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-top:1rem">\n';
     const promises: Array<Promise<any>> = [];
     for (const indexArrayItem of indexArray) {
         const imagePath = `docs/assets/examples/${indexArrayItem.mdFileName.replace('.md', '.png')}`;
         const outputPath = imagePath.replace('.png', '.webp');
         promises.push(sharp(imagePath).webp({quality: 90, lossless: false}).toFile(outputPath));
-        indexMarkdown += `
-## [${indexArrayItem.title}](./${indexArrayItem.mdFileName})
-
-![${indexArrayItem.description}](${outputPath.replace('docs/', '../')}){ loading=lazy }
-
-${indexArrayItem.description}
+        const desc = indexArrayItem.description || '';
+        indexMarkdown += `<a class="example-card" href="./${indexArrayItem.mdFileName.replace(/.md$/, '/')}" style="border:1px solid var(--md-default-fg-color--lightest);border-radius:0.5rem;text-decoration:none!important;color:inherit!important;transition:box-shadow 0.2s,transform 0.2s;display:flex;flex-direction:column">
+<div style="position:relative;overflow:hidden;border-radius:0.5rem 0.5rem 0 0">
+<img src="${outputPath.replace('docs/', '../')}" loading="lazy" alt="${desc}" style="width:100%;aspect-ratio:12/5;object-fit:cover;display:block">
+${indexArrayItem.isNew ? '<span style="position:absolute;top:0.5rem;right:0.5rem;padding:0.15rem 0.5rem;font-size:0.75rem;font-weight:800;text-transform:uppercase;background:var(--md-primary-fg-color);color:white;border-radius:0.25rem">new</span>' : ''}
+</div>
+<div style="padding:0.6rem 0.8rem">
+<h3 style="margin:0 0 0.25rem;font-size:0.85rem;font-weight:600">${indexArrayItem.title}</h3>
+<p style="margin:0;font-size:0.75rem;color:var(--md-default-fg-color--light);line-height:1.4">${desc}</p>
+</div>
+</a>
 `;
     }
     await Promise.all(promises);
+    indexMarkdown += '</div>\n';
     return indexMarkdown;
 }
 
