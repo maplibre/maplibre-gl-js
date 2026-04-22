@@ -10,27 +10,27 @@ describe('getAntimeridianEdgePredicate', () => {
     });
 
     test('left-edge tile (x === 0) flags x=0 edges only', () => {
-        const pred = getAntimeridianEdgePredicate(new CanonicalTileID(2, 0, 1));
-        expect(pred).not.toBeNull();
-        expect(pred(0, 0)).toBe(true);
-        expect(pred(0, 10)).toBe(false);
-        expect(pred(10, 0)).toBe(false);
-        expect(pred(EXTENT, EXTENT)).toBe(false);
+        const isEdge = getAntimeridianEdgePredicate(new CanonicalTileID(2, 0, 1));
+        expect(isEdge).not.toBeNull();
+        expect(isEdge(0, 0)).toBe(true);
+        expect(isEdge(0, 10)).toBe(false);
+        expect(isEdge(10, 0)).toBe(false);
+        expect(isEdge(EXTENT, EXTENT)).toBe(false);
     });
 
     test('right-edge tile (x === (1<<z) - 1) flags x=EXTENT edges only', () => {
-        const pred = getAntimeridianEdgePredicate(new CanonicalTileID(2, 3, 1));
-        expect(pred).not.toBeNull();
-        expect(pred(EXTENT, EXTENT)).toBe(true);
-        expect(pred(EXTENT, 10)).toBe(false);
-        expect(pred(0, 0)).toBe(false);
+        const isEdge = getAntimeridianEdgePredicate(new CanonicalTileID(2, 3, 1));
+        expect(isEdge).not.toBeNull();
+        expect(isEdge(EXTENT, EXTENT)).toBe(true);
+        expect(isEdge(EXTENT, 10)).toBe(false);
+        expect(isEdge(0, 0)).toBe(false);
     });
 
     test('zoom 0 tile is both the left and right edge', () => {
-        const pred = getAntimeridianEdgePredicate(new CanonicalTileID(0, 0, 0));
-        expect(pred).not.toBeNull();
-        expect(pred(0, 0)).toBe(true);
-        expect(pred(EXTENT, EXTENT)).toBe(true);
-        expect(pred(0, EXTENT)).toBe(false);
+        const isEdge = getAntimeridianEdgePredicate(new CanonicalTileID(0, 0, 0));
+        expect(isEdge).not.toBeNull();
+        expect(isEdge(0, 0)).toBe(true);
+        expect(isEdge(EXTENT, EXTENT)).toBe(true);
+        expect(isEdge(0, EXTENT)).toBe(false);
     });
 });

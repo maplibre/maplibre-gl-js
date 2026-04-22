@@ -21,13 +21,6 @@ export type BucketParameters<Layer extends TypedStyleLayer> = {
     collisionBoxArray: CollisionBoxArray;
     sourceLayerIndex: number;
     sourceID: string;
-    /**
-     * Whether the source wraps features into duplicate world copies. Only
-     * `false` when the active projection disallows world copies (globe,
-     * vertical perspective) AND the source is GeoJSON — in which case features
-     * are clipped at the antimeridian and buckets must suppress the resulting
-     * synthetic outline edges. Defaults to `true` when omitted.
-     */
     worldCopies?: boolean;
 };
 

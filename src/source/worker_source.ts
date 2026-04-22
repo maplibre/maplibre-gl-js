@@ -40,7 +40,6 @@ export type WorkerTileParameters = TileParameters & {
     collectResourceTiming?: boolean;
     returnDependencies?: boolean;
     subdivisionGranularity: SubdivisionGranularitySetting;
-    /** See {@link PopulateParameters.worldCopies}. */
     worldCopies?: boolean;
     encoding?: string;
     /**

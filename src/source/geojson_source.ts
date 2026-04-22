@@ -209,6 +209,7 @@ export class GeoJSONSource extends Evented implements Source {
                     log: false,
                     generateId: options.generateId || false
                 },
+                worldCopies: true
             },
             clusterProperties: options.clusterProperties,
             filter: options.filter
@@ -237,32 +238,28 @@ export class GeoJSONSource extends Evented implements Source {
 
     onAdd(map: Map) {
         this.map = map;
-        this._updateOptionsForProjection();
+        this._updateOptionsForProjection(false);
         this.load();
     }
 
     /**
      * Updates geojson-vt options based on the current map projection. Globe and
      * verticalperspective don't have world copies, so features near the antimeridian
-     * must not be wrapped into duplicate copies — otherwise they render twice.
+     * must not be wrapped into duplicate copies, otherwise they render twice.
      * @internal
      */
-    _updateOptionsForProjection() {
+    _updateOptionsForProjection(updateData: boolean = true) {
         const worldCopies = this.map?.transform?.getCoveringTilesDetailsProvider().allowWorldCopies() ?? true;
 
-        // `worldCopies` is supported at runtime by @maplibre/geojson-vt but isn't
-        // yet exposed in the published type. Cast locally.
-        const opts = this.workerOptions.geojsonVtOptions as typeof this.workerOptions.geojsonVtOptions & {worldCopies?: boolean};
+
+        const opts = this.workerOptions.geojsonVtOptions
         if (opts.worldCopies === worldCopies) return;
         opts.worldCopies = worldCopies;
 
-        // Re-seed pending data so the worker rebuilds the geojson-vt index with the
-        // new option. Without this, a projection switch would reload against an
-        // index still built with the previous worldCopies setting.
-        if (!this._hasPendingWorkerUpdate()) {
+        if (updateData && !this._hasPendingWorkerUpdate()) {
             this._pendingWorkerUpdate.data = this._getCurrentData();
+            this._updateWorkerData();
         }
-        this._updateWorkerData();
     }
 
     private _getCurrentData(): GeoJSON.GeoJSON | string {
@@ -630,8 +627,7 @@ export class GeoJSONSource extends Evented implements Source {
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId,
             subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
-            // Already kept in sync with the projection by _updateOptionsForProjection.
-            worldCopies: (this.workerOptions.geojsonVtOptions as {worldCopies?: boolean}).worldCopies,
+            worldCopies: this.workerOptions.geojsonVtOptions.worldCopies,
         };
 
         tile.abortController = new AbortController();
