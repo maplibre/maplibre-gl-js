@@ -50,38 +50,40 @@ describe('LineStyleLayer', () => {
         expect(lineLayer.gradientVersion).toBeGreaterThan(gradientVersion);
     });
 
-    test('resize destroys lineFbo and sets it to null', () => {
-        const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
-        const destroy = vi.fn();
-        lineLayer.lineFbo = {destroy} as unknown as Framebuffer;
-
-        lineLayer.resize();
-
-        expect(destroy).toHaveBeenCalledOnce();
-        expect(lineLayer.lineFbo).toBeNull();
-    });
+    describe('lineFbo', () => {
+        test('resize destroys lineFbo and sets it to null', () => {
+            const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
+            const destroy = vi.fn();
+            lineLayer.lineFbo = {destroy} as unknown as Framebuffer;
     
-    test('resize is a no-op when lineFbo is null', () => {
-        const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
-        
-        lineLayer.resize();
-        expect(lineLayer.lineFbo).toBeNull();
-    });
+            lineLayer.resize();
     
-    test('lineFbo does not exist by default', () => {
-        const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
+            expect(destroy).toHaveBeenCalledOnce();
+            expect(lineLayer.lineFbo).toBeNull();
+        });
         
-        expect(lineLayer.lineFbo).toBeNull();
-    });
-
-    test('onRemove destroys lineFbo', () => {
-        const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
-        const destroy = vi.fn();
-        lineLayer.lineFbo = {destroy} as unknown as Framebuffer;
-
-        lineLayer.onRemove();
-
-        expect(destroy).toHaveBeenCalledOnce();
-        expect(lineLayer.lineFbo).toBeNull();
+        test('resize is a no-op when lineFbo is null', () => {
+            const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
+            
+            lineLayer.resize();
+            expect(lineLayer.lineFbo).toBeNull();
+        });
+        
+        test('does not exist by default', () => {
+            const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
+            
+            expect(lineLayer.lineFbo).toBeNull();
+        });
+    
+        test('onRemove destroys lineFbo', () => {
+            const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
+            const destroy = vi.fn();
+            lineLayer.lineFbo = {destroy} as unknown as Framebuffer;
+    
+            lineLayer.onRemove();
+    
+            expect(destroy).toHaveBeenCalledOnce();
+            expect(lineLayer.lineFbo).toBeNull();
+        });
     });
 });
