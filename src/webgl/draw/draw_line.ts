@@ -158,7 +158,6 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     }
 
     if (painter.renderPass === 'translucent') {
-        // maybe rename that to drawLineTranslucentPass(...)? or drawLineTranslucent(...)
         drawLineTranslucent(painter, tileManager, layer, coords, renderOptions, false, true);
         return;
     }
