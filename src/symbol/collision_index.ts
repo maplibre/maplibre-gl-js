@@ -327,8 +327,8 @@ export class CollisionIndex {
                     const x2 = centerX + radius;
                     const y2 = centerY + radius;
 
-                    entirelyOffscreen = entirelyOffscreen && this.isOffscreen(x1, y1, x2, y2);
-                    inGrid = inGrid || this.isInsideGrid(x1, y1, x2, y2);
+                    entirelyOffscreen &&= this.isOffscreen(x1, y1, x2, y2);
+                    inGrid ||= this.isInsideGrid(x1, y1, x2, y2);
 
                     if (overlapMode !== 'always' && this.grid.hitTestCircle(centerX, centerY, radius, overlapMode, collisionGroupPredicate)) {
                         // Don't early exit if we're showing the debug circles because we still want to calculate

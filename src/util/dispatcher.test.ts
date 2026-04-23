@@ -32,9 +32,7 @@ describe('Dispatcher', () => {
         const releaseCalled = [];
         const workerPool = {
             acquire () {
-                if (!workers) {
-                    workers = [workerFactory(), workerFactory()];
-                }
+                workers ||= [workerFactory(), workerFactory()];
                 return workers;
             },
             release (id) {
