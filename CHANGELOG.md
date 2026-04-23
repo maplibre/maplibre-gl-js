@@ -1,9 +1,24 @@
 ## main
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+- Update PR template to include AI policy confirmation ([#7505](https://github.com/maplibre/maplibre-gl-js/pull/7505)) (by [@HarelM](https://github.com/HarelM))
+- docs: Improve documentation for MapOptions hash parameter ([#7503](https://github.com/maplibre/maplibre-gl-js/pull/7503)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Fix author attribution for touchZoomRotate features ([#7502](https://github.com/maplibre/maplibre-gl-js/pull/7502)) (by [@HarelM](https://github.com/HarelM))
+- Rename freameId to needsRerender ([#7491](https://github.com/maplibre/maplibre-gl-js/pull/7491)) (by [@HarelM](https://github.com/HarelM))
+- chore: add logical-assignment-operators ([#7409](https://github.com/maplibre/maplibre-gl-js/pull/7409)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- docs: split html and js and indicate the new items ([#7440](https://github.com/maplibre/maplibre-gl-js/pull/7440)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- test(terrain): make the terrain bench show a diff when using symbols ([#7477](https://github.com/maplibre/maplibre-gl-js/pull/7477)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- perf(terrain): skip fog computation when fog opacity is zero ([#7476](https://github.com/maplibre/maplibre-gl-js/pull/7476)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- chore: migrate benchmarks to Mapterhorn and OFM ([#7475](https://github.com/maplibre/maplibre-gl-js/pull/7475)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+## 5.24.0
+### ✨ Features and improvements
 - GPU performance optimization: Render halo and glyph in a single pass (-40% Time Reduction) ([#7436](https://github.com/maplibre/maplibre-gl-js/pull/7436)) (by [@xavierjs](https://github.com/xavierjs))
 - Optimize matrix inversions and reduce GPU stalls ([#7367](https://github.com/maplibre/maplibre-gl-js/pull/7367)) (by [@xavierjs](https://github.com/xavierjs))
 - Add example showing how to measure map performance using built-in events (`load`, `idle`, `render`) ([#7077](https://github.com/maplibre/maplibre-gl-js/pull/7077)) (by [@CommanderStorm](https://github.com/CommanderStorm))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix `Popup` not updating its position when switching between terrain/globe projections ([#7468](https://github.com/maplibre/maplibre-gl-js/pull/7468)) (by [@CommanderStorm](https://github.com/CommanderStorm))
