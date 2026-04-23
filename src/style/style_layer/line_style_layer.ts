@@ -132,12 +132,14 @@ export class LineStyleLayer extends StyleLayer {
     };
 
     resize() {
-        this.lineFbo?.destroy();
-        this.lineFbo = null;
+        if (this.lineFbo) {
+            this.lineFbo.destroy();
+            this.lineFbo = null;
+        }
     }
 }
 
-function getLineWidth(lineWidth: number, lineGapWidth: number): number {
+function getLineWidth(lineWidth, lineGapWidth) {
     if (lineGapWidth > 0) {
         return lineGapWidth + 2 * lineWidth;
     } else {
