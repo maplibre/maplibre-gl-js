@@ -365,7 +365,7 @@ export abstract class StyleLayer extends Evented {
         };
 
         if (this.visibility) {
-            output.layout = output.layout || {};
+            output.layout ||= {};
             output.layout.visibility = this.visibility;
         }
 

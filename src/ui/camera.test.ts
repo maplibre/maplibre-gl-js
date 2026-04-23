@@ -44,7 +44,7 @@ function attachSimulateFrame(camera) {
 }
 
 function createCamera(options?): Camera & { simulateFrame: () => void } {
-    options = options || {};
+    options ||= {};
 
     const transform = options.globe ? new GlobeTransform() : new MercatorTransform();
     transform.setMinZoom(0);
@@ -70,7 +70,7 @@ function createCamera(options?): Camera & { simulateFrame: () => void } {
 }
 
 function createCameraGlobe(options?) {
-    options = options || {};
+    options ||= {};
     options.globe = true;
     return createCamera(options);
 }
@@ -1924,7 +1924,7 @@ describe('flyTo', () => {
         let leftWorld0 = false;
 
         camera.on('move', () => {
-            leftWorld0 = leftWorld0 || (camera.getCenter().lng < -180);
+            leftWorld0 ||= (camera.getCenter().lng < -180);
         });
 
         const promise = camera.once('moveend');
@@ -3781,7 +3781,7 @@ describe('flyTo globe projection', () => {
             let leftWorld0 = false;
 
             camera.on('move', () => {
-                leftWorld0 = leftWorld0 || (camera.getCenter().lng < -180);
+                leftWorld0 ||= (camera.getCenter().lng < -180);
             });
 
             const promise = camera.once('moveend');

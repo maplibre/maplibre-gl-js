@@ -211,18 +211,14 @@ export default class Worker {
     private _getAvailableImages(mapId: string) {
         let availableImages = this.availableImages[mapId];
 
-        if (!availableImages) {
-            availableImages = [];
-        }
+        availableImages ||= [];
 
         return availableImages;
     }
 
     private _getLayerIndex(mapId: string) {
         let layerIndexes = this.layerIndexes[mapId];
-        if (!layerIndexes) {
-            layerIndexes = this.layerIndexes[mapId] = new StyleLayerIndex();
-        }
+        layerIndexes ||= this.layerIndexes[mapId] = new StyleLayerIndex();
         return layerIndexes;
     }
 
@@ -234,10 +230,8 @@ export default class Worker {
      * @returns a new instance or a cached one
      */
     private _getWorkerSource(mapId: string, sourceType: string, sourceName: string): WorkerSource {
-        if (!this.workerSources[mapId])
-            this.workerSources[mapId] = {};
-        if (!this.workerSources[mapId][sourceType])
-            this.workerSources[mapId][sourceType] = {};
+        this.workerSources[mapId] ||= {};
+        this.workerSources[mapId][sourceType] ||= {};
 
         if (!this.workerSources[mapId][sourceType][sourceName]) {
             // use a wrapped actor so that we can attach a target mapId param
@@ -271,12 +265,8 @@ export default class Worker {
      * @returns a new instance or a cached one
      */
     private _getDEMWorkerSource(mapId: string, sourceType: string) {
-        if (!this.demWorkerSources[mapId])
-            this.demWorkerSources[mapId] = {};
-
-        if (!this.demWorkerSources[mapId][sourceType]) {
-            this.demWorkerSources[mapId][sourceType] = new RasterDEMTileWorkerSource();
-        }
+        this.demWorkerSources[mapId] ||= {};
+        this.demWorkerSources[mapId][sourceType] ||= new RasterDEMTileWorkerSource();
 
         return this.demWorkerSources[mapId][sourceType];
     }

@@ -169,9 +169,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
         const expectedBuf = fs.readFileSync(path);
         const expectedImg = PNG.sync.read(expectedBuf);
         const diffImg = new PNG({width, height});
-        if (!testData.expected) {
-            testData.expected = expectedBuf.toString('base64'); // default expected image
-        }
+        testData.expected ||= expectedBuf.toString('base64'); // default expected image
 
         const diff = pixelmatch(
             actualImg.data, expectedImg.data, diffImg.data,
@@ -215,7 +213,7 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
         .map(fixture => {
             const id = path.dirname(fixture);
             const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8')) as StyleWithTestData;
-            style.metadata = style.metadata || {} as any;
+            style.metadata ||= {} as any;
 
             style.metadata.test = {
                 id,

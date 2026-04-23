@@ -648,7 +648,7 @@ export function projectLineVertexToLabelPlane(index: number, projectionContext: 
 
     if (projection.signedDistanceFromCamera > 0) {
         cache.projections[index] = projection.point;
-        cache.anyProjectionOccluded = cache.anyProjectionOccluded || projection.isOccluded;
+        cache.anyProjectionOccluded ||= projection.isOccluded;
         return projection.point;
     }
 
@@ -880,8 +880,7 @@ export function placeGlyphAlongLine(
                 prevToCurrentOffsetNormal = transformToOffsetNormal(prevToCurrent, lineOffsetY, direction);
             }
             // Initialize offsetPrev on our first iteration, after that it will be pre-calculated
-            if (!offsetPreviousVertex)
-                offsetPreviousVertex = previousVertex.add(prevToCurrentOffsetNormal);
+            offsetPreviousVertex ||= previousVertex.add(prevToCurrentOffsetNormal);
 
             offsetIntersectionPoint = findOffsetIntersectionPoint(currentIndex, prevToCurrentOffsetNormal, currentVertex, lineStartIndex, lineEndIndex, offsetPreviousVertex, lineOffsetY, projectionContext, syntheticVertexArgs);
 

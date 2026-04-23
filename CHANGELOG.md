@@ -1,18 +1,28 @@
 ## main
 ### ✨ Features and improvements
 - _...Add new stuff here..._
--  Optimize matrix inversions and reduce GPU stalls ([#7367](https://github.com/maplibre/maplibre-gl-js/pull/7367)) (by [@xavierjs](https://github.com/xavierjs))
-- Add example showing how to measure map performance using built-in events (`load`, `idle`, `render`) ([#7077](https://github.com/maplibre/maplibre-gl-js/pull/7077)) (by [@CommanderStorm](https://github.com/CommanderStorm))
-- Add `touchZoomRotate.setZoomRate()` and `touchZoomRotate.setZoomThreshold()` to customize touch zoom speed and pinch sensitivity ([#7271](https://github.com/maplibre/maplibre-gl-js/issues/7271))
 
 ### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 5.24.0
+
+### ✨ Features and improvements
+
+- GPU performance optimization: Render halo and glyph in a single pass (-40% Time Reduction) ([#7436](https://github.com/maplibre/maplibre-gl-js/pull/7436)) (by [@xavierjs](https://github.com/xavierjs))
+- Optimize matrix inversions and reduce GPU stalls ([#7367](https://github.com/maplibre/maplibre-gl-js/pull/7367)) (by [@xavierjs](https://github.com/xavierjs))
+- Add example showing how to measure map performance using built-in events (`load`, `idle`, `render`) ([#7077](https://github.com/maplibre/maplibre-gl-js/pull/7077)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+
+### 🐞 Bug fixes
+
 - Fix `Popup` not updating its position when switching between terrain/globe projections ([#7468](https://github.com/maplibre/maplibre-gl-js/pull/7468)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Skip fog computation when fog opacity is zero ([#7476](https://github.com/maplibre/maplibre-gl-js/pull/7476)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ## 5.23.0
 
 ### ✨ Features and improvements
 
-- Add `touchZoomRotate.setZoomRate()` and `touchZoomRotate.setZoomThreshold()` to customize touch zoom speed and pinch sensitivity ([#7271](https://github.com/maplibre/maplibre-gl-js/issues/7271))
+- Add `touchZoomRotate.setZoomRate()` and `touchZoomRotate.setZoomThreshold()` to customize touch zoom speed and pinch sensitivity ([#7271](https://github.com/maplibre/maplibre-gl-js/issues/7271)) (by [@itisyb](https://github.com/itisyb))
 - Improve ability to communicate with imported scripts in workers and use `makeRequest` in workres as well ([#7451](https://github.com/maplibre/maplibre-gl-js/issues/7451)) (by [@HarelM](https://github.com/HarelM))
 - Allow `opacity` and `opacityWhenCovered` in `Marker` and `MarkerOptions` to accept `number` in addition to `string`, and add `maplibregl-marker-covered` CSS class to `Marker` element when covered by 3D terrain or a globe ([#7433](https://github.com/maplibre/maplibre-gl-js/issues/7433)) (by [@YuChunTsao](https://github.com/YuChunTsao))
 - perf: add a bench for terrain rendering and fix `_demMatrixCache` lookup being wasted cycles by actually using the cache ([#7400](https://github.com/maplibre/maplibre-gl-js/pull/7400)) (by [@CommanderStorm](https://github.com/CommanderStorm))
