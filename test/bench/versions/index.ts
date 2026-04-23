@@ -8,7 +8,7 @@ import Paint from '../benchmarks/paint';
 import PaintStates from '../benchmarks/paint_states';
 import {PropertyLevelRemove, FeatureLevelRemove, SourceLevelRemove} from '../benchmarks/remove_paint_state';
 import {LayerBackground, LayerCircle, LayerFill, LayerFillExtrusion, LayerHeatmap, LayerHillshade, LayerColorRelief2Colors, LayerColorRelief256Colors, LayerLine, LayerRaster, LayerSymbol, LayerSymbolWithHalo, LayerSymbolWithIcons, LayerTextWithVariableAnchor, LayerSymbolWithSortKey} from '../benchmarks/layers';
-import LineOpacityTranslucent from '../benchmarks/layer_line_oppacity';
+import LineOpacityTranslucent from '../benchmarks/layer_line_opacity';
 import Load from '../benchmarks/map_load';
 import HillshadeLoad from '../benchmarks/hillshade_load';
 import ColorReliefLoad from '../benchmarks/color_relief_load';

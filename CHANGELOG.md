@@ -4,7 +4,7 @@
 
 ### 🐞 Bug fixes
 
-- Fix transparent, overlapping lines creating artefacts. This is fixed for `line-oppacity`, but purposefully not for transparent `line-color` propertys, thus still allowing transparent colors to stack their effect. ([#7490](https://github.com/maplibre/maplibre-gl-js/pull/7490)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Fix transparent, overlapping lines creating artefacts. This is fixed for `line-opacity`, but purposefully not for transparent `line-color` properties, thus still allowing transparent colors to stack their effect. ([#7490](https://github.com/maplibre/maplibre-gl-js/pull/7490)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 
 ## 5.24.0
