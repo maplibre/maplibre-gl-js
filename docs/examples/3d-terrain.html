@@ -3,10 +3,11 @@
 <head>
     <title>3D Terrain</title>
     <meta property="og:description" content="Go beyond hillshade and show elevation in actual 3D." />
+    <meta property="og:created" content="2023-06-27" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -34,13 +35,11 @@
                 // Use a different source for terrain and hillshade layers, to improve render quality
                 terrainSource: {
                     type: 'raster-dem',
-                    url: 'https://tiles.mapterhorn.com/tilejson.json',
-                    tileSize: 256
+                    url: 'https://tiles.mapterhorn.com/tilejson.json'
                 },
                 hillshadeSource: {
                     type: 'raster-dem',
-                    url: 'https://tiles.mapterhorn.com/tilejson.json',
-                    tileSize: 256
+                    url: 'https://tiles.mapterhorn.com/tilejson.json'
                 }
             },
             layers: [

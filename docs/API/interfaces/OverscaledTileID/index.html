@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.32">
+      <meta name="generator" content="zensical-0.0.34">
     
     
       
@@ -53,7 +53,7 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
         <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
@@ -6162,6 +6162,14 @@
   </span>
   
   
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
+  
 
       </a>
     </li>
@@ -8010,6 +8018,14 @@
   </span>
   
   
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
+  
 
       </a>
     </li>
@@ -8373,6 +8389,14 @@
     
   </span>
   
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -9186,6 +9210,14 @@
   </span>
   
   
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
+  
 
       </a>
     </li>
@@ -9354,6 +9386,14 @@
   </span>
   
   
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
+  
 
       </a>
     </li>
@@ -9381,6 +9421,14 @@
     
   </span>
   
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -9549,6 +9597,14 @@
     
   </span>
   
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
   
 
       </a>
@@ -10169,14 +10225,14 @@
 
 
 <h1 id="overscaledtileid">OverscaledTileID</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/tile/tile_id.ts#L89">tile/tile_id.ts:89</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/fd31bd85967c19446d836236e93021fb10ffe30d/src/tile/tile_id.ts#L89">tile/tile_id.ts:89</a></p>
 <p>An overscaled tile identifier</p>
 <h2 id="methods">Methods</h2>
 <h3 id="normalizecoordinates">normalizeCoordinates()</h3>
 <blockquote>
 <p><strong>normalizeCoordinates</strong>(<code>x</code>: <code>number</code>, <code>y</code>: <code>number</code>, <code>extent?</code>: <code>number</code>): <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/tile/tile_id.ts#L245">tile/tile_id.ts:245</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/fd31bd85967c19446d836236e93021fb10ffe30d/src/tile/tile_id.ts#L245">tile/tile_id.ts:245</a></p>
 <p>Maps tile-local coordinates that may fall outside the <code>[0, extent)</code> range
 to the correct neighbor tile and the corresponding in-tile position.</p>
 <p>Coordinates can exceed tile bounds when geometry (e.g. symbol labels along
@@ -10236,7 +10292,7 @@ and returning <code>null</code> when the target falls beyond the polar tile-grid
 <blockquote>
 <p><strong>scaledTo</strong>(<code>targetZ</code>: <code>number</code>): <code>OverscaledTileID</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/tile/tile_id.ts#L126">tile/tile_id.ts:126</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/fd31bd85967c19446d836236e93021fb10ffe30d/src/tile/tile_id.ts#L126">tile/tile_id.ts:126</a></p>
 <p>Returns a new <code>OverscaledTileID</code> representing the tile at the target zoom level.
 When targetZ is greater than the current canonical z, the canonical coordinates are unchanged.
 When targetZ is less than the current canonical z, the canonical coordinates are updated.</p>
@@ -10267,7 +10323,7 @@ When targetZ is less than the current canonical z, the canonical coordinates are
 <blockquote>
 <p><strong>terrainRttPosMatrix32f</strong>: <code>mat4</code> = <code>null</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7f61f6f252c8612bc21a634fec648b0eb0007835/src/tile/tile_id.ts#L100">tile/tile_id.ts:100</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/fd31bd85967c19446d836236e93021fb10ffe30d/src/tile/tile_id.ts#L100">tile/tile_id.ts:100</a></p>
 <p>This matrix is used during terrain's render-to-texture stage only.
 If the render-to-texture stage is active, this matrix will be present
 and should be used, otherwise this matrix will be null.
@@ -10405,7 +10461,7 @@ The matrix should be float32 in order to avoid slow WebGL calls in Chrome.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"search":"../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.91a19a9e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.9f55f5b1.min.js"></script>
       
     
   </body>
