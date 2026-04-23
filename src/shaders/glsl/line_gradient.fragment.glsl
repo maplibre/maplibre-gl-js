@@ -13,6 +13,10 @@ in float v_depth;
 #pragma mapbox: define lowp float blur
 #pragma mapbox: define lowp float opacity
 
+#ifdef OPACITY_MRT
+layout(location = 1) out vec4 fragOpacityOut;
+#endif
+
 void main() {
     #pragma mapbox: initialize lowp float blur
     #pragma mapbox: initialize lowp float opacity
@@ -32,6 +36,10 @@ void main() {
 
     float finalOpacity = u_opacity_override ? 1.0 : opacity;
     fragColor = color * (alpha * finalOpacity);
+
+#ifdef OPACITY_MRT
+    fragOpacityOut = vec4(opacity, 0.0, 0.0, 1.0);
+#endif
 
     #ifdef GLOBE
     if (v_depth > 1.0) {
