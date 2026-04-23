@@ -109,9 +109,11 @@ async function generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray: H
         const outputPath = imagePath.replace('.png', '.webp');
         promises.push(sharp(imagePath).webp({quality: 90, lossless: false}).toFile(outputPath));
         const desc = indexArrayItem.description || '';
-        indexMarkdown += `<a class="example-card" href="./${indexArrayItem.mdFileName.replace(/.md$/, '/')}" style="border:1px solid var(--md-default-fg-color--lightest);border-radius:0.5rem;text-decoration:none!important;color:inherit!important;transition:box-shadow 0.2s,transform 0.2s;display:flex;flex-direction:column">
+        const cardFileName = indexArrayItem.mdFileName.replace(/.md$/, '/');
+        const cardImg = outputPath.replace('docs/', '../');
+        indexMarkdown += `<a class="example-card" href="./${cardFileName}" style="border:1px solid var(--md-default-fg-color--lightest);border-radius:0.5rem;text-decoration:none!important;color:inherit!important;transition:box-shadow 0.2s,transform 0.2s;display:flex;flex-direction:column">
 <div style="position:relative;overflow:hidden;border-radius:0.5rem 0.5rem 0 0">
-<img src="${outputPath.replace('docs/', '../')}" loading="lazy" alt="${desc}" style="width:100%;aspect-ratio:12/5;object-fit:cover;display:block">
+<img src="${cardImg}" loading="lazy" alt="${desc}" style="width:100%;aspect-ratio:12/5;object-fit:cover;display:block">
 ${indexArrayItem.isNew ? '<span style="position:absolute;top:0.5rem;right:0.5rem;padding:0.15rem 0.5rem;font-size:0.75rem;font-weight:800;text-transform:uppercase;background:var(--md-primary-fg-color);color:white;border-radius:0.25rem">new</span>' : ''}
 </div>
 <div style="padding:0.6rem 0.8rem">
