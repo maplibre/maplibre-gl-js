@@ -157,6 +157,14 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
         layer.lineFbo = null;
     }
 
+    if (painter.renderPass === 'translucent') {
+        // maybe rename that to drawLineTranslucentPass(...)? or drawLineTranslucent(...)
+        drawLineTranslucent(painter, tileManager, layer, coords, renderOptions, false, true);
+        return;
+    }
+
+    // We want self-overlap to collapse lines
+    //
     // if the opacity is not constant (full/tansparent), we need to render to an offscreen FBO at full opacity and the
     // composite pass will apply the opacity.
     // If we do this any other way, there will be hideous artifacts
@@ -164,14 +172,10 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     // Because terrain may have cases where we snake and thus need the opacity, we are currently accepting the artefacts.
     // Needs more looking into how to solve this.
     if (useOffscreen) {
-        if (painter.renderPass === 'offscreen') {
-            drawLineOffscreen(painter, tileManager, layer, coords, renderOptions);
-        } else {
-            drawLineComposite(painter, layer);
-        }
-    } else if (painter.renderPass === 'translucent') {
-        drawLineTiles(painter, tileManager, layer, coords, renderOptions, false, true);
+        drawLineOffscreen(painter, tileManager, layer, coords, renderOptions);
+        return;
     }
+    drawLineComposite(painter, layer);
 }
 
 function drawLineOffscreen(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
@@ -187,7 +191,7 @@ function drawLineOffscreen(painter: Painter, tileManager: TileManager, layer: Li
     painter.currentStencilSource = undefined;
     painter._renderTileClippingMasks(layer, coords, false);
 
-    drawLineTiles(painter, tileManager, layer, coords, renderOptions, true, false);
+    drawLineTranslucent(painter, tileManager, layer, coords, renderOptions, true, false);
 }
 
 function drawLineComposite(painter: Painter, layer: LineStyleLayer) {
@@ -207,7 +211,7 @@ function drawLineComposite(painter: Painter, layer: LineStyleLayer) {
         painter.viewportSegments, layer.paint, painter.transform.zoom);
 }
 
-function drawLineTiles(
+function drawLineTranslucent(
     painter: Painter,
     tileManager: TileManager,
     layer: LineStyleLayer,
