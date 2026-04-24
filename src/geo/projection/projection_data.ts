@@ -68,4 +68,3 @@ export type ProjectionDataParams = {
      */
     applyGlobeMatrix?: boolean;
 };
-
