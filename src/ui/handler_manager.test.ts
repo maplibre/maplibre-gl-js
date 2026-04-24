@@ -67,7 +67,7 @@ describe('HandlerManager terrain scenarios', () => {
         manager._handleMapControls(options);
 
         expect(handleZoom).toHaveBeenCalledWith(options.deltasForHelper, options.tr);
-        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
+        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc, options.fixedBearing);
         expect(map._elevationFreeze).toBe(false);
         expect(manager._terrainMovement).toBe(false);
         expect(setCenterMock).not.toHaveBeenCalled();
@@ -111,7 +111,7 @@ describe('HandlerManager terrain scenarios', () => {
 
         expect(manager._terrainMovement).toBe(true);
         expect(map._elevationFreeze).toBe(true);
-        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
+        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc, options.fixedBearing);
     });
 
     it('_handleMapControls keeps terrain movement state when globe terrain is already active', () => {
@@ -152,7 +152,7 @@ describe('HandlerManager terrain scenarios', () => {
 
         expect(manager._terrainMovement).toBe(true);
         expect(map._elevationFreeze).toBe(true);
-        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
+        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc, options.fixedBearing);
     });
 
     it('_handleMapControls activates terrain movement on first drag in mercator terrain', () => {
@@ -281,7 +281,7 @@ describe('HandlerManager terrain scenarios', () => {
 
         manager._handleMapControls(options);
 
-        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
+        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc, options.fixedBearing);
     });
 });
 

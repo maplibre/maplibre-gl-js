@@ -308,7 +308,7 @@ export class MercatorTransform implements ITransform {
         this._helper.recalculateZoomAndCenter(elevation);
     }
 
-    setLocationAtPoint(lnglat: LngLat, point: Point) {
+    setLocationAtPoint(lnglat: LngLat, point: Point, _fixedBearing?: boolean) {
         const z = mercatorZfromAltitude(this.elevation, this.center.lat);
         const a = this.screenPointToMercatorCoordinateAtZ(point, z);
         const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, z);

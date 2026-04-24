@@ -3061,6 +3061,136 @@ describe('easeTo globe projection', () => {
             expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.transform)));
         });
 
+        describe('handlePanInertia with fixedBearing: false', () => {
+            test('returns panInertia data when fixedBearing is false', () => {
+                const camera = createCameraGlobe({zoom: 3});
+                const result = camera.cameraHelper.handlePanInertia(
+                    new Point(100, 50), camera.transform, camera.transform.centerPoint, false
+                );
+                expect(result.panInertia).toBeDefined();
+                expect(result.panInertia.startCenter).toBeDefined();
+                expect(result.panInertia.startBearing).toBeDefined();
+                expect(result.panInertia.endCenter).toBeDefined();
+                expect(result.panInertia.endBearing).toBeDefined();
+                expect(result.panInertia.startCenter.lng).toBe(camera.transform.center.lng);
+                expect(result.panInertia.startCenter.lat).toBe(camera.transform.center.lat);
+                expect(result.easingBearing).toBeDefined();
+            });
+
+            test('does not return panInertia when fixedBearing is true', () => {
+                const camera = createCameraGlobe({zoom: 3});
+                const result = camera.cameraHelper.handlePanInertia(
+                    new Point(100, 50), camera.transform, camera.transform.centerPoint, true
+                );
+                expect(result.panInertia).toBeUndefined();
+                expect(result.easingBearing).toBeUndefined();
+            });
+
+            test('does not return panInertia when fixedBearing is undefined', () => {
+                const camera = createCameraGlobe({zoom: 3});
+                const result = camera.cameraHelper.handlePanInertia(
+                    new Point(100, 50), camera.transform, camera.transform.centerPoint
+                );
+                expect(result.panInertia).toBeUndefined();
+                expect(result.easingBearing).toBeUndefined();
+            });
+
+            test('panInertia startCenter matches current transform center', () => {
+                const camera = createCameraGlobe({zoom: 3});
+                const anchor = camera.transform.centerPoint;
+                const result = camera.cameraHelper.handlePanInertia(
+                    new Point(80, -60), camera.transform, anchor, false
+                );
+                expect(result.panInertia.startCenter.lng).toBeCloseTo(camera.transform.center.lng, 6);
+                expect(result.panInertia.startCenter.lat).toBeCloseTo(camera.transform.center.lat, 6);
+                expect(result.panInertia.endCenter.lng).toBeCloseTo(result.easingCenter.lng, 4);
+                expect(result.panInertia.endCenter.lat).toBeCloseTo(result.easingCenter.lat, 4);
+            });
+
+            test('easeTo with panInertia produces no NaN near poles', () => {
+                const camera = createCameraGlobe({center: [0, 80], zoom: 2});
+                const pan = new Point(200, -100);
+                const anchor = camera.transform.centerPoint;
+                const result = camera.cameraHelper.handlePanInertia(pan, camera.transform, anchor, false);
+                camera.easeTo({
+                    center: result.easingCenter,
+                    bearing: result.easingBearing,
+                    duration: 0,
+                    _panInertia: result.panInertia,
+                } as any);
+                expect(isNaN(camera.getCenter().lng)).toBe(false);
+                expect(isNaN(camera.getCenter().lat)).toBe(false);
+                expect(isNaN(camera.getBearing())).toBe(false);
+            });
+
+            test('easeTo with panInertia couples center and bearing (no bounce)', () => {
+                const camera = createCameraGlobe({center: [0, 75], zoom: 2});
+                const pan = new Point(150, -80);
+                const anchor = camera.transform.centerPoint;
+                const result = camera.cameraHelper.handlePanInertia(pan, camera.transform, anchor, false);
+
+                // Simulate the easing by calling easeTo with duration: 0
+                // This runs the easeFunc at k=1, which should produce the same
+                // result as handlePanInertia's cloned transform.
+                camera.easeTo({
+                    center: result.easingCenter,
+                    bearing: result.easingBearing,
+                    duration: 0,
+                    _panInertia: result.panInertia,
+                } as any);
+
+                // The final center should match the target from handlePanInertia
+                expect(camera.getCenter().lng).toBeCloseTo(result.easingCenter.lng, 4);
+                expect(camera.getCenter().lat).toBeCloseTo(result.easingCenter.lat, 4);
+                // The final bearing should match the target bearing
+                expect(camera.getBearing()).toBeCloseTo(result.easingBearing, 4);
+            });
+
+            test('easeTo with panInertia intermediate frames produce valid state', () => {
+                const camera = createCameraGlobe({center: [10, 70], zoom: 2});
+                const pan = new Point(120, -90);
+                const anchor = camera.transform.centerPoint;
+                const result = camera.cameraHelper.handlePanInertia(pan, camera.transform, anchor, false);
+
+                const tr = camera.transform;
+                const easeHandler = camera.cameraHelper.handleEaseTo(tr, {
+                    bearing: result.easingBearing,
+                    pitch: tr.pitch,
+                    roll: tr.roll,
+                    padding: tr.padding,
+                    offsetAsPoint: new Point(0, 0),
+                    center: result.easingCenter,
+                    panInertia: result.panInertia,
+                });
+
+                // Simulate intermediate frames
+                for (const k of [0, 0.25, 0.5, 0.75, 1.0]) {
+                    easeHandler.easeFunc(k);
+                    expect(isNaN(tr.center.lng)).toBe(false);
+                    expect(isNaN(tr.center.lat)).toBe(false);
+                    expect(isNaN(tr.bearing)).toBe(false);
+                    expect(tr.center.lat).toBeGreaterThanOrEqual(-90);
+                    expect(tr.center.lat).toBeLessThanOrEqual(90);
+                }
+            });
+
+            test('easeTo without panInertia uses interpolateLngLatForGlobe path', () => {
+                const camera = createCameraGlobe({center: [0, 0], zoom: 3});
+                const result = camera.cameraHelper.handlePanInertia(
+                    new Point(100, 50), camera.transform, camera.transform.centerPoint, true
+                );
+                // fixedBearing: true => no panInertia, so easeTo uses standard path
+                camera.easeTo({
+                    center: result.easingCenter,
+                    duration: 0,
+                });
+                expect(isNaN(camera.getCenter().lng)).toBe(false);
+                expect(isNaN(camera.getCenter().lat)).toBe(false);
+                // Bearing should not change
+                expect(camera.getBearing()).toBeCloseTo(0, 4);
+            });
+        });
+
         test('zooms with specified offset', () => {
             const camera = createCameraGlobe();
             camera.easeTo({zoom: 3.2, offset: [100, 0], duration: 0});

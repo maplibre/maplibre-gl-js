@@ -17,9 +17,10 @@ import type {LngLatBounds} from '../lng_lat_bounds';
 export class MercatorCameraHelper implements ICameraHelper {
     get useGlobeControls(): boolean { return false; }
 
-    handlePanInertia(pan: Point, transform: IReadonlyTransform): {
+    handlePanInertia(pan: Point, transform: IReadonlyTransform, _around?: Point, _fixedBearing?: boolean): {
         easingCenter: LngLat;
         easingOffset: Point;
+        easingBearing?: number;
     } {
         // Reduce the offset so that it never goes past the horizon. If it goes past
         // the horizon, the pan direction is opposite of the intended direction.
@@ -40,7 +41,7 @@ export class MercatorCameraHelper implements ICameraHelper {
         if (deltas.zoomDelta) tr.setZoom(tr.zoom + deltas.zoomDelta);
     }
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void {
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat, _fixedBearing?: boolean): void {
         // If we are rotating about the center point, there is no need to update the transform center. Doing so causes
         // a small amount of drift of the center point, especially when pitch is close to 90 degrees.
         // In this case, return early.

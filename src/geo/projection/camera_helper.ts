@@ -24,6 +24,13 @@ export type CameraForBoxAndBearingHandlerResult = {
     bearing: number;
 };
 
+export type PanInertiaData = {
+    startCenter: LngLat;
+    startBearing: number;
+    endCenter: LngLat;
+    endBearing: number;
+};
+
 export type EaseToHandlerOptions = {
     bearing: number;
     pitch: number;
@@ -35,6 +42,7 @@ export type EaseToHandlerOptions = {
     center?: LngLatLike;
     zoom?: number;
     offset?: PointLike;
+    panInertia?: PanInertiaData;
 };
 
 export type EaseToHandlerResult = {
@@ -106,14 +114,16 @@ export function cameraBoundsWarning() {
 export interface ICameraHelper {
     get useGlobeControls(): boolean;
 
-    handlePanInertia(pan: Point, transform: IReadonlyTransform): {
+    handlePanInertia(pan: Point, transform: IReadonlyTransform, around?: Point, fixedBearing?: boolean): {
         easingCenter: LngLat;
         easingOffset: Point;
+        easingBearing?: number;
+        panInertia?: PanInertiaData;
     };
 
     handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void;
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void;
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat, fixedBearing?: boolean): void;
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
 
