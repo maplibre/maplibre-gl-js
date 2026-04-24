@@ -21,6 +21,10 @@ void main() {
     #pragma mapbox: initialize lowp float blur
     #pragma mapbox: initialize lowp float opacity
 
+#ifdef OPACITY_MRT
+    if (opacity <= 0.0) discard;
+#endif
+
     // Calculate the distance of the pixel from the line in pixels.
     float dist = length(v_normal) * v_width2.s;
 

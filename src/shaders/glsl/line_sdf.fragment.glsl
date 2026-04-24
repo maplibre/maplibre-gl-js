@@ -30,6 +30,10 @@ void main() {
     #pragma mapbox: initialize highp vec4 color
     #pragma mapbox: initialize lowp float blur
     #pragma mapbox: initialize lowp float opacity
+
+#ifdef OPACITY_MRT
+    if (opacity <= 0.0) discard;
+#endif
     #pragma mapbox: initialize mediump float width
     #pragma mapbox: initialize lowp float floorwidth
     #pragma mapbox: initialize mediump vec4 dasharray_from
