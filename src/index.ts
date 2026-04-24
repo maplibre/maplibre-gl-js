@@ -47,7 +47,7 @@ import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTou
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from './util/actor_messages';
 import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileMesh} from './util/create_tile_mesh';
 import type {ControlPosition, IControl} from './ui/control/control';
-import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput} from './style/style_layer/custom_style_layer';
+import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer';
 import type {AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera';
 import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeature} from './util/vectortile_to_geojson';
 import type {Handler, HandlerResult} from './ui/handler_manager';
@@ -341,6 +341,8 @@ export {
     type WebGLContextAttributesWithType,
     type IControl,
     type CustomLayerInterface,
+    type CustomLayerProjectionDataParams,
+    type UnwrappedTileIDLiteral,
     type CanvasSourceSpecification,
     type PaddingOptions,
     type LngLatLike,
