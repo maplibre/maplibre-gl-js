@@ -54,17 +54,6 @@ describe('GlobeTransform', () => {
             const projectionData = globeTransform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0), applyGlobeMatrix: true});
             expect(projectionData.projectionTransition).not.toBe(0);
         });
-
-        test('OverscaledTileID instance is not required', () => {
-            const projectionData = globeTransform.getProjectionData({overscaledTileID: {
-                canonical: {
-                    x: 1,
-                    y: 0,
-                    z: 1,
-                },
-            }});
-            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
-        });
     });
 
     describe('clipping plane', () => {

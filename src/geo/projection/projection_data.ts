@@ -54,15 +54,7 @@ export type ProjectionDataParams = {
     /**
      * The ID of the current tile
      */
-    overscaledTileID: OverscaledTileID | null | {
-        overscaledZ?: number;
-        wrap?: number;
-        canonical: {
-            x: number;
-            y: number;
-            z: number;
-        };
-    };
+    overscaledTileID: OverscaledTileID | null;
     /**
      * Set to true if a pixel-aligned matrix should be used, if possible (mostly used for raster tiles under mercator projection)
      */
@@ -76,3 +68,4 @@ export type ProjectionDataParams = {
      */
     applyGlobeMatrix?: boolean;
 };
+

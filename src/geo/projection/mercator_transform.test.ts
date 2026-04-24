@@ -621,34 +621,6 @@ describe('transform', () => {
     describe('getProjectionData', () => {
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
         transform.resize(512, 512);
-        test('parses a custom object', () => {
-            const projectionData = transform.getProjectionData({overscaledTileID: {
-                canonical: {
-                    x: 1,
-                    y: 0,
-                    z: 1,
-                },
-            }});
-            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
-            expectToBeCloseToArray([...projectionData.mainMatrix], [
-                0.09375,
-                0,
-                0,
-                0,
-                0,
-                -0.09375,
-                0,
-                0,
-                0,
-                0,
-                -0.000013132550520822406,
-                -0.000012790334039891604,
-                0,
-                768,
-                767.7944946289062,
-                768
-            ]);
-        });
         test('parses OverscaledTileID', () => {
             const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
             transform.resize(512, 512);
