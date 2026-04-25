@@ -81,10 +81,16 @@ describe('drag rotate', () => {
         // Prevent inertial rotation.
         vi.spyOn(timeControl, 'now').mockReturnValue(0);
 
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
         const rollstart = vi.fn();
         const roll      = vi.fn();
         const rollend   = vi.fn();
 
+        map.on('rotatestart', rotatestart);
+        map.on('rotate',      rotate);
+        map.on('rotateend',   rotateend);
         map.on('rollstart', rollstart);
         map.on('roll',      roll);
         map.on('rollend',   rollend);
@@ -97,6 +103,9 @@ describe('drag rotate', () => {
 
         simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 10});
         map._renderTaskQueue.run();
+        expect(rotatestart).toHaveBeenCalledTimes(0);
+        expect(rotate).toHaveBeenCalledTimes(0);
+        expect(rotateend).toHaveBeenCalledTimes(0);
         expect(rollstart).toHaveBeenCalledTimes(1);
         expect(roll).toHaveBeenCalledTimes(1);
         expect(rollend).toHaveBeenCalledTimes(0);
@@ -106,6 +115,9 @@ describe('drag rotate', () => {
         expect(rollstart).toHaveBeenCalledTimes(1);
         expect(roll).toHaveBeenCalledTimes(1);
         expect(rollend).toHaveBeenCalledTimes(1);
+        expect(rotatestart).toHaveBeenCalledTimes(0);
+        expect(rotate).toHaveBeenCalledTimes(0);
+        expect(rotateend).toHaveBeenCalledTimes(0);
 
         map.remove();
     });
@@ -163,6 +175,41 @@ describe('drag rotate', () => {
         expect(rotateend).toHaveBeenCalledTimes(0);
 
         simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 0, ctrlKey: true});
+        map._renderTaskQueue.run();
+        expect(rotatestart).toHaveBeenCalledTimes(1);
+        expect(rotate).toHaveBeenCalledTimes(1);
+        expect(rotateend).toHaveBeenCalledTimes(1);
+
+        map.remove();
+    });
+
+    test('DragRotateHandler fires rotate events for Firefox control-click drag reported as right-click', () => {
+        const map = createMap();
+
+        // Prevent inertial rotation.
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
+
+        const rotatestart = vi.fn();
+        const rotate      = vi.fn();
+        const rotateend   = vi.fn();
+
+        map.on('rotatestart', rotatestart);
+        map.on('rotate',      rotate);
+        map.on('rotateend',   rotateend);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, ctrlKey: true});
+        map._renderTaskQueue.run();
+        expect(rotatestart).toHaveBeenCalledTimes(0);
+        expect(rotate).toHaveBeenCalledTimes(0);
+        expect(rotateend).toHaveBeenCalledTimes(0);
+
+        simulate.mousemove(map.getCanvas(), {buttons: 2, ctrlKey: true, clientX: 200, clientY: 10});
+        map._renderTaskQueue.run();
+        expect(rotatestart).toHaveBeenCalledTimes(1);
+        expect(rotate).toHaveBeenCalledTimes(1);
+        expect(rotateend).toHaveBeenCalledTimes(0);
+
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, ctrlKey: true});
         map._renderTaskQueue.run();
         expect(rotatestart).toHaveBeenCalledTimes(1);
         expect(rotate).toHaveBeenCalledTimes(1);
