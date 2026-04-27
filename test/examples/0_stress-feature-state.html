@@ -15,25 +15,33 @@
 <body>
 <div id="map"></div>
 <script>
-    const CATS_COUNT = 20000;
-    const ENABLE_FEATURE_STATE = true;
+    const CATS_COUNT = 10000;
+
+    /**
+     * Setting this value to 1e6 will make the zoom in/out or all operations requiring repainting
+     * very laggy
+     */
+    const USELESS_FEATURE_STATES_COUNT = 1000000;
 
     const map = new maplibregl.Map({
         container: 'map',
         style: 'https://demotiles.maplibre.org/style.json',
-        center: [-100.486052, 37.830348],
+        center: [0, 0],
         zoom: 2
     });
 
     map.on('load', async () => {
         const features = [];
+        const rdm = (amplitude) => {
+            return amplitude * (Math.random() * 2 - 1);
+        }
         for (let i=0; i<CATS_COUNT; ++i){
             features.push({
                 'type': 'Feature',
                 'id': i,
                 'geometry': {
                     'type': 'Point',
-                    'coordinates': [Math.random()*360 - 180, Math.random()*180 - 90]
+                    'coordinates': [rdm(20), rdm(20)]
                 }
             });
         }
@@ -54,92 +62,28 @@
             'type': 'symbol',
             'source': 'point',
             'layout': {
-                'icon-allow-overlap': true,
+                'icon-overlap': 'always',
                 'icon-image': 'cat',
-                'icon-size': 0.25,
+                'icon-size': 0.1,
             },
             'paint': {
-                'icon-opacity': (ENABLE_FEATURE_STATE) ? [
+                'icon-opacity': [
                         'case',
                         ['boolean', ['feature-state', 'selected'], false],
                         1,
                         0.3
-                    ] : 0.3
+                    ]
             }
         });
 
-        for (let i = 0; i < CATS_COUNT; ++i) {
+
+        for (let k=0; k<USELESS_FEATURE_STATES_COUNT; ++k){
             map.setFeatureState(
-                {source: 'point', id: i},
-                {selected: (i%2 === 0)}
+                {source: 'point', id: `useless${k}` },
+                {uselessProperty: ((k)%2 === 0)}
             );
         }
 
-       /* map.setFeatureState(
-                        {source: 'cats', id: hoveredStateId},
-                        {selected: false}
-                    );*/
-
-        // The feature-state dependent fill-opacity expression will render the hover effect
-        // when a feature's hover state is set to true.
-        /*for (let i=0; i<LAYER_DUPLICATE_COUNT; ++i){
-            map.addLayer({
-                'id': `state-fills-${i}`,
-                'type': 'fill',
-                'source': 'states',
-                'layout': {},
-                'paint': {
-                    'fill-color': '#627BC1',
-                    'fill-opacity': (ENABLE_FEATURE_STATE) ? [
-                        'case',
-                        ['boolean', ['feature-state', 'hover'], false],
-                        1 / LAYER_DUPLICATE_COUNT,
-                        0.5 / LAYER_DUPLICATE_COUNT
-                    ] : 0.5 / LAYER_DUPLICATE_COUNT
-                }
-            });
-        }*/
-
-        /*map.addLayer({
-            'id': 'state-borders',
-            'type': 'line',
-            'source': 'states',
-            'layout': {},
-            'paint': {
-                'line-color': '#627BC1',
-                'line-width': 2
-            }
-        });*/
-
-        // When the user moves their mouse over the state-fill layer, we'll update the
-        // feature state for the feature under the mouse.
-        /*map.on('mousemove', 'state-fills', (e) => {
-            if (e.features.length > 0) {
-                if (hoveredStateId) {
-                    map.setFeatureState(
-                        {source: 'states', id: hoveredStateId},
-                        {hover: false}
-                    );
-                }
-                hoveredStateId = e.features[0].id;
-                map.setFeatureState(
-                    {source: 'states', id: hoveredStateId},
-                    {hover: true}
-                );
-            }
-        });
-
-        // When the mouse leaves the state-fill layer, update the feature state of the
-        // previously hovered feature.
-        map.on('mouseleave', 'state-fills', () => {
-            if (hoveredStateId) {
-                map.setFeatureState(
-                    {source: 'states', id: hoveredStateId},
-                    {hover: false}
-                );
-            }
-            hoveredStateId = null;
-        });*/
     });
 </script>
 </body>
