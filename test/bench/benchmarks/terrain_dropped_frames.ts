@@ -4,9 +4,9 @@ import {addProtocol, removeProtocol} from '../../../src/source/protocol_crud';
 import type {Map} from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-// Measures the worst frame time during a scripted flyTo with terrain enabled.
-// Modeled on playground/terrain-bench.html: the map flies a fixed route
-// and we record the longest rAF interval as the measurement for that pass.
+// Measures the worst frame time during a scripted flyTo, parameterized
+// over terrain on/off and projection mercator/globe so we can compare the
+// four combinations in a single bench run.
 //
 // All resources are local. The bench-vector protocol returns a single
 // bundled tile for every z/x/y; bench-dem does the same for the DEM;
@@ -33,9 +33,22 @@ const BEARING = 180;
 const FLIGHT_MS = 1_000;
 const ITERATIONS = 10;
 
-export default class TerrainDroppedFrames extends Benchmark {
+type Variant = {
+    terrain: boolean;
+    projection: 'mercator' | 'globe';
+};
+
+class FlyDroppedFramesBench extends Benchmark {
     map: Map;
     uninstallProtocols: () => void;
+    variant: Variant;
+    label: string;
+
+    constructor(label: string, variant: Variant) {
+        super();
+        this.label = label;
+        this.variant = variant;
+    }
 
     async setup() {
         const vectorBuffer = await (await fetch('/test/bench/data/785.vector.pbf')).arrayBuffer();
@@ -48,6 +61,9 @@ export default class TerrainDroppedFrames extends Benchmark {
             removeProtocol(DEM_PROTOCOL);
         };
 
+        const style = buildStyle();
+        style.projection = {type: this.variant.projection};
+
         this.map = await createMap({
             center: START,
             zoom: ZOOM,
@@ -56,15 +72,17 @@ export default class TerrainDroppedFrames extends Benchmark {
             maxPitch: 85,
             width: 393,
             height: 852,
-            style: buildStyle(),
+            style,
             fadeDuration: 0,
             stubRender: false,
             showMap: true,
             idle: true,
         });
 
-        this.map.setTerrain({source: 'dem', exaggeration: 1});
-        await new Promise(resolve => this.map.once('idle', resolve));
+        if (this.variant.terrain) {
+            this.map.setTerrain({source: 'dem', exaggeration: 1});
+            await new Promise(resolve => this.map.once('idle', resolve));
+        }
     }
 
     async run(): Promise<Measurement[]> {
@@ -78,7 +96,7 @@ export default class TerrainDroppedFrames extends Benchmark {
             const measurements: Measurement[] = [];
             for (let i = 0; i < ITERATIONS; i++) {
                 const maxFrameMs = await this.flyAndMeasureMaxFrame();
-                console.log(`TerrainDroppedFrames iter ${i}: max frame ${maxFrameMs.toFixed(1)}ms`);
+                console.log(`${this.label} iter ${i}: max frame ${maxFrameMs.toFixed(1)}ms`);
                 measurements.push({time: maxFrameMs, iterations: 1});
             }
 
@@ -129,6 +147,19 @@ export default class TerrainDroppedFrames extends Benchmark {
         for (const t of frameTimes) if (t > max) max = t;
         return max;
     }
+}
+
+export class Terrain3DGlobe extends FlyDroppedFramesBench {
+    constructor() { super('Terrain3DGlobe', {terrain: true, projection: 'globe'}); }
+}
+export class Terrain3DMercator extends FlyDroppedFramesBench {
+    constructor() { super('Terrain3DMercator', {terrain: true, projection: 'mercator'}); }
+}
+export class Terrain2DGlobe extends FlyDroppedFramesBench {
+    constructor() { super('Terrain2DGlobe', {terrain: false, projection: 'globe'}); }
+}
+export class Terrain2DMercator extends FlyDroppedFramesBench {
+    constructor() { super('Terrain2DMercator', {terrain: false, projection: 'mercator'}); }
 }
 
 // Build a synthetic basemap-style style covering the source-layers
