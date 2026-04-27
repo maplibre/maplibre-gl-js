@@ -33,9 +33,6 @@ const PITCH = 85;
 const BEARING = 180;
 const FLIGHT_MS = 6_000;
 
-// Number of measured flights. One warmup flight runs first and is discarded.
-const FLIGHT_COUNT = 10;
-
 export default class TerrainRender extends Benchmark {
     map: Map;
     uninstallProtocols: () => void;
@@ -81,15 +78,11 @@ export default class TerrainRender extends Benchmark {
             // caches reach steady state before measurement.
             await this.flyAndCountDrops();
 
-            const measurements: Measurement[] = [];
-            for (let i = 0; i < FLIGHT_COUNT; i++) {
-                const {dropped, total} = await this.flyAndCountDrops();
-                const percent = 100 * dropped / Math.max(1, total);
-                measurements.push({time: percent, iterations: 1});
-            }
+            const {dropped, total} = await this.flyAndCountDrops();
+            const percent = 100 * dropped / Math.max(1, total);
 
             this.teardown();
-            return measurements;
+            return [{time: percent, iterations: 1}];
         } catch (e) {
             console.error(e);
         }
