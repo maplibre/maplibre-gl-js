@@ -8,6 +8,8 @@ import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import {type OverscaledTileID} from '../tile/tile_id';
 import type {Event} from './evented';
 
+export const JSON_PREFIX = '__$json__:';
+
 /**
  * Ensures that a value is an `Error` instance.
  * If the value is already an `Error`, it is returned as-is.
