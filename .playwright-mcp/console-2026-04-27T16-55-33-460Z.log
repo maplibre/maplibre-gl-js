@@ -1,4 +1,0 @@
-[      73ms] [ERROR] Failed to load resource: net::ERR_UNKNOWN_URL_SCHEME @ about:blank:0
-[     880ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://api.github.com/repos/maplibre/maplibre-gl-js/releases/latest:0
-[     881ms] [LOG] Comparing versions: ,main @ http://localhost:9966/test/bench/versions/index.html:25
-[    1110ms] [ERROR] Event @ http://localhost:9966/test/bench/versions/index.html:68
