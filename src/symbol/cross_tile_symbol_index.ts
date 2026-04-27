@@ -1,9 +1,8 @@
 import KDBush from 'kdbush';
 import {EXTENT} from '../data/extent';
 
-import {type SymbolInstanceArray} from '../data/array_types.g';
-
 import type {SymbolInstance} from '../data/array_types.g';
+import {type SymbolInstanceArray} from '../data/array_types.g';
 import type {OverscaledTileID} from '../tile/tile_id';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket';
 import type {StyleLayer} from '../style/style_layer';
@@ -28,11 +27,11 @@ const roundingFactor = 512 / EXTENT / 2;
 
 export const KDBUSH_THRESHHOLD = 128;
 
-interface SymbolsByKeyEntry {
+type SymbolsByKeyEntry = {
     index?: KDBush;
-    positions?: {x: number; y: number}[];
+    positions?: Array<{x: number; y: number}>;
     crossTileIDs: number[];
-}
+};
 
 class TileLayerIndex {
     _symbolsByKey: Record<number, SymbolsByKeyEntry> = {};
@@ -91,12 +90,10 @@ class TileLayerIndex {
         const yWorld = (y * EXTENT + symbolInstance.anchorY) * scale;
         const xOffset = localX * EXTENT * roundingFactor;
         const yOffset = localY * EXTENT * roundingFactor;
-        const result =  {
+        return {
             x: Math.floor(xWorld - xOffset),
             y: Math.floor(yWorld - yOffset)
         };
-
-        return result;
     }
 
     findMatches(symbolInstances: SymbolInstanceArray, newTileID: OverscaledTileID, zoomCrossTileIDs: {
@@ -220,8 +217,7 @@ class CrossTileSymbolLayerIndex {
     }
 
     addBucket(tileID: OverscaledTileID, bucket: SymbolBucket, crossTileIDs: CrossTileIDs) {
-        if (this.indexes[tileID.overscaledZ] &&
-            this.indexes[tileID.overscaledZ][tileID.key]) {
+        if (this.indexes[tileID.overscaledZ]?.[tileID.key]) {
             if (this.indexes[tileID.overscaledZ][tileID.key].bucketInstanceId ===
                 bucket.bucketInstanceId) {
                 return false;
@@ -241,9 +237,7 @@ class CrossTileSymbolLayerIndex {
             symbolInstance.crossTileID = 0;
         }
 
-        if (!this.usedCrossTileIDs[tileID.overscaledZ]) {
-            this.usedCrossTileIDs[tileID.overscaledZ] = {};
-        }
+        this.usedCrossTileIDs[tileID.overscaledZ] ||= {};
         const zoomCrossTileIDs = this.usedCrossTileIDs[tileID.overscaledZ];
 
         for (const zoom in this.indexes) {
@@ -320,7 +314,7 @@ export class CrossTileSymbolIndex {
         this.bucketsInCurrentPlacement = {};
     }
 
-    addLayer(styleLayer: StyleLayer, tiles: Array<Tile>, lng: number) {
+    addLayer(styleLayer: StyleLayer, tiles: Tile[], lng: number) {
         let layerIndex = this.layerIndexes[styleLayer.id];
         if (layerIndex === undefined) {
             layerIndex = this.layerIndexes[styleLayer.id] = new CrossTileSymbolLayerIndex();
@@ -333,11 +327,12 @@ export class CrossTileSymbolIndex {
 
         for (const tile of tiles) {
             const symbolBucket = (tile.getBucket(styleLayer) as any as SymbolBucket);
-            if (!symbolBucket || styleLayer.id !== symbolBucket.layerIds[0])
+            if (styleLayer.id !== symbolBucket?.layerIds[0])
                 continue;
 
             if (!symbolBucket.bucketInstanceId) {
-                symbolBucket.bucketInstanceId = ++this.maxBucketInstanceId;
+                this.maxBucketInstanceId += 1;
+                symbolBucket.bucketInstanceId = this.maxBucketInstanceId;
             }
 
             if (layerIndex.addBucket(tile.tileID, symbolBucket, this.crossTileIDs)) {
@@ -353,11 +348,11 @@ export class CrossTileSymbolIndex {
         return symbolBucketsChanged;
     }
 
-    pruneUnusedLayers(usedLayers: Array<string>) {
+    pruneUnusedLayers(usedLayers: string[]) {
         const usedLayerMap = {};
-        usedLayers.forEach((usedLayer) => {
+        for (const usedLayer of usedLayers) {
             usedLayerMap[usedLayer] = true;
-        });
+        }
         for (const layerId in this.layerIndexes) {
             if (!usedLayerMap[layerId]) {
                 delete this.layerIndexes[layerId];

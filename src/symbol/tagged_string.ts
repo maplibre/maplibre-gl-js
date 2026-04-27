@@ -79,7 +79,7 @@ function getGlyphAdvance(
 ): number {
     if ('fontStack' in section) {
         const positions = glyphMap[section.fontStack];
-        const glyph = positions && positions[codePoint];
+        const glyph = positions?.[codePoint];
         if (!glyph) return 0;
         return glyph.metrics.advance * section.scale + spacing;
     } else {
@@ -134,7 +134,7 @@ function evaluateBreak(
     breakIndex: number,
     breakX: number,
     targetWidth: number,
-    potentialBreaks: Array<Break>,
+    potentialBreaks: Break[],
     penalty: number,
     isLastBreak: boolean
 ): Break {
@@ -164,7 +164,7 @@ function evaluateBreak(
     };
 }
 
-function leastBadBreaks(lastLineBreak?: Break | null): Array<number> {
+function leastBadBreaks(lastLineBreak?: Break | null): number[] {
     if (!lastLineBreak) {
         return [];
     }
@@ -173,12 +173,12 @@ function leastBadBreaks(lastLineBreak?: Break | null): Array<number> {
 
 export class TaggedString {
     text: string;
-    sections: Array<SectionOptions>;
+    sections: SectionOptions[];
     /** Maps each character in `text` to its corresponding entry in `sections`. */
-    sectionIndex: Array<number>;
+    sectionIndex: number[];
     imageSectionID: number | null;
 
-    constructor(text: string = '', sections: Array<SectionOptions> = [], sectionIndex: Array<number> = []) {
+    constructor(text: string = '', sections: SectionOptions[] = [], sectionIndex: number[] = []) {
         this.text = text;
         this.sections = sections;
         this.sectionIndex = sectionIndex;
@@ -187,8 +187,7 @@ export class TaggedString {
 
     static fromFeature(text: Formatted, defaultFontStack: string) {
         const result = new TaggedString();
-        for (let i = 0; i < text.sections.length; i++) {
-            const section = text.sections[i];
+        for (const section of text.sections) {
             if (!section.image) {
                 result.addTextSection(section, defaultFontStack);
             } else {
@@ -327,7 +326,7 @@ export class TaggedString {
         },
         imagePositions: {[_: string]: ImagePosition},
         layoutTextSize: number
-    ): Array<number> {
+    ): number[] {
         const potentialLineBreaks = [];
         const targetWidth = this.determineAverageLineWidth(spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
 

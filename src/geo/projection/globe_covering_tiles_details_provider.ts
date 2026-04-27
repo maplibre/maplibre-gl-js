@@ -9,6 +9,7 @@ import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provid
 import {OverscaledTileID} from '../../tile/tile_id';
 import {earthRadius} from '../lng_lat';
 import {ConvexVolume} from '../../util/primitives/convex_volume';
+import type {IBoundingVolume} from '../../util/primitives/bounding_volume';
 import {threePlaneIntersection} from '../../util/util';
 
 /**
@@ -30,7 +31,7 @@ function distanceToTileWrapX(pointX: number, pointY: number, tileCornerX: number
     if (tileCornerToPointX < 0) {
         // Point is left of tile
         distanceX = Math.min(-tileCornerToPointX, 1.0 + tileCornerToPointX - tileSize);
-    } else if (tileCornerToPointX > 1) {
+    } else if (tileCornerToPointX > tileSize) {
         // Point is right of tile
         distanceX = Math.min(Math.max(tileCornerToPointX - tileSize, 0), 1.0 - tileCornerToPointX);
     } else {
@@ -57,7 +58,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
      * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
      * when crossing the poles Y is mirrored and X is shifted by half world size.
      */
-    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _bv: ConvexVolume): number {
+    distanceToTile2d(pointX: number, pointY: number, tileID: {x: number; y: number; z: number}, _bv: IBoundingVolume): number {
         const scale = 1 << tileID.z;
         const tileMercatorSize = 1.0 / scale;
         const tileCornerX = tileID.x / scale; // In range 0..1

@@ -5,7 +5,7 @@ import fetchStyle from '../lib/fetch_style';
 
 export default class StyleLayerCreate extends Benchmark {
     style: string | StyleSpecification;
-    layers: Array<any>;
+    layers: any[];
 
     constructor(style: string | StyleSpecification) {
         super();

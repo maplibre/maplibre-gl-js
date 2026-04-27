@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 
 import {BenchmarksTable} from './components/BenchmarkTable';
 import {summaryStatistics, regression, Summary} from './lib/statistics';
+import {ensureError} from '../../src/util/util';
 import type {BenchmarkRowProps} from './components/BenchmarkRow';
 
 function updateUI(benchmarks: BenchmarkRowProps[], finished?: boolean) {
@@ -42,7 +43,7 @@ export async function run(benchmarks: BenchmarkRowProps[]) {
                 updateUI(benchmarks);
             } catch (error) {
                 version.status = 'errored';
-                version.error = error;
+                version.error = ensureError(error);
                 updateUI(benchmarks);
             }
         }

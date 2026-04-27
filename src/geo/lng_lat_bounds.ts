@@ -26,7 +26,7 @@ export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number
  *
  * If no arguments are provided to the constructor, a `null` bounding box is created.
  *
- * Note that any Mapbox GL method that accepts a `LngLatBounds` object as an argument or option
+ * Note that any MapLibre GL method that accepts a `LngLatBounds` object as an argument or option
  * can also accept an `Array` of two {@link LngLatLike} constructs and will perform an implicit conversion.
  * This flexible type is documented as {@link LngLatBoundsLike}.
  *
@@ -38,6 +38,7 @@ export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number
  * let ne = new LngLat(-73.9397, 40.8002);
  * let llb = new LngLatBounds(sw, ne);
  * ```
+ * @see [Fit to the bounds of a LineString](https://maplibre.org/maplibre-gl-js/docs/examples/fit-to-the-bounds-of-a-linestring/)
  */
 export class LngLatBounds {
     _ne: LngLat;
@@ -230,7 +231,7 @@ export class LngLatBounds {
      * llb.toArray(); // = [[-73.9876, 40.7661], [-73.9397, 40.8002]]
      * ```
      */
-    toArray() {
+    toArray(): [[number, number], [number, number]] {
         return [this._sw.toArray(), this._ne.toArray()];
     }
 

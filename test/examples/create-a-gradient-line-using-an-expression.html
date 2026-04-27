@@ -3,6 +3,7 @@
 <head>
     <title>Create a gradient line using an expression</title>
     <meta property="og:description" content="Use the line-gradient paint property and an expression to visualize distance from the starting point of a line." />
+    <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
@@ -16,12 +17,12 @@
 <div id="map"></div>
 
 <script>
-    const map = (window.map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style: 'https://tiles.openfreemap.org/styles/bright',
         center: [-77.035, 38.875],
         zoom: 12
-    }));
+    });
 
     const geojson = {
         'type': 'FeatureCollection',

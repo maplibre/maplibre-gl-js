@@ -7,8 +7,8 @@ import {serialize, deserialize} from '../../../src/util/web_worker_transfer';
 
 export default class WorkerTransfer extends Benchmark {
     parser: TileParser;
-    payloadTiles: Array<any>;
-    payloadJSON: Array<any>;
+    payloadTiles: any[];
+    payloadJSON: any[];
     worker: Worker;
     style: string | StyleSpecification;
 

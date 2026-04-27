@@ -10,13 +10,11 @@ import {Bounds} from '../geo/bounds';
  *
  * @param polygonRings - first item in array is the outer ring followed optionally by the list of holes, should be an element of the result of util/classify_rings
  * @param precision - Specified in input coordinate units. If 0 returns after first run, if `> 0` repeatedly narrows the search space until the radius of the area searched for the best pole is less than precision
- * @param debug - Print some statistics to the console during execution
  * @returns Pole of Inaccessibility.
  */
 export function findPoleOfInaccessibility(
-    polygonRings: Array<Array<Point>>,
+    polygonRings: Point[][],
     precision: number = 1,
-    debug: boolean = false
 ): Point {
     const bounds = Bounds.fromPoints(polygonRings[0]);
 
@@ -37,8 +35,8 @@ export function findPoleOfInaccessibility(
     }
 
     // take centroid as the first best guess
-    let bestCell = getCentroidCell(polygonRings);
-    let numProbes = cellQueue.length;
+    const centroidCell = getCentroidCell(polygonRings);
+    let bestCell = centroidCell;
 
     while (cellQueue.length) {
         // pick the most promising cell from the queue
@@ -47,7 +45,6 @@ export function findPoleOfInaccessibility(
         // update the best cell if we found a better one
         if (cell.d > bestCell.d || !bestCell.d) {
             bestCell = cell;
-            if (debug) console.log('found best %d after %d probes', Math.round(1e4 * cell.d) / 1e4, numProbes);
         }
 
         // do not drill down further if there's no chance of a better solution
@@ -59,35 +56,44 @@ export function findPoleOfInaccessibility(
         cellQueue.push(new Cell(cell.p.x + h, cell.p.y - h, h, polygonRings));
         cellQueue.push(new Cell(cell.p.x - h, cell.p.y + h, h, polygonRings));
         cellQueue.push(new Cell(cell.p.x + h, cell.p.y + h, h, polygonRings));
-        numProbes += 4;
     }
 
-    if (debug) {
-        console.log(`num probes: ${numProbes}`);
-        console.log(`best distance: ${bestCell.d}`);
+    // For convex or nearly-convex polygons, the centroid provides visually
+    // better label placement than the mathematical POI.
+    // Coordinate rounding (e.g. in geojson-vt) can break polygon symmetry and cause the POI to
+    // drift far from center even though its distance-to-edge is only marginally better.
+    // Prefer the centroid when it is inside the polygon
+    // and its distance is within `precision` of the best found.
+    if (centroidCell.d > 0 && bestCell.d - centroidCell.d <= precision) {
+        return centroidCell.p;
     }
-
     return bestCell.p;
 }
 
-function compareMax(a, b) {
+function compareMax(a: Cell, b: Cell) {
     return b.max - a.max;
 }
 
-function Cell(x, y, h, polygon) {
-    this.p = new Point(x, y);
-    this.h = h; // half the cell size
-    this.d = pointToPolygonDist(this.p, polygon); // distance from cell center to polygon
-    this.max = this.d + this.h * Math.SQRT2; // max distance to polygon within a cell
+class Cell {
+    p: Point;
+    h: number;
+    d: number;
+    max: number;
+
+    constructor(x: number, y: number, h: number, polygon: Point[][]) {
+        this.p = new Point(x, y);
+        this.h = h; // half the cell size
+        this.d = pointToPolygonDist(this.p, polygon); // distance from cell center to polygon
+        this.max = this.d + this.h * Math.SQRT2; // max distance to polygon within a cell
+    }
 }
 
 // signed distance from point to polygon outline (negative if point is outside)
-function pointToPolygonDist(p, polygon) {
+function pointToPolygonDist(p: Point, polygon: Point[][]) {
     let inside = false;
     let minDistSq = Infinity;
 
-    for (let k = 0; k < polygon.length; k++) {
-        const ring = polygon[k];
+    for (const ring of polygon) {
 
         for (let i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
             const a = ring[i];
@@ -104,7 +110,7 @@ function pointToPolygonDist(p, polygon) {
 }
 
 // get polygon centroid
-function getCentroidCell(polygon) {
+export function getCentroidCell(polygon: Point[][]) {
     let area = 0;
     let x = 0;
     let y = 0;

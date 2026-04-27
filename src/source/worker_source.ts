@@ -46,6 +46,7 @@ export type WorkerTileParameters = TileParameters & {
      * This allows the worker to know that it needs to overzoom from a source tile.
      */
     overzoomParameters?: OverzoomParameters;
+    etag?: string;
 };
 
 /**
@@ -71,8 +72,8 @@ export type WorkerDEMTileParameters = TileParameters & {
 /**
  * The worker tile's result type
  */
-export type WorkerTileResult = ExpiryData & {
-    buckets: Array<Bucket>;
+export type WorkerTileWithData = ExpiryData & {
+    buckets: Bucket[];
     imageAtlas: ImageAtlas;
     dashPositions: Record<string, DashEntry>;
     glyphAtlasImage: AlphaImage;
@@ -80,7 +81,7 @@ export type WorkerTileResult = ExpiryData & {
     collisionBoxArray: CollisionBoxArray;
     rawTileData?: ArrayBuffer;
     encoding?: string;
-    resourceTiming?: Array<PerformanceResourceTiming>;
+    resourceTiming?: PerformanceResourceTiming[];
     // Only used for benchmarking:
     glyphMap?: {
         [_: string]: {
@@ -91,13 +92,21 @@ export type WorkerTileResult = ExpiryData & {
         [_: string]: StyleImage;
     } | null;
     glyphPositions?: GlyphPositions | null;
+    etagUnmodified?: false;
 };
+
+export type WorkerTileWithoutData = ExpiryData & {
+    etagUnmodified: true;  // Strict for type narrowing
+    resourceTiming?: PerformanceResourceTiming[];
+};
+
+export type WorkerTileResult = WorkerTileWithData | WorkerTileWithoutData;
 
 /**
  * This is how the @see {@link WorkerSource} constructor should look like.
  */
 export interface WorkerSourceConstructor {
-    new (actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>): WorkerSource;
+    new (actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[]): WorkerSource;
 }
 
 /**
@@ -106,7 +115,7 @@ export interface WorkerSourceConstructor {
  * @see {@link Map.addSourceType}
  */
 export interface WorkerSource {
-    availableImages: Array<string>;
+    availableImages: string[];
 
     /**
      * Loads a tile from the given params and parse it into buckets ready to send

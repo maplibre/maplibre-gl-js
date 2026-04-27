@@ -1,8 +1,8 @@
 import {now} from '../util/time_control';
 import {Placement} from '../symbol/placement';
+import {isSymbolStyleLayer, type SymbolStyleLayer} from './style_layer/symbol_style_layer';
 import type {ITransform} from '../geo/transform_interface';
 import type {StyleLayer} from './style_layer';
-import type {SymbolStyleLayer} from './style_layer/symbol_style_layer';
 import type {Tile} from '../tile/tile';
 import type {BucketPart} from '../symbol/placement';
 import type {Terrain} from '../render/terrain';
@@ -14,7 +14,7 @@ class LayerPlacement {
     _seenCrossTileIDs: {
         [k in string | number]: boolean;
     };
-    _bucketParts: Array<BucketPart>;
+    _bucketParts: BucketPart[];
 
     constructor(styleLayer: SymbolStyleLayer) {
         this._sortAcrossTiles = styleLayer.layout.get('symbol-z-order') !== 'viewport-y' &&
@@ -26,7 +26,7 @@ class LayerPlacement {
         this._bucketParts = [];
     }
 
-    continuePlacement(tiles: Array<Tile>, placement: Placement, showCollisionBoxes: boolean, styleLayer: StyleLayer, shouldPausePlacement: () => boolean) {
+    continuePlacement(tiles: Tile[], placement: Placement, showCollisionBoxes: boolean, styleLayer: StyleLayer, shouldPausePlacement: () => boolean) {
 
         const bucketParts = this._bucketParts;
 
@@ -69,7 +69,7 @@ export class PauseablePlacement {
     constructor(
         transform: ITransform,
         terrain: Terrain,
-        order: Array<string>,
+        order: string[],
         forceFullPlacement: boolean,
         showCollisionBoxes: boolean,
         fadeDuration: number,
@@ -88,9 +88,9 @@ export class PauseablePlacement {
     }
 
     continuePlacement(
-        order: Array<string>,
+        order: string[],
         layers: {[_: string]: StyleLayer},
-        layerTiles: {[_: string]: Array<Tile>}
+        layerTiles: {[_: string]: Tile[]}
     ) {
         const startTime = now();
 
@@ -102,13 +102,12 @@ export class PauseablePlacement {
             const layerId = order[this._currentPlacementIndex];
             const layer = layers[layerId];
             const placementZoom = this.placement.collisionIndex.transform.zoom;
-            if (layer.type === 'symbol' &&
+            if (isSymbolStyleLayer(layer) &&
+                layer.layout &&
                 (!layer.minzoom || layer.minzoom <= placementZoom) &&
                 (!layer.maxzoom || layer.maxzoom > placementZoom)) {
 
-                if (!this._inProgressLayer) {
-                    this._inProgressLayer = new LayerPlacement(layer as any as SymbolStyleLayer);
-                }
+                this._inProgressLayer ||= new LayerPlacement(layer);
 
                 const pausePlacement = this._inProgressLayer.continuePlacement(layerTiles[layer.source], this.placement, this._showCollisionBoxes, layer, shouldPausePlacement);
 

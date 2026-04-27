@@ -6,6 +6,8 @@ import {rtlWorkerPlugin, type RTLTextPlugin} from './rtl_text_plugin_worker';
 import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
 import {isWorker} from '../util/util';
 import {addProtocol, removeProtocol} from './protocol_crud';
+import {makeRequest} from '../util/ajax';
+
 import {type PluginState} from './rtl_text_plugin_status';
 import type {
     WorkerSource,
@@ -14,7 +16,6 @@ import type {
     WorkerDEMTileParameters,
     TileParameters
 } from '../source/worker_source';
-
 import type {WorkerGlobalScopeInterface} from '../util/web_worker';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {
@@ -32,7 +33,7 @@ export default class Worker {
     self: WorkerGlobalScopeInterface & ActorTarget;
     actor: Actor;
     layerIndexes: {[_: string]: StyleLayerIndex};
-    availableImages: {[_: string]: Array<string>};
+    availableImages: {[_: string]: string[]};
     externalWorkerSourceTypes: { [_: string]: WorkerSourceConstructor };
     /**
      * This holds a cache for the already created worker source instances.
@@ -86,9 +87,10 @@ export default class Worker {
 
         // This is invoked by the RTL text plugin when the download via the `importScripts` call has finished, and the code has been parsed.
         this.self.registerRTLTextPlugin = (rtlTextPlugin: RTLTextPlugin) => {
-
             rtlWorkerPlugin.setMethods(rtlTextPlugin);
         };
+
+        this.self.makeRequest = makeRequest;
 
         this.actor.registerMessageHandler(MessageType.loadDEMTile, (mapId: string, params: WorkerDEMTileParameters) => {
             return this._getDEMWorkerSource(mapId, params.source).loadTile(params);
@@ -114,10 +116,6 @@ export default class Worker {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).loadData(params);
         });
 
-        this.actor.registerMessageHandler(MessageType.getData, (mapId: string, params: LoadGeoJSONParameters) => {
-            return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getData();
-        });
-
         this.actor.registerMessageHandler(MessageType.loadTile, (mapId: string, params: WorkerTileParameters) => {
             return this._getWorkerSource(mapId, params.type, params.source).loadTile(params);
         });
@@ -135,9 +133,7 @@ export default class Worker {
         });
 
         this.actor.registerMessageHandler(MessageType.removeSource, async (mapId: string, params: RemoveSourceParams) => {
-            if (!this.workerSources[mapId] ||
-                !this.workerSources[mapId][params.type] ||
-                !this.workerSources[mapId][params.type][params.source]) {
+            if (!this.workerSources[mapId]?.[params.type]?.[params.source]) {
                 return;
             }
 
@@ -184,7 +180,7 @@ export default class Worker {
             }
         });
 
-        this.actor.registerMessageHandler(MessageType.setLayers, async (mapId: string, params: Array<LayerSpecification>) => {
+        this.actor.registerMessageHandler(MessageType.setLayers, async (mapId: string, params: LayerSpecification[]) => {
             this._getLayerIndex(mapId).replace(params, this._getGlobalState(mapId));
         });
     }
@@ -198,7 +194,7 @@ export default class Worker {
         return state;
     }
 
-    private async _setImages(mapId: string, images: Array<string>): Promise<void> {
+    private async _setImages(mapId: string, images: string[]): Promise<void> {
         this.availableImages[mapId] = images;
         for (const workerSource in this.workerSources[mapId]) {
             const ws = this.workerSources[mapId][workerSource];
@@ -209,25 +205,20 @@ export default class Worker {
     }
 
     private async _syncRTLPluginState(mapId: string, incomingState: PluginState): Promise<PluginState> {
-        const state = await rtlWorkerPlugin.syncState(incomingState, this.self.importScripts);
-        return state;
+        return await rtlWorkerPlugin.syncState(incomingState, this.self.importScripts);
     }
 
     private _getAvailableImages(mapId: string) {
         let availableImages = this.availableImages[mapId];
 
-        if (!availableImages) {
-            availableImages = [];
-        }
+        availableImages ||= [];
 
         return availableImages;
     }
 
     private _getLayerIndex(mapId: string) {
         let layerIndexes = this.layerIndexes[mapId];
-        if (!layerIndexes) {
-            layerIndexes = this.layerIndexes[mapId] = new StyleLayerIndex();
-        }
+        layerIndexes ||= this.layerIndexes[mapId] = new StyleLayerIndex();
         return layerIndexes;
     }
 
@@ -239,10 +230,8 @@ export default class Worker {
      * @returns a new instance or a cached one
      */
     private _getWorkerSource(mapId: string, sourceType: string, sourceName: string): WorkerSource {
-        if (!this.workerSources[mapId])
-            this.workerSources[mapId] = {};
-        if (!this.workerSources[mapId][sourceType])
-            this.workerSources[mapId][sourceType] = {};
+        this.workerSources[mapId] ||= {};
+        this.workerSources[mapId][sourceType] ||= {};
 
         if (!this.workerSources[mapId][sourceType][sourceName]) {
             // use a wrapped actor so that we can attach a target mapId param
@@ -276,12 +265,8 @@ export default class Worker {
      * @returns a new instance or a cached one
      */
     private _getDEMWorkerSource(mapId: string, sourceType: string) {
-        if (!this.demWorkerSources[mapId])
-            this.demWorkerSources[mapId] = {};
-
-        if (!this.demWorkerSources[mapId][sourceType]) {
-            this.demWorkerSources[mapId][sourceType] = new RasterDEMTileWorkerSource();
-        }
+        this.demWorkerSources[mapId] ||= {};
+        this.demWorkerSources[mapId][sourceType] ||= new RasterDEMTileWorkerSource();
 
         return this.demWorkerSources[mapId][sourceType];
     }

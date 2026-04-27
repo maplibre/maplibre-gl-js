@@ -73,7 +73,9 @@ export function mercatorScale(lat: number) {
  * ```ts
  * let nullIsland = new MercatorCoordinate(0.5, 0.5, 0);
  * ```
- * @see [Add a custom style layer](https://maplibre.org/maplibre-gl-js/docs/examples/custom-style-layer/)
+ * @see [Add a custom style layer](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-custom-style-layer/)
+ * @see [Add a 3D model using three.js](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/)
+ * @see [Add a simple custom layer on a globe](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-simple-custom-layer-on-a-globe/)
  */
 export class MercatorCoordinate implements IMercatorCoordinate {
     x: number;

@@ -570,8 +570,8 @@ describe('drag rotate', () => {
         expect(rotateend).toHaveBeenCalledTimes(0);
 
         // simulates another handler taking over
-        // simulate a scroll zoom
-        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        // simulate scroll zoom
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
         expect(rotatestart).toHaveBeenCalledTimes(1);
         expect(rotate).toHaveBeenCalledTimes(1);
@@ -736,7 +736,7 @@ describe('drag rotate', () => {
     test('DragRotateHandler does not begin a drag if preventDefault is called on the mousedown event', () => {
         const map = createMap();
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const rotatestart = vi.fn();
         const rotate      = vi.fn();

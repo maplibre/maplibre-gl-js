@@ -1,6 +1,6 @@
 import {ImageSource} from './image_source';
 
-import {Texture} from '../render/texture';
+import {Texture} from '../webgl/texture';
 import {Event, ErrorEvent} from '../util/evented';
 import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
 
@@ -107,13 +107,11 @@ export class CanvasSource extends ImageSource {
 
     async load() {
         this._loaded = true;
-        if (!this.canvas) {
-            this.canvas = (this.options.canvas instanceof HTMLCanvasElement) ?
-                this.options.canvas :
-                document.getElementById(this.options.canvas) as HTMLCanvasElement;
-            // cast to HTMLCanvasElement in else of ternary
-            // should we do a safety check and throw if it's not actually HTMLCanvasElement?
-        }
+        this.canvas ||= (this.options.canvas instanceof HTMLCanvasElement) ?
+            this.options.canvas :
+            document.getElementById(this.options.canvas) as HTMLCanvasElement;
+        // cast to HTMLCanvasElement in else of ternary
+        // should we do a safety check and throw if it's not actually HTMLCanvasElement?
         this.width = this.canvas.width;
         this.height = this.canvas.height;
 

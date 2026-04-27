@@ -60,12 +60,12 @@ function overlapAllowed(overlapA: OverlapMode, overlapB: OverlapMode): boolean {
  * the number of comparisons necessary.
  */
 export class GridIndex<T extends GridKey> {
-    circleKeys: Array<T>;
-    boxKeys: Array<T>;
-    boxCells: Array<Array<number>>;
-    circleCells: Array<Array<number>>;
-    bboxes: Array<number>;
-    circles: Array<number>;
+    circleKeys: T[];
+    boxKeys: T[];
+    boxCells: number[][];
+    circleCells: number[][];
+    bboxes: number[];
+    circles: number[];
     xCellCount: number;
     yCellCount: number;
     width: number;
@@ -219,6 +219,12 @@ export class GridIndex<T extends GridKey> {
         const {seenUids, hitTest, overlapMode} = queryArgs;
         const boxCell = this.boxCells[cellIndex];
 
+        // Use a small epsilon to account for floating-point imprecision
+        // when collision box boundaries are computed via different
+        // projection paths (different tiles/sources) but should
+        // mathematically produce the same boundary value.
+        const epsilon = 1e-6;
+
         if (boxCell !== null) {
             const bboxes = this.bboxes;
             for (const boxUid of boxCell) {
@@ -227,10 +233,10 @@ export class GridIndex<T extends GridKey> {
                     const offset = boxUid * 4;
                     const key = this.boxKeys[boxUid];
 
-                    if ((x1 <= bboxes[offset + 2]) &&
-                        (y1 <= bboxes[offset + 3]) &&
-                        (x2 >= bboxes[offset + 0]) &&
-                        (y2 >= bboxes[offset + 1]) &&
+                    if ((x1 <= bboxes[offset + 2] + epsilon) &&
+                        (y1 <= bboxes[offset + 3] + epsilon) &&
+                        (x2 >= bboxes[offset + 0] - epsilon) &&
+                        (y2 >= bboxes[offset + 1] - epsilon) &&
                         (!predicate || predicate(key))) {
                         if (!hitTest || !overlapAllowed(overlapMode, key.overlapMode)) {
                             result.push({
@@ -292,7 +298,7 @@ export class GridIndex<T extends GridKey> {
         return false;
     }
 
-    private _queryCellCircle(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: Array<boolean>, queryArgs: QueryArgs, predicate?: (key: T) => boolean): boolean {
+    private _queryCellCircle(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: boolean[], queryArgs: QueryArgs, predicate?: (key: T) => boolean): boolean {
         const {circle, seenUids, overlapMode} = queryArgs;
         const boxCell = this.boxCells[cellIndex];
 

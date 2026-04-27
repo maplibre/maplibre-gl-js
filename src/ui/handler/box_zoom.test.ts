@@ -3,9 +3,15 @@ import {Map} from '../map';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {beforeMapTest} from '../../util/test/util';
+import type {BoxZoomHandlerOptions} from './box_zoom';
 
-function createMap(clickTolerance) {
-    return new Map({style: '', container: DOM.create('div', '', window.document.body), clickTolerance});
+function createMap(clickTolerance, boxZoom: boolean | BoxZoomHandlerOptions = true) {
+    return new Map({
+        style: '',
+        container: DOM.create('div', '', window.document.body),
+        clickTolerance,
+        boxZoom
+    });
 }
 
 beforeEach(() => {
@@ -40,7 +46,51 @@ describe('BoxZoomHandler', () => {
         map.remove();
     });
 
-    test('avoids conflicts with DragPanHandler when disabled and reenabled (#2237)', () => {
+    test('runs custom box zoom end callback and skips default zoom animation', () => {
+        const boxZoomEnd = vi.fn();
+        const map = createMap(undefined, {boxZoomEnd});
+        const fitScreenCoordinatesSpy = vi.spyOn(map, 'fitScreenCoordinates');
+
+        simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
+        map._renderTaskQueue.run();
+
+        simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
+        map._renderTaskQueue.run();
+
+        simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
+        map._renderTaskQueue.run();
+
+        expect(boxZoomEnd).toHaveBeenCalledTimes(1);
+        expect(boxZoomEnd).toHaveBeenCalledWith(
+            map,
+            expect.objectContaining({x: 0, y: 0}),
+            expect.objectContaining({x: 5, y: 5}),
+            expect.any(MouseEvent)
+        );
+        expect(fitScreenCoordinatesSpy).not.toHaveBeenCalled();
+
+        map.remove();
+    });
+
+    test('keeps default zoom behavior when box zoom options object has no callback', () => {
+        const map = createMap(undefined, {});
+        const fitScreenCoordinatesSpy = vi.spyOn(map, 'fitScreenCoordinates');
+
+        simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
+        map._renderTaskQueue.run();
+
+        simulate.mousemove(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
+        map._renderTaskQueue.run();
+
+        simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
+        map._renderTaskQueue.run();
+
+        expect(fitScreenCoordinatesSpy).toHaveBeenCalledTimes(1);
+
+        map.remove();
+    });
+
+    test('avoids conflicts with DragPanHandler when disabled and re-enabled (#2237)', () => {
         const map = createMap(undefined);
 
         map.boxZoom.disable();
@@ -85,7 +135,7 @@ describe('BoxZoomHandler', () => {
     test('does not begin a box zoom if preventDefault is called on the mousedown event', () => {
         const map = createMap(undefined);
 
-        map.on('mousedown', e => e.preventDefault());
+        map.on('mousedown', e => { e.preventDefault(); });
 
         const boxzoomstart = vi.fn();
         const boxzoomend   = vi.fn();

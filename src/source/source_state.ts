@@ -30,8 +30,8 @@ export class SourceFeatureState {
 
     updateState(sourceLayer: string, featureId: number | string, newState: any) {
         const feature = String(featureId);
-        this.stateChanges[sourceLayer] = this.stateChanges[sourceLayer] || {};
-        this.stateChanges[sourceLayer][feature] = this.stateChanges[sourceLayer][feature] || {};
+        this.stateChanges[sourceLayer] ||= {};
+        this.stateChanges[sourceLayer][feature] ||= {};
         extend(this.stateChanges[sourceLayer][feature], newState);
 
         if (this.deletedStates[sourceLayer] === null) {
@@ -40,7 +40,7 @@ export class SourceFeatureState {
                 if (ft !== feature) this.deletedStates[sourceLayer][ft] = null;
             }
         } else {
-            const featureDeletionQueued = this.deletedStates[sourceLayer] && this.deletedStates[sourceLayer][feature] === null;
+            const featureDeletionQueued = this.deletedStates[sourceLayer]?.[feature] === null;
             if (featureDeletionQueued) {
                 this.deletedStates[sourceLayer][feature] = {};
                 for (const prop in this.state[sourceLayer][feature]) {
@@ -48,7 +48,7 @@ export class SourceFeatureState {
                 }
             } else {
                 for (const key in newState) {
-                    const deletionInQueue = this.deletedStates[sourceLayer] && this.deletedStates[sourceLayer][feature] && this.deletedStates[sourceLayer][feature][key] === null;
+                    const deletionInQueue = this.deletedStates[sourceLayer]?.[feature]?.[key] === null;
                     if (deletionInQueue) delete this.deletedStates[sourceLayer][feature][key];
                 }
             }
@@ -61,15 +61,15 @@ export class SourceFeatureState {
 
         const feature = String(featureId);
 
-        this.deletedStates[sourceLayer] = this.deletedStates[sourceLayer] || {};
+        this.deletedStates[sourceLayer] ||= {};
 
         if (key && featureId !== undefined) {
             if (this.deletedStates[sourceLayer][feature] !== null) {
-                this.deletedStates[sourceLayer][feature] = this.deletedStates[sourceLayer][feature] || {};
+                this.deletedStates[sourceLayer][feature] ||= {};
                 this.deletedStates[sourceLayer][feature][key] = null;
             }
         } else if (featureId !== undefined) {
-            const updateInQueue = this.stateChanges[sourceLayer] && this.stateChanges[sourceLayer][feature];
+            const updateInQueue = this.stateChanges[sourceLayer]?.[feature];
             if (updateInQueue) {
                 this.deletedStates[sourceLayer][feature] = {};
                 for (key in this.stateChanges[sourceLayer][feature]) this.deletedStates[sourceLayer][feature][key] = null;
@@ -109,10 +109,10 @@ export class SourceFeatureState {
         const featuresChanged: LayerFeatureStates = {};
 
         for (const sourceLayer in this.stateChanges) {
-            this.state[sourceLayer]  = this.state[sourceLayer] || {};
+            this.state[sourceLayer] ||= {};
             const layerStates = {};
             for (const feature in this.stateChanges[sourceLayer]) {
-                if (!this.state[sourceLayer][feature]) this.state[sourceLayer][feature] = {};
+                this.state[sourceLayer][feature] ||= {};
                 extend(this.state[sourceLayer][feature], this.stateChanges[sourceLayer][feature]);
                 layerStates[feature] = this.state[sourceLayer][feature];
             }
@@ -120,7 +120,7 @@ export class SourceFeatureState {
         }
 
         for (const sourceLayer in this.deletedStates) {
-            this.state[sourceLayer]  = this.state[sourceLayer] || {};
+            this.state[sourceLayer] ||= {};
             const layerStates = {};
 
             if (this.deletedStates[sourceLayer] === null) {
@@ -141,7 +141,7 @@ export class SourceFeatureState {
                 }
             }
 
-            featuresChanged[sourceLayer] = featuresChanged[sourceLayer] || {};
+            featuresChanged[sourceLayer] ||= {};
             extend(featuresChanged[sourceLayer], layerStates);
         }
 

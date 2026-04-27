@@ -14,7 +14,7 @@ type SerializedObject<S extends Serialized = any> = {
 /**
  * All the possible values that can be serialized and sent to and from the worker
  */
-export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | ImageBitmap | Blob | Array<Serialized> | SerializedObject;
+export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | ImageBitmap | Blob | Serialized[] | SerializedObject;
 
 type Registry = {
     [_: string]: {
@@ -23,8 +23,8 @@ type Registry = {
             deserialize?: (input: Serialized) => unknown;
             serialize?: (input: any, transferables: Transferable[]) => SerializedObject;
         };
-        omit: ReadonlyArray<string>;
-        shallow: ReadonlyArray<string>;
+        omit: readonly string[];
+        shallow: readonly string[];
     };
 };
 
@@ -63,8 +63,8 @@ export function register<T extends any>(
     });
     registry[name] = {
         klass,
-        omit: options.omit as ReadonlyArray<string> || [],
-        shallow: options.shallow as ReadonlyArray<string> || []
+        omit: options.omit as readonly string[] || [],
+        shallow: options.shallow as readonly string[] || []
     };
 }
 
@@ -90,7 +90,7 @@ for (const name in expressions) {
 
 function isArrayBuffer(value: any): value is ArrayBuffer {
     return value && typeof ArrayBuffer !== 'undefined' &&
-           (value instanceof ArrayBuffer || (value.constructor && value.constructor.name === 'ArrayBuffer'));
+           (value instanceof ArrayBuffer || (value.constructor?.name === 'ArrayBuffer'));
 }
 
 function getClassRegistryKey(input: Object|SerializedObject): string {
@@ -103,10 +103,7 @@ function isRegistered(input: unknown): boolean {
         return false;
     }
     const classRegistryKey = getClassRegistryKey(input);
-    if (classRegistryKey && classRegistryKey !== 'Object') {
-        return true;
-    }
-    return false;
+    return classRegistryKey && classRegistryKey !== 'Object';
 }
 
 function isSerializeHandledByBuiltin(input: unknown) {
@@ -142,7 +139,7 @@ function isSerializeHandledByBuiltin(input: unknown) {
  * any ArrayBuffers or ArrayBuffer views) to the list. (If a copy is needed,
  * this should happen in the client code, before using serialize().)
  */
-export function serialize(input: unknown, transferables?: Array<Transferable> | null): Serialized {
+export function serialize(input: unknown, transferables?: Transferable[] | null): Serialized {
     if (isSerializeHandledByBuiltin(input)) {
         if (isArrayBuffer(input) || isImageBitmap(input)) {
             if (transferables) {
@@ -150,9 +147,8 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
             }
         }
         if (ArrayBuffer.isView(input)) {
-            const view = input;
             if (transferables) {
-                transferables.push(view.buffer);
+                transferables.push(input.buffer);
             }
         }
         if (input instanceof ImageData) {
@@ -164,7 +160,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
     }
 
     if (Array.isArray(input)) {
-        const serialized: Array<Serialized> = [];
+        const serialized: Serialized[] = [];
         for (const item of input) {
             serialized.push(serialize(item, transferables));
         }
@@ -188,14 +184,14 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         // approach for objects whose members include instances of dynamic
         // StructArray types. Once we refactor StructArray to be static,
         // we can remove this complexity.
-        (klass.serialize(input, transferables) as SerializedObject) : {};
+        klass.serialize(input, transferables) : {};
 
     if (!klass.serialize) {
         for (const key in input) {
             if (!input.hasOwnProperty(key)) continue;
-            if (registry[classRegistryKey].omit.indexOf(key) >= 0) continue;
+            if (registry[classRegistryKey].omit.includes(key)) continue;
             const property = input[key];
-            properties[key] = registry[classRegistryKey].shallow.indexOf(key) >= 0 ?
+            properties[key] = registry[classRegistryKey].shallow.includes(key) ?
                 property :
                 serialize(property, transferables);
         }
@@ -203,7 +199,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
             properties.message = input.message;
         }
     } else {
-        if (transferables && properties === transferables[transferables.length - 1]) {
+        if (properties === transferables?.[transferables.length - 1]) {
             throw new Error('statically serialized object won\'t survive transfer of $name property');
         }
     }
@@ -248,7 +244,7 @@ export function deserialize(input: Serialized): unknown {
     for (const key of Object.keys(input)) {
         if (key === '$name') continue;
         const value = (input as SerializedObject)[key];
-        result[key] = registry[classRegistryKey].shallow.indexOf(key) >= 0 ? value : deserialize(value);
+        result[key] = registry[classRegistryKey].shallow.includes(key) ? value : deserialize(value);
     }
 
     return result;

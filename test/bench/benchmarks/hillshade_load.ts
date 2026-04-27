@@ -25,7 +25,7 @@ export default class HillshadeLoad extends Benchmark {
             'pitch': 0,
             'sources': {
                 'terrain-rgb': {
-                    'url': 'https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                    'url': 'https://tiles.mapterhorn.com/tilejson.json',
                     'type': 'raster-dem',
                     'tileSize': 256
                 }

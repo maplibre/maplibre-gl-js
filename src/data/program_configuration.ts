@@ -8,16 +8,16 @@ import {patternAttributes} from './bucket/pattern_attributes';
 import {dashAttributes} from './bucket/dash_attributes';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {FeaturePositionMap} from './feature_position_map';
-import {type Uniform, Uniform1f, UniformColor, Uniform4f} from '../render/uniform_binding';
+import {type Uniform, Uniform1f, UniformColor, Uniform4f} from '../webgl/uniform_binding';
 
-import type {UniformLocations} from '../render/uniform_binding';
+import type {UniformLocations} from '../webgl/uniform_binding';
 
 import type {CanonicalTileID} from '../tile/tile_id';
-import type {Context} from '../gl/context';
+import type {Context} from '../webgl/context';
 import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
 import type {CrossfadeParameters} from '../style/evaluation_parameters';
 import type {StructArray, StructArrayMember} from '../util/struct_array';
-import type {VertexBuffer} from '../gl/vertex_buffer';
+import type {VertexBuffer} from '../webgl/vertex_buffer';
 import type {ImagePosition} from '../render/image_atlas';
 import type {
     Feature,
@@ -99,7 +99,7 @@ interface AttributeBinder {
 }
 
 interface UniformBinder {
-    uniformNames: Array<string>;
+    uniformNames: string[];
     setUniform(
         uniform: Uniform<any>,
         globals: GlobalProperties,
@@ -112,9 +112,9 @@ interface UniformBinder {
 class ConstantBinder implements UniformBinder {
     value: unknown;
     type: string;
-    uniformNames: Array<string>;
+    uniformNames: string[];
 
-    constructor(value: unknown, names: Array<string>, type: string) {
+    constructor(value: unknown, names: string[], type: string) {
         this.value = value;
         this.uniformNames = names.map(name => `u_${name}`);
         this.type = type;
@@ -136,15 +136,15 @@ class ConstantBinder implements UniformBinder {
 }
 
 class CrossFadedConstantBinder implements UniformBinder {
-    uniformNames: Array<string>;
-    patternFrom: Array<number>;
-    patternTo: Array<number>;
-    dashFrom: Array<number>;
-    dashTo: Array<number>;
+    uniformNames: string[];
+    patternFrom: number[];
+    patternTo: number[];
+    dashFrom: number[];
+    dashTo: number[];
     pixelRatioFrom: number;
     pixelRatioTo: number;
 
-    constructor(value: unknown, names: Array<string>) {
+    constructor(value: unknown, names: string[]) {
         this.uniformNames = names.map(name => `u_${name}`);
         this.patternFrom = null;
         this.patternTo = null;
@@ -187,7 +187,7 @@ class CrossFadedConstantBinder implements UniformBinder {
     }
 
     getBinding(context: Context, location: WebGLUniformLocation, name: string): Partial<Uniform<any>> {
-        return (name.substr(0, 9) === 'u_pattern' || name.substr(0, 12) === 'u_dasharray_') ?
+        return (name.startsWith('u_pattern') || name.startsWith('u_dasharray_')) ?
             new Uniform4f(context, location) :
             new Uniform1f(context, location);
     }
@@ -199,10 +199,10 @@ class SourceExpressionBinder implements AttributeBinder {
     maxValue: number;
 
     paintVertexArray: StructArray;
-    paintVertexAttributes: Array<StructArrayMember>;
+    paintVertexAttributes: StructArrayMember[];
     paintVertexBuffer: VertexBuffer;
 
-    constructor(expression: SourceExpression, names: Array<string>, type: string, PaintVertexArray: {
+    constructor(expression: SourceExpression, names: string[], type: string, PaintVertexArray: {
         new (...args: any): StructArray;
     }) {
         this.expression = expression;
@@ -244,8 +244,8 @@ class SourceExpressionBinder implements AttributeBinder {
     }
 
     upload(context: Context) {
-        if (this.paintVertexArray && this.paintVertexArray.arrayBuffer) {
-            if (this.paintVertexBuffer && this.paintVertexBuffer.buffer) {
+        if (this.paintVertexArray?.arrayBuffer.byteLength) {
+            if (this.paintVertexBuffer?.buffer) {
                 this.paintVertexBuffer.updateData(this.paintVertexArray);
             } else {
                 this.paintVertexBuffer = context.createVertexBuffer(this.paintVertexArray, this.paintVertexAttributes, this.expression.isStateDependent);
@@ -262,17 +262,17 @@ class SourceExpressionBinder implements AttributeBinder {
 
 class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
     expression: CompositeExpression;
-    uniformNames: Array<string>;
+    uniformNames: string[];
     type: string;
     useIntegerZoom: boolean;
     zoom: number;
     maxValue: number;
 
     paintVertexArray: StructArray;
-    paintVertexAttributes: Array<StructArrayMember>;
+    paintVertexAttributes: StructArrayMember[];
     paintVertexBuffer: VertexBuffer;
 
-    constructor(expression: CompositeExpression, names: Array<string>, type: string, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {
+    constructor(expression: CompositeExpression, names: string[], type: string, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {
         new (...args: any): StructArray;
     }) {
         this.expression = expression;
@@ -320,8 +320,8 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
     }
 
     upload(context: Context) {
-        if (this.paintVertexArray && this.paintVertexArray.arrayBuffer) {
-            if (this.paintVertexBuffer && this.paintVertexBuffer.buffer) {
+        if (this.paintVertexArray?.arrayBuffer.byteLength) {
+            if (this.paintVertexBuffer?.buffer) {
                 this.paintVertexBuffer.updateData(this.paintVertexArray);
             } else {
                 this.paintVertexBuffer = context.createVertexBuffer(this.paintVertexArray, this.paintVertexAttributes, this.expression.isStateDependent);
@@ -357,7 +357,7 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
     zoomOutPaintVertexArray: StructArray;
     zoomInPaintVertexBuffer: VertexBuffer;
     zoomOutPaintVertexBuffer: VertexBuffer;
-    paintVertexAttributes: Array<StructArrayMember>;
+    paintVertexAttributes: StructArrayMember[];
 
     constructor(expression: CompositeExpression, type: string, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {
         new (...args: any): StructArray;
@@ -383,7 +383,7 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
         this._setPaintValues(start, end, this.getPositionIds(feature), options);
     }
 
-    abstract getVertexAttributes(): Array<StructArrayMember>;
+    abstract getVertexAttributes(): StructArrayMember[];
 
     protected abstract getPositionIds(feature: Feature): {min: string; mid: string; max: string};
     protected abstract getPositions(options: PaintOptions): {[_: string]: T};
@@ -407,7 +407,7 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
     }
 
     upload(context: Context) {
-        if (this.zoomInPaintVertexArray && this.zoomInPaintVertexArray.arrayBuffer && this.zoomOutPaintVertexArray && this.zoomOutPaintVertexArray.arrayBuffer) {
+        if (this.zoomInPaintVertexArray?.arrayBuffer.byteLength && this.zoomOutPaintVertexArray?.arrayBuffer.byteLength) {
             const attributes = this.getVertexAttributes();
             this.zoomInPaintVertexBuffer = context.createVertexBuffer(this.zoomInPaintVertexArray, attributes, this.expression.isStateDependent);
             this.zoomOutPaintVertexBuffer = context.createVertexBuffer(this.zoomOutPaintVertexArray, attributes, this.expression.isStateDependent);
@@ -426,10 +426,10 @@ class CrossFadedPatternBinder extends CrossFadedBinder<ImagePosition> {
     }
 
     protected getPositionIds(feature: Feature) {
-        return feature.patterns && feature.patterns[this.layerId];
+        return feature.patterns?.[this.layerId];
     }
 
-    getVertexAttributes(): Array<StructArrayMember> {
+    getVertexAttributes(): StructArrayMember[] {
         return patternAttributes.members;
     }
 
@@ -449,10 +449,10 @@ class CrossFadedDasharrayBinder extends CrossFadedBinder<DashEntry> {
     }
 
     protected getPositionIds(feature: Feature) {
-        return feature.dashes && feature.dashes[this.layerId];
+        return feature.dashes?.[this.layerId];
     }
 
-    getVertexAttributes(): Array<StructArrayMember> {
+    getVertexAttributes(): StructArrayMember[] {
         return dashAttributes.members;
     }
 
@@ -487,7 +487,7 @@ export class ProgramConfiguration {
     binders: {[_: string]: AttributeBinder | UniformBinder};
     cacheKey: string;
 
-    _buffers: Array<VertexBuffer>;
+    _buffers: VertexBuffer[];
 
     constructor(layer: TypedStyleLayer, zoom: number, filterProperties: (_: string) => boolean) {
         this.binders = {};
@@ -591,7 +591,7 @@ export class ProgramConfiguration {
         return dirty;
     }
 
-    defines(): Array<string> {
+    defines(): string[] {
         const result = [];
         for (const property in this.binders) {
             const binder = this.binders[property];
@@ -602,13 +602,13 @@ export class ProgramConfiguration {
         return result;
     }
 
-    getBinderAttributes(): Array<string> {
+    getBinderAttributes(): string[] {
         const result = [];
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder) {
-                for (let i = 0; i < binder.paintVertexAttributes.length; i++) {
-                    result.push(binder.paintVertexAttributes[i].name);
+                for (const attribute of binder.paintVertexAttributes) {
+                    result.push(attribute.name);
                 }
             } else if (binder instanceof CrossFadedBinder) {
                 const attributes = binder.getVertexAttributes();
@@ -620,7 +620,7 @@ export class ProgramConfiguration {
         return result;
     }
 
-    getBinderUniforms(): Array<string> {
+    getBinderUniforms(): string[] {
         const uniforms = [];
         for (const property in this.binders) {
             const binder = this.binders[property];
@@ -633,11 +633,11 @@ export class ProgramConfiguration {
         return uniforms;
     }
 
-    getPaintVertexBuffers(): Array<VertexBuffer> {
+    getPaintVertexBuffers(): VertexBuffer[] {
         return this._buffers;
     }
 
-    getUniforms(context: Context, locations: UniformLocations): Array<BinderUniform> {
+    getUniforms(context: Context, locations: UniformLocations): BinderUniform[] {
         const uniforms = [];
         for (const property in this.binders) {
             const binder = this.binders[property];
@@ -655,7 +655,7 @@ export class ProgramConfiguration {
 
     setUniforms(
         context: Context,
-        binderUniforms: Array<BinderUniform>,
+        binderUniforms: BinderUniform[],
         properties: any,
         globals: GlobalProperties
     ) {
@@ -705,7 +705,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
     _featureMap: FeaturePositionMap;
     _bufferOffset: number;
 
-    constructor(layers: ReadonlyArray<Layer>, zoom: number, filterProperties: (_: string) => boolean = () => true) {
+    constructor(layers: readonly Layer[], zoom: number, filterProperties: (_: string) => boolean = () => true) {
         this.programConfigurations = {};
         for (const layer of layers) {
             this.programConfigurations[layer.id] = new ProgramConfiguration(layer, zoom, filterProperties);
@@ -728,7 +728,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this.needsUpload = true;
     }
 
-    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayerLike, layers: ReadonlyArray<TypedStyleLayer>, options: PaintOptions) {
+    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayerLike, layers: readonly TypedStyleLayer[], options: PaintOptions) {
         for (const layer of layers) {
             this.needsUpload = this.programConfigurations[layer.id].updatePaintArrays(featureStates, this._featureMap, vtLayer, layer, options) || this.needsUpload;
         }
@@ -811,7 +811,7 @@ function layoutType(property: string, type: string, binderType: string) {
     };
 
     const layoutException = getLayoutException(property);
-    return  layoutException && layoutException[binderType] || defaultLayouts[type][binderType];
+    return  layoutException?.[binderType] || defaultLayouts[type][binderType];
 }
 
 register('ConstantBinder', ConstantBinder);

@@ -13,15 +13,14 @@ export type CreateBucketParameters = {
     layout?: Record<string, any>;
     paint?: Record<string, any>;
     globalState?: Record<string, any>;
-    availableImages?: Array<string>;
+    availableImages?: string[];
 };
 
 export function loadVectorTile(name = 'mbsv5-6-18-23.vector.pbf'): VectorTile {
-    const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets', name))));
-    return vt;
+    return new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets', name))));
 }
 
-export function getFeaturesFromLayer(sourceLayer: VectorTileLayerLike): Array<IndexedFeature> {
+export function getFeaturesFromLayer(sourceLayer: VectorTileLayerLike): IndexedFeature[] {
     const features = new Array<IndexedFeature>(sourceLayer.length);
     for (let i = 0; i < sourceLayer.length; i++) {
         features[i] = {feature: sourceLayer.feature(i), index: i} as unknown as IndexedFeature;

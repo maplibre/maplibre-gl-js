@@ -17,6 +17,12 @@ import {WritingMode} from '../symbol/shaping';
 import {findLineIntersection} from '../util/util';
 import {type UnwrappedTileID} from '../tile/tile_id';
 import {type StructArray} from '../util/struct_array';
+import {fastInvertSkewMat4} from '../util/fast_maths';
+
+/**
+ * Pre-allocate objects to avoid online allocation
+ */
+const tmpMat4 = mat4.create();
 
 /**
  * The result of projecting a point to the screen, with some additional information about the projection.
@@ -642,7 +648,7 @@ export function projectLineVertexToLabelPlane(index: number, projectionContext: 
 
     if (projection.signedDistanceFromCamera > 0) {
         cache.projections[index] = projection.point;
-        cache.anyProjectionOccluded = cache.anyProjectionOccluded || projection.isOccluded;
+        cache.anyProjectionOccluded ||= projection.isOccluded;
         return projection.point;
     }
 
@@ -773,7 +779,7 @@ type PlacedGlyph = {
     /**
      * The label-plane path used to reach this glyph: used only for collision detection
      */
-    path: Array<Point>;
+    path: Point[];
 };
 
 /*
@@ -833,7 +839,7 @@ export function placeGlyphAlongLine(
     let distanceFromAnchor = 0;
     let currentSegmentDistance = 0;
     const absOffsetX = Math.abs(combinedOffsetX);
-    const pathVertices: Array<Point> = [];
+    const pathVertices: Point[] = [];
 
     let currentLineSegment: Point;
     while (distanceFromAnchor + currentSegmentDistance <= absOffsetX) {
@@ -874,8 +880,7 @@ export function placeGlyphAlongLine(
                 prevToCurrentOffsetNormal = transformToOffsetNormal(prevToCurrent, lineOffsetY, direction);
             }
             // Initialize offsetPrev on our first iteration, after that it will be pre-calculated
-            if (!offsetPreviousVertex)
-                offsetPreviousVertex = previousVertex.add(prevToCurrentOffsetNormal);
+            offsetPreviousVertex ||= previousVertex.add(prevToCurrentOffsetNormal);
 
             offsetIntersectionPoint = findOffsetIntersectionPoint(currentIndex, prevToCurrentOffsetNormal, currentVertex, lineStartIndex, lineEndIndex, offsetPreviousVertex, lineOffsetY, projectionContext, syntheticVertexArgs);
 
@@ -930,9 +935,9 @@ export function xyTransformMat4(out: vec4, a: vec4, m: mat4) {
  * Returns a new array of the projected points.
  * Does not modify the input array.
  */
-export function projectPathSpecialProjection(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext): Array<PointProjection> {
-    const inverseLabelPlaneMatrix = mat4.create();
-    mat4.invert(inverseLabelPlaneMatrix, projectionContext.pitchedLabelPlaneMatrix);
+export function projectPathSpecialProjection(projectedPath: Point[], projectionContext: SymbolProjectionContext): PointProjection[] {
+    const inverseLabelPlaneMatrix = tmpMat4;
+    fastInvertSkewMat4(inverseLabelPlaneMatrix, projectionContext.pitchedLabelPlaneMatrix);
     return projectedPath.map(p => {
         const backProjected = projectWithMatrix(p.x, p.y, inverseLabelPlaneMatrix, projectionContext.getElevation);
         const projected = projectionContext.transform.projectTileCoordinates(
@@ -952,7 +957,7 @@ export function projectPathSpecialProjection(projectedPath: Array<Point>, projec
  * and returns it.
  * Does not modify the input array.
  */
-export function pathSlicedToLongestUnoccluded(path: Array<PointProjection>): Array<PointProjection> {
+export function pathSlicedToLongestUnoccluded(path: PointProjection[]): PointProjection[] {
     let longestUnoccludedStart = 0;
     let longestUnoccludedLength = 0;
     let currentUnoccludedStart = 0;

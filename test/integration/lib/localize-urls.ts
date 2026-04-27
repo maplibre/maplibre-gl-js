@@ -4,14 +4,14 @@ import {type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export function localizeURLs(style: any, port: number, baseTestsDir: string) {
     localizeStyleURLs(style, port);
-    if (style.metadata && style.metadata.test && style.metadata.test.operations) {
-        style.metadata.test.operations.forEach((op) => {
+    if (style.metadata?.test?.operations) {
+        for (const op of style.metadata.test.operations) {
             if (op[0] === 'addSource') {
                 localizeSourceURLs(op[2], port);
             } else if (op[0] === 'setStyle') {
                 if (typeof op[1] === 'object') {
                     localizeStyleURLs(op[1], port);
-                    return;
+                    continue;
                 }
 
                 let styleJSON;
@@ -20,14 +20,14 @@ export function localizeURLs(style: any, port: number, baseTestsDir: string) {
                     styleJSON = fs.readFileSync(path.join(baseTestsDir, 'assets', relativePath));
                 } catch (error) {
                     console.log(`* ${error}`);
-                    return;
+                    continue;
                 }
 
                 try {
                     styleJSON = JSON.parse(styleJSON);
                 } catch (error) {
                     console.log(`* Error while parsing ${op[1]}: ${error}`);
-                    return;
+                    continue;
                 }
 
                 localizeStyleURLs(styleJSON, port);
@@ -35,7 +35,7 @@ export function localizeURLs(style: any, port: number, baseTestsDir: string) {
                 op[1] = styleJSON;
                 op[2] = {diff: false};
             }
-        });
+        }
     }
 }
 

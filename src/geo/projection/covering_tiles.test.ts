@@ -261,24 +261,127 @@ describe('coveringTiles', () => {
             ]);
         });
 
-        test('nonzero center elevation', () => {
-            const options = {
-                minzoom: 1,
-                maxzoom: 15,
-                tileSize: 512,
-                reparseOverscaled: true
-            };
-        
-            const transform = new GlobeTransform();
-            transform.resize(128, 128);
-            transform.setZoom(11);
-            transform.setCenter(new LngLat(0.021, 0.0915));
-            transform.setElevation(20000);
+        describe('nonzero center elevation', () => {
+            test('looking down', () => {
+                const options = {
+                    minzoom: 1,
+                    maxzoom: 15,
+                    tileSize: 512,
+                    reparseOverscaled: true
+                };
 
-            expect(coveringTiles(transform, options)).toEqual([
-                new OverscaledTileID(11, 0, 11, 1024, 1023),
-                new OverscaledTileID(11, 0, 11, 1023, 1023)
-            ]);
+                const transform = new GlobeTransform();
+                transform.resize(128, 128);
+                transform.setZoom(11);
+                transform.setCenter(new LngLat(0.021, 0.0915));
+                transform.setElevation(20000);
+
+                expect(coveringTiles(transform, options)).toEqual([
+                    new OverscaledTileID(11, 0, 11, 1024, 1023),
+                    new OverscaledTileID(10, 0, 10, 511, 511),
+                ]);
+            });
+
+            describe('high pitch', () => {
+
+                test('bearing 0', () => {
+                    const options = {
+                        minzoom: 1,
+                        maxzoom: 15,
+                        tileSize: 512,
+                        reparseOverscaled: true
+                    };
+
+                    const transform = new GlobeTransform();
+                    transform.resize(128, 128);
+                    transform.setZoom(11);
+                    transform.setPitch(70);
+                    transform.setBearing(0);
+                    transform.setCenter(new LngLat(0.021, 0.0915));
+                    transform.setElevation(20000);
+
+                    expect(coveringTiles(transform, options)).toEqual([
+                        new OverscaledTileID(11, 0, 11, 1023, 1023),
+                        new OverscaledTileID(11, 0, 11, 1024, 1022),
+                        new OverscaledTileID(11, 0, 11, 1023, 1022),
+                        new OverscaledTileID(12, 0, 12, 2048, 2046),
+                        new OverscaledTileID(12, 0, 12, 2048, 2047),
+                    ]);
+                });
+
+                test('bearing 90', () => {
+                    const options = {
+                        minzoom: 1,
+                        maxzoom: 15,
+                        tileSize: 512,
+                        reparseOverscaled: true
+                    };
+
+                    const transform = new GlobeTransform();
+                    transform.resize(128, 128);
+                    transform.setZoom(11);
+                    transform.setPitch(70);
+                    transform.setBearing(90);
+                    transform.setCenter(new LngLat(0.021, 0.0915));
+                    transform.setElevation(20000);
+
+                    expect(coveringTiles(transform, options)).toEqual([
+                        new OverscaledTileID(11, 0, 11, 1024, 1023),
+                        new OverscaledTileID(9, 0, 9, 256, 256),
+                        new OverscaledTileID(12, 0, 12, 2047, 2046),
+                        new OverscaledTileID(12, 0, 12, 2047, 2047),
+                    ]);
+                });
+
+                test('bearing 180', () => {
+                    const options = {
+                        minzoom: 1,
+                        maxzoom: 15,
+                        tileSize: 512,
+                        reparseOverscaled: true
+                    };
+
+                    const transform = new GlobeTransform();
+                    transform.resize(128, 128);
+                    transform.setZoom(11);
+                    transform.setPitch(70);
+                    transform.setBearing(180);
+                    transform.setCenter(new LngLat(0.021, 0.0915));
+                    transform.setElevation(20000);
+
+                    expect(coveringTiles(transform, options)).toEqual([
+                        new OverscaledTileID(11, 0, 11, 1023, 1023),
+                        new OverscaledTileID(8, 0, 8, 128, 128),
+                        new OverscaledTileID(8, 0, 8, 127, 128),
+                        new OverscaledTileID(12, 0, 12, 2048, 2046),
+                        new OverscaledTileID(12, 0, 12, 2048, 2047),
+                    ]);
+                });
+
+                test('bearing 270', () => {
+                    const options = {
+                        minzoom: 1,
+                        maxzoom: 15,
+                        tileSize: 512,
+                        reparseOverscaled: true
+                    };
+
+                    const transform = new GlobeTransform();
+                    transform.resize(128, 128);
+                    transform.setZoom(11);
+                    transform.setPitch(70);
+                    transform.setBearing(270);
+                    transform.setCenter(new LngLat(0.021, 0.0915));
+                    transform.setElevation(20000);
+
+                    expect(coveringTiles(transform, options)).toEqual([
+                        new OverscaledTileID(10, 0, 10, 511, 511),
+                        new OverscaledTileID(9, 0, 9, 255, 256),
+                        new OverscaledTileID(12, 0, 12, 2048, 2046),
+                        new OverscaledTileID(12, 0, 12, 2048, 2047),
+                    ]);
+                });
+            });
         });
     });
 
