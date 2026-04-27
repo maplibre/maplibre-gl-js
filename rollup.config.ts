@@ -66,9 +66,12 @@ const config: RollupOptions[] = [{
     ],
 },
 
-// ESM builds — use the same single-file factory as the CSP builds.
+// ESM builds. The worker filename has no `-dev` postfix so auto-detection
+// (`new URL('./maplibre-gl-worker.mjs', import.meta.url)`) works for both
+// dev and production builds, and matches the path Vite/webpack/Rollup look
+// for when bundling the worker as a sibling asset.
 createBundleConfig('src/index.ts', `dist/maplibre-gl${outputPostfix}.mjs`, 'es'),
-createBundleConfig('src/source/worker.ts', `dist/maplibre-gl-worker${outputPostfix}.mjs`, 'es'),
+createBundleConfig('src/source/worker.ts', 'dist/maplibre-gl-worker.mjs', 'es'),
 
 ];
 

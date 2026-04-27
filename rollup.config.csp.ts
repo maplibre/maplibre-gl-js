@@ -8,9 +8,10 @@ const configs = [
     createBundleConfig('src/index.ts', `dist/maplibre-gl-csp${outputPostfix}.js`, 'umd'),
     createBundleConfig('src/source/worker.ts', `dist/maplibre-gl-csp-worker${outputPostfix}.js`, 'iife'),
 
-    // ESM builds for CSP
+    // ESM builds for CSP. Worker filename has no `-dev` postfix to keep
+    // auto-detection working in both build modes (see rollup.config.ts).
     createBundleConfig('src/index.ts', `dist/maplibre-gl-csp${outputPostfix}.mjs`, 'es'),
-    createBundleConfig('src/source/worker.ts', `dist/maplibre-gl-csp-worker${outputPostfix}.mjs`, 'es')
+    createBundleConfig('src/source/worker.ts', 'dist/maplibre-gl-csp-worker.mjs', 'es')
 ];
 
 export default configs;
