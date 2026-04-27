@@ -12,6 +12,7 @@ import {loadGeometry} from '../load_geometry';
 import {toEvaluationFeature} from '../evaluation_feature';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {getAntimeridianEdgePredicate} from './antimeridian_bucket_features';
+import {GEOJSONVT_ANTIMERIDIAN_CLIP} from '@maplibre/geojson-vt';
 
 import type {CanonicalTileID} from '../../tile/tile_id';
 import type {
@@ -57,7 +58,6 @@ export class FillBucket implements Bucket {
     segments: SegmentVector;
     segments2: SegmentVector;
     uploaded: boolean;
-    worldCopies: boolean;
 
     constructor(options: BucketParameters<FillStyleLayer>) {
         this.zoom = options.zoom;
@@ -75,7 +75,6 @@ export class FillBucket implements Bucket {
         this.segments = new SegmentVector();
         this.segments2 = new SegmentVector();
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
-        this.worldCopies = options.worldCopies ?? true;
     }
 
     populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID) {
@@ -176,16 +175,15 @@ export class FillBucket implements Bucket {
     addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {
         [_: string]: ImagePosition;
     }, subdivisionGranularity: SubdivisionGranularitySetting) {
+        // Suppress outline edges along the antimeridian on geojson-vt-clipped polygons.
+        const isClipEdge = feature.properties && Object.hasOwn(feature.properties, GEOJSONVT_ANTIMERIDIAN_CLIP)
+            ? getAntimeridianEdgePredicate(canonical) : null;
+
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             const subdivided = subdividePolygon(polygon, canonical, subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z));
 
             const vertexArray = this.layoutVertexArray;
 
-            // Filter out outline edges that lie on the antimeridian tile boundary
-            // (geojson-vt clip artifacts that would otherwise draw a visible seam).
-            // Only relevant when the active projection disables world copies;
-            // otherwise there are no synthetic edges to suppress.
-            const isClipEdge = this.worldCopies ? null : getAntimeridianEdgePredicate(canonical);
             const lineList = isClipEdge ?
                 subdivided.indicesLineList.map(indices => {
                     const filtered: number[] = [];

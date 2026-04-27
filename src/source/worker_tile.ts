@@ -36,7 +36,6 @@ export class WorkerTile {
     showCollisionBoxes: boolean;
     collectResourceTiming: boolean;
     returnDependencies: boolean;
-    worldCopies: boolean;
 
     status: 'parsing' | 'done';
     data: VectorTileLike;
@@ -58,7 +57,6 @@ export class WorkerTile {
         this.collectResourceTiming = !!params.collectResourceTiming;
         this.returnDependencies = !!params.returnDependencies;
         this.promoteId = params.promoteId;
-        this.worldCopies = params.worldCopies ?? true;
         this.inFlightDependencies = [];
     }
 
@@ -122,7 +120,6 @@ export class WorkerTile {
                     collisionBoxArray: this.collisionBoxArray,
                     sourceLayerIndex,
                     sourceID: this.source,
-                    worldCopies: this.worldCopies,
                 });
 
                 bucket.populate(features, options, this.tileID.canonical);

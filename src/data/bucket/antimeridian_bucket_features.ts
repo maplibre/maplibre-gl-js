@@ -13,8 +13,9 @@ import type {CanonicalTileID} from '../../tile/tile_id';
  * strokes. Buckets use this predicate to skip those edges.
  */
 export function getAntimeridianEdgePredicate(
-    canonical: CanonicalTileID,
+    canonical: CanonicalTileID | undefined,
 ): ((x0: number, x1: number) => boolean) | null {
+    if (!canonical) return null;
     const suppressLeft = canonical.x === 0;
     const suppressRight = canonical.x === (1 << canonical.z) - 1;
     if (!suppressLeft && !suppressRight) return null;

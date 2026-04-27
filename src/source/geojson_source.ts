@@ -627,7 +627,6 @@ export class GeoJSONSource extends Evented implements Source {
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId,
             subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
-            worldCopies: this.workerOptions.geojsonVtOptions.worldCopies,
         };
 
         tile.abortController = new AbortController();

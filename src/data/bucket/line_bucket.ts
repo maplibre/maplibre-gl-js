@@ -1,6 +1,6 @@
 import {LineLayoutArray, LineExtLayoutArray} from '../array_types.g';
 import Point from '@mapbox/point-geometry';
-import {GEOJSONVT_CLIP_END, GEOJSONVT_CLIP_START} from '@maplibre/geojson-vt';
+import {GEOJSONVT_ANTIMERIDIAN_CLIP, GEOJSONVT_CLIP_END, GEOJSONVT_CLIP_START} from '@maplibre/geojson-vt';
 import {members as layoutAttributes} from './line_attributes';
 import {members as layoutAttributesExt} from './line_attributes_ext';
 import {SegmentVector} from '../segment';
@@ -121,7 +121,6 @@ export class LineBucket implements Bucket {
     programConfigurations: ProgramConfigurationSet<LineStyleLayer>;
     segments: SegmentVector;
     uploaded: boolean;
-    worldCopies: boolean;
 
     constructor(options: BucketParameters<LineStyleLayer>) {
         this.zoom = options.zoom;
@@ -145,7 +144,6 @@ export class LineBucket implements Bucket {
         this.maxLineLength = 0;
 
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
-        this.worldCopies = options.worldCopies ?? true;
     }
 
     populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID) {
@@ -266,12 +264,13 @@ export class LineBucket implements Bucket {
         this.lineClips = this.lineFeatureClips(feature);
 
         const isPolygon = VectorTileFeature.types[feature.type] === 'Polygon';
-        // Only clipped (worldCopies: false) polygons have synthetic antimeridian edges to suppress.
-        const splitAtAntimeridian = isPolygon && !this.worldCopies;
+        const isClipEdge = isPolygon && feature.properties && Object.hasOwn(feature.properties, GEOJSONVT_ANTIMERIDIAN_CLIP)
+            ? getAntimeridianEdgePredicate(canonical) : null;
+        const splitAtAntimeridian = !!isClipEdge;
 
         for (const line of geometry) {
             if (splitAtAntimeridian) {
-                const segments = splitRingAtAntimeridian(line, canonical);
+                const segments = splitRingAtAntimeridian(line, isClipEdge);
                 if (segments) {
                     // Horizontal tangent so both tiles derive the same cap axis at the seam.
                     const antimeridianTangent = new Point(1, 0);
@@ -679,10 +678,7 @@ export class LineBucket implements Bucket {
  * segments for the remaining edges (or null if the ring has none). Suppresses the
  * visible stroke geojson-vt's clip would otherwise draw along the seam.
  */
-function splitRingAtAntimeridian(ring: Point[], canonical: CanonicalTileID): Point[][] | null {
-    const isClipEdge = getAntimeridianEdgePredicate(canonical);
-    if (!isClipEdge) return null;
-
+function splitRingAtAntimeridian(ring: Point[], isClipEdge: (x0: number, x1: number) => boolean): Point[][] | null {
     const n = ring.length;
     const edgeIsClip = (i: number) => isClipEdge(ring[i].x, ring[(i + 1) % n].x);
 

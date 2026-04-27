@@ -11,6 +11,7 @@ import {SubdivisionGranularitySetting} from '../../render/subdivision_granularit
 import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile';
 import {CanonicalTileID} from '../../tile/tile_id';
 import {EXTENT} from '../extent';
+import {GEOJSONVT_ANTIMERIDIAN_CLIP} from '@maplibre/geojson-vt';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const {noSubdivision} = SubdivisionGranularitySetting;
@@ -185,15 +186,12 @@ describe('LineBucket', () => {
         const polygonRight = [new Point(EXTENT, 100), new Point(EXTENT, 7000), new Point(4000, 7000), new Point(4000, 100)];
         const polygonInterior = [new Point(200, 100), new Point(200, 7000), new Point(4000, 7000), new Point(4000, 100)];
 
-        const polygonFeature = {type: 3, properties: {}} as BucketFeature;
-        const lineFeature = {type: 2, properties: {}} as BucketFeature;
+        // addFeature gates the antimeridian split on the GEOJSONVT_ANTIMERIDIAN_CLIP tag.
+        const polygonFeature = {type: 3, properties: {[GEOJSONVT_ANTIMERIDIAN_CLIP]: true}} as BucketFeature;
+        const lineFeature = {type: 2, properties: {[GEOJSONVT_ANTIMERIDIAN_CLIP]: true}} as BucketFeature;
 
-        // Filter only runs when the active projection disables world copies
-        // (globe / vertical perspective). populate() sets this from options;
-        // these tests go straight to addFeature, so we flip it manually.
         function render(feature: BucketFeature, ring: Point[], tile: CanonicalTileID) {
             const bucket = createLineBucket({id: 'test'});
-            bucket.worldCopies = false;
             bucket.addFeature(feature, [ring], undefined, tile, undefined, undefined, noSubdivision);
             return {
                 vertices: bucket.layoutVertexArray.length,
@@ -233,11 +231,12 @@ describe('LineBucket', () => {
             expect(a).toEqual(b);
         });
 
-        test('does not split when worldCopies is true (mercator)', () => {
-            // A left-edge tile with worldCopies left at its default (true):
-            // the polygon ring should render as a full closed ring.
+        test('does not split untagged feature on a left-edge tile', () => {
+            // Without the GEOJSONVT_ANTIMERIDIAN_CLIP tag the gate stays null, so
+            // the polygon ring should render as a full closed ring even on an edge tile.
+            const untaggedPolygon = {type: 3, properties: {}} as BucketFeature;
             const mercator = createLineBucket({id: 'test'});
-            mercator.addFeature(polygonFeature, [polygonLeft], undefined, new CanonicalTileID(4, 0, 5), undefined, undefined, noSubdivision);
+            mercator.addFeature(untaggedPolygon, [polygonLeft], undefined, new CanonicalTileID(4, 0, 5), undefined, undefined, noSubdivision);
             const interior = render(polygonFeature, polygonLeft, new CanonicalTileID(4, 5, 5));
             expect(mercator.layoutVertexArray.length).toBe(interior.vertices);
             expect(mercator.indexArray.length).toBe(interior.indices);
@@ -247,9 +246,9 @@ describe('LineBucket', () => {
             // A left-edge tile should produce the same geometry as calling
             // addLine manually with the ring rotated so the antimeridian edge
             // is removed and the line is drawn with butt caps.
+            const leftEdgeTile = new CanonicalTileID(4, 0, 5);
             const split = createLineBucket({id: 'test'});
-            split.worldCopies = false;
-            split.addFeature(polygonFeature, [polygonLeft], undefined, new CanonicalTileID(4, 0, 5), undefined, undefined, noSubdivision);
+            split.addFeature(polygonFeature, [polygonLeft], undefined, leftEdgeTile, undefined, undefined, noSubdivision);
 
             const manual = createLineBucket({id: 'test'});
             // polygonLeft = [(0,100),(0,7000),(4000,7000),(4000,100)].

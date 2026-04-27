@@ -11,6 +11,7 @@ import {type BucketFeature, type BucketParameters} from '../bucket';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {CanonicalTileID} from '../../tile/tile_id';
 import {EXTENT} from '../extent';
+import {GEOJSONVT_ANTIMERIDIAN_CLIP} from '@maplibre/geojson-vt';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 function createPolygon(numPoints) {
@@ -122,20 +123,18 @@ describe('FillBucket', () => {
             new Point(4000, 100),
         ];
 
-        // Filter only runs when the active projection disables world copies
-        // (globe / vertical perspective). populate() sets this from options;
-        // these tests go straight to addFeature, so we flip it manually.
+        // addFeature gates the antimeridian filter on the GEOJSONVT_ANTIMERIDIAN_CLIP tag.
+        const taggedFeature = {properties: {[GEOJSONVT_ANTIMERIDIAN_CLIP]: true}} as BucketFeature;
+
         function outlineEdgeCount(ring: Point[], tile: CanonicalTileID): number {
             const bucket = createFillBucket({id: 'test', layout: {}});
-            bucket.worldCopies = false;
-            bucket.addFeature({} as BucketFeature, [ring], undefined, tile, undefined, SubdivisionGranularitySetting.noSubdivision);
+            bucket.addFeature(taggedFeature, [ring], undefined, tile, undefined, SubdivisionGranularitySetting.noSubdivision);
             return bucket.indexArray2.length;
         }
 
         function triangleCount(ring: Point[], tile: CanonicalTileID): number {
             const bucket = createFillBucket({id: 'test', layout: {}});
-            bucket.worldCopies = false;
-            bucket.addFeature({} as BucketFeature, [ring], undefined, tile, undefined, SubdivisionGranularitySetting.noSubdivision);
+            bucket.addFeature(taggedFeature, [ring], undefined, tile, undefined, SubdivisionGranularitySetting.noSubdivision);
             return bucket.indexArray.length;
         }
 
@@ -163,9 +162,8 @@ describe('FillBucket', () => {
             expect(leftTileWithRightEdge).toBe(interior);
         });
 
-        test('does not run when worldCopies is true (mercator)', () => {
-            // Same ring on a left-edge tile but with worldCopies left at its
-            // default (true): the x=0 edge must be preserved.
+        test('does not run for an untagged feature on a left-edge tile', () => {
+            // Without the antimeridian-clip tag the x=0 outline edge must be preserved.
             const bucket = createFillBucket({id: 'test', layout: {}});
             bucket.addFeature({} as BucketFeature, [leftEdgeRing], undefined, new CanonicalTileID(4, 0, 5), undefined, SubdivisionGranularitySetting.noSubdivision);
             const interior = outlineEdgeCount(leftEdgeRing, new CanonicalTileID(4, 5, 5));
