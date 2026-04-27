@@ -1,4 +1,5 @@
 import type {RequestParameters, GetResourceResponse} from './ajax';
+import {defaultWorkerUrl} from './default_worker_url';
 
 /**
  * This method type is used to register a protocol handler.
@@ -25,5 +26,5 @@ export const config: Config = {
     MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME: 8,
     MAX_TILE_CACHE_ZOOM_LEVELS: 5,
     REGISTERED_PROTOCOLS: {},
-    WORKER_URL: ''
+    WORKER_URL: defaultWorkerUrl
 };
