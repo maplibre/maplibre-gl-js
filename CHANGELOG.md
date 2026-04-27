@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Expose `getProjectionData` function in custom layer args objects ([#7471](https://github.com/maplibre/maplibre-gl-js/pull/7471)) (by [@kubapelc](https://github.com/kubapelc))
+- Marked package `sideEffects` as CSS-only in package metadata, which may improve tree-shaking and reduce bundle size in some bundlers ([#7258](https://github.com/maplibre/maplibre-gl-js/pull/7258)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
