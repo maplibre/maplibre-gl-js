@@ -29,7 +29,7 @@ import CoveringTilesGlobe from '../benchmarks/covering_tiles_globe';
 import CoveringTilesMercator from '../benchmarks/covering_tiles_mercator';
 import GeoJSONSourceUpdateData from '../benchmarks/geojson_source_update_data';
 import GeoJSONSourceSetData from '../benchmarks/geojson_source_set_data';
-import TerrainRender from '../benchmarks/terrain_render';
+import TerrainDroppedFrames from '../benchmarks/terrain_dropped_frames';
 import {LineOpacityOpaque, LineOpacityTranslucent, LineOpacityDataDriven} from '../benchmarks/line_opacity_overlap';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as Array<GeoJSON.Feature<GeoJSON.Point>>).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
@@ -97,7 +97,7 @@ register('CoveringTilesGlobe', new CoveringTilesGlobe(0));
 register('CoveringTilesGlobePitched', new CoveringTilesGlobe(60));
 register('CoveringTilesMercator', new CoveringTilesMercator(0));
 register('CoveringTilesMercatorPitched', new CoveringTilesMercator(60));
-register('TerrainRender', new TerrainRender());
+register('TerrainDroppedFrames', new TerrainDroppedFrames());
 register('LineOpacityOpaque', new LineOpacityOpaque());
 register('LineOpacityTranslucent', new LineOpacityTranslucent());
 register('LineOpacityDataDriven', new LineOpacityDataDriven());
