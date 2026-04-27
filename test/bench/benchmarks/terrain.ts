@@ -77,11 +77,11 @@ class TerrainBase extends Benchmark {
 
             // Warmup flight: not counted, but lets tile / shader / glyph
             // caches reach steady state before measurement.
-            await this.flyAndMeasureMaxFrame();
+            await this.runInner();
 
             const measurements: Measurement[] = [];
             for (let i = 0; i < ITERATIONS; i++) {
-                const maxFrameMs = await this.flyAndMeasureMaxFrame();
+                const maxFrameMs = await this.runInner();
                 console.log(`${this.label} iter ${i}: max frame ${maxFrameMs.toFixed(1)}ms`);
                 measurements.push({time: maxFrameMs, iterations: 1});
             }
@@ -97,7 +97,13 @@ class TerrainBase extends Benchmark {
         this.map.remove();
     }
 
-    private async flyAndMeasureMaxFrame(): Promise<number> {
+    private async runInner(): Promise<number> {
+        // Clear MapLibre's tile / parse / GPU caches so each pass re-parses
+        // tiles on workers and re-uploads to the GPU. HTTP caches stay warm.
+        for (const id in this.map.style.tileManagers) {
+            this.map.style.tileManagers[id].clearTiles();
+        }
+
         this.map.jumpTo({center: START, zoom: ZOOM, pitch: PITCH, bearing: BEARING});
         await new Promise(resolve => this.map.once('idle', resolve));
 
