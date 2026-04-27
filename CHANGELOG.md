@@ -1,5 +1,4 @@
 ## main
-
 ### ✨ Features and improvements
 - Added `Terrain3DGlobe`, `Terrain3DMercator`, `Terrain2DGlobe` and `Terrain2DMercator` benchmarks. (by [@lucaswoj](https://github.com/lucaswoj)) 
 - _...Add new stuff here..._
