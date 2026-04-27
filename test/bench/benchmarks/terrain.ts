@@ -21,9 +21,10 @@ import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 // produces 4x the per-frame draw calls and shader switches.
 const LAYER_DUPLICATION = 64;
 
-// Linear flight from Innsbruck south up the Wipptal toward the Brenner pass.
-const START: [number, number] = [11.40, 47.27];
-const END: [number, number] = [11.50, 47.00];
+// Short linear flight near null island. All tiles serve the same bytes, so
+// the absolute location does not matter; only the path length does.
+const START: [number, number] = [0.0, 0.15];
+const END: [number, number] = [0.0, -0.15];
 const ZOOM = 12;
 const PITCH = 85;
 const BEARING = 180;
