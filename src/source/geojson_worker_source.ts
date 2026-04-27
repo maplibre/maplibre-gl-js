@@ -1,14 +1,13 @@
 import {getJSON} from '../util/ajax';
 import {RequestPerformance} from '../util/request_performance';
-import {GeoJSONWrapper} from '@maplibre/vt-pbf';
+import {fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent';
 import {GeoJSONVT, type GeoJSONVTOptions} from '@maplibre/geojson-vt';
 import {createExpression, type FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error';
-import {toVirtualVectorTile} from './vector_tile_overzoomed';
 import {WorkerTile} from './worker_tile';
 import {WorkerTileState, type ParsingState} from './worker_tile_state';
-import {extend} from '../util/util';
+import {extend, JSON_PREFIX} from '../util/util';
 
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {WorkerSource, WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source';
@@ -89,7 +88,11 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (!geoJSONTile) return null;
 
         const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features, {version: 2, extent: EXTENT});
-        return toVirtualVectorTile(geojsonWrapper);
+        return {
+            vectorTile: geojsonWrapper,
+            rawData: fromVectorTileJs(geojsonWrapper, JSON_PREFIX).buffer
+        };
+
     }
 
     /**
