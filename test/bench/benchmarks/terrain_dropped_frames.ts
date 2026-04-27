@@ -22,7 +22,7 @@ const DEM_PROTOCOL = 'bench-dem';
 // Crank this up until you see dropped frames on the target machine. Each
 // layer in the base style is emitted N times, so LAYER_DUPLICATION=4
 // produces 4x the per-frame draw calls and shader switches.
-const LAYER_DUPLICATION = 32;
+const LAYER_DUPLICATION = 64;
 
 // Linear flight from Innsbruck south up the Wipptal toward the Brenner pass.
 const START: [number, number] = [11.40, 47.27];
@@ -31,7 +31,7 @@ const ZOOM = 12;
 const PITCH = 85;
 const BEARING = 180;
 const FLIGHT_MS = 1_000;
-const ITERATIONS = 30;
+const ITERATIONS = 10;
 
 export default class TerrainDroppedFrames extends Benchmark {
     map: Map;
@@ -99,17 +99,11 @@ export default class TerrainDroppedFrames extends Benchmark {
         await new Promise(resolve => this.map.once('idle', resolve));
 
         const frameTimes: number[] = [];
-        const frameStarts: number[] = [];
         let lastTs: number | undefined;
-        let startTs: number | undefined;
         let running = true;
         const onFrame = (ts: number) => {
             if (!running) return;
-            if (startTs === undefined) startTs = ts;
-            if (lastTs !== undefined) {
-                frameTimes.push(ts - lastTs);
-                frameStarts.push(lastTs - startTs);
-            }
+            if (lastTs !== undefined) frameTimes.push(ts - lastTs);
             lastTs = ts;
             requestAnimationFrame(onFrame);
         };
@@ -130,17 +124,9 @@ export default class TerrainDroppedFrames extends Benchmark {
 
         // Drop the first frame: flyTo startup is a transient.
         frameTimes.shift();
-        frameStarts.shift();
 
         let max = 0;
-        let maxIdx = 0;
-        for (let i = 0; i < frameTimes.length; i++) {
-            if (frameTimes[i] > max) {
-                max = frameTimes[i];
-                maxIdx = i;
-            }
-        }
-        console.log(`  max ${max.toFixed(1)}ms at t+${frameStarts[maxIdx].toFixed(0)}ms (frame ${maxIdx}/${frameTimes.length})`);
+        for (const t of frameTimes) if (t > max) max = t;
         return max;
     }
 }
