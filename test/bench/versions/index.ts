@@ -29,7 +29,7 @@ import CoveringTilesGlobe from '../benchmarks/covering_tiles_globe';
 import CoveringTilesMercator from '../benchmarks/covering_tiles_mercator';
 import GeoJSONSourceUpdateData from '../benchmarks/geojson_source_update_data';
 import GeoJSONSourceSetData from '../benchmarks/geojson_source_set_data';
-import {Terrain3DGlobe, Terrain3DMercator, Terrain2DGlobe, Terrain2DMercator} from '../benchmarks/terrain_dropped_frames';
+import {Terrain3DGlobe, Terrain3DMercator, Terrain2DGlobe, Terrain2DMercator} from '../benchmarks/terrain';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as Array<GeoJSON.Feature<GeoJSON.Point>>).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 

@@ -19,12 +19,10 @@ import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 // Crank this up until you see dropped frames on the target machine. Each
 // layer in the base style is emitted N times, so LAYER_DUPLICATION=4
 // produces 4x the per-frame draw calls and shader switches.
-const LAYER_DUPLICATION = 64;
+const STYLE_COMPLEXITY = 100;
 
-// Short linear flight near null island. All tiles serve the same bytes, so
-// the absolute location does not matter; only the path length does.
-const START: [number, number] = [0.0, 0.15];
-const END: [number, number] = [0.0, -0.15];
+const CENTER_START: [number, number] = [0.0, 0.15];
+const CENTER_END: [number, number] = [0.0, -0.15];
 const ZOOM = 12;
 const PITCH = 85;
 const BEARING = 180;
@@ -52,7 +50,7 @@ class TerrainBase extends Benchmark {
         style.projection = {type: this.variant.projection};
 
         this.map = await createMap({
-            center: START,
+            center: CENTER_START,
             zoom: ZOOM,
             pitch: PITCH,
             bearing: BEARING,
@@ -105,7 +103,7 @@ class TerrainBase extends Benchmark {
             this.map.style.tileManagers[id].clearTiles();
         }
 
-        this.map.jumpTo({center: START, zoom: ZOOM, pitch: PITCH, bearing: BEARING});
+        this.map.jumpTo({center: CENTER_START, zoom: ZOOM, pitch: PITCH, bearing: BEARING});
         await new Promise(resolve => this.map.once('idle', resolve));
 
         const frameTimes: number[] = [];
@@ -120,7 +118,7 @@ class TerrainBase extends Benchmark {
         requestAnimationFrame(onFrame);
 
         this.map.flyTo({
-            center: END,
+            center: CENTER_END,
             zoom: ZOOM,
             pitch: PITCH,
             bearing: BEARING,
@@ -272,7 +270,7 @@ function buildStyle(): StyleSpecification {
         },
     ];
 
-    for (let dup = 0; dup < LAYER_DUPLICATION; dup++) {
+    for (let dup = 0; dup < STYLE_COMPLEXITY; dup++) {
         for (const layer of baseLayers) {
             layers.push({...layer, id: `${layer.id}_${dup}`} as any);
         }
@@ -284,13 +282,13 @@ function buildStyle(): StyleSpecification {
         sources: {
             vector: {
                 type: 'vector',
-                tiles: ['/test/bench/data/785.vector.pbf?z={z}&x={x}&y={y}'],
+                tiles: [`${location.origin}/test/bench/data/785.vector.pbf?id={z}/{x}/{y}`],
                 minzoom: 0,
                 maxzoom: 14,
             },
             dem: {
                 type: 'raster-dem',
-                tiles: ['/test/bench/data/terrain_dem.png?z={z}&x={x}&y={y}'],
+                tiles: [`${location.origin}/test/bench/data/terrain_dem.png?id={z}/{x}/{y}`],
                 tileSize: 256,
                 encoding: 'terrarium',
                 minzoom: 0,
