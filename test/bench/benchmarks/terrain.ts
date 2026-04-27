@@ -3,9 +3,9 @@ import createMap from '../lib/create_map';
 import type {Map} from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-// Measures the worst frame time during a flyTo operation, parameterized
-// over terrain on/off and projection mercator/globe so we can compare the
-// four combinations in a single bench run.
+// Worst-frame timing for a scripted flyTo. One bench class per
+// (terrain on/off) x (mercator/globe) combo so we can compare all four in
+// a single bench run.
 
 const STYLE_COMPLEXITY = 100;
 const DURATION = 1_000;
@@ -58,15 +58,15 @@ class TerrainBase extends Benchmark {
         }
     }
 
-    // The harness's regression machinery is built for sync per-iteration
-    // timing, so this benchmark overrides run() and reports each pass as a
-    // single measurement whose "time" is the max frame interval in ms.
+    // The harness's regression machinery assumes sync per-iteration timing,
+    // so we override `run` and report each pass as a `Measurement` whose
+    // `time` is the worst frame interval in ms.
     async run(): Promise<Measurement[]> {
         try {
             await this.setup();
 
-            // Warmup flight: not counted, but lets tile / shader / glyph
-            // caches reach steady state before measurement.
+            // First flight is throwaway. Lets shader / glyph / atlas caches
+            // settle before we start measuring.
             await this.runInner();
 
             const measurements: Measurement[] = [];
@@ -88,8 +88,9 @@ class TerrainBase extends Benchmark {
     }
 
     private async runInner(): Promise<number> {
-        // Clear MapLibre's tile / parse / GPU caches so each pass re-parses
-        // tiles on workers and re-uploads to the GPU. HTTP caches stay warm.
+        // Drop tile / parse / GPU caches between passes so we re-parse on
+        // workers and re-upload to the GPU each time. HTTP cache stays
+        // warm, so we measure render cost without paying for network too.
         for (const id in this.map.style.tileManagers) {
             this.map.style.tileManagers[id].clearTiles();
         }
@@ -121,7 +122,7 @@ class TerrainBase extends Benchmark {
         await new Promise(resolve => this.map.once('moveend', resolve));
         running = false;
 
-        // Drop the first frame: flyTo startup is a transient.
+        // First frame is a startup transient. Drop it.
         frameTimes.shift();
 
         let max = 0;
@@ -143,13 +144,14 @@ export class Terrain2DMercator extends TerrainBase {
     constructor() { super('Terrain2DMercator', {terrain: false, projection: 'mercator'}); }
 }
 
-// Build a synthetic basemap-style style covering the source-layers
-// present in the bundled 785.vector.pbf: landuse, water, waterway, road,
-// road_label, place_label, poi_label. Layer types covered: background,
-// fill, line (casing + fill), symbol (point), symbol (line), circle.
+// Synthetic basemap covering every source-layer in the bundled
+// 785.vector.pbf (landuse, water, waterway, road, road_label, place_label,
+// poi_label) and every layer type we care about (background, fill, line
+// casing + fill, line + point symbols, circle).
 //
-// Each "base" layer is emitted LAYER_DUPLICATION times with slightly
-// varied paint so the renderer can't trivially batch them.
+// Each base layer is emitted `STYLE_COMPLEXITY` times with slightly varied
+// paint so the renderer can't trivially batch them. Crank `STYLE_COMPLEXITY`
+// up until the bench drops frames on the target machine.
 function buildStyle(): StyleSpecification {
     const layers: StyleSpecification['layers'] = [
         {id: 'background', type: 'background', paint: {'background-color': '#f0ece0'}},
