@@ -9,7 +9,7 @@ type ValidationError = {
     identifier?: string;
 };
 
-export type Validator = (a: any) => ReadonlyArray<ValidationError>;
+export type Validator = (a: any) => readonly ValidationError[];
 
 type ValidateStyle = {
     source: Validator;
@@ -22,7 +22,7 @@ type ValidateStyle = {
     filter: Validator;
     paintProperty: Validator;
     layoutProperty: Validator;
-    (b: any, a?: any | null): ReadonlyArray<ValidationError>;
+    (b: any, a?: any | null): readonly ValidationError[];
 };
 
 export const validateStyle = (validateStyleMin as unknown as ValidateStyle);
@@ -43,7 +43,7 @@ export function emitValidationErrors(
     }> | null
 ): boolean {
     let hasErrors = false;
-    if (errors && errors.length) {
+    if (errors?.length) {
         for (const error of errors) {
             emitter.fire(new ErrorEvent(new Error(error.message)));
             hasErrors = true;

@@ -7,7 +7,7 @@ import {type InViewTiles} from './tile_manager_in_view_tiles';
 export function backfillDEM(tile: Tile, inViewTiles: InViewTiles) {
     const renderables = inViewTiles.getRenderableIds();
     for (const borderId of renderables) {
-        if (!tile.neighboringTiles || !tile.neighboringTiles[borderId]) {
+        if (!tile.neighboringTiles?.[borderId]) {
             continue;
         }
         const borderTile = inViewTiles.getTileById(borderId);

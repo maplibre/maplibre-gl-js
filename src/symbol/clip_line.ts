@@ -10,11 +10,10 @@ import Point from '@mapbox/point-geometry';
  * @param y2 - the bottom edge of the box
  * @returns lines
  */
-export function clipLine(lines: Array<Array<Point>>, x1: number, y1: number, x2: number, y2: number): Array<Array<Point>> {
-    const clippedLines: Array<Array<Point>> = [];
+export function clipLine(lines: Point[][], x1: number, y1: number, x2: number, y2: number): Point[][] {
+    const clippedLines: Point[][] = [];
 
-    for (let l = 0; l < lines.length; l++) {
-        const line = lines[l];
+    for (const line of lines) {
         let clippedLine: Point[] | undefined;
 
         for (let i = 0; i < line.length - 1; i++) {

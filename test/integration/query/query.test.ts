@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import type {Page, Browser} from 'puppeteer';
 import type {Server} from 'node:http';
 import type {AddressInfo} from 'node:net';
+import {ensureError} from '../../../src/util/util';
 
 import {deepEqual} from '../lib/json-diff';
 import {localizeURLs} from '../lib/localize-urls';
@@ -20,7 +21,7 @@ async function performQueryOnFixture(fixture)  {
 
     async function handleOperation(map: maplibregl.Map, operation) {
         const opName = operation[0];
-        
+
         switch (opName) {
             case 'wait':
                 while (!map.loaded()) {
@@ -114,7 +115,7 @@ describe('query tests', () => {
             <html lang="en">
             <head>
                 <meta charset='utf-8'>
-                
+
             </head>
             <body id='map'></body>
             </html>`);
@@ -138,7 +139,7 @@ describe('query tests', () => {
             }
             return entry;
         });
-        
+
         const coverageReport = new CoverageReport({
             name: 'MapLibre Coverage Report',
             outputDir: './coverage/query',
@@ -148,9 +149,9 @@ describe('query tests', () => {
             }
         });
         coverageReport.cleanCache();
-        
+
         await coverageReport.add(rawV8CoverageData);
-        
+
         await coverageReport.generate();
     }, 60000);
 
@@ -213,7 +214,7 @@ async function dirToJson(dir: string, port: number) {
                 console.warn(`Ignoring file with unexpected extension. ${pp.ext}`);
             }
         } catch (e) {
-            console.warn(`Error parsing file: ${file} ${e.message}`);
+            console.warn(`Error parsing file: ${file} ${ensureError(e).message}`);
             throw e;
         }
     }
@@ -224,7 +225,7 @@ function processStyle(testName:string, style: unknown, port:number) {
     const clone = JSON.parse(JSON.stringify(style));
     localizeURLs(clone, port, 'test/integration');
 
-    clone.metadata = clone.metadata || {};
+    clone.metadata ||= {};
 
     clone.metadata.test = {
         testName,

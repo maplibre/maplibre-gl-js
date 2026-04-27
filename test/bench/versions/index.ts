@@ -7,7 +7,7 @@ import WorkerTransfer from '../benchmarks/worker_transfer';
 import Paint from '../benchmarks/paint';
 import PaintStates from '../benchmarks/paint_states';
 import {PropertyLevelRemove, FeatureLevelRemove, SourceLevelRemove} from '../benchmarks/remove_paint_state';
-import {LayerBackground, LayerCircle, LayerFill, LayerFillExtrusion, LayerHeatmap, LayerHillshade, LayerColorRelief2Colors, LayerColorRelief256Colors, LayerLine, LayerRaster, LayerSymbol, LayerSymbolWithIcons, LayerTextWithVariableAnchor, LayerSymbolWithSortKey} from '../benchmarks/layers';
+import {LayerBackground, LayerCircle, LayerFill, LayerFillExtrusion, LayerHeatmap, LayerHillshade, LayerColorRelief2Colors, LayerColorRelief256Colors, LayerLine, LayerRaster, LayerSymbol, LayerSymbolWithHalo, LayerSymbolWithIcons, LayerTextWithVariableAnchor, LayerSymbolWithSortKey} from '../benchmarks/layers';
 import Load from '../benchmarks/map_load';
 import HillshadeLoad from '../benchmarks/hillshade_load';
 import ColorReliefLoad from '../benchmarks/color_relief_load';
@@ -29,8 +29,9 @@ import CoveringTilesGlobe from '../benchmarks/covering_tiles_globe';
 import CoveringTilesMercator from '../benchmarks/covering_tiles_mercator';
 import GeoJSONSourceUpdateData from '../benchmarks/geojson_source_update_data';
 import GeoJSONSourceSetData from '../benchmarks/geojson_source_set_data';
+import TerrainRender from '../benchmarks/terrain_render';
 
-const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as GeoJSON.Feature<GeoJSON.Point>[]).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
+const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as Array<GeoJSON.Feature<GeoJSON.Point>>).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
 (window as any).maplibreglBenchmarks = (window as any).maplibreglBenchmarks || {};
 
@@ -41,7 +42,7 @@ function register(name, bench) {
     (window as any).maplibreglBenchmarks[name][version] = bench;
 }
 
-const style = 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL';
+const style = 'https://tiles.openfreemap.org/styles/liberty';
 const center = [-77.032194, 38.912753];
 const zooms = [4, 8, 11, 13, 15, 17];
 const locations = zooms.map(zoom => ({center, zoom}));
@@ -75,6 +76,7 @@ register('LayerColorRelief256Colors', new LayerColorRelief256Colors());
 register('LayerLine', new LayerLine());
 register('LayerRaster', new LayerRaster());
 register('LayerSymbol', new LayerSymbol());
+register('LayerSymbolWithHalo', new LayerSymbolWithHalo());
 register('LayerSymbolWithIcons', new LayerSymbolWithIcons());
 register('LayerTextWithVariableAnchor', new LayerTextWithVariableAnchor());
 register('LayerSymbolWithSortKey', new LayerSymbolWithSortKey());
@@ -94,6 +96,7 @@ register('CoveringTilesGlobe', new CoveringTilesGlobe(0));
 register('CoveringTilesGlobePitched', new CoveringTilesGlobe(60));
 register('CoveringTilesMercator', new CoveringTilesMercator(0));
 register('CoveringTilesMercatorPitched', new CoveringTilesMercator(60));
+register('TerrainRender', new TerrainRender());
 
 Promise.resolve().then(() => {
     // Ensure the global worker pool is never drained. Browsers have resource limits

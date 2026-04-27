@@ -149,7 +149,7 @@ export type MapLayerEventType = {
  * });
  * ```
  */
-export interface MapEventType {
+export type MapEventType = {
     /**
      * Fired when an error occurs. This is GL JS's primary error reporting
      * mechanism. We use an event instead of `throw` to better accommodate
@@ -591,13 +591,13 @@ export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
      * The array of pixel coordinates corresponding to a
      * [touch event's `touches`](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/touches) property.
      */
-    points: Array<Point>;
+    points: Point[];
 
     /**
      * The geographical locations on the map corresponding to a
      * [touch event's `touches`](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/touches) property.
      */
-    lngLats: Array<LngLat>;
+    lngLats: LngLat[];
 
     /**
      * Prevents subsequent default processing of the event by the map.

@@ -20,9 +20,9 @@ import type {
 } from '../bucket';
 import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer';
 import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer';
-import type {Context} from '../../gl/context';
-import type {IndexBuffer} from '../../gl/index_buffer';
-import type {VertexBuffer} from '../../gl/vertex_buffer';
+import type {Context} from '../../webgl/context';
+import type {IndexBuffer} from '../../webgl/index_buffer';
+import type {VertexBuffer} from '../../webgl/vertex_buffer';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
@@ -50,10 +50,10 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
     index: number;
     zoom: number;
     overscaling: number;
-    layerIds: Array<string>;
-    layers: Array<Layer>;
-    stateDependentLayers: Array<Layer>;
-    stateDependentLayerIds: Array<string>;
+    layerIds: string[];
+    layers: Layer[];
+    stateDependentLayers: Layer[];
+    stateDependentLayerIds: string[];
 
     layoutVertexArray: CircleLayoutArray;
     layoutVertexBuffer: VertexBuffer;
@@ -81,7 +81,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
     }
 
-    populate(features: Array<IndexedFeature>, options: PopulateParameters, canonical: CanonicalTileID) {
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID) {
         const styleLayer = this.layers[0];
         const bucketFeatures: BucketFeature[] = [];
         let circleSortKey = null;
@@ -97,7 +97,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
             sortFeaturesByKey = !circleSortKey.isConstant();
 
             // Circles that are "printed" onto the map surface should be tessellated to follow the globe's curvature.
-            subdivide = subdivide || circleStyle.paint.get('circle-pitch-alignment') === 'map';
+            subdivide ||= circleStyle.paint.get('circle-pitch-alignment') === 'map';
         }
 
         const granularity = subdivide ? options.subdivisionGranularity.circle : 1;
@@ -172,13 +172,13 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         this.segments.destroy();
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, granularity: CircleGranularity = 1) {
+    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, granularity: CircleGranularity = 1) {
         // Since we store the circle's center in each vertex, we only have 3 bits for actual vertex position in each axis.
         // Thus the valid range of positions is 0..7.
         // This gives us 4 possible granularity settings that are symmetrical.
 
         // This array stores vertex positions that should by used by the tessellated quad.
-        let extrudes: Array<number>;
+        let extrudes: number[];
 
         switch (granularity) {
             case 1:

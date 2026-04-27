@@ -2,8 +2,9 @@ import {getVideo} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 
 import {ImageSource} from './image_source';
-import {Texture} from '../render/texture';
+import {Texture} from '../webgl/texture';
 import {Event, ErrorEvent} from '../util/evented';
+import {ensureError} from '../util/util';
 import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
 
 import type {Map} from '../ui/map';
@@ -53,9 +54,13 @@ import type {VideoSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
  */
 export class VideoSource extends ImageSource {
     options: VideoSourceSpecification;
-    urls: Array<string>;
+    urls: string[];
     video: HTMLVideoElement;
     roundZoom: boolean;
+
+    private _onPlayingHandler = () => {
+        this.map?.triggerRepaint();
+    };
 
     constructor(id: string, options: VideoSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);
@@ -70,7 +75,7 @@ export class VideoSource extends ImageSource {
 
         this.urls = [];
         for (const url of options.urls) {
-            this.urls.push(this.map._requestManager.transformRequest(url, ResourceType.Source).url);
+            this.urls.push((await this.map._requestManager.transformRequest(url, ResourceType.Source)).url);
         }
         try {
             const video = await getVideo(this.urls);
@@ -83,9 +88,7 @@ export class VideoSource extends ImageSource {
 
             // Start repainting when video starts playing. hasTransition() will then return
             // true to trigger additional frames as long as the videos continues playing.
-            this.video.addEventListener('playing', () => {
-                this.map.triggerRepaint();
-            });
+            this.video.addEventListener('playing', this._onPlayingHandler);
 
             if (this.map) {
                 this.video.play();
@@ -93,7 +96,7 @@ export class VideoSource extends ImageSource {
 
             this._finishLoading();
         } catch (err) {
-            this.fire(new ErrorEvent(err));
+            this.fire(new ErrorEvent(ensureError(err)));
         }
     }
 
@@ -143,6 +146,14 @@ export class VideoSource extends ImageSource {
         if (this.video) {
             this.video.play();
             this.setCoordinates(this.coordinates);
+        }
+    }
+
+    onRemove() {
+        super.onRemove();
+        if (this.video) {
+            this.video.removeEventListener('playing', this._onPlayingHandler);
+            this.video.pause();
         }
     }
 

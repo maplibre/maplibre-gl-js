@@ -5,18 +5,18 @@ import {extend, type Subscription} from './util';
  */
 export type Listener = (a: any) => any;
 
-type Listeners = {[_: string]: Array<Listener>};
+type Listeners = {[_: string]: Listener[]};
 
 function _addEventListener(type: string, listener: Listener, listenerList: Listeners) {
-    const listenerExists = listenerList[type] && listenerList[type].indexOf(listener) !== -1;
+    const listenerExists = listenerList[type]?.includes(listener);
     if (!listenerExists) {
-        listenerList[type] = listenerList[type] || [];
+        listenerList[type] ||= [];
         listenerList[type].push(listener);
     }
 }
 
 function _removeEventListener(type: string, listener: Listener, listenerList: Listeners) {
-    if (listenerList && listenerList[type]) {
+    if (listenerList?.[type]) {
         const index = listenerList[type].indexOf(listener);
         if (index !== -1) {
             listenerList[type].splice(index, 1);
@@ -36,9 +36,9 @@ export class Event {
     }
 }
 
-interface ErrorLike {
+type ErrorLike = {
     message: string;
-}
+};
 
 /**
  * An error event
@@ -71,7 +71,7 @@ export class Evented {
      * extended with `target` and `type` properties.
      */
     on(type: string, listener: Listener): Subscription {
-        this._listeners = this._listeners || {};
+        this._listeners ||= {};
         _addEventListener(type, listener, this._listeners);
 
         return {
@@ -107,7 +107,7 @@ export class Evented {
         if (!listener) {
             return new Promise((resolve) => this.once(type, resolve));
         }
-        this._oneTimeListeners = this._oneTimeListeners || {};
+        this._oneTimeListeners ||= {};
         _addEventListener(type, listener, this._oneTimeListeners);
 
         return this;
@@ -127,12 +127,12 @@ export class Evented {
             (event as any).target = this;
 
             // make sure adding or removing listeners inside other listeners won't cause an infinite loop
-            const listeners = this._listeners && this._listeners[type] ? this._listeners[type].slice() : [];
+            const listeners = this._listeners?.[type] ? this._listeners[type].slice() : [];
             for (const listener of listeners) {
                 listener.call(this, event);
             }
 
-            const oneTimeListeners = this._oneTimeListeners && this._oneTimeListeners[type] ? this._oneTimeListeners[type].slice() : [];
+            const oneTimeListeners = this._oneTimeListeners?.[type] ? this._oneTimeListeners[type].slice() : [];
             for (const listener of oneTimeListeners) {
                 _removeEventListener(type, listener, this._oneTimeListeners);
                 listener.call(this, event);
@@ -164,9 +164,9 @@ export class Evented {
      */
     listens(type: string): boolean {
         return (
-            (this._listeners && this._listeners[type] && this._listeners[type].length > 0) ||
-            (this._oneTimeListeners && this._oneTimeListeners[type] && this._oneTimeListeners[type].length > 0) ||
-            (this._eventedParent && this._eventedParent.listens(type))
+            (this._listeners?.[type]?.length > 0) ||
+            (this._oneTimeListeners?.[type]?.length > 0) ||
+            (this._eventedParent?.listens(type))
         );
     }
 

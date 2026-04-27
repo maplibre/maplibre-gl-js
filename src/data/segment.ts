@@ -2,7 +2,7 @@ import {warnOnce} from '../util/util';
 
 import {register} from '../util/web_worker_transfer';
 
-import type {VertexArrayObject} from '../render/vertex_array_object';
+import type {VertexArrayObject} from '../webgl/vertex_array_object';
 import type {StructArray} from '../util/struct_array';
 
 /**
@@ -24,10 +24,10 @@ export type Segment = {
  */
 export class SegmentVector {
     static MAX_VERTEX_ARRAY_LENGTH: number;
-    segments: Array<Segment>;
+    segments: Segment[];
     private _forceNewSegmentOnNextPrepare: boolean = false;
 
-    constructor(segments: Array<Segment> = []) {
+    constructor(segments: Segment[] = []) {
         this.segments = segments;
     }
 

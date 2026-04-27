@@ -42,13 +42,13 @@ export type PositionedGlyph = {
 };
 
 export type PositionedLine = {
-    positionedGlyphs: Array<PositionedGlyph>;
+    positionedGlyphs: PositionedGlyph[];
     lineOffset: number;
 };
 
 // A collection of positioned glyphs and some metadata
 export type Shaping = {
-    positionedLines: Array<PositionedLine>;
+    positionedLines: PositionedLine[];
     top: number;
     bottom: number;
     left: number;
@@ -71,7 +71,7 @@ type LineShapingSize = {
     horizontalLineContentHeight: number;
 };
 
-function isEmpty(positionedLines: Array<PositionedLine>) {
+function isEmpty(positionedLines: PositionedLine[]) {
     for (const line of positionedLines) {
         if (line.positionedGlyphs.length !== 0) {
             return false;
@@ -83,7 +83,7 @@ function isEmpty(positionedLines: Array<PositionedLine>) {
 export type SymbolAnchor = 'center' | 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 export type TextJustify = 'left' | 'center' | 'right';
 
-function breakLines(input: TaggedString, lineBreakPoints: Array<number>): Array<TaggedString> {
+function breakLines(input: TaggedString, lineBreakPoints: number[]): TaggedString[] {
     const lines = [];
     let start = 0;
     for (const lineBreak of lineBreakPoints) {
@@ -128,7 +128,7 @@ function shapeText(
         logicalInput.verticalizePunctuation();
     }
 
-    let lines: Array<TaggedString>;
+    let lines: TaggedString[];
 
     let lineBreaks = logicalInput.determineLineBreaks(spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
     const {processBidirectionalText, processStyledBidirectionalText} = rtlWorkerPlugin;
@@ -261,12 +261,12 @@ function getRectAndMetrics(
     section: TextSectionOptions,
     codePoint: number
 ): GlyphPosition | null {
-    if (glyphPosition && glyphPosition.rect) {
+    if (glyphPosition?.rect) {
         return glyphPosition;
     }
 
     const glyphs = glyphMap[section.fontStack];
-    const glyph = glyphs && glyphs[codePoint];
+    const glyph = glyphs?.[codePoint];
     if (!glyph) return null;
 
     const metrics = glyph.metrics;
@@ -298,7 +298,7 @@ function shapeLines(shaping: Shaping,
         };
     },
     imagePositions: {[_: string]: ImagePosition},
-    lines: Array<TaggedString>,
+    lines: TaggedString[],
     lineHeight: number,
     textAnchor: SymbolAnchor,
     textJustify: TextJustify,
@@ -435,7 +435,7 @@ function shapeTextSection(
     },
 ): ShapingSectionAttributes | null {
     const positions = glyphPositions[section.fontStack];
-    const glyphPosition = positions && positions[codePoint];
+    const glyphPosition = positions?.[codePoint];
 
     const rectAndMetrics = getRectAndMetrics(glyphPosition, glyphMap, section, codePoint);
 
@@ -490,7 +490,7 @@ function shapeImageSection(
 }
 
 // justify right = 1, left = 0, center = 0.5
-function justifyLine(positionedGlyphs: Array<PositionedGlyph>,
+function justifyLine(positionedGlyphs: PositionedGlyph[],
     start: number,
     end: number,
     justify: 1 | 0 | 0.5) {
@@ -509,7 +509,7 @@ function justifyLine(positionedGlyphs: Array<PositionedGlyph>,
 /**
  * Aligns the lines based on horizontal and vertical alignment.
  */
-function align(positionedLines: Array<PositionedLine>,
+function align(positionedLines: PositionedLine[],
     justify: number,
     horizontalAlign: number,
     verticalAlign: number,
@@ -559,12 +559,12 @@ function shapeIcon(
     return {image, top: y1, bottom: y2, left: x1, right: x2};
 }
 
-export interface Box {
+export type Box = {
     x1: number;
     y1: number;
     x2: number;
     y2: number;
-}
+};
 
 /**
  * Called after a PositionedIcon has already been run through fitIconToText,

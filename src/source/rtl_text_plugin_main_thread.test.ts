@@ -20,7 +20,7 @@ describe('RTLMainThreadPlugin', () => {
         global.fetch = null;
         // Reset the singleton instance before each test
         rtlMainThreadPlugin.clearRTLTextPlugin();
-        broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(() => { return Promise.resolve({} as any); });
+        broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(() => Promise.resolve({} as any));
     });
 
     function broadcastMockSuccess(message: MessageType, payload: PluginState): Promise<PluginState[]> {
@@ -74,7 +74,7 @@ describe('RTLMainThreadPlugin', () => {
         expect(rtlMainThreadPlugin.status).toBe('loaded');
     });
 
-    it('should set the RTL text plugin but deffer downloading', async () => {
+    it('should set the RTL text plugin but defer downloading', async () => {
         await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
         expect(rtlMainThreadPlugin.status).toBe('deferred');
         expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'deferred', pluginURL: url});
@@ -86,7 +86,7 @@ describe('RTLMainThreadPlugin', () => {
     });
 
     it('should throw if the plugin url is not set', async () => {
-        const spy = vi.spyOn(browser, 'resolveURL').mockImplementation(() => { return ''; });
+        const spy = vi.spyOn(browser, 'resolveURL').mockImplementation(() => '');
         await expect(rtlMainThreadPlugin.setRTLTextPlugin(null)).rejects.toThrow('requested url null is invalid');
         spy.mockRestore();
     });

@@ -1,5 +1,3 @@
-import {DOM} from '../../util/dom';
-
 const LEFT_BUTTON = 0;
 const RIGHT_BUTTON = 2;
 
@@ -49,8 +47,7 @@ export class MouseMoveStateManager implements DragMoveStateManager<MouseEvent> {
     }
 
     startMove(e: MouseEvent) {
-        const eventButton = DOM.mouseButton(e);
-        this._eventButton = eventButton;
+        this._eventButton = e.button;
     }
 
     endMove(_e?: MouseEvent) {
@@ -72,7 +69,7 @@ export class MouseMoveStateManager implements DragMoveStateManager<MouseEvent> {
     }
 
     isValidEndEvent(e: MouseEvent) {
-        const eventButton = DOM.mouseButton(e);
+        const eventButton = e.button;
         return eventButton === this._eventButton;
     }
 }
@@ -93,8 +90,7 @@ export class OneFingerTouchMoveStateManager implements DragMoveStateManager<Touc
     }
 
     startMove(e: TouchEvent) {
-        const firstTouch = e.targetTouches[0].identifier;
-        this._firstTouch = firstTouch;
+        this._firstTouch = e.targetTouches[0].identifier;
     }
 
     endMove(_e?: TouchEvent) {
@@ -116,7 +112,7 @@ export class OneFingerTouchMoveStateManager implements DragMoveStateManager<Touc
 
 export class MouseOrTouchMoveStateManager implements DragMoveStateManager<MouseEvent | TouchEvent> {
     constructor(
-        private mouseMoveStateManager = new MouseMoveStateManager({checkCorrectEvent: () => true}), 
+        private mouseMoveStateManager = new MouseMoveStateManager({checkCorrectEvent: () => true}),
         private oneFingerTouchMoveStateManager = new OneFingerTouchMoveStateManager()
     ) {}
 
@@ -127,14 +123,14 @@ export class MouseOrTouchMoveStateManager implements DragMoveStateManager<MouseE
 
     startMove(e: MouseEvent | TouchEvent) {
         this._executeRelevantHandler(e,
-            e => this.mouseMoveStateManager.startMove(e),
-            e => this.oneFingerTouchMoveStateManager.startMove(e));
+            e => { this.mouseMoveStateManager.startMove(e); },
+            e => { this.oneFingerTouchMoveStateManager.startMove(e); });
     }
 
     endMove(e?: MouseEvent | TouchEvent) {
         this._executeRelevantHandler(e,
-            e => this.mouseMoveStateManager.endMove(e),
-            e => this.oneFingerTouchMoveStateManager.endMove(e));
+            e => { this.mouseMoveStateManager.endMove(e); },
+            e => { this.oneFingerTouchMoveStateManager.endMove(e); });
     }
 
     isValidStartEvent(e: MouseEvent | TouchEvent) {

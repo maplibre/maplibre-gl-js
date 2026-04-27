@@ -4,7 +4,9 @@ import {type SourceClass, addSourceType, create} from './source';
 
 describe('addSourceType', () => {
     test('adds factory function without a worker url does not dispatch to worker', async () => {
-        const sourceType = vi.fn().mockImplementation(function (id) { this.id = id; }) as SourceClass;
+        const sourceType = vi.fn().mockImplementation(function (this: {id: string}, id: string) {
+            this.id = id;
+        }) as SourceClass;
 
         // expect no call to load worker source
         const spy = vi.spyOn(Dispatcher.prototype, 'broadcast');

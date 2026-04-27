@@ -20,8 +20,8 @@ function transformTextInternal(text: string, layer: SymbolStyleLayer, feature: F
 }
 
 export function transformText(text: Formatted, layer: SymbolStyleLayer, feature: Feature): Formatted {
-    text.sections.forEach(section => {
+    for (const section of text.sections) {
         section.text = transformTextInternal(section.text, layer, feature);
-    });
+    }
     return text;
 }

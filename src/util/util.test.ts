@@ -72,7 +72,7 @@ describe('util', () => {
 
     test('mapObject', () => {
         expect.assertions(5);
-        expect(mapObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
+        expect(mapObject({}, () => expect(false).toBeTruthy())).toEqual({});
         const that = {};
         expect(mapObject({map: 'box'}, (value, key, object) => {
             expect(value).toBe('box');
@@ -84,9 +84,9 @@ describe('util', () => {
 
     test('filterObject', () => {
         expect.assertions(6);
-        expect(filterObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
+        expect(filterObject({}, () => expect(false).toBeTruthy())).toEqual({});
         const that = {};
-        filterObject({map: 'box'}, function(value, key, object) {
+        filterObject({map: 'box'}, function(this: Record<string, never>, value: string, key: string, object: Record<string, string>) {
             expect(value).toBe('box');
             expect(key).toBe('map');
             expect(object).toEqual({map: 'box'});

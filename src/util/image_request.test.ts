@@ -1,6 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {config} from './config';
-import {webpSupported} from './webp_supported';
 import {sleep, stubAjaxGetImage} from './test/util';
 import {fakeServer, type FakeServer} from 'nise';
 import {ImageRequest} from './image_request';
@@ -20,11 +19,11 @@ describe('ImageRequest', () => {
     });
 
     test('getImage respects maxParallelImageRequests', async () => {
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
+        server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png'}, ''); });
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
-        const promises: Promise<any>[] = [];
+        const promises: Array<Promise<any>> = [];
         for (let i = 0; i < maxRequests + 5; i++) {
             promises.push(ImageRequest.getImage({url: ''}, new AbortController()));
 
@@ -40,7 +39,7 @@ describe('ImageRequest', () => {
     });
 
     test('getImage respects maxParallelImageRequests and continues to respond even when server returns 404', async () => {
-        server.respondWith(request => request.respond(404));
+        server.respondWith(request => { request.respond(404); });
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
@@ -98,14 +97,11 @@ describe('ImageRequest', () => {
         expect((queuedRequest as any).aborted).toBe(true);
     });
 
-    test('getImage sends accept/webp when supported', async () => {
+    test('getImage sends accept/webp header', async () => {
         server.respondWith((request) => {
             expect(request.requestHeaders.accept.includes('image/webp')).toBeTruthy();
             request.respond(200, {'Content-Type': 'image/webp'}, '');
         });
-
-        // mock webp support
-        webpSupported.supported = true;
 
         const promise = ImageRequest.getImage({url: ''}, new AbortController());
 
@@ -115,9 +111,9 @@ describe('ImageRequest', () => {
     });
 
     test('getImage uses createImageBitmap when supported', async () => {
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+        server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''));
+            'Expires': 'expires'}, ''); });
 
         stubAjaxGetImage(() => Promise.resolve(new ImageBitmap()));
         const promise = ImageRequest.getImage({url: ''}, new AbortController());
@@ -131,9 +127,9 @@ describe('ImageRequest', () => {
     });
 
     test('getImage using createImageBitmap throws exception', async () => {
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+        server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''));
+            'Expires': 'expires'}, ''); });
 
         stubAjaxGetImage(() => Promise.reject(new Error('error')));
 
@@ -146,9 +142,9 @@ describe('ImageRequest', () => {
 
     test('getImage uses HTMLImageElement when createImageBitmap is not supported', async () => {
         const makeRequestSky = vi.spyOn(ajax, 'makeRequest');
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+        server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''));
+            'Expires': 'expires'}, ''); });
 
         const promise = ImageRequest.getImage({url: ''}, new AbortController());
 
@@ -209,7 +205,7 @@ describe('ImageRequest', () => {
     });
 
     test('getImage request returned 404 response for fetch request', async () => {
-        server.respondWith(request => request.respond(404));
+        server.respondWith(request => { request.respond(404); });
 
         const promise = ImageRequest.getImage({url: ''}, new AbortController());
 
@@ -243,15 +239,15 @@ describe('ImageRequest', () => {
     });
 
     test('Cancel: getImage request cancelled', async () => {
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
+        server.respondWith(request => { request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
-            'Expires': 'expires'}, ''));
+            'Expires': 'expires'}, ''); });
 
         const abortController = new AbortController();
         let response = false;
         ImageRequest.getImage({url: ''}, abortController)
-            .then(() => { response = true; })
-            .catch(() => { response = true; });
+            .then(() => response = true)
+            .catch(() => response = true);
 
         abortController.abort();
 
@@ -264,9 +260,9 @@ describe('ImageRequest', () => {
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
         let callbackCounter = 0;
-        const promiseCallback = () => { callbackCounter++; };
+        const promiseCallback = () => callbackCounter++;
 
-        const abortConstollers: {url: string; abortController: AbortController}[] = [];
+        const abortConstollers: Array<{url: string; abortController: AbortController}> = [];
         for (let i = 0; i < maxRequests + 100; i++) {
             const url = `${i}`;
             const abortController = new AbortController();
@@ -309,7 +305,7 @@ describe('ImageRequest', () => {
         callbackHandles.push(ImageRequest.addThrottleControl(() => true));
 
         let callbackCounter = 0;
-        const promiseCallback = () => { callbackCounter++; };
+        const promiseCallback = () => callbackCounter++;
 
         for (let i = 0; i < maxRequestsPerFrame + 1; i++) {
             ImageRequest.getImage({url: ''}, new AbortController()).then(promiseCallback);
@@ -331,7 +327,7 @@ describe('ImageRequest', () => {
         const controlId = ImageRequest.addThrottleControl(() => true);
 
         let callbackCounter = 0;
-        const promiseCallback = () => { callbackCounter++; };
+        const promiseCallback = () => callbackCounter++;
 
         for (let i = 0; i < maxRequests; i++) {
             ImageRequest.getImage({url: ''}, new AbortController()).then(promiseCallback);
@@ -351,7 +347,7 @@ describe('ImageRequest', () => {
         const controlId = ImageRequest.addThrottleControl(() => false);
 
         let callbackCounter = 0;
-        const promiseCallback = () => { callbackCounter++; };
+        const promiseCallback = () => callbackCounter++;
 
         for (let i = 0; i < maxRequests + 100; i++) {
             ImageRequest.getImage({url: ''}, new AbortController()).then(promiseCallback);
@@ -383,7 +379,7 @@ describe('ImageRequest', () => {
         for (let i = 0; i < requestsMade; i++) {
             const promise = ImageRequest.getImage(requestParameter, new AbortController());
             promise.catch(() => {});
-            promise.then(() => { completedMap[i] = true; });
+            promise.then(() => completedMap[i] = true);
         }
 
         // up to the config value

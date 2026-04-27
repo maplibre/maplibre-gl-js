@@ -25,7 +25,7 @@ export default class ColorReliefLoad extends Benchmark {
             'pitch': 0,
             'sources': {
                 'terrain-rgb': {
-                    'url': 'https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                    'url': 'https://tiles.mapterhorn.com/tilejson.json',
                     'type': 'raster-dem',
                     'tileSize': 256
                 }
@@ -38,9 +38,9 @@ export default class ColorReliefLoad extends Benchmark {
                     'layout': {},
                     'paint': {
                         'color-relief-color': [
-                            "interpolate",
-                            ["linear"],
-                            ["elevation"],
+                            'interpolate',
+                            ['linear'],
+                            ['elevation'],
                             0, 'rgb(112, 209, 255)',
                             12.88581315, 'rgb(113, 211, 247)',
                             51.5432526, 'rgb(114, 212, 234)',

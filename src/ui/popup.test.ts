@@ -10,7 +10,7 @@ const containerWidth = 512;
 const containerHeight = 512;
 
 function createMap(options?) {
-    options = options || {};
+    options ||= {};
     const container = window.document.createElement('div');
     window.document.body.appendChild(container);
     Object.defineProperty(container, 'clientWidth', {value: options.width || containerWidth});
@@ -385,7 +385,7 @@ describe('popup', () => {
         expect(popup.getElement().classList.contains('maplibregl-popup-anchor-top-left')).toBeTruthy();
     });
 
-    ([
+    const cases =  [
         ['top-left',     new Point(10, 10),                                     'translate(0,0) translate(7px,7px)'],
         ['top',          new Point(containerWidth / 2, 10),                     'translate(-50%,0) translate(0px,10px)'],
         ['top-right',    new Point(containerWidth - 10, 10),                    'translate(-100%,0) translate(-7px,7px)'],
@@ -395,12 +395,12 @@ describe('popup', () => {
         ['bottom-left',  new Point(10, containerHeight - 10),                   'translate(0,-100%) translate(7px,-7px)'],
         ['left',         new Point(10, containerHeight / 2),                    'translate(0,-50%) translate(10px,0px)'],
         ['bottom',       new Point(containerWidth / 2, containerHeight / 2),    'translate(-50%,-100%) translate(0px,-10px)']
-    ] as [PositionAnchor, Point, string][]).forEach((args) => {
-        const anchor = args[0];
-        const point = args[1];
-        const transform = args[2];
+    ] as const satisfies ReadonlyArray<[PositionAnchor, Point, string]>;
 
-        test(`Popup automatically anchors to ${anchor}`, () => {
+    const anchorCases = cases.map(([anchor, point]) => [anchor, point] as const);
+    test.each(anchorCases)(
+        'Popup automatically anchors to %s',
+        (anchor, point) => {
             const map = createMap();
             const popup = new Popup()
                 .setLngLat([0, 0])
@@ -416,7 +416,10 @@ describe('popup', () => {
             expect(popup.getElement().classList.contains(`maplibregl-popup-anchor-${anchor}`)).toBeTruthy();
         });
 
-        test(`Popup translation reflects offset and ${anchor} anchor`, () => {
+    const transformCases = cases.map(([anchor, _point, transform]) => [anchor, transform] as const);
+    test.each(transformCases)(
+        'Popup translation reflects offset and %s anchor',
+        (anchor, transform) => {
             const map = createMap();
             vi.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
@@ -427,7 +430,6 @@ describe('popup', () => {
 
             expect(popup.getElement().style.transform).toBe(transform);
         });
-    });
 
     test('Popup automatically anchors to top if its bottom offset would push it off-screen', () => {
         const map = createMap();
@@ -523,7 +525,7 @@ describe('popup', () => {
             .addTo(map)
             .addTo(map);
 
-        (map.getContainer().querySelector('.maplibregl-popup-close-button') as HTMLButtonElement).click();
+        map.getContainer().querySelector<HTMLButtonElement>('.maplibregl-popup-close-button').click();
 
         expect(map.getContainer().querySelectorAll('.maplibregl-popup')).toHaveLength(0);
     });
@@ -892,7 +894,7 @@ describe('popup', () => {
         test('accepts object padding value', () => {
             const map = createMap();
             const padding = {top: 10, right: 20, bottom: 30, left: 40};
-            const popup = new Popup({padding: padding})
+            const popup = new Popup({padding})
                 .setText('Test')
                 .setLngLat([0, 0])
                 .addTo(map);
@@ -1066,5 +1068,44 @@ describe('popup', () => {
 
             popup.remove();
         });
+    });
+
+    test('Popup updates position when switching projection', async () => {
+        const map = createMap({width: 1024, renderWorldCopies: true});
+        await map.once('load');
+
+        const popup = new Popup()
+            .setLngLat(new LngLat(20, 30))
+            .setText('Test')
+            .addTo(map);
+
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(540px,211px)');
+
+        map.setProjection({type: 'globe'});
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(536px,216px)');
+
+        map.setProjection({type: 'mercator'});
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(540px,211px)');
+
+        map.remove();
+    });
+
+    test('Popup updates position when terrain is enabled', async () => {
+        const map = createMap({width: 1024, renderWorldCopies: true, pitch: 60, zoom: 14});
+        await map.once('load');
+
+        const popup = new Popup()
+            .setLngLat(new LngLat(20, 30))
+            .setText('Test')
+            .addTo(map);
+
+        expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(1075px,-187px)');
+
+        map.addSource('terrain', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'terrain'});
+
+        expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(1075px,-187px)');
+
+        map.remove();
     });
 });

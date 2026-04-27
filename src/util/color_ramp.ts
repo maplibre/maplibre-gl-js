@@ -8,7 +8,7 @@ export type ColorRampParams = {
     evaluationKey: string;
     resolution?: number;
     image?: RGBAImage;
-    clips?: Array<any>;
+    clips?: any[];
 };
 
 /**

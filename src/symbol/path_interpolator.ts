@@ -2,17 +2,17 @@ import {clamp} from '../util/util';
 import type Point from '@mapbox/point-geometry';
 
 export class PathInterpolator {
-    points: Array<Point>;
+    points: Point[];
     length: number;
     paddedLength: number;
     padding: number;
-    _distances: Array<number>;
+    _distances: number[];
 
-    constructor(points_?: Array<Point> | null, padding_?: number | null) {
+    constructor(points_?: Point[] | null, padding_?: number | null) {
         this.reset(points_, padding_);
     }
 
-    reset(points_?: Array<Point> | null, padding_?: number | null) {
+    reset(points_?: Point[] | null, padding_?: number | null) {
         this.points = points_ || [];
 
         // Compute cumulative distance from first point to every other point in the segment.

@@ -33,7 +33,7 @@ jobs:
           ref: ${{ steps.ref.outputs.ref || 'refs/heads/main' }}
 
       - name: Use Node.js from nvmrc
-        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v4
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v4
         with:
           node-version-file: '.nvmrc'
 

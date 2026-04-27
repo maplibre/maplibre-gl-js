@@ -74,11 +74,10 @@ describe('getAnchors', () => {
     test('overscaled anchors contain all anchors in parent', () => {
         const anchors = getAnchors(nonContinuedLine, bigSpacing, Math.PI, shapedText, shapedIcon, glyphSize, 1, 1, TILE_EXTENT);
         const childAnchors = getAnchors(nonContinuedLine, bigSpacing / 2, Math.PI, shapedText, shapedIcon, glyphSize, 0.5, 2, TILE_EXTENT);
-        for (let i = 0; i < anchors.length; i++) {
-            const anchor = anchors[i];
+        for (const anchor of anchors) {
             let found = false;
-            for (let k = 0; k < childAnchors.length; k++) {
-                if (anchor.equals(childAnchors[k])) {
+            for (const childAnchor of childAnchors) {
+                if (anchor.equals(childAnchor)) {
                     found = true;
                     break;
                 }

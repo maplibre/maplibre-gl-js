@@ -36,7 +36,7 @@ export class CanonicalTileID implements ICanonicalTileID {
     /**
      * given a list of urls, choose a url template and return a tile URL
      */
-    url(urls: Array<string>, pixelRatio: number, scheme?: string | null) {
+    url(urls: string[], pixelRatio: number, scheme?: string | null) {
         const bbox = getTileBBox(this.x, this.y, this.z);
         const quadkey = getQuadkey(this.z, this.x, this.y);
 
@@ -197,8 +197,8 @@ export class OverscaledTileID {
         if (this.canonical.x < rhs.canonical.x) return true;
         if (this.canonical.x > rhs.canonical.x) return false;
 
-        if (this.canonical.y < rhs.canonical.y) return true;
-        return false;
+        return this.canonical.y < rhs.canonical.y;
+
     }
 
     wrapped() {
@@ -283,10 +283,10 @@ export function calculateTileKey(wrap: number, overscaledZ: number, z: number, x
     return (dim * dim * wrap + dim * y + x).toString(36) + z.toString(36) + overscaledZ.toString(36);
 }
 
-function getQuadkey(z, x, y) {
-    let quadkey = '', mask;
+function getQuadkey(z:number, x:number, y:number): string {
+    let quadkey = '';
     for (let i = z; i > 0; i--) {
-        mask = 1 << (i - 1);
+        const mask = 1 << (i - 1);
         quadkey += ((x & mask ? 1 : 0) + (y & mask ? 2 : 0));
     }
     return quadkey;

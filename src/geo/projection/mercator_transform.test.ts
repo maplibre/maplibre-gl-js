@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
-import {CanonicalTileID, UnwrappedTileID} from '../../tile/tile_id';
+import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id';
 import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed';
 import type {Terrain} from '../../render/terrain';
 import {MercatorTransform} from './mercator_transform';
@@ -9,6 +9,7 @@ import {LngLatBounds} from '../lng_lat_bounds';
 import {getMercatorHorizon} from './mercator_utils';
 import {mat4} from 'gl-matrix';
 import {expectToBeCloseToArray} from '../../util/test/util';
+import {EXTENT} from '../../data/extent';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -170,7 +171,7 @@ describe('transform', () => {
         transform.resize(500, 500);
 
         // equivalent ranges
-        const lngRanges: [number, number][] = [
+        const lngRanges: Array<[number, number]> = [
             [175, -175], [175, 185], [-185, -175], [-185, 185]
         ];
 
@@ -615,5 +616,22 @@ describe('transform', () => {
         expect(transform.getCameraAltitude()).toBeCloseTo(camAlt, 10);
         expect(transform.getCameraLngLat().lng).toBeCloseTo(camLngLat.lng, 10);
         expect(transform.getCameraLngLat().lat).toBeCloseTo(camLngLat.lat, 10);
+    });
+
+    describe('getProjectionData', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
+        transform.resize(512, 512);
+        test('parses OverscaledTileID', () => {
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
+            transform.resize(512, 512);
+            const projectionData = transform.getProjectionData({overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0)});
+            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+        });
+        test('parses null', () => {
+            const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
+            transform.resize(512, 512);
+            const projectionData = transform.getProjectionData({overscaledTileID: null});
+            expectToBeCloseToArray(projectionData.tileMercatorCoords, [0, 0, 1, 1]);
+        });
     });
 });
