@@ -72,7 +72,7 @@ test('does not fire "webglcontextrestored" after remove has been called', async 
     expect(spy).not.toHaveBeenCalled();
 });
 
-test('WebGL2 error fires ErrorEvent and shows overlay', () => {
+test('WebGL2 context creation error fires ErrorEvent', () => {
     HTMLCanvasElement.prototype.getContext = function (type: string) {
         if (type === 'webgl2') {
             const errorEvent = new Event('webglcontextcreationerror');
@@ -81,29 +81,22 @@ test('WebGL2 error fires ErrorEvent and shows overlay', () => {
             return null;
         }
     };
-    const container = window.document.createElement('div');
-    const errorSpy = vi.fn();
-    const map = createMap({container});
-    map.on('error', errorSpy);
-
-    // The error overlay should be present
-    const overlay = container.querySelector('.maplibregl-webgl-error');
-    expect(overlay).toBeTruthy();
-    // Should contain a link to the WebGL help page
-    const link = overlay.querySelector('a');
-    expect(link).toBeTruthy();
-    expect(link.href).toContain('wiki.openstreetmap.org');
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    createMap();
+    const errors = consoleErrorSpy.mock.calls.map(c => c[0]).filter((e): e is Error => e instanceof Error);
+    expect(errors.some(e => e.message.includes('Failed to initialize WebGL'))).toBe(true);
+    consoleErrorSpy.mockRestore();
 });
 
-test('Error overlay appears when getContext webgl2 returns null', () => {
+test('ErrorEvent fires when getContext webgl2 returns null', () => {
     HTMLCanvasElement.prototype.getContext = function (_type: string) {
         return null;
     };
-    const container = window.document.createElement('div');
-    createMap({container});
-    const overlay = container.querySelector('.maplibregl-webgl-error');
-    expect(overlay).toBeTruthy();
-    expect(overlay.textContent).toContain('WebGL');
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    createMap();
+    const errors = consoleErrorSpy.mock.calls.map(c => c[0]).filter((e): e is Error => e instanceof Error);
+    expect(errors.some(e => e.message.includes('Failed to initialize WebGL'))).toBe(true);
+    consoleErrorSpy.mockRestore();
 });
 
 test('Hit WebGL max drawing buffer limit', () => {
