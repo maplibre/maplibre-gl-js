@@ -3,14 +3,9 @@ import createMap from '../lib/create_map';
 import type {Map} from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-// Worst-frame timing for a scripted flyTo. One bench class per
-// (terrain on/off) x (mercator/globe) combo so we can compare all four in
-// a single bench run.
-
-const STYLE_COMPLEXITY = 100;
+const STYLE_COMPLEXITY = 64;
+const ITERATIONS = 5;
 const DURATION = 1_000;
-const ITERATIONS = 10;
-
 const CENTER_START: [number, number] = [0.0, 0.15];
 const CENTER_END: [number, number] = [0.0, -0.15];
 const ZOOM = 12;
@@ -54,9 +49,8 @@ class TerrainBase extends Benchmark {
 
         if (this.variant.terrain) {
             this.map.setTerrain({source: 'dem', exaggeration: 1});
+            await new Promise(resolve => this.map.once('idle', resolve));
         }
-
-        await new Promise(resolve => this.map.once('idle', resolve));
     }
 
     // The parent `Bench` class doesn't support custom metrics so we override 
@@ -275,6 +269,7 @@ function buildStyle(): StyleSpecification {
             dem: {
                 type: 'raster-dem',
                 tiles: [`${location.origin}/test/bench/data/terrain_dem.png?id={z}/{x}/{y}`],
+                tileSize: 256,
                 encoding: 'terrarium',
                 minzoom: 0,
                 maxzoom: 14,
