@@ -1,7 +1,7 @@
 {
   "name": "maplibre-gl",
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
-  "version": "5.24.0",
+  "version": "6.0.0-0",
   "main": "dist/maplibre-gl.js",
   "style": "dist/maplibre-gl.css",
   "license": "BSD-3-Clause",
@@ -16,7 +16,9 @@
   },
   "types": "dist/maplibre-gl.d.ts",
   "type": "module",
-  "sideEffects": ["*.css"],
+  "sideEffects": [
+    "*.css"
+  ],
   "dependencies": {
     "@mapbox/jsonlint-lines-primitives": "^2.0.2",
     "@mapbox/point-geometry": "^1.1.0",
