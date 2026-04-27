@@ -32,6 +32,7 @@ const ZOOM = 12;
 const PITCH = 85;
 const BEARING = 180;
 const FLIGHT_MS = 6_000;
+const ITERATIONS = 5;
 
 export default class TerrainDroppedFrames extends Benchmark {
     map: Map;
@@ -78,11 +79,15 @@ export default class TerrainDroppedFrames extends Benchmark {
             // caches reach steady state before measurement.
             await this.flyAndCountDrops();
 
-            const {dropped, total} = await this.flyAndCountDrops();
-            const percent = 100 * dropped / Math.max(1, total);
+            const measurements: Measurement[] = [];
+            for (let i = 0; i < ITERATIONS; i++) {
+                const {dropped, total} = await this.flyAndCountDrops();
+                const percent = 100 * dropped / Math.max(1, total);
+                measurements.push({time: percent, iterations: 1});
+            }
 
             this.teardown();
-            return [{time: percent, iterations: 1}];
+            return measurements;
         } catch (e) {
             console.error(e);
         }
