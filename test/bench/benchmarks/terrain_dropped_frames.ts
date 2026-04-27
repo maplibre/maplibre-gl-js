@@ -99,11 +99,17 @@ export default class TerrainDroppedFrames extends Benchmark {
         await new Promise(resolve => this.map.once('idle', resolve));
 
         const frameTimes: number[] = [];
+        const frameStarts: number[] = [];
         let lastTs: number | undefined;
+        let startTs: number | undefined;
         let running = true;
         const onFrame = (ts: number) => {
             if (!running) return;
-            if (lastTs !== undefined) frameTimes.push(ts - lastTs);
+            if (startTs === undefined) startTs = ts;
+            if (lastTs !== undefined) {
+                frameTimes.push(ts - lastTs);
+                frameStarts.push(lastTs - startTs);
+            }
             lastTs = ts;
             requestAnimationFrame(onFrame);
         };
@@ -124,9 +130,17 @@ export default class TerrainDroppedFrames extends Benchmark {
 
         // Drop the first frame: flyTo startup is a transient.
         frameTimes.shift();
+        frameStarts.shift();
 
         let max = 0;
-        for (const t of frameTimes) if (t > max) max = t;
+        let maxIdx = 0;
+        for (let i = 0; i < frameTimes.length; i++) {
+            if (frameTimes[i] > max) {
+                max = frameTimes[i];
+                maxIdx = i;
+            }
+        }
+        console.log(`  max ${max.toFixed(1)}ms at t+${frameStarts[maxIdx].toFixed(0)}ms (frame ${maxIdx}/${frameTimes.length})`);
         return max;
     }
 }
