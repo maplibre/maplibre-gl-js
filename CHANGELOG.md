@@ -4,6 +4,7 @@
 - Enable `global-state` expressions in layout properties([#6209](https://github.com/maplibre/maplibre-gl-js/pull/6209))
 - Align typescript types generation with docs generation and avoid exporting non-exported types [#6217](https://github.com/maplibre/maplibre-gl-js/pull/6217)
 - ESM bundle (`maplibre-gl.mjs`) with automatic worker URL detection in Vite, webpack 5+, Rollup, and direct browser ESM. Use the `workerUrl` Map option or `setWorkerUrl()` to override when needed. ([#6254](https://github.com/maplibre/maplibre-gl-js/pull/6254))
+- ⚠️ Public package subpaths via `package.json` `"exports"`. Use `maplibre-gl/css` for the stylesheet, `maplibre-gl/worker` for the worker bundle, and `maplibre-gl/csp` / `maplibre-gl/csp-worker` for the CSP variants instead of the previous `dist/*` paths. ([#6254](https://github.com/maplibre/maplibre-gl-js/pull/6254))
 
 - _...Add new stuff here..._
 

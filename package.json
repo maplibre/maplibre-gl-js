@@ -17,6 +17,24 @@
   },
   "types": "dist/maplibre-gl.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/maplibre-gl.d.ts",
+      "import": "./dist/maplibre-gl.mjs",
+      "require": "./dist/maplibre-gl.js"
+    },
+    "./worker": "./dist/maplibre-gl-worker.mjs",
+    "./css": "./dist/maplibre-gl.css",
+    "./csp": {
+      "import": "./dist/maplibre-gl-csp.mjs",
+      "default": "./dist/maplibre-gl-csp.js"
+    },
+    "./csp-worker": {
+      "import": "./dist/maplibre-gl-csp-worker.mjs",
+      "default": "./dist/maplibre-gl-csp-worker.js"
+    },
+    "./package.json": "./package.json"
+  },
   "sideEffects": [
     "*.css"
   ],

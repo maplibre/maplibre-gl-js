@@ -54,7 +54,7 @@ You can then import the MapLibre GL JS module in your project.
 
 ```javascript
 import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import 'maplibre-gl/css';
 
 const map = new maplibregl.Map({
     container: 'map', // container id
@@ -70,7 +70,7 @@ MapLibre GL JS ships an ES module build (`maplibre-gl.mjs`) alongside the classi
 
 ```ts
 import {Map} from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import 'maplibre-gl/css';
 
 const map = new Map({/* … */});
 ```
