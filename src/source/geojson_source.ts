@@ -243,14 +243,13 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     /**
-     * Updates geojson-vt options based on the current map projection. Globe and
-     * verticalperspective don't have world copies, so features near the antimeridian
-     * must not be wrapped into duplicate copies, otherwise they render twice.
+     * Updates geojson-vt options based on the current map projection.
      * @internal
      */
     _updateOptionsForProjection(updateData: boolean = true) {
-        const worldCopies = this.map?.transform?.getCoveringTilesDetailsProvider().allowWorldCopies() ?? true;
+        const transform = this.map?.transform;
 
+        const worldCopies = transform ? transform.getCoveringTilesDetailsProvider().allowWorldCopies() && transform.renderWorldCopies : true;
 
         const opts = this.workerOptions.geojsonVtOptions
         if (opts.worldCopies === worldCopies) return;
