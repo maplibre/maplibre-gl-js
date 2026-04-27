@@ -106,10 +106,6 @@ describe('FillBucket', () => {
     });
 
     describe('antimeridian outline filter', () => {
-        // Clockwise rectangle in tile space. One vertical edge sits on x=0
-        // (antimeridian on the left-most tile), and one on x=EXTENT
-        // (antimeridian on the right-most tile). classifyRings treats clockwise
-        // rings as exterior in MapLibre's tile convention.
         const leftEdgeRing = [
             new Point(0, 100),
             new Point(4000, 100),
@@ -123,7 +119,6 @@ describe('FillBucket', () => {
             new Point(4000, 100),
         ];
 
-        // addFeature gates the antimeridian filter on the GEOJSONVT_ANTIMERIDIAN_CLIP tag.
         const taggedFeature = {properties: {[GEOJSONVT_ANTIMERIDIAN_CLIP]: true}} as BucketFeature;
 
         function outlineEdgeCount(ring: Point[], tile: CanonicalTileID): number {
@@ -163,7 +158,6 @@ describe('FillBucket', () => {
         });
 
         test('does not run for an untagged feature on a left-edge tile', () => {
-            // Without the antimeridian-clip tag the x=0 outline edge must be preserved.
             const bucket = createFillBucket({id: 'test', layout: {}});
             bucket.addFeature({} as BucketFeature, [leftEdgeRing], undefined, new CanonicalTileID(4, 0, 5), undefined, SubdivisionGranularitySetting.noSubdivision);
             const interior = outlineEdgeCount(leftEdgeRing, new CanonicalTileID(4, 5, 5));
