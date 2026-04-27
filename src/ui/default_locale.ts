@@ -24,8 +24,4 @@ export const defaultLocale = {
     'CooperativeGesturesHandler.WindowsHelpText': 'Use Ctrl + scroll to zoom the map',
     'CooperativeGesturesHandler.MacHelpText': 'Use ⌘ + scroll to zoom the map',
     'CooperativeGesturesHandler.MobileHelpText': 'Use two fingers to move the map',
-    'Map.WebGL2NotSupported.Full': 'We are sorry, but it seems that your browser does not support WebGL2, a technology for rendering 3D graphics on the web.',
-    'Map.WebGL2NotSupported.Short': 'WebGL2 is required to display this map.',
-    'Map.WebGL2NotSupported.LearnMore': 'Read more',
-    'Map.WebGL2NotSupported.LearnMoreUrl': 'https://wiki.openstreetmap.org/wiki/This_map_requires_WebGL',
 };

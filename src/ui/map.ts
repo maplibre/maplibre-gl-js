@@ -3480,29 +3480,6 @@ export class Map extends Camera {
     }
 
     _showWebGL2Error(webglcontextcreationerrorDetailObject: any) {
-        const fullText = this._getUIString('Map.WebGL2NotSupported.Full');
-        const shortText = this._getUIString('Map.WebGL2NotSupported.Short');
-        const learnMore = this._getUIString('Map.WebGL2NotSupported.LearnMore');
-        const webglLink = this._getUIString('Map.WebGL2NotSupported.LearnMoreUrl');
-
-        const errorDiv = DOM.create('div', 'maplibregl-webgl-error', this._container);
-
-        const fullMsg = DOM.create('p', 'maplibregl-webgl-error-full', errorDiv);
-        fullMsg.textContent = `${fullText} ${shortText} `;
-        const fullLink = DOM.create('a', undefined, fullMsg);
-        fullLink.href = webglLink;
-        fullLink.target = '_blank';
-        fullLink.rel = 'noopener noreferrer';
-        fullLink.textContent = learnMore;
-
-        const shortMsg = DOM.create('p', 'maplibregl-webgl-error-short', errorDiv);
-        shortMsg.textContent = `${shortText} `;
-        const shortLink = DOM.create('a', undefined, shortMsg);
-        shortLink.href = webglLink;
-        shortLink.target = '_blank';
-        shortLink.rel = 'noopener noreferrer';
-        shortLink.textContent = learnMore;
-
         const msg = 'Failed to initialize WebGL';
         if (webglcontextcreationerrorDetailObject) {
             webglcontextcreationerrorDetailObject.message = msg;
