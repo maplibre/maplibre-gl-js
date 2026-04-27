@@ -86,20 +86,25 @@ class TerrainBase extends Benchmark {
     }
 
     private async runInner(): Promise<number> {
+        // Clear existing caches
         for (const id in this.map.style.tileManagers) {
             this.map.style.tileManagers[id].clearTiles();
+        }
+        if (this.variant.terrain) {
+            this.map.setTerrain(null);
+            this.map.setTerrain({source: 'dem', exaggeration: 1});
         }
 
         this.map.jumpTo({center: CENTER_START, zoom: ZOOM, pitch: PITCH, bearing: BEARING});
         await new Promise(resolve => this.map.once('idle', resolve));
 
         const frameTimes: number[] = [];
-        let lastTs: number | undefined;
+        let prevTime: number | undefined;
         let running = true;
-        const onFrame = (ts: number) => {
+        const onFrame = (time: number) => {
             if (!running) return;
-            if (lastTs !== undefined) frameTimes.push(ts - lastTs);
-            lastTs = ts;
+            if (prevTime !== undefined) frameTimes.push(time - prevTime);
+            prevTime = time;
             requestAnimationFrame(onFrame);
         };
         requestAnimationFrame(onFrame);
@@ -116,13 +121,11 @@ class TerrainBase extends Benchmark {
         });
         await new Promise(resolve => this.map.once('moveend', resolve));
         running = false;
-
-        // First frame is a startup transient. Drop it.
         frameTimes.shift();
 
-        let max = 0;
-        for (const t of frameTimes) if (t > max) max = t;
-        return max;
+        let maxTime = 0;
+        for (const t of frameTimes) if (t > maxTime) maxTime = t;
+        return maxTime;
     }
 }
 
@@ -139,14 +142,9 @@ export class Terrain2DMercator extends TerrainBase {
     constructor() { super('Terrain2DMercator', {terrain: false, projection: 'mercator'}); }
 }
 
-// Synthetic basemap covering every source-layer in the bundled
-// 785.vector.pbf (landuse, water, waterway, road, road_label, place_label,
-// poi_label) and every layer type we care about (background, fill, line
-// casing + fill, line + point symbols, circle).
-//
-// Each base layer is emitted `STYLE_COMPLEXITY` times with slightly varied
-// paint so the renderer can't trivially batch them. Crank `STYLE_COMPLEXITY`
-// up until the bench drops frames on the target machine.
+// Create a basemap-like style that uses the layers from the bundled 
+// `785.vector.pbf` vector tile. Each layer is duplicated `STYLE_COMPLEXITY` 
+// times to simulate a more complex basemap style and stress the system.
 function buildStyle(): StyleSpecification {
     const layers: StyleSpecification['layers'] = [
         {id: 'background', type: 'background', paint: {'background-color': '#f0ece0'}},
@@ -258,9 +256,9 @@ function buildStyle(): StyleSpecification {
         },
     ];
 
-    for (let dup = 0; dup < STYLE_COMPLEXITY; dup++) {
+    for (let i = 0; i < STYLE_COMPLEXITY; i++) {
         for (const layer of baseLayers) {
-            layers.push({...layer, id: `${layer.id}_${dup}`} as any);
+            layers.push({...layer, id: `${layer.id}_${i}`} as any);
         }
     }
 
