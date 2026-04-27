@@ -109,7 +109,19 @@ export default defineConfig({
 
 ### Custom worker URL
 
-If you need to host the worker at a non-default location, override with [`setWorkerUrl()`](./API/functions/setWorkerUrl.md):
+If you need to host the worker at a non-default location, override with the `workerUrl` Map option or [`setWorkerUrl()`](./API/functions/setWorkerUrl.md):
+
+```ts
+import {Map} from 'maplibre-gl';
+
+const map = new Map({
+    container: 'map',
+    workerUrl: '/static/maplibre-gl-worker.mjs',
+    style: '…'
+});
+```
+
+Or set it globally before creating any maps:
 
 ```ts
 import {setWorkerUrl} from 'maplibre-gl';

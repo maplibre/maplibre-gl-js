@@ -297,6 +297,16 @@ export type MapOptions = {
      */
     transformConstrain?: TransformConstrainFunction | null;
     /**
+     * URL of the MapLibre GL JS web worker. Convenience equivalent to calling
+     * {@link setWorkerUrl} before constructing the map; useful in component
+     * frameworks (React, Vue, Svelte, etc.) where wiring a side-effecting
+     * global call is awkward. Modern bundlers (Vite, webpack 5+, Rollup) and
+     * direct browser ESM auto-detect the worker URL via `import.meta.url`,
+     * so this option only needs to be set when overriding the default
+     * (custom CDN paths, cross-origin worker hosting, etc.).
+     */
+    workerUrl?: string;
+    /**
      * A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
      * For an example, see https://maplibre.org/maplibre-gl-js/docs/examples/locale-switching/
      * Alternatively, search the official plugins page for plugins related to localization.
@@ -697,6 +707,10 @@ export class Map extends Camera {
             ...defaultOptions.canvasContextAttributes,
             ...options.canvasContextAttributes
         }} as CompleteMapOptions;
+
+        if (resolvedOptions.workerUrl) {
+            config.WORKER_URL = resolvedOptions.workerUrl;
+        }
 
         if (resolvedOptions.minZoom != null && resolvedOptions.maxZoom != null && resolvedOptions.minZoom > resolvedOptions.maxZoom) {
             throw new Error('maxZoom must be greater than or equal to minZoom');
