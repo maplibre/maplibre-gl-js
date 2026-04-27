@@ -6,7 +6,7 @@ import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 // Measures dropped frames during a scripted flyTo with terrain enabled.
 // Modeled on playground/terrain-bench.html: the map flies a fixed route
-// and we count rAF frames whose interval exceeds 1.5x the display budget.
+// and we count rAF frames whose interval exceeds the 30fps budget.
 //
 // All resources are local. The bench-vector protocol returns a single
 // bundled tile for every z/x/y; bench-dem does the same for the DEM;
@@ -23,7 +23,7 @@ const DEM_PROTOCOL = 'bench-dem';
 // Crank this up until you see dropped frames on the target machine. Each
 // layer in the base style is emitted N times, so LAYER_DUPLICATION=4
 // produces 4x the per-frame draw calls and shader switches.
-const LAYER_DUPLICATION = 48;
+const LAYER_DUPLICATION = 32;
 
 // Linear flight from Innsbruck south up the Wipptal toward the Brenner pass.
 const START: [number, number] = [11.40, 47.27];
@@ -31,13 +31,13 @@ const END: [number, number] = [11.50, 47.00];
 const ZOOM = 12;
 const PITCH = 85;
 const BEARING = 180;
-const FLIGHT_MS = 6_000;
-const ITERATIONS = 5;
+const FLIGHT_MS = 1_000;
+const ITERATIONS = 30;
+const DROPPED_THRESHOLD_MS = 1000 / 30;
 
 export default class TerrainDroppedFrames extends Benchmark {
     map: Map;
     uninstallProtocols: () => void;
-    budgetMs: number;
 
     async setup() {
         const vectorBuffer = await (await fetch('/test/bench/data/785.vector.pbf')).arrayBuffer();
@@ -67,8 +67,6 @@ export default class TerrainDroppedFrames extends Benchmark {
 
         this.map.setTerrain({source: 'dem', exaggeration: 1});
         await new Promise(resolve => this.map.once('idle', resolve));
-
-        this.budgetMs = await probeRefreshRate();
     }
 
     async run(): Promise<Measurement[]> {
@@ -83,6 +81,7 @@ export default class TerrainDroppedFrames extends Benchmark {
             for (let i = 0; i < ITERATIONS; i++) {
                 const {dropped, total} = await this.flyAndCountDrops();
                 const percent = 100 * dropped / Math.max(1, total);
+                console.log(`TerrainDroppedFrames iter ${i}: ${dropped}/${total} = ${percent.toFixed(2)}%`);
                 measurements.push({time: percent, iterations: 1});
             }
 
@@ -129,36 +128,21 @@ export default class TerrainDroppedFrames extends Benchmark {
         // Drop the first frame: flyTo startup is a transient.
         frameTimes.shift();
 
-        const droppedThreshold = this.budgetMs * 1.5;
         let dropped = 0;
-        for (const t of frameTimes) if (t > droppedThreshold) dropped++;
+        for (const t of frameTimes) if (t > DROPPED_THRESHOLD_MS) dropped++;
+
+        const sorted = [...frameTimes].sort((a, b) => a - b);
+        const pct = (p: number) => sorted[Math.floor(sorted.length * p)];
+        const sum = frameTimes.reduce((a, b) => a + b, 0);
+        console.log(
+            `flyAndCountDrops: ${frameTimes.length} frames over ${sum.toFixed(0)}ms ` +
+            `(avg ${(sum / frameTimes.length).toFixed(1)}ms = ${(1000 * frameTimes.length / sum).toFixed(1)}fps), ` +
+            `frame ms p50=${pct(0.5).toFixed(1)} p90=${pct(0.9).toFixed(1)} max=${sorted[sorted.length - 1].toFixed(1)}, ` +
+            `min=${sorted[0].toFixed(1)}, threshold=${DROPPED_THRESHOLD_MS.toFixed(1)}ms`
+        );
+
         return {dropped, total: frameTimes.length};
     }
-}
-
-// Probe display refresh rate by sampling rAF intervals for ~1s, then
-// snap the median to the nearest standard rate (60/72/90/120/144 Hz).
-async function probeRefreshRate(): Promise<number> {
-    return new Promise(resolve => {
-        const times: number[] = [];
-        let lastTs: number | undefined;
-        const start = performance.now();
-        const probe = (ts: number) => {
-            if (lastTs !== undefined) times.push(ts - lastTs);
-            lastTs = ts;
-            if (performance.now() - start < 1000) {
-                requestAnimationFrame(probe);
-            } else {
-                const sorted = [...times].sort((a, b) => a - b);
-                const median = sorted[Math.floor(sorted.length / 2)] || 1000 / 60;
-                const candidates = [1000 / 60, 1000 / 72, 1000 / 90, 1000 / 120, 1000 / 144];
-                const budget = candidates.reduce((best, c) =>
-                    Math.abs(c - median) < Math.abs(best - median) ? c : best, candidates[0]);
-                resolve(budget);
-            }
-        };
-        requestAnimationFrame(probe);
-    });
 }
 
 // Build a synthetic basemap-style style covering the source-layers
