@@ -54,26 +54,24 @@ class TerrainBase extends Benchmark {
 
         if (this.variant.terrain) {
             this.map.setTerrain({source: 'dem', exaggeration: 1});
-            await new Promise(resolve => this.map.once('idle', resolve));
         }
+
+        await new Promise(resolve => this.map.once('idle', resolve));
     }
 
-    // The harness's regression machinery assumes sync per-iteration timing,
-    // so we override `run` and report each pass as a `Measurement` whose
-    // `time` is the worst frame interval in ms.
+    // The parent `Bench` class doesn't support custom metrics so we override 
+    // `run` and report each pass as a `Measurement` whose `time` is the worst 
+    // frame interval in ms.
     async run(): Promise<Measurement[]> {
         try {
             await this.setup();
 
-            // First flight is throwaway. Lets shader / glyph / atlas caches
-            // settle before we start measuring.
+            // Warmup
             await this.runInner();
 
             const measurements: Measurement[] = [];
             for (let i = 0; i < ITERATIONS; i++) {
-                const maxFrameMs = await this.runInner();
-                console.log(`${this.label} iter ${i}: max frame ${maxFrameMs.toFixed(1)}ms`);
-                measurements.push({time: maxFrameMs, iterations: 1});
+                measurements.push({time: await this.runInner(), iterations: 1});
             }
 
             this.teardown();
@@ -88,9 +86,6 @@ class TerrainBase extends Benchmark {
     }
 
     private async runInner(): Promise<number> {
-        // Drop tile / parse / GPU caches between passes so we re-parse on
-        // workers and re-upload to the GPU each time. HTTP cache stays
-        // warm, so we measure render cost without paying for network too.
         for (const id in this.map.style.tileManagers) {
             this.map.style.tileManagers[id].clearTiles();
         }
