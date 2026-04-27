@@ -5,13 +5,12 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-- fix!: improve types for `{set,set}LayoutProperty`, `{set,set}PaintProperty` to be the actual type instead of `string`/`any` ([#7481](https://github.com/maplibre/maplibre-gl-js/pull/7481)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 ## 6.0.0-1
+
 ### ✨ Features and improvements
 
 - ⚠️ Support geojson nested objects, this is a breaking change as it encodes `__$json__` before properties that used to be an object. It also parses them back, but this is still a breaking change if you assumed this bug existed. ([#6992](https://github.com/maplibre/maplibre-gl-js/pull/6992)) (by [HarelM](https://github.com/HarelM))
-
-### 🐞 Bug fixes
+- ⚠️ Improve types for `{get,set}LayoutProperty`, `{get,set}PaintProperty` to be the actual type instead of `string`/`any` ([#7481](https://github.com/maplibre/maplibre-gl-js/pull/7481)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ## 6.0.0-0
 
