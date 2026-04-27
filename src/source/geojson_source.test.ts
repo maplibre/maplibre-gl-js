@@ -1238,6 +1238,7 @@ describe('GeoJSONSource._updateOptionsForProjection', () => {
     function createMap({ worldCopies }: { worldCopies: boolean } = { worldCopies: true }) {
         return {
             transform: {
+                renderWorldCopies: worldCopies,
                 getCoveringTilesDetailsProvider: () => ({ allowWorldCopies: () => worldCopies})
             }
         } as any;
@@ -1249,7 +1250,7 @@ describe('GeoJSONSource._updateOptionsForProjection', () => {
         expect(source.workerOptions.geojsonVtOptions.worldCopies).toBe(true);
     });
 
-    test('mercator projection sets worldCopies: true; second call is a no-op', () => {
+    test('no-op when worldCopies value is unchanged', () => {
         const source = createSource();
         source.map = createMap({ worldCopies: true });
         const spy = vi.fn().mockResolvedValue({});
@@ -1263,7 +1264,7 @@ describe('GeoJSONSource._updateOptionsForProjection', () => {
         expect(spy.mock.calls.length).toBe(callsAfterFirst);
     });
 
-    test('globe projection flips worldCopies to false and dispatches a loadData update', async () => {
+    test('updates worldCopies and dispatches loadData when value changes', async () => {
         const source = createSource({ data: hawkHill });
         source.map = createMap({ worldCopies:false});
         const spy = vi.fn().mockResolvedValue({});
@@ -1279,52 +1280,48 @@ describe('GeoJSONSource._updateOptionsForProjection', () => {
         expect(loadDataCalls[0][0].data.geojsonVtOptions.worldCopies).toBe(false);
     });
 
-    // Setting _isUpdatingWorker = true makes _updateWorkerData return early
-    // before it consumes _pendingWorkerUpdate.data, so the re-seeded value
-    // can be observed synchronously.
     function freezeWorkerDispatch(source: GeoJSONSource) {
         source._isUpdatingWorker = true;
         source._pendingWorkerUpdate = {};
     }
 
-    test('re-seeds pending data from a URL when no update is pending', () => {
-        const source = createSource({data: 'http://example.com/data.geojson'});
+    const updateableFeature: GeoJSON.Feature = {
+        type: 'Feature',
+        id: 1,
+        properties: {name: 'a'},
+        geometry: {type: 'Point', coordinates: [0, 0]}
+    };
+
+    test.each([
+        {
+            label: 'a URL',
+            sourceOpts: {data: 'http://example.com/data.geojson'},
+            setup: undefined,
+            expected: 'http://example.com/data.geojson',
+        },
+        {
+            label: 'an inline geojson object',
+            sourceOpts: {data: hawkHill},
+            setup: undefined,
+            expected: hawkHill,
+        },
+        {
+            label: 'an updateable map',
+            sourceOpts: undefined,
+            setup: (source: GeoJSONSource) => {
+                source._data = {updateable: new Map([[1, updateableFeature]])} as any;
+            },
+            expected: {type: 'FeatureCollection', features: [updateableFeature]},
+        },
+    ])('re-seeds pending data from $label when no update is pending', ({sourceOpts, setup, expected}) => {
+        const source = createSource(sourceOpts);
         source.map = createMap({ worldCopies: false });
         freezeWorkerDispatch(source);
+        setup?.(source);
 
         source._updateOptionsForProjection();
 
-        expect(source._pendingWorkerUpdate.data).toBe('http://example.com/data.geojson');
-    });
-
-    test('re-seeds pending data from an inline geojson object when no update is pending', () => {
-        const source = createSource({data: hawkHill});
-        source.map = createMap({ worldCopies: false });
-        freezeWorkerDispatch(source);
-
-        source._updateOptionsForProjection();
-
-        expect(source._pendingWorkerUpdate.data).toBe(hawkHill);
-    });
-
-    test('re-seeds pending data from an updateable map as a FeatureCollection', () => {
-        const source = createSource();
-        source.map = createMap({ worldCopies: false });
-        freezeWorkerDispatch(source);
-
-        const feature: GeoJSON.Feature = {
-            type: 'Feature',
-            id: 1,
-            properties: {name: 'a'},
-            geometry: {type: 'Point', coordinates: [0, 0]}
-        };
-        source._data = {updateable: new Map([[1, feature]])} as any;
-        source._updateOptionsForProjection();
-
-        expect(source._pendingWorkerUpdate.data).toEqual({
-            type: 'FeatureCollection',
-            features: [feature]
-        });
+        expect(source._pendingWorkerUpdate.data).toEqual(expected);
     });
 
     test('does not overwrite an existing pending update', () => {

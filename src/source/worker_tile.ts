@@ -79,7 +79,7 @@ export class WorkerTile {
             glyphDependencies: {},
             dashDependencies: {},
             availableImages,
-            subdivisionGranularity,
+            subdivisionGranularity
         };
 
         const layerFamilies = layerIndex.familiesBySource[this.source];
@@ -119,7 +119,7 @@ export class WorkerTile {
                     overscaling: this.overscaling,
                     collisionBoxArray: this.collisionBoxArray,
                     sourceLayerIndex,
-                    sourceID: this.source,
+                    sourceID: this.source
                 });
 
                 bucket.populate(features, options, this.tileID.canonical);

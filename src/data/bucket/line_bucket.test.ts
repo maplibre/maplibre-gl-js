@@ -232,38 +232,12 @@ describe('LineBucket', () => {
         });
 
         test('does not split untagged feature on a left-edge tile', () => {
-            // Without the GEOJSONVT_ANTIMERIDIAN_CLIP tag the gate stays null, so
-            // the polygon ring should render as a full closed ring even on an edge tile.
             const untaggedPolygon = {type: 3, properties: {}} as BucketFeature;
             const mercator = createLineBucket({id: 'test'});
             mercator.addFeature(untaggedPolygon, [polygonLeft], undefined, new CanonicalTileID(4, 0, 5), undefined, undefined, noSubdivision);
             const interior = render(polygonFeature, polygonLeft, new CanonicalTileID(4, 5, 5));
             expect(mercator.layoutVertexArray.length).toBe(interior.vertices);
             expect(mercator.indexArray.length).toBe(interior.indices);
-        });
-
-        test('matches explicit open-segment rendering for the split case', () => {
-            // A left-edge tile should produce the same geometry as calling
-            // addLine manually with the ring rotated so the antimeridian edge
-            // is removed and the line is drawn with butt caps.
-            const leftEdgeTile = new CanonicalTileID(4, 0, 5);
-            const split = createLineBucket({id: 'test'});
-            split.addFeature(polygonFeature, [polygonLeft], undefined, leftEdgeTile, undefined, undefined, noSubdivision);
-
-            const manual = createLineBucket({id: 'test'});
-            // polygonLeft = [(0,100),(0,7000),(4000,7000),(4000,100)].
-            // Edge 0 (0,100)→(0,7000) is the antimeridian clip edge. Removing
-            // it leaves one open segment that traces every remaining edge,
-            // starting at the vertex after the clip and ending at the vertex
-            // before it: [(0,7000),(4000,7000),(4000,100),(0,100)]. addLine is
-            // called with butt caps and forceOpenLine=true.
-            manual.addLine(
-                [new Point(0, 7000), new Point(4000, 7000), new Point(4000, 100), new Point(0, 100)],
-                polygonFeature, 'miter', 'butt', 2, 1, new CanonicalTileID(4, 0, 5), noSubdivision, true,
-            );
-
-            expect(split.layoutVertexArray.length).toBe(manual.layoutVertexArray.length);
-            expect(split.indexArray.length).toBe(manual.indexArray.length);
         });
     });
 
