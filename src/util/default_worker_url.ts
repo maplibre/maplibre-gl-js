@@ -11,10 +11,7 @@
  *
  * In the UMD bundle this value is irrelevant. `setWorkerUrl(blobUrl)` is
  * called from `build/rollup/bundle_prelude.js` at module-init time and
- * overwrites whatever default we computed here. In the CSP-ESM bundle the
- * worker file is byte-identical to the regular ESM worker (both produced
- * from `src/source/worker.ts` with the same plugin chain), so the same
- * sibling URL works there too.
+ * overwrites whatever default we computed here.
  *
  * `setWorkerUrl()` remains the escape hatch for any environment where this
  * detection doesn't produce the right URL (custom CDN paths, cross-origin

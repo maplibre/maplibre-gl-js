@@ -25,14 +25,7 @@
     },
     "./worker": "./dist/maplibre-gl-worker.mjs",
     "./css": "./dist/maplibre-gl.css",
-    "./csp": {
-      "import": "./dist/maplibre-gl-csp.mjs",
-      "default": "./dist/maplibre-gl-csp.js"
-    },
-    "./csp-worker": {
-      "import": "./dist/maplibre-gl-csp-worker.mjs",
-      "default": "./dist/maplibre-gl-csp-worker.js"
-    },
+    "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },
   "sideEffects": [

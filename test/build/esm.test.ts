@@ -41,14 +41,4 @@ describe('ESM build', () => {
         expect(typeof mod.setWorkerUrl).toBe('function');
     });
 
-    test('CSP ESM main bundle exports the public API (if built)', async () => {
-        if (!fs.existsSync('dist/maplibre-gl-csp-dev.mjs')) return;
-        const mod = await loadEsm('dist/maplibre-gl-csp-dev.mjs');
-        expect(typeof mod.Map).toBe('function');
-    });
-
-    test('CSP ESM worker bundle loads as an ES module (if built)', async () => {
-        if (!fs.existsSync('dist/maplibre-gl-csp-worker.mjs')) return;
-        await expect(loadEsm('dist/maplibre-gl-csp-worker.mjs')).resolves.toBeDefined();
-    });
 });
