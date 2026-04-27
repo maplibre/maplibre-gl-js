@@ -74,7 +74,7 @@ class TerrainBase extends Benchmark {
     }
 
     private async runInner(): Promise<number> {
-        // Clear existing caches
+        // Clear tile and terrain caches
         for (const id in this.map.style.tileManagers) {
             this.map.style.tileManagers[id].clearTiles();
         }
@@ -83,20 +83,21 @@ class TerrainBase extends Benchmark {
             this.map.setTerrain({source: 'dem', exaggeration: 1});
         }
 
+        // Reset the map viewport
         this.map.jumpTo({center: CENTER_START, zoom: ZOOM, pitch: PITCH, bearing: BEARING});
         await new Promise(resolve => this.map.once('idle', resolve));
 
-        const frameTimes: number[] = [];
+        // Animate the map and collect frame times
+        const times: number[] = [];
         let prevTime: number | undefined;
         let running = true;
         const onFrame = (time: number) => {
             if (!running) return;
-            if (prevTime !== undefined) frameTimes.push(time - prevTime);
+            if (prevTime !== undefined) times.push(time - prevTime);
             prevTime = time;
             requestAnimationFrame(onFrame);
         };
         requestAnimationFrame(onFrame);
-
         this.map.flyTo({
             center: CENTER_END,
             zoom: ZOOM,
@@ -109,10 +110,11 @@ class TerrainBase extends Benchmark {
         });
         await new Promise(resolve => this.map.once('moveend', resolve));
         running = false;
-        frameTimes.shift();
 
+        // Return the slowest frame time.
+        times.shift();
         let maxTime = 0;
-        for (const t of frameTimes) if (t > maxTime) maxTime = t;
+        for (const time of times) if (time > maxTime) maxTime = time;
         return maxTime;
     }
 }
@@ -130,9 +132,9 @@ export class Terrain2DMercator extends TerrainBase {
     constructor() { super('Terrain2DMercator', false, 'mercator'); }
 }
 
-// Create a basemap style that uses the layers from the bundled `785.vector.pbf` 
-// tile. Each layer is duplicated `STYLE_COMPLEXITY` times to simulate a more 
-// complex basemap style and stress the system.
+// Create a basemap style that uses the features from the bundled 
+// `785.vector.pbf` tile. Each layer is duplicated `STYLE_COMPLEXITY` times to 
+// simulate a more  complex basemap style and stress the system.
 function buildStyle(): StyleSpecification {
     const layers: StyleSpecification['layers'] = [
         {id: 'background', type: 'background', paint: {'background-color': '#f0ece0'}},
@@ -263,7 +265,6 @@ function buildStyle(): StyleSpecification {
             dem: {
                 type: 'raster-dem',
                 tiles: [`${location.origin}/test/bench/data/terrain_dem.png?id={z}/{x}/{y}`],
-                tileSize: 256,
                 encoding: 'terrarium',
                 minzoom: 0,
                 maxzoom: 14,
