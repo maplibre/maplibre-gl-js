@@ -1,16 +1,16 @@
 import {describe, test, expect} from 'vitest';
 import {CanonicalTileID} from '../../tile/tile_id';
 import {EXTENT} from '../extent';
-import {getAntimeridianEdgePredicate} from './antimeridian_bucket_features';
+import {createIsAntimeridianEdge} from './antimeridian_bucket_features';
 
-describe('getAntimeridianEdgePredicate', () => {
+describe('createIsAntimeridianEdge', () => {
     test('returns null for an interior tile', () => {
-        expect(getAntimeridianEdgePredicate(new CanonicalTileID(2, 1, 1))).toBeNull();
-        expect(getAntimeridianEdgePredicate(new CanonicalTileID(2, 2, 1))).toBeNull();
+        expect(createIsAntimeridianEdge(new CanonicalTileID(2, 1, 1))).toBeNull();
+        expect(createIsAntimeridianEdge(new CanonicalTileID(2, 2, 1))).toBeNull();
     });
 
     test('left-edge tile (x === 0) flags x=0 edges only', () => {
-        const isEdge = getAntimeridianEdgePredicate(new CanonicalTileID(2, 0, 1));
+        const isEdge = createIsAntimeridianEdge(new CanonicalTileID(2, 0, 1));
         expect(isEdge).not.toBeNull();
         expect(isEdge(0, 0)).toBe(true);
         expect(isEdge(0, 10)).toBe(false);
@@ -19,7 +19,7 @@ describe('getAntimeridianEdgePredicate', () => {
     });
 
     test('right-edge tile (x === (1<<z) - 1) flags x=EXTENT edges only', () => {
-        const isEdge = getAntimeridianEdgePredicate(new CanonicalTileID(2, 3, 1));
+        const isEdge = createIsAntimeridianEdge(new CanonicalTileID(2, 3, 1));
         expect(isEdge).not.toBeNull();
         expect(isEdge(EXTENT, EXTENT)).toBe(true);
         expect(isEdge(EXTENT, 10)).toBe(false);
@@ -27,7 +27,7 @@ describe('getAntimeridianEdgePredicate', () => {
     });
 
     test('zoom 0 tile is both the left and right edge', () => {
-        const isEdge = getAntimeridianEdgePredicate(new CanonicalTileID(0, 0, 0));
+        const isEdge = createIsAntimeridianEdge(new CanonicalTileID(0, 0, 0));
         expect(isEdge).not.toBeNull();
         expect(isEdge(0, 0)).toBe(true);
         expect(isEdge(EXTENT, EXTENT)).toBe(true);

@@ -14,7 +14,7 @@ import {loadGeometry} from '../load_geometry';
 import {toEvaluationFeature} from '../evaluation_feature';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {subdivideVertexLine} from '../../render/subdivision';
-import {getAntimeridianEdgePredicate} from './antimeridian_bucket_features';
+import {createIsAntimeridianEdge} from './antimeridian_bucket_features';
 
 import type {CanonicalTileID} from '../../tile/tile_id';
 import type {
@@ -264,13 +264,13 @@ export class LineBucket implements Bucket {
         this.lineClips = this.lineFeatureClips(feature);
 
         const isPolygon = VectorTileFeature.types[feature.type] === 'Polygon';
-        const isClipEdge = isPolygon && feature.properties && Object.hasOwn(feature.properties, GEOJSONVT_ANTIMERIDIAN_CLIP)
-            ? getAntimeridianEdgePredicate(canonical) : null;
-        const splitAtAntimeridian = !!isClipEdge;
+        const isAntimeridianEdge = isPolygon && feature.properties && Object.hasOwn(feature.properties, GEOJSONVT_ANTIMERIDIAN_CLIP)
+            ? createIsAntimeridianEdge(canonical) : null;
+        const splitAtAntimeridian = !!isAntimeridianEdge;
 
         for (const line of geometry) {
             if (splitAtAntimeridian) {
-                const segments = splitRingAtAntimeridian(line, isClipEdge);
+                const segments = splitRingAtAntimeridian(line, isAntimeridianEdge);
                 if (segments) {
                     // Horizontal tangent so both tiles derive the same cap axis at the seam.
                     const antimeridianTangent = new Point(1, 0);
@@ -678,15 +678,15 @@ export class LineBucket implements Bucket {
  * segments for the remaining edges (or null if the ring has none). Suppresses the
  * visible stroke geojson-vt's clip would otherwise draw along the seam.
  */
-function splitRingAtAntimeridian(ring: Point[], isClipEdge: (x0: number, x1: number) => boolean): Point[][] | null {
+function splitRingAtAntimeridian(ring: Point[], isAntimeridianEdge: (x0: number, x1: number) => boolean): Point[][] | null {
     const n = ring.length;
-    const edgeIsClip = (i: number) => isClipEdge(ring[i].x, ring[(i + 1) % n].x);
+    const edgeIsAntimeridian = (i: number) => isAntimeridianEdge(ring[i].x, ring[(i + 1) % n].x);
 
-    // Start the walk at the vertex after the first clip edge so every non-clip
-    // edge is emitted exactly once.
+    // Start the walk at the vertex after the first antimeridian edge so every
+    // non-antimeridian edge is emitted exactly once.
     let start = -1;
     for (let i = 0; i < n; i++) {
-        if (edgeIsClip(i)) { start = (i + 1) % n; break; }
+        if (edgeIsAntimeridian(i)) { start = (i + 1) % n; break; }
     }
     if (start < 0) return null;
 
@@ -695,7 +695,7 @@ function splitRingAtAntimeridian(ring: Point[], isClipEdge: (x0: number, x1: num
     for (let k = 0; k < n; k++) {
         const i = (start + k) % n;
         current.push(ring[i]);
-        if (edgeIsClip(i)) {
+        if (edgeIsAntimeridian(i)) {
             if (current.length >= 2) segments.push(current);
             current = [];
         }
