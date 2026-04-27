@@ -78,7 +78,7 @@ export class ScaleControl implements IControl {
 
     /** {@inheritDoc IControl.onRemove} */
     onRemove() {
-        DOM.remove(this._container);
+        this._container.remove();
         this._map.off('move', this._onMove);
         this._map = undefined;
     }
@@ -100,7 +100,7 @@ function updateScale(map: Map, container: HTMLElement, options: ScaleControlOpti
     // Using spherical law of cosines approximation, the real distance is
     // found between the two coordinates.
     // Minimum maxWidth is calculated for the scale box.
-    const optWidth = options && options.maxWidth || 100;
+    const optWidth = options?.maxWidth || 100;
     const y = map._container.clientHeight / 2;
     const x = map._container.clientWidth / 2;
     const left = map.unproject([x - optWidth / 2, y]);
@@ -113,7 +113,7 @@ function updateScale(map: Map, container: HTMLElement, options: ScaleControlOpti
     // The real distance corresponding to 100px scale length is rounded off to
     // near pretty number and the scale length for the same is found out.
     // Default unit of the scale is based on User's locale.
-    if (options && options.unit === 'imperial') {
+    if (options?.unit === 'imperial') {
         const maxFeet = 3.2808 * maxMeters;
         if (maxFeet > 5280) {
             const maxMiles = maxFeet / 5280;
@@ -121,7 +121,7 @@ function updateScale(map: Map, container: HTMLElement, options: ScaleControlOpti
         } else {
             setScale(container, maxWidth, maxFeet, map._getUIString('ScaleControl.Feet'));
         }
-    } else if (options && options.unit === 'nautical') {
+    } else if (options?.unit === 'nautical') {
         const maxNauticals = maxMeters / 1852;
         setScale(container, maxWidth, maxNauticals, map._getUIString('ScaleControl.NauticalMiles'));
     } else if (maxMeters >= 1000) {

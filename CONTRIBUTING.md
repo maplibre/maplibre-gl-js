@@ -40,12 +40,21 @@ Some best practices for PRs for bugfixes are as follows:
 
 This is not intended to be a strict process but rather a guideline that will build confidence that your PR is addressing the problem.
 
+## AI-Assisted Contributions
+
+MapLibre welcomes contributors who use AI coding tools, but we must be vigilant to not incorporate copyrighted materials. You are responsible for everything you submit. Maintainers will not merge code that the author cannot explain or defend in review, regardless of how it was produced, and will need to close your PR or issue if you are not able to meet this bar.
+
+The full policy is at
+[maplibre/maplibre/AI_POLICY.md](https://github.com/maplibre/maplibre/blob/main/AI_POLICY.md). Please review this policy before submitting a PR or bug report.
+
+**Disclosure:** Disclose significant AI assistance in your PR (the PR template has a checkbox).
+
 ## Preparing your Development Environment
 
 ### CodeSpaces
 
 By creating a code space you should be able to start working immediately after the post create script finishes running.
-This script basically installes everything written here in the linux part.
+This script basically installs everything written here in the linux part.
 
 ### macOS
 

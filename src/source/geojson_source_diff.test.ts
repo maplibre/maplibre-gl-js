@@ -325,7 +325,7 @@ describe('applySourceDiff', () => {
         const affectedGeometries = applySourceDiff(updateable, {
             update: [{
                 id: point.id,
-                newGeometry: newGeometry,
+                newGeometry,
             }]
         });
         expect(updateable.size).toBe(1);
@@ -345,7 +345,7 @@ describe('applySourceDiff', () => {
             }]
         });
         expect(updateable.size).toBe(1);
-        const properties = updateable.get(point.id)?.properties!;
+        const properties = updateable.get(point.id)?.properties;
         expect(Object.keys(properties)).toHaveLength(2);
         expect(properties.prop).toBe('value');
         expect(properties.prop2).toBe('value2');
@@ -363,7 +363,7 @@ describe('applySourceDiff', () => {
             }]
         });
         expect(updateable.size).toBe(1);
-        const properties2 = updateable.get(point.id)?.properties!;
+        const properties2 = updateable.get(point.id)?.properties;
         expect(Object.keys(properties2)).toHaveLength(2);
         expect(properties2.prop).toBe('value');
         expect(properties2.prop2).toBe('value3');
@@ -379,7 +379,7 @@ describe('applySourceDiff', () => {
             }]
         });
         expect(updateable.size).toBe(1);
-        const properties3 = updateable.get(point.id)?.properties!;
+        const properties3 = updateable.get(point.id)?.properties;
         expect(Object.keys(properties3)).toHaveLength(1);
         expect(properties3.prop).toBe('value');
         expect(affectedGeometries).toStrictEqual([point.geometry]);
@@ -394,7 +394,7 @@ describe('applySourceDiff', () => {
             }]
         });
         expect(updateable.size).toBe(1);
-        expect(Object.keys(updateable.get(point.id)?.properties!)).toHaveLength(0);
+        expect(Object.keys(updateable.get(point.id)?.properties)).toHaveLength(0);
         expect(affectedGeometries).toStrictEqual([point.geometry]);
     });
 

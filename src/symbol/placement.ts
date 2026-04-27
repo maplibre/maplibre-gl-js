@@ -72,7 +72,7 @@ export class RetainedQueryData {
     sourceLayerIndex: number;
     bucketIndex: number;
     tileID: OverscaledTileID;
-    featureSortOrder: Array<number>;
+    featureSortOrder: number[];
     constructor(bucketInstanceId: number,
         featureIndex: FeatureIndex,
         sourceLayerIndex: number,
@@ -203,7 +203,7 @@ export class Placement {
     prevPlacement: Placement;
     zoomAtLastRecencyCheck: number;
     collisionCircleArrays: {
-        [k in any]: Array<number>;
+        [k in any]: number[];
     };
     collisionBoxArrays: Map<number, Map<number, {
         text: number[];
@@ -242,7 +242,7 @@ export class Placement {
         return (x: number, y: number) => terrain.getElevation(tileID, x, y);
     }
 
-    getBucketParts(results: Array<BucketPart>, styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean) {
+    getBucketParts(results: BucketPart[], styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean) {
         const symbolBucket = (tile.getBucket(styleLayer) as SymbolBucket);
         const bucketFeatureIndex = tile.latestFeatureIndex;
         if (!symbolBucket || !bucketFeatureIndex || styleLayer.id !== symbolBucket.layerIds[0])
@@ -381,10 +381,8 @@ export class Placement {
             let prevAnchor;
             // If this label was placed in the previous placement, record the anchor position
             // to allow us to animate the transition
-            if (this.prevPlacement &&
-                this.prevPlacement.variableOffsets[symbolInstance.crossTileID] &&
-                this.prevPlacement.placements[symbolInstance.crossTileID] &&
-                this.prevPlacement.placements[symbolInstance.crossTileID].text) {
+            if (this.prevPlacement?.variableOffsets[symbolInstance.crossTileID] &&
+                this.prevPlacement?.placements[symbolInstance.crossTileID]?.text) {
                 prevAnchor = this.prevPlacement.variableOffsets[symbolInstance.crossTileID].anchor;
             }
             if (symbolInstance.crossTileID === 0) throw new Error('symbolInstance.crossTileID can\'t be 0');
@@ -519,7 +517,7 @@ export class Placement {
                             } else {
                                 placed = placeHorizontalFn();
                             }
-                            if (placed && placed.placeable) break;
+                            if (placed?.placeable) break;
                         }
                     } else {
                         placed = placeHorizontalFn();
@@ -546,7 +544,7 @@ export class Placement {
                             undefined,
                             simpleProjectionMatrix,
                         );
-                        if (placedFeature && placedFeature.placeable) {
+                        if (placedFeature?.placeable) {
                             this.markUsedOrientation(bucket, orientation, symbolInstance);
                             this.placedOrientations[symbolInstance.crossTileID] = orientation;
                         }
@@ -566,7 +564,7 @@ export class Placement {
                     };
 
                     placeTextForPlacementModes(placeHorizontal, placeVertical);
-                    updatePreviousOrientationIfNotPlaced(placed && placed.placeable);
+                    updatePreviousOrientationIfNotPlaced(placed?.placeable);
 
                 } else {
                     // If this symbol was in the last placement, prefer placement using same anchor, if it's still available
@@ -601,7 +599,7 @@ export class Placement {
 
                                 if (result) {
                                     placedBox = result.placedGlyphBoxes;
-                                    if (placedBox && placedBox.placeable) {
+                                    if (placedBox?.placeable) {
                                         placeText = true;
                                         shift = result.shift;
                                         return placedBox;
@@ -650,7 +648,7 @@ export class Placement {
 
                     const placeVertical = () => {
                         const verticalTextBox = collisionArrays.verticalTextBox;
-                        const wasPlaced = placed && placed.placeable;
+                        const wasPlaced = placed?.placeable;
                         if (bucket.allowVerticalPlacement && !wasPlaced && symbolInstance.numVerticalGlyphVertices > 0 && verticalTextBox) {
                             return placeBoxForVariableAnchors(verticalTextBox, collisionArrays.verticalIconBox, WritingMode.vertical);
                         }
@@ -664,7 +662,7 @@ export class Placement {
                         offscreen = placed.offscreen;
                     }
 
-                    const prevOrientation = updatePreviousOrientationIfNotPlaced(placed && placed.placeable);
+                    const prevOrientation = updatePreviousOrientationIfNotPlaced(placed?.placeable);
 
                     // If we didn't get placed, we still need to copy our position from the last placement for
                     // fade animations
@@ -680,8 +678,8 @@ export class Placement {
             }
 
             placedGlyphBoxes = placed;
-            placeText = placedGlyphBoxes && placedGlyphBoxes.placeable;
-            offscreen = placedGlyphBoxes && placedGlyphBoxes.offscreen;
+            placeText = placedGlyphBoxes?.placeable;
+            offscreen = placedGlyphBoxes?.offscreen;
 
             if (symbolInstance.useRuntimeCollisionCircles && symbolInstance.centerJustifiedTextSymbolIndex >= 0) {
                 const placedSymbol = bucket.text.placedSymbolArray.get(symbolInstance.centerJustifiedTextSymbolIndex);
@@ -716,7 +714,7 @@ export class Placement {
                 // in this case, but for now quirks in text-anchor
                 // and text-offset may prevent that from being true.
                 placeText = textAlwaysOverlap || (placedGlyphCircles.circles.length > 0 && !placedGlyphCircles.collisionDetected);
-                offscreen = offscreen && placedGlyphCircles.offscreen;
+                offscreen &&= placedGlyphCircles.offscreen;
             }
 
             if (collisionArrays.iconFeatureIndex) {
@@ -748,7 +746,7 @@ export class Placement {
                     placedIconBoxes = placeIconFeature(collisionArrays.iconBox);
                     placeIcon = placedIconBoxes.placeable;
                 }
-                offscreen = offscreen && placedIconBoxes.offscreen;
+                offscreen &&= placedIconBoxes.offscreen;
             }
 
             const iconWithoutText = textOptional ||
@@ -761,7 +759,7 @@ export class Placement {
             } else if (!textWithoutIcon) {
                 placeText = placeIcon && placeText;
             } else if (!iconWithoutText) {
-                placeIcon = placeIcon && placeText;
+                placeIcon &&= placeText;
             }
 
             const hasTextBox = placeText && placedGlyphBoxes.placeable;
@@ -968,12 +966,11 @@ export class Placement {
             const prevOpacity = prevOpacities[crossTileID];
             if (prevOpacity) {
                 this.opacities[crossTileID] = new JointOpacityState(prevOpacity, increment, jointPlacement.text, jointPlacement.icon);
-                placementChanged = placementChanged ||
-                    jointPlacement.text !== prevOpacity.text.placed ||
-                    jointPlacement.icon !== prevOpacity.icon.placed;
+                placementChanged ||= jointPlacement.text !== prevOpacity.text.placed;
+                placementChanged ||= jointPlacement.icon !== prevOpacity.icon.placed;
             } else {
                 this.opacities[crossTileID] = new JointOpacityState(null, increment, jointPlacement.text, jointPlacement.icon, jointPlacement.skipFade);
-                placementChanged = placementChanged || jointPlacement.text || jointPlacement.icon;
+                placementChanged ||= jointPlacement.text || jointPlacement.icon;
             }
         }
 
@@ -984,7 +981,8 @@ export class Placement {
                 const jointOpacity = new JointOpacityState(prevOpacity, increment, false, false);
                 if (!jointOpacity.isHidden()) {
                     this.opacities[crossTileID] = jointOpacity;
-                    placementChanged = placementChanged || prevOpacity.text.placed || prevOpacity.icon.placed;
+                    placementChanged ||= prevOpacity.text.placed;
+                    placementChanged ||= prevOpacity.icon.placed;
                 }
             }
         }
@@ -1013,7 +1011,7 @@ export class Placement {
         }
     }
 
-    updateLayerOpacities(styleLayer: StyleLayer, tiles: Array<Tile>) {
+    updateLayerOpacities(styleLayer: StyleLayer, tiles: Tile[]) {
         const seenCrossTileIDs = {};
         for (const tile of tiles) {
             const symbolBucket = tile.getBucket(styleLayer) as SymbolBucket;
@@ -1063,7 +1061,7 @@ export class Placement {
             for (let i = 0; i < numVertices / 4; i++) {
                 iconOrText.opacityVertexArray.emplaceBack(opacity);
             }
-            iconOrText.hasVisibleVertices = iconOrText.hasVisibleVertices || (opacity !== PACKED_HIDDEN_OPACITY);
+            iconOrText.hasVisibleVertices ||= (opacity !== PACKED_HIDDEN_OPACITY);
         };
 
         const boxArrays = this.collisionBoxArrays.get(bucket.bucketInstanceId);
@@ -1110,15 +1108,16 @@ export class Placement {
                 // symbol instances appropriately so that symbols from buckets that have yet to be placed
                 // offset appropriately.
                 const symbolHidden = opacityState.text.isHidden();
-                [
+                const textSymbolIndexes = [
                     symbolInstance.rightJustifiedTextSymbolIndex,
                     symbolInstance.centerJustifiedTextSymbolIndex,
                     symbolInstance.leftJustifiedTextSymbolIndex
-                ].forEach(index => {
+                ];
+                for (const index of textSymbolIndexes) {
                     if (index >= 0) {
                         bucket.text.placedSymbolArray.get(index).hidden = symbolHidden || horizontalHidden ? 1 : 0;
                     }
-                });
+                }
 
                 if (symbolInstance.verticalPlacedTextSymbolIndex >= 0) {
                     bucket.text.placedSymbolArray.get(symbolInstance.verticalPlacedTextSymbolIndex).hidden = symbolHidden || verticalHidden ? 1 : 0;
@@ -1156,7 +1155,7 @@ export class Placement {
                 }
             }
 
-            const realBoxes = (boxArrays && boxArrays.has(s)) ? boxArrays.get(s) : {
+            const realBoxes = (boxArrays?.has(s)) ? boxArrays.get(s) : {
                 text: null,
                 icon: null
             };
@@ -1283,7 +1282,7 @@ export class Placement {
     }
 }
 
-function updateCollisionVertices(collisionVertexArray: CollisionVertexArray, placed: boolean, notUsed: boolean | number, realBox: Array<number>, shiftX?: number, shiftY?: number) {
+function updateCollisionVertices(collisionVertexArray: CollisionVertexArray, placed: boolean, notUsed: boolean | number, realBox: number[], shiftX?: number, shiftY?: number) {
     if (!realBox || realBox.length === 0) {
         realBox = [0, 0, 0, 0];
     }

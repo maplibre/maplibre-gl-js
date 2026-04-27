@@ -10,7 +10,6 @@ import {EXTENT} from '../data/extent';
 
 import type {PaddingOptions} from './edge_insets';
 import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} from './transform_interface';
-import type {OverscaledTileID} from '../tile/tile_id';
 import {Bounds} from './bounds';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
@@ -65,11 +64,13 @@ export type TransformHelperCallbacks = {
 
 export type TransformOptions = {
     /**
-     * The minimum zoom level of the map.
+     * The minimum zoom level of the map. Users cannot zoom out beyond this level. (0–24)
+     * @defaultValue 0
      */
     minZoom?: number;
     /**
-     * The maximum zoom level of the map.
+     * The maximum zoom level of the map. Users cannot zoom in beyond this level. (0–24)
+     * @defaultValue 22
      */
     maxZoom?: number;
     /**
@@ -479,8 +480,8 @@ export class TransformHelper implements ITransformGetters {
      * @returns max bounds
      */
     getMaxBounds(): LngLatBounds | null {
-        if (!this._latRange || this._latRange.length !== 2 ||
-            !this._lngRange || this._lngRange.length !== 2) return null;
+        if (this._latRange?.length !== 2 ||
+            this._lngRange?.length !== 2) return null;
 
         return new LngLatBounds([this._lngRange[0], this._latRange[0]], [this._lngRange[1], this._latRange[1]]);
     }
@@ -510,7 +511,7 @@ export class TransformHelper implements ITransformGetters {
      * screen where the *base* of a visible extrusion could be.
      *
      */
-    getCameraQueryGeometry(cameraPoint: Point, queryGeometry: Array<Point>): Array<Point> {
+    getCameraQueryGeometry(cameraPoint: Point, queryGeometry: Point[]): Point[] {
         if (queryGeometry.length === 1) {
             return [queryGeometry[0], cameraPoint];
         } else {
@@ -679,7 +680,7 @@ export class TransformHelper implements ITransformGetters {
         return camMercator.toLngLat();
     }
 
-    getMercatorTileCoordinates(overscaledTileID: OverscaledTileID): [number, number, number, number] {
+    getMercatorTileCoordinates(overscaledTileID?: { canonical: {x: number; y: number; z: number}} | null): [number, number, number, number] {
         if (!overscaledTileID) {
             return [0, 0, 1, 1];
         }

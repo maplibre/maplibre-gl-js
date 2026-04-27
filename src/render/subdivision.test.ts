@@ -969,18 +969,18 @@ describe('Fill subdivision', () => {
  * Jest prints much nicer comparisons on arrays of these simple objects than on
  * arrays of points.
  */
-function toSimplePoints(a: Array<Point>): Array<{x: number; y: number}> {
+function toSimplePoints(a: Point[]): Array<{x: number; y: number}> {
     const result = [];
-    for (let i = 0; i < a.length; i++) {
+    for (const point of a) {
         result.push({
-            x: a[i].x,
-            y: a[i].y,
+            x: point.x,
+            y: point.y,
         });
     }
     return result;
 }
 
-function getEdgeOccurrencesMap(triangleIndices: Array<number>): Map<string, number> {
+function getEdgeOccurrencesMap(triangleIndices: number[]): Map<string, number> {
     const edgeOccurrences = new Map<string, number>();
     for (let triangleIndex = 0; triangleIndex < triangleIndices.length; triangleIndex += 3) {
         const i0 = triangleIndices[triangleIndex];
@@ -1003,7 +1003,7 @@ function getEdgeOccurrencesMap(triangleIndices: Array<number>): Map<string, numb
 /**
  * Checks that the supplied mesh has no edge that is shared by more than 2 triangles.
  */
-function testMeshIntegrity(triangleIndices: Array<number>) {
+function testMeshIntegrity(triangleIndices: number[]) {
     const edgeOccurrences = getEdgeOccurrencesMap(triangleIndices);
     for (const pair of edgeOccurrences) {
         if (pair[1] > 2) {
@@ -1015,7 +1015,7 @@ function testMeshIntegrity(triangleIndices: Array<number>) {
 /**
  * Checks that the lines in `lineIndicesLists` actually match the exposed edges of the triangle mesh in `triangleIndices`.
  */
-function testPolygonOutlineMatches(triangleIndices: Array<number>, lineIndicesLists: Array<Array<number>>): void {
+function testPolygonOutlineMatches(triangleIndices: number[], lineIndicesLists: number[][]): void {
     const edgeOccurrences = getEdgeOccurrencesMap(triangleIndices);
     const uncoveredEdges = new Set<string>();
 
@@ -1058,7 +1058,7 @@ function isSubsetOf(a: Set<string>, b: Set<string>): boolean {
     return true;
 }
 
-function hasDuplicateVertices(flattened: Array<number>): boolean {
+function hasDuplicateVertices(flattened: number[]): boolean {
     const set = new Set<string>();
     for (let i = 0; i < flattened.length; i += 2) {
         const vx = flattened[i];
@@ -1075,7 +1075,7 @@ function hasDuplicateVertices(flattened: Array<number>): boolean {
 /**
  * Passes if all triangles have the correct winding order, otherwise throws.
  */
-function checkWindingOrder(flattened: Array<number>, indices: Array<number>): void {
+function checkWindingOrder(flattened: number[], indices: number[]): void {
     for (let i = 0; i < indices.length; i += 3) {
         const i0 = indices[i];
         const i1 = indices[i + 1];

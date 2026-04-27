@@ -1,6 +1,6 @@
 import {type SegmentVector} from '../data/segment';
-import {type VertexBuffer} from '../gl/vertex_buffer';
-import {type IndexBuffer} from '../gl/index_buffer';
+import {type VertexBuffer} from '../webgl/vertex_buffer';
+import {type IndexBuffer} from '../webgl/index_buffer';
 
 export class Mesh {
     vertexBuffer: VertexBuffer;

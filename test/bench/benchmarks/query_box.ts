@@ -8,10 +8,10 @@ const height = 768;
 
 export default class QueryBox extends Benchmark {
     style: string;
-    locations: Array<any>;
-    maps: Array<Map>;
+    locations: any[];
+    maps: Map[];
 
-    constructor(style: string, locations: Array<any>) {
+    constructor(style: string, locations: any[]) {
         super();
         this.style = style;
         this.locations = locations;

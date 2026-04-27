@@ -31,9 +31,9 @@ function createResizeObserverEntryMock() {
     global.ResizeObserverEntry = class ResizeObserverEntry {
         target: Element;
         contentRect: DOMRectReadOnly;
-        borderBoxSize: ReadonlyArray<ResizeObserverSize>;
-        contentBoxSize: ReadonlyArray<ResizeObserverSize>;
-        devicePixelContentBoxSize: ReadonlyArray<ResizeObserverSize>;
+        borderBoxSize: readonly ResizeObserverSize[];
+        contentBoxSize: readonly ResizeObserverSize[];
+        devicePixelContentBoxSize: readonly ResizeObserverSize[];
 
         constructor() {
             this.target = document.createElement('div'); // Default target
@@ -878,6 +878,24 @@ describe('GeolocateControl with no options', () => {
         map.zoomTo(10, {duration: 0});
         await zoomendPromise;
         expect(geolocate._circleElement.style.width).toBeTruthy();
+    });
+
+    test('GeolocateControl does not crash on movestart after removal in ACTIVE_LOCK state', async () => {
+        const geolocate = new GeolocateControl({trackUserLocation: true});
+        map.addControl(geolocate);
+        await sleep(0);
+
+        // Reach ACTIVE_LOCK state via the public API
+        const geolocatePromise = geolocate.once('geolocate');
+        geolocate.trigger();
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
+        await geolocatePromise;
+
+        map.removeControl(geolocate);
+
+        expect(() => {
+            map.fire('movestart');
+        }).not.toThrow();
     });
 
     test('Geolocate control should appear only once', async () => {

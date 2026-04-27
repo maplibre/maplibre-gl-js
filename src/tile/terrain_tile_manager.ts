@@ -34,7 +34,7 @@ export class TerrainTileManager extends Evented {
     /**
      * contains a list of tileID-keys for the current scene. (only for performance)
      */
-    _renderableTilesKeys: Array<string>;
+    _renderableTilesKeys: string[];
     /**
      * raster-dem-tile for a TileID cache.
      */
@@ -133,7 +133,7 @@ export class TerrainTileManager extends Evented {
      * get a list of tiles, which are loaded and should be rendered in the current scene
      * @returns the renderable tiles
      */
-    getRenderableTiles(): Array<Tile> {
+    getRenderableTiles(): Tile[] {
         return this._renderableTilesKeys.map(key => this.getTileByID(key));
     }
 
@@ -273,8 +273,7 @@ export class TerrainTileManager extends Evented {
         if (z > source.maxzoom) z = source.maxzoom;
         if (z < source.minzoom) return undefined;
         // cache for tileID to terrain-tileID
-        if (!this._sourceTileCache[tileID.key])
-            this._sourceTileCache[tileID.key] = tileID.scaledTo(z).key;
+        this._sourceTileCache[tileID.key] ||= tileID.scaledTo(z).key;
         let tile = this.findTileInCaches(this._sourceTileCache[tileID.key]);
         // during tile-loading phase look if parent tiles (with loaded dem) are available.
         if (!tile?.dem && searchForDEM) {

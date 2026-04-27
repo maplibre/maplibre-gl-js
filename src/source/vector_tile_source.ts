@@ -1,6 +1,6 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
 
-import {extend, pick} from '../util/util';
+import {ensureError, extend, pick} from '../util/util';
 import {loadTileJson} from './load_tilejson';
 import {TileBounds} from '../tile/tile_bounds';
 import {ResourceType} from '../util/request_manager';
@@ -78,7 +78,7 @@ export class VectorTileSource extends Evented implements Source {
     dispatcher: Dispatcher;
     map: Map;
     bounds: [number, number, number, number];
-    tiles: Array<string>;
+    tiles: string[];
     tileBounds: TileBounds;
     reparseOverscaled: boolean;
     isTileClipped: boolean;
@@ -135,7 +135,7 @@ export class VectorTileSource extends Evented implements Source {
 
             // only fire error event if it is not due to aborting the request
             if (!isAbortError(err)) {
-                this.fire(new ErrorEvent(err));
+                this.fire(new ErrorEvent(ensureError(err)));
             }
         }
     }
@@ -168,7 +168,7 @@ export class VectorTileSource extends Evented implements Source {
      *
      * @param tiles - An array of one or more tile source URLs, as in the TileJSON spec.
      */
-    setTiles(tiles: Array<string>): this {
+    setTiles(tiles: string[]): this {
         this.setSourceProperty(() => {
             this._options.tiles = tiles;
         });
@@ -204,7 +204,7 @@ export class VectorTileSource extends Evented implements Source {
     async loadTile(tile: Tile): Promise<LoadTileResult | void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const params: WorkerTileParameters = {
-            request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
+            request: await this.map._requestManager.transformRequest(url, ResourceType.Tile),
             uid: tile.uid,
             tileID: tile.tileID,
             zoom: tile.tileID.overscaledZ,
@@ -216,7 +216,7 @@ export class VectorTileSource extends Evented implements Source {
             promoteId: this.promoteId,
             subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
             encoding: this.encoding,
-            overzoomParameters: this._getOverzoomParameters(tile),
+            overzoomParameters: await this._getOverzoomParameters(tile),
             etag: tile.etag
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
@@ -259,7 +259,7 @@ export class VectorTileSource extends Evented implements Source {
      * When the requested tile has a higher canonical Z than source maxzoom, pass overzoom parameters so worker can load the
      * deepest tile at source max zoom to generate sub tiles using geojsonvt for highest performance on vector overscaling
      */
-    private _getOverzoomParameters(tile: Tile): OverzoomParameters | undefined {
+    private async _getOverzoomParameters(tile: Tile): Promise<OverzoomParameters | undefined> {
         if (tile.tileID.canonical.z <= this.maxzoom) {
             return undefined;
         }
@@ -271,7 +271,7 @@ export class VectorTileSource extends Evented implements Source {
 
         return {
             maxZoomTileID,
-            overzoomRequest: this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile)
+            overzoomRequest: await this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile)
         };
     }
 

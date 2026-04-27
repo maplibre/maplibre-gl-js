@@ -28,11 +28,11 @@ export function fillLargeMeshArrays(
     segmentsTriangles: SegmentVector,
     vertexArray: StructArray,
     triangleIndexArray: TriangleIndexArray,
-    flattened: Array<number>,
-    triangleIndices: Array<number>,
+    flattened: number[],
+    triangleIndices: number[],
     segmentsLines?: SegmentVector,
     lineIndexArray?: LineIndexArray,
-    lineList?: Array<Array<number>>) {
+    lineList?: number[][]) {
 
     const numVertices = flattened.length / 2;
     const hasLines = segmentsLines && lineIndexArray && lineList;
@@ -68,8 +68,7 @@ export function fillLargeMeshArrays(
         }
 
         if (hasLines) {
-            for (let listIndex = 0; listIndex < lineList.length; listIndex++) {
-                const lineIndices = lineList[listIndex];
+            for (const lineIndices of lineList) {
 
                 for (let i = 1; i < lineIndices.length; i += 2) {
                     lineIndexArray.emplaceBack(
@@ -120,8 +119,8 @@ export function fillLargeMeshArrays(
  * @returns Index of the vertex in the final vertex array.
  */
 function copyOrReuseVertex(
-    actualVertexIndices: Array<number>,
-    flattened: Array<number>,
+    actualVertexIndices: number[],
+    flattened: number[],
     addVertex: (x: number, y: number) => void,
     totalVerticesCreated: {count: number},
     oldIndex: number,
@@ -144,12 +143,12 @@ function fillSegmentsTriangles(
     segmentsTriangles: SegmentVector,
     vertexArray: StructArray,
     triangleIndexArray: TriangleIndexArray,
-    flattened: Array<number>,
-    triangleIndices: Array<number>,
+    flattened: number[],
+    triangleIndices: number[],
     addVertex: (x: number, y: number) => void
 ) {
     // Array, or rather a map of [vertex index in the original data] -> index of the latest copy of this vertex in the final vertex buffer.
-    const actualVertexIndices: Array<number> = [];
+    const actualVertexIndices: number[] = [];
     for (let i = 0; i < flattened.length / 2; i++) {
         actualVertexIndices.push(-1);
     }
@@ -206,12 +205,12 @@ function fillSegmentsLines(
     segmentsLines: SegmentVector,
     vertexArray: StructArray,
     lineIndexArray: LineIndexArray,
-    flattened: Array<number>,
-    lineList: Array<Array<number>>,
+    flattened: number[],
+    lineList: number[][],
     addVertex: (x: number, y: number) => void
 ) {
     // Array, or rather a map of [vertex index in the original data] -> index of the latest copy of this vertex in the final vertex buffer.
-    const actualVertexIndices: Array<number> = [];
+    const actualVertexIndices: number[] = [];
     for (let i = 0; i < flattened.length / 2; i++) {
         actualVertexIndices.push(-1);
     }
@@ -222,9 +221,8 @@ function fillSegmentsLines(
     let segment = segmentsLines.getOrCreateLatestSegment(vertexArray, lineIndexArray);
     let baseVertex = segment.vertexLength;
 
-    for (let lineListIndex = 0; lineListIndex < lineList.length; lineListIndex++) {
-        const currentLine = lineList[lineListIndex];
-        for (let lineVertex = 1; lineVertex < lineList[lineListIndex].length; lineVertex += 2) {
+    for (const currentLine of lineList) {
+        for (let lineVertex = 1; lineVertex < currentLine.length; lineVertex += 2) {
             const i0 = currentLine[lineVertex - 1];
             const i1 = currentLine[lineVertex];
 

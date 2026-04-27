@@ -9,7 +9,7 @@ export interface ReadOnlyBounds {
 
     /**
      * Returns whether this bounding box contains a point
-     * 
+     *
      * @param point - The point to check
      * @returns True if this bounding box contains point, false otherwise.
      */
@@ -17,28 +17,28 @@ export interface ReadOnlyBounds {
 
     /**
      * Returns true if this bounding box contains no points
-     * 
+     *
      * @returns True if this bounding box contains no points.
      */
     empty(): boolean;
 
     /**
      * Returns the width of this bounding box.
-     * 
+     *
      * @returns `maxX - minX`.
      */
     width(): number;
 
     /**
      * Returns the height of this bounding box.
-     * 
+     *
      * @returns `maxY - minY`.
      */
     height(): number;
 
     /**
      * Returns true if this bounding box completely covers `other`.
-     * 
+     *
      * @param other - The other bounding box
      * @returns True if this bounding box completely encloses `other`
      */
@@ -46,7 +46,7 @@ export interface ReadOnlyBounds {
 
     /**
      * Returns true if this bounding box touches any part of `other`.
-     * 
+     *
      * @param other - The other bounding box
      * @returns True if this bounding box touches any part of `other`.
      */
@@ -62,7 +62,7 @@ export class Bounds implements ReadOnlyBounds {
 
     /**
      * Expands this bounding box to include point.
-     * 
+     *
      * @param point - The point to include in this bounding box
      * @returns This mutated bounding box
      */
@@ -76,7 +76,7 @@ export class Bounds implements ReadOnlyBounds {
 
     /**
      * Expands this bounding box by a fixed amount in each direction.
-     * 
+     *
      * @param amount - The amount to expand the box by, or contract if negative
      * @returns This mutated bounding box
      */
@@ -97,7 +97,7 @@ export class Bounds implements ReadOnlyBounds {
 
     /**
      * Shrinks this bounding box by a fixed amount in each direction.
-     * 
+     *
      * @param amount - The amount to shrink the box by
      * @returns This mutated bounding box
      */
@@ -108,11 +108,11 @@ export class Bounds implements ReadOnlyBounds {
     /**
      * Returns a new bounding box that contains all of the corners of this bounding
      * box with a transform applied. Does not modify this bounding box.
-     * 
+     *
      * @param fn - The function to apply to each corner
      * @returns A new bounding box containing all of the mapped points.
      */
-    map(fn: (point: Point2D) => Point2D) {
+    map(fn: (point: Point) => Point2D): Bounds {
         const result = new Bounds();
         result.extend(fn(new Point(this.minX, this.minY)));
         result.extend(fn(new Point(this.maxX, this.minY)));
@@ -123,7 +123,7 @@ export class Bounds implements ReadOnlyBounds {
 
     /**
      * Creates a new bounding box that includes all points provided.
-     * 
+     *
      * @param points - The points to include inside the bounding box
      * @returns The new bounding box
      */

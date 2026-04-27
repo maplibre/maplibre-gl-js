@@ -46,7 +46,7 @@ export interface Property<T, R> {
         value: PropertyValue<T, R>,
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: string[]
     ): R;
     interpolate(a: R, b: R, t: number): R;
 }
@@ -91,7 +91,7 @@ export class PropertyValue<T, R> {
     possiblyEvaluate(
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: string[]
     ): R {
         return this.property.possiblyEvaluate(this, parameters, canonical, availableImages);
     }
@@ -146,8 +146,12 @@ export class Transitionable<Props> {
 
     constructor(properties: Properties<Props>, globalState: Record<string, any>) {
         this._properties = properties;
-        this._values = (Object.create(properties.defaultTransitionablePropertyValues) as any);
+        this._values = (Object.create(properties.defaultTransitionablePropertyValues));
         this._globalState = globalState;
+    }
+
+    hasProperty(name: string): boolean {
+        return name in this._properties.defaultTransitionablePropertyValues;
     }
 
     getValue<S extends keyof Props, T>(name: S): PropertyValueSpecification<T> | void {
@@ -155,7 +159,7 @@ export class Transitionable<Props> {
     }
 
     setValue<S extends keyof Props, T>(name: S, value: PropertyValueSpecification<T> | void) {
-        if (!Object.prototype.hasOwnProperty.call(this._values, name)) {
+        if (!Object.hasOwn(this._values, name)) {
             this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._globalState);
         }
         // Note that we do not _remove_ an own property in the case where a value is being reset
@@ -168,7 +172,7 @@ export class Transitionable<Props> {
     }
 
     setTransition<S extends keyof Props>(name: S, value: TransitionSpecification | void) {
-        if (!Object.prototype.hasOwnProperty.call(this._values, name)) {
+        if (!Object.hasOwn(this._values, name)) {
             this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._globalState);
         }
         this._values[name].transition = clone(value) || undefined;
@@ -239,7 +243,7 @@ class TransitioningPropertyValue<T, R> {
     possiblyEvaluate(
         parameters: EvaluationParameters,
         canonical: CanonicalTileID,
-        availableImages: Array<string>
+        availableImages: string[]
     ): R {
         const now = parameters.now || 0;
         const finalValue = this.value.possiblyEvaluate(parameters, canonical, availableImages);
@@ -280,13 +284,13 @@ export class Transitioning<Props> {
 
     constructor(properties: Properties<Props>) {
         this._properties = properties;
-        this._values = (Object.create(properties.defaultTransitioningPropertyValues) as any);
+        this._values = (Object.create(properties.defaultTransitioningPropertyValues));
     }
 
     possiblyEvaluate(
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: string[]
     ): PossiblyEvaluated<Props, any> {
         const result = new PossiblyEvaluated(this._properties);
         for (const property of Object.keys(this._values)) {
@@ -323,12 +327,16 @@ export class Layout<Props> {
 
     constructor(properties: Properties<Props>, globalState: Record<string, any>) {
         this._properties = properties;
-        this._values = (Object.create(properties.defaultPropertyValues) as any);
+        this._values = (Object.create(properties.defaultPropertyValues));
         this._globalState = globalState;
     }
 
     hasValue<S extends keyof Props>(name: S) {
         return this._values[name].value !== undefined;
+    }
+
+    hasProperty(name: string): boolean {
+        return name in this._properties.defaultPropertyValues;
     }
 
     getValue<S extends keyof Props>(name: S) {
@@ -353,7 +361,7 @@ export class Layout<Props> {
     possiblyEvaluate(
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: string[]
     ): PossiblyEvaluated<Props, any> {
         const result = new PossiblyEvaluated(this._properties);
         for (const property of Object.keys(this._values)) {
@@ -423,7 +431,7 @@ export class PossiblyEvaluatedPropertyValue<T> {
         feature: Feature,
         featureState: FeatureState,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: string[]
     ): T {
         return this.property.evaluate(this.value, this.parameters, feature, featureState, canonical, availableImages);
     }
@@ -496,7 +504,7 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
         value: PropertyValue<T, PossiblyEvaluatedPropertyValue<T>>,
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: string[]
     ): PossiblyEvaluatedPropertyValue<T> {
         if (value.expression.kind === 'constant' || value.expression.kind === 'camera') {
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: value.expression.evaluate(parameters, null, {}, canonical, availableImages)}, parameters);
@@ -542,7 +550,7 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
         feature: Feature,
         featureState: FeatureState,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: string[]
     ): T {
         if (value.kind === 'constant') {
             return value.value;
@@ -564,7 +572,7 @@ export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFad
         value: PropertyValue<CrossFaded<T>, PossiblyEvaluatedPropertyValue<CrossFaded<T>>>,
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: string[]
     ): PossiblyEvaluatedPropertyValue<CrossFaded<T>> {
         if (value.value === undefined) {
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, parameters);
@@ -593,7 +601,7 @@ export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFad
         feature: Feature,
         featureState: FeatureState,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: string[]
     ): CrossFaded<T> {
         if (value.kind === 'source') {
             const constant = value.evaluate(globals, feature, featureState, canonical, availableImages);
@@ -634,7 +642,7 @@ export class CrossFadedProperty<T> implements Property<T, CrossFaded<T>> {
         value: PropertyValue<T, CrossFaded<T>>,
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: string[]
     ): CrossFaded<T> {
         if (value.value === undefined) {
             return undefined;
@@ -678,7 +686,7 @@ export class ColorRampProperty implements Property<Color, boolean> {
         value: PropertyValue<Color, boolean>,
         parameters: EvaluationParameters,
         canonical?: CanonicalTileID,
-        availableImages?: Array<string>
+        availableImages?: string[]
     ): boolean {
         return !!value.expression.evaluate(parameters, null, {}, canonical, availableImages);
     }
@@ -702,7 +710,7 @@ export class Properties<Props> {
     defaultTransitionablePropertyValues: {[K in keyof Props]: TransitionablePropertyValue<unknown, unknown>};
     defaultTransitioningPropertyValues: {[K in keyof Props]: TransitioningPropertyValue<unknown, unknown>};
     defaultPossiblyEvaluatedValues: {[K in keyof Props]: PossiblyEvaluatedPropertyValue<unknown>};
-    overridableProperties: Array<string>;
+    overridableProperties: string[];
 
     constructor(properties: Props) {
         this.properties = properties;

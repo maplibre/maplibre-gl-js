@@ -34,7 +34,7 @@ export function allowsLetterSpacing(chars: string) {
  * Returns a regular expression matching the given script codes, excluding any
  * code that the execution environment lacks support for in regular expressions.
  */
-function sanitizedRegExpFromScriptCodes(scriptCodes: Array<string>): RegExp {
+function sanitizedRegExpFromScriptCodes(scriptCodes: string[]): RegExp {
     const supportedPropertyEscapes = scriptCodes.map(code => {
         try {
             return new RegExp(`\\p{sc=${code}}`, 'u').source;
@@ -143,10 +143,8 @@ export function charInSupportedScript(char: number, canRenderRTL: boolean) {
     if (!canRenderRTL && charInRTLScript(char)) {
         return false;
     }
-    if (codePointRequiresComplexTextShaping(char)) {
-        return false;
-    }
-    return true;
+    return !codePointRequiresComplexTextShaping(char);
+
 }
 
 export function stringContainsRTLText(chars: string): boolean {

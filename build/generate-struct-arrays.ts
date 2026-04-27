@@ -113,14 +113,12 @@ function createStructArrayLayoutType({members, size, alignment}) {
     const key = `${members.map(m => `${m.components}${typeAbbreviations[m.type]}`).join('')}${size}`;
     const className = `StructArrayLayout${key}`;
 
-    if (!layoutCache[key]) {
-        layoutCache[key] = {
-            className,
-            members,
-            size,
-            usedTypes
-        };
-    }
+    layoutCache[key] ||= {
+        className,
+        members,
+        size,
+        usedTypes
+    };
 
     return className;
 }
@@ -267,7 +265,7 @@ class ${structArrayLayoutClass} extends StructArray {`);
     const argNamesTyped = [];
 
     for (const member of members) {
-        if (usedTypeSizes.indexOf(member.size) < 0) {
+        if (!usedTypeSizes.includes(member.size)) {
             usedTypeSizes.push(member.size);
         }
         for (let c = 0; c < member.components; c++) {

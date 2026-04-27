@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+
 import typedocConfig from '../typedoc.json' with {type: 'json'};
 import packageJson from '../package.json' with {type: 'json'};
 import {get} from 'https';
@@ -9,6 +10,7 @@ type HtmlDoc = {
     title: string;
     description: string;
     mdFileName: string;
+    isNew: boolean;
 };
 
 function generateAPIIntroMarkdown(lines: string[]): string {
@@ -33,25 +35,77 @@ Import declarations are omitted from the examples for brevity.
     return intro;
 }
 
-function generateMarkdownForExample(title: string, description: string, file: string, htmlContent: string): string {
-    return `
+function isNewExample(htmlContentLines: string[]): boolean {
+    const createdLine = htmlContentLines.find(l => l.includes('og:created'));
+    if (!createdLine) return false;
+    const match = createdLine.match(/content=["'](\d{4}-\d{2}-\d{2})["']/);
+    if (!match) return false;
+    const createdDate = new Date(match[1]);
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    return createdDate >= sixMonthsAgo;
+}
+
+function extractJsFromHtml(htmlContent: string): string | null {
+    const scriptRegex = /<script(?![^>]*\bsrc\b)(?![^>]*type="importmap")[^>]*>([\s\S]*?)<\/script>/g;
+    const scripts: string[] = [];
+    let match;
+    while ((match = scriptRegex.exec(htmlContent)) !== null) {
+        if (match[1].trim()) {
+            scripts.push(match[1]);
+        }
+    }
+    if (scripts.length === 0) return null;
+
+    let js = scripts.join('\n\n');
+
+    // Strip common leading whitespace
+    const lines = js.split('\n');
+    const nonEmptyLines = lines.filter(l => l.trim().length > 0);
+    if (nonEmptyLines.length > 0) {
+        const minIndent = Math.min(...nonEmptyLines.map(l => l.match(/^\s*/)[0].length));
+        if (minIndent > 0) {
+            js = lines.map(l => l.length >= minIndent ? l.slice(minIndent) : l).join('\n');
+        }
+    }
+
+    return js.trim();
+}
+
+function indentBlock(text: string, spaces: number = 4): string {
+    const indent = ' '.repeat(spaces);
+    return text.split('\n').map(line => line.length > 0 ? `${indent}${line}` : '').join('\n');
+}
+
+function generateMarkdownForExample(title: string, description: string, file: string, htmlContent: string, isNew: boolean): string {
+    const frontmatter = isNew ? '---\nstatus: new\n---\n' : '';
+    const jsContent = extractJsFromHtml(htmlContent);
+
+    let codeBlock: string;
+    if (jsContent) {
+        const jsBlock = indentBlock(`\`\`\`js\n${jsContent}\n\`\`\``);
+        const htmlBlock = indentBlock(`\`\`\`html\n${htmlContent.trimEnd()}\n\`\`\``);
+        codeBlock = `=== "Only JS"\n\n${jsBlock}\n\n=== "Full HTML"\n\n${htmlBlock}`;
+    } else {
+        codeBlock = `\`\`\`html\n${htmlContent}\n\`\`\``;
+    }
+
+    return `${frontmatter}
 # ${title}
 
 ${description}
 
 <iframe src="../${file}" width="100%" style="border:none; height:400px"></iframe>
 
-\`\`\`html
-${htmlContent}
-\`\`\`
+${codeBlock}
 `;
 }
 
 async function generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray: HtmlDoc[]): Promise<string> {
     let indexMarkdown = '# Overview \n\n';
-    const promises: Promise<any>[] = [];
+    const promises: Array<Promise<any>> = [];
     for (const indexArrayItem of indexArray) {
-        const imagePath = `docs/assets/examples/${indexArrayItem.mdFileName!.replace('.md', '.png')}`;
+        const imagePath = `docs/assets/examples/${indexArrayItem.mdFileName.replace('.md', '.png')}`;
         const outputPath = imagePath.replace('.png', '.webp');
         promises.push(sharp(imagePath).webp({quality: 90, lossless: false}).toFile(outputPath));
         indexMarkdown += `
@@ -73,7 +127,7 @@ function generateReadme() {
     const globalsFile = path.join(typedocConfig.out, 'globals.md');
     const content = fs.readFileSync(globalsFile, 'utf-8');
     let lines = content.split('\n');
-    const classesLineIndex = lines.indexOf(lines.find(l => l.endsWith('Classes')) as string);
+    const classesLineIndex = lines.indexOf(lines.find(l => l.endsWith('Classes')));
     lines = lines.splice(2, classesLineIndex - 2);
     const contentString = generateAPIIntroMarkdown(lines);
     fs.writeFileSync(path.join(typedocConfig.out, 'README.md'), contentString);
@@ -100,16 +154,18 @@ async function generateExamplesFolder() {
         htmlContent = htmlContent.replace(/\.\.\/\.\.\//g, maplibreUnpkg);
         htmlContent = htmlContent.replace(/-dev.js/g, '.js');
         const htmlContentLines = htmlContent.split('\n');
-        const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim()!;
-        const description = htmlContentLines.find(l => l.includes('og:description'))?.replace(/.*content=\"(.*)\".*/, '$1')!;
+        const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim();
+        const description = htmlContentLines.find(l => l.includes('og:description'))?.replace(/.*content=\"(.*)\".*/, '$1');
         fs.writeFileSync(path.join(examplesDocsFolder, file), htmlContent);
         const mdFileName = file.replace('.html', '.md');
+        const isNew = isNewExample(htmlContentLines);
         indexArray.push({
             title,
             description,
-            mdFileName
+            mdFileName,
+            isNew
         });
-        const exampleMarkdown = generateMarkdownForExample(title, description, file, htmlContent);
+        const exampleMarkdown = generateMarkdownForExample(title, description, file, htmlContent, isNew);
         fs.writeFileSync(path.join(examplesDocsFolder, mdFileName), exampleMarkdown);
     }
 

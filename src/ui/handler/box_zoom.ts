@@ -133,7 +133,7 @@ export class BoxZoomHandler implements Handler {
             minY = Math.min(p0.y, pos.y),
             maxY = Math.max(p0.y, pos.y);
 
-        DOM.setTransform(this._box, `translate(${minX}px,${minY}px)`);
+        this._box.style.transform = `translate(${minX}px,${minY}px)`;
 
         this._box.style.width = `${maxX - minX}px`;
         this._box.style.height = `${maxY - minY}px`;
@@ -180,7 +180,7 @@ export class BoxZoomHandler implements Handler {
         this._container.classList.remove('maplibregl-crosshair');
 
         if (this._box) {
-            DOM.remove(this._box);
+            this._box.remove();
             this._box = null;
         }
 

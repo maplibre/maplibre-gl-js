@@ -1,16 +1,16 @@
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import {TileManager} from './tile_manager';
-import {type Source, addSourceType} from '../source/source';
-import {Tile, FadingRoles, FadingDirections} from './tile';
+import {addSourceType, type Source} from '../source/source';
+import {FadingDirections, FadingRoles, Tile} from './tile';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
-import {Event, ErrorEvent, Evented} from '../util/evented';
+import {ErrorEvent, Event, Evented} from '../util/evented';
 import {extend} from '../util/util';
 import {type Dispatcher} from '../util/dispatcher';
 import {TileBounds} from './tile_bounds';
-import {sleep, waitForEvent, beforeMapTest, createMap as globalCreateMap} from '../util/test/util';
+import {beforeMapTest, createMap as globalCreateMap, sleep, waitForEvent} from '../util/test/util';
 import {now} from '../util/time_control';
 
 import {type Map} from '../ui/map';
@@ -74,9 +74,7 @@ class SourceMock extends Evented implements Source {
 function createSource(id: string, sourceOptions: any, _dispatcher: any, eventedParent: Evented) {
     // allow tests to override mocked methods/properties by providing
     // them in the source definition object that's given to Source.create()
-    const source = new SourceMock(id, sourceOptions, _dispatcher, eventedParent);
-
-    return source;
+    return new SourceMock(id, sourceOptions, _dispatcher, eventedParent);
 }
 
 addSourceType('mock-source-type', createSource as any);
@@ -88,7 +86,7 @@ function createTileManager(options?, used?) {
         maxzoom: 14,
         type: 'mock-source-type'
     }, options), {} as Dispatcher);
-    const scWithTestLogic = extend(sc, {
+    return extend(sc, {
         used: typeof used === 'boolean' ? used : true,
         addTile(tileID: OverscaledTileID): Tile {
             return this._addTile(tileID);
@@ -100,7 +98,6 @@ function createTileManager(options?, used?) {
             return this._tiles;
         }
     });
-    return scWithTestLogic;
 }
 
 type MapOptions = {
@@ -174,7 +171,7 @@ describe('TileManager.addTile', () => {
             tile.state = 'loaded';
             load++;
         };
-        tileManager.on('dataloading', () => { add++; });
+        tileManager.on('dataloading', () => add++);
 
         const tr = new MercatorTransform();
         tr.resize(512, 512);
@@ -260,7 +257,7 @@ describe('TileManager.addTile', () => {
             tile.state = 'loaded';
             load++;
         };
-        tileManager.on('dataloading', () => { add++; });
+        tileManager.on('dataloading', () => add++);
 
         const t1 = tileManager._addTile(tileID);
         const t2 = tileManager._addTile(new OverscaledTileID(0, 1, 0, 0, 0));
@@ -282,11 +279,10 @@ describe('TileManager.addTile', () => {
             new OverscaledTileID(1, 0, 1, 1, 1)
         ];
 
-        for (let i = 0; i < tileIDs.length; i++)
-            tileManager._addTile(tileIDs[i]);
+        for (const tileID of tileIDs)
+            tileManager._addTile(tileID);
 
-        for (let i = 0; i < tileIDs.length; i++) {
-            const id = tileIDs[i];
+        for (const id of tileIDs) {
             const key = id.key;
 
             expect(tileManager._inViewTiles.getTileById(key)).toBeTruthy();
@@ -1268,13 +1264,13 @@ describe('TileManager._updateRetainedTiles', () => {
         const idealTiles = [new OverscaledTileID(1, 0, 1, 1, 1), new OverscaledTileID(1, 0, 1, 0, 1)];
         stateCache[idealTiles[0].key] = 'loaded';
         const retained = tileManager._updateRetainedTiles(idealTiles, 1);
-        expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toEqual([
             // when child tiles aren't found, check and request parent tile
             new OverscaledTileID(0, 0, 0, 0, 0)
         ]);
 
         // retained tiles include all ideal tiles and any parents that were loaded to cover
-        // non-existant tiles
+        // non-existent tiles
         expect(retained).toEqual({
             // 1/0/1
             '211': new OverscaledTileID(1, 0, 1, 0, 1),
@@ -1303,13 +1299,13 @@ describe('TileManager._updateRetainedTiles', () => {
         const getTileSpy = vi.spyOn(tileManager, 'getTile');
 
         tileManager._updateRetainedTiles([idealTile], 2);
-        expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toEqual([
             // parents
             new OverscaledTileID(1, 0, 1, 0, 0), // not found
             new OverscaledTileID(0, 0, 0, 0, 0)  // not found
         ]);
 
-        expect(addTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
+        expect(addTileSpy.mock.calls.map((c) => c[0])).toEqual([
             // ideal tile
             new OverscaledTileID(2, 0, 2, 0, 0),
             // parents
@@ -1335,7 +1331,7 @@ describe('TileManager._updateRetainedTiles', () => {
 
         const retained = tileManager._updateRetainedTiles([idealTile], 1);
 
-        expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toEqual([
             // parents
             new OverscaledTileID(0, 0, 0, 0, 0), // found
         ]);
@@ -1395,7 +1391,7 @@ describe('TileManager._updateRetainedTiles', () => {
 
         const getTileSpy = vi.spyOn(tileManager, 'getTile');
         let retained = tileManager._updateRetainedTiles([idealTile], 1);
-        expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toEqual([
             // parent
             new OverscaledTileID(0, 0, 0, 0, 0)
         ]);
@@ -1442,7 +1438,7 @@ describe('TileManager._updateRetainedTiles', () => {
 
         sleep(10);
 
-        expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([]);
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toEqual([]);
 
         expect(retained).toEqual({
             // ideal tile id (2, 0, 0)
@@ -1485,7 +1481,7 @@ describe('TileManager._updateRetainedTiles', () => {
 
         const getTileSpy = vi.spyOn(tileManager, 'getTile');
         tileManager._updateRetainedTiles(idealTiles, 8);
-        expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toEqual([
             // parent tile ascent
             new OverscaledTileID(7, 0, 7, 0, 0),
             new OverscaledTileID(6, 0, 6, 0, 0),
@@ -1506,7 +1502,7 @@ describe('TileManager._updateRetainedTiles', () => {
         }
 
         tileManager._updateRetainedTiles(idealTiles, 8);
-        expect(getTileSpy.mock.calls.map((c) => { return c[0]; })).toEqual([
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toEqual([
             // parent tile ascent
             new OverscaledTileID(7, 0, 7, 0, 0),
             new OverscaledTileID(6, 0, 6, 0, 0),
@@ -1735,7 +1731,9 @@ describe('TileManager.tilesIn', () => {
         ], 1, true);
 
         tiles.sort((a, b) => { return a.tile.tileID.canonical.x - b.tile.tileID.canonical.x; });
-        tiles.forEach((result) => { delete result.tile.uid; });
+        for (const result of tiles) {
+            delete result.tile.uid;
+        }
 
         expect(tiles[0].tile.tileID.key).toBe('011');
         expect(tiles[0].tile.tileSize).toBe(512);
@@ -1780,7 +1778,9 @@ describe('TileManager.tilesIn', () => {
                 ], 1, true);
 
                 tiles.sort((a, b) => { return a.tile.tileID.canonical.x - b.tile.tileID.canonical.x; });
-                tiles.forEach((result) => { delete result.tile.uid; });
+                for (const result of tiles) {
+                    delete result.tile.uid;
+                }
 
                 expect(tiles[0].tile.tileID.key).toBe('012');
                 expect(tiles[0].tile.tileSize).toBe(1024);
@@ -2312,8 +2312,8 @@ describe('tile manager get ids', () => {
 
         const tileManager = createTileManager({});
         tileManager.transform = new MercatorTransform();
-        for (let i = 0; i < ids.length; i++) {
-            tileManager._inViewTiles.setTile(ids[i].key, {tileID: ids[i]} as any as Tile);
+        for (const id of ids) {
+            tileManager._inViewTiles.setTile(id.key, {tileID: id} as any as Tile);
         }
         expect(tileManager.getIds()).toEqual([
             new OverscaledTileID(0, 0, 0, 0, 0).key,

@@ -1,8 +1,8 @@
 import {getJSON} from '../util/ajax';
-import {RequestPerformance} from '../util/performance';
+import {RequestPerformance} from '../util/request_performance';
 import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent';
-import {GeoJSONVT, type GeoJSONVTOptions, type SuperclusterOptions, type ClusterProperties} from '@maplibre/geojson-vt';
+import {GeoJSONVT, type GeoJSONVTOptions} from '@maplibre/geojson-vt';
 import {createExpression, type FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error';
 import {toVirtualVectorTile} from './vector_tile_overzoomed';
@@ -23,12 +23,9 @@ import type {StyleLayerIndex} from '../style/style_layer_index';
  */
 export type GeoJSONWorkerOptions = {
     source?: string;
-    cluster?: boolean;
     geojsonVtOptions?: GeoJSONVTOptions;
-    superclusterOptions?: SuperclusterOptions;
-    clusterProperties?: ClusterProperties;
+    clusterProperties?: Record<string, [unknown, unknown]>;
     filter?: FilterSpecification;
-    promoteId?: string;
     collectResourceTiming?: boolean;
 };
 
@@ -66,14 +63,14 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
 export class GeoJSONWorkerSource implements WorkerSource {
     actor: IActor;
     layerIndex: StyleLayerIndex;
-    availableImages: Array<string>;
+    availableImages: string[];
     tileState: WorkerTileState;
 
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONVT;
     _createGeoJSONIndex: typeof createGeoJSONIndex;
 
-    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>, createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
+    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[], createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
         this.actor = actor;
         this.layerIndex = layerIndex;
         this.availableImages = availableImages;
@@ -271,7 +268,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         }
 
         if (params.updateCluster) {
-            this._geoJSONIndex.updateClusterOptions(params.cluster, getSuperclusterOptions(params));
+            this._geoJSONIndex.updateClusterOptions(params.geojsonVtOptions.cluster, getSuperclusterOptions(params));
         }
 
         if (this._geoJSONIndex == null) {
@@ -284,7 +281,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
      */
     _filterGeoJSON(data: GeoJSON.GeoJSON, filter: FilterSpecification): GeoJSON.GeoJSON {
         if (data.type !== 'FeatureCollection') return data;
-        
+
         const predicate = this._getFilterPredicate(filter);
         if (!predicate) return data;
 
@@ -301,9 +298,8 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (compiled.result === 'error') {
             throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
         }
-        
-        const predicate = (feature: GeoJSON.Feature) => compiled.value.evaluate({zoom: 0}, feature as any);
-        return predicate;
+
+        return (feature: GeoJSON.Feature) => compiled.value.evaluate({zoom: 0}, feature as any);
     }
 
     async removeSource(_params: RemoveSourceParams): Promise<void> {
@@ -314,7 +310,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         return this._geoJSONIndex.getClusterExpansionZoom(params.clusterId);
     }
 
-    getClusterChildren(params: ClusterIDAndSource): Array<GeoJSON.Feature> {
+    getClusterChildren(params: ClusterIDAndSource): GeoJSON.Feature[] {
         return this._geoJSONIndex.getClusterChildren(params.clusterId);
     }
 
@@ -322,7 +318,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         clusterId: number;
         limit: number;
         offset: number;
-    }): Array<GeoJSON.Feature> {
+    }): GeoJSON.Feature[] {
         return this._geoJSONIndex.getClusterLeaves(params.clusterId, params.limit, params.offset);
     }
 }
@@ -330,15 +326,14 @@ export class GeoJSONWorkerSource implements WorkerSource {
 export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONVT {
     const options = extend(params.geojsonVtOptions || {}, {
         updateable: true,
-        cluster: params.cluster,
-        clusterOptions: getSuperclusterOptions(params)
+        clusterOptions: getSuperclusterOptions(params),
     });
 
     return new GeoJSONVT(data, options);
 }
 
-function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
-    if (!clusterProperties || !superclusterOptions) return superclusterOptions;
+function getSuperclusterOptions({geojsonVtOptions, clusterProperties}: LoadGeoJSONParameters) {
+    if (!clusterProperties || !geojsonVtOptions.clusterOptions) return geojsonVtOptions.clusterOptions;
 
     const mapExpressions = {};
     const reduceExpressions = {};
@@ -347,7 +342,7 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGe
     const propertyNames = Object.keys(clusterProperties);
 
     for (const key of propertyNames) {
-        const [operator, mapExpression] = clusterProperties[key] as [unknown, unknown];
+        const [operator, mapExpression] = clusterProperties[key];
 
         const mapExpressionParsed = createExpression(mapExpression);
         const reduceExpressionParsed = createExpression(
@@ -357,7 +352,7 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGe
         reduceExpressions[key] = reduceExpressionParsed.value;
     }
 
-    superclusterOptions.map = (pointProperties) => {
+    geojsonVtOptions.clusterOptions.map = (pointProperties) => {
         feature.properties = pointProperties;
         const properties = {};
         for (const key of propertyNames) {
@@ -365,12 +360,12 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGe
         }
         return properties;
     };
-    superclusterOptions.reduce = (accumulated, clusterProperties) => {
+    geojsonVtOptions.clusterOptions.reduce = (accumulated, clusterProperties) => {
         feature.properties = clusterProperties;
         for (const key of propertyNames) {
             globals.accumulated = accumulated[key];
             accumulated[key] = reduceExpressions[key].evaluate(globals, feature);
         }
     };
-    return superclusterOptions;
+    return geojsonVtOptions.clusterOptions;
 }

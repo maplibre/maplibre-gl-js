@@ -31,7 +31,7 @@ export class CooperativeGesturesHandler implements Handler {
     /**
      * This is the key that will allow to bypass the cooperative gesture protection
      */
-    _bypassKey: 'metaKey' | 'ctrlKey' = navigator.userAgent.indexOf('Mac') !== -1 ? 'metaKey' : 'ctrlKey';
+    _bypassKey: 'metaKey' | 'ctrlKey' = navigator.userAgent.includes('Mac') ? 'metaKey' : 'ctrlKey';
     _enabled: boolean;
 
     constructor(map: Map, options: GestureOptions) {
@@ -71,7 +71,7 @@ export class CooperativeGesturesHandler implements Handler {
 
     _destroyUI() {
         if (this._container) {
-            DOM.remove(this._container);
+            this._container.remove();
             const mapCanvasContainer = this._map.getCanvasContainer();
             mapCanvasContainer.classList.remove('maplibregl-cooperative-gestures');
         }

@@ -57,7 +57,7 @@ export function getIconQuads(
     iconRotate: number,
     isSDFIcon: boolean,
     hasIconTextFit: boolean
-): Array<SymbolQuad> {
+): SymbolQuad[] {
     const quads = [];
 
     const image = shapedIcon.image;
@@ -239,7 +239,7 @@ export function getGlyphQuads(
     feature: Feature,
     imageMap: {[_: string]: StyleImage},
     allowVerticalPlacement: boolean
-): Array<SymbolQuad> {
+): SymbolQuad[] {
 
     const textRotate = layer.layout.get('text-rotate').evaluate(feature, {}) * Math.PI / 180;
     const quads = [];

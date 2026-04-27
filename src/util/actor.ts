@@ -1,4 +1,4 @@
-import {type Subscription, isWorker, subscribe} from './util';
+import {type Subscription, ensureError, isWorker, subscribe} from './util';
 import {serialize, deserialize, type Serialized} from './web_worker_transfer';
 import {ThrottledInvoker} from './throttled_invoker';
 
@@ -60,11 +60,11 @@ export class Actor implements IActor {
     resolveRejects: { [x: string]: ResolveReject};
     name: string;
     tasks: { [x: string]: MessageData };
-    taskQueue: Array<string>;
+    taskQueue: string[];
     abortControllers: { [x: number | string]: AbortController };
     invoker: ThrottledInvoker;
     globalScope: ActorTarget;
-    messageHandlers: { [x in MessageType]?: MessageHandler<MessageType>};
+    messageHandlers: { [K in MessageType]?: MessageHandler<K>};
     subscription: Subscription;
 
     /**
@@ -85,7 +85,7 @@ export class Actor implements IActor {
     }
 
     registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>) {
-        this.messageHandlers[type] = handler;
+        (this.messageHandlers as Record<T, MessageHandler<T>>)[type] = handler;
     }
 
     unregisterMessageHandler<T extends MessageType>(type: T) {
@@ -132,7 +132,7 @@ export class Actor implements IActor {
                 }
             };
 
-            const buffers: Array<Transferable> = [];
+            const buffers: Transferable[] = [];
             const messageToPost: MessageData = {
                 ...message,
                 id,
@@ -222,7 +222,7 @@ export class Actor implements IActor {
                 return;
             }
             if (task.error) {
-                resolveReject.reject(deserialize(task.error) as Error);
+                resolveReject.reject(ensureError(deserialize(task.error)));
             } else {
                 resolveReject.resolve(deserialize(task.data));
             }
@@ -239,12 +239,12 @@ export class Actor implements IActor {
             const data = await this.messageHandlers[task.type](task.sourceMapId, params, abortController);
             this.completeTask(id, null, data);
         } catch (err) {
-            this.completeTask(id, err);
+            this.completeTask(id, ensureError(err));
         }
     }
 
     completeTask(id: string, err: Error, data?: RequestResponseMessageMap[MessageType][1]) {
-        const buffers: Array<Transferable> = [];
+        const buffers: Transferable[] = [];
         delete this.abortControllers[id];
         const responseMessage: MessageData = {
             id,

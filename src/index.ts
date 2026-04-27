@@ -47,7 +47,7 @@ import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTou
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from './util/actor_messages';
 import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileMesh} from './util/create_tile_mesh';
 import type {ControlPosition, IControl} from './ui/control/control';
-import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput} from './style/style_layer/custom_style_layer';
+import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer';
 import type {AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera';
 import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeature} from './util/vectortile_to_geojson';
 import type {Handler, HandlerResult} from './ui/handler_manager';
@@ -63,7 +63,7 @@ import type {RequestTransformFunction, ResourceType} from './util/request_manage
 import {EXTENT} from './data/extent';
 import type {OverscaledTileID} from './tile/tile_id';
 import type {PositionAnchor} from './ui/anchor';
-import type {ProjectionData} from './geo/projection/projection_data';
+import type {ProjectionData, ProjectionDataParams} from './geo/projection/projection_data';
 import type {WorkerTileResult} from './source/worker_source';
 import type {Actor, IActor} from './util/actor';
 import type {Bucket} from './data/bucket';
@@ -90,7 +90,8 @@ export type * from '@maplibre/maplibre-gl-style-spec';
  * ```ts
  * setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js', false);
  * ```
- * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-rtl-text/)
+ * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js/docs/examples/add-support-for-right-to-left-scripts/)
+ * @see [Display and style rich text labels](https://maplibre.org/maplibre-gl-js/docs/examples/display-and-style-rich-text-labels/)
  */
 function setRTLTextPlugin(pluginURL: string, lazy: boolean): Promise<void> {
     return rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy);
@@ -311,6 +312,7 @@ export {
     type ExpiryData,
     type PositionAnchor,
     type ProjectionData,
+    type ProjectionDataParams,
     type GeoJSONFeatureId,
     type GeoJSONFeatureDiff,
     type TextFit,
@@ -339,6 +341,8 @@ export {
     type WebGLContextAttributesWithType,
     type IControl,
     type CustomLayerInterface,
+    type CustomLayerProjectionDataParams,
+    type UnwrappedTileIDLiteral,
     type CanvasSourceSpecification,
     type PaddingOptions,
     type LngLatLike,
@@ -383,5 +387,6 @@ export {
     setNow,
     restoreNow,
     isTimeFrozen,
+    getGlobalDispatcher,
     EXTENT
 };

@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {indexTouches} from './handler_util';
 
-function getCentroid(points: Array<Point>) {
+function getCentroid(points: Point[]) {
     const sum = new Point(0, 0);
     for (const point of points) {
         sum._add(point);
@@ -37,7 +37,7 @@ export class SingleTapRecognizer {
         this.aborted = false;
     }
 
-    touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
 
         if (this.centroid || mapTouches.length > this.numTouches) {
             this.aborted = true;
@@ -56,7 +56,7 @@ export class SingleTapRecognizer {
         }
     }
 
-    touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         if (this.aborted || !this.centroid) return;
 
         const newTouches = indexTouches(mapTouches, points);
@@ -69,7 +69,7 @@ export class SingleTapRecognizer {
         }
     }
 
-    touchend(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         if (!this.centroid || e.timeStamp - this.startTime > MAX_TOUCH_TIME) {
             this.aborted = true;
         }
@@ -107,15 +107,15 @@ export class TapRecognizer {
         this.singleTap.reset();
     }
 
-    touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         this.singleTap.touchstart(e, points, mapTouches);
     }
 
-    touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         this.singleTap.touchmove(e, points, mapTouches);
     }
 
-    touchend(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         const tap = this.singleTap.touchend(e, points, mapTouches);
         if (tap) {
             const soonEnough = e.timeStamp - this.lastTime < MAX_TAP_INTERVAL;

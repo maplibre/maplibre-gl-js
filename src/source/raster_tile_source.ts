@@ -1,4 +1,4 @@
-import {extend, pick} from '../util/util';
+import {ensureError, extend, pick} from '../util/util';
 
 import {ImageRequest} from '../util/image_request';
 
@@ -6,7 +6,7 @@ import {ResourceType} from '../util/request_manager';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {loadTileJson} from './load_tilejson';
 import {TileBounds} from '../tile/tile_bounds';
-import {Texture} from '../render/texture';
+import {Texture} from '../webgl/texture';
 import {isAbortError} from '../util/abort_error';
 
 import type {Source} from './source';
@@ -64,7 +64,7 @@ export class RasterTileSource extends Evented implements Source {
     roundZoom: boolean;
     dispatcher: Dispatcher;
     map: Map;
-    tiles: Array<string>;
+    tiles: string[];
 
     _loaded: boolean;
     _options: RasterSourceSpecification | RasterDEMSourceSpecification;
@@ -112,7 +112,7 @@ export class RasterTileSource extends Evented implements Source {
 
             // only fire error event if it is not due to aborting the request
             if (!isAbortError(err)) {
-                this.fire(new ErrorEvent(err));
+                this.fire(new ErrorEvent(ensureError(err)));
             }
         }
     }
@@ -149,7 +149,7 @@ export class RasterTileSource extends Evented implements Source {
      *
      * @param tiles - An array of one or more tile source URLs, as in the raster tiles spec (See the [Style Specification](https://maplibre.org/maplibre-style-spec/)
      */
-    setTiles(tiles: Array<string>): this {
+    setTiles(tiles: string[]): this {
         this.setSourceProperty(() => {
             this._options.tiles = tiles;
         });
@@ -183,13 +183,13 @@ export class RasterTileSource extends Evented implements Source {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         tile.abortController = new AbortController();
         try {
-            const response = await ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles);
+            const response = await ImageRequest.getImage(await this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles);
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
                 return;
             }
-            if (response && response.data) {
+            if (response?.data) {
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }

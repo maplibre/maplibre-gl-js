@@ -72,7 +72,7 @@ export class LineStyleLayer extends StyleLayer {
         return this._transitionablePaint._values['line-gradient'].value.expression;
     }
 
-    recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {
+    recalculate(parameters: EvaluationParameters, availableImages: string[]) {
         super.recalculate(parameters, availableImages);
         (this.paint._values as any)['line-floorwidth'] =
             lineFloorwidthProperty.possiblyEvaluate(this._transitioningPaint._values['line-width'].value, parameters);
@@ -119,7 +119,7 @@ export class LineStyleLayer extends StyleLayer {
     }
 }
 
-function getLineWidth(lineWidth, lineGapWidth) {
+function getLineWidth(lineWidth: number, lineGapWidth: number): number {
     if (lineGapWidth > 0) {
         return lineGapWidth + 2 * lineWidth;
     } else {

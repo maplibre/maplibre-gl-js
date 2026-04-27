@@ -82,8 +82,6 @@ class RTLMainThreadPlugin extends Evented {
 let rtlMainThreadPlugin: RTLMainThreadPlugin = null;
 
 export function rtlMainThreadPluginFactory(): RTLMainThreadPlugin {
-    if (!rtlMainThreadPlugin) {
-        rtlMainThreadPlugin = new RTLMainThreadPlugin();
-    }
+    rtlMainThreadPlugin ||= new RTLMainThreadPlugin();
     return rtlMainThreadPlugin;
 }

@@ -83,6 +83,33 @@ export class TwoFingersTouchZoomRotateHandler {
     }
 
     /**
+     * Sets the zoom rate of touch gestures.
+     * @param zoomRate - 1 The rate used to scale touch movement to a zoom value. Set to `undefined` to restore the default.
+     * @example
+     * Slow down touch zoom
+     * ```ts
+     * map.touchZoomRotate.setZoomRate(0.5);
+     * ```
+     */
+    setZoomRate(zoomRate?: number) {
+        this._touchZoom.setZoomRate(zoomRate);
+        this._tapDragZoom.setZoomRate(zoomRate);
+    }
+
+    /**
+     * Sets the threshold before a pinch gesture starts zooming.
+     * @param zoomThreshold - 0.1 The minimum zoom delta before the pinch gesture becomes active. Set to `undefined` to restore the default.
+     * @example
+     * Make pinch zoom less sensitive
+     * ```ts
+     * map.touchZoomRotate.setZoomThreshold(0.3);
+     * ```
+     */
+    setZoomThreshold(zoomThreshold?: number) {
+        this._touchZoom.setZoomThreshold(zoomThreshold);
+    }
+
+    /**
      * Disables the "pinch to rotate" interaction, leaving the "pinch to zoom"
      * interaction enabled.
      *
