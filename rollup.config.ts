@@ -3,7 +3,7 @@ import sourcemaps from 'rollup-plugin-sourcemaps2';
 import {plugins, watchStagingPlugin} from './build/rollup_plugins';
 import banner from './build/banner';
 import {type RollupOptions} from 'rollup';
-import {config as cspConfig} from './rollup.config.csp';
+import {createBundleConfig} from './build/rollup_bundle_config';
 
 const {BUILD} = process.env;
 
@@ -66,9 +66,9 @@ const config: RollupOptions[] = [{
     ],
 },
 
-// ESM builds
-cspConfig('src/index.ts', `dist/maplibre-gl${outputPostfix}.mjs`, 'es'),
-cspConfig('src/source/worker.ts', `dist/maplibre-gl-worker${outputPostfix}.mjs`, 'es'),
+// ESM builds — use the same single-file factory as the CSP builds.
+createBundleConfig('src/index.ts', `dist/maplibre-gl${outputPostfix}.mjs`, 'es'),
+createBundleConfig('src/source/worker.ts', `dist/maplibre-gl-worker${outputPostfix}.mjs`, 'es'),
 
 ];
 

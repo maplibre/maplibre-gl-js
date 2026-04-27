@@ -1,37 +1,16 @@
-import {plugins} from './build/rollup_plugins';
-import banner from './build/banner';
-import {type InputOption, type ModuleFormat, type RollupOptions} from 'rollup';
+import {createBundleConfig, outputPostfix} from './build/rollup_bundle_config';
 
 // a config for generating a special GL JS bundle with static web worker code (in a separate file)
 // https://github.com/mapbox/mapbox-gl-js/issues/6058
 
-const {BUILD} = process.env;
-
-const production: boolean = (BUILD !== 'dev');
-const outputPostfix: string = production ? '' : '-dev';
-
-export const config = (input: InputOption, file: string, format: ModuleFormat): RollupOptions => ({
-    input,
-    output: {
-        name: 'maplibregl',
-        file,
-        format,
-        sourcemap: true,
-        indent: false,
-        banner
-    },
-    treeshake: production,
-    plugins: plugins(production)
-});
-
 const configs = [
     // UMD/IIFE builds for CSP
-    config('src/index.ts', `dist/maplibre-gl-csp${outputPostfix}.js`, 'umd'),
-    config('src/source/worker.ts', `dist/maplibre-gl-csp-worker${outputPostfix}.js`, 'iife'),
+    createBundleConfig('src/index.ts', `dist/maplibre-gl-csp${outputPostfix}.js`, 'umd'),
+    createBundleConfig('src/source/worker.ts', `dist/maplibre-gl-csp-worker${outputPostfix}.js`, 'iife'),
 
     // ESM builds for CSP
-    config('src/index.ts', `dist/maplibre-gl-csp${outputPostfix}.mjs`, 'es'),
-    config('src/source/worker.ts', `dist/maplibre-gl-csp-worker${outputPostfix}.mjs`, 'es')
+    createBundleConfig('src/index.ts', `dist/maplibre-gl-csp${outputPostfix}.mjs`, 'es'),
+    createBundleConfig('src/source/worker.ts', `dist/maplibre-gl-csp-worker${outputPostfix}.mjs`, 'es')
 ];
 
 export default configs;
