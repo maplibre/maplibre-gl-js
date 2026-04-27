@@ -1,0 +1,11 @@
+[      48ms] [LOG] Comparing versions:  @ http://localhost:9966/test/bench/versions/index.html?compare=:25
+[      88ms] [ERROR] Failed to load resource: net::ERR_UNKNOWN_URL_SCHEME @ about:blank:0
+[     232ms] [WARNING] Vector tile source "vector" layer "landuse" does not use vector tile spec v2 and therefore may have some rendering errors. @ blob:http://localhost:9966/310df11d-b761-49e2-a152-4f267771ed6a:0
+[     236ms] [WARNING] Vector tile source "vector" layer "landuse_overlay" does not use vector tile spec v2 and therefore may have some rendering errors. @ blob:http://localhost:9966/310df11d-b761-49e2-a152-4f267771ed6a:0
+[     236ms] [WARNING] Vector tile source "vector" layer "water" does not use vector tile spec v2 and therefore may have some rendering errors. @ blob:http://localhost:9966/310df11d-b761-49e2-a152-4f267771ed6a:0
+[     236ms] [WARNING] Vector tile source "vector" layer "waterway" does not use vector tile spec v2 and therefore may have some rendering errors. @ blob:http://localhost:9966/310df11d-b761-49e2-a152-4f267771ed6a:0
+[     237ms] [WARNING] Vector tile source "vector" layer "road" does not use vector tile spec v2 and therefore may have some rendering errors. @ blob:http://localhost:9966/310df11d-b761-49e2-a152-4f267771ed6a:0
+[     243ms] [WARNING] Vector tile source "vector" layer "road_label" does not use vector tile spec v2 and therefore may have some rendering errors. @ blob:http://localhost:9966/310df11d-b761-49e2-a152-4f267771ed6a:0
+[     245ms] [WARNING] Vector tile source "vector" layer "poi_label" does not use vector tile spec v2 and therefore may have some rendering errors. @ blob:http://localhost:9966/310df11d-b761-49e2-a152-4f267771ed6a:0
+[     245ms] [WARNING] Vector tile source "vector" layer "place_label" does not use vector tile spec v2 and therefore may have some rendering errors. @ blob:http://localhost:9966/310df11d-b761-49e2-a152-4f267771ed6a:0
+[   68651ms] [ERROR] Error: <path> attribute d: Expected number, "MNaN,190Z". @ http://localhost:9966/test/bench/benchmarks_view_generated.js:2196

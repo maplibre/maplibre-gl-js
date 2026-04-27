@@ -30,8 +30,6 @@ import CoveringTilesMercator from '../benchmarks/covering_tiles_mercator';
 import GeoJSONSourceUpdateData from '../benchmarks/geojson_source_update_data';
 import GeoJSONSourceSetData from '../benchmarks/geojson_source_set_data';
 import TerrainRender from '../benchmarks/terrain_render';
-import TerrainLoad from '../benchmarks/terrain_load';
-import {TerrainLoadTerrainOff, TerrainLoadFewLayers, TerrainLoadManyLayers, TerrainLoadVeryManyLayers} from '../benchmarks/terrain_load_sensitivity';
 import {LineOpacityOpaque, LineOpacityTranslucent, LineOpacityDataDriven} from '../benchmarks/line_opacity_overlap';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as Array<GeoJSON.Feature<GeoJSON.Point>>).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
@@ -100,11 +98,6 @@ register('CoveringTilesGlobePitched', new CoveringTilesGlobe(60));
 register('CoveringTilesMercator', new CoveringTilesMercator(0));
 register('CoveringTilesMercatorPitched', new CoveringTilesMercator(60));
 register('TerrainRender', new TerrainRender());
-register('TerrainLoad', new TerrainLoad());
-register('TerrainLoadTerrainOff', new TerrainLoadTerrainOff());
-register('TerrainLoadFewLayers', new TerrainLoadFewLayers());
-register('TerrainLoadManyLayers', new TerrainLoadManyLayers());
-register('TerrainLoadVeryManyLayers', new TerrainLoadVeryManyLayers());
 register('LineOpacityOpaque', new LineOpacityOpaque());
 register('LineOpacityTranslucent', new LineOpacityTranslucent());
 register('LineOpacityDataDriven', new LineOpacityDataDriven());

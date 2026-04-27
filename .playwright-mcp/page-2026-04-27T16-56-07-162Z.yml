@@ -1,0 +1,34 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - heading "TITLE" [level=1] [ref=e4]
+    - heading "MapLibre GL JS Benchmarks – Running" [level=1] [ref=e5]
+    - table [ref=e7]:
+      - rowgroup [ref=e8]:
+        - row "TerrainRender terrain-dropped-frames-bench-dirty 0a81b9d" [ref=e9]:
+          - columnheader "TerrainRender" [ref=e10]:
+            - heading "TerrainRender" [level=2] [ref=e11]:
+              - link "TerrainRender" [ref=e12] [cursor=pointer]:
+                - /url: "#TerrainRender"
+          - columnheader "terrain-dropped-frames-bench-dirty 0a81b9d" [ref=e13]
+        - row "(20% trimmed) Mean Running..." [ref=e14]:
+          - rowheader "(20% trimmed) Mean" [ref=e15]
+          - cell "Running..." [ref=e16]:
+            - paragraph [ref=e17]: Running...
+        - row "(Windsorized) Deviation Running..." [ref=e18]:
+          - rowheader "(Windsorized) Deviation" [ref=e19]
+          - cell "Running..." [ref=e20]:
+            - paragraph [ref=e21]: Running...
+        - row "R² Slope / Correlation Running..." [ref=e22]:
+          - rowheader "R² Slope / Correlation" [ref=e23]
+          - cell "Running..." [ref=e24]:
+            - paragraph [ref=e25]: Running...
+        - row "Minimum Running..." [ref=e26]:
+          - rowheader "Minimum" [ref=e27]
+          - cell "Running..." [ref=e28]:
+            - paragraph [ref=e29]: Running...
+  - generic [ref=e30]:
+    - region "Map" [ref=e32]
+    - group [ref=e35]:
+      - generic "Toggle attribution" [ref=e36]
+      - link "MapLibre" [ref=e38] [cursor=pointer]:
+        - /url: https://maplibre.org/

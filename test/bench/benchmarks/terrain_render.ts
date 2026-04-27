@@ -1,28 +1,66 @@
-import Benchmark from '../lib/benchmark';
+import Benchmark, {type Measurement} from '../lib/benchmark';
 import createMap from '../lib/create_map';
-import {
-    installTerrainBenchProtocols,
-    buildTerrainBenchStyle,
-    TERRAIN_BENCH_CAMERA,
-} from '../lib/terrain_style';
+import {addProtocol, removeProtocol} from '../../../src/source/protocol_crud';
 import type {Map} from '../../../src/ui/map';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-// Measures steady-state per-render cost with terrain enabled and a
-// contrived many-layer style. The map is created once, loaded to idle,
-// then each iteration rotates the camera slightly and renders. Tiles
-// and shaders are already warm so this measures the fast path.
-// For full load-to-idle cost see terrain_load.ts.
+// Measures dropped frames during a scripted flyTo with terrain enabled.
+// Modeled on playground/terrain-bench.html: the map flies a fixed route
+// and we count rAF frames whose interval exceeds 1.5x the display budget.
+//
+// All resources are local. The bench-vector protocol returns a single
+// bundled tile for every z/x/y; bench-dem does the same for the DEM;
+// glyphs come from the integration test fixtures.
+//
+// The harness's regression machinery is built for sync per-iteration
+// timing, so this benchmark overrides run() and reports each pass as a
+// single measurement whose "time" is the percent of dropped frames. The
+// existing UI's "trimmedMean" / "min" columns then read as percentages.
+
+const VECTOR_PROTOCOL = 'bench-vector';
+const DEM_PROTOCOL = 'bench-dem';
+
+// Crank this up until you see dropped frames on the target machine. Each
+// layer in the base style is emitted N times, so LAYER_DUPLICATION=4
+// produces 4x the per-frame draw calls and shader switches.
+const LAYER_DUPLICATION = 48;
+
+// Linear flight from Innsbruck south up the Wipptal toward the Brenner pass.
+const START: [number, number] = [11.40, 47.27];
+const END: [number, number] = [11.50, 47.00];
+const ZOOM = 12;
+const PITCH = 85;
+const BEARING = 180;
+const FLIGHT_MS = 6_000;
+
+// Number of measured flights. One warmup flight runs first and is discarded.
+const FLIGHT_COUNT = 10;
+
 export default class TerrainRender extends Benchmark {
     map: Map;
     uninstallProtocols: () => void;
-    _bearing = TERRAIN_BENCH_CAMERA.bearing;
+    budgetMs: number;
 
     async setup() {
-        this.uninstallProtocols = await installTerrainBenchProtocols();
+        const vectorBuffer = await (await fetch('/test/bench/data/785.vector.pbf')).arrayBuffer();
+        const demBuffer = await (await fetch('/test/bench/data/terrain_dem.png')).arrayBuffer();
+
+        addProtocol(VECTOR_PROTOCOL, async () => ({data: vectorBuffer.slice(0)}));
+        addProtocol(DEM_PROTOCOL, async () => ({data: demBuffer.slice(0)}));
+        this.uninstallProtocols = () => {
+            removeProtocol(VECTOR_PROTOCOL);
+            removeProtocol(DEM_PROTOCOL);
+        };
 
         this.map = await createMap({
-            ...TERRAIN_BENCH_CAMERA,
-            style: buildTerrainBenchStyle(),
+            center: START,
+            zoom: ZOOM,
+            pitch: PITCH,
+            bearing: BEARING,
+            maxPitch: 85,
+            width: 393,
+            height: 852,
+            style: buildStyle(),
             fadeDuration: 0,
             stubRender: false,
             showMap: true,
@@ -31,19 +69,243 @@ export default class TerrainRender extends Benchmark {
 
         this.map.setTerrain({source: 'dem', exaggeration: 1});
         await new Promise(resolve => this.map.once('idle', resolve));
+
+        this.budgetMs = await probeRefreshRate();
     }
 
-    bench() {
-        // Rotate the camera slightly each frame to force the depth
-        // pre-pass to re-run and symbol layers to recalculate visibility
-        // against terrain depth.
-        this._bearing = (this._bearing + 0.5) % 360;
-        this.map.setBearing(this._bearing);
-        Benchmark.renderMap(this.map);
+    async run(): Promise<Measurement[]> {
+        try {
+            await this.setup();
+
+            // Warmup flight: not counted, but lets tile / shader / glyph
+            // caches reach steady state before measurement.
+            await this.flyAndCountDrops();
+
+            const measurements: Measurement[] = [];
+            for (let i = 0; i < FLIGHT_COUNT; i++) {
+                const {dropped, total} = await this.flyAndCountDrops();
+                const percent = 100 * dropped / Math.max(1, total);
+                measurements.push({time: percent, iterations: 1});
+            }
+
+            this.teardown();
+            return measurements;
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     teardown() {
         this.map.remove();
         this.uninstallProtocols?.();
     }
+
+    private async flyAndCountDrops(): Promise<{dropped: number; total: number}> {
+        this.map.jumpTo({center: START, zoom: ZOOM, pitch: PITCH, bearing: BEARING});
+        await new Promise(resolve => this.map.once('idle', resolve));
+
+        const frameTimes: number[] = [];
+        let lastTs: number | undefined;
+        let running = true;
+        const onFrame = (ts: number) => {
+            if (!running) return;
+            if (lastTs !== undefined) frameTimes.push(ts - lastTs);
+            lastTs = ts;
+            requestAnimationFrame(onFrame);
+        };
+        requestAnimationFrame(onFrame);
+
+        this.map.flyTo({
+            center: END,
+            zoom: ZOOM,
+            pitch: PITCH,
+            bearing: BEARING,
+            duration: FLIGHT_MS,
+            curve: 1,
+            minZoom: ZOOM,
+            easing: t => t,
+        });
+        await new Promise(resolve => this.map.once('moveend', resolve));
+        running = false;
+
+        // Drop the first frame: flyTo startup is a transient.
+        frameTimes.shift();
+
+        const droppedThreshold = this.budgetMs * 1.5;
+        let dropped = 0;
+        for (const t of frameTimes) if (t > droppedThreshold) dropped++;
+        return {dropped, total: frameTimes.length};
+    }
+}
+
+// Probe display refresh rate by sampling rAF intervals for ~1s, then
+// snap the median to the nearest standard rate (60/72/90/120/144 Hz).
+async function probeRefreshRate(): Promise<number> {
+    return new Promise(resolve => {
+        const times: number[] = [];
+        let lastTs: number | undefined;
+        const start = performance.now();
+        const probe = (ts: number) => {
+            if (lastTs !== undefined) times.push(ts - lastTs);
+            lastTs = ts;
+            if (performance.now() - start < 1000) {
+                requestAnimationFrame(probe);
+            } else {
+                const sorted = [...times].sort((a, b) => a - b);
+                const median = sorted[Math.floor(sorted.length / 2)] || 1000 / 60;
+                const candidates = [1000 / 60, 1000 / 72, 1000 / 90, 1000 / 120, 1000 / 144];
+                const budget = candidates.reduce((best, c) =>
+                    Math.abs(c - median) < Math.abs(best - median) ? c : best, candidates[0]);
+                resolve(budget);
+            }
+        };
+        requestAnimationFrame(probe);
+    });
+}
+
+// Build a synthetic basemap-style style covering the source-layers
+// present in the bundled 785.vector.pbf: landuse, water, waterway, road,
+// road_label, place_label, poi_label. Layer types covered: background,
+// fill, line (casing + fill), symbol (point), symbol (line), circle.
+//
+// Each "base" layer is emitted LAYER_DUPLICATION times with slightly
+// varied paint so the renderer can't trivially batch them.
+function buildStyle(): StyleSpecification {
+    const layers: StyleSpecification['layers'] = [
+        {id: 'background', type: 'background', paint: {'background-color': '#f0ece0'}},
+    ];
+
+    const baseLayers: StyleSpecification['layers'] = [
+        {
+            id: 'landuse',
+            type: 'fill',
+            source: 'vector',
+            'source-layer': 'landuse',
+            paint: {'fill-color': '#d0e0a0', 'fill-opacity': 0.6},
+        },
+        {
+            id: 'landuse_overlay',
+            type: 'fill',
+            source: 'vector',
+            'source-layer': 'landuse_overlay',
+            paint: {'fill-color': '#c8dca0', 'fill-opacity': 0.5},
+        },
+        {
+            id: 'water',
+            type: 'fill',
+            source: 'vector',
+            'source-layer': 'water',
+            paint: {'fill-color': '#a0c8f0'},
+        },
+        {
+            id: 'waterway',
+            type: 'line',
+            source: 'vector',
+            'source-layer': 'waterway',
+            paint: {'line-color': '#80a8d0', 'line-width': 1.2},
+        },
+        {
+            id: 'road_casing',
+            type: 'line',
+            source: 'vector',
+            'source-layer': 'road',
+            paint: {'line-color': '#888', 'line-width': 4, 'line-opacity': 0.6},
+        },
+        {
+            id: 'road',
+            type: 'line',
+            source: 'vector',
+            'source-layer': 'road',
+            paint: {
+                'line-color': ['match', ['get', 'class'],
+                    'motorway', '#fc8',
+                    'trunk', '#fc8',
+                    'primary', '#fea',
+                    'secondary', '#ffd',
+                    /* default */ '#fff',
+                ],
+                'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.5, 16, 6],
+            },
+        },
+        {
+            id: 'road_label',
+            type: 'symbol',
+            source: 'vector',
+            'source-layer': 'road_label',
+            layout: {
+                'symbol-placement': 'line',
+                'text-field': ['get', 'name'],
+                'text-font': ['Noto Sans Regular'],
+                'text-size': 11,
+            },
+            paint: {'text-color': '#333', 'text-halo-color': '#fff', 'text-halo-width': 1},
+        },
+        {
+            id: 'poi_circle',
+            type: 'circle',
+            source: 'vector',
+            'source-layer': 'poi_label',
+            paint: {
+                'circle-radius': 3,
+                'circle-color': '#a55',
+                'circle-stroke-width': 1,
+                'circle-stroke-color': '#fff',
+            },
+        },
+        {
+            id: 'poi_label',
+            type: 'symbol',
+            source: 'vector',
+            'source-layer': 'poi_label',
+            layout: {
+                'text-field': ['get', 'name'],
+                'text-font': ['Noto Sans Regular'],
+                'text-size': 10,
+                'text-offset': [0, 0.8],
+                'text-anchor': 'top',
+            },
+            paint: {'text-color': '#553', 'text-halo-color': '#fff', 'text-halo-width': 1},
+        },
+        {
+            id: 'place_label',
+            type: 'symbol',
+            source: 'vector',
+            'source-layer': 'place_label',
+            layout: {
+                'text-field': ['get', 'name'],
+                'text-font': ['Noto Sans Regular'],
+                'text-size': ['interpolate', ['linear'], ['get', 'localrank'], 1, 16, 10, 11],
+                'text-allow-overlap': false,
+            },
+            paint: {'text-color': '#222', 'text-halo-color': '#fff', 'text-halo-width': 1.5},
+        },
+    ];
+
+    for (let dup = 0; dup < LAYER_DUPLICATION; dup++) {
+        for (const layer of baseLayers) {
+            layers.push({...layer, id: `${layer.id}_${dup}`} as any);
+        }
+    }
+
+    return {
+        version: 8,
+        glyphs: '/test/integration/assets/glyphs/{fontstack}/{range}.pbf',
+        sources: {
+            vector: {
+                type: 'vector',
+                tiles: [`${VECTOR_PROTOCOL}://{z}/{x}/{y}`],
+                minzoom: 0,
+                maxzoom: 14,
+            },
+            dem: {
+                type: 'raster-dem',
+                tiles: [`${DEM_PROTOCOL}://{z}/{x}/{y}`],
+                tileSize: 256,
+                encoding: 'terrarium',
+                minzoom: 0,
+                maxzoom: 14,
+            },
+        },
+        layers,
+    };
 }
