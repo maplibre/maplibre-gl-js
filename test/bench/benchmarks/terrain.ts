@@ -3,31 +3,19 @@ import createMap from '../lib/create_map';
 import type {Map} from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-// Measures the worst frame time during a scripted flyTo, parameterized
+// Measures the worst frame time during a flyTo operation, parameterized
 // over terrain on/off and projection mercator/globe so we can compare the
 // four combinations in a single bench run.
-//
-// Tiles point at static fixtures served by the dev server: a single
-// vector tile and a single DEM tile, reused for every z/x/y. The
-// {z}/{x}/{y} placeholders go in query params so each tile gets a
-// distinct cache key in MapLibre's tile cache.
-//
-// The harness's regression machinery is built for sync per-iteration
-// timing, so this benchmark overrides run() and reports each pass as a
-// single measurement whose "time" is the max frame interval in ms.
 
-// Crank this up until you see dropped frames on the target machine. Each
-// layer in the base style is emitted N times, so LAYER_DUPLICATION=4
-// produces 4x the per-frame draw calls and shader switches.
 const STYLE_COMPLEXITY = 100;
+const DURATION = 1_000;
+const ITERATIONS = 10;
 
 const CENTER_START: [number, number] = [0.0, 0.15];
 const CENTER_END: [number, number] = [0.0, -0.15];
 const ZOOM = 12;
 const PITCH = 85;
 const BEARING = 180;
-const DURATION = 1_000;
-const ITERATIONS = 10;
 
 type Variant = {
     terrain: boolean;
@@ -70,6 +58,9 @@ class TerrainBase extends Benchmark {
         }
     }
 
+    // The harness's regression machinery is built for sync per-iteration
+    // timing, so this benchmark overrides run() and reports each pass as a
+    // single measurement whose "time" is the max frame interval in ms.
     async run(): Promise<Measurement[]> {
         try {
             await this.setup();
@@ -282,6 +273,10 @@ function buildStyle(): StyleSpecification {
         sources: {
             vector: {
                 type: 'vector',
+                // Tiles point at static fixtures served by the dev server: a single
+                // vector tile and a single DEM tile, reused for every z/x/y. The
+                // {z}/{x}/{y} placeholders go in query params so each tile gets a
+                // distinct cache key in MapLibre's tile cache.
                 tiles: [`${location.origin}/test/bench/data/785.vector.pbf?id={z}/{x}/{y}`],
                 minzoom: 0,
                 maxzoom: 14,
