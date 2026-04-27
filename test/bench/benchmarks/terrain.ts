@@ -268,10 +268,6 @@ function buildStyle(): StyleSpecification {
         sources: {
             vector: {
                 type: 'vector',
-                // Tiles point at static fixtures served by the dev server: a single
-                // vector tile and a single DEM tile, reused for every z/x/y. The
-                // {z}/{x}/{y} placeholders go in query params so each tile gets a
-                // distinct cache key in MapLibre's tile cache.
                 tiles: [`${location.origin}/test/bench/data/785.vector.pbf?id={z}/{x}/{y}`],
                 minzoom: 0,
                 maxzoom: 14,
@@ -279,7 +275,6 @@ function buildStyle(): StyleSpecification {
             dem: {
                 type: 'raster-dem',
                 tiles: [`${location.origin}/test/bench/data/terrain_dem.png?id={z}/{x}/{y}`],
-                tileSize: 256,
                 encoding: 'terrarium',
                 minzoom: 0,
                 maxzoom: 14,
