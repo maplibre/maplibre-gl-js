@@ -49,6 +49,8 @@ import lineSDFFrag from './glsl/line_sdf.fragment.glsl.g';
 import lineSDFVert from './glsl/line_sdf.vertex.glsl.g';
 import lineGradientSDFFrag from './glsl/line_gradient_sdf.fragment.glsl.g';
 import lineGradientSDFVert from './glsl/line_gradient_sdf.vertex.glsl.g';
+import lineTextureFrag from './glsl/line_texture.fragment.glsl.g';
+import lineTextureVert from './glsl/line_texture.vertex.glsl.g';
 import rasterFrag from './glsl/raster.fragment.glsl.g';
 import rasterVert from './glsl/raster.vertex.glsl.g';
 import symbolIconFrag from './glsl/symbol_icon.fragment.glsl.g';
@@ -107,6 +109,7 @@ export const shaders = {
     linePattern: prepare(linePatternFrag, linePatternVert),
     lineSDF: prepare(lineSDFFrag, lineSDFVert),
     lineGradientSDF: prepare(lineGradientSDFFrag, lineGradientSDFVert),
+    lineTexture: prepare(lineTextureFrag, lineTextureVert),
     raster: prepare(rasterFrag, rasterVert),
     symbolIcon: prepare(symbolIconFrag, symbolIconVert),
     symbolSDF: prepare(symbolSDFFrag, symbolSDFVert),

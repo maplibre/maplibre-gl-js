@@ -1,4 +1,4 @@
-import {ColorAttachment, DepthAttachment, DepthStencilAttachment} from './value';
+import {ColorAttachment, ColorAttachment1, DepthAttachment, DepthStencilAttachment} from './value';
 
 import type {Context} from './context';
 import {createFramebufferNotCompleteError} from '../util/framebuffer_error';
@@ -13,6 +13,7 @@ export class Framebuffer {
     height: number;
     framebuffer: WebGLFramebuffer;
     colorAttachment: ColorAttachment;
+    colorAttachment1: ColorAttachment1 | null;
     depthAttachment: DepthAttachment;
 
     constructor(context: Context, width: number, height: number, hasDepth: boolean, hasStencil: boolean) {
@@ -23,6 +24,7 @@ export class Framebuffer {
         const fbo = this.framebuffer = gl.createFramebuffer();
 
         this.colorAttachment = new ColorAttachment(context, fbo);
+        this.colorAttachment1 = null;
         if (hasDepth) {
             this.depthAttachment = hasStencil ? new DepthStencilAttachment(context, fbo) : new DepthAttachment(context, fbo);
         } else if (hasStencil) {
@@ -38,6 +40,11 @@ export class Framebuffer {
 
         const texture = this.colorAttachment.get();
         if (texture) gl.deleteTexture(texture);
+
+        if (this.colorAttachment1) {
+            const texture1 = this.colorAttachment1.get();
+            if (texture1) gl.deleteTexture(texture1);
+        }
 
         if (this.depthAttachment) {
             const renderbuffer = this.depthAttachment.get();

@@ -16,4 +16,8 @@ precision mediump float;
 
 #endif
 
+#ifdef OPACITY_MRT
+layout(location = 0) out highp vec4 fragColor;
+#else
 out highp vec4 fragColor;
+#endif

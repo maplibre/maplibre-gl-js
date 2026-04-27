@@ -7,6 +7,7 @@ uniform float u_fade;
 uniform mediump vec3 u_scale;
 
 uniform sampler2D u_image;
+uniform bool u_opacity_override;
 
 in vec2 v_normal;
 in vec2 v_width2;
@@ -24,6 +25,10 @@ in float v_depth;
 #pragma mapbox: define lowp float blur
 #pragma mapbox: define lowp float opacity
 
+#ifdef OPACITY_MRT
+layout(location = 1) out vec4 fragOpacityOut;
+#endif
+
 void main() {
     #pragma mapbox: initialize mediump vec4 pattern_from
     #pragma mapbox: initialize mediump vec4 pattern_to
@@ -32,6 +37,10 @@ void main() {
 
     #pragma mapbox: initialize lowp float blur
     #pragma mapbox: initialize lowp float opacity
+
+#ifdef OPACITY_MRT
+    if (opacity <= 0.0) discard;
+#endif
 
     vec2 pattern_tl_a = pattern_from.xy;
     vec2 pattern_br_a = pattern_from.zw;
@@ -72,7 +81,12 @@ void main() {
 
     vec4 color = mix(texture(u_image, pos_a), texture(u_image, pos_b), u_fade);
 
-    fragColor = color * alpha * opacity;
+    float finalOpacity = u_opacity_override ? 1.0 : opacity;
+    fragColor = color * alpha * finalOpacity;
+
+#ifdef OPACITY_MRT
+    fragOpacityOut = vec4(opacity, 0.0, 0.0, 1.0);
+#endif
 
     #ifdef GLOBE
     if (v_depth > 1.0) {

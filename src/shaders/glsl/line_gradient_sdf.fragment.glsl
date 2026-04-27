@@ -3,6 +3,7 @@ uniform sampler2D u_image;
 uniform sampler2D u_image_dash;
 uniform float u_mix;
 uniform lowp float u_lineatlas_width;
+uniform bool u_opacity_override;
 
 in vec2 v_normal;
 in vec2 v_width2;
@@ -21,9 +22,17 @@ in float v_depth;
 #pragma mapbox: define mediump vec4 dasharray_from
 #pragma mapbox: define mediump vec4 dasharray_to
 
+#ifdef OPACITY_MRT
+layout(location = 1) out vec4 fragOpacityOut;
+#endif
+
 void main() {
     #pragma mapbox: initialize lowp float blur
     #pragma mapbox: initialize lowp float opacity
+
+#ifdef OPACITY_MRT
+    if (opacity <= 0.0) discard;
+#endif
     #pragma mapbox: initialize mediump float width
     #pragma mapbox: initialize lowp float floorwidth
     #pragma mapbox: initialize mediump vec4 dasharray_from
@@ -49,7 +58,12 @@ void main() {
     float dash_alpha = smoothstep(0.5 - sdfgamma / floorwidth, 0.5 + sdfgamma / floorwidth, sdfdist);
 
     // Combine gradient color with dash pattern
-    fragColor = color * (alpha * dash_alpha * opacity);
+    float finalOpacity = u_opacity_override ? 1.0 : opacity;
+    fragColor = color * (alpha * dash_alpha * finalOpacity);
+
+#ifdef OPACITY_MRT
+    fragOpacityOut = vec4(opacity, 0.0, 0.0, 1.0);
+#endif
 
     #ifdef GLOBE
     if (v_depth > 1.0) {

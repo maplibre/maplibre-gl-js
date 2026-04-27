@@ -67,6 +67,7 @@ export class Context {
 
     extTextureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
     extTextureFilterAnisotropicMax?: GLfloat;
+    extDrawBuffersIndexed: OES_draw_buffers_indexed | null;
     HALF_FLOAT?: GLenum;
     RGBA16F?: GLenum;
     RGB16F?: GLenum;
@@ -110,6 +111,8 @@ export class Context {
         if (this.extTextureFilterAnisotropic) {
             this.extTextureFilterAnisotropicMax = gl.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
         }
+
+        this.extDrawBuffersIndexed = gl.getExtension('OES_draw_buffers_indexed');
 
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
 

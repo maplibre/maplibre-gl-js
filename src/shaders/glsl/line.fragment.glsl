@@ -1,4 +1,5 @@
 uniform lowp float u_device_pixel_ratio;
+uniform bool u_opacity_override;
 
 in vec2 v_width2;
 in vec2 v_normal;
@@ -11,10 +12,18 @@ in float v_depth;
 #pragma mapbox: define lowp float blur
 #pragma mapbox: define lowp float opacity
 
+#ifdef OPACITY_MRT
+layout(location = 1) out vec4 fragOpacityOut;
+#endif
+
 void main() {
     #pragma mapbox: initialize highp vec4 color
     #pragma mapbox: initialize lowp float blur
     #pragma mapbox: initialize lowp float opacity
+
+#ifdef OPACITY_MRT
+    if (opacity <= 0.0) discard;
+#endif
 
     // Calculate the distance of the pixel from the line in pixels.
     float dist = length(v_normal) * v_width2.s;
@@ -25,7 +34,12 @@ void main() {
     float blur2 = (blur + 1.0 / u_device_pixel_ratio) * v_gamma_scale;
     float alpha = clamp(min(dist - (v_width2.t - blur2), v_width2.s - dist) / blur2, 0.0, 1.0);
 
-    fragColor = color * (alpha * opacity);
+    float finalOpacity = u_opacity_override ? 1.0 : opacity;
+    fragColor = color * (alpha * finalOpacity);
+
+#ifdef OPACITY_MRT
+    fragOpacityOut = vec4(opacity, 0.0, 0.0, 1.0);
+#endif
 
     #ifdef GLOBE
     if (v_depth > 1.0) {

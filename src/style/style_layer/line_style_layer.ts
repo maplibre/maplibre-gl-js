@@ -11,6 +11,7 @@ import {isZoomExpression, Step} from '@maplibre/maplibre-gl-style-spec';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g';
+import type {Framebuffer} from '../../webgl/framebuffer';
 
 export class LineFloorwidthProperty extends DataDrivenProperty<number> {
     useIntegerZoom: true;
@@ -41,6 +42,7 @@ export class LineStyleLayer extends StyleLayer {
 
     gradientVersion: number;
     stepInterpolant: boolean;
+    lineFbo: Framebuffer | null;
 
     _transitionablePaint: Transitionable<LinePaintProps>;
     _transitioningPaint: Transitioning<LinePaintProps>;
@@ -49,6 +51,7 @@ export class LineStyleLayer extends StyleLayer {
     constructor(layer: LayerSpecification, globalState: Record<string, any>) {
         super(layer, properties, globalState);
         this.gradientVersion = 0;
+        this.lineFbo = null;
         if (!lineFloorwidthProperty) {
             lineFloorwidthProperty =
                 new LineFloorwidthProperty(properties.paint.properties['line-width'].specification);
@@ -116,6 +119,27 @@ export class LineStyleLayer extends StyleLayer {
 
     isTileClipped() {
         return true;
+    }
+
+    hasOffscreenPass() {
+        const opacity = this.paint.get('line-opacity');
+        const constantOpacity = opacity.constantOr(-1);
+        if (this.isHidden()) return false;
+        // Data-driven opacity (constantOr returns -1) needs offscreen MRT rendering
+        if (constantOpacity === -1) return true;
+        // Constant partial opacity needs offscreen rendering to prevent self-overlap
+        return constantOpacity > 0 && constantOpacity < 1;
+    }
+
+    onRemove = () => {
+        this.resize();
+    };
+
+    resize() {
+        if (this.lineFbo) {
+            this.lineFbo.destroy();
+            this.lineFbo = null;
+        }
     }
 }
 
