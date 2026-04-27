@@ -1,6 +1,5 @@
 import Benchmark, {type Measurement} from '../lib/benchmark';
 import createMap from '../lib/create_map';
-import {addProtocol, removeProtocol} from '../../../src/source/protocol_crud';
 import type {Map} from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
@@ -8,16 +7,14 @@ import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 // over terrain on/off and projection mercator/globe so we can compare the
 // four combinations in a single bench run.
 //
-// All resources are local. The bench-vector protocol returns a single
-// bundled tile for every z/x/y; bench-dem does the same for the DEM;
-// glyphs come from the integration test fixtures.
+// Tiles point at static fixtures served by the dev server: a single
+// vector tile and a single DEM tile, reused for every z/x/y. The
+// {z}/{x}/{y} placeholders go in query params so each tile gets a
+// distinct cache key in MapLibre's tile cache.
 //
 // The harness's regression machinery is built for sync per-iteration
 // timing, so this benchmark overrides run() and reports each pass as a
 // single measurement whose "time" is the max frame interval in ms.
-
-const VECTOR_PROTOCOL = 'bench-vector';
-const DEM_PROTOCOL = 'bench-dem';
 
 // Crank this up until you see dropped frames on the target machine. Each
 // layer in the base style is emitted N times, so LAYER_DUPLICATION=4
@@ -30,7 +27,7 @@ const END: [number, number] = [11.50, 47.00];
 const ZOOM = 12;
 const PITCH = 85;
 const BEARING = 180;
-const FLIGHT_MS = 1_000;
+const DURATION = 1_000;
 const ITERATIONS = 10;
 
 type Variant = {
@@ -40,7 +37,6 @@ type Variant = {
 
 class TerrainBase extends Benchmark {
     map: Map;
-    uninstallProtocols: () => void;
     variant: Variant;
     label: string;
 
@@ -51,16 +47,6 @@ class TerrainBase extends Benchmark {
     }
 
     async setup() {
-        const vectorBuffer = await (await fetch('/test/bench/data/785.vector.pbf')).arrayBuffer();
-        const demBuffer = await (await fetch('/test/bench/data/terrain_dem.png')).arrayBuffer();
-
-        addProtocol(VECTOR_PROTOCOL, async () => ({data: vectorBuffer.slice(0)}));
-        addProtocol(DEM_PROTOCOL, async () => ({data: demBuffer.slice(0)}));
-        this.uninstallProtocols = () => {
-            removeProtocol(VECTOR_PROTOCOL);
-            removeProtocol(DEM_PROTOCOL);
-        };
-
         const style = buildStyle();
         style.projection = {type: this.variant.projection};
 
@@ -109,7 +95,6 @@ class TerrainBase extends Benchmark {
 
     teardown() {
         this.map.remove();
-        this.uninstallProtocols?.();
     }
 
     private async flyAndMeasureMaxFrame(): Promise<number> {
@@ -132,7 +117,7 @@ class TerrainBase extends Benchmark {
             zoom: ZOOM,
             pitch: PITCH,
             bearing: BEARING,
-            duration: FLIGHT_MS,
+            duration: DURATION,
             curve: 1,
             minZoom: ZOOM,
             easing: t => t,
@@ -292,13 +277,13 @@ function buildStyle(): StyleSpecification {
         sources: {
             vector: {
                 type: 'vector',
-                tiles: [`${VECTOR_PROTOCOL}://{z}/{x}/{y}`],
+                tiles: ['/test/bench/data/785.vector.pbf?z={z}&x={x}&y={y}'],
                 minzoom: 0,
                 maxzoom: 14,
             },
             dem: {
                 type: 'raster-dem',
-                tiles: [`${DEM_PROTOCOL}://{z}/{x}/{y}`],
+                tiles: ['/test/bench/data/terrain_dem.png?z={z}&x={x}&y={y}'],
                 tileSize: 256,
                 encoding: 'terrarium',
                 minzoom: 0,
