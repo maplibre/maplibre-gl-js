@@ -38,7 +38,7 @@ type Variant = {
     projection: 'mercator' | 'globe';
 };
 
-class FlyDroppedFramesBench extends Benchmark {
+class TerrainBase extends Benchmark {
     map: Map;
     uninstallProtocols: () => void;
     variant: Variant;
@@ -149,16 +149,16 @@ class FlyDroppedFramesBench extends Benchmark {
     }
 }
 
-export class Terrain3DGlobe extends FlyDroppedFramesBench {
+export class Terrain3DGlobe extends TerrainBase {
     constructor() { super('Terrain3DGlobe', {terrain: true, projection: 'globe'}); }
 }
-export class Terrain3DMercator extends FlyDroppedFramesBench {
+export class Terrain3DMercator extends TerrainBase {
     constructor() { super('Terrain3DMercator', {terrain: true, projection: 'mercator'}); }
 }
-export class Terrain2DGlobe extends FlyDroppedFramesBench {
+export class Terrain2DGlobe extends TerrainBase {
     constructor() { super('Terrain2DGlobe', {terrain: false, projection: 'globe'}); }
 }
-export class Terrain2DMercator extends FlyDroppedFramesBench {
+export class Terrain2DMercator extends TerrainBase {
     constructor() { super('Terrain2DMercator', {terrain: false, projection: 'mercator'}); }
 }
 
