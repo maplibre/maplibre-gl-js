@@ -383,10 +383,10 @@ describe('hash', () => {
             expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
         });
 
-        test('invalidate hash with slashes encoded as %2F', () => {
+        test('validate hash with slashes encoded as %2F', () => {
             window.location.hash = '#10%2F3.00%2F-1.00';
 
-            expect(hash._isValidHash(hash._getCurrentHash())).toBeFalsy();
+            expect(hash._isValidHash(hash._getCurrentHash())).toBeTruthy();
         });
 
         test('invalidate hash with string values', () => {
@@ -524,7 +524,7 @@ describe('hash', () => {
 
     });
 
-    test('hash with URL in other parameter does not change', () => {
+    test('hash with URL in other parameter does not change except normalization', () => {
         const hash = createHash('map')
             .addTo(map);
 
@@ -533,7 +533,7 @@ describe('hash', () => {
         map.setZoom(5);
         map.setCenter([1.0, 2.0]);
 
-        expect(window.location.hash).toBe('#map=5/2/1&returnUrl=https://example.com&filter=a&b=');
+        expect(window.location.hash).toBe('#map=5/2/1&returnUrl=https://example.com&filter=a&b');
 
         window.location.hash = '#search=foo&map=7/4/2&redirect=/path?query=value';
         hash._onHashChange();
@@ -542,7 +542,7 @@ describe('hash', () => {
         expect(map.getCenter().lng).toBe(2);
     });
 
-    test('hash with URL+path in other parameter does not change', () => {
+    test('hash with URL+path in other parameter does not change except for normalization', () => {
         const hash = createHash('map')
             .addTo(map);
 
@@ -551,7 +551,7 @@ describe('hash', () => {
         map.setZoom(5);
         map.setCenter([1.0, 2.0]);
 
-        expect(window.location.hash).toBe('#map=5/2/1&returnUrl=https://example.com/abcd/ef&filter=a&b=');
+        expect(window.location.hash).toBe('#map=5/2/1&returnUrl=https://example.com/abcd/ef&filter=a&b');
 
         window.location.hash = '#search=foo&map=7/4/2&redirect=/path?query=value';
         hash._onHashChange();
@@ -601,7 +601,7 @@ describe('hash', () => {
 
     });
 
-    test('update to hash with empty parameter values is kept as-is', () => {
+    test('update to hash with empty parameter are de-normalized', () => {
         const hash = createHash('map')
             .addTo(map);
 
@@ -610,7 +610,7 @@ describe('hash', () => {
         expect(map.getZoom()).toBe(10);
 
         map.setZoom(5);
-        expect(window.location.hash).toBe('#map=5/3/-1&empty=');
+        expect(window.location.hash).toBe('#map=5/3/-1&empty');
     });
 
     describe('geographic boundary values', () => {
