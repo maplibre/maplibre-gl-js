@@ -5,6 +5,50 @@ import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {ProjectionData} from '../../geo/projection/projection_data';
 
 /**
+ * Type for an object literal that specifies a map tile.
+ */
+export type UnwrappedTileIDLiteral = {
+    /**
+     * An optional wrap values.
+     * Useful in scenarios when multiple world copies are visible, such as a zoomed out map or a map centered around the antimeridian.
+     * Tiles from each world copy should have different wrap values, with wrap increasing for each copy from west to east.
+     */
+    wrap?: number;
+    /**
+     * The tile's XY coordinates and zoom level.
+     */
+    canonical: {
+        x: number;
+        y: number;
+        z: number;
+    };
+};
+
+/**
+ * Parameters object for the {@link CustomRenderMethodInput.getProjectionData} function.
+ * Contains the requested tile ID and more.
+ */
+export type CustomLayerProjectionDataParams = {
+    /**
+     * The coordinates of the current tile.
+     */
+    tileID: UnwrappedTileIDLiteral | null;
+    /**
+     * Set to true if a pixel-aligned matrix should be used, if possible.
+     * This flag is mostly used for raster tiles under mercator projection.
+     */
+    aligned?: boolean;
+    /**
+     * Set to true if the terrain matrix should be applied when pre-rendering tiles into textures for 3D terrain.
+     */
+    applyTerrainMatrix?: boolean;
+    /**
+     * Set to true if the globe matrix should be applied when using globe projection.
+     */
+    applyGlobeMatrix?: boolean;
+};
+
+/**
 * Input arguments exposed by custom render function.
 */
 export type CustomRenderMethodInput = {
@@ -25,14 +69,14 @@ export type CustomRenderMethodInput = {
      */
     fov: number;
     /**
-    * model view projection matrix
-    * represents the matrix converting from world space to clip space
+    * Model view projection matrix.
+    * Represents the matrix converting from world space to clip space.
     * https://learnopengl.com/Getting-started/Coordinate-Systems
     * **/
     modelViewProjectionMatrix: mat4;
     /**
-    * projection matrix
-    * represents the matrix converting from view space to clip space
+    * Projection matrix.
+    * Represents the matrix converting from view space to clip space.
     * https://learnopengl.com/Getting-started/Coordinate-Systems
     */
     projectionMatrix: mat4;
@@ -105,6 +149,15 @@ export type CustomRenderMethodInput = {
      * or more accurately for globe, elevation above the surface of the perfect sphere used to render the planet.
      */
     defaultProjectionData: ProjectionData;
+
+    /**
+     * Generates a {@link ProjectionData} instance to be used while rendering a given tile.
+     * In custom layers, this function is only needed when rendering tiles in a completely custom way and with shaders that are compatible with both projections.
+     *
+     * @see [Add a custom layer with tiles to a globe](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-custom-layer-with-tiles-to-a-globe)
+     * @param params - Parameters for the projection data generation.
+     */
+    getProjectionData: (params: CustomLayerProjectionDataParams) => ProjectionData;
 };
 
 /**

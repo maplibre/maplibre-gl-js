@@ -349,7 +349,7 @@ describe('resourceTiming', () => {
             return null;
         });
         window.performance.measure = vi.fn().mockImplementation((name, start, end) => {
-            measures[name] = measures[name] || [];
+            measures[name] ||= [];
             measures[name].push({
                 duration: marks[end] - marks[start],
                 entryType: 'measure',

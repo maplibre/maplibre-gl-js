@@ -3,7 +3,8 @@ import {StencilMode} from '../stencil_mode';
 
 import type {Painter, RenderOptions} from '../../render/painter';
 import type {TileManager} from '../../tile/tile_manager';
-import type {CustomRenderMethodInput, CustomStyleLayer} from '../../style/style_layer/custom_style_layer';
+import type {CustomLayerProjectionDataParams, CustomRenderMethodInput, CustomStyleLayer} from '../../style/style_layer/custom_style_layer';
+import {OverscaledTileID} from '../../tile/tile_id';
 
 export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, renderOptions: RenderOptions) {
 
@@ -27,6 +28,20 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
             define: projection.shaderDefine,
         },
         defaultProjectionData: projectionData,
+        getProjectionData: (params: CustomLayerProjectionDataParams) => {
+            return transform.getProjectionData({
+                overscaledTileID: new OverscaledTileID(
+                    params.tileID.canonical.z,
+                    params.tileID.wrap ?? 0,
+                    params.tileID.canonical.z,
+                    params.tileID.canonical.x,
+                    params.tileID.canonical.y,
+                ),
+                aligned: params.aligned,
+                applyGlobeMatrix: params.applyGlobeMatrix,
+                applyTerrainMatrix: params.applyTerrainMatrix,
+            });
+        }
     };
 
     const renderingMode = implementation.renderingMode ? implementation.renderingMode : '2d';

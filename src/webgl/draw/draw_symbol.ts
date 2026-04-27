@@ -9,7 +9,7 @@ import {StencilMode} from '../stencil_mode';
 import {DepthMode} from '../depth_mode';
 import {CullFaceMode} from '../cull_face_mode';
 import {addDynamicAttributes} from '../../data/bucket/symbol_bucket';
-
+import {fastInvertTransformMat4} from '../../util/fast_maths';
 import {getAnchorAlignment, WritingMode} from '../../symbol/shaping';
 import ONE_EM from '../../symbol/one_em';
 
@@ -304,7 +304,7 @@ function drawLayerSymbols(
     pitchAlignment: SymbolLayerSpecification['layout']['text-pitch-alignment'],
     keepUpright: boolean,
     stencilMode: StencilMode,
-    colorMode: Readonly<ColorMode>, 
+    colorMode: Readonly<ColorMode>,
     isRenderingToTexture: boolean) {
 
     const context = painter.context;
@@ -376,8 +376,6 @@ function drawLayerSymbols(
         // See the comment at the beginning of src/symbol/projection.ts for an overview of the symbol projection process
         const s = pixelsToTileUnits(tile, 1, painter.transform.zoom);
         const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.transform, s);
-        const pitchedLabelPlaneMatrixInverse = mat4.create();
-        mat4.invert(pitchedLabelPlaneMatrixInverse, pitchedLabelPlaneMatrix);
         const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = translatePosition(transform, tile, translate, translateAnchor);
@@ -389,6 +387,9 @@ function drawLayerSymbols(
             bucket.hasIconData();
 
         if (alongLine) {
+            const pitchedLabelPlaneMatrixInverse = mat4.create();
+            fastInvertTransformMat4(pitchedLabelPlaneMatrixInverse, pitchedLabelPlaneMatrix);
+
             const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
             const rotateToLine = layer.layout.get('text-rotation-alignment') === 'map';
             updateLineLabels(bucket, painter, isText, pitchedLabelPlaneMatrix, pitchedLabelPlaneMatrixInverse, pitchWithMap, keepUpright, rotateToLine, coord.toUnwrapped(), transform.width, transform.height, translation, getElevation);
@@ -409,7 +410,7 @@ function drawLayerSymbols(
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
-                    uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, true, pitchedTextRescaling);
+                    uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, hasHalo, pitchedTextRescaling);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
@@ -459,6 +460,10 @@ function drawLayerSymbols(
         tileRenderState.sort((a, b) => a.sortKey - b.sortKey);
     }
 
+    const haloWidthProperty = layer.paint.get(isText ? 'text-halo-width' : 'icon-halo-width');
+    const haloWidth = haloWidthProperty.constantOr(null) ?? Infinity;
+    const isGlyphOverlap = layer.layout.get('text-letter-spacing').constantOr(0) * ONE_EM < 0 || haloWidth > 1;
+
     for (const segmentState of tileRenderState) {
         const state = segmentState.state;
 
@@ -471,15 +476,25 @@ function drawLayerSymbols(
             }
         }
 
-        if (state.isSDF) {
+        const isHalo = state.isSDF && state.hasHalo;
+        if (isHalo) {
             const uniformValues = state.uniformValues;
-            if (state.hasHalo) {
-                uniformValues['u_is_halo'] = 1;
+            uniformValues['u_is_halo'] = 1;
+            if (isGlyphOverlap){
+                // render halo in 2 pass (1 for the halo only, 1 for the text only)
+                uniformValues['u_is_plain'] = 0;
                 drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues, state.projectionData, segmentState.terrainData);
+                uniformValues['u_is_halo'] = 0;
+                uniformValues['u_is_plain'] = 1;
             }
-            uniformValues['u_is_halo'] = 0;
         }
+
         drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, state.uniformValues, state.projectionData, segmentState.terrainData);
+
+        if (isHalo && !isGlyphOverlap) {
+            // for 1 pass halo rendering, restore the uniforms state
+            state.uniformValues['u_is_halo'] = 0;
+        }
     }
 }
 

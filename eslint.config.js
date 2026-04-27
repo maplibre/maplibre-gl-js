@@ -10,7 +10,7 @@ import preferTypeForDataShapes from './build/eslint-rules/prefer-type-for-data-s
 
 export default [
     {
-        ignores: ['build/*.js', 'build/rollup/**', 'staging/**', 'coverage/**', 'node_modules/**', 'docs/**', 'dist/**']
+        ignores: ['build/*.js', 'build/rollup/**', 'staging/**', 'coverage/**', 'node_modules/**', 'docs/**', 'dist/**', '**/*_generated.js']
     },
     {
         ignores: ['test/bench/**'],
@@ -71,6 +71,7 @@ export default [
             '@typescript-eslint/array-type': ['error', {default: 'array-simple'}],
             'local/prefer-type-for-data-shapes': 'error',
 
+            'logical-assignment-operators': ['error', 'always', {enforceForIfStatements: true}],
             'prefer-object-spread': 'error',
             'prefer-object-has-own': 'error',
             'object-shorthand': 'error',

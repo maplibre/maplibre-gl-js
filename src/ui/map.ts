@@ -81,10 +81,11 @@ export type WebGLContextAttributesWithType = WebGLContextAttributes & {contextTy
 export type MapOptions = {
     /**
      * If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
-     * For example, `http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60`.
-     * An additional string may optionally be provided to indicate a parameter-styled hash,
-     * e.g. http://path/to/my/page.html#map=2.59/39.26/53.07/-24.1/60&foo=bar, where foo
-     * is a custom parameter and bar is an arbitrary hash distinct from the map hash.
+     * For example, `https://example.com#2.59/39.26/53.07/-24.1/60`.
+     * 
+     * An additional string may optionally be provided as an alternative to indicate a parameter-styled hash.
+     * For example, passing `hash: "foo"` will produce a hash like `https://example.com#foo=2.59/39.26/53.07/-24.1/60`.
+     * This is usefull for allowing multiple maps or other state.
      * @defaultValue false
      */
     hash?: boolean | string;
@@ -1579,8 +1580,8 @@ export class Map extends Camera {
     }
 
     _saveDelegatedListener(type: keyof MapEventType | string, delegatedListener: DelegatedListener): void {
-        this._delegatedListeners = this._delegatedListeners || {};
-        this._delegatedListeners[type] = this._delegatedListeners[type] || [];
+        this._delegatedListeners ||= {};
+        this._delegatedListeners[type] ||= [];
         this._delegatedListeners[type].push(delegatedListener);
     }
 
@@ -1975,7 +1976,7 @@ export class Map extends Camera {
         let queryGeometry: Point[];
         const isGeometry = geometryOrOptions instanceof Point || Array.isArray(geometryOrOptions);
         const geometry = isGeometry ? geometryOrOptions : [[0, 0], [this.transform.width, this.transform.height]];
-        options = options || (isGeometry ? {} : geometryOrOptions) || {};
+        options ||= (isGeometry ? {} : geometryOrOptions) || {};
 
         if (geometry instanceof Point || typeof geometry[0] === 'number') {
             queryGeometry = [Point.convert(geometry as PointLike)];
@@ -3607,7 +3608,7 @@ export class Map extends Camera {
     _update(updateStyle?: boolean) {
         if (!this.style?._loaded) return this;
 
-        this._styleDirty = this._styleDirty || updateStyle;
+        this._styleDirty ||= updateStyle;
         this._sourcesDirty = true;
         this.triggerRepaint();
 

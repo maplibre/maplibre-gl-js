@@ -174,9 +174,7 @@ export class FeatureIndex {
                 serializedLayers,
                 sourceFeatureState,
                 (feature: VectorTileFeatureLike, styleLayer: StyleLayer, featureState: FeatureState) => {
-                    if (!featureGeometry) {
-                        featureGeometry = loadGeometry(feature);
-                    }
+                    featureGeometry ||= loadGeometry(feature);
 
                     return styleLayer.queryIntersectsFeature({
                         queryGeometry,

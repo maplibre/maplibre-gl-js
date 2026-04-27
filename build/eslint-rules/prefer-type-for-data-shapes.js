@@ -1,4 +1,3 @@
-/** @type {import('eslint').Rule.RuleModule} */
 export default {
     meta: {
         type: 'suggestion',

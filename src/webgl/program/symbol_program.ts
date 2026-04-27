@@ -49,6 +49,7 @@ export type SymbolSDFUniformsType = {
     'u_gamma_scale': Uniform1f;
     'u_device_pixel_ratio': Uniform1f;
     'u_is_halo': Uniform1i;
+    'u_is_plain': Uniform1i;
     'u_translation': Uniform2f;
     'u_pitched_scale': Uniform1f;
 };
@@ -123,6 +124,7 @@ const symbolSDFUniforms = (context: Context, locations: UniformLocations): Symbo
     'u_gamma_scale': new Uniform1f(context, locations.u_gamma_scale),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
     'u_is_halo': new Uniform1i(context, locations.u_is_halo),
+    'u_is_plain': new Uniform1i(context, locations.u_is_plain),
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_pitched_scale': new Uniform1f(context, locations.u_pitched_scale),
 });
@@ -223,7 +225,8 @@ const symbolSDFUniformValues = (
         glCoordMatrix, translation, isText, texSize, pitchedScale), {
         'u_gamma_scale': (pitchWithMap ? Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance : 1),
         'u_device_pixel_ratio': painter.pixelRatio,
-        'u_is_halo': +isHalo
+        'u_is_halo': isHalo ? 1 : 0,
+        'u_is_plain': 1
     });
 };
 

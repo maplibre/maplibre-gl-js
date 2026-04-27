@@ -478,11 +478,11 @@ export class SymbolBucket implements Bucket {
                 const formattedText = Formatted.factory(resolvedTokens);
 
                 // on this instance: if hasRTLText is already true, all future calls to containsRTLText can be skipped.
-                const bucketHasRTLText = this.hasRTLText = (this.hasRTLText || containsRTLText(formattedText));
+                this.hasRTLText ||= containsRTLText(formattedText);
                 if (
-                    !bucketHasRTLText || // non-rtl text so can proceed safely
+                    !this.hasRTLText || // non-rtl text so can proceed safely
                     rtlWorkerPlugin.getRTLTextPluginStatus() === 'unavailable' || // We don't intend to lazy-load the rtl text plugin, so proceed with incorrect shaping
-                    bucketHasRTLText && rtlWorkerPlugin.isParsed() // Use the rtlText plugin to shape text
+                    this.hasRTLText && rtlWorkerPlugin.isParsed() // Use the rtlText plugin to shape text
                 ) {
                     text = transformText(formattedText, layer, evaluationFeature);
                 }
@@ -533,8 +533,8 @@ export class SymbolBucket implements Bucket {
                     if (!section.image) {
                         const doesAllowVerticalWritingMode = allowsVerticalWritingMode(text.toString());
                         const sectionFont = section.fontStack || fontStack;
-                        const sectionStack = stacks[sectionFont] = stacks[sectionFont] || {};
-                        this.calculateGlyphDependencies(section.text, sectionStack, textAlongLine, this.allowVerticalPlacement, doesAllowVerticalWritingMode);
+                        stacks[sectionFont] ||= {};
+                        this.calculateGlyphDependencies(section.text, stacks[sectionFont], textAlongLine, this.allowVerticalPlacement, doesAllowVerticalWritingMode);
                     } else {
                         // Add section image to the list of dependencies.
                         icons[section.image.name] = true;
@@ -544,7 +544,7 @@ export class SymbolBucket implements Bucket {
         }
 
         if (layout.get('symbol-placement') === 'line') {
-            // Merge adjacent lines with the same text to improve labelling.
+            // Merge adjacent lines with the same text to improve labeling.
             // It's better to place labels on one long line than on many short segments.
             this.features = mergeLines(this.features);
         }

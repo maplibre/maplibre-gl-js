@@ -7,9 +7,7 @@ let globalWorkerPool;
  * to be shared across each Map
  */
 export function getGlobalWorkerPool() {
-    if (!globalWorkerPool) {
-        globalWorkerPool = new WorkerPool();
-    }
+    globalWorkerPool ||= new WorkerPool();
     return globalWorkerPool;
 }
 
