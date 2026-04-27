@@ -12,32 +12,29 @@ const ZOOM = 12;
 const PITCH = 85;
 const BEARING = 180;
 
-type Variant = {
-    terrain: boolean;
-    projection: 'mercator' | 'globe';
-};
-
 class TerrainBase extends Benchmark {
     map: Map;
-    variant: Variant;
     label: string;
+    terrain: boolean;
+    projection: 'mercator' | 'globe';
 
-    constructor(label: string, variant: Variant) {
+    constructor(label: string, terrain: boolean, projection: 'mercator' | 'globe') {
         super();
         this.label = label;
-        this.variant = variant;
+        this.terrain = terrain;
+        this.projection = projection;
     }
 
     async setup() {
         const style = buildStyle();
-        style.projection = {type: this.variant.projection};
+        style.projection = {type: this.projection};
 
         this.map = await createMap({
             center: CENTER_START,
             zoom: ZOOM,
             pitch: PITCH,
             bearing: BEARING,
-            maxPitch: 85,
+            maxPitch: PITCH,
             width: 393,
             height: 852,
             style,
@@ -47,7 +44,7 @@ class TerrainBase extends Benchmark {
             idle: true,
         });
 
-        if (this.variant.terrain) {
+        if (this.terrain) {
             this.map.setTerrain({source: 'dem', exaggeration: 1});
             await new Promise(resolve => this.map.once('idle', resolve));
         }
@@ -84,7 +81,7 @@ class TerrainBase extends Benchmark {
         for (const id in this.map.style.tileManagers) {
             this.map.style.tileManagers[id].clearTiles();
         }
-        if (this.variant.terrain) {
+        if (this.terrain) {
             this.map.setTerrain(null);
             this.map.setTerrain({source: 'dem', exaggeration: 1});
         }
@@ -124,21 +121,21 @@ class TerrainBase extends Benchmark {
 }
 
 export class Terrain3DGlobe extends TerrainBase {
-    constructor() { super('Terrain3DGlobe', {terrain: true, projection: 'globe'}); }
+    constructor() { super('Terrain3DGlobe', true, 'globe'); }
 }
 export class Terrain3DMercator extends TerrainBase {
-    constructor() { super('Terrain3DMercator', {terrain: true, projection: 'mercator'}); }
+    constructor() { super('Terrain3DMercator', true, 'mercator'); }
 }
 export class Terrain2DGlobe extends TerrainBase {
-    constructor() { super('Terrain2DGlobe', {terrain: false, projection: 'globe'}); }
+    constructor() { super('Terrain2DGlobe', false, 'globe'); }
 }
 export class Terrain2DMercator extends TerrainBase {
-    constructor() { super('Terrain2DMercator', {terrain: false, projection: 'mercator'}); }
+    constructor() { super('Terrain2DMercator', false, 'mercator'); }
 }
 
-// Create a basemap-like style that uses the layers from the bundled 
-// `785.vector.pbf` vector tile. Each layer is duplicated `STYLE_COMPLEXITY` 
-// times to simulate a more complex basemap style and stress the system.
+// Create a basemap style that uses the layers from the bundled `785.vector.pbf` 
+// tile. Each layer is duplicated `STYLE_COMPLEXITY` times to simulate a more 
+// complex basemap style and stress the system.
 function buildStyle(): StyleSpecification {
     const layers: StyleSpecification['layers'] = [
         {id: 'background', type: 'background', paint: {'background-color': '#f0ece0'}},
