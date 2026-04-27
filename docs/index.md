@@ -64,6 +64,59 @@ const map = new maplibregl.Map({
 });
 ```
 
+## ESM
+
+MapLibre GL JS ships an ES module build (`maplibre-gl.mjs`) alongside the classic UMD bundle. The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically:
+
+```ts
+import {Map} from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+const map = new Map({/* … */});
+```
+
+Vite, webpack 5+, and Rollup all bundle the companion worker file as a sibling asset with no extra configuration.
+
+### In the browser, without a bundler
+
+```html
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.css" />
+<div id="map" style="height: 400px"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [0, 0],
+        zoom: 1
+    });
+</script>
+```
+
+See the [Display a map with ESM](./examples/display-a-map-with-esm.md) example for a runnable version.
+
+### Vite SSR
+
+If your build uses SSR (React Router v7, Astro, etc.) and Vite resolves the CommonJS entry on the server, force the ESM entry with:
+
+```ts
+// vite.config.ts
+export default defineConfig({
+    ssr: {noExternal: ['maplibre-gl']}
+});
+```
+
+### Custom worker URL
+
+If you need to host the worker at a non-default location, override with [`setWorkerUrl()`](./API/functions/setWorkerUrl.md):
+
+```ts
+import {setWorkerUrl} from 'maplibre-gl';
+
+setWorkerUrl('/static/maplibre-gl-worker.mjs');
+```
+
 ## CSP Directives
 
 As a mitigation for Cross-Site Scripting and other types of web security vulnerabilities, you may use a [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/Security/CSP) to specify security policies for your website. If you do, MapLibre GL JS requires the following CSP directives:
@@ -74,7 +127,7 @@ child-src blob: ;
 img-src data: blob: ;
 ```
 
-For strict CSP environments without `worker-src blob: ; child-src blob:` enabled, there's a separate MapLibre GL JS bundle (`maplibre-gl-csp.js` and `maplibre-gl-csp-worker.js`) which requires setting the path to the worker manually:
+For strict CSP environments without `worker-src blob: ; child-src blob:` enabled, there's a separate MapLibre GL JS bundle (`maplibre-gl-csp.js` and `maplibre-gl-csp-worker.js`, with `.mjs` ESM variants) which requires setting the path to the worker manually:
 
 ```html
 <script>
