@@ -514,6 +514,86 @@ describe('VectorTileSource', () => {
         expect(tile.etag).toBeUndefined();
     });
 
+    describe('Accept header', () => {
+        function captureMessages(source: VectorTileSource) {
+            const captured = {data: null as WorkerTileParameters|null};
+            source.dispatcher = getWrapDispatcher()({
+                sendAsync(message: ActorMessage<MessageType>) {
+                    captured.data = message.data as WorkerTileParameters;
+                    return Promise.resolve({});
+                }
+            });
+            return captured;
+        }
+
+        test('requests MVT tiles with application/vnd.mapbox-vector-tile', async () => {
+            const source = createSource({
+                tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+            });
+            const captured = captureMessages(source);
+            await waitForMetadataEvent(source);
+
+            await source.loadTile({
+                tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+                loadVectorData() {},
+            } as any as Tile);
+
+            expect(captured.data.request.headers.Accept).toBe('application/vnd.mapbox-vector-tile');
+        });
+
+        test('requests MLT tiles with application/vnd.maplibre-tile', async () => {
+            const source = createSource({
+                tiles: ['http://example.com/{z}/{x}/{y}.mlt'],
+                encoding: 'mlt'
+            });
+            const captured = captureMessages(source);
+            await waitForMetadataEvent(source);
+
+            await source.loadTile({
+                tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+                loadVectorData() {},
+            } as any as Tile);
+
+            expect(captured.data.request.headers.Accept).toBe('application/vnd.maplibre-tile');
+        });
+
+        test('does not override Accept header set by transformRequest', async () => {
+            const source = createSource({
+                tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+            }, async (url) => ({
+                url,
+                headers: {Accept: 'application/x-custom'}
+            }));
+            const captured = captureMessages(source);
+            await waitForMetadataEvent(source);
+
+            await source.loadTile({
+                tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+                loadVectorData() {},
+            } as any as Tile);
+
+            expect(captured.data.request.headers.Accept).toBe('application/x-custom');
+        });
+
+        test('sets Accept header on overzoom requests', async () => {
+            const source = createSource({
+                tiles: ['http://example.com/{z}/{x}/{y}.pbf'],
+                maxzoom: 10,
+                encoding: 'mlt'
+            });
+            const captured = captureMessages(source);
+            await waitForMetadataEvent(source);
+            source.map._zoomLevelsToOverscale = 2;
+
+            await source.loadTile({
+                tileID: new OverscaledTileID(12, 0, 12, 5, 5),
+                loadVectorData() {},
+            } as any as Tile);
+
+            expect(captured.data.request.headers.Accept).toBe('application/vnd.maplibre-tile');
+        });
+    });
+
     test('stores worker etag on tile when present', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
