@@ -4,9 +4,9 @@ import {addProtocol, removeProtocol} from '../../../src/source/protocol_crud';
 import type {Map} from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-// Measures dropped frames during a scripted flyTo with terrain enabled.
+// Measures the worst frame time during a scripted flyTo with terrain enabled.
 // Modeled on playground/terrain-bench.html: the map flies a fixed route
-// and we count rAF frames whose interval exceeds the 30fps budget.
+// and we record the longest rAF interval as the measurement for that pass.
 //
 // All resources are local. The bench-vector protocol returns a single
 // bundled tile for every z/x/y; bench-dem does the same for the DEM;
@@ -14,8 +14,7 @@ import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 //
 // The harness's regression machinery is built for sync per-iteration
 // timing, so this benchmark overrides run() and reports each pass as a
-// single measurement whose "time" is the percent of dropped frames. The
-// existing UI's "trimmedMean" / "min" columns then read as percentages.
+// single measurement whose "time" is the max frame interval in ms.
 
 const VECTOR_PROTOCOL = 'bench-vector';
 const DEM_PROTOCOL = 'bench-dem';
@@ -33,7 +32,6 @@ const PITCH = 85;
 const BEARING = 180;
 const FLIGHT_MS = 1_000;
 const ITERATIONS = 30;
-const DROPPED_THRESHOLD_MS = 1000 / 30;
 
 export default class TerrainDroppedFrames extends Benchmark {
     map: Map;
@@ -75,14 +73,13 @@ export default class TerrainDroppedFrames extends Benchmark {
 
             // Warmup flight: not counted, but lets tile / shader / glyph
             // caches reach steady state before measurement.
-            await this.flyAndCountDrops();
+            await this.flyAndMeasureMaxFrame();
 
             const measurements: Measurement[] = [];
             for (let i = 0; i < ITERATIONS; i++) {
-                const {dropped, total} = await this.flyAndCountDrops();
-                const percent = 100 * dropped / Math.max(1, total);
-                console.log(`TerrainDroppedFrames iter ${i}: ${dropped}/${total} = ${percent.toFixed(2)}%`);
-                measurements.push({time: percent, iterations: 1});
+                const maxFrameMs = await this.flyAndMeasureMaxFrame();
+                console.log(`TerrainDroppedFrames iter ${i}: max frame ${maxFrameMs.toFixed(1)}ms`);
+                measurements.push({time: maxFrameMs, iterations: 1});
             }
 
             this.teardown();
@@ -97,7 +94,7 @@ export default class TerrainDroppedFrames extends Benchmark {
         this.uninstallProtocols?.();
     }
 
-    private async flyAndCountDrops(): Promise<{dropped: number; total: number}> {
+    private async flyAndMeasureMaxFrame(): Promise<number> {
         this.map.jumpTo({center: START, zoom: ZOOM, pitch: PITCH, bearing: BEARING});
         await new Promise(resolve => this.map.once('idle', resolve));
 
@@ -128,20 +125,9 @@ export default class TerrainDroppedFrames extends Benchmark {
         // Drop the first frame: flyTo startup is a transient.
         frameTimes.shift();
 
-        let dropped = 0;
-        for (const t of frameTimes) if (t > DROPPED_THRESHOLD_MS) dropped++;
-
-        const sorted = [...frameTimes].sort((a, b) => a - b);
-        const pct = (p: number) => sorted[Math.floor(sorted.length * p)];
-        const sum = frameTimes.reduce((a, b) => a + b, 0);
-        console.log(
-            `flyAndCountDrops: ${frameTimes.length} frames over ${sum.toFixed(0)}ms ` +
-            `(avg ${(sum / frameTimes.length).toFixed(1)}ms = ${(1000 * frameTimes.length / sum).toFixed(1)}fps), ` +
-            `frame ms p50=${pct(0.5).toFixed(1)} p90=${pct(0.9).toFixed(1)} max=${sorted[sorted.length - 1].toFixed(1)}, ` +
-            `min=${sorted[0].toFixed(1)}, threshold=${DROPPED_THRESHOLD_MS.toFixed(1)}ms`
-        );
-
-        return {dropped, total: frameTimes.length};
+        let max = 0;
+        for (const t of frameTimes) if (t > max) max = t;
+        return max;
     }
 }
 
