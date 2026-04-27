@@ -50,9 +50,6 @@ class TerrainBase extends Benchmark {
         }
     }
 
-    // The parent `Bench` class doesn't support custom metrics so we override 
-    // `run` and report each pass as a `Measurement` whose `time` is the worst 
-    // frame interval in ms.
     async run(): Promise<Measurement[]> {
         try {
             await this.setup();
