@@ -158,7 +158,7 @@ describe('setLayoutProperty', () => {
         await map.once('style.load');
         map.style.dispatcher.broadcast = function (key, value: any) {
             expect(key).toBe(MessageType.updateLayers);
-            expect(value.layers.map((layer) => { return layer.id; })).toEqual(['symbol']);
+            expect(value.layers.map((layer) => layer.id)).toEqual(['symbol']);
             return Promise.resolve({} as any);
         };
 

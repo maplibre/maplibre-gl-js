@@ -138,7 +138,8 @@ function getTouchById(mapTouches: Touch[], points: Point[], identifier: number):
 
 /* ZOOM */
 
-const ZOOM_THRESHOLD = 0.1;
+const defaultZoomRate = 1;
+const defaultZoomThreshold = 0.1;
 
 function getZoomDelta(distance: number, lastDistance: number): number {
     return Math.log(distance / lastDistance) / Math.LN2;
@@ -153,6 +154,40 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
 
     _distance?: number;
     _startDistance?: number;
+    _zoomRate: number;
+    _zoomThreshold: number;
+
+    constructor() {
+        super();
+        this._zoomRate = defaultZoomRate;
+        this._zoomThreshold = defaultZoomThreshold;
+    }
+
+    /**
+     * Sets the zoom rate of touch gestures.
+     * @param zoomRate - 1 The rate used to scale touch movement to a zoom value. Set to `undefined` to restore the default.
+     * @example
+     * Slow down touch zoom
+     * ```ts
+     * map.touchZoomRotate.setZoomRate(0.5);
+     * ```
+     */
+    setZoomRate(zoomRate?: number) {
+        this._zoomRate = zoomRate ?? defaultZoomRate;
+    }
+
+    /**
+     * Sets the threshold before a pinch gesture starts zooming.
+     * @param zoomThreshold - 0.1 The minimum zoom delta before the pinch gesture becomes active. Set to `undefined` to restore the default.
+     * @example
+     * Make pinch zoom less sensitive
+     * ```ts
+     * map.touchZoomRotate.setZoomThreshold(0.3);
+     * ```
+     */
+    setZoomThreshold(zoomThreshold?: number) {
+        this._zoomThreshold = zoomThreshold ?? defaultZoomThreshold;
+    }
 
     reset() {
         super.reset();
@@ -167,10 +202,10 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
     _move(points: [Point, Point], pinchAround: Point | null): HandlerResult | void {
         const lastDistance = this._distance;
         this._distance = points[0].dist(points[1]);
-        if (!this._active && Math.abs(getZoomDelta(this._distance, this._startDistance)) < ZOOM_THRESHOLD) return;
+        if (!this._active && Math.abs(getZoomDelta(this._distance, this._startDistance)) < this._zoomThreshold) return;
         this._active = true;
         return {
-            zoomDelta: getZoomDelta(this._distance, lastDistance),
+            zoomDelta: getZoomDelta(this._distance, lastDistance) * this._zoomRate,
             pinchAround
         };
     }

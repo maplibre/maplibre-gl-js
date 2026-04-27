@@ -136,8 +136,7 @@ export class LngLat {
         const lat2 = lngLat.lat * rad;
         const a = Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos((lngLat.lng - this.lng) * rad);
 
-        const maxMeters = earthRadius * Math.acos(Math.min(a, 1));
-        return maxMeters;
+        return earthRadius * Math.acos(Math.min(a, 1));
     }
 
     /**

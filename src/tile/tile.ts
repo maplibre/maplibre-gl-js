@@ -5,7 +5,7 @@ import {GeoJSONFeature} from '../util/vectortile_to_geojson';
 import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
 import {SymbolBucket} from '../data/bucket/symbol_bucket';
 import {CollisionBoxArray} from '../data/array_types.g';
-import {Texture} from '../render/texture';
+import {Texture} from '../webgl/texture';
 import {now} from '../util/time_control';
 import {toEvaluationFeature} from '../data/evaluation_feature';
 import {EvaluationParameters} from '../style/evaluation_parameters';
@@ -22,9 +22,9 @@ import type {DEMData} from '../data/dem_data';
 import type {AlphaImage} from '../util/image';
 import type {ImageAtlas} from '../render/image_atlas';
 import type {ImageManager} from '../render/image_manager';
-import type {Context} from '../gl/context';
+import type {Context} from '../webgl/context';
 import type {OverscaledTileID} from './tile_id';
-import type {Framebuffer} from '../gl/framebuffer';
+import type {Framebuffer} from '../webgl/framebuffer';
 import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {LayerFeatureStates} from '../source/source_state';
 import type Point from '@mapbox/point-geometry';
@@ -297,18 +297,12 @@ export class Tile {
             this.imageAtlasTexture.destroy();
         }
 
-        if (this.imageAtlas) {
-            this.imageAtlas = null;
-        }
-
         if (this.glyphAtlasTexture) {
             this.glyphAtlasTexture.destroy();
         }
-
-        if (this.dashPositions) {
-            this.dashPositions = null;
-        }
-
+        
+        this.imageAtlas = null;
+        this.dashPositions = null;
         this.latestFeatureIndex = null;
         this.state = 'unloaded';
     }

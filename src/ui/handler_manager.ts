@@ -528,7 +528,7 @@ export class HandlerManager {
         const terrain = map.terrain;
 
         if (!hasChange(combinedResult) && !(terrain && this._terrainMovement)) {
-            return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
+            this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true); return;
         }
 
         // stop any ongoing camera animations (easeTo, flyTo)
@@ -540,7 +540,7 @@ export class HandlerManager {
             around = pinchAround;
         }
 
-        around = around || map.transform.centerPoint;
+        around ||= map.transform.centerPoint;
 
         if (terrain && !tr.isPointOnMapSurface(around)) {
             around = tr.centerPoint;

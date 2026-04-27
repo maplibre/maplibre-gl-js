@@ -10,7 +10,6 @@ import {EXTENT} from '../data/extent';
 
 import type {PaddingOptions} from './edge_insets';
 import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} from './transform_interface';
-import type {OverscaledTileID} from '../tile/tile_id';
 import {Bounds} from './bounds';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
@@ -65,11 +64,13 @@ export type TransformHelperCallbacks = {
 
 export type TransformOptions = {
     /**
-     * The minimum zoom level of the map.
+     * The minimum zoom level of the map. Users cannot zoom out beyond this level. (0–24)
+     * @defaultValue 0
      */
     minZoom?: number;
     /**
-     * The maximum zoom level of the map.
+     * The maximum zoom level of the map. Users cannot zoom in beyond this level. (0–24)
+     * @defaultValue 22
      */
     maxZoom?: number;
     /**
@@ -679,7 +680,7 @@ export class TransformHelper implements ITransformGetters {
         return camMercator.toLngLat();
     }
 
-    getMercatorTileCoordinates(overscaledTileID: OverscaledTileID): [number, number, number, number] {
+    getMercatorTileCoordinates(overscaledTileID?: { canonical: {x: number; y: number; z: number}} | null): [number, number, number, number] {
         if (!overscaledTileID) {
             return [0, 0, 1, 1];
         }

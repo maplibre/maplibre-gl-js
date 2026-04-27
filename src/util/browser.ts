@@ -62,7 +62,7 @@ export const browser = {
     },
 
     resolveURL(path: string) {
-        if (!linkEl) linkEl = document.createElement('a');
+        linkEl ||= document.createElement('a');
         linkEl.href = path;
         return linkEl.href;
     },
@@ -74,9 +74,7 @@ export const browser = {
         // In case your test crashes when checking matchMedia, call setMatchMedia from 'src/util/test/util'
         if (!matchMedia) return false;
         //Lazily initialize media query
-        if (reducedMotionQuery == null) {
-            reducedMotionQuery = matchMedia('(prefers-reduced-motion: reduce)');
-        }
+        reducedMotionQuery ??= matchMedia('(prefers-reduced-motion: reduce)');
         return reducedMotionQuery.matches;
     },
 

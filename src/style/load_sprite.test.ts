@@ -1,4 +1,4 @@
-import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {beforeEach, describe, expect, test, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import {RequestManager} from '../util/request_manager';
@@ -7,6 +7,7 @@ import {type FakeServer, fakeServer} from 'nise';
 import {bufferToArrayBuffer, sleep} from '../util/test/util';
 import {ABORT_ERROR} from '../util/abort_error';
 import * as util from '../util/util';
+import {ensureError} from '../util/util';
 
 describe('normalizeSpriteURL', () => {
     test('concantenates path, ratio, and extension for non-mapbox:// scheme', () => {
@@ -47,10 +48,9 @@ describe('loadSprite', () => {
     beforeEach(() => {
         vi.spyOn(util, 'arrayBufferToImageBitmap').mockImplementation(async (_data: ArrayBuffer) => {
             try {
-                const img = await createImageBitmap(new ImageData(1024, 824));
-                return img;
+                return await createImageBitmap(new ImageData(1024, 824));
             } catch (e) {
-                throw new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`);
+                throw new Error(`Could not load image because of ${ensureError(e).message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`);
             }
         });
         global.fetch = null;
@@ -81,10 +81,10 @@ describe('loadSprite', () => {
         expect(Object.keys(result)).toHaveLength(1);
         expect(Object.keys(result)[0]).toBe('default');
 
-        Object.values(result['default']).forEach(styleImage => {
+        for (const styleImage of Object.values(result['default'])) {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
+        }
 
         expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
         expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
@@ -107,10 +107,10 @@ describe('loadSprite', () => {
         expect(Object.keys(result)).toHaveLength(1);
         expect(Object.keys(result)[0]).toBe('default');
 
-        Object.values(result['default']).forEach(styleImage => {
+        for (const styleImage of Object.values(result['default'])) {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
+        }
 
         expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
         expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
@@ -146,15 +146,15 @@ describe('loadSprite', () => {
         expect(Object.keys(result)[0]).toBe('sprite1');
         expect(Object.keys(result)[1]).toBe('sprite2');
 
-        Object.values(result['sprite1']).forEach(styleImage => {
+        for (const styleImage of Object.values(result['sprite1'])) {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
+        }
 
-        Object.values(result['sprite2']).forEach(styleImage => {
+        for (const styleImage of Object.values(result['sprite2'])) {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
+        }
 
         expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
         expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
@@ -182,15 +182,15 @@ describe('loadSprite', () => {
         expect(Object.keys(result)[0]).toBe('sprite1');
         expect(Object.keys(result)[1]).toBe('sprite2');
 
-        Object.values(result['sprite1']).forEach(styleImage => {
+        for (const styleImage of Object.values(result['sprite1'])) {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
+        }
 
-        Object.values(result['sprite2']).forEach(styleImage => {
+        for (const styleImage of Object.values(result['sprite2'])) {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
+        }
 
         expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
         expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
@@ -264,10 +264,10 @@ describe('loadSprite', () => {
         expect(Object.keys(result)).toHaveLength(1);
         expect(Object.keys(result)[0]).toBe('default');
 
-        Object.values(result['default']).forEach(styleImage => {
+        for (const styleImage of Object.values(result['default'])) {
             expect(styleImage.spriteData).toBeTruthy();
             expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
-        });
+        }
 
         expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1@2x.json');
         expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1@2x.png');

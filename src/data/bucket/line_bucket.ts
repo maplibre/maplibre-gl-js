@@ -4,7 +4,7 @@ import {members as layoutAttributes} from './line_attributes';
 import {members as layoutAttributesExt} from './line_attributes_ext';
 import {SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
-import {TriangleIndexArray} from '../index_array_type';
+import {TriangleIndexArray} from '../array_types.g';
 import {EXTENT} from '../extent';
 import {VectorTileFeature} from '@mapbox/vector-tile';
 import {register} from '../../util/web_worker_transfer';
@@ -26,10 +26,10 @@ import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
 import type Point from '@mapbox/point-geometry';
 import type {Segment} from '../segment';
 import type {RGBAImage} from '../../util/image';
-import type {Context} from '../../gl/context';
-import type {Texture} from '../../render/texture';
-import type {IndexBuffer} from '../../gl/index_buffer';
-import type {VertexBuffer} from '../../gl/vertex_buffer';
+import type {Context} from '../../webgl/context';
+import type {Texture} from '../../webgl/texture';
+import type {IndexBuffer} from '../../webgl/index_buffer';
+import type {VertexBuffer} from '../../webgl/vertex_buffer';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
@@ -131,9 +131,9 @@ export class LineBucket implements Bucket {
         this.patternFeatures = [];
         this.lineClipsArray = [];
         this.gradients = {};
-        this.layers.forEach(layer => {
+        for (const layer of this.layers) {
             this.gradients[layer.id] = {};
-        });
+        }
 
         this.layoutVertexArray = new LineLayoutArray();
         this.layoutVertexArray2 = new LineExtLayoutArray();
@@ -247,7 +247,7 @@ export class LineBucket implements Bucket {
     }
 
     lineFeatureClips(feature: BucketFeature): LineClips | undefined {
-        if (!!feature.properties && Object.prototype.hasOwnProperty.call(feature.properties, GEOJSONVT_CLIP_START) && Object.prototype.hasOwnProperty.call(feature.properties, GEOJSONVT_CLIP_END)) {
+        if (!!feature.properties && Object.hasOwn(feature.properties, GEOJSONVT_CLIP_START) && Object.hasOwn(feature.properties, GEOJSONVT_CLIP_END)) {
             const start = +feature.properties[GEOJSONVT_CLIP_START];
             const end = +feature.properties[GEOJSONVT_CLIP_END];
             return {start, end};
@@ -347,7 +347,7 @@ export class LineBucket implements Bucket {
 
             // If we still don't have a previous normal, this is the beginning of a
             // non-closed line, so we're doing a straight "join".
-            prevNormal = prevNormal || nextNormal;
+            prevNormal ||= nextNormal;
 
             // Determine the normal of the join extrusion. It is the angle bisector
             // of the segments between the previous line and the next line.

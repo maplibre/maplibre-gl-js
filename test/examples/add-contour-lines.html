@@ -3,6 +3,7 @@
 <head>
     <title>Add Contour Lines</title>
     <meta property="og:description" content="Add contour lines to your map from a raster-dem source." />
+    <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
@@ -29,7 +30,7 @@
     // tile for each tile request from maplibre
     demSource.setupMaplibre(maplibregl);
 
-    const map = (window.map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         zoom: 13,
         center: [11.3229, 47.2738],
@@ -110,7 +111,7 @@
                 }
             ]
         }
-    }));
+    });
 </script>
 </body>
 </html>

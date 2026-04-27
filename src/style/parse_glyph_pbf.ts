@@ -5,6 +5,16 @@ const border = 3;
 
 import type {StyleGlyph} from './style_glyph';
 
+type RawGlyph = {
+    id: number;
+    bitmap: Uint8Array;
+    width: number;
+    height: number;
+    left: number;
+    top: number;
+    advance: number;
+};
+
 function readFontstacks(tag: number, glyphs: StyleGlyph[], pbf: Protobuf) {
     if (tag === 1) {
         pbf.readMessage(readFontstack, glyphs);
@@ -13,7 +23,7 @@ function readFontstacks(tag: number, glyphs: StyleGlyph[], pbf: Protobuf) {
 
 function readFontstack(tag: number, glyphs: StyleGlyph[], pbf: Protobuf) {
     if (tag === 3) {
-        const {id, bitmap, width, height, left, top, advance} = pbf.readMessage(readGlyph, {});
+        const {id, bitmap, width, height, left, top, advance} = pbf.readMessage(readGlyph, {} as RawGlyph);
         glyphs.push({
             id,
             bitmap: new AlphaImage({
@@ -25,7 +35,7 @@ function readFontstack(tag: number, glyphs: StyleGlyph[], pbf: Protobuf) {
     }
 }
 
-function readGlyph(tag: number, glyph: any, pbf: Protobuf) {
+function readGlyph(tag: number, glyph: RawGlyph, pbf: Protobuf) {
     if (tag === 1) glyph.id = pbf.readVarint();
     else if (tag === 2) glyph.bitmap = pbf.readBytes();
     else if (tag === 3) glyph.width = pbf.readVarint();

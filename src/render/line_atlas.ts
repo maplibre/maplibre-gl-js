@@ -1,6 +1,6 @@
 import {warnOnce} from '../util/util';
 
-import type {Context} from '../gl/context';
+import type {Context} from '../webgl/context';
 
 /**
  * A dash entry
@@ -50,9 +50,7 @@ export class LineAtlas {
     getDash(dasharray: number[], round: boolean) {
         const key = dasharray.join(',') + String(round);
 
-        if (!this.dashEntry[key]) {
-            this.dashEntry[key] = this.addDash(dasharray, round);
-        }
+        this.dashEntry[key] ||= this.addDash(dasharray, round);
         return this.dashEntry[key];
     }
 

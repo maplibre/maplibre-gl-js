@@ -1,4 +1,4 @@
-import type {Context} from '../../gl/context';
+import type {Context} from '../../webgl/context';
 import type {CanonicalTileID} from '../../tile/tile_id';
 import {type Mesh} from '../../render/mesh';
 import {now} from '../../util/time_control';
@@ -96,9 +96,7 @@ export class VerticalPerspectiveProjection implements Projection {
     }
 
     public updateGPUdependent(renderContext: ProjectionGPUContext): void {
-        if (!this._errorMeasurement) {
-            this._errorMeasurement = new ProjectionErrorMeasurement(renderContext);
-        }
+        this._errorMeasurement ||= new ProjectionErrorMeasurement(renderContext);
         const mercatorY = mercatorYfromLat(this._errorQueryLatitudeDegrees);
         const expectedResult = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
         const newValue = this._errorMeasurement.updateErrorLoop(mercatorY, expectedResult);
@@ -155,9 +153,9 @@ export class VerticalPerspectiveProjection implements Projection {
         const currentTime = now();
         let dirty = false;
         // Error correction transition
-        dirty = dirty || (currentTime - this._errorMeasurementLastChangeTime) / 1000.0 < (globeConstants.errorTransitionTimeSeconds + 0.2);
+        dirty ||= (currentTime - this._errorMeasurementLastChangeTime) / 1000.0 < (globeConstants.errorTransitionTimeSeconds + 0.2);
         // Error correction query in flight
-        dirty = dirty || (this._errorMeasurement?.awaitingQuery);
+        dirty ||= (this._errorMeasurement?.awaitingQuery);
         return dirty;
     }
 

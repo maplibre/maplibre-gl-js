@@ -95,65 +95,65 @@ describe('map events', () => {
 
     test('MapEvent handler fires contextmenu on MacOS/Linux, but only at mouseup', () => {
         const map = createMap();
-        const target = map.getCanvas();
+        const relatedTarget = map.getCanvas();
         map.dragPan.enable();
 
         const contextmenu = vi.fn();
 
         map.on('contextmenu', contextmenu);
 
-        simulate.mousedown(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
-        simulate.contextmenu(map.getCanvas(), {target}); // triggered immediately after mousedown
+        simulate.mousedown(map.getCanvas(), {relatedTarget, button: 2, clientX: 10, clientY: 10});
+        simulate.contextmenu(map.getCanvas(), {relatedTarget}); // triggered immediately after mousedown
         expect(contextmenu).toHaveBeenCalledTimes(0);
-        simulate.mouseup(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
+        simulate.mouseup(map.getCanvas(), {relatedTarget, button: 2, clientX: 10, clientY: 10});
         expect(contextmenu).toHaveBeenCalledTimes(1);
     });
 
     test('MapEvent handler does not fire contextmenu on MacOS/Linux, when moved', () => {
         const map = createMap();
-        const target = map.getCanvas();
+        const relatedTarget = map.getCanvas();
         map.dragPan.enable();
 
         const contextmenu = vi.fn();
 
         map.on('contextmenu', contextmenu);
 
-        simulate.mousedown(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
-        simulate.contextmenu(map.getCanvas(), {target}); // triggered immediately after mousedown
-        simulate.mousemove(map.getCanvas(), {target, buttons: 2, clientX: 50, clientY: 10});
-        simulate.mouseup(map.getCanvas(), {target, button: 2, clientX: 70, clientY: 10});
+        simulate.mousedown(map.getCanvas(), {relatedTarget, button: 2, clientX: 10, clientY: 10});
+        simulate.contextmenu(map.getCanvas(), {relatedTarget}); // triggered immediately after mousedown
+        simulate.mousemove(map.getCanvas(), {relatedTarget, buttons: 2, clientX: 50, clientY: 10});
+        simulate.mouseup(map.getCanvas(), {relatedTarget, button: 2, clientX: 70, clientY: 10});
         expect(contextmenu).toHaveBeenCalledTimes(0);
     });
 
     test('MapEvent handler fires contextmenu on Windows', () => {
         const map = createMap();
-        const target = map.getCanvas();
+        const relatedTarget = map.getCanvas();
         map.dragPan.enable();
 
         const contextmenu = vi.fn();
 
         map.on('contextmenu', contextmenu);
 
-        simulate.mousedown(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
-        simulate.mouseup(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
+        simulate.mousedown(map.getCanvas(), {relatedTarget, button: 2, clientX: 10, clientY: 10});
+        simulate.mouseup(map.getCanvas(), {relatedTarget, button: 2, clientX: 10, clientY: 10});
         expect(contextmenu).toHaveBeenCalledTimes(0);
-        simulate.contextmenu(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10}); // triggered only after mouseup
+        simulate.contextmenu(map.getCanvas(), {relatedTarget, button: 2, clientX: 10, clientY: 10}); // triggered only after mouseup
         expect(contextmenu).toHaveBeenCalledTimes(1);
     });
 
     test('MapEvent handler does not fire contextmenu on Windows, when moved', () => {
         const map = createMap();
-        const target = map.getCanvas();
+        const relatedTarget = map.getCanvas();
         map.dragPan.enable();
 
         const contextmenu = vi.fn();
 
         map.on('contextmenu', contextmenu);
 
-        simulate.mousedown(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10});
-        simulate.mousemove(map.getCanvas(), {target, buttons: 2, clientX: 50, clientY: 10});
-        simulate.mouseup(map.getCanvas(), {target, button: 2, clientX: 50, clientY: 10});
-        simulate.contextmenu(map.getCanvas(), {target, button: 2, clientX: 10, clientY: 10}); // triggered only after mouseup
+        simulate.mousedown(map.getCanvas(), {relatedTarget, button: 2, clientX: 10, clientY: 10});
+        simulate.mousemove(map.getCanvas(), {relatedTarget, buttons: 2, clientX: 50, clientY: 10});
+        simulate.mouseup(map.getCanvas(), {relatedTarget, button: 2, clientX: 50, clientY: 10});
+        simulate.contextmenu(map.getCanvas(), {relatedTarget, button: 2, clientX: 10, clientY: 10}); // triggered only after mouseup
         expect(contextmenu).toHaveBeenCalledTimes(0);
     });
 

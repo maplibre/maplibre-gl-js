@@ -2,7 +2,7 @@ import {CanonicalTileID} from '../tile/tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
-import {Texture} from '../render/texture';
+import {Texture} from '../webgl/texture';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
 import type {Source} from './source';
@@ -15,7 +15,7 @@ import type {
     VideoSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
-import {MAX_TILE_ZOOM} from '../util/util';
+import {ensureError, MAX_TILE_ZOOM} from '../util/util';
 import {Bounds} from '../geo/bounds';
 import {isAbortError} from '../util/abort_error';
 
@@ -166,7 +166,7 @@ export class ImageSource extends Evented implements Source {
             this._request = null;
             this._loaded = true;
             if (!isAbortError(err)) {
-                this.fire(new ErrorEvent(err));
+                this.fire(new ErrorEvent(ensureError(err)));
             }
         }
     }
@@ -192,7 +192,7 @@ export class ImageSource extends Evented implements Source {
         }
 
         this.options.url = options.url;
-        this.load(options.coordinates).finally(() => { this.texture = null; });
+        this.load(options.coordinates).finally(() => this.texture = null);
         return this;
     }
 

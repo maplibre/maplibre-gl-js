@@ -179,7 +179,7 @@ export class TileCache {
      * @param max - the max size of the cache
      * @returns this cache
      */
-    setMaxSize(max: number): TileCache {
+    setMaxSize(max: number): this {
         this.max = max;
 
         while (this.order.length > this.max) {

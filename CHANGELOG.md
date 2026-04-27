@@ -1,10 +1,40 @@
 ## main
 ### ✨ Features and improvements
+- Expose `getProjectionData` function in custom layer args objects ([#7471](https://github.com/maplibre/maplibre-gl-js/pull/7471)) (by [@kubapelc](https://github.com/kubapelc))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix polygon text label placement drifting far from center for convex polygons at high zoom due to coordinate rounding in geojson-vt ([#7380](https://github.com/maplibre/maplibre-gl-js/pull/7380)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
+
+## 5.24.0
+
+### ✨ Features and improvements
+
+- GPU performance optimization: Render halo and glyph in a single pass (-40% Time Reduction) ([#7436](https://github.com/maplibre/maplibre-gl-js/pull/7436)) (by [@xavierjs](https://github.com/xavierjs))
+- Optimize matrix inversions and reduce GPU stalls ([#7367](https://github.com/maplibre/maplibre-gl-js/pull/7367)) (by [@xavierjs](https://github.com/xavierjs))
+- Add example showing how to measure map performance using built-in events (`load`, `idle`, `render`) ([#7077](https://github.com/maplibre/maplibre-gl-js/pull/7077)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+
+### 🐞 Bug fixes
+
+- Fix `Popup` not updating its position when switching between terrain/globe projections ([#7468](https://github.com/maplibre/maplibre-gl-js/pull/7468)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Skip fog computation when fog opacity is zero ([#7476](https://github.com/maplibre/maplibre-gl-js/pull/7476)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+
+## 5.23.0
+
+### ✨ Features and improvements
+
+- Add `touchZoomRotate.setZoomRate()` and `touchZoomRotate.setZoomThreshold()` to customize touch zoom speed and pinch sensitivity ([#7271](https://github.com/maplibre/maplibre-gl-js/issues/7271)) (by [@itisyb](https://github.com/itisyb))
+- Improve ability to communicate with imported scripts in workers and use `makeRequest` in workres as well ([#7451](https://github.com/maplibre/maplibre-gl-js/issues/7451)) (by [@HarelM](https://github.com/HarelM))
+- Allow `opacity` and `opacityWhenCovered` in `Marker` and `MarkerOptions` to accept `number` in addition to `string`, and add `maplibregl-marker-covered` CSS class to `Marker` element when covered by 3D terrain or a globe ([#7433](https://github.com/maplibre/maplibre-gl-js/issues/7433)) (by [@YuChunTsao](https://github.com/YuChunTsao))
+- perf: add a bench for terrain rendering and fix `_demMatrixCache` lookup being wasted cycles by actually using the cache ([#7400](https://github.com/maplibre/maplibre-gl-js/pull/7400)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+
+### 🐞 Bug fixes
+
+- Fix polygon text label placement drifting far from center for convex polygons at high zoom due to coordinate rounding in geojson-vt ([#7380](https://github.com/maplibre/maplibre-gl-js/pull/7380)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Ensure that a successful ArrayBuffer response from a custom protocol that is null/undefined is set to an empty ArrayBuffer ([#7427](https://github.com/maplibre/maplibre-gl-js/pull/7427)) (by [@neodescis](https://github.com/neodescis))
+- Fix error in `_contextRestored` when map was initialized without a style ([#7432](https://github.com/maplibre/maplibre-gl-js/issues/7432)) (by [@mvanhorn](https://github.com/mvanhorn))
+- Fix issue with the cache used for zoomLevelsToOverscale feature ([#7450](https://github.com/maplibre/maplibre-gl-js/issues/7450)) (by [@HarelM](https://github.com/HarelM))
+- Update stylelint and fix old issues with the CSS (mainly change rgb to use spaces) ([#7365](https://github.com/maplibre/maplibre-gl-js/issues/7365)) (by [@HarelM](https://github.com/HarelM))
 
 ## 5.22.0
 

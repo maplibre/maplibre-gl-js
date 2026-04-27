@@ -44,7 +44,7 @@ function attachSimulateFrame(camera) {
 }
 
 function createCamera(options?): Camera & { simulateFrame: () => void } {
-    options = options || {};
+    options ||= {};
 
     const transform = options.globe ? new GlobeTransform() : new MercatorTransform();
     transform.setMinZoom(0);
@@ -70,7 +70,7 @@ function createCamera(options?): Camera & { simulateFrame: () => void } {
 }
 
 function createCameraGlobe(options?) {
-    options = options || {};
+    options ||= {};
     options.globe = true;
     return createCamera(options);
 }
@@ -146,7 +146,7 @@ describe('calculateCameraOptionsFromTo', () => {
     });
 
     test('same To as From error', () => {
-        expect(() => { camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 0); }).toThrow();
+        expect(() => camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 0)).toThrow();
     });
 });
 
@@ -307,9 +307,9 @@ describe('jumpTo', () => {
         let started, moved, ended;
         const eventData = {data: 'ok'};
 
-        camera.on('movestart', (d) => { started = d.data; });
-        camera.on('move', (d) => { moved = d.data; });
-        camera.on('moveend', (d) => { ended = d.data; });
+        camera.on('movestart', (d) => started = d.data);
+        camera.on('move', (d) => moved = d.data);
+        camera.on('moveend', (d) => ended = d.data);
 
         camera.jumpTo({center: [1, 2]}, eventData);
         expect(started).toBe('ok');
@@ -321,9 +321,9 @@ describe('jumpTo', () => {
         let started, moved, ended;
         const eventData = {data: 'ok'};
 
-        camera.on('movestart', (d) => { started = d.data; });
-        camera.on('move', (d) => { moved = d.data; });
-        camera.on('moveend', (d) => { ended = d.data; });
+        camera.on('movestart', (d) => started = d.data);
+        camera.on('move', (d) => moved = d.data);
+        camera.on('moveend', (d) => ended = d.data);
 
         camera.setVerticalFieldOfView(44, eventData);
         expect(started).toBe('ok');
@@ -335,9 +335,9 @@ describe('jumpTo', () => {
         let started, zoomed, ended;
         const eventData = {data: 'ok'};
 
-        camera.on('zoomstart', (d) => { started = d.data; });
-        camera.on('zoom', (d) => { zoomed = d.data; });
-        camera.on('zoomend', (d) => { ended = d.data; });
+        camera.on('zoomstart', (d) => started = d.data);
+        camera.on('zoom', (d) => zoomed = d.data);
+        camera.on('zoomend', (d) => ended = d.data);
 
         camera.jumpTo({zoom: 3}, eventData);
         expect(started).toBe('ok');
@@ -349,9 +349,9 @@ describe('jumpTo', () => {
         let started, rotated, ended;
         const eventData = {data: 'ok'};
 
-        camera.on('rotatestart', (d) => { started = d.data; });
-        camera.on('rotate', (d) => { rotated = d.data; });
-        camera.on('rotateend', (d) => { ended = d.data; });
+        camera.on('rotatestart', (d) => started = d.data);
+        camera.on('rotate', (d) => rotated = d.data);
+        camera.on('rotateend', (d) => ended = d.data);
 
         camera.jumpTo({bearing: 90}, eventData);
         expect(started).toBe('ok');
@@ -363,9 +363,9 @@ describe('jumpTo', () => {
         let started, pitched, ended;
         const eventData = {data: 'ok'};
 
-        camera.on('pitchstart', (d) => { started = d.data; });
-        camera.on('pitch', (d) => { pitched = d.data; });
-        camera.on('pitchend', (d) => { ended = d.data; });
+        camera.on('pitchstart', (d) => started = d.data);
+        camera.on('pitch', (d) => pitched = d.data);
+        camera.on('pitchend', (d) => ended = d.data);
 
         camera.jumpTo({pitch: 10}, eventData);
         expect(started).toBe('ok');
@@ -377,9 +377,9 @@ describe('jumpTo', () => {
         let started, rolled, ended;
         const eventData = {data: 'ok'};
 
-        camera.on('rollstart', (d) => { started = d.data; });
-        camera.on('roll', (d) => { rolled = d.data; });
-        camera.on('rollend', (d) => { ended = d.data; });
+        camera.on('rollstart', (d) => started = d.data);
+        camera.on('roll', (d) => rolled = d.data);
+        camera.on('rollend', (d) => ended = d.data);
 
         camera.jumpTo({roll: 10}, eventData);
         expect(started).toBe('ok');
@@ -426,9 +426,9 @@ describe('setCenter', () => {
         let started, moved, ended;
         const eventData = {data: 'ok'};
 
-        camera.on('movestart', (d) => { started = d.data; });
-        camera.on('move', (d) => { moved = d.data; });
-        camera.on('moveend', (d) => { ended = d.data; });
+        camera.on('movestart', (d) => started = d.data);
+        camera.on('move', (d) => moved = d.data);
+        camera.on('moveend', (d) => ended = d.data);
 
         camera.setCenter([10, 20], eventData);
         expect(started).toBe('ok');
@@ -456,12 +456,12 @@ describe('setZoom', () => {
         let movestarted, moved, moveended, zoomstarted, zoomed, zoomended;
         const eventData = {data: 'ok'};
 
-        camera.on('movestart', (d) => { movestarted = d.data; });
-        camera.on('move', (d) => { moved = d.data; });
-        camera.on('moveend', (d) => { moveended = d.data; });
-        camera.on('zoomstart', (d) => { zoomstarted = d.data; });
-        camera.on('zoom', (d) => { zoomed = d.data; });
-        camera.on('zoomend', (d) => { zoomended = d.data; });
+        camera.on('movestart', (d) => movestarted = d.data);
+        camera.on('move', (d) => moved = d.data);
+        camera.on('moveend', (d) => moveended = d.data);
+        camera.on('zoomstart', (d) => zoomstarted = d.data);
+        camera.on('zoom', (d) => zoomed = d.data);
+        camera.on('zoomend', (d) => zoomended = d.data);
 
         camera.setZoom(4, eventData);
         expect(movestarted).toBe('ok');
@@ -498,12 +498,12 @@ describe('setBearing', () => {
         let movestarted, moved, moveended, rotatestarted, rotated, rotateended;
         const eventData = {data: 'ok'};
 
-        camera.on('movestart', (d) => { movestarted = d.data; });
-        camera.on('move', (d) => { moved = d.data; });
-        camera.on('moveend', (d) => { moveended = d.data; });
-        camera.on('rotatestart', (d) => { rotatestarted = d.data; });
-        camera.on('rotate', (d) => { rotated = d.data; });
-        camera.on('rotateend', (d) => { rotateended = d.data; });
+        camera.on('movestart', (d) => movestarted = d.data);
+        camera.on('move', (d) => moved = d.data);
+        camera.on('moveend', (d) => moveended = d.data);
+        camera.on('rotatestart', (d) => rotatestarted = d.data);
+        camera.on('rotate', (d) => rotated = d.data);
+        camera.on('rotateend', (d) => rotateended = d.data);
 
         camera.setBearing(5, eventData);
         expect(movestarted).toBe('ok');
@@ -534,12 +534,12 @@ describe('setRoll', () => {
         let movestarted, moved, moveended, rollstarted, rolled, rollended;
         const eventData = {data: 'ok'};
 
-        camera.on('movestart', (d) => { movestarted = d.data; });
-        camera.on('move', (d) => { moved = d.data; });
-        camera.on('moveend', (d) => { moveended = d.data; });
-        camera.on('rollstart', (d) => { rollstarted = d.data; });
-        camera.on('roll', (d) => { rolled = d.data; });
-        camera.on('rollend', (d) => { rollended = d.data; });
+        camera.on('movestart', (d) => movestarted = d.data);
+        camera.on('move', (d) => moved = d.data);
+        camera.on('moveend', (d) => moveended = d.data);
+        camera.on('rollstart', (d) => rollstarted = d.data);
+        camera.on('roll', (d) => rolled = d.data);
+        camera.on('rollend', (d) => rollended = d.data);
 
         camera.setRoll(5, eventData);
         expect(movestarted).toBe('ok');
@@ -610,8 +610,8 @@ describe('panBy', () => {
         let started, moved;
         const eventData = {data: 'ok'};
 
-        camera.on('movestart', (d) => { started = d.data; });
-        camera.on('move', (d) => { moved = d.data; });
+        camera.on('movestart', (d) => started = d.data);
+        camera.on('move', (d) => moved = d.data);
         const promise = camera.once('moveend');
 
         camera.panBy([100, 0], {duration: 0}, eventData);
@@ -628,7 +628,7 @@ describe('panBy', () => {
         // fire once in advance to satisfy assertions that moveend only comes after movestart
         camera.fire('movestart');
 
-        camera.on('movestart', () => { started = true; });
+        camera.on('movestart', () => started = true);
         const promise = camera.once('moveend');
 
         camera.panBy([100, 0], {duration: 0, noMoveStart: true});
@@ -669,8 +669,8 @@ describe('panTo', () => {
         let started, moved;
         const eventData = {data: 'ok'};
 
-        camera.on('movestart', (d) => { started = d.data; });
-        camera.on('move', (d) => { moved = d.data; });
+        camera.on('movestart', (d) => started = d.data);
+        camera.on('move', (d) => moved = d.data);
         const promise = camera.once('moveend');
 
         camera.panTo([100, 0], {duration: 0}, eventData);
@@ -688,7 +688,7 @@ describe('panTo', () => {
         // fire once in advance to satisfy assertions that moveend only comes after movestart
         camera.fire('movestart');
 
-        camera.on('movestart', () => { started = true; });
+        camera.on('movestart', () => started = true);
         const promise = camera.once('moveend');
 
         camera.panTo([100, 0], {duration: 0, noMoveStart: true});
@@ -731,12 +731,12 @@ describe('zoomTo', () => {
         let movestarted, moved, zoomstarted, zoomed;
         const eventData = {data: 'ok'};
 
-        camera.on('movestart', (d) => { movestarted = d.data; });
-        camera.on('move', (d) => { moved = d.data; });
+        camera.on('movestart', (d) => movestarted = d.data);
+        camera.on('move', (d) => moved = d.data);
         const movePromise = camera.once('moveend');
 
-        camera.on('zoomstart', (d) => { zoomstarted = d.data; });
-        camera.on('zoom', (d) => { zoomed = d.data; });
+        camera.on('zoomstart', (d) => zoomstarted = d.data);
+        camera.on('zoom', (d) => zoomed = d.data);
         const zoomPromise = camera.once('zoomend');
 
         camera.zoomTo(5, {duration: 0}, eventData);
@@ -800,12 +800,12 @@ describe('rotateTo', () => {
         let movestarted, moved, rotatestarted, rotated;
         const eventData = {data: 'ok'};
 
-        camera.on('movestart', (d) => { movestarted = d.data; });
-        camera.on('move', (d) => { moved = d.data; });
+        camera.on('movestart', (d) => movestarted = d.data);
+        camera.on('move', (d) => moved = d.data);
         const movePromise = camera.once('moveend');
 
-        camera.on('rotatestart', (d) => { rotatestarted = d.data; });
-        camera.on('rotate', (d) => { rotated = d.data; });
+        camera.on('rotatestart', (d) => rotatestarted = d.data);
+        camera.on('rotate', (d) => rotated = d.data);
         const rotatePRomise = camera.once('rotateend');
 
         camera.rotateTo(90, {duration: 0}, eventData);
@@ -983,24 +983,24 @@ describe('easeTo', () => {
         let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched, rollstarted, rolled;
         const eventData = {data: 'ok'};
 
-        camera.on('movestart', (d) => { movestarted = d.data; });
-        camera.on('move', (d) => { moved = d.data; });
+        camera.on('movestart', (d) => movestarted = d.data);
+        camera.on('move', (d) => moved = d.data);
         const movePromise = camera.once('moveend');
 
-        camera.on('zoomstart', (d) => { zoomstarted = d.data; });
-        camera.on('zoom', (d) => { zoomed = d.data; });
+        camera.on('zoomstart', (d) => zoomstarted = d.data);
+        camera.on('zoom', (d) => zoomed = d.data);
         const zoomPromise = camera.once('zoomend');
 
-        camera.on('rotatestart', (d) => { rotatestarted = d.data; });
-        camera.on('rotate', (d) => { rotated = d.data; });
+        camera.on('rotatestart', (d) => rotatestarted = d.data);
+        camera.on('rotate', (d) => rotated = d.data);
         const rotatePromise = camera.once('rotateend');
 
-        camera.on('pitchstart', (d) => { pitchstarted = d.data; });
-        camera.on('pitch', (d) => { pitched = d.data; });
+        camera.on('pitchstart', (d) => pitchstarted = d.data);
+        camera.on('pitch', (d) => pitched = d.data);
         const pitchPromise = camera.once('pitchend');
 
-        camera.on('rollstart', (d) => { rollstarted = d.data; });
-        camera.on('roll', (d) => { rolled = d.data; });
+        camera.on('rollstart', (d) => rollstarted = d.data);
+        camera.on('roll', (d) => rolled = d.data);
         const rollPromise = camera.once('rollend');
 
         camera.easeTo(
@@ -1196,7 +1196,7 @@ describe('easeTo', () => {
         const max = 300;
 
         let startTime;
-        camera.on('movestart', () => { startTime = timeControl.now(); });
+        camera.on('movestart', () => startTime = timeControl.now());
         const promise = camera.once('moveend');
 
         setTimeout(() => {
@@ -1222,7 +1222,7 @@ describe('easeTo', () => {
         Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
 
         let startTime;
-        camera.on('movestart', () => { startTime = new Date(); });
+        camera.on('movestart', () => startTime = new Date());
         const promise = camera.once('moveend');
 
         camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 1000});
@@ -1489,27 +1489,27 @@ describe('flyTo', () => {
         let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched, rollstarted, rolled;
         const eventData = {data: 'ok'};
 
-        camera.on('movestart', (d) => { movestarted = d.data; });
-        camera.on('move', (d) => { moved = d.data; });
-        camera.on('rotate', (d) => { rotated = d.data; });
-        camera.on('pitch', (d) => { pitched = d.data; });
-        camera.on('roll', (d) => { rolled = d.data; });
+        camera.on('movestart', (d) => movestarted = d.data);
+        camera.on('move', (d) => moved = d.data);
+        camera.on('rotate', (d) => rotated = d.data);
+        camera.on('pitch', (d) => pitched = d.data);
+        camera.on('roll', (d) => rolled = d.data);
         const movePromise = camera.once('moveend');
 
-        camera.on('zoomstart', (d) => { zoomstarted = d.data; });
-        camera.on('zoom', (d) => { zoomed = d.data; });
+        camera.on('zoomstart', (d) => zoomstarted = d.data);
+        camera.on('zoom', (d) => zoomed = d.data);
         const zoomPromise = camera.once('zoomend');
 
-        camera.on('rotatestart', (d) => { rotatestarted = d.data; });
-        camera.on('rotate', (d) => { rotated = d.data; });
+        camera.on('rotatestart', (d) => rotatestarted = d.data);
+        camera.on('rotate', (d) => rotated = d.data);
         const rotatePromise = camera.once('rotateend');
 
-        camera.on('pitchstart', (d) => { pitchstarted = d.data; });
-        camera.on('pitch', (d) => { pitched = d.data; });
+        camera.on('pitchstart', (d) => pitchstarted = d.data);
+        camera.on('pitch', (d) => pitched = d.data);
         const pitchPromise = camera.once('pitchend');
 
-        camera.on('rollstart', (d) => { rollstarted = d.data; });
-        camera.on('roll', (d) => { rolled = d.data; });
+        camera.on('rollstart', (d) => rollstarted = d.data);
+        camera.on('roll', (d) => rolled = d.data);
         const rollPromise = camera.once('rollend');
 
         camera.flyTo(
@@ -1559,17 +1559,17 @@ describe('flyTo', () => {
             pitchstarted, pitched, pitchended;
         const eventData = {data: 'ok'};
 
-        camera.on('movestart', (d) => { movestarted = d.data; });
-        camera.on('move', (d) => { moved = d.data; });
-        camera.on('zoomstart', (d) => { zoomstarted = d.data; });
-        camera.on('zoom', (d) => { zoomed = d.data; });
-        camera.on('zoomend', (d) => { zoomended = d.data; });
-        camera.on('rotatestart', (d) => { rotatestarted = d.data; });
-        camera.on('rotate', (d) => { rotated = d.data; });
-        camera.on('rotateend', (d) => { rotateended = d.data; });
-        camera.on('pitchstart', (d) => { pitchstarted = d.data; });
-        camera.on('pitch', (d) => { pitched = d.data; });
-        camera.on('pitchend', (d) => { pitchended = d.data; });
+        camera.on('movestart', (d) => movestarted = d.data);
+        camera.on('move', (d) => moved = d.data);
+        camera.on('zoomstart', (d) => zoomstarted = d.data);
+        camera.on('zoom', (d) => zoomed = d.data);
+        camera.on('zoomend', (d) => zoomended = d.data);
+        camera.on('rotatestart', (d) => rotatestarted = d.data);
+        camera.on('rotate', (d) => rotated = d.data);
+        camera.on('rotateend', (d) => rotateended = d.data);
+        camera.on('pitchstart', (d) => pitchstarted = d.data);
+        camera.on('pitch', (d) => pitched = d.data);
+        camera.on('pitchend', (d) => pitchended = d.data);
         const promise = camera.once('moveend');
 
         const stub = vi.spyOn(timeControl, 'now');
@@ -1924,7 +1924,7 @@ describe('flyTo', () => {
         let leftWorld0 = false;
 
         camera.on('move', () => {
-            leftWorld0 = leftWorld0 || (camera.getCenter().lng < -180);
+            leftWorld0 ||= (camera.getCenter().lng < -180);
         });
 
         const promise = camera.once('moveend');
@@ -2037,7 +2037,7 @@ describe('flyTo', () => {
         let startTime: number;
         const camera = createCamera({center: [37.63454, 55.75868], zoom: 18});
 
-        camera.on('movestart', () => { startTime = new Date().getTime(); });
+        camera.on('movestart', () => startTime = new Date().getTime());
         const promise = camera.once('moveend');
 
         camera.flyTo({center: [-122.3998631, 37.7884307], maxDuration: 100});
@@ -2052,7 +2052,7 @@ describe('flyTo', () => {
         const camera = createCamera();
         Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
         let startTime;
-        camera.on('movestart', () => { startTime = new Date(); });
+        camera.on('movestart', () => startTime = new Date());
         const promise = camera.once('moveend');
 
         camera.flyTo({center: [100, 0], bearing: 90, animate: true});
@@ -2078,9 +2078,9 @@ describe('flyTo', () => {
 
         const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
         camera.terrain = {getElevationForLngLatZoom: () => 0} as any as Terrain;
-        camera._prepareElevation = () => { terrainCallbacks.prepare++; };
-        camera._updateElevation = () => { terrainCallbacks.update++; };
-        camera._finalizeElevation = () => { terrainCallbacks.finalize++; };
+        camera._prepareElevation = () => terrainCallbacks.prepare++;
+        camera._updateElevation = () => terrainCallbacks.update++;
+        camera._finalizeElevation = () => terrainCallbacks.finalize++;
         camera.setCenter([-10, 0]);
         const moveEnded = camera.once('moveend');
 
@@ -2102,9 +2102,9 @@ describe('flyTo', () => {
 
         const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
         camera.terrain = {getElevationForLngLatZoom: () => 0} as any as Terrain;
-        camera._prepareElevation = () => { terrainCallbacks.prepare++; };
-        camera._updateElevation = () => { terrainCallbacks.update++; };
-        camera._finalizeElevation = () => { terrainCallbacks.finalize++; };
+        camera._prepareElevation = () => terrainCallbacks.prepare++;
+        camera._updateElevation = () => terrainCallbacks.update++;
+        camera._finalizeElevation = () => terrainCallbacks.finalize++;
         camera.setCenter([-10, 0]);
         const moveEnded = camera.once('moveend');
 
@@ -2130,7 +2130,7 @@ describe('flyTo', () => {
             elevation: 0,
             recalculateZoomAndCenter: () => true,
             setMinElevationForCurrentTile: (_a) => true,
-            setElevation: (e) => { (camera.transform as any).elevation = e; }
+            setElevation: (e) => (camera.transform as any).elevation = e
         } as any;
 
         camera._prepareElevation(new LngLat(10, 0));
@@ -2805,9 +2805,9 @@ describe('jumpTo globe projection', () => {
             let started, moved, ended;
             const eventData = {data: 'ok'};
 
-            camera.on('movestart', (d) => { started = d.data; });
-            camera.on('move', (d) => { moved = d.data; });
-            camera.on('moveend', (d) => { ended = d.data; });
+            camera.on('movestart', (d) => started = d.data);
+            camera.on('move', (d) => moved = d.data);
+            camera.on('moveend', (d) => ended = d.data);
 
             camera.jumpTo({center: [1, 2]}, eventData);
             expect(started).toBe('ok');
@@ -2819,9 +2819,9 @@ describe('jumpTo globe projection', () => {
             let started, zoomed, ended;
             const eventData = {data: 'ok'};
 
-            camera.on('zoomstart', (d) => { started = d.data; });
-            camera.on('zoom', (d) => { zoomed = d.data; });
-            camera.on('zoomend', (d) => { ended = d.data; });
+            camera.on('zoomstart', (d) => started = d.data);
+            camera.on('zoom', (d) => zoomed = d.data);
+            camera.on('zoomend', (d) => ended = d.data);
 
             camera.jumpTo({zoom: 3}, eventData);
             expect(started).toBe('ok');
@@ -2833,9 +2833,9 @@ describe('jumpTo globe projection', () => {
             let started, rotated, ended;
             const eventData = {data: 'ok'};
 
-            camera.on('rotatestart', (d) => { started = d.data; });
-            camera.on('rotate', (d) => { rotated = d.data; });
-            camera.on('rotateend', (d) => { ended = d.data; });
+            camera.on('rotatestart', (d) => started = d.data);
+            camera.on('rotate', (d) => rotated = d.data);
+            camera.on('rotateend', (d) => ended = d.data);
 
             camera.jumpTo({bearing: 90}, eventData);
             expect(started).toBe('ok');
@@ -2847,9 +2847,9 @@ describe('jumpTo globe projection', () => {
             let started, pitched, ended;
             const eventData = {data: 'ok'};
 
-            camera.on('pitchstart', (d) => { started = d.data; });
-            camera.on('pitch', (d) => { pitched = d.data; });
-            camera.on('pitchend', (d) => { ended = d.data; });
+            camera.on('pitchstart', (d) => started = d.data);
+            camera.on('pitch', (d) => pitched = d.data);
+            camera.on('pitchend', (d) => ended = d.data);
 
             camera.jumpTo({pitch: 10}, eventData);
             expect(started).toBe('ok');
@@ -3429,27 +3429,27 @@ describe('flyTo globe projection', () => {
             let movestarted, moved, zoomstarted, zoomed, rotatestarted, rotated, pitchstarted, pitched, rollstarted, rolled;
             const eventData = {data: 'ok'};
 
-            camera.on('movestart', (d) => { movestarted = d.data; });
-            camera.on('move', (d) => { moved = d.data; });
-            camera.on('rotate', (d) => { rotated = d.data; });
-            camera.on('pitch', (d) => { pitched = d.data; });
-            camera.on('roll', (d) => { rolled = d.data; });
+            camera.on('movestart', (d) => movestarted = d.data);
+            camera.on('move', (d) => moved = d.data);
+            camera.on('rotate', (d) => rotated = d.data);
+            camera.on('pitch', (d) => pitched = d.data);
+            camera.on('roll', (d) => rolled = d.data);
             const movePromise = camera.once('moveend');
 
-            camera.on('zoomstart', (d) => { zoomstarted = d.data; });
-            camera.on('zoom', (d) => { zoomed = d.data; });
+            camera.on('zoomstart', (d) => zoomstarted = d.data);
+            camera.on('zoom', (d) => zoomed = d.data);
             const zoomPromise = camera.once('zoomend');
 
-            camera.on('rotatestart', (d) => { rotatestarted = d.data; });
-            camera.on('rotate', (d) => { rotated = d.data; });
+            camera.on('rotatestart', (d) => rotatestarted = d.data);
+            camera.on('rotate', (d) => rotated = d.data);
             const rotatePromise = camera.once('rotateend');
 
-            camera.on('pitchstart', (d) => { pitchstarted = d.data; });
-            camera.on('pitch', (d) => { pitched = d.data; });
+            camera.on('pitchstart', (d) => pitchstarted = d.data);
+            camera.on('pitch', (d) => pitched = d.data);
             const pitchPromise = camera.once('pitchend');
 
-            camera.on('rollstart', (d) => { rollstarted = d.data; });
-            camera.on('roll', (d) => { rolled = d.data; });
+            camera.on('rollstart', (d) => rollstarted = d.data);
+            camera.on('roll', (d) => rolled = d.data);
             const rollPromise = camera.once('rollend');
 
             camera.flyTo(
@@ -3501,17 +3501,17 @@ describe('flyTo globe projection', () => {
                 pitchstarted, pitched, pitchended;
             const eventData = {data: 'ok'};
 
-            camera.on('movestart', (d) => { movestarted = d.data; });
-            camera.on('move', (d) => { moved = d.data; });
-            camera.on('zoomstart', (d) => { zoomstarted = d.data; });
-            camera.on('zoom', (d) => { zoomed = d.data; });
-            camera.on('zoomend', (d) => { zoomended = d.data; });
-            camera.on('rotatestart', (d) => { rotatestarted = d.data; });
-            camera.on('rotate', (d) => { rotated = d.data; });
-            camera.on('rotateend', (d) => { rotateended = d.data; });
-            camera.on('pitchstart', (d) => { pitchstarted = d.data; });
-            camera.on('pitch', (d) => { pitched = d.data; });
-            camera.on('pitchend', (d) => { pitchended = d.data; });
+            camera.on('movestart', (d) => movestarted = d.data);
+            camera.on('move', (d) => moved = d.data);
+            camera.on('zoomstart', (d) => zoomstarted = d.data);
+            camera.on('zoom', (d) => zoomed = d.data);
+            camera.on('zoomend', (d) => zoomended = d.data);
+            camera.on('rotatestart', (d) => rotatestarted = d.data);
+            camera.on('rotate', (d) => rotated = d.data);
+            camera.on('rotateend', (d) => rotateended = d.data);
+            camera.on('pitchstart', (d) => pitchstarted = d.data);
+            camera.on('pitch', (d) => pitched = d.data);
+            camera.on('pitchend', (d) => pitchended = d.data);
             const promise = camera.once('moveend');
 
             const stub = vi.spyOn(timeControl, 'now');
@@ -3781,7 +3781,7 @@ describe('flyTo globe projection', () => {
             let leftWorld0 = false;
 
             camera.on('move', () => {
-                leftWorld0 = leftWorld0 || (camera.getCenter().lng < -180);
+                leftWorld0 ||= (camera.getCenter().lng < -180);
             });
 
             const promise = camera.once('moveend');
@@ -3898,7 +3898,7 @@ describe('flyTo globe projection', () => {
             let startTime: number;
             const camera = createCameraGlobe({center: [37.63454, 55.75868], zoom: 18});
 
-            camera.on('movestart', () => { startTime = new Date().getTime(); });
+            camera.on('movestart', () => startTime = new Date().getTime());
             const promise = camera.once('moveend');
 
             camera.flyTo({center: [-122.3998631, 37.7884307], maxDuration: 100});

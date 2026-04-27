@@ -25,11 +25,10 @@ describe('geojson tile worker source', () => {
             '0': {} as WorkerTile
         };
 
-        const res = await source.removeTile({
+        await source.removeTile({
             source: 'source',
             uid: 0
         } as any as TileParameters);
-        expect(res).toBeUndefined();
 
         expect(source.tileState.loaded).toEqual({});
     });
@@ -344,13 +343,13 @@ describe('resourceTiming', () => {
         const sampleMarks = [100, 350];
         const marks = {};
         const measures = {};
-        window.performance.getEntriesByName = vi.fn().mockImplementation((name) => { return measures[name] || []; });
+        window.performance.getEntriesByName = vi.fn().mockImplementation((name) => measures[name] || []);
         vi.spyOn(performance, 'mark').mockImplementation((name) => {
             marks[name] = sampleMarks.shift();
             return null;
         });
         window.performance.measure = vi.fn().mockImplementation((name, start, end) => {
-            measures[name] = measures[name] || [];
+            measures[name] ||= [];
             measures[name].push({
                 duration: marks[end] - marks[start],
                 entryType: 'measure',
@@ -359,8 +358,8 @@ describe('resourceTiming', () => {
             });
             return null;
         });
-        vi.spyOn(performance, 'clearMarks').mockImplementation(() => { return null; });
-        vi.spyOn(performance, 'clearMeasures').mockImplementation(() => { return null; });
+        vi.spyOn(performance, 'clearMarks').mockImplementation(() => null);
+        vi.spyOn(performance, 'clearMeasures').mockImplementation(() => null);
 
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
@@ -557,7 +556,7 @@ describe('loadData', () => {
         expect(mockGeoJSONIndex.updateClusterOptions).not.toHaveBeenCalled();
         await expect(worker.loadData({
             type: 'geojson',
-            updateCluster: true, 
+            updateCluster: true,
             geojsonVtOptions: {
                 cluster: true,
                 clusterOptions: {},

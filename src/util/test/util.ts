@@ -62,13 +62,11 @@ export function createMap(options?) {
 
     if (options?.deleteStyle) delete defaultOptions.style;
 
-    const map = new Map(extend(defaultOptions, options));
-
-    return map;
+    return new Map(extend(defaultOptions, options));
 }
 
 export function equalWithPrecision(test, expected, actual, multiplier, message, extra) {
-    message = message || `should be equal to within ${multiplier}`;
+    message ||= `should be equal to within ${multiplier}`;
     const expectedRounded = Math.round(expected / multiplier) * multiplier;
     const actualRounded = Math.round(actual / multiplier) * multiplier;
 
@@ -126,25 +124,23 @@ export function beforeMapTest() {
 }
 
 export function getWrapDispatcher() {
-    const wrapDispatcher = (actor: IActor) => {
+    return (actor: IActor) => {
         return {
             getActor() {
                 return actor;
             }
         } as any as Dispatcher;
     };
-
-    return wrapDispatcher;
 }
 
 export function getMockDispatcher() {
     const wrapDispatcher = getWrapDispatcher();
 
-    const mockDispatcher = wrapDispatcher({
-        sendAsync() { return Promise.resolve({}); },
+    return wrapDispatcher({
+        sendAsync() {
+            return Promise.resolve({});
+        },
     });
-
-    return mockDispatcher;
 }
 
 export function stubAjaxGetImage(createImageBitmap) {

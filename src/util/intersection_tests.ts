@@ -19,15 +19,12 @@ function polygonIntersectsPolygon(polygonA: Polygon, polygonB: Polygon) {
         if (polygonContainsPoint(polygonA, point)) return true;
     }
 
-    if (lineIntersectsLine(polygonA, polygonB)) return true;
-
-    return false;
+    return lineIntersectsLine(polygonA, polygonB);
 }
 
 function polygonIntersectsBufferedPoint(polygon: Polygon, point: Point, radius: number) {
     if (polygonContainsPoint(polygon, point)) return true;
-    if (pointIntersectsBufferedLine(point, polygon, radius)) return true;
-    return false;
+    return pointIntersectsBufferedLine(point, polygon, radius);
 }
 
 function polygonIntersectsMultiPolygon(polygon: Polygon, multiPolygon: MultiPolygon) {

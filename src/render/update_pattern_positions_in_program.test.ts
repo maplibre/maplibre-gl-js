@@ -43,8 +43,7 @@ function constructMockFillStyleLayer(): FillStyleLayer {
             ]
         }
     } as FillLayerSpecification;
-    const layer = new FillStyleLayer(layerSpec, {});
-    return layer;
+    return new FillStyleLayer(layerSpec, {});
 }
 
 describe('updatePatternPositionsInProgram', () => {

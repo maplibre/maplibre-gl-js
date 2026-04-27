@@ -65,7 +65,7 @@ const hawkHill = {
 describe('GeoJSONSource.constructor', () => {
     const mapStub = {
         _requestManager: {
-            transformRequest: (url) => { return {url}; }
+            transformRequest: (url: string) => ({url})
         }
     } as any;
     test('warn if maxzoom <= clusterMaxZoom', () => {
@@ -94,7 +94,7 @@ describe('GeoJSONSource.constructor', () => {
 
 describe('GeoJSONSource.setData', () => {
     function createSource(opts?) {
-        opts = opts || {};
+        opts ||= {};
         opts = extend(opts, {data: {}});
         return new GeoJSONSource('id', opts, wrapDispatcher({
             sendAsync(_message) {
@@ -144,7 +144,7 @@ describe('GeoJSONSource.setData', () => {
         const source = createSource({collectResourceTiming: true});
         source.map = {
             _requestManager: {
-                transformRequest: (url) => { return {url}; }
+                transformRequest: (url:string) => ({url})
             } as any as RequestManager
         } as any;
         const spy = vi.fn();
@@ -168,7 +168,7 @@ describe('GeoJSONSource.setData', () => {
         const source = createSource({collectResourceTiming: true});
         source.map = {
             _requestManager: {
-                transformRequest: async (url) => { return {url}; }
+                transformRequest: async (url: string) => ({url})
             } as any as RequestManager
         } as any;
         const spy = vi.fn();
@@ -526,7 +526,7 @@ describe('GeoJSONSource.update', () => {
     test('transforms url before making request', () => {
         const mapStub = {
             _requestManager: {
-                transformRequest: (url) => { return {url}; }
+                transformRequest: (url: string) => ({url})
             }
         } as any;
         const transformSpy = vi.spyOn(mapStub._requestManager, 'transformRequest');
@@ -540,7 +540,7 @@ describe('GeoJSONSource.update', () => {
         const source = new GeoJSONSource('id', {data: 'https://example.com/data.geojson'} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync() { return Promise.resolve({data: hawkHill}); }
         }), undefined);
-        source.map = {_requestManager: {transformRequest: (url) => ({url})}} as any;
+        source.map = {_requestManager: {transformRequest: (url: string) => ({url})}} as any;
 
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         source.load();
@@ -625,7 +625,8 @@ describe('GeoJSONSource.update', () => {
         source.load();
 
         const err = await promise;
-        expect(err.error).toBe('error');
+        expect(err.error).toBeInstanceOf(Error);
+        expect(err.error.message).toBe('error');
     });
 
     test('sends loadData request to dispatcher after data update', async () => {
@@ -670,7 +671,7 @@ describe('GeoJSONSource.update', () => {
 describe('GeoJSONSource.getData', () => {
     const mapStub = {
         _requestManager: {
-            transformRequest: (url) => { return {url}; }
+            transformRequest: (url: string) => ({url})
         }
     } as any;
     test('gets the data when passed as a geojson object', async () => {
@@ -899,7 +900,7 @@ describe('GeoJSONSource.updateData', () => {
 describe('GeoJSONSource.getBounds', () => {
     const mapStub = {
         _requestManager: {
-            transformRequest: (url) => { return {url}; }
+            transformRequest: (url: string) => ({url})
         }
     } as any;
 
@@ -943,7 +944,7 @@ describe('GeoJSONSource.getBounds', () => {
 describe('GeoJSONSource.serialize', () => {
     const mapStub = {
         _requestManager: {
-            transformRequest: (url) => { return {url}; }
+            transformRequest: (url: string) => ({url})
         }
     } as any;
     test('serialize source with inline data', () => {

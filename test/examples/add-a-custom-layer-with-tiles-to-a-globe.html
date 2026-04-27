@@ -3,6 +3,7 @@
 <head>
     <title>Add a custom layer with tiles to a globe</title>
     <meta property="og:description" content="Use custom layer to display arbitrary tiles drawn with a custom WebGL shader on a globe." />
+    <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
@@ -261,7 +262,7 @@
                     }
                 };
 
-                const projectionData = map.transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true});
+                const projectionData = args.getProjectionData({tileID: tileID, applyGlobeMatrix: true});
 
                 gl.uniform4f(
                     locations['u_projection_clipping_plane'],

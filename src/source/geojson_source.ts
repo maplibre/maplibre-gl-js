@@ -1,5 +1,5 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import {extend, warnOnce, type ExactlyOne} from '../util/util';
+import {ensureError, extend, warnOnce, type ExactlyOne} from '../util/util';
 import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
@@ -483,7 +483,7 @@ export class GeoJSONSource extends Evented implements Source {
                 return;
             }
 
-            this.fire(new ErrorEvent(err));
+            this.fire(new ErrorEvent(ensureError(err)));
         } finally {
             // If there is more pending data, update the worker again.
             if (this._hasPendingWorkerUpdate()) {

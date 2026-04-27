@@ -184,7 +184,7 @@ class MouseRotateWrapper {
     constructor(map: Map, element: HTMLElement, pitch: boolean = false) {
         this._clickTolerance = 10;
         this.element = element;
-        
+
         const moveStateManager = new MouseOrTouchMoveStateManager();
         this._rotatePitchHandler = new DragHandler<DragRotateResult, MouseEvent | TouchEvent>({
             clickTolerance: 3,

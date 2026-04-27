@@ -3,7 +3,7 @@ import {loadGlyphRange} from '../style/load_glyph_range';
 import TinySDF from '@mapbox/tiny-sdf';
 import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g';
 import {AlphaImage} from '../util/image';
-import {warnOnce} from '../util/util';
+import {ensureError, warnOnce} from '../util/util';
 
 import type {StyleGlyph} from '../style/style_glyph';
 import type {RequestManager} from '../util/request_manager';
@@ -78,9 +78,7 @@ export class GlyphManager {
         const result: GetGlyphsResponse = {};
 
         for (const {stack, id, glyph} of updatedGlyphs) {
-            if (!result[stack]) {
-                result[stack] = {};
-            }
+            result[stack] ||= {};
             // Clone the glyph so that our own copy of its ArrayBuffer doesn't get transferred.
             result[stack][id] = glyph && {
                 id: glyph.id,
@@ -94,14 +92,8 @@ export class GlyphManager {
 
     async _getAndCacheGlyphsPromise(stack: string, id: number): Promise<{stack: string; id: number; glyph: StyleGlyph}> {
         // Create an entry for this fontstack if it doesn’t already exist.
-        let entry = this.entries[stack];
-        if (!entry) {
-            entry = this.entries[stack] = {
-                glyphs: {},
-                requests: {},
-                ranges: {}
-            };
-        }
+        this.entries[stack] ??= {glyphs: {}, requests: {}, ranges: {}};
+        const entry = this.entries[stack];
 
         // Try to get the glyph from the cache of client-side glyphs by codepoint.
         let glyph = entry.glyphs[id];
@@ -127,9 +119,7 @@ export class GlyphManager {
         }
 
         // Start downloading this range unless we’re currently downloading it.
-        if (!entry.requests[range]) {
-            entry.requests[range] = GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager);
-        }
+        entry.requests[range] ||= GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager);
 
         try {
             // Get the response and cache the glyphs from it.
@@ -142,7 +132,7 @@ export class GlyphManager {
         } catch (e) {
             // Fall back to drawing the glyph locally and caching it.
             const glyph = entry.glyphs[id] = this._drawGlyph(entry, stack, id);
-            this._warnOnMissingGlyphRange(glyph, range, id, e);
+            this._warnOnMissingGlyphRange(glyph, range, id, ensureError(e));
             return {stack, id, glyph};
         }
     }
@@ -220,7 +210,7 @@ export class GlyphManager {
             buffer: 3 * textureScale,
             radius: 8 * textureScale,
             cutoff: 0.25,
-            fontFamily: fontFamily,
+            fontFamily,
             fontWeight: this._fontWeight(fontFamilies[0]),
             fontStyle: this._fontStyle(fontFamilies[0]),
             lang: this.lang
@@ -269,12 +259,8 @@ export class GlyphManager {
     destroy() {
         for (const stack in this.entries) {
             const entry = this.entries[stack];
-            if (entry.tinySDF) {
-                entry.tinySDF = null;
-            }
-            if (entry.ideographTinySDF) {
-                entry.ideographTinySDF = null;
-            }
+            entry.tinySDF = null;
+            entry.ideographTinySDF = null;
             entry.glyphs = {};
             entry.requests = {};
             entry.ranges = {};

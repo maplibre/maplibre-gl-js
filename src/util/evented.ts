@@ -10,7 +10,7 @@ type Listeners = {[_: string]: Listener[]};
 function _addEventListener(type: string, listener: Listener, listenerList: Listeners) {
     const listenerExists = listenerList[type]?.includes(listener);
     if (!listenerExists) {
-        listenerList[type] = listenerList[type] || [];
+        listenerList[type] ||= [];
         listenerList[type].push(listener);
     }
 }
@@ -36,9 +36,9 @@ export class Event {
     }
 }
 
-interface ErrorLike {
+type ErrorLike = {
     message: string;
-}
+};
 
 /**
  * An error event
@@ -71,7 +71,7 @@ export class Evented {
      * extended with `target` and `type` properties.
      */
     on(type: string, listener: Listener): Subscription {
-        this._listeners = this._listeners || {};
+        this._listeners ||= {};
         _addEventListener(type, listener, this._listeners);
 
         return {
@@ -107,7 +107,7 @@ export class Evented {
         if (!listener) {
             return new Promise((resolve) => this.once(type, resolve));
         }
-        this._oneTimeListeners = this._oneTimeListeners || {};
+        this._oneTimeListeners ||= {};
         _addEventListener(type, listener, this._oneTimeListeners);
 
         return this;

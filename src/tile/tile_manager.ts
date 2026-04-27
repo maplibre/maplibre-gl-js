@@ -2,6 +2,7 @@ import {create as createSource} from '../source/source';
 
 import {Tile} from './tile';
 import {ErrorEvent, Event, Evented} from '../util/evented';
+import {ensureError} from '../util/util';
 import {TileCache} from './tile_cache';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {EXTENT} from '../data/extent';
@@ -18,7 +19,7 @@ import {hasRasterTransition, isRasterType, updateFadingTiles} from './tile_manag
 import {backfillDEM} from './tile_manager_raster_dem';
 import {InViewTiles} from './tile_manager_in_view_tiles';
 
-import type {Context} from '../gl/context';
+import type {Context} from '../webgl/context';
 import type {Source} from '../source/source';
 import type {Map} from '../ui/map';
 import type {Style} from '../style/style';
@@ -99,7 +100,7 @@ export class TileManager extends Evented {
         this.id = id;
         this.dispatcher = dispatcher;
 
-        this.on('data', (e: MapSourceDataEvent) => this._dataHandler(e));
+        this.on('data', (e: MapSourceDataEvent) => { this._dataHandler(e); });
 
         this.on('dataloading', () => {
             this._sourceErrored = false;
@@ -193,7 +194,7 @@ export class TileManager extends Evented {
             tile.state = 'errored';
 
             if (err.status !== 404) {
-                this._source.fire(new ErrorEvent(err, {tile}));
+                this._source.fire(new ErrorEvent(ensureError(err), {tile}));
             } else {
                 // continue to try loading parent/children tiles if a tile doesn't exist (404)
                 this.update(this.transform, this.terrain);
@@ -403,7 +404,8 @@ export class TileManager extends Evented {
             // determine if the loaded tile (hasData) is a qualified descendent of any target tile
             for (const targetID of targetTileIDs) {
                 if (tile.tileID.isChildOf(targetID)) {
-                    (loadedDescendents[targetID.key] ||= []).push(tile);
+                    loadedDescendents[targetID.key] ||= [];
+                    loadedDescendents[targetID.key].push(tile);
                 }
             }
         }
@@ -923,11 +925,7 @@ export class TileManager extends Evented {
             return true;
         }
 
-        if (isRasterType(this._source.type) && hasRasterTransition(this._inViewTiles, this._rasterFadeDuration)) {
-            return true;
-        }
-
-        return false;
+        return isRasterType(this._source.type) && hasRasterTransition(this._inViewTiles, this._rasterFadeDuration);
     }
 
     setRasterFadeDuration(fadeDuration: number) {
@@ -938,7 +936,7 @@ export class TileManager extends Evented {
      * Set the value of a particular state for a feature
      */
     setFeatureState(sourceLayer: string, featureId: number | string, state: any) {
-        sourceLayer = sourceLayer || GEOJSON_TILE_LAYER_NAME;
+        sourceLayer ||= GEOJSON_TILE_LAYER_NAME;
         this._state.updateState(sourceLayer, featureId, state);
     }
 
@@ -946,7 +944,7 @@ export class TileManager extends Evented {
      * Resets the value of a particular state key for a feature
      */
     removeFeatureState(sourceLayer?: string, featureId?: number | string, key?: string) {
-        sourceLayer = sourceLayer || GEOJSON_TILE_LAYER_NAME;
+        sourceLayer ||= GEOJSON_TILE_LAYER_NAME;
         this._state.removeFeatureState(sourceLayer, featureId, key);
     }
 
@@ -954,7 +952,7 @@ export class TileManager extends Evented {
      * Get the entire state object for a feature
      */
     getFeatureState(sourceLayer: string, featureId: number | string) {
-        sourceLayer = sourceLayer || GEOJSON_TILE_LAYER_NAME;
+        sourceLayer ||= GEOJSON_TILE_LAYER_NAME;
         return this._state.getState(sourceLayer, featureId);
     }
 
