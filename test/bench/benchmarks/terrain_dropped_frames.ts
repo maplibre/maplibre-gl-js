@@ -33,7 +33,7 @@ const PITCH = 85;
 const BEARING = 180;
 const FLIGHT_MS = 6_000;
 
-export default class TerrainRender extends Benchmark {
+export default class TerrainDroppedFrames extends Benchmark {
     map: Map;
     uninstallProtocols: () => void;
     budgetMs: number;

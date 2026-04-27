@@ -39,7 +39,7 @@ if (argv.compare !== true && argv.compare !== undefined) { // handle --compare w
 
 console.log(`Starting headless chrome at: ${url.toString()}`);
 
-const browser = await puppeteer.launch({headless: true, protocolTimeout: 600_000});
+const browser = await puppeteer.launch({headless: true});
 
 try {
 
