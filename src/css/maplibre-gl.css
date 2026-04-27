@@ -933,7 +933,7 @@ a.maplibregl-ctrl-logo.maplibregl-compact {
     display: none;
 }
 
-@media (max-width: 480px) {
+@media (width <= 480px) {
     .maplibregl-webgl-error .maplibregl-webgl-error-full {
         display: none;
     }
