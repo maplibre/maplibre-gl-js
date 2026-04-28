@@ -126,26 +126,23 @@ Construct the worker URL in your own source code so webpack's asset detection ca
 import {Map, setWorkerUrl} from 'maplibre-gl';
 import 'maplibre-gl/css';
 
-setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
+setWorkerUrl(new URL('maplibre-gl/worker', import.meta.url).toString());
 
 const map = new Map({/* … */});
 ```
 
 #### Rollup
 
-Use `rollup-plugin-copy` to put the worker file next to the bundle, then reference it with a relative `new URL(..., import.meta.url)`:
-
 ```ts
 // rollup.config.js
+import {fileURLToPath} from 'url';
 import copy from 'rollup-plugin-copy';
+
+const workerSrc = fileURLToPath(import.meta.resolve('maplibre-gl/worker'));
 
 export default {
     plugins: [
-        copy({
-            targets: [
-                {src: 'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs', dest: 'dist'}
-            ]
-        }),
+        copy({targets: [{src: workerSrc, dest: 'dist'}]}),
         /* ... */
     ]
 };

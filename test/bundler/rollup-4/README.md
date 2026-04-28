@@ -2,10 +2,8 @@
 
 Minimal Rollup app exercising the ESM build:
 
-- `import {Map} from 'maplibre-gl'` and `import 'maplibre-gl/css'` resolve via the package's `exports` field.
-- `rollup-plugin-copy` copies `maplibre-gl-worker.mjs` from `node_modules` to the bundle output. `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` then references it as a sibling of the bundled `main.js`.
-
-This is the simplest reliable Rollup setup: the `import.meta.url` evaluation happens at runtime in the browser and doesn't require a transform plugin.
+- All library imports (`maplibre-gl`, `maplibre-gl/css`, `maplibre-gl/worker`) resolve via the package's `exports` field.
+- `rollup-plugin-copy` copies the worker file to the bundle output. `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` references it relative to the bundle at runtime.
 
 ## Setup
 
