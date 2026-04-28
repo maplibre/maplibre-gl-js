@@ -4,7 +4,7 @@
   In practical terms, this will not change how you interact with the map.
   This enables performance improvements (e.g. line opacity), Terrain3D enhancements, and several bug fixes.
   WebGL2 support has been widely available for years, and usage of the legacy path had plateaued, so maintaining it no longer justified the added complexity.
-  To ease this breaking change, we have aloso refactored how we handle the case that no webgl is avaliableWebGL (e.g. due to browser restrictions).
+  To ease this breaking change, we have also refactored how we handle the case that no webgl is avaliableWebGL (e.g. due to browser restrictions).
   You can now listen to the webgl error via `.on("error")`, or by overriding `Map._showWebGL2Error`.
   See [caniuse.com/webgl2](https://caniuse.com/webgl2) for ecosystem support and [our RFC for details](https://github.com/maplibre/maplibre-gl-js/discussions/6017). ([#7453](https://github.com/maplibre/maplibre-gl-js/pull/7453)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
