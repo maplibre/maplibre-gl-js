@@ -7,7 +7,7 @@ Standalone apps that exercise `maplibre-gl`'s ESM build through real bundlers. E
 | `vite-7/` | Vite 7 | `import workerUrl from 'maplibre-gl/worker?url'` |
 | `vite-8/` | Vite 8 | `import workerUrl from 'maplibre-gl/worker?url'` |
 | `webpack-5/` | webpack 5 | `setWorkerUrl(new URL('maplibre-gl/worker', import.meta.url).toString())` |
-| `rollup/` | Rollup 4 | `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` (worker copied next to the bundle via `rollup-plugin-copy`) |
+| `rollup-4/` | Rollup 4 | `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` (worker copied next to the bundle via `rollup-plugin-copy`) |
 
 All four use the same library imports: `import {Map} from 'maplibre-gl'`, `import 'maplibre-gl/css'`. The differences are in how each bundler resolves the worker URL.
 
@@ -24,7 +24,7 @@ cd test/bundler/<name>
 npm install
 npm run dev      # vite-7, vite-8, webpack-5
 # or:
-npm run build && npm run serve   # rollup
+npm run build && npm run serve   # rollup-4
 ```
 
 These examples are not part of CI. They exist to verify that maplibre-gl's package layout and `exports` field work correctly with real bundler tooling, and to document each bundler's worker-URL setup.
