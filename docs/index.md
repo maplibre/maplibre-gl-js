@@ -143,6 +143,39 @@ setWorkerUrl(new URL('maplibre-gl/worker', import.meta.url).toString());
 const map = new Map({/* … */});
 ```
 
+rspack and rsbuild use the same pattern.
+
+### esbuild
+
+```js
+// build.js
+import * as esbuild from 'esbuild';
+import {fileURLToPath} from 'url';
+import {copyFileSync} from 'fs';
+
+await esbuild.build({
+    entryPoints: ['src/main.ts'],
+    bundle: true,
+    outdir: 'dist',
+    format: 'esm'
+});
+
+copyFileSync(
+    fileURLToPath(import.meta.resolve('maplibre-gl/worker')),
+    'dist/maplibre-gl-worker.mjs'
+);
+```
+
+```ts
+// src/main.ts
+import {Map, setWorkerUrl} from 'maplibre-gl';
+import 'maplibre-gl/css';
+
+setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
+
+const map = new Map({/* … */});
+```
+
 ### Rollup
 
 ```ts
