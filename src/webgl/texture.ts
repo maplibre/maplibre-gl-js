@@ -96,21 +96,21 @@ export class Texture {
         context.pixelStoreUnpackPremultiplyAlpha.setDefault();
     }
 
-    private _uploadDomImage(image: TexImageSource, gl: WebGLRenderingContext | WebGL2RenderingContext) {
+    private _uploadDomImage(image: TexImageSource, gl: WebGL2RenderingContext) {
         gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, gl.UNSIGNED_BYTE, image);
     }
 
-    private _uploadRawData(image: DataTextureImage, wantPremultiply: boolean, width: number, height: number, gl: WebGLRenderingContext | WebGL2RenderingContext) {
+    private _uploadRawData(image: DataTextureImage, wantPremultiply: boolean, width: number, height: number, gl: WebGL2RenderingContext) {
         let {data} = image;
         if (wantPremultiply && data) data = premultiplyAlpha(data);
         gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, gl.UNSIGNED_BYTE, data);
     }
 
-    private _updateDomImage(image: TexImageSource, x: number, y: number, gl: WebGLRenderingContext | WebGL2RenderingContext) {
+    private _updateDomImage(image: TexImageSource, x: number, y: number, gl: WebGL2RenderingContext) {
         gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, gl.RGBA, gl.UNSIGNED_BYTE, image);
     }
 
-    private _updateRawData(image: DataTextureImage, wantPremultiply: boolean, x: number, y: number, width: number, height: number, gl: WebGLRenderingContext | WebGL2RenderingContext) {
+    private _updateRawData(image: DataTextureImage, wantPremultiply: boolean, x: number, y: number, width: number, height: number, gl: WebGL2RenderingContext) {
         let {data} = image;
         if (wantPremultiply && data) data = premultiplyAlpha(data);
         gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, data);
