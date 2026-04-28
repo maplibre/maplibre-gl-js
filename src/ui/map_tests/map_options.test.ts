@@ -26,26 +26,6 @@ describe('mapOptions', () => {
         expect(map._maxTileCacheZoomLevels).toBe(1);
     });
 
-    test('workerUrl: option sets config.WORKER_URL', () => {
-        const previousWorkerUrl = config.WORKER_URL;
-        try {
-            createMap({workerUrl: '/custom/worker.mjs'});
-            expect(config.WORKER_URL).toBe('/custom/worker.mjs');
-        } finally {
-            config.WORKER_URL = previousWorkerUrl;
-        }
-    });
-
-    test('workerUrl: option is ignored when not provided (default URL preserved)', () => {
-        const previousWorkerUrl = config.WORKER_URL;
-        try {
-            createMap();
-            expect(config.WORKER_URL).toBe(previousWorkerUrl);
-        } finally {
-            config.WORKER_URL = previousWorkerUrl;
-        }
-    });
-
     test('Style validation is enabled by default', () => {
         let validationOption = false;
         vi.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {

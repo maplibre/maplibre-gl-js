@@ -66,7 +66,7 @@ const map = new maplibregl.Map({
 
 ## ESM
 
-MapLibre GL JS ships an ES module build (`maplibre-gl.mjs`) alongside the classic UMD bundle. The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically. Every consumer of the ESM build needs to point MapLibre at the worker URL with [`setWorkerUrl()`](./API/functions/setWorkerUrl.md) (or the `workerUrl` Map option); each environment below shows how to wire it up.
+MapLibre GL JS ships an ES module build (`maplibre-gl.mjs`) alongside the classic UMD bundle. The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically. Every consumer of the ESM build needs to point MapLibre at the worker URL with [`setWorkerUrl()`](./API/functions/setWorkerUrl.md); each environment below shows how to wire it up.
 
 ### In the browser, without a bundler
 
@@ -150,28 +150,6 @@ import 'maplibre-gl/css';
 setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
 
 const map = new Map({/* … */});
-```
-
-### Custom worker URL
-
-If you need to host the worker at a non-default location, override with the `workerUrl` Map option or [`setWorkerUrl()`](./API/functions/setWorkerUrl.md):
-
-```ts
-import {Map} from 'maplibre-gl';
-
-const map = new Map({
-    container: 'map',
-    workerUrl: '/static/maplibre-gl-worker.mjs',
-    style: '…'
-});
-```
-
-Or set it globally before creating any maps:
-
-```ts
-import {setWorkerUrl} from 'maplibre-gl';
-
-setWorkerUrl('/static/maplibre-gl-worker.mjs');
 ```
 
 ## CSP Directives
