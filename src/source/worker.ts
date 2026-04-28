@@ -37,7 +37,7 @@ import {
  *   or `export`). If ESM is detected, run it through a blob-URL dynamic
  *   `import()` so the browser parses it as a module; this requires
  *   `script-src blob:` in the worker CSP. Otherwise treat it as UMD/IIFE and
- *   run it via indirect `eval`, which requires `script-src 'unsafe-eval'`.
+ *   run it via `globalThis.eval`, which requires `script-src 'unsafe-eval'`.
  */
 async function loadScript(url: string): Promise<void> {
     if (url.endsWith('.mjs')) {
@@ -60,7 +60,11 @@ async function loadScript(url: string): Promise<void> {
         }
         return;
     }
-    (0, eval)(code);
+    // Run the code in the worker's global scope (not inside this function),
+    // so UMD/IIFE plugin scripts can assign to globals like
+    // `self.registerRTLTextPlugin`. Calling eval as a property access
+    // (rather than the bare `eval` identifier) is what makes it global-scope.
+    globalThis.eval(code);
 }
 
 /**
