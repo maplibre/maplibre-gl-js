@@ -14,7 +14,8 @@
     "resolveJsonModule": true,
     "skipLibCheck": false,
     "strict": false,
-    "target": "ES2016",
+    "target": "es2022",
+    "useDefineForClassFields": false,
     "lib": [
       "ESNext",
       "DOM",
@@ -29,7 +30,7 @@
     "experimentalSpecifierResolution": "node",
     "esm": true,
     "compilerOptions": {
-      "target": "es2019",
+      "target": "es2022",
       "types": [
         "node"
       ]
