@@ -22,7 +22,7 @@ To run any of them:
 npm install
 npm run build-dist
 
-cd test/bundler/<name>
+cd test/integration/bundler/<name>
 npm install
 npm run dev      # vite-7, vite-8, webpack-5
 # or:

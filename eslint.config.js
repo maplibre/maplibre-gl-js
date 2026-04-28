@@ -10,7 +10,7 @@ import preferTypeForDataShapes from './build/eslint-rules/prefer-type-for-data-s
 
 export default [
     {
-        ignores: ['build/*.js', 'build/rollup/**', 'staging/**', 'coverage/**', 'node_modules/**', 'docs/**', 'dist/**', 'site/**', 'test/bundler/**', '**/*_generated.js']
+        ignores: ['build/*.js', 'build/rollup/**', 'staging/**', 'coverage/**', 'node_modules/**', 'docs/**', 'dist/**', 'site/**', 'test/integration/bundler/*/**', '**/*_generated.js']
     },
     {
         ignores: ['test/bench/**'],

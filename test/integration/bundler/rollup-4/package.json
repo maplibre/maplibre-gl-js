@@ -10,7 +10,7 @@
     "serve": "http-server -p 3000 -c-1 ."
   },
   "dependencies": {
-    "maplibre-gl": "file:../../.."
+    "maplibre-gl": "file:../../../.."
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^29.0.0",

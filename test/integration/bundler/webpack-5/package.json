@@ -8,7 +8,7 @@
     "build": "webpack --mode production"
   },
   "dependencies": {
-    "maplibre-gl": "file:../../.."
+    "maplibre-gl": "file:../../../.."
   },
   "devDependencies": {
     "css-loader": "^7.1.2",

@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "maplibre-gl": "file:../../.."
+    "maplibre-gl": "file:../../../.."
   },
   "devDependencies": {
     "vite": "^8.0.0"
