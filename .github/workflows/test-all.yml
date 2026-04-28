@@ -89,7 +89,7 @@ jobs:
         if: '!cancelled()'
         with:
           name: build-dist-${{ matrix.os }}
-          path: dist/maplibre-gl.js
+          path: dist/maplibre-gl.mjs
       - run: npm run test-integration-ci
       - name: Move files
         if: runner.os == 'Linux'

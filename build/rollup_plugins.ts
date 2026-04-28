@@ -57,12 +57,3 @@ export const plugins = (production: boolean): Plugin[] => [
         })
     ) : [])
 ].filter(Boolean);
-
-export const watchStagingPlugin: Plugin = {
-    name: 'watch-external',
-    buildStart() {
-        this.addWatchFile('staging/maplibregl/index.js');
-        this.addWatchFile('staging/maplibregl/shared.js');
-        this.addWatchFile('staging/maplibregl/worker.js');
-    }
-};

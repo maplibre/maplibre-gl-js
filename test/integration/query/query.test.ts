@@ -13,7 +13,7 @@ import {ensureError} from '../../../src/util/util';
 import {deepEqual} from '../lib/json-diff';
 import {localizeURLs} from '../lib/localize-urls';
 import {launchPuppeteer} from '../lib/puppeteer_config';
-import type {default as MapLibreGL} from '../../../dist/maplibre-gl';
+import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
 let maplibregl: typeof MapLibreGL;
 
@@ -99,27 +99,37 @@ describe('query tests', () => {
     let page: Page;
 
     beforeAll(async () => {
-        server = http.createServer(
-            st({
-                path: 'test/integration/assets',
-                cors: true,
-            })
-        );
+        const assetsMount = st({path: 'test/integration/assets', cors: true, passthrough: true});
+        const distMount = st({path: 'dist', url: '/dist', cors: true, passthrough: true});
+        server = http.createServer((req, res) => {
+            if (req.url === '/blank.html') {
+                res.writeHead(200, {'Content-Type': 'text/html'});
+                res.end('<!doctype html><meta charset=utf-8><body id="map"></body>');
+                return;
+            }
+            distMount(req, res, () => {
+                assetsMount(req, res, () => {
+                    res.writeHead(404);
+                    res.end('');
+                });
+            });
+        });
         browser = await launchPuppeteer();
         await new Promise<void>((resolve) => server.listen(resolve));
+        const port = (server.address() as AddressInfo).port;
         page = await browser.newPage();
         await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
         await page.setViewport({width: 512, height: 512, deviceScaleFactor: 2});
-        await page.setContent(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset='utf-8'>
-
-            </head>
-            <body id='map'></body>
-            </html>`);
-        await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
+        await page.goto(`http://localhost:${port}/blank.html`, {waitUntil: 'domcontentloaded'});
+        await page.addScriptTag({
+            type: 'module',
+            content: `
+                import * as maplibregl from '/dist/maplibre-gl-dev.mjs';
+                maplibregl.setWorkerUrl('/dist/maplibre-gl-worker-dev.mjs');
+                window.maplibregl = maplibregl;
+            `
+        });
+        await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
         await page.addStyleTag({path: 'dist/maplibre-gl.css'});
     }, 60000);
 
@@ -134,8 +144,8 @@ describe('query tests', () => {
                 source: it.text,
                 ...it.rawScriptCoverage
             };
-            if (entry.url.endsWith('maplibre-gl-dev.js')) {
-                entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.js.map').toString('utf-8'));
+            if (entry.url.endsWith('maplibre-gl-dev.mjs')) {
+                entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.mjs.map').toString('utf-8'));
             }
             return entry;
         });

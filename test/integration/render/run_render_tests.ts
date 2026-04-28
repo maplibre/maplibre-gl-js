@@ -13,7 +13,8 @@ import type {Page, Browser} from 'puppeteer';
 import {ensureError} from '../../../src/util/util';
 import {localizeURLs} from '../lib/localize-urls';
 import {launchPuppeteer} from '../lib/puppeteer_config';
-import type {default as MapLibreGL, Map as MaplibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import type {Map as MaplibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let maplibregl: typeof MapLibreGL;
@@ -917,11 +918,22 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
     }
 }
 
-async function createPageAndStart(browser: Browser, testStyles: StyleWithTestData[], directory: string, options: RenderOptions) {
+async function createPageAndStart(browser: Browser, testStyles: StyleWithTestData[], directory: string, options: RenderOptions, serverPort: number) {
     const page = await browser.newPage();
     await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
     applyDebugParameter(options, page);
-    await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
+    // Navigate to a real URL so module imports below resolve against the server origin.
+    await page.goto(`http://localhost:${serverPort}/blank.html`, {waitUntil: 'domcontentloaded'});
+    await page.addScriptTag({
+        type: 'module',
+        content: `
+            import * as maplibregl from '/dist/maplibre-gl-dev.mjs';
+            maplibregl.setWorkerUrl('/dist/maplibre-gl-worker-dev.mjs');
+            window.maplibregl = maplibregl;
+        `
+    });
+    // Wait for the module to actually execute and populate window.maplibregl.
+    await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
     await runTests(page, testStyles, directory);
     return page;
 }
@@ -939,8 +951,8 @@ async function closePageAndFinish(page: Page, reportCoverage: boolean) {
             source: it.text,
             ...it.rawScriptCoverage
         };
-        if (entry.url.endsWith('maplibre-gl-dev.js')) {
-            entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.js.map').toString('utf-8'));
+        if (entry.url.endsWith('maplibre-gl-dev.mjs')) {
+            entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.mjs.map').toString('utf-8'));
         }
         return entry;
     });
@@ -995,18 +1007,31 @@ async function executeRenderTests() {
         cors: true,
         passthrough: true,
     });
+    const distMount = st({
+        path: 'dist',
+        url: '/dist',
+        cors: true,
+        passthrough: true,
+    });
     const server = http.createServer((req, res) => {
         res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins, or specify 'http://your-frontend-domain.com'
         res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Include any custom headers your client might send
-        mount(req, res, () => {
-            if (req.url.includes('/sparse204/1-')) {
-                res.writeHead(204);
-                res.end('');
-            } else {
-                res.writeHead(404);
-                res.end('');
-            }
+        if (req.url === '/blank.html') {
+            res.writeHead(200, {'Content-Type': 'text/html'});
+            res.end('<!doctype html><meta charset=utf-8><title>blank</title>');
+            return;
+        }
+        distMount(req, res, () => {
+            mount(req, res, () => {
+                if (req.url.includes('/sparse204/1-')) {
+                    res.writeHead(204);
+                    res.end('');
+                } else {
+                    res.writeHead(404);
+                    res.end('');
+                }
+            });
         });
     });
 
@@ -1021,20 +1046,21 @@ async function executeRenderTests() {
     await new Promise<void>((resolve) => mvtServer.listen(2901, '0.0.0.0', resolve));
 
     const directory = path.join(__dirname);
-    let testStyles = getTestStyles(options, directory, (server.address() as any).port);
+    const serverPort = (server.address() as any).port;
+    let testStyles = getTestStyles(options, directory, serverPort);
 
     if (process.env.SPLIT_COUNT && process.env.CURRENT_SPLIT_INDEX) {
         const numberOfTestsForThisPart = Math.ceil(testStyles.length / +process.env.SPLIT_COUNT);
         testStyles = testStyles.splice(+process.env.CURRENT_SPLIT_INDEX * numberOfTestsForThisPart, numberOfTestsForThisPart);
     }
 
-    let page = await createPageAndStart(browser, testStyles, directory, options);
+    let page = await createPageAndStart(browser, testStyles, directory, options, serverPort);
     const failedTests = testStyles.filter(t => t.metadata.test.error || !t.metadata.test.ok);
     await closePageAndFinish(page, failedTests.length === 0);
     if (failedTests.length > 0 && failedTests.length < testStyles.length) {
         console.log(`Re-running failed tests: ${failedTests.length}`);
         options.debug = true;
-        page = await createPageAndStart(browser, failedTests, directory, options);
+        page = await createPageAndStart(browser, failedTests, directory, options, serverPort);
         await closePageAndFinish(page, true);
     }
 

@@ -9,9 +9,14 @@ It is part of the MapLibre ecosystem, with a counterpart for Android, iOS and ot
 <iframe src="./examples/display-a-globe-with-a-vector-map.html" width="100%" height="400px" style="border:none"></iframe>
 
 ```html
-<div id="map"></div>
-<script>
-    var map = new maplibregl.Map({
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.css" />
+<div id="map" style="height: 400px"></div>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.mjs';
+
+    maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl-worker.mjs');
+
+    const map = new maplibregl.Map({
         container: 'map', // container id
         style: 'https://demotiles.maplibre.org/globe.json', // style URL
         center: [0, 0], // starting position [lng, lat]
@@ -52,10 +57,10 @@ You can then import the MapLibre GL JS module in your project.
 ```
 
 ```javascript
-import maplibregl from 'maplibre-gl';
+import {Map} from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-const map = new maplibregl.Map({
+const map = new Map({
     container: 'map', // container id
     style: 'https://demotiles.maplibre.org/globe.json', // style URL
     center: [0, 0], // starting position [lng, lat]
@@ -63,15 +68,27 @@ const map = new maplibregl.Map({
 });
 ```
 
+See the [ESM](#esm) section below for setting up the worker URL with your bundler.
+
 ## ESM
 
-MapLibre GL JS ships an ES module build (`maplibre-gl.mjs`) alongside the classic UMD bundle. The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically. Every consumer of the ESM build needs to point MapLibre at the worker URL with [`setWorkerUrl()`](./API/functions/setWorkerUrl.md); each environment below shows how to wire it up.
+MapLibre GL JS v6 ships as ES modules only (`maplibre-gl.mjs`). The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically. Every consumer needs to point MapLibre at the worker URL with [`setWorkerUrl()`](./API/functions/setWorkerUrl.md); each environment below shows how to wire it up.
 
 For minimal runnable apps per bundler (Vite, webpack, esbuild, Rollup), see [`test/integration/bundler/`](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler).
 
-### Migrating to ESM
+### Migrating from v5
 
-If you import maplibre-gl from npm, your `import` lines are unchanged: in v6 the package resolves to the ESM bundle automatically.
+If you import maplibre-gl from npm with named imports (`import {Map} from 'maplibre-gl'`), your imports keep working: v6 resolves to the ESM bundle automatically. If you used the default import (`import maplibregl from 'maplibre-gl'`), switch to either named imports or a namespace import:
+
+```ts
+// before
+import maplibregl from 'maplibre-gl';
+
+// after
+import * as maplibregl from 'maplibre-gl';
+// or pull in just what you need
+import {Map, setWorkerUrl} from 'maplibre-gl';
+```
 
 If you load maplibre-gl via `<script src>`, switch to a module script:
 
@@ -106,7 +123,7 @@ The ESM build also requires a one-time `setWorkerUrl()` call (shown in the subse
 </script>
 ```
 
-See the [Display a map with ESM](./examples/display-a-map-with-esm.md) example for a runnable version.
+See the [Display a map](./examples/display-a-map.md) example for a runnable version.
 
 ### Vite
 
@@ -209,19 +226,11 @@ const map = new Map({/* … */});
 As a mitigation for Cross-Site Scripting and other types of web security vulnerabilities, you may use a [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/Security/CSP) to specify security policies for your website. If you do, MapLibre GL JS requires the following CSP directives:
 
 ```
-worker-src blob: ;
-child-src blob: ;
-img-src data: blob: ;
+worker-src 'self' ;
+img-src data: blob: 'self' ;
 ```
 
-For strict CSP environments without `worker-src blob: ; child-src blob:` enabled, there's a separate MapLibre GL JS bundle (`maplibre-gl-csp.js` and `maplibre-gl-csp-worker.js`) which requires setting the path to the worker manually:
-
-```html
-<script>
-maplibregl.setWorkerUrl("${urls.js().replace('.js', '-csp-worker.js')}");
-...
-</script>
-```
+The ESM build loads the worker from a real URL (set via [`setWorkerUrl()`](./API/functions/setWorkerUrl.md)), so no `blob:` worker source is required. The previous CSP-specific bundle from v5 is no longer needed.
 
 ## MapLibre CSS
 
@@ -233,9 +242,13 @@ Note too that if the CSS isn't available by the first render, as soon as the CSS
 
 ## CDN
 
-MapLibre GL JS is also distributed via UNPKG. Our latest version can installed by adding below tags this in the html `<head>`. Further instructions on how to select specific versions and semver ranges can be found on at [unpkg.com](https://unpkg.com).
+MapLibre GL JS is also distributed via UNPKG. Load it as an ES module via a `<script type="module">` tag. Further instructions on how to select specific versions and semver ranges can be found at [unpkg.com](https://unpkg.com).
 
 ```html
-<script src="https://unpkg.com/maplibre-gl@^5.22.0/dist/maplibre-gl.js"></script>
-<link href="https://unpkg.com/maplibre-gl@^5.22.0/dist/maplibre-gl.css" rel="stylesheet" />
+<link href="https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.css" rel="stylesheet" />
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.mjs';
+
+    maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl-worker.mjs');
+</script>
 ```
