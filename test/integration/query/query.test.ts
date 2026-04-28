@@ -5,7 +5,7 @@ import st from 'st';
 import http from 'node:http';
 import path from 'node:path/posix';
 import fs from 'node:fs';
-import type {Page, Browser} from 'puppeteer';
+import type {Page, Browser, WebWorker} from 'puppeteer';
 import type {Server} from 'node:http';
 import type {AddressInfo} from 'node:net';
 import {ensureError} from '../../../src/util/util';
@@ -97,6 +97,7 @@ describe('query tests', () => {
     let browser: Browser;
     let server: Server;
     let page: Page;
+    const workers: WebWorker[] = [];
 
     beforeAll(async () => {
         const assetsMount = st({path: 'test/integration/assets', cors: true, passthrough: true});
@@ -113,6 +114,14 @@ describe('query tests', () => {
         await new Promise<void>((resolve) => server.listen(resolve));
         const port = (server.address() as AddressInfo).port;
         page = await browser.newPage();
+        // Capture worker coverage as workers attach (URL is stable, not blob:).
+        page.on('workercreated', async (worker: WebWorker) => {
+            workers.push(worker);
+            try {
+                await worker.client.send('Profiler.enable');
+                await worker.client.send('Profiler.startPreciseCoverage', {callCount: true, detailed: true});
+            } catch {}
+        });
         await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
         await page.setViewport({width: 512, height: 512, deviceScaleFactor: 2});
         await page.goto(`http://localhost:${port}/test-page.html`, {waitUntil: 'load'});
@@ -121,12 +130,21 @@ describe('query tests', () => {
 
     afterAll(async () => {
         const coverage = await page.coverage.stopJSCoverage();
+
+        const workerCoverageEntries: any[] = [];
+        for (const worker of workers) {
+            try {
+                const result = await worker.client.send('Profiler.takePreciseCoverage');
+                workerCoverageEntries.push(...result.result);
+            } catch {}
+        }
+
         await page.close();
         await browser.close();
         await new Promise(resolve => server.close(resolve));
-        const rawV8CoverageData = coverage.map((it) => {
+        const rawV8CoverageData: any[] = coverage.map((it) => {
             // Convert to raw v8 coverage format
-            const entry: any =  {
+            const entry: any = {
                 source: it.text,
                 ...it.rawScriptCoverage
             };
@@ -135,6 +153,20 @@ describe('query tests', () => {
             }
             return entry;
         });
+
+        const workerSource = fs.readFileSync('dist/maplibre-gl-worker-dev.mjs', 'utf-8');
+        const workerSourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-worker-dev.mjs.map', 'utf-8'));
+        for (const entry of workerCoverageEntries) {
+            if (entry.url.endsWith('maplibre-gl-worker-dev.mjs')) {
+                rawV8CoverageData.push({
+                    source: workerSource,
+                    url: entry.url,
+                    scriptId: entry.scriptId,
+                    functions: entry.functions,
+                    sourceMap: workerSourceMap
+                });
+            }
+        }
 
         const coverageReport = new CoverageReport({
             name: 'MapLibre Coverage Report',

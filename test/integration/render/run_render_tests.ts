@@ -8,7 +8,7 @@ import {globSync} from 'glob';
 import http from 'http';
 import {CoverageReport} from 'monocart-coverage-reports';
 import junitReportBuilder, {type TestSuite} from 'junit-report-builder';
-import type {Page, Browser} from 'puppeteer';
+import type {Page, Browser, WebWorker} from 'puppeteer';
 
 import {ensureError} from '../../../src/util/util';
 import {localizeURLs} from '../lib/localize-urls';
@@ -920,24 +920,42 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
 
 async function createPageAndStart(browser: Browser, testStyles: StyleWithTestData[], directory: string, options: RenderOptions, serverPort: number) {
     const page = await browser.newPage();
+    const workers: WebWorker[] = [];
+    page.on('workercreated', async (worker: WebWorker) => {
+        workers.push(worker);
+        try {
+            await worker.client.send('Profiler.enable');
+            await worker.client.send('Profiler.startPreciseCoverage', {callCount: true, detailed: true});
+        } catch {}
+    });
+
     await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
     applyDebugParameter(options, page);
     await page.goto(`http://localhost:${serverPort}/test-page.html`, {waitUntil: 'load'});
     await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
     await runTests(page, testStyles, directory);
-    return page;
+    return {page, workers};
 }
 
-async function closePageAndFinish(page: Page, reportCoverage: boolean) {
+async function closePageAndFinish({page, workers}: {page: Page; workers: WebWorker[]}, reportCoverage: boolean) {
     const coverage = await page.coverage.stopJSCoverage();
+
+    const workerCoverageEntries: any[] = [];
+    for (const worker of workers) {
+        try {
+            const result = await worker.client.send('Profiler.takePreciseCoverage');
+            workerCoverageEntries.push(...result.result);
+        } catch {}
+    }
+
     await page.close();
     if (!reportCoverage) {
         return;
     }
 
-    const rawV8CoverageData = coverage.map((it) => {
+    const rawV8CoverageData: any[] = coverage.map((it) => {
         // Convert to raw v8 coverage format
-        const entry: any =  {
+        const entry: any = {
             source: it.text,
             ...it.rawScriptCoverage
         };
@@ -946,6 +964,20 @@ async function closePageAndFinish(page: Page, reportCoverage: boolean) {
         }
         return entry;
     });
+
+    const workerSource = fs.readFileSync('dist/maplibre-gl-worker-dev.mjs', 'utf-8');
+    const workerSourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-worker-dev.mjs.map', 'utf-8'));
+    for (const entry of workerCoverageEntries) {
+        if (entry.url.endsWith('maplibre-gl-worker-dev.mjs')) {
+            rawV8CoverageData.push({
+                source: workerSource,
+                url: entry.url,
+                scriptId: entry.scriptId,
+                functions: entry.functions,
+                sourceMap: workerSourceMap
+            });
+        }
+    }
 
     const coverageReport = new CoverageReport({
         name: 'MapLibre Coverage Report',
@@ -1039,14 +1071,14 @@ async function executeRenderTests() {
         testStyles = testStyles.splice(+process.env.CURRENT_SPLIT_INDEX * numberOfTestsForThisPart, numberOfTestsForThisPart);
     }
 
-    let page = await createPageAndStart(browser, testStyles, directory, options, serverPort);
+    let pageWithWorkers = await createPageAndStart(browser, testStyles, directory, options, serverPort);
     const failedTests = testStyles.filter(t => t.metadata.test.error || !t.metadata.test.ok);
-    await closePageAndFinish(page, failedTests.length === 0);
+    await closePageAndFinish(pageWithWorkers, failedTests.length === 0);
     if (failedTests.length > 0 && failedTests.length < testStyles.length) {
         console.log(`Re-running failed tests: ${failedTests.length}`);
         options.debug = true;
-        page = await createPageAndStart(browser, failedTests, directory, options, serverPort);
-        await closePageAndFinish(page, true);
+        pageWithWorkers = await createPageAndStart(browser, failedTests, directory, options, serverPort);
+        await closePageAndFinish(pageWithWorkers, true);
     }
 
     const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
