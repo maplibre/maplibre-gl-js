@@ -1,4 +1,4 @@
-import {vi, expect} from 'vitest';
+import {vi, expect, onTestFinished} from 'vitest';
 import {Map} from '../../ui/map';
 import {NullWebGL2RenderingContext} from './null_gl';
 import {extend} from '../../util/util';
@@ -104,20 +104,24 @@ function setResizeObserver() {
         disconnect = vi.fn();
     });
 }
+let _originalGetContext: typeof HTMLCanvasElement.prototype.getContext | undefined;
+
 function setNullGLGetContext() {
+    _originalGetContext ??= HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function (type: string, attributes?: any): any {
         if (type === 'webgl2') return new NullWebGL2RenderingContext(this, attributes);
         return _originalGetContext.call(this, type, attributes);
     } as any;
 }
 
-const _originalGetContext = HTMLCanvasElement.prototype.getContext;
-
 export function beforeMapTest() {
-    setNullGLGetContext()
+    setNullGLGetContext();
     setPerformance();
     setMatchMedia();
     setResizeObserver();
+    onTestFinished(() => {
+        HTMLCanvasElement.prototype.getContext = _originalGetContext;
+    });
 }
 
 export function getWrapDispatcher() {
