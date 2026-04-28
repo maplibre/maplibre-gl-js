@@ -436,8 +436,8 @@ describe('Browser tests', () => {
             }
         });
 
-        // In a module worker, calling importScripts throws this specific error.
-        expect(errorMessage).toMatch(/Failed to execute 'importScripts'.*/);
+        // UMD path: "Failed to load <url>: <status>"; ESM path: "Failed to fetch dynamically imported module..."
+        expect(errorMessage).toMatch(/badURL|dynamically imported module/);
 
     }, 5000);
 

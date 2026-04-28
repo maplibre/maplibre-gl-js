@@ -4,7 +4,6 @@ import type {WorkerSourceConstructor} from '../source/worker_source';
 import type {GetResourceResponse, RequestParameters} from './ajax';
 
 export interface WorkerGlobalScopeInterface {
-    importScripts(...urls: string[]): void;
     registerWorkerSource: (sourceName: string, sourceConstructor: WorkerSourceConstructor) => void;
     registerRTLTextPlugin: (_: any) => void;
     addProtocol: (customProtocol: string, loadFn: AddProtocolAction) => void;
