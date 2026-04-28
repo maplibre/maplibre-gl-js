@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+
+- Added a new map creation option, `disableTerrainSkirts`, which removes visually unappealing vertical artifacts when using a terrain along with a transparent background ([#7523](https://github.com/maplibre/maplibre-gl-js/pull/7523)) (by [@safwat-halaby](https://github.com/safwat-halaby))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._

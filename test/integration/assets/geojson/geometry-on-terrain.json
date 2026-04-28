@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"description": "A polygon and a line geographically placed at the same location as the 'assets/tiles/terrain/10-189-401.terrain' tile and its neighbors",
+"features": [
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -113.523, 36.035 ], [ -113.269, 36.015 ], [ -112.986, 35.995 ], [ -112.898, 36.021 ], [ -112.887, 36.087 ], [ -113.008, 36.149 ], [ -113.114, 36.044 ], [ -113.274, 36.052 ], [ -113.371, 36.088 ], [ -113.416, 36.054 ], [ -113.484, 36.098 ], [ -113.523, 36.035 ] ] ] } },
+{ "type": "Feature", "properties": { }, "geometry": { "type": "LineString", "coordinates": [ [ -113.525, 35.892 ], [ -113.466, 35.946 ], [ -113.312, 35.884 ], [ -113.231, 35.948 ], [ -113.166, 35.941 ], [ -113.135, 35.893 ], [ -113.059, 35.886 ], [ -112.991, 35.905 ], [ -112.95, 35.933 ], [ -112.876, 35.898 ] ] } }
+]
+}

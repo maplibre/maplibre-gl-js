@@ -1,0 +1,72 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Terrain with skirts disabled to avoid vertical artifacts when using transparent terrains.",
+      "height": 512,
+      "width": 512,
+      "disableTerrainSkirts": true,
+      "threshold": 0.05,
+      "note_on_threshold": "Since we are dealing with transparent lines and polygons, we need a sensitive threshold. Somewhere between 0.11 and 0.15 overlaping polygon parts no longer qualify as different from non overlaps. So ~0.11 is the safest maximum threshold."
+    }
+  },
+  "center": [
+    -113.2339,
+    35.9405
+  ],
+  "zoom": 9.64,
+  "pitch": 36,
+  "bearing": 27.8,
+  "sources": {
+    "terrainSource": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain/{z}-{x}-{y}.terrain.png"
+      ],
+      "tileSize": 256
+    },
+    "features": {
+      "type": "geojson",
+      "data": "local://geojson/geometry-on-terrain.json"
+    }
+  },
+  "terrain": {
+    "source": "terrainSource",
+    "exaggeration": 1
+  },
+  "layers": [
+    {
+      "id": "polytest",
+      "type": "fill",
+      "source": "features",
+      "paint": {
+        "fill-color": "#198EC8",
+        "fill-opacity": 0.5
+      },
+      "filter": [
+        "==",
+        [
+          "geometry-type"
+        ],
+        "Polygon"
+      ]
+    },
+    {
+      "id": "linetest",
+      "type": "line",
+      "source": "features",
+      "paint": {
+        "line-color": "#FF0000",
+        "line-opacity": 1,
+        "line-width": 20
+      },
+      "filter": [
+        "==",
+        [
+          "geometry-type"
+        ],
+        "LineString"
+      ]
+    }
+  ]
+}
