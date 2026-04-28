@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- ⚠️ Remove `waitForCompletion` parameter from GeoJSON source and remove the return value of `this` to allow future changes to the API ([#7538](https://github.com/maplibre/maplibre-gl-js/issues/7538)) (by [@HarelM](https://github.com/HarelM))
+- ⚠️ Remove the second paramter from `GeoJSONSource.setData` (`waitForCompletion`) and remove the return value of `this` to allow future changes to the API ([#7538](https://github.com/maplibre/maplibre-gl-js/issues/7538)) (by [@HarelM](https://github.com/HarelM))
 - ⚠️ WebGL (v1) support has been removed; WebGL2 is now required.
   In practical terms, this will not change how you interact with the map.
   This enables performance improvements (e.g. line opacity), Terrain3D enhancements, and several bug fixes.
