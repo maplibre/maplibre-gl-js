@@ -23,8 +23,6 @@
       "import": "./dist/maplibre-gl.mjs",
       "require": "./dist/maplibre-gl.js"
     },
-    "./worker": "./dist/maplibre-gl-worker.mjs",
-    "./css": "./dist/maplibre-gl.css",
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },

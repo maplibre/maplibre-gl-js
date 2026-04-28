@@ -2,8 +2,8 @@
 
 Minimal esbuild app exercising the ESM build:
 
-- All library imports (`maplibre-gl`, `maplibre-gl/css`, `maplibre-gl/worker`) resolve via the package's `exports` field.
-- `build.js` runs esbuild and copies the worker file from `maplibre-gl/worker` to `dist/`. `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` references it relative to the bundle at runtime.
+- All library imports (`maplibre-gl`, `maplibre-gl/dist/maplibre-gl.css`) resolve via the package's `exports` field.
+- `build.js` runs esbuild and copies the worker file from `node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs` to `dist/`. `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` references it relative to the bundle at runtime.
 
 esbuild does not recognize the `new URL(..., import.meta.url)` pattern as an asset reference, so the worker is copied explicitly in the build script.
 

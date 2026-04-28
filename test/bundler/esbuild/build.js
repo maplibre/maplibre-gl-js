@@ -1,8 +1,7 @@
 import * as esbuild from 'esbuild';
-import {fileURLToPath} from 'url';
 import {copyFileSync, existsSync, mkdirSync} from 'fs';
 
-const workerSrc = fileURLToPath(import.meta.resolve('maplibre-gl/worker'));
+const workerSrc = 'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs';
 
 if (!existsSync(workerSrc)) {
     console.error(

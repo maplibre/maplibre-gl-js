@@ -1,5 +1,5 @@
 import {Map, setWorkerUrl} from 'maplibre-gl';
-import 'maplibre-gl/css';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
 

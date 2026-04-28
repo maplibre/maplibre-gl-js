@@ -54,7 +54,7 @@ You can then import the MapLibre GL JS module in your project.
 
 ```javascript
 import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/css';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 const map = new maplibregl.Map({
     container: 'map', // container id
@@ -113,8 +113,8 @@ Use Vite's `?url` query to get the worker file's bundled URL:
 
 ```ts
 import {Map, setWorkerUrl} from 'maplibre-gl';
-import 'maplibre-gl/css';
-import workerUrl from 'maplibre-gl/worker?url';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 
 setWorkerUrl(workerUrl);
 
@@ -136,9 +136,9 @@ export default defineConfig({
 
 ```ts
 import {Map, setWorkerUrl} from 'maplibre-gl';
-import 'maplibre-gl/css';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
-setWorkerUrl(new URL('maplibre-gl/worker', import.meta.url).toString());
+setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
 
 const map = new Map({/* … */});
 ```
@@ -150,7 +150,6 @@ rspack and rsbuild use the same pattern.
 ```js
 // build.js
 import * as esbuild from 'esbuild';
-import {fileURLToPath} from 'url';
 import {copyFileSync} from 'fs';
 
 await esbuild.build({
@@ -161,7 +160,7 @@ await esbuild.build({
 });
 
 copyFileSync(
-    fileURLToPath(import.meta.resolve('maplibre-gl/worker')),
+    'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs',
     'dist/maplibre-gl-worker.mjs'
 );
 ```
@@ -169,7 +168,7 @@ copyFileSync(
 ```ts
 // src/main.ts
 import {Map, setWorkerUrl} from 'maplibre-gl';
-import 'maplibre-gl/css';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
 
@@ -180,14 +179,15 @@ const map = new Map({/* … */});
 
 ```ts
 // rollup.config.js
-import {fileURLToPath} from 'url';
 import copy from 'rollup-plugin-copy';
-
-const workerSrc = fileURLToPath(import.meta.resolve('maplibre-gl/worker'));
 
 export default {
     plugins: [
-        copy({targets: [{src: workerSrc, dest: 'dist'}]}),
+        copy({
+            targets: [
+                {src: 'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs', dest: 'dist'}
+            ]
+        }),
         /* ... */
     ]
 };
@@ -196,7 +196,7 @@ export default {
 ```ts
 // src/main.ts
 import {Map, setWorkerUrl} from 'maplibre-gl';
-import 'maplibre-gl/css';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
 

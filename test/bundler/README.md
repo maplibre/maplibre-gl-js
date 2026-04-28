@@ -1,24 +1,24 @@
 # Bundler examples
 
-Standalone apps that exercise `maplibre-gl`'s ESM build through real bundlers. Each subdirectory is self-contained: it symlinks the parent package via `link:../../..`, so `npm install` resolves `import 'maplibre-gl'`, `import 'maplibre-gl/css'`, and the worker URL exactly as a downstream consumer would, and stays in sync with the parent's `dist/` whenever you rebuild.
+Standalone apps that exercise `maplibre-gl`'s ESM build through real bundlers. Each subdirectory is self-contained: it depends on the parent package via `file:../../..`, so `npm install` copies the parent's `dist/` into the example's `node_modules` and the example then resolves `import 'maplibre-gl'` and `import 'maplibre-gl/dist/maplibre-gl.css'` exactly as a downstream consumer would.
 
 | Directory | Bundler | Worker URL setup |
 |---|---|---|
-| `vite-7/` | Vite 7 | `import workerUrl from 'maplibre-gl/worker?url'` |
-| `vite-8/` | Vite 8 | `import workerUrl from 'maplibre-gl/worker?url'` |
-| `webpack-5/` | webpack 5 | `setWorkerUrl(new URL('maplibre-gl/worker', import.meta.url).toString())` |
+| `vite-7/` | Vite 7 | `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'` |
+| `vite-8/` | Vite 8 | `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'` |
+| `webpack-5/` | webpack 5 | `setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString())` |
 | `rollup-4/` | Rollup 4 | `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` (worker copied next to the bundle via `rollup-plugin-copy`) |
 | `esbuild/` | esbuild | `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` (worker copied next to the bundle in `build.js`) |
 
-All five use the same library imports: `import {Map} from 'maplibre-gl'`, `import 'maplibre-gl/css'`. The differences are in how each bundler resolves the worker URL.
+All five use the same library imports: `import {Map} from 'maplibre-gl'`, `import 'maplibre-gl/dist/maplibre-gl.css'`. The differences are in how each bundler resolves the worker URL.
 
 To run any of them:
 
 ```bash
 # From repo root: build the parent's production bundles. Required because
-# every example resolves `maplibre-gl/worker`, which points at the
-# production-named `dist/maplibre-gl-worker.mjs`. `build-dev` alone
-# produces only the `-dev` variant and the examples will fail to copy.
+# every example references `dist/maplibre-gl-worker.mjs` (the production
+# name); `build-dev` alone produces only the `-dev` variant and the
+# examples will fail to copy.
 npm install
 npm run build-dist
 
