@@ -15,6 +15,7 @@
     "skipLibCheck": false,
     "strict": false,
     "target": "es2022",
+    "useDefineForClassFields": false,
     "lib": [
       "ESNext",
       "DOM",
