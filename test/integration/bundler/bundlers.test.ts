@@ -75,8 +75,9 @@ describe('Bundler examples', () => {
                     }
                 });
                 page.on('pageerror', (err) => {
-                    if (!isEnvNoise(err.message)) {
-                        errors.push(`pageerror: ${err.message}`);
+                    const message = err instanceof Error ? err.message : String(err);
+                    if (!isEnvNoise(message)) {
+                        errors.push(`pageerror: ${message}`);
                     }
                 });
                 page.on('response', (res) => {

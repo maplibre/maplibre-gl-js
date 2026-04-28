@@ -20,7 +20,6 @@ It is part of the MapLibre ecosystem, with a counterpart for Android, iOS and ot
 </script>
 ```
 
-
 ## Reading this documentation
 
 This documentation is divided into several sections:
@@ -67,6 +66,8 @@ const map = new maplibregl.Map({
 ## ESM
 
 MapLibre GL JS ships an ES module build (`maplibre-gl.mjs`) alongside the classic UMD bundle. The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically. Every consumer of the ESM build needs to point MapLibre at the worker URL with [`setWorkerUrl()`](./API/functions/setWorkerUrl.md); each environment below shows how to wire it up.
+
+For minimal runnable apps per bundler (Vite, webpack, esbuild, Rollup), see [`test/integration/bundler/`](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler).
 
 ### Migrating to ESM
 
@@ -132,8 +133,6 @@ export default defineConfig({
 });
 ```
 
-Runnable examples: [Vite 7 (Rollup/esbuild)](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/vite-rollup-esbuild), [Vite 8+ (Rolldown)](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/vite-rolldown).
-
 ### webpack 5+
 
 ```ts
@@ -146,8 +145,6 @@ const map = new Map({/* … */});
 ```
 
 rspack and rsbuild use the same pattern.
-
-Runnable example: [webpack](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/webpack).
 
 ### esbuild
 
@@ -179,8 +176,6 @@ setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
 const map = new Map({/* … */});
 ```
 
-Runnable example: [esbuild](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/esbuild).
-
 ### Rollup
 
 ```ts
@@ -208,8 +203,6 @@ setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
 
 const map = new Map({/* … */});
 ```
-
-Runnable example: [Rollup](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/rollup).
 
 ## CSP Directives
 
