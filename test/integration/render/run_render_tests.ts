@@ -13,7 +13,7 @@ import type {Page, Browser} from 'puppeteer';
 import {ensureError} from '../../../src/util/util';
 import {localizeURLs} from '../lib/localize-urls';
 import {launchPuppeteer} from '../lib/puppeteer_config';
-import type {Map as MaplibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -291,7 +291,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 this.renderingMode = '2d';
             }
 
-            onAdd(map: MaplibreMap, gl: WebGL2RenderingContext) {
+            onAdd(map: MapLibreMap, gl: WebGL2RenderingContext) {
                 const vertexSource = `#version 300 es
                 in vec3 aPos;
                 uniform mat4 u_matrix;
@@ -351,7 +351,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 this.renderingMode = '3d';
             }
 
-            onAdd(map: MaplibreMap, gl: WebGL2RenderingContext) {
+            onAdd(map: MapLibreMap, gl: WebGL2RenderingContext) {
 
                 const vertexSource = `#version 300 es
 
@@ -599,7 +599,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
          * @param operations - The operations
          * @param callback - The callback to use when all the operations are executed
          */
-        async function applyOperations(testData: TestData, map: MaplibreMap & { _render: () => void}, idle: boolean) {
+        async function applyOperations(testData: TestData, map: MapLibreMap & { _render: () => void}, idle: boolean) {
             if (!testData.operations || testData.operations.length === 0) {
                 return;
             }
