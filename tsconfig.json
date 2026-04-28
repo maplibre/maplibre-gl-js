@@ -53,6 +53,6 @@
     "test/bench/run-benchmarks.ts",
     "test/bench/gl-stats.ts"  ,
     "test/bench/**/*generated*",
-    "test/integration/bundler/*/**"
+    "test/integration/bundler/*/src/**"
   ]
 }
