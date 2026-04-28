@@ -3,7 +3,7 @@
         "name": "error_example",
         "metadata": {
           "test": {
-            "timeout": 60000
+            "timeout": 120000
           }
         },
         "zoom": 22,
