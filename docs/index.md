@@ -66,18 +66,11 @@ const map = new maplibregl.Map({
 
 ## ESM
 
-MapLibre GL JS ships an ES module build (`maplibre-gl.mjs`) alongside the classic UMD bundle. The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically:
-
-```ts
-import {Map} from 'maplibre-gl';
-import 'maplibre-gl/css';
-
-const map = new Map({/* … */});
-```
-
-Vite, webpack 5+, and Rollup all bundle the companion worker file as a sibling asset with no extra configuration.
+MapLibre GL JS ships an ES module build (`maplibre-gl.mjs`) alongside the classic UMD bundle. The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically.
 
 ### In the browser, without a bundler
+
+The simplest case: no build step, no worker URL setup. The worker URL is auto-detected from `import.meta.url`:
 
 ```html
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.css" />
@@ -96,9 +89,13 @@ Vite, webpack 5+, and Rollup all bundle the companion worker file as a sibling a
 
 See the [Display a map with ESM](./examples/display-a-map-with-esm.md) example for a runnable version.
 
-### Vite
+### With a bundler
 
-Vite does not extend `import.meta.url`-based asset detection to files inside `node_modules`, so the auto-detection inside `maplibre-gl.mjs` does not fire when the package is consumed via npm. Use the `?url` query to import the worker file for its URL and pass it to `setWorkerUrl()`:
+Bundlers do not extend their `new URL(..., import.meta.url)` asset detection to expressions inside `node_modules`, so the auto-detection inside `maplibre-gl.mjs` does not fire when the package is installed via npm. Wire the worker URL through your bundler's idiom:
+
+#### Vite
+
+Use Vite's `?url` query to get the worker file's bundled URL:
 
 ```ts
 import {Map, setWorkerUrl} from 'maplibre-gl';
@@ -110,11 +107,20 @@ setWorkerUrl(workerUrl);
 const map = new Map({/* … */});
 ```
 
-This applies to both Vite 7 and Vite 8 in dev and production.
+Works in Vite 7 and Vite 8, dev and production.
 
-### webpack 5+
+If your build uses SSR (TanStack Start, Astro, etc.) and Vite resolves the CommonJS entry on the server, also add:
 
-webpack also does not extend its `new URL(..., import.meta.url)` asset detection to expressions inside `node_modules`, so put the URL construction in your own source:
+```ts
+// vite.config.ts
+export default defineConfig({
+    ssr: {noExternal: ['maplibre-gl']}
+});
+```
+
+#### webpack 5+
+
+Construct the worker URL in your own source code so webpack's asset detection can fire:
 
 ```ts
 import {Map, setWorkerUrl} from 'maplibre-gl';
@@ -125,9 +131,7 @@ setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url)
 const map = new Map({/* … */});
 ```
 
-webpack resolves the package specifier, copies the worker file to the build output, and rewrites the URL at build time.
-
-### Rollup
+#### Rollup
 
 Use `rollup-plugin-copy` to put the worker file next to the bundle, then reference it with a relative `new URL(..., import.meta.url)`:
 
@@ -155,17 +159,6 @@ import 'maplibre-gl/css';
 setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
 
 const map = new Map({/* … */});
-```
-
-### Vite SSR
-
-If your build uses SSR (React Router v7, Astro, etc.) and Vite resolves the CommonJS entry on the server, force the ESM entry:
-
-```ts
-// vite.config.ts
-export default defineConfig({
-    ssr: {noExternal: ['maplibre-gl']}
-});
 ```
 
 ### Custom worker URL
@@ -200,7 +193,7 @@ child-src blob: ;
 img-src data: blob: ;
 ```
 
-For strict CSP environments without `worker-src blob: ; child-src blob:` enabled, there's a separate MapLibre GL JS bundle (`maplibre-gl-csp.js` and `maplibre-gl-csp-worker.js`, with `.mjs` ESM variants) which requires setting the path to the worker manually:
+For strict CSP environments without `worker-src blob: ; child-src blob:` enabled, there's a separate MapLibre GL JS bundle (`maplibre-gl-csp.js` and `maplibre-gl-csp-worker.js`) which requires setting the path to the worker manually:
 
 ```html
 <script>
