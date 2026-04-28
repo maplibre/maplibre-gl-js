@@ -1,6 +1,15 @@
 ## main
 ### ✨ Features and improvements
 - ⚠️ Remove the second paramter from `GeoJSONSource.setData` (`waitForCompletion`) and remove the return value of `this` to allow future changes to the API ([#7538](https://github.com/maplibre/maplibre-gl-js/issues/7538)) (by [@HarelM](https://github.com/HarelM))
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 6.0.0-2
+
+### ✨ Features and improvements
+
 - ⚠️ WebGL (v1) support has been removed; WebGL2 is now required.
   In practical terms, this will not change how you interact with the map.
   This enables performance improvements (e.g. line opacity), Terrain3D enhancements, and several bug fixes.
@@ -8,10 +17,6 @@
   To ease this breaking change, we have also refactored how we handle the case that no webgl is avaliableWebGL (e.g. due to browser restrictions).
   You can now listen to the webgl error via `.on("error")`, or by overriding `Map._showWebGL2Error`.
   See [caniuse.com/webgl2](https://caniuse.com/webgl2) for ecosystem support and [our RFC for details](https://github.com/maplibre/maplibre-gl-js/discussions/6017). ([#7453](https://github.com/maplibre/maplibre-gl-js/pull/7453)) (by [@CommanderStorm](https://github.com/CommanderStorm))
-- _...Add new stuff here..._
-
-### 🐞 Bug fixes
-- _...Add new stuff here..._
 
 ## 6.0.0-1
 
