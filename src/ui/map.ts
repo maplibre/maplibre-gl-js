@@ -9,6 +9,7 @@ import {RequestManager, ResourceType} from '../util/request_manager';
 import {Style, type StyleSwapOptions} from '../style/style';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {Painter} from '../render/painter';
+import {GPUInitializationError} from '../util/gpu_initialization_error';
 import {Hash} from './hash';
 import {HandlerManager} from './handler_manager';
 import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions} from './camera';
@@ -3460,36 +3461,19 @@ export class Map extends Camera {
             premultipliedAlpha: true
         };
 
-        let webglcontextcreationerrorDetailObject: any = null;
-        this._canvas.addEventListener('webglcontextcreationerror', (args: WebGLContextEvent) => {
-            webglcontextcreationerrorDetailObject = {requestedAttributes: attributes};
-            if (args) {
-                webglcontextcreationerrorDetailObject.statusMessage = args.statusMessage;
-                webglcontextcreationerrorDetailObject.type = args.type;
-            }
+        let creationEvent: WebGLContextEvent | null = null;
+        this._canvas.addEventListener('webglcontextcreationerror', (event: WebGLContextEvent) => {
+            creationEvent = event;
         }, {once: true});
 
         const gl: WebGL2RenderingContext | null = this._canvas.getContext('webgl2', attributes);
 
         if (!gl) {
-            this._showWebGL2Error(webglcontextcreationerrorDetailObject);
+            this.fire(new ErrorEvent(new GPUInitializationError(attributes, creationEvent)));
             return;
         }
 
         this.painter = new Painter(gl, this.transform);
-    }
-
-    _showWebGL2Error(webglcontextcreationerrorDetailObject: any) {
-        const msg = 'Failed to initialize WebGL';
-        if (webglcontextcreationerrorDetailObject) {
-            webglcontextcreationerrorDetailObject.message = msg;
-        }
-
-        this.fire(new ErrorEvent(new Error(
-            webglcontextcreationerrorDetailObject
-                ? JSON.stringify(webglcontextcreationerrorDetailObject)
-                : msg
-        )));
     }
 
     override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {

@@ -1,5 +1,6 @@
 import {beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util';
+import {GPUInitializationError} from '../../util/gpu_initialization_error';
 
 let originalGetContext: typeof HTMLCanvasElement.prototype.getContext;
 beforeEach(() => {
@@ -72,7 +73,7 @@ test('does not fire "webglcontextrestored" after remove has been called', async 
     expect(spy).not.toHaveBeenCalled();
 });
 
-test('WebGL2 context creation error fires ErrorEvent', () => {
+test('WebGL2 context creation error fires ErrorEvent with structured GPUInitializationError', () => {
     HTMLCanvasElement.prototype.getContext = function (type: string) {
         if (type === 'webgl2') {
             const errorEvent = new Event('webglcontextcreationerror');
@@ -82,20 +83,24 @@ test('WebGL2 context creation error fires ErrorEvent', () => {
         }
     };
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    createMap();
-    const errors = consoleErrorSpy.mock.calls.map(c => c[0]).filter((e): e is Error => e instanceof Error);
-    expect(errors.some(e => e.message.includes('Failed to initialize WebGL'))).toBe(true);
+    createMap({canvasContextAttributes: {antialias: true}});
+    const err = consoleErrorSpy.mock.calls[0][0];
+    expect(err.constructor).toBe(GPUInitializationError);
+    expect(err.message).toBe('Failed to initialize WebGL');
+    expect(err.statusMessage).toBe('mocked webglcontextcreationerror message');
+    expect(err.requestedAttributes.antialias).toBe(true);
     consoleErrorSpy.mockRestore();
 });
 
-test('ErrorEvent fires when getContext webgl2 returns null', () => {
+test('GPUInitializationError has null statusMessage when no webglcontextcreationerror is dispatched', () => {
     HTMLCanvasElement.prototype.getContext = function (_type: string) {
         return null;
     };
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     createMap();
-    const errors = consoleErrorSpy.mock.calls.map(c => c[0]).filter((e): e is Error => e instanceof Error);
-    expect(errors.some(e => e.message.includes('Failed to initialize WebGL'))).toBe(true);
+    const err = consoleErrorSpy.mock.calls[0][0];
+    expect(err.constructor).toBe(GPUInitializationError);
+    expect(err.statusMessage).toBeNull();
     consoleErrorSpy.mockRestore();
 });
 

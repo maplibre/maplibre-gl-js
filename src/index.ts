@@ -75,6 +75,7 @@ import type {StyleGlyph} from './style/style_glyph';
 import type {FeatureIndex} from './data/feature_index';
 import type {DashEntry} from './render/line_atlas';
 import type {Painter} from './render/painter';
+import {GPUInitializationError} from './util/gpu_initialization_error';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -367,6 +368,7 @@ export {
     type CoveringTilesOptions,
     type DashEntry,
     type Painter,
+    GPUInitializationError,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,
