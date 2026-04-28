@@ -4,7 +4,6 @@ import type {Map} from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const STYLE_COMPLEXITY = 64;
-const ITERATIONS = 5;
 const DURATION = 1_000;
 const CENTER_START: [number, number] = [0.0, 0.15];
 const CENTER_END: [number, number] = [0.0, -0.15];
@@ -13,6 +12,8 @@ const PITCH = 85;
 const BEARING = 180;
 
 class TerrainBase extends Benchmark {
+    public minimumMeasurements = 5;
+
     map: Map;
     label: string;
     terrain: boolean;
@@ -58,7 +59,7 @@ class TerrainBase extends Benchmark {
             await this.runInner();
 
             const measurements: Measurement[] = [];
-            for (let i = 0; i < ITERATIONS; i++) {
+            for (let i = 0; i < this.minimumMeasurements; i++) {
                 measurements.push({time: await this.runInner(), iterations: 1});
             }
 
