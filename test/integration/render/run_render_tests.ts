@@ -922,17 +922,7 @@ async function createPageAndStart(browser: Browser, testStyles: StyleWithTestDat
     const page = await browser.newPage();
     await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
     applyDebugParameter(options, page);
-    // Navigate to a real URL so module imports below resolve against the server origin.
-    await page.goto(`http://localhost:${serverPort}/blank.html`, {waitUntil: 'domcontentloaded'});
-    await page.addScriptTag({
-        type: 'module',
-        content: `
-            import * as maplibregl from '/dist/maplibre-gl-dev.mjs';
-            maplibregl.setWorkerUrl('/dist/maplibre-gl-worker-dev.mjs');
-            window.maplibregl = maplibregl;
-        `
-    });
-    // Wait for the module to actually execute and populate window.maplibregl.
+    await page.goto(`http://localhost:${serverPort}/test-page.html`, {waitUntil: 'load'});
     await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
     await runTests(page, testStyles, directory);
     return page;
@@ -1017,11 +1007,6 @@ async function executeRenderTests() {
         res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins, or specify 'http://your-frontend-domain.com'
         res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Include any custom headers your client might send
-        if (req.url === '/blank.html') {
-            res.writeHead(200, {'Content-Type': 'text/html'});
-            res.end('<!doctype html><meta charset=utf-8><title>blank</title>');
-            return;
-        }
         distMount(req, res, () => {
             mount(req, res, () => {
                 if (req.url.includes('/sparse204/1-')) {

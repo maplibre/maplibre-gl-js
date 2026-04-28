@@ -102,11 +102,6 @@ describe('query tests', () => {
         const assetsMount = st({path: 'test/integration/assets', cors: true, passthrough: true});
         const distMount = st({path: 'dist', url: '/dist', cors: true, passthrough: true});
         server = http.createServer((req, res) => {
-            if (req.url === '/blank.html') {
-                res.writeHead(200, {'Content-Type': 'text/html'});
-                res.end('<!doctype html><meta charset=utf-8><body id="map"></body>');
-                return;
-            }
             distMount(req, res, () => {
                 assetsMount(req, res, () => {
                     res.writeHead(404);
@@ -120,17 +115,8 @@ describe('query tests', () => {
         page = await browser.newPage();
         await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
         await page.setViewport({width: 512, height: 512, deviceScaleFactor: 2});
-        await page.goto(`http://localhost:${port}/blank.html`, {waitUntil: 'domcontentloaded'});
-        await page.addScriptTag({
-            type: 'module',
-            content: `
-                import * as maplibregl from '/dist/maplibre-gl-dev.mjs';
-                maplibregl.setWorkerUrl('/dist/maplibre-gl-worker-dev.mjs');
-                window.maplibregl = maplibregl;
-            `
-        });
+        await page.goto(`http://localhost:${port}/test-page.html`, {waitUntil: 'load'});
         await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
-        await page.addStyleTag({path: 'dist/maplibre-gl.css'});
     }, 60000);
 
     afterAll(async () => {
