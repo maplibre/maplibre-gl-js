@@ -35,12 +35,10 @@ describe('production bundle', () => {
             const actual = measure(filePath);
 
             if (process.env.UPDATE) {
-                const updated: SizeMap = {...(bundleSizes as SizeMap)};
+                const jsonPath = path.resolve(__dirname, './bundle_size.json');
+                const updated: SizeMap = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
                 updated[filePath] = actual;
-                fs.writeFileSync(
-                    path.resolve(__dirname, './bundle_size.json'),
-                    `${JSON.stringify(updated, null, 4)}\n`
-                );
+                fs.writeFileSync(jsonPath, `${JSON.stringify(updated, null, 4)}\n`);
                 return;
             }
 
