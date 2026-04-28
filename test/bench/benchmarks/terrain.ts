@@ -47,7 +47,7 @@ class TerrainBase extends Benchmark {
 
         if (this.terrain) {
             this.map.setTerrain({source: 'dem', exaggeration: 1});
-            await new Promise(resolve => this.map.once('idle', resolve));
+            await this.map.once('idle');
         }
     }
 
