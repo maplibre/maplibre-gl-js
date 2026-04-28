@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- ⚠️ Remove the second paramter from `GeoJSONSource.setData` (`waitForCompletion`) and remove the return value of `this` to allow future changes to the API ([#7538](https://github.com/maplibre/maplibre-gl-js/issues/7538)) (by [@HarelM](https://github.com/HarelM))
+- ⚠️ Remove the second parameter from `GeoJSONSource.setData` (`waitForCompletion`) and remove the return value of `this` to allow future changes to the API ([#7538](https://github.com/maplibre/maplibre-gl-js/issues/7538)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
