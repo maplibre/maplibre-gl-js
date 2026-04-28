@@ -1,5 +1,5 @@
 {
-  "name": "maplibre-gl-vite-7-example",
+  "name": "maplibre-gl-vite-rollup-example",
   "version": "0.0.0",
   "private": true,
   "type": "module",

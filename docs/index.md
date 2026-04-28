@@ -132,7 +132,7 @@ export default defineConfig({
 });
 ```
 
-Runnable examples: [Vite 7](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/vite-7), [Vite 8](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/vite-8).
+Runnable examples: [Vite (Rollup)](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/vite-rollup), [Vite (Rolldown)](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/vite-rolldown).
 
 ### webpack 5+
 
@@ -147,7 +147,7 @@ const map = new Map({/* … */});
 
 rspack and rsbuild use the same pattern.
 
-Runnable example: [webpack 5](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/webpack-5).
+Runnable example: [webpack](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/webpack).
 
 ### esbuild
 
@@ -209,7 +209,7 @@ setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
 const map = new Map({/* … */});
 ```
 
-Runnable example: [Rollup 4](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/rollup-4).
+Runnable example: [Rollup](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/rollup).
 
 ## CSP Directives
 
