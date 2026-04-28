@@ -92,19 +92,19 @@ describe('GeoJSONSource.constructor', () => {
     });
 });
 
-describe('GeoJSONSource.setData', () => {
-    function createSource(opts?) {
-        opts ||= {};
-        opts = extend(opts, {data: {}});
-        return new GeoJSONSource('id', opts, wrapDispatcher({
-            sendAsync(_message) {
-                return new Promise((resolve) => {
-                    setTimeout(() => resolve({}), 0);
-                });
-            }
-        }), undefined);
-    }
+function createSource(opts?) {
+    opts ||= {};
+    opts.data ||= {};
+    return new GeoJSONSource('id', opts, wrapDispatcher({
+        sendAsync(_message) {
+            return new Promise((resolve) => {
+                setTimeout(() => resolve({}), 0);
+            });
+        }
+    }), undefined);
+}
 
+describe('GeoJSONSource.setData', () => {
     test('returns self', () => {
         const source = createSource();
         expect(source.setData({} as GeoJSON.GeoJSON)).toBe(source);
@@ -315,6 +315,7 @@ describe('GeoJSONSource.update', () => {
                 minPoints: 2,
                 radius: 800,
             },
+            worldCopies: true
         });
     });
 
@@ -1230,5 +1231,109 @@ describe('GeoJSONSource.getClusterLeaves', () => {
         expect(spy.mock.calls[0][0].type).toBe(MessageType.getClusterLeaves);
         expect((spy.mock.calls[0][0].data as ClusterIDAndSource).clusterId).toBe(1);
         vi.resetAllMocks();
+    });
+});
+
+describe('GeoJSONSource._updateOptionsForProjection', () => {
+    function createMap({ worldCopies }: { worldCopies: boolean } = { worldCopies: true }) {
+        return {
+            transform: {
+                renderWorldCopies: worldCopies,
+                getCoveringTilesDetailsProvider: () => ({ allowWorldCopies: () => worldCopies})
+            }
+        } as any;
+    }
+
+    test('defaults to worldCopies: true when map is not yet attached', () => {
+        const source = createSource();
+        source._updateOptionsForProjection();
+        expect(source.workerOptions.geojsonVtOptions.worldCopies).toBe(true);
+    });
+
+    test('no-op when worldCopies value is unchanged', () => {
+        const source = createSource();
+        source.map = createMap({ worldCopies: true });
+        const spy = vi.fn().mockResolvedValue({});
+        source.actor.sendAsync = spy;
+
+        source._updateOptionsForProjection();
+        expect(source.workerOptions.geojsonVtOptions.worldCopies).toBe(true);
+        const callsAfterFirst = spy.mock.calls.length;
+
+        source._updateOptionsForProjection();
+        expect(spy.mock.calls.length).toBe(callsAfterFirst);
+    });
+
+    test('updates worldCopies and dispatches loadData when value changes', async () => {
+        const source = createSource({ data: hawkHill });
+        source.map = createMap({ worldCopies:false});
+        const spy = vi.fn().mockResolvedValue({});
+        source.actor.sendAsync = spy;
+        await source.load()
+
+        source._updateOptionsForProjection();
+        await sleep(0);
+
+        expect(source.workerOptions.geojsonVtOptions.worldCopies).toBe(false);
+        const loadDataCalls = spy.mock.calls.filter(c => c[0].type === MessageType.loadData);
+        expect(loadDataCalls.length).toBe(2);
+        expect(loadDataCalls[0][0].data.geojsonVtOptions.worldCopies).toBe(false);
+    });
+
+    function freezeWorkerDispatch(source: GeoJSONSource) {
+        source._isUpdatingWorker = true;
+        source._pendingWorkerUpdate = {};
+    }
+
+    const updateableFeature: GeoJSON.Feature = {
+        type: 'Feature',
+        id: 1,
+        properties: {name: 'a'},
+        geometry: {type: 'Point', coordinates: [0, 0]}
+    };
+
+    test.each([
+        {
+            label: 'a URL',
+            sourceOpts: {data: 'http://example.com/data.geojson'},
+            setup: undefined,
+            expected: 'http://example.com/data.geojson',
+        },
+        {
+            label: 'an inline geojson object',
+            sourceOpts: {data: hawkHill},
+            setup: undefined,
+            expected: hawkHill,
+        },
+        {
+            label: 'an updateable map',
+            sourceOpts: undefined,
+            setup: (source: GeoJSONSource) => {
+                source._data = {updateable: new Map([[1, updateableFeature]])} as any;
+            },
+            expected: {type: 'FeatureCollection', features: [updateableFeature]},
+        },
+    ])('re-seeds pending data from $label when no update is pending', ({sourceOpts, setup, expected}) => {
+        const source = createSource(sourceOpts);
+        source.map = createMap({ worldCopies: false });
+        freezeWorkerDispatch(source);
+        setup?.(source);
+
+        source._updateOptionsForProjection();
+
+        expect(source._pendingWorkerUpdate.data).toEqual(expected);
+    });
+
+    test('does not overwrite an existing pending update', () => {
+        const source = createSource();
+        source.map = createMap({ worldCopies: false });
+        source._isUpdatingWorker = true;
+
+        const diff = {removeAll: true} as GeoJSONSourceDiff;
+        source._pendingWorkerUpdate = {diff};
+        source._updateOptionsForProjection();
+
+        expect(source._pendingWorkerUpdate.data).toBeUndefined();
+        expect(source._pendingWorkerUpdate.diff).toBe(diff);
     });
 });

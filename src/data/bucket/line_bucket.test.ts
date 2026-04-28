@@ -9,6 +9,9 @@ import {type ZoomHistory} from '../../../src/style/zoom_history';
 import {type BucketFeature, type BucketParameters} from '../bucket';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile';
+import {CanonicalTileID} from '../../tile/tile_id';
+import {EXTENT} from '../extent';
+import {GEOJSONVT_ANTIMERIDIAN_CLIP} from '@maplibre/geojson-vt';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const {noSubdivision} = SubdivisionGranularitySetting;
@@ -171,6 +174,70 @@ describe('LineBucket', () => {
         expect(bucket.patternFeatures.length).toBeGreaterThan(0);
         expect(bucket.patternFeatures[0].patterns).toEqual({
             test: {min: 'test-pattern', mid: 'test-pattern', max: 'test-pattern'}
+        });
+    });
+
+    describe('antimeridian ring splitting', () => {
+        const {noSubdivision} = SubdivisionGranularitySetting;
+
+        // Rectangle with one vertical edge on x=0 (the antimeridian on a
+        // left-edge tile) and one on x=EXTENT (right-edge).
+        const polygonLeft = [new Point(0, 100), new Point(0, 7000), new Point(4000, 7000), new Point(4000, 100)];
+        const polygonRight = [new Point(EXTENT, 100), new Point(EXTENT, 7000), new Point(4000, 7000), new Point(4000, 100)];
+        const polygonInterior = [new Point(200, 100), new Point(200, 7000), new Point(4000, 7000), new Point(4000, 100)];
+
+        // addFeature gates the antimeridian split on the GEOJSONVT_ANTIMERIDIAN_CLIP tag.
+        const polygonFeature = {type: 3, properties: {[GEOJSONVT_ANTIMERIDIAN_CLIP]: true}} as BucketFeature;
+        const lineFeature = {type: 2, properties: {[GEOJSONVT_ANTIMERIDIAN_CLIP]: true}} as BucketFeature;
+
+        function render(feature: BucketFeature, ring: Point[], tile: CanonicalTileID) {
+            const bucket = createLineBucket({id: 'test'});
+            bucket.addFeature(feature, [ring], undefined, tile, undefined, undefined, noSubdivision);
+            return {
+                vertices: bucket.layoutVertexArray.length,
+                indices: bucket.indexArray.length,
+            };
+        }
+
+        test('polygon ring with an x=0 edge is drawn open on a left-edge tile', () => {
+            const interior = render(polygonFeature, polygonLeft, new CanonicalTileID(4, 5, 5));
+            const border = render(polygonFeature, polygonLeft, new CanonicalTileID(4, 0, 5));
+            expect(border.vertices).toBeLessThan(interior.vertices);
+            expect(border.indices).toBeLessThan(interior.indices);
+        });
+
+        test('polygon ring with an x=EXTENT edge is drawn open on a right-edge tile', () => {
+            const interior = render(polygonFeature, polygonRight, new CanonicalTileID(4, 5, 5));
+            const border = render(polygonFeature, polygonRight, new CanonicalTileID(4, 15, 5));
+            expect(border.vertices).toBeLessThan(interior.vertices);
+            expect(border.indices).toBeLessThan(interior.indices);
+        });
+
+        test('polygon ring without an antimeridian edge is unchanged on a border tile', () => {
+            const interior = render(polygonFeature, polygonInterior, new CanonicalTileID(4, 5, 5));
+            const border = render(polygonFeature, polygonInterior, new CanonicalTileID(4, 0, 5));
+            expect(border).toEqual(interior);
+        });
+
+        test('LineString feature on a border tile is never split', () => {
+            const interior = render(lineFeature, polygonLeft, new CanonicalTileID(4, 5, 5));
+            const border = render(lineFeature, polygonLeft, new CanonicalTileID(4, 0, 5));
+            expect(border).toEqual(interior);
+        });
+
+        test('polygon ring on an interior tile is unchanged regardless of coordinates', () => {
+            const a = render(polygonFeature, polygonLeft, new CanonicalTileID(4, 5, 5));
+            const b = render(polygonFeature, polygonLeft, new CanonicalTileID(4, 7, 5));
+            expect(a).toEqual(b);
+        });
+
+        test('does not split untagged feature on a left-edge tile', () => {
+            const untaggedPolygon = {type: 3, properties: {}} as BucketFeature;
+            const mercator = createLineBucket({id: 'test'});
+            mercator.addFeature(untaggedPolygon, [polygonLeft], undefined, new CanonicalTileID(4, 0, 5), undefined, undefined, noSubdivision);
+            const interior = render(polygonFeature, polygonLeft, new CanonicalTileID(4, 5, 5));
+            expect(mercator.layoutVertexArray.length).toBe(interior.vertices);
+            expect(mercator.indexArray.length).toBe(interior.indices);
         });
     });
 

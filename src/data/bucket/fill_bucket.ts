@@ -11,6 +11,8 @@ import {hasPattern, addPatternDependencies} from './pattern_bucket_features';
 import {loadGeometry} from '../load_geometry';
 import {toEvaluationFeature} from '../evaluation_feature';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {createIsAntimeridianEdge} from './antimeridian_bucket_features';
+import {GEOJSONVT_ANTIMERIDIAN_CLIP} from '@maplibre/geojson-vt';
 
 import type {CanonicalTileID} from '../../tile/tile_id';
 import type {
@@ -173,10 +175,27 @@ export class FillBucket implements Bucket {
     addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {
         [_: string]: ImagePosition;
     }, subdivisionGranularity: SubdivisionGranularitySetting) {
+        // Suppress outline edges along the antimeridian on geojson-vt-clipped polygons.
+        const isAntimeridianEdge = feature.properties && Object.hasOwn(feature.properties, GEOJSONVT_ANTIMERIDIAN_CLIP)
+            ? createIsAntimeridianEdge(canonical) : null;
+
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             const subdivided = subdividePolygon(polygon, canonical, subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z));
 
             const vertexArray = this.layoutVertexArray;
+
+            const lineList = isAntimeridianEdge ?
+                subdivided.indicesLineList.map(indices => {
+                    const filtered: number[] = [];
+                    for (let i = 0; i < indices.length; i += 2) {
+                        const i0 = indices[i];
+                        const i1 = indices[i + 1];
+                        if (isAntimeridianEdge(subdivided.verticesFlattened[i0 * 2], subdivided.verticesFlattened[i1 * 2])) continue;
+                        filtered.push(i0, i1);
+                    }
+                    return filtered;
+                }) :
+                subdivided.indicesLineList;
 
             fillLargeMeshArrays(
                 (x, y) => {
@@ -189,7 +208,7 @@ export class FillBucket implements Bucket {
                 subdivided.indicesTriangles,
                 this.segments2,
                 this.indexArray2,
-                subdivided.indicesLineList,
+                lineList,
             );
         }
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, canonical});

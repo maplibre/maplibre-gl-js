@@ -209,6 +209,7 @@ export class GeoJSONSource extends Evented implements Source {
                     log: false,
                     generateId: options.generateId || false
                 },
+                worldCopies: true
             },
             clusterProperties: options.clusterProperties,
             filter: options.filter
@@ -237,7 +238,33 @@ export class GeoJSONSource extends Evented implements Source {
 
     onAdd(map: Map) {
         this.map = map;
+        this._updateOptionsForProjection(false);
         this.load();
+    }
+
+    /**
+     * Updates geojson-vt options based on the current map projection.
+     * @internal
+     */
+    _updateOptionsForProjection(updateData: boolean = true) {
+        const transform = this.map?.transform;
+
+        const worldCopies = transform ? transform.getCoveringTilesDetailsProvider().allowWorldCopies() && transform.renderWorldCopies : true;
+
+        const opts = this.workerOptions.geojsonVtOptions
+        if (opts.worldCopies === worldCopies) return;
+        opts.worldCopies = worldCopies;
+
+        if (updateData && !this._hasPendingWorkerUpdate()) {
+            this._pendingWorkerUpdate.data = this._getCurrentData();
+            this._updateWorkerData();
+        }
+    }
+
+    private _getCurrentData(): GeoJSON.GeoJSON | string {
+        return this._data.updateable ?
+            {type: 'FeatureCollection', features: Array.from(this._data.updateable.values())} :
+            this._data.url || this._data.geojson;
     }
 
     /**
@@ -598,7 +625,7 @@ export class GeoJSONSource extends Evented implements Source {
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId,
-            subdivisionGranularity: this.map.style.projection.subdivisionGranularity
+            subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
         };
 
         tile.abortController = new AbortController();
@@ -632,12 +659,7 @@ export class GeoJSONSource extends Evented implements Source {
     serialize(): GeoJSONSourceSpecification {
         return extend({}, this._options, {
             type: this.type,
-            data: this._data.updateable ?
-                {
-                    type: 'FeatureCollection',
-                    features: Array.from(this._data.updateable.values())
-                } :
-                this._data.url || this._data.geojson
+            data: this._getCurrentData()
         });
     }
 

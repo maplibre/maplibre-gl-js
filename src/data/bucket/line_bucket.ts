@@ -1,5 +1,6 @@
 import {LineLayoutArray, LineExtLayoutArray} from '../array_types.g';
-import {GEOJSONVT_CLIP_END, GEOJSONVT_CLIP_START} from '@maplibre/geojson-vt';
+import Point from '@mapbox/point-geometry';
+import {GEOJSONVT_ANTIMERIDIAN_CLIP, GEOJSONVT_CLIP_END, GEOJSONVT_CLIP_START} from '@maplibre/geojson-vt';
 import {members as layoutAttributes} from './line_attributes';
 import {members as layoutAttributesExt} from './line_attributes_ext';
 import {SegmentVector} from '../segment';
@@ -13,6 +14,7 @@ import {loadGeometry} from '../load_geometry';
 import {toEvaluationFeature} from '../evaluation_feature';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {subdivideVertexLine} from '../../render/subdivision';
+import {createIsAntimeridianEdge} from './antimeridian_bucket_features';
 
 import type {CanonicalTileID} from '../../tile/tile_id';
 import type {
@@ -23,7 +25,6 @@ import type {
     PopulateParameters
 } from '../bucket';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
-import type Point from '@mapbox/point-geometry';
 import type {Segment} from '../segment';
 import type {RGBAImage} from '../../util/image';
 import type {Context} from '../../webgl/context';
@@ -262,14 +263,30 @@ export class LineBucket implements Bucket {
         const roundLimit = layout.get('line-round-limit').evaluate(feature, {});
         this.lineClips = this.lineFeatureClips(feature);
 
+        const isPolygon = VectorTileFeature.types[feature.type] === 'Polygon';
+        const isAntimeridianEdge = isPolygon && feature.properties && Object.hasOwn(feature.properties, GEOJSONVT_ANTIMERIDIAN_CLIP)
+            ? createIsAntimeridianEdge(canonical) : null;
+        const splitAtAntimeridian = !!isAntimeridianEdge;
+
         for (const line of geometry) {
+            if (splitAtAntimeridian) {
+                const segments = splitRingAtAntimeridian(line, isAntimeridianEdge);
+                if (segments) {
+                    // Horizontal tangent so both tiles derive the same cap axis at the seam.
+                    const antimeridianTangent = new Point(1, 0);
+                    for (const segment of segments) {
+                        this.addLine(segment, feature, join, 'butt', miterLimit, roundLimit, canonical, subdivisionGranularity, true, antimeridianTangent);
+                    }
+                    continue;
+                }
+            }
             this.addLine(line, feature, join, cap, miterLimit, roundLimit, canonical, subdivisionGranularity);
         }
 
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, dashPositions, canonical});
     }
 
-    addLine(vertices: Point[], feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting) {
+    addLine(vertices: Point[], feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting, forceOpenLine: boolean = false, terminalTangent: Point | null = null) {
         this.distance = 0;
         this.scaledDistance = 0;
         this.totalDistance = 0;
@@ -288,7 +305,7 @@ export class LineBucket implements Bucket {
             this.maxLineLength = Math.max(this.maxLineLength, this.totalDistance);
         }
 
-        const isPolygon = VectorTileFeature.types[feature.type] === 'Polygon';
+        const isPolygon = !forceOpenLine && VectorTileFeature.types[feature.type] === 'Polygon';
 
         // If the line has duplicate vertices at the ends, adjust start/length to remove them.
         let len = vertices.length;
@@ -358,6 +375,13 @@ export class LineBucket implements Bucket {
             let joinNormal = prevNormal.add(nextNormal);
             if (joinNormal.x !== 0 || joinNormal.y !== 0) {
                 joinNormal._unit();
+            }
+            // At cap vertices, align the normal's axis with the given tangent while
+            // keeping the natural sign so the line's left/right orientation is preserved.
+            if (terminalTangent && (!prevVertex || !nextVertex)) {
+                const axis = terminalTangent.clone()._unit()._perp();
+                const sign = axis.x * joinNormal.x + axis.y * joinNormal.y >= 0 ? 1 : -1;
+                joinNormal = axis._mult(sign);
             }
             /*  joinNormal     prevNormal
              *             ↖      ↑
@@ -647,6 +671,38 @@ export class LineBucket implements Bucket {
             bucketFeature.dashes[layer.id] = {min: minKey, mid: midKey, max: maxKey};
         }
     }
+}
+
+/**
+ * Splits a polygon ring at antimeridian-tile-boundary edges, returning open line
+ * segments for the remaining edges (or null if the ring has none). Suppresses the
+ * visible stroke geojson-vt's clip would otherwise draw along the seam.
+ */
+function splitRingAtAntimeridian(ring: Point[], isAntimeridianEdge: (x0: number, x1: number) => boolean): Point[][] | null {
+    const n = ring.length;
+    const edgeIsAntimeridian = (i: number) => isAntimeridianEdge(ring[i].x, ring[(i + 1) % n].x);
+
+    // Start the walk at the vertex after the first antimeridian edge so every
+    // non-antimeridian edge is emitted exactly once.
+    let start = -1;
+    for (let i = 0; i < n; i++) {
+        if (edgeIsAntimeridian(i)) { start = (i + 1) % n; break; }
+    }
+    if (start < 0) return null;
+
+    const segments: Point[][] = [];
+    let current: Point[] = [];
+    for (let k = 0; k < n; k++) {
+        const i = (start + k) % n;
+        current.push(ring[i]);
+        if (edgeIsAntimeridian(i)) {
+            if (current.length >= 2) segments.push(current);
+            current = [];
+        }
+    }
+    if (current.length >= 2) segments.push(current);
+
+    return segments;
 }
 
 register('LineBucket', LineBucket, {omit: ['layers', 'patternFeatures']});
