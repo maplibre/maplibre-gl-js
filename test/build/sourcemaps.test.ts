@@ -50,29 +50,27 @@ describe.each(distjs)('release file %s', (file) => {
 
 describe('main sourcemap', () => {
     test('should match source files', async () => {
-        // The ESM build emits two bundles (main + worker). Union both sourcemaps
-        // so the comparison covers worker-only modules too.
-        const mainBundleURL = pathToFileURL(packageJson.module);
-        const workerBundleURL = pathToFileURL(packageJson.module.replace(/maplibre-gl\.mjs$/, 'maplibre-gl-worker.mjs'));
-        const mainSourcemap = await getSourceMapForFile(mainBundleURL);
-        const workerSourcemap = await getSourceMapForFile(workerBundleURL);
+        const mainSourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.module));
+        const workerSourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.module.replace(/maplibre-gl\.mjs$/, 'maplibre-gl-worker.mjs')));
         const sourceMapEntryRootDir = path.relative('.', dirname(packageJson.module));
 
-        const sourcemapEntriesNormalized = [...mainSourcemap.sources, ...workerSourcemap.sources]
+        // Worker code lives in its own bundle, so union sources from both sourcemaps.
+        const sourcemapEntriesNormalized = [...mainSourcemapJSON.sources, ...workerSourcemapJSON.sources]
             .map(f => path.join(sourceMapEntryRootDir, f));
 
+        // *.mjs.map files should have these files
         const srcFiles = await glob('src/**/*.ts');
         const expectedEntriesInSourcemapJSON = srcFiles.filter(f => {
             if (f.endsWith('.test.ts'))
                 return false;
             if (f.startsWith(path.join('src', 'style-spec')))
                 return false;
-            // Test-only helper, not bundled.
             if (f === path.join('src', 'util', 'test', 'util.ts'))
                 return false;
             return !f.startsWith(`build${path.sep}`);
         }).sort();
 
+        // actual files from *.mjs.map
         const actualEntriesInSourcemapJSON = sourcemapEntriesNormalized.filter(f => {
             if (f.startsWith('node_modules'))
                 return false;
@@ -86,9 +84,7 @@ describe('main sourcemap', () => {
 
         const s1 = setMinus(actualEntriesInSourcemapJSON, expectedEntriesInSourcemapJSON);
         expect(s1.length).toBeLessThan(5);
-        // The remaining gap is pure type/interface files, which rollup tree-shakes
-        // because they have no runtime exports.
         const s2 = setMinus(expectedEntriesInSourcemapJSON, actualEntriesInSourcemapJSON);
-        expect(s2.length).toBeLessThan(28);
+        expect(s2.length).toBeLessThan(17);
     });
 });
