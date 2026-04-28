@@ -53,7 +53,7 @@ describe('main sourcemap', () => {
         // The ESM build emits two bundles (main + worker). Union both sourcemaps
         // so the comparison covers worker-only modules too.
         const mainBundleURL = pathToFileURL(packageJson.module);
-        const workerBundleURL = pathToFileURL(packageJson.module.replace(/\.mjs$/, '').replace(/maplibre-gl$/, 'maplibre-gl-worker') + '.mjs');
+        const workerBundleURL = pathToFileURL(packageJson.module.replace(/maplibre-gl\.mjs$/, 'maplibre-gl-worker.mjs'));
         const mainSourcemap = await getSourceMapForFile(mainBundleURL);
         const workerSourcemap = await getSourceMapForFile(workerBundleURL);
         const sourceMapEntryRootDir = path.relative('.', dirname(packageJson.module));

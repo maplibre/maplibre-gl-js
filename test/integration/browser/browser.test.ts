@@ -437,7 +437,6 @@ describe('Browser tests', () => {
         });
 
         // In a module worker, calling importScripts throws this specific error.
-        // Classic-worker (UMD) used to throw "Failed to execute 'importScripts'... failed to load.".
         expect(errorMessage).toMatch(/Failed to execute 'importScripts'.*/);
 
     }, 5000);
