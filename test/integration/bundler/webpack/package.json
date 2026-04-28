@@ -2,7 +2,7 @@
   "name": "maplibre-gl-webpack-example",
   "version": "0.0.0",
   "private": true,
-  "description": "webpack 5 app exercising maplibre-gl's ESM build, package subpaths, and worker auto-detection.",
+  "description": "webpack app exercising maplibre-gl's ESM build, package subpaths, and worker auto-detection.",
   "scripts": {
     "dev": "webpack serve --mode development",
     "build": "webpack --mode production"

@@ -121,7 +121,7 @@ setWorkerUrl(workerUrl);
 const map = new Map({/* … */});
 ```
 
-Works in Vite 7 and Vite 8, dev and production.
+Works in modern Vite, dev and production.
 
 If your build uses SSR (TanStack Start, Astro, etc.) and Vite resolves the CommonJS entry on the server, also add:
 
@@ -132,7 +132,7 @@ export default defineConfig({
 });
 ```
 
-Runnable examples: [Vite (Rollup)](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/vite-rollup), [Vite (Rolldown)](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/vite-rolldown).
+Runnable examples: [Vite 7 (Rollup/esbuild)](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/vite-rollup-esbuild), [Vite 8+ (Rolldown)](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler/vite-rolldown).
 
 ### webpack 5+
 

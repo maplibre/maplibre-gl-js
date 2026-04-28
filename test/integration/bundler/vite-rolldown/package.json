@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Vite 8 (Rolldown) app exercising maplibre-gl's ESM build, package subpaths, and worker auto-detection.",
+  "description": "Vite 8+ (Rolldown) app exercising maplibre-gl's ESM build, package subpaths, and worker auto-detection.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

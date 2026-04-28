@@ -1,6 +1,6 @@
-# Vite 8 example
+# Vite 8+ (Rolldown) example
 
-Minimal Vite 8 app exercising the ESM build. Identical to the Vite 7 example: the same `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'` pattern works in both Vite 7 and Vite 8 regardless of whether dependency pre-bundling is done by esbuild or Rolldown.
+Minimal Vite 8+ (Rolldown) app exercising the ESM build. Identical to the Vite 7 (Rollup/esbuild) example: the same `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'` pattern works regardless of whether dependency pre-bundling is done by esbuild or Rolldown.
 
 ## Setup
 

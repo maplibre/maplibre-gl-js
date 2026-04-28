@@ -4,8 +4,8 @@ Standalone apps that exercise `maplibre-gl`'s ESM build through real bundlers. E
 
 | Directory | Bundler | Worker URL setup |
 |---|---|---|
-| `vite-rollup/` | Vite (Rollup) | `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'` |
-| `vite-rolldown/` | Vite (Rolldown) | `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'` |
+| `vite-rollup-esbuild/` | Vite 7 (Rollup/esbuild) | `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'` |
+| `vite-rolldown/` | Vite 8+ (Rolldown) | `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'` |
 | `webpack/` | webpack | `setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString())` |
 | `rollup/` | Rollup | `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` (worker copied next to the bundle via `rollup-plugin-copy`) |
 | `esbuild/` | esbuild | `setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString())` (worker copied next to the bundle in `build.js`) |
@@ -24,7 +24,7 @@ npm run build-dist
 
 cd test/integration/bundler/<name>
 npm install
-npm run dev      # vite-rollup, vite-rolldown, webpack
+npm run dev      # vite-rollup-esbuild, vite-rolldown, webpack
 # or:
 npm run build && npm run serve   # rollup, esbuild
 ```

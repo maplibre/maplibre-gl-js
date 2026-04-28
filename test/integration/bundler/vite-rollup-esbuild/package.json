@@ -1,9 +1,9 @@
 {
-  "name": "maplibre-gl-vite-rollup-example",
+  "name": "maplibre-gl-vite-rollup-esbuild-example",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Vite 7 app exercising maplibre-gl's ESM build, package subpaths, and worker auto-detection.",
+  "description": "Vite 7 (Rollup/esbuild) app exercising maplibre-gl's ESM build, package subpaths, and worker auto-detection.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
