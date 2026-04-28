@@ -1,8 +1,16 @@
 ## main
 ### ✨ Features and improvements
-
 - ⚠️ The TypeScript target has been updated to ES2022.
   This results in smaller bundles and improved runtime performance by relying on modern JavaScript features and reducing transpilation. Consumers targeting browsers or using some tooling released before 2022 may need to transpile MapLibre or update. This change also aligns all internal build configurations to a single target instead of ES2016 + ES2019, avoiding inconsistencies in emitted code. ([#7404](https://github.com/maplibre/maplibre-gl-js/pull/7404)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 6.0.0-2
+
+### ✨ Features and improvements
+
 - ⚠️ WebGL (v1) support has been removed; WebGL2 is now required.
   In practical terms, this will not change how you interact with the map.
   This enables performance improvements (e.g. line opacity), Terrain3D enhancements, and several bug fixes.
@@ -10,10 +18,6 @@
   To ease this breaking change, we have also refactored how we handle the case that no webgl is avaliableWebGL (e.g. due to browser restrictions).
   You can now listen to the webgl error via `.on("error")`, or by overriding `Map._showWebGL2Error`.
   See [caniuse.com/webgl2](https://caniuse.com/webgl2) for ecosystem support and [our RFC for details](https://github.com/maplibre/maplibre-gl-js/discussions/6017). ([#7453](https://github.com/maplibre/maplibre-gl-js/pull/7453)) (by [@CommanderStorm](https://github.com/CommanderStorm))
-- _...Add new stuff here..._
-
-### 🐞 Bug fixes
-- _...Add new stuff here..._
 
 ## 6.0.0-1
 
