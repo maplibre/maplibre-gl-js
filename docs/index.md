@@ -68,6 +68,24 @@ const map = new maplibregl.Map({
 
 MapLibre GL JS ships an ES module build (`maplibre-gl.mjs`) alongside the classic UMD bundle. The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically. Every consumer of the ESM build needs to point MapLibre at the worker URL with [`setWorkerUrl()`](./API/functions/setWorkerUrl.md); each environment below shows how to wire it up.
 
+### Migrating to ESM
+
+If you import maplibre-gl from npm, your `import` lines are unchanged: in v6 the package resolves to the ESM bundle automatically.
+
+If you load maplibre-gl via `<script src>`, switch to a module script:
+
+```html
+<!-- before -->
+<script src="https://unpkg.com/maplibre-gl@^5/dist/maplibre-gl.js"></script>
+
+<!-- after -->
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.mjs';
+</script>
+```
+
+The ESM build also requires a one-time `setWorkerUrl()` call (shown in the subsections below).
+
 ### In the browser, without a bundler
 
 ```html
