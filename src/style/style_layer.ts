@@ -18,7 +18,9 @@ import type {
     LayerSpecification,
     FilterSpecification,
     VisibilitySpecification,
-    VisibilityExpression
+    VisibilityExpression,
+    AllPaintProperties,
+    AllLayoutProperties,
 } from '@maplibre/maplibre-gl-style-spec';
 import type {TransitionParameters, PropertyValue} from './properties';
 import {type EvaluationParameters} from './evaluation_parameters';
@@ -31,6 +33,8 @@ import type {StyleSetterOptions} from './style';
 import {type mat4} from 'gl-matrix';
 import type {UnwrappedTileID} from '../tile/tile_id';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
+
+export type PaintPropertyEntry = { [K in keyof AllPaintProperties]: {name: K; value: AllPaintProperties[K]} }[keyof AllPaintProperties];
 
 export type QueryIntersectsFeatureParams = {
     /**
@@ -153,10 +157,10 @@ export abstract class StyleLayer extends Evented {
             this._transitionablePaint = new Transitionable(properties.paint, globalState);
 
             for (const property in layer.paint) {
-                this.setPaintProperty(property, layer.paint[property], {validate: false});
+                this.setPaintProperty(property as keyof AllPaintProperties, layer.paint[property as keyof typeof layer.paint], {validate: false});
             }
             for (const property in layer.layout) {
-                this.setLayoutProperty(property, layer.layout[property], {validate: false});
+                this.setLayoutProperty(property as keyof AllLayoutProperties, layer.layout[property as keyof typeof layer.layout], {validate: false});
             }
 
             this._transitioningPaint = this._transitionablePaint.untransitioned();
@@ -174,9 +178,9 @@ export abstract class StyleLayer extends Evented {
         return this._crossfadeParameters;
     }
 
-    getLayoutProperty(name: string) {
+    getLayoutProperty<K extends keyof AllLayoutProperties>(name: K): AllLayoutProperties[K] {
         if (name === 'visibility') {
-            return this.visibility;
+            return this.visibility as AllLayoutProperties[K];
         }
         if (this._transitionablePaint?.hasProperty(name)) {
             throw new Error(name + ERROR_PAINT_NOT_LAYOUT);
@@ -221,8 +225,8 @@ export abstract class StyleLayer extends Evented {
      * This is used to determine if layer needs to be repainted when global state property changes.
      *
      */
-    getPaintAffectingGlobalStateRefs(): globalThis.Map<string, Array<{name: string; value: any}>> {
-        const globalStateRefs = new globalThis.Map<string, Array<{name: string; value: any}>>();
+    getPaintAffectingGlobalStateRefs(): globalThis.Map<string, PaintPropertyEntry[]> {
+        const globalStateRefs = new globalThis.Map<string, PaintPropertyEntry[]>();
 
         if (this._transitionablePaint) {
             for (const propertyName in this._transitionablePaint._values) {
@@ -230,7 +234,7 @@ export abstract class StyleLayer extends Evented {
 
                 for (const globalStateRef of value.getGlobalStateRefs()) {
                     const properties = globalStateRefs.get(globalStateRef) ?? [];
-                    properties.push({name: propertyName, value: value.value});
+                    properties.push({name: propertyName as keyof AllPaintProperties, value: value.value} as PaintPropertyEntry);
                     globalStateRefs.set(globalStateRef, properties);
                 }
             }
@@ -247,10 +251,10 @@ export abstract class StyleLayer extends Evented {
         return this._visibilityExpression.getGlobalStateRefs();
     }
 
-    setLayoutProperty(name: string, value: any, options: StyleSetterOptions = {}) {
+    setLayoutProperty<K extends keyof AllLayoutProperties>(name: K, value: AllLayoutProperties[K], options: StyleSetterOptions = {}) {
         if (name === 'visibility') {
-            this.visibility = value;
-            this._visibilityExpression.setValue(value);
+            this.visibility = value as VisibilitySpecification;
+            this._visibilityExpression.setValue(value as VisibilitySpecification);
             this.recalculateVisibility();
             return;
         }
@@ -265,23 +269,23 @@ export abstract class StyleLayer extends Evented {
         this._unevaluatedLayout.setValue(name, value);
     }
 
-    getPaintProperty(name: string) {
+    getPaintProperty<K extends keyof AllPaintProperties>(name: K): AllPaintProperties[K] {
         if (name.endsWith(TRANSITION_SUFFIX)) {
             const baseName = name.slice(0, -TRANSITION_SUFFIX.length);
             if (baseName === 'visibility' || this._unevaluatedLayout?.hasProperty(baseName)) {
                 throw new Error(name + ERROR_LAYOUT_NOT_PAINT);
             }
-            return this._transitionablePaint.getTransition(baseName);
+            return this._transitionablePaint.getTransition(baseName) as AllPaintProperties[K];
         } else {
-            if (name === 'visibility' || this._unevaluatedLayout?.hasProperty(name)) {
+            if (name as any === 'visibility' || this._unevaluatedLayout?.hasProperty(name)) {
                 throw new Error(name + ERROR_LAYOUT_NOT_PAINT);
             }
-            return this._transitionablePaint.getValue(name);
+            return this._transitionablePaint.getValue(name) as AllPaintProperties[K];
         }
     }
 
-    setPaintProperty(name: string, value: unknown, options: StyleSetterOptions = {}) {
-        if (name === 'visibility' || (this._unevaluatedLayout?.hasProperty(name))) {
+    setPaintProperty<K extends keyof AllPaintProperties>(name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}) {
+        if (name as any === 'visibility' || this._unevaluatedLayout?.hasProperty(name)) {
             this.fire(new ErrorEvent(new Error(name + ERROR_LAYOUT_NOT_PAINT)));
             return false;
         }
@@ -297,7 +301,8 @@ export abstract class StyleLayer extends Evented {
             const wasDataDriven = transitionable.value.isDataDriven();
             const oldValue = transitionable.value;
 
-            this._transitionablePaint.setValue(name, value);
+            // Transitionable.setValue uses a free-floating T that can't unify with the AllPaintProperties union -> better types downstream of this code needed
+            this._transitionablePaint.setValue(name, value as any);
             this._handleSpecialPaintPropertyUpdate(name);
 
             const newValue = this._transitionablePaint._values[name].value;
