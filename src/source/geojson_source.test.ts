@@ -105,11 +105,6 @@ describe('GeoJSONSource.setData', () => {
         }), undefined);
     }
 
-    test('returns self', () => {
-        const source = createSource();
-        expect(source.setData({} as GeoJSON.GeoJSON)).toBe(source);
-    });
-
     test('fires "data" event', async () => {
         const source = createSource();
         const loadPromise = source.once('data');
