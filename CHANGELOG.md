@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- ⚠️ Add ESM bundle (`maplibre-gl.mjs`). ([#6254](https://github.com/maplibre/maplibre-gl-js/pull/6254)) (by [@birkskyum](https://github.com/birkskyum))
+- Add ESM bundle (`maplibre-gl.mjs`). ([#6254](https://github.com/maplibre/maplibre-gl-js/pull/6254)) (by [@birkskyum](https://github.com/birkskyum))
 
 - _...Add new stuff here..._
 
