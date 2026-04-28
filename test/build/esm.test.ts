@@ -22,10 +22,7 @@ describe('ESM build', () => {
     });
 
     test('worker bundle loads as an ES module', async () => {
-        // The ESM worker has no `-dev` postfix: dev and production builds
-        // both write to `dist/maplibre-gl-worker.mjs` (production overwrites
-        // dev when both run via `build-dist`).
-        const workerPath = 'dist/maplibre-gl-worker.mjs';
+        const workerPath = 'dist/maplibre-gl-worker-dev.mjs';
         const content = fs.readFileSync(workerPath, 'utf8');
         // Smoke checks before evaluating: clearer failure messages than a
         // generic ReferenceError from a misformatted bundle.
@@ -39,6 +36,11 @@ describe('ESM build', () => {
         const mod = await loadEsm('dist/maplibre-gl.mjs');
         expect(typeof mod.Map).toBe('function');
         expect(typeof mod.setWorkerUrl).toBe('function');
+    });
+
+    test('production worker bundle loads as an ES module (if built)', async () => {
+        if (!fs.existsSync('dist/maplibre-gl-worker.mjs')) return;
+        await expect(loadEsm('dist/maplibre-gl-worker.mjs')).resolves.toBeDefined();
     });
 
 });

@@ -3,11 +3,7 @@
 Minimal Vite 7 app exercising the ESM build:
 
 - `import {Map} from 'maplibre-gl'` and `import 'maplibre-gl/css'` resolve via the package's `exports` field.
-- `import workerUrl from 'maplibre-gl/worker?url'` imports the worker file purely for its URL. `setWorkerUrl(workerUrl)` then points MapLibre at it.
-
-## Why the explicit worker URL?
-
-The `import.meta.url`-based auto-detection inside `maplibre-gl.mjs` works for source code that Vite processes, but Vite does not extend the same asset detection to files inside `node_modules`. The `?url` query is Vite's idiomatic mechanism for "give me the bundled URL of this file," and it works in both dev and production builds.
+- `import workerUrl from 'maplibre-gl/worker?url'` imports the worker file purely for its URL, and `setWorkerUrl(workerUrl)` points MapLibre at it. The `?url` query is Vite's idiomatic mechanism and works in both dev and production builds.
 
 ## Setup
 

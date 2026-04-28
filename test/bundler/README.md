@@ -11,8 +11,6 @@ Standalone apps that exercise `maplibre-gl`'s ESM build through real bundlers. E
 
 All four use the same library imports: `import {Map} from 'maplibre-gl'`, `import 'maplibre-gl/css'`. The differences are in how each bundler resolves the worker URL.
 
-No bundler extends `new URL(..., import.meta.url)` asset detection to expressions inside `node_modules`, so the auto-detection inside `maplibre-gl.mjs` doesn't fire on its own in any of them. Each bundler has its own user-side pattern: `?url` for Vite, `new URL(...)` in user source for webpack, and an explicit copy step for Rollup.
-
 To run any of them:
 
 ```bash

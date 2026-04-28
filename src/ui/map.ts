@@ -297,13 +297,10 @@ export type MapOptions = {
      */
     transformConstrain?: TransformConstrainFunction | null;
     /**
-     * URL of the MapLibre GL JS web worker. Convenience equivalent to calling
+     * URL of the MapLibre GL JS web worker. Equivalent to calling
      * {@link setWorkerUrl} before constructing the map; useful in component
      * frameworks (React, Vue, Svelte, etc.) where wiring a side-effecting
-     * global call is awkward. Modern bundlers (Vite, webpack 5+, Rollup) and
-     * direct browser ESM auto-detect the worker URL via `import.meta.url`,
-     * so this option only needs to be set when overriding the default
-     * (custom CDN paths, cross-origin worker hosting, etc.).
+     * global call is awkward.
      */
     workerUrl?: string;
     /**

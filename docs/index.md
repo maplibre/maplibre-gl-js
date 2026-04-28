@@ -66,17 +66,17 @@ const map = new maplibregl.Map({
 
 ## ESM
 
-MapLibre GL JS ships an ES module build (`maplibre-gl.mjs`) alongside the classic UMD bundle. The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically.
+MapLibre GL JS ships an ES module build (`maplibre-gl.mjs`) alongside the classic UMD bundle. The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically. Every consumer of the ESM build needs to point MapLibre at the worker URL with [`setWorkerUrl()`](./API/functions/setWorkerUrl.md) (or the `workerUrl` Map option); each environment below shows how to wire it up.
 
 ### In the browser, without a bundler
-
-The simplest case: no build step, no worker URL setup. The worker URL is auto-detected from `import.meta.url`:
 
 ```html
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.css" />
 <div id="map" style="height: 400px"></div>
 <script type="module">
     import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.mjs';
+
+    maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl-worker.mjs');
 
     const map = new maplibregl.Map({
         container: 'map',
@@ -89,11 +89,7 @@ The simplest case: no build step, no worker URL setup. The worker URL is auto-de
 
 See the [Display a map with ESM](./examples/display-a-map-with-esm.md) example for a runnable version.
 
-### With a bundler
-
-Bundlers do not extend their `new URL(..., import.meta.url)` asset detection to expressions inside `node_modules`, so the auto-detection inside `maplibre-gl.mjs` does not fire when the package is installed via npm. Wire the worker URL through your bundler's idiom:
-
-#### Vite
+### Vite
 
 Use Vite's `?url` query to get the worker file's bundled URL:
 
@@ -118,9 +114,7 @@ export default defineConfig({
 });
 ```
 
-#### webpack 5+
-
-Construct the worker URL in your own source code so webpack's asset detection can fire:
+### webpack 5+
 
 ```ts
 import {Map, setWorkerUrl} from 'maplibre-gl';
@@ -131,7 +125,7 @@ setWorkerUrl(new URL('maplibre-gl/worker', import.meta.url).toString());
 const map = new Map({/* … */});
 ```
 
-#### Rollup
+### Rollup
 
 ```ts
 // rollup.config.js
