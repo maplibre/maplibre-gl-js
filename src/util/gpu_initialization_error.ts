@@ -11,7 +11,7 @@ export class GPUInitializationError extends Error {
     readonly statusMessage: string | null;
 
     constructor(requestedAttributes: WebGLContextAttributes, creationEvent: WebGLContextEvent | null) {
-        super('Failed to initialize WebGL');
+        super('WebGL2 is required to display this map. We are sorry, but it seems that your browser does not support WebGL2, a technology for rendering 3D graphics on the web. Read more on https://wiki.openstreetmap.org/wiki/This_map_requires_WebGL');
         this.name = 'GPUInitializationError';
         this.requestedAttributes = requestedAttributes;
         this.statusMessage = creationEvent?.statusMessage ?? null;

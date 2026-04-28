@@ -86,7 +86,7 @@ test('WebGL2 context creation error fires ErrorEvent with structured GPUInitiali
     createMap({canvasContextAttributes: {antialias: true}});
     const err = consoleErrorSpy.mock.calls[0][0];
     expect(err.constructor).toBe(GPUInitializationError);
-    expect(err.message).toBe('Failed to initialize WebGL');
+    expect(err.message).toBe('WebGL2 is required to display this map. We are sorry, but it seems that your browser does not support WebGL2, a technology for rendering 3D graphics on the web. Read more on https://wiki.openstreetmap.org/wiki/This_map_requires_WebGL');
     expect(err.statusMessage).toBe('mocked webglcontextcreationerror message');
     expect(err.requestedAttributes.antialias).toBe(true);
     consoleErrorSpy.mockRestore();
