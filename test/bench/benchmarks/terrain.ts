@@ -86,7 +86,7 @@ class TerrainBase extends Benchmark {
 
         // Reset the map viewport
         this.map.jumpTo({center: CENTER_START, zoom: ZOOM, pitch: PITCH, bearing: BEARING});
-        await new Promise(resolve => this.map.once('idle', resolve));
+        await this.map.once('idle');
 
         // Animate the map and collect frame times
         const times: number[] = [];
@@ -109,7 +109,7 @@ class TerrainBase extends Benchmark {
             minZoom: ZOOM,
             easing: t => t,
         });
-        await new Promise(resolve => this.map.once('moveend', resolve));
+        await this.map.once('moveend');
         running = false;
 
         // Return the slowest frame time.
@@ -133,9 +133,11 @@ export class Terrain2DMercator extends TerrainBase {
     constructor() { super('Terrain2DMercator', false, 'mercator'); }
 }
 
-// Create a basemap style that uses the features from the bundled 
-// `785.vector.pbf` tile. Each layer is duplicated `STYLE_COMPLEXITY` times to 
-// simulate a more  complex basemap style and stress the system.
+/** 
+ * Create a basemap style that uses the features from the bundled 
+ * `785.vector.pbf` tile. Each layer is duplicated `STYLE_COMPLEXITY` times to 
+ * simulate a more  complex basemap style and stress the system.
+ * */
 function buildStyle(): StyleSpecification {
     const layers: StyleSpecification['layers'] = [
         {id: 'background', type: 'background', paint: {'background-color': '#f0ece0'}},
