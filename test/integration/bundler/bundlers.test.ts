@@ -1,5 +1,5 @@
 import {describe, beforeAll, afterAll, test, expect} from 'vitest';
-import {type Browser, type Page} from 'puppeteer';
+import {type Browser, type ConsoleMessage, type Page} from 'puppeteer';
 import {execSync} from 'node:child_process';
 import {existsSync, readdirSync, statSync} from 'node:fs';
 import http, {type Server} from 'node:http';
@@ -9,16 +9,11 @@ import st from 'st';
 
 import {launchPuppeteer} from '../lib/puppeteer_config';
 
-// Smoke-tests each bundler example under `test/bundler/`:
-//   1. `npm install` (copies the parent's `dist/` via the `file:` dependency)
-//   2. `npm run build`
-//   3. Open the built page in headless Chrome and verify the worker loads
-//      and the maplibre canvas appears.
-//
-// Catches the runtime worker-URL bugs that build-only checks miss, e.g. the
-// "Loading Worker from … was blocked because of a disallowed MIME type" case.
+// Smoke-tests each bundler example under `test/integration/bundler/`:
+// installs deps, builds, opens the result in headless Chrome, and verifies
+// the worker loads and the maplibre canvas appears.
 
-const POST_LOAD_WAIT_MS = 2000;
+const POST_LOAD_WAIT_MS = 3000;
 const TEST_TIMEOUT_MS = 180000;
 
 // Headless-Chrome / SwiftShader quirks that aren't bundler bugs.
@@ -30,8 +25,6 @@ const ENV_NOISE = [
 const isEnvNoise = (text: string) => ENV_NOISE.some((re) => re.test(text));
 
 const bundlerDir = 'test/integration/bundler';
-// Use forward-slash paths throughout: Node's `fs` accepts them on both POSIX
-// and Windows, and they're directly usable as URL path segments later.
 const examples = readdirSync(bundlerDir, {withFileTypes: true})
     .filter((e) => e.isDirectory() && statSync(path.join(bundlerDir, e.name)).isDirectory())
     .map((e) => `${bundlerDir}/${e.name}`)
@@ -59,16 +52,18 @@ describe('Bundler examples', () => {
             execSync('npm install', {cwd: dir, stdio: 'inherit'});
             execSync('npm run build', {cwd: dir, stdio: 'inherit'});
 
-            // Vite and webpack put index.html in dist/; esbuild and Rollup keep
-            // it at the example root referencing the built bundle in dist/.
-            const servedSubpath = existsSync(path.join(dir, 'dist', 'index.html'))
-                ? `${dir}/dist/`
-                : `${dir}/`;
+            const indexPath = existsSync(path.join(dir, 'dist', 'index.html'))
+                ? `${dir}/dist/index.html`
+                : `${dir}/index.html`;
 
+            const consoleMessages: string[] = [];
+            const failedRequests: string[] = [];
             const errors: string[] = [];
+
             const page: Page = await browser.newPage();
             try {
-                page.on('console', (msg) => {
+                page.on('console', (msg: ConsoleMessage) => {
+                    consoleMessages.push(`[${msg.type()}] ${msg.text()}`);
                     const text = msg.text();
                     if (msg.type() === 'error' && /MIME|module|Worker/i.test(text) && !isEnvNoise(text)) {
                         errors.push(`console.error: ${text}`);
@@ -81,16 +76,34 @@ describe('Bundler examples', () => {
                     }
                 });
                 page.on('response', (res) => {
-                    if (res.url().includes('worker') && res.status() >= 400) {
-                        errors.push(`worker request failed: ${res.url()} (HTTP ${res.status()})`);
+                    if (res.status() >= 400) {
+                        failedRequests.push(`${res.status()} ${res.url()}`);
+                        if (res.url().includes('worker')) {
+                            errors.push(`worker request failed: ${res.url()} (HTTP ${res.status()})`);
+                        }
                     }
                 });
 
-                await page.goto(`http://localhost:${port}/${servedSubpath}`, {timeout: 15000});
+                const url = `http://localhost:${port}/${indexPath}`;
+                await page.goto(url, {timeout: 15000});
                 await new Promise((r) => setTimeout(r, POST_LOAD_WAIT_MS));
 
                 const hasCanvas = await page.$('.maplibregl-canvas');
-                expect(hasCanvas, 'no .maplibregl-canvas element found after load').not.toBeNull();
+                if (!hasCanvas) {
+                    const diagnostics = [
+                        `URL: ${url}`,
+                        '',
+                        'Console messages:',
+                        ...consoleMessages.map((m) => `  ${m}`),
+                        '',
+                        'Failed requests:',
+                        ...failedRequests.map((r) => `  ${r}`),
+                        '',
+                        'Captured errors:',
+                        ...errors.map((e) => `  ${e}`)
+                    ].join('\n');
+                    throw new Error(`no .maplibregl-canvas element found after load\n\n${diagnostics}`);
+                }
                 expect(errors, `unexpected errors:\n  ${errors.join('\n  ')}`).toEqual([]);
             } finally {
                 await page.close();
