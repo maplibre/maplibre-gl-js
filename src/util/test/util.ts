@@ -1,5 +1,6 @@
 import {vi, expect} from 'vitest';
 import {Map} from '../../ui/map';
+import {NullWebGL2RenderingContext} from './null_gl';
 import {extend} from '../../util/util';
 import {type Dispatcher} from '../../util/dispatcher';
 import {type IActor} from '../actor';
@@ -103,8 +104,17 @@ function setResizeObserver() {
         disconnect = vi.fn();
     });
 }
+function setNullGLGetContext() {
+    HTMLCanvasElement.prototype.getContext = function (type: string, attributes?: any): any {
+        if (type === 'webgl2') return new NullWebGL2RenderingContext(this, attributes);
+        return _originalGetContext.call(this, type, attributes);
+    } as any;
+}
+
+const _originalGetContext = HTMLCanvasElement.prototype.getContext;
 
 export function beforeMapTest() {
+    setNullGLGetContext()
     setPerformance();
     setMatchMedia();
     setResizeObserver();

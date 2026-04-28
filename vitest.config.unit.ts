@@ -11,7 +11,6 @@ export default defineConfig({
         },
         setupFiles: [
             'vitest-webgl-canvas-mock',
-            './test/unit/lib/webgl2_mock_setup.ts',
             './test/unit/lib/web_worker_mock.ts'
         ],
         include: [
