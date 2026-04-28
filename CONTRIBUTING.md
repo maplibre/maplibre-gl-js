@@ -171,10 +171,9 @@ A standalone build allows you to turn the contents of this repository into `mapl
 
 To create a standalone build, run
 ```bash
-npm run build-prod
-npm run build-css
+npm run build-dist
 ```
-Once those commands finish, you will have a standalone build at `dist/maplibre-gl.mjs`, `dist/maplibre-gl-worker.mjs` and `dist/maplibre-gl.css`. Load it via `<script type="module">` and call `setWorkerUrl()` to point at the worker file.
+Once that finishes, you will have a standalone build at `dist/maplibre-gl.mjs`, `dist/maplibre-gl-worker.mjs` and `dist/maplibre-gl.css`. Load it via `<script type="module">` and call `setWorkerUrl()` to point at the worker file.
 
 ## Analyze your Standalone Build
 
