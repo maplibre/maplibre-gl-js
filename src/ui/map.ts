@@ -395,13 +395,13 @@ export type MapOptions = {
     /**
      * Removes vertical artifacts that occur at tile seam lines when a transparent background is used along with an elevation terrain.
      * Currently, this parameter is a tradeoff; Setting it to true disables the vertical extensions which are added to the edges of terrain tiles.
-     * This removes the visually unappealing vertical artifacts, but might introduce horizontal hairline gaps that occur when viewing some terrain datasets from a high-pitch angle.
+     * This removes the visually unappealing vertical artifacts, but might introduce horizontal hairline gaps (stitches) that occur when viewing some terrain datasets from a high-pitch angle.
      * It is recommended to set this to true only when one is using a transparent background along with a terrain.
      * There is no reason to set this to true if the background tiles are opaque or if no terrain is being used.
      * Future rendering techniques may eliminate the need for this parameter.
      * @defaultValue false
      */
-    disableTerrainVerticalExtensions?: boolean;
+    disableTerrainSkirts?: boolean;
     /**
      * Allows overzooming by splitting vector tiles after max zoom.
      * Defines the number of zoom level that will overscale from map's max zoom and below.
@@ -516,7 +516,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
     centerClampedToGround: true,
-    disableTerrainVerticalExtensions: false,
+    disableTerrainSkirts: false,
     experimentalZoomLevelsToOverscale: undefined,
     anisotropicFilterPitch: defaultAnisotropicFilterPitch,
 };
@@ -606,7 +606,7 @@ export class Map extends Camera {
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
     /** @internal */
     _zoomLevelsToOverscale: number | undefined;
-    _disableTerrainVerticalExtensions: boolean;
+    _disableTerrainSkirts: boolean;
 
     /**
      * @internal
@@ -760,7 +760,7 @@ export class Map extends Camera {
         this._bearingSnap = resolvedOptions.bearingSnap;
         this._zoomSnap = resolvedOptions.zoomSnap;
         this._centerClampedToGround = resolvedOptions.centerClampedToGround;
-        this._disableTerrainVerticalExtensions = resolvedOptions.disableTerrainVerticalExtensions === true;
+        this._disableTerrainSkirts = resolvedOptions.disableTerrainSkirts === true;
         this._refreshExpiredTiles = resolvedOptions.refreshExpiredTiles === true;
         this._fadeDuration = resolvedOptions.fadeDuration;
         this._crossSourceCollisions = resolvedOptions.crossSourceCollisions === true;
@@ -2372,7 +2372,7 @@ export class Map extends Camera {
                     warnOnce('You are using the same source for a color-relief layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
                 }
             }
-            this.terrain = new Terrain(this.painter, tileManager, options, this._disableTerrainVerticalExtensions);
+            this.terrain = new Terrain(this.painter, tileManager, options, this._disableTerrainSkirts);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));

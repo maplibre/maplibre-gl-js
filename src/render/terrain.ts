@@ -137,16 +137,16 @@ export class Terrain {
      */
     _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
     /**
-     * If `true`, terrain extensions are not rendered.
-     * @see {@link MapOptions.disableTerrainVerticalExtensions}
+     * If `true`, terrain skirts are not rendered.
+     * @see {@link MapOptions.disableTerrainSkirts}
      */
-    _disableTerrainVerticalExtensions: boolean;
-    constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification, disableTerrainVerticalExtensions?: boolean) {
+    _disableTerrainSkirts: boolean;
+    constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification, disableTerrainSkirts?: boolean) {
         this.painter = painter;
         this.tileManager = new TerrainTileManager(tileManager);
         this.options = options;
         this.exaggeration = typeof options.exaggeration === 'number' ? options.exaggeration : 1.0;
-        this._disableTerrainVerticalExtensions = disableTerrainVerticalExtensions ?? false;
+        this._disableTerrainSkirts = disableTerrainSkirts ?? false;
         this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = {};
@@ -457,8 +457,8 @@ export class Terrain {
             indexArray.emplaceBack(x + y, meshSize + x + y + 1, meshSize + x + y + 2);
             indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
         }
-        if (!this._disableTerrainVerticalExtensions) {
-            this._buildVerticalExtensions(vertexArray, indexArray, meshSize, delta, northPole, southPole);
+        if (!this._disableTerrainSkirts) {
+            this._buildSkirts(vertexArray, indexArray, meshSize, delta, northPole, southPole);
         }
 
         const mesh = new Mesh(
@@ -519,11 +519,9 @@ export class Terrain {
         };
     }
 
-    _buildVerticalExtensions(vertexArray: Pos3dArray, indexArray: TriangleIndexArray, meshSize: number, delta: number, northPole: boolean, southPole: boolean) {
-        if (this._disableTerrainVerticalExtensions) return;
-
-        // add an extra frame around the mesh to avoid stitching on tile boundaries with different zoomlevels
-        // top-bottom frame + pole vertices, if needed
+    _buildSkirts(vertexArray: Pos3dArray, indexArray: TriangleIndexArray, meshSize: number, delta: number, northPole: boolean, southPole: boolean) {
+        // add an extra frame around the mesh to avoid hairline gaps (stitching) on tile boundaries with different zoomlevels
+        // top-bottom frame + pole vertices
         const offsetTop = vertexArray.length;
         const offsetTopEdge = 0;
         const offsetBottom = offsetTop + (meshSize + 1);

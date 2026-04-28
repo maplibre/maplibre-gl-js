@@ -2,10 +2,10 @@
   "version": 8,
   "metadata": {
     "test": {
-      "description": "Terrain with vertical tile extensions enabled to avoid horizontal hairline gaps with typical opaque terrains. See also: The threshold commentary in vertical-extensions-disabled",
+      "description": "Terrain with skirts enabled to avoid horizontal hairline gaps (stitches) with typical opaque terrains. See also: The threshold commentary in skirts-disabled",
       "height": 512,
       "width": 512,
-      "disableTerrainVerticalExtensions": false,
+      "disableTerrainSkirts": false,
       "threshold": 0.05
     }
   },

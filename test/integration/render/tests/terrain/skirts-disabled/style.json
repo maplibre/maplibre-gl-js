@@ -2,10 +2,10 @@
   "version": 8,
   "metadata": {
     "test": {
-      "description": "Terrain with vertical tile extensions disabled to avoid vertical artifacts when using transparent terrains.",
+      "description": "Terrain with skirts disabled to avoid vertical artifacts when using transparent terrains.",
       "height": 512,
       "width": 512,
-      "disableTerrainVerticalExtensions": true,
+      "disableTerrainSkirts": true,
       "threshold": 0.05,
       "note_on_threshold": "Since we are dealing with transparent lines and polygons, we need a sensitive threshold. Somewhere between 0.11 and 0.15 overlaping polygon parts no longer qualify as different from non overlaps. So ~0.11 is the safest maximum threshold."
     }
