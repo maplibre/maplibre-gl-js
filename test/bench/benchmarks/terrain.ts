@@ -133,11 +133,11 @@ export class Terrain2DMercator extends TerrainBase {
     constructor() { super('Terrain2DMercator', false, 'mercator'); }
 }
 
-/** 
- * Create a basemap style that uses the features from the bundled 
- * `785.vector.pbf` tile. Each layer is duplicated `STYLE_COMPLEXITY` times to 
- * simulate a more  complex basemap style and stress the system.
- * */
+/**
+ * Create a basemap style that uses the features from the bundled
+ * `785.vector.pbf` tile. Each layer is duplicated `STYLE_COMPLEXITY` times to
+ * simulate a more complex basemap style and stress the system.
+ */
 function buildStyle(): StyleSpecification {
     const layers: StyleSpecification['layers'] = [
         {id: 'background', type: 'background', paint: {'background-color': '#f0ece0'}},
