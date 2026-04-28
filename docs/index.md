@@ -72,7 +72,7 @@ See the [ESM](#esm) section below for setting up the worker URL with your bundle
 
 ## ESM
 
-MapLibre GL JS v6 ships as ES modules only (`maplibre-gl.mjs`). The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically. Every consumer needs to point MapLibre at the worker URL with [`setWorkerUrl()`](./API/functions/setWorkerUrl.md); each environment below shows how to wire it up.
+MapLibre GL JS v6 ships as ES modules only (`maplibre-gl.mjs`). The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically.
 
 For minimal runnable apps per bundler (Vite, webpack, esbuild, Rollup), see [`test/integration/bundler/`](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler).
 
@@ -102,124 +102,130 @@ If you load maplibre-gl via `<script src>`, switch to a module script:
 </script>
 ```
 
-The ESM build also requires a one-time `setWorkerUrl()` call (shown in the subsections below).
+Finally, every consumer now needs a one-time [`setWorkerUrl()`](./API/functions/setWorkerUrl.md) call to point MapLibre at the worker file. The exact form depends on your bundler — see [Installation](#installation) below.
 
-### In the browser, without a bundler
+### Installation
 
-```html
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.css" />
-<div id="map" style="height: 400px"></div>
-<script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.mjs';
+Pick your setup:
 
-    maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl-worker.mjs');
+=== "Vite"
 
-    const map = new maplibregl.Map({
-        container: 'map',
-        style: 'https://demotiles.maplibre.org/style.json',
-        center: [0, 0],
-        zoom: 1
+    Use Vite's `?url` query to get the worker file's bundled URL:
+
+    ```ts
+    import {Map, setWorkerUrl} from 'maplibre-gl';
+    import 'maplibre-gl/dist/maplibre-gl.css';
+    import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+
+    setWorkerUrl(workerUrl);
+
+    const map = new Map({/* … */});
+    ```
+
+    Works in modern Vite, dev and production.
+
+    If your build uses SSR (TanStack Start, Astro, etc.) and Vite resolves the CommonJS entry on the server, also add:
+
+    ```ts
+    // vite.config.ts
+    export default defineConfig({
+        ssr: {noExternal: ['maplibre-gl']}
     });
-</script>
-```
+    ```
 
-See the [Display a map](./examples/display-a-map.md) example for a runnable version.
+=== "webpack 5+"
 
-### Vite
+    ```ts
+    import {Map, setWorkerUrl} from 'maplibre-gl';
+    import 'maplibre-gl/dist/maplibre-gl.css';
 
-Use Vite's `?url` query to get the worker file's bundled URL:
+    setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
 
-```ts
-import {Map, setWorkerUrl} from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+    const map = new Map({/* … */});
+    ```
 
-setWorkerUrl(workerUrl);
+    rspack and rsbuild use the same pattern.
 
-const map = new Map({/* … */});
-```
+=== "esbuild"
 
-Works in modern Vite, dev and production.
+    ```js
+    // build.js
+    import * as esbuild from 'esbuild';
+    import {copyFileSync} from 'fs';
 
-If your build uses SSR (TanStack Start, Astro, etc.) and Vite resolves the CommonJS entry on the server, also add:
+    await esbuild.build({
+        entryPoints: ['src/main.ts'],
+        bundle: true,
+        outdir: 'dist',
+        format: 'esm'
+    });
 
-```ts
-// vite.config.ts
-export default defineConfig({
-    ssr: {noExternal: ['maplibre-gl']}
-});
-```
+    copyFileSync(
+        'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs',
+        'dist/maplibre-gl-worker.mjs'
+    );
+    ```
 
-### webpack 5+
+    ```ts
+    // src/main.ts
+    import {Map, setWorkerUrl} from 'maplibre-gl';
+    import 'maplibre-gl/dist/maplibre-gl.css';
 
-```ts
-import {Map, setWorkerUrl} from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+    setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
 
-setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
+    const map = new Map({/* … */});
+    ```
 
-const map = new Map({/* … */});
-```
+=== "Rollup"
 
-rspack and rsbuild use the same pattern.
+    ```ts
+    // rollup.config.js
+    import copy from 'rollup-plugin-copy';
 
-### esbuild
+    export default {
+        plugins: [
+            copy({
+                targets: [
+                    {src: 'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs', dest: 'dist'}
+                ]
+            }),
+            /* ... */
+        ]
+    };
+    ```
 
-```js
-// build.js
-import * as esbuild from 'esbuild';
-import {copyFileSync} from 'fs';
+    ```ts
+    // src/main.ts
+    import {Map, setWorkerUrl} from 'maplibre-gl';
+    import 'maplibre-gl/dist/maplibre-gl.css';
 
-await esbuild.build({
-    entryPoints: ['src/main.ts'],
-    bundle: true,
-    outdir: 'dist',
-    format: 'esm'
-});
+    setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
 
-copyFileSync(
-    'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs',
-    'dist/maplibre-gl-worker.mjs'
-);
-```
+    const map = new Map({/* … */});
+    ```
 
-```ts
-// src/main.ts
-import {Map, setWorkerUrl} from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+=== "CDN / No bundler"
 
-setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
+    Load MapLibre directly from UNPKG as an ES module via a `<script type="module">` tag. See [unpkg.com](https://unpkg.com) for instructions on selecting specific versions and semver ranges.
 
-const map = new Map({/* … */});
-```
+    ```html
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.css" />
+    <div id="map" style="height: 400px"></div>
+    <script type="module">
+        import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.mjs';
 
-### Rollup
+        maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl-worker.mjs');
 
-```ts
-// rollup.config.js
-import copy from 'rollup-plugin-copy';
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://demotiles.maplibre.org/style.json',
+            center: [0, 0],
+            zoom: 1
+        });
+    </script>
+    ```
 
-export default {
-    plugins: [
-        copy({
-            targets: [
-                {src: 'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs', dest: 'dist'}
-            ]
-        }),
-        /* ... */
-    ]
-};
-```
-
-```ts
-// src/main.ts
-import {Map, setWorkerUrl} from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-
-setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
-
-const map = new Map({/* … */});
-```
+    See the [Display a map](./examples/display-a-map.md) example for a runnable version.
 
 ## CSP Directives
 
@@ -239,16 +245,3 @@ The CSS referenced in the Quickstart is used to style DOM elements created by Ma
 Including it with a `<link>` in the head of the document via the UNPKG CDN is the simplest and easiest way to provide the CSS, but it is also bundled in the MapLibre module, meaning that if you have a bundler that can handle CSS, you can import the CSS from `maplibre-gl/dist/maplibre-gl.css`.
 
 Note too that if the CSS isn't available by the first render, as soon as the CSS is provided, the DOM elements that depend on this CSS should recover.
-
-## CDN
-
-MapLibre GL JS is also distributed via UNPKG. Load it as an ES module via a `<script type="module">` tag. Further instructions on how to select specific versions and semver ranges can be found at [unpkg.com](https://unpkg.com).
-
-```html
-<link href="https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.css" rel="stylesheet" />
-<script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.mjs';
-
-    maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl-worker.mjs');
-</script>
-```
