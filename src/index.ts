@@ -46,6 +46,9 @@ import {KeyboardHandler} from './ui/handler/keyboard';
 import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler, type AroundCenterOptions} from './ui/handler/two_fingers_touch';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from './util/actor_messages';
 import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileMesh} from './util/create_tile_mesh';
+import {GPUInitializationError} from './util/gpu_initialization_error';
+import {EXTENT} from './data/extent';
+
 import type {ControlPosition, IControl} from './ui/control/control';
 import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer';
 import type {AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera';
@@ -60,7 +63,6 @@ import type {Tile} from './tile/tile';
 import type {GeoJSONFeatureDiff, GeoJSONFeatureId, GeoJSONSourceDiff} from './source/geojson_source_diff';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from './source/query_features';
 import type {RequestTransformFunction, ResourceType} from './util/request_manager';
-import {EXTENT} from './data/extent';
 import type {OverscaledTileID} from './tile/tile_id';
 import type {PositionAnchor} from './ui/anchor';
 import type {ProjectionData, ProjectionDataParams} from './geo/projection/projection_data';
@@ -75,7 +77,6 @@ import type {StyleGlyph} from './style/style_glyph';
 import type {FeatureIndex} from './data/feature_index';
 import type {DashEntry} from './render/line_atlas';
 import type {Painter} from './render/painter';
-import {GPUInitializationError} from './util/gpu_initialization_error';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
