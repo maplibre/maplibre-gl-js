@@ -1,0 +1,26 @@
+{
+  "name": "maplibre-gl-rollup-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Rollup app exercising maplibre-gl's ESM build, package subpaths, and worker setup.",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "serve": "http-server -p 3000 -c-1 ."
+  },
+  "dependencies": {
+    "maplibre-gl": "file:../../.."
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-typescript": "^12.1.0",
+    "http-server": "^14.1.1",
+    "rollup": "^4.24.0",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-import-css": "^3.5.0",
+    "tslib": "^2.8.0",
+    "typescript": "^5.6.0"
+  }
+}

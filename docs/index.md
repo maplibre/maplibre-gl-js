@@ -112,6 +112,51 @@ const map = new Map({/* … */});
 
 This applies to both Vite 7 and Vite 8 in dev and production.
 
+### webpack 5+
+
+webpack also does not extend its `new URL(..., import.meta.url)` asset detection to expressions inside `node_modules`, so put the URL construction in your own source:
+
+```ts
+import {Map, setWorkerUrl} from 'maplibre-gl';
+import 'maplibre-gl/css';
+
+setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
+
+const map = new Map({/* … */});
+```
+
+webpack resolves the package specifier, copies the worker file to the build output, and rewrites the URL at build time.
+
+### Rollup
+
+Use `rollup-plugin-copy` to put the worker file next to the bundle, then reference it with a relative `new URL(..., import.meta.url)`:
+
+```ts
+// rollup.config.js
+import copy from 'rollup-plugin-copy';
+
+export default {
+    plugins: [
+        copy({
+            targets: [
+                {src: 'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs', dest: 'dist'}
+            ]
+        }),
+        /* ... */
+    ]
+};
+```
+
+```ts
+// src/main.ts
+import {Map, setWorkerUrl} from 'maplibre-gl';
+import 'maplibre-gl/css';
+
+setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
+
+const map = new Map({/* … */});
+```
+
 ### Vite SSR
 
 If your build uses SSR (React Router v7, Astro, etc.) and Vite resolves the CommonJS entry on the server, force the ESM entry:

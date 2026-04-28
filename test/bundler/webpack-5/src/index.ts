@@ -1,8 +1,7 @@
 import {Map, setWorkerUrl} from 'maplibre-gl';
 import 'maplibre-gl/css';
-import workerUrl from 'maplibre-gl/worker?url';
 
-setWorkerUrl(workerUrl);
+setWorkerUrl(new URL('maplibre-gl/worker', import.meta.url).toString());
 
 new Map({
     container: 'map',
