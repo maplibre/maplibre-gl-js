@@ -3,7 +3,7 @@
 - Pass document's `lang` to Tiny-SDF to render Simplified and Traditional Chinese characters ([#6223](https://github.com/maplibre/maplibre-gl-js/issues/6223))
 - Enable `global-state` expressions in layout properties([#6209](https://github.com/maplibre/maplibre-gl-js/pull/6209))
 - Align typescript types generation with docs generation and avoid exporting non-exported types [#6217](https://github.com/maplibre/maplibre-gl-js/pull/6217)
-- ESM bundle (`maplibre-gl.mjs`) with automatic worker URL detection in Vite, webpack 5+, Rollup, and direct browser ESM. New `workerUrl` Map option and shorter package subpaths `maplibre-gl/css` and `maplibre-gl/worker` (the existing `dist/*` paths still work). The CSP variant remains UMD-only since the regular ESM build is already CSP-friendly. ([#6254](https://github.com/maplibre/maplibre-gl-js/pull/6254))
+- ESM bundle (`maplibre-gl.mjs`) with automatic worker URL resolution for direct browser ESM. Bundler-based setups (Vite, webpack, Rollup) import the worker URL explicitly via `maplibre-gl/worker` (e.g. `import workerUrl from 'maplibre-gl/worker?url'` in Vite) and pass it to `setWorkerUrl()` or the new `workerUrl` Map option. Shorter package subpaths `maplibre-gl/css` and `maplibre-gl/worker` are now available alongside the existing `dist/*` paths. The CSP variant remains UMD-only since the regular ESM build is already CSP-friendly. ([#6254](https://github.com/maplibre/maplibre-gl-js/pull/6254))
 
 - _...Add new stuff here..._
 

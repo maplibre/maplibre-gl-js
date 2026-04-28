@@ -96,9 +96,25 @@ Vite, webpack 5+, and Rollup all bundle the companion worker file as a sibling a
 
 See the [Display a map with ESM](./examples/display-a-map-with-esm.md) example for a runnable version.
 
+### Vite
+
+Vite does not extend `import.meta.url`-based asset detection to files inside `node_modules`, so the auto-detection inside `maplibre-gl.mjs` does not fire when the package is consumed via npm. Use the `?url` query to import the worker file for its URL and pass it to `setWorkerUrl()`:
+
+```ts
+import {Map, setWorkerUrl} from 'maplibre-gl';
+import 'maplibre-gl/css';
+import workerUrl from 'maplibre-gl/worker?url';
+
+setWorkerUrl(workerUrl);
+
+const map = new Map({/* … */});
+```
+
+This applies to both Vite 7 and Vite 8 in dev and production.
+
 ### Vite SSR
 
-If your build uses SSR (React Router v7, Astro, etc.) and Vite resolves the CommonJS entry on the server, force the ESM entry with:
+If your build uses SSR (React Router v7, Astro, etc.) and Vite resolves the CommonJS entry on the server, force the ESM entry:
 
 ```ts
 // vite.config.ts
