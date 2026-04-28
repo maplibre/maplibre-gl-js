@@ -76,33 +76,7 @@ MapLibre GL JS v6 ships as ES modules only (`maplibre-gl.mjs`). The `"module"` f
 
 For minimal runnable apps per bundler (Vite, webpack, esbuild, Rollup), see [`test/integration/bundler/`](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler).
 
-### Migrating from v5
-
-If you import maplibre-gl from npm with named imports (`import {Map} from 'maplibre-gl'`), your imports keep working: v6 resolves to the ESM bundle automatically. If you used the default import (`import maplibregl from 'maplibre-gl'`), switch to either named imports or a namespace import:
-
-```ts
-// before
-import maplibregl from 'maplibre-gl';
-
-// after
-import * as maplibregl from 'maplibre-gl';
-// or pull in just what you need
-import {Map, setWorkerUrl} from 'maplibre-gl';
-```
-
-If you load maplibre-gl via `<script src>`, switch to a module script:
-
-```html
-<!-- before -->
-<script src="https://unpkg.com/maplibre-gl@^5/dist/maplibre-gl.js"></script>
-
-<!-- after -->
-<script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.mjs';
-</script>
-```
-
-Finally, every consumer now needs a one-time [`setWorkerUrl()`](./API/functions/setWorkerUrl.md) call to point MapLibre at the worker file. The exact form depends on your bundler — see [Installation](#installation) below.
+Upgrading from v5? See the [v5 to v6 migration guide](./guides/v5-to-v6-migration-guide.md).
 
 ### Installation
 
@@ -235,8 +209,6 @@ As a mitigation for Cross-Site Scripting and other types of web security vulnera
 worker-src 'self' ;
 img-src data: blob: 'self' ;
 ```
-
-The ESM build loads the worker from a real URL (set via [`setWorkerUrl()`](./API/functions/setWorkerUrl.md)), so no `blob:` worker source is required. The previous CSP-specific bundle from v5 is no longer needed.
 
 ## MapLibre CSS
 
