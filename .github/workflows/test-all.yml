@@ -33,8 +33,7 @@ jobs:
         if: '!cancelled()'
       - run: npm run generate-docs
       - name: Build docs
-        run: |
-          npm run docs
+        run: npm run docs
       - name: Check spelling
         # This need to run after the docs are built
         run: npm run spellcheck
