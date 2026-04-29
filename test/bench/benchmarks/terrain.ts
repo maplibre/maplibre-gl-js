@@ -4,11 +4,12 @@ import type {Map} from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 // STYLE_COMPLEXITY * 10 = number of layers in the style
-// This parameter tuned so that Terrain2DMercator benchmark is around 16ms on desktop (60 FPS)
+// This parameter tuned the highest possible value at which Terrain2DMercator is around 2ms on desktop (60 FPS)
 const STYLE_COMPLEXITY = 32;
 
 const MEASUREMENT_COUNT = 10;
 const DURATION = 1_000;
+const FRAME_BUDGET = 1000 / 60;
 const CENTER_START: [number, number] = [0.0, 0.15];
 const CENTER_END: [number, number] = [0.0, -0.15];
 const ZOOM = 12;
@@ -113,11 +114,12 @@ class TerrainBase implements BenchmarkLike {
         await this.map.once('moveend');
         running = false;
 
-        // Return the slowest frame time.
+        // Return the total time spent over budget across all frames (jank-sum).
+        // How much time did the user spent looking at animation stutters?
         times.shift();
-        let maxTime = 0;
-        for (const time of times) if (time > maxTime) maxTime = time;
-        return maxTime;
+        let jankSum = 0;
+        for (const time of times) if (time > FRAME_BUDGET) jankSum += time - FRAME_BUDGET;
+        return jankSum;
     }
 }
 
