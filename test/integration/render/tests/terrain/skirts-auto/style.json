@@ -2,7 +2,7 @@
   "version": 8,
   "metadata": {
     "test": {
-      "description": "Terrain with skirts enabled to avoid horizontal hairline gaps (stitches) with typical opaque terrains. See also: The threshold commentary in skirts-disabled",
+      "description": "Terrain with skirts enabled to avoid horizontal hairline gaps (stitches) with typical opaque terrains. See also: The threshold commentary in skirts-none",
       "height": 512,
       "width": 512,
       "terrainSkirtLength": "auto",
