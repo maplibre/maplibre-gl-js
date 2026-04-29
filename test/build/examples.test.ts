@@ -34,9 +34,7 @@ describe('Example HTML files', () => {
             } else {
                 const expectedFileName = titleMatch[1].trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
                 const actualFileName = exampleFile.split('/').pop()?.replace('.html', '').toLowerCase();
-                if (expectedFileName !== actualFileName) {
-                    expect.fail(`file name "${exampleFile.split('/').pop()}" does not match title "${titleMatch[1]}". Expected file name is "${expectedFileName}.html"`);
-                }
+                expect(actualFileName).toBe(expectedFileName);
             }
         });
     }
