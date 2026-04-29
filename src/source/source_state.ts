@@ -3,8 +3,20 @@ import type {Tile} from '../tile/tile';
 import type {FeatureState} from '@maplibre/maplibre-gl-style-spec';
 import type {InViewTiles} from '../tile/tile_manager_in_view_tiles';
 
-export type FeatureStates = {[featureId: string]: FeatureState};
+export type FeatureStateEntry = {id: string; state: FeatureState};
+export type FeatureStates = FeatureStateEntry[];
 export type LayerFeatureStates = {[layer: string]: FeatureStates};
+
+type FeatureStatesMap = {[featureId: string]: FeatureState};
+type LayerFeatureStatesMap = {[layer: string]: FeatureStatesMap};
+
+function featureStatesMapToArray(map: FeatureStatesMap): FeatureStates {
+    const result: FeatureStates = [];
+    for (const id in map) {
+        result.push({id, state: map[id]});
+    }
+    return result;
+}
 
 /**
  * @internal
@@ -16,8 +28,8 @@ export type LayerFeatureStates = {[layer: string]: FeatureStates};
  * In deletedStates, all null's denote complete removal of state at that scope
 */
 export class SourceFeatureState {
-    state: LayerFeatureStates;
-    stateChanges: LayerFeatureStates;
+    state: LayerFeatureStatesMap;
+    stateChanges: LayerFeatureStatesMap;
     deletedStates: {};
     revision: number;
 
@@ -101,7 +113,11 @@ export class SourceFeatureState {
     }
 
     initializeTileState(tile: Tile, painter: any) {
-        tile.setFeatureState(this.state, painter);
+        const layerStates: LayerFeatureStates = {};
+        for (const sourceLayer in this.state) {
+            layerStates[sourceLayer] = featureStatesMapToArray(this.state[sourceLayer]);
+        }
+        tile.setFeatureState(layerStates, painter);
     }
 
     coalesceChanges(inViewTiles: InViewTiles, painter: any) {
@@ -110,23 +126,23 @@ export class SourceFeatureState {
 
         for (const sourceLayer in this.stateChanges) {
             this.state[sourceLayer]  = this.state[sourceLayer] || {};
-            const layerStates = {};
+            const layerStates: FeatureStates = [];
             for (const feature in this.stateChanges[sourceLayer]) {
                 if (!this.state[sourceLayer][feature]) this.state[sourceLayer][feature] = {};
                 extend(this.state[sourceLayer][feature], this.stateChanges[sourceLayer][feature]);
-                layerStates[feature] = this.state[sourceLayer][feature];
+                layerStates.push({id: feature, state: this.state[sourceLayer][feature]});
             }
             featuresChanged[sourceLayer] = layerStates;
         }
 
         for (const sourceLayer in this.deletedStates) {
             this.state[sourceLayer]  = this.state[sourceLayer] || {};
-            const layerStates = {};
+            const layerStates: FeatureStates = [];
 
             if (this.deletedStates[sourceLayer] === null) {
                 for (const ft in this.state[sourceLayer]) {
-                    layerStates[ft] = {};
                     this.state[sourceLayer][ft] = {};
+                    layerStates.push({id: ft, state: {}});
                 }
             } else {
                 for (const feature in this.deletedStates[sourceLayer]) {
@@ -137,12 +153,15 @@ export class SourceFeatureState {
                             delete this.state[sourceLayer][feature][key];
                         }
                     }
-                    layerStates[feature] = this.state[sourceLayer][feature];
+                    layerStates.push({id: feature, state: this.state[sourceLayer][feature]});
                 }
             }
 
-            featuresChanged[sourceLayer] = featuresChanged[sourceLayer] || {};
-            extend(featuresChanged[sourceLayer], layerStates);
+            if (!featuresChanged[sourceLayer]) {
+                featuresChanged[sourceLayer] = layerStates;
+            } else {
+                featuresChanged[sourceLayer].push(...layerStates);
+            }
         }
 
         this.stateChanges = {};
