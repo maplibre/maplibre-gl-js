@@ -7,7 +7,7 @@
       "width": 512,
       "terrainSkirtLength": "none",
       "threshold": 0.05,
-      "note_on_threshold": "Since we are dealing with transparent lines and polygons, we need a sensitive threshold. Somewhere between 0.11 and 0.15 overlaping polygon parts no longer qualify as different from non overlaps. So ~0.11 is the safest maximum threshold."
+      "note_on_threshold": "Since we are dealing with transparent lines and polygons, we need a sensitive threshold. Somewhere between 0.11 and 0.15 overlaping polygon parts no longer qualify as different from non overlaps. So ~0.11 is the maximum safe threshold."
     }
   },
   "center": [
