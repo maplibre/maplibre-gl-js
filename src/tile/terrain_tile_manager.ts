@@ -129,6 +129,20 @@ export class TerrainTileManager extends Evented {
     }
 
     /**
+     * Release the RTT slot cache for `tileID` (and its ancestors/descendants),
+     * or for all tiles if `tileID` is omitted. Slots return to the painter's
+     * pool for recycling. Called when source data, image sources, or the
+     * style itself change in ways the per-tile fingerprint doesn't capture.
+     */
+    freeRtt(tileID?: OverscaledTileID) {
+        for (const key in this._tiles) {
+            const tile = this._tiles[key];
+            if (!tileID || tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
+                tile.releaseRttSlots(this.painter);
+        }
+    }
+
+    /**
      * get a list of tiles, which are loaded and should be rendered in the current scene
      * @returns the renderable tiles
      */
