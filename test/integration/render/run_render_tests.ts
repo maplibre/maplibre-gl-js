@@ -6,14 +6,14 @@ import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
 import http from 'http';
-import {CoverageReport} from 'monocart-coverage-reports';
 import junitReportBuilder, {type TestSuite} from 'junit-report-builder';
-import type {Page, Browser} from 'puppeteer';
+import type {Page, Browser, WebWorker} from 'puppeteer';
 
 import {ensureError} from '../../../src/util/util';
 import {localizeURLs} from '../lib/localize-urls';
-import {launchPuppeteer} from '../lib/puppeteer_config';
-import type {default as MapLibreGL, Map as MaplibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config';
+import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let maplibregl: typeof MapLibreGL;
@@ -257,24 +257,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
     await page.setViewport({width, height, deviceScaleFactor: 2});
 
-    await page.setContent(`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Query Test Page</title>
-    <meta charset='utf-8'>
-    <link rel="icon" href="about:blank">
-    <style>#map {
-        box-sizing:content-box;
-        width:${width}px;
-        height:${height}px;
-    }</style>
-</head>
-<body>
-    <div id='map'></div>
-</body>
-</html>`);
-
     const evaluatedArray = await page.evaluate(async (style: StyleWithTestData) => {
 
         const options = style.metadata.test;
@@ -290,7 +272,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 this.renderingMode = '2d';
             }
 
-            onAdd(map: MaplibreMap, gl: WebGL2RenderingContext) {
+            onAdd(map: MapLibreMap, gl: WebGL2RenderingContext) {
                 const vertexSource = `#version 300 es
                 in vec3 aPos;
                 uniform mat4 u_matrix;
@@ -350,7 +332,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 this.renderingMode = '3d';
             }
 
-            onAdd(map: MaplibreMap, gl: WebGL2RenderingContext) {
+            onAdd(map: MapLibreMap, gl: WebGL2RenderingContext) {
 
                 const vertexSource = `#version 300 es
 
@@ -598,7 +580,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
          * @param operations - The operations
          * @param callback - The callback to use when all the operations are executed
          */
-        async function applyOperations(testData: TestData, map: MaplibreMap & { _render: () => void}, idle: boolean) {
+        async function applyOperations(testData: TestData, map: MapLibreMap & { _render: () => void}, idle: boolean) {
             if (!testData.operations || testData.operations.length === 0) {
                 return;
             }
@@ -718,7 +700,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
 
             if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
-                maplibregl.setRTLTextPlugin(
+                await maplibregl.setRTLTextPlugin(
                     'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js',
                     false // Don't lazy load the plugin
                 );
@@ -917,47 +899,22 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
     }
 }
 
-async function createPageAndStart(browser: Browser, testStyles: StyleWithTestData[], directory: string, options: RenderOptions) {
+async function createPageAndStart(browser: Browser, testStyles: StyleWithTestData[], directory: string, options: RenderOptions, serverPort: number) {
     const page = await browser.newPage();
-    await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
+    const workers = await startCoverage(page);
     applyDebugParameter(options, page);
-    await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
+    await page.goto(`http://localhost:${serverPort}/test-page.html`, {waitUntil: 'load'});
+    await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
     await runTests(page, testStyles, directory);
-    return page;
+    return {page, workers};
 }
 
-async function closePageAndFinish(page: Page, reportCoverage: boolean) {
-    const coverage = await page.coverage.stopJSCoverage();
-    await page.close();
-    if (!reportCoverage) {
-        return;
+async function closePageAndFinish({page, workers}: {page: Page; workers: WebWorker[]}, reportCoverage: boolean) {
+    if (reportCoverage) {
+        await stopCoverageAndReport(page, workers, 'render');
+    } else {
+        await page.close();
     }
-
-    const rawV8CoverageData = coverage.map((it) => {
-        // Convert to raw v8 coverage format
-        const entry: any =  {
-            source: it.text,
-            ...it.rawScriptCoverage
-        };
-        if (entry.url.endsWith('maplibre-gl-dev.js')) {
-            entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.js.map').toString('utf-8'));
-        }
-        return entry;
-    });
-
-    const coverageReport = new CoverageReport({
-        name: 'MapLibre Coverage Report',
-        outputDir: './coverage/render',
-        reports: [['v8'], ['json']],
-        sourcePath: (relativePath)=> {
-            return path.resolve(relativePath);
-        }
-    });
-    coverageReport.cleanCache();
-
-    await coverageReport.add(rawV8CoverageData);
-
-    await coverageReport.generate();
 }
 
 /**
@@ -995,18 +952,26 @@ async function executeRenderTests() {
         cors: true,
         passthrough: true,
     });
+    const distMount = st({
+        path: 'dist',
+        url: '/dist',
+        cors: true,
+        passthrough: true,
+    });
     const server = http.createServer((req, res) => {
         res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins, or specify 'http://your-frontend-domain.com'
         res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Include any custom headers your client might send
-        mount(req, res, () => {
-            if (req.url.includes('/sparse204/1-')) {
-                res.writeHead(204);
-                res.end('');
-            } else {
-                res.writeHead(404);
-                res.end('');
-            }
+        distMount(req, res, () => {
+            mount(req, res, () => {
+                if (req.url.includes('/sparse204/1-')) {
+                    res.writeHead(204);
+                    res.end('');
+                } else {
+                    res.writeHead(404);
+                    res.end('');
+                }
+            });
         });
     });
 
@@ -1021,21 +986,22 @@ async function executeRenderTests() {
     await new Promise<void>((resolve) => mvtServer.listen(2901, '0.0.0.0', resolve));
 
     const directory = path.join(__dirname);
-    let testStyles = getTestStyles(options, directory, (server.address() as any).port);
+    const serverPort = (server.address() as any).port;
+    let testStyles = getTestStyles(options, directory, serverPort);
 
     if (process.env.SPLIT_COUNT && process.env.CURRENT_SPLIT_INDEX) {
         const numberOfTestsForThisPart = Math.ceil(testStyles.length / +process.env.SPLIT_COUNT);
         testStyles = testStyles.splice(+process.env.CURRENT_SPLIT_INDEX * numberOfTestsForThisPart, numberOfTestsForThisPart);
     }
 
-    let page = await createPageAndStart(browser, testStyles, directory, options);
+    let pageWithWorkers = await createPageAndStart(browser, testStyles, directory, options, serverPort);
     const failedTests = testStyles.filter(t => t.metadata.test.error || !t.metadata.test.ok);
-    await closePageAndFinish(page, failedTests.length === 0);
+    await closePageAndFinish(pageWithWorkers, failedTests.length === 0);
     if (failedTests.length > 0 && failedTests.length < testStyles.length) {
         console.log(`Re-running failed tests: ${failedTests.length}`);
         options.debug = true;
-        page = await createPageAndStart(browser, failedTests, directory, options);
-        await closePageAndFinish(page, true);
+        pageWithWorkers = await createPageAndStart(browser, failedTests, directory, options, serverPort);
+        await closePageAndFinish(pageWithWorkers, true);
     }
 
     const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);

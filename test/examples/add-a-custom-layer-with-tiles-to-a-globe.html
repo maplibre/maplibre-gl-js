@@ -7,7 +7,7 @@
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -33,7 +33,11 @@
 <div id="map"></div>
 <br />
 <button id="project">Toggle projection</button>
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     // This example demonstrates how to draw a custom layer consisting of
     // web mercator tiles with a custom shader.
     // Each drawn tile must be subdivided in order to be properly curved.

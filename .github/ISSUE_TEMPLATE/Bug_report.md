@@ -42,7 +42,7 @@ Providing a minimal, complete, verifiable demonstration *dramatically* improves 
 We recommend using https://jsbin.com.
 
 Consider using the non-minified version for this demo to create better error messages.
-E.g. `<script src='https://unpkg.com/maplibre-gl@1.15.2/dist/maplibre-gl-dev.js'></script><link href='https://unpkg.com/maplibre-gl@1.15.2/dist/maplibre-gl.css' rel='stylesheet' />`
+E.g. `<script type='module'>import * as maplibregl from 'https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl-dev.mjs'; maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl-worker-dev.mjs');</script><link href='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css' rel='stylesheet' />`
 
 See https://stackoverflow.com/help/mcve for guidelines on creating an effective example.
 -->

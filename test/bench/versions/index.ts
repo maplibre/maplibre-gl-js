@@ -22,6 +22,7 @@ import CustomLayer from '../benchmarks/customlayer';
 import MapIdle from '../benchmarks/map_idle';
 
 import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool';
+import {setWorkerUrl} from '../../../src';
 import SymbolCollisionBox from '../benchmarks/symbol_collision_box';
 import Subdivide from '../benchmarks/subdivide';
 import LoadMatchingFeature from '../benchmarks/feature_index';
@@ -34,6 +35,9 @@ import {Terrain3DGlobe, Terrain3DMercator, Terrain2DGlobe, Terrain2DMercator} fr
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as Array<GeoJSON.Feature<GeoJSON.Point>>).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
 (window as any).maplibreglBenchmarks = (window as any).maplibreglBenchmarks || {};
+
+// Resolve the worker URL relative to this bundle's own URL (set by rollup ESM output).
+setWorkerUrl(new URL('./benchmarks_worker.mjs', import.meta.url).toString());
 
 const version = process.env.BENCHMARK_VERSION;
 

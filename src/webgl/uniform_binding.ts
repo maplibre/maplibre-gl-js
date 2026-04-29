@@ -15,7 +15,7 @@ export type UniformLocations = {[_: string]: WebGLUniformLocation};
  * A base uniform abstract class
  */
 abstract class Uniform<T> {
-    gl: WebGLRenderingContext|WebGL2RenderingContext;
+    gl: WebGL2RenderingContext;
     location: WebGLUniformLocation;
     current: T;
 

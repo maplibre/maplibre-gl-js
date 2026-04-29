@@ -217,12 +217,7 @@ function createHeatmapFbo(context: Context, width: number, height: number): Fram
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-    // Use the higher precision half-float texture where available (producing much smoother looking heatmaps);
-    // Otherwise, fall back to a low precision texture
-    const numType = context.HALF_FLOAT ?? gl.UNSIGNED_BYTE;
-    const internalFormat = context.RGBA16F ?? gl.RGBA;
-
-    gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, width, height, 0, gl.RGBA, numType, null);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.HALF_FLOAT, null);
 
     const fbo = context.createFramebuffer(width, height, false, false);
     fbo.colorAttachment.set(texture);

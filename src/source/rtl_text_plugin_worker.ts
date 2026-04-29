@@ -48,7 +48,7 @@ class RTLWorkerPlugin implements RTLTextPlugin {
         return this.pluginStatus;
     }
 
-    public async syncState(incomingState: PluginState, importScripts: (url: string) => void): Promise<PluginState> {
+    public async syncState(incomingState: PluginState, loadScript: (url: string) => Promise<void>): Promise<PluginState> {
         // Parsed plugin cannot be changed, so just return its current state.
         if (this.isParsed()) {
             return this.getState();
@@ -63,8 +63,8 @@ class RTLWorkerPlugin implements RTLTextPlugin {
         const loadScriptPromise = new Promise<void>((resolve) => {
             this.loadScriptResolve = resolve;
         });
-        importScripts(urlToLoad);
         const dontWaitForeverTimeoutPromise = new Promise<void>((resolve) => setTimeout(() => resolve(), this.TIMEOUT));
+        await loadScript(urlToLoad);
         await Promise.race([loadScriptPromise, dontWaitForeverTimeoutPromise]);
         const complete = this.isParsed();
         if (complete) {

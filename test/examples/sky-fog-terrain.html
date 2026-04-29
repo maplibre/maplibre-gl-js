@@ -7,7 +7,7 @@
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -34,7 +34,11 @@
     <tr><td><label for="horizon-fog-blend-slider">horizon-fog-blend</label></td><td><input type="range" id="horizon-fog-blend-slider" min="0" max="1" step="0.01" value="0.5" /></td></tr>
     <tr><td><label for="fog-ground-blend-slider">fog-ground-blend</label></td><td><input type="range" id="fog-ground-blend-slider" min="0" max="1" step="0.01" value="0.1" /></td></tr>
 </table>
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     function setSkyFromUi() {
         if (!document.getElementById('sky-enabled').checked) {
             map.setSky(undefined);

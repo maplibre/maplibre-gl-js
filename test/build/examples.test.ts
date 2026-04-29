@@ -1,5 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {globSync} from 'glob';
+import {basename} from 'path';
 import fs from 'fs';
 
 describe('Example HTML files', () => {
@@ -22,6 +23,19 @@ describe('Example HTML files', () => {
                 expect.fail('missing `og:description` meta tag');
             } else if (!descriptionMatch[1].trim()) {
                 expect.fail('`og:description` content is empty');
+            }
+        });
+
+        test(`${exampleFile} file name matches the title`, () => {
+            const titleMatch = content.match(/<title>([^<]*)<\/title>/);
+            if (!titleMatch) {
+                expect.fail('missing <title> tag');
+            } else if (!titleMatch[1].trim()) {
+                expect.fail('<title> content is empty');
+            } else {
+                const expectedFileName = titleMatch[1].trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+                const actualFileName = basename(exampleFile).replace('.html', '').toLowerCase();
+                expect(actualFileName).toBe(expectedFileName);
             }
         });
     }
