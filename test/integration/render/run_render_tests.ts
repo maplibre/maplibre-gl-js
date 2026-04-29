@@ -257,24 +257,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
     await page.setViewport({width, height, deviceScaleFactor: 2});
 
-    await page.setContent(`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Query Test Page</title>
-    <meta charset='utf-8'>
-    <link rel="icon" href="about:blank">
-    <style>#map {
-        box-sizing:content-box;
-        width:${width}px;
-        height:${height}px;
-    }</style>
-</head>
-<body>
-    <div id='map'></div>
-</body>
-</html>`);
-
     const evaluatedArray = await page.evaluate(async (style: StyleWithTestData) => {
 
         const options = style.metadata.test;
