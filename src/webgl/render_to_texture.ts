@@ -67,7 +67,7 @@ export class RenderToTexture {
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
-        this.pool = new RenderPool(painter.context, 30, terrain.tileManager.tileSize * terrain.qualityFactor);
+        this.pool = new RenderPool(painter.context, 400, terrain.tileManager.tileSize * terrain.qualityFactor);
     }
 
     destruct() {
@@ -121,7 +121,15 @@ export class RenderToTexture {
                 // rerender if there are different coords to render than in the last rendering
                 // or if the source revision has changed
                 const fingerprint = this._rttFingerprints[source][tile.tileID.key];
-                if (fingerprint && fingerprint !== tile.rttFingerprint[source]) tile.rtt = [];
+                if (fingerprint && fingerprint !== tile.rttFingerprint[source]) {
+                    // Invalidate any pool slots that claim to hold content for this tile.
+                    // Without this the next acquireForContent call would cache-hit on stale data.
+                    for (const entry of tile.rtt) {
+                        const slot = entry && this.pool.getObjectForId(entry.id);
+                        if (slot) this.pool.clearContent(slot);
+                    }
+                    tile.rtt = [];
+                }
             }
         }
     }
@@ -168,19 +176,9 @@ export class RenderToTexture {
                     this.pool.freeAllObjects();
                 }
                 this._rttTiles.push(tile);
-                // check for cached PoolObject
-                if (tile.rtt[stack]) {
-                    const obj = this.pool.getObjectForId(tile.rtt[stack].id);
-                    if (obj.stamp === tile.rtt[stack].stamp) {
-                        this.pool.useObject(obj);
-                        continue;
-                    }
-                }
-                // get free PoolObject
-                const obj = this.pool.getOrCreateFreeObject();
-                this.pool.useObject(obj);
-                this.pool.stampObject(obj);
+                const {obj, wasHit} = this.pool.acquireForContent(tile.tileID.key, stack);
                 tile.rtt[stack] = {id: obj.id, stamp: obj.stamp};
+                if (wasHit) continue;
                 // prepare PoolObject for rendering
                 painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
                 painter.context.clear({color: Color.transparent, stencil: 0});

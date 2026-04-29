@@ -8,6 +8,9 @@ export type PoolObject = {
     texture: Texture;
     stamp: number;
     inUse: boolean;
+    /** Identity of the content currently stored in this slot. */
+    contentTileKey: string | undefined;
+    contentStack: number;
 };
 /**
  * @internal
@@ -47,7 +50,7 @@ export class RenderPool {
         }
         fbo.depthAttachment.set(this._context.createRenderbuffer(this._context.gl.DEPTH_STENCIL, this._tileSize, this._tileSize));
         fbo.colorAttachment.set(texture.texture);
-        return {id, fbo, texture, stamp: -1, inUse: false};
+        return {id, fbo, texture, stamp: -1, inUse: false, contentTileKey: undefined, contentStack: -1};
     }
 
     public getObjectForId(id: number): PoolObject {
@@ -76,6 +79,56 @@ export class RenderPool {
         const obj = this._createObject(this._objects.length);
         this._objects.push(obj);
         return obj;
+    }
+
+    /**
+     * Returns the slot already holding `(tileKey, stack)` if any, otherwise allocates
+     * a fresh slot. The returned slot's `contentTileKey/contentStack` always match the
+     * request on return: if it was a cache hit, the caller can use the texture as-is;
+     * if it was a fresh allocation, the caller is expected to render new content into
+     * the slot. The slot is marked inUse either way.
+     *
+     * `wasHit` is set true when the returned slot already held the requested content.
+     */
+    public acquireForContent(tileKey: string, stack: number): {obj: PoolObject; wasHit: boolean} {
+        // 1. Existing slot with matching content (cache hit).
+        for (const obj of this._objects) {
+            if (!obj.inUse && obj.contentTileKey === tileKey && obj.contentStack === stack) {
+                obj.inUse = true;
+                this._recentlyUsed = this._recentlyUsed.filter(id => obj.id !== id);
+                this._recentlyUsed.push(obj.id);
+                return {obj, wasHit: true};
+            }
+        }
+        // 2. Allocate a fresh / never-occupied slot if available.
+        if (this._objects.length < this._size) {
+            const obj = this._createObject(this._objects.length);
+            obj.contentTileKey = tileKey;
+            obj.contentStack = stack;
+            obj.inUse = true;
+            this._objects.push(obj);
+            this._recentlyUsed.push(obj.id);
+            return {obj, wasHit: false};
+        }
+        // 3. Evict LRU free slot, reassign.
+        for (const id of this._recentlyUsed) {
+            const candidate = this._objects[id];
+            if (!candidate.inUse) {
+                candidate.contentTileKey = tileKey;
+                candidate.contentStack = stack;
+                candidate.inUse = true;
+                this._recentlyUsed = this._recentlyUsed.filter(x => x !== id);
+                this._recentlyUsed.push(id);
+                return {obj: candidate, wasHit: false};
+            }
+        }
+        throw new Error('No free RenderPool available, call freeAllObjects() required!');
+    }
+
+    /** Mark a slot as no longer holding valid content (e.g. on fingerprint invalidation). */
+    public clearContent(obj: PoolObject) {
+        obj.contentTileKey = undefined;
+        obj.contentStack = -1;
     }
 
     public freeObject(obj: PoolObject) {
