@@ -122,8 +122,8 @@ export class RenderToTexture {
                 // or if the source revision has changed
                 const fingerprint = this._rttFingerprints[source][tile.tileID.key];
                 if (fingerprint && fingerprint !== tile.rttFingerprint[source]) {
-                    // Invalidate any pool slots that claim to hold content for this tile.
-                    // Without this the next acquireForContent call would cache-hit on stale data.
+                    // Drop the tile's stale slot bindings AND clear those slots' content
+                    // keys, so a later acquireForContent doesn't cache-hit on stale data.
                     for (const entry of tile.rtt) {
                         const slot = entry && this.pool.getObjectForId(entry.id);
                         if (slot) this.pool.clearContent(slot);
@@ -178,8 +178,8 @@ export class RenderToTexture {
                 this._rttTiles.push(tile);
                 const {obj, wasHit} = this.pool.acquireForContent(tile.tileID.key, stack);
                 tile.rtt[stack] = {id: obj.id, stamp: obj.stamp};
+                // Cache hit: slot still holds the right texture from a previous frame, skip render.
                 if (wasHit) continue;
-                // prepare PoolObject for rendering
                 painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
                 painter.context.clear({color: Color.transparent, stencil: 0});
                 painter.currentStencilSource = undefined;

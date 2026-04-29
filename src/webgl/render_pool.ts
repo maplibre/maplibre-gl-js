@@ -82,47 +82,40 @@ export class RenderPool {
     }
 
     /**
-     * Returns the slot already holding `(tileKey, stack)` if any, otherwise allocates
-     * a fresh slot. The returned slot's `contentTileKey/contentStack` always match the
-     * request on return: if it was a cache hit, the caller can use the texture as-is;
-     * if it was a fresh allocation, the caller is expected to render new content into
-     * the slot. The slot is marked inUse either way.
-     *
-     * `wasHit` is set true when the returned slot already held the requested content.
+     * Acquire a slot for rendering `(tileKey, stack)`. Prefers a free slot that
+     * already holds matching content (cache hit). Otherwise grows the pool, or
+     * reuses the LRU free slot. Returns `wasHit=true` when the caller can skip
+     * rendering and reuse the slot's existing texture.
      */
     public acquireForContent(tileKey: string, stack: number): {obj: PoolObject; wasHit: boolean} {
-        // 1. Existing slot with matching content (cache hit).
-        for (const obj of this._objects) {
-            if (!obj.inUse && obj.contentTileKey === tileKey && obj.contentStack === stack) {
-                obj.inUse = true;
-                this._recentlyUsed = this._recentlyUsed.filter(id => obj.id !== id);
-                this._recentlyUsed.push(obj.id);
-                return {obj, wasHit: true};
-            }
-        }
-        // 2. Allocate a fresh / never-occupied slot if available.
-        if (this._objects.length < this._size) {
-            const obj = this._createObject(this._objects.length);
-            obj.contentTileKey = tileKey;
-            obj.contentStack = stack;
-            obj.inUse = true;
-            this._objects.push(obj);
-            this._recentlyUsed.push(obj.id);
-            return {obj, wasHit: false};
-        }
-        // 3. Evict LRU free slot, reassign.
+        let hit: PoolObject | undefined;
+        let lruFree: PoolObject | undefined;
         for (const id of this._recentlyUsed) {
-            const candidate = this._objects[id];
-            if (!candidate.inUse) {
-                candidate.contentTileKey = tileKey;
-                candidate.contentStack = stack;
-                candidate.inUse = true;
-                this._recentlyUsed = this._recentlyUsed.filter(x => x !== id);
-                this._recentlyUsed.push(id);
-                return {obj: candidate, wasHit: false};
+            const obj = this._objects[id];
+            if (obj.inUse) continue;
+            if (obj.contentTileKey === tileKey && obj.contentStack === stack) {
+                hit = obj;
+                break;
             }
+            lruFree ??= obj;
         }
-        throw new Error('No free RenderPool available, call freeAllObjects() required!');
+
+        const obj = hit ??
+            (this._objects.length < this._size ? this._growPool() : lruFree);
+        if (!obj) throw new Error('No free RenderPool available, call freeAllObjects() required!');
+
+        obj.contentTileKey = tileKey;
+        obj.contentStack = stack;
+        obj.inUse = true;
+        this._recentlyUsed = this._recentlyUsed.filter(id => id !== obj.id);
+        this._recentlyUsed.push(obj.id);
+        return {obj, wasHit: !!hit};
+    }
+
+    private _growPool(): PoolObject {
+        const obj = this._createObject(this._objects.length);
+        this._objects.push(obj);
+        return obj;
     }
 
     /** Mark a slot as no longer holding valid content (e.g. on fingerprint invalidation). */
