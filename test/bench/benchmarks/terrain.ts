@@ -3,8 +3,11 @@ import createMap from '../lib/create_map';
 import type {Map} from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-const STYLE_COMPLEXITY = 64;
-const MEASUREMENT_COUNT = 5;
+// STYLE_COMPLEXITY * 10 = number of layers in the style
+// This parameter tuned so that Terrain2DMercator benchmark is around 16ms on desktop (60 FPS)
+const STYLE_COMPLEXITY = 32;
+
+const MEASUREMENT_COUNT = 10;
 const DURATION = 1_000;
 const CENTER_START: [number, number] = [0.0, 0.15];
 const CENTER_END: [number, number] = [0.0, -0.15];
