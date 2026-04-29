@@ -1,13 +1,18 @@
 ## main
 ### ✨ Features and improvements
 - ⚠️ `zoomLevelsToOverscale` default value was changed to 4 to support better handling of high level zoom with dense labels. This might have a side effect of changing a bit the results of `queryRenderedFeatures` and some rendering of polygon center label. To revert this change, set the value to `undefined` ([#7537](https://github.com/maplibre/maplibre-gl-js/issues/7537)) (by [@HarelM](https://github.com/HarelM))
-- ⚠️ Remove the second parameter from `GeoJSONSource.setData` (`waitForCompletion`) and remove the return value of `this` to allow future changes to the API ([#7538](https://github.com/maplibre/maplibre-gl-js/issues/7538)) (by [@HarelM](https://github.com/HarelM))
-- ⚠️ The TypeScript target has been updated to ES2022.
-  This results in smaller bundles and improved runtime performance by relying on modern JavaScript features and reducing transpilation. Consumers targeting browsers or using some tooling released before 2022 may need to transpile MapLibre or update. This change also aligns all internal build configurations to a single target instead of ES2016 + ES2019, avoiding inconsistencies in emitted code. ([#7404](https://github.com/maplibre/maplibre-gl-js/pull/7404)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+
+## 6.0.0-3
+
+### ✨ Features and improvements
+
+- ⚠️ Remove the second parameter from `GeoJSONSource.setData` (`waitForCompletion`) and remove the return value of `this` to allow future changes to the API ([#7538](https://github.com/maplibre/maplibre-gl-js/issues/7538)) (by [@HarelM](https://github.com/HarelM))
+- ⚠️ The TypeScript target has been updated to ES2022.
+  This results in smaller bundles and improved runtime performance by relying on modern JavaScript features and reducing transpilation. Consumers targeting browsers or using some tooling released before 2022 may need to transpile MapLibre or update. This change also aligns all internal build configurations to a single target instead of ES2016 + ES2019, avoiding inconsistencies in emitted code. ([#7404](https://github.com/maplibre/maplibre-gl-js/pull/7404)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ## 6.0.0-2
 
