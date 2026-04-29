@@ -1,5 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {globSync} from 'glob';
+import {basename} from 'path';
 import fs from 'fs';
 
 describe('Example HTML files', () => {
@@ -33,7 +34,7 @@ describe('Example HTML files', () => {
                 expect.fail('<title> content is empty');
             } else {
                 const expectedFileName = titleMatch[1].trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
-                const actualFileName = exampleFile.split('/').pop()?.replace('.html', '').toLowerCase();
+                const actualFileName = basename(exampleFile).replace('.html', '').toLowerCase();
                 expect(actualFileName).toBe(expectedFileName);
             }
         });
