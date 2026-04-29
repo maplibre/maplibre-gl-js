@@ -7,7 +7,7 @@
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -30,7 +30,11 @@
     Shift + drag with <code>boxZoomEnd</code> (no default zoom). Selected: <span id="selected-count">0</span>
     <button id="clear-selection" type="button">Clear</button>
 </div>
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     const BASE_LAYER_ID = 'earthquakes-base';
     const SELECTED_LAYER_ID = 'earthquakes-selected';
     const selectedCountElement = document.getElementById('selected-count');

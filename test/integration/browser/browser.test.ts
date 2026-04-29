@@ -6,7 +6,8 @@ import type {AddressInfo} from 'net';
 
 import {sleep} from '../../../src/util/test/util';
 import {launchPuppeteer} from '../lib/puppeteer_config';
-import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
+import type {Map} from '../../../dist/maplibre-gl';
+import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
 const testWidth = 800;
 const testHeight = 600;
@@ -426,18 +427,18 @@ describe('Browser tests', () => {
 
     test('Load map with RTL plugin should throw exception for invalid URL', async () => {
 
-        const rtlPromise = page.evaluate(() => {
-            // console.log('Testing start');
-            return maplibregl.setRTLTextPlugin('badURL', false);
+        const errorMessage = await page.evaluate(async () => {
+            try {
+                await maplibregl.setRTLTextPlugin('badURL', false);
+                return null;
+            } catch (e) {
+                return (e as Error).message;
+            }
         });
 
-        // exact message looks like
-        // Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'http://localhost:52015/test/integration/browser/fixtures/badURL' failed to load.
-        const regex = new RegExp('Failed to execute \'importScripts\'.*');
+        expect(errorMessage).toMatch(/badURL|dynamically imported module/);
 
-        await expect(rtlPromise).rejects.toThrow(regex);
-
-    }, 2000);
+    }, 5000);
 
     test('Movement with transformCameraUpdate and terrain', {retry: 3, timeout: 20000}, async () => {
         await page.evaluate(async () => {

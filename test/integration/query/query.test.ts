@@ -5,7 +5,7 @@ import st from 'st';
 import http from 'node:http';
 import path from 'node:path/posix';
 import fs from 'node:fs';
-import type {Page, Browser} from 'puppeteer';
+import type {Page, Browser, WebWorker} from 'puppeteer';
 import type {Server} from 'node:http';
 import type {AddressInfo} from 'node:net';
 import {ensureError} from '../../../src/util/util';
@@ -13,7 +13,7 @@ import {ensureError} from '../../../src/util/util';
 import {deepEqual} from '../lib/json-diff';
 import {localizeURLs} from '../lib/localize-urls';
 import {launchPuppeteer} from '../lib/puppeteer_config';
-import type {default as MapLibreGL} from '../../../dist/maplibre-gl';
+import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
 let maplibregl: typeof MapLibreGL;
 
@@ -97,48 +97,76 @@ describe('query tests', () => {
     let browser: Browser;
     let server: Server;
     let page: Page;
+    const workers: WebWorker[] = [];
 
     beforeAll(async () => {
-        server = http.createServer(
-            st({
-                path: 'test/integration/assets',
-                cors: true,
-            })
-        );
+        const assetsMount = st({path: 'test/integration/assets', cors: true, passthrough: true});
+        const distMount = st({path: 'dist', url: '/dist', cors: true, passthrough: true});
+        server = http.createServer((req, res) => {
+            distMount(req, res, () => {
+                assetsMount(req, res, () => {
+                    res.writeHead(404);
+                    res.end('');
+                });
+            });
+        });
         browser = await launchPuppeteer();
         await new Promise<void>((resolve) => server.listen(resolve));
+        const port = (server.address() as AddressInfo).port;
         page = await browser.newPage();
+        // Capture worker coverage as workers attach (URL is stable, not blob:).
+        page.on('workercreated', async (worker: WebWorker) => {
+            workers.push(worker);
+            try {
+                await worker.client.send('Profiler.enable');
+                await worker.client.send('Profiler.startPreciseCoverage', {callCount: true, detailed: true});
+            } catch {}
+        });
         await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
         await page.setViewport({width: 512, height: 512, deviceScaleFactor: 2});
-        await page.setContent(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset='utf-8'>
-
-            </head>
-            <body id='map'></body>
-            </html>`);
-        await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
-        await page.addStyleTag({path: 'dist/maplibre-gl.css'});
+        await page.goto(`http://localhost:${port}/test-page.html`, {waitUntil: 'load'});
+        await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
     }, 60000);
 
     afterAll(async () => {
         const coverage = await page.coverage.stopJSCoverage();
+
+        const workerCoverageEntries: any[] = [];
+        for (const worker of workers) {
+            try {
+                const result = await worker.client.send('Profiler.takePreciseCoverage');
+                workerCoverageEntries.push(...result.result);
+            } catch {}
+        }
+
         await page.close();
         await browser.close();
         await new Promise(resolve => server.close(resolve));
-        const rawV8CoverageData = coverage.map((it) => {
+        const rawV8CoverageData: any[] = coverage.map((it) => {
             // Convert to raw v8 coverage format
-            const entry: any =  {
+            const entry: any = {
                 source: it.text,
                 ...it.rawScriptCoverage
             };
-            if (entry.url.endsWith('maplibre-gl-dev.js')) {
-                entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.js.map').toString('utf-8'));
+            if (entry.url.endsWith('maplibre-gl-dev.mjs')) {
+                entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.mjs.map').toString('utf-8'));
             }
             return entry;
         });
+
+        const workerSource = fs.readFileSync('dist/maplibre-gl-worker-dev.mjs', 'utf-8');
+        const workerSourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-worker-dev.mjs.map', 'utf-8'));
+        for (const entry of workerCoverageEntries) {
+            if (entry.url.endsWith('maplibre-gl-worker-dev.mjs')) {
+                rawV8CoverageData.push({
+                    source: workerSource,
+                    url: entry.url,
+                    scriptId: entry.scriptId,
+                    functions: entry.functions,
+                    sourceMap: workerSourceMap
+                });
+            }
+        }
 
         const coverageReport = new CoverageReport({
             name: 'MapLibre Coverage Report',

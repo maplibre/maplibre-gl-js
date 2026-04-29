@@ -5,7 +5,7 @@ import path, {dirname} from 'path';
 import fs from 'node:fs/promises';
 import {pathToFileURL} from 'url';
 
-const distjs = globSync('dist/**/*.js');
+const distjs = globSync('dist/**/*.{js,mjs}');
 
 async function getSourceMapForFile(url: string|URL) {
     const content = await fs.readFile(url, {encoding: 'utf-8'});
@@ -50,22 +50,27 @@ describe.each(distjs)('release file %s', (file) => {
 
 describe('main sourcemap', () => {
     test('should match source files', async () => {
-        const sourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.main));
-        const sourceMapEntryRootDir = path.relative('.', dirname(packageJson.main));
+        const mainSourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.module));
+        const workerSourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.module.replace(/maplibre-gl\.mjs$/, 'maplibre-gl-worker.mjs')));
+        const sourceMapEntryRootDir = path.relative('.', dirname(packageJson.module));
 
-        const sourcemapEntriesNormalized = sourcemapJSON.sources.map(f => path.join(sourceMapEntryRootDir, f));
+        // Worker code lives in its own bundle, so union sources from both sourcemaps.
+        const sourcemapEntriesNormalized = [...mainSourcemapJSON.sources, ...workerSourcemapJSON.sources]
+            .map(f => path.join(sourceMapEntryRootDir, f));
 
-        // *.js.map file should have these files
+        // *.mjs.map files should have these files
         const srcFiles = await glob('src/**/*.ts');
         const expectedEntriesInSourcemapJSON = srcFiles.filter(f => {
             if (f.endsWith('.test.ts'))
                 return false;
             if (f.startsWith(path.join('src', 'style-spec')))
                 return false;
+            if (f === path.join('src', 'util', 'test', 'util.ts'))
+                return false;
             return !f.startsWith(`build${path.sep}`);
         }).sort();
 
-        // actual files from *.js.map
+        // actual files from *.mjs.map
         const actualEntriesInSourcemapJSON = sourcemapEntriesNormalized.filter(f => {
             if (f.startsWith('node_modules'))
                 return false;
@@ -80,6 +85,6 @@ describe('main sourcemap', () => {
         const s1 = setMinus(actualEntriesInSourcemapJSON, expectedEntriesInSourcemapJSON);
         expect(s1.length).toBeLessThan(5);
         const s2 = setMinus(expectedEntriesInSourcemapJSON, actualEntriesInSourcemapJSON);
-        expect(s2.length).toBeLessThan(18);
+        expect(s2.length).toBeLessThan(17);
     });
 });

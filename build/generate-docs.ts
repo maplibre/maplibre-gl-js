@@ -152,7 +152,8 @@ async function generateExamplesFolder() {
         const htmlFile = path.join(examplesFolder, file);
         let htmlContent = fs.readFileSync(htmlFile, 'utf-8');
         htmlContent = htmlContent.replace(/\.\.\/\.\.\//g, maplibreUnpkg);
-        htmlContent = htmlContent.replace(/-dev.js/g, '.js');
+        htmlContent = htmlContent.replace(/-dev\.js/g, '.js');
+        htmlContent = htmlContent.replace(/-dev\.mjs/g, '.mjs');
         const htmlContentLines = htmlContent.split('\n');
         const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim();
         const description = htmlContentLines.find(l => l.includes('og:description'))?.replace(/.*content=\"(.*)\".*/, '$1');

@@ -79,3 +79,8 @@ validation:
   absolute_links: warn
   unrecognized_links: warn
   anchors: warn
+
+# README.md exists for GitHub readers (it documents how to run the docs locally).
+# Without this exclude, zensical/mkdocs-material renders it at `/` instead of index.md.
+exclude_docs: |
+  README.md
