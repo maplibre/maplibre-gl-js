@@ -8,13 +8,16 @@ export type PoolObject = {
     texture: Texture;
     stamp: number;
     inUse: boolean;
-    /** Identity of the content currently stored in this slot. */
+    /** Identity of the content currently stored in this slot, or undefined if invalidated. */
     contentTileKey: string | undefined;
     contentStack: number;
 };
 /**
  * @internal
- * `RenderPool` is a resource pool for textures and framebuffers
+ * Content-addressed cache of rendered tile textures. Each slot is keyed by
+ * `(tileKey, stack)`; slots survive across frames so unchanged tiles can
+ * skip re-rendering. Callers use `acquire` to fetch a slot and check
+ * `wasHit` to decide whether the existing texture is reusable.
  */
 export class RenderPool {
     private _objects: PoolObject[];
@@ -82,12 +85,12 @@ export class RenderPool {
     }
 
     /**
-     * Acquire a slot for rendering `(tileKey, stack)`. Prefers a free slot that
-     * already holds matching content (cache hit). Otherwise grows the pool, or
-     * reuses the LRU free slot. Returns `wasHit=true` when the caller can skip
-     * rendering and reuse the slot's existing texture.
+     * Cache lookup: returns a slot for `(tileKey, stack)`. On a hit (`wasHit`),
+     * the slot's existing texture is reusable and the caller should skip
+     * rendering. On a miss, returns a fresh slot (grown or LRU-evicted) that
+     * the caller must render into.
      */
-    public acquireForContent(tileKey: string, stack: number): {obj: PoolObject; wasHit: boolean} {
+    public acquire(tileKey: string, stack: number): {obj: PoolObject; wasHit: boolean} {
         let hit: PoolObject | undefined;
         let lruFree: PoolObject | undefined;
         for (const id of this._recentlyUsed) {
@@ -118,8 +121,8 @@ export class RenderPool {
         return obj;
     }
 
-    /** Mark a slot as no longer holding valid content (e.g. on fingerprint invalidation). */
-    public clearContent(obj: PoolObject) {
+    /** Drop a slot's cached content so the next `acquire` for it will miss. */
+    public invalidate(obj: PoolObject) {
         obj.contentTileKey = undefined;
         obj.contentStack = -1;
     }
