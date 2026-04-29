@@ -396,17 +396,18 @@ export type MapOptions = {
      */
     centerClampedToGround?: boolean;
     /**
-     * Allows overzooming by splitting vector tiles after max zoom.
-     * Defines the number of zoom level that will overscale from map's max zoom and below.
-     * For example if the map's max zoom is 20 and this is set to 3, the zoom levels of 20, 19 and 18 will be overscaled
-     * and the rest will be split.
-     * When undefined, all zoom levels after source's max zoom will be overscaled.
+     * Defines the number of zoom level that will overscale instead of split tiles below (inclusive) a map's `maxZoom`.
+     * When `undefined`, all zoom levels after source's max zoom will be overscaled.
+     *
      * This can help in reducing the size of the overscaling and improve performance in high zoom levels.
      * The drawback is that it changes rendering for polygon centered labels and changes the results of query rendered features.
-     * @defaultValue undefined
-     * @experimental
+     * 
+     * For example if map's `maxZoom` is 20, the source's `maxzoom` is 10 (tiles are avaliable until zoom 10) and `zoomLevelsToOverscale` is set to 3:
+     * - The zoom levels of 20, 19, 18 will be overscaled.
+     * - The zoom levels 11 to 17 will be split.
+     * @defaultValue 4
      */
-    experimentalZoomLevelsToOverscale?: number;
+    zoomLevelsToOverscale?: number;
     /**
      * Determines the rotation interaction model:
      * - When true: Uses "Orbital" logic where rotation is relative to the pivot center.
@@ -509,7 +510,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
     centerClampedToGround: true,
-    experimentalZoomLevelsToOverscale: undefined,
+    zoomLevelsToOverscale: 4,
     anisotropicFilterPitch: defaultAnisotropicFilterPitch,
 };
 
@@ -759,7 +760,7 @@ export class Map extends Camera {
         this._clickTolerance = resolvedOptions.clickTolerance;
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
-        this._zoomLevelsToOverscale = resolvedOptions.experimentalZoomLevelsToOverscale;
+        this._zoomLevelsToOverscale = resolvedOptions.zoomLevelsToOverscale;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
