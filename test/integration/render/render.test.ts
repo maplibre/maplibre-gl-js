@@ -861,7 +861,7 @@ describe('Render tests', () => {
         workers = await startCoverage(page);
         await page.goto(`http://localhost:${serverPort}/test-page.html`, {waitUntil: 'load'});
         await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
-    });
+    }, 30000);
 
     afterAll(async () => {
         await stopCoverageAndReport(page, workers, 'render');
