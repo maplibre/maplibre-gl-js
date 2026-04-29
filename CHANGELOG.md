@@ -1,12 +1,18 @@
 ## main
 ### ✨ Features and improvements
 - ⚠️ Switch to an ESM-only distribution (`maplibre-gl.mjs`). The UMD bundles (`maplibre-gl.js`, `maplibre-gl-csp.js`) are no longer published. The CSP-specific bundle is also dropped: the ESM build loads its worker as a real URL, so `worker-src blob:` is no longer required. Consumers using `<script src=".../maplibre-gl.js">` must switch to `<script type="module">`, and consumers using `import maplibregl from 'maplibre-gl'` must switch to `import * as maplibregl from 'maplibre-gl'` or named imports. See the docs ESM section for migration steps. ([#6254](https://github.com/maplibre/maplibre-gl-js/pull/6254)) (by [@birkskyum](https://github.com/birkskyum))
-- ⚠️ The TypeScript target has been updated to ES2022.
-  This results in smaller bundles and improved runtime performance by relying on modern JavaScript features and reducing transpilation. Consumers targeting browsers or using some tooling released before 2022 may need to transpile MapLibre or update. This change also aligns all internal build configurations to a single target instead of ES2016 + ES2019, avoiding inconsistencies in emitted code. ([#7404](https://github.com/maplibre/maplibre-gl-js/pull/7404)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+
+## 6.0.0-3
+
+### ✨ Features and improvements
+
+- ⚠️ Remove the second parameter from `GeoJSONSource.setData` (`waitForCompletion`) and remove the return value of `this` to allow future changes to the API ([#7538](https://github.com/maplibre/maplibre-gl-js/issues/7538)) (by [@HarelM](https://github.com/HarelM))
+- ⚠️ The TypeScript target has been updated to ES2022.
+  This results in smaller bundles and improved runtime performance by relying on modern JavaScript features and reducing transpilation. Consumers targeting browsers or using some tooling released before 2022 may need to transpile MapLibre or update. This change also aligns all internal build configurations to a single target instead of ES2016 + ES2019, avoiding inconsistencies in emitted code. ([#7404](https://github.com/maplibre/maplibre-gl-js/pull/7404)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ## 6.0.0-2
 
