@@ -6,13 +6,12 @@ import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
 import http from 'http';
-import {CoverageReport} from 'monocart-coverage-reports';
 import junitReportBuilder, {type TestSuite} from 'junit-report-builder';
 import type {Page, Browser, WebWorker} from 'puppeteer';
 
 import {ensureError} from '../../../src/util/util';
 import {localizeURLs} from '../lib/localize-urls';
-import {launchPuppeteer} from '../lib/puppeteer_config';
+import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config';
 import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
@@ -920,16 +919,7 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
 
 async function createPageAndStart(browser: Browser, testStyles: StyleWithTestData[], directory: string, options: RenderOptions, serverPort: number) {
     const page = await browser.newPage();
-    const workers: WebWorker[] = [];
-    page.on('workercreated', async (worker: WebWorker) => {
-        workers.push(worker);
-        try {
-            await worker.client.send('Profiler.enable');
-            await worker.client.send('Profiler.startPreciseCoverage', {callCount: true, detailed: true});
-        } catch {}
-    });
-
-    await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
+    const workers = await startCoverage(page);
     applyDebugParameter(options, page);
     await page.goto(`http://localhost:${serverPort}/test-page.html`, {waitUntil: 'load'});
     await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
@@ -938,60 +928,11 @@ async function createPageAndStart(browser: Browser, testStyles: StyleWithTestDat
 }
 
 async function closePageAndFinish({page, workers}: {page: Page; workers: WebWorker[]}, reportCoverage: boolean) {
-    const coverage = await page.coverage.stopJSCoverage();
-
-    const workerCoverageEntries: any[] = [];
-    for (const worker of workers) {
-        try {
-            const result = await worker.client.send('Profiler.takePreciseCoverage');
-            workerCoverageEntries.push(...result.result);
-        } catch {}
+    if (reportCoverage) {
+        await stopCoverageAndReport(page, workers, 'render');
+    } else {
+        await page.close();
     }
-
-    await page.close();
-    if (!reportCoverage) {
-        return;
-    }
-
-    const rawV8CoverageData: any[] = coverage.map((it) => {
-        // Convert to raw v8 coverage format
-        const entry: any = {
-            source: it.text,
-            ...it.rawScriptCoverage
-        };
-        if (entry.url.endsWith('maplibre-gl-dev.mjs')) {
-            entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.mjs.map').toString('utf-8'));
-        }
-        return entry;
-    });
-
-    const workerSource = fs.readFileSync('dist/maplibre-gl-worker-dev.mjs', 'utf-8');
-    const workerSourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-worker-dev.mjs.map', 'utf-8'));
-    for (const entry of workerCoverageEntries) {
-        if (entry.url.endsWith('maplibre-gl-worker-dev.mjs')) {
-            rawV8CoverageData.push({
-                source: workerSource,
-                url: entry.url,
-                scriptId: entry.scriptId,
-                functions: entry.functions,
-                sourceMap: workerSourceMap
-            });
-        }
-    }
-
-    const coverageReport = new CoverageReport({
-        name: 'MapLibre Coverage Report',
-        outputDir: './coverage/render',
-        reports: [['v8'], ['json']],
-        sourcePath: (relativePath)=> {
-            return path.resolve(relativePath);
-        }
-    });
-    coverageReport.cleanCache();
-
-    await coverageReport.add(rawV8CoverageData);
-
-    await coverageReport.generate();
 }
 
 /**

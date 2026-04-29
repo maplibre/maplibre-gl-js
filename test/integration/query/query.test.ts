@@ -1,6 +1,5 @@
 import {describe, beforeAll, afterAll, test, expect} from 'vitest';
 import {globSync} from 'glob';
-import {CoverageReport} from 'monocart-coverage-reports';
 import st from 'st';
 import http from 'node:http';
 import path from 'node:path/posix';
@@ -12,7 +11,7 @@ import {ensureError} from '../../../src/util/util';
 
 import {deepEqual} from '../lib/json-diff';
 import {localizeURLs} from '../lib/localize-urls';
-import {launchPuppeteer} from '../lib/puppeteer_config';
+import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
 let maplibregl: typeof MapLibreGL;
@@ -97,7 +96,7 @@ describe('query tests', () => {
     let browser: Browser;
     let server: Server;
     let page: Page;
-    const workers: WebWorker[] = [];
+    let workers: WebWorker[] = [];
 
     beforeAll(async () => {
         const assetsMount = st({path: 'test/integration/assets', cors: true, passthrough: true});
@@ -114,73 +113,16 @@ describe('query tests', () => {
         await new Promise<void>((resolve) => server.listen(resolve));
         const port = (server.address() as AddressInfo).port;
         page = await browser.newPage();
-        // Capture worker coverage as workers attach (URL is stable, not blob:).
-        page.on('workercreated', async (worker: WebWorker) => {
-            workers.push(worker);
-            try {
-                await worker.client.send('Profiler.enable');
-                await worker.client.send('Profiler.startPreciseCoverage', {callCount: true, detailed: true});
-            } catch {}
-        });
-        await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
+        workers = await startCoverage(page);
         await page.setViewport({width: 512, height: 512, deviceScaleFactor: 2});
         await page.goto(`http://localhost:${port}/test-page.html`, {waitUntil: 'load'});
         await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
     }, 60000);
 
     afterAll(async () => {
-        const coverage = await page.coverage.stopJSCoverage();
-
-        const workerCoverageEntries: any[] = [];
-        for (const worker of workers) {
-            try {
-                const result = await worker.client.send('Profiler.takePreciseCoverage');
-                workerCoverageEntries.push(...result.result);
-            } catch {}
-        }
-
-        await page.close();
+        await stopCoverageAndReport(page, workers, 'query');
         await browser.close();
         await new Promise(resolve => server.close(resolve));
-        const rawV8CoverageData: any[] = coverage.map((it) => {
-            // Convert to raw v8 coverage format
-            const entry: any = {
-                source: it.text,
-                ...it.rawScriptCoverage
-            };
-            if (entry.url.endsWith('maplibre-gl-dev.mjs')) {
-                entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.mjs.map').toString('utf-8'));
-            }
-            return entry;
-        });
-
-        const workerSource = fs.readFileSync('dist/maplibre-gl-worker-dev.mjs', 'utf-8');
-        const workerSourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-worker-dev.mjs.map', 'utf-8'));
-        for (const entry of workerCoverageEntries) {
-            if (entry.url.endsWith('maplibre-gl-worker-dev.mjs')) {
-                rawV8CoverageData.push({
-                    source: workerSource,
-                    url: entry.url,
-                    scriptId: entry.scriptId,
-                    functions: entry.functions,
-                    sourceMap: workerSourceMap
-                });
-            }
-        }
-
-        const coverageReport = new CoverageReport({
-            name: 'MapLibre Coverage Report',
-            outputDir: './coverage/query',
-            reports: [['v8'], ['json']],
-            sourcePath: (relativePath)=> {
-                return path.resolve(relativePath);
-            }
-        });
-        coverageReport.cleanCache();
-
-        await coverageReport.add(rawV8CoverageData);
-
-        await coverageReport.generate();
     }, 60000);
 
     const allTestsRoot = path.join('test', 'integration', 'query', 'tests');
