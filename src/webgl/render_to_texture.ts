@@ -5,7 +5,6 @@ import {type OverscaledTileID} from '../tile/tile_id';
 import {drawTerrain} from './draw/draw_terrain';
 import {type Style} from '../style/style';
 import {type Terrain} from '../render/terrain';
-import {RenderPool} from './render_pool';
 import {type Texture} from './texture';
 import type {StyleLayer} from '../style/style_layer';
 import {ImageSource} from '../source/image_source';
@@ -24,12 +23,16 @@ const LAYERS_TO_TEXTURES: { [keyof in StyleLayer['type']]?: boolean } = {
 
 /**
  * @internal
- * A helper class to help define what should be rendered to texture and how
+ * Renders RTT-eligible layers into per-tile cached textures, then drapes
+ * them onto the terrain mesh. Slots live on each Tile so their lifetime
+ * tracks the tile itself; the underlying FBO+texture handles are recycled
+ * via the painter's slot pool.
  */
 export class RenderToTexture {
     painter: Painter;
     terrain: Terrain;
-    pool: RenderPool;
+    /** RTT slot dimension in pixels (tile size × terrain quality factor). */
+    _slotSize: number;
     /**
      * coordsAscending contains a list of all tiles which should be rendered for one render-to-texture tile
      * e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
@@ -67,15 +70,17 @@ export class RenderToTexture {
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
-        this.pool = new RenderPool(painter.context, 400, terrain.tileManager.tileSize * terrain.qualityFactor);
+        this._slotSize = terrain.tileManager.tileSize * terrain.qualityFactor;
     }
 
     destruct() {
-        this.pool.destruct();
+        for (const tile of Object.values(this.terrain.tileManager._tiles)) {
+            tile.releaseRttSlots(this.painter);
+        }
     }
 
     getTexture(tile: Tile): Texture {
-        return this.pool.getObjectForId(tile.rtt[this._stacks.length - 1].id).texture;
+        return tile.rttSlots.get(this._stacks.length - 1).texture;
     }
 
     prepareForRender(style: Style, zoom: number) {
@@ -115,19 +120,12 @@ export class RenderToTexture {
             }
         }
 
-        // check tiles to render
+        // Source content changed: drop cached slots so we re-render with fresh data.
         for (const tile of this._renderableTiles) {
             for (const source in this._rttFingerprints) {
-                // rerender if there are different coords to render than in the last rendering
-                // or if the source revision has changed
                 const fingerprint = this._rttFingerprints[source][tile.tileID.key];
                 if (fingerprint && fingerprint !== tile.rttFingerprint[source]) {
-                    // Source data changed: invalidate cached slots so we don't hit on stale pixels.
-                    for (const entry of tile.rtt) {
-                        const slot = entry && this.pool.getObjectForId(entry.id);
-                        if (slot) this.pool.invalidate(slot);
-                    }
-                    tile.rtt = [];
+                    tile.releaseRttSlots(this.painter);
                 }
             }
         }
@@ -168,25 +166,18 @@ export class RenderToTexture {
             this._prevType = type;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
             for (const tile of this._renderableTiles) {
-                // if render pool is full draw current tiles to screen and free pool
-                if (this.pool.isFull()) {
-                    drawTerrain(this.painter, this.terrain, this._rttTiles, options);
-                    this._rttTiles = [];
-                    this.pool.freeAllObjects();
-                }
                 this._rttTiles.push(tile);
-                const {obj, wasHit} = this.pool.acquire(tile.tileID.key, stack);
-                tile.rtt[stack] = {id: obj.id, stamp: obj.stamp};
-                // The whole point: on a cache hit, the slot's texture is still valid
-                // from a previous frame, so we skip the redraw entirely.
-                if (wasHit) continue;
-                painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
+                // Cache hit: this tile already has a slot for this stack from a previous frame.
+                if (tile.rttSlots.has(stack)) continue;
+                const slot = painter.acquireRttSlot(this._slotSize);
+                tile.rttSlots.set(stack, slot);
+                painter.context.bindFramebuffer.set(slot.fbo.framebuffer);
                 painter.context.clear({color: Color.transparent, stencil: 0});
                 painter.currentStencilSource = undefined;
                 for (const layerId of layers) {
                     const layer = painter.style._layers[layerId];
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
-                    painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
+                    painter.context.viewport.set([0, 0, slot.fbo.width, slot.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords, true);
                     painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
                     if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
@@ -194,7 +185,6 @@ export class RenderToTexture {
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles, options);
             this._rttTiles = [];
-            this.pool.freeAllObjects();
 
             return LAYERS_TO_TEXTURES[type];
         }

@@ -11,6 +11,7 @@ import {now} from '../util/time_control';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 import {createMat4f64} from '../util/util';
 import {type CanonicalTileRange} from '../source/image_source';
+import type {Painter} from '../render/painter';
 
 /**
  * @internal
@@ -59,6 +60,13 @@ export class TerrainTileManager extends Evented {
      * used to determine whether depth & coord framebuffers need updating
      */
     _lastTilesetChange: number = now();
+
+    /**
+     * The painter that owns the RTT slot pool. Set by `Terrain` after
+     * construction so render-to-texture tiles can return their slots when
+     * unloaded. Undefined in tests that don't render.
+     */
+    painter: Painter | undefined;
 
     constructor(tileManager: TileManager) {
         super();
@@ -113,20 +121,24 @@ export class TerrainTileManager extends Evented {
         }
         // free unused tiles
         for (const key in this._tiles) {
-            if (!keys[key]) delete this._tiles[key];
+            if (!keys[key]) {
+                this._tiles[key].releaseRttSlots(this.painter);
+                delete this._tiles[key];
+            }
         }
     }
 
     /**
-     * Free render to texture cache
-     * @param tileID - optional, free only corresponding to tileID.
+     * No-op. The RTT cache is invalidated by `prepareForRender`'s fingerprint
+     * check, which compares the current source state against what each tile
+     * was last rendered with. `freeRtt` was a hammer that worked around a
+     * stamp-based cache that never hit; now that the cache is content-keyed
+     * via per-tile slots, eagerly releasing on every source data event would
+     * defeat the cache. Kept as a callable for back-compat with external
+     * callers in `Map`.
      */
-    freeRtt(tileID?: OverscaledTileID) {
-        for (const key in this._tiles) {
-            const tile = this._tiles[key];
-            if (!tileID || tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
-                tile.rtt = [];
-        }
+    freeRtt(_tileID?: OverscaledTileID) {
+        // intentionally empty
     }
 
     /**

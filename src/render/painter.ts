@@ -17,6 +17,7 @@ import {StencilMode} from '../webgl/stencil_mode';
 import {ColorMode} from '../webgl/color_mode';
 import {CullFaceMode} from '../webgl/cull_face_mode';
 import {Texture} from '../webgl/texture';
+import type {Framebuffer} from '../webgl/framebuffer';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webgl/draw';
 import {type OverscaledTileID} from '../tile/tile_id';
@@ -68,6 +69,17 @@ export type RenderOptions = {
 };
 
 /**
+ * A render-to-texture slot: an FBO with a color texture and depth-stencil
+ * renderbuffer attached. Owned by a Tile while in use, recycled via
+ * `Painter.releaseRttSlot` when the tile no longer needs it.
+ */
+export type RttSlot = {
+    fbo: Framebuffer;
+    texture: Texture;
+    size: number;
+};
+
+/**
  * @internal
  * Initialize a new painter object.
  */
@@ -79,6 +91,9 @@ export class Painter {
     renderToTexture: IRenderToTexture;
     _tileTextures: {
         [_: number]: Texture[];
+    };
+    _rttSlots: {
+        [_: number]: RttSlot[];
     };
     numSublayers: number;
     depthEpsilon: number;
@@ -130,6 +145,7 @@ export class Painter {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
+        this._rttSlots = {};
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16) as any), renderTime: 0};
 
         this.setup();
@@ -687,6 +703,13 @@ export class Painter {
     }
 
     static readonly MAX_TEXTURE_POOL_SIZE_PER_BUCKET = 50;
+    /**
+     * RTT slots bundle an FBO, color texture, and depth-stencil renderbuffer.
+     * They are far more expensive to recreate than plain textures, and a
+     * panning camera dirties them in bursts that exceed the visible-tile
+     * count, so a generous pool keeps the working set resident between frames.
+     */
+    static readonly MAX_RTT_SLOT_POOL_SIZE_PER_BUCKET = 400;
 
     saveTileTexture(texture: Texture) {
         const textures = this._tileTextures[texture.size[0]];
@@ -702,6 +725,30 @@ export class Painter {
     getTileTexture(size: number) {
         const textures = this._tileTextures[size];
         return textures && textures.length > 0 ? textures.pop() : null;
+    }
+
+    acquireRttSlot(size: number): RttSlot {
+        const slots = this._rttSlots[size];
+        if (slots && slots.length > 0) return slots.pop();
+        const fbo = this.context.createFramebuffer(size, size, true, true);
+        const texture = new Texture(this.context, {width: size, height: size, data: null}, this.context.gl.RGBA);
+        texture.bind(this.context.gl.LINEAR, this.context.gl.CLAMP_TO_EDGE);
+        if (this.context.extTextureFilterAnisotropic) {
+            this.context.gl.texParameterf(this.context.gl.TEXTURE_2D, this.context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.context.extTextureFilterAnisotropicMax);
+        }
+        fbo.depthAttachment.set(this.context.createRenderbuffer(this.context.gl.DEPTH_STENCIL, size, size));
+        fbo.colorAttachment.set(texture.texture);
+        return {fbo, texture, size};
+    }
+
+    releaseRttSlot(slot: RttSlot) {
+        const slots = this._rttSlots[slot.size] ??= [];
+        if (slots.length < Painter.MAX_RTT_SLOT_POOL_SIZE_PER_BUCKET) {
+            slots.push(slot);
+        } else {
+            slot.texture.destroy();
+            slot.fbo.destroy();
+        }
     }
 
     /**
@@ -807,6 +854,16 @@ export class Painter {
                 }
             }
             this._tileTextures = {};
+        }
+
+        if (this._rttSlots) {
+            for (const size in this._rttSlots) {
+                for (const slot of this._rttSlots[size]) {
+                    slot.texture.destroy();
+                    slot.fbo.destroy();
+                }
+            }
+            this._rttSlots = {};
         }
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();

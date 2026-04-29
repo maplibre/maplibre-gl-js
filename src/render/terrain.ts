@@ -140,6 +140,7 @@ export class Terrain {
     constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification) {
         this.painter = painter;
         this.tileManager = new TerrainTileManager(tileManager);
+        this.tileManager.painter = painter;
         this.options = options;
         this.exaggeration = typeof options.exaggeration === 'number' ? options.exaggeration : 1.0;
         this.qualityFactor = 2;

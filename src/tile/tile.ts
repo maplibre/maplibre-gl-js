@@ -31,7 +31,7 @@ import type {ExpiryData} from '../util/ajax';
 import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict} from '../source/query_features';
 import type {DashEntry} from '../render/line_atlas';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
-import type {Painter} from '../render/painter';
+import type {Painter, RttSlot} from '../render/painter';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
@@ -117,7 +117,12 @@ export class Tile {
     hasSymbolBuckets: boolean;
     hasRTLText: boolean;
     dependencies: any;
-    rtt: Array<{id: number; stamp: number}>;
+    /**
+     * Render-to-texture slots keyed by stack index. Each slot caches the
+     * rendered output of one stack of layers for this tile and survives
+     * across frames until the tile is unloaded or its source data changes.
+     */
+    rttSlots: Map<number, RttSlot>;
     rttFingerprint: {[sourceId:string]: string};
 
     /**
@@ -135,7 +140,7 @@ export class Tile {
         this.hasSymbolBuckets = false;
         this.hasRTLText = false;
         this.dependencies = {};
-        this.rtt = [];
+        this.rttSlots = new Map();
         this.rttFingerprint = {};
 
         // Counts the number of times a response was already expired when
@@ -195,6 +200,19 @@ export class Tile {
     clearTextures(painter: any) {
         if (this.demTexture) painter.saveTileTexture(this.demTexture);
         this.demTexture = null;
+    }
+
+    /**
+     * Return all cached RTT slots to the painter's pool. If no painter is
+     * available (e.g. tile created in a test without a render context), the
+     * slots are simply dropped — they were never rendered into.
+     */
+    releaseRttSlots(painter: Painter | undefined) {
+        if (this.rttSlots.size === 0) return;
+        if (painter) {
+            for (const slot of this.rttSlots.values()) painter.releaseRttSlot(slot);
+        }
+        this.rttSlots.clear();
     }
 
     /**
