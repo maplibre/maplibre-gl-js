@@ -7,7 +7,7 @@
 <meta property="og:created" content="2026-03-29" />
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
 <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-<script src='../../dist/maplibre-gl-dev.js'></script>
+
 <style>
     body { margin: 0; padding: 0; }
     #map { position: absolute; top: 0; bottom: 0; width: 100%; }
@@ -34,7 +34,11 @@
     <div>FPS: <span id="fps">—</span></div>
 </div>
 
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     const createdAt = performance.now();
 
     const map = new maplibregl.Map({

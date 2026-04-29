@@ -1,67 +1,28 @@
-import fs from 'fs';
-import sourcemaps from 'rollup-plugin-sourcemaps2';
-import {plugins, watchStagingPlugin} from './build/rollup_plugins';
+import {type InputOption, type ModuleFormat, type RollupOptions} from 'rollup';
+import {plugins} from './build/rollup_plugins';
 import banner from './build/banner';
-import {type RollupOptions} from 'rollup';
 
-const {BUILD} = process.env;
+const production = process.env.BUILD === 'production';
+const outputPostfix = production ? '' : '-dev';
 
-const production = BUILD === 'production';
-const outputFile = production ? 'dist/maplibre-gl.js' : 'dist/maplibre-gl-dev.js';
-
-const config: RollupOptions[] = [{
-    // Rollup will use code splitting to bundle GL JS into three "chunks":
-    // - staging/maplibregl/index.js: the main module, plus all its dependencies not shared by the worker module
-    // - staging/maplibregl/worker.js: the worker module, plus all dependencies not shared by the main module
-    // - staging/maplibregl/shared.js: the set of modules that are dependencies of both the main module and the worker module
-    //
-    // This is also where we do all of our source transformations using the plugins.
-    input: ['src/index.ts', 'src/source/worker.ts'],
+/** Rollup config for bundling a single entry point into a single output file. */
+const bundle = (input: InputOption, file: string, format: ModuleFormat): RollupOptions => ({
+    input,
     output: {
-        dir: 'staging/maplibregl',
-        format: 'amd',
-        sourcemap: 'inline',
+        name: 'maplibregl',
+        file,
+        format,
+        sourcemap: true,
         indent: false,
-        chunkFileNames: 'shared.js',
-        amd: {
-            autoId: true,
-        },
-        minifyInternalExports: production
-    },
-    onwarn: (message) => {
-        console.error(message);
-        throw message;
+        banner
     },
     treeshake: production,
     plugins: plugins(production)
-}, {
-    // Next, bundle together the three "chunks" produced in the previous pass
-    // into a single, final bundle. See rollup/bundle_prelude.js and
-    // rollup/maplibregl.js for details.
-    input: 'build/rollup/maplibregl.js',
-    output: {
-        name: 'maplibregl',
-        file: outputFile,
-        format: 'umd',
-        sourcemap: true,
-        indent: false,
-        intro: fs.readFileSync('build/rollup/bundle_prelude.js', 'utf8'),
-        banner
-    },
-    watch: {
-        // give the staging chunks a chance to finish before rebuilding the dev build
-        buildDelay: 1000
-    },
-    treeshake: false,
-    plugins: [
-        // Ingest the sourcemaps produced in the first step of the build.
-        // This is the only reason we use Rollup for this second pass
-        sourcemaps(),
-        // When running in development watch mode, tell rollup explicitly to watch
-        // for changes to the staging chunks built by the previous step. Otherwise
-        // only they get built, but not the merged dev build js
-        ...production ? [] : [watchStagingPlugin]
-    ],
-}];
+});
+
+const config: RollupOptions[] = [
+    bundle('src/index.ts', `dist/maplibre-gl${outputPostfix}.mjs`, 'es'),
+    bundle('src/source/worker.ts', `dist/maplibre-gl-worker${outputPostfix}.mjs`, 'es')
+];
 
 export default config;

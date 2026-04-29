@@ -27,6 +27,47 @@ import {
 } from '../util/actor_messages';
 
 /**
+ * Loads an external script into worker (global) scope. The loader picks a
+ * strategy based on what the script actually is:
+ *
+ * - `.mjs` URLs: dynamic `import()` directly, no fetch/sniff overhead. Worker
+ *   CSP needs `script-src` to permit the URL.
+ *
+ * - Other URLs: fetch the source and sniff for ESM syntax (top-level `import`
+ *   or `export`). If ESM is detected, run it through a blob-URL dynamic
+ *   `import()` so the browser parses it as a module; this requires
+ *   `script-src blob:` in the worker CSP. Otherwise treat it as UMD/IIFE and
+ *   run it via `globalThis.eval`, which requires `script-src 'unsafe-eval'`.
+ */
+async function loadScript(url: string): Promise<void> {
+    if (url.endsWith('.mjs')) {
+        await import(/* @vite-ignore */ url);
+        return;
+    }
+    const response = await fetch(url, {credentials: 'same-origin'});
+    if (!response.ok) {
+        throw new Error(`Failed to load ${url}: ${response.status}`);
+    }
+    const code = await response.text();
+    // Top-level `import`/`export` keywords are unique to ESM. UMD scripts
+    // assign to `module.exports` / `exports.foo` — those don't match.
+    if (/^[ \t]*(import|export)\s/m.test(code)) {
+        const blobUrl = URL.createObjectURL(new Blob([code], {type: 'text/javascript'}));
+        try {
+            await import(/* @vite-ignore */ blobUrl);
+        } finally {
+            URL.revokeObjectURL(blobUrl);
+        }
+        return;
+    }
+    // Run the code in the worker's global scope (not inside this function),
+    // so UMD/IIFE plugin scripts can assign to globals like
+    // `self.registerRTLTextPlugin`. Calling eval as a property access
+    // (rather than the bare `eval` identifier) is what makes it global-scope.
+    globalThis.eval(code);
+}
+
+/**
  * The Worker class responsible for background thread related execution
  */
 export default class Worker {
@@ -85,7 +126,7 @@ export default class Worker {
         this.self.addProtocol = addProtocol;
         this.self.removeProtocol = removeProtocol;
 
-        // This is invoked by the RTL text plugin when the download via the `importScripts` call has finished, and the code has been parsed.
+        // Invoked by the RTL text plugin once it has fetched and parsed.
         this.self.registerRTLTextPlugin = (rtlTextPlugin: RTLTextPlugin) => {
             rtlWorkerPlugin.setMethods(rtlTextPlugin);
         };
@@ -162,7 +203,7 @@ export default class Worker {
         });
 
         this.actor.registerMessageHandler(MessageType.importScript, async (_mapId: string, params: string) => {
-            this.self.importScripts(params);
+            await loadScript(params);
         });
 
         this.actor.registerMessageHandler(MessageType.setImages, (mapId: string, params: string[]) => {
@@ -205,7 +246,7 @@ export default class Worker {
     }
 
     private async _syncRTLPluginState(mapId: string, incomingState: PluginState): Promise<PluginState> {
-        return await rtlWorkerPlugin.syncState(incomingState, this.self.importScripts);
+        return await rtlWorkerPlugin.syncState(incomingState, loadScript);
     }
 
     private _getAvailableImages(mapId: string) {
