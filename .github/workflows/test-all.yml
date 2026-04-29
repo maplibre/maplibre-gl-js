@@ -32,11 +32,9 @@ jobs:
       - run: npm run typecheck
         if: '!cancelled()'
       - run: npm run generate-docs
-      - name: Build docs using docker and mkdocs-material
+      - name: Build docs
         run: |
-          rm docs/README.md
-          rm -rf docs/API/_media
-          docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build --strict
+          npm run docs
       - name: Check spelling
         # This need to run after the docs are built
         run: npm run spellcheck

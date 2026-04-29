@@ -24,5 +24,20 @@ describe('Example HTML files', () => {
                 expect.fail('`og:description` content is empty');
             }
         });
+
+        test(`${exampleFile} file name matches the title`, () => {
+            const titleMatch = content.match(/<title>([^<]*)<\/title>/);
+            if (!titleMatch) {
+                expect.fail('missing <title> tag');
+            } else if (!titleMatch[1].trim()) {
+                expect.fail('<title> content is empty');
+            } else {
+                const expectedFileName = titleMatch[1].trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+                const actualFileName = exampleFile.split('/').pop()?.replace('.html', '').toLowerCase();
+                if (expectedFileName !== actualFileName) {
+                    expect.fail(`file name "${exampleFile.split('/').pop()}" does not match title "${titleMatch[1]}". Expected file name is "${expectedFileName}.html"`);
+                }
+            }
+        });
     }
 });
