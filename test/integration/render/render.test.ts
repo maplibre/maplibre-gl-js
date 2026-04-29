@@ -837,23 +837,6 @@ function printHTMLReport(testStyles: StyleWithTestData[]) {
     const p = path.join(__dirname, 'results.html');
     fs.writeFileSync(p, resultsContent, 'utf8');
     console.log(`\nFull html report is logged to '${p}'`);
-
-    // write text report of just the error/failed id
-    if (testStats.errored?.length > 0) {
-        const erroredItemIds = testStats.errored.map(t => t.id);
-        const caseIdFileName = path.join(__dirname, 'results-errored-caseIds.txt');
-        fs.writeFileSync(caseIdFileName, erroredItemIds.join('\n'), 'utf8');
-
-        console.log(`\n${testStats.errored?.length} errored test case IDs are logged to '${caseIdFileName}'`);
-    }
-
-    if (testStats.failed?.length > 0) {
-        const failedItemIds = testStats.failed.map(t => t.id);
-        const caseIdFileName = path.join(__dirname, 'results-failed-caseIds.txt');
-        fs.writeFileSync(caseIdFileName, failedItemIds.join('\n'), 'utf8');
-
-        console.log(`\n${testStats.failed?.length} failed test case IDs are logged to '${caseIdFileName}'`);
-    }
 }
 
 describe('Render tests', () => {
