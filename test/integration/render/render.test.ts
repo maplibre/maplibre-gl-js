@@ -13,7 +13,7 @@ import {localizeURLs} from '../lib/localize-urls';
 import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config';
 import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let maplibregl: typeof MapLibreGL;
@@ -815,12 +815,12 @@ async function createServer() {
 
 function printHTMLReport(testStyles: StyleWithTestData[]) {
     const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
-        const testStats: TestStats = {
-            total: tests.length,
-            errored: tests.filter(t => t.error),
-            failed: tests.filter(t => !t.error && !t.ok),
-            passed: tests.filter(t => !t.error && t.ok)
-        };
+    const testStats: TestStats = {
+        total: tests.length,
+        errored: tests.filter(t => t.error),
+        failed: tests.filter(t => !t.error && !t.ok),
+        passed: tests.filter(t => !t.error && t.ok)
+    };
     const erroredItems = testStats.errored.map(t => getReportItem(t));
     const failedItems = testStats.failed.map(t => getReportItem(t));
 
@@ -894,7 +894,7 @@ describe('Render tests', () => {
         await browser.close();
     });
 
-    beforeEach(async ({ task }) => {
+    beforeEach(async () => {
         const retryCount = (expect.getState() as any).retryCount ?? 0;
         if (retryCount > 0) {
             addConsoleLogging(page);
