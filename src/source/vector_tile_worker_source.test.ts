@@ -173,7 +173,8 @@ describe('vector tile worker source', () => {
         const loadVectorData = (_params, _rawData) => {
             return {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
-                rawData: rawTileData
+                rawData: rawTileData,
+                encoding: 'mvt'
             };
         };
 
@@ -342,7 +343,8 @@ describe('vector tile worker source', () => {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
-                expires: null
+                expires: null,
+                encoding: 'mvt'
             };
         };
 
@@ -405,7 +407,8 @@ describe('vector tile worker source', () => {
                 vectorTile: new VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
-                expires: null
+                expires: null,
+                encoding: 'mvt'
             };
         };
 
@@ -428,7 +431,7 @@ describe('vector tile worker source', () => {
             return null;
         });
         window.performance.measure = vi.fn().mockImplementation((name, start, end) => {
-            measures[name] = measures[name] || [];
+            measures[name] ||= [];
             measures[name].push({
                 duration: marks[end] - marks[start],
                 entryType: 'measure',

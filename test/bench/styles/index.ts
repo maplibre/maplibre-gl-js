@@ -8,6 +8,9 @@ import QueryPoint from '../benchmarks/query_point';
 import QueryBox from '../benchmarks/query_box';
 
 import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool';
+import {setWorkerUrl} from '../../../src';
+
+setWorkerUrl(new URL('./benchmarks_worker.mjs', import.meta.url).toString());
 
 const locations = locationsWithTileID(styleBenchmarkLocations.features as Array<GeoJSON.Feature<GeoJSON.Point>>);
 

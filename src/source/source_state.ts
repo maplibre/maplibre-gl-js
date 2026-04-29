@@ -42,8 +42,8 @@ export class SourceFeatureState {
 
     updateState(sourceLayer: string, featureId: number | string, newState: any) {
         const feature = String(featureId);
-        this.stateChanges[sourceLayer] = this.stateChanges[sourceLayer] || {};
-        this.stateChanges[sourceLayer][feature] = this.stateChanges[sourceLayer][feature] || {};
+        this.stateChanges[sourceLayer] ||= {};
+        this.stateChanges[sourceLayer][feature] ||= {};
         extend(this.stateChanges[sourceLayer][feature], newState);
 
         if (this.deletedStates[sourceLayer] === null) {
@@ -73,11 +73,11 @@ export class SourceFeatureState {
 
         const feature = String(featureId);
 
-        this.deletedStates[sourceLayer] = this.deletedStates[sourceLayer] || {};
+        this.deletedStates[sourceLayer] ||= {};
 
         if (key && featureId !== undefined) {
             if (this.deletedStates[sourceLayer][feature] !== null) {
-                this.deletedStates[sourceLayer][feature] = this.deletedStates[sourceLayer][feature] || {};
+                this.deletedStates[sourceLayer][feature] ||= {};
                 this.deletedStates[sourceLayer][feature][key] = null;
             }
         } else if (featureId !== undefined) {
@@ -125,10 +125,10 @@ export class SourceFeatureState {
         const featuresChanged: LayerFeatureStates = {};
 
         for (const sourceLayer in this.stateChanges) {
-            this.state[sourceLayer]  = this.state[sourceLayer] || {};
+            this.state[sourceLayer] ||= {};
             const layerStates: FeatureStates = [];
             for (const feature in this.stateChanges[sourceLayer]) {
-                if (!this.state[sourceLayer][feature]) this.state[sourceLayer][feature] = {};
+                this.state[sourceLayer][feature] ||= {};
                 extend(this.state[sourceLayer][feature], this.stateChanges[sourceLayer][feature]);
                 layerStates.push({id: feature, state: this.state[sourceLayer][feature]});
             }
@@ -136,7 +136,7 @@ export class SourceFeatureState {
         }
 
         for (const sourceLayer in this.deletedStates) {
-            this.state[sourceLayer]  = this.state[sourceLayer] || {};
+            this.state[sourceLayer] ||= {};
             const layerStates: FeatureStates = [];
 
             if (this.deletedStates[sourceLayer] === null) {
@@ -157,11 +157,8 @@ export class SourceFeatureState {
                 }
             }
 
-            if (!featuresChanged[sourceLayer]) {
-                featuresChanged[sourceLayer] = layerStates;
-            } else {
-                featuresChanged[sourceLayer].push(...layerStates);
-            }
+            featuresChanged[sourceLayer] ||= [];
+            extend(featuresChanged[sourceLayer], layerStates);
         }
 
         this.stateChanges = {};

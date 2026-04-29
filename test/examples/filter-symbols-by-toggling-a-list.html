@@ -3,10 +3,11 @@
 <head>
     <title>Filter symbols by toggling a list</title>
     <meta property="og:description" content="Filter a set of symbols based on a property value in the data." />
+    <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -65,7 +66,11 @@
 <div id="map"></div>
 <nav id="filter-group" class="filter-group"></nav>
 
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     const places = {
         'type': 'FeatureCollection',
         'features': [

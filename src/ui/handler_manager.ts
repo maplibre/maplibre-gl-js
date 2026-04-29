@@ -540,7 +540,7 @@ export class HandlerManager {
             around = pinchAround;
         }
 
-        around = around || map.transform.centerPoint;
+        around ||= map.transform.centerPoint;
 
         if (terrain && !tr.isPointOnMapSurface(around)) {
             around = tr.centerPoint;

@@ -9,6 +9,7 @@ import {RequestManager, ResourceType} from '../util/request_manager';
 import {Style, type StyleSwapOptions} from '../style/style';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {Painter} from '../render/painter';
+import {GPUInitializationError} from '../util/gpu_initialization_error';
 import {Hash} from './hash';
 import {HandlerManager} from './handler_manager';
 import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions} from './camera';
@@ -60,6 +61,8 @@ import type {
     TerrainSpecification,
     ProjectionSpecification,
     SkySpecification,
+    AllPaintProperties,
+    AllLayoutProperties,
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
@@ -70,8 +73,10 @@ import type {ICameraHelper} from '../geo/projection/camera_helper';
 
 const version = packageJSON.version;
 
-export type WebGLSupportedVersions = 'webgl2' | 'webgl' | undefined;
-export type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: WebGLSupportedVersions};
+export type ContextType = 'webgl2';
+/** @deprecated Use {@link ContextType} instead. */
+export type WebGLSupportedVersions = ContextType | undefined;
+export type WebGLContextAttributesWithType = WebGLContextAttributes & {contextType?: ContextType};
 
 /**
  * The {@link Map} options object.
@@ -79,10 +84,11 @@ export type WebGLContextAttributesWithType = WebGLContextAttributes & {contextTy
 export type MapOptions = {
     /**
      * If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
-     * For example, `http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60`.
-     * An additional string may optionally be provided to indicate a parameter-styled hash,
-     * e.g. http://path/to/my/page.html#map=2.59/39.26/53.07/-24.1/60&foo=bar, where foo
-     * is a custom parameter and bar is an arbitrary hash distinct from the map hash.
+     * For example, `https://example.com#2.59/39.26/53.07/-24.1/60`.
+     * 
+     * An additional string may optionally be provided as an alternative to indicate a parameter-styled hash.
+     * For example, passing `hash: "foo"` will produce a hash like `https://example.com#foo=2.59/39.26/53.07/-24.1/60`.
+     * This is usefull for allowing multiple maps or other state.
      * @defaultValue false
      */
     hash?: boolean | string;
@@ -129,8 +135,8 @@ export type MapOptions = {
     /**
      * Set of WebGLContextAttributes that are applied to the WebGL context of the map.
      * See https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext for more details.
-     * `contextType` can be set to `webgl2` or `webgl` to force a WebGL version. Not setting it, Maplibre will do it's best to get a suitable context.
-     * @defaultValue antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false, failIfMajorPerformanceCaveat: false, desynchronized: false, contextType: 'webgl2withfallback'
+     * `contextType` is restricted to `'webgl2'`. This option is kept as a forward-looking API for future WebGPU support.
+     * @defaultValue antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false, failIfMajorPerformanceCaveat: false, desynchronized: false, contextType: 'webgl2'
      */
     canvasContextAttributes?: WebGLContextAttributesWithType;
     /**
@@ -390,17 +396,18 @@ export type MapOptions = {
      */
     centerClampedToGround?: boolean;
     /**
-     * Allows overzooming by splitting vector tiles after max zoom.
-     * Defines the number of zoom level that will overscale from map's max zoom and below.
-     * For example if the map's max zoom is 20 and this is set to 3, the zoom levels of 20, 19 and 18 will be overscaled
-     * and the rest will be split.
-     * When undefined, all zoom levels after source's max zoom will be overscaled.
+     * Defines the number of zoom level that will overscale instead of split tiles below (inclusive) a map's `maxZoom`.
+     * When `undefined`, all zoom levels after source's max zoom will be overscaled.
+     *
      * This can help in reducing the size of the overscaling and improve performance in high zoom levels.
      * The drawback is that it changes rendering for polygon centered labels and changes the results of query rendered features.
-     * @defaultValue undefined
-     * @experimental
+     * 
+     * For example if map's `maxZoom` is 20, the source's `maxzoom` is 10 (tiles are avaliable until zoom 10) and `zoomLevelsToOverscale` is set to 3:
+     * - The zoom levels of 20, 19, 18 will be overscaled.
+     * - The zoom levels 11 to 17 will be split.
+     * @defaultValue 4
      */
-    experimentalZoomLevelsToOverscale?: number;
+    zoomLevelsToOverscale?: number;
     /**
      * Determines the rotation interaction model:
      * - When true: Uses "Orbital" logic where rotation is relative to the pivot center.
@@ -503,7 +510,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
     centerClampedToGround: true,
-    experimentalZoomLevelsToOverscale: undefined,
+    zoomLevelsToOverscale: 4,
     anisotropicFilterPitch: defaultAnisotropicFilterPitch,
 };
 
@@ -753,7 +760,7 @@ export class Map extends Camera {
         this._clickTolerance = resolvedOptions.clickTolerance;
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
-        this._zoomLevelsToOverscale = resolvedOptions.experimentalZoomLevelsToOverscale;
+        this._zoomLevelsToOverscale = resolvedOptions.zoomLevelsToOverscale;
         this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
@@ -775,6 +782,7 @@ export class Map extends Camera {
 
         this._setupContainer();
         this._setupPainter();
+        if (!this.painter) return;
 
         this.on('move', () => this._update(false));
         this.on('moveend', () => this._update(false));
@@ -1576,8 +1584,8 @@ export class Map extends Camera {
     }
 
     _saveDelegatedListener(type: keyof MapEventType | string, delegatedListener: DelegatedListener): void {
-        this._delegatedListeners = this._delegatedListeners || {};
-        this._delegatedListeners[type] = this._delegatedListeners[type] || [];
+        this._delegatedListeners ||= {};
+        this._delegatedListeners[type] ||= [];
         this._delegatedListeners[type].push(delegatedListener);
     }
 
@@ -1972,7 +1980,7 @@ export class Map extends Camera {
         let queryGeometry: Point[];
         const isGeometry = geometryOrOptions instanceof Point || Array.isArray(geometryOrOptions);
         const geometry = isGeometry ? geometryOrOptions : [[0, 0], [this.transform.width, this.transform.height]];
-        options = options || (isGeometry ? {} : geometryOrOptions) || {};
+        options ||= (isGeometry ? {} : geometryOrOptions) || {};
 
         if (geometry instanceof Point || typeof geometry[0] === 'number') {
             queryGeometry = [Point.convert(geometry as PointLike)];
@@ -2992,7 +3000,7 @@ export class Map extends Camera {
      * @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js/docs/examples/change-a-layers-color-with-buttons/)
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
      */
-    setPaintProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}): this {
+    setPaintProperty<K extends keyof AllPaintProperties>(layerId: string, name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}): this {
         this.style.setPaintProperty(layerId, name, value, options);
         return this._update(true);
     }
@@ -3004,7 +3012,7 @@ export class Map extends Camera {
      * @param name - The name of a paint property to get.
      * @returns The value of the specified paint property.
      */
-    getPaintProperty(layerId: string, name: string) {
+    getPaintProperty<K extends keyof AllPaintProperties>(layerId: string, name: K): AllPaintProperties[K] {
         return this.style.getPaintProperty(layerId, name);
     }
 
@@ -3020,7 +3028,7 @@ export class Map extends Camera {
      * map.setLayoutProperty('my-layer', 'visibility', 'none');
      * ```
      */
-    setLayoutProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}): this {
+    setLayoutProperty<K extends keyof AllLayoutProperties>(layerId: string, name: K, value: AllLayoutProperties[K], options: StyleSetterOptions = {}): this {
         this.style.setLayoutProperty(layerId, name, value, options);
         return this._update(true);
     }
@@ -3032,7 +3040,7 @@ export class Map extends Camera {
      * @param name - The name of the layout property to get.
      * @returns The value of the specified layout property.
      */
-    getLayoutProperty(layerId: string, name: string) {
+    getLayoutProperty<K extends keyof AllLayoutProperties>(layerId: string, name: K): AllLayoutProperties[K] | undefined {
         return this.style.getLayoutProperty(layerId, name);
     }
 
@@ -3456,30 +3464,16 @@ export class Map extends Camera {
             premultipliedAlpha: true
         };
 
-        let webglcontextcreationerrorDetailObject: any = null;
-        this._canvas.addEventListener('webglcontextcreationerror', (args: WebGLContextEvent) => {
-            webglcontextcreationerrorDetailObject = {requestedAttributes: attributes};
-            if (args) {
-                webglcontextcreationerrorDetailObject.statusMessage = args.statusMessage;
-                webglcontextcreationerrorDetailObject.type = args.type;
-            }
+        let creationEvent: WebGLContextEvent | null = null;
+        this._canvas.addEventListener('webglcontextcreationerror', (event: WebGLContextEvent) => {
+            creationEvent = event;
         }, {once: true});
 
-        let gl: WebGL2RenderingContext | WebGLRenderingContext | null = null;
-        if (this._canvasContextAttributes.contextType) {
-            gl = this._canvas.getContext(this._canvasContextAttributes.contextType, attributes) as WebGL2RenderingContext | WebGLRenderingContext;
-        } else {
-            gl = this._canvas.getContext('webgl2', attributes) || this._canvas.getContext('webgl', attributes);
-        }
+        const gl: WebGL2RenderingContext | null = this._canvas.getContext('webgl2', attributes);
 
         if (!gl) {
-            const msg = 'Failed to initialize WebGL';
-            if (webglcontextcreationerrorDetailObject) {
-                webglcontextcreationerrorDetailObject.message = msg;
-                throw new Error(JSON.stringify(webglcontextcreationerrorDetailObject));
-            } else {
-                throw new Error(msg);
-            }
+            this.fire(new ErrorEvent(new GPUInitializationError(attributes, creationEvent)));
+            return;
         }
 
         this.painter = new Painter(gl, this.transform);
@@ -3539,6 +3533,7 @@ export class Map extends Camera {
         this._lostContextStyle = {style: null, images: null};
 
         this._setupPainter();
+        if (!this.painter) return;
         this.resize();
         this._update();
         this._resizeInternal();
@@ -3577,7 +3572,7 @@ export class Map extends Camera {
     _update(updateStyle?: boolean) {
         if (!this.style?._loaded) return this;
 
-        this._styleDirty = this._styleDirty || updateStyle;
+        this._styleDirty ||= updateStyle;
         this._sourcesDirty = true;
         this.triggerRepaint();
 

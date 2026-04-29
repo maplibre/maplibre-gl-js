@@ -3,10 +3,11 @@
 <head>
     <title>Customize the map transform constrain</title>
     <meta property='og:description' content='Customize the constrain callback of the map transform. For example, to allow users to underzoom and overpan the bounds.' />
+    <meta property="og:created" content="2025-10-13" />
     <meta charset='utf-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body {
             margin: 0;
@@ -18,7 +19,11 @@
 </head>
 <body>
 <div id='map'></div>
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     function customTransformConstrain(lngLat, zoom) {
         return {center: lngLat, zoom: zoom ?? 0}
     };

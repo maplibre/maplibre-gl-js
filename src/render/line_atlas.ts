@@ -50,9 +50,7 @@ export class LineAtlas {
     getDash(dasharray: number[], round: boolean) {
         const key = dasharray.join(',') + String(round);
 
-        if (!this.dashEntry[key]) {
-            this.dashEntry[key] = this.addDash(dasharray, round);
-        }
+        this.dashEntry[key] ||= this.addDash(dasharray, round);
         return this.dashEntry[key];
     }
 

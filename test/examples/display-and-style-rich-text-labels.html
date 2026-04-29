@@ -3,10 +3,11 @@
 <head>
     <title>Display and style rich text labels</title>
     <meta property="og:description" content="Use the format expression to display country labels in both English and in the local language." />
+    <meta property="og:created" content="2023-06-27" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -15,7 +16,11 @@
 <body>
 <!-- The lang attribute is read from the map container if present, otherwise from the HTML document -->
 <div id="map" lang="zh-HK"></div>
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     maplibregl.setRTLTextPlugin(
         'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js'
     );

@@ -23,7 +23,7 @@ export class RasterDEMTileWorkerSource {
             new RGBAImage({width, height}, await getImageData(rawImageData, -1, -1, width, height)) :
             rawImageData;
         const dem = new DEMData(uid, imagePixels, encoding, redFactor, greenFactor, blueFactor, baseShift);
-        this.loaded = this.loaded || {};
+        this.loaded ||= {};
         this.loaded[uid] = dem;
         return dem;
     }

@@ -3,10 +3,11 @@
 <head>
     <title>Create a draggable Marker</title>
     <meta property="og:description" content="Drag the marker to a new location on a map and populate its coordinates in a display." />
+    <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -32,7 +33,11 @@
 <div id="map"></div>
 <pre id="coordinates" class="coordinates"></pre>
 
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     const coordinates = document.getElementById('coordinates');
     const map = new maplibregl.Map({
         container: 'map',

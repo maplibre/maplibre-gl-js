@@ -125,7 +125,7 @@ export class Painter {
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
     terrainFacilitator: {depthDirty: boolean; coordsDirty: boolean; matrix: mat4; renderTime: number};
 
-    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: IReadonlyTransform) {
+    constructor(gl: WebGL2RenderingContext, transform: IReadonlyTransform) {
         this.drawFunctions = webglDrawFunctions;
         this.context = new Context(gl);
         this.transform = transform;
@@ -727,7 +727,7 @@ export class Painter {
      * @returns
      */
     useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false, defines: string[] = []): Program<any> {
-        this.cache = this.cache || {};
+        this.cache ||= {};
         const useTerrain = !!this.style.map.terrain;
 
         const projection = this.style.projection;
@@ -743,19 +743,17 @@ export class Painter {
 
         const key = name + configurationKey + projectionKey + overdrawKey + terrainKey + definesKey;
 
-        if (!this.cache[key]) {
-            this.cache[key] = new Program(
-                this.context,
-                shaders[name],
-                programConfiguration,
-                programUniforms[name],
-                this._showOverdrawInspector,
-                useTerrain,
-                projectionPrelude,
-                projectionDefine,
-                defines
-            );
-        }
+        this.cache[key] ||= new Program(
+            this.context,
+            shaders[name],
+            programConfiguration,
+            programUniforms[name],
+            this._showOverdrawInspector,
+            useTerrain,
+            projectionPrelude,
+            projectionDefine,
+            defines
+        );
         return this.cache[key];
     }
 

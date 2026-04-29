@@ -14,13 +14,13 @@ import type {TileManager} from '../tile/tile_manager';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {DEMData} from '../data/dem_data';
 import type {Painter} from './painter';
+import {createNullGL} from '../util/test/null_gl';
 
 describe('Terrain', () => {
-    let gl: WebGLRenderingContext;
+    let gl: WebGL2RenderingContext;
 
     beforeEach(() => {
-        gl = document.createElement('canvas').getContext('webgl');
-        vi.spyOn(gl, 'checkFramebufferStatus').mockReturnValue(gl.FRAMEBUFFER_COMPLETE);
+        gl = createNullGL();
         vi.spyOn(gl, 'readPixels').mockImplementation((_1, _2, _3, _4, _5, _6, rgba) => {
             rgba[0] = 0;
             rgba[1] = 0;

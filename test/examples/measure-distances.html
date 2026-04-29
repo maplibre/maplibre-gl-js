@@ -3,10 +3,11 @@
 <head>
     <title>Measure distances</title>
     <meta property="og:description" content="Click points on a map to create lines that measure distanced using turf.length." />
+    <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -37,7 +38,11 @@
 <div id="distance" class="distance-container"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     const map = new maplibregl.Map({
         container: 'map',
         style: 'https://tiles.openfreemap.org/styles/bright',
@@ -147,16 +152,16 @@
 
             map.getSource('geojson').setData(geojson);
         });
-    });
 
-    map.on('mousemove', (e) => {
-        const features = map.queryRenderedFeatures(e.point, {
-            layers: ['measure-points']
+        map.on('mousemove', (e) => {
+            const features = map.queryRenderedFeatures(e.point, {
+                layers: ['measure-points']
+            });
+            // UI indicator for clicking/hovering a point on the map
+            map.getCanvas().style.cursor = features.length ?
+                'pointer' :
+                'crosshair';
         });
-        // UI indicator for clicking/hovering a point on the map
-        map.getCanvas().style.cursor = features.length ?
-            'pointer' :
-            'crosshair';
     });
 </script>
 </body>

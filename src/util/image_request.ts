@@ -105,9 +105,7 @@ export namespace ImageRequest {
      */
     export const getImage = (requestParameters: RequestParameters, abortController: AbortController, supportImageRefresh: boolean = true): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> => {
         return new Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>>((resolve, reject) => {
-            if (!requestParameters.headers) {
-                requestParameters.headers = {};
-            }
+            requestParameters.headers ||= {};
             requestParameters.headers.accept = 'image/webp,*/*';
             extend(requestParameters, {type: 'image'});
             const request: ImageRequestQueueItem = {

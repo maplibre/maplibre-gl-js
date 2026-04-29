@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MapLibre integration test page</title>
+    <meta charset='utf-8'>
+    <link rel='stylesheet' href='/dist/maplibre-gl.css' />
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from '/dist/maplibre-gl-dev.mjs';
+    maplibregl.setWorkerUrl('/dist/maplibre-gl-worker-dev.mjs');
+    // Spawn the worker pool now and keep it alive across Map.remove() calls
+    // so each test reuses the warm worker instead of paying module-worker
+    // startup cost on every Map.
+    maplibregl.prewarm();
+    window.maplibregl = maplibregl;
+</script>
+</body>
+</html>

@@ -10,7 +10,7 @@ const containerWidth = 512;
 const containerHeight = 512;
 
 function createMap(options?) {
-    options = options || {};
+    options ||= {};
     const container = window.document.createElement('div');
     window.document.body.appendChild(container);
     Object.defineProperty(container, 'clientWidth', {value: options.width || containerWidth});

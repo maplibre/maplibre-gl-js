@@ -32,8 +32,7 @@ describe('Worker RTLTextPlugin', () => {
 
     beforeEach(() => {
         _self = {
-            addEventListener() {},
-            importScripts() {}
+            addEventListener() {}
         } as any;
         worker = new Worker(_self);
         global.fetch = null;

@@ -46,8 +46,11 @@ import {KeyboardHandler} from './ui/handler/keyboard';
 import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler, type AroundCenterOptions} from './ui/handler/two_fingers_touch';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from './util/actor_messages';
 import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileMesh} from './util/create_tile_mesh';
+import {GPUInitializationError} from './util/gpu_initialization_error';
+import {EXTENT} from './data/extent';
+
 import type {ControlPosition, IControl} from './ui/control/control';
-import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput} from './style/style_layer/custom_style_layer';
+import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer';
 import type {AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera';
 import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeature} from './util/vectortile_to_geojson';
 import type {Handler, HandlerResult} from './ui/handler_manager';
@@ -55,15 +58,14 @@ import type {Complete, RequireAtLeastOne, Subscription} from './util/util';
 import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles';
 import type {TransformConstrainFunction} from './geo/transform_interface';
 import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, TextFit} from './style/style_image';
-import type {StyleLayer} from './style/style_layer';
+import type {StyleLayer, PaintPropertyEntry} from './style/style_layer';
 import type {Tile} from './tile/tile';
 import type {GeoJSONFeatureDiff, GeoJSONFeatureId, GeoJSONSourceDiff} from './source/geojson_source_diff';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from './source/query_features';
 import type {RequestTransformFunction, ResourceType} from './util/request_manager';
-import {EXTENT} from './data/extent';
 import type {OverscaledTileID} from './tile/tile_id';
 import type {PositionAnchor} from './ui/anchor';
-import type {ProjectionData} from './geo/projection/projection_data';
+import type {ProjectionData, ProjectionDataParams} from './geo/projection/projection_data';
 import type {WorkerTileResult} from './source/worker_source';
 import type {Actor, IActor} from './util/actor';
 import type {Bucket} from './data/bucket';
@@ -222,6 +224,7 @@ export {
     Evented,
     Event,
     AJAXError,
+    GPUInitializationError,
     config,
     CanvasSource,
     GeoJSONSource,
@@ -264,6 +267,7 @@ export {
     type StyleImageData,
     type StyleImageMetadata,
     type StyleLayer,
+    type PaintPropertyEntry,
     type GetResourceResponse,
     type MapGeoJSONFeature,
     type Alignment,
@@ -312,6 +316,7 @@ export {
     type ExpiryData,
     type PositionAnchor,
     type ProjectionData,
+    type ProjectionDataParams,
     type GeoJSONFeatureId,
     type GeoJSONFeatureDiff,
     type TextFit,
@@ -340,6 +345,8 @@ export {
     type WebGLContextAttributesWithType,
     type IControl,
     type CustomLayerInterface,
+    type CustomLayerProjectionDataParams,
+    type UnwrappedTileIDLiteral,
     type CanvasSourceSpecification,
     type PaddingOptions,
     type LngLatLike,

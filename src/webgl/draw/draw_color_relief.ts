@@ -66,7 +66,7 @@ function renderColorRelief(
         const dem = tile.dem;
         if(firstTile) {
             // we should avoid calling gl.getParameter at runtime (GPU stall risk)
-            textureMaxSize = textureMaxSize || gl.getParameter(gl.MAX_TEXTURE_SIZE);
+            textureMaxSize ||= gl.getParameter(gl.MAX_TEXTURE_SIZE);
             const maxLength = textureMaxSize;
             const {elevationTexture, colorTexture} = layer.getColorRampTextures(context, maxLength, dem.getUnpackVector());
             context.activeTexture.set(gl.TEXTURE1);
@@ -87,7 +87,7 @@ function renderColorRelief(
         context.activeTexture.set(gl.TEXTURE0);
 
         context.pixelStoreUnpackPremultiplyAlpha.set(false);
-        tile.demTexture = tile.demTexture || painter.getTileTexture(textureStride);
+        tile.demTexture ||= painter.getTileTexture(textureStride);
         if (tile.demTexture) {
             const demTexture = tile.demTexture;
             demTexture.update(pixelData, {premultiply: false});
