@@ -632,90 +632,84 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             return fakeCanvas;
         }
 
-        return new Promise(async (resolve, reject) => {
-            setTimeout(() => {
-                reject(new Error('Test timed out'));
-            }, options.timeout || 40000);
+        if (options.addFakeCanvas) {
+            const fakeCanvas = await createFakeCanvas(document, options.addFakeCanvas.id, options.addFakeCanvas.image);
+            document.body.appendChild(fakeCanvas);
+        }
 
-            if (options.addFakeCanvas) {
-                const fakeCanvas = await createFakeCanvas(document, options.addFakeCanvas.id, options.addFakeCanvas.image);
-                document.body.appendChild(fakeCanvas);
-            }
+        if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
+            await maplibregl.setRTLTextPlugin(
+                'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js',
+                false // Don't lazy load the plugin
+            );
+        }
 
-            if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
-                await maplibregl.setRTLTextPlugin(
-                    'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js',
-                    false // Don't lazy load the plugin
-                );
-            }
-
-            const map = new maplibregl.Map({
-                container: 'map',
-                style,
-                interactive: false,
-                attributionControl: false,
-                maxPitch: options.maxPitch,
-                pixelRatio: options.pixelRatio,
-                canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
-                fadeDuration: options.fadeDuration || 0,
-                localIdeographFontFamily: options.localIdeographFontFamily || false as any,
-                crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
-                maxCanvasSize: [8192, 8192]
-            });
-
-            let idle = false;
-            map.on('idle', () => {
-                console.log('idle');
-                idle = true;
-            });
-            // Configure the map to never stop the render loop
-            map.repaint = typeof options.continuesRepaint === 'undefined' ? true : options.continuesRepaint;
-
-            if (options.debug) map.showTileBoundaries = true;
-            if (options.showOverdrawInspector) map.showOverdrawInspector = true;
-            if (options.showPadding) map.showPadding = true;
-
-            const gl = map.painter.context.gl;
-
-            await map.once('load');
-            if (options.collisionDebug) {
-                map.showCollisionBoxes = true;
-                if (options.operations) {
-                    options.operations.push(['wait']);
-                } else {
-                    options.operations = [['wait']];
-                }
-            }
-
-            await applyOperations(options, map as any, idle);
-            const viewport = gl.getParameter(gl.VIEWPORT);
-            const w = options.reportWidth ?? viewport[2];
-            const h = options.reportHeight ?? viewport[3];
-
-            const data = new Uint8Array(w * h * 4);
-            gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
-
-            // Flip the scanlines.
-            const stride = w * 4;
-            const tmp = new Uint8Array(stride);
-            for (let i = 0, j = h - 1; i < j; i++, j--) {
-                const start = i * stride;
-                const end = j * stride;
-                tmp.set(data.slice(start, start + stride), 0);
-                data.set(data.slice(end, end + stride), start);
-                data.set(tmp, end);
-            }
-
-            map.remove();
-            delete map.painter.context.gl;
-
-            if (options.addFakeCanvas) {
-                const fakeCanvas = window.document.getElementById(options.addFakeCanvas.id);
-                fakeCanvas.parentNode.removeChild(fakeCanvas);
-            }
-
-            resolve(data);
+        const map = new maplibregl.Map({
+            container: 'map',
+            style,
+            interactive: false,
+            attributionControl: false,
+            maxPitch: options.maxPitch,
+            pixelRatio: options.pixelRatio,
+            canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
+            fadeDuration: options.fadeDuration || 0,
+            localIdeographFontFamily: options.localIdeographFontFamily || false as any,
+            crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
+            maxCanvasSize: [8192, 8192]
         });
+
+        let idle = false;
+        map.on('idle', () => {
+            console.log('idle');
+            idle = true;
+        });
+        // Configure the map to never stop the render loop
+        map.repaint = typeof options.continuesRepaint === 'undefined' ? true : options.continuesRepaint;
+
+        if (options.debug) map.showTileBoundaries = true;
+        if (options.showOverdrawInspector) map.showOverdrawInspector = true;
+        if (options.showPadding) map.showPadding = true;
+
+        const gl = map.painter.context.gl;
+
+        await map.once('load');
+        if (options.collisionDebug) {
+            map.showCollisionBoxes = true;
+            if (options.operations) {
+                options.operations.push(['wait']);
+            } else {
+                options.operations = [['wait']];
+            }
+        }
+
+        await applyOperations(options, map as any, idle);
+        const viewport = gl.getParameter(gl.VIEWPORT);
+        const w = options.reportWidth ?? viewport[2];
+        const h = options.reportHeight ?? viewport[3];
+
+        const data = new Uint8Array(w * h * 4);
+        gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+        // Flip the scanlines.
+        const stride = w * 4;
+        const tmp = new Uint8Array(stride);
+        for (let i = 0, j = h - 1; i < j; i++, j--) {
+            const start = i * stride;
+            const end = j * stride;
+            tmp.set(data.slice(start, start + stride), 0);
+            data.set(data.slice(end, end + stride), start);
+            data.set(tmp, end);
+        }
+
+        map.remove();
+        delete map.painter.context.gl;
+
+        if (options.addFakeCanvas) {
+            const fakeCanvas = window.document.getElementById(options.addFakeCanvas.id);
+            fakeCanvas.parentNode.removeChild(fakeCanvas);
+        }
+
+        return data;
     }, styleForTest as any);
 
     return new Uint8Array(Object.values(evaluatedArray as object) as number[]);
@@ -909,7 +903,7 @@ describe('Render tests', () => {
     });
 
     for (const style of testStyles) {
-        test(style.metadata.test.id, {retry: 1, timeout: style.metadata.test.timeout}, async () => {
+        test(style.metadata.test.id, {retry: 1, timeout: style.metadata.test.timeout || 40000}, async () => {
             const serverPort = (server.address() as any).port;
             localizeURLs(style, serverPort, path.join(__dirname, '../'));
             const data = await getImageFromStyle(style, page);
