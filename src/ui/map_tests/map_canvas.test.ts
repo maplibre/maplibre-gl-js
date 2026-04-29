@@ -11,9 +11,9 @@ describe('Max Canvas Size option', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 2048});
         Object.defineProperty(container, 'clientHeight', {value: 2048});
-        vi.spyOn(WebGLRenderingContext.prototype, 'drawingBufferWidth', 'get').mockReturnValue(8192);
-        vi.spyOn(WebGLRenderingContext.prototype, 'drawingBufferHeight', 'get').mockReturnValue(8192);
         const map = createMap({container, maxCanvasSize: [8192, 8192], pixelRatio: 5});
+        vi.spyOn(map.painter.context.gl, 'drawingBufferWidth', 'get').mockReturnValue(8192);
+        vi.spyOn(map.painter.context.gl, 'drawingBufferHeight', 'get').mockReturnValue(8192);
         map.resize();
         expect(map.getCanvas().width).toBe(8192);
         expect(map.getCanvas().height).toBe(8192);
@@ -23,9 +23,9 @@ describe('Max Canvas Size option', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 1024});
         Object.defineProperty(container, 'clientHeight', {value: 2048});
-        vi.spyOn(WebGLRenderingContext.prototype, 'drawingBufferWidth', 'get').mockReturnValue(8192);
-        vi.spyOn(WebGLRenderingContext.prototype, 'drawingBufferHeight', 'get').mockReturnValue(4096);
         const map = createMap({container, maxCanvasSize: [8192, 4096], pixelRatio: 3});
+        vi.spyOn(map.painter.context.gl, 'drawingBufferWidth', 'get').mockReturnValue(8192);
+        vi.spyOn(map.painter.context.gl, 'drawingBufferHeight', 'get').mockReturnValue(4096);
         map.resize();
         expect(map.getCanvas().width).toBe(2048);
         expect(map.getCanvas().height).toBe(4096);
@@ -35,9 +35,9 @@ describe('Max Canvas Size option', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 12834});
         Object.defineProperty(container, 'clientHeight', {value: 9000});
-        vi.spyOn(WebGLRenderingContext.prototype, 'drawingBufferWidth', 'get').mockReturnValue(4096);
-        vi.spyOn(WebGLRenderingContext.prototype, 'drawingBufferHeight', 'get').mockReturnValue(8192);
         const map = createMap({container, maxCanvasSize: [4096, 8192], pixelRatio: 1});
+        vi.spyOn(map.painter.context.gl, 'drawingBufferWidth', 'get').mockReturnValue(4096);
+        vi.spyOn(map.painter.context.gl, 'drawingBufferHeight', 'get').mockReturnValue(8192);
         map.resize();
         expect(map.getCanvas().width).toBe(4096);
         expect(map.getCanvas().height).toBe(2872);
@@ -47,9 +47,9 @@ describe('Max Canvas Size option', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 2048});
         Object.defineProperty(container, 'clientHeight', {value: 2048});
-        vi.spyOn(WebGLRenderingContext.prototype, 'drawingBufferWidth', 'get').mockReturnValue(3072);
-        vi.spyOn(WebGLRenderingContext.prototype, 'drawingBufferHeight', 'get').mockReturnValue(3072);
         const map = createMap({container, maxCanvasSize: [3072, 3072], pixelRatio: 1.25});
+        vi.spyOn(map.painter.context.gl, 'drawingBufferWidth', 'get').mockReturnValue(3072);
+        vi.spyOn(map.painter.context.gl, 'drawingBufferHeight', 'get').mockReturnValue(3072);
         map.resize();
         expect(map.getCanvas().width).toBe(2560);
         expect(map.getCanvas().height).toBe(2560);

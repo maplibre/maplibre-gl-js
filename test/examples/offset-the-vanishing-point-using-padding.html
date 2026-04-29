@@ -7,7 +7,7 @@
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -113,7 +113,11 @@
     </div>
 </div>
 
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     const center = [-77.01866, 38.888];
     const map = new maplibregl.Map({
         container: 'map',

@@ -4,6 +4,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {Style} from '../style/style';
 import {StubMap} from '../util/test/util';
 import {Texture} from '../webgl/texture';
+import {createNullGL} from '../util/test/null_gl';
 
 describe('render', () => {
     let painter: Painter;
@@ -21,7 +22,7 @@ describe('render', () => {
     };
 
     beforeEach(() => {
-        const gl = document.createElement('canvas').getContext('webgl');
+        const gl = createNullGL();
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(512, 512);
         painter = new Painter(gl, transform);
@@ -49,7 +50,7 @@ describe('render', () => {
 
 describe('tile texture pool', () => {
     function createPainterWithPool() {
-        const gl = document.createElement('canvas').getContext('webgl');
+        const gl = createNullGL();
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         return new Painter(gl, transform);
     }

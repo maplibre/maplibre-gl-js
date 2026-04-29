@@ -2,7 +2,7 @@
 
 This directory contains the source for the [MapLibre GL JS docs](https://maplibre.org/maplibre-gl-js/docs/) hosted on the MapLibre site.
 
-Besides this README, each other `.md` file in this directory corresponds to a site page. Each is converted into an `.html` file by [MkDocs](https://www.mkdocs.org/).
+Besides this README, each other `.md` file in this directory corresponds to a site page. Each is converted into an `.html` file by [Zensical](https://zensical.org/).
 
 !!! info
     To run the docs, you need to ensure Docker is installed and you have permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).
@@ -61,10 +61,11 @@ API documentation is written as [TSDoc comments](https://tsdoc.org/) and process
 
 ## Writing Examples
 
-Examples are written as regular HTML files in `test/examples`. Each example should have a title and a og:description.
+Examples are written as regular HTML files in `test/examples`. Each example should have a title, og:description and og:created.
 
 * `title`: A short title for the example in **sentence case** as a **verb phrase**.
 * `description`: A one sentence description of the example in plain text. This description will appear alongside a thumbnail and title on the examples page.
+* `created`: YYYY-MM-DD date format to when this example was created, this allow the docs to show what's new
 
 When you create a new example, you **must** make an accompanying image.
 
@@ -87,10 +88,10 @@ To update or add a new example, PR the relevant changes to this repo. The exampl
 It uses 3 tools:
 
 1. [TypeDoc](https://typedoc.org/) cli
-2. [MkDocs material](https://squidfunk.github.io/mkdocs-material/)
+2. [Zensical](https://zensical.org/)
 3. `generate-docs.ts` script
 
 The TypeDoc CLI convert is used to generate markdown files of the API from the TSDoc comments and places the output in API folder of the docs.
 The `generate-docs.ts` does some manipulation of this API output and also uses the examples html files from the test folder to generate markdown of the examples index file and all the examples markdown files.
 Other markdown from the docs folder are used as is.
-[MkDocs](https://www.mkdocs.org/) is used to build the documentation site for production and server it in debug. It has a live reload and the markdown files can be looked at in order to understand why things are shown as they do.
+[Zensical](https://zensical.org/) is used to build the documentation site for production and serve it in debug. It has a live reload and the markdown files can be looked at in order to understand why things are shown as they do.

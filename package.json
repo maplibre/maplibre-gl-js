@@ -1,8 +1,8 @@
 {
   "name": "maplibre-gl",
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
-  "version": "6.0.0-1",
-  "main": "dist/maplibre-gl.js",
+  "version": "6.0.0-5",
+  "module": "dist/maplibre-gl.mjs",
   "style": "dist/maplibre-gl.css",
   "license": "BSD-3-Clause",
   "homepage": "https://maplibre.org/",
@@ -16,6 +16,14 @@
   },
   "types": "dist/maplibre-gl.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/maplibre-gl.d.ts",
+      "import": "./dist/maplibre-gl.mjs"
+    },
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
   "sideEffects": [
     "*.css"
   ],
@@ -133,7 +141,6 @@
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
   "scripts": {
-    "generate-dist-package": "node --no-warnings --loader ts-node/esm build/generate-dist-package.js",
     "generate-unicode-data": "node --no-warnings --loader ts-node/esm build/generate-unicode-data.ts",
     "generate-shaders": "node --no-warnings --loader ts-node/esm build/generate-shaders.ts",
     "generate-struct-arrays": "node --no-warnings --loader ts-node/esm build/generate-struct-arrays.ts",
@@ -141,19 +148,17 @@
     "generate-typings": "dts-bundle-generator --export-referenced-types=false --umd-module-name=maplibregl -o ./dist/maplibre-gl.d.ts ./src/index.ts",
     "generate-docs": "typedoc && node --no-warnings --loader ts-node/esm build/generate-docs.ts",
     "generate-images": "node --no-warnings --loader ts-node/esm build/generate-doc-images.ts",
-    "build-dist": "npm run build-css && npm run generate-unicode-data && npm run generate-typings && npm run generate-shaders && npm run build-dev && npm run build-csp-dev && npm run build-prod && npm run build-csp",
+    "build-dist": "npm run build-css && npm run generate-unicode-data && npm run generate-typings && npm run generate-shaders && npm run build-dev && npm run build-prod",
     "build-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev",
     "watch-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev --watch",
     "build-prod": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production",
-    "build-csp": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.csp.ts --environment BUILD:production",
-    "build-csp-dev": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.csp.ts --environment BUILD:dev",
     "build-css": "postcss -o dist/maplibre-gl.css src/css/maplibre-gl.css",
     "watch-css": "postcss --watch -o dist/maplibre-gl.css src/css/maplibre-gl.css",
     "build-benchmarks": "npm run build-dev && rollup --configPlugin @rollup/plugin-typescript -c test/bench/rollup_config_benchmarks.ts",
     "watch-benchmarks": "rollup --configPlugin @rollup/plugin-typescript -c test/bench/rollup_config_benchmarks.ts --watch",
     "bundle-stats": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production,BUNDLE:stats",
     "spellcheck": "cspell",
-    "docs": "npm run generate-docs && docker run --rm -v ${PWD}:/docs zensical/zensical build",
+    "docs": "npm run generate-docs && docker run --rm -v ${PWD}:/docs zensical/zensical build --strict",
     "start-server": "st --no-cache -H localhost --port 9966 .",
     "start-docs": "docker run --rm -it -p 8000:8000 -v ${PWD}:/docs zensical/zensical serve --open --dev-addr=0.0.0.0:8000",
     "start": "run-p watch-css watch-dev start-server",
@@ -169,7 +174,7 @@
     "test-build-ci": "vitest run --config vitest.config.build.ts --coverage",
     "test-watch-roots": "vitest --config vitest.config.unit.ts --watch",
     "test-render": "node --no-warnings --loader ts-node/esm test/integration/render/run_render_tests.ts",
-    "codegen": "run-p --print-label generate-dist-package generate-style-code generate-unicode-data generate-struct-arrays generate-shaders && npm run generate-typings",
+    "codegen": "run-p --print-label generate-style-code generate-unicode-data generate-struct-arrays generate-shaders && npm run generate-typings",
     "benchmark": "node --no-warnings --loader ts-node/esm test/bench/run-benchmarks.ts",
     "gl-stats": "node --no-warnings --loader ts-node/esm test/bench/gl-stats.ts",
     "prepare": "npm run codegen",
