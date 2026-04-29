@@ -436,7 +436,6 @@ describe('Browser tests', () => {
             }
         });
 
-        // UMD path: "Failed to load <url>: <status>"; ESM path: "Failed to fetch dynamically imported module..."
         expect(errorMessage).toMatch(/badURL|dynamically imported module/);
 
     }, 5000);
