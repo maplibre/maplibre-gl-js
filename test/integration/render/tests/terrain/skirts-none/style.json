@@ -2,11 +2,12 @@
   "version": 8,
   "metadata": {
     "test": {
-      "description": "Terrain with skirts enabled to avoid horizontal hairline gaps (stitches) with typical opaque terrains. See also: The threshold commentary in skirts-disabled",
+      "description": "Terrain with skirts disabled to avoid vertical artifacts when using transparent terrains.",
       "height": 512,
       "width": 512,
-      "disableTerrainSkirts": false,
-      "threshold": 0.05
+      "terrainSkirtLength": "none",
+      "threshold": 0.05,
+      "note_on_threshold": "Since we are dealing with transparent lines and polygons, we need a sensitive threshold. Somewhere between 0.11 and 0.15 overlaping polygon parts no longer qualify as different from non overlaps. So ~0.11 is the safest maximum threshold."
     }
   },
   "center": [

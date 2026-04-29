@@ -137,16 +137,16 @@ export class Terrain {
      */
     _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
     /**
-     * If `true`, terrain skirts are not rendered.
-     * @see {@link MapOptions.disableTerrainSkirts}
+     * Controls how terrain skirt length is calculated.
+     * @see {@link MapOptions.terrainSkirtLength}
      */
-    _disableTerrainSkirts: boolean;
-    constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification, disableTerrainSkirts?: boolean) {
+    _terrainSkirtLength: 'none' | 'auto';
+    constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification, terrainSkirtLength: 'none' | 'auto' = 'auto') {
         this.painter = painter;
         this.tileManager = new TerrainTileManager(tileManager);
         this.options = options;
         this.exaggeration = typeof options.exaggeration === 'number' ? options.exaggeration : 1.0;
-        this._disableTerrainSkirts = disableTerrainSkirts ?? false;
+        this._terrainSkirtLength = terrainSkirtLength;
         this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = {};
@@ -457,7 +457,7 @@ export class Terrain {
             indexArray.emplaceBack(x + y, meshSize + x + y + 1, meshSize + x + y + 2);
             indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
         }
-        if (!this._disableTerrainSkirts) {
+        if (this._terrainSkirtLength !== 'none') {
             this._buildSkirts(vertexArray, indexArray, meshSize, delta, northPole, southPole);
         }
 
@@ -471,12 +471,12 @@ export class Terrain {
     }
 
     /**
-     * Calculates a height of the frame around the terrain-mesh to avoid stitching between
-     * tile boundaries in different zoomlevels.
+     * Calculates the height of the tile skirts for the "auto" strategy.
+     * @see {@link MapOptions.terrainSkirtLength}
      * @param zoom - current zoomlevel
      * @returns the elevation delta in meters
      */
-    getMeshFrameDelta(zoom: number): number {
+    getSkirtLength(zoom: number): number {
         // divide by 5 is evaluated by trial & error to get a frame in the right height
         return 2 * Math.PI * earthRadius / Math.pow(2, Math.max(zoom, 0)) / 5;
     }
@@ -519,9 +519,10 @@ export class Terrain {
         };
     }
 
+    /** Add an extra frame around the mesh to avoid hairline gaps (stitching) on tile boundaries with different zoomlevels.
+     * @see {@link MapOptions.terrainSkirtLength}
+    */
     _buildSkirts(vertexArray: Pos3dArray, indexArray: TriangleIndexArray, meshSize: number, delta: number, northPole: boolean, southPole: boolean) {
-        // add an extra frame around the mesh to avoid hairline gaps (stitching) on tile boundaries with different zoomlevels
-        // top-bottom frame + pole vertices
         const offsetTop = vertexArray.length;
         const offsetTopEdge = 0;
         const offsetBottom = offsetTop + (meshSize + 1);
