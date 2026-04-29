@@ -402,7 +402,15 @@ export type MapOptions = {
      * and the rest will be split.
      * When undefined, all zoom levels after source's max zoom will be overscaled.
      * This can help in reducing the size of the overscaling and improve performance in high zoom levels.
-     * The drawback is that it changes rendering for polygon centered labels and changes the results of query rendered features.
+    * Defines the number of zoom level that will overscale from map's max zoom and below.
+    *
+    * This can help in reducing the size of the overscaling and improve performance in high zoom levels.
+    * The drawback is that it changes rendering for polygon centered labels and changes the results of query rendered features.
+    * When `undefined`, all zoom levels after source's max zoom will be overscaled.
+    * 
+    * For example if map's `maxZoom` is 20, the source's `maxzoom` is 10 (tiles are avaliable until zoom 10) and `zoomLevelsToOverscale` is set to 3:
+    * - The zoom levels of 20, 19, 18 will be overscaled.
+    * - The zoom levels 11 to 17 will be split.
      * @defaultValue 4
      */
     zoomLevelsToOverscale?: number;
