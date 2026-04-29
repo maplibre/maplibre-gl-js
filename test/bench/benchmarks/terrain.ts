@@ -1,9 +1,10 @@
-import Benchmark, {type Measurement} from '../lib/benchmark';
+import {type BenchmarkLike, type Measurement} from '../lib/benchmark';
 import createMap from '../lib/create_map';
 import type {Map} from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const STYLE_COMPLEXITY = 64;
+const MEASUREMENT_COUNT = 5;
 const DURATION = 1_000;
 const CENTER_START: [number, number] = [0.0, 0.15];
 const CENTER_END: [number, number] = [0.0, -0.15];
@@ -11,16 +12,13 @@ const ZOOM = 12;
 const PITCH = 85;
 const BEARING = 180;
 
-class TerrainBase extends Benchmark {
-    public minimumMeasurements = 5;
-
+class TerrainBase implements BenchmarkLike {
     map: Map;
     label: string;
     terrain: boolean;
     projection: 'mercator' | 'globe';
 
     constructor(label: string, terrain: boolean, projection: 'mercator' | 'globe') {
-        super();
         this.label = label;
         this.terrain = terrain;
         this.projection = projection;
@@ -49,18 +47,18 @@ class TerrainBase extends Benchmark {
             this.map.setTerrain({source: 'dem', exaggeration: 1});
             await this.map.once('idle');
         }
+
+        // Warm the HTTP, glyph, and sprite caches
+        await this.bench();
     }
 
     async run(): Promise<Measurement[]> {
         try {
             await this.setup();
 
-            // Warmup
-            await this.runInner();
-
             const measurements: Measurement[] = [];
-            for (let i = 0; i < this.minimumMeasurements; i++) {
-                measurements.push({time: await this.runInner(), iterations: 1});
+            for (let i = 0; i < MEASUREMENT_COUNT; i++) {
+                measurements.push({time: await this.bench(), iterations: 1});
             }
 
             this.teardown();
@@ -74,7 +72,7 @@ class TerrainBase extends Benchmark {
         this.map.remove();
     }
 
-    private async runInner(): Promise<number> {
+    private async bench(): Promise<number> {
         // Clear tile and terrain caches
         for (const id in this.map.style.tileManagers) {
             this.map.style.tileManagers[id].clearTiles();
