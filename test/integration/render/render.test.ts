@@ -13,7 +13,7 @@ import {localizeURLs} from '../lib/localize-urls';
 import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config';
 import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFailed, test} from 'vitest';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let maplibregl: typeof MapLibreGL;
@@ -894,9 +894,9 @@ describe('Render tests', () => {
         await browser.close();
     });
 
-    beforeEach(async () => {
-        const retryCount = (expect.getState() as any).retryCount ?? 0;
-        if (retryCount > 0) {
+    beforeEach((ctx) => {
+        if (!testStyles.find(s => s.metadata.test.id === ctx.task.name)?.metadata.test.ok) {
+            console.log(`Retry ${ctx.task.name} with console logging enabled`);
             addConsoleLogging(page);
         }
     });
