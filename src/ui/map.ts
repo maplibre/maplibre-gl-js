@@ -401,7 +401,6 @@ export type MapOptions = {
      * For example if the map's max zoom is 20 and this is set to 3, the zoom levels of 20, 19 and 18 will be overscaled
      * and the rest will be split.
      * When undefined, all zoom levels after source's max zoom will be overscaled.
-     * This can help in reducing the size of the overscaling and improve performance in high zoom levels.
     * Defines the number of zoom level that will overscale from map's max zoom and below.
     *
     * This can help in reducing the size of the overscaling and improve performance in high zoom levels.
