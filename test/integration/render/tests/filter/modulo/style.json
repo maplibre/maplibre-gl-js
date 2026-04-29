@@ -1,11 +1,6 @@
 {
         "version": 8,
         "name": "error_example",
-        "metadata": {
-          "test": {
-            "timeout": 120000
-          }
-        },
         "zoom": 22,
         "center": [35.116597623673215, 31.77328952295099],
         "sources": {
