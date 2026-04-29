@@ -2369,20 +2369,12 @@ export class Map extends Camera {
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this._terrainDataCallback = e => {
-                if (e.dataType === 'style') {
-                    this.terrain.tileManager.freeRtt();
-                } else if (e.dataType === 'source' && e.tile) {
+                if (e.dataType !== 'style' && e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
                         if (this._centerClampedToGround) {
                             this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
                         }
-                    }
-
-                    if (e.source?.type === 'image') {
-                        this.terrain.tileManager.freeRtt();
-                    } else {
-                        this.terrain.tileManager.freeRtt(e.tile.tileID);
                     }
                 }
             };

@@ -129,19 +129,6 @@ export class TerrainTileManager extends Evented {
     }
 
     /**
-     * No-op. The RTT cache is invalidated by `prepareForRender`'s fingerprint
-     * check, which compares the current source state against what each tile
-     * was last rendered with. `freeRtt` was a hammer that worked around a
-     * stamp-based cache that never hit; now that the cache is content-keyed
-     * via per-tile slots, eagerly releasing on every source data event would
-     * defeat the cache. Kept as a callable for back-compat with external
-     * callers in `Map`.
-     */
-    freeRtt(_tileID?: OverscaledTileID) {
-        // intentionally empty
-    }
-
-    /**
      * get a list of tiles, which are loaded and should be rendered in the current scene
      * @returns the renderable tiles
      */
