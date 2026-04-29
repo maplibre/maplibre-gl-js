@@ -20,9 +20,7 @@ The main bundle creates the worker via `new Worker(url, {type: 'module'})`, wher
 
 `banner.ts` is used to create a banner at the beginning of the output file
 
-`rollup_plugins.ts` is used to define common plugins for rollup configurations
-
-`rollup_bundle_config.ts` is the shared factory that produces a `RollupOptions` for either bundle (main or worker) given input/output paths.
+`rollup_plugins.ts` is used to define common plugins for rollup configurations (also reused by the benchmarks)
 
 `rollup_plugin_minify_style_spec.ts` is used to specify the plugin used in style spec bundling
 
