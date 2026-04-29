@@ -200,7 +200,7 @@ To add a new render test:
 
 You can update the expected results of query-tests by running them with with the `UPDATE` flag enabled, for example on Linux:
 ```
-UPDATE=true npm run test-query
+UPDATE=true npm run test-integration
 ```
 Check carefully if all changes are intended.
 
