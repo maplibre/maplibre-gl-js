@@ -69,11 +69,11 @@ export type RenderOptions = {
 };
 
 /**
- * A render-to-texture slot: an FBO with a color texture and depth-stencil
- * renderbuffer attached. Owned by a Tile while in use, recycled via
- * `Painter.releaseRttSlot` when the tile no longer needs it.
+ * A render-to-texture object: an FBO with a color texture and depth-stencil
+ * renderbuffer attached. Owned by a `Tile` while in use, recycled via
+ * `Painter.freeRTT` when the tile no longer needs it.
  */
-export type RTT = {
+export type RTTObject = {
     fbo: Framebuffer;
     texture: Texture;
     size: number;
@@ -92,8 +92,8 @@ export class Painter {
     _tileTextures: {
         [_: number]: Texture[];
     };
-    _rttSlots: {
-        [_: number]: RTT[];
+    _rttObjects: {
+        [_: number]: RTTObject[];
     };
     numSublayers: number;
     depthEpsilon: number;
@@ -145,7 +145,7 @@ export class Painter {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
-        this._rttSlots = {};
+        this._rttObjects = {};
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16) as any), renderTime: 0};
 
         this.setup();
@@ -704,7 +704,7 @@ export class Painter {
 
     static readonly MAX_TEXTURE_POOL_SIZE_PER_BUCKET = 50;
     /**
-     * RTT slots bundle an FBO, color texture, and depth-stencil renderbuffer.
+     * RTT objects bundle an FBO, color texture, and depth-stencil renderbuffer.
      * They are far more expensive to recreate than plain textures, and a
      * panning camera dirties them in bursts that exceed the visible-tile
      * count, so a generous pool keeps the working set resident between frames.
@@ -727,9 +727,9 @@ export class Painter {
         return textures && textures.length > 0 ? textures.pop() : null;
     }
 
-    acquireRttSlot(size: number): RTT {
-        const slots = this._rttSlots[size];
-        if (slots && slots.length > 0) return slots.pop();
+    getRTT(size: number): RTTObject {
+        const obj = this._rttObjects[size];
+        if (obj && obj.length > 0) return obj.pop();
         const fbo = this.context.createFramebuffer(size, size, true, true);
         const texture = new Texture(this.context, {width: size, height: size, data: null}, this.context.gl.RGBA);
         texture.bind(this.context.gl.LINEAR, this.context.gl.CLAMP_TO_EDGE);
@@ -741,13 +741,13 @@ export class Painter {
         return {fbo, texture, size};
     }
 
-    releaseRttSlot(slot: RTT) {
-        const slots = this._rttSlots[slot.size] ??= [];
-        if (slots.length < Painter.MAX_RTT_SLOT_POOL_SIZE_PER_BUCKET) {
-            slots.push(slot);
+    saveRTT(obj: RTTObject) {
+        const objs = this._rttObjects[obj.size] ??= [];
+        if (objs.length < Painter.MAX_RTT_SLOT_POOL_SIZE_PER_BUCKET) {
+            objs.push(obj);
         } else {
-            slot.texture.destroy();
-            slot.fbo.destroy();
+            obj.texture.destroy();
+            obj.fbo.destroy();
         }
     }
 
@@ -856,14 +856,14 @@ export class Painter {
             this._tileTextures = {};
         }
 
-        if (this._rttSlots) {
-            for (const size in this._rttSlots) {
-                for (const slot of this._rttSlots[size]) {
-                    slot.texture.destroy();
-                    slot.fbo.destroy();
+        if (this._rttObjects) {
+            for (const size in this._rttObjects) {
+                for (const obj of this._rttObjects[size]) {
+                    obj.texture.destroy();
+                    obj.fbo.destroy();
                 }
             }
-            this._rttSlots = {};
+            this._rttObjects = {};
         }
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();

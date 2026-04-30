@@ -72,8 +72,8 @@ describe('render to texture', () => {
         useProgram: () => ({draw: () => { layersDrawn++; }}),
         _renderTileClippingMasks: vi.fn(),
         renderLayer: vi.fn(),
-        acquireRttSlot: (size: number) => ({fbo: {framebuffer: null, width: size, height: size}, texture: {}, size}),
-        releaseRttSlot: vi.fn(),
+        getRTT: (size: number) => ({fbo: {framebuffer: null, width: size, height: size}, texture: {}, size}),
+        saveRTT: vi.fn(),
         drawFunctions: {
             terrainDepth: vi.fn(),
             terrainCoords: vi.fn(),
@@ -123,7 +123,7 @@ describe('render to texture', () => {
     painter.renderToTexture = rtt;
 
     beforeEach(() => {
-        tile.rttSlots.length = 0;
+        tile.rttObjects.length = 0;
         tile.rttFingerprint = {};
     });
 
@@ -150,24 +150,24 @@ describe('render to texture', () => {
         rtt.prepareForRender(style, 0);
 
         tile.rttFingerprint = {maine: '923#0'};
-        tile.rttSlots[0] = {fbo: {} as any, texture: {} as any, size: 512};
+        tile.rttObjects[0] = {fbo: {} as any, texture: {} as any, size: 512};
 
         const otherTileID = new OverscaledTileID(3, 0, 2, 2, 2);
         (terrain.tileManager.getTerrainCoords as Mock).mockReturnValueOnce({[tile.tileID.key]: otherTileID});
 
         rtt.prepareForRender(style, 0);
 
-        expect(tile.rttSlots.length).toBe(0);
+        expect(tile.rttObjects.length).toBe(0);
     });
 
     test('should not clear tile cache if state remains same', () => {
         rtt.prepareForRender(style, 0);
         tile.rttFingerprint = {maine: '923#0'};
-        tile.rttSlots[0] = {fbo: {} as any, texture: {} as any, size: 512};
+        tile.rttObjects[0] = {fbo: {} as any, texture: {} as any, size: 512};
 
         rtt.prepareForRender(style, 0);
 
-        expect(tile.rttSlots.length).toBe(1);
+        expect(tile.rttObjects.length).toBe(1);
     });
 
     test('should render text after a line by not adding the text to the stack', () => {
@@ -216,14 +216,14 @@ describe('render to texture', () => {
         const state = {revision: 0};
         (style.tileManagers['maine'].getState as Mock).mockReturnValue(state);
 
-        tile.rttSlots[0] = {fbo: {} as any, texture: {} as any, size: 512};
+        tile.rttObjects[0] = {fbo: {} as any, texture: {} as any, size: 512};
         tile.rttFingerprint = {maine: '923#0'};
 
         rtt.prepareForRender(style, 0);
-        expect(tile.rttSlots.length).toBe(1);
+        expect(tile.rttObjects.length).toBe(1);
 
         state.revision = 1;
         rtt.prepareForRender(style, 0);
-        expect(tile.rttSlots.length).toBe(0);
+        expect(tile.rttObjects.length).toBe(0);
     });
 });

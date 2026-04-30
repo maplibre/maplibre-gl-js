@@ -26,13 +26,13 @@ const LAYERS_TO_TEXTURES: { [keyof in StyleLayer['type']]?: boolean } = {
  * Renders RTT-eligible layers into per-tile cached textures, then drapes
  * them onto the terrain mesh. Slots live on each Tile so their lifetime
  * tracks the tile itself; the underlying FBO+texture handles are recycled
- * via the painter's slot pool.
+ * via the painter's RTT pool.
  */
 export class RenderToTexture {
     painter: Painter;
     terrain: Terrain;
-    /** RTT slot dimension in pixels (tile size × terrain quality factor). */
-    _slotSize: number;
+    /** RTT texture dimension in pixels (tile size × terrain quality factor). */
+    _rttWidth: number;
     /**
      * coordsAscending contains a list of all tiles which should be rendered for one render-to-texture tile
      * e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
@@ -70,7 +70,7 @@ export class RenderToTexture {
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
-        this._slotSize = terrain.tileManager.tileSize * terrain.qualityFactor;
+        this._rttWidth = terrain.tileManager.tileSize * terrain.qualityFactor;
     }
 
     destruct() {
@@ -80,7 +80,7 @@ export class RenderToTexture {
     }
 
     getTexture(tile: Tile): Texture {
-        return tile.rttSlots[this._stacks.length - 1].texture;
+        return tile.rttObjects[this._stacks.length - 1].texture;
     }
 
     prepareForRender(style: Style, zoom: number) {
@@ -167,17 +167,17 @@ export class RenderToTexture {
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
             for (const tile of this._renderableTiles) {
                 this._rttTiles.push(tile);
-                // Cache hit: this tile already has a slot for this stack from a previous frame.
-                if (tile.rttSlots[stack]) continue;
-                const slot = painter.acquireRttSlot(this._slotSize);
-                tile.rttSlots[stack] = slot;
-                painter.context.bindFramebuffer.set(slot.fbo.framebuffer);
+                // Cache hit: this tile already has a RTT object for this stack from a previous frame.
+                if (tile.rttObjects[stack]) continue;
+                const obj = painter.getRTT(this._rttWidth);
+                tile.rttObjects[stack] = obj;
+                painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
                 painter.context.clear({color: Color.transparent, stencil: 0});
                 painter.currentStencilSource = undefined;
                 for (const layerId of layers) {
                     const layer = painter.style._layers[layerId];
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
-                    painter.context.viewport.set([0, 0, slot.fbo.width, slot.fbo.height]);
+                    painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords, true);
                     painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
                     if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];

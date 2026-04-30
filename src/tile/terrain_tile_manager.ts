@@ -62,9 +62,9 @@ export class TerrainTileManager extends Evented {
     _lastTilesetChange: number = now();
 
     /**
-     * The painter that owns the RTT slot pool. Set by `Terrain` after
-     * construction so render-to-texture tiles can return their slots when
-     * unloaded. Undefined in tests that don't render.
+     * The painter that owns the RTT pool. Set by `Terrain` after
+     * construction so render-to-texture tiles can release their RTT objects
+     * when unloaded.
      */
     painter: Painter | undefined;
 
@@ -129,10 +129,10 @@ export class TerrainTileManager extends Evented {
     }
 
     /**
-     * Release the RTT slot cache for `tileID` (and its ancestors/descendants),
-     * or for all tiles if `tileID` is omitted. Slots return to the painter's
-     * pool for recycling. Called when source data, image sources, or the
-     * style itself change in ways the per-tile fingerprint doesn't capture.
+     * Release the RTT objects for `tileID` (and its ancestors/descendants),
+     * or for all tiles if `tileID` is omitted. RTT objects return to the 
+     * painter's pool for recycling. Called when source data, image sources, or
+     * the style itself change in ways the per-tile fingerprint doesn't capture.
      */
     freeRtt(tileID?: OverscaledTileID) {
         for (const key in this._tiles) {
