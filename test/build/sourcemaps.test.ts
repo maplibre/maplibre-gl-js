@@ -82,8 +82,15 @@ describe('main sourcemap', () => {
             return a.filter(x => !sb.has(x));
         }
 
+        // Files in the sourcemap that don't exist in src/. A few are OK
+        // (the bundler adds a small number of helper files of its own).
         const s1 = setMinus(actualEntriesInSourcemapJSON, expectedEntriesInSourcemapJSON);
         expect(s1.length).toBeLessThan(5);
+
+        // src/ files that are missing from the sourcemap. Some are OK to miss:
+        // type-only files compile to nothing, and test-only helpers don't end
+        // up in the production bundle. If this number jumps, real source files
+        // are getting dropped, and it should be investigated before raising the limit.
         const s2 = setMinus(expectedEntriesInSourcemapJSON, actualEntriesInSourcemapJSON);
         expect(s2.length).toBeLessThan(18);
     });
