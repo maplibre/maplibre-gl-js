@@ -5,10 +5,10 @@ import type {InViewTiles} from '../tile/tile_manager_in_view_tiles';
 
 export type FeatureStateEntry = {id: string; state: FeatureState};
 export type FeatureStates = FeatureStateEntry[];
-export type LayerFeatureStates = {[layer: string]: FeatureStates};
+export type LayerFeatureStates = Record<string, FeatureStates>;
 
-type FeatureStatesMap = {[featureId: string]: FeatureState};
-type LayerFeatureStatesMap = {[layer: string]: FeatureStatesMap};
+type FeatureStatesMap = Record<string, FeatureState>;
+type LayerFeatureStatesMap = Record<string, FeatureStatesMap>;
 
 function featureStatesMapToArray(map: FeatureStatesMap): FeatureStates {
     const result: FeatureStates = [];
