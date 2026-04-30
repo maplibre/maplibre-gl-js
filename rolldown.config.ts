@@ -8,15 +8,7 @@ const outputPostfix = production ? '' : '-dev';
 const bundle = (input: InputOption, file: string, format: ModuleFormat): RolldownOptions => ({
     input,
     platform: 'browser',
-    // Override package.json `"sideEffects": ["*.css"]` for our own source so
-    // top-level `register(...)` calls (see src/util/web_worker_transfer.ts)
-    // survive tree-shaking.
-    treeshake: production ? {
-        moduleSideEffects: [
-            {test: /[\\/]src[\\/].*\.ts$/, sideEffects: true},
-            {test: /\.css$/, sideEffects: true},
-        ],
-    } : false,
+    treeshake: production,
     output: {
         name: 'maplibregl',
         file,

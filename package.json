@@ -25,7 +25,8 @@
     "./package.json": "./package.json"
   },
   "sideEffects": [
-    "*.css"
+    "*.css",
+    "src/**/*.ts"
   ],
   "dependencies": {
     "@mapbox/jsonlint-lines-primitives": "^2.0.2",
