@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+- Fix feature state bulk remove + feature set per-id set does not remove state of first feature ([#7554](https://github.com/maplibre/maplibre-gl-js/pull/7554)) (by [@xavierjs](https://github.com/xavierjs))
 
 ## 6.0.0-5
 
