@@ -34,7 +34,6 @@ test/integration/dist/**/*.js
 test/integration/dist/**/*.json
 test/integration/query/dist/fixtures.json
 */**/*.g.ts
-# stray TypeScript declaration emit; real declarations live in /dist/ and /types/
 src/**/*.d.ts
 build/**/*.d.ts
 test/**/*.d.ts
