@@ -11,7 +11,17 @@ const bundle = (input: InputOption, file: string, format: ModuleFormat): Rolldow
     // Match the previous rollup setup which used @rollup/plugin-node-resolve
     // with `browser: true, preferBuiltins: false`.
     platform: 'browser',
-    treeshake: production,
+    // Override package.json's `"sideEffects": ["*.css"]` for our own source —
+    // ~22 modules under `src/` rely on top-level `register(...)` calls
+    // (see src/util/web_worker_transfer.ts) that strict tree-shaking would
+    // otherwise drop, breaking worker IPC ("can't deserialize unregistered
+    // class …").
+    treeshake: production ? {
+        moduleSideEffects: [
+            {test: /[\\/]src[\\/].*\.ts$/, sideEffects: true},
+            {test: /\.css$/, sideEffects: true},
+        ],
+    } : false,
     output: {
         name: 'maplibregl',
         file,
