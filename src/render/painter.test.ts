@@ -106,6 +106,9 @@ describe('RTT pool', () => {
         const painter = createPainter();
         const cap = Painter.MAX_RTT_SLOT_POOL_SIZE_PER_BUCKET;
 
+        // Spy on every object so we can count destroys at two checkpoints:
+        // after release (only the over-cap excess should be destroyed) and
+        // after painter.destroy() (the rest, still pooled, get destroyed too).
         const objs = [];
         for (let i = 0; i < cap + 5; i++) {
             const obj = painter.acquireRTT(128);

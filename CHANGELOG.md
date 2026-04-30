@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+- Improve 3D terrain performance by fixing bugs that caused every tile to be re-rendered on every frame ([#7549](https://github.com/maplibre/maplibre-gl-js/pull/7549)) (by [@lucaswoj](https://github.com/lucaswoj))
 
 ## 6.0.0-5
 
