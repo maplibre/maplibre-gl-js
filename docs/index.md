@@ -9,12 +9,12 @@ It is part of the MapLibre ecosystem, with a counterpart for Android, iOS and ot
 <iframe src="./examples/display-a-globe-with-a-vector-map.html" width="100%" height="400px" style="border:none"></iframe>
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0-5/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.css" />
 <div id="map" style="height: 400px"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0-5/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.mjs';
 
-    maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@^6.0.0-5/dist/maplibre-gl-worker.mjs');
+    maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl-worker.mjs');
 
     const map = new maplibregl.Map({
         container: 'map', // container id
@@ -183,12 +183,12 @@ Pick your setup:
     Load MapLibre directly from UNPKG as an ES module via a `<script type="module">` tag. See [unpkg.com](https://unpkg.com) for instructions on selecting specific versions and semver ranges.
 
     ```html
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0-5/dist/maplibre-gl.css" />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.css" />
     <div id="map" style="height: 400px"></div>
     <script type="module">
-        import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0-5/dist/maplibre-gl.mjs';
+        import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl.mjs';
 
-        maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@^6.0.0-5/dist/maplibre-gl-worker.mjs');
+        maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@^6.0.0/dist/maplibre-gl-worker.mjs');
 
         const map = new maplibregl.Map({
             container: 'map',
