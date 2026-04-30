@@ -1,4 +1,4 @@
-import {describe, beforeAll, afterAll, test, expect} from 'vitest';
+import {describe, beforeAll, afterAll, test, expect, vi} from 'vitest';
 import {TerrainTileManager} from './terrain_tile_manager';
 import {Style} from '../style/style';
 import {RequestManager} from '../util/request_manager';
@@ -10,6 +10,7 @@ import {Tile} from './tile';
 import {type DEMData} from '../data/dem_data';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {StubMap} from '../util/test/util';
+import type {Painter} from '../render/painter';
 
 const transform = new MercatorTransform();
 
@@ -215,4 +216,69 @@ describe('TerrainTileManager', () => {
         });
     });
 
+    describe('releaseRTT', () => {
+        function setupTilesWithRttObjects() {
+            const parent = new OverscaledTileID(1, 0, 1, 0, 0);
+            const same = new OverscaledTileID(2, 0, 2, 1, 1);
+            const child = new OverscaledTileID(3, 0, 3, 3, 2);
+            const sibling = new OverscaledTileID(2, 0, 2, 0, 0);
+
+            const tiles = {
+                [parent.key]: new Tile(parent, 256),
+                [same.key]: new Tile(same, 256),
+                [child.key]: new Tile(child, 256),
+                [sibling.key]: new Tile(sibling, 256),
+            };
+
+            const rttObjects: Record<string, any> = {};
+            for (const key in tiles) {
+                rttObjects[key] = {fbo: {}, texture: {}, size: 512, _key: key};
+                tiles[key].rttObjects[0] = rttObjects[key];
+            }
+
+            tsc._tiles = tiles;
+            const painter = {releaseRTT: vi.fn()} as unknown as Painter;
+            tsc.painter = painter;
+
+            return {parent, same, child, sibling, tiles, rttObjects, painter};
+        }
+
+        test('with no tileID releases every cached tile', () => {
+            const {tiles, rttObjects, painter} = setupTilesWithRttObjects();
+
+            tsc.releaseRTT();
+
+            expect((painter.releaseRTT as any).mock.calls.length).toBe(Object.keys(tiles).length);
+            for (const key in rttObjects) {
+                expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[key]);
+                expect(tiles[key].rttObjects.length).toBe(0);
+            }
+        });
+
+        test('with a tileID releases the matching tile, its ancestors, and its descendants', () => {
+            const {parent, same, child, sibling, tiles, rttObjects, painter} = setupTilesWithRttObjects();
+
+            tsc.releaseRTT(same);
+
+            expect(tiles[parent.key].rttObjects.length).toBe(0);
+            expect(tiles[same.key].rttObjects.length).toBe(0);
+            expect(tiles[child.key].rttObjects.length).toBe(0);
+            expect(tiles[sibling.key].rttObjects.length).toBe(1);
+
+            expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[parent.key]);
+            expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[same.key]);
+            expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[child.key]);
+            expect(painter.releaseRTT).not.toHaveBeenCalledWith(rttObjects[sibling.key]);
+        });
+
+        test('does not throw when painter is not yet attached', () => {
+            const tile = new Tile(new OverscaledTileID(2, 0, 2, 1, 1), 256);
+            tile.rttObjects[0] = {fbo: {}, texture: {}, size: 512} as any;
+            tsc._tiles = {[tile.tileID.key]: tile};
+            tsc.painter = undefined;
+
+            expect(() => tsc.releaseRTT()).not.toThrow();
+            expect(tile.rttObjects.length).toBe(0);
+        });
+    });
 });

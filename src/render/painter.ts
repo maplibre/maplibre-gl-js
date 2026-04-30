@@ -711,8 +711,8 @@ export class Painter {
     }
 
     acquireRTT(size: number): RTTObject {
-        const obj = this._rttObjects[size];
-        if (obj && obj.length > 0) return obj.pop();
+        const objs = this._rttObjects[size];
+        if (objs && objs.length > 0) return objs.pop();
         const fbo = this.context.createFramebuffer(size, size, true, true);
         const texture = new Texture(this.context, {width: size, height: size, data: null}, this.context.gl.RGBA);
         texture.bind(this.context.gl.LINEAR, this.context.gl.CLAMP_TO_EDGE);

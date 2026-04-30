@@ -146,18 +146,21 @@ describe('render to texture', () => {
         );
     });
 
-    test('should clear tile cache when overlaid tiles change', () => {
+    test('should clear tile cache when overlaid tiles change and return rtt object to painter pool', () => {
         rtt.prepareForRender(style, 0);
 
+        const obj = {fbo: {} as any, texture: {} as any, size: 512};
         tile.rttFingerprint = {maine: '923#0'};
-        tile.rttObjects[0] = {fbo: {} as any, texture: {} as any, size: 512};
+        tile.rttObjects[0] = obj;
 
         const otherTileID = new OverscaledTileID(3, 0, 2, 2, 2);
         (terrain.tileManager.getTerrainCoords as Mock).mockReturnValueOnce({[tile.tileID.key]: otherTileID});
+        (painter.releaseRTT as Mock).mockClear();
 
         rtt.prepareForRender(style, 0);
 
         expect(tile.rttObjects.length).toBe(0);
+        expect(painter.releaseRTT).toHaveBeenCalledWith(obj);
     });
 
     test('should not clear tile cache if state remains same', () => {
@@ -224,6 +227,56 @@ describe('render to texture', () => {
 
         state.revision = 1;
         rtt.prepareForRender(style, 0);
+        expect(tile.rttObjects.length).toBe(0);
+    });
+
+    test('cache miss acquires an rtt object from the painter and stores it on the tile', () => {
+        style._order = ['maine-fill', 'maine-symbol'];
+        rtt.prepareForRender(style, 0);
+
+        const acquireSpy = vi.spyOn(painter, 'acquireRTT');
+        acquireSpy.mockClear();
+
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        rtt.renderLayer(fillLayer, renderOptions);
+        rtt.renderLayer(symbolLayer, renderOptions);
+
+        expect(acquireSpy).toHaveBeenCalledWith(rtt._rttSize);
+        expect(tile.rttObjects[0]).toBeTruthy();
+        expect(tile.rttObjects[0].size).toBe(rtt._rttSize);
+    });
+
+    test('cache hit reuses tile.rttObjects[stack] and skips acquireRTT', () => {
+        style._order = ['maine-fill', 'maine-symbol'];
+        rtt.prepareForRender(style, 0);
+
+        const cached = {fbo: {framebuffer: null} as any, texture: {} as any, size: rtt._rttSize};
+        tile.rttObjects[0] = cached;
+
+        const acquireSpy = vi.spyOn(painter, 'acquireRTT');
+        acquireSpy.mockClear();
+
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        rtt.renderLayer(fillLayer, renderOptions);
+        rtt.renderLayer(symbolLayer, renderOptions);
+
+        expect(acquireSpy).not.toHaveBeenCalled();
+        expect(tile.rttObjects[0]).toBe(cached);
+    });
+
+    test('destruct returns every defined tile rtt object to the painter pool, skipping sparse entries', () => {
+        const objA = {fbo: {} as any, texture: {} as any, size: 512};
+        const objB = {fbo: {} as any, texture: {} as any, size: 512};
+        tile.rttObjects[0] = objA;
+        tile.rttObjects[2] = objB;
+        terrain.tileManager._tiles = {[tile.tileID.key]: tile};
+        (painter.releaseRTT as Mock).mockClear();
+
+        rtt.destruct();
+
+        expect(painter.releaseRTT).toHaveBeenCalledTimes(2);
+        expect(painter.releaseRTT).toHaveBeenCalledWith(objA);
+        expect(painter.releaseRTT).toHaveBeenCalledWith(objB);
         expect(tile.rttObjects.length).toBe(0);
     });
 });

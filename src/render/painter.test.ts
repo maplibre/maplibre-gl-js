@@ -82,3 +82,44 @@ describe('tile texture pool', () => {
         painter.destroy();
     });
 });
+
+describe('RTT pool', () => {
+    function createPainter() {
+        const gl = createNullGL();
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        return new Painter(gl, transform);
+    }
+
+    test('acquireRTT creates on miss, recycles on hit', () => {
+        const painter = createPainter();
+        const a = painter.acquireRTT(256);
+        expect(a.size).toBe(256);
+        expect(a.fbo).toBeTruthy();
+        expect(a.texture).toBeTruthy();
+
+        painter.releaseRTT(a);
+        expect(painter.acquireRTT(256)).toBe(a);
+        painter.destroy();
+    });
+
+    test('releaseRTT caps pool size and destroys excess; destroy cleans up the rest', () => {
+        const painter = createPainter();
+        const cap = Painter.MAX_RTT_SLOT_POOL_SIZE_PER_BUCKET;
+
+        const objs = [];
+        for (let i = 0; i < cap + 5; i++) {
+            const obj = painter.acquireRTT(128);
+            vi.spyOn(obj.texture, 'destroy');
+            vi.spyOn(obj.fbo, 'destroy');
+            objs.push(obj);
+        }
+        for (const obj of objs) painter.releaseRTT(obj);
+
+        const destroyedAtRelease = objs.filter(o => o.texture.destroy.mock.calls.length > 0).length;
+        expect(destroyedAtRelease).toBe(5);
+
+        painter.destroy();
+        const destroyedAfterPainterDestroy = objs.filter(o => o.texture.destroy.mock.calls.length > 0).length;
+        expect(destroyedAfterPainterDestroy).toBe(cap + 5);
+    });
+});
