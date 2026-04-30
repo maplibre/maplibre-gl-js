@@ -32,7 +32,7 @@ export class RenderToTexture {
     painter: Painter;
     terrain: Terrain;
     /** RTT texture dimension in pixels (tile size × terrain quality factor). */
-    _rttWidth: number;
+    _rttSize: number;
     /**
      * coordsAscending contains a list of all tiles which should be rendered for one render-to-texture tile
      * e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
@@ -70,12 +70,12 @@ export class RenderToTexture {
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
-        this._rttWidth = terrain.tileManager.tileSize * terrain.qualityFactor;
+        this._rttSize = terrain.tileManager.tileSize * terrain.qualityFactor;
     }
 
     destruct() {
         for (const tile of Object.values(this.terrain.tileManager._tiles)) {
-            tile.freeRtt(this.painter);
+            tile.releaseRTT(this.painter);
         }
     }
 
@@ -120,12 +120,12 @@ export class RenderToTexture {
             }
         }
 
-        // Source content changed: drop cached slots so we re-render with fresh data.
+        // check tiles to render
         for (const tile of this._renderableTiles) {
             for (const source in this._rttFingerprints) {
                 const fingerprint = this._rttFingerprints[source][tile.tileID.key];
                 if (fingerprint && fingerprint !== tile.rttFingerprint[source]) {
-                    tile.freeRtt(this.painter);
+                    tile.releaseRTT(this.painter);
                 }
             }
         }
@@ -169,7 +169,7 @@ export class RenderToTexture {
                 this._rttTiles.push(tile);
                 // Cache hit: this tile already has a RTT object for this stack from a previous frame.
                 if (tile.rttObjects[stack]) continue;
-                const obj = painter.getRTT(this._rttWidth);
+                const obj = painter.acquireRTT(this._rttSize);
                 tile.rttObjects[stack] = obj;
                 painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
                 painter.context.clear({color: Color.transparent, stencil: 0});

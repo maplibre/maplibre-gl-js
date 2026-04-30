@@ -72,8 +72,8 @@ describe('render to texture', () => {
         useProgram: () => ({draw: () => { layersDrawn++; }}),
         _renderTileClippingMasks: vi.fn(),
         renderLayer: vi.fn(),
-        getRTT: (size: number) => ({fbo: {framebuffer: null, width: size, height: size}, texture: {}, size}),
-        saveRTT: vi.fn(),
+        acquireRTT: (size: number) => ({fbo: {framebuffer: null, width: size, height: size}, texture: {}, size}),
+        releaseRTT: vi.fn(),
         drawFunctions: {
             terrainDepth: vi.fn(),
             terrainCoords: vi.fn(),

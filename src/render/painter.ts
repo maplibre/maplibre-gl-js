@@ -69,17 +69,6 @@ export type RenderOptions = {
 };
 
 /**
- * A render-to-texture object: an FBO with a color texture and depth-stencil
- * renderbuffer attached. Owned by a `Tile` while in use, recycled via
- * `Painter.freeRTT` when the tile no longer needs it.
- */
-export type RTTObject = {
-    fbo: Framebuffer;
-    texture: Texture;
-    size: number;
-};
-
-/**
  * @internal
  * Initialize a new painter object.
  */
@@ -703,12 +692,6 @@ export class Painter {
     }
 
     static readonly MAX_TEXTURE_POOL_SIZE_PER_BUCKET = 50;
-    /**
-     * RTT objects bundle an FBO, color texture, and depth-stencil renderbuffer.
-     * They are far more expensive to recreate than plain textures, and a
-     * panning camera dirties them in bursts that exceed the visible-tile
-     * count, so a generous pool keeps the working set resident between frames.
-     */
     static readonly MAX_RTT_SLOT_POOL_SIZE_PER_BUCKET = 400;
 
     saveTileTexture(texture: Texture) {
@@ -727,7 +710,7 @@ export class Painter {
         return textures && textures.length > 0 ? textures.pop() : null;
     }
 
-    getRTT(size: number): RTTObject {
+    acquireRTT(size: number): RTTObject {
         const obj = this._rttObjects[size];
         if (obj && obj.length > 0) return obj.pop();
         const fbo = this.context.createFramebuffer(size, size, true, true);
@@ -741,7 +724,7 @@ export class Painter {
         return {fbo, texture, size};
     }
 
-    saveRTT(obj: RTTObject) {
+    releaseRTT(obj: RTTObject) {
         const objs = this._rttObjects[obj.size] ??= [];
         if (objs.length < Painter.MAX_RTT_SLOT_POOL_SIZE_PER_BUCKET) {
             objs.push(obj);
@@ -905,3 +888,15 @@ export class Painter {
         return this.width !== drawingBufferWidth || this.height !== drawingBufferHeight;
     }
 }
+
+/**
+ * Holds the GPU resources used to render a 2D tile into a texture so it can
+ * be draped over 3D terrain: an FBO with a color texture and depth-stencil
+ * renderbuffer attached. Owned by a `Tile` while in use, recycled via
+ * `Painter.releaseRTT` when the tile no longer needs it.
+ */
+export type RTTObject = {
+    fbo: Framebuffer;
+    texture: Texture;
+    size: number;
+};

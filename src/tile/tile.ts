@@ -119,9 +119,14 @@ export class Tile {
     dependencies: any;
     /**
      * @internal
-     * Render-to-texture objects indexed by stack index. Each object caches the
-     * rendered output of one stack of layers for this tile and survives
-     * across frames until the tile is unloaded or its source data changes.
+     * Caches the result of rendering this 2D tile into a texture so it can be
+     * draped over 3D terrain. Indexed by stack index, where a stack is a
+     * contiguous run of RTT-eligible layers (fill, line, raster, etc.) split
+     * by non-RTT layers like symbols. So `rttObjects[0]` holds the texture
+     * for layers below the first symbol break, `rttObjects[1]` for layers
+     * between the first and second symbol breaks, and so on. Each entry
+     * survives across frames until the tile is unloaded or its source data
+     * changes.
      */
     rttObjects: Array<RTTObject | undefined>;
     rttFingerprint: {[sourceId:string]: string};
@@ -208,11 +213,11 @@ export class Tile {
      * available (e.g. tile created in a test without a render context), the
      * slots are simply dropped — they were never rendered into.
      */
-    freeRtt(painter: Painter | undefined) {
+    releaseRTT(painter: Painter | undefined) {
         if (this.rttObjects.length === 0) return;
         if (painter) {
             for (const obj of this.rttObjects) {
-                if (obj) painter.saveRTT(obj);
+                if (obj) painter.releaseRTT(obj);
             }
         }
         this.rttObjects.length = 0;

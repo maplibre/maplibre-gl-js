@@ -62,9 +62,7 @@ export class TerrainTileManager extends Evented {
     _lastTilesetChange: number = now();
 
     /**
-     * The painter that owns the RTT pool. Set by `Terrain` after
-     * construction so render-to-texture tiles can release their RTT objects
-     * when unloaded.
+     * the painter that owns the RTT pool, used to release RTT objects on tile unload.
      */
     painter: Painter | undefined;
 
@@ -122,7 +120,7 @@ export class TerrainTileManager extends Evented {
         // free unused tiles
         for (const key in this._tiles) {
             if (!keys[key]) {
-                this._tiles[key].freeRtt(this.painter);
+                this._tiles[key].releaseRTT(this.painter);
                 delete this._tiles[key];
             }
         }
@@ -134,11 +132,11 @@ export class TerrainTileManager extends Evented {
      * painter's pool for recycling. Called when source data, image sources, or
      * the style itself change in ways the per-tile fingerprint doesn't capture.
      */
-    freeRtt(tileID?: OverscaledTileID) {
+    releaseRTT(tileID?: OverscaledTileID) {
         for (const key in this._tiles) {
             const tile = this._tiles[key];
             if (!tileID || tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
-                tile.freeRtt(this.painter);
+                tile.releaseRTT(this.painter);
         }
     }
 
