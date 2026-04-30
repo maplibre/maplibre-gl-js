@@ -57,9 +57,7 @@ describe('Browser tests', () => {
 
     afterAll(async () => {
         await browser.close();
-        if (server) {
-            server.close();
-        }
+        server?.close();
     }, 40000);
 
     test('Contextmenu event triggered during scrollzoom', {retry: 3, timeout: 20000}, async () => {
