@@ -1,5 +1,6 @@
-import {vi, expect} from 'vitest';
+import {vi, expect, onTestFinished} from 'vitest';
 import {Map} from '../../ui/map';
+import {NullWebGL2RenderingContext} from './null_gl';
 import {extend} from '../../util/util';
 import {type Dispatcher} from '../../util/dispatcher';
 import {type IActor} from '../actor';
@@ -103,24 +104,24 @@ function setResizeObserver() {
         disconnect = vi.fn();
     });
 }
+let _originalGetContext: typeof HTMLCanvasElement.prototype.getContext | undefined;
+
+function setNullGLGetContext() {
+    _originalGetContext ??= HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (type: string, attributes?: any): any {
+        if (type === 'webgl2') return new NullWebGL2RenderingContext(this, attributes);
+        return _originalGetContext.call(this, type, attributes);
+    } as any;
+}
 
 export function beforeMapTest() {
+    setNullGLGetContext();
     setPerformance();
     setMatchMedia();
     setResizeObserver();
-    // remove the following when the following is merged and released: https://github.com/Adamfsk/jest-webgl-canvas-mock/pull/5
-    (WebGLRenderingContext.prototype as any).bindVertexArray = WebGLRenderingContext.prototype.getExtension('OES_vertex_array_object').bindVertexArrayOES;
-    (WebGLRenderingContext.prototype as any).createVertexArray = WebGLRenderingContext.prototype.getExtension('OES_vertex_array_object').createVertexArrayOES;
-    if (!WebGLRenderingContext.prototype.drawingBufferHeight && !WebGLRenderingContext.prototype.drawingBufferWidth) {
-        Object.defineProperty(WebGLRenderingContext.prototype, 'drawingBufferWidth', {
-            get: vi.fn(),
-            configurable: true,
-        });
-        Object.defineProperty(WebGLRenderingContext.prototype, 'drawingBufferHeight', {
-            get: vi.fn(),
-            configurable: true,
-        });
-    }
+    onTestFinished(() => {
+        HTMLCanvasElement.prototype.getContext = _originalGetContext;
+    });
 }
 
 export function getWrapDispatcher() {

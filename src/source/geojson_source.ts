@@ -244,16 +244,11 @@ export class GeoJSONSource extends Evented implements Source {
      * Sets the GeoJSON data and re-renders the map.
      *
      * @param data - A GeoJSON data object or a URL to one. The latter is preferable in the case of large GeoJSON files.
-     * @param waitForCompletion - If true, the method will return a promise that resolves when set data is complete.
      */
-    setData(data: GeoJSON.GeoJSON | string, waitForCompletion: true): Promise<void>;
-    setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: false): this;
-    setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: boolean): this | Promise<void> {
+    setData(data: GeoJSON.GeoJSON | string): Promise<void> {
         this._data = typeof data === 'string' ? {url: data} : {geojson: data};
         this._pendingWorkerUpdate = {data};
-        const updatePromise = this._updateWorkerData();
-        if (waitForCompletion) return updatePromise;
-        return this;
+        return this._updateWorkerData();
     }
 
     /**
@@ -269,15 +264,10 @@ export class GeoJSONSource extends Evented implements Source {
      * Updates are applied on a best-effort basis, updating an ID that does not exist will not result in an error.
      *
      * @param diff - The changes that need to be applied.
-     * @param waitForCompletion - If true, the method will return a promise that resolves when the update is complete.
      */
-    updateData(diff: GeoJSONSourceDiff, waitForCompletion: true): Promise<void>;
-    updateData(diff: GeoJSONSourceDiff, waitForCompletion?: false): this;
-    updateData(diff: GeoJSONSourceDiff, waitForCompletion?: boolean): this | Promise<void> {
+    updateData(diff: GeoJSONSourceDiff): Promise<void> {
         this._pendingWorkerUpdate.diff = mergeSourceDiffs(this._pendingWorkerUpdate.diff, diff);
-        const updatePromise = this._updateWorkerData();
-        if (waitForCompletion) return updatePromise;
-        return this;
+        return this._updateWorkerData();
     }
 
     /**
@@ -316,7 +306,7 @@ export class GeoJSONSource extends Evented implements Source {
      * map.getSource('some id').setClusterOptions({cluster: false, clusterRadius: 50, clusterMaxZoom: 14});
      * ```
      */
-    setClusterOptions(options: SetClusterOptions): this {
+    setClusterOptions(options: SetClusterOptions): Promise<void> {
         this.workerOptions.geojsonVtOptions.cluster = options.cluster;
         if (options.clusterRadius !== undefined) {
             this.workerOptions.geojsonVtOptions.clusterOptions.radius = this._pixelsToTileUnits(options.clusterRadius);
@@ -325,8 +315,7 @@ export class GeoJSONSource extends Evented implements Source {
             this.workerOptions.geojsonVtOptions.clusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
         }
         this._pendingWorkerUpdate.updateCluster = true;
-        this._updateWorkerData();
-        return this;
+        return this._updateWorkerData();
     }
 
     /**
@@ -557,7 +546,7 @@ export class GeoJSONSource extends Evented implements Source {
      * Determine whether a tile should be reloaded based on a set of options associated with a {@link MapSourceDataChangedEvent}.
      * @internal
      */
-    shouldReloadTile(tile: Tile, {affectedBounds}: GeoJSONSourceShouldReloadTileOptions) : boolean {
+    shouldReloadTile(tile: Tile, {affectedBounds}: GeoJSONSourceShouldReloadTileOptions): boolean {
         if (tile.state === 'loading') {
             return true;
         }

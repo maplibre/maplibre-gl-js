@@ -45,11 +45,13 @@ jobs:
           npm run generate-typings
           npm run build-benchmarks
 
-      - name: Copy benchmarks_generated.js
+      - name: Copy ESM benchmark artifacts
         run: |
           mkdir tmp
-          cp test/bench/versions/benchmarks_generated.js tmp
-          cp test/bench/versions/benchmarks_generated.js.map tmp
+          cp test/bench/versions/benchmarks_generated.mjs tmp
+          cp test/bench/versions/benchmarks_generated.mjs.map tmp
+          cp test/bench/versions/benchmarks_worker.mjs tmp
+          cp test/bench/versions/benchmarks_worker.mjs.map tmp
 
       - name: Upload to GitHub Pages
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0

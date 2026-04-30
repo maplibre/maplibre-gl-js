@@ -79,3 +79,6 @@ validation:
   absolute_links: warn
   unrecognized_links: warn
   anchors: warn
+
+exclude_docs: |
+  README.md

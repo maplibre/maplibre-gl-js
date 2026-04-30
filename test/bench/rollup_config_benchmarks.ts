@@ -1,5 +1,4 @@
 import fs from 'fs';
-import sourcemaps from 'rollup-plugin-sourcemaps2';
 import replace from '@rollup/plugin-replace';
 import {plugins, nodeResolve} from '../../build/rollup_plugins';
 import commonjs from '@rollup/plugin-commonjs';
@@ -8,9 +7,9 @@ import {execSync} from 'child_process';
 import {type RollupOptions} from 'rollup';
 
 /**
- * This script generates the benchmark bundles for the benchmark suite.
- * It does it by replacing the index.ts file of maplibre-gl-js with a local index.ts file that registers the relevant benchmarks.
- * The thing to note here is that the index.ts file of the benchmarks needs to export the same thing the original index.ts file is exporting.
+ * Generates the benchmark bundles. Each benchmark suite (versions, styles) emits
+ * two ESM bundles: a main bundle that registers benchmarks into a window global,
+ * and a worker bundle that the main bundle points at via `setWorkerUrl()`.
  */
 
 let styles = ['https://tiles.openfreemap.org/styles/liberty'];
@@ -42,40 +41,32 @@ const replaceConfig = {
 };
 
 const allPlugins = plugins(true).concat(replace(replaceConfig));
-const intro = fs.readFileSync('build/rollup/bundle_prelude.js', 'utf8');
 
-const splitConfig = (name: string): RollupOptions[] => [{
-    input: [`test/bench/${name}/index.ts`, 'src/source/worker.ts'],
+const benchmarkSuiteConfig = (name: string): RollupOptions[] => [{
+    input: `test/bench/${name}/index.ts`,
     output: {
-        dir: `staging/benchmarks/${name}`,
-        format: 'amd',
+        file: `test/bench/${name}/benchmarks_generated.mjs`,
+        format: 'es',
+        sourcemap: true,
         indent: false,
-        sourcemap: 'inline',
-        chunkFileNames: 'shared.js',
-        amd: {
-            autoId: true,
-        },
     },
     plugins: allPlugins
 }, {
-    input: `test/bench/rollup/benchmarks_${name}.js`,
+    input: 'src/source/worker.ts',
     output: {
-        file: `test/bench/${name}/benchmarks_generated.js`,
-        format: 'umd',
-        indent: false,
+        file: `test/bench/${name}/benchmarks_worker.mjs`,
+        format: 'es',
         sourcemap: true,
-        intro
+        indent: false,
     },
-    treeshake: false,
-    plugins: [sourcemaps()],
+    plugins: allPlugins
 }];
 
 const viewConfig: RollupOptions = {
     input: 'test/bench/benchmarks_view.tsx',
     output: {
-        name: 'Benchmarks',
-        file: 'test/bench/benchmarks_view_generated.js',
-        format: 'umd',
+        file: 'test/bench/benchmarks_view_generated.mjs',
+        format: 'es',
         indent: false,
         sourcemap: false
     },
@@ -87,4 +78,4 @@ const viewConfig: RollupOptions = {
     ].filter(Boolean)
 };
 
-export default splitConfig('versions').concat(splitConfig('styles')).concat(viewConfig);
+export default benchmarkSuiteConfig('versions').concat(benchmarkSuiteConfig('styles')).concat(viewConfig);

@@ -32,11 +32,8 @@ jobs:
       - run: npm run typecheck
         if: '!cancelled()'
       - run: npm run generate-docs
-      - name: Build docs using docker and mkdocs-material
-        run: |
-          rm docs/README.md
-          rm -rf docs/API/_media
-          docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build --strict
+      - name: Build docs
+        run: npm run docs
       - name: Check spelling
         # This need to run after the docs are built
         run: npm run spellcheck
@@ -89,7 +86,7 @@ jobs:
         if: '!cancelled()'
         with:
           name: build-dist-${{ matrix.os }}
-          path: dist/maplibre-gl.js
+          path: dist/
       - run: npm run test-integration-ci
       - name: Move files
         if: runner.os == 'Linux'

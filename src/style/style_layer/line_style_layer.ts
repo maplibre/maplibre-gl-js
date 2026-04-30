@@ -139,7 +139,7 @@ export class LineStyleLayer extends StyleLayer {
     }
 }
 
-function getLineWidth(lineWidth, lineGapWidth) {
+function getLineWidth(lineWidth: number, lineGapWidth: number): number {
     if (lineGapWidth > 0) {
         return lineGapWidth + 2 * lineWidth;
     } else {

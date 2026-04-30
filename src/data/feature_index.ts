@@ -1,4 +1,5 @@
 import type Point from '@mapbox/point-geometry';
+import {type VectorTileFeatureLike, type VectorTileLayerLike, GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
 import {loadGeometry} from './load_geometry';
 import {toEvaluationFeature} from './evaluation_feature';
 import {EXTENT} from './extent';
@@ -13,9 +14,10 @@ import {EvaluationParameters} from '../style/evaluation_parameters';
 import {polygonIntersectsBox} from '../util/intersection_tests';
 import {PossiblyEvaluated} from '../style/properties';
 import {FeatureIndexArray} from './array_types.g';
-
 import {MLTVectorTile} from '../source/vector_tile_mlt';
 import {Bounds} from '../geo/bounds';
+import {VectorTile} from '@mapbox/vector-tile';
+
 import type {OverscaledTileID} from '../tile/tile_id';
 import type {SourceFeatureState} from '../source/source_state';
 import type {mat4} from 'gl-matrix';
@@ -23,8 +25,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../geo/transform_interface';
-import {type VectorTileFeatureLike, type VectorTileLayerLike, GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
-import {VectorTile} from '@mapbox/vector-tile';
+import type {TileEncoding} from '../source/worker_source';
 
 export {GEOJSON_TILE_LAYER_NAME};
 
@@ -67,7 +68,7 @@ export class FeatureIndex {
     grid3D: TransferableGridIndex;
     featureIndexArray: FeatureIndexArray;
     promoteId?: PromoteIdSpecification;
-    encoding: string;
+    encoding: TileEncoding;
     rawTileData: ArrayBuffer;
     bucketLayerIDs: string[][];
 
@@ -112,9 +113,14 @@ export class FeatureIndex {
 
     loadVTLayers(): {[_: string]: VectorTileLayerLike} {
         if (!this.vtLayers) {
-            this.vtLayers = this.encoding !== 'mlt' 
-                ? new VectorTile(new Protobuf(this.rawTileData)).layers
-                : new MLTVectorTile(this.rawTileData).layers;
+            switch (this.encoding) {
+                case 'mlt':
+                    this.vtLayers = new MLTVectorTile(this.rawTileData).layers;
+                    break;
+                case 'mvt':
+                default:
+                    this.vtLayers = new VectorTile(new Protobuf(this.rawTileData)).layers;
+            }
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : [GEOJSON_TILE_LAYER_NAME]);
         }
         return this.vtLayers;
