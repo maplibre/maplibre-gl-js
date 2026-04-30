@@ -3620,3 +3620,29 @@ describe('Style.serialize', () => {
         expect(typeof result['4,2,true'].y).toBe('number');
     });
 });
+
+describe('Style#setFeatureState', () => {
+    test('fires an error if state contains a forbidden key', async () => {
+        const style = createStyle();
+        style.loadJSON({
+            'version': 8,
+            'sources': {
+                'vector': {
+                    type: 'vector',
+                    tiles: ['http://example.com/{z}/{x}/{y}.png']
+                }
+            },
+            'layers': []
+        });
+
+        await style.once('style.load');
+
+        const spy = vi.fn();
+        style.on('error', spy);
+
+        style.setFeatureState({source: 'vector', sourceLayer: 'layer', id: 1}, {'__proto__': true});
+
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls[0][0].error.message).toMatch(/The feature state should not include one of the following keys/);
+    });
+});
