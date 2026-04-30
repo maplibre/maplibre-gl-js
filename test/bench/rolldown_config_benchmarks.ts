@@ -4,11 +4,8 @@ import {execSync} from 'child_process';
 import {defineConfig, type RolldownOptions} from 'rolldown';
 import {replacePlugin} from 'rolldown/plugins';
 
-/**
- * Generates the benchmark bundles. Each benchmark suite (versions, styles) emits
- * two ESM bundles: a main bundle that registers benchmarks into a window global,
- * and a worker bundle that the main bundle points at via `setWorkerUrl()`.
- */
+// Each benchmark suite (versions, styles) emits a main bundle and a worker
+// bundle the main bundle points at via `setWorkerUrl()`.
 
 let styles = ['https://tiles.openfreemap.org/styles/liberty'];
 
@@ -37,9 +34,6 @@ const replaceValues = {
     'process.env.NODE_ENV': JSON.stringify('production'),
 };
 
-// Rolldown's built-in `replacePlugin` mirrors @rollup/plugin-replace's identifier
-// substitution behavior; the maplibre-specific jsonlint patch is already
-// applied via `plugins(true)` from build/rolldown_plugins.
 const allPlugins = [...plugins(true), replacePlugin(replaceValues, {preventAssignment: true})];
 
 const benchmarkSuiteConfig = (name: string): RolldownOptions[] => [{
