@@ -31,7 +31,7 @@ import type {ExpiryData} from '../util/ajax';
 import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict} from '../source/query_features';
 import type {DashEntry} from '../render/line_atlas';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
-import type {Painter, RttSlot} from '../render/painter';
+import type {Painter, RTT} from '../render/painter';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
@@ -119,11 +119,12 @@ export class Tile {
     dependencies: any;
     /**
      * @internal
-     * Render-to-texture slots keyed by stack index. Each slot caches the
+     * Render-to-texture slots indexed by stack index. Each slot caches the
      * rendered output of one stack of layers for this tile and survives
      * across frames until the tile is unloaded or its source data changes.
+     * Stack indices are dense small integers, so a plain array is used.
      */
-    rttSlots: Map<number, RttSlot>;
+    rttSlots: Array<RTT | undefined>;
     rttFingerprint: {[sourceId:string]: string};
 
     /**
@@ -141,7 +142,7 @@ export class Tile {
         this.hasSymbolBuckets = false;
         this.hasRTLText = false;
         this.dependencies = {};
-        this.rttSlots = new Map();
+        this.rttSlots = [];
         this.rttFingerprint = {};
 
         // Counts the number of times a response was already expired when
@@ -208,12 +209,14 @@ export class Tile {
      * available (e.g. tile created in a test without a render context), the
      * slots are simply dropped — they were never rendered into.
      */
-    releaseRttSlots(painter: Painter | undefined) {
-        if (this.rttSlots.size === 0) return;
+    freeRtt(painter: Painter | undefined) {
+        if (this.rttSlots.length === 0) return;
         if (painter) {
-            for (const slot of this.rttSlots.values()) painter.releaseRttSlot(slot);
+            for (const slot of this.rttSlots) {
+                if (slot) painter.releaseRttSlot(slot);
+            }
         }
-        this.rttSlots.clear();
+        this.rttSlots.length = 0;
     }
 
     /**

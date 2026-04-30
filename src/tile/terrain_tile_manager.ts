@@ -122,7 +122,7 @@ export class TerrainTileManager extends Evented {
         // free unused tiles
         for (const key in this._tiles) {
             if (!keys[key]) {
-                this._tiles[key].releaseRttSlots(this.painter);
+                this._tiles[key].freeRtt(this.painter);
                 delete this._tiles[key];
             }
         }
@@ -138,7 +138,7 @@ export class TerrainTileManager extends Evented {
         for (const key in this._tiles) {
             const tile = this._tiles[key];
             if (!tileID || tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
-                tile.releaseRttSlots(this.painter);
+                tile.freeRtt(this.painter);
         }
     }
 

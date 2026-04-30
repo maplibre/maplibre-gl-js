@@ -75,12 +75,12 @@ export class RenderToTexture {
 
     destruct() {
         for (const tile of Object.values(this.terrain.tileManager._tiles)) {
-            tile.releaseRttSlots(this.painter);
+            tile.freeRtt(this.painter);
         }
     }
 
     getTexture(tile: Tile): Texture {
-        return tile.rttSlots.get(this._stacks.length - 1).texture;
+        return tile.rttSlots[this._stacks.length - 1].texture;
     }
 
     prepareForRender(style: Style, zoom: number) {
@@ -125,7 +125,7 @@ export class RenderToTexture {
             for (const source in this._rttFingerprints) {
                 const fingerprint = this._rttFingerprints[source][tile.tileID.key];
                 if (fingerprint && fingerprint !== tile.rttFingerprint[source]) {
-                    tile.releaseRttSlots(this.painter);
+                    tile.freeRtt(this.painter);
                 }
             }
         }
@@ -168,9 +168,9 @@ export class RenderToTexture {
             for (const tile of this._renderableTiles) {
                 this._rttTiles.push(tile);
                 // Cache hit: this tile already has a slot for this stack from a previous frame.
-                if (tile.rttSlots.has(stack)) continue;
+                if (tile.rttSlots[stack]) continue;
                 const slot = painter.acquireRttSlot(this._slotSize);
-                tile.rttSlots.set(stack, slot);
+                tile.rttSlots[stack] = slot;
                 painter.context.bindFramebuffer.set(slot.fbo.framebuffer);
                 painter.context.clear({color: Color.transparent, stencil: 0});
                 painter.currentStencilSource = undefined;

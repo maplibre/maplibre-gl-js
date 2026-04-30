@@ -123,7 +123,7 @@ describe('render to texture', () => {
     painter.renderToTexture = rtt;
 
     beforeEach(() => {
-        tile.rttSlots.clear();
+        tile.rttSlots.length = 0;
         tile.rttFingerprint = {};
     });
 
@@ -150,24 +150,24 @@ describe('render to texture', () => {
         rtt.prepareForRender(style, 0);
 
         tile.rttFingerprint = {maine: '923#0'};
-        tile.rttSlots.set(0, {fbo: {} as any, texture: {} as any, size: 512});
+        tile.rttSlots[0] = {fbo: {} as any, texture: {} as any, size: 512};
 
         const otherTileID = new OverscaledTileID(3, 0, 2, 2, 2);
         (terrain.tileManager.getTerrainCoords as Mock).mockReturnValueOnce({[tile.tileID.key]: otherTileID});
 
         rtt.prepareForRender(style, 0);
 
-        expect(tile.rttSlots.size).toBe(0);
+        expect(tile.rttSlots.length).toBe(0);
     });
 
     test('should not clear tile cache if state remains same', () => {
         rtt.prepareForRender(style, 0);
         tile.rttFingerprint = {maine: '923#0'};
-        tile.rttSlots.set(0, {fbo: {} as any, texture: {} as any, size: 512});
+        tile.rttSlots[0] = {fbo: {} as any, texture: {} as any, size: 512};
 
         rtt.prepareForRender(style, 0);
 
-        expect(tile.rttSlots.size).toBe(1);
+        expect(tile.rttSlots.length).toBe(1);
     });
 
     test('should render text after a line by not adding the text to the stack', () => {
@@ -216,14 +216,14 @@ describe('render to texture', () => {
         const state = {revision: 0};
         (style.tileManagers['maine'].getState as Mock).mockReturnValue(state);
 
-        tile.rttSlots.set(0, {fbo: {} as any, texture: {} as any, size: 512});
+        tile.rttSlots[0] = {fbo: {} as any, texture: {} as any, size: 512};
         tile.rttFingerprint = {maine: '923#0'};
 
         rtt.prepareForRender(style, 0);
-        expect(tile.rttSlots.size).toBe(1);
+        expect(tile.rttSlots.length).toBe(1);
 
         state.revision = 1;
         rtt.prepareForRender(style, 0);
-        expect(tile.rttSlots.size).toBe(0);
+        expect(tile.rttSlots.length).toBe(0);
     });
 });

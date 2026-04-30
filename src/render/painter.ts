@@ -73,7 +73,7 @@ export type RenderOptions = {
  * renderbuffer attached. Owned by a Tile while in use, recycled via
  * `Painter.releaseRttSlot` when the tile no longer needs it.
  */
-export type RttSlot = {
+export type RTT = {
     fbo: Framebuffer;
     texture: Texture;
     size: number;
@@ -93,7 +93,7 @@ export class Painter {
         [_: number]: Texture[];
     };
     _rttSlots: {
-        [_: number]: RttSlot[];
+        [_: number]: RTT[];
     };
     numSublayers: number;
     depthEpsilon: number;
@@ -727,7 +727,7 @@ export class Painter {
         return textures && textures.length > 0 ? textures.pop() : null;
     }
 
-    acquireRttSlot(size: number): RttSlot {
+    acquireRttSlot(size: number): RTT {
         const slots = this._rttSlots[size];
         if (slots && slots.length > 0) return slots.pop();
         const fbo = this.context.createFramebuffer(size, size, true, true);
@@ -741,7 +741,7 @@ export class Painter {
         return {fbo, texture, size};
     }
 
-    releaseRttSlot(slot: RttSlot) {
+    releaseRttSlot(slot: RTT) {
         const slots = this._rttSlots[slot.size] ??= [];
         if (slots.length < Painter.MAX_RTT_SLOT_POOL_SIZE_PER_BUCKET) {
             slots.push(slot);
