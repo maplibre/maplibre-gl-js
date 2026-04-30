@@ -136,13 +136,18 @@ export class Terrain {
      * matrices to transform from vector-tile coords to raster-dem-tile coords.
      */
     _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
-
-    constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification) {
+    /**
+     * Controls how terrain skirt length is calculated.
+     * @see {@link MapOptions.terrainSkirtLength}
+     */
+    _terrainSkirtLength: 'none' | 'auto';
+    constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification, terrainSkirtLength: 'none' | 'auto' = 'auto') {
         this.painter = painter;
         this.tileManager = new TerrainTileManager(tileManager);
         this.tileManager.painter = painter;
         this.options = options;
         this.exaggeration = typeof options.exaggeration === 'number' ? options.exaggeration : 1.0;
+        this._terrainSkirtLength = terrainSkirtLength;
         this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = {};
@@ -453,39 +458,8 @@ export class Terrain {
             indexArray.emplaceBack(x + y, meshSize + x + y + 1, meshSize + x + y + 2);
             indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
         }
-        // add an extra frame around the mesh to avoid stitching on tile boundaries with different zoomlevels
-        // top-bottom frame + pole vertices, if needed
-        const offsetTop = vertexArray.length;
-        const offsetTopEdge = 0;
-        const offsetBottom = offsetTop + (meshSize + 1);
-        const offsetBottomEdge = (meshSize + 1) * meshSize;
-        const northY = northPole ? NORTH_POLE_Y : 0;
-        const northZ = northPole ? 0 : 1;
-        const southY = southPole ? SOUTH_POLE_Y : EXTENT;
-        const southZ = southPole ? 0 : 1;
-        for (let x = 0; x <= meshSize; x++) {
-            vertexArray.emplaceBack(x * delta, northY, northZ);
-        }
-        for (let x = 0; x <= meshSize; x++) {
-            vertexArray.emplaceBack(x * delta, southY, southZ);
-        }
-        for (let x = 0; x < meshSize; x++) {
-            indexArray.emplaceBack(offsetBottomEdge + x, offsetBottom + x, offsetBottom + x + 1);
-            indexArray.emplaceBack(offsetBottomEdge + x, offsetBottom + x + 1, offsetBottomEdge + x + 1);
-            indexArray.emplaceBack(offsetTopEdge + x, offsetTop + x + 1, offsetTop + x);
-            indexArray.emplaceBack(offsetTopEdge + x, offsetTopEdge + x + 1, offsetTop + x + 1);
-        }
-        // left-right frame
-        const offsetLeft = vertexArray.length;
-        const offsetRight = offsetLeft + (meshSize + 1) * 2;
-        for (const x of [0, 1]) for (let y = 0; y <= meshSize; y++) for (const z of [0, 1]) {
-            vertexArray.emplaceBack(x * EXTENT, y * delta, z);
-        }
-        for (let y = 0; y < meshSize * 2; y += 2) {
-            indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 1, offsetLeft + y + 3);
-            indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 3, offsetLeft + y + 2);
-            indexArray.emplaceBack(offsetRight + y, offsetRight + y + 3, offsetRight + y + 1);
-            indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
+        if (this._terrainSkirtLength !== 'none') {
+            this._buildSkirts(vertexArray, indexArray, meshSize, delta, northPole, southPole);
         }
 
         const mesh = new Mesh(
@@ -498,12 +472,12 @@ export class Terrain {
     }
 
     /**
-     * Calculates a height of the frame around the terrain-mesh to avoid stitching between
-     * tile boundaries in different zoomlevels.
+     * Calculates the height of the tile skirts for the "auto" strategy.
+     * @see {@link MapOptions.terrainSkirtLength}
      * @param zoom - current zoomlevel
      * @returns the elevation delta in meters
      */
-    getMeshFrameDelta(zoom: number): number {
+    getSkirtLength(zoom: number): number {
         // divide by 5 is evaluated by trial & error to get a frame in the right height
         return 2 * Math.PI * earthRadius / Math.pow(2, Math.max(zoom, 0)) / 5;
     }
@@ -544,5 +518,43 @@ export class Terrain {
             mercatorX,
             mercatorY
         };
+    }
+
+    /** Add an extra frame around the mesh to avoid hairline gaps (stitching) on tile boundaries with different zoomlevels.
+     * @see {@link MapOptions.terrainSkirtLength}
+    */
+    _buildSkirts(vertexArray: Pos3dArray, indexArray: TriangleIndexArray, meshSize: number, delta: number, northPole: boolean, southPole: boolean) {
+        const offsetTop = vertexArray.length;
+        const offsetTopEdge = 0;
+        const offsetBottom = offsetTop + (meshSize + 1);
+        const offsetBottomEdge = (meshSize + 1) * meshSize;
+        const northY = northPole ? NORTH_POLE_Y : 0;
+        const northZ = northPole ? 0 : 1;
+        const southY = southPole ? SOUTH_POLE_Y : EXTENT;
+        const southZ = southPole ? 0 : 1;
+        for (let x = 0; x <= meshSize; x++) {
+            vertexArray.emplaceBack(x * delta, northY, northZ);
+        }
+        for (let x = 0; x <= meshSize; x++) {
+            vertexArray.emplaceBack(x * delta, southY, southZ);
+        }
+        for (let x = 0; x < meshSize; x++) {
+            indexArray.emplaceBack(offsetBottomEdge + x, offsetBottom + x, offsetBottom + x + 1);
+            indexArray.emplaceBack(offsetBottomEdge + x, offsetBottom + x + 1, offsetBottomEdge + x + 1);
+            indexArray.emplaceBack(offsetTopEdge + x, offsetTop + x + 1, offsetTop + x);
+            indexArray.emplaceBack(offsetTopEdge + x, offsetTopEdge + x + 1, offsetTop + x + 1);
+        }
+        // left-right frame
+        const offsetLeft = vertexArray.length;
+        const offsetRight = offsetLeft + (meshSize + 1) * 2;
+        for (const x of [0, 1]) for (let y = 0; y <= meshSize; y++) for (const z of [0, 1]) {
+            vertexArray.emplaceBack(x * EXTENT, y * delta, z);
+        }
+        for (let y = 0; y < meshSize * 2; y += 2) {
+            indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 1, offsetLeft + y + 3);
+            indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 3, offsetLeft + y + 2);
+            indexArray.emplaceBack(offsetRight + y, offsetRight + y + 3, offsetRight + y + 1);
+            indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
+        }
     }
 }
