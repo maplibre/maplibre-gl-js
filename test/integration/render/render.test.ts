@@ -43,6 +43,7 @@ type TestData = {
     collisionDebug: boolean;
     localIdeographFontFamily: string;
     crossSourceCollisions: boolean;
+    terrainSkirtLength: 'none' | 'auto';
     operations: any[];
     queryGeometry: PointLike;
     queryOptions: any;
@@ -655,6 +656,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             fadeDuration: options.fadeDuration || 0,
             localIdeographFontFamily: options.localIdeographFontFamily || false as any,
             crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
+            terrainSkirtLength: options.terrainSkirtLength,
             maxCanvasSize: [8192, 8192]
         });
 
