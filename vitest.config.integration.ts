@@ -6,7 +6,10 @@ export default defineConfig({
         name: 'integration',
         environment: 'node',
         include: [
-            'test/integration/**/*.test.{ts,js}',
+            'test/integration/**/*.test.ts',
+        ],
+        exclude: [
+            'test/integration/render/*.*', // Render tests are run separately
         ],
         coverage: {
             provider: 'v8',

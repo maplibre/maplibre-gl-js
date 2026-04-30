@@ -6,7 +6,6 @@ import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
 import http from 'http';
-import junitReportBuilder, {type TestSuite} from 'junit-report-builder';
 import type {Page, Browser, WebWorker} from 'puppeteer';
 
 import {ensureError} from '../../../src/util/util';
@@ -14,6 +13,7 @@ import {localizeURLs} from '../lib/localize-urls';
 import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config';
 import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let maplibregl: typeof MapLibreGL;
@@ -23,7 +23,6 @@ type TestData = {
     width: number;
     height: number;
     pixelRatio: number;
-    recycleMap: boolean;
     allowed: number;
     /**
      * Perceptual color difference threshold, number between 0 and 1, smaller is more sensitive
@@ -44,6 +43,7 @@ type TestData = {
     collisionDebug: boolean;
     localIdeographFontFamily: string;
     crossSourceCollisions: boolean;
+    terrainSkirtLength: 'none' | 'auto';
     operations: any[];
     queryGeometry: PointLike;
     queryOptions: any;
@@ -60,15 +60,6 @@ type TestData = {
     expected: string;
 };
 
-type RenderOptions = {
-    tests: any[];
-    recycleMap: boolean;
-    skipreport: boolean;
-    seed: string;
-    debug: boolean;
-    openBrowser: boolean;
-};
-
 type StyleWithTestData = StyleSpecification & {
     metadata : {
         test: TestData;
@@ -82,37 +73,6 @@ type TestStats = {
     passed: TestData[];
 };
 
-// https://stackoverflow.com/a/1349426/229714
-function makeHash(): string {
-    const array = [];
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-    for (let i = 0; i < 10; ++i)
-        array.push(possible.charAt(Math.floor(Math.random() * possible.length)));
-
-    // join array elements without commas.
-    return array.join('');
-}
-
-function checkParameter(options: RenderOptions, param: string): boolean {
-    const index = options.tests.indexOf(param);
-    if (index === -1)
-        return false;
-    options.tests.splice(index, 1);
-    return true;
-}
-
-function checkValueParameter(options: RenderOptions, defaultValue: any, param: string) {
-    const index = options.tests.findIndex((elem) => String(elem).startsWith(param));
-    if (index === -1)
-        return defaultValue;
-
-    const split = String(options.tests.splice(index, 1)).split('=');
-    if (split.length !== 2)
-        return defaultValue;
-
-    return split[1];
-}
 /**
  * Compares the Unit8Array that was created to the expected file in the file system.
  * It updates testData with the results.
@@ -206,9 +166,7 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
  * @param directory - The base directory
  * @returns The tests data structure and the styles that were loaded
  */
-function getTestStyles(options: RenderOptions, directory: string, port: number): StyleWithTestData[] {
-    const tests = options.tests || [];
-
+function getTestStyles(directory: string): StyleWithTestData[] {
     return globSync('**/style.json', {cwd: directory})
         .map(fixture => {
             const id = path.dirname(fixture);
@@ -220,26 +178,12 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
                 width: 512,
                 height: 512,
                 pixelRatio: 1,
-                recycleMap: options.recycleMap || false,
                 allowed: 0.00025,
                 threshold: 0.1285,
                 ...style.metadata.test
             };
 
             return style;
-        })
-        .filter(style => {
-            const test = style.metadata.test;
-            if (tests.length !== 0 && !tests.some(t => test.id.includes(t))) {
-                return false;
-            }
-
-            if (process.env.BUILDTYPE !== 'Debug' && test.id.match(/^debug\//)) {
-                console.log(`* skipped ${test.id}`);
-                return false;
-            }
-            localizeURLs(style, port, path.join(__dirname, '../'));
-            return true;
         });
 }
 
@@ -256,24 +200,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
     const height = styleForTest.metadata.test.height;
 
     await page.setViewport({width, height, deviceScaleFactor: 2});
-
-    await page.setContent(`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Query Test Page</title>
-    <meta charset='utf-8'>
-    <link rel="icon" href="about:blank">
-    <style>#map {
-        box-sizing:content-box;
-        width:${width}px;
-        height:${height}px;
-    }</style>
-</head>
-<body>
-    <div id='map'></div>
-</body>
-</html>`);
 
     const evaluatedArray = await page.evaluate(async (style: StyleWithTestData) => {
 
@@ -707,148 +633,88 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             return fakeCanvas;
         }
 
-        return new Promise(async (resolve, reject) => {
-            setTimeout(() => {
-                reject(new Error('Test timed out'));
-            }, options.timeout || 40000);
+        if (options.addFakeCanvas) {
+            const fakeCanvas = await createFakeCanvas(document, options.addFakeCanvas.id, options.addFakeCanvas.image);
+            document.body.appendChild(fakeCanvas);
+        }
 
-            if (options.addFakeCanvas) {
-                const fakeCanvas = await createFakeCanvas(document, options.addFakeCanvas.id, options.addFakeCanvas.image);
-                document.body.appendChild(fakeCanvas);
-            }
+        if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
+            await maplibregl.setRTLTextPlugin(
+                'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js',
+                false // Don't lazy load the plugin
+            );
+        }
 
-            if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
-                await maplibregl.setRTLTextPlugin(
-                    'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js',
-                    false // Don't lazy load the plugin
-                );
-            }
-
-            const map = new maplibregl.Map({
-                container: 'map',
-                style,
-                interactive: false,
-                attributionControl: false,
-                maxPitch: options.maxPitch,
-                pixelRatio: options.pixelRatio,
-                canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
-                fadeDuration: options.fadeDuration || 0,
-                localIdeographFontFamily: options.localIdeographFontFamily || false as any,
-                crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
-                maxCanvasSize: [8192, 8192]
-            });
-
-            let idle = false;
-            map.on('idle', () => {
-                console.log('idle');
-                idle = true;
-            });
-            // Configure the map to never stop the render loop
-            map.repaint = typeof options.continuesRepaint === 'undefined' ? true : options.continuesRepaint;
-
-            if (options.debug) map.showTileBoundaries = true;
-            if (options.showOverdrawInspector) map.showOverdrawInspector = true;
-            if (options.showPadding) map.showPadding = true;
-
-            const gl = map.painter.context.gl;
-
-            await map.once('load');
-            if (options.collisionDebug) {
-                map.showCollisionBoxes = true;
-                if (options.operations) {
-                    options.operations.push(['wait']);
-                } else {
-                    options.operations = [['wait']];
-                }
-            }
-
-            await applyOperations(options, map as any, idle);
-            const viewport = gl.getParameter(gl.VIEWPORT);
-            const w = options.reportWidth ?? viewport[2];
-            const h = options.reportHeight ?? viewport[3];
-
-            const data = new Uint8Array(w * h * 4);
-            gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
-
-            // Flip the scanlines.
-            const stride = w * 4;
-            const tmp = new Uint8Array(stride);
-            for (let i = 0, j = h - 1; i < j; i++, j--) {
-                const start = i * stride;
-                const end = j * stride;
-                tmp.set(data.slice(start, start + stride), 0);
-                data.set(data.slice(end, end + stride), start);
-                data.set(tmp, end);
-            }
-
-            map.remove();
-            delete map.painter.context.gl;
-
-            if (options.addFakeCanvas) {
-                const fakeCanvas = window.document.getElementById(options.addFakeCanvas.id);
-                fakeCanvas.parentNode.removeChild(fakeCanvas);
-            }
-
-            resolve(data);
+        const map = new maplibregl.Map({
+            container: 'map',
+            style,
+            interactive: false,
+            attributionControl: false,
+            maxPitch: options.maxPitch,
+            pixelRatio: options.pixelRatio,
+            canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
+            fadeDuration: options.fadeDuration || 0,
+            localIdeographFontFamily: options.localIdeographFontFamily || false as any,
+            crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
+            terrainSkirtLength: options.terrainSkirtLength,
+            maxCanvasSize: [8192, 8192]
         });
+
+        let idle = false;
+        map.on('idle', () => {
+            console.log('idle');
+            idle = true;
+        });
+        // Configure the map to never stop the render loop
+        map.repaint = typeof options.continuesRepaint === 'undefined' ? true : options.continuesRepaint;
+
+        if (options.debug) map.showTileBoundaries = true;
+        if (options.showOverdrawInspector) map.showOverdrawInspector = true;
+        if (options.showPadding) map.showPadding = true;
+
+        const gl = map.painter.context.gl;
+
+        await map.once('load');
+        if (options.collisionDebug) {
+            map.showCollisionBoxes = true;
+            if (options.operations) {
+                options.operations.push(['wait']);
+            } else {
+                options.operations = [['wait']];
+            }
+        }
+
+        await applyOperations(options, map as any, idle);
+        const viewport = gl.getParameter(gl.VIEWPORT);
+        const w = options.reportWidth ?? viewport[2];
+        const h = options.reportHeight ?? viewport[3];
+
+        const data = new Uint8Array(w * h * 4);
+        gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+        // Flip the scanlines.
+        const stride = w * 4;
+        const tmp = new Uint8Array(stride);
+        for (let i = 0, j = h - 1; i < j; i++, j--) {
+            const start = i * stride;
+            const end = j * stride;
+            tmp.set(data.slice(start, start + stride), 0);
+            data.set(data.slice(end, end + stride), start);
+            data.set(tmp, end);
+        }
+
+        map.remove();
+        delete map.painter.context.gl;
+
+        if (options.addFakeCanvas) {
+            const fakeCanvas = window.document.getElementById(options.addFakeCanvas.id);
+            fakeCanvas.parentNode.removeChild(fakeCanvas);
+        }
+
+        return data;
     }, styleForTest as any);
 
     return new Uint8Array(Object.values(evaluatedArray as object) as number[]);
-}
-
-/**
- * Prints the progress to the console
- *
- * @param test - The current test
- * @param total - The total number of tests
- * @param index - The current test index
- */
-function printProgress(test: TestData, total: number, index: number) {
-    if (test.error) {
-        console.log('\x1b[91m', `${index}/${total}: errored ${test.id} ${test.error.message}`, '\x1b[0m');
-    } else if (!test.ok) {
-        console.log('\x1b[31m', `${index}/${total}: failed ${test.id} ${test.difference}`, '\x1b[0m');
-    } else {
-        console.log(`${index}/${total}: passed ${test.id}`);
-    }
-}
-
-function printSpecificStatistics(status: 'passed' | 'failed' | 'errored', subsetStats: TestData[], total: number, suite: TestSuite) {
-    const statusCount = subsetStats.length;
-    if (statusCount === 0) {
-        return;
-    }
-    console.log(`${statusCount} ${status} (${(100 * statusCount / total).toFixed(1)}%)`);
-    for (const testData of subsetStats) {
-        const testCase = suite.testCase().className(testData.id).name(testData.id);
-        if (status === 'failed') {
-            testCase.failure();
-        } else if (status === 'errored') {
-            testCase.error();
-        }
-    }
-    if (status === 'passed') {
-        return;
-    }
-    for (let i = 0; i < subsetStats.length; i++) {
-        printProgress(subsetStats[i], statusCount, i + 1);
-    }
-}
-
-/**
- * Prints the summary at the end of the run
- *
- * @param tests - all the tests with their results
- * @returns `true` if all the tests passed
- */
-function printStatistics(stats: TestStats): boolean {
-    const suite = junitReportBuilder.testSuite().name('render-tests');
-    printSpecificStatistics('passed', stats.passed, stats.total, suite);
-    printSpecificStatistics('failed', stats.failed, stats.total, suite);
-    printSpecificStatistics('errored', stats.errored, stats.total, suite);
-
-    junitReportBuilder.writeTo('junit.xml');
-    return (stats.failed.length + stats.errored.length) === 0;
 }
 
 function getReportItem(test: TestData) {
@@ -876,95 +742,32 @@ function getReportItem(test: TestData) {
 </div>`;
 }
 
-function applyDebugParameter(options: RenderOptions, page: Page) {
-    if (options.debug) {
-        page.on('console', async (message) => {
-            if (message.text() !== 'JSHandle@error') {
-                console.log(`${message.type().substring(0, 3).toUpperCase()} ${message.text()}`);
-                return;
-            }
-            const messages = await Promise.all(message.args().map((arg) => arg.getProperty('message')));
-            console.log(`${message.type().substring(0, 3).toUpperCase()} ${messages.filter(Boolean)}`);
-        });
-
-        page.on('pageerror', (e) => { console.error(ensureError(e).message); });
-
-        page.on('response', response => {
-            console.log(`${response.status()} ${response.url()}`);
-        });
-
-        page.on('requestfailed', request => {
-            if (request) {
-                console.error(`requestfailed, error text: ${request.failure()?.errorText}, url: ${request.url()}`);
-            } else {
-                console.error('Request failed and request object is ', request);
-            }
-        });
-    }
-}
-
-async function runTests(page: Page, testStyles: StyleWithTestData[], directory: string) {
-    let index = 0;
-    for (const style of testStyles) {
-        try {
-            style.metadata.test.error = undefined;
-            const data = await getImageFromStyle(style, page);
-            compareRenderResults(directory, style.metadata.test, data);
-        } catch (ex) {
-            style.metadata.test.error = ensureError(ex);
+function addConsoleLogging(page: Page) {
+    page.on('console', async (message) => {
+        if (message.text() !== 'JSHandle@error') {
+            console.log(`${message.type().substring(0, 3).toUpperCase()} ${message.text()}`);
+            return;
         }
-        printProgress(style.metadata.test, testStyles.length, ++index);
-    }
+        const messages = await Promise.all(message.args().map((arg) => arg.getProperty('message')));
+        console.log(`${message.type().substring(0, 3).toUpperCase()} ${messages.filter(Boolean)}`);
+    });
+
+    page.on('pageerror', (e) => { console.error(ensureError(e).message); });
+
+    page.on('response', response => {
+        console.log(`${response.status()} ${response.url()}`);
+    });
+
+    page.on('requestfailed', request => {
+        if (request) {
+            console.error(`requestfailed, error text: ${request.failure()?.errorText}, url: ${request.url()}`);
+        } else {
+            console.error('Request failed and request object is ', request);
+        }
+    });
 }
 
-async function createPageAndStart(browser: Browser, testStyles: StyleWithTestData[], directory: string, options: RenderOptions, serverPort: number) {
-    const page = await browser.newPage();
-    const workers = await startCoverage(page);
-    applyDebugParameter(options, page);
-    await page.goto(`http://localhost:${serverPort}/test-page.html`, {waitUntil: 'load'});
-    await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
-    await runTests(page, testStyles, directory);
-    return {page, workers};
-}
-
-async function closePageAndFinish({page, workers}: {page: Page; workers: WebWorker[]}, reportCoverage: boolean) {
-    if (reportCoverage) {
-        await stopCoverageAndReport(page, workers, 'render');
-    } else {
-        await page.close();
-    }
-}
-
-/**
- * Entry point to run the render test suite, compute differences to expected values (making exceptions based on
- * implementation vagaries), print results to standard output, write test artifacts to the
- * filesystem (optionally updating expected results), and exit the process with a success or
- * failure code.
- *
- * If all the tests are successful, this function exits the process with exit code 0. Otherwise
- * it exits with 1.
- */
-async function executeRenderTests() {
-    const options: RenderOptions = {
-        tests: [],
-        recycleMap: false,
-        skipreport: false,
-        seed: makeHash(),
-        debug: false,
-        openBrowser: false
-    };
-
-    if (process.argv.length > 2) {
-        options.tests = process.argv.slice(2).filter((value, index, self) => { return self.indexOf(value) === index; }) || [];
-        options.recycleMap = checkParameter(options, '--recycle-map');
-        options.skipreport = checkParameter(options, '--skip-report');
-        options.seed = checkValueParameter(options, options.seed, '--seed');
-        options.debug = checkParameter(options, '--debug');
-        options.openBrowser = checkParameter(options, '--open-browser');
-    }
-
-    const browser = await launchPuppeteer(!options.openBrowser);
-
+async function createServer() {
     const mount = st({
         path: 'test/integration/assets',
         cors: true,
@@ -1003,25 +806,10 @@ async function executeRenderTests() {
     await new Promise<void>((resolve) => server.listen(2900, '0.0.0.0', resolve));
     await new Promise<void>((resolve) => mvtServer.listen(2901, '0.0.0.0', resolve));
 
-    const directory = path.join(__dirname);
-    const serverPort = (server.address() as any).port;
-    let testStyles = getTestStyles(options, directory, serverPort);
+    return {server, mvtServer};
+}
 
-    if (process.env.SPLIT_COUNT && process.env.CURRENT_SPLIT_INDEX) {
-        const numberOfTestsForThisPart = Math.ceil(testStyles.length / +process.env.SPLIT_COUNT);
-        testStyles = testStyles.splice(+process.env.CURRENT_SPLIT_INDEX * numberOfTestsForThisPart, numberOfTestsForThisPart);
-    }
-
-    let pageWithWorkers = await createPageAndStart(browser, testStyles, directory, options, serverPort);
-    const failedTests = testStyles.filter(t => t.metadata.test.error || !t.metadata.test.ok);
-    await closePageAndFinish(pageWithWorkers, failedTests.length === 0);
-    if (failedTests.length > 0 && failedTests.length < testStyles.length) {
-        console.log(`Re-running failed tests: ${failedTests.length}`);
-        options.debug = true;
-        pageWithWorkers = await createPageAndStart(browser, failedTests, directory, options, serverPort);
-        await closePageAndFinish(pageWithWorkers, true);
-    }
-
+function printHTMLReport(testStyles: StyleWithTestData[]) {
     const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
     const testStats: TestStats = {
         total: tests.length,
@@ -1029,62 +817,83 @@ async function executeRenderTests() {
         failed: tests.filter(t => !t.error && !t.ok),
         passed: tests.filter(t => !t.error && t.ok)
     };
+    const erroredItems = testStats.errored.map(t => getReportItem(t));
+    const failedItems = testStats.failed.map(t => getReportItem(t));
 
-    if (process.env.UPDATE) {
-        if (testStats.errored.length > 0) {
-            console.log(`Updated ${testStats.failed.length}/${testStats.total} tests, ${testStats.errored.length} errored.`);
-        } else {
-            console.log(`Updated ${testStats.total} tests.`);
-        }
-        process.exit(0);
+    // write HTML reports
+    let resultData: string;
+    if (erroredItems.length || failedItems.length) {
+        const resultItemTemplate = fs.readFileSync(path.join(__dirname, 'result_item_template.html')).toString();
+        resultData = resultItemTemplate
+            .replace('${failedItemsLength}', failedItems.length.toString())
+            .replace('${failedItems}', failedItems.join('\n'))
+            .replace('${erroredItemsLength}', erroredItems.length.toString())
+            .replace('${erroredItems}', erroredItems.join('\n'));
+    } else {
+        resultData = '<h1 style="color: green">All tests passed!</h1>';
     }
 
-    const success = printStatistics(testStats);
+    const reportTemplate = fs.readFileSync(path.join(__dirname, 'report_template.html')).toString();
+    const resultsContent = reportTemplate.replace('${resultData}', resultData);
 
-    if (!options.skipreport) {
-        const erroredItems = testStats.errored.map(t => getReportItem(t));
-        const failedItems = testStats.failed.map(t => getReportItem(t));
-
-        // write HTML reports
-        let resultData: string;
-        if (erroredItems.length || failedItems.length) {
-            const resultItemTemplate = fs.readFileSync(path.join(__dirname, 'result_item_template.html')).toString();
-            resultData = resultItemTemplate
-                .replace('${failedItemsLength}', failedItems.length.toString())
-                .replace('${failedItems}', failedItems.join('\n'))
-                .replace('${erroredItemsLength}', erroredItems.length.toString())
-                .replace('${erroredItems}', erroredItems.join('\n'));
-        } else {
-            resultData = '<h1 style="color: green">All tests passed!</h1>';
-        }
-
-        const reportTemplate = fs.readFileSync(path.join(__dirname, 'report_template.html')).toString();
-        const resultsContent = reportTemplate.replace('${resultData}', resultData);
-
-        const p = path.join(__dirname, options.recycleMap ? 'results-recycle-map.html' : 'results.html');
-        fs.writeFileSync(p, resultsContent, 'utf8');
-        console.log(`\nFull html report is logged to '${p}'`);
-
-        // write text report of just the error/failed id
-        if (testStats.errored?.length > 0) {
-            const erroredItemIds = testStats.errored.map(t => t.id);
-            const caseIdFileName = path.join(__dirname, 'results-errored-caseIds.txt');
-            fs.writeFileSync(caseIdFileName, erroredItemIds.join('\n'), 'utf8');
-
-            console.log(`\n${testStats.errored?.length} errored test case IDs are logged to '${caseIdFileName}'`);
-        }
-
-        if (testStats.failed?.length > 0) {
-            const failedItemIds = testStats.failed.map(t => t.id);
-            const caseIdFileName = path.join(__dirname, 'results-failed-caseIds.txt');
-            fs.writeFileSync(caseIdFileName, failedItemIds.join('\n'), 'utf8');
-
-            console.log(`\n${testStats.failed?.length} failed test case IDs are logged to '${caseIdFileName}'`);
-        }
-    }
-
-    process.exit(success ? 0 : 1);
+    const p = path.join(__dirname, 'results.html');
+    fs.writeFileSync(p, resultsContent, 'utf8');
+    console.log(`\nFull html report is logged to '${p}'`);
 }
 
-// start testing here
-executeRenderTests();
+describe('Render tests', () => {
+    let browser: Browser;
+    let server: http.Server;
+    let mvtServer: http.Server;
+    let page: Page;
+    let workers: WebWorker[];
+
+    const directory = path.join(__dirname);
+    let testStyles = getTestStyles(directory);
+    if (process.env.SPLIT_COUNT && process.env.CURRENT_SPLIT_INDEX) {
+        const numberOfTestsForThisPart = Math.ceil(testStyles.length / +process.env.SPLIT_COUNT);
+        testStyles = testStyles.splice(+process.env.CURRENT_SPLIT_INDEX * numberOfTestsForThisPart, numberOfTestsForThisPart);
+    }
+
+    beforeAll(async () => {
+        browser = await launchPuppeteer(true);
+        ({server, mvtServer} = await createServer());
+        const serverPort = (server.address() as any).port;
+        page = await browser.newPage();
+        workers = await startCoverage(page);
+        await page.goto(`http://localhost:${serverPort}/test-page.html`, {waitUntil: 'load'});
+        await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
+    }, 30000);
+
+    afterAll(async () => {
+        await stopCoverageAndReport(page, workers, 'render');
+        printHTMLReport(testStyles);
+        server.close();
+        mvtServer.close();
+        await browser.close();
+    });
+
+    beforeEach((ctx) => {
+        if (!testStyles.find(s => s.metadata.test.id === ctx.task.name)?.metadata.test.ok) {
+            console.log(`Retry ${ctx.task.name} with console logging enabled`);
+            addConsoleLogging(page);
+        }
+    });
+
+    afterEach(async () => {
+        page.removeAllListeners('console');
+        page.removeAllListeners('pageerror');
+        page.removeAllListeners('response');
+        page.removeAllListeners('requestfailed');
+    });
+
+    for (const style of testStyles) {
+        test(style.metadata.test.id, {retry: 1, timeout: style.metadata.test.timeout || 40000}, async () => {
+            const serverPort = (server.address() as any).port;
+            localizeURLs(style, serverPort, path.join(__dirname, '../'));
+            const data = await getImageFromStyle(style, page);
+            compareRenderResults(directory, style.metadata.test, data);
+            expect(style.metadata.test.ok).toBe(true);
+        });
+    }
+});

@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import {type RegressionResults, type Summary} from '../lib/statistics';
-import type Benchmark from '../lib/benchmark';
+import {type BenchmarkLike} from '../lib/benchmark';
 
 export type Version = {
     name: string;
@@ -11,7 +11,7 @@ export type Version = {
     summary: Summary;
     regression: RegressionResults;
     error: Error;
-    bench: Benchmark;
+    bench: BenchmarkLike;
 };
 
 export const versionColor = d3.scaleOrdinal(['#1b9e77', '#7570b3', '#d95f02']);
