@@ -3640,7 +3640,7 @@ describe('Style#setFeatureState', () => {
         const spy = vi.fn();
         style.on('error', spy);
 
-        style.setFeatureState({source: 'vector', sourceLayer: 'layer', id: 1}, {'__proto__': true});
+        style.setFeatureState({source: 'vector', sourceLayer: 'layer', id: 1}, {'constructor': true});
 
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].error.message).toMatch(/The feature state should not include one of the following keys/);
