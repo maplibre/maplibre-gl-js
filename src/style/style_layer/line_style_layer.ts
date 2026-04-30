@@ -132,10 +132,8 @@ export class LineStyleLayer extends StyleLayer {
     };
 
     resize() {
-        if (this.lineFbo) {
-            this.lineFbo.destroy();
-            this.lineFbo = null;
-        }
+        this.lineFbo?.destroy();
+        this.lineFbo = null;
     }
 }
 
