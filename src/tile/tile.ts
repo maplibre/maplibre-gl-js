@@ -118,6 +118,7 @@ export class Tile {
     hasRTLText: boolean;
     dependencies: any;
     /**
+     * @internal
      * Render-to-texture slots keyed by stack index. Each slot caches the
      * rendered output of one stack of layers for this tile and survives
      * across frames until the tile is unloaded or its source data changes.
