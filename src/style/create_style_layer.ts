@@ -12,7 +12,7 @@ import {CustomStyleLayer, type CustomLayerInterface} from './style_layer/custom_
 
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-export function createStyleLayer(layer: LayerSpecification | CustomLayerInterface, globalState: Record<string, any>) {
+export function createStyleLayer(layer: LayerSpecification | CustomLayerInterface, globalState: Record<string, any>): HeatmapStyleLayer | CircleStyleLayer | HillshadeStyleLayer | ColorReliefStyleLayer | FillExtrusionStyleLayer | FillStyleLayer | LineStyleLayer | SymbolStyleLayer | BackgroundStyleLayer | RasterStyleLayer | CustomStyleLayer {
     if (layer.type === 'custom') {
         return new CustomStyleLayer(layer, globalState);
     }

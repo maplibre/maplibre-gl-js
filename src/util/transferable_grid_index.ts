@@ -80,7 +80,7 @@ export class TransferableGridIndex {
         this.max = extent + p;
     }
 
-    insert(key: number, x1: number, y1: number, x2: number, y2: number) {
+    insert(key: number, x1: number, y1: number, x2: number, y2: number): void {
         this._forEachCell(x1, y1, x2, y2, this._insertCell, this.uid++, undefined, undefined);
         this.keys.push(key);
         this.bboxes.push(x1);
@@ -89,11 +89,11 @@ export class TransferableGridIndex {
         this.bboxes.push(y2);
     }
 
-    _insertReadonly() {
+    _insertReadonly(): void {
         throw new Error('Cannot insert into a GridIndex created from an ArrayBuffer.');
     }
 
-    _insertCell(x1: number, y1: number, x2: number, y2: number, cellIndex: number, uid: number) {
+    _insertCell(x1: number, y1: number, x2: number, y2: number, cellIndex: number, uid: number): void {
         this.cells[cellIndex].push(uid);
     }
 
@@ -111,7 +111,7 @@ export class TransferableGridIndex {
         }
     }
 
-    _queryCell(x1: number, y1: number, x2: number, y2:number, cellIndex:number, result, seenUids, intersectionTest: Function) {
+    _queryCell(x1: number, y1: number, x2: number, y2:number, cellIndex:number, result: any, seenUids: any, intersectionTest: Function): void {
         const cell = this.cells[cellIndex];
         if (cell !== null) {
             const keys = this.keys;
@@ -135,7 +135,7 @@ export class TransferableGridIndex {
         }
     }
 
-    _forEachCell(x1: number, y1: number, x2:number, y2:number, fn: Function, arg1, arg2, intersectionTest) {
+    _forEachCell(x1: number, y1: number, x2:number, y2:number, fn: Function, arg1: any, arg2: any, intersectionTest: any): void {
         const cx1 = this._convertToCellCoord(x1);
         const cy1 = this._convertToCellCoord(y1);
         const cx2 = this._convertToCellCoord(x2);
@@ -153,11 +153,11 @@ export class TransferableGridIndex {
         }
     }
 
-    _convertFromCellCoord (x) {
+    _convertFromCellCoord (x: any): number {
         return (x - this.padding) / this.scale;
     }
 
-    _convertToCellCoord(x) {
+    _convertToCellCoord(x: any): number {
         return Math.max(0, Math.min(this.d - 1, Math.floor(x * this.scale) + this.padding));
     }
 

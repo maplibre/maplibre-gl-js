@@ -88,7 +88,7 @@ export class RasterTileSource extends Evented implements Source {
         extend(this, pick(options, ['url', 'scheme', 'tileSize']));
     }
 
-    async load(sourceDataChanged: boolean = false) {
+    async load(sourceDataChanged: boolean = false): Promise<void> {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         this._tileJSONRequest = new AbortController();
@@ -121,19 +121,19 @@ export class RasterTileSource extends Evented implements Source {
         return this._loaded;
     }
 
-    onAdd(map: Map) {
+    onAdd(map: Map): void {
         this.map = map;
         this.load();
     }
 
-    onRemove() {
+    onRemove(): void {
         if (this._tileJSONRequest) {
             this._tileJSONRequest.abort();
             this._tileJSONRequest = null;
         }
     }
 
-    setSourceProperty(callback: Function) {
+    setSourceProperty(callback: Function): void {
         if (this._tileJSONRequest) {
             this._tileJSONRequest.abort();
             this._tileJSONRequest = null;
@@ -171,11 +171,11 @@ export class RasterTileSource extends Evented implements Source {
         return this;
     }
 
-    serialize() {
+    serialize(): RasterSourceSpecification | RasterDEMSourceSpecification {
         return extend({}, this._options);
     }
 
-    hasTile(tileID: OverscaledTileID) {
+    hasTile(tileID: OverscaledTileID): boolean {
         return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
     }
 
@@ -216,20 +216,20 @@ export class RasterTileSource extends Evented implements Source {
         }
     }
 
-    async abortTile(tile: Tile) {
+    async abortTile(tile: Tile): Promise<void> {
         if (tile.abortController) {
             tile.abortController.abort();
             delete tile.abortController;
         }
     }
 
-    async unloadTile(tile: Tile) {
+    async unloadTile(tile: Tile): Promise<void> {
         if (tile.texture) {
             this.map.painter.saveTileTexture(tile.texture);
         }
     }
 
-    hasTransition() {
+    hasTransition(): boolean {
         return false;
     }
 }

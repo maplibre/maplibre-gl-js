@@ -31,11 +31,11 @@ export class IndexBuffer {
         }
     }
 
-    bind() {
+    bind(): void {
         this.context.bindElementBuffer.set(this.buffer);
     }
 
-    updateData(array: StructArray) {
+    updateData(array: StructArray): void {
         const gl = this.context.gl;
         if (!this.dynamicDraw) throw new Error('Attempted to update data while not in dynamic mode.');
         // The right VAO will get this buffer re-bound later in VertexArrayObject.bind
@@ -45,7 +45,7 @@ export class IndexBuffer {
         gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, array.arrayBuffer);
     }
 
-    destroy() {
+    destroy(): void {
         const gl = this.context.gl;
         if (this.buffer) {
             gl.deleteBuffer(this.buffer);

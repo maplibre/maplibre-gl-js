@@ -5,9 +5,9 @@ import {getMaximumPaintValue, translateDistance, translate, offsetLine} from '..
 import properties, {type LineLayoutPropsPossiblyEvaluated, type LinePaintPropsPossiblyEvaluated} from './line_style_layer_properties.g';
 import {extend} from '../../util/util';
 import {EvaluationParameters} from '../evaluation_parameters';
-import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated, DataDrivenProperty} from '../properties';
+import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated, DataDrivenProperty, type PossiblyEvaluatedPropertyValue} from '../properties';
 
-import {isZoomExpression, Step} from '@maplibre/maplibre-gl-style-spec';
+import {isZoomExpression, Step, type Feature, type FeatureState, type StylePropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g';
@@ -15,7 +15,7 @@ import type {LineLayoutProps, LinePaintProps} from './line_style_layer_propertie
 export class LineFloorwidthProperty extends DataDrivenProperty<number> {
     useIntegerZoom: true;
 
-    possiblyEvaluate(value, parameters) {
+    possiblyEvaluate(value: any, parameters: EvaluationParameters): PossiblyEvaluatedPropertyValue<number> {
         parameters = new EvaluationParameters(Math.floor(parameters.zoom), {
             now: parameters.now,
             fadeDuration: parameters.fadeDuration,
@@ -25,7 +25,7 @@ export class LineFloorwidthProperty extends DataDrivenProperty<number> {
         return super.possiblyEvaluate(value, parameters);
     }
 
-    evaluate(value, globals, feature, featureState) {
+    evaluate(value: any, globals: EvaluationParameters, feature: Feature, featureState: FeatureState): number {
         globals = extend({}, globals, {zoom: Math.floor(globals.zoom)});
         return super.evaluate(value, globals, feature, featureState);
     }
@@ -56,7 +56,7 @@ export class LineStyleLayer extends StyleLayer {
         }
     }
 
-    _handleSpecialPaintPropertyUpdate(name: string) {
+    _handleSpecialPaintPropertyUpdate(name: string): void {
         if (name === 'line-gradient') {
             const expression = this.gradientExpression();
             if (isZoomExpression(expression)) {
@@ -68,17 +68,17 @@ export class LineStyleLayer extends StyleLayer {
         }
     }
 
-    gradientExpression() {
+    gradientExpression(): StylePropertyExpression {
         return this._transitionablePaint._values['line-gradient'].value.expression;
     }
 
-    recalculate(parameters: EvaluationParameters, availableImages: string[]) {
+    recalculate(parameters: EvaluationParameters, availableImages: string[]): void {
         super.recalculate(parameters, availableImages);
         (this.paint._values as any)['line-floorwidth'] =
             lineFloorwidthProperty.possiblyEvaluate(this._transitioningPaint._values['line-width'].value, parameters);
     }
 
-    createBucket(parameters: BucketParameters<any>) {
+    createBucket(parameters: BucketParameters<any>): LineBucket {
         return new LineBucket(parameters);
     }
 
@@ -114,7 +114,7 @@ export class LineStyleLayer extends StyleLayer {
         return polygonIntersectsBufferedMultiLine(translatedPolygon, geometry, halfWidth);
     }
 
-    isTileClipped() {
+    isTileClipped(): boolean {
         return true;
     }
 }

@@ -37,7 +37,7 @@ function getCenterAnchor(line: Point[],
     shapedText: Shaping,
     shapedIcon: PositionedIcon,
     glyphSize: number,
-    boxScale: number) {
+    boxScale: number): Anchor {
     const angleWindowSize = getAngleWindowSize(shapedText, glyphSize, boxScale);
     const labelLength = getShapedLabelLength(shapedText, shapedIcon) * boxScale;
 

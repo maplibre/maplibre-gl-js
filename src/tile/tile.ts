@@ -159,7 +159,7 @@ export class Tile {
      * @internal
      * Many-to-one crossfade between a base tile and parent/ancestor tile (when zooming)
      */
-    setCrossFadeLogic({fadingRole, fadingDirection, fadingParentID, fadeEndTime}: CrossFadeArgs) {
+    setCrossFadeLogic({fadingRole, fadingDirection, fadingParentID, fadeEndTime}: CrossFadeArgs): void {
         this.resetFadeLogic();
 
         this.fadingRole = fadingRole;
@@ -171,13 +171,13 @@ export class Tile {
     /**
      * Self fading for edge tiles (when panning map)
      */
-    setSelfFadeLogic(fadeEndTime: number) {
+    setSelfFadeLogic(fadeEndTime: number): void {
         this.resetFadeLogic();
         this.selfFading = true;
         this.fadeEndTime = fadeEndTime;
     }
 
-    resetFadeLogic() {
+    resetFadeLogic(): void {
         this.fadingRole = null;
         this.fadingDirection = null;
         this.fadingParentID = null;
@@ -188,11 +188,11 @@ export class Tile {
         this.fadeOpacity = 1;
     }
 
-    wasRequested() {
+    wasRequested(): boolean {
         return this.state === 'errored' || this.state === 'loaded' || this.state === 'reloading';
     }
 
-    clearTextures(painter: any) {
+    clearTextures(painter: any): void {
         if (this.demTexture) painter.saveTileTexture(this.demTexture);
         this.demTexture = null;
     }
@@ -206,7 +206,7 @@ export class Tile {
      * @param painter - the painter
      * @param justReloaded - `true` to just reload
      */
-    loadVectorData(data: WorkerTileResult, painter: Painter, justReloaded?: boolean | null) {
+    loadVectorData(data: WorkerTileResult, painter: Painter, justReloaded?: boolean | null): void {
         if (data?.etagUnmodified === true) {
             this.state = 'loaded';
             return;
@@ -288,7 +288,7 @@ export class Tile {
     /**
      * Release any data or WebGL resources referenced by this tile.
      */
-    unloadVectorData() {
+    unloadVectorData(): void {
         for (const id in this.buckets) {
             this.buckets[id].destroy();
         }
@@ -308,11 +308,11 @@ export class Tile {
         this.state = 'unloaded';
     }
 
-    getBucket(layer: StyleLayer) {
+    getBucket(layer: StyleLayer): Bucket {
         return this.buckets[layer.id];
     }
 
-    upload(context: Context) {
+    upload(context: Context): void {
         for (const id in this.buckets) {
             const bucket = this.buckets[id];
             if (bucket.uploadPending()) {
@@ -332,7 +332,7 @@ export class Tile {
         }
     }
 
-    prepare(imageManager: ImageManager) {
+    prepare(imageManager: ImageManager): void {
         if (this.imageAtlas) {
             this.imageAtlas.patchUpdatedImages(imageManager, this.imageAtlasTexture);
         }
@@ -369,7 +369,7 @@ export class Tile {
         }, layers, serializedLayers, sourceFeatureState);
     }
 
-    querySourceFeatures(result: GeoJSONFeature[], params?: QuerySourceFeatureOptionsStrict) {
+    querySourceFeatures(result: GeoJSONFeature[], params?: QuerySourceFeatureOptionsStrict): void {
         const featureIndex = this.latestFeatureIndex;
         if (!featureIndex?.rawTileData) return;
 
@@ -399,15 +399,15 @@ export class Tile {
         }
     }
 
-    hasData() {
+    hasData(): boolean {
         return this.state === 'loaded' || this.state === 'reloading' || this.state === 'expired';
     }
 
-    patternsLoaded() {
+    patternsLoaded(): boolean {
         return this.imageAtlas && !!Object.keys(this.imageAtlas.patternPositions).length;
     }
 
-    setExpiryData(data: ExpiryData) {
+    setExpiryData(data: ExpiryData): void {
         const prior = this.expirationTime;
 
         if (data.cacheControl) {
@@ -456,7 +456,7 @@ export class Tile {
         }
     }
 
-    getExpiryTimeout() {
+    getExpiryTimeout(): number {
         if (this.expirationTime) {
             if (this.expiredRequestCount) {
                 return 1000 * (1 << Math.min(this.expiredRequestCount - 1, 31));
@@ -467,7 +467,7 @@ export class Tile {
         }
     }
 
-    setFeatureState(states: LayerFeatureStates, painter: any) {
+    setFeatureState(states: LayerFeatureStates, painter: any): void {
         if (!this.latestFeatureIndex?.rawTileData ||
             Object.keys(states).length === 0) {
             return;
@@ -501,15 +501,15 @@ export class Tile {
         return !this.symbolFadeHoldUntil || this.symbolFadeHoldUntil < now();
     }
 
-    clearSymbolFadeHold() {
+    clearSymbolFadeHold(): void {
         this.symbolFadeHoldUntil = undefined;
     }
 
-    setSymbolHoldDuration(duration: number) {
+    setSymbolHoldDuration(duration: number): void {
         this.symbolFadeHoldUntil = now() + duration;
     }
 
-    setDependencies(namespace: string, dependencies: string[]) {
+    setDependencies(namespace: string, dependencies: string[]): void {
         const index = {};
         for (const dep of dependencies) {
             index[dep] = true;
@@ -517,7 +517,7 @@ export class Tile {
         this.dependencies[namespace] = index;
     }
 
-    hasDependency(namespaces: string[], keys: string[]) {
+    hasDependency(namespaces: string[], keys: string[]): boolean {
         for (const namespace of namespaces) {
             const dependencies = this.dependencies[namespace];
             if (dependencies) {

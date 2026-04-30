@@ -12,7 +12,7 @@ function updateUI(benchmarks: BenchmarkRowProps[], finished?: boolean) {
     root.render(<BenchmarksTable benchmarks={benchmarks} finished={finished}/>);
 }
 
-export async function run(benchmarks: BenchmarkRowProps[]) {
+export async function run(benchmarks: BenchmarkRowProps[]): Promise<BenchmarkRowProps[]> {
     const filter = window.location.hash.substr(1);
     if (filter) benchmarks = benchmarks.filter(({name}) => name === filter);
 

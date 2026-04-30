@@ -103,7 +103,7 @@ export default class SymbolCollisionBoxWithInsert extends Benchmark {
         }
     }
 
-    bench() {
+    bench(): void {
         const ci = new CollisionIndex(this._transform);
 
         // Place and insert: real collision detection with a growing index

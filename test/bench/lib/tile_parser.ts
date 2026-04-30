@@ -73,7 +73,7 @@ export default class TileParser {
         this.icons = {};
     }
 
-    async loadImages(params: any) {
+    async loadImages(params: any): Promise<any> {
         const key = JSON.stringify(params);
         if (!this.icons[key]) {
             this.icons[key] = await this.style.getImages('', params);
@@ -81,7 +81,7 @@ export default class TileParser {
         return this.icons[key];
     }
 
-    async loadGlyphs(params: any) {
+    async loadGlyphs(params: any): Promise<any> {
         const key = JSON.stringify(params);
         if (!this.glyphs[key]) {
             this.glyphs[key] = await this.style.getGlyphs('', params);
@@ -89,7 +89,7 @@ export default class TileParser {
         return this.glyphs[key];
     }
 
-    async loadDashes(params: any) {
+    async loadDashes(params: any): Promise<any> {
         const key = JSON.stringify(params);
         if (!this.dashes[key]) {
             this.dashes[key] = await this.style.getDashes('', params);
@@ -123,7 +123,10 @@ export default class TileParser {
         });
     }
 
-    fetchTile(tileID: OverscaledTileID) {
+    fetchTile(tileID: OverscaledTileID): Promise<{
+        tileID: OverscaledTileID;
+        buffer: ArrayBuffer;
+    }> {
         return fetch(tileID.canonical.url(this.tileJSON.tiles, devicePixelRatio))
             .then(response => response.arrayBuffer())
             .then(buffer => ({tileID, buffer}));

@@ -21,7 +21,7 @@ export class LayerBenchmark extends Benchmark {
     layerStyle: any;
     map: any;
 
-    async setup() {
+    async setup(): Promise<void> {
         try {
             this.map = await createMap({
                 zoom: 16,
@@ -35,11 +35,11 @@ export class LayerBenchmark extends Benchmark {
         }
     }
 
-    bench() {
+    bench(): void {
         Benchmark.renderMap(this.map);
     }
 
-    teardown() {
+    teardown(): void {
         this.map.remove();
     }
 }
@@ -110,7 +110,7 @@ export class LayerFillExtrusion extends LayerBenchmark {
 }
 
 export class LayerHeatmap extends LayerBenchmark {
-    async setup() {
+    async setup(): Promise<void> {
         const response = await fetch('/test/bench/data/naturalearth-land.json');
         const data = await response.json();
         this.layerStyle = Object.assign({}, style, {
@@ -335,7 +335,7 @@ export class LayerSymbolWithSortKey extends LayerBenchmark {
         });
     }
 
-    generateSortKeyLayers() {
+    generateSortKeyLayers(): any[] {
         const generated = [];
         for (let i = 0; i < layerCount; i++) {
             generated.push({

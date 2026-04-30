@@ -172,7 +172,7 @@ export class Program<Us extends UniformBindings> {
         configuration?: ProgramConfiguration | null,
         dynamicLayoutBuffer?: VertexBuffer | null,
         dynamicLayoutBuffer2?: VertexBuffer | null,
-        dynamicLayoutBuffer3?: VertexBuffer | null) {
+        dynamicLayoutBuffer3?: VertexBuffer | null): void {
 
         const gl = context.gl;
 

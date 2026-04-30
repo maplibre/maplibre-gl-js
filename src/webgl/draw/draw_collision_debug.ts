@@ -21,7 +21,7 @@ type TileBatch = {
 
 let quadTriangles: QuadTriangleArray;
 
-export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean) {
+export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean): void {
     const context = painter.context;
     const transform = painter.transform;
     const gl = context.gl;

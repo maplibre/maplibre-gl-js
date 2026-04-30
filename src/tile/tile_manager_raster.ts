@@ -27,7 +27,7 @@ export function updateFadingTiles(
     maxFadingAncestorLevels: number,
     sourceMinZoom: number,
     sourceMaxZoom: number,
-    rasterFadeDuration: number) {
+    rasterFadeDuration: number): void {
     const currentTime: number = now();
     const edgeTileIDs: Set<OverscaledTileID> = getEdgeTiles(idealTileIDs);
 
@@ -206,7 +206,7 @@ function updateFadingEdge(idealTile: Tile, edgeTileIDs: Set<OverscaledTileID>, n
     return false;
 }
 
-export function hasRasterTransition(inViewTiles: InViewTiles, rasterFadeDuration: number) {
+export function hasRasterTransition(inViewTiles: InViewTiles, rasterFadeDuration: number): boolean {
     if (rasterFadeDuration <= 0) {
         return false;
     }

@@ -23,7 +23,10 @@ export type Summary = {
     max: number;
 };
 
-export function probabilitiesOfSuperiority(before, after) {
+export function probabilitiesOfSuperiority(before: any, after: any): {
+    superior: number;
+    inferior: number;
+} {
     const timerPrecision = 0.005;
 
     let superiorCount = 0;
@@ -45,7 +48,7 @@ export function probabilitiesOfSuperiority(before, after) {
     };
 }
 
-export function summaryStatistics(data): Summary {
+export function summaryStatistics(data: any): Summary {
     const variance = d3.variance(data);
     const sorted = data.slice().sort(d3.ascending);
     const [q1, q2, q3] = [.25, .5, .75].map((d) => d3.quantile(sorted, d));
@@ -84,7 +87,7 @@ export function summaryStatistics(data): Summary {
     };
 }
 
-export function regression(measurements) {
+export function regression(measurements: any): RegressionResults {
     const result = [];
     for (let i = 0, n = 1; i + n < measurements.length; i += n, n++) {
         const subset = measurements.slice(i, i + n);
@@ -113,7 +116,7 @@ function leastSquaresRegression(data: Array<[number, number]>): RegressionResult
     return {correlation, slope, intercept, data};
 }
 
-export function kde(samples, summary, ticks): Array<[number, number]> {
+export function kde(samples: any, summary: any, ticks: any): Array<[number, number]> {
     const kernel = kernelEpanechnikov;
 
     if (samples.length === 0) {

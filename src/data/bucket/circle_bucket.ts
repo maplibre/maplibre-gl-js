@@ -81,7 +81,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
     }
 
-    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID) {
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void {
         const styleLayer = this.layers[0];
         const bucketFeatures: BucketFeature[] = [];
         let circleSortKey = null;
@@ -140,22 +140,22 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         }
     }
 
-    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}) {
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}): void {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, {
             imagePositions
         });
     }
 
-    isEmpty() {
+    isEmpty(): boolean {
         return this.layoutVertexArray.length === 0;
     }
 
-    uploadPending() {
+    uploadPending(): boolean {
         return !this.uploaded || this.programConfigurations.needsUpload;
     }
 
-    upload(context: Context) {
+    upload(context: Context): void {
         if (!this.uploaded) {
             this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layoutAttributes);
             this.indexBuffer = context.createIndexBuffer(this.indexArray);
@@ -164,7 +164,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         this.uploaded = true;
     }
 
-    destroy() {
+    destroy(): void {
         if (!this.layoutVertexBuffer) return;
         this.layoutVertexBuffer.destroy();
         this.indexBuffer.destroy();
@@ -172,7 +172,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         this.segments.destroy();
     }
 
-    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, granularity: CircleGranularity = 1) {
+    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, granularity: CircleGranularity = 1): void {
         // Since we store the circle's center in each vertex, we only have 3 bits for actual vertex position in each axis.
         // Thus the valid range of positions is 0..7.
         // This gives us 4 possible granularity settings that are symmetrical.

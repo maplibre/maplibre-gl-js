@@ -14,7 +14,7 @@ const stats = BUNDLE === 'stats';
 // Common set of plugins/transformations shared across different rollup
 // builds (main maplibre bundle, style-spec package, benchmarks bundle)
 
-export const nodeResolve = resolve({
+export const nodeResolve: Plugin = resolve({
     browser: true,
     preferBuiltins: false
 });

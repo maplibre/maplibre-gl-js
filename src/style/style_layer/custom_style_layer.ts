@@ -292,7 +292,7 @@ export interface CustomLayerInterface {
     onRemove?(map: Map, gl: WebGL2RenderingContext): void;
 }
 
-export function validateCustomStyleLayer(layerObject: CustomLayerInterface) {
+export function validateCustomStyleLayer(layerObject: CustomLayerInterface): any[] {
     const errors = [];
     const id = layerObject.id;
 
@@ -330,29 +330,29 @@ export class CustomStyleLayer extends StyleLayer {
         this.implementation = implementation;
     }
 
-    is3D() {
+    is3D(): boolean {
         return this.implementation.renderingMode === '3d';
     }
 
-    hasOffscreenPass() {
+    hasOffscreenPass(): boolean {
         return this.implementation.prerender !== undefined;
     }
 
-    recalculate() {}
-    updateTransitions() {}
-    hasTransition() { return false; }
+    recalculate(): void {}
+    updateTransitions(): void {}
+    hasTransition(): boolean { return false; }
 
     serialize(): LayerSpecification {
         throw new Error('Custom layers cannot be serialized');
     }
 
-    onAdd = (map: Map) => {
+    onAdd: (map: Map) => void = (map: Map) => {
         if (this.implementation.onAdd) {
             this.implementation.onAdd(map, map.painter.context.gl);
         }
     };
 
-    onRemove = (map: Map) => {
+    onRemove: (map: Map) => void = (map: Map) => {
         if (this.implementation.onRemove) {
             this.implementation.onRemove(map, map.painter.context.gl);
         }

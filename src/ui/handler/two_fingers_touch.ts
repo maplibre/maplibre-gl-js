@@ -172,7 +172,7 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
      * map.touchZoomRotate.setZoomRate(0.5);
      * ```
      */
-    setZoomRate(zoomRate?: number) {
+    setZoomRate(zoomRate?: number): void {
         this._zoomRate = zoomRate ?? defaultZoomRate;
     }
 
@@ -185,11 +185,11 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
      * map.touchZoomRotate.setZoomThreshold(0.3);
      * ```
      */
-    setZoomThreshold(zoomThreshold?: number) {
+    setZoomThreshold(zoomThreshold?: number): void {
         this._zoomThreshold = zoomThreshold ?? defaultZoomThreshold;
     }
 
-    reset() {
+    reset(): void {
         super.reset();
         delete this._distance;
         delete this._startDistance;

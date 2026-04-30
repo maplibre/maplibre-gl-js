@@ -222,7 +222,7 @@ export class TransformHelper implements ITransformGetters {
     get clipSpaceToPixelsMatrix(): mat4 { return this._clipSpaceToPixelsMatrix; }
 
     get minElevationForCurrentTile(): number { return this._minElevationForCurrentTile; }
-    setMinElevationForCurrentTile(ele: number) {
+    setMinElevationForCurrentTile(ele: number): void {
         this._minElevationForCurrentTile = ele;
     }
 
@@ -251,35 +251,35 @@ export class TransformHelper implements ITransformGetters {
     get pixelsToGLUnits(): [number, number] { return this._pixelsToGLUnits; }
 
     get minZoom(): number { return this._minZoom; }
-    setMinZoom(zoom: number) {
+    setMinZoom(zoom: number): void {
         if (this._minZoom === zoom) return;
         this._minZoom = zoom;
         this.setZoom(this.applyConstrain(this._center, this.zoom).zoom);
     }
 
     get maxZoom(): number { return this._maxZoom; }
-    setMaxZoom(zoom: number) {
+    setMaxZoom(zoom: number): void {
         if (this._maxZoom === zoom) return;
         this._maxZoom = zoom;
         this.setZoom(this.applyConstrain(this._center, this.zoom).zoom);
     }
 
     get minPitch(): number { return this._minPitch; }
-    setMinPitch(pitch: number) {
+    setMinPitch(pitch: number): void {
         if (this._minPitch === pitch) return;
         this._minPitch = pitch;
         this.setPitch(Math.max(this.pitch, pitch));
     }
 
     get maxPitch(): number { return this._maxPitch; }
-    setMaxPitch(pitch: number) {
+    setMaxPitch(pitch: number): void {
         if (this._maxPitch === pitch) return;
         this._maxPitch = pitch;
         this.setPitch(Math.min(this.pitch, pitch));
     }
 
     get renderWorldCopies(): boolean { return this._renderWorldCopies; }
-    setRenderWorldCopies(renderWorldCopies: boolean) {
+    setRenderWorldCopies(renderWorldCopies: boolean): void {
         if (renderWorldCopies === undefined) {
             renderWorldCopies = true;
         } else if (renderWorldCopies === null) {
@@ -290,7 +290,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get constrainOverride(): TransformConstrainFunction { return this._constrainOverride; }
-    setConstrainOverride(constrain?: TransformConstrainFunction | null) {
+    setConstrainOverride(constrain?: TransformConstrainFunction | null): void {
         if (constrain === undefined) constrain = null;
         if (this._constrainOverride === constrain) return;
         this._constrainOverride = constrain;
@@ -316,7 +316,7 @@ export class TransformHelper implements ITransformGetters {
     get bearing(): number {
         return this._bearingInRadians / Math.PI * 180;
     }
-    setBearing(bearing: number) {
+    setBearing(bearing: number): void {
         const b = wrap(bearing, -180, 180) * Math.PI / 180;
         if (this._bearingInRadians === b) return;
         this._unmodified = false;
@@ -336,7 +336,7 @@ export class TransformHelper implements ITransformGetters {
     get pitch(): number {
         return this._pitchInRadians / Math.PI * 180;
     }
-    setPitch(pitch: number) {
+    setPitch(pitch: number): void {
         const p = clamp(pitch, this.minPitch, this.maxPitch) / 180 * Math.PI;
         if (this._pitchInRadians === p) return;
         this._unmodified = false;
@@ -350,7 +350,7 @@ export class TransformHelper implements ITransformGetters {
     get roll(): number {
         return this._rollInRadians / Math.PI * 180;
     }
-    setRoll(roll: number) {
+    setRoll(roll: number): void {
         const r = roll / 180 * Math.PI;
         if (this._rollInRadians === r) return;
         this._unmodified = false;
@@ -364,7 +364,7 @@ export class TransformHelper implements ITransformGetters {
     get fov(): number {
         return radiansToDegrees(this._fovInRadians);
     }
-    setFov(fov: number) {
+    setFov(fov: number): void {
         fov = clamp(fov, 0.1, 150);
         if (this.fov === fov) return;
         this._unmodified = false;
@@ -373,7 +373,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get zoom(): number { return this._zoom; }
-    setZoom(zoom: number) {
+    setZoom(zoom: number): void {
         const constrainedZoom = this.applyConstrain(this._center, zoom).zoom;
         if (this._zoom === constrainedZoom) return;
         this._unmodified = false;
@@ -385,7 +385,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get center(): LngLat { return this._center; }
-    setCenter(center: LngLat) {
+    setCenter(center: LngLat): void {
         if (center.lat === this._center.lat && center.lng === this._center.lng) return;
         this._unmodified = false;
         this._center = center;
@@ -397,7 +397,7 @@ export class TransformHelper implements ITransformGetters {
      * Elevation at current center point, meters above sea level
      */
     get elevation(): number { return this._elevation; }
-    setElevation(elevation: number) {
+    setElevation(elevation: number): void {
         if (elevation === this._elevation) return;
         this._elevation = elevation;
         this.constrainInternal();
@@ -405,7 +405,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get padding(): PaddingOptions { return this._edgeInsets.toJSON(); }
-    setPadding(padding: PaddingOptions) {
+    setPadding(padding: PaddingOptions): void {
         if (this._edgeInsets.equals(padding)) return;
         this._unmodified = false;
         // Update edge-insets in-place

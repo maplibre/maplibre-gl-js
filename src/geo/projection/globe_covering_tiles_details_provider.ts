@@ -48,7 +48,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
     /**
      * Prepares the internal bounding volume cache for the next frame.
      */
-    prepareNextFrame() {
+    prepareNextFrame(): void {
         this._boundingVolumeCache.swapBuffers();
     }
 
@@ -105,7 +105,7 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         return false;
     }
 
-    getTileBoundingVolume(tileID: { x: number; y: number; z: number }, wrap: number, elevation: number, options: CoveringTilesOptionsInternal) {
+    getTileBoundingVolume(tileID: { x: number; y: number; z: number }, wrap: number, elevation: number, options: CoveringTilesOptionsInternal): ConvexVolume {
         return this._boundingVolumeCache.getTileBoundingVolume(tileID, wrap, elevation, options);
     }
 

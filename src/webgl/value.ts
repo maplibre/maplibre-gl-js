@@ -41,14 +41,14 @@ class BaseValue<T> implements IValue<T> {
     get(): T {
         return this.current;
     }
-    set(value: T) { // eslint-disable-line
+    set(value: T): void { // eslint-disable-line
         // overridden in child classes;
     }
 
     getDefault(): T {
         return this.default; // overridden in child classes
     }
-    setDefault() {
+    setDefault(): void {
         this.set(this.default);
     }
 }
@@ -57,7 +57,7 @@ export class ClearColor extends BaseValue<Color> {
     getDefault(): Color {
         return Color.transparent;
     }
-    set(v: Color) {
+    set(v: Color): void {
         const c = this.current;
         if (v.r === c.r && v.g === c.g && v.b === c.b && v.a === c.a && !this.dirty) return;
         this.gl.clearColor(v.r, v.g, v.b, v.a);
@@ -70,7 +70,7 @@ export class ClearDepth extends BaseValue<number> {
     getDefault(): number {
         return 1;
     }
-    set(v: number) {
+    set(v: number): void {
         if (v === this.current && !this.dirty) return;
         this.gl.clearDepth(v);
         this.current = v;
@@ -82,7 +82,7 @@ export class ClearStencil extends BaseValue<number> {
     getDefault(): number {
         return 0;
     }
-    set(v: number) {
+    set(v: number): void {
         if (v === this.current && !this.dirty) return;
         this.gl.clearStencil(v);
         this.current = v;
@@ -94,7 +94,7 @@ export class ColorMask extends BaseValue<ColorMaskType> {
     getDefault(): ColorMaskType {
         return [true, true, true, true];
     }
-    set(v: ColorMaskType) {
+    set(v: ColorMaskType): void {
         const c = this.current;
         if (v[0] === c[0] && v[1] === c[1] && v[2] === c[2] && v[3] === c[3] && !this.dirty) return;
         this.gl.colorMask(v[0], v[1], v[2], v[3]);
@@ -149,7 +149,7 @@ export class StencilOp extends BaseValue<StencilOpType> {
         const gl = this.gl;
         return [gl.KEEP, gl.KEEP, gl.KEEP];
     }
-    set(v: StencilOpType) {
+    set(v: StencilOpType): void {
         const c = this.current;
         if (v[0] === c[0] && v[1] === c[1] && v[2] === c[2] && !this.dirty) return;
         this.gl.stencilOp(v[0], v[1], v[2]);
@@ -162,7 +162,7 @@ export class StencilTest extends BaseValue<boolean> {
     getDefault(): boolean {
         return false;
     }
-    set(v: boolean) {
+    set(v: boolean): void {
         if (v === this.current && !this.dirty) return;
         const gl = this.gl;
         if (v) {
@@ -179,7 +179,7 @@ export class DepthRange extends BaseValue<DepthRangeType> {
     getDefault(): DepthRangeType {
         return [0, 1];
     }
-    set(v: DepthRangeType) {
+    set(v: DepthRangeType): void {
         const c = this.current;
         if (v[0] === c[0] && v[1] === c[1] && !this.dirty) return;
         this.gl.depthRange(v[0], v[1]);
@@ -192,7 +192,7 @@ export class DepthTest extends BaseValue<boolean> {
     getDefault(): boolean {
         return false;
     }
-    set(v: boolean) {
+    set(v: boolean): void {
         if (v === this.current && !this.dirty) return;
         const gl = this.gl;
         if (v) {
@@ -209,7 +209,7 @@ export class DepthFunc extends BaseValue<DepthFuncType> {
     getDefault(): DepthFuncType {
         return this.gl.LESS;
     }
-    set(v: DepthFuncType) {
+    set(v: DepthFuncType): void {
         if (v === this.current && !this.dirty) return;
         this.gl.depthFunc(v);
         this.current = v;
@@ -221,7 +221,7 @@ export class Blend extends BaseValue<boolean> {
     getDefault(): boolean {
         return false;
     }
-    set(v: boolean) {
+    set(v: boolean): void {
         if (v === this.current && !this.dirty) return;
         const gl = this.gl;
         if (v) {
@@ -239,7 +239,7 @@ export class BlendFunc extends BaseValue<BlendFuncType> {
         const gl = this.gl;
         return [gl.ONE, gl.ZERO];
     }
-    set(v: BlendFuncType) {
+    set(v: BlendFuncType): void {
         const c = this.current;
         if (v[0] === c[0] && v[1] === c[1] && !this.dirty) return;
         this.gl.blendFunc(v[0], v[1]);
@@ -252,7 +252,7 @@ export class BlendColor extends BaseValue<Color> {
     getDefault(): Color {
         return Color.transparent;
     }
-    set(v: Color) {
+    set(v: Color): void {
         const c = this.current;
         if (v.r === c.r && v.g === c.g && v.b === c.b && v.a === c.a && !this.dirty) return;
         this.gl.blendColor(v.r, v.g, v.b, v.a);
@@ -265,7 +265,7 @@ export class BlendEquation extends BaseValue<BlendEquationType> {
     getDefault(): BlendEquationType {
         return this.gl.FUNC_ADD;
     }
-    set(v: BlendEquationType) {
+    set(v: BlendEquationType): void {
         if (v === this.current && !this.dirty) return;
         this.gl.blendEquation(v);
         this.current = v;
@@ -277,7 +277,7 @@ export class CullFace extends BaseValue<boolean> {
     getDefault(): boolean {
         return false;
     }
-    set(v: boolean) {
+    set(v: boolean): void {
         if (v === this.current && !this.dirty) return;
         const gl = this.gl;
         if (v) {
@@ -294,7 +294,7 @@ export class CullFaceSide extends BaseValue<CullFaceModeType> {
     getDefault(): CullFaceModeType {
         return this.gl.BACK;
     }
-    set(v: CullFaceModeType) {
+    set(v: CullFaceModeType): void {
         if (v === this.current && !this.dirty) return;
         this.gl.cullFace(v);
         this.current = v;
@@ -306,7 +306,7 @@ export class FrontFace extends BaseValue<FrontFaceType> {
     getDefault(): FrontFaceType {
         return this.gl.CCW;
     }
-    set(v: FrontFaceType) {
+    set(v: FrontFaceType): void {
         if (v === this.current && !this.dirty) return;
         this.gl.frontFace(v);
         this.current = v;
@@ -318,7 +318,7 @@ export class ProgramValue extends BaseValue<WebGLProgram> {
     getDefault(): WebGLProgram {
         return null;
     }
-    set(v?: WebGLProgram | null) {
+    set(v?: WebGLProgram | null): void {
         if (v === this.current && !this.dirty) return;
         this.gl.useProgram(v);
         this.current = v;
@@ -330,7 +330,7 @@ export class ActiveTextureUnit extends BaseValue<TextureUnitType> {
     getDefault(): TextureUnitType {
         return this.gl.TEXTURE0;
     }
-    set(v: TextureUnitType) {
+    set(v: TextureUnitType): void {
         if (v === this.current && !this.dirty) return;
         this.gl.activeTexture(v);
         this.current = v;
@@ -343,7 +343,7 @@ export class Viewport extends BaseValue<ViewportType> {
         const gl = this.gl;
         return [0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight];
     }
-    set(v: ViewportType) {
+    set(v: ViewportType): void {
         const c = this.current;
         if (v[0] === c[0] && v[1] === c[1] && v[2] === c[2] && v[3] === c[3] && !this.dirty) return;
         this.gl.viewport(v[0], v[1], v[2], v[3]);
@@ -356,7 +356,7 @@ export class BindFramebuffer extends BaseValue<WebGLFramebuffer> {
     getDefault(): WebGLFramebuffer {
         return null;
     }
-    set(v?: WebGLFramebuffer | null) {
+    set(v?: WebGLFramebuffer | null): void {
         if (v === this.current && !this.dirty) return;
         const gl = this.gl;
         gl.bindFramebuffer(gl.FRAMEBUFFER, v);
@@ -369,7 +369,7 @@ export class BindRenderbuffer extends BaseValue<WebGLRenderbuffer> {
     getDefault(): WebGLRenderbuffer {
         return null;
     }
-    set(v?: WebGLRenderbuffer | null) {
+    set(v?: WebGLRenderbuffer | null): void {
         if (v === this.current && !this.dirty) return;
         const gl = this.gl;
         gl.bindRenderbuffer(gl.RENDERBUFFER, v);
@@ -382,7 +382,7 @@ export class BindTexture extends BaseValue<WebGLTexture> {
     getDefault(): WebGLTexture {
         return null;
     }
-    set(v?: WebGLTexture | null) {
+    set(v?: WebGLTexture | null): void {
         if (v === this.current && !this.dirty) return;
         const gl = this.gl;
         gl.bindTexture(gl.TEXTURE_2D, v);
@@ -395,7 +395,7 @@ export class BindVertexBuffer extends BaseValue<WebGLBuffer> {
     getDefault(): WebGLBuffer {
         return null;
     }
-    set(v?: WebGLBuffer | null) {
+    set(v?: WebGLBuffer | null): void {
         if (v === this.current && !this.dirty) return;
         const gl = this.gl;
         gl.bindBuffer(gl.ARRAY_BUFFER, v);
@@ -408,7 +408,7 @@ export class BindElementBuffer extends BaseValue<WebGLBuffer> {
     getDefault(): WebGLBuffer {
         return null;
     }
-    set(v?: WebGLBuffer | null) {
+    set(v?: WebGLBuffer | null): void {
         // Always rebind
         const gl = this.gl;
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, v);
@@ -421,7 +421,7 @@ export class BindVertexArray extends BaseValue<WebGLVertexArrayObject | null> {
     getDefault(): WebGLVertexArrayObject | null {
         return null;
     }
-    set(v: WebGLVertexArrayObject | null) {
+    set(v: WebGLVertexArrayObject | null): void {
         if (v === this.current && !this.dirty) return;
         const gl = this.gl;
 
@@ -436,7 +436,7 @@ export class PixelStoreUnpack extends BaseValue<number> {
     getDefault(): number {
         return 4;
     }
-    set(v: number) {
+    set(v: number): void {
         if (v === this.current && !this.dirty) return;
         const gl = this.gl;
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, v);
@@ -480,13 +480,13 @@ class FramebufferAttachment<T> extends BaseValue<T> {
         this.context = context;
         this.parent = parent;
     }
-    getDefault() {
+    getDefault(): T {
         return null;
     }
 }
 
 export class ColorAttachment extends FramebufferAttachment<WebGLTexture> {
-    setDirty() {
+    setDirty(): void {
         this.dirty = true;
     }
     set(v?: WebGLTexture | null): void {

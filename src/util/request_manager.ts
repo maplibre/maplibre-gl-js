@@ -27,7 +27,7 @@ export class RequestManager {
         this._transformRequestFn = transformRequestFn ?? null;
     }
 
-    transformRequest(url: string, type: ResourceType) {
+    transformRequest(url: string, type: ResourceType): RequestParameters | Promise<RequestParameters> {
         if (this._transformRequestFn) {
             return this._transformRequestFn(url, type) || {url};
         }
@@ -35,7 +35,7 @@ export class RequestManager {
         return {url};
     }
 
-    setTransformRequest(transformRequest: RequestTransformFunction | null) {
+    setTransformRequest(transformRequest: RequestTransformFunction | null): void {
         this._transformRequestFn = transformRequest;
     }
 }

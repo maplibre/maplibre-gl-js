@@ -196,19 +196,19 @@ export class ImageSource extends Evented implements Source {
         return this;
     }
 
-    _finishLoading() {
+    _finishLoading(): void {
         if (this.map) {
             this.setCoordinates(this.coordinates);
             this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
         }
     }
 
-    onAdd(map: Map) {
+    onAdd(map: Map): void {
         this.map = map;
         this.load();
     }
 
-    onRemove() {
+    onRemove(): void {
         if (this._request) {
             this._request.abort();
             this._request = null;
@@ -255,7 +255,7 @@ export class ImageSource extends Evented implements Source {
         return this;
     }
 
-    prepare() {
+    prepare(): void {
         if (Object.keys(this.tiles).length === 0 || !this.image) {
             return;
         }
@@ -355,7 +355,7 @@ export class ImageSource extends Evented implements Source {
  * @returns centerpoint
  * @internal
  */
-export function getCoordinatesCenterTileID(coords: MercatorCoordinate[]) {
+export function getCoordinatesCenterTileID(coords: MercatorCoordinate[]): CanonicalTileID {
     const bounds = Bounds.fromPoints(coords);
 
     const dx = bounds.width();

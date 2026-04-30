@@ -85,7 +85,7 @@ export class LngLat {
      * wrapped.lng; // = -73.9749
      * ```
      */
-    wrap() {
+    wrap(): LngLat {
         return new LngLat(wrap(this.lng, -180, 180), this.lat);
     }
 

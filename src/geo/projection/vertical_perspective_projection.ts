@@ -89,7 +89,7 @@ export class VerticalPerspectiveProjection implements Projection {
      */
     get latitudeErrorCorrectionRadians(): number { return this._errorCorrectionUsable; }
 
-    public destroy() {
+    public destroy(): void {
         if (this._errorMeasurement) {
             this._errorMeasurement.destroy();
         }
@@ -159,7 +159,7 @@ export class VerticalPerspectiveProjection implements Projection {
         return dirty;
     }
 
-    setErrorQueryLatitudeDegrees(value: number) {
+    setErrorQueryLatitudeDegrees(value: number): void {
         this._errorQueryLatitudeDegrees = value;
     }
 }

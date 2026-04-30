@@ -19,20 +19,20 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
         this.postListeners = postListeners;
     }
 
-    addEventListener(event: 'message', callback: EventListener) {
+    addEventListener(event: 'message', callback: EventListener): void {
         if (event === 'message') {
             this.addListeners.push(callback);
         }
     }
 
-    removeEventListener(event: 'message', callback: EventListener) {
+    removeEventListener(event: 'message', callback: EventListener): void {
         const i = this.addListeners.indexOf(callback);
         if (i >= 0) {
             this.addListeners.splice(i, 1);
         }
     }
 
-    postMessage(data: any) {
+    postMessage(data: any): void {
         setTimeout(() => {
             try {
                 for (const listener of this.postListeners) {
@@ -44,12 +44,12 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
         }, 0);
     }
 
-    terminate() {
+    terminate(): void {
         this.addListeners.splice(0, this.addListeners.length);
         this.postListeners.splice(0, this.postListeners.length);
     }
 
-    importScripts() { }
+    importScripts(): void { }
 }
 
 function setGlobalWorker(MockWorker: { new(...args: any): any}) {

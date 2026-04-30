@@ -117,7 +117,7 @@ export class ImageAtlas {
         this.patternPositions = patternPositions;
     }
 
-    addImages(images: {[_: string]: StyleImage}, positions: {[_: string]: ImagePosition}, bins: Rect[]) {
+    addImages(images: {[_: string]: StyleImage}, positions: {[_: string]: ImagePosition}, bins: Rect[]): void {
         for (const id in images) {
             const src = images[id];
             const bin = {
@@ -135,7 +135,7 @@ export class ImageAtlas {
         }
     }
 
-    patchUpdatedImages(imageManager: ImageManager, texture: Texture) {
+    patchUpdatedImages(imageManager: ImageManager, texture: Texture): void {
         imageManager.dispatchRenderCallbacks(this.haveRenderCallbacks);
         for (const name in imageManager.updatedImages) {
             this.patchUpdatedImage(this.iconPositions[name], imageManager.getImage(name), texture);
@@ -143,7 +143,7 @@ export class ImageAtlas {
         }
     }
 
-    patchUpdatedImage(position: ImagePosition, image: StyleImage, texture: Texture) {
+    patchUpdatedImage(position: ImagePosition, image: StyleImage, texture: Texture): void {
         if (!position || !image) return;
 
         if (position.version === image.version) return;

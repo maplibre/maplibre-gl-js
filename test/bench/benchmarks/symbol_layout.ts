@@ -22,7 +22,7 @@ export default class SymbolLayout extends Layout {
         }
     }
 
-    async bench() {
+    async bench(): Promise<void> {
         for (const tileResult of this.parsedTiles) {
             for (const bucket of tileResult.buckets) {
                 if (bucket instanceof SymbolBucket) {

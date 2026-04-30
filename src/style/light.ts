@@ -89,7 +89,7 @@ export class Light extends Evented {
         return this._transitionable.serialize();
     }
 
-    setLight(light?: LightSpecification, options: StyleSetterOptions = {}) {
+    setLight(light?: LightSpecification, options: StyleSetterOptions = {}): void {
         if (this._validate(validateLight, light, options)) {
             return;
         }
@@ -104,21 +104,21 @@ export class Light extends Evented {
         }
     }
 
-    updateTransitions(parameters: TransitionParameters) {
+    updateTransitions(parameters: TransitionParameters): void {
         this._transitioning = this._transitionable.transitioned(parameters, this._transitioning);
     }
 
-    hasTransition() {
+    hasTransition(): boolean {
         return this._transitioning.hasTransition();
     }
 
-    recalculate(parameters: EvaluationParameters) {
+    recalculate(parameters: EvaluationParameters): void {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
     _validate(validate: Function, value: unknown, options?: {
         validate?: boolean;
-    }) {
+    }): boolean {
         if (options?.validate === false) {
             return false;
         }

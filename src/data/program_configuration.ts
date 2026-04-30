@@ -538,14 +538,14 @@ export class ProgramConfiguration {
         return binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder ? binder.maxValue : 0;
     }
 
-    populatePaintArrays(newLength: number, feature: Feature, options: PaintOptions) {
+    populatePaintArrays(newLength: number, feature: Feature, options: PaintOptions): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedBinder)
                 binder.populatePaintArray(newLength, feature, options);
         }
     }
-    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition) {
+    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
@@ -553,7 +553,7 @@ export class ProgramConfiguration {
         }
     }
 
-    setConstantDashPositions(dashTo: DashEntry, dashFrom: DashEntry) {
+    setConstantDashPositions(dashTo: DashEntry, dashFrom: DashEntry): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
@@ -658,7 +658,7 @@ export class ProgramConfiguration {
         binderUniforms: BinderUniform[],
         properties: any,
         globals: GlobalProperties
-    ) {
+    ): void {
         // Uniform state bindings are owned by the Program, but we set them
         // from within the ProgramConfiguration's binder members.
         for (const {name, property, binding} of binderUniforms) {
@@ -666,7 +666,7 @@ export class ProgramConfiguration {
         }
     }
 
-    updatePaintBuffers(crossfade?: CrossfadeParameters) {
+    updatePaintBuffers(crossfade?: CrossfadeParameters): void {
         this._buffers = [];
 
         for (const property in this.binders) {
@@ -681,7 +681,7 @@ export class ProgramConfiguration {
         }
     }
 
-    upload(context: Context) {
+    upload(context: Context): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedBinder)
@@ -690,7 +690,7 @@ export class ProgramConfiguration {
         this.updatePaintBuffers();
     }
 
-    destroy() {
+    destroy(): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedBinder)
@@ -715,7 +715,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this._bufferOffset = 0;
     }
 
-    populatePaintArrays(length: number, feature: Feature, index: number, options: PaintOptions) {
+    populatePaintArrays(length: number, feature: Feature, index: number, options: PaintOptions): void {
         for (const key in this.programConfigurations) {
             this.programConfigurations[key].populatePaintArrays(length, feature, options);
         }
@@ -728,17 +728,17 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this.needsUpload = true;
     }
 
-    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayerLike, layers: readonly TypedStyleLayer[], options: PaintOptions) {
+    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayerLike, layers: readonly TypedStyleLayer[], options: PaintOptions): void {
         for (const layer of layers) {
             this.needsUpload = this.programConfigurations[layer.id].updatePaintArrays(featureStates, this._featureMap, vtLayer, layer, options) || this.needsUpload;
         }
     }
 
-    get(layerId: string) {
+    get(layerId: string): ProgramConfiguration {
         return this.programConfigurations[layerId];
     }
 
-    upload(context: Context) {
+    upload(context: Context): void {
         if (!this.needsUpload) return;
         for (const layerId in this.programConfigurations) {
             this.programConfigurations[layerId].upload(context);
@@ -746,7 +746,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this.needsUpload = false;
     }
 
-    destroy() {
+    destroy(): void {
         for (const layerId in this.programConfigurations) {
             this.programConfigurations[layerId].destroy();
         }

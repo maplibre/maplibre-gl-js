@@ -22,12 +22,12 @@ class RemovePaintState extends Benchmark {
     numFeatures: any;
     map: any;
 
-    constructor(center) {
+    constructor(center: any) {
         super();
         this.center = center;
     }
 
-    async setup() {
+    async setup(): Promise<void> {
         const response = await fetch('/test/bench/data/naturalearth-land.json');
         const data = await response.json();
         this.numFeatures = data.features.length;
@@ -60,19 +60,19 @@ class RemovePaintState extends Benchmark {
         }
     }
 
-    bench() {
+    bench(): void {
         this.map._styleDirty = true;
         this.map._sourcesDirty = true;
         Benchmark.renderMap(this.map);
     }
 
-    teardown() {
+    teardown(): void {
         this.map.remove();
     }
 }
 
 export class PropertyLevelRemove extends RemovePaintState {
-    bench() {
+    bench(): void {
 
         for (let i = 0; i < this.numFeatures; i += 50) {
             this.map.setFeatureState({source: 'land', id: i}, {bench: true});
@@ -86,7 +86,7 @@ export class PropertyLevelRemove extends RemovePaintState {
 }
 
 export class FeatureLevelRemove extends RemovePaintState {
-    bench() {
+    bench(): void {
 
         for (let i = 0; i < this.numFeatures; i += 50) {
             this.map.setFeatureState({source: 'land', id: i}, {bench: true});
@@ -100,7 +100,7 @@ export class FeatureLevelRemove extends RemovePaintState {
 }
 
 export class SourceLevelRemove extends RemovePaintState {
-    bench() {
+    bench(): void {
 
         for (let i = 0; i < this.numFeatures; i += 50) {
             this.map.setFeatureState({source: 'land', id: i}, {bench: true});

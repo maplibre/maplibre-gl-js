@@ -15,7 +15,7 @@ export class RequestPerformance {
         performance.mark(this.start);
     }
 
-    finish() {
+    finish(): PerformanceEntryList {
         performance.mark(this.end);
         let resourceTimingData = performance.getEntriesByName(this.measure);
 

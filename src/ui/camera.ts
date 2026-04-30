@@ -348,7 +348,7 @@ export abstract class Camera extends Evented {
      * to this new transform, carrying over all the properties of the old transform (center, pitch, etc.).
      * When the style's projection is changed (or first set), this function should be called.
      */
-    migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
+    migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
         newTransform.apply(this.transform, true);
         this.transform = newTransform;
         this.cameraHelper = newCameraHelper;
@@ -380,7 +380,7 @@ export abstract class Camera extends Evented {
      * map.setCenter([-74, 38]);
      * ```
      */
-    setCenter(center: LngLatLike, eventData?: any) {
+    setCenter(center: LngLatLike, eventData?: any): this {
         return this.jumpTo({center}, eventData);
     }
 
@@ -1198,7 +1198,7 @@ export abstract class Camera extends Evented {
     }
 
     _prepareEase(eventData: any, noMoveStart: boolean,
-        currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {}) {
+        currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {}): void {
         this._moving = true;
         if (!noMoveStart && !currently.moving) {
             this.fire(new Event('movestart', eventData));
@@ -1217,14 +1217,14 @@ export abstract class Camera extends Evented {
         }
     }
 
-    _prepareElevation(center: LngLat) {
+    _prepareElevation(center: LngLat): void {
         this._elevationCenter = center;
         this._elevationStart = this.transform.elevation;
         this._elevationTarget = this.terrain.getElevationForLngLatZoom(center, this.transform.tileZoom);
         this._elevationFreeze = true;
     }
 
-    _updateElevation(k: number) {
+    _updateElevation(k: number): void {
 
         if (this._elevationStart === undefined || this._elevationCenter === undefined) {
             this._prepareElevation(this.transform.center);
@@ -1242,7 +1242,7 @@ export abstract class Camera extends Evented {
         this.transform.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
     }
 
-    _finalizeElevation() {
+    _finalizeElevation(): void {
         this._elevationFreeze = false;
         if (this.getCenterClampedToGround()) {
             this.transform.recalculateZoomAndCenter(this.terrain);
@@ -1301,7 +1301,7 @@ export abstract class Camera extends Evented {
      * If the camera is inside terrain, it gets elevated.
      * Call `transformCameraUpdate` if present, and then apply the "approved" changes.
      */
-    _applyUpdatedTransform(tr: ITransform) {
+    _applyUpdatedTransform(tr: ITransform): void {
         const modifiers : Array<(tr: ITransform) => ReturnType<CameraUpdateTransformFunction>> = [];
         modifiers.push(tr => this._elevateCameraIfInsideTerrain(tr));
         if (this.transformCameraUpdate) {
@@ -1332,7 +1332,7 @@ export abstract class Camera extends Evented {
         this.transform.apply(finalTransform, false);
     }
 
-    _fireMoveEvents(eventData?: any) {
+    _fireMoveEvents(eventData?: any): void {
         this.fire(new Event('move', eventData));
         if (this._zooming) {
             this.fire(new Event('zoom', eventData));
@@ -1348,7 +1348,7 @@ export abstract class Camera extends Evented {
         }
     }
 
-    _afterEase(eventData?: any, easeId?: string) {
+    _afterEase(eventData?: any, easeId?: string): void {
         // if this easing is being stopped to start another easing with
         // the same id then don't fire any events to avoid extra start/stop events
         if (this._easeId && easeId && this._easeId === easeId) {
@@ -1591,7 +1591,7 @@ export abstract class Camera extends Evented {
         return this;
     }
 
-    isEasing() {
+    isEasing(): boolean {
         return !!this._easeFrameId;
     }
 
@@ -1629,7 +1629,7 @@ export abstract class Camera extends Evented {
             animate?: boolean;
             duration?: number;
             easing?: (_: number) => number;
-        }) {
+        }): void {
         if (options.animate === false || options.duration === 0) {
             frame(1);
             finish();
@@ -1643,7 +1643,7 @@ export abstract class Camera extends Evented {
     }
 
     // Callback for map._requestRenderFrame
-    _renderFrameCallback = () => {
+    _renderFrameCallback = (): void => {
         const t = Math.min((now() - this._easeStart) / this._easeOptions.duration, 1);
         this._onEaseFrame(this._easeOptions.easing(t));
 
@@ -1656,7 +1656,7 @@ export abstract class Camera extends Evented {
     };
 
     // convert bearing so that it's numerically close to the current one so that it interpolates properly
-    _normalizeBearing(bearing: number, currentBearing: number) {
+    _normalizeBearing(bearing: number, currentBearing: number): number {
         bearing = wrap(bearing, -180, 180);
         const diff = Math.abs(bearing - currentBearing);
         if (Math.abs(bearing - 360 - currentBearing) < diff) bearing -= 360;

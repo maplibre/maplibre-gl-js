@@ -96,15 +96,15 @@ export class SegmentVector {
      * Causes the next call to {@link prepareSegment} to always return a new segment,
      * not reusing the current segment even if the new geometry would fit it.
      */
-    forceNewSegmentOnNextPrepare() {
+    forceNewSegmentOnNextPrepare(): void {
         this._forceNewSegmentOnNextPrepare = true;
     }
 
-    get() {
+    get(): Segment[] {
         return this.segments;
     }
 
-    destroy() {
+    destroy(): void {
         for (const segment of this.segments) {
             for (const k in segment.vaos) {
                 segment.vaos[k].destroy();

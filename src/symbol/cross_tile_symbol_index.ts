@@ -98,7 +98,7 @@ class TileLayerIndex {
 
     findMatches(symbolInstances: SymbolInstanceArray, newTileID: OverscaledTileID, zoomCrossTileIDs: {
         [crossTileID: number]: boolean;
-    }) {
+    }): void {
         const tolerance = this.tileID.canonical.z < newTileID.canonical.z ? 1 : Math.pow(2, this.tileID.canonical.z - newTileID.canonical.z);
 
         for (let i = 0; i < symbolInstances.length; i++) {
@@ -159,7 +159,7 @@ class TileLayerIndex {
         }
     }
 
-    getCrossTileIDsLists() {
+    getCrossTileIDsLists(): number[][] {
         return Object.values(this._symbolsByKey).map(({crossTileIDs}) => crossTileIDs);
     }
 }
@@ -169,7 +169,7 @@ class CrossTileIDs {
     constructor() {
         this.maxCrossTileID = 0;
     }
-    generate() {
+    generate(): number {
         return ++this.maxCrossTileID;
     }
 }
@@ -198,7 +198,7 @@ class CrossTileSymbolLayerIndex {
      * To prevent labels from flashing out and in we adjust the tileID values in the indexes
      * so that they match the new wrapped version of the map.
      */
-    handleWrapJump(lng: number) {
+    handleWrapJump(lng: number): void {
         const wrapDelta = Math.round((lng - this.lng) / 360);
         if (wrapDelta !== 0) {
             for (const zoom in this.indexes) {
@@ -216,7 +216,7 @@ class CrossTileSymbolLayerIndex {
         this.lng = lng;
     }
 
-    addBucket(tileID: OverscaledTileID, bucket: SymbolBucket, crossTileIDs: CrossTileIDs) {
+    addBucket(tileID: OverscaledTileID, bucket: SymbolBucket, crossTileIDs: CrossTileIDs): boolean {
         if (this.indexes[tileID.overscaledZ]?.[tileID.key]) {
             if (this.indexes[tileID.overscaledZ][tileID.key].bucketInstanceId ===
                 bucket.bucketInstanceId) {
@@ -275,7 +275,7 @@ class CrossTileSymbolLayerIndex {
         return true;
     }
 
-    removeBucketCrossTileIDs(zoom: string | number, removedBucket: TileLayerIndex) {
+    removeBucketCrossTileIDs(zoom: string | number, removedBucket: TileLayerIndex): void {
         for (const crossTileIDs of removedBucket.getCrossTileIDsLists()) {
             for (const crossTileID of crossTileIDs) {
                 delete this.usedCrossTileIDs[zoom][crossTileID];
@@ -285,7 +285,7 @@ class CrossTileSymbolLayerIndex {
 
     removeStaleBuckets(currentIDs: {
         [k in string | number]: boolean;
-    }) {
+    }): boolean {
         let tilesChanged = false;
         for (const z in this.indexes) {
             const zoomIndexes = this.indexes[z];
@@ -314,7 +314,7 @@ export class CrossTileSymbolIndex {
         this.bucketsInCurrentPlacement = {};
     }
 
-    addLayer(styleLayer: StyleLayer, tiles: Tile[], lng: number) {
+    addLayer(styleLayer: StyleLayer, tiles: Tile[], lng: number): boolean {
         let layerIndex = this.layerIndexes[styleLayer.id];
         if (layerIndex === undefined) {
             layerIndex = this.layerIndexes[styleLayer.id] = new CrossTileSymbolLayerIndex();
@@ -348,7 +348,7 @@ export class CrossTileSymbolIndex {
         return symbolBucketsChanged;
     }
 
-    pruneUnusedLayers(usedLayers: string[]) {
+    pruneUnusedLayers(usedLayers: string[]): void {
         const usedLayerMap = {};
         for (const usedLayer of usedLayers) {
             usedLayerMap[usedLayer] = true;

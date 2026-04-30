@@ -128,14 +128,14 @@ export default class CustomLayer extends Benchmark {
         });
     }
 
-    bench() {
+    bench(): void {
         const customLayer = new Tent3D();
         this.map.addLayer(customLayer);
         this.map._styleDirty = true;
         this.map._sourcesDirty = true;
         Benchmark.renderMap(this.map, Date.now());
     }
-    teardown() {
+    teardown(): void {
         this.map.remove();
     }
 }

@@ -16,17 +16,17 @@ export class MapEventHandler implements Handler {
         this._clickTolerance = options.clickTolerance;
     }
 
-    reset() {
+    reset(): void {
         delete this._mousedownPos;
     }
 
-    wheel(e: WheelEvent) {
+    wheel(e: WheelEvent): {} {
         // If mapEvent.preventDefault() is called by the user, prevent handlers such as:
         // - ScrollZoom
         return this._firePreventable(new MapWheelEvent(e.type, this._map, e));
     }
 
-    mousedown(e: MouseEvent, point: Point) {
+    mousedown(e: MouseEvent, point: Point): {} {
         this._mousedownPos = point;
         // If mapEvent.preventDefault() is called by the user, prevent handlers such as:
         // - MousePan
@@ -36,30 +36,30 @@ export class MapEventHandler implements Handler {
         return this._firePreventable(new MapMouseEvent(e.type, this._map, e));
     }
 
-    mouseup(e: MouseEvent) {
+    mouseup(e: MouseEvent): void {
         this._map.fire(new MapMouseEvent(e.type, this._map, e));
     }
 
-    click(e: MouseEvent, point: Point) {
+    click(e: MouseEvent, point: Point): void {
         if (this._mousedownPos && this._mousedownPos.dist(point) >= this._clickTolerance) return;
         this._map.fire(new MapMouseEvent(e.type, this._map, e));
     }
 
-    dblclick(e: MouseEvent) {
+    dblclick(e: MouseEvent): {} {
         // If mapEvent.preventDefault() is called by the user, prevent handlers such as:
         // - DblClickZoom
         return this._firePreventable(new MapMouseEvent(e.type, this._map, e));
     }
 
-    mouseover(e: MouseEvent) {
+    mouseover(e: MouseEvent): void {
         this._map.fire(new MapMouseEvent(e.type, this._map, e));
     }
 
-    mouseout(e: MouseEvent) {
+    mouseout(e: MouseEvent): void {
         this._map.fire(new MapMouseEvent(e.type, this._map, e));
     }
 
-    touchstart(e: TouchEvent) {
+    touchstart(e: TouchEvent): {} {
         // If mapEvent.preventDefault() is called by the user, prevent handlers such as:
         // - TouchPan
         // - TouchZoom
@@ -70,19 +70,19 @@ export class MapEventHandler implements Handler {
         return this._firePreventable(new MapTouchEvent(e.type, this._map, e));
     }
 
-    touchmove(e: TouchEvent) {
+    touchmove(e: TouchEvent): void {
         this._map.fire(new MapTouchEvent(e.type, this._map, e));
     }
 
-    touchend(e: TouchEvent) {
+    touchend(e: TouchEvent): void {
         this._map.fire(new MapTouchEvent(e.type, this._map, e));
     }
 
-    touchcancel(e: TouchEvent) {
+    touchcancel(e: TouchEvent): void {
         this._map.fire(new MapTouchEvent(e.type, this._map, e));
     }
 
-    _firePreventable(mapEvent: MapMouseEvent | MapTouchEvent | MapWheelEvent) {
+    _firePreventable(mapEvent: MapMouseEvent | MapTouchEvent | MapWheelEvent): {} {
         this._map.fire(mapEvent);
         if (mapEvent.defaultPrevented) {
             // returning an object marks the handler as active and resets other handlers
@@ -90,15 +90,15 @@ export class MapEventHandler implements Handler {
         }
     }
 
-    isEnabled() {
+    isEnabled(): boolean {
         return true;
     }
 
-    isActive() {
+    isActive(): boolean {
         return false;
     }
-    enable() {}
-    disable() {}
+    enable(): void {}
+    disable(): void {}
 }
 
 export class BlockableMapEventHandler {
@@ -111,30 +111,30 @@ export class BlockableMapEventHandler {
         this._map = map;
     }
 
-    reset() {
+    reset(): void {
         this._delayContextMenu = false;
         this._ignoreContextMenu = true;
         delete this._contextMenuEvent;
     }
 
-    mousemove(e: MouseEvent) {
+    mousemove(e: MouseEvent): void {
         // mousemove map events should not be fired when interaction handlers (pan, rotate, etc) are active
         this._map.fire(new MapMouseEvent(e.type, this._map, e));
     }
 
-    mousedown() {
+    mousedown(): void {
         this._delayContextMenu = true;
         this._ignoreContextMenu = false;
     }
 
-    mouseup() {
+    mouseup(): void {
         this._delayContextMenu = false;
         if (this._contextMenuEvent) {
             this._map.fire(new MapMouseEvent('contextmenu', this._map, this._contextMenuEvent));
             delete this._contextMenuEvent;
         }
     }
-    contextmenu(e: MouseEvent) {
+    contextmenu(e: MouseEvent): void {
         if (this._delayContextMenu) {
             // Mac: contextmenu fired on mousedown; we save it until mouseup for consistency's sake
             this._contextMenuEvent = e;
@@ -149,13 +149,13 @@ export class BlockableMapEventHandler {
         }
     }
 
-    isEnabled() {
+    isEnabled(): boolean {
         return true;
     }
 
-    isActive() {
+    isActive(): boolean {
         return false;
     }
-    enable() {}
-    disable() {}
+    enable(): void {}
+    disable(): void {}
 }

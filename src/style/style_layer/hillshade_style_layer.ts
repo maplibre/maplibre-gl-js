@@ -39,7 +39,7 @@ export class HillshadeStyleLayer extends StyleLayer {
         return {directionRadians, altitudeRadians, shadowColor, highlightColor};
     }
 
-    hasOffscreenPass() {
+    hasOffscreenPass(): boolean {
         return this.paint.get('hillshade-exaggeration') !== 0 && !this.isHidden();
     }
 }

@@ -79,7 +79,45 @@ export type PreparedShader = {
     staticUniforms: string[];
 };
 
-export const shaders = {
+export const shaders: {
+    prelude: PreparedShader;
+    projectionMercator: PreparedShader;
+    projectionGlobe: PreparedShader;
+    background: PreparedShader;
+    backgroundPattern: PreparedShader;
+    circle: PreparedShader;
+    clippingMask: PreparedShader;
+    heatmap: PreparedShader;
+    heatmapTexture: PreparedShader;
+    collisionBox: PreparedShader;
+    collisionCircle: PreparedShader;
+    colorRelief: PreparedShader;
+    debug: PreparedShader;
+    depth: PreparedShader;
+    fill: PreparedShader;
+    fillOutline: PreparedShader;
+    fillOutlinePattern: PreparedShader;
+    fillPattern: PreparedShader;
+    fillExtrusion: PreparedShader;
+    fillExtrusionPattern: PreparedShader;
+    hillshadePrepare: PreparedShader;
+    hillshade: PreparedShader;
+    line: PreparedShader;
+    lineGradient: PreparedShader;
+    linePattern: PreparedShader;
+    lineSDF: PreparedShader;
+    lineGradientSDF: PreparedShader;
+    raster: PreparedShader;
+    symbolIcon: PreparedShader;
+    symbolSDF: PreparedShader;
+    symbolTextAndIcon: PreparedShader;
+    terrain: PreparedShader;
+    terrainDepth: PreparedShader;
+    terrainCoords: PreparedShader;
+    projectionErrorMeasurement: PreparedShader;
+    atmosphere: PreparedShader;
+    sky: PreparedShader;
+} = {
     prelude: prepare(preludeFrag, preludeVert),
     projectionMercator: prepare('', projectionMercatorVert),
     projectionGlobe: prepare('', projectionGlobeVert),

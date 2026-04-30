@@ -24,7 +24,7 @@ export type TextAnchor = keyof typeof TextAnchorEnum;
 // We don't actually load baseline data, but we assume an offset of ONE_EM - 17
 // (see "yOffset" in shaping.js)
 const baselineOffset = 7;
-export const INVALID_TEXT_OFFSET = Number.POSITIVE_INFINITY;
+export const INVALID_TEXT_OFFSET: number = Number.POSITIVE_INFINITY;
 
 export function evaluateVariableOffset(anchor: TextAnchor, offset: [number, number]): [number, number] {
 

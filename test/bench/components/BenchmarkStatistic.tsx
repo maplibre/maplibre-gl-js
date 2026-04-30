@@ -8,7 +8,7 @@ type BenchmarkStatisticProps = {
     version: Version;
 }
 
-export const BenchmarkStatistic = (props: BenchmarkStatisticProps) => {
+export const BenchmarkStatistic = (props: BenchmarkStatisticProps): any => {
 
     switch (props.status) {
         case 'waiting':

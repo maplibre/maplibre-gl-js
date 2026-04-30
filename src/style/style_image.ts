@@ -175,7 +175,7 @@ export interface StyleImageInterface {
     onRemove?: () => void;
 }
 
-export function renderStyleImage(image: StyleImage) {
+export function renderStyleImage(image: StyleImage): boolean {
     const {userImage} = image;
     if (userImage?.render) {
         const updated = userImage.render();

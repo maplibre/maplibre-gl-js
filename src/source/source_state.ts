@@ -28,7 +28,7 @@ export class SourceFeatureState {
         this.revision = 0;
     }
 
-    updateState(sourceLayer: string, featureId: number | string, newState: any) {
+    updateState(sourceLayer: string, featureId: number | string, newState: any): void {
         const feature = String(featureId);
         this.stateChanges[sourceLayer] ||= {};
         this.stateChanges[sourceLayer][feature] ||= {};
@@ -55,7 +55,7 @@ export class SourceFeatureState {
         }
     }
 
-    removeFeatureState(sourceLayer: string, featureId?: number | string, key?: string) {
+    removeFeatureState(sourceLayer: string, featureId?: number | string, key?: string): void {
         const sourceLayerDeleted = this.deletedStates[sourceLayer] === null;
         if (sourceLayerDeleted) return;
 
@@ -83,7 +83,7 @@ export class SourceFeatureState {
 
     }
 
-    getState(sourceLayer: string, featureId: number | string) {
+    getState(sourceLayer: string, featureId: number | string): FeatureState {
         const feature = String(featureId);
         const base = this.state[sourceLayer] || {};
         const changes = this.stateChanges[sourceLayer] || {};
@@ -100,11 +100,11 @@ export class SourceFeatureState {
         return reconciledState;
     }
 
-    initializeTileState(tile: Tile, painter: any) {
+    initializeTileState(tile: Tile, painter: any): void {
         tile.setFeatureState(this.state, painter);
     }
 
-    coalesceChanges(inViewTiles: InViewTiles, painter: any) {
+    coalesceChanges(inViewTiles: InViewTiles, painter: any): void {
         //track changes with full state objects, but only for features that got modified
         const featuresChanged: LayerFeatureStates = {};
 

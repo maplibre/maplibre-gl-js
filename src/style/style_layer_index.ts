@@ -24,13 +24,13 @@ export class StyleLayerIndex {
         }
     }
 
-    replace(layerConfigs: LayerSpecification[], globalState?: Record<string, any>) {
+    replace(layerConfigs: LayerSpecification[], globalState?: Record<string, any>): void {
         this._layerConfigs = {};
         this._layers = {};
         this.update(layerConfigs, [], globalState);
     }
 
-    update(layerConfigs: LayerSpecification[], removedIds: string[], globalState?: Record<string, any>) {
+    update(layerConfigs: LayerSpecification[], removedIds: string[], globalState?: Record<string, any>): void {
         for (const layerConfig of layerConfigs) {
             this._layerConfigs[layerConfig.id] = layerConfig;
 

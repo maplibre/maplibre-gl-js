@@ -12,11 +12,11 @@ export default class StyleValidate extends Benchmark {
         this.style = style;
     }
 
-    async setup() {
+    async setup(): Promise<void> {
         this.json = await fetchStyle(this.style);
     }
 
-    bench() {
+    bench(): void {
         validateStyleMin(this.json);
     }
 }

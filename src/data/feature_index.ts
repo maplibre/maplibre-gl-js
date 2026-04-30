@@ -86,7 +86,7 @@ export class FeatureIndex {
         this.promoteId = promoteId;
     }
 
-    insert(feature: VectorTileFeatureLike, geometry: Point[][], featureIndex: number, sourceLayerIndex: number, bucketIndex: number, is3D?: boolean) {
+    insert(feature: VectorTileFeatureLike, geometry: Point[][], featureIndex: number, sourceLayerIndex: number, bucketIndex: number, is3D?: boolean): void {
         const key = this.featureIndexArray.length;
         this.featureIndexArray.emplaceBack(featureIndex, sourceLayerIndex, bucketIndex);
 
@@ -217,7 +217,7 @@ export class FeatureIndex {
             styleLayer: StyleLayer,
             featureState: any,
             id: string | number | void
-        ) => boolean | number) {
+        ) => boolean | number): void {
 
         const layerIDs = this.bucketLayerIDs[bucketIndex];
         if (filterLayerIDs && !layerIDs.some(id => filterLayerIDs.has(id)))
@@ -310,7 +310,7 @@ export class FeatureIndex {
         return result;
     }
 
-    hasLayer(id: string) {
+    hasLayer(id: string): boolean {
         for (const layerIDs of this.bucketLayerIDs) {
             for (const layerID of layerIDs) {
                 if (id === layerID) return true;

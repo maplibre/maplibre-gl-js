@@ -6,7 +6,7 @@ import type {GeoJSONSource} from '../../../src/source/geojson_source';
 export default class GeoJSONSourceUpdateData extends Benchmark {
     map: Map;
 
-    async setup() {
+    async setup(): Promise<void> {
         this.map = await createMap({
             width: 512,
             height: 512,
@@ -55,7 +55,7 @@ export default class GeoJSONSourceUpdateData extends Benchmark {
         });
     }
 
-    async bench() {
+    async bench(): Promise<void> {
         const source = this.map.getSource<GeoJSONSource>('points');
 
         source.updateData({
@@ -73,7 +73,7 @@ export default class GeoJSONSourceUpdateData extends Benchmark {
         });
     }
 
-    teardown() {
+    teardown(): void {
         this.map.remove();
     }
 }

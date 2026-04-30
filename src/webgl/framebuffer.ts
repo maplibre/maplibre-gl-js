@@ -33,7 +33,7 @@ export class Framebuffer {
         }
     }
 
-    destroy() {
+    destroy(): void {
         const gl = this.context.gl;
 
         const texture = this.colorAttachment.get();

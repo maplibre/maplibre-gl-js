@@ -22,12 +22,12 @@ export default class PaintStates extends Benchmark {
     numFeatures: any;
     map: any;
 
-    constructor(center) {
+    constructor(center: any) {
         super();
         this.center = center;
     }
 
-    async setup() {
+    async setup(): Promise<void> {
         const response = await fetch('/test/bench/data/naturalearth-land.json');
         const data = await response.json();
         this.numFeatures = data.features.length;
@@ -60,7 +60,7 @@ export default class PaintStates extends Benchmark {
         }
     }
 
-    bench() {
+    bench(): void {
         this.map._styleDirty = true;
         this.map._sourcesDirty = true;
         this.map._render();
@@ -70,7 +70,7 @@ export default class PaintStates extends Benchmark {
         Benchmark.renderMap(this.map);
     }
 
-    teardown() {
+    teardown(): void {
         this.map.remove();
     }
 }

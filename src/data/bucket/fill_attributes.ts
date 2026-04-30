@@ -1,8 +1,10 @@
-import {createLayout} from '../../util/struct_array';
+import {createLayout, type StructArrayLayout, type StructArrayMember} from '../../util/struct_array';
 
-const layout = createLayout([
+const layout: StructArrayLayout = createLayout([
     {name: 'a_pos', components: 2, type: 'Int16'}
 ], 4);
 
 export default layout;
-export const {members, size, alignment} = layout;
+export const members: StructArrayMember[] = layout.members;
+export const size: number = layout.size;
+export const alignment: number = layout.alignment;

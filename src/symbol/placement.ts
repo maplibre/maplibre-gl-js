@@ -34,7 +34,7 @@ class OpacityState {
         }
         this.placed = placed;
     }
-    isHidden() {
+    isHidden(): boolean {
         return this.opacity === 0 && !this.placed;
     }
 }
@@ -46,7 +46,7 @@ class JointOpacityState {
         this.text = new OpacityState(prevState ? prevState.text : null, increment, placedText, skipFade);
         this.icon = new OpacityState(prevState ? prevState.icon : null, increment, placedIcon, skipFade);
     }
-    isHidden() {
+    isHidden(): boolean {
         return this.text.isHidden() && this.icon.isHidden();
     }
 }
@@ -102,7 +102,7 @@ class CollisionGroups {
         this.collisionGroups = {};
     }
 
-    get(sourceID: string) {
+    get(sourceID: string): CollisionGroup {
         // The predicate/groupID mechanism allows for arbitrary grouping,
         // but the current interface defines one source == one group when
         // crossSourceCollisions == true.
@@ -242,7 +242,7 @@ export class Placement {
         return (x: number, y: number) => terrain.getElevation(tileID, x, y);
     }
 
-    getBucketParts(results: BucketPart[], styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean) {
+    getBucketParts(results: BucketPart[], styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean): void {
         const symbolBucket = (tile.getBucket(styleLayer) as SymbolBucket);
         const bucketFeatureIndex = tile.latestFeatureIndex;
         if (!symbolBucket || !bucketFeatureIndex || styleLayer.id !== symbolBucket.layerIds[0])
@@ -324,7 +324,7 @@ export class Placement {
         pitchWithMap: boolean,
         textPixelRatio: number,
         tileID: OverscaledTileID,
-        unwrappedTileID,
+        unwrappedTileID: UnwrappedTileID,
         collisionGroup: CollisionGroup,
         textOverlapMode: OverlapMode,
         symbolInstance: SymbolInstance,
@@ -407,7 +407,7 @@ export class Placement {
 
     placeLayerBucketPart(bucketPart: BucketPart, seenCrossTileIDs: {
         [k in string | number]: boolean;
-    }, showCollisionBoxes: boolean) {
+    }, showCollisionBoxes: boolean): void {
 
         const {
             bucket,
@@ -893,7 +893,7 @@ export class Placement {
         }
     }
 
-    markUsedJustification(bucket: SymbolBucket, placedAnchor: TextAnchor, symbolInstance: SymbolInstance, orientation: number) {
+    markUsedJustification(bucket: SymbolBucket, placedAnchor: TextAnchor, symbolInstance: SymbolInstance, orientation: number): void {
         const justifications = {
             'left': symbolInstance.leftJustifiedTextSymbolIndex,
             'center': symbolInstance.centerJustifiedTextSymbolIndex,
@@ -927,7 +927,7 @@ export class Placement {
         }
     }
 
-    markUsedOrientation(bucket: SymbolBucket, orientation: number, symbolInstance: SymbolInstance) {
+    markUsedOrientation(bucket: SymbolBucket, orientation: number, symbolInstance: SymbolInstance): void {
         const horizontal = (orientation === WritingMode.horizontal || orientation === WritingMode.horizontalOnly) ? orientation : 0;
         const vertical = orientation === WritingMode.vertical ? orientation : 0;
 
@@ -1011,7 +1011,7 @@ export class Placement {
         }
     }
 
-    updateLayerOpacities(styleLayer: StyleLayer, tiles: Tile[]) {
+    updateLayerOpacities(styleLayer: StyleLayer, tiles: Tile[]): void {
         const seenCrossTileIDs = {};
         for (const tile of tiles) {
             const symbolBucket = tile.getBucket(styleLayer) as SymbolBucket;
@@ -1023,7 +1023,7 @@ export class Placement {
 
     updateBucketOpacities(bucket: SymbolBucket, tileID: OverscaledTileID, seenCrossTileIDs: {
         [k in string | number]: boolean;
-    }, collisionBoxArray?: CollisionBoxArray | null) {
+    }, collisionBoxArray?: CollisionBoxArray | null): void {
         if (bucket.hasTextData()) {
             bucket.text.opacityVertexArray.clear();
             bucket.text.hasVisibleVertices = false;
@@ -1246,13 +1246,13 @@ export class Placement {
         }
     }
 
-    symbolFadeChange(now: number) {
+    symbolFadeChange(now: number): number {
         return this.fadeDuration === 0 ?
             1 :
             ((now - this.commitTime) / this.fadeDuration + this.prevZoomAdjustment);
     }
 
-    zoomAdjustment(zoom: number) {
+    zoomAdjustment(zoom: number): number {
         // When zooming out quickly, labels can overlap each other. This
         // adjustment is used to reduce the interval between placement calculations
         // and to reduce the fade duration when zooming out quickly. Discovering the
@@ -1260,12 +1260,12 @@ export class Placement {
         return Math.max(0, (this.transform.zoom - zoom) / 1.5);
     }
 
-    hasTransitions(now: number) {
+    hasTransitions(now: number): boolean {
         return this.stale ||
             now - this.lastPlacementChangeTime < this.fadeDuration;
     }
 
-    stillRecent(now: number, zoom: number) {
+    stillRecent(now: number, zoom: number): boolean {
         // The adjustment makes placement more frequent when zooming.
         // This condition applies the adjustment only after the map has
         // stopped zooming. This avoids adding extra jank while zooming.
@@ -1277,7 +1277,7 @@ export class Placement {
         return this.commitTime + this.fadeDuration * durationAdjustment > now;
     }
 
-    setStale() {
+    setStale(): void {
         this.stale = true;
     }
 }

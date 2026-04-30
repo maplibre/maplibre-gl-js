@@ -6,7 +6,7 @@ import {compareTileId, type OverscaledTileID} from './tile_id';
 export class InViewTiles {
     private _tiles: Record<string, Tile> = {};
 
-    public handleWrapJump(wrapDelta: number) {
+    public handleWrapJump(wrapDelta: number): void {
         const tiles: Record<string, Tile> = {};
         for (const id in this._tiles) {
             const tile = this._tiles[id];
@@ -16,7 +16,7 @@ export class InViewTiles {
         this._tiles = tiles;
     }
 
-    public setFeatureState(featuresChanged: LayerFeatureStates, painter: any) {
+    public setFeatureState(featuresChanged: LayerFeatureStates, painter: any): void {
         for (const id in this._tiles) {
             const tile = this._tiles[id];
             tile.setFeatureState(featuresChanged, painter);
@@ -38,11 +38,11 @@ export class InViewTiles {
         return this._tiles[key];
     }
 
-    public setTile(key: string, tile: Tile) {
+    public setTile(key: string, tile: Tile): void {
         this._tiles[key] = tile;
     }
 
-    public deleteTileById(key: string) {
+    public deleteTileById(key: string): void {
         delete this._tiles[key];
     }
 
@@ -59,7 +59,7 @@ export class InViewTiles {
         return null;
     }
 
-    public isIdRenderable(id: string, symbolLayer: boolean = false) {
+    public isIdRenderable(id: string, symbolLayer: boolean = false): boolean {
         return this.getTileById(id)?.isRenderable(symbolLayer);
     }
 

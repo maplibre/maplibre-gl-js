@@ -10,7 +10,7 @@ import {type PossiblyEvaluated} from '../../style/properties';
 
 type PatternStyleLayers = LineStyleLayer[] | FillStyleLayer[] | FillExtrusionStyleLayer[];
 
-export function hasPattern(type: string, layers: PatternStyleLayers, options: PopulateParameters) {
+export function hasPattern(type: string, layers: PatternStyleLayers, options: PopulateParameters): boolean {
     const patterns = options.patternDependencies;
     let hasPattern = false;
 
@@ -31,7 +31,7 @@ export function hasPattern(type: string, layers: PatternStyleLayers, options: Po
     return hasPattern;
 }
 
-export function addPatternDependencies(type: string, layers: PatternStyleLayers, patternFeature: BucketFeature, parameters: { zoom: number }, options: PopulateParameters) {
+export function addPatternDependencies(type: string, layers: PatternStyleLayers, patternFeature: BucketFeature, parameters: { zoom: number }, options: PopulateParameters): BucketFeature {
     const {zoom} = parameters;
     const patterns = options.patternDependencies;
     for (const layer of layers) {

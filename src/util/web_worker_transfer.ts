@@ -55,7 +55,7 @@ export function register<T extends any>(
         new (...args: any): T;
     },
     options: RegisterOptions<T> = {}
-) {
+): void {
     if (registry[name]) throw new Error(`${name} is already registered.`);
     ((Object.defineProperty as any))(klass, '_classRegistryKey', {
         value: name,

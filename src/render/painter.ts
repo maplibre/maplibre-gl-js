@@ -146,7 +146,7 @@ export class Painter {
      * Update the GL viewport, projection matrix, and transforms to compensate
      * for a new width and height value.
      */
-    resize(width: number, height: number, pixelRatio: number) {
+    resize(width: number, height: number, pixelRatio: number): void {
         this.width = Math.floor(width * pixelRatio);
         this.height = Math.floor(height * pixelRatio);
         this.pixelRatio = pixelRatio;
@@ -159,7 +159,7 @@ export class Painter {
         }
     }
 
-    setup() {
+    setup(): void {
         const context = this.context;
 
         const tileExtentArray = new PosArray();
@@ -225,7 +225,7 @@ export class Painter {
      * Reset the drawing canvas by clearing the stencil buffer so that we can draw
      * new tiles at the same location, while retaining previously drawn pixels.
      */
-    clearStencil() {
+    clearStencil(): void {
         const context = this.context;
         const gl = context.gl;
 
@@ -257,7 +257,7 @@ export class Painter {
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }
 
-    _renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean) {
+    _renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean): void {
         if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs?.length) {
             return;
         }
@@ -291,7 +291,7 @@ export class Painter {
         this._tileClippingMaskIDs = stencilRefs;
     }
 
-    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: OverscaledTileID[], renderToTexture: boolean, useBorders: boolean) {
+    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: OverscaledTileID[], renderToTexture: boolean, useBorders: boolean): void {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.projection;
@@ -321,7 +321,7 @@ export class Painter {
      * Fills the depth buffer with the geometry of all supplied tiles.
      * Does not change the color buffer or the stencil buffer.
      */
-    _renderTilesDepthBuffer() {
+    _renderTilesDepthBuffer(): void {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.projection;
@@ -463,11 +463,11 @@ export class Painter {
      * This returns true for layers that can be drawn using the
      * opaque pass.
      */
-    opaquePassEnabledForLayer() {
+    opaquePassEnabledForLayer(): boolean {
         return this.currentLayer < this.opaquePassCutoff;
     }
 
-    render(style: Style, options: PainterOptions) {
+    render(style: Style, options: PainterOptions): void {
         this.style = style;
         this.options = options;
 
@@ -621,7 +621,7 @@ export class Painter {
      * Update the depth framebuffer if the camera has moved or tiles have reloaded.
      * Marks coords as depthDirty so they are re-rendered on next demand.
      */
-    maybeDrawDepth(requireExact: boolean) {
+    maybeDrawDepth(requireExact: boolean): void {
         if (!this.style?.map?.terrain) {
             return;
         }
@@ -647,7 +647,7 @@ export class Painter {
     /**
      * Render the coords framebuffer if it is coordsDirty
      */
-    maybeDrawCoords() {
+    maybeDrawCoords(): void {
         if (!this.style?.map?.terrain || !this.terrainFacilitator.coordsDirty) {
             return;
         }
@@ -655,7 +655,7 @@ export class Painter {
         this.drawFunctions.terrainCoords(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
+    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
@@ -688,7 +688,7 @@ export class Painter {
 
     static readonly MAX_TEXTURE_POOL_SIZE_PER_BUCKET = 50;
 
-    saveTileTexture(texture: Texture) {
+    saveTileTexture(texture: Texture): void {
         const textures = this._tileTextures[texture.size[0]];
         if (!textures) {
             this._tileTextures[texture.size[0]] = [texture];
@@ -699,7 +699,7 @@ export class Painter {
         }
     }
 
-    getTileTexture(size: number) {
+    getTileTexture(size: number): Texture {
         const textures = this._tileTextures[size];
         return textures && textures.length > 0 ? textures.pop() : null;
     }
@@ -761,7 +761,7 @@ export class Painter {
      * Reset some GL state to default values to avoid hard-to-debug bugs
      * in custom layers.
      */
-    setCustomLayerDefaults() {
+    setCustomLayerDefaults(): void {
         // Prevent custom layers from unintentionally modify the last VAO used.
         // All other state is state is restored on it's own, but for VAOs it's
         // simpler to unbind so that we don't have to track the state of VAOs.
@@ -779,14 +779,14 @@ export class Painter {
     /*
      * Set GL state that is shared by all layers.
      */
-    setBaseState() {
+    setBaseState(): void {
         const gl = this.context.gl;
         this.context.cullFace.set(false);
         this.context.viewport.set([0, 0, this.width, this.height]);
         this.context.blendEquation.set(gl.FUNC_ADD);
     }
 
-    initDebugOverlayCanvas() {
+    initDebugOverlayCanvas(): void {
         if (this.debugOverlayCanvas == null) {
             this.debugOverlayCanvas = document.createElement('canvas');
             this.debugOverlayCanvas.width = 512;
@@ -796,7 +796,7 @@ export class Painter {
         }
     }
 
-    destroy() {
+    destroy(): void {
         if (this._tileTextures) {
             for (const size in this._tileTextures) {
                 const textures = this._tileTextures[size];
@@ -843,7 +843,7 @@ export class Painter {
      * That means that we've reached GL limits somehow.
      * Note: drawing buffer size changes only when canvas size changes
      */
-    overLimit() {
+    overLimit(): boolean {
         const {drawingBufferWidth, drawingBufferHeight} = this.context.gl;
         return this.width !== drawingBufferWidth || this.height !== drawingBufferHeight;
     }

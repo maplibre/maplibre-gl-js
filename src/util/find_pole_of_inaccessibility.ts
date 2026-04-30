@@ -110,7 +110,7 @@ function pointToPolygonDist(p: Point, polygon: Point[][]) {
 }
 
 // get polygon centroid
-export function getCentroidCell(polygon: Point[][]) {
+export function getCentroidCell(polygon: Point[][]): Cell {
     let area = 0;
     let x = 0;
     let y = 0;

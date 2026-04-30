@@ -116,11 +116,11 @@ export class GlobeProjection extends Evented implements Projection {
         return this.currentProjection.getMeshFromTileID(context, _tileID, _hasBorder, _allowPoles, _usage);
     }
 
-    setProjection(projection?: ProjectionSpecification) {
+    setProjection(projection?: ProjectionSpecification): void {
         this._transitionable.setValue('type', projection?.type || 'mercator');
     }
 
-    updateTransitions(parameters: TransitionParameters) {
+    updateTransitions(parameters: TransitionParameters): void {
         this._transitioning = this._transitionable.transitioned(parameters, this._transitioning);
     }
 
@@ -128,11 +128,11 @@ export class GlobeProjection extends Evented implements Projection {
         return this._transitioning.hasTransition() || this.currentProjection.hasTransition();
     }
 
-    recalculate(parameters: EvaluationParameters) {
+    recalculate(parameters: EvaluationParameters): void {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
-    setErrorQueryLatitudeDegrees(value: number) {
+    setErrorQueryLatitudeDegrees(value: number): void {
         this._verticalPerspectiveProjection.setErrorQueryLatitudeDegrees(value);
         this._mercatorProjection.setErrorQueryLatitudeDegrees(value);
     }

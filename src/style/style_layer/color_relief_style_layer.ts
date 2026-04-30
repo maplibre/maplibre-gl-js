@@ -97,7 +97,7 @@ export class ColorReliefStyleLayer extends StyleLayer {
         return this.colorRampTextures;
     }
 
-    hasOffscreenPass() {
+    hasOffscreenPass(): boolean {
         return !this.isHidden() && !!this.colorRampTextures;
     }
 }

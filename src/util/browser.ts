@@ -61,13 +61,13 @@ export const browser = {
         return context;
     },
 
-    resolveURL(path: string) {
+    resolveURL(path: string): string {
         linkEl ||= document.createElement('a');
         linkEl.href = path;
         return linkEl.href;
     },
 
-    hardwareConcurrency: typeof navigator !== 'undefined' && navigator.hardwareConcurrency || 4,
+    hardwareConcurrency: (typeof navigator !== 'undefined' && navigator.hardwareConcurrency || 4) as number,
 
     get prefersReducedMotion(): boolean {
         if (reducedMotionOverride !== undefined) return reducedMotionOverride;

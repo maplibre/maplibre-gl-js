@@ -23,7 +23,7 @@ export class GlobeControl implements IControl {
     _globeButton: HTMLButtonElement;
 
     /** {@inheritDoc IControl.onAdd} */
-    onAdd(map: Map) {
+    onAdd(map: Map): HTMLElement {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
         this._globeButton = DOM.create('button', 'maplibregl-ctrl-globe', this._container);
@@ -38,7 +38,7 @@ export class GlobeControl implements IControl {
     }
 
     /** {@inheritDoc IControl.onRemove} */
-    onRemove() {
+    onRemove(): void {
         this._container.remove();
         this._map.off('styledata', this._updateGlobeIcon);
         this._map.off('projectiontransition', this._updateGlobeIcon);
@@ -46,7 +46,7 @@ export class GlobeControl implements IControl {
         this._map = undefined;
     }
 
-    _toggleProjection = () => {
+    _toggleProjection = (): void => {
         const currentProjection = this._map.getProjection()?.type;
         if (currentProjection === 'mercator' || !currentProjection) {
             this._map.setProjection({type: 'globe'});
@@ -56,7 +56,7 @@ export class GlobeControl implements IControl {
         this._updateGlobeIcon();
     };
 
-    _updateGlobeIcon = () => {
+    _updateGlobeIcon = (): void => {
         this._globeButton.classList.remove('maplibregl-ctrl-globe');
         this._globeButton.classList.remove('maplibregl-ctrl-globe-enabled');
         if (this._map.getProjection()?.type === 'globe') {

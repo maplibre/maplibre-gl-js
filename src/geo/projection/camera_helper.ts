@@ -93,7 +93,7 @@ export type UpdateRotationArgs = {
 /**
  * @internal
  */
-export function cameraBoundsWarning() {
+export function cameraBoundsWarning(): void {
     warnOnce(
         'Map cannot fit within canvas with the given bounds, padding, and/or offset.'
     );
@@ -128,7 +128,7 @@ export interface ICameraHelper {
  * @internal
  * Set a transform's rotation to a value interpolated between startEulerAngles and endEulerAngles
  */
-export function updateRotation(args: UpdateRotationArgs) {
+export function updateRotation(args: UpdateRotationArgs): void {
     if (args.useSlerp) {
         // At pitch ==0, the Euler angle representation is ambiguous. In this case, set the Euler angles
         // to the representation requested by the caller

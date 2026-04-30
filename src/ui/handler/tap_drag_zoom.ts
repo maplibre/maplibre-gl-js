@@ -29,11 +29,11 @@ export class TapDragZoomHandler implements Handler {
         this.reset();
     }
 
-    setZoomRate(zoomRate?: number) {
+    setZoomRate(zoomRate?: number): void {
         this._zoomRate = zoomRate ?? defaultZoomRate;
     }
 
-    reset() {
+    reset(): void {
         this._active = false;
         delete this._swipePoint;
         delete this._swipeTouch;
@@ -42,7 +42,7 @@ export class TapDragZoomHandler implements Handler {
         this._tap.reset();
     }
 
-    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): void {
         if (this._swipePoint) return;
 
         if (!this._tapTime) {
@@ -62,7 +62,7 @@ export class TapDragZoomHandler implements Handler {
         }
     }
 
-    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): {zoomDelta: number} | void {
         if (!this._tapTime) {
             this._tap.touchmove(e, points, mapTouches);
         } else if (this._swipePoint) {
@@ -83,7 +83,7 @@ export class TapDragZoomHandler implements Handler {
         }
     }
 
-    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]): void {
         if (!this._tapTime) {
             const point = this._tap.touchend(e, points, mapTouches);
             if (point) {
@@ -97,24 +97,24 @@ export class TapDragZoomHandler implements Handler {
         }
     }
 
-    touchcancel() {
+    touchcancel(): void {
         this.reset();
     }
 
-    enable() {
+    enable(): void {
         this._enabled = true;
     }
 
-    disable() {
+    disable(): void {
         this._enabled = false;
         this.reset();
     }
 
-    isEnabled() {
+    isEnabled(): boolean {
         return this._enabled;
     }
 
-    isActive() {
+    isActive(): boolean {
         return this._active;
     }
 }

@@ -31,7 +31,7 @@ export class RenderPool {
         this._stamp = 0;
     }
 
-    public destruct() {
+    public destruct(): void {
         for (const obj of this._objects) {
             obj.texture.destroy();
             obj.fbo.destroy();
@@ -54,13 +54,13 @@ export class RenderPool {
         return this._objects[id];
     }
 
-    public useObject(obj: PoolObject) {
+    public useObject(obj: PoolObject): void {
         obj.inUse = true;
         this._recentlyUsed = this._recentlyUsed.filter(id => obj.id !== id);
         this._recentlyUsed.push(obj.id);
     }
 
-    public stampObject(obj: PoolObject) {
+    public stampObject(obj: PoolObject): void {
         obj.stamp = ++this._stamp;
     }
 
@@ -78,11 +78,11 @@ export class RenderPool {
         return obj;
     }
 
-    public freeObject(obj: PoolObject) {
+    public freeObject(obj: PoolObject): void {
         obj.inUse = false;
     }
 
-    public freeAllObjects() {
+    public freeAllObjects(): void {
         for (const obj of this._objects)
             this.freeObject(obj);
     }

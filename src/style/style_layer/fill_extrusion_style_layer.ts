@@ -26,7 +26,7 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         super(layer, properties, globalState);
     }
 
-    createBucket(parameters: BucketParameters<FillExtrusionStyleLayer>) {
+    createBucket(parameters: BucketParameters<FillExtrusionStyleLayer>): FillExtrusionBucket {
         return new FillExtrusionBucket(parameters);
     }
 
@@ -69,7 +69,7 @@ function dot(a, b) {
     return a.x * b.x + a.y * b.y;
 }
 
-export function getIntersectionDistance(projectedQueryGeometry: Point3D[], projectedFace: Point3D[]) {
+export function getIntersectionDistance(projectedQueryGeometry: Point3D[], projectedFace: Point3D[]): number {
 
     if (projectedQueryGeometry.length === 1) {
         // For point queries calculate the z at which the point intersects the face

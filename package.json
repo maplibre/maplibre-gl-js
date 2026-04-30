@@ -144,7 +144,9 @@
     "generate-shaders": "node --no-warnings --loader ts-node/esm build/generate-shaders.ts",
     "generate-struct-arrays": "node --no-warnings --loader ts-node/esm build/generate-struct-arrays.ts",
     "generate-style-code": "node --no-warnings --loader ts-node/esm build/generate-style-code.ts",
-    "generate-typings": "dts-bundle-generator --export-referenced-types=false --umd-module-name=maplibregl -o ./dist/maplibre-gl.d.ts ./src/index.ts",
+    "build-types": "tsc -p tsconfig.build.json",
+    "bundle-types": "dts-bundle-generator --export-referenced-types=false --umd-module-name=maplibregl -o ./dist/maplibre-gl.d.ts ./src/index.ts",
+    "generate-typings": "npm run build-types && npm run bundle-types",
     "generate-docs": "typedoc && node --no-warnings --loader ts-node/esm build/generate-docs.ts",
     "generate-images": "node --no-warnings --loader ts-node/esm build/generate-doc-images.ts",
     "build-dist": "npm run build-css && npm run generate-unicode-data && npm run generate-typings && npm run generate-shaders && npm run build-dev && npm run build-prod",
@@ -177,7 +179,7 @@
     "benchmark": "node --no-warnings --loader ts-node/esm test/bench/run-benchmarks.ts",
     "gl-stats": "node --no-warnings --loader ts-node/esm test/bench/gl-stats.ts",
     "prepare": "npm run codegen",
-    "typecheck": "tsc --noEmit && tsc --project tsconfig.dist.json",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.build.json --noEmit && tsc -p tsconfig.dist.json",
     "tsnode": "node --experimental-loader=ts-node/esm --no-warnings"
   },
   "files": [

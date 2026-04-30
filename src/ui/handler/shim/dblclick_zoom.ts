@@ -26,7 +26,7 @@ export class DoubleClickZoomHandler {
      * map.doubleClickZoom.enable();
      * ```
      */
-    enable() {
+    enable(): void {
         this._clickZoom.enable();
         this._tapZoom.enable();
     }
@@ -39,7 +39,7 @@ export class DoubleClickZoomHandler {
      * map.doubleClickZoom.disable();
      * ```
      */
-    disable() {
+    disable(): void {
         this._clickZoom.disable();
         this._tapZoom.disable();
     }
@@ -49,7 +49,7 @@ export class DoubleClickZoomHandler {
      *
      * @returns `true` if the "double click to zoom" interaction is enabled.
      */
-    isEnabled() {
+    isEnabled(): boolean {
         return this._clickZoom.isEnabled() && this._tapZoom.isEnabled();
     }
 
@@ -58,7 +58,7 @@ export class DoubleClickZoomHandler {
      *
      * @returns `true` if the "double click to zoom" interaction is active.
      */
-    isActive() {
+    isActive(): boolean {
         return this._clickZoom.isActive() || this._tapZoom.isActive();
     }
 }

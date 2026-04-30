@@ -14,5 +14,7 @@ export type Version = {
     bench: BenchmarkLike;
 };
 
-export const versionColor = d3.scaleOrdinal(['#1b9e77', '#7570b3', '#d95f02']);
-export const formatSample = d3.format('.3r');
+export const versionColor: d3.ScaleOrdinal<string, string, never> = d3.scaleOrdinal(['#1b9e77', '#7570b3', '#d95f02']);
+export const formatSample: (n: number | {
+    valueOf(): number;
+}) => string = d3.format('.3r');

@@ -74,7 +74,7 @@ export class TerrainTileManager extends Evented {
         tileManager.tileSize = this.tileSize;
     }
 
-    destruct() {
+    destruct(): void {
         this.tileManager.usedForTerrain = false;
         this.tileManager.tileSize = null;
     }
@@ -121,7 +121,7 @@ export class TerrainTileManager extends Evented {
      * Free render to texture cache
      * @param tileID - optional, free only corresponding to tileID.
      */
-    freeRtt(tileID?: OverscaledTileID) {
+    freeRtt(tileID?: OverscaledTileID): void {
         for (const key in this._tiles) {
             const tile = this._tiles[key];
             if (!tileID || tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
@@ -297,7 +297,7 @@ export class TerrainTileManager extends Evented {
      * @param time - the time
      * @returns true if any tiles came into view at or after the specified time
      */
-    anyTilesAfterTime(time = Date.now()): boolean {
+    anyTilesAfterTime(time: number = Date.now()): boolean {
         return this._lastTilesetChange >= time;
     }
 

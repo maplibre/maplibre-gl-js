@@ -96,7 +96,7 @@ export class MercatorProjection implements Projection {
         return false;
     }
 
-    setErrorQueryLatitudeDegrees(_value: number) {
+    setErrorQueryLatitudeDegrees(_value: number): void {
         // Do nothing.
     }
 }

@@ -78,4 +78,5 @@ const viewConfig: RollupOptions = {
     ].filter(Boolean)
 };
 
-export default benchmarkSuiteConfig('versions').concat(benchmarkSuiteConfig('styles')).concat(viewConfig);
+const config: RollupOptions[] = benchmarkSuiteConfig('versions').concat(benchmarkSuiteConfig('styles')).concat(viewConfig);
+export default config;

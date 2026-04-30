@@ -70,7 +70,7 @@ export class RenderToTexture {
         this.pool = new RenderPool(painter.context, 30, terrain.tileManager.tileSize * terrain.qualityFactor);
     }
 
-    destruct() {
+    destruct(): void {
         this.pool.destruct();
     }
 
@@ -78,7 +78,7 @@ export class RenderToTexture {
         return this.pool.getObjectForId(tile.rtt[this._stacks.length - 1].id).texture;
     }
 
-    prepareForRender(style: Style, zoom: number) {
+    prepareForRender(style: Style, zoom: number): void {
         this._stacks = [];
         this._prevType = null;
         this._rttTiles = [];

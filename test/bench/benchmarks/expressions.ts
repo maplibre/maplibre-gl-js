@@ -22,7 +22,7 @@ class ExpressionBenchmark extends Benchmark {
         this.style = style;
     }
 
-    async setup() {
+    async setup(): Promise<void> {
         const json = await fetchStyle(this.style);
         this.data = [];
 
@@ -65,7 +65,7 @@ class ExpressionBenchmark extends Benchmark {
 }
 
 export class FunctionCreate extends ExpressionBenchmark {
-    bench() {
+    bench(): void {
         for (const {rawValue, propertySpec} of this.data) {
             createFunction(rawValue, propertySpec);
         }
@@ -73,7 +73,7 @@ export class FunctionCreate extends ExpressionBenchmark {
 }
 
 export class FunctionEvaluate extends ExpressionBenchmark {
-    bench() {
+    bench(): void {
         for (const {compiledFunction} of this.data) {
             compiledFunction.evaluate({zoom: 0});
         }
@@ -81,7 +81,7 @@ export class FunctionEvaluate extends ExpressionBenchmark {
 }
 
 export class ExpressionCreate extends ExpressionBenchmark {
-    bench() {
+    bench(): void {
         for (const {rawExpression, propertySpec} of this.data) {
             createPropertyExpression(rawExpression, propertySpec);
         }
@@ -89,7 +89,7 @@ export class ExpressionCreate extends ExpressionBenchmark {
 }
 
 export class ExpressionEvaluate extends ExpressionBenchmark {
-    bench() {
+    bench(): void {
         for (const {compiledExpression} of this.data) {
             compiledExpression.evaluate({zoom: 0});
         }

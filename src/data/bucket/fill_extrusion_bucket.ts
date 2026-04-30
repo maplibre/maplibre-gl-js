@@ -97,7 +97,7 @@ export class FillExtrusionBucket implements Bucket {
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
     }
 
-    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID) {
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void {
         this.features = [];
         this.hasDependencies = hasPattern('fill-extrusion', this.layers, options);
 
@@ -127,29 +127,29 @@ export class FillExtrusionBucket implements Bucket {
         }
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
+    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}): void {
         for (const feature of this.features) {
             const {geometry} = feature;
             this.addFeature(feature, geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
         }
     }
 
-    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}) {
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}): void {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, {
             imagePositions
         });
     }
 
-    isEmpty() {
+    isEmpty(): boolean {
         return this.layoutVertexArray.length === 0 && this.centroidVertexArray.length === 0;
     }
 
-    uploadPending() {
+    uploadPending(): boolean {
         return !this.uploaded || this.programConfigurations.needsUpload;
     }
 
-    upload(context: Context) {
+    upload(context: Context): void {
         if (!this.uploaded) {
             this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layoutAttributes);
             this.centroidVertexBuffer = context.createVertexBuffer(this.centroidVertexArray, centroidAttributes.members, true);
@@ -159,7 +159,7 @@ export class FillExtrusionBucket implements Bucket {
         this.uploaded = true;
     }
 
-    destroy() {
+    destroy(): void {
         if (!this.layoutVertexBuffer) return;
         this.layoutVertexBuffer.destroy();
         this.indexBuffer.destroy();
@@ -168,7 +168,7 @@ export class FillExtrusionBucket implements Bucket {
         this.centroidVertexBuffer.destroy();
     }
 
-    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting) {
+    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting): void {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             // Compute polygon centroid to calculate elevation in GPU
             const centroid: CentroidAccumulator = {x: 0, y: 0, sampleCount: 0};
@@ -260,7 +260,7 @@ export class FillExtrusionBucket implements Bucket {
      * Generates side faces for the supplied geometry. Assumes `geometry` to be a line string, like the output of {@link subdivideVertexLine}.
      * For rings, it is assumed that the first and last vertex of `geometry` are equal.
      */
-    private _generateSideFaces(geometry: Point[], segmentReference: {segment: Segment}) {
+    private _generateSideFaces(geometry: Point[], segmentReference: {segment: Segment}): void {
         let edgeDistance = 0;
 
         for (let p = 1; p < geometry.length; p++) {

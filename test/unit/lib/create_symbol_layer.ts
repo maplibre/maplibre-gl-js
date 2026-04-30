@@ -5,7 +5,7 @@ import {type EvaluationParameters} from '../../../src/style/evaluation_parameter
 import {type BucketParameters} from '../../../src/data/bucket';
 import {type CollisionBoxArray} from '../../../src/data/array_types.g';
 
-export function createSymbolBucket(layerId: string, font: string, text: string,  collisionBoxArray: CollisionBoxArray) {
+export function createSymbolBucket(layerId: string, font: string, text: string,  collisionBoxArray: CollisionBoxArray): SymbolBucket {
     const layer = new SymbolStyleLayer({
         id: layerId,
         type: 'symbol',
@@ -22,7 +22,7 @@ export function createSymbolBucket(layerId: string, font: string, text: string, 
     } as BucketParameters<SymbolStyleLayer>);
 }
 
-export function createSymbolIconBucket(layerId, iconProperty, collisionBoxArray) {
+export function createSymbolIconBucket(layerId: any, iconProperty: any, collisionBoxArray: any): SymbolBucket {
     const layer = new SymbolStyleLayer({
         id: layerId,
         type: 'symbol',
