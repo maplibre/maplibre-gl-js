@@ -692,7 +692,6 @@ export class Painter {
     }
 
     static readonly MAX_TEXTURE_POOL_SIZE_PER_BUCKET = 50;
-    static readonly MAX_RTT_SLOT_POOL_SIZE_PER_BUCKET = 400;
 
     saveTileTexture(texture: Texture) {
         const textures = this._tileTextures[texture.size[0]];
@@ -712,7 +711,7 @@ export class Painter {
 
     acquireRTT(size: number): RTTObject {
         const objs = this._rttObjects[size];
-        if (objs && objs.length > 0) return objs.pop();
+        if (objs?.length > 0) return objs.pop();
         const fbo = this.context.createFramebuffer(size, size, true, true);
         const texture = new Texture(this.context, {width: size, height: size, data: null}, this.context.gl.RGBA);
         texture.bind(this.context.gl.LINEAR, this.context.gl.CLAMP_TO_EDGE);
@@ -725,13 +724,7 @@ export class Painter {
     }
 
     releaseRTT(obj: RTTObject) {
-        const objs = this._rttObjects[obj.size] ??= [];
-        if (objs.length < Painter.MAX_RTT_SLOT_POOL_SIZE_PER_BUCKET) {
-            objs.push(obj);
-        } else {
-            obj.texture.destroy();
-            obj.fbo.destroy();
-        }
+        (this._rttObjects[obj.size] ??= []).push(obj);
     }
 
     /**

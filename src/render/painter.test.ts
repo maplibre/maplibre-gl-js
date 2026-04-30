@@ -102,15 +102,11 @@ describe('RTT pool', () => {
         painter.destroy();
     });
 
-    test('releaseRTT caps pool size and destroys excess; destroy cleans up the rest', () => {
+    test('painter.destroy cleans up pooled RTT slots', () => {
         const painter = createPainter();
-        const cap = Painter.MAX_RTT_SLOT_POOL_SIZE_PER_BUCKET;
 
-        // Spy on every object so we can count destroys at two checkpoints:
-        // after release (only the over-cap excess should be destroyed) and
-        // after painter.destroy() (the rest, still pooled, get destroyed too).
         const objs = [];
-        for (let i = 0; i < cap + 5; i++) {
+        for (let i = 0; i < 10; i++) {
             const obj = painter.acquireRTT(128);
             vi.spyOn(obj.texture, 'destroy');
             vi.spyOn(obj.fbo, 'destroy');
@@ -118,11 +114,8 @@ describe('RTT pool', () => {
         }
         for (const obj of objs) painter.releaseRTT(obj);
 
-        const destroyedAtRelease = objs.filter(o => o.texture.destroy.mock.calls.length > 0).length;
-        expect(destroyedAtRelease).toBe(5);
-
         painter.destroy();
-        const destroyedAfterPainterDestroy = objs.filter(o => o.texture.destroy.mock.calls.length > 0).length;
-        expect(destroyedAfterPainterDestroy).toBe(cap + 5);
+        const destroyed = objs.filter(o => o.texture.destroy.mock.calls.length > 0).length;
+        expect(destroyed).toBe(10);
     });
 });
