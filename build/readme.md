@@ -18,9 +18,9 @@ These commands will use [rolldown](https://rolldown.rs/) to bundle the code as E
 
 The main bundle creates the worker via `new Worker(url, {type: 'module'})`, where the URL is whatever the consumer passes to `setWorkerUrl()`.
 
-`banner.ts` is used to create a banner at the beginning of the output file
+`banner.ts` is used to create a banner at the beginning of the output file.
 
-`rolldown_plugins.ts` is used to define common plugins for rolldown configurations (also reused by the benchmarks). Rolldown ships with built-in TypeScript, JSON, CommonJS interop, node resolution and minification, so the previous `@rollup/plugin-*` set is no longer needed — only the maplibre-specific transforms (e.g. the jsonlint `_token_stack:` patch) and bundle-stats visualizer are kept here.
+`rolldown_plugins.ts` defines plugins shared between the main build and the benchmarks: a transform that strips a problematic label from jsonlint's generated parser, and a bundle-size visualizer that runs when invoked via `npm run bundle-stats`.
 
 <hr>
 
