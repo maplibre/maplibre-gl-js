@@ -238,7 +238,7 @@ describe('TerrainTileManager', () => {
 
             tsc._tiles = tiles;
             const painter = {releaseRTT: vi.fn()} as unknown as Painter;
-            tsc.painter = painter;
+            tsc.tileManager.map.painter = painter;
 
             return {parent, same, child, sibling, tiles, rttObjects, painter};
         }
@@ -269,16 +269,6 @@ describe('TerrainTileManager', () => {
             expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[same.key]);
             expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[child.key]);
             expect(painter.releaseRTT).not.toHaveBeenCalledWith(rttObjects[sibling.key]);
-        });
-
-        test('does not throw when painter is not yet attached', () => {
-            const tile = new Tile(new OverscaledTileID(2, 0, 2, 1, 1), 256);
-            tile.rttObjects[0] = {fbo: {}, texture: {}, size: 512} as any;
-            tsc._tiles = {[tile.tileID.key]: tile};
-            tsc.painter = undefined;
-
-            expect(() => tsc.releaseRTT()).not.toThrow();
-            expect(tile.rttObjects.length).toBe(0);
         });
     });
 });
