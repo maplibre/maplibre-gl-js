@@ -15293,7 +15293,6 @@ var StyleLayer = class extends Evented {
 		};
 		this._visibilityExpression = createVisibility(this.visibility, globalState);
 		if (layer.type === "custom") return;
-		layer = layer;
 		this.metadata = layer.metadata;
 		this.minzoom = layer.minzoom;
 		this.maxzoom = layer.maxzoom;
@@ -45524,9 +45523,19 @@ function drawLine(painter, tileManager, layer, coords, renderOptions) {
 		layer.lineFbo.destroy();
 		layer.lineFbo = null;
 	}
-	if (useOffscreen) if (painter.renderPass === "offscreen") drawLineOffscreen(painter, tileManager, layer, coords, renderOptions);
-	else drawLineComposite(painter, layer);
-	else if (painter.renderPass === "translucent") drawLineTiles(painter, tileManager, layer, coords, renderOptions, false, true);
+	if (painter.renderPass === "offscreen" && !useOffscreen) return;
+	if (painter.renderPass === "offscreen" && useOffscreen) {
+		drawLineOffscreen(painter, tileManager, layer, coords, renderOptions);
+		return;
+	}
+	if (painter.renderPass === "translucent" && useOffscreen) {
+		drawLineComposite(painter, layer);
+		return;
+	}
+	if (painter.renderPass === "translucent" && !useOffscreen) {
+		drawLineTiles(painter, tileManager, layer, coords, renderOptions, false, true);
+		return;
+	}
 }
 function drawLineOffscreen(painter, tileManager, layer, coords, renderOptions) {
 	const context = painter.context;
@@ -60313,7 +60322,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 6f47ba7";
+const version = "main f0b2411";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;

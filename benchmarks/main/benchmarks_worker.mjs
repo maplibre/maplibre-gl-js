@@ -11091,7 +11091,6 @@ var StyleLayer = class extends Evented {
 		};
 		this._visibilityExpression = createVisibility(this.visibility, globalState);
 		if (layer.type === "custom") return;
-		layer = layer;
 		this.metadata = layer.metadata;
 		this.minzoom = layer.minzoom;
 		this.maxzoom = layer.maxzoom;
