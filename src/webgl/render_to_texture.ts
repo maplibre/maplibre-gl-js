@@ -73,12 +73,6 @@ export class RenderToTexture {
         this._rttSize = terrain.tileManager.tileSize * terrain.qualityFactor;
     }
 
-    destruct() {
-        for (const tile of Object.values(this.terrain.tileManager._tiles)) {
-            tile.releaseRTT(this.painter);
-        }
-    }
-
     getTexture(tile: Tile): Texture {
         return tile.rttObjects[this._stacks.length - 1].texture;
     }

@@ -11,5 +11,4 @@ export interface IRenderToTexture {
     prepareForRender(style: Style, zoom: number): void;
     renderLayer(layer: StyleLayer, renderOptions: RenderOptions): boolean;
     getTexture(tile: Tile): any;
-    destruct(): void;
 }

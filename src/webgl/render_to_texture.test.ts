@@ -263,20 +263,4 @@ describe('render to texture', () => {
         expect(acquireSpy).not.toHaveBeenCalled();
         expect(tile.rttObjects[0]).toBe(cached);
     });
-
-    test('destruct returns every defined tile rtt object to the painter pool, skipping sparse entries', () => {
-        const objA = {fbo: {} as any, texture: {} as any, size: 512};
-        const objB = {fbo: {} as any, texture: {} as any, size: 512};
-        tile.rttObjects[0] = objA;
-        tile.rttObjects[2] = objB;
-        terrain.tileManager._tiles = {[tile.tileID.key]: tile};
-        (painter.releaseRTT as Mock).mockClear();
-
-        rtt.destruct();
-
-        expect(painter.releaseRTT).toHaveBeenCalledTimes(2);
-        expect(painter.releaseRTT).toHaveBeenCalledWith(objA);
-        expect(painter.releaseRTT).toHaveBeenCalledWith(objB);
-        expect(tile.rttObjects.length).toBe(0);
-    });
 });

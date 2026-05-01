@@ -2358,7 +2358,6 @@ export class Map extends Camera {
                 this.terrain.destroy();
             }
             this.terrain = null;
-            if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
             this.transform.setMinElevationForCurrentTile(0);
             if (this._centerClampedToGround) {
