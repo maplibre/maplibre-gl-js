@@ -23,7 +23,7 @@ afterEach(() => {
 
 describe('setStyle', () => {
     test('returns self', () => {
-        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
+        const map = new Map({container: window.document.createElement('div')});
         expect(map.setStyle({
             version: 8,
             sources: {},
@@ -110,7 +110,7 @@ describe('setStyle', () => {
     });
 
     test('style transform overrides unmodified map transform', async () => {
-        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
+        const map = new Map({container: window.document.createElement('div')});
         map.transform.setMaxBounds(new LngLatBounds([-120, -60], [140, 80]));
         map.transform.resize(600, 400, true);
         expect(map.transform.zoom).toBe(0.6983039737971013);
@@ -135,7 +135,7 @@ describe('setStyle', () => {
     });
 
     test('style transform does not override map transform modified via setters', async () => {
-        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
+        const map = new Map({container: window.document.createElement('div')});
         expect(map.transform.unmodified).toBeTruthy();
         map.setZoom(10);
         map.setCenter([-77.0186, 38.8888]);

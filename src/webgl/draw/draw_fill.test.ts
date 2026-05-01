@@ -35,12 +35,12 @@ describe('drawFill', () => {
         const painterMock: Painter = constructMockPainter();
         const layer: FillStyleLayer = constructMockLayer();
 
-        const programMock = new Program(null as any, null as any, null as any, null as any, null as any, null as any, null as any, null as any);
+        const programMock = new Program(null, null, null, null, null, null, null, null);
         (painterMock.useProgram as Mock).mockReturnValue(programMock);
 
         const mockTile = constructMockTile(layer);
 
-        const tileManagerMock = new TileManager(null as any, null as any, null as any);
+        const tileManagerMock = new TileManager(null, null, null);
         (tileManagerMock.getTile as Mock).mockReturnValue(mockTile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
@@ -76,13 +76,13 @@ describe('drawFill', () => {
         // mimicking the transitioning fill-pattern value
         layer.getPaintProperty = (() => {
             return 'pattern1';
-        }) as any;
+        });
 
         return layer;
     }
 
     function constructMockPainter(): Painter {
-        const painterMock = new Painter(null as any, null as any);
+        const painterMock = new Painter(null, null);
         painterMock.context = {
             gl: {},
             activeTexture: {

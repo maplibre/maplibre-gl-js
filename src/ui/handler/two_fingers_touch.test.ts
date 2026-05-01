@@ -1,12 +1,12 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {Map, type MapOptions} from '../map';
+import {Map} from '../map';
 import {Marker} from '../marker';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {beforeMapTest} from '../../util/test/util';
 
 function createMap() {
-    return new Map({container: DOM.create('div', '', window.document.body)} as any as MapOptions);
+    return new Map({container: DOM.create('div', '', window.document.body)});
 }
 
 function createPinchZoomMap() {

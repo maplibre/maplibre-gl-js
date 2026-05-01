@@ -61,7 +61,7 @@ function getSunPos(light: Light, transform: IReadonlyTransform): vec3 {
     const _lp = light.properties.get('position');
     const lightPos = [-_lp.x, -_lp.y, -_lp.z] as vec3;
 
-    const lightMat = mat4.identity(new Float64Array(16) as any);
+    const lightMat = mat4.identity(new Float64Array(16));
 
     if (light.properties.get('anchor') === 'map') {
         mat4.rotateZ(lightMat, lightMat, transform.rollInRadians);
