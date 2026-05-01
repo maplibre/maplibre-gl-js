@@ -94,7 +94,7 @@ describe('calculateCameraOptionsFromTo', () => {
     });
 
     test('look at west', () => {
-        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0} as LngLat, 0, {lng: 0, lat: 0} as LngLat);
+        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 0, lat: 0});
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.bearing).toBeCloseTo(-90);
         expect(cameraOptions.roll).toBeUndefined();

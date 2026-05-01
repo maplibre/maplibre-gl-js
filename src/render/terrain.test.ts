@@ -47,7 +47,7 @@ describe('Terrain', () => {
         const tileManager = {_source: {tileSize: 512}} as TileManager;
         const getTileByID = (tileID) : Tile => {
             if (tileID !== 'abcd') {
-                return null as any as Tile;
+                return null;
             }
             return {
                 tileID: new OverscaledTileID(0, 0, 0, 0, 0),
@@ -192,7 +192,7 @@ describe('Terrain', () => {
     test('Return null elevation values when no DEM', () => {
         const tileID = new OverscaledTileID(5, 0, 5, 17, 11);
         const tile = new Tile(tileID, 256);
-        tile.dem = null as any as DEMData;
+        tile.dem = null;
         const painter = {
             context: new Context(gl),
             width: 1,

@@ -150,13 +150,13 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             const extremesPoints = [];
 
             for (const c of corners) {
-                extremesPoints.push(vec3.scale([] as any, c, maxElevation));
+                extremesPoints.push(vec3.scale([], c, maxElevation));
             }
 
             if (maxElevation !== minElevation) {
                 // Only add additional points if terrain is enabled and is not flat.
                 for (const c of corners) {
-                    extremesPoints.push(vec3.scale([] as any, c, minElevation));
+                    extremesPoints.push(vec3.scale([], c, minElevation));
                 }
             }
 
@@ -190,23 +190,23 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             // Vector "center" (from planet center to tile center) will be our up/down axis.
             const center = projectTileCoordinatesToSphere(EXTENT / 2, EXTENT / 2, tileID.x, tileID.y, tileID.z);
             // Vector to the east of "center".
-            const centerEast = vec3.cross([] as any, [0, 1, 0], center);
+            const centerEast = vec3.cross([], [0, 1, 0], center);
             vec3.normalize(centerEast, centerEast);
             // Vector to the north of "center" will be our north/south axis.
-            const north = vec3.cross([] as any, center, centerEast);
+            const north = vec3.cross([], center, centerEast);
             vec3.normalize(north, north);
 
             // Axes for the east and west edge of our bounding volume.
             // These axes are NOT opposites of each other, they differ!
             // They are also not orthogonal to the up/down and north/south axes.
-            const axisEast = vec3.cross([] as any, corners[2], corners[1]);
+            const axisEast = vec3.cross([], corners[2], corners[1]);
             vec3.normalize(axisEast, axisEast);
-            const axisWest = vec3.cross([] as any, corners[0], corners[3]);
+            const axisWest = vec3.cross([], corners[0], corners[3]);
             vec3.normalize(axisWest, axisWest);
 
             // Now we will expand the extremes point set for bounding volume creation.
             // We will also include the tile center point, since it will always be an extreme for the "center" axis.
-            extremesPoints.push(vec3.scale([] as any, center, maxElevation));
+            extremesPoints.push(vec3.scale([], center, maxElevation));
             // No need to include a minElevation-scaled center, since we already have minElevation corners in the set and these will always lie lower than the center.
 
             // The extremes might also lie on the midpoint of the north or south edge.
@@ -231,12 +231,12 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
             
             if (tileID.y >= (1 << tileID.z) / 2) {
                 // South hemisphere - include the tile's north edge midpoint
-                extremesPoints.push(vec3.scale([] as any, projectTileCoordinatesToSphere(EXTENT / 2, 0, tileID.x, tileID.y, tileID.z), maxElevation));
+                extremesPoints.push(vec3.scale([], projectTileCoordinatesToSphere(EXTENT / 2, 0, tileID.x, tileID.y, tileID.z), maxElevation));
                 // No need to include minElevation variant of this point, for the same reason why we don't include minElevation center.
             }
             if (tileID.y < (1 << tileID.z) / 2) {
                 // North hemisphere - include the tile's south edge midpoint
-                extremesPoints.push(vec3.scale([] as any, projectTileCoordinatesToSphere(EXTENT / 2, EXTENT, tileID.x, tileID.y, tileID.z), maxElevation));
+                extremesPoints.push(vec3.scale([], projectTileCoordinatesToSphere(EXTENT / 2, EXTENT, tileID.x, tileID.y, tileID.z), maxElevation));
                 // No need to include minElevation variant of this point, for the same reason why we don't include minElevation center.
             }
 

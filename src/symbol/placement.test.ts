@@ -13,7 +13,7 @@ describe('placement', () => {
     beforeEach(() => {
         transform = new MercatorTransform();
         transform.resize(512, 512);
-        placement = new Placement(transform, undefined as any, 0, true);
+        placement = new Placement(transform, undefined, 0, true);
     });
 
     test('should not throw on integer overflow', () => {

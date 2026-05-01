@@ -133,7 +133,7 @@ export class Painter {
         this.transform = transform;
         this._tileTextures = {};
         this._rttObjects = {};
-        this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16) as any), renderTime: 0};
+        this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
 

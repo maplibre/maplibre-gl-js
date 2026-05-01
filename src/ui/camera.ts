@@ -1192,7 +1192,7 @@ export abstract class Camera extends Evented {
         }, (interruptingEaseId?: string) => {
             if (this.terrain && options.freezeElevation) this._finalizeElevation();
             this._afterEase(eventData, interruptingEaseId);
-        }, options as any);
+        }, options);
 
         return this;
     }

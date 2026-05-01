@@ -7,6 +7,7 @@ uniform float u_fade;
 uniform mediump vec3 u_scale;
 
 uniform sampler2D u_image;
+uniform bool u_opacity_override;
 
 in vec2 v_normal;
 in vec2 v_width2;
@@ -72,7 +73,8 @@ void main() {
 
     vec4 color = mix(texture(u_image, pos_a), texture(u_image, pos_b), u_fade);
 
-    fragColor = color * alpha * opacity;
+    float finalOpacity = u_opacity_override ? 1.0 : opacity;
+    fragColor = color * alpha * finalOpacity;
 
     #ifdef GLOBE
     if (v_depth > 1.0) {

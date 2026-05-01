@@ -4,7 +4,7 @@ import {type StyleLayer} from '../../style/style_layer';
 import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util';
 import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 import {type MapLibreEvent} from '../events';
-import {Map, type MapOptions} from '../map';
+import {Map} from '../map';
 import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
 import {GlobeProjection} from '../../geo/projection/globe_projection';
 import {type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -157,7 +157,7 @@ describe('map events', () => {
     test('Map.on adds a listener not triggered when the specified layer does not exist', () => {
         const map = createMap();
 
-        vi.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);
+        vi.spyOn(map, 'getLayer').mockReturnValue(null);
 
         const spy = vi.fn();
 
@@ -474,7 +474,7 @@ describe('map events', () => {
     test.each(mouseInteractionEvents)('Map.on %s does not fire if the specified layer does not exist', (event) => {
         const map = createMap();
 
-        vi.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);
+        vi.spyOn(map, 'getLayer').mockReturnValue(null);
 
         const spy = vi.fn();
 
@@ -941,7 +941,7 @@ describe('map events', () => {
     });
 
     test('emits load event after a style is set', async () => {
-        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
+        const map = new Map({container: window.document.createElement('div')});
 
         const failSpy = vi.fn();
 
@@ -956,7 +956,7 @@ describe('map events', () => {
     });
 
     test('errors inside load event are not suppressed', async () => {
-        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
+        const map = new Map({container: window.document.createElement('div')});
 
         const loadHandler = vi.fn(() => {
             throw new Error('Error in load handler');

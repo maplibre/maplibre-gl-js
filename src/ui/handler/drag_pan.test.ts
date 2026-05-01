@@ -2,7 +2,7 @@ import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {beforeMapTest} from '../../util/test/util';
-import {Map, type MapOptions} from '../map';
+import {Map} from '../map';
 import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 
 function createMap(clickTolerance?, dragPan?) {
@@ -10,7 +10,7 @@ function createMap(clickTolerance?, dragPan?) {
         container: DOM.create('div', '', window.document.body),
         clickTolerance: clickTolerance || 0,
         dragPan: dragPan || true,
-    } as any as MapOptions);
+    });
 }
 
 beforeEach(() => {
