@@ -102,6 +102,24 @@ describe('RTT pool', () => {
         painter.destroy();
     });
 
+    test('acquireRTT resizes pooled objects when sizes differ', () => {
+        const painter = createPainter();
+        const a = painter.acquireRTT(256);
+        const fbo = a.fbo;
+        const texture = a.texture;
+        painter.releaseRTT(a);
+
+        const b = painter.acquireRTT(512);
+        expect(b).toBe(a);
+        expect(b.size).toBe(512);
+        expect(b.fbo).toBe(fbo);
+        expect(b.fbo.width).toBe(512);
+        expect(b.fbo.height).toBe(512);
+        expect(b.texture).toBe(texture);
+        expect(b.texture.size).toEqual([512, 512]);
+        painter.destroy();
+    });
+
     test('painter.destroy cleans up pooled RTT slots', () => {
         const painter = createPainter();
 

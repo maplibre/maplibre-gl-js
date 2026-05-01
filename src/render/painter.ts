@@ -94,11 +94,9 @@ export class Painter {
         [_: number]: Texture[];
     };
     /**
-     * A pool of recyclable {@link RTTObject}s, bucketed by their size (width in pixels).
-     * `acquireRTT(size)` pops from the bucket for that size; `releaseRTT(obj)`
-     * pushes back into the bucket for `obj.size`.
+     * A pool of recyclable {@link RTTObject}s
      */
-    _rttObjects: Record<number, RTTObject[]>;
+    _rttObjects: RTTObject[];
     numSublayers: number;
     depthEpsilon: number;
     emptyProgramConfiguration: ProgramConfiguration;
@@ -149,7 +147,7 @@ export class Painter {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
-        this._rttObjects = {};
+        this._rttObjects = [];
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
@@ -725,21 +723,35 @@ export class Painter {
     }
 
     acquireRTT(size: number): RTTObject {
-        const objs = this._rttObjects[size];
-        if (objs?.length > 0) return objs.pop();
-        const fbo = this.context.createFramebuffer(size, size, true, true);
-        const texture = new Texture(this.context, {width: size, height: size, data: null}, this.context.gl.RGBA);
-        texture.bind(this.context.gl.LINEAR, this.context.gl.CLAMP_TO_EDGE);
-        if (this.context.extTextureFilterAnisotropic) {
-            this.context.gl.texParameterf(this.context.gl.TEXTURE_2D, this.context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.context.extTextureFilterAnisotropicMax);
+        const gl = this.context.gl;
+        const obj = this._rttObjects.pop();
+        if (obj) {
+            if (obj.size !== size) {
+                gl.bindTexture(gl.TEXTURE_2D, obj.texture.texture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                obj.texture.size = [size, size];
+                this.context.bindRenderbuffer.set(obj.fbo.depthAttachment.get());
+                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, size, size);
+                this.context.bindRenderbuffer.set(null);
+                obj.fbo.width = size;
+                obj.fbo.height = size;
+                obj.size = size;
+            }
+            return obj;
         }
-        fbo.depthAttachment.set(this.context.createRenderbuffer(this.context.gl.DEPTH_STENCIL, size, size));
+        const fbo = this.context.createFramebuffer(size, size, true, true);
+        const texture = new Texture(this.context, {width: size, height: size, data: null}, gl.RGBA);
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+        if (this.context.extTextureFilterAnisotropic) {
+            gl.texParameterf(gl.TEXTURE_2D, this.context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.context.extTextureFilterAnisotropicMax);
+        }
+        fbo.depthAttachment.set(this.context.createRenderbuffer(gl.DEPTH_STENCIL, size, size));
         fbo.colorAttachment.set(texture.texture);
         return {fbo, texture, size};
     }
 
     releaseRTT(obj: RTTObject) {
-        (this._rttObjects[obj.size] ??= []).push(obj);
+        this._rttObjects.push(obj);
     }
 
     /**
@@ -847,13 +859,11 @@ export class Painter {
             this._tileTextures = {};
         }
 
-        for (const size in this._rttObjects) {
-            for (const obj of this._rttObjects[size]) {
-                obj.texture.destroy();
-                obj.fbo.destroy();
-            }
+        for (const obj of this._rttObjects) {
+            obj.texture.destroy();
+            obj.fbo.destroy();
         }
-        this._rttObjects = {};
+        this._rttObjects = [];
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
         if (this.debugBuffer) this.debugBuffer.destroy();
