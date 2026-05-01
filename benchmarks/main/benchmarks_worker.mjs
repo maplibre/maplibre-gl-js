@@ -18676,7 +18676,11 @@ let lineFloorwidthProperty;
 var LineStyleLayer = class extends StyleLayer {
 	constructor(layer, globalState) {
 		super(layer, line_style_layer_properties_g_default, globalState);
+		this.onRemove = () => {
+			this.resize();
+		};
 		this.gradientVersion = 0;
+		this.lineFbo = null;
 		if (!lineFloorwidthProperty) {
 			lineFloorwidthProperty = new LineFloorwidthProperty(line_style_layer_properties_g_default.paint.properties["line-width"].specification);
 			lineFloorwidthProperty.useIntegerZoom = true;
@@ -18715,6 +18719,14 @@ var LineStyleLayer = class extends StyleLayer {
 	}
 	isTileClipped() {
 		return true;
+	}
+	hasOffscreenPass() {
+		const constantOpacity = this.paint.get("line-opacity").constantOr(-1);
+		return constantOpacity > 0 && constantOpacity < 1 && !this.isHidden();
+	}
+	resize() {
+		this.lineFbo?.destroy();
+		this.lineFbo = null;
 	}
 };
 function getLineWidth(lineWidth, lineGapWidth) {
