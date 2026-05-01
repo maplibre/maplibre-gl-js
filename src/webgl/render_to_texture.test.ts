@@ -241,16 +241,16 @@ describe('render to texture', () => {
         rtt.renderLayer(fillLayer, renderOptions);
         rtt.renderLayer(symbolLayer, renderOptions);
 
-        expect(acquireSpy).toHaveBeenCalledWith(rtt._rttSize);
+        expect(acquireSpy).toHaveBeenCalledWith(rtt.rttSize);
         expect(tile.rttObjects[0]).toBeTruthy();
-        expect(tile.rttObjects[0].size).toBe(rtt._rttSize);
+        expect(tile.rttObjects[0].size).toBe(rtt.rttSize);
     });
 
     test('cache hit reuses tile.rttObjects[stack] and skips acquireRTT', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
 
-        const cached = {fbo: {framebuffer: null} as any, texture: {} as any, size: rtt._rttSize};
+        const cached = {fbo: {framebuffer: null} as any, texture: {} as any, size: rtt.rttSize};
         tile.rttObjects[0] = cached;
 
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');

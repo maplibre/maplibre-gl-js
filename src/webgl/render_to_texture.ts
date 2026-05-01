@@ -32,7 +32,7 @@ export class RenderToTexture {
     painter: Painter;
     terrain: Terrain;
     /** RTT texture dimension in pixels (tile size × terrain quality factor). */
-    _rttSize: number;
+    rttSize: number;
     /**
      * coordsAscending contains a list of all tiles which should be rendered for one render-to-texture tile
      * e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
@@ -70,7 +70,7 @@ export class RenderToTexture {
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
-        this._rttSize = terrain.tileManager.tileSize * terrain.qualityFactor;
+        this.rttSize = terrain.tileManager.tileSize * terrain.qualityFactor;
     }
 
     getTexture(tile: Tile): Texture {
@@ -163,7 +163,7 @@ export class RenderToTexture {
                 this._rttTiles.push(tile);
                 // Cache hit: this tile already has a RTT object for this stack from a previous frame.
                 if (tile.rttObjects[stack]) continue;
-                const obj = painter.acquireRTT(this._rttSize);
+                const obj = painter.acquireRTT(this.rttSize);
                 tile.rttObjects[stack] = obj;
                 painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
                 painter.context.clear({color: Color.transparent, stencil: 0});
