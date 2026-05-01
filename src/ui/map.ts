@@ -397,12 +397,14 @@ export type MapOptions = {
     centerClampedToGround?: boolean;
     /**
      * Controls the length of the vertical extensions which are added to the edges of terrain tiles.
-     * It is recommended to set this to "none" only when using a transparent background along with an elevation terrain.
      *
-     * - `"none"` disables skirts entirely, eliminating vertical artifacts that occur on tile boundaries when a transparent background is used along with a terrain, but might introduce some horizontal hairline gaps (stitches).
-     * - `"auto"` renders skirts to eliminate horizontal hairline gaps (stitches) that might occur on tile boundaries with different zoomlevels for some terrain datasets, but introduces vertical artifacts if using a transparent background along with a terrain.
+     * If the skirts are introducing visually unappealing vertical artifacts, consider avoiding transparent or semi-transparent backgrounds,
+     * for example, by having the first layer be a background layer with a [`background-color`](https://maplibre.org/maplibre-style-spec/layers/#background-color).
+     * If that is impossible or insufficient, you can entirely disable skirts,
+     * at the cost of potentially introducing some horizontal hairline gaps (stitches) on tile boundaries with different zoomlevels for some terrain datasets.
      *
-     * Currently, this parameter is a tradeoff. Future rendering techniques may eliminate the need for it.
+     * - `"none"` disables skirts entirely.
+     * - `"auto"` renders skirts with an automatically chosen length.
      * @defaultValue "auto"
      */
     terrainSkirtLength?: 'none' | 'auto';

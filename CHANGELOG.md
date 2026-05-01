@@ -3,6 +3,8 @@
 
 - _...Add new stuff here..._
 - Add a new map creation option, `terrainSkirtLength`, which allows the removal of visually unappealing vertical artifacts when using a terrain along with a transparent background ([#7523](https://github.com/maplibre/maplibre-gl-js/pull/7523)) (by [@safwat-halaby](https://github.com/safwat-halaby))
+- Bundle with Rolldown instead of Rollup ([#7555](https://github.com/maplibre/maplibre-gl-js/pull/7555)) (by [@birkskyum](https://github.com/birkskyum))
+- Optimization for Feature State: Replace String-Indexed Object with Array (up to 3.4X speedup) ([#7550](https://github.com/maplibre/maplibre-gl-js/pull/7550)) (by [@xavierjs](https://github.com/xavierjs))
 
 ### 🐞 Bug fixes
 

@@ -3,8 +3,8 @@ import type {LngLatLike} from './lng_lat';
 import {wrap} from '../util/util';
 
 /**
- * A {@link LngLatBounds} object, an array of {@link LngLatLike} objects in [sw, ne] order,
- * or an array of numbers in [west, south, east, north] order.
+ * A {@link LngLatBounds} object, an array of {@link LngLatLike} objects in `[sw, ne]` order,
+ * or an array of numbers in `[west, south, east, north]` order.
  *
  * @group Geography and Geometry
  *
@@ -47,7 +47,7 @@ export class LngLatBounds {
     /**
      * @param sw - The southwest corner of the bounding box.
      * OR array of 4 numbers in the order of  west, south, east, north
-     * OR array of 2 LngLatLike: [sw,ne]
+     * OR array of 2 LngLatLike: `[sw, ne]`
      * @param ne - The northeast corner of the bounding box.
      * @example
      * ```ts

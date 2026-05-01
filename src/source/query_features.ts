@@ -33,7 +33,7 @@ export type QueryRenderedFeaturesOptions = {
      */
     availableImages?: string[];
     /**
-     * Whether to check if the [options.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * Whether to check if the `options.filter` conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      */
     validate?: boolean;
 };
@@ -61,7 +61,7 @@ export type QuerySourceFeatureOptions = {
      */
     filter?: FilterSpecification;
     /**
-     * Whether to check if the [parameters.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * Whether to check if the `parameters.filter` conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @defaultValue true
      */
     validate?: boolean;

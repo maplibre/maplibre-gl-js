@@ -8,7 +8,7 @@ import {drawCustom} from './draw_custom';
 import {CustomStyleLayer} from '../../style/style_layer/custom_style_layer';
 import {MercatorTransform} from '../../geo/projection/mercator_transform';
 import {MercatorProjection} from '../../geo/projection/mercator_projection';
-import {type CustomRenderMethodInput} from '../../../dist/maplibre-gl';
+import {type CustomRenderMethodInput} from '../../style/style_layer/custom_style_layer';
 import {expectToBeCloseToArray} from '../../util/test/util';
 
 vi.mock('../../render/painter');
