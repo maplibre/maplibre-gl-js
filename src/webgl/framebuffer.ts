@@ -1,4 +1,4 @@
-import {ColorAttachment, ColorAttachment1, DepthAttachment, DepthStencilAttachment} from './value';
+import {ColorAttachment, type ColorAttachment1, DepthAttachment, DepthStencilAttachment} from './value';
 
 import type {Context} from './context';
 import {createFramebufferNotCompleteError} from '../util/framebuffer_error';
