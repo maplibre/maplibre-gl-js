@@ -3,6 +3,7 @@ uniform sampler2D u_image;
 uniform sampler2D u_image_dash;
 uniform float u_mix;
 uniform lowp float u_lineatlas_width;
+uniform bool u_opacity_override;
 
 in vec2 v_normal;
 in vec2 v_width2;
@@ -49,7 +50,8 @@ void main() {
     float dash_alpha = smoothstep(0.5 - sdfgamma / floorwidth, 0.5 + sdfgamma / floorwidth, sdfdist);
 
     // Combine gradient color with dash pattern
-    fragColor = color * (alpha * dash_alpha * opacity);
+    float finalOpacity = u_opacity_override ? 1.0 : opacity;
+    fragColor = color * (alpha * dash_alpha * finalOpacity);
 
     #ifdef GLOBE
     if (v_depth > 1.0) {

@@ -127,7 +127,7 @@ describe('Evented', () => {
         const evented = new Evented();
         const listener = vi.fn(x => x);
         evented.on('a', listener);
-        evented.fire('a' as any as Event, {foo: 'bar'});
+        evented.fire('a', {foo: 'bar'});
         expect(listener).toHaveBeenCalledTimes(1);
         expect(listener.mock.calls[0][0].foo).toBe('bar');
 

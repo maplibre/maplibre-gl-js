@@ -558,12 +558,12 @@ export class TransformHelper implements ITransformGetters {
         if (this._width && this._height) {
             this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
 
-            let m = mat4.identity(new Float64Array(16) as any);
+            let m = mat4.identity(new Float64Array(16));
             mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
             mat4.translate(m, m, [1, -1, 0]);
             this._clipSpaceToPixelsMatrix = m;
 
-            m = mat4.identity(new Float64Array(16) as any);
+            m = mat4.identity(new Float64Array(16));
             mat4.scale(m, m, [1, -1, 1]);
             mat4.translate(m, m, [-1, -1, 0]);
             mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);

@@ -39,7 +39,7 @@
     "pretty": true
   },
   "include": [
-    "rollup.config.*",
+    "rolldown.config.*",
     "src/**/*",
     "test/bench/**/*",
     "test/integration/**/*",
@@ -49,7 +49,7 @@
   "exclude": [
     "node_modules",
     "dist",
-    "build/rollup",
+    "build/rolldown",
     "test/bench/run-benchmarks.ts",
     "test/bench/gl-stats.ts",
     "test/bench/**/*generated*",

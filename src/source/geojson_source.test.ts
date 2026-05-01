@@ -171,7 +171,7 @@ describe('GeoJSONSource.setData', () => {
             return new Promise((resolve) => {
                 if (message.type === MessageType.loadData) {
                     spy(message);
-                    resolve({} as any);
+                    resolve({});
                 }
             });
         };
