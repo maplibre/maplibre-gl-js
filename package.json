@@ -131,7 +131,8 @@
     "typedoc": "^0.28.19",
     "typedoc-plugin-markdown": "^4.11.0",
     "typescript": "^6.0.3",
-    "vitest": "4.1.5",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.5",
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
   "scripts": {
