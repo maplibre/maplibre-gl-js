@@ -16,7 +16,7 @@ import type {WorkerTile} from './worker_tile';
 const actor = {send: () => {}} as any as Actor;
 
 describe('geojson tile worker source', () => {
-    const actor: IActor = {sendAsync: () => Promise.resolve({})} as any as IActor;
+    const actor: IActor = {sendAsync: () => Promise.resolve({})};
 
     test('GeoJSONWorkerSource.removeTile removes loaded tile', async () => {
         const source = new GeoJSONWorkerSource(actor, new StyleLayerIndex(), []);
@@ -35,7 +35,7 @@ describe('geojson tile worker source', () => {
 
     test('GeoJSONWorkerSource.reloadTile reloads a previously-loaded tile', async () => {
         const source = new GeoJSONWorkerSource(actor, new StyleLayerIndex(), []);
-        const parse = vi.fn().mockResolvedValue({} as WorkerTileResult);
+        const parse = vi.fn().mockResolvedValue({});
 
         source.tileState.loaded = {
             '0': {
@@ -99,7 +99,7 @@ describe('geojson tile worker source', () => {
             }
         };
 
-        const source = new GeoJSONWorkerSource(actor as any, layerIndex, ['hello']);
+        const source = new GeoJSONWorkerSource(actor, layerIndex, ['hello']);
 
         const geoJson = {
             type: 'FeatureCollection',
@@ -565,7 +565,7 @@ describe('loadData', () => {
                 'max': ['max', ['get', 'scalerank']],
                 'sum': ['+', ['get', 'scalerank']],
             }
-        } as LoadGeoJSONParameters)).resolves.toBeDefined();
+        })).resolves.toBeDefined();
         expect(updateSpy).toHaveBeenCalled();
         expect(updateSpy.mock.calls[0][1].map).toBeInstanceOf(Function);
         expect(updateSpy.mock.calls[0][1].reduce).toBeInstanceOf(Function);

@@ -10,7 +10,7 @@ export class Aabb implements IBoundingVolume {
     constructor(min_: vec3, max_: vec3) {
         this.min = min_;
         this.max = max_;
-        this.center = vec3.scale([] as any, vec3.add([] as any, this.min, this.max), 0.5);
+        this.center = vec3.scale([], vec3.add([], this.min, this.max), 0.5);
     }
 
     quadrant(index: number): Aabb {

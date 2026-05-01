@@ -136,8 +136,6 @@ export abstract class StyleLayer extends Evented {
 
         if (layer.type === 'custom') return;
 
-        layer = (layer as any as LayerSpecification);
-
         this.metadata = layer.metadata;
         this.minzoom = layer.minzoom;
         this.maxzoom = layer.maxzoom;
@@ -180,6 +178,7 @@ export abstract class StyleLayer extends Evented {
 
     getLayoutProperty<K extends keyof AllLayoutProperties>(name: K): AllLayoutProperties[K] {
         if (name === 'visibility') {
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- otherwise typescript fails with error TS2590: Expression produces a union type that is too complex to represent
             return this.visibility as AllLayoutProperties[K];
         }
         if (this._transitionablePaint?.hasProperty(name)) {
@@ -275,11 +274,13 @@ export abstract class StyleLayer extends Evented {
             if (baseName === 'visibility' || this._unevaluatedLayout?.hasProperty(baseName)) {
                 throw new Error(name + ERROR_LAYOUT_NOT_PAINT);
             }
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- otherwise typescript fails with error TS2590: Expression produces a union type that is too complex to represent
             return this._transitionablePaint.getTransition(baseName) as AllPaintProperties[K];
         } else {
             if (name as any === 'visibility' || this._unevaluatedLayout?.hasProperty(name)) {
                 throw new Error(name + ERROR_LAYOUT_NOT_PAINT);
             }
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- otherwise typescript fails with error TS2590: Expression produces a union type that is too complex to represent
             return this._transitionablePaint.getValue(name) as AllPaintProperties[K];
         }
     }

@@ -47,7 +47,7 @@ describe('transform', () => {
         expect(transform.farZ).toBe(804.8028169246645);
         expect([...transform.projectionMatrix]).toEqual([3, 0, 0, 0, 0, 3, 0, 0, -0, 0, -1.0251635313034058, -1, 0, 0, -20.25163459777832, 0]);
         expectToBeCloseToArray([...transform.inverseProjectionMatrix], [0.3333333333333333, 0, 0, 0, 0, 0.3333333333333333, 0, 0, 0, 0, 0, -0.04937872980873673, 0, 0, -1, 0.05062127019126326], 10);
-        expectToBeCloseToArray([...mat4.multiply(new Float64Array(16) as any, transform.projectionMatrix, transform.inverseProjectionMatrix)], [
+        expectToBeCloseToArray([...mat4.multiply(new Float64Array(16), transform.projectionMatrix, transform.inverseProjectionMatrix)], [
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,

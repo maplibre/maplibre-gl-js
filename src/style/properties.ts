@@ -718,7 +718,7 @@ export class Properties<Props> {
         this.defaultTransitionablePropertyValues = ({} as any);
         this.defaultTransitioningPropertyValues = ({} as any);
         this.defaultPossiblyEvaluatedValues = ({} as any);
-        this.overridableProperties = ([] as any);
+        this.overridableProperties = ([]);
 
         for (const property in properties) {
             const prop = properties[property] as any;

@@ -3,7 +3,7 @@ import {SymbolBucket} from './symbol_bucket';
 import {CollisionBoxArray} from '../../data/array_types.g';
 import {performSymbolLayout} from '../../symbol/symbol_layout';
 import {Placement} from '../../symbol/placement';
-import {type CanonicalTileID, OverscaledTileID} from '../../tile/tile_id';
+import {OverscaledTileID} from '../../tile/tile_id';
 import {Tile} from '../../tile/tile';
 import {CrossTileSymbolIndex} from '../../symbol/cross_tile_symbol_index';
 import {FeatureIndex} from '../../data/feature_index';
@@ -62,12 +62,12 @@ describe('SymbolBucket', () => {
         const bucketA = bucketSetup();
         const bucketB = bucketSetup();
         const options = createPopulateOptions([]);
-        const placement = new Placement(transform, undefined as any, 0, true);
+        const placement = new Placement(transform, undefined, 0, true);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const crossTileSymbolIndex = new CrossTileSymbolIndex();
 
         // add feature from bucket A
-        bucketA.populate(features, options, undefined as any);
+        bucketA.populate(features, options, undefined);
         performSymbolLayout(
             {
                 bucket: bucketA,
@@ -81,7 +81,7 @@ describe('SymbolBucket', () => {
         tileA.collisionBoxArray = collisionBoxArray;
 
         // add same feature from bucket B
-        bucketB.populate(features, options, undefined as any);
+        bucketB.populate(features, options, undefined);
         performSymbolLayout({
             bucket: bucketB, glyphMap: stacks, glyphPositions: {}, subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
         } as any);
@@ -89,7 +89,7 @@ describe('SymbolBucket', () => {
         tileB.buckets = {test: bucketB};
         tileB.collisionBoxArray = collisionBoxArray;
 
-        crossTileSymbolIndex.addLayer(bucketA.layers[0], [tileA, tileB], undefined as any);
+        crossTileSymbolIndex.addLayer(bucketA.layers[0], [tileA, tileB], undefined);
 
         const place = (layer, tile) => {
             const parts = [];
@@ -116,7 +116,7 @@ describe('SymbolBucket', () => {
         const bucket = bucketSetup();
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
 
-        bucket.populate(features, options, undefined as any);
+        bucket.populate(features, options, undefined);
         const fakeGlyph = {rect: {w: 10, h: 10}, metrics: {left: 10, top: 10, advance: 10}};
         performSymbolLayout({
             bucket,
@@ -154,8 +154,8 @@ describe('SymbolBucket', () => {
                 createIndexedFeature(0, 0, 'a'),
                 createIndexedFeature(1, 1, 'b'),
                 createIndexedFeature(2, 2, 'a')
-            ] as any as IndexedFeature[],
-            options, undefined as any
+            ],
+            options, undefined
         );
 
         const icons = options.iconDependencies as any;
@@ -197,8 +197,8 @@ describe('SymbolBucket', () => {
                 createIndexedFeature(0, 0, 'a'),
                 createIndexedFeature(1, 1, 'b'),
                 createIndexedFeature(2, 2, 'a')
-            ] as any as IndexedFeature[],
-            options, undefined as unknown as CanonicalTileID
+            ],
+            options, undefined
         );
 
         const icons = options.iconDependencies as any;
@@ -216,8 +216,8 @@ describe('SymbolBucket', () => {
         const rtlBucket = bucketSetup('مرحبا');
         const ltrBucket = bucketSetup('hello');
         const options = createPopulateOptions([]);
-        rtlBucket.populate(features, options, undefined as any);
-        ltrBucket.populate(features, options, undefined as any);
+        rtlBucket.populate(features, options, undefined);
+        ltrBucket.populate(features, options, undefined);
 
         expect(rtlBucket.hasRTLText).toBeTruthy();
         expect(ltrBucket.hasRTLText).toBeFalsy();
@@ -228,7 +228,7 @@ describe('SymbolBucket', () => {
         const rtlBucket = bucketSetup('مرحبا');
         const options = createPopulateOptions([]);
         rtlBucket.createArrays();
-        rtlBucket.populate(features, options, undefined as any);
+        rtlBucket.populate(features, options, undefined);
 
         expect(rtlBucket.isEmpty()).toBeFalsy();
         expect(rtlBucket.symbolInstances).toHaveLength(0);
@@ -237,7 +237,7 @@ describe('SymbolBucket', () => {
     test('SymbolBucket detects rtl text mixed with ltr text', () => {
         const mixedBucket = bucketSetup('مرحبا translates to hello');
         const options = createPopulateOptions([]);
-        mixedBucket.populate(features, options, undefined as any);
+        mixedBucket.populate(features, options, undefined);
 
         expect(mixedBucket.hasRTLText).toBeTruthy();
     });
