@@ -1,7 +1,7 @@
-import Benchmark from '../lib/benchmark';
-import createMap from '../lib/create_map';
-import type {Map} from '../../../src/ui/map';
-import type {GeoJSONSource} from '../../../src/source/geojson_source';
+import Benchmark from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
+import type {Map} from '../../../src/ui/map.ts';
+import type {GeoJSONSource} from '../../../src/source/geojson_source.ts';
 
 const data: GeoJSON.FeatureCollection = {
     type: 'FeatureCollection',

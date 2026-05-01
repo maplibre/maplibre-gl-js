@@ -1,18 +1,18 @@
-import {warnOnce} from '../../util/util';
-import {MercatorProjection} from './mercator_projection';
-import {MercatorTransform} from './mercator_transform';
-import {MercatorCameraHelper} from './mercator_camera_helper';
-import {GlobeProjection} from './globe_projection';
-import {GlobeTransform} from './globe_transform';
-import {GlobeCameraHelper} from './globe_camera_helper';
-import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper';
-import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
-import {VerticalPerspectiveProjection} from './vertical_perspective_projection';
+import {warnOnce} from '../../util/util.ts';
+import {MercatorProjection} from './mercator_projection.ts';
+import {MercatorTransform} from './mercator_transform.ts';
+import {MercatorCameraHelper} from './mercator_camera_helper.ts';
+import {GlobeProjection} from './globe_projection.ts';
+import {GlobeTransform} from './globe_transform.ts';
+import {GlobeCameraHelper} from './globe_camera_helper.ts';
+import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper.ts';
+import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
+import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Projection} from './projection';
-import type {ITransform, TransformConstrainFunction} from '../transform_interface';
-import type {ICameraHelper} from './camera_helper';
+import type {Projection} from './projection.ts';
+import type {ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {ICameraHelper} from './camera_helper.ts';
 
 export function createProjectionFromName(name: ProjectionSpecification['type'], transformConstrain?: TransformConstrainFunction): {
     projection: Projection;

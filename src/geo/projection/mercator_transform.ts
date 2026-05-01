@@ -1,25 +1,25 @@
-import {LngLat, type LngLatLike} from '../lng_lat';
-import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
+import {LngLat, type LngLatLike} from '../lng_lat.ts';
+import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, createIdentityMat4f64, createMat4f64, degreesToRadians, createIdentityMat4f32, zoomScale, scaleZoom} from '../../util/util';
+import {wrap, clamp, createIdentityMat4f64, createMat4f64, degreesToRadians, createIdentityMat4f32, zoomScale, scaleZoom} from '../../util/util.ts';
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
-import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../tile/tile_id';
+import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../tile/tile_id.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {type PointProjection, xyTransformMat4} from '../../symbol/projection';
-import {LngLatBounds} from '../lng_lat_bounds';
-import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils';
-import {EXTENT} from '../../data/extent';
-import {TransformHelper} from '../transform_helper';
-import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider';
-import {Frustum} from '../../util/primitives/frustum';
-import {fastInvertProjMat4} from '../../util/fast_maths';
+import {type PointProjection, xyTransformMat4} from '../../symbol/projection.ts';
+import {LngLatBounds} from '../lng_lat_bounds.ts';
+import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils.ts';
+import {EXTENT} from '../../data/extent.ts';
+import {TransformHelper} from '../transform_helper.ts';
+import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
+import {Frustum} from '../../util/primitives/frustum.ts';
+import {fastInvertProjMat4} from '../../util/fast_maths.ts';
 
-import type {Terrain} from '../../render/terrain';
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface';
-import type {TransformOptions} from '../transform_helper';
-import type {PaddingOptions} from '../edge_insets';
-import type {ProjectionData, ProjectionDataParams} from './projection_data';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import type {Terrain} from '../../render/terrain.ts';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {TransformOptions} from '../transform_helper.ts';
+import type {PaddingOptions} from '../edge_insets.ts';
+import type {ProjectionData, ProjectionDataParams} from './projection_data.ts';
+import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;

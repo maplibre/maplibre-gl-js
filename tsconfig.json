@@ -3,6 +3,7 @@
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
     "checkJs": true,
     "isolatedModules": false,
     "noEmit": true,
@@ -25,18 +26,6 @@
       "geojson",
       "offscreencanvas"
     ]
-  },
-  "ts-node": {
-    "experimentalSpecifierResolution": "node",
-    "esm": true,
-    "compilerOptions": {
-      "target": "es2022",
-      "types": [
-        "node"
-      ]
-    },
-    "logError": true,
-    "pretty": true
   },
   "include": [
     "rolldown.config.*",

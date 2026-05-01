@@ -1,38 +1,38 @@
-import {FillExtrusionLayoutArray, PosArray} from '../array_types.g';
+import {FillExtrusionLayoutArray, PosArray} from '../array_types.g.ts';
 
-import {members as layoutAttributes, centroidAttributes} from './fill_extrusion_attributes';
-import {type Segment, SegmentVector} from '../segment';
-import {ProgramConfigurationSet} from '../program_configuration';
-import {TriangleIndexArray} from '../index_array_type';
-import {EXTENT} from '../extent';
+import {members as layoutAttributes, centroidAttributes} from './fill_extrusion_attributes.ts';
+import {type Segment, SegmentVector} from '../segment.ts';
+import {ProgramConfigurationSet} from '../program_configuration.ts';
+import {TriangleIndexArray} from '../index_array_type.ts';
+import {EXTENT} from '../extent.ts';
 import {VectorTileFeature} from '@mapbox/vector-tile';
 import {classifyRings} from '@maplibre/maplibre-gl-style-spec';
 const EARCUT_MAX_RINGS = 500;
-import {register} from '../../util/web_worker_transfer';
-import {hasPattern, addPatternDependencies} from './pattern_bucket_features';
-import {loadGeometry} from '../load_geometry';
-import {toEvaluationFeature} from '../evaluation_feature';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {register} from '../../util/web_worker_transfer.ts';
+import {hasPattern, addPatternDependencies} from './pattern_bucket_features.ts';
+import {loadGeometry} from '../load_geometry.ts';
+import {toEvaluationFeature} from '../evaluation_feature.ts';
+import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 
-import type {CanonicalTileID} from '../../tile/tile_id';
+import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
     Bucket,
     BucketParameters,
     BucketFeature,
     IndexedFeature,
     PopulateParameters
-} from '../bucket';
+} from '../bucket.ts';
 
-import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer';
-import type {Context} from '../../webgl/context';
-import type {IndexBuffer} from '../../webgl/index_buffer';
-import type {VertexBuffer} from '../../webgl/vertex_buffer';
+import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
+import type {Context} from '../../webgl/context.ts';
+import type {IndexBuffer} from '../../webgl/index_buffer.ts';
+import type {VertexBuffer} from '../../webgl/vertex_buffer.ts';
 import type Point from '@mapbox/point-geometry';
-import type {FeatureStates} from '../../source/source_state';
-import type {ImagePosition} from '../../render/image_atlas';
-import {subdividePolygon, subdivideVertexLine} from '../../render/subdivision';
-import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays';
+import type {FeatureStates} from '../../source/source_state.ts';
+import type {ImagePosition} from '../../render/image_atlas.ts';
+import {subdividePolygon, subdivideVertexLine} from '../../render/subdivision.ts';
+import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
+import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const FACTOR = Math.pow(2, 13);

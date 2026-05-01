@@ -7,11 +7,11 @@ import fs from 'node:fs';
 import type {Page, Browser, WebWorker} from 'puppeteer';
 import type {Server} from 'node:http';
 import type {AddressInfo} from 'node:net';
-import {ensureError} from '../../../src/util/util';
+import {ensureError} from '../../../src/util/util.ts';
 
-import {deepEqual} from '../lib/json-diff';
-import {localizeURLs} from '../lib/localize-urls';
-import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config';
+import {deepEqual} from '../lib/json-diff.ts';
+import {localizeURLs} from '../lib/localize-urls.ts';
+import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config.ts';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
 let maplibregl: typeof MapLibreGL;

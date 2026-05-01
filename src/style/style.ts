@@ -1,35 +1,35 @@
-import {throwIfAborted} from '../util/abort_error';
-import {Event, ErrorEvent, Evented} from '../util/evented';
-import {type StyleLayer} from './style_layer';
-import {isRasterStyleLayer} from './style_layer/raster_style_layer';
-import {createStyleLayer} from './create_style_layer';
-import {loadSprite} from './load_sprite';
-import {ImageManager} from '../render/image_manager';
-import {GlyphManager} from '../render/glyph_manager';
-import {Light} from './light';
-import {Sky} from './sky';
-import {LineAtlas} from '../render/line_atlas';
-import {clone, ensureError, extend, deepEqual, filterObject, mapObject} from '../util/util';
-import {coerceSpriteToArray} from '../util/style';
-import {getJSON, getReferrer} from '../util/ajax';
-import {ResourceType} from '../util/request_manager';
-import {browser} from '../util/browser';
-import {now} from '../util/time_control';
-import {Dispatcher} from '../util/dispatcher';
-import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
-import {type Source} from '../source/source';
-import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
-import {TileManager} from '../tile/tile_manager';
-import {type GeoJSONSource} from '../source/geojson_source';
+import {throwIfAborted} from '../util/abort_error.ts';
+import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {type StyleLayer} from './style_layer.ts';
+import {isRasterStyleLayer} from './style_layer/raster_style_layer.ts';
+import {createStyleLayer} from './create_style_layer.ts';
+import {loadSprite} from './load_sprite.ts';
+import {ImageManager} from '../render/image_manager.ts';
+import {GlyphManager} from '../render/glyph_manager.ts';
+import {Light} from './light.ts';
+import {Sky} from './sky.ts';
+import {LineAtlas} from '../render/line_atlas.ts';
+import {clone, ensureError, extend, deepEqual, filterObject, mapObject} from '../util/util.ts';
+import {coerceSpriteToArray} from '../util/style.ts';
+import {getJSON, getReferrer} from '../util/ajax.ts';
+import {ResourceType} from '../util/request_manager.ts';
+import {browser} from '../util/browser.ts';
+import {now} from '../util/time_control.ts';
+import {Dispatcher} from '../util/dispatcher.ts';
+import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style.ts';
+import {type Source} from '../source/source.ts';
+import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features.ts';
+import {TileManager} from '../tile/tile_manager.ts';
+import {type GeoJSONSource} from '../source/geojson_source.ts';
 import {latest as styleSpec, derefLayers, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
-import {getGlobalWorkerPool} from '../util/global_worker_pool';
-import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
-import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
-import {PauseablePlacement} from './pauseable_placement';
-import {ZoomHistory} from './zoom_history';
-import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
-import {validateCustomStyleLayer} from './style_layer/custom_style_layer';
-import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
+import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
+import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
+import {PauseablePlacement} from './pauseable_placement.ts';
+import {ZoomHistory} from './zoom_history.ts';
+import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
+import {validateCustomStyleLayer} from './style_layer/custom_style_layer.ts';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type Point from '@mapbox/point-geometry';
 
 // We're skipping validation errors with the `source.canvas` identifier in order
@@ -41,11 +41,11 @@ const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
 }> | null) =>
     _emitValidationErrors(evented, errors?.filter(error => error.identifier !== 'source.canvas'));
 
-import type {Map} from '../ui/map';
-import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
-import type {StyleImage} from './style_image';
-import type {EvaluationParameters} from './evaluation_parameters';
-import type {Placement} from '../symbol/placement';
+import type {Map} from '../ui/map.ts';
+import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
+import type {StyleImage} from './style_image.ts';
+import type {EvaluationParameters} from './evaluation_parameters.ts';
+import type {Placement} from '../symbol/placement.ts';
 import type {
     LayerSpecification,
     FilterSpecification,
@@ -60,9 +60,9 @@ import type {
     AllPaintProperties,
     AllLayoutProperties,
 } from '@maplibre/maplibre-gl-style-spec';
-import type {CanvasSourceSpecification} from '../source/canvas_source';
-import type {CustomLayerInterface} from './style_layer/custom_style_layer';
-import type {Validator} from './validate_style';
+import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
+import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
+import type {Validator} from './validate_style.ts';
 import {
     type GetDashesParameters,
     type GetDashesResponse,
@@ -71,10 +71,10 @@ import {
     type GetGlyphsResponse,
     type GetImagesParameters,
     type GetImagesResponse
-} from '../util/actor_messages';
-import {type Projection} from '../geo/projection/projection';
-import {createProjectionFromName} from '../geo/projection/projection_factory';
-import type {OverscaledTileID} from '../tile/tile_id';
+} from '../util/actor_messages.ts';
+import {type Projection} from '../geo/projection/projection.ts';
+import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
 
 const empty = emptyStyle();
 /**

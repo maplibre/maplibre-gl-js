@@ -1,21 +1,21 @@
-import {getJSON} from '../util/ajax';
-import {RequestPerformance} from '../util/request_performance';
+import {getJSON} from '../util/ajax.ts';
+import {RequestPerformance} from '../util/request_performance.ts';
 import {fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
-import {EXTENT} from '../data/extent';
+import {EXTENT} from '../data/extent.ts';
 import {GeoJSONVT, type GeoJSONVTOptions} from '@maplibre/geojson-vt';
 import {createExpression, type FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {isAbortError} from '../util/abort_error';
-import {WorkerTile} from './worker_tile';
-import {WorkerTileState, type ParsingState} from './worker_tile_state';
-import {extend, JSON_PREFIX} from '../util/util';
+import {isAbortError} from '../util/abort_error.ts';
+import {WorkerTile} from './worker_tile.ts';
+import {WorkerTileState, type ParsingState} from './worker_tile_state.ts';
+import {extend, JSON_PREFIX} from '../util/util.ts';
 
-import type {GeoJSONSourceDiff} from './geojson_source_diff';
-import type {WorkerSource, WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source';
-import type {LoadVectorTileResult} from './vector_tile_worker_source';
-import type {RequestParameters} from '../util/ajax';
-import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
-import type {IActor} from '../util/actor';
-import type {StyleLayerIndex} from '../style/style_layer_index';
+import type {GeoJSONSourceDiff} from './geojson_source_diff.ts';
+import type {WorkerSource, WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source.ts';
+import type {LoadVectorTileResult} from './vector_tile_worker_source.ts';
+import type {RequestParameters} from '../util/ajax.ts';
+import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages.ts';
+import type {IActor} from '../util/actor.ts';
+import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 
 /**
  * The geojson worker options that can be passed to the worker

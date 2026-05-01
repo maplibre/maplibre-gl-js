@@ -1,16 +1,16 @@
-import {LngLat, type LngLatLike} from './lng_lat';
-import {LngLatBounds} from './lng_lat_bounds';
+import {LngLat, type LngLatLike} from './lng_lat.ts';
+import {LngLatBounds} from './lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom} from '../util/util';
+import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom} from '../util/util.ts';
 import {mat4, mat2} from 'gl-matrix';
-import {EdgeInsets} from './edge_insets';
-import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate';
-import {cameraMercatorCoordinateFromCenterAndRotation, cameraDirectionFromPitchBearing} from './projection/mercator_utils';
-import {EXTENT} from '../data/extent';
+import {EdgeInsets} from './edge_insets.ts';
+import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate.ts';
+import {cameraMercatorCoordinateFromCenterAndRotation, cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
+import {EXTENT} from '../data/extent.ts';
 
-import type {PaddingOptions} from './edge_insets';
-import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} from './transform_interface';
-import {Bounds} from './bounds';
+import type {PaddingOptions} from './edge_insets.ts';
+import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} from './transform_interface.ts';
+import {Bounds} from './bounds.ts';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
  * interpolating between the two endpoints will cross it.

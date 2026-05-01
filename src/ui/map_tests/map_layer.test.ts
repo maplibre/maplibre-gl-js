@@ -1,9 +1,9 @@
 import {describe, beforeEach, afterEach, test, expect} from 'vitest';
-import {createMap, beforeMapTest, createStyle, waitForEvent} from '../../util/test/util';
-import {extend} from '../../util/util';
-import {type EvaluationParameters} from '../../style/evaluation_parameters';
+import {createMap, beforeMapTest, createStyle, waitForEvent} from '../../util/test/util.ts';
+import {extend} from '../../util/util.ts';
+import {type EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {MessageType} from '../../util/actor_messages';
+import {MessageType} from '../../util/actor_messages.ts';
 
 let server: FakeServer;
 

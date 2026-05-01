@@ -1,7 +1,7 @@
 import {describe, beforeEach, test, expect} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util';
-import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed';
-import {type LngLatBoundsLike} from '../../geo/lng_lat_bounds';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed.ts';
+import {type LngLatBoundsLike} from '../../geo/lng_lat_bounds.ts';
 
 beforeEach(() => {
     beforeMapTest();

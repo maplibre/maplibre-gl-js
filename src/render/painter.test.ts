@@ -1,10 +1,10 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {Painter} from './painter';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {Style} from '../style/style';
-import {StubMap} from '../util/test/util';
-import {Texture} from '../webgl/texture';
-import {createNullGL} from '../util/test/null_gl';
+import {Painter} from './painter.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {Style} from '../style/style.ts';
+import {StubMap} from '../util/test/util.ts';
+import {Texture} from '../webgl/texture.ts';
+import {createNullGL} from '../util/test/null_gl.ts';
 
 describe('render', () => {
     let painter: Painter;

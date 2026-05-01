@@ -1,4 +1,4 @@
-import {createLayout} from '../../util/struct_array';
+import {createLayout} from '../../util/struct_array.ts';
 
 export const dashAttributes = createLayout([
     // [0, y, height, width]

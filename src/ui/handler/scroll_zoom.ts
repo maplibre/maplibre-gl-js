@@ -1,15 +1,15 @@
-import {DOM} from '../../util/dom';
+import {DOM} from '../../util/dom.ts';
 
-import {defaultEasing, bezier, zoomScale, scaleZoom, evaluateZoomSnap} from '../../util/util';
-import {now} from '../../util/time_control';
+import {defaultEasing, bezier, zoomScale, scaleZoom, evaluateZoomSnap} from '../../util/util.ts';
+import {now} from '../../util/time_control.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {LngLat} from '../../geo/lng_lat';
-import {TransformProvider} from './transform-provider';
+import {LngLat} from '../../geo/lng_lat.ts';
+import {TransformProvider} from './transform-provider.ts';
 
-import type {Map} from '../map';
+import type {Map} from '../map.ts';
 import type Point from '@mapbox/point-geometry';
-import type {AroundCenterOptions} from './two_fingers_touch';
-import type {Handler} from '../handler_manager';
+import type {AroundCenterOptions} from './two_fingers_touch.ts';
+import type {Handler} from '../handler_manager.ts';
 
 // deltaY value for mouse scroll wheel identification
 const wheelZoomDelta = 4.000244140625;

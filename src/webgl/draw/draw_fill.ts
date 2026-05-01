@@ -1,21 +1,21 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {DepthMode} from '../depth_mode';
-import {CullFaceMode} from '../cull_face_mode';
-import {type ColorMode} from '../color_mode';
+import {DepthMode} from '../depth_mode.ts';
+import {CullFaceMode} from '../cull_face_mode.ts';
+import {type ColorMode} from '../color_mode.ts';
 import {
     fillUniformValues,
     fillPatternUniformValues,
     fillOutlineUniformValues,
     fillOutlinePatternUniformValues
-} from '../program/fill_program';
+} from '../program/fill_program.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer';
-import type {FillBucket} from '../../data/bucket/fill_bucket';
-import type {OverscaledTileID} from '../../tile/tile_id';
-import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program';
-import {translatePosition} from '../../util/util';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
+import type {FillBucket} from '../../data/bucket/fill_bucket.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
+import {translatePosition} from '../../util/util.ts';
 
 export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
     const color = layer.paint.get('fill-color');

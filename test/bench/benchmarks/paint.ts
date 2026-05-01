@@ -1,6 +1,6 @@
-import Benchmark from '../lib/benchmark';
-import createMap from '../lib/create_map';
-import type {Map} from '../../../src/ui/map';
+import Benchmark from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
+import type {Map} from '../../../src/ui/map.ts';
 
 const width = 1024;
 const height = 768;

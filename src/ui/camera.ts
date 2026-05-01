@@ -1,21 +1,21 @@
-import {extend, wrap, defaultEasing, pick, scaleZoom, evaluateZoomSnap} from '../util/util';
+import {extend, wrap, defaultEasing, pick, scaleZoom, evaluateZoomSnap} from '../util/util.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {browser} from '../util/browser';
-import {now} from '../util/time_control';
-import {LngLat} from '../geo/lng_lat';
-import {LngLatBounds} from '../geo/lng_lat_bounds';
+import {browser} from '../util/browser.ts';
+import {now} from '../util/time_control.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
-import {Event, Evented} from '../util/evented';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
+import {Event, Evented} from '../util/evented.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 
-import type {Terrain} from '../render/terrain';
-import type {ITransform} from '../geo/transform_interface';
-import type {LngLatLike} from '../geo/lng_lat';
-import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
-import type {TaskID} from '../util/task_queue';
-import type {PaddingOptions} from '../geo/edge_insets';
-import type {HandlerManager} from './handler_manager';
-import type {ICameraHelper} from '../geo/projection/camera_helper';
+import type {Terrain} from '../render/terrain.ts';
+import type {ITransform} from '../geo/transform_interface.ts';
+import type {LngLatLike} from '../geo/lng_lat.ts';
+import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
+import type {TaskID} from '../util/task_queue.ts';
+import type {PaddingOptions} from '../geo/edge_insets.ts';
+import type {HandlerManager} from './handler_manager.ts';
+import type {ICameraHelper} from '../geo/projection/camera_helper.ts';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.

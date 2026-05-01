@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect} from 'vitest';
-import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
+import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util.ts';
 
 function createMap(logoPosition, maplibreLogo) {
 

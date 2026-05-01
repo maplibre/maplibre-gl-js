@@ -1,5 +1,5 @@
 import {test, expect} from 'vitest';
-import {resolveTokens} from './resolve_tokens';
+import {resolveTokens} from './resolve_tokens.ts';
 
 test('resolveToken', () => {
     expect('3 Fine Fields').toBe(resolveTokens({a: 3, b: 'Fine', c: 'Fields'}, '{a} {b} {c}'));
