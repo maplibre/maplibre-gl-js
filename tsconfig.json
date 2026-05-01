@@ -14,7 +14,8 @@
     "resolveJsonModule": true,
     "skipLibCheck": false,
     "strict": false,
-    "target": "ES2016",
+    "target": "es2022",
+    "useDefineForClassFields": false,
     "lib": [
       "ESNext",
       "DOM",
@@ -29,7 +30,7 @@
     "experimentalSpecifierResolution": "node",
     "esm": true,
     "compilerOptions": {
-      "target": "es2019",
+      "target": "es2022",
       "types": [
         "node"
       ]
@@ -38,7 +39,7 @@
     "pretty": true
   },
   "include": [
-    "rollup.config.*",
+    "rolldown.config.*",
     "src/**/*",
     "test/bench/**/*",
     "test/integration/**/*",
@@ -48,10 +49,15 @@
   "exclude": [
     "node_modules",
     "dist",
-    "build/rollup",
-    "test/bench/rollup",
+    "build/rolldown",
     "test/bench/run-benchmarks.ts",
-    "test/bench/gl-stats.ts"  ,
-    "test/bench/**/*generated*"
+    "test/bench/gl-stats.ts",
+    "test/bench/**/*generated*",
+    "test/bench/**/benchmarks_worker.mjs",
+    "test/integration/bundler/vite-rollup-esbuild/**",
+    "test/integration/bundler/vite-rolldown/**",
+    "test/integration/bundler/webpack/**",
+    "test/integration/bundler/esbuild/**",
+    "test/integration/bundler/rollup/**"
   ]
 }

@@ -179,7 +179,7 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
 
 function drawLineOffscreen(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
     const context = painter.context;
-    const gl = context.gl as WebGL2RenderingContext;
+    const gl = context.gl;
     const isDataDriven = layer.paint.get('line-opacity').constantOr(-1) === -1;
 
     // Recreate FBO if MRT requirement changed (e.g. opacity toggled between constant and data-driven)
@@ -346,7 +346,7 @@ function drawLineTiles(
 }
 
 function createLineFbo(context: Context, width: number, height: number, withOpacityTarget: boolean): Framebuffer {
-    const gl = context.gl as WebGL2RenderingContext;
+    const gl = context.gl;
 
     // RT0: Color texture (RGBA)
     const texture = gl.createTexture();
@@ -355,6 +355,7 @@ function createLineFbo(context: Context, width: number, height: number, withOpac
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 
     const fbo = context.createFramebuffer(width, height, true, true);

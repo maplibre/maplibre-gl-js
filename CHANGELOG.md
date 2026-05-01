@@ -4,8 +4,63 @@
 
 ### 🐞 Bug fixes
 
-- Fix transparent, overlapping lines creating artefacts. This is fixed for `line-opacity`, but purposefully not for transparent `line-color` properties, thus still allowing transparent colors to stack their effect. ([#7490](https://github.com/maplibre/maplibre-gl-js/pull/7490)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- ⚠️ Fix transparent, overlapping lines creating artefacts. This is fixed for `line-opacity`, but purposefully not for transparent `line-color` properties, thus still allowing transparent colors to stack their effect. ([#7490](https://github.com/maplibre/maplibre-gl-js/pull/7490)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
+
+## 6.0.0-6
+
+### ✨ Features and improvements
+
+- Add a new map creation option, `terrainSkirtLength`, which allows the removal of visually unappealing vertical artifacts when using a terrain along with a transparent background ([#7523](https://github.com/maplibre/maplibre-gl-js/pull/7523)) (by [@safwat-halaby](https://github.com/safwat-halaby))
+- Bundle with Rolldown instead of Rollup ([#7555](https://github.com/maplibre/maplibre-gl-js/pull/7555)) (by [@birkskyum](https://github.com/birkskyum))
+- Optimization for Feature State: Replace String-Indexed Object with Array (up to 3.4X speedup) ([#7550](https://github.com/maplibre/maplibre-gl-js/pull/7550)) (by [@xavierjs](https://github.com/xavierjs))
+
+## 6.0.0-5
+
+### ✨ Features and improvements
+
+- ⚠️ Switch to an ESM-only distribution (`maplibre-gl.mjs`). The UMD bundles (`maplibre-gl.js`, `maplibre-gl-csp.js`) are no longer published. The CSP-specific bundle is also dropped: the ESM build loads its worker as a real URL, so `worker-src blob:` is no longer required. Consumers using `<script src=".../maplibre-gl.js">` must switch to `<script type="module">`, and consumers using `import maplibregl from 'maplibre-gl'` must switch to `import * as maplibregl from 'maplibre-gl'` or named imports. See the docs ESM section for migration steps. ([#6254](https://github.com/maplibre/maplibre-gl-js/pull/6254)) (by [@birkskyum](https://github.com/birkskyum))
+
+## 6.0.0-4
+
+### ✨ Features and improvements
+
+- ⚠️ `zoomLevelsToOverscale` default value was changed to 4 to support better handling of high level zoom with dense labels. This might have a side effect of changing a bit the results of `queryRenderedFeatures` and some rendering of polygon center label. To revert this change, set the value to `undefined` ([#7537](https://github.com/maplibre/maplibre-gl-js/issues/7537)) (by [@HarelM](https://github.com/HarelM))
+
+## 6.0.0-3
+
+### ✨ Features and improvements
+
+- ⚠️ Remove the second parameter from `GeoJSONSource.setData` (`waitForCompletion`) and remove the return value of `this` to allow future changes to the API ([#7538](https://github.com/maplibre/maplibre-gl-js/issues/7538)) (by [@HarelM](https://github.com/HarelM))
+- ⚠️ The TypeScript target has been updated to ES2022.
+  This results in smaller bundles and improved runtime performance by relying on modern JavaScript features and reducing transpilation. Consumers targeting browsers or using some tooling released before 2022 may need to transpile MapLibre or update. This change also aligns all internal build configurations to a single target instead of ES2016 + ES2019, avoiding inconsistencies in emitted code. ([#7404](https://github.com/maplibre/maplibre-gl-js/pull/7404)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+
+## 6.0.0-2
+
+### ✨ Features and improvements
+
+- ⚠️ WebGL (v1) support has been removed; WebGL2 is now required.
+  In practical terms, this will not change how you interact with the map.
+  This enables performance improvements (e.g. line opacity), Terrain3D enhancements, and several bug fixes.
+  WebGL2 support has been widely available for years, and usage of the legacy path had plateaued, so maintaining it no longer justified the added complexity.
+  To ease this breaking change, we have also refactored how we handle the case that no webgl is avaliableWebGL (e.g. due to browser restrictions).
+  You can now listen to the webgl error via `.on("error")`, or by overriding `Map._showWebGL2Error`.
+  See [caniuse.com/webgl2](https://caniuse.com/webgl2) for ecosystem support and [our RFC for details](https://github.com/maplibre/maplibre-gl-js/discussions/6017). ([#7453](https://github.com/maplibre/maplibre-gl-js/pull/7453)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+
+## 6.0.0-1
+
+### ✨ Features and improvements
+
+- ⚠️ Support geojson nested objects, this is a breaking change as it encodes `__$json__` before properties that used to be an object. It also parses them back, but this is still a breaking change if you assumed this bug existed. ([#6992](https://github.com/maplibre/maplibre-gl-js/pull/6992)) (by [HarelM](https://github.com/HarelM))
+- ⚠️ Improve types for `{get,set}LayoutProperty`, `{get,set}PaintProperty` to be the actual type instead of `string`/`any` ([#7481](https://github.com/maplibre/maplibre-gl-js/pull/7481)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+
+## 6.0.0-0
+
+### ✨ Features and improvements
+
+- ⚠️ Refactored the `Hash`-based location control (the option that syncs map state to the URL like `#map=5/1/2`) to use `URLSearchParams` internally. This improves extensibility for custom use cases, but may break existing code that relies on the previous implementation. It also changes how certain edge cases are parsed—for example, strings like `#10%2F3.00%2F-1.00` are now accepted, and hashes like `#foo` are normalized to `#foo=`. ([#7073](https://github.com/maplibre/maplibre-gl-js/pull/7073)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Expose `getProjectionData` function in custom layer args objects ([#7471](https://github.com/maplibre/maplibre-gl-js/pull/7471)) (by [@kubapelc](https://github.com/kubapelc))
+- Marked package `sideEffects` as CSS-only in package metadata, which may improve tree-shaking and reduce bundle size in some bundlers ([#7258](https://github.com/maplibre/maplibre-gl-js/pull/7258)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ## 5.24.0
 

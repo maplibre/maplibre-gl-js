@@ -1,5 +1,6 @@
 import type Point from '@mapbox/point-geometry';
 import {classifyRings} from '@mapbox/vector-tile';
+import {JSON_PREFIX} from './util';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
@@ -45,6 +46,13 @@ export class GeoJSONFeature {
         this._y = y;
         this._z = z;
 
+        for (const key in vectorTileFeature.properties) {
+            if (typeof vectorTileFeature.properties[key] !== 'string' || !vectorTileFeature.properties[key].startsWith(JSON_PREFIX)) {
+                continue;
+            }
+            // JSON parsing the special case of a json prefix that is serialized in geojson worker source.
+            vectorTileFeature.properties[key] = JSON.parse(vectorTileFeature.properties[key].slice(JSON_PREFIX.length));
+        }
         this.properties = vectorTileFeature.properties;
         this.id = id;
     }

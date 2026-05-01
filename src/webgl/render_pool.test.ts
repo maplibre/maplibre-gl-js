@@ -1,13 +1,13 @@
-import {describe, test, expect, vi} from 'vitest';
+import {describe, test, expect} from 'vitest';
 import {Context} from './context';
 import {RenderPool} from './render_pool';
+import {createNullGL} from '../util/test/null_gl';
 
 describe('render pool', () => {
     const POOL_SIZE = 3;
 
     function createAndFillPool(): RenderPool {
-        const gl = document.createElement('canvas').getContext('webgl');
-        vi.spyOn(gl, 'checkFramebufferStatus').mockReturnValue(gl.FRAMEBUFFER_COMPLETE);
+        const gl = createNullGL();
         const pool = new RenderPool(new Context(gl), POOL_SIZE, 512);
         for (let i = 0; i < POOL_SIZE; i++) {
             pool.useObject(pool.getOrCreateFreeObject());
@@ -16,7 +16,7 @@ describe('render pool', () => {
     }
 
     test('create pool should not be full', () =>  {
-        const gl = document.createElement('canvas').getContext('webgl');
+        const gl = createNullGL();
         const pool = new RenderPool(new Context(gl), POOL_SIZE, 512);
         expect(pool.isFull()).toBeFalsy();
     });
