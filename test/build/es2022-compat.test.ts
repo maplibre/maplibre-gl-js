@@ -2,7 +2,7 @@ import {describe, test, expect} from 'vitest';
 import fs from 'fs';
 import {transformWithOxc} from 'vite';
 
-describe('ES2020 compatibility (#7069)', () => {
+describe('ES2022 compatibility (#7069)', () => {
     for (const file of ['dist/maplibre-gl.mjs', 'dist/maplibre-gl-worker.mjs']) {
         test(`${file} does not require ES2022+ downleveling helpers`, async () => {
             const bundle = fs.readFileSync(file, 'utf8');
