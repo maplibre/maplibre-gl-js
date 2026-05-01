@@ -41,10 +41,8 @@ export class Framebuffer {
         const texture = this.colorAttachment.get();
         if (texture) gl.deleteTexture(texture);
 
-        if (this.colorAttachment1) {
-            const texture1 = this.colorAttachment1.get();
-            if (texture1) gl.deleteTexture(texture1);
-        }
+        const texture1 = this.colorAttachment1?.get();
+        if (texture1) gl.deleteTexture(texture1);
 
         if (this.depthAttachment) {
             const renderbuffer = this.depthAttachment.get();
