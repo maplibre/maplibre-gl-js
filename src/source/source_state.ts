@@ -112,7 +112,7 @@ export class SourceFeatureState {
         return reconciledState;
     }
 
-    initializeTileState(tile: Tile, painter: any) {
+    initializeTileState(tile: Tile, painter: any): void {
         const layerStates: LayerFeatureStates = {};
         for (const sourceLayer in this.state) {
             layerStates[sourceLayer] = featureStatesMapToArray(this.state[sourceLayer]);
