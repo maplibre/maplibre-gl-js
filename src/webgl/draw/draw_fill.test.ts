@@ -9,7 +9,7 @@ import type {ZoomHistory} from '../../style/zoom_history';
 import type {Map} from '../../ui/map';
 import {type IReadonlyTransform} from '../../geo/transform_interface';
 import type {EvaluationParameters} from '../../style/evaluation_parameters';
-import type {FillLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {FillLayerSpecification, AllPaintProperties} from '@maplibre/maplibre-gl-style-spec';
 import {type Style} from '../../style/style';
 import {FillStyleLayer} from '../../style/style_layer/fill_style_layer';
 import {drawFill} from './draw_fill';
@@ -74,9 +74,10 @@ describe('drawFill', () => {
         // 'fill-pattern': 'pattern0'
         // so tile.imageAtlas.patternPositions['pattern0'] would return nothing
         // mimicking the transitioning fill-pattern value
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- otherwise typescript fails with error TS2590: Expression produces a union type that is too complex to represent
         layer.getPaintProperty = (() => {
             return 'pattern1';
-        });
+        }) as <K extends keyof AllPaintProperties>(name: K) => AllPaintProperties[K];
 
         return layer;
     }
