@@ -8,11 +8,11 @@ export type SimpleSegment = {
 };
 
 export type SimpleMesh = {
-    segmentsTriangles: Array<SimpleSegment>;
-    segmentsLines: Array<SimpleSegment>;
-    vertices: Array<number>;
-    indicesTriangles: Array<number>;
-    indicesLines: Array<number>;
+    segmentsTriangles: SimpleSegment[];
+    segmentsLines: SimpleSegment[];
+    vertices: number[];
+    indicesTriangles: number[];
+    indicesLines: number[];
 };
 
 /**
@@ -172,7 +172,7 @@ export function getGridMeshRandom(size: number, triangleCount: number, lineCount
  * @param edges - List of arrays of edge indices. Every pair of indices forms a line. A single triangle would look like `[[0 1 1 2 2 0]]`.
  * @returns SVG image as string.
  */
-export function getDebugSvg(flattened: Array<number>, triangles?: Array<number>, edges?: Array<Array<number>>, granularity: number = 1): string {
+export function getDebugSvg(flattened: number[], triangles?: number[], edges?: number[][], granularity: number = 1): string {
     const svg = [];
 
     const cellSize = EXTENT / granularity;
@@ -182,9 +182,9 @@ export function getDebugSvg(flattened: Array<number>, triangles?: Array<number>,
     let maxX = -Infinity;
     let maxY = -Infinity;
 
-    for (let i = 0; i < triangles.length; i++) {
-        const x = flattened[triangles[i] * 2];
-        const y = flattened[triangles[i] * 2 + 1];
+    for (const triangle of triangles) {
+        const x = flattened[triangle * 2];
+        const y = flattened[triangle * 2 + 1];
         minX = Math.min(minX, x);
         minY = Math.min(minY, y);
         maxX = Math.max(maxX, x);

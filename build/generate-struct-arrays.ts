@@ -22,6 +22,7 @@ import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attribute
 import {lineLayoutAttributes} from '../src/data/bucket/line_attributes';
 import {lineLayoutAttributesExt} from '../src/data/bucket/line_attributes_ext';
 import {patternAttributes} from '../src/data/bucket/pattern_attributes';
+import {dashAttributes} from '../src/data/bucket/dash_attributes';
 // symbol layer specific arrays
 import {
     symbolLayoutAttributes,
@@ -112,14 +113,12 @@ function createStructArrayLayoutType({members, size, alignment}) {
     const key = `${members.map(m => `${m.components}${typeAbbreviations[m.type]}`).join('')}${size}`;
     const className = `StructArrayLayout${key}`;
 
-    if (!layoutCache[key]) {
-        layoutCache[key] = {
-            className,
-            members,
-            size,
-            usedTypes
-        };
-    }
+    layoutCache[key] ||= {
+        className,
+        members,
+        size,
+        usedTypes
+    };
 
     return className;
 }
@@ -146,7 +145,8 @@ const layoutAttributes = {
     heatmap: circleAttributes,
     line: lineLayoutAttributes,
     lineExt: lineLayoutAttributesExt,
-    pattern: patternAttributes
+    pattern: patternAttributes,
+    dash: dashAttributes
 };
 for (const name in layoutAttributes) {
     createStructArrayType(`${name.replace(/-/g, '_')}_layout`, layoutAttributes[name]);
@@ -265,7 +265,7 @@ class ${structArrayLayoutClass} extends StructArray {`);
     const argNamesTyped = [];
 
     for (const member of members) {
-        if (usedTypeSizes.indexOf(member.size) < 0) {
+        if (!usedTypeSizes.includes(member.size)) {
             usedTypeSizes.push(member.size);
         }
         for (let c = 0; c < member.components; c++) {

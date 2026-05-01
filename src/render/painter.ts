@@ -1,6 +1,6 @@
-import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import {mat4} from 'gl-matrix';
-import {SourceCache} from '../source/source_cache';
+import {TileManager} from '../tile/tile_manager';
 import {EXTENT} from '../data/extent';
 import {SegmentVector} from '../data/segment';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
@@ -9,30 +9,17 @@ import posAttributes from '../data/pos_attributes';
 import {type ProgramConfiguration} from '../data/program_configuration';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
 import {shaders} from '../shaders/shaders';
-import {Program} from './program';
-import {programUniforms} from './program/program_uniforms';
-import {Context} from '../gl/context';
-import {DepthMode} from '../gl/depth_mode';
-import {StencilMode} from '../gl/stencil_mode';
-import {ColorMode} from '../gl/color_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {Texture} from './texture';
+import {Program} from '../webgl/program';
+import {programUniforms} from '../webgl/program/program_uniforms';
+import {Context} from '../webgl/context';
+import {DepthMode} from '../webgl/depth_mode';
+import {StencilMode} from '../webgl/stencil_mode';
+import {ColorMode} from '../webgl/color_mode';
+import {CullFaceMode} from '../webgl/cull_face_mode';
+import {Texture} from '../webgl/texture';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {drawSymbols} from './draw_symbol';
-import {drawCircles} from './draw_circle';
-import {drawHeatmap} from './draw_heatmap';
-import {drawLine} from './draw_line';
-import {drawFill} from './draw_fill';
-import {drawFillExtrusion} from './draw_fill_extrusion';
-import {drawHillshade} from './draw_hillshade';
-import {drawColorRelief} from './draw_color_relief';
-import {drawRaster} from './draw_raster';
-import {drawBackground} from './draw_background';
-import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug';
-import {drawCustom} from './draw_custom';
-import {drawDepth, drawCoords} from './draw_terrain';
-import {type OverscaledTileID} from '../source/tile_id';
-import {drawSky, drawAtmosphere} from './draw_sky';
+import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webgl/draw';
+import {type OverscaledTileID} from '../tile/tile_id';
 import {Mesh} from './mesh';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection';
 
@@ -43,11 +30,11 @@ import type {CrossFaded} from '../style/properties';
 import type {LineAtlas} from './line_atlas';
 import type {ImageManager} from './image_manager';
 import type {GlyphManager} from './glyph_manager';
-import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {IndexBuffer} from '../gl/index_buffer';
-import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
+import type {VertexBuffer} from '../webgl/vertex_buffer';
+import type {IndexBuffer} from '../webgl/index_buffer';
+import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../webgl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import type {RenderToTexture} from './render_to_texture';
+import type {IRenderToTexture} from './render_to_texture_interface';
 import type {ProjectionData} from '../geo/projection/projection_data';
 import {coveringTiles} from '../geo/projection/covering_tiles';
 import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
@@ -72,6 +59,7 @@ type PainterOptions = {
     zooming: boolean;
     moving: boolean;
     fadeDuration: number;
+    anisotropicFilterPitch: number;
 };
 
 export type RenderOptions = {
@@ -83,12 +71,14 @@ export type RenderOptions = {
  * @internal
  * Initialize a new painter object.
  */
+
 export class Painter {
+    drawFunctions: DrawFunctions;
     context: Context;
     transform: IReadonlyTransform;
-    renderToTexture: RenderToTexture;
+    renderToTexture: IRenderToTexture;
     _tileTextures: {
-        [_: number]: Array<Texture>;
+        [_: number]: Texture[];
     };
     numSublayers: number;
     depthEpsilon: number;
@@ -133,19 +123,20 @@ export class Painter {
     // this object stores the current camera-matrix and the last render time
     // of the terrain-facilitators. e.g. depth & coords framebuffers
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
-    terrainFacilitator: {dirty: boolean; matrix: mat4; renderTime: number};
+    terrainFacilitator: {depthDirty: boolean; coordsDirty: boolean; matrix: mat4; renderTime: number};
 
-    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: IReadonlyTransform) {
+    constructor(gl: WebGL2RenderingContext, transform: IReadonlyTransform) {
+        this.drawFunctions = webglDrawFunctions;
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
-        this.terrainFacilitator = {dirty: true, matrix: mat4.identity(new Float64Array(16) as any), renderTime: 0};
+        this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
 
         // Within each layer there are multiple distinct z-planes that can be drawn to.
         // This is implemented using the WebGL depth buffer.
-        this.numSublayers = SourceCache.maxUnderzooming + SourceCache.maxOverzooming + 1;
+        this.numSublayers = TileManager.maxOverzooming + TileManager.maxUnderzooming + 1;
         this.depthEpsilon = 1 / Math.pow(2, 16);
 
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
@@ -266,8 +257,8 @@ export class Painter {
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }
 
-    _renderTileClippingMasks(layer: StyleLayer, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean) {
-        if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs || !tileIDs.length) {
+    _renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean) {
+        if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs?.length) {
             return;
         }
 
@@ -300,7 +291,7 @@ export class Painter {
         this._tileClippingMaskIDs = stencilRefs;
     }
 
-    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean, useBorders: boolean) {
+    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: OverscaledTileID[], renderToTexture: boolean, useBorders: boolean) {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.projection;
@@ -311,7 +302,7 @@ export class Painter {
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const stencilRef = tileStencilRefs[tileID.key];
-            const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
+            const terrainData = this.style.map.terrain?.getTerrainData(tileID);
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
@@ -342,7 +333,7 @@ export class Painter {
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
-            const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
+            const terrainData = this.style.map.terrain?.getTerrainData(tileID);
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
 
             const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true});
@@ -384,9 +375,9 @@ export class Painter {
      * values.
      * Returns [StencilMode for tile overscaleZ map, sortedCoords].
      */
-    getStencilConfigForOverlapAndUpdateStencilID(tileIDs: Array<OverscaledTileID>): [{
+    getStencilConfigForOverlapAndUpdateStencilID(tileIDs: OverscaledTileID[]): [{
         [_: number]: Readonly<StencilMode>;
-    }, Array<OverscaledTileID>] {
+    }, OverscaledTileID[]] {
         const gl = this.context.gl;
         const coords = tileIDs.sort((a, b) => b.overscaledZ - a.overscaledZ);
         const minTileZ = coords[coords.length - 1].overscaledZ;
@@ -406,10 +397,10 @@ export class Painter {
         return [{[minTileZ]: StencilMode.disabled}, coords];
     }
 
-    stencilConfigForOverlapTwoPass(tileIDs: Array<OverscaledTileID>): [
+    stencilConfigForOverlapTwoPass(tileIDs: OverscaledTileID[]): [
         { [_: number]: Readonly<StencilMode> }, // borderless tiles - high priority & high stencil values
         { [_: number]: Readonly<StencilMode> }, // tiles with border - low priority
-        Array<OverscaledTileID>
+        OverscaledTileID[]
     ] {
         const gl = this.context.gl;
         const coords = tileIDs.sort((a, b) => b.overscaledZ - a.overscaledZ);
@@ -484,27 +475,27 @@ export class Painter {
         this.imageManager = style.imageManager;
         this.glyphManager = style.glyphManager;
 
-        this.symbolFadeChange = style.placement.symbolFadeChange(browser.now());
+        this.symbolFadeChange = style.placement.symbolFadeChange(now());
 
         this.imageManager.beginFrame();
 
         const layerIds = this.style._order;
-        const sourceCaches = this.style.sourceCaches;
+        const tileManagers = this.style.tileManagers;
 
-        const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
-        const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
-        const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
+        const coordsAscending: {[_: string]: OverscaledTileID[]} = {};
+        const coordsDescending: {[_: string]: OverscaledTileID[]} = {};
+        const coordsDescendingSymbol: {[_: string]: OverscaledTileID[]} = {};
         const renderOptions: RenderOptions = {isRenderingToTexture: false, isRenderingGlobe: style.projection?.transitionState > 0};
 
-        for (const id in sourceCaches) {
-            const sourceCache = sourceCaches[id];
-            if (sourceCache.used) {
-                sourceCache.prepare(this.context);
+        for (const id in tileManagers) {
+            const tileManager = tileManagers[id];
+            if (tileManager.used) {
+                tileManager.prepare(this.context);
             }
 
-            coordsAscending[id] = sourceCache.getVisibleCoordinates(false);
+            coordsAscending[id] = tileManager.getVisibleCoordinates(false);
             coordsDescending[id] = coordsAscending[id].slice().reverse();
-            coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
+            coordsDescendingSymbol[id] = tileManager.getVisibleCoordinates(true).reverse();
         }
 
         this.opaquePassCutoff = Infinity;
@@ -516,7 +507,7 @@ export class Painter {
             }
         }
 
-        this.maybeDrawDepthAndCoords(false);
+        this.maybeDrawDepth(false);
 
         if (this.renderToTexture) {
             this.renderToTexture.prepareForRender(this.style, this.transform.zoom);
@@ -537,7 +528,7 @@ export class Painter {
             const coords = coordsDescending[layer.source];
             if (layer.type !== 'custom' && !coords.length) continue;
 
-            this.renderLayer(this, sourceCaches[layer.source], layer, coords, renderOptions);
+            this.renderLayer(this, tileManagers[layer.source], layer, coords, renderOptions);
         }
 
         // Execute offscreen GPU tasks of the projection manager
@@ -555,7 +546,7 @@ export class Painter {
         this.clearStencil();
 
         // draw sky first to not overwrite symbols
-        if (this.style.sky) drawSky(this, this.style.sky);
+        if (this.style.sky) this.drawFunctions.sky(this, this.style.sky);
 
         this._showOverdrawInspector = options.showOverdrawInspector;
         this.depthRangeFor3D = [0, 1 - ((style._order.length + 2) * this.numSublayers * this.depthEpsilon)];
@@ -567,11 +558,11 @@ export class Painter {
 
             for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
                 const layer = this.style._layers[layerIds[this.currentLayer]];
-                const sourceCache = sourceCaches[layer.source];
+                const tileManager = tileManagers[layer.source];
                 const coords = coordsAscending[layer.source];
 
                 this._renderTileClippingMasks(layer, coords, false);
-                this.renderLayer(this, sourceCache, layer, coords, renderOptions);
+                this.renderLayer(this, tileManager, layer, coords, renderOptions);
             }
         }
 
@@ -583,9 +574,9 @@ export class Painter {
 
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
-            const sourceCache = sourceCaches[layer.source];
+            const tileManager = tileManagers[layer.source];
 
-            if (this.renderToTexture && this.renderToTexture.renderLayer(layer, renderOptions)) continue;
+            if (this.renderToTexture?.renderLayer(layer, renderOptions)) continue;
 
             if (!this.opaquePassEnabledForLayer() && !globeDepthRendered) {
                 globeDepthRendered = true;
@@ -602,23 +593,23 @@ export class Painter {
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
-            this.renderLayer(this, sourceCache, layer, coords, renderOptions);
+            this.renderLayer(this, tileManager, layer, coords, renderOptions);
         }
 
         // Render atmosphere, only for Globe projection
         if (renderOptions.isRenderingGlobe) {
-            drawAtmosphere(this, this.style.sky, this.style.light);
+            this.drawFunctions.atmosphere(this, this.style.sky, this.style.light);
         }
 
         if (this.options.showTileBoundaries) {
             const selectedSource = selectDebugSource(this.style, this.transform.zoom);
             if (selectedSource) {
-                drawDebug(this, selectedSource, selectedSource.getVisibleCoordinates());
+                this.drawFunctions.debug(this, selectedSource, selectedSource.getVisibleCoordinates());
             }
         }
 
         if (this.options.showPadding) {
-            drawDebugPadding(this);
+            this.drawFunctions.debugPadding(this);
         }
 
         // Set defaults for most GL values so that anyone using the state after the render
@@ -627,21 +618,20 @@ export class Painter {
     }
 
     /**
-     * Update the depth and coords framebuffers, if the contents of those frame buffers is out of date.
-     * If requireExact is false, then the contents of those frame buffers is not updated if it is close
-     * to accurate (that is, the camera has not moved much since it was updated last).
+     * Update the depth framebuffer if the camera has moved or tiles have reloaded.
+     * Marks coords as depthDirty so they are re-rendered on next demand.
      */
-    maybeDrawDepthAndCoords(requireExact: boolean) {
-        if (!this.style || !this.style.map || !this.style.map.terrain) {
+    maybeDrawDepth(requireExact: boolean) {
+        if (!this.style?.map?.terrain) {
             return;
         }
         const prevMatrix = this.terrainFacilitator.matrix;
         const currMatrix = this.transform.modelViewProjectionMatrix;
 
-        // Update coords/depth-framebuffer on camera movement, or tile reloading
-        let doUpdate = this.terrainFacilitator.dirty;
+        // Update depth-framebuffer on camera movement, or tile reloading
+        let doUpdate = this.terrainFacilitator.depthDirty;
         doUpdate ||= requireExact ? !mat4.exactEquals(prevMatrix, currMatrix) : !mat4.equals(prevMatrix, currMatrix);
-        doUpdate ||= this.style.map.terrain.sourceCache.anyTilesAfterTime(this.terrainFacilitator.renderTime);
+        doUpdate ||= this.style.map.terrain.tileManager.anyTilesAfterTime(this.terrainFacilitator.renderTime);
 
         if (!doUpdate) {
             return;
@@ -649,47 +639,63 @@ export class Painter {
 
         mat4.copy(prevMatrix, currMatrix);
         this.terrainFacilitator.renderTime = Date.now();
-        this.terrainFacilitator.dirty = false;
-        drawDepth(this, this.style.map.terrain);
-        drawCoords(this, this.style.map.terrain);
+        this.terrainFacilitator.depthDirty = false;
+        this.terrainFacilitator.coordsDirty = true;
+        this.drawFunctions.terrainDepth(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions) {
+    /**
+     * Render the coords framebuffer if it is coordsDirty
+     */
+    maybeDrawCoords() {
+        if (!this.style?.map?.terrain || !this.terrainFacilitator.coordsDirty) {
+            return;
+        }
+        this.terrainFacilitator.coordsDirty = false;
+        this.drawFunctions.terrainCoords(this, this.style.map.terrain);
+    }
+
+    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
+        const draw = this.drawFunctions;
         if (isSymbolStyleLayer(layer)) {
-            drawSymbols(painter, sourceCache, layer, coords, this.style.placement.variableOffsets, renderOptions);
+            draw.symbol(painter, tileManager, layer, coords, this.style.placement.variableOffsets, renderOptions);
         } else if (isCircleStyleLayer(layer)) {
-            drawCircles(painter, sourceCache, layer, coords, renderOptions);
+            draw.circle(painter, tileManager, layer, coords, renderOptions);
         } else if (isHeatmapStyleLayer(layer)) {
-            drawHeatmap(painter, sourceCache, layer, coords, renderOptions);
+            draw.heatmap(painter, tileManager, layer, coords, renderOptions);
         } else if (isLineStyleLayer(layer)) {
-            drawLine(painter, sourceCache, layer, coords, renderOptions);
+            draw.line(painter, tileManager, layer, coords, renderOptions);
         } else if (isFillStyleLayer(layer)) {
-            drawFill(painter, sourceCache, layer, coords, renderOptions);
+            draw.fill(painter, tileManager, layer, coords, renderOptions);
         } else if (isFillExtrusionStyleLayer(layer)) {
-            drawFillExtrusion(painter, sourceCache, layer, coords, renderOptions);
+            draw.fillExtrusion(painter, tileManager, layer, coords, renderOptions);
         } else if (isHillshadeStyleLayer(layer)) {
-            drawHillshade(painter, sourceCache, layer, coords, renderOptions);
+            draw.hillshade(painter, tileManager, layer, coords, renderOptions);
         } else if (isColorReliefStyleLayer(layer)) {
-            drawColorRelief(painter, sourceCache, layer, coords, renderOptions);
+            draw.colorRelief(painter, tileManager, layer, coords, renderOptions);
         } else if (isRasterStyleLayer(layer)) {
-            drawRaster(painter, sourceCache, layer, coords, renderOptions);
+            draw.raster(painter, tileManager, layer, coords, renderOptions);
         } else if (isBackgroundStyleLayer(layer)) {
-            drawBackground(painter, sourceCache, layer, coords, renderOptions);
+            draw.background(painter, tileManager, layer, coords, renderOptions);
         } else if (isCustomStyleLayer(layer)) {
-            drawCustom(painter, sourceCache, layer, renderOptions);
+            draw.custom(painter, tileManager, layer, renderOptions);
         }
     }
+
+    static readonly MAX_TEXTURE_POOL_SIZE_PER_BUCKET = 50;
 
     saveTileTexture(texture: Texture) {
         const textures = this._tileTextures[texture.size[0]];
         if (!textures) {
             this._tileTextures[texture.size[0]] = [texture];
-        } else {
+        } else if (textures.length < Painter.MAX_TEXTURE_POOL_SIZE_PER_BUCKET) {
             textures.push(texture);
+        } else {
+            texture.destroy();
         }
     }
 
@@ -720,8 +726,8 @@ export class Painter {
      * False by default. Use true when drawing with a simple projection matrix is desired, eg. when drawing a fullscreen quad.
      * @returns
      */
-    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false, defines: Array<string> = []): Program<any> {
-        this.cache = this.cache || {};
+    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false, defines: string[] = []): Program<any> {
+        this.cache ||= {};
         const useTerrain = !!this.style.map.terrain;
 
         const projection = this.style.projection;
@@ -737,19 +743,17 @@ export class Painter {
 
         const key = name + configurationKey + projectionKey + overdrawKey + terrainKey + definesKey;
 
-        if (!this.cache[key]) {
-            this.cache[key] = new Program(
-                this.context,
-                shaders[name],
-                programConfiguration,
-                programUniforms[name],
-                this._showOverdrawInspector,
-                useTerrain,
-                projectionPrelude,
-                projectionDefine,
-                defines
-            );
-        }
+        this.cache[key] ||= new Program(
+            this.context,
+            shaders[name],
+            programConfiguration,
+            programUniforms[name],
+            this._showOverdrawInspector,
+            useTerrain,
+            projectionPrelude,
+            projectionDefine,
+            defines
+        );
         return this.cache[key];
     }
 
@@ -793,8 +797,44 @@ export class Painter {
     }
 
     destroy() {
+        if (this._tileTextures) {
+            for (const size in this._tileTextures) {
+                const textures = this._tileTextures[size];
+                if (textures) {
+                    for (const texture of textures) {
+                        texture.destroy();
+                    }
+                }
+            }
+            this._tileTextures = {};
+        }
+
+        if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
+        if (this.debugBuffer) this.debugBuffer.destroy();
+        if (this.rasterBoundsBuffer) this.rasterBoundsBuffer.destroy();
+        if (this.rasterBoundsBufferPosOnly) this.rasterBoundsBufferPosOnly.destroy();
+        if (this.viewportBuffer) this.viewportBuffer.destroy();
+        if (this.tileBorderIndexBuffer) this.tileBorderIndexBuffer.destroy();
+        if (this.quadTriangleIndexBuffer) this.quadTriangleIndexBuffer.destroy();
+        if (this.tileExtentMesh) this.tileExtentMesh.vertexBuffer?.destroy();
+        if (this.tileExtentMesh) this.tileExtentMesh.indexBuffer?.destroy();
+
         if (this.debugOverlayTexture) {
             this.debugOverlayTexture.destroy();
+        }
+
+        if (this.cache) {
+            for (const key in this.cache) {
+                const program = this.cache[key];
+                if (program?.program) {
+                    this.context.gl.deleteProgram(program.program);
+                }
+            }
+            this.cache = {};
+        }
+
+        if (this.context) {
+            this.context.setDefault();
         }
     }
 

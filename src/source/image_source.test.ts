@@ -6,9 +6,9 @@ import {extend, MAX_TILE_ZOOM} from '../util/util';
 import {type FakeServer, fakeServer} from 'nise';
 import {type RequestManager} from '../util/request_manager';
 import {sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util';
-import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
-import {type Texture} from '../render/texture';
+import {Tile} from '../tile/tile';
+import {OverscaledTileID} from '../tile/tile_id';
+import {type Texture} from '../webgl/texture';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
@@ -17,8 +17,7 @@ function createSource(options) {
         coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]]
     }, options);
 
-    const source = new ImageSource('id', options, {} as any, options.eventedParent);
-    return source;
+    return new ImageSource('id', options, {} as any, options.eventedParent);
 }
 
 class StubMap extends Evented {
@@ -67,6 +66,7 @@ describe('ImageSource', () => {
             expect(e.dataType).toBe('source');
         });
         source.onAdd(new StubMap() as any);
+        await sleep(0);
         server.respond();
         await sleep(0);
         expect(source.image).toBeTruthy();
@@ -81,6 +81,24 @@ describe('ImageSource', () => {
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0]).toBe('/image.png');
         expect(spy.mock.calls[0][1]).toBe('Image');
+    });
+
+    test('can asynchronously transform request', async () => {
+        const source = createSource({url: '/image.png'});
+        const map = new StubMap() as any;
+        map._requestManager = {
+            transformRequest: async (url) => ({
+                url,
+                headers: {Authorization: 'Bearer token'}
+            })
+        };
+        const promise = source.once('data');
+        source.onAdd(map);
+        await sleep(0);
+        server.respond();
+        await promise;
+        expect(server.requests[0].url).toBe('/image.png');
+        expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer token');
     });
 
     test('updates url from updateImage', () => {
@@ -122,6 +140,7 @@ describe('ImageSource', () => {
             url: '/image2.png',
             coordinates: [[0, 0], [-1, 0], [-1, -1], [0, -1]]
         });
+        await sleep(0);
         server.respond();
         await sleep(0);
         const afterSerialized = source.serialize();
@@ -132,6 +151,7 @@ describe('ImageSource', () => {
         const source = createSource({url: '/image.png'});
         const promise = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'content');
         source.onAdd(new StubMap() as any);
+        await sleep(0);
         server.respond();
         await promise;
         expect(typeof source.tileID == 'object').toBeTruthy();
@@ -141,6 +161,7 @@ describe('ImageSource', () => {
         const source = createSource({url: '/image.png'});
         const promise = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'metadata');
         source.onAdd(new StubMap() as any);
+        await sleep(0);
         server.respond();
         await expect(promise).resolves.toBeDefined();
     });
@@ -179,19 +200,21 @@ describe('ImageSource', () => {
         source.onAdd(map);
         expect(source.image).toBeUndefined();
         source.updateImage({url: '/image2.png'});
+        await sleep(0);
         server.respond();
         await sleep(10);
 
         expect(source.image).toBeTruthy();
     });
 
-    test('cancels request if updateImage is used', () => {
+    test('cancels request if updateImage is used', async () => {
         const map = new StubMap() as any;
         const source = createSource({url: '/image.png', eventedParent: map});
 
         // Suppress errors because we're aborting.
         map.on('error', () => {});
         source.onAdd(map);
+        await sleep(0);
 
         const spy = vi.spyOn(server.requests[0] as any, 'abort');
 
@@ -205,6 +228,7 @@ describe('ImageSource', () => {
 
         expect(source.loaded()).toBe(false);
         source.onAdd(map);
+        await sleep(0);
         server.respond();
         await sleep(0);
         expect(source.loaded()).toBe(true);
@@ -216,10 +240,26 @@ describe('ImageSource', () => {
 
         expect(missingImagesource.loaded()).toBe(false);
         missingImagesource.onAdd(map);
+        await sleep(0);
         server.respond();
         await sleep(0);
 
         expect(missingImagesource.loaded()).toBe(true);
+    });
+
+    test('does not throw when updateImage is called while a request is pending', async () => {
+        const map = new StubMap() as any;
+        const source = createSource({url: '/image.png', eventedParent: map});
+
+        const errorHandler = vi.fn();
+        source.on('error', errorHandler);
+
+        source.onAdd(map);
+        source.updateImage({url: '/image2.png'});
+
+        await sleep(0);
+
+        expect(errorHandler).not.toHaveBeenCalled();
     });
 
     describe('terrainTileRanges', () => {
@@ -241,10 +281,86 @@ describe('ImageSource', () => {
             source.onAdd(map);
             server.respond();
             source.setCoordinates([[11.39585,47.30074],[11.46585,47.30074],[11.46585,47.25074],[11.39585,47.25074]]);
-            expect(source.terrainTileRanges[9]).toEqual({minTileX: 272, minTileY: 179, maxTileX: 272, maxTileY: 179});
-            expect(source.terrainTileRanges[10]).toEqual({minTileX: 544, minTileY: 358, maxTileX: 544, maxTileY: 359});
-            expect(source.terrainTileRanges[11]).toEqual({minTileX: 1088, minTileY: 717, maxTileX: 1089, maxTileY: 718});
-            expect(source.terrainTileRanges[12]).toEqual({minTileX: 2177, minTileY: 1435, maxTileX: 2178, maxTileY: 1436});
+            expect(source.terrainTileRanges[9]).toEqual({
+                minWrap: 0,
+                maxWrap: 0,
+                minTileXWrapped: 272,
+                maxTileXWrapped: 272,
+                minTileY: 179,
+                maxTileY: 179
+            });
+            expect(source.terrainTileRanges[10]).toEqual({
+                minWrap: 0,
+                maxWrap: 0,
+                minTileXWrapped: 544,
+                maxTileXWrapped: 544,
+                minTileY: 358,
+                maxTileY: 359
+            });
+            expect(source.terrainTileRanges[11]).toEqual({
+                minWrap: 0,
+                maxWrap: 0,
+                minTileXWrapped: 1088,
+                maxTileXWrapped: 1089,
+                minTileY: 717,
+                maxTileY: 718
+            });
+            expect(source.terrainTileRanges[12]).toEqual({
+                minWrap: 0,
+                maxWrap: 0,
+                minTileXWrapped: 2177,
+                maxTileXWrapped: 2178,
+                minTileY: 1435,
+                maxTileY: 1436
+            });
+        });
+
+        test('calculates tile ranges for an image exceeds the world bounds - east', () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            source.onAdd(map);
+            server.respond();
+            source.setCoordinates([[-180, 60], [270, 60], [270, -60], [-180, -60]]);
+            expect(source.terrainTileRanges[0]).toEqual({
+                minWrap: 0,
+                maxWrap: 1,
+                minTileXWrapped: 0,
+                maxTileXWrapped: 0,
+                minTileY: 0,
+                maxTileY: 0
+            });
+            expect(source.terrainTileRanges[1]).toEqual({
+                minWrap: 0,
+                maxWrap: 1,
+                minTileXWrapped: 0,
+                maxTileXWrapped: 0,
+                minTileY: 0,
+                maxTileY: 1
+            });
+        });
+
+        test('calculates tile ranges for an image exceeds the world bounds - west', () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            source.onAdd(map);
+            server.respond();
+            source.setCoordinates([[120, 60], [-270, 60], [-270, -60], [120, -60]]);
+            expect(source.terrainTileRanges[0]).toEqual({
+                minWrap: -1,
+                maxWrap: 0,
+                minTileXWrapped: 0,
+                maxTileXWrapped: 0,
+                minTileY: 0,
+                maxTileY: 0
+            });
+            expect(source.terrainTileRanges[1]).toEqual({
+                minWrap: -1,
+                maxWrap: 0,
+                minTileXWrapped: 1,
+                maxTileXWrapped: 1,
+                minTileY: 0,
+                maxTileY: 1
+            });
         });
     });
 });

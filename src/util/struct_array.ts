@@ -59,7 +59,7 @@ export type StructArrayMember = {
 };
 
 export type StructArrayLayout = {
-    members: Array<StructArrayMember>;
+    members: StructArrayMember[];
     size: number;
     alignment: number;
 };
@@ -100,7 +100,7 @@ abstract class StructArray {
     uint8: Uint8Array;
 
     // The following properties are defined on the prototype.
-    members: Array<StructArrayMember>;
+    members: StructArrayMember[];
     bytesPerElement: number;
     abstract emplaceBack(...v: number[]);
     abstract emplace(i: number, ...v: number[]);
@@ -116,7 +116,7 @@ abstract class StructArray {
      * metadata needed to reconstruct the StructArray base class during
      * deserialization.
      */
-    static serialize(array: StructArray, transferables?: Array<Transferable>): SerializedStructArray {
+    static serialize(array: StructArray, transferables?: Transferable[]): SerializedStructArray {
 
         array._trim();
 
@@ -191,12 +191,20 @@ abstract class StructArray {
     _refreshViews() {
         throw new Error('_refreshViews() must be implemented by each concrete StructArray layout');
     }
+
+    /**
+     * Replace the buffer with an empty one so typed views release the original ArrayBuffer for GC.
+     */
+    freeBufferAfterUpload() {
+        this.arrayBuffer = new ArrayBuffer(0);
+        this._refreshViews();
+    }
 }
 
 /**
  * Given a list of member fields, create a full StructArrayLayout, in
  * particular calculating the correct byte offset for each field.  This data
- * is used at build time to generate StructArrayLayout_*#emplaceBack() and
+ * is used at build time to generate StructArrayLayout_*.emplaceBack() and
  * other accessors, and at runtime for binding vertex buffer attributes.
  */
 function createLayout(

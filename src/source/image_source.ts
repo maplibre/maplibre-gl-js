@@ -1,22 +1,23 @@
-import {CanonicalTileID} from './tile_id';
+import {CanonicalTileID} from '../tile/tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
-import {Texture} from '../render/texture';
+import {Texture} from '../webgl/texture';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
 import type {Source} from './source';
 import type {CanvasSourceSpecification} from './canvas_source';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from './tile';
+import type {Tile} from '../tile/tile';
 import type {
     ImageSourceSpecification,
     VideoSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
-import {MAX_TILE_ZOOM} from '../util/util';
+import {ensureError, MAX_TILE_ZOOM} from '../util/util';
 import {Bounds} from '../geo/bounds';
+import {isAbortError} from '../util/abort_error';
 
 /**
  * Four geographical coordinates,
@@ -27,7 +28,7 @@ import {Bounds} from '../geo/bounds';
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
 
 /**
- * The options object for the {@link ImageSource#updateImage} method
+ * The options object for the {@link ImageSource.updateImage} method
  */
 export type UpdateImageOptions = {
     /**
@@ -41,10 +42,17 @@ export type UpdateImageOptions = {
 };
 
 export type CanonicalTileRange = {
-    minTileX: number;
     minTileY: number;
-    maxTileX: number;
     maxTileY: number;
+
+    /**
+     * Image can exceed the boundary of a single "world" (tile 0/0/0),
+     * so we need to know the tile range for wrapping.
+     */
+    minTileXWrapped: number;
+    maxTileXWrapped: number;
+    minWrap: number;
+    maxWrap: number;
 };
 
 /**
@@ -111,7 +119,7 @@ export class ImageSource extends Evented implements Source {
     texture: Texture | null;
     image: HTMLImageElement | ImageBitmap;
     tileID: CanonicalTileID;
-    tileCoords: Array<Point>;
+    tileCoords: Point[];
     flippedWindingOrder: boolean = false;
     _loaded: boolean;
     _request: AbortController;
@@ -143,11 +151,11 @@ export class ImageSource extends Evented implements Source {
 
         this._request = new AbortController();
         try {
-            const image = await ImageRequest.getImage(this.map._requestManager.transformRequest(this.url, ResourceType.Image), this._request);
+            const image = await ImageRequest.getImage(await this.map._requestManager.transformRequest(this.url, ResourceType.Image), this._request);
             this._request = null;
             this._loaded = true;
 
-            if (image && image.data) {
+            if (image?.data) {
                 this.image = image.data;
                 if (newCoordinates) {
                     this.coordinates = newCoordinates;
@@ -157,7 +165,9 @@ export class ImageSource extends Evented implements Source {
         } catch (err) {
             this._request = null;
             this._loaded = true;
-            this.fire(new ErrorEvent(err));
+            if (!isAbortError(err)) {
+                this.fire(new ErrorEvent(ensureError(err)));
+            }
         }
     }
 
@@ -182,7 +192,7 @@ export class ImageSource extends Evented implements Source {
         }
 
         this.options.url = options.url;
-        this.load(options.coordinates).finally(() => { this.texture = null; });
+        this.load(options.coordinates).finally(() => this.texture = null);
         return this;
     }
 
@@ -232,7 +242,7 @@ export class ImageSource extends Evented implements Source {
         this.terrainTileRanges = this._getOverlappingTileRanges(cornerCoords);
 
         // Constrain min/max zoom to our tile's zoom level in order to force
-        // SourceCache to request this tile (no matter what the map's zoom
+        // TileManager to request this tile (no matter what the map's zoom
         // level)
         this.minzoom = this.maxzoom = this.tileID.z;
 
@@ -280,7 +290,7 @@ export class ImageSource extends Evented implements Source {
         // `errored` to indicate that we have no data for it.
         // If the world wraps, we may have multiple "wrapped" copies of the
         // single tile.
-        if (this.tileID && this.tileID.equals(tile.tileID.canonical)) {
+        if (this.tileID?.equals(tile.tileID.canonical)) {
             this.tiles[String(tile.tileID.wrap)] = tile;
             tile.buckets = {};
         } else {
@@ -307,7 +317,7 @@ export class ImageSource extends Evented implements Source {
      * @internal
      */
     private _getOverlappingTileRanges(
-        coords: Array<MercatorCoordinate>
+        coords: MercatorCoordinate[]
     ): {[zoom: string]: CanonicalTileRange} {
         const {minX, minY, maxX, maxY} = Bounds.fromPoints(coords);
 
@@ -320,10 +330,17 @@ export class ImageSource extends Evented implements Source {
             const maxTileX = Math.floor(maxX * tilesAtZoom);
             const maxTileY = Math.floor(maxY * tilesAtZoom);
 
+            const minTileXWrapped = ((minTileX % tilesAtZoom) + tilesAtZoom) % tilesAtZoom;
+            const maxTileXWrapped = maxTileX % tilesAtZoom;
+            const minWrap = Math.floor(minTileX / tilesAtZoom);
+            const maxWrap = Math.floor(maxTileX / tilesAtZoom);
+
             ranges[z] = {
-                minTileX,
+                minWrap,
+                maxWrap,
+                minTileXWrapped,
+                maxTileXWrapped,
                 minTileY,
-                maxTileX,
                 maxTileY
             };
         }
@@ -338,7 +355,7 @@ export class ImageSource extends Evented implements Source {
  * @returns centerpoint
  * @internal
  */
-export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
+export function getCoordinatesCenterTileID(coords: MercatorCoordinate[]) {
     const bounds = Bounds.fromPoints(coords);
 
     const dx = bounds.width();
@@ -353,7 +370,7 @@ export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
         Math.floor((bounds.minY + bounds.maxY) / 2 * tilesAtZoom));
 }
 
-function hasWrongWindingOrder(coords: Array<Point>) {
+function hasWrongWindingOrder(coords: Point[]) {
     const e0x = coords[1].x - coords[0].x;
     const e0y = coords[1].y - coords[0].y;
     const e1x = coords[2].x - coords[0].x;

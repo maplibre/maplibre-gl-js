@@ -2121,5 +2121,60 @@
       "advance": 21
     },
     "rect": {"x": 0, "y": 0, "w": 32, "h": 32}
+  },
+  "65039": {
+    "id": 65039,
+    "metrics": {
+      "width": 18,
+      "height": 18,
+      "left": 2,
+      "top": -8,
+      "advance": 21
+    },
+    "rect": {"x": 0, "y": 0, "w": 32, "h": 32}
+  },
+  "65077": {
+    "id": 65077,
+    "metrics": {
+      "width": 18,
+      "height": 18,
+      "left": 2,
+      "top": -8,
+      "advance": 21
+    },
+    "rect": {"x": 0, "y": 0, "w": 32, "h": 32}
+  },
+  "65078": {
+    "id": 65078,
+    "metrics": {
+      "width": 18,
+      "height": 18,
+      "left": 2,
+      "top": -8,
+      "advance": 21
+    },
+    "rect": {"x": 0, "y": 0, "w": 32, "h": 32}
+  },
+  "127760": {
+    "id": 127760,
+    "metrics": {
+      "width": 18,
+      "height": 18,
+      "left": 2,
+      "top": -8,
+      "advance": 21
+    },
+    "rect": {"x": 0, "y": 0, "w": 32, "h": 32}
+  },
+  "128506": {
+    "id": 128506,
+    "metrics": {
+      "width": 18,
+      "height": 18,
+      "left": 2,
+      "top": -8,
+      "advance": 21
+    },
+    "rect": {"x": 0, "y": 0, "w": 32, "h": 32}
   }
 }

@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {CrossTileSymbolIndex, KDBUSH_THRESHHOLD} from './cross_tile_symbol_index';
-import {OverscaledTileID} from '../source/tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 import {type StyleLayer} from '../style/style_layer';
 
 const styleLayer = {

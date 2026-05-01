@@ -11,7 +11,7 @@ import {MessageType} from './actor_messages';
  */
 export class Dispatcher {
     workerPool: WorkerPool;
-    actors: Array<Actor>;
+    actors: Actor[];
     currentActor: number;
     id: string | number;
 
@@ -33,8 +33,8 @@ export class Dispatcher {
     /**
      * Broadcast a message to all Workers.
      */
-    broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<RequestResponseMessageMap[T][1][]> {
-        const promises: Promise<RequestResponseMessageMap[T][1]>[] = [];
+    broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>> {
+        const promises: Array<Promise<RequestResponseMessageMap[T][1]>> = [];
         for (const actor of this.actors) {
             promises.push(actor.sendAsync({type, data}));
         }
@@ -51,7 +51,9 @@ export class Dispatcher {
     }
 
     remove(mapRemoved: boolean = true) {
-        this.actors.forEach((actor) => { actor.remove(); });
+        for (const actor of this.actors) {
+            actor.remove();
+        }
         this.actors = [];
         if (mapRemoved) this.workerPool.release(this.id);
     }
@@ -61,10 +63,23 @@ export class Dispatcher {
             actor.registerMessageHandler(type, handler);
         }
     }
+
+    public unregisterMessageHandler<T extends MessageType>(type: T) {
+        for (const actor of this.actors) {
+            actor.unregisterMessageHandler(type);
+        }
+    }
 }
 
 let globalDispatcher: Dispatcher;
 
+/**
+ * This function is used to get the global dispatcher that is shared across all maps instances.
+ * It is used by the main thread to send messages to the workers, and by the workers to send messages back to the main thread.
+ * If you import a script into the worker and need to send a message to the workers to pass some parameters for example, 
+ * you can use this function to get the global dispatcher and send a message to the workers.
+ * @returns The global dispatcher instance.
+ */
 export function getGlobalDispatcher(): Dispatcher {
     if (!globalDispatcher) {
         globalDispatcher = new Dispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);

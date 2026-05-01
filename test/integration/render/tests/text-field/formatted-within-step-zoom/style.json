@@ -1,0 +1,62 @@
+{
+  "version": 8,
+  "metadata": {
+      "test": {
+          "height": 512,
+          "width": 512
+      }
+  },
+  "center": [0, 0],
+  "zoom": 0,
+  "sources": {
+      "point": {
+          "type": "geojson",
+          "data": {
+              "type": "FeatureCollection",
+              "features": [
+                  {
+                      "type": "Feature",
+                      "geometry": {
+                          "type": "Point",
+                          "coordinates": [0, 0]
+                      },
+                      "properties": {
+                          "title": "Point #1",
+                          "subTitle": "Description of point number 1"
+                      }
+                  }
+              ]
+          }
+      }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "sprite": "local://sprites/emerald",
+  "layers": [
+      {
+          "id": "label",
+          "type": "symbol",
+          "source": "point",
+          "layout": {
+              "text-anchor": "top-left",
+              "text-justify": "left",
+              "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+              "text-field": [
+                  "step",
+                  ["zoom"],
+                  "",
+                  0,
+                  [
+                      "format",
+                      ["concat", ["get", "title"], "\n"],
+                      { "font-scale": 1.2, "text-color": "#FF0000" },
+                      ["concat", ["get", "subTitle"], "\n"],
+                      { "font-scale": 0.8, "text-color": "#00FF00" }
+                  ]
+              ]
+          },
+          "paint": {
+              "text-color": "#000000"
+          }
+      }
+  ]
+}

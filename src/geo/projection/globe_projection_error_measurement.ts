@@ -1,16 +1,15 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {ColorMode} from '../../gl/color_mode';
-import {CullFaceMode} from '../../gl/cull_face_mode';
-import {DepthMode} from '../../gl/depth_mode';
-import {StencilMode} from '../../gl/stencil_mode';
+import {ColorMode} from '../../webgl/color_mode';
+import {CullFaceMode} from '../../webgl/cull_face_mode';
+import {DepthMode} from '../../webgl/depth_mode';
+import {StencilMode} from '../../webgl/stencil_mode';
 import {warnOnce} from '../../util/util';
-import {projectionErrorMeasurementUniformValues} from '../../render/program/projection_error_measurement_program';
+import {projectionErrorMeasurementUniformValues} from '../../webgl/program/projection_error_measurement_program';
 import {Mesh} from '../../render/mesh';
 import {SegmentVector} from '../../data/segment';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import posAttributes from '../../data/pos_attributes';
-import {type Framebuffer} from '../../gl/framebuffer';
-import {isWebGL2} from '../../gl/webgl2';
+import {type Framebuffer} from '../../webgl/framebuffer';
 import {type ProjectionGPUContext} from './projection';
 
 /**
@@ -110,12 +109,10 @@ export class ProjectionErrorMeasurement {
         this._fbo = context.createFramebuffer(this._texWidth, this._texHeight, false, false);
         this._fbo.colorAttachment.set(texture);
 
-        if (isWebGL2(gl)) {
-            this._pbo = gl.createBuffer();
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
-            gl.bufferData(gl.PIXEL_PACK_BUFFER, 4, gl.STREAM_READ);
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-        }
+        this._pbo = gl.createBuffer();
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
+        gl.bufferData(gl.PIXEL_PACK_BUFFER, 4, gl.STREAM_READ);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
     }
 
     public destroy() {
@@ -175,54 +172,43 @@ export class ProjectionErrorMeasurement {
             '$clipping', this._fullscreenTriangle.vertexBuffer, this._fullscreenTriangle.indexBuffer,
             this._fullscreenTriangle.segments);
 
-        if (this._pbo && isWebGL2(gl)) {
-            // Read back into PBO
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
-            gl.readBuffer(gl.COLOR_ATTACHMENT0);
-            gl.readPixels(0, 0, this._texWidth, this._texHeight, this._texFormat, this._texType, 0);
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-            const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
-            gl.flush();
+        // Read back into PBO
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
+        gl.readBuffer(gl.COLOR_ATTACHMENT0);
+        gl.readPixels(0, 0, this._texWidth, this._texHeight, this._texFormat, this._texType, 0);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+        const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+        gl.flush();
 
-            this._readbackQueue = {
-                frameNumberIssued: this._updateCount,
-                sync,
-            };
-        } else {
-            // Read it back later.
-            this._readbackQueue = {
-                frameNumberIssued: this._updateCount,
-                sync: null,
-            };
-        }
+        this._readbackQueue = {
+            frameNumberIssued: this._updateCount,
+            sync,
+        };
     }
 
     private _tryReadback(): void {
         const gl = this._cachedRenderContext.context.gl;
 
-        if (this._pbo && this._readbackQueue && isWebGL2(gl)) {
-            // WebGL 2 path
-            const waitResult = gl.clientWaitSync(this._readbackQueue.sync, 0, 0);
-
-            if (waitResult === gl.WAIT_FAILED) {
-                warnOnce('WebGL2 clientWaitSync failed.');
-                this._readbackQueue = null;
-                this._lastReadbackFrame = this._updateCount;
-                return;
-            }
-
-            if (waitResult === gl.TIMEOUT_EXPIRED) {
-                return; // Wait one more frame
-            }
-
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
-            gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, this._resultBuffer, 0, 4);
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-        } else {
-            // WebGL1 compatible
-            this._bindFramebuffer();
-            gl.readPixels(0, 0, this._texWidth, this._texHeight, this._texFormat, this._texType, this._resultBuffer);
+        if (!this._readbackQueue) {
+            return;
         }
+
+        const waitResult = gl.clientWaitSync(this._readbackQueue.sync, 0, 0);
+
+        if (waitResult === gl.WAIT_FAILED) {
+            warnOnce('WebGL2 clientWaitSync failed.');
+            this._readbackQueue = null;
+            this._lastReadbackFrame = this._updateCount;
+            return;
+        }
+
+        if (waitResult === gl.TIMEOUT_EXPIRED) {
+            return; // Wait one more frame
+        }
+
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
+        gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, this._resultBuffer, 0, 4);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
 
         // If we made it here, _resultBuffer contains the new measurement
         this._readbackQueue = null;

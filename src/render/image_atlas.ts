@@ -6,7 +6,7 @@ import potpack from 'potpack';
 import type {StyleImage} from '../style/style_image';
 import {type TextFit} from '../style/style_image';
 import type {ImageManager} from './image_manager';
-import type {Texture} from './texture';
+import type {Texture} from '../webgl/texture';
 import type {Rect} from './glyph_atlas';
 import type {GetImagesResponse} from '../util/actor_messages';
 
@@ -56,7 +56,7 @@ export class ImagePosition {
         ];
     }
 
-    get tlbr(): Array<number> {
+    get tlbr(): number[] {
         return this.tl.concat(this.br);
     }
 
@@ -75,7 +75,7 @@ export class ImageAtlas {
     image: RGBAImage;
     iconPositions: {[_: string]: ImagePosition};
     patternPositions: {[_: string]: ImagePosition};
-    haveRenderCallbacks: Array<string>;
+    haveRenderCallbacks: string[];
     uploaded: boolean;
 
     constructor(icons: GetImagesResponse, patterns: GetImagesResponse) {
@@ -117,7 +117,7 @@ export class ImageAtlas {
         this.patternPositions = patternPositions;
     }
 
-    addImages(images: {[_: string]: StyleImage}, positions: {[_: string]: ImagePosition}, bins: Array<Rect>) {
+    addImages(images: {[_: string]: StyleImage}, positions: {[_: string]: ImagePosition}, bins: Rect[]) {
         for (const id in images) {
             const src = images[id];
             const bin = {

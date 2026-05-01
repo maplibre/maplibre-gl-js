@@ -1,0 +1,899 @@
+import path, {dirname} from 'path';
+import fs from 'fs';
+import st from 'st';
+import {PNG} from 'pngjs';
+import pixelmatch from 'pixelmatch';
+import {fileURLToPath} from 'url';
+import {globSync} from 'glob';
+import http from 'http';
+import type {Page, Browser, WebWorker} from 'puppeteer';
+
+import {ensureError} from '../../../src/util/util';
+import {localizeURLs} from '../lib/localize-urls';
+import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config';
+import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import type * as MapLibreGL from '../../../dist/maplibre-gl';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+let maplibregl: typeof MapLibreGL;
+
+type TestData = {
+    id: string;
+    width: number;
+    height: number;
+    pixelRatio: number;
+    allowed: number;
+    /**
+     * Perceptual color difference threshold, number between 0 and 1, smaller is more sensitive
+     * @defaultValue 0.1285
+     */
+    threshold: number;
+    ok: boolean;
+    difference: number;
+    timeout: number;
+    addFakeCanvas: {
+        id: string;
+        image: string;
+    };
+    fadeDuration: number;
+    debug: boolean;
+    showOverdrawInspector: boolean;
+    showPadding: boolean;
+    collisionDebug: boolean;
+    localIdeographFontFamily: string;
+    crossSourceCollisions: boolean;
+    terrainSkirtLength: 'none' | 'auto';
+    operations: any[];
+    queryGeometry: PointLike;
+    queryOptions: any;
+    error?: Error;
+    maxPitch: number;
+    continuesRepaint: boolean;
+    // Crop PNG results if they're too large
+    reportWidth: number;
+    reportHeight: number;
+
+    // base64-encoded content of the PNG results
+    actual: string;
+    diff: string;
+    expected: string;
+};
+
+type StyleWithTestData = StyleSpecification & {
+    metadata : {
+        test: TestData;
+    };
+};
+
+type TestStats = {
+    total: number;
+    errored: TestData[];
+    failed: TestData[];
+    passed: TestData[];
+};
+
+/**
+ * Compares the Unit8Array that was created to the expected file in the file system.
+ * It updates testData with the results.
+ *
+ * @param directory - The base directory of the data
+ * @param testData - The test data
+ * @param data - The actual image data to compare the expected to
+ * @returns nothing as it updates the testData object
+ */
+function compareRenderResults(directory: string, testData: TestData, data: Uint8Array) {
+    const dir = path.join(directory, testData.id);
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir);
+    }
+
+    const expectedPath = path.join(dir, 'expected.png');
+    const actualPath = path.join(dir, 'actual.png');
+    const diffPath = path.join(dir, 'diff.png');
+
+    const width = Math.floor(testData.reportWidth ?? testData.width * testData.pixelRatio);
+    const height = Math.floor(testData.reportHeight ?? testData.height * testData.pixelRatio);
+    const actualImg = new PNG({width, height});
+
+    // PNG data must be unassociated (not premultiplied)
+    for (let i = 0; i < data.length; i++) {
+        const a = data[i * 4 + 3] / 255;
+        if (a !== 0) {
+            data[i * 4 + 0] /= a;
+            data[i * 4 + 1] /= a;
+            data[i * 4 + 2] /= a;
+        }
+    }
+    actualImg.data = data as any;
+    const actualBuf = PNG.sync.write(actualImg, {filterType: 4});
+    testData.actual = actualBuf.toString('base64');
+
+    // there may be multiple expected images, covering different platforms
+    let globPattern = path.join(dir, 'expected*.png');
+    globPattern = globPattern.replace(/\\/g, '/');
+    const expectedPaths = globSync(globPattern);
+
+    if (!process.env.UPDATE && expectedPaths.length === 0) {
+        throw new Error(`No expected*.png files found as ${dir}; did you mean to run tests with UPDATE=true?`);
+    }
+
+    // if we have multiple expected images, we'll compare against each one and pick the one with
+    // the least amount of difference; this is useful for covering features that render differently
+    // depending on platform, i.e. heatmaps use half-float textures for improved rendering where supported
+    let minDiff = Infinity;
+    let minDiffImg: PNG;
+    let minExpectedBuf: Buffer;
+
+    for (const path of expectedPaths) {
+        const expectedBuf = fs.readFileSync(path);
+        const expectedImg = PNG.sync.read(expectedBuf);
+        const diffImg = new PNG({width, height});
+        testData.expected ||= expectedBuf.toString('base64'); // default expected image
+
+        const diff = pixelmatch(
+            actualImg.data, expectedImg.data, diffImg.data,
+            width, height, {threshold: testData.threshold}) / (width * height);
+
+        if (diff < minDiff) {
+            minDiff = diff;
+            minDiffImg = diffImg;
+            minExpectedBuf = expectedBuf;
+        }
+    }
+
+    if (minDiffImg) {
+        const diffBuf = PNG.sync.write(minDiffImg, {filterType: 4});
+        fs.writeFileSync(diffPath, diffBuf);
+        testData.diff = diffBuf.toString('base64');
+        testData.expected = minExpectedBuf.toString('base64');
+    }
+    fs.writeFileSync(actualPath, actualBuf);
+
+    testData.difference = minDiff;
+    testData.ok = minDiff <= testData.allowed;
+
+    if (!testData.ok && process.env.UPDATE) {
+        console.log(`Updating ${expectedPath}`);
+        fs.writeFileSync(expectedPath, PNG.sync.write(actualImg));
+    }
+}
+
+/**
+ * Gets all the tests from the file system looking for style.json files.
+ *
+ * @param options - The options
+ * @param directory - The base directory
+ * @returns The tests data structure and the styles that were loaded
+ */
+function getTestStyles(directory: string): StyleWithTestData[] {
+    return globSync('**/style.json', {cwd: directory})
+        .map(fixture => {
+            const id = path.dirname(fixture);
+            const style = JSON.parse(fs.readFileSync(path.join(directory, fixture), 'utf8')) as StyleWithTestData;
+            style.metadata ||= {} as any;
+
+            style.metadata.test = {
+                id,
+                width: 512,
+                height: 512,
+                pixelRatio: 1,
+                allowed: 0.00025,
+                threshold: 0.1285,
+                ...style.metadata.test
+            };
+
+            return style;
+        });
+}
+
+/**
+ * It creates the map and applies the operations to create an image
+ * and returns it as a Uint8Array
+ *
+ * @param style - The style to use
+ * @returns an image byte array promise
+ */
+async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): Promise<Uint8Array> {
+
+    const width = styleForTest.metadata.test.width;
+    const height = styleForTest.metadata.test.height;
+
+    await page.setViewport({width, height, deviceScaleFactor: 2});
+
+    const evaluatedArray = await page.evaluate(async (style: StyleWithTestData) => {
+
+        const options = style.metadata.test;
+
+        class NullIsland {
+            id: string;
+            type: string;
+            renderingMode: string;
+            program: WebGLProgram;
+            constructor() {
+                this.id = 'null-island';
+                this.type = 'custom';
+                this.renderingMode = '2d';
+            }
+
+            onAdd(map: MapLibreMap, gl: WebGL2RenderingContext) {
+                const vertexSource = `#version 300 es
+                in vec3 aPos;
+                uniform mat4 u_matrix;
+                void main() {
+                    gl_Position = u_matrix * vec4(aPos, 1.0);
+                    gl_PointSize = 20.0;
+                }`;
+
+                const fragmentSource = `#version 300 es
+
+                out highp vec4 fragColor;
+                void main() {
+                    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+                }`;
+
+                const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+                gl.shaderSource(vertexShader, vertexSource);
+                gl.compileShader(vertexShader);
+                const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+                gl.shaderSource(fragmentShader, fragmentSource);
+                gl.compileShader(fragmentShader);
+
+                this.program = gl.createProgram();
+                gl.attachShader(this.program, vertexShader);
+                gl.attachShader(this.program, fragmentShader);
+                gl.linkProgram(this.program);
+            }
+
+            render(gl: WebGL2RenderingContext, args) {
+                const vertexArray = new Float32Array([0.5, 0.5, 0.0]);
+                gl.useProgram(this.program);
+                const vertexBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
+                const posAttrib = gl.getAttribLocation(this.program, 'aPos');
+                gl.enableVertexAttribArray(posAttrib);
+                gl.vertexAttribPointer(posAttrib, 3, gl.FLOAT, false, 0, 0);
+                gl.uniformMatrix4fv(gl.getUniformLocation(this.program, 'u_matrix'), false, args.defaultProjectionData.mainMatrix);
+                gl.drawArrays(gl.POINTS, 0, 1);
+            }
+        }
+
+        class Tent3D {
+            id: string;
+            type: string;
+            renderingMode: string;
+            program: WebGLProgram & {
+                a_pos?: number;
+                aPos?: number;
+                uMatrix?:  WebGLUniformLocation;
+            };
+            vertexBuffer: WebGLBuffer;
+            indexBuffer: WebGLBuffer;
+            constructor() {
+                this.id = 'tent-3d';
+                this.type = 'custom';
+                this.renderingMode = '3d';
+            }
+
+            onAdd(map: MapLibreMap, gl: WebGL2RenderingContext) {
+
+                const vertexSource = `#version 300 es
+
+                in vec3 aPos;
+                uniform mat4 uMatrix;
+
+                void main() {
+                    gl_Position = uMatrix * vec4(aPos, 1.0);
+                }`;
+
+                const fragmentSource = `#version 300 es
+
+                out highp vec4 fragColor;
+                void main() {
+                    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+                }`;
+
+                const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+                gl.shaderSource(vertexShader, vertexSource);
+                gl.compileShader(vertexShader);
+                const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+                gl.shaderSource(fragmentShader, fragmentSource);
+                gl.compileShader(fragmentShader);
+
+                this.program = gl.createProgram();
+                gl.attachShader(this.program, vertexShader);
+                gl.attachShader(this.program, fragmentShader);
+                gl.linkProgram(this.program);
+                gl.validateProgram(this.program);
+
+                this.program.aPos = gl.getAttribLocation(this.program, 'aPos');
+                this.program.uMatrix = gl.getUniformLocation(this.program, 'uMatrix');
+
+                const x = 0.5 - 0.015;
+                const y = 0.5 - 0.01;
+                const z = 0.01;
+                const d = 0.01;
+
+                const vertexArray = new Float32Array([
+                    x, y, 0,
+                    x + d, y, 0,
+                    x, y + d, z,
+                    x + d, y + d, z,
+                    x, y + d + d, 0,
+                    x + d, y + d + d, 0]);
+                const indexArray = new Uint16Array([
+                    0, 1, 2,
+                    1, 2, 3,
+                    2, 3, 4,
+                    3, 4, 5
+                ]);
+
+                this.vertexBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
+                this.indexBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArray, gl.STATIC_DRAW);
+            }
+
+            render(gl: WebGL2RenderingContext, args) {
+                gl.useProgram(this.program);
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+                gl.enableVertexAttribArray(this.program.a_pos);
+                gl.vertexAttribPointer(this.program.aPos, 3, gl.FLOAT, false, 0, 0);
+                gl.uniformMatrix4fv(this.program.uMatrix, false, args.defaultProjectionData.mainMatrix);
+                gl.drawElements(gl.TRIANGLES, 12, gl.UNSIGNED_SHORT, 0);
+            }
+        }
+
+        class Tent3DGlobe {
+            id: string;
+            type: string;
+            renderingMode: string;
+
+            vertexBuffer: WebGLBuffer;
+            indexBuffer: WebGLBuffer;
+            shaderMap: Map<string, {
+                program: WebGLProgram;
+                a_pos?: number;
+                aPos?: number;
+                uMatrix?:  WebGLUniformLocation;
+            }> = new Map();
+
+            constructor() {
+                this.id = 'tent-3d-globe';
+                this.type = 'custom';
+                this.renderingMode = '3d';
+            }
+
+            getShader(gl, shaderDescription) {
+                if (this.shaderMap.has(shaderDescription.variantName)) {
+                    return this.shaderMap.get(shaderDescription.variantName);
+                }
+
+                const vertexSource = `#version 300 es
+                // Inject MapLibre projection code
+                ${shaderDescription.vertexShaderPrelude}
+                ${shaderDescription.define}
+
+                in vec3 a_pos;
+
+                void main() {
+                    gl_Position = projectTileFor3D(a_pos.xy, a_pos.z);
+                }`;
+
+                // create GLSL source for fragment shader
+                const fragmentSource = `#version 300 es
+                uniform mediump vec4 u_color;
+                out highp vec4 fragColor;
+                void main() {
+                    fragColor = u_color;
+                }`;
+
+                // create a vertex shader
+                const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+                gl.shaderSource(vertexShader, vertexSource);
+                gl.compileShader(vertexShader);
+
+                // create a fragment shader
+                const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+                gl.shaderSource(fragmentShader, fragmentSource);
+                gl.compileShader(fragmentShader);
+
+                // link the two shaders into a WebGL program
+                const program = gl.createProgram();
+                gl.attachShader(program, vertexShader);
+                gl.attachShader(program, fragmentShader);
+                gl.linkProgram(program);
+
+                const result = {
+                    program,
+                    aPos: gl.getAttribLocation(program, 'a_pos'),
+                };
+
+                this.shaderMap.set(shaderDescription.variantName, result);
+
+                return result;
+            }
+
+            onAdd (map, gl) {
+                const x = 0.5 - 0.015;
+                const y = 0.5 - 0.01;
+                const z = 500_000;
+                const d = 0.01;
+
+                const vertexArray = new Float32Array([
+                    x, y, 0,
+                    x + d, y, 0,
+                    x, y + d, z,
+                    x + d, y + d, z,
+                    x, y + d + d, 0,
+                    x + d, y + d + d, 0]);
+                const indexArray = new Uint16Array([
+                    0, 2, 1,
+                    1, 2, 3,
+                    2, 4, 3,
+                    3, 4, 5
+                ]);
+
+                this.vertexBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
+                this.indexBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArray, gl.STATIC_DRAW);
+            }
+
+            render (gl, args) {
+                const shader = this.getShader(gl, args.shaderData);
+                gl.useProgram(shader.program);
+                gl.uniformMatrix4fv(
+                    gl.getUniformLocation(shader.program, 'u_projection_fallback_matrix'),
+                    false,
+                    args.defaultProjectionData.fallbackMatrix
+                );
+                gl.uniformMatrix4fv(
+                    gl.getUniformLocation(shader.program, 'u_projection_matrix'),
+                    false,
+                    args.defaultProjectionData.mainMatrix
+                );
+                gl.uniform4f(
+                    gl.getUniformLocation(shader.program, 'u_projection_tile_mercator_coords'),
+                    ...args.defaultProjectionData.tileMercatorCoords
+                );
+                gl.uniform4f(
+                    gl.getUniformLocation(shader.program, 'u_projection_clipping_plane'),
+                    ...args.defaultProjectionData.clippingPlane
+                );
+                gl.uniform1f(
+                    gl.getUniformLocation(shader.program, 'u_projection_transition'),
+                    args.defaultProjectionData.projectionTransition
+                );
+
+                gl.enable(gl.CULL_FACE);
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+                gl.enableVertexAttribArray(shader.aPos);
+                gl.vertexAttribPointer(shader.aPos, 3, gl.FLOAT, false, 0, 0);
+                for (let i = 0; i < 2; i++) {
+                    gl.uniform4f(
+                        gl.getUniformLocation(shader.program, 'u_color'),
+                        i === 0 ? 1 : 0.25, 0, 0, 1
+                    );
+                    gl.cullFace(i === 0 ? gl.BACK : gl.FRONT);
+                    gl.drawElements(gl.TRIANGLES, 12, gl.UNSIGNED_SHORT, 0);
+                }
+            }
+        }
+
+        const customLayerImplementations = {
+            'tent-3d': Tent3D,
+            'tent-3d-globe': Tent3DGlobe,
+            'null-island': NullIsland
+        };
+
+        async function updateFakeCanvas(document: Document, id: string, imagePath: string) {
+            const fakeCanvas = document.getElementById(id) as HTMLCanvasElement;
+
+            const getMeta = async (url) => {
+                const img = new Image();
+                img.src = url;
+                img.crossOrigin = 'anonymous';
+                await img.decode();
+                return img;
+            };
+
+            const image = await getMeta(`http://localhost:2900/${imagePath}`);
+
+            fakeCanvas.width = image.naturalWidth;
+            fakeCanvas.height = image.naturalHeight;
+            fakeCanvas.id = id;
+
+            const ctx = fakeCanvas.getContext('2d');
+            ctx?.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
+
+        }
+
+        /**
+         * Executes the operations in the test data
+         *
+         * @param testData - The test data to operate upon
+         * @param map - The Map
+         * @param operations - The operations
+         * @param callback - The callback to use when all the operations are executed
+         */
+        async function applyOperations(testData: TestData, map: MapLibreMap & { _render: () => void}, idle: boolean) {
+            if (!testData.operations || testData.operations.length === 0) {
+                return;
+            }
+            for (const operation of testData.operations) {
+                console.log(`Running operation: ${JSON.stringify(operation)}`);
+                switch (operation[0]) {
+                    case 'wait':
+                        if (operation.length <= 1) {
+                            while (!map.loaded()) {
+                                await map.once('render');
+                            }
+                        } else {
+                            if (typeof operation[1] === 'string') {
+                                // Wait for the event to fire
+                                await map.once(operation[1]);
+                            } else {
+                                await new Promise<void>((resolve) => {
+                                    setTimeout(() => {
+                                        resolve();
+                                    }, operation[1]);
+                                });
+                                map._render();
+                            }
+                        }
+                        console.log('done waiting');
+                        break;
+                    case 'idle':
+                        map.repaint = false;
+                        if (idle) {
+                            console.log('idle is true');
+                            break;
+                        }
+                        await map.once('idle');
+                        console.log('done waiting for idle');
+                        break;
+                    case 'sleep':
+                        await new Promise<void>((resolve) => {
+                            setTimeout(() => {
+                                resolve();
+                            }, operation[1]);
+                        });
+                        break;
+                    case 'addImage': {
+                        const getImage = async (url) => {
+                            const img = new Image();
+                            img.src = url;
+                            img.crossOrigin = 'anonymous';
+                            await img.decode();
+                            return img;
+                        };
+                        const image = await getImage(`http://localhost:2900/${operation[2]}`);
+
+                        map.addImage(operation[1], image, operation[3] || {});
+                        break;
+                    }
+                    case 'addCustomLayer':
+                        map.addLayer(new customLayerImplementations[operation[1]](), operation[2]);
+                        map._render();
+                        break;
+                    case 'updateFakeCanvas': {
+                        const canvasSource = map.getSource<CanvasSource>(operation[1]);
+                        canvasSource.play();
+                        // update before pause should be rendered
+                        await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[2]);
+                        canvasSource.pause();
+                        // update after pause should not be rendered
+                        await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[3]);
+                        map._render();
+                        break;
+                    }
+                    case 'setStyle':
+                        map.setStyle(operation[1], {localIdeographFontFamily: false});
+                        break;
+                    case 'pauseTiles':
+                        map.style.tileManagers[operation[1]].pause();
+                        break;
+                    default:
+                        if (typeof map[operation[0]] === 'function') {
+                            map[operation[0]](...operation.slice(1));
+                        }
+                }
+            }
+
+        }
+
+        async function createFakeCanvas(document: Document, id: string, imagePath: string): Promise<HTMLCanvasElement> {
+            const fakeCanvas: HTMLCanvasElement = document.createElement('canvas');
+
+            const getImage = async (url) => {
+                const img = new Image();
+                img.src = url;
+                img.crossOrigin = 'anonymous';
+                await img.decode();
+                return img;
+            };
+
+            const image = await getImage(`http://localhost:2900/${imagePath}`);
+
+            fakeCanvas.width = image.naturalWidth;
+            fakeCanvas.height = image.naturalHeight;
+            fakeCanvas.id = id;
+
+            const ctx = fakeCanvas.getContext('2d');
+            ctx?.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight);
+
+            return fakeCanvas;
+        }
+
+        if (options.addFakeCanvas) {
+            const fakeCanvas = await createFakeCanvas(document, options.addFakeCanvas.id, options.addFakeCanvas.image);
+            document.body.appendChild(fakeCanvas);
+        }
+
+        if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
+            await maplibregl.setRTLTextPlugin(
+                'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js',
+                false // Don't lazy load the plugin
+            );
+        }
+
+        const map = new maplibregl.Map({
+            container: 'map',
+            style,
+            interactive: false,
+            attributionControl: false,
+            maxPitch: options.maxPitch,
+            pixelRatio: options.pixelRatio,
+            canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
+            fadeDuration: options.fadeDuration || 0,
+            localIdeographFontFamily: options.localIdeographFontFamily || false as any,
+            crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
+            terrainSkirtLength: options.terrainSkirtLength,
+            maxCanvasSize: [8192, 8192]
+        });
+
+        let idle = false;
+        map.on('idle', () => {
+            console.log('idle');
+            idle = true;
+        });
+        // Configure the map to never stop the render loop
+        map.repaint = typeof options.continuesRepaint === 'undefined' ? true : options.continuesRepaint;
+
+        if (options.debug) map.showTileBoundaries = true;
+        if (options.showOverdrawInspector) map.showOverdrawInspector = true;
+        if (options.showPadding) map.showPadding = true;
+
+        const gl = map.painter.context.gl;
+
+        await map.once('load');
+        if (options.collisionDebug) {
+            map.showCollisionBoxes = true;
+            if (options.operations) {
+                options.operations.push(['wait']);
+            } else {
+                options.operations = [['wait']];
+            }
+        }
+
+        await applyOperations(options, map as any, idle);
+        const viewport = gl.getParameter(gl.VIEWPORT);
+        const w = options.reportWidth ?? viewport[2];
+        const h = options.reportHeight ?? viewport[3];
+
+        const data = new Uint8Array(w * h * 4);
+        gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+        // Flip the scanlines.
+        const stride = w * 4;
+        const tmp = new Uint8Array(stride);
+        for (let i = 0, j = h - 1; i < j; i++, j--) {
+            const start = i * stride;
+            const end = j * stride;
+            tmp.set(data.slice(start, start + stride), 0);
+            data.set(data.slice(end, end + stride), start);
+            data.set(tmp, end);
+        }
+
+        map.remove();
+        delete map.painter.context.gl;
+
+        if (options.addFakeCanvas) {
+            const fakeCanvas = window.document.getElementById(options.addFakeCanvas.id);
+            fakeCanvas.parentNode.removeChild(fakeCanvas);
+        }
+
+        return data;
+    }, styleForTest as any);
+
+    return new Uint8Array(Object.values(evaluatedArray as object) as number[]);
+}
+
+function getReportItem(test: TestData) {
+    return `<div class="test">
+    <h2>${test.id}</h2>
+    ${test.actual ? `
+    <div class="imagewrap">
+        <div>
+        <p>Actual</p>
+        <img src="data:image/png;base64,${test.actual}" data-alt-src="data:image/png;base64,${test.expected}">
+        </div>
+        ${test.diff ? `
+        <div>
+        <p>Diff</p>
+        <img src="data:image/png;base64,${test.diff}" data-alt-src="data:image/png;base64,${test.expected}">
+        </div>` : ''}
+        ${test.expected ? `
+        <div>
+        <p>Closest expected</p>
+        <img src="data:image/png;base64,${test.expected}"  >
+        </div>` : ''}
+    </div>` : ''}
+    ${test.error ? `<p style="color: red"><strong>Error:</strong> ${test.error.message}</p>` : ''}
+    ${test.difference ? `<p class="diff"><strong>Diff:</strong> ${test.difference}</p>` : ''}
+</div>`;
+}
+
+function addConsoleLogging(page: Page) {
+    page.on('console', async (message) => {
+        if (message.text() !== 'JSHandle@error') {
+            console.log(`${message.type().substring(0, 3).toUpperCase()} ${message.text()}`);
+            return;
+        }
+        const messages = await Promise.all(message.args().map((arg) => arg.getProperty('message')));
+        console.log(`${message.type().substring(0, 3).toUpperCase()} ${messages.filter(Boolean)}`);
+    });
+
+    page.on('pageerror', (e) => { console.error(ensureError(e).message); });
+
+    page.on('response', response => {
+        console.log(`${response.status()} ${response.url()}`);
+    });
+
+    page.on('requestfailed', request => {
+        if (request) {
+            console.error(`requestfailed, error text: ${request.failure()?.errorText}, url: ${request.url()}`);
+        } else {
+            console.error('Request failed and request object is ', request);
+        }
+    });
+}
+
+async function createServer() {
+    const mount = st({
+        path: 'test/integration/assets',
+        cors: true,
+        passthrough: true,
+    });
+    const distMount = st({
+        path: 'dist',
+        url: '/dist',
+        cors: true,
+        passthrough: true,
+    });
+    const server = http.createServer((req, res) => {
+        res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins, or specify 'http://your-frontend-domain.com'
+        res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Include any custom headers your client might send
+        distMount(req, res, () => {
+            mount(req, res, () => {
+                if (req.url.includes('/sparse204/1-')) {
+                    res.writeHead(204);
+                    res.end('');
+                } else {
+                    res.writeHead(404);
+                    res.end('');
+                }
+            });
+        });
+    });
+
+    const mvtServer = http.createServer(
+        st({
+            path: 'node_modules/@mapbox/mvt-fixtures/real-world',
+            cors: true,
+        })
+    );
+
+    await new Promise<void>((resolve) => server.listen(2900, '0.0.0.0', resolve));
+    await new Promise<void>((resolve) => mvtServer.listen(2901, '0.0.0.0', resolve));
+
+    return {server, mvtServer};
+}
+
+function printHTMLReport(testStyles: StyleWithTestData[]) {
+    const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
+    const testStats: TestStats = {
+        total: tests.length,
+        errored: tests.filter(t => t.error),
+        failed: tests.filter(t => !t.error && !t.ok),
+        passed: tests.filter(t => !t.error && t.ok)
+    };
+    const erroredItems = testStats.errored.map(t => getReportItem(t));
+    const failedItems = testStats.failed.map(t => getReportItem(t));
+
+    // write HTML reports
+    let resultData: string;
+    if (erroredItems.length || failedItems.length) {
+        const resultItemTemplate = fs.readFileSync(path.join(__dirname, 'result_item_template.html')).toString();
+        resultData = resultItemTemplate
+            .replace('${failedItemsLength}', failedItems.length.toString())
+            .replace('${failedItems}', failedItems.join('\n'))
+            .replace('${erroredItemsLength}', erroredItems.length.toString())
+            .replace('${erroredItems}', erroredItems.join('\n'));
+    } else {
+        resultData = '<h1 style="color: green">All tests passed!</h1>';
+    }
+
+    const reportTemplate = fs.readFileSync(path.join(__dirname, 'report_template.html')).toString();
+    const resultsContent = reportTemplate.replace('${resultData}', resultData);
+
+    const p = path.join(__dirname, 'results.html');
+    fs.writeFileSync(p, resultsContent, 'utf8');
+    console.log(`\nFull html report is logged to '${p}'`);
+}
+
+describe('Render tests', () => {
+    let browser: Browser;
+    let server: http.Server;
+    let mvtServer: http.Server;
+    let page: Page;
+    let workers: WebWorker[];
+
+    const directory = path.join(__dirname);
+    let testStyles = getTestStyles(directory);
+    if (process.env.SPLIT_COUNT && process.env.CURRENT_SPLIT_INDEX) {
+        const numberOfTestsForThisPart = Math.ceil(testStyles.length / +process.env.SPLIT_COUNT);
+        testStyles = testStyles.splice(+process.env.CURRENT_SPLIT_INDEX * numberOfTestsForThisPart, numberOfTestsForThisPart);
+    }
+
+    beforeAll(async () => {
+        browser = await launchPuppeteer(true);
+        ({server, mvtServer} = await createServer());
+        const serverPort = (server.address() as any).port;
+        page = await browser.newPage();
+        workers = await startCoverage(page);
+        await page.goto(`http://localhost:${serverPort}/test-page.html`, {waitUntil: 'load'});
+        await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
+    }, 30000);
+
+    afterAll(async () => {
+        await stopCoverageAndReport(page, workers, 'render');
+        printHTMLReport(testStyles);
+        server.close();
+        mvtServer.close();
+        await browser.close();
+    });
+
+    beforeEach((ctx) => {
+        if (!testStyles.find(s => s.metadata.test.id === ctx.task.name)?.metadata.test.ok) {
+            console.log(`Retry ${ctx.task.name} with console logging enabled`);
+            addConsoleLogging(page);
+        }
+    });
+
+    afterEach(async () => {
+        page.removeAllListeners('console');
+        page.removeAllListeners('pageerror');
+        page.removeAllListeners('response');
+        page.removeAllListeners('requestfailed');
+    });
+
+    for (const style of testStyles) {
+        test(style.metadata.test.id, {retry: 1, timeout: style.metadata.test.timeout || 40000}, async () => {
+            const serverPort = (server.address() as any).port;
+            localizeURLs(style, serverPort, path.join(__dirname, '../'));
+            const data = await getImageFromStyle(style, page);
+            compareRenderResults(directory, style.metadata.test, data);
+            expect(style.metadata.test.ok).toBe(true);
+        });
+    }
+});

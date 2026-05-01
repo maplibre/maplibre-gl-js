@@ -6,14 +6,14 @@ import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '.
 import type {ColorReliefPaintProps} from './color_relief_style_layer_properties.g';
 import {Color, Interpolate, ZoomConstantExpression, type LayerSpecification, type EvaluationContext, type StylePropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {warnOnce} from '../../util/util';
-import {Texture} from '../../render/texture';
+import {Texture} from '../../webgl/texture';
 import {RGBAImage} from '../../util/image';
-import {type Context} from '../../gl/context';
+import {type Context} from '../../webgl/context';
 import {packDEMData} from '../../data/dem_data';
 
 export const isColorReliefStyleLayer = (layer: StyleLayer): layer is ColorReliefStyleLayer => layer.type === 'color-relief';
 
-export type ColorRamp = {elevationStops: Array<number>; colorStops: Array<Color>};
+export type ColorRamp = {elevationStops: number[]; colorStops: Color[]};
 export type ColorRampTextures = {elevationTexture: Texture; colorTexture: Texture};
 
 export class ColorReliefStyleLayer extends StyleLayer {
@@ -23,8 +23,8 @@ export class ColorReliefStyleLayer extends StyleLayer {
     _transitioningPaint: Transitioning<ColorReliefPaintProps>;
     paint: PossiblyEvaluated<ColorReliefPaintProps, ColorReliefPaintPropsPossiblyEvaluated>;
 
-    constructor(layer: LayerSpecification) {
-        super(layer, properties);
+    constructor(layer: LayerSpecification, globalState: Record<string, any>) {
+        super(layer, properties, globalState);
     }
 
     /**
@@ -70,14 +70,14 @@ export class ColorReliefStyleLayer extends StyleLayer {
             remappedColorRamp.elevationStops.push(colorRamp.elevationStops[Math.round(i)]);
             remappedColorRamp.colorStops.push(colorRamp.colorStops[Math.round(i)]);
         }
-        warnOnce(`Too many colors in specification of ${this.id} color-relief layer, may not render properly.`);
+        warnOnce(`Too many colors in specification of ${this.id} color-relief layer, may not render properly. Max possible colors: ${maxLength}, provided: ${colorRamp.elevationStops.length}`);
         return remappedColorRamp;
     }
-    
+
     _colorRampChanged() : boolean {
         return this.colorRampExpression != this._transitionablePaint._values['color-relief-color'].value.expression;
     }
-    
+
     getColorRampTextures(context: Context, maxLength: number, unpackVector: number[]): ColorRampTextures {
         if (this.colorRampTextures && !this._colorRampChanged()) {
             return this.colorRampTextures;
@@ -98,6 +98,6 @@ export class ColorReliefStyleLayer extends StyleLayer {
     }
 
     hasOffscreenPass() {
-        return this.visibility !== 'none' && !!this.colorRampTextures;
+        return !this.isHidden() && !!this.colorRampTextures;
     }
 }

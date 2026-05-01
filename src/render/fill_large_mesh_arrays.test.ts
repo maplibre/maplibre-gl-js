@@ -315,7 +315,7 @@ function createMeshBuffers(): MeshBuffers {
  * Creates a mesh the geometry of which is a merge of the specified input meshes,
  * useful for comparing the result of using {@link fillLargeMeshArrays} on several meshes.
  */
-function mergeMeshes(meshes: Array<SimpleMesh>): SimpleMesh {
+function mergeMeshes(meshes: SimpleMesh[]): SimpleMesh {
     const result: SimpleMesh = {
         vertices: [],
         indicesTriangles: [],

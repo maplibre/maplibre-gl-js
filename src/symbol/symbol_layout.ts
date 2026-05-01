@@ -16,7 +16,7 @@ import {SymbolBucket} from '../data/bucket/symbol_bucket';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {SIZE_PACK_FACTOR, MAX_PACKED_SIZE, MAX_GLYPH_ICON_SIZE} from './symbol_size';
 import ONE_EM from './one_em';
-import type {CanonicalTileID} from '../source/tile_id';
+import type {CanonicalTileID} from '../tile/tile_id';
 import type {Shaping, PositionedIcon, TextJustify} from './shaping';
 import type {CollisionBoxArray, TextAnchorOffsetArray} from '../data/array_types.g';
 import type {SymbolFeature} from '../data/bucket/symbol_bucket';
@@ -228,7 +228,7 @@ export function performSymbolLayout(args: {
 
         let shapedIcon;
         let isSDFIcon = false;
-        if (feature.icon && feature.icon.name) {
+        if (feature.icon?.name) {
             const image = args.imageMap[feature.icon.name];
             if (image) {
                 shapedIcon = shapeIcon(
@@ -251,7 +251,7 @@ export function performSymbolLayout(args: {
         }
 
         const shapedText = getDefaultHorizontalShaping(shapedTextOrientations.horizontal) || shapedTextOrientations.vertical;
-        args.bucket.iconsInText = shapedText ? shapedText.iconsInText : false;
+        args.bucket.iconsInText ||= shapedText ? shapedText.iconsInText : false;
         if (shapedText || shapedIcon) {
             addFeature(args.bucket, feature, shapedTextOrientations, shapedIcon, args.imageMap, sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, args.canonical, args.subdivisionGranularity);
         }
@@ -280,7 +280,7 @@ export function getAnchorJustification(anchor: TextAnchor): TextJustify {
 /**
  * Given a feature and its shaped text and icon data, add a 'symbol
  * instance' for each _possible_ placement of the symbol feature.
- * (At render timePlaceSymbols#place() selects which of these instances to
+ * (At render it selects which of these instances to
  * show or hide based on collisions with symbols in other layers.)
  */
 function addFeature(bucket: SymbolBucket,
@@ -321,7 +321,7 @@ function addFeature(bucket: SymbolBucket,
         textRepeatDistance = symbolMinDistance / 2;
 
     const iconTextFit = layout.get('icon-text-fit');
-    let verticallyShapedIcon;
+    let verticallyShapedIcon: PositionedIcon | undefined;
     // Adjust shaped icon size when icon-text-fit is used.
     if (shapedIcon && iconTextFit !== 'none') {
         if (bucket.allowVerticalPlacement && shapedTextOrientations.vertical) {
@@ -507,11 +507,11 @@ function getDefaultHorizontalShaping(
  */
 function addSymbol(bucket: SymbolBucket,
     anchor: Anchor,
-    line: Array<Point>,
+    line: Point[],
     shapedTextOrientations: ShapedTextOrientations,
-    shapedIcon: PositionedIcon | void,
+    shapedIcon: PositionedIcon | undefined,
     imageMap: {[_: string]: StyleImage},
-    verticallyShapedIcon: PositionedIcon | void,
+    verticallyShapedIcon: PositionedIcon | undefined,
     layer: SymbolStyleLayer,
     collisionBoxArray: CollisionBoxArray,
     featureIndex: number,
@@ -673,7 +673,7 @@ function addSymbol(bucket: SymbolBucket,
     let collisionCircleDiameter = -1;
 
     const getCollisionCircleHeight = (feature: CollisionFeature, prevHeight: number): number => {
-        if (feature && feature.circleDiameter)
+        if (feature?.circleDiameter)
             return Math.max(feature.circleDiameter, prevHeight);
         return prevHeight;
     };

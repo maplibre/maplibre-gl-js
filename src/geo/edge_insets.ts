@@ -50,7 +50,7 @@ export class EdgeInsets {
      * @param t - interpolation step/weight
      * @returns the insets
      */
-    interpolate(start: PaddingOptions | EdgeInsets, target: PaddingOptions, t: number): EdgeInsets {
+    interpolate(start: PaddingOptions | EdgeInsets, target: PaddingOptions, t: number): this {
         if (target.top != null && start.top != null) this.top = interpolates.number(start.top, target.top, t);
         if (target.bottom != null && start.bottom != null) this.bottom = interpolates.number(start.bottom, target.bottom, t);
         if (target.left != null && start.left != null) this.left = interpolates.number(start.left, target.left, t);
@@ -60,7 +60,7 @@ export class EdgeInsets {
     }
 
     /**
-     * Utility method that computes the new apprent center or vanishing point after applying insets.
+     * Utility method that computes the new apparent center or vanishing point after applying insets.
      * This is in pixels and with the top left being (0.0) and +y being downwards.
      *
      * @param width - the width
@@ -103,7 +103,7 @@ export class EdgeInsets {
 }
 
 /**
- * Options for setting padding on calls to methods such as {@link Map#fitBounds}, {@link Map#fitScreenCoordinates}, and {@link Map#setPadding}. Adjust these options to set the amount of padding in pixels added to the edges of the canvas. Set a uniform padding on all edges or individual values for each edge. All properties of this object must be
+ * Options for setting padding on calls to methods such as {@link Map.fitBounds}, {@link Map.fitScreenCoordinates}, and {@link Map.setPadding}. Adjust these options to set the amount of padding in pixels added to the edges of the canvas. Set a uniform padding on all edges or individual values for each edge. All properties of this object must be
  * non-negative integers.
  *
  * @group Geography and Geometry

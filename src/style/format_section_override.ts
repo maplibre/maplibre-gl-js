@@ -18,7 +18,7 @@ export class FormatSectionOverride<T> implements Expression {
     evaluate(ctx: EvaluationContext) {
         if (ctx.formattedSection) {
             const overrides = this.defaultValue.property.overrides;
-            if (overrides && overrides.hasOverride(ctx.formattedSection)) {
+            if (overrides?.hasOverride(ctx.formattedSection)) {
                 return overrides.getOverride(ctx.formattedSection);
             }
         }

@@ -3,6 +3,7 @@ import type Point from '@mapbox/point-geometry';
 import type {Map} from '../map';
 import {TransformProvider} from './transform-provider';
 import {type Handler} from '../handler_manager';
+import {evaluateZoomSnap} from '../../util/util';
 
 /**
  * A `TapZoomHandler` allows the user to zoom the map at a point by double tapping
@@ -35,17 +36,17 @@ export class TapZoomHandler implements Handler {
         this._zoomOut.reset();
     }
 
-    touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         this._zoomIn.touchstart(e, points, mapTouches);
         this._zoomOut.touchstart(e, points, mapTouches);
     }
 
-    touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         this._zoomIn.touchmove(e, points, mapTouches);
         this._zoomOut.touchmove(e, points, mapTouches);
     }
 
-    touchend(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         const zoomInPoint = this._zoomIn.touchend(e, points, mapTouches);
         const zoomOutPoint = this._zoomOut.touchend(e, points, mapTouches);
         const tr = this._tr;
@@ -57,7 +58,7 @@ export class TapZoomHandler implements Handler {
             return {
                 cameraAnimation: (map: Map) => map.easeTo({
                     duration: 300,
-                    zoom: tr.zoom + 1,
+                    zoom: evaluateZoomSnap(tr.zoom + 1, map.getZoomSnap()),
                     around: tr.unproject(zoomInPoint)
                 }, {originalEvent: e})
             };
@@ -68,7 +69,7 @@ export class TapZoomHandler implements Handler {
             return {
                 cameraAnimation: (map: Map) => map.easeTo({
                     duration: 300,
-                    zoom: tr.zoom - 1,
+                    zoom: evaluateZoomSnap(tr.zoom - 1, map.getZoomSnap()),
                     around: tr.unproject(zoomOutPoint)
                 }, {originalEvent: e})
             };

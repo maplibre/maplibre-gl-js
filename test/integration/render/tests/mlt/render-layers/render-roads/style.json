@@ -1,0 +1,34 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "debug": true,
+            "height": 256
+        }
+    },
+    "center": [
+        11.534169,
+        48.145262
+    ],
+    "zoom": 15.80,
+    "sources": {
+        "openmaptiles": {
+            "type": "vector",
+            "encoding": "mlt",
+            "tiles": ["local://tiles/mlt/{z}/{x}/{y}.mlt"],
+            "maxzoom": 14
+        }
+    },
+    "sprite": "local://sprites/sprite",
+    "layers": [
+        {
+            "id": "road",
+            "type": "line",
+            "source": "openmaptiles",
+            "source-layer": "transportation",
+            "paint": {
+                "line-color": "#00FF00"
+            }
+        }
+    ]
+}

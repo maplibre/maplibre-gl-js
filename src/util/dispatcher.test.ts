@@ -19,7 +19,7 @@ describe('Dispatcher', () => {
         } as any as WorkerPool;
 
         const dispatcher = new Dispatcher(workerPool, mapId);
-        expect(dispatcher.actors.map((actor) => { return actor.target; })).toEqual(workers);
+        expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
         dispatcher.remove();
         expect(dispatcher.actors).toHaveLength(0);
         expect(releaseCalled).toEqual([mapId]);
@@ -32,9 +32,7 @@ describe('Dispatcher', () => {
         const releaseCalled = [];
         const workerPool = {
             acquire () {
-                if (!workers) {
-                    workers = [workerFactory(), workerFactory()];
-                }
+                workers ||= [workerFactory(), workerFactory()];
                 return workers;
             },
             release (id) {
@@ -44,7 +42,7 @@ describe('Dispatcher', () => {
         } as any as WorkerPool;
 
         let dispatcher = new Dispatcher(workerPool, mapId);
-        expect(dispatcher.actors.map((actor) => { return actor.target; })).toEqual(workers);
+        expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
 
         // Remove dispatcher, but map is not disposed (During style change)
         dispatcher.remove(false);
@@ -53,18 +51,19 @@ describe('Dispatcher', () => {
 
         // Create new instance of dispatcher
         dispatcher = new Dispatcher(workerPool, mapId);
-        expect(dispatcher.actors.map((actor) => { return actor.target; })).toEqual(workers);
+        expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
         dispatcher.remove(true); // mapRemoved = true
         expect(dispatcher.actors).toHaveLength(0);
         expect(releaseCalled).toEqual([mapId]);
 
     });
 
-    test('#remove destroys actors', () => {
+    test('remove destroys actors', () => {
         const actorsRemoved = [];
         const mapId = 1;
-        const spy = vi.fn().mockImplementation(() => { actorsRemoved.push(this); });
-        Actor.prototype.remove = spy;
+        Actor.prototype.remove = vi.fn().mockImplementation(() => {
+            actorsRemoved.push(this);
+        });
         WorkerPool.workerCount = 4;
 
         const workerPool = new WorkerPool();

@@ -101,10 +101,7 @@ export class TransferableGridIndex {
         const min = this.min;
         const max = this.max;
         if (x1 <= min && y1 <= min && max <= x2 && max <= y2 && !intersectionTest) {
-            // We use `Array#slice` because `this.keys` may be a `Int32Array` and
-            // some browsers (Safari and IE) do not support `TypedArray#slice`
-            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/slice#Browser_compatibility
-            return Array.prototype.slice.call(this.keys);
+            return [...this.keys];
 
         } else {
             const result = [];
@@ -119,8 +116,7 @@ export class TransferableGridIndex {
         if (cell !== null) {
             const keys = this.keys;
             const bboxes = this.bboxes;
-            for (let u = 0; u < cell.length; u++) {
-                const uid = cell[u];
+            for (const uid of cell) {
                 if (seenUids[uid] === undefined) {
                     const offset = uid * 4;
                     if (intersectionTest ?
@@ -172,8 +168,8 @@ export class TransferableGridIndex {
 
         const metadataLength = NUM_PARAMS + this.cells.length + 1 + 1;
         let totalCellLength = 0;
-        for (let i = 0; i < this.cells.length; i++) {
-            totalCellLength += this.cells[i].length;
+        for (const cell of this.cells) {
+            totalCellLength += cell.length;
         }
 
         const array = new Int32Array(metadataLength + totalCellLength + this.keys.length + this.bboxes.length);
@@ -200,7 +196,7 @@ export class TransferableGridIndex {
         return array.buffer;
     }
 
-    public static serialize(grid: TransferableGridIndex, transferables?: Array<Transferable>): SerializedGrid {
+    public static serialize(grid: TransferableGridIndex, transferables?: Transferable[]): SerializedGrid {
         const buffer = grid.toArrayBuffer();
         if (transferables) {
             transferables.push(buffer);

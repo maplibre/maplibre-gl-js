@@ -5,6 +5,50 @@ import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {ProjectionData} from '../../geo/projection/projection_data';
 
 /**
+ * Type for an object literal that specifies a map tile.
+ */
+export type UnwrappedTileIDLiteral = {
+    /**
+     * An optional wrap values.
+     * Useful in scenarios when multiple world copies are visible, such as a zoomed out map or a map centered around the antimeridian.
+     * Tiles from each world copy should have different wrap values, with wrap increasing for each copy from west to east.
+     */
+    wrap?: number;
+    /**
+     * The tile's XY coordinates and zoom level.
+     */
+    canonical: {
+        x: number;
+        y: number;
+        z: number;
+    };
+};
+
+/**
+ * Parameters object for the {@link CustomRenderMethodInput.getProjectionData} function.
+ * Contains the requested tile ID and more.
+ */
+export type CustomLayerProjectionDataParams = {
+    /**
+     * The coordinates of the current tile.
+     */
+    tileID: UnwrappedTileIDLiteral | null;
+    /**
+     * Set to true if a pixel-aligned matrix should be used, if possible.
+     * This flag is mostly used for raster tiles under mercator projection.
+     */
+    aligned?: boolean;
+    /**
+     * Set to true if the terrain matrix should be applied when pre-rendering tiles into textures for 3D terrain.
+     */
+    applyTerrainMatrix?: boolean;
+    /**
+     * Set to true if the globe matrix should be applied when using globe projection.
+     */
+    applyGlobeMatrix?: boolean;
+};
+
+/**
 * Input arguments exposed by custom render function.
 */
 export type CustomRenderMethodInput = {
@@ -25,14 +69,14 @@ export type CustomRenderMethodInput = {
      */
     fov: number;
     /**
-    * model view projection matrix
-    * represents the matrix converting from world space to clip space
+    * Model view projection matrix.
+    * Represents the matrix converting from world space to clip space.
     * https://learnopengl.com/Getting-started/Coordinate-Systems
     * **/
     modelViewProjectionMatrix: mat4;
     /**
-    * projection matrix
-    * represents the matrix converting from view space to clip space
+    * Projection matrix.
+    * Represents the matrix converting from view space to clip space.
     * https://learnopengl.com/Getting-started/Coordinate-Systems
     */
     projectionMatrix: mat4;
@@ -105,31 +149,40 @@ export type CustomRenderMethodInput = {
      * or more accurately for globe, elevation above the surface of the perfect sphere used to render the planet.
      */
     defaultProjectionData: ProjectionData;
+
+    /**
+     * Generates a {@link ProjectionData} instance to be used while rendering a given tile.
+     * In custom layers, this function is only needed when rendering tiles in a completely custom way and with shaders that are compatible with both projections.
+     *
+     * @see [Add a custom layer with tiles to a globe](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-custom-layer-with-tiles-to-a-globe)
+     * @param params - Parameters for the projection data generation.
+     */
+    getProjectionData: (params: CustomLayerProjectionDataParams) => ProjectionData;
 };
 
 /**
  * @param gl - The map's gl context.
  * @param options - Argument object with render inputs like camera properties.
  */
-type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, options: CustomRenderMethodInput) => void;
+export type CustomRenderMethod = (gl: WebGL2RenderingContext, options: CustomRenderMethodInput) => void;
 
 /**
  * Interface for custom style layers. This is a specification for
  * implementers to model: it is not an exported method or class.
  *
  * Custom layers allow a user to render directly into the map's GL context using the map's camera.
- * These layers can be added between any regular layers using {@link Map#addLayer}.
+ * These layers can be added between any regular layers using {@link Map.addLayer}.
  *
  * Custom layers must have a unique `id` and must have the `type` of `"custom"`.
  * They must implement `render` and may implement `prerender`, `onAdd` and `onRemove`.
- * They can trigger rendering using {@link Map#triggerRepaint}
+ * They can trigger rendering using {@link Map.triggerRepaint}
  * and they should appropriately handle {@link MapContextEvent} with `webglcontextlost` and `webglcontextrestored`.
  *
  * The `renderingMode` property controls whether the layer is treated as a `"2d"` or `"3d"` map layer. Use:
  *
  * - `"renderingMode": "3d"` to use the depth buffer and share it with other layers
  * - `"renderingMode": "2d"` to add a layer with no depth. If you need to use the depth buffer for a `"2d"` layer you must use an offscreen
- *   framebuffer and {@link CustomLayerInterface#prerender}
+ *   framebuffer and {@link CustomLayerInterface.prerender}
  *
  * @example
  * Custom layer implemented as ES6 class
@@ -141,7 +194,7 @@ type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, opt
  *         this.renderingMode = '2d';
  *     }
  *
- *     onAdd(map, gl) {
+ *      onAdd(map: maplibregl.Map, gl: WebGL2RenderingContext) {
  *         const vertexSource = `
  *         uniform mat4 u_matrix;
  *         void main() {
@@ -167,7 +220,13 @@ type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, opt
  *         gl.linkProgram(this.program);
  *     }
  *
- *     render(gl, matrix) {
+ *     render({
+ *      gl,
+ *      modelViewProjectionMatrix: matrix
+ *      }: {
+ *      gl: WebGL2RenderingContext;
+ *      modelViewProjectionMatrix: Float32Array;
+ *      }) {
  *         gl.useProgram(this.program);
  *         gl.uniformMatrix4fv(gl.getUniformLocation(this.program, "u_matrix"), false, matrix);
  *         gl.drawArrays(gl.POINTS, 0, 1);
@@ -216,21 +275,21 @@ export interface CustomLayerInterface {
      */
     prerender?: CustomRenderMethod;
     /**
-     * Optional method called when the layer has been added to the Map with {@link Map#addLayer}. This
+     * Optional method called when the layer has been added to the Map with {@link Map.addLayer}. This
      * gives the layer a chance to initialize gl resources and register event listeners.
      *
      * @param map - The Map this custom layer was just added to.
      * @param gl - The gl context for the map.
      */
-    onAdd?(map: Map, gl: WebGLRenderingContext | WebGL2RenderingContext): void;
+    onAdd?(map: Map, gl: WebGL2RenderingContext): void;
     /**
-     * Optional method called when the layer has been removed from the Map with {@link Map#removeLayer}. This
+     * Optional method called when the layer has been removed from the Map with {@link Map.removeLayer}. This
      * gives the layer a chance to clean up gl resources and event listeners.
      *
      * @param map - The Map this custom layer was just added to.
      * @param gl - The gl context for the map.
      */
-    onRemove?(map: Map, gl: WebGLRenderingContext | WebGL2RenderingContext): void;
+    onRemove?(map: Map, gl: WebGL2RenderingContext): void;
 }
 
 export function validateCustomStyleLayer(layerObject: CustomLayerInterface) {
@@ -266,8 +325,8 @@ export class CustomStyleLayer extends StyleLayer {
 
     implementation: CustomLayerInterface;
 
-    constructor(implementation: CustomLayerInterface) {
-        super(implementation, {});
+    constructor(implementation: CustomLayerInterface, globalState: Record<string, any>) {
+        super(implementation, {}, globalState);
         this.implementation = implementation;
     }
 

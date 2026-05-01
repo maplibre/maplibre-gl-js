@@ -8,7 +8,7 @@ import type {Shaping, PositionedIcon} from './shaping';
 
 export {getAnchors, getCenterAnchor};
 
-function getLineLength(line: Array<Point>): number {
+function getLineLength(line: Point[]): number {
     let lineLength = 0;
     for (let k = 0; k < line.length - 1; k++) {
         lineLength += line[k].dist(line[k + 1]);
@@ -32,7 +32,7 @@ function getShapedLabelLength(shapedText?: Shaping | null, shapedIcon?: Position
         shapedIcon ? shapedIcon.right - shapedIcon.left : 0);
 }
 
-function getCenterAnchor(line: Array<Point>,
+function getCenterAnchor(line: Point[],
     maxAngle: number,
     shapedText: Shaping,
     shapedIcon: PositionedIcon,
@@ -70,7 +70,7 @@ function getCenterAnchor(line: Array<Point>,
     }
 }
 
-function getAnchors(line: Array<Point>,
+function getAnchors(line: Point[],
     spacing: number,
     maxAngle: number,
     shapedText: Shaping,
@@ -78,7 +78,7 @@ function getAnchors(line: Array<Point>,
     glyphSize: number,
     boxScale: number,
     overscaling: number,
-    tileExtent: number) {
+    tileExtent: number): Anchor[] {
 
     // Resample a line to get anchor points for labels and check that each
     // potential label passes text-max-angle check and has enough room to fit
@@ -111,15 +111,15 @@ function getAnchors(line: Array<Point>,
     return resample(line, offset, spacing, angleWindowSize, maxAngle, labelLength, isLineContinued, false, tileExtent);
 }
 
-function resample(line, offset, spacing, angleWindowSize, maxAngle, labelLength, isLineContinued, placeAtMiddle, tileExtent) {
+function resample(line: Point[], offset: number, spacing: number, angleWindowSize: number, maxAngle: number, labelLength: number, isLineContinued: boolean, placeAtMiddle: boolean, tileExtent: number): Anchor[] {
 
     const halfLabelLength = labelLength / 2;
     const lineLength = getLineLength(line);
 
-    let distance = 0,
-        markedDistance = offset - spacing;
+    let distance = 0;
+    let markedDistance = offset - spacing;
 
-    let anchors = [];
+    let anchors: Anchor[] = [];
 
     for (let i = 0; i < line.length - 1; i++) {
 

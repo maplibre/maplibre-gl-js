@@ -1,13 +1,13 @@
 import Layout from './layout';
 import {SymbolBucket} from '../../../src/data/bucket/symbol_bucket';
 import {performSymbolLayout} from '../../../src/symbol/symbol_layout';
-import {OverscaledTileID} from '../../../src/source/tile_id';
+import {type OverscaledTileID} from '../../../src/tile/tile_id';
 import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings';
 
 export default class SymbolLayout extends Layout {
-    parsedTiles: Array<any>;
+    parsedTiles: any[];
 
-    constructor(style: string, locations?: Array<OverscaledTileID>) {
+    constructor(style: string, locations?: OverscaledTileID[]) {
         super(style, locations);
         this.parsedTiles = [];
     }

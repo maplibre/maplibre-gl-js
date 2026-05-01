@@ -1,7 +1,7 @@
 import type {Map} from '../map';
 
 /**
- * A position defintion for the control to be placed, can be in one of the corners of the map.
+ * A position definition for the control to be placed, can be in one of the corners of the map.
  * When two or more controls are places in the same location they are stacked toward the center of the map.
  */
 export type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -28,7 +28,7 @@ export type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom
  *     }
  *
  *     onRemove() {
- *         this._container.parentNode.removeChild(this._container);
+ *         this._container.remove();
  *         this._map = undefined;
  *     }
  * }
@@ -37,7 +37,7 @@ export type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom
 export interface IControl {
     /**
      * Register a control on the map and give it a chance to register event listeners
-     * and resources. This method is called by {@link Map#addControl}
+     * and resources. This method is called by {@link Map.addControl}
      * internally.
      *
      * @param map - the Map this control will be added to
@@ -49,7 +49,7 @@ export interface IControl {
     onAdd(map: Map): HTMLElement;
     /**
      * Unregister a control on the map and give it a chance to detach event listeners
-     * and resources. This method is called by {@link Map#removeControl}
+     * and resources. This method is called by {@link Map.removeControl}
      * internally.
      *
      * @param map - the Map this control will be removed from
@@ -57,7 +57,7 @@ export interface IControl {
     onRemove(map: Map): void;
     /**
      * Optionally provide a default position for this control. If this method
-     * is implemented and {@link Map#addControl} is called without the `position`
+     * is implemented and {@link Map.addControl} is called without the `position`
      * parameter, the value returned by getDefaultPosition will be used as the
      * control's position.
      *

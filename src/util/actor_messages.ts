@@ -5,8 +5,9 @@ import type {StyleImage} from '../style/style_image';
 import type {StyleGlyph} from '../style/style_glyph';
 import type {PluginState} from '../source/rtl_text_plugin_status';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 import type {GetResourceResponse, RequestParameters} from './ajax';
+import type {DashEntry} from '../render/line_atlas';
 
 /**
  * The parameters needed in order to get information about the cluster
@@ -26,8 +27,9 @@ export type GetClusterLeavesParams = ClusterIDAndSource & { limit: number; offse
  * The result of the call to load a geojson source
  */
 export type GeoJSONWorkerSourceLoadDataResult = {
-    resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
+    resourceTiming?: {[_: string]: PerformanceResourceTiming[]};
     abandoned?: boolean;
+    data?: GeoJSON.GeoJSON;
 };
 
 /**
@@ -42,15 +44,15 @@ export type RemoveSourceParams = {
  * Parameters needed to update the layers
  */
 export type UpdateLayersParameters = {
-    layers: Array<LayerSpecification>;
-    removedIds: Array<string>;
+    layers: LayerSpecification[];
+    removedIds: string[];
 };
 
 /**
  * Parameters needed to get the images
  */
 export type GetImagesParameters = {
-    icons: Array<string>;
+    icons: string[];
     source: string;
     tileID: OverscaledTileID;
     type: string;
@@ -61,7 +63,7 @@ export type GetImagesParameters = {
  */
 export type GetGlyphsParameters = {
     type: string;
-    stacks: {[_: string]: Array<number>};
+    stacks: {[_: string]: number[]};
     source: string;
     tileID: OverscaledTileID;
 };
@@ -81,6 +83,21 @@ export type GetGlyphsResponse = {
 export type GetImagesResponse = {[_: string]: StyleImage};
 
 /**
+ * Parameters needed to get the line dashes
+ */
+export type GetDashesParameters = {
+    dashes: {[key: string]: {
+        dasharray: number[];
+        round: boolean;
+    };};
+};
+
+/**
+ * A response object returned when requesting line dashes
+ */
+export type GetDashesResponse = {[dashId: string]: DashEntry};
+
+/**
  * All the possible message types that can be sent to and from the worker
  */
 export const enum MessageType {
@@ -89,12 +106,13 @@ export const enum MessageType {
     getClusterChildren = 'GCC',
     getClusterLeaves = 'GCL',
     loadData = 'LD',
-    getData = 'GD',
     loadTile = 'LT',
     reloadTile = 'RT',
     getGlyphs = 'GG',
+    getDashes = 'GDA',
     getImages = 'GI',
     setImages = 'SI',
+    updateGlobalState = 'UGS',
     setLayers = 'SL',
     updateLayers = 'UL',
     syncRTLPluginState = 'SRPS',
@@ -115,16 +133,16 @@ export const enum MessageType {
 export type RequestResponseMessageMap = {
     [MessageType.loadDEMTile]: [WorkerDEMTileParameters, DEMData];
     [MessageType.getClusterExpansionZoom]: [ClusterIDAndSource, number];
-    [MessageType.getClusterChildren]: [ClusterIDAndSource, Array<GeoJSON.Feature>];
-    [MessageType.getClusterLeaves]: [GetClusterLeavesParams, Array<GeoJSON.Feature>];
+    [MessageType.getClusterChildren]: [ClusterIDAndSource, GeoJSON.Feature[]];
+    [MessageType.getClusterLeaves]: [GetClusterLeavesParams, GeoJSON.Feature[]];
     [MessageType.loadData]: [LoadGeoJSONParameters, GeoJSONWorkerSourceLoadDataResult];
-    [MessageType.getData]: [LoadGeoJSONParameters, GeoJSON.GeoJSON];
     [MessageType.loadTile]: [WorkerTileParameters, WorkerTileResult];
     [MessageType.reloadTile]: [WorkerTileParameters, WorkerTileResult];
     [MessageType.getGlyphs]: [GetGlyphsParameters, GetGlyphsResponse];
     [MessageType.getImages]: [GetImagesParameters, GetImagesResponse];
     [MessageType.setImages]: [string[], void];
-    [MessageType.setLayers]: [Array<LayerSpecification>, void];
+    [MessageType.updateGlobalState]: [Record<string, any>, void];
+    [MessageType.setLayers]: [LayerSpecification[], void];
     [MessageType.updateLayers]: [UpdateLayersParameters, void];
     [MessageType.syncRTLPluginState]: [PluginState, PluginState];
     [MessageType.setReferrer]: [string, void];
@@ -135,6 +153,7 @@ export type RequestResponseMessageMap = {
     [MessageType.abortTile]: [TileParameters, void];
     [MessageType.removeDEMTile]: [TileParameters, void];
     [MessageType.getResource]: [RequestParameters, GetResourceResponse<any>];
+    [MessageType.getDashes]: [GetDashesParameters, GetDashesResponse];
 };
 
 /**

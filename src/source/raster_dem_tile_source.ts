@@ -4,7 +4,7 @@ import {extend, isImageBitmap, readImageUsingVideoFrame} from '../util/util';
 import {type Evented} from '../util/evented';
 import {browser} from '../util/browser';
 import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported';
-import {OverscaledTileID} from './tile_id';
+import {OverscaledTileID} from '../tile/tile_id';
 import {RasterTileSource} from './raster_tile_source';
 // ensure DEMData is registered for worker transfer on main thread:
 import '../data/dem_data';
@@ -12,7 +12,7 @@ import type {DEMEncoding} from '../data/dem_data';
 
 import type {Source} from './source';
 import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from './tile';
+import type {Tile} from '../tile/tile';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted';
 import {RGBAImage} from '../util/image';
@@ -55,7 +55,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
     override async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        const request = this.map._requestManager.transformRequest(url, ResourceType.Tile);
+        const request = await this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
         tile.abortController = new AbortController();
         try {
@@ -65,7 +65,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 tile.state = 'unloaded';
                 return;
             }
-            if (response && response.data) {
+            if (response?.data) {
                 const img = response.data;
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
@@ -84,14 +84,16 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                     baseShift: this.baseShift
                 };
 
+                if (tile.actor && tile.state !== 'expired' && tile.state !== 'reloading') {
+                    return;
+                }
                 if (!tile.actor || tile.state === 'expired') {
                     tile.actor = this.dispatcher.getActor();
-                    const data = await tile.actor.sendAsync({type: MessageType.loadDEMTile, data: params});
-                    tile.dem = data;
-                    tile.needsHillshadePrepare = true;
-                    tile.needsTerrainPrepare = true;
-                    tile.state = 'loaded';
                 }
+                tile.dem = await tile.actor.sendAsync({type: MessageType.loadDEMTile, data: params});
+                tile.needsHillshadePrepare = true;
+                tile.needsTerrainPrepare = true;
+                tile.state = 'loaded';
             }
         } catch (err) {
             delete tile.abortController;
@@ -117,7 +119,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         return browser.getImageData(img, 1);
     }
 
-    _getNeighboringTiles(tileID: OverscaledTileID) {
+    _getNeighboringTiles(tileID: OverscaledTileID): Record<string, {backfilled: boolean}> {
         const canonical = tileID.canonical;
         const dim = Math.pow(2, canonical.z);
 
@@ -126,7 +128,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         const nx = (canonical.x + 1 + dim) % dim;
         const nxw = canonical.x + 1 === dim ? tileID.wrap + 1 : tileID.wrap;
 
-        const neighboringTiles = {};
+        const neighboringTiles: Record<string, {backfilled: boolean}> = {};
         // add adjacent tiles
         neighboringTiles[new OverscaledTileID(tileID.overscaledZ, pxw, canonical.z, px, canonical.y).key] = {backfilled: false};
         neighboringTiles[new OverscaledTileID(tileID.overscaledZ, nxw, canonical.z, nx, canonical.y).key] = {backfilled: false};

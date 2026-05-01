@@ -1,6 +1,6 @@
 import {EXTENT} from '../data/extent';
 
-import type {OverscaledTileID} from './tile_id';
+import type {OverscaledTileID} from '../tile/tile_id';
 
 /**
  * Converts a pixel value at a the given zoom level to tile units.

@@ -3,7 +3,7 @@ import {warnOnce, clamp} from '../util/util';
 import {EXTENT} from './extent';
 
 import type Point from '@mapbox/point-geometry';
-import type {VectorTileFeature} from '@mapbox/vector-tile';
+import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 // These bounds define the minimum and maximum supported coordinate values.
 // While visible coordinates are within [0, EXTENT], tiles may theoretically
@@ -14,17 +14,15 @@ const MAX = Math.pow(2, BITS - 1) - 1;
 const MIN = -MAX - 1;
 
 /**
- * Loads a geometry from a VectorTileFeature and scales it to the common extent
+ * Loads a geometry from a VectorTileFeatureLike and scales it to the common extent
  * used internally.
  * @param feature - the vector tile feature to load
  */
-export function loadGeometry(feature: VectorTileFeature): Array<Array<Point>> {
+export function loadGeometry(feature: VectorTileFeatureLike): Point[][] {
     const scale = EXTENT / feature.extent;
     const geometry = feature.loadGeometry();
-    for (let r = 0; r < geometry.length; r++) {
-        const ring = geometry[r];
-        for (let p = 0; p < ring.length; p++) {
-            const point = ring[p];
+    for (const ring of geometry) {
+        for (const point of ring) {
             // round here because mapbox-gl-native uses integers to represent
             // points and we need to do the same to avoid rendering differences.
             const x = Math.round(point.x * scale);

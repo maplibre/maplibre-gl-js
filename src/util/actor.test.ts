@@ -2,7 +2,7 @@ import {describe, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor';
 import {type WorkerGlobalScopeInterface, workerFactory} from './web_worker';
 import {sleep} from './test/util';
-import {ABORT_ERROR, createAbortError} from './abort_error';
+import {ABORT_ERROR, AbortError} from './abort_error';
 import {MessageType} from './actor_messages';
 
 describe('Actor', () => {
@@ -110,8 +110,8 @@ describe('Actor', () => {
         let received = false;
         const abortController = new AbortController();
         const p1 = m1.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: 'geojson', source: '', clusterId: 1729}}, abortController)
-            .then(() => { received = true; })
-            .catch(() => { received = true; });
+            .then(() => received = true)
+            .catch(() => received = true);
 
         abortController.abort();
 
@@ -128,7 +128,7 @@ describe('Actor', () => {
             return new Promise((resolve, reject) => {
                 handlerAbortController.signal.addEventListener('abort', () => {
                     gotAbortSignal = true;
-                    reject(createAbortError());
+                    reject(new AbortError());
                 });
                 setTimeout(resolve, 200);
             });
@@ -139,8 +139,8 @@ describe('Actor', () => {
         let received = false;
         const abortController = new AbortController();
         m1.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: 'geojson', source: '', clusterId: 1729}}, abortController)
-            .then(() => { received = true; })
-            .catch(() => { received = true; });
+            .then(() => received = true)
+            .catch(() => received = true);
 
         abortController.abort();
 
@@ -166,8 +166,8 @@ describe('Actor', () => {
         let received = false;
         const abortController = new AbortController();
         const p1 = actor.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: 'geojson', source: '', clusterId: 1729}, mustQueue: true}, abortController)
-            .then(() => { received = true; })
-            .catch(() => { received = true; });
+            .then(() => received = true)
+            .catch(() => received = true);
 
         abortController.abort();
 
@@ -178,7 +178,7 @@ describe('Actor', () => {
         expect(spy).not.toHaveBeenCalled();
     });
 
-    test('#remove unbinds event listener', () => {
+    test('remove unbinds event listener', () => {
         const addEventListenerSpy = vi.fn();
         const removeEventListenerSpy = vi.fn();
         const actor = new Actor({
@@ -195,9 +195,9 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        worker.worker.actor.registerMessageHandler(MessageType.abortTile, () => Promise.reject(createAbortError()));
+        worker.worker.actor.registerMessageHandler(MessageType.abortTile, () => Promise.reject(new AbortError()));
 
-        await expect(async () => actor.sendAsync({type: MessageType.abortTile, data: {} as any})).rejects.toThrow(ABORT_ERROR);
+        await expect(async () => actor.sendAsync({type: MessageType.abortTile, data: {} as any})).rejects.toThrow(expect.objectContaining({name: ABORT_ERROR}));
     });
 
     test('send a message that must be queued, it should still arrive', async () => {
@@ -248,6 +248,20 @@ describe('Actor', () => {
         await sleep(100);
 
         expect(spy).not.toHaveBeenCalled();
+    });
+
+    test('should process a message when origin is "null"', async () => {
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+        const actor = new Actor(worker, '1');
+
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, spy);
+
+        actor.target.postMessage({type: MessageType.getClusterExpansionZoom, data: {} as any, origin: 'null'});
+
+        await sleep(0);
+
+        expect(spy).toHaveBeenCalled();
     });
 
     test('should process a message when origin is "file://"', async () => {

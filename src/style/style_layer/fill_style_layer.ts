@@ -20,11 +20,11 @@ export class FillStyleLayer extends StyleLayer {
     _transitioningPaint: Transitioning<FillPaintProps>;
     paint: PossiblyEvaluated<FillPaintProps, FillPaintPropsPossiblyEvaluated>;
 
-    constructor(layer: LayerSpecification) {
-        super(layer, properties);
+    constructor(layer: LayerSpecification, globalState: Record<string, any>) {
+        super(layer, properties, globalState);
     }
 
-    recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {
+    recalculate(parameters: EvaluationParameters, availableImages: string[]) {
         super.recalculate(parameters, availableImages);
 
         const outlineColor = this.paint._values['fill-outline-color'];

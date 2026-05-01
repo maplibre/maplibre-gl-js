@@ -3,17 +3,18 @@ import type {WorkerGlobalScopeInterface} from '../../../src/util/web_worker';
 import type {ActorTarget} from '../../../src/util/actor';
 
 export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
-    addListeners: Array<EventListener>;
-    postListeners: Array<EventListener>;
+    addListeners: EventListener[];
+    postListeners: EventListener[];
     target: MessageBus;
 
     registerWorkerSource: any;
     registerRTLTextPlugin: any;
     addProtocol: any;
     removeProtocol: any;
+    makeRequest: any;
     worker: any;
 
-    constructor(addListeners: Array<EventListener>, postListeners: Array<EventListener>) {
+    constructor(addListeners: EventListener[], postListeners: EventListener[]) {
         this.addListeners = addListeners;
         this.postListeners = postListeners;
     }
@@ -37,8 +38,8 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
                 for (const listener of this.postListeners) {
                     listener({data, target: this.target} as any);
                 }
-            } catch (e) {
-                console.error(e);
+            } catch {
+                // this is used only in tests, ignoring.
             }
         }, 0);
     }
@@ -61,8 +62,7 @@ function setGlobalWorker(MockWorker: { new(...args: any): any}) {
         parentBus.target = workerBus;
         workerBus.target = parentBus;
 
-        const worker = new MockWorker(workerBus);
-        parentBus.worker = worker;
+        parentBus.worker = new MockWorker(workerBus);
 
         return parentBus;
     };

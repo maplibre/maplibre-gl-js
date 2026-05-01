@@ -1,11 +1,11 @@
 import {warnOnce} from '../util/util';
 
-import type {Context} from '../gl/context';
+import type {Context} from '../webgl/context';
 
 /**
  * A dash entry
  */
-type DashEntry = {
+export type DashEntry = {
     y: number;
     height: number;
     width: number;
@@ -15,7 +15,7 @@ type DashEntry = {
  * @internal
  * A LineAtlas lets us reuse rendered dashed lines
  * by writing many of them to a texture and then fetching their positions
- * using {@link LineAtlas#getDash}.
+ * using {@link LineAtlas.getDash}.
  *
  * @param width - the width
  * @param height - the height
@@ -47,16 +47,14 @@ export class LineAtlas {
      * @param round - whether to add circle caps in between dash segments
      * @returns position of dash texture in {@link DashEntry}
      */
-    getDash(dasharray: Array<number>, round: boolean) {
+    getDash(dasharray: number[], round: boolean) {
         const key = dasharray.join(',') + String(round);
 
-        if (!this.dashEntry[key]) {
-            this.dashEntry[key] = this.addDash(dasharray, round);
-        }
+        this.dashEntry[key] ||= this.addDash(dasharray, round);
         return this.dashEntry[key];
     }
 
-    getDashRanges(dasharray: Array<number>, lineAtlasWidth: number, stretch: number) {
+    getDashRanges(dasharray: number[], lineAtlasWidth: number, stretch: number) {
         // If dasharray has an odd length, both the first and last parts
         // are dashes and should be joined seamlessly.
         const oddDashArray = dasharray.length % 2 === 1;
@@ -156,7 +154,7 @@ export class LineAtlas {
         }
     }
 
-    addDash(dasharray: Array<number>, round: boolean): DashEntry {
+    addDash(dasharray: number[], round: boolean): DashEntry {
         const n = round ? 7 : 0;
         const height = 2 * n + 1;
 
@@ -166,7 +164,7 @@ export class LineAtlas {
         }
 
         let length = 0;
-        for (let i = 0; i < dasharray.length; i++) { length += dasharray[i]; }
+        for (const dash of dasharray) { length += dash; }
 
         if (length !== 0) {
             const stretch = this.width / length;
@@ -180,8 +178,8 @@ export class LineAtlas {
         }
 
         const dashEntry = {
-            y: (this.nextRow + n + 0.5) / this.height,
-            height: 2 * n / this.height,
+            y: this.nextRow + n,
+            height: 2 * n,
             width: length
         };
 

@@ -26,6 +26,9 @@ test('resolveToken', () => {
     expect(resolveTokens({text: '\ufff0'}, '{text}')).toBe('\ufff0');
     expect(resolveTokens({text: '\uffff'}, '{text}')).toBe('\uffff');
 
+    // Unicode beyond 65535.
+    expect(resolveTokens({text: '🌐'}, '{text}')).toBe('🌐');
+
     // Non-string values cast to strings.
     expect(resolveTokens({name: 5000}, '{name}')).toBe('5000');
     expect(resolveTokens({name: -15.5}, '{name}')).toBe('-15.5');

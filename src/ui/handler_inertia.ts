@@ -1,6 +1,6 @@
-import {browser} from '../util/browser';
+import {now} from '../util/time_control';
 import type {Map} from './map';
-import {bezier, clamp, extend} from '../util/util';
+import {bezier, clamp, extend, evaluateZoomSnap} from '../util/util';
 import Point from '@mapbox/point-geometry';
 import type {DragPanOptions} from './handler/shim/drag_pan';
 import {type EaseToOptions} from './camera';
@@ -60,15 +60,15 @@ export class HandlerInertia {
 
     record(settings: any) {
         this._drainInertiaBuffer();
-        this._inertiaBuffer.push({time: browser.now(), settings});
+        this._inertiaBuffer.push({time: now(), settings});
     }
 
     _drainInertiaBuffer() {
         const inertia = this._inertiaBuffer,
-            now = browser.now(),
+            currentTime = now(),
             cutoff = 160;   //msec
 
-        while (inertia.length > 0 && now - inertia[0].time > cutoff)
+        while (inertia.length > 0 && currentTime - inertia[0].time > cutoff)
             inertia.shift();
     }
 
@@ -114,7 +114,7 @@ export class HandlerInertia {
 
         if (deltas.zoom) {
             const result = calculateEasing(deltas.zoom, duration, defaultZoomInertiaOptions);
-            easeOptions.zoom = this._map.transform.zoom + result.amount;
+            easeOptions.zoom = evaluateZoomSnap(this._map.transform.zoom + result.amount, this._map.getZoomSnap(), result.amount);
             extendDuration(easeOptions, result);
         }
 

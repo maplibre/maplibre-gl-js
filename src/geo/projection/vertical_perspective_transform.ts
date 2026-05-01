@@ -2,7 +2,7 @@ import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat';
 import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce} from '../../util/util';
-import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../source/tile_id';
+import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {LngLatBounds} from '../lng_lat_bounds';
@@ -13,7 +13,8 @@ import {Frustum} from '../../util/primitives/frustum';
 
 import type {Terrain} from '../../render/terrain';
 import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform} from '../transform_interface';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface';
+import type {TransformOptions} from '../transform_helper';
 import type {PaddingOptions} from '../edge_insets';
 import type {ProjectionData, ProjectionDataParams} from './projection_data';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
@@ -113,7 +114,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         this._helper.setPadding(padding);
     }
     interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number): void {
-        return this._helper.interpolatePadding(start, target, t);
+        this._helper.interpolatePadding(start, target, t);
     }
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
@@ -126,6 +127,9 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
     setMaxBounds(bounds?: LngLatBounds): void {
         this._helper.setMaxBounds(bounds);
+    }
+    setConstrainOverride(constrain?: TransformConstrainFunction | null): void {
+        this._helper.setConstrainOverride(constrain);
     }
     overrideNearFarZ(nearZ: number, farZ: number): void {
         this._helper.overrideNearFarZ(nearZ, farZ);
@@ -218,14 +222,17 @@ export class VerticalPerspectiveTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-    public get nearZ(): number { 
-        return this._helper.nearZ; 
+    get constrainOverride(): TransformConstrainFunction {
+        return this._helper.constrainOverride;
     }
-    public get farZ(): number { 
-        return this._helper.farZ; 
+    public get nearZ(): number {
+        return this._helper.nearZ;
     }
-    public get autoCalculateNearFarZ(): boolean { 
-        return this._helper.autoCalculateNearFarZ; 
+    public get farZ(): number {
+        return this._helper.farZ;
+    }
+    public get autoCalculateNearFarZ(): boolean {
+        return this._helper.autoCalculateNearFarZ;
     }
     setTransitionState(_value: number): void {
         // Do nothing
@@ -251,24 +258,23 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     private _coveringTilesDetailsProvider: GlobeCoveringTilesDetailsProvider;
 
-    public constructor() {
-
+    public constructor(options?: TransformOptions) {
         this._helper = new TransformHelper({
-            calcMatrices: () => { this._calcMatrices(); },
-            getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
-        });
+            calcMatrices: () => this._calcMatrices(),
+            defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
+        }, options);
         this._coveringTilesDetailsProvider = new GlobeCoveringTilesDetailsProvider();
     }
 
     clone(): ITransform {
         const clone = new VerticalPerspectiveTransform();
-        clone.apply(this);
+        clone.apply(this, false);
         return clone;
     }
 
-    public apply(that: IReadonlyTransform, globeLatitudeErrorCorrectionRadians?: number): void {
+    public apply(that: IReadonlyTransform, constrain: boolean, globeLatitudeErrorCorrectionRadians?: number): void {
         this._globeLatitudeErrorCorrectionRadians = globeLatitudeErrorCorrectionRadians || 0;
-        this._helper.apply(that);
+        this._helper.apply(that, constrain);
     }
 
     public get projectionMatrix(): mat4 { return this._projectionMatrix; }
@@ -636,7 +642,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         return new LngLatBounds(boundsArray);
     }
 
-    getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {
+    defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         // Globe: TODO: respect _lngRange, _latRange
         // It is possible to implement exact constrain for globe, but I don't think it is worth the effort.
         const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
@@ -648,7 +654,11 @@ export class VerticalPerspectiveTransform implements ITransform {
             ),
             zoom: constrainedZoom
         };
-    }
+    };
+
+    applyConstrain: TransformConstrainFunction = (lngLat, zoom) => {
+        return this._helper.applyConstrain(lngLat, zoom);
+    };
 
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
         return this._helper.calculateCenterFromCameraLngLatAlt(lngLat, alt, bearing, pitch);

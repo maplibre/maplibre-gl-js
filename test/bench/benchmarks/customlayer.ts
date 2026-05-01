@@ -1,7 +1,7 @@
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
-import {CustomLayerInterface} from '../../../src/style/style_layer/custom_style_layer';
-import {Map} from '../../../src/ui/map';
+import {type CustomLayerInterface, type CustomRenderMethodInput} from '../../../src/style/style_layer/custom_style_layer';
+import {type Map} from '../../../src/ui/map';
 
 class Tent3D implements CustomLayerInterface {
     id: string;
@@ -89,13 +89,13 @@ class Tent3D implements CustomLayerInterface {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArray, gl.STATIC_DRAW);
     }
 
-    render(gl: WebGL2RenderingContext, matrix) {
+    render(gl: WebGL2RenderingContext, options: CustomRenderMethodInput) {
         gl.useProgram(this.program);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
         gl.enableVertexAttribArray(this.program.a_pos);
         gl.vertexAttribPointer(this.program.aPos, 3, gl.FLOAT, false, 0, 0);
-        gl.uniformMatrix4fv(this.program.uMatrix, false, matrix);
+        gl.uniformMatrix4fv(this.program.uMatrix, false, options.modelViewProjectionMatrix);
         gl.drawElements(gl.TRIANGLES, 12, gl.UNSIGNED_SHORT, 0);
     }
 }
@@ -133,7 +133,7 @@ export default class CustomLayer extends Benchmark {
         this.map.addLayer(customLayer);
         this.map._styleDirty = true;
         this.map._sourcesDirty = true;
-        this.map._render(Date.now());
+        Benchmark.renderMap(this.map, Date.now());
     }
     teardown() {
         this.map.remove();

@@ -75,7 +75,7 @@ describe('smartWrap', () => {
 
     test('Shifts lng to -360 if lng is outside viewport on the right and at least 180° from map center', () => {
         transform.center.lng = 50;
-        transform.locationToScreenPoint = (() => { return new Point(110, 51); }); // outside viewport
+        transform.locationToScreenPoint = (() => new Point(110, 51)); // outside viewport
 
         const result = smartWrap(
             new LngLat(250, 0), // 200 from map center
@@ -86,7 +86,7 @@ describe('smartWrap', () => {
 
     test('Shifts lng to +360 if lng is outside viewport on the left and at least 180° from map center', () => {
         transform.center.lng = 50;
-        transform.locationToScreenPoint = (() => { return new Point(-10, 51); }); // outside viewport
+        transform.locationToScreenPoint = (() => new Point(-10, 51)); // outside viewport
 
         const result = smartWrap(
             new LngLat(-150, 0), // 200 from map center

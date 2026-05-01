@@ -13,8 +13,9 @@ import type {IControl} from './control';
  * let map = new Map()
  *     .addControl(new GlobeControl());
  * ```
- * 
- * @see [Display a globe with a fill extrusion layer](https://maplibre.org/maplibre-gl-js/docs/examples/globe-fill-extrusion/)
+ *
+ * @see [Display a globe with a fill extrusion layer](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-globe-with-a-fill-extrusion-layer/)
+ * @see [Sky, Fog, Terrain](https://maplibre.org/maplibre-gl-js/docs/examples/sky-fog-terrain/)
  */
 export class GlobeControl implements IControl {
     _map: Map;
@@ -32,13 +33,15 @@ export class GlobeControl implements IControl {
 
         this._updateGlobeIcon();
         this._map.on('styledata', this._updateGlobeIcon);
+        this._map.on('projectiontransition', this._updateGlobeIcon);
         return this._container;
     }
 
     /** {@inheritDoc IControl.onRemove} */
     onRemove() {
-        DOM.remove(this._container);
+        this._container.remove();
         this._map.off('styledata', this._updateGlobeIcon);
+        this._map.off('projectiontransition', this._updateGlobeIcon);
         this._globeButton.removeEventListener('click', this._toggleProjection);
         this._map = undefined;
     }

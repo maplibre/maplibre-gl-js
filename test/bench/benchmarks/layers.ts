@@ -36,7 +36,7 @@ export class LayerBenchmark extends Benchmark {
     }
 
     bench() {
-        this.map._render();
+        Benchmark.renderMap(this.map);
     }
 
     teardown() {
@@ -157,7 +157,7 @@ export class LayerHillshade extends LayerBenchmark {
             sources: {
                 'terrain-rgb': {
                     'type': 'raster-dem',
-                    'url': 'https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+                    'url': 'https://tiles.mapterhorn.com/tilejson.json'
                 }
             },
             layers: generateLayers({
@@ -177,7 +177,7 @@ export class LayerColorRelief2Colors extends LayerBenchmark {
             sources: {
                 'terrain-rgb': {
                     'type': 'raster-dem',
-                    'url': 'https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+                    'url': 'https://tiles.mapterhorn.com/tilejson.json'
                 }
             },
             layers: generateLayers({
@@ -186,9 +186,9 @@ export class LayerColorRelief2Colors extends LayerBenchmark {
                 'source': 'terrain-rgb',
                 'paint': {
                     'color-relief-color': [
-                        "interpolate",
-                        ["linear"],
-                        ["elevation"],
+                        'interpolate',
+                        ['linear'],
+                        ['elevation'],
                         0, 'rgb(112, 209, 255)',
                         3724, 'rgb(255, 178, 129)'
                     ]
@@ -202,7 +202,7 @@ export class LayerColorRelief256Colors extends LayerBenchmark {
     constructor() {
         super();
 
-        const colorSpec: any[] = ["interpolate", ["linear"], ["elevation"]];
+        const colorSpec: any[] = ['interpolate', ['linear'], ['elevation']];
         for (let i = 0; i < 256; i++) {
             colorSpec.push(i);
             colorSpec.push(`rgb(${i}, 0, ${255-i})`);
@@ -212,7 +212,7 @@ export class LayerColorRelief256Colors extends LayerBenchmark {
             sources: {
                 'terrain-rgb': {
                     'type': 'raster-dem',
-                    'url': 'https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+                    'url': 'https://tiles.mapterhorn.com/tilejson.json'
                 }
             },
             layers: generateLayers({
@@ -276,6 +276,31 @@ export class LayerSymbol extends LayerBenchmark {
                 'layout': {
                     'icon-image': 'dot_11',
                     'text-field': '{name_en}'
+                }
+            })
+        });
+    }
+}
+
+export class LayerSymbolWithHalo extends LayerBenchmark {
+    constructor() {
+        super();
+
+        this.layerStyle = Object.assign({}, style, {
+            layers: generateLayers({
+                'id': 'symbollayer',
+                'type': 'symbol',
+                'source': 'openmaptiles',
+                'source-layer': 'poi',
+                'layout': {
+                    'icon-image': 'dot_11',
+                    'text-field': '{name_en}'
+                },
+                'paint': {
+                    'text-color': '#000000',
+                    'text-halo-color': '#ff0000',
+                    'text-halo-width': 2,
+                    'text-halo-blur': 1
                 }
             })
         });

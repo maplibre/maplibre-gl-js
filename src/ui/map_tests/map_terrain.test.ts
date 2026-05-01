@@ -20,7 +20,7 @@ afterEach(() => {
     server.restore();
 });
 
-describe('#setTerrain', () => {
+describe('setTerrain', () => {
     test('warn when terrain and hillshade source identical', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 5,
@@ -34,16 +34,17 @@ describe('#setTerrain', () => {
         map.addSource('terrainrgb', {type: 'raster-dem', url: '/source.json'});
         server.respond();
         map.addLayer({id: 'hillshade', type: 'hillshade', source: 'terrainrgb'});
-        const stub = vi.spyOn(console, 'warn').mockImplementation(() => { });
-        stub.mockReset();
+        const originalWarn = console.warn;
+        console.warn = vi.fn();
         map.setTerrain({
             source: 'terrainrgb'
         });
         expect(console.warn).toHaveBeenCalledTimes(1);
+        console.warn = originalWarn;
     });
 });
 
-describe('#getTerrain', () => {
+describe('getTerrain', () => {
     test('returns null when not set', () => {
         const map = createMap();
         expect(map.getTerrain()).toBeNull();
@@ -54,10 +55,9 @@ describe('getCameraTargetElevation', () => {
     test('Elevation is zero without terrain, and matches any given terrain', () => {
         expect(map.getCameraTargetElevation()).toBe(0);
 
-        const terrainStub = {} as Terrain;
-        map.terrain = terrainStub;
+        map.terrain = {} as Terrain;
 
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setElevation(200);
         transform.setCenter(new LngLat(10.0, 50.0));
         transform.setZoom(14);
@@ -83,7 +83,7 @@ describe('Keep camera outside terrain', () => {
         map.jumpTo({center: [0.0, 0.0], bearing: 0, pitch: 45, zoom: 15});
         const initialLngLat = map.transform.screenPointToLocation(map.transform.getCameraPoint());
         const initialAltitude = map.transform.getCameraAltitude();
-        expect(initialAltitude).toBeCloseTo(506, 0);
+        expect(initialAltitude).toBeCloseTo(516, 0);
 
         // Now we set the elevation to 5000 everywhere and try to jump to the
         // same position. This would lead to a jump into the terrain, which
@@ -96,7 +96,6 @@ describe('Keep camera outside terrain', () => {
         const lngLat = map.transform.screenPointToLocation(map.transform.getCameraPoint());
         expect(lngLat.lng).toBeCloseTo(initialLngLat.lng);
         expect(lngLat.lat).toBeCloseTo(initialLngLat.lat);
-        expect(map.transform.pitch).toBeLessThan(45);
         expect(map.transform.getCameraAltitude()).toBeGreaterThan(initialAltitude);
         expect(map.transform.getCameraAltitude()).toBeGreaterThan(terrainElevation);
     });

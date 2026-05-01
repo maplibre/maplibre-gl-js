@@ -2,16 +2,16 @@ import {type PluginState, type RTLPluginStatus} from './rtl_text_plugin_status';
 
 export interface RTLTextPlugin {
     applyArabicShaping: (a: string) => string;
-    processBidirectionalText: ((b: string, a: Array<number>) => Array<string>);
-    processStyledBidirectionalText: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>);
+    processBidirectionalText: ((b: string, a: number[]) => string[]);
+    processStyledBidirectionalText: ((c: string, b: number[], a: number[]) => Array<[string, number[]]>);
 }
 
 class RTLWorkerPlugin implements RTLTextPlugin {
     readonly TIMEOUT = 5000;
 
     applyArabicShaping: (a: string) => string = null;
-    processBidirectionalText: ((b: string, a: Array<number>) => Array<string>) = null;
-    processStyledBidirectionalText: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>) = null;
+    processBidirectionalText: ((b: string, a: number[]) => string[]) = null;
+    processStyledBidirectionalText: ((c: string, b: number[], a: number[]) => Array<[string, number[]]>) = null;
     pluginStatus: RTLPluginStatus = 'unavailable';
     pluginURL: string = null;
     loadScriptResolve: () => void = () => {};
@@ -48,7 +48,7 @@ class RTLWorkerPlugin implements RTLTextPlugin {
         return this.pluginStatus;
     }
 
-    public async syncState(incomingState: PluginState, importScripts: (url: string) => void): Promise<PluginState> {
+    public async syncState(incomingState: PluginState, loadScript: (url: string) => Promise<void>): Promise<PluginState> {
         // Parsed plugin cannot be changed, so just return its current state.
         if (this.isParsed()) {
             return this.getState();
@@ -63,8 +63,8 @@ class RTLWorkerPlugin implements RTLTextPlugin {
         const loadScriptPromise = new Promise<void>((resolve) => {
             this.loadScriptResolve = resolve;
         });
-        importScripts(urlToLoad);
         const dontWaitForeverTimeoutPromise = new Promise<void>((resolve) => setTimeout(() => resolve(), this.TIMEOUT));
+        await loadScript(urlToLoad);
         await Promise.race([loadScriptPromise, dontWaitForeverTimeoutPromise]);
         const complete = this.isParsed();
         if (complete) {

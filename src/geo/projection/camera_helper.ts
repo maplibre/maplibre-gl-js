@@ -135,7 +135,7 @@ export function updateRotation(args: UpdateRotationArgs) {
         if (args.k < 1) {
             const startRotation = rollPitchBearingToQuat(args.startEulerAngles.roll, args.startEulerAngles.pitch, args.startEulerAngles.bearing);
             const endRotation = rollPitchBearingToQuat(args.endEulerAngles.roll, args.endEulerAngles.pitch, args.endEulerAngles.bearing);
-            const rotation: quat = new Float64Array(4) as any;
+            const rotation: quat = new Float64Array(4);
             quat.slerp(rotation, startRotation, endRotation, args.k);
             const eulerAngles = getRollPitchBearing(rotation);
             args.tr.setRoll(eulerAngles.roll);
@@ -211,11 +211,9 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, padding:
         nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom)
     );
 
-    const result = {
+    return {
         center,
         zoom,
         bearing
     };
-
-    return result;
 }

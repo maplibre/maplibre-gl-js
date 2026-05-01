@@ -161,6 +161,24 @@ describe('shaping', () => {
         expect(shaped).toEqual(expectedImagesVertical);
     });
 
+    test('Rotated punctuation in vertical layout', () => {
+        const shaped = shapeText(Formatted.fromString('()'), glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.vertical, true, layoutTextSize, layoutTextSizeThisZoom);
+        const positionedGlyphs = (shaped as Shaping).positionedLines[0].positionedGlyphs;
+        expect(positionedGlyphs[0].glyph).toBe(0xfe35);
+        expect(positionedGlyphs[1].glyph).toBe(0xfe36);
+    });
+
+    test('Characters beyond the Basic Multilingual Plane', () => {
+        const shaped = shapeText(Formatted.fromString('🗺️🌐'), glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
+        const positionedGlyphs = (shaped as Shaping).positionedLines[0].positionedGlyphs;
+        expect(positionedGlyphs[0].glyph).toBe(0x1f5fa);
+        expect(positionedGlyphs[0].x).toBe(-31.5);
+        expect(positionedGlyphs[1].glyph).toBe(0xfe0f);
+        expect(positionedGlyphs[1].x).toBe(-10.5);
+        expect(positionedGlyphs[2].glyph).toBe(0x1f310);
+        expect(positionedGlyphs[2].x).toBe(10.5);
+    });
+
     test('text vertical align', () => {
         const shaped = shapeText(new Formatted([
             sectionForText('A', 3),

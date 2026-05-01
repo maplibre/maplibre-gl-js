@@ -1,0 +1,40 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "debug": true,
+            "height": 256
+        }
+    },
+    "center": [
+        15.311276,
+        50.821840
+    ],
+    "zoom": 5.7,
+    "sources": {
+        "openmaptiles": {
+            "type": "vector",
+            "encoding": "mlt",
+            "tiles": ["local://tiles/mlt/{z}/{x}/{y}.mlt"],
+            "maxzoom": 14
+        }
+    },
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "sprite": "local://sprites/sprite",
+    "layers": [
+        {
+            "id": "place_label_other",
+            "type": "symbol",
+            "source": "openmaptiles",
+            "source-layer": "place",
+            "layout": {
+                "text-field": "{name:latin}",
+                "text-font": ["Noto Sans Regular"],
+                "text-size": ["interpolate", ["linear"], ["zoom"], 3, 12, 8, 22]
+            },
+            "paint": {
+                "text-color": "#ffffff"
+            }
+        }
+    ]
+}

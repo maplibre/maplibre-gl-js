@@ -1,0 +1,65 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "width": 64,
+            "height": 64,
+            "addFakeCanvas": {
+                "id": "fake-canvas",
+                "image": "./image/64x64.png"
+            },
+            "operations": [
+                [
+                    "wait"
+                ]
+            ]
+        }
+    },
+    "center": [
+        0,
+        0
+    ],
+    "zoom": 0,
+    "sources": {
+        "canvas": {
+            "type": "canvas",
+            "animate": false,
+            "coordinates": [
+                [
+                    -10,
+                    10
+                ],
+                [
+                    10,
+                    10
+                ],
+                [
+                    10,
+                    -10
+                ],
+                [
+                    -10,
+                    -10
+                ]
+            ],
+            "canvas": "fake-canvas"
+        }
+    },
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "white"
+            }
+        },
+        {
+            "id": "canvas",
+            "type": "raster",
+            "source": "canvas",
+            "paint": {
+                "raster-fade-duration": 0
+            }
+        }
+    ]
+}

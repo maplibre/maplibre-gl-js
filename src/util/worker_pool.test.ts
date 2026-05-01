@@ -2,7 +2,7 @@ import {describe, test, expect} from 'vitest';
 import {WorkerPool} from './worker_pool';
 
 describe('WorkerPool', () => {
-    test('#acquire', () => {
+    test('acquire', () => {
         Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
 
         const pool = new WorkerPool();
@@ -14,19 +14,21 @@ describe('WorkerPool', () => {
         expect(workers2).toHaveLength(4);
 
         // check that the two different dispatchers' workers arrays correspond
-        workers1.forEach((w, i) => { expect(w).toBe(workers2[i]); });
+        for (let i = 0; i < workers1.length; i++) {
+            expect(workers1[i]).toBe(workers2[i]);
+        }
     });
 
-    test('#release', () => {
+    test('release', () => {
         let workersTerminated = 0;
         Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
 
         const pool = new WorkerPool();
         pool.acquire('map-1');
         const workers = pool.acquire('map-2');
-        workers.forEach((w) => {
+        for (const w of workers) {
             w.terminate = function () { workersTerminated += 1; };
-        });
+        }
 
         pool.release('map-2');
 

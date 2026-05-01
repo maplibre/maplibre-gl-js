@@ -1,5 +1,6 @@
-import {vi, expect} from 'vitest';
+import {vi, expect, onTestFinished} from 'vitest';
 import {Map} from '../../ui/map';
+import {NullWebGL2RenderingContext} from './null_gl';
 import {extend} from '../../util/util';
 import {type Dispatcher} from '../../util/dispatcher';
 import {type IActor} from '../actor';
@@ -37,7 +38,7 @@ export class StubMap extends Evented {
     getTerrain() { return this._terrain; }
 
     migrateProjection(newTransform: ITransform) {
-        newTransform.apply(this.transform);
+        newTransform.apply(this.transform, true);
         this.transform = newTransform;
     }
 }
@@ -62,13 +63,11 @@ export function createMap(options?) {
 
     if (options?.deleteStyle) delete defaultOptions.style;
 
-    const map = new Map(extend(defaultOptions, options));
-
-    return map;
+    return new Map(extend(defaultOptions, options));
 }
 
 export function equalWithPrecision(test, expected, actual, multiplier, message, extra) {
-    message = message || `should be equal to within ${multiplier}`;
+    message ||= `should be equal to within ${multiplier}`;
     const expectedRounded = Math.round(expected / multiplier) * multiplier;
     const actualRounded = Math.round(actual / multiplier) * multiplier;
 
@@ -99,52 +98,50 @@ export function setMatchMedia() {
 }
 
 function setResizeObserver() {
-    global.ResizeObserver = vi.fn().mockImplementation(() => ({
-        observe: vi.fn(),
-        unobserve: vi.fn(),
-        disconnect: vi.fn(),
-    }));
+    global.ResizeObserver = vi.fn(class {
+        observe = vi.fn();
+        unobserve = vi.fn();
+        disconnect = vi.fn();
+    });
+}
+let _originalGetContext: typeof HTMLCanvasElement.prototype.getContext | undefined;
+
+function setNullGLGetContext() {
+    _originalGetContext ??= HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (type: string, attributes?: any): any {
+        if (type === 'webgl2') return new NullWebGL2RenderingContext(this, attributes);
+        return _originalGetContext.call(this, type, attributes);
+    } as any;
 }
 
 export function beforeMapTest() {
+    setNullGLGetContext();
     setPerformance();
     setMatchMedia();
     setResizeObserver();
-    // remove the following when the following is merged and released: https://github.com/Adamfsk/jest-webgl-canvas-mock/pull/5
-    (WebGLRenderingContext.prototype as any).bindVertexArray = WebGLRenderingContext.prototype.getExtension('OES_vertex_array_object').bindVertexArrayOES;
-    (WebGLRenderingContext.prototype as any).createVertexArray = WebGLRenderingContext.prototype.getExtension('OES_vertex_array_object').createVertexArrayOES;
-    if (!WebGLRenderingContext.prototype.drawingBufferHeight && !WebGLRenderingContext.prototype.drawingBufferWidth) {
-        Object.defineProperty(WebGLRenderingContext.prototype, 'drawingBufferWidth', {
-            get: vi.fn(),
-            configurable: true,
-        });
-        Object.defineProperty(WebGLRenderingContext.prototype, 'drawingBufferHeight', {
-            get: vi.fn(),
-            configurable: true,
-        });
-    }
+    onTestFinished(() => {
+        HTMLCanvasElement.prototype.getContext = _originalGetContext;
+    });
 }
 
 export function getWrapDispatcher() {
-    const wrapDispatcher = (actor: IActor) => {
+    return (actor: IActor) => {
         return {
             getActor() {
                 return actor;
             }
         } as any as Dispatcher;
     };
-
-    return wrapDispatcher;
 }
 
 export function getMockDispatcher() {
     const wrapDispatcher = getWrapDispatcher();
 
-    const mockDispatcher = wrapDispatcher({
-        sendAsync() { return Promise.resolve({}); },
+    return wrapDispatcher({
+        sendAsync() {
+            return Promise.resolve({});
+        },
     });
-
-    return mockDispatcher;
 }
 
 export function stubAjaxGetImage(createImageBitmap) {
@@ -217,7 +214,7 @@ export function createStyle(): StyleSpecification {
     };
 }
 
-export function expectToBeCloseToArray(actual: Array<number>, expected: Array<number>, precision?: number) {
+export function expectToBeCloseToArray(actual: number[], expected: number[], precision?: number) {
     expect(actual).toHaveLength(expected.length);
     for (let i = 0; i < expected.length; i++) {
         expect(actual[i]).toBeCloseTo(expected[i], precision);
@@ -228,11 +225,12 @@ export function createTerrain(): Terrain {
     return {
         pointCoordinate: () => null,
         getElevationForLngLatZoom: () => 1000,
+        getElevationForLngLat: () => 1000,
         getMinTileElevationForLngLatZoom: () => 0,
         getFramebuffer: () => ({}),
         getCoordsTexture: () => ({}),
         depthAtPoint: () => .9,
-        sourceCache: {
+        tileManager: {
             update: () => {},
             getRenderableTiles: () => [],
             anyTilesAfterTime: () => false
@@ -278,4 +276,4 @@ export function createTestCameraFrustum(fovy: number, aspectRatio: number, zNear
     mat4.invert(invProj, proj);
 
     return Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
-};
+}

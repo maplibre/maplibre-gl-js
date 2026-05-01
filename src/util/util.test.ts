@@ -1,7 +1,8 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, getEdgeTiles, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance, evaluateZoomSnap} from './util';
 import {Canvas} from 'canvas';
+import {OverscaledTileID} from '../tile/tile_id';
 import {expectToBeCloseToArray} from './test/util';
 import {vec3, type vec4} from 'gl-matrix';
 
@@ -71,7 +72,7 @@ describe('util', () => {
 
     test('mapObject', () => {
         expect.assertions(5);
-        expect(mapObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
+        expect(mapObject({}, () => expect(false).toBeTruthy())).toEqual({});
         const that = {};
         expect(mapObject({map: 'box'}, (value, key, object) => {
             expect(value).toBe('box');
@@ -83,9 +84,9 @@ describe('util', () => {
 
     test('filterObject', () => {
         expect.assertions(6);
-        expect(filterObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
+        expect(filterObject({}, () => expect(false).toBeTruthy())).toEqual({});
         const that = {};
-        filterObject({map: 'box'}, function(value, key, object) {
+        filterObject({map: 'box'}, function(this: Record<string, never>, value: string, key: string, object: Record<string, string>) {
             expect(value).toBe('box');
             expect(key).toBe('map');
             expect(object).toEqual({map: 'box'});
@@ -242,6 +243,80 @@ describe('util isCounterClockwise', () => {
     });
 });
 
+describe('util getEdgeTiles', () => {
+    const makeTile = (z: number, x: number, y: number): OverscaledTileID => {
+        return new OverscaledTileID(z, 0, z, x, y);
+    };
+    const arrayKeys = (tileIDs: OverscaledTileID[]) => {
+        return tileIDs.map(id => id.key).sort();
+    };
+    const setKeys = (tileIDs: Set<OverscaledTileID>) => {
+        return Array.from(tileIDs).map(id => id.key).sort();
+    };
+
+    test('returns [] for empty input', () => {
+        expect(getEdgeTiles([])).toEqual(new Set<OverscaledTileID>());
+    });
+
+    test('returns all edge tiles at same zoom', () => {
+        const tiles = [
+            makeTile(2, 0, 0),
+            makeTile(2, 1, 0),
+            makeTile(2, 0, 1),
+            makeTile(2, 1, 1),
+        ];
+        const edges = getEdgeTiles(tiles);
+        expect(setKeys(edges)).toEqual(arrayKeys(tiles));
+    });
+
+    test('returns only edge tiles for a 3x3 block at the same zoom', () => {
+        // 3x3 block of tiles at z=3
+        const tiles: OverscaledTileID[] = [];
+        for (let x = 4; x <= 6; x++) {
+            for (let y = 4; y <= 6; y++) {
+                tiles.push(makeTile(3, x, y));
+            }
+        }
+
+        const edges = getEdgeTiles(tiles);
+
+        // expected: 8 perimeter tiles (center tile (5,5) is not on any edge)
+        const expected = tiles.filter(id => {
+            const {x, y} = id.canonical;
+            return !(x === 5 && y === 5);
+        });
+
+        expect(setKeys(edges)).toEqual(arrayKeys(expected));
+    });
+
+    test('returns only perimeter tiles when mixing coarse and fine', () => {
+        const coarse = [
+            makeTile(2, 0, 0),
+            makeTile(2, 1, 0),
+            makeTile(2, 0, 1),
+            makeTile(2, 1, 1)
+        ];
+        const fine = [
+            makeTile(3, 4, 4),
+            makeTile(3, 5, 4),
+            makeTile(3, 4, 5),
+            makeTile(3, 5, 5)
+        ];
+
+        const allTiles = [...coarse, ...fine];
+        const edges = getEdgeTiles(allTiles);
+
+        // expected: drop (z=2, x=1, y=1) and (z=3, x=4, y=4)
+        const expected = allTiles.filter(id => {
+            const {x, y, z} = id.canonical;
+            return !(z === 2 && x === 1 && y === 1) &&
+                   !(z === 3 && x === 4 && y === 4);
+        });
+
+        expect(setKeys(edges)).toEqual(arrayKeys(expected));
+    });
+});
+
 describe('util parseCacheControl', () => {
     test('max-age', () => {
         expect(parseCacheControl('max-age=123456789')).toEqual({
@@ -320,7 +395,10 @@ describe('util readImageUsingVideoFrame', () => {
         }),
         close: vi.fn(),
     };
-    (window as any).VideoFrame = vi.fn(() => frame);
+    // return the same frame object each time to allow checking of mock calls
+    global.VideoFrame = vi.fn(function() {
+        return frame;
+    }) as any;
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 2;
 
@@ -363,7 +441,6 @@ describe('util readImageUsingVideoFrame', () => {
 
     describe('layout/rect', () => {
         beforeEach(() => {
-            (window as any).VideoFrame = vi.fn(() => frame);
             canvas.width = canvas.height = 3;
         });
 
@@ -459,7 +536,7 @@ describe('util readImageUsingVideoFrame', () => {
 
 describe('util readImageDataUsingOffscreenCanvas', () => {
     test('reads pixels from image', async () => {
-        (window as any).OffscreenCanvas = Canvas;
+        global.OffscreenCanvas = Canvas as any;
         const image = new Canvas(2, 2);
         const context = image.getContext('2d');
         context.fillStyle = 'rgb(10,0,0)';
@@ -530,12 +607,32 @@ describe('util scaleZoom and zoomScale relation', () => {
     });
 });
 
+describe('evaluateZoomSnap', () => {
+    test('evaluateZoomSnap logic', () => {
+        expect(evaluateZoomSnap(9.1, 0.5)).toBe(9.0);
+        expect(evaluateZoomSnap(9.6, 1.0)).toBe(10.0);
+        expect(evaluateZoomSnap(9.63, 0)).toBe(9.63);
+    });
+
+    test('evaluateZoomSnap directional logic, when delta is defined and positive (snapping up)', () => {
+        expect(evaluateZoomSnap(9.1, 1.0, 1.0)).toBe(10.0);
+        expect(evaluateZoomSnap(10.0, 1.0, 1.0)).toBe(10.0);
+        expect(evaluateZoomSnap(10.00000001, 1.0, 1.0)).toBe(11.0);
+    });
+
+    test('evaluateZoomSnap directional logic, when delta is defined and negative (snapping down)', () => {
+        expect(evaluateZoomSnap(9.9, 1.0, -1.0)).toBe(9.0);
+        expect(evaluateZoomSnap(9.1, 1.0, -1.0)).toBe(9.0);
+        expect(evaluateZoomSnap(8.999999999, 1.0, -1.0)).toBe(8.0);
+    });
+});
+
 describe('threePlaneIntersection', () => {
     const precision = 10;
 
     function createPlane(origin: number[], direction: number[]): vec4 {
-        const normalized = vec3.normalize([] as any, direction as vec3);
-        const dist = vec3.dot(normalized, origin as vec3);
+        const normalized = vec3.normalize([], direction);
+        const dist = vec3.dot(normalized, origin);
         return [normalized[0], normalized[1], normalized[2], -dist];
     }
 

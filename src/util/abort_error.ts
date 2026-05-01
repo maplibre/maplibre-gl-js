@@ -3,19 +3,34 @@
  */
 export const ABORT_ERROR = 'AbortError';
 
+export class AbortError extends Error {
+    name = ABORT_ERROR;
+
+    constructor(messageOrError: string | Error = ABORT_ERROR) {
+        super(messageOrError instanceof Error ? messageOrError.message : messageOrError);
+        if (messageOrError instanceof Error && messageOrError.stack) {
+            this.stack = messageOrError.stack;
+        }
+    }
+}
+
 /**
  * Check if an error is an abort error
  * @param error - An error object
  * @returns - true if the error is an abort error
  */
-export function isAbortError(error: Error): boolean {
-    return error.message === ABORT_ERROR;
+export function isAbortError(error: unknown): boolean {
+    return error instanceof Error && error.name === ABORT_ERROR;
 }
 
 /**
- * Use this when you need to create an abort error.
- * @returns An error object with the message "AbortError"
+ * Throws an AbortError if the provided abort signal has already been aborted.
+ *
+ * @param signal - The abort signal to check.
+ * @throws AbortError If the signal is aborted.
  */
-export function createAbortError(): Error {
-    return new Error(ABORT_ERROR);
+export function throwIfAborted(signal: AbortSignal): void {
+    if (signal.aborted) {
+        throw new AbortError(signal.reason);
+    }
 }

@@ -1,7 +1,7 @@
 import {VectorTileSource} from '../source/vector_tile_source';
 import {RasterTileSource} from '../source/raster_tile_source';
 import {RasterDEMTileSource} from '../source/raster_dem_tile_source';
-import {GeoJSONSource} from '../source/geojson_source';
+import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions} from '../source/geojson_source';
 import {VideoSource} from '../source/video_source';
 import {ImageSource} from '../source/image_source';
 import {CanvasSource} from '../source/canvas_source';
@@ -10,8 +10,9 @@ import {type Dispatcher} from '../util/dispatcher';
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Event, Evented} from '../util/evented';
 import type {Map} from '../ui/map';
-import type {Tile} from './tile';
-import type {OverscaledTileID, CanonicalTileID} from './tile_id';
+import type {Tile} from '../tile/tile';
+import type {OverscaledTileID, CanonicalTileID} from '../tile/tile_id';
+import type {LoadTileResult} from '../source/vector_tile_source';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 import {type CalculateTileZoomFunction} from '../geo/projection/covering_tiles';
 
@@ -62,7 +63,7 @@ export interface Source {
      * `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
      */
     reparseOverscaled?: boolean;
-    vectorLayerIds?: Array<string>;
+    vectorLayerIds?: string[];
     /**
      * True if the source has transition, false otherwise.
      */
@@ -91,7 +92,7 @@ export interface Source {
      * In most cases it will defer the work to the relevant worker source.
      * @param tile - The tile to load
      */
-    loadTile(tile: Tile): Promise<void>;
+    loadTile(tile: Tile): Promise<LoadTileResult | void>;
     /**
      * True is the tile is part of the source, false otherwise.
      * @param tileID - The tile ID
@@ -121,6 +122,12 @@ export interface Source {
      * Optional function to redefine how tiles are loaded at high pitch angles.
      */
     calculateTileZoom?: CalculateTileZoomFunction;
+    /**
+     * Optional function to determine whether a tile should be reloaded, given a
+     * set of options associated with a `MapSourceDataChangedEvent`.
+     * @internal
+     */
+    shouldReloadTile?(tile: Tile, options: GeoJSONSourceShouldReloadTileOptions): boolean;
 }
 
 /**
@@ -178,7 +185,7 @@ const setSourceType = (name: string, type: SourceClass) => {
 };
 
 /**
- * Adds a custom source type, making it available for use with {@link Map#addSource}.
+ * Adds a custom source type, making it available for use with {@link Map.addSource}.
  * @param name - The name of the source type; source definition objects use this name in the `{type: ...}` field.
  * @param SourceType - A {@link SourceClass} - which is a constructor for the `Source` interface.
  * @returns a promise that is resolved when the source type is ready or rejected with an error.

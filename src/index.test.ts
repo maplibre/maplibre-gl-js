@@ -1,4 +1,4 @@
-import {describe, beforeEach, afterAll, test, expect} from 'vitest';
+import {describe, beforeEach, afterAll, test, expect, vi} from 'vitest';
 import {config} from './util/config';
 import {addProtocol, getWorkerCount, removeProtocol, getVersion} from './index';
 import {getJSON, getArrayBuffer} from './util/ajax';
@@ -36,62 +36,70 @@ describe('maplibre', () => {
         expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
     });
 
-    test('#addProtocol - getJSON', async () => {
-        let protocolCallbackCalled = false;
-        addProtocol('custom', () => {
-            protocolCallbackCalled = true;
-            return Promise.resolve({data: {'foo': 'bar'}});
-        });
+    test('addProtocol - getJSON', async () => {
+        const mockProtocol = vi.fn().mockReturnValue(Promise.resolve({data: {'foo': 'bar'}}));
+        addProtocol('custom', mockProtocol);
+
         const response = await getJSON({url: 'custom://test/url/json'}, new AbortController());
         expect(response.data).toEqual({foo: 'bar'});
-        expect(protocolCallbackCalled).toBeTruthy();
+        expect(mockProtocol).toHaveBeenCalled();
     });
 
-    test('#addProtocol - getArrayBuffer', async () => {
-        let protocolCallbackCalled = false;
-        addProtocol('custom', () => {
-            protocolCallbackCalled = true;
-            return Promise.resolve({data: new ArrayBuffer(1), cacheControl: 'cache-control', expires: 'expires'});
-        });
+    test('addProtocol - getArrayBuffer', async () => {
+        const mockProtocol = vi.fn().mockReturnValue(Promise.resolve({data: new ArrayBuffer(1), cacheControl: 'cache-control', expires: 'expires'}));
+        addProtocol('custom', mockProtocol);
+
         const response = await getArrayBuffer({url: 'custom://test/url/getArrayBuffer'}, new AbortController());
         expect(response.data).toBeInstanceOf(ArrayBuffer);
         expect(response.cacheControl).toBe('cache-control');
         expect(response.expires).toBe('expires');
-        expect(protocolCallbackCalled).toBeTruthy();
+        expect(mockProtocol).toHaveBeenCalled();
     });
 
-    test('#addProtocol - returning ImageBitmap for getImage', async () => {
-        let protocolCallbackCalled = false;
-        addProtocol('custom', () => {
-            protocolCallbackCalled = true;
-            return Promise.resolve({data: new ImageBitmap()});
-        });
+    test('addProtocol - null response for getArrayBuffer results in empty array buffer', async () => {
+        const mockProtocol = vi.fn().mockReturnValue(Promise.resolve({data: null, cacheControl: 'cache-control', expires: 'expires'}));
+        addProtocol('custom', mockProtocol);
+
+        const response = await getArrayBuffer({url: 'custom://test/url/getArrayBuffer'}, new AbortController());
+        expect(response.data).toBeInstanceOf(ArrayBuffer);
+        expect(response.data.byteLength).toBe(0);
+        expect(response.cacheControl).toBe('cache-control');
+        expect(response.expires).toBe('expires');
+        expect(mockProtocol).toHaveBeenCalled();
+    });
+
+    test('addProtocol - returning ImageBitmap for getImage', async () => {
+        const mockProtocol = vi.fn().mockReturnValue(Promise.resolve({data: new ImageBitmap()}));
+        addProtocol('custom', mockProtocol);
 
         const img = await ImageRequest.getImage({url: 'custom://test/url/getImage'}, new AbortController());
         expect(img.data).toBeInstanceOf(ImageBitmap);
-        expect(protocolCallbackCalled).toBeTruthy();
+        expect(mockProtocol).toHaveBeenCalled();
     });
 
-    test('#addProtocol - returning HTMLImageElement for getImage', async () => {
-        let protocolCallbackCalled = false;
-        addProtocol('custom', () => {
-            protocolCallbackCalled = true;
-            return Promise.resolve({data: new Image()});
-        });
+    test('addProtocol - returning HTMLImageElement for getImage', async () => {
+        const mockProtocol = vi.fn().mockReturnValue(Promise.resolve({data: new Image()}));
+        addProtocol('custom', mockProtocol);
+
         const img = await ImageRequest.getImage({url: 'custom://test/url/getImage'}, new AbortController());
         expect(img.data).toBeInstanceOf(HTMLImageElement);
-        expect(protocolCallbackCalled).toBeTruthy();
+        expect(mockProtocol).toHaveBeenCalled();
     });
 
-    test('#addProtocol - error', () => {
-        addProtocol('custom', () => Promise.reject(new Error('test error')));
+    test('addProtocol - error', async () => {
+        const mockError = new Error('test error');
+        const mockProtocol = vi.fn().mockReturnValue(Promise.reject(mockError));
+        addProtocol('custom', mockProtocol);
 
-        getJSON({url: 'custom://test/url/json'}, new AbortController()).catch((error) => {
-            expect(error).toBeTruthy();
-        });
+        const successCallback = vi.fn();
+        const errorCallback = vi.fn();
+        await getJSON({url: 'custom://test/url/json'}, new AbortController()).then(successCallback, errorCallback);
+        expect(successCallback).not.toHaveBeenCalled();
+        expect(errorCallback).toHaveBeenCalledExactlyOnceWith(mockError);
+        expect(mockProtocol).toHaveBeenCalled();
     });
 
-    test('#addProtocol - Cancel request', async () => {
+    test('addProtocol - Cancel request', async () => {
         let cancelCalled = false;
         addProtocol('custom', (_req, abortController) => {
             abortController.signal.addEventListener('abort', () => {

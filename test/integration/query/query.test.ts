@@ -1,27 +1,26 @@
 import {describe, beforeAll, afterAll, test, expect} from 'vitest';
-import puppeteer, {type Page, type Browser} from 'puppeteer';
-
-import {deepEqual} from '../lib/json-diff';
+import {globSync} from 'glob';
 import st from 'st';
 import http from 'node:http';
-import type {Server} from 'node:http';
-
 import path from 'node:path/posix';
 import fs from 'node:fs';
+import type {Page, Browser, WebWorker} from 'puppeteer';
+import type {Server} from 'node:http';
 import type {AddressInfo} from 'node:net';
+import {ensureError} from '../../../src/util/util';
 
+import {deepEqual} from '../lib/json-diff';
 import {localizeURLs} from '../lib/localize-urls';
-import {globSync} from 'glob';
+import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config';
+import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
-import type * as maplibreglModule from '../../../dist/maplibre-gl';
-import {CoverageReport} from 'monocart-coverage-reports';
-let maplibregl: typeof maplibreglModule;
+let maplibregl: typeof MapLibreGL;
 
 async function performQueryOnFixture(fixture)  {
 
     async function handleOperation(map: maplibregl.Map, operation) {
         const opName = operation[0];
-        
+
         switch (opName) {
             case 'wait':
                 while (!map.loaded()) {
@@ -97,65 +96,33 @@ describe('query tests', () => {
     let browser: Browser;
     let server: Server;
     let page: Page;
+    let workers: WebWorker[] = [];
 
     beforeAll(async () => {
-        server = http.createServer(
-            st({
-                path: 'test/integration/assets',
-                cors: true,
-            })
-        );
-        browser = await puppeteer.launch({
-            headless: true,
-            args: [
-                '--enable-webgl', 
-                '--no-sandbox',
-            ],
+        const assetsMount = st({path: 'test/integration/assets', cors: true, passthrough: true});
+        const distMount = st({path: 'dist', url: '/dist', cors: true, passthrough: true});
+        server = http.createServer((req, res) => {
+            distMount(req, res, () => {
+                assetsMount(req, res, () => {
+                    res.writeHead(404);
+                    res.end('');
+                });
+            });
         });
+        browser = await launchPuppeteer();
         await new Promise<void>((resolve) => server.listen(resolve));
+        const port = (server.address() as AddressInfo).port;
         page = await browser.newPage();
-        await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
+        workers = await startCoverage(page);
         await page.setViewport({width: 512, height: 512, deviceScaleFactor: 2});
-        await page.setContent(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset='utf-8'>
-                
-            </head>
-            <body id='map'></body>
-            </html>`);
-        await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
-        await page.addStyleTag({path: 'dist/maplibre-gl.css'});
+        await page.goto(`http://localhost:${port}/test-page.html`, {waitUntil: 'load'});
+        await page.waitForFunction(() => (window as any).maplibregl, {timeout: 10000});
     }, 60000);
 
     afterAll(async () => {
-        const coverage = await page.coverage.stopJSCoverage();
-        await page.close();
+        await stopCoverageAndReport(page, workers, 'query');
         await browser.close();
         await new Promise(resolve => server.close(resolve));
-        const rawV8CoverageData = coverage.map((it) => {
-            // Convert to raw v8 coverage format
-            const entry: any =  {
-                source: it.text,
-                ...it.rawScriptCoverage
-            };
-            if (entry.url.endsWith('maplibre-gl-dev.js')) {
-                entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.js.map').toString('utf-8'));
-            }
-            return entry;
-        });
-        
-        const coverageReport = new CoverageReport({
-            name: 'MapLibre Coverage Report',
-            outputDir: './coverage/query',
-            reports: [['v8'], ['codecov']]
-        });
-        coverageReport.cleanCache();
-        
-        await coverageReport.add(rawV8CoverageData);
-        
-        await coverageReport.generate();
     }, 60000);
 
     const allTestsRoot = path.join('test', 'integration', 'query', 'tests');
@@ -217,7 +184,7 @@ async function dirToJson(dir: string, port: number) {
                 console.warn(`Ignoring file with unexpected extension. ${pp.ext}`);
             }
         } catch (e) {
-            console.warn(`Error parsing file: ${file} ${e.message}`);
+            console.warn(`Error parsing file: ${file} ${ensureError(e).message}`);
             throw e;
         }
     }
@@ -228,7 +195,7 @@ function processStyle(testName:string, style: unknown, port:number) {
     const clone = JSON.parse(JSON.stringify(style));
     localizeURLs(clone, port, 'test/integration');
 
-    clone.metadata = clone.metadata || {};
+    clone.metadata ||= {};
 
     clone.metadata.test = {
         testName,

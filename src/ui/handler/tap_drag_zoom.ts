@@ -2,6 +2,8 @@ import {type Handler} from '../handler_manager';
 import {TapRecognizer, MAX_TAP_INTERVAL, MAX_DIST} from './tap_recognizer';
 import type Point from '@mapbox/point-geometry';
 
+const defaultZoomRate = 1;
+
 /**
  * A `TapDragZoomHandler` allows the user to zoom the map at a point by double tapping. It also allows the user pan the map by dragging.
  */
@@ -14,6 +16,7 @@ export class TapDragZoomHandler implements Handler {
     _tapTime: number;
     _tapPoint: Point;
     _tap: TapRecognizer;
+    _zoomRate: number;
 
     constructor() {
 
@@ -21,8 +24,13 @@ export class TapDragZoomHandler implements Handler {
             numTouches: 1,
             numTaps: 1
         });
+        this._zoomRate = defaultZoomRate;
 
         this.reset();
+    }
+
+    setZoomRate(zoomRate?: number) {
+        this._zoomRate = zoomRate ?? defaultZoomRate;
     }
 
     reset() {
@@ -34,7 +42,7 @@ export class TapDragZoomHandler implements Handler {
         this._tap.reset();
     }
 
-    touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         if (this._swipePoint) return;
 
         if (!this._tapTime) {
@@ -54,7 +62,7 @@ export class TapDragZoomHandler implements Handler {
         }
     }
 
-    touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         if (!this._tapTime) {
             this._tap.touchmove(e, points, mapTouches);
         } else if (this._swipePoint) {
@@ -70,12 +78,12 @@ export class TapDragZoomHandler implements Handler {
             this._active = true;
 
             return {
-                zoomDelta: dist / 128
+                zoomDelta: dist / 128 * this._zoomRate
             };
         }
     }
 
-    touchend(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]) {
         if (!this._tapTime) {
             const point = this._tap.touchend(e, points, mapTouches);
             if (point) {

@@ -78,7 +78,7 @@ export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldS
     const scale = worldSize / zoomScale(canonical.z);
     const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
 
-    const worldMatrix = mat4.identity(new Float64Array(16) as any);
+    const worldMatrix = mat4.identity(new Float64Array(16));
     mat4.translate(worldMatrix, worldMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
     mat4.scale(worldMatrix, worldMatrix, [scale / EXTENT, scale / EXTENT, 1]);
     return worldMatrix;
@@ -88,9 +88,19 @@ export function cameraMercatorCoordinateFromCenterAndRotation(center: LngLat, el
     const centerMercator = MercatorCoordinate.fromLngLat(center, elevation);
     const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
     const dMercator = distance * mercUnitsPerMeter;
-    const dzMercator = dMercator * Math.cos(degreesToRadians(pitch));
-    const dhMercator = Math.sqrt(dMercator * dMercator - dzMercator * dzMercator);
-    const dxMercator = dhMercator * Math.sin(degreesToRadians(-bearing));
-    const dyMercator = dhMercator * Math.cos(degreesToRadians(-bearing));
+    const {x, y, z} = cameraDirectionFromPitchBearing(pitch, bearing);
+    const dxMercator = dMercator * -x;
+    const dyMercator = dMercator * -y;
+    const dzMercator = dMercator * -z;
     return new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
+}
+
+export function cameraDirectionFromPitchBearing(pitch: number, bearing: number): {x: number; y: number; z: number} {
+    const pitchRadians = degreesToRadians(pitch);
+    const bearingRadians = degreesToRadians(bearing);
+    const z = Math.cos(-pitchRadians);
+    const h = Math.sin(pitchRadians);
+    const x = h * Math.sin(bearingRadians);
+    const y = -h * Math.cos(bearingRadians);
+    return {x, y, z};
 }

@@ -2,7 +2,7 @@ import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import Benchmark from '../lib/benchmark';
 import fetchStyle from '../lib/fetch_style';
 import TileParser from '../lib/tile_parser';
-import {OverscaledTileID} from '../../../src/source/tile_id';
+import {OverscaledTileID} from '../../../src/tile/tile_id';
 
 export default class Layout extends Benchmark {
     tiles: Array<{
@@ -11,9 +11,9 @@ export default class Layout extends Benchmark {
     }>;
     parser: TileParser;
     style: string | StyleSpecification;
-    tileIDs: Array<OverscaledTileID>;
+    tileIDs: OverscaledTileID[];
 
-    constructor(style: string | StyleSpecification, tileIDs?: Array<OverscaledTileID>) {
+    constructor(style: string | StyleSpecification, tileIDs?: OverscaledTileID[]) {
         super();
         this.style = style;
         this.tileIDs = tileIDs || [

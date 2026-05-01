@@ -17,7 +17,7 @@ export type AttributionControlOptions = {
     /**
      * Attributions to show in addition to any other attributions.
      */
-    customAttribution?: string | Array<string>;
+    customAttribution?: string | string[];
 };
 
 export const defaultAttributionControlOptions: AttributionControlOptions = {
@@ -35,6 +35,7 @@ export const defaultAttributionControlOptions: AttributionControlOptions = {
  *         compact: true
  *     }));
  * ```
+ * @see [Change the default position for attribution](https://maplibre.org/maplibre-gl-js/docs/examples/change-the-default-position-for-attribution/)
  */
 export class AttributionControl implements IControl {
     options: AttributionControlOptions;
@@ -83,7 +84,7 @@ export class AttributionControl implements IControl {
 
     /** {@inheritDoc IControl.onRemove} */
     onRemove() {
-        DOM.remove(this._container);
+        this._container.remove();
 
         this._map.off('styledata', this._updateData);
         this._map.off('sourcedata', this._updateData);
@@ -122,7 +123,7 @@ export class AttributionControl implements IControl {
 
     _updateAttributions() {
         if (!this._map.style) return;
-        let attributions: Array<string> = [];
+        let attributions: string[] = [];
         if (this.options.customAttribution) {
             if (Array.isArray(this.options.customAttribution)) {
                 attributions = attributions.concat(
@@ -142,12 +143,12 @@ export class AttributionControl implements IControl {
             this.styleId = stylesheet.id;
         }
 
-        const sourceCaches = this._map.style.sourceCaches;
-        for (const id in sourceCaches) {
-            const sourceCache = sourceCaches[id];
-            if (sourceCache.used || sourceCache.usedForTerrain) {
-                const source = sourceCache.getSource();
-                if (source.attribution && attributions.indexOf(source.attribution) < 0) {
+        const tileManagers = this._map.style.tileManagers;
+        for (const id in tileManagers) {
+            const tileManager = tileManagers[id];
+            if (tileManager.used || tileManager.usedForTerrain) {
+                const source = tileManager.getSource();
+                if (source.attribution && !attributions.includes(source.attribution)) {
                     attributions.push(source.attribution);
                 }
             }
@@ -161,7 +162,7 @@ export class AttributionControl implements IControl {
         attributions.sort((a, b) => a.length - b.length);
         attributions = attributions.filter((attrib, i) => {
             for (let j = i + 1; j < attributions.length; j++) {
-                if (attributions[j].indexOf(attrib) >= 0) { return false; }
+                if (attributions[j].includes(attrib)) { return false; }
             }
             return true;
         });

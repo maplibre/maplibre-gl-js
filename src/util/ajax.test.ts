@@ -5,6 +5,8 @@ import {
     type AJAXError,
     sameOrigin
 } from './ajax';
+import {isAbortError} from './abort_error';
+import {ensureError} from './util';
 
 import {fakeServer, type FakeServer} from 'nise';
 
@@ -16,6 +18,8 @@ function readAsText(blob) {
         fileReader.readAsText(blob);
     });
 }
+
+const originalFetch = global.fetch;
 
 describe('ajax', () => {
     let server: FakeServer;
@@ -86,6 +90,46 @@ describe('ajax', () => {
             expect(ajaxError.statusText).toBe('Not Found');
             expect(ajaxError.url).toBe('http://example.com/test.json');
             expect(body).toBe('404 Not Found');
+        }
+    });
+
+    test('getJSON, aborted', async () => {
+        const abortController = new AbortController();
+        server.respondWith(request => {
+            request.respond(404, undefined, '404 Not Found');
+        });
+        const promise = getJSON({url: 'http://example.com/test.json'}, abortController);
+        abortController.abort();
+        server.respond();
+
+        try {
+            await promise;
+        } catch (error) {
+            expect(ensureError(error).name).toBe('AbortError');
+            expect(isAbortError(error)).toBe(true);
+        }
+    });
+
+    test('getJSON with fetch, aborted', async () => {
+        // Mock Request.prototype.signal to simulate environment with fetch and AbortController support
+        Object.defineProperty(Request.prototype, 'signal', {});
+
+        // Re-enable fetch for this test
+        global.fetch = originalFetch;
+
+        const abortController = new AbortController();
+        server.respondWith(request => {
+            request.respond(404, undefined, '404 Not Found');
+        });
+        const promise = getJSON({url: 'http://example.com/test.json'}, abortController);
+        abortController.abort();
+        server.respond();
+
+        try {
+            await promise;
+        } catch (error) {
+            expect(ensureError(error).name).toBe('AbortError');
+            expect(isAbortError(error)).toBe(true);
         }
     });
 
@@ -234,5 +278,36 @@ describe('ajax', () => {
             expect(server.requests[0].requestHeaders['Accept']).toBe('application/geo+json');
         });
 
+    });
+
+    describe('referrerPolicy', () => {
+
+        test('should pass referrerPolicy to fetch Request', async () => {
+            global.fetch = originalFetch;
+
+            const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response(new ArrayBuffer(1)));
+
+            await getArrayBuffer({url: 'http://example.com/test.json', referrerPolicy: 'origin-when-cross-origin'}, new AbortController());
+
+            expect(fetchSpy).toHaveBeenCalledTimes(1);
+            const request = fetchSpy.mock.calls[0][0] as Request;
+            expect(request.referrerPolicy).toBe('origin-when-cross-origin');
+
+            fetchSpy.mockRestore();
+        });
+
+        test('should default referrerPolicy to empty string when not provided', async () => {
+            global.fetch = originalFetch;
+
+            const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response(new ArrayBuffer(1)));
+
+            await getArrayBuffer({url: 'http://example.com/test.json'}, new AbortController());
+
+            expect(fetchSpy).toHaveBeenCalledTimes(1);
+            const request = fetchSpy.mock.calls[0][0] as Request;
+            expect(request.referrerPolicy).toBe('');
+
+            fetchSpy.mockRestore();
+        });
     });
 });

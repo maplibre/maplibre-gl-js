@@ -2,7 +2,7 @@ import type {ExpiryData, RequestParameters} from '../util/ajax';
 import type {RGBAImage, AlphaImage} from '../util/image';
 import type {GlyphPositions} from '../render/glyph_atlas';
 import type {ImageAtlas} from '../render/image_atlas';
-import type {OverscaledTileID} from './tile_id';
+import type {CanonicalTileID, OverscaledTileID} from '../tile/tile_id';
 import type {Bucket} from '../data/bucket';
 import type {FeatureIndex} from '../data/feature_index';
 import type {CollisionBoxArray} from '../data/array_types.g';
@@ -14,6 +14,9 @@ import type {RemoveSourceParams} from '../util/actor_messages';
 import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import type {DashEntry} from '../render/line_atlas';
+
+export type TileEncoding = 'mlt' | 'mvt';
 
 /**
  * Parameters to identify a tile
@@ -39,7 +42,21 @@ export type WorkerTileParameters = TileParameters & {
     collectResourceTiming?: boolean;
     returnDependencies?: boolean;
     subdivisionGranularity: SubdivisionGranularitySetting;
-    globalState: Record<string, any>;
+    encoding?: TileEncoding;
+    /**
+     * Provide this property when the requested tile has a higher canonical Z than source maxzoom.
+     * This allows the worker to know that it needs to overzoom from a source tile.
+     */
+    overzoomParameters?: OverzoomParameters;
+    etag?: string;
+};
+
+/**
+ * Parameters needed in order to load a tile that is overzoomed from a source tile
+ */
+export type OverzoomParameters = {
+    maxZoomTileID: CanonicalTileID;
+    overzoomRequest: RequestParameters;
 };
 
 /**
@@ -57,14 +74,16 @@ export type WorkerDEMTileParameters = TileParameters & {
 /**
  * The worker tile's result type
  */
-export type WorkerTileResult = ExpiryData & {
-    buckets: Array<Bucket>;
+export type WorkerTileWithData = ExpiryData & {
+    buckets: Bucket[];
     imageAtlas: ImageAtlas;
+    dashPositions: Record<string, DashEntry>;
     glyphAtlasImage: AlphaImage;
     featureIndex: FeatureIndex;
     collisionBoxArray: CollisionBoxArray;
     rawTileData?: ArrayBuffer;
-    resourceTiming?: Array<PerformanceResourceTiming>;
+    encoding?: TileEncoding;
+    resourceTiming?: PerformanceResourceTiming[];
     // Only used for benchmarking:
     glyphMap?: {
         [_: string]: {
@@ -75,22 +94,30 @@ export type WorkerTileResult = ExpiryData & {
         [_: string]: StyleImage;
     } | null;
     glyphPositions?: GlyphPositions | null;
+    etagUnmodified?: false;
 };
+
+export type WorkerTileWithoutData = ExpiryData & {
+    etagUnmodified: true;  // Strict for type narrowing
+    resourceTiming?: PerformanceResourceTiming[];
+};
+
+export type WorkerTileResult = WorkerTileWithData | WorkerTileWithoutData;
 
 /**
  * This is how the @see {@link WorkerSource} constructor should look like.
  */
 export interface WorkerSourceConstructor {
-    new (actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>): WorkerSource;
+    new (actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[]): WorkerSource;
 }
 
 /**
  * `WorkerSource` should be implemented by custom source types to provide code that can be run on the WebWorkers.
  * Each of the methods has a relevant event that triggers it from the main thread with the relevant parameters.
- * @see {@link Map#addSourceType}
+ * @see {@link Map.addSourceType}
  */
 export interface WorkerSource {
-    availableImages: Array<string>;
+    availableImages: string[];
 
     /**
      * Loads a tile from the given params and parse it into buckets ready to send
@@ -100,7 +127,7 @@ export interface WorkerSource {
     loadTile(params: WorkerTileParameters): Promise<WorkerTileResult>;
     /**
      * Re-parses a tile that has already been loaded.  Yields the same data as
-     * {@link WorkerSource#loadTile}.
+     * {@link WorkerSource.loadTile}.
      */
     reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult>;
     /**

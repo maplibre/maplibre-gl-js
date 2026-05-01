@@ -1,4 +1,4 @@
-import {OverscaledTileID} from '../../source/tile_id';
+import {OverscaledTileID} from '../../tile/tile_id';
 import {vec2, type vec4} from 'gl-matrix';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {degreesToRadians, scaleZoom} from '../../util/util';
@@ -23,7 +23,15 @@ type CoveringTilesStackEntry = {
     fullyVisible: boolean;
 };
 
-export type CoveringZoomOptions = {
+export type CoveringTilesOptions = {
+    /**
+     * Smallest allowed tile zoom.
+     */
+    minzoom?: number;
+    /**
+     * Largest allowed tile zoom.
+     */
+    maxzoom?: number;
     /**
      * Whether to round or floor the target zoom level. If true, the value will be rounded to the closest integer. Otherwise the value will be floored.
      */
@@ -34,15 +42,7 @@ export type CoveringZoomOptions = {
     tileSize: number;
 };
 
-export type CoveringTilesOptions = CoveringZoomOptions & {
-    /**
-     * Smallest allowed tile zoom.
-     */
-    minzoom?: number;
-    /**
-     * Largest allowed tile zoom.
-     */
-    maxzoom?: number;
+export type CoveringTilesOptionsInternal = CoveringTilesOptions & {
     /**
      * `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
      * Fill this option when computing covering tiles for a source.
@@ -100,7 +100,7 @@ export function isTileVisible(frustum: Frustum, tileBoundingVolume: IBoundingVol
 /**
  * Definite integral of cos(x)^p. The analytical solution is described in `developer-guides/covering-tiles.md`,
  * but here the integral is evaluated numerically.
- * @param p - the power to raise cos(x) to inside the itegral
+ * @param p - the power to raise cos(x) to inside the integral
  * @param x1 - the starting point of the integral.
  * @param x2 - the ending point of the integral.
  * @return the integral of cos(x)^p from x=x1 to x=x2
@@ -160,7 +160,7 @@ const defaultCalculateTileZoom = createCalculateTileZoomFunction(defaultMaxZoomL
  * @param options - The options, most importantly the source's tile size.
  * @returns An integer zoom level at which all tiles will be visible.
  */
-export function coveringZoomLevel(transform: IReadonlyTransform, options: CoveringZoomOptions): number {
+export function coveringZoomLevel(transform: IReadonlyTransform, options: CoveringTilesOptions): number {
     const z = (options.roundZoom ? Math.round : Math.floor)(
         transform.zoom + scaleZoom(transform.tileSize / options.tileSize)
     );
@@ -180,7 +180,7 @@ export function coveringZoomLevel(transform: IReadonlyTransform, options: Coveri
  * @param details - Interface to define required helper functions.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
-export function coveringTiles(transform: IReadonlyTransform, options: CoveringTilesOptions): OverscaledTileID[] {
+export function coveringTiles(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): OverscaledTileID[] {
     const frustum = transform.getCameraFrustum();
     const plane = transform.getClippingPlane();
     const cameraCoord = transform.screenPointToMercatorCoordinate(transform.getCameraPoint());
@@ -212,8 +212,8 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     };
 
     // Do a depth-first traversal to find visible tiles and proper levels of detail
-    const stack: Array<CoveringTilesStackEntry> = [];
-    const result: Array<CoveringTilesResult> = [];
+    const stack: CoveringTilesStackEntry[] = [];
+    const result: CoveringTilesResult[] = [];
 
     if (transform.renderWorldCopies && detailsProvider.allowWorldCopies()) {
         // Render copy of the globe thrice on both sides

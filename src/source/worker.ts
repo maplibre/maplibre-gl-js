@@ -6,6 +6,8 @@ import {rtlWorkerPlugin, type RTLTextPlugin} from './rtl_text_plugin_worker';
 import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
 import {isWorker} from '../util/util';
 import {addProtocol, removeProtocol} from './protocol_crud';
+import {makeRequest} from '../util/ajax';
+
 import {type PluginState} from './rtl_text_plugin_status';
 import type {
     WorkerSource,
@@ -14,7 +16,6 @@ import type {
     WorkerDEMTileParameters,
     TileParameters
 } from '../source/worker_source';
-
 import type {WorkerGlobalScopeInterface} from '../util/web_worker';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {
@@ -26,13 +27,54 @@ import {
 } from '../util/actor_messages';
 
 /**
+ * Loads an external script into worker (global) scope. The loader picks a
+ * strategy based on what the script actually is:
+ *
+ * - `.mjs` URLs: dynamic `import()` directly, no fetch/sniff overhead. Worker
+ *   CSP needs `script-src` to permit the URL.
+ *
+ * - Other URLs: fetch the source and sniff for ESM syntax (top-level `import`
+ *   or `export`). If ESM is detected, run it through a blob-URL dynamic
+ *   `import()` so the browser parses it as a module; this requires
+ *   `script-src blob:` in the worker CSP. Otherwise treat it as UMD/IIFE and
+ *   run it via `globalThis.eval`, which requires `script-src 'unsafe-eval'`.
+ */
+async function loadScript(url: string): Promise<void> {
+    if (url.endsWith('.mjs')) {
+        await import(/* @vite-ignore */ url);
+        return;
+    }
+    const response = await fetch(url, {credentials: 'same-origin'});
+    if (!response.ok) {
+        throw new Error(`Failed to load ${url}: ${response.status}`);
+    }
+    const code = await response.text();
+    // Top-level `import`/`export` keywords are unique to ESM. UMD scripts
+    // assign to `module.exports` / `exports.foo` — those don't match.
+    if (/^[ \t]*(import|export)\s/m.test(code)) {
+        const blobUrl = URL.createObjectURL(new Blob([code], {type: 'text/javascript'}));
+        try {
+            await import(/* @vite-ignore */ blobUrl);
+        } finally {
+            URL.revokeObjectURL(blobUrl);
+        }
+        return;
+    }
+    // Run the code in the worker's global scope (not inside this function),
+    // so UMD/IIFE plugin scripts can assign to globals like
+    // `self.registerRTLTextPlugin`. Calling eval as a property access
+    // (rather than the bare `eval` identifier) is what makes it global-scope.
+    globalThis.eval(code);
+}
+
+/**
  * The Worker class responsible for background thread related execution
  */
 export default class Worker {
     self: WorkerGlobalScopeInterface & ActorTarget;
     actor: Actor;
     layerIndexes: {[_: string]: StyleLayerIndex};
-    availableImages: {[_: string]: Array<string>};
+    availableImages: {[_: string]: string[]};
     externalWorkerSourceTypes: { [_: string]: WorkerSourceConstructor };
     /**
      * This holds a cache for the already created worker source instances.
@@ -59,6 +101,7 @@ export default class Worker {
         };
     };
     referrer: string;
+    globalStates: Map<string, Record<string, any>>;
 
     constructor(self: WorkerGlobalScopeInterface & ActorTarget) {
         this.self = self;
@@ -71,6 +114,8 @@ export default class Worker {
         this.demWorkerSources = {};
         this.externalWorkerSourceTypes = {};
 
+        this.globalStates = new Map<string, Record<string, any>>();
+
         this.self.registerWorkerSource = (name: string, WorkerSource: WorkerSourceConstructor) => {
             if (this.externalWorkerSourceTypes[name]) {
                 throw new Error(`Worker source with name "${name}" already registered.`);
@@ -81,11 +126,12 @@ export default class Worker {
         this.self.addProtocol = addProtocol;
         this.self.removeProtocol = removeProtocol;
 
-        // This is invoked by the RTL text plugin when the download via the `importScripts` call has finished, and the code has been parsed.
+        // Invoked by the RTL text plugin once it has fetched and parsed.
         this.self.registerRTLTextPlugin = (rtlTextPlugin: RTLTextPlugin) => {
-
             rtlWorkerPlugin.setMethods(rtlTextPlugin);
         };
+
+        this.self.makeRequest = makeRequest;
 
         this.actor.registerMessageHandler(MessageType.loadDEMTile, (mapId: string, params: WorkerDEMTileParameters) => {
             return this._getDEMWorkerSource(mapId, params.source).loadTile(params);
@@ -111,10 +157,6 @@ export default class Worker {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).loadData(params);
         });
 
-        this.actor.registerMessageHandler(MessageType.getData, (mapId: string, params: LoadGeoJSONParameters) => {
-            return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getData();
-        });
-
         this.actor.registerMessageHandler(MessageType.loadTile, (mapId: string, params: WorkerTileParameters) => {
             return this._getWorkerSource(mapId, params.type, params.source).loadTile(params);
         });
@@ -132,9 +174,7 @@ export default class Worker {
         });
 
         this.actor.registerMessageHandler(MessageType.removeSource, async (mapId: string, params: RemoveSourceParams) => {
-            if (!this.workerSources[mapId] ||
-                !this.workerSources[mapId][params.type] ||
-                !this.workerSources[mapId][params.type][params.source]) {
+            if (!this.workerSources[mapId]?.[params.type]?.[params.source]) {
                 return;
             }
 
@@ -151,6 +191,7 @@ export default class Worker {
             delete this.availableImages[mapId];
             delete this.workerSources[mapId];
             delete this.demWorkerSources[mapId];
+            this.globalStates.delete(mapId);
         });
 
         this.actor.registerMessageHandler(MessageType.setReferrer, async (_mapId: string, params: string) => {
@@ -162,7 +203,7 @@ export default class Worker {
         });
 
         this.actor.registerMessageHandler(MessageType.importScript, async (_mapId: string, params: string) => {
-            this.self.importScripts(params);
+            await loadScript(params);
         });
 
         this.actor.registerMessageHandler(MessageType.setImages, (mapId: string, params: string[]) => {
@@ -170,15 +211,31 @@ export default class Worker {
         });
 
         this.actor.registerMessageHandler(MessageType.updateLayers, async (mapId: string, params: UpdateLayersParameters) => {
-            this._getLayerIndex(mapId).update(params.layers, params.removedIds);
+            this._getLayerIndex(mapId).update(params.layers, params.removedIds, this._getGlobalState(mapId));
         });
 
-        this.actor.registerMessageHandler(MessageType.setLayers, async (mapId: string, params: Array<LayerSpecification>) => {
-            this._getLayerIndex(mapId).replace(params);
+        this.actor.registerMessageHandler(MessageType.updateGlobalState, async (mapId: string, params: Record<string, any>) => {
+            const globalState = this._getGlobalState(mapId);
+            for (const key in params) {
+                globalState[key] = params[key];
+            }
+        });
+
+        this.actor.registerMessageHandler(MessageType.setLayers, async (mapId: string, params: LayerSpecification[]) => {
+            this._getLayerIndex(mapId).replace(params, this._getGlobalState(mapId));
         });
     }
 
-    private async _setImages(mapId: string, images: Array<string>): Promise<void> {
+    private _getGlobalState(mapId: string): Record<string, any> {
+        let state = this.globalStates.get(mapId);
+        if (!state) {
+            state = {};
+            this.globalStates.set(mapId, state);
+        }
+        return state;
+    }
+
+    private async _setImages(mapId: string, images: string[]): Promise<void> {
         this.availableImages[mapId] = images;
         for (const workerSource in this.workerSources[mapId]) {
             const ws = this.workerSources[mapId][workerSource];
@@ -189,25 +246,20 @@ export default class Worker {
     }
 
     private async _syncRTLPluginState(mapId: string, incomingState: PluginState): Promise<PluginState> {
-        const state = await rtlWorkerPlugin.syncState(incomingState, this.self.importScripts);
-        return state;
+        return await rtlWorkerPlugin.syncState(incomingState, loadScript);
     }
 
     private _getAvailableImages(mapId: string) {
         let availableImages = this.availableImages[mapId];
 
-        if (!availableImages) {
-            availableImages = [];
-        }
+        availableImages ||= [];
 
         return availableImages;
     }
 
     private _getLayerIndex(mapId: string) {
         let layerIndexes = this.layerIndexes[mapId];
-        if (!layerIndexes) {
-            layerIndexes = this.layerIndexes[mapId] = new StyleLayerIndex();
-        }
+        layerIndexes ||= this.layerIndexes[mapId] = new StyleLayerIndex();
         return layerIndexes;
     }
 
@@ -219,10 +271,8 @@ export default class Worker {
      * @returns a new instance or a cached one
      */
     private _getWorkerSource(mapId: string, sourceType: string, sourceName: string): WorkerSource {
-        if (!this.workerSources[mapId])
-            this.workerSources[mapId] = {};
-        if (!this.workerSources[mapId][sourceType])
-            this.workerSources[mapId][sourceType] = {};
+        this.workerSources[mapId] ||= {};
+        this.workerSources[mapId][sourceType] ||= {};
 
         if (!this.workerSources[mapId][sourceType][sourceName]) {
             // use a wrapped actor so that we can attach a target mapId param
@@ -256,12 +306,8 @@ export default class Worker {
      * @returns a new instance or a cached one
      */
     private _getDEMWorkerSource(mapId: string, sourceType: string) {
-        if (!this.demWorkerSources[mapId])
-            this.demWorkerSources[mapId] = {};
-
-        if (!this.demWorkerSources[mapId][sourceType]) {
-            this.demWorkerSources[mapId][sourceType] = new RasterDEMTileWorkerSource();
-        }
+        this.demWorkerSources[mapId] ||= {};
+        this.demWorkerSources[mapId][sourceType] ||= new RasterDEMTileWorkerSource();
 
         return this.demWorkerSources[mapId][sourceType];
     }

@@ -1,8 +1,8 @@
 import type {Projection, ProjectionGPUContext, TileMeshUsage} from './projection';
-import type {CanonicalTileID} from '../../source/tile_id';
+import type {CanonicalTileID} from '../../tile/tile_id';
 import {EXTENT} from '../../data/extent';
 import {type PreparedShader, shaders} from '../../shaders/shaders';
-import type {Context} from '../../gl/context';
+import type {Context} from '../../webgl/context';
 import {Mesh} from '../../render/mesh';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {SegmentVector} from '../../data/segment';

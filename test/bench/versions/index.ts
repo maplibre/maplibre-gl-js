@@ -7,7 +7,8 @@ import WorkerTransfer from '../benchmarks/worker_transfer';
 import Paint from '../benchmarks/paint';
 import PaintStates from '../benchmarks/paint_states';
 import {PropertyLevelRemove, FeatureLevelRemove, SourceLevelRemove} from '../benchmarks/remove_paint_state';
-import {LayerBackground, LayerCircle, LayerFill, LayerFillExtrusion, LayerHeatmap, LayerHillshade, LayerColorRelief2Colors, LayerColorRelief256Colors, LayerLine, LayerRaster, LayerSymbol, LayerSymbolWithIcons, LayerTextWithVariableAnchor, LayerSymbolWithSortKey} from '../benchmarks/layers';
+import {LayerBackground, LayerCircle, LayerFill, LayerFillExtrusion, LayerHeatmap, LayerHillshade, LayerColorRelief2Colors, LayerColorRelief256Colors, LayerLine, LayerRaster, LayerSymbol, LayerSymbolWithHalo, LayerSymbolWithIcons, LayerTextWithVariableAnchor, LayerSymbolWithSortKey} from '../benchmarks/layers';
+import LineOpacityTranslucent from '../benchmarks/layer_line_opacity';
 import Load from '../benchmarks/map_load';
 import HillshadeLoad from '../benchmarks/hillshade_load';
 import ColorReliefLoad from '../benchmarks/color_relief_load';
@@ -22,15 +23,22 @@ import CustomLayer from '../benchmarks/customlayer';
 import MapIdle from '../benchmarks/map_idle';
 
 import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool';
+import {setWorkerUrl} from '../../../src';
 import SymbolCollisionBox from '../benchmarks/symbol_collision_box';
 import Subdivide from '../benchmarks/subdivide';
 import LoadMatchingFeature from '../benchmarks/feature_index';
 import CoveringTilesGlobe from '../benchmarks/covering_tiles_globe';
 import CoveringTilesMercator from '../benchmarks/covering_tiles_mercator';
+import GeoJSONSourceUpdateData from '../benchmarks/geojson_source_update_data';
+import GeoJSONSourceSetData from '../benchmarks/geojson_source_set_data';
+import {Terrain3DGlobe, Terrain3DMercator, Terrain2DGlobe, Terrain2DMercator} from '../benchmarks/terrain';
 
-const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as GeoJSON.Feature<GeoJSON.Point>[]).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
+const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as Array<GeoJSON.Feature<GeoJSON.Point>>).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
 (window as any).maplibreglBenchmarks = (window as any).maplibreglBenchmarks || {};
+
+// Resolve the worker URL relative to this bundle's own URL (set by rollup ESM output).
+setWorkerUrl(new URL('./benchmarks_worker.mjs', import.meta.url).toString());
 
 const version = process.env.BENCHMARK_VERSION;
 
@@ -39,7 +47,7 @@ function register(name, bench) {
     (window as any).maplibreglBenchmarks[name][version] = bench;
 }
 
-const style = 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL';
+const style = 'https://tiles.openfreemap.org/styles/liberty';
 const center = [-77.032194, 38.912753];
 const zooms = [4, 8, 11, 13, 15, 17];
 const locations = zooms.map(zoom => ({center, zoom}));
@@ -47,6 +55,8 @@ const locations = zooms.map(zoom => ({center, zoom}));
 register('Paint', new Paint(style, locations));
 register('QueryPoint', new QueryPoint(style, locations));
 register('QueryBox', new QueryBox(style, locations));
+register('GeoJSONSourceUpdateData', new GeoJSONSourceUpdateData());
+register('GeoJSONSourceSetData', new GeoJSONSourceSetData());
 register('Layout', new Layout(style));
 register('Placement', new Placement(style, locations));
 register('Validate', new Validate(style));
@@ -65,12 +75,14 @@ register('LayerCircle', new LayerCircle());
 register('LayerFill', new LayerFill());
 register('LayerFillExtrusion', new LayerFillExtrusion());
 register('LayerHeatmap', new LayerHeatmap());
+register('LineOpacityTranslucent', new LineOpacityTranslucent());
 register('LayerHillshade', new LayerHillshade());
 register('LayerColorRelief2Colors', new LayerColorRelief2Colors());
 register('LayerColorRelief256Colors', new LayerColorRelief256Colors());
 register('LayerLine', new LayerLine());
 register('LayerRaster', new LayerRaster());
 register('LayerSymbol', new LayerSymbol());
+register('LayerSymbolWithHalo', new LayerSymbolWithHalo());
 register('LayerSymbolWithIcons', new LayerSymbolWithIcons());
 register('LayerTextWithVariableAnchor', new LayerTextWithVariableAnchor());
 register('LayerSymbolWithSortKey', new LayerSymbolWithSortKey());
@@ -90,6 +102,10 @@ register('CoveringTilesGlobe', new CoveringTilesGlobe(0));
 register('CoveringTilesGlobePitched', new CoveringTilesGlobe(60));
 register('CoveringTilesMercator', new CoveringTilesMercator(0));
 register('CoveringTilesMercatorPitched', new CoveringTilesMercator(60));
+register('Terrain3DGlobe', new Terrain3DGlobe());
+register('Terrain3DMercator', new Terrain3DMercator());
+register('Terrain2DGlobe', new Terrain2DGlobe());
+register('Terrain2DMercator', new Terrain2DMercator());
 
 Promise.resolve().then(() => {
     // Ensure the global worker pool is never drained. Browsers have resource limits

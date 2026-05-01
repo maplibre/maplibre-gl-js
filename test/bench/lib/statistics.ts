@@ -4,8 +4,8 @@ export type RegressionResults = {
     correlation:number;
     slope:number;
     intercept: number;
-    data: [number, number][];
-}
+    data: Array<[number, number]>;
+};
 
 export type Summary = {
     mean: number;
@@ -21,7 +21,7 @@ export type Summary = {
     min: number;
     argmax: number;
     max: number;
-}
+};
 
 export function probabilitiesOfSuperiority(before, after) {
     const timerPrecision = 0.005;
@@ -96,7 +96,7 @@ export function regression(measurements) {
     return leastSquaresRegression(result);
 }
 
-function leastSquaresRegression(data): RegressionResults {
+function leastSquaresRegression(data: Array<[number, number]>): RegressionResults {
     const meanX = d3.sum(data, d => d[0]) / data.length;
     const meanY = d3.sum(data, d => d[1]) / data.length;
     const varianceX = d3.variance(data, d => d[0]);
@@ -113,7 +113,7 @@ function leastSquaresRegression(data): RegressionResults {
     return {correlation, slope, intercept, data};
 }
 
-export function kde(samples, summary, ticks): [number, number][] {
+export function kde(samples, summary, ticks): Array<[number, number]> {
     const kernel = kernelEpanechnikov;
 
     if (samples.length === 0) {

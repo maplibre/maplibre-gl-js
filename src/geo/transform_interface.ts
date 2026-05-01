@@ -3,13 +3,25 @@ import type {LngLatBounds} from './lng_lat_bounds';
 import type {MercatorCoordinate} from './mercator_coordinate';
 import type Point from '@mapbox/point-geometry';
 import type {mat4, mat2, vec3, vec4} from 'gl-matrix';
-import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
+import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../tile/tile_id';
 import type {PaddingOptions} from './edge_insets';
 import type {Terrain} from '../render/terrain';
 import type {PointProjection} from '../symbol/projection';
 import type {ProjectionData, ProjectionDataParams} from './projection/projection_data';
 import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
 import type {Frustum} from '../util/primitives/frustum';
+
+/**
+ * The callback defining how the transform constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
+ * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
+ */
+export type TransformConstrainFunction =  (
+    lngLat: LngLat,
+    zoom: number
+) => {
+    center: LngLat;
+    zoom: number;
+};
 
 export interface ITransformGetters {
     get tileSize(): number;
@@ -83,6 +95,8 @@ export interface ITransformGetters {
     get nearZ(): number;
     get farZ(): number;
     get autoCalculateNearFarZ(): boolean;
+
+    get constrainOverride(): TransformConstrainFunction;
 }
 
 /**
@@ -92,7 +106,12 @@ export interface ITransformGetters {
 interface ITransformMutators {
     clone(): ITransform;
 
-    apply(that: IReadonlyTransform): void;
+    /**
+     * Applies a transform to the current transform.
+     * @param that - The transform to apply to the current transform.
+     * @param constrain - Whether to constrain the transform's center and zoom and recompute internal matrices once applied.
+     */
+    apply(that: IReadonlyTransform, constrain: boolean): void;
 
     /**
      * Sets the transform's minimal allowed zoom level.
@@ -194,6 +213,12 @@ interface ITransformMutators {
      */
     setMaxBounds(bounds?: LngLatBounds | null): void;
 
+    /** Sets or clears the custom callback overriding the transform's default constrain,
+     * whose responsibility is to respect the longitude and latitude bounds by constraining the viewport's lnglat and zoom.
+     * @param constrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
+     */
+    setConstrainOverride(constrain?: TransformConstrainFunction | null): void;
+
     /**
      * @internal
      * Called before rendering to allow the transform implementation
@@ -201,7 +226,7 @@ interface ITransformMutators {
      * Used in mercator transform to precompute tile matrices (posMatrix).
      * @param coords - Array of tile IDs that will be rendered.
      */
-    populateCache(coords: Array<OverscaledTileID>): void;
+    populateCache(coords: OverscaledTileID[]): void;
 
     /**
      * @internal
@@ -268,7 +293,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Return any "wrapped" copies of a given tile coordinate that are visible
      * in the current view.
      */
-    getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID>;
+    getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[];
 
     /**
      * @internal
@@ -340,9 +365,15 @@ export interface IReadonlyTransform extends ITransformGetters {
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean;
 
     /**
-     * Get center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
+     * @internal
+     * The tranform's default callback that ensures that longitude and latitude bounds are respected by the viewport.
      */
-    getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number};
+    defaultConstrain: TransformConstrainFunction;
+
+    /**
+     * Constrain the center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
+     */
+    applyConstrain: TransformConstrainFunction;
 
     maxPitchScaleFactor(): number;
 
@@ -390,7 +421,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * screen where the *base* of a visible extrusion could be.
      *
      */
-    getCameraQueryGeometry(queryGeometry: Array<Point>): Array<Point>;
+    getCameraQueryGeometry(queryGeometry: Point[]): Point[];
 
     /**
      * Return the distance to the camera in clip space from a LngLat.

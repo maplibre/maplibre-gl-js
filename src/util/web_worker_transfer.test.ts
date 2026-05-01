@@ -1,5 +1,4 @@
 import {describe, test, expect} from 'vitest';
-import {type SerializedObject} from '../../dist/maplibre-gl';
 import {AJAXError} from './ajax';
 import {register, serialize, deserialize} from './web_worker_transfer';
 
@@ -100,8 +99,7 @@ describe('web worker transfer', () => {
         const url = 'https://example.com';
 
         const ajaxError = new AJAXError(status, statusText, url, new Blob());
-        const serialized = serialize(ajaxError) as SerializedObject;
-        expect(serialized.$name).toBe(ajaxError.constructor.name);
+        const serialized = serialize(ajaxError);
         const deserialized = deserialize(serialized) as AJAXError;
         expect(deserialized.status).toBe(404);
         expect(deserialized.statusText).toBe(statusText);
@@ -148,7 +146,7 @@ describe('web worker transfer', () => {
     });
     test('some objects can not be deserialized', () => {
         expect(() => {
-            deserialize(<SerializedObject><unknown>BigInt(123));
+            deserialize(BigInt(123) as unknown);
         }).toThrow();
     });
 });

@@ -11,10 +11,11 @@ import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {SingleCollisionBox} from '../data/bucket/symbol_bucket';
 import type {
     GlyphOffsetArray,
+    PlacedSymbol,
     SymbolLineVertexArray
 } from '../data/array_types.g';
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
-import {type OverscaledTileID, type UnwrappedTileID} from '../source/tile_id';
+import {type OverscaledTileID, type UnwrappedTileID} from '../tile/tile_id';
 import {type PointProjection, type SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection';
 import {clamp, getAABB} from '../util/util';
 import {Bounds} from '../geo/bounds';
@@ -28,13 +29,13 @@ import {Bounds} from '../geo/bounds';
 export const viewportPadding = 100;
 
 export type PlacedCircles = {
-    circles: Array<number>;
+    circles: number[];
     offscreen: boolean;
     collisionDetected: boolean;
 };
 
 export type PlacedBox = {
-    box: Array<number>;
+    box: number[];
     placeable: boolean;
     offscreen: boolean;
     occluded: boolean;
@@ -184,7 +185,7 @@ export class CollisionIndex {
 
     placeCollisionCircles(
         overlapMode: OverlapMode,
-        symbol: any,
+        symbol: PlacedSymbol,
         lineVertexArray: SymbolLineVertexArray,
         glyphOffsetArray: GlyphOffsetArray,
         fontSize: number,
@@ -248,7 +249,7 @@ export class CollisionIndex {
             const first = firstAndLastGlyph.first;
             const last = firstAndLastGlyph.last;
 
-            let projectedPath: Array<Point> = [];
+            let projectedPath: Point[] = [];
             for (let i = first.path.length - 1; i >= 1; i--) {
                 projectedPath.push(first.path[i]);
             }
@@ -326,8 +327,8 @@ export class CollisionIndex {
                     const x2 = centerX + radius;
                     const y2 = centerY + radius;
 
-                    entirelyOffscreen = entirelyOffscreen && this.isOffscreen(x1, y1, x2, y2);
-                    inGrid = inGrid || this.isInsideGrid(x1, y1, x2, y2);
+                    entirelyOffscreen &&= this.isOffscreen(x1, y1, x2, y2);
+                    inGrid ||= this.isInsideGrid(x1, y1, x2, y2);
 
                     if (overlapMode !== 'always' && this.grid.hitTestCircle(centerX, centerY, radius, overlapMode, collisionGroupPredicate)) {
                         // Don't early exit if we're showing the debug circles because we still want to calculate
@@ -352,7 +353,7 @@ export class CollisionIndex {
         };
     }
 
-    projectPathToScreenSpace(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext): Array<PointProjection> {
+    projectPathToScreenSpace(projectedPath: Point[], projectionContext: SymbolProjectionContext): PointProjection[] {
         const screenSpacePath = projectPathSpecialProjection(projectedPath, projectionContext);
         // We don't want to generate screenspace collision circles for parts of the line that
         // are occluded by the planet itself. Find the longest segment of the path that is
@@ -365,7 +366,7 @@ export class CollisionIndex {
      * symbols on the map, we use the CollisionIndex to look up the symbol part of
      * `queryRenderedFeatures`.
      */
-    queryRenderedSymbols(viewportQueryGeometry: Array<Point>) {
+    queryRenderedSymbols(viewportQueryGeometry: Point[]) {
         if (viewportQueryGeometry.length === 0 || (this.grid.keysLength() === 0 && this.ignoredGrid.keysLength() === 0)) {
             return {};
         }
@@ -420,14 +421,14 @@ export class CollisionIndex {
         return result;
     }
 
-    insertCollisionBox(collisionBox: Array<number>, overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
+    insertCollisionBox(collisionBox: number[], overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
         const grid = ignorePlacement ? this.ignoredGrid : this.grid;
 
         const key = {bucketInstanceId, featureIndex, collisionGroupID, overlapMode};
         grid.insert(key, collisionBox[0], collisionBox[1], collisionBox[2], collisionBox[3]);
     }
 
-    insertCollisionCircles(collisionCircles: Array<number>, overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
+    insertCollisionCircles(collisionCircles: number[], overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
         const grid = ignorePlacement ? this.ignoredGrid : this.grid;
 
         const key = {bucketInstanceId, featureIndex, collisionGroupID, overlapMode};
@@ -492,7 +493,7 @@ export class CollisionIndex {
     *   example transformation: clipPos = glCoordMatrix * viewportMatrix * circle_pos
     */
     getViewportMatrix() {
-        const m = mat4.identity([] as any);
+        const m = mat4.identity([]);
         mat4.translate(m, m, [-viewportPadding, -viewportPadding, 0.0]);
         return m;
     }
@@ -605,7 +606,7 @@ export class CollisionIndex {
             {offsetX: offsetXmin,  offsetY: offsetYhalf}
         ];
 
-        let points: Array<Point> = [];
+        let points: Point[] = [];
 
         for (const {offsetX, offsetY} of offsetsArray) {
             points.push(new Point(

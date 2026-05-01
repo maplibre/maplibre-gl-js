@@ -1,4 +1,5 @@
 import {describe, test, expect, beforeEach, vi, afterEach, type Mock} from 'vitest';
+import {beforeMapTest, createMap as globalCreateMap} from './test/util';
 import {browser} from './browser';
 
 describe('browser', () => {
@@ -12,7 +13,9 @@ describe('browser', () => {
         function flushAllRAFs() {
             const pending = [...rafCallbacks];
             rafCallbacks = [];
-            pending.forEach(({callback}) => callback(performance.now()));
+            for (const {callback} of pending) {
+                callback(performance.now());
+            }
         }
 
         beforeEach(() => {
@@ -146,8 +149,31 @@ describe('browser', () => {
         });
     });
 
-    test('now', () => {
-        expect(typeof browser.now()).toBe('number');
+    describe('reduceMotion', () => {
+        const createMap = (options: {reduceMotion?: boolean}) => {
+            beforeMapTest();
+            const container = window.document.createElement('div');
+            window.document.body.appendChild(container);
+            Object.defineProperty(container, 'clientWidth', {value: 512});
+            Object.defineProperty(container, 'clientHeight', {value: 512});
+            return globalCreateMap({container, ...options});
+        };
+
+        test('reduceMotion set to true', () => {
+            createMap({reduceMotion: true});
+            expect(browser.prefersReducedMotion).toBe(true);
+        });
+
+        test('reduceMotion set to false', () => {
+            createMap({reduceMotion: false});
+            expect(browser.prefersReducedMotion).toBe(false);
+        });
+
+        test('reduceMotion set to undefined', () => {
+            const browserDefault = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            createMap({});
+            expect(browser.prefersReducedMotion).toBe(browserDefault);
+        });
     });
 
     test('hardwareConcurrency', () => {

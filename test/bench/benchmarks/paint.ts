@@ -7,10 +7,10 @@ const height = 768;
 
 export default class Paint extends Benchmark {
     style: string;
-    locations: Array<any>;
-    maps: Array<Map>;
+    locations: any[];
+    maps: Map[];
 
-    constructor(style: string, locations: Array<any>) {
+    constructor(style: string, locations: any[]) {
         super();
         this.style = style;
         this.locations = locations;
@@ -36,7 +36,7 @@ export default class Paint extends Benchmark {
         for (const map of this.maps) {
             map._styleDirty = true;
             map._sourcesDirty = true;
-            map._render(Date.now());
+            Benchmark.renderMap(map);
         }
     }
 

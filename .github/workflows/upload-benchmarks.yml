@@ -4,15 +4,36 @@ on:
   push:
     branches:
       - main
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Tagged commit to upload (e.g., v1.2.3). Leave empty for main branch.'
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tagged commit to upload (e.g., v1.2.3). Leave empty for main branch.'
+        required: false
+        type: string
 
 jobs:
   upload_benchmarks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Determine ref
+        if: inputs.tag != ''
+        id: ref
+        run: |
+          TAG="${{ inputs.tag }}"
+          echo "ref=refs/tags/${TAG}" >> $GITHUB_OUTPUT
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ steps.ref.outputs.ref || 'refs/heads/main' }}
 
       - name: Use Node.js from nvmrc
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v4
         with:
           node-version-file: '.nvmrc'
 
@@ -24,16 +45,19 @@ jobs:
           npm run generate-typings
           npm run build-benchmarks
 
-      - name: Copy benchmarks_generated.js
+      - name: Copy ESM benchmark artifacts
         run: |
           mkdir tmp
-          cp test/bench/versions/benchmarks_generated.js tmp
-          cp test/bench/versions/benchmarks_generated.js.map tmp
+          cp test/bench/versions/benchmarks_generated.mjs tmp
+          cp test/bench/versions/benchmarks_generated.mjs.map tmp
+          cp test/bench/versions/benchmarks_worker.mjs tmp
+          cp test/bench/versions/benchmarks_worker.mjs.map tmp
 
-      - name: Upload to GitHub Pages (main)
-        if: startsWith(github.ref, 'refs/heads/main')
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload to GitHub Pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: tmp
-          destination_dir: benchmarks/main
+          destination_dir: benchmarks/${{ inputs.tag || 'main' }}
+          commit_message: 'deploy: ${{ inputs.tag }}'
+

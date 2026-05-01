@@ -1,8 +1,8 @@
 export class DictionaryCoder {
     _stringToNumber: {[_: string]: number};
-    _numberToString: Array<string>;
+    _numberToString: string[];
 
-    constructor(strings: Array<string>) {
+    constructor(strings: string[]) {
         this._stringToNumber = {};
         this._numberToString = [];
         for (let i = 0; i < strings.length; i++) {

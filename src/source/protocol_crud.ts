@@ -26,9 +26,13 @@ export function getProtocol(url: string) {
  *  });
  * // the following is an example of a way to return an error when trying to load a tile
  * addProtocol('custom2', async (params, abortController) => {
- *      throw new Error('someErrorMessage'));
+ *      throw new Error('someErrorMessage');
  * });
  * ```
+ * @see [Add a COG raster source](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-cog-raster-source/)
+ * @see [Add Contour Lines](https://maplibre.org/maplibre-gl-js/docs/examples/add-contour-lines/)
+ * @see [PMTiles source and protocol](https://maplibre.org/maplibre-gl-js/docs/examples/pmtiles-source-and-protocol/)
+ * @see [Use addProtocol to Transform Feature Properties](https://maplibre.org/maplibre-gl-js/docs/examples/use-addprotocol-to-transform-feature-properties/)
  */
 export function addProtocol(customProtocol: string, loadFn: AddProtocolAction) {
     config.REGISTERED_PROTOCOLS[customProtocol] = loadFn;

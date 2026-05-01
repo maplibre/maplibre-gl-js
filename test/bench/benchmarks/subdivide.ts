@@ -1,4 +1,4 @@
-import {CanonicalTileID} from '../../../src/source/tile_id';
+import {CanonicalTileID} from '../../../src/tile/tile_id';
 import Benchmark from '../lib/benchmark';
 import {EXTENT} from '../../../src/data/extent';
 import {subdividePolygon} from '../../../src/render/subdivision';
@@ -7,7 +7,7 @@ import Point from '@mapbox/point-geometry';
 export default class Subdivide extends Benchmark {
     tileID: CanonicalTileID;
     granularity: number;
-    polygon: Array<Array<Point>>;
+    polygon: Point[][];
 
     async setup(): Promise<void> {
         await super.setup();
@@ -47,7 +47,7 @@ export default class Subdivide extends Benchmark {
     }
 }
 
-function generateRing(cx: number, cy: number, radius: number, vertexCount: number): Array<Point> {
+function generateRing(cx: number, cy: number, radius: number, vertexCount: number): Point[] {
     const ring = [];
 
     for (let i = 0; i < vertexCount; i++) {

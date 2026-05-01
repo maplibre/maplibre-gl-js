@@ -1,6 +1,6 @@
 import {VariableAnchorOffsetCollection, type VariableAnchorOffsetCollectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type SymbolFeature} from '../../data/bucket/symbol_bucket';
-import {type CanonicalTileID} from '../../source/tile_id';
+import {type CanonicalTileID} from '../../tile/tile_id';
 import ONE_EM from '../../symbol/one_em';
 import {type SymbolStyleLayer} from './symbol_style_layer';
 

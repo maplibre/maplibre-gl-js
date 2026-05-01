@@ -17,7 +17,7 @@ afterEach(() => {
     server.restore();
 });
 
-test('#moveLayer', async () => {
+test('moveLayer', async () => {
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
@@ -48,7 +48,7 @@ test('#moveLayer', async () => {
     expect(map.getLayer('layerId2').id).toBe('layerId2');
 });
 
-test('#getLayer', async () => {
+test('getLayer', async () => {
     const layer = {
         id: 'layerId',
         type: 'circle',
@@ -76,7 +76,7 @@ test('#getLayer', async () => {
     expect(mapLayer.source).toBe(layer.source);
 });
 
-test('#removeLayer restores Map#loaded() to true', async () => {
+test('removeLayer restores Map.loaded() to true', async () => {
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
@@ -102,7 +102,7 @@ test('#removeLayer restores Map#loaded() to true', async () => {
     map.remove();
 });
 
-describe('#getLayersOrder', () => {
+describe('getLayersOrder', () => {
     test('returns ids of layers in the correct order', async () => {
         const map = createMap({
             style: extend(createStyle(), {
@@ -130,7 +130,7 @@ describe('#getLayersOrder', () => {
     });
 });
 
-describe('#setLayoutProperty', () => {
+describe('setLayoutProperty', () => {
     test('sets property', async () => {
         const map = createMap({
             style: {
@@ -158,7 +158,7 @@ describe('#setLayoutProperty', () => {
         await map.once('style.load');
         map.style.dispatcher.broadcast = function (key, value: any) {
             expect(key).toBe(MessageType.updateLayers);
-            expect(value.layers.map((layer) => { return layer.id; })).toEqual(['symbol']);
+            expect(value.layers.map((layer) => layer.id)).toEqual(['symbol']);
             return Promise.resolve({} as any);
         };
 
@@ -193,9 +193,9 @@ describe('#setLayoutProperty', () => {
 
         await map.once('style.load');
         const errorPromise = map.once('error');
-        map.setLayoutProperty('non-existant', 'text-transform', 'lowercase');
+        map.setLayoutProperty('non-existent', 'text-transform', 'lowercase');
         const error = await errorPromise;
-        expect(error.error.message).toMatch(/Cannot style non-existing layer "non-existant"./);
+        expect(error.error.message).toMatch(/Cannot style non-existing layer "non-existent"./);
     });
 
     test('fires a data event', async () => {
@@ -336,7 +336,7 @@ describe('#setLayoutProperty', () => {
     });
 });
 
-describe('#getLayoutProperty', () => {
+describe('getLayoutProperty', () => {
     test('fires an error if layer not found', async () => {
         const map = createMap({
             style: {
@@ -348,13 +348,13 @@ describe('#getLayoutProperty', () => {
 
         await map.once('style.load');
         const errorPromise = map.once('error');
-        map.getLayoutProperty('non-existant', 'text-transform');
+        map.getLayoutProperty('non-existent', 'text-transform');
         const error = await errorPromise;
-        expect(error.error.message).toMatch(/Cannot get style of non-existing layer "non-existant"./);
+        expect(error.error.message).toMatch(/Cannot get style of non-existing layer "non-existent"./);
     });
 });
 
-describe('#setPaintProperty', () => {
+describe('setPaintProperty', () => {
     test('sets property', async () => {
         const map = createMap({
             style: {
@@ -423,8 +423,8 @@ describe('#setPaintProperty', () => {
 
         await map.once('style.load');
         const errorPromise = map.once('error');
-        map.setPaintProperty('non-existant', 'background-color', 'red');
+        map.setPaintProperty('non-existent', 'background-color', 'red');
         const error = await errorPromise;
-        expect(error.error.message).toMatch(/Cannot style non-existing layer "non-existant"./);
+        expect(error.error.message).toMatch(/Cannot style non-existing layer "non-existent"./);
     });
 });

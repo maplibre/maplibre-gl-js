@@ -120,7 +120,7 @@ export class DEMData {
     }
 
     _idx(x: number, y: number) {
-        if (x < -1 || x >= this.dim + 1 ||  y < -1 || y >= this.dim + 1) throw new RangeError('out of range source coordinates for DEM data');
+        if (x < -1 || x >= this.dim + 1 ||  y < -1 || y >= this.dim + 1) throw new RangeError(`Out of range source coordinates for DEM data. x: ${x}, y: ${y}, dim: ${this.dim}`);
         return (y + 1) * this.stride + (x + 1);
     }
 

@@ -2,10 +2,10 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {beforeMapTest, sleep} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {Map, type MapOptions} from '../map';
+import {Map} from '../map';
 
 function createMap() {
-    return new Map({container: window.document.createElement('div')} as any as MapOptions);
+    return new Map({container: window.document.createElement('div')});
 }
 
 function setupEvents(map: Map) {
@@ -23,6 +23,36 @@ function setupEvents(map: Map) {
         zoom,
         zoomend
     };
+}
+
+function createTapDragZoomMap() {
+    const map = createMap();
+    map.handlers._handlersById.tapZoom.disable();
+
+    return {map, target: map.getCanvas()};
+}
+
+function startDoubleTapDragGesture(map: Map, target: HTMLElement) {
+    const pointTouchOptions = {
+        touches: [{target, clientX: 100, clientY: 100}]
+    };
+
+    simulate.touchstart(target, pointTouchOptions);
+    simulate.touchend(target);
+    simulate.touchstart(target, pointTouchOptions);
+    map._renderTaskQueue.run();
+}
+
+function moveDoubleTapDragGesture(map: Map, target: HTMLElement, clientY: number) {
+    simulate.touchmove(target, {
+        touches: [{target, clientX: 100, clientY}]
+    });
+    map._renderTaskQueue.run();
+}
+
+function endDoubleTapDragGesture(map: Map, target: HTMLElement) {
+    simulate.touchend(target);
+    map._renderTaskQueue.run();
 }
 
 beforeEach(() => {
@@ -88,6 +118,62 @@ describe('tap_drag_zoom', () => {
         expect(zoomstart).not.toHaveBeenCalled();
         expect(zoom).not.toHaveBeenCalled();
         expect(zoomend).not.toHaveBeenCalled();
+    });
+
+    test('TapDragZoomHandler scales double-tap drag zoom with setZoomRate', () => {
+        const {map: defaultMap, target: defaultTarget} = createTapDragZoomMap();
+        const defaultStartZoom = defaultMap.getZoom();
+
+        startDoubleTapDragGesture(defaultMap, defaultTarget);
+        moveDoubleTapDragGesture(defaultMap, defaultTarget, 110);
+
+        const defaultZoomDelta = defaultMap.getZoom() - defaultStartZoom;
+
+        endDoubleTapDragGesture(defaultMap, defaultTarget);
+        defaultMap.remove();
+
+        const {map: slowMap, target: slowTarget} = createTapDragZoomMap();
+        slowMap.touchZoomRotate.setZoomRate(0.5);
+        const slowStartZoom = slowMap.getZoom();
+
+        startDoubleTapDragGesture(slowMap, slowTarget);
+        moveDoubleTapDragGesture(slowMap, slowTarget, 110);
+
+        const slowZoomDelta = slowMap.getZoom() - slowStartZoom;
+
+        endDoubleTapDragGesture(slowMap, slowTarget);
+        slowMap.remove();
+
+        expect(defaultZoomDelta).toBeGreaterThan(slowZoomDelta);
+        expect(slowZoomDelta).toBeCloseTo(defaultZoomDelta * 0.5, 5);
+    });
+
+    test('TapDragZoomHandler restores the default double-tap drag zoom rate', () => {
+        const {map: defaultMap, target: defaultTarget} = createTapDragZoomMap();
+        const defaultStartZoom = defaultMap.getZoom();
+
+        startDoubleTapDragGesture(defaultMap, defaultTarget);
+        moveDoubleTapDragGesture(defaultMap, defaultTarget, 110);
+
+        const defaultZoomDelta = defaultMap.getZoom() - defaultStartZoom;
+
+        endDoubleTapDragGesture(defaultMap, defaultTarget);
+        defaultMap.remove();
+
+        const {map: restoredMap, target: restoredTarget} = createTapDragZoomMap();
+        restoredMap.touchZoomRotate.setZoomRate(0.5);
+        restoredMap.touchZoomRotate.setZoomRate(undefined);
+        const restoredStartZoom = restoredMap.getZoom();
+
+        startDoubleTapDragGesture(restoredMap, restoredTarget);
+        moveDoubleTapDragGesture(restoredMap, restoredTarget, 110);
+
+        const restoredZoomDelta = restoredMap.getZoom() - restoredStartZoom;
+
+        endDoubleTapDragGesture(restoredMap, restoredTarget);
+        restoredMap.remove();
+
+        expect(restoredZoomDelta).toBeCloseTo(defaultZoomDelta, 5);
     });
 
     test('TapDragZoomHandler does not zoom on double-tap and drag if touchstart events are in different locations (>30px apart)', () => {

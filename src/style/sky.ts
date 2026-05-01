@@ -1,4 +1,4 @@
-import {DataConstantProperty, type PossiblyEvaluated, Properties, Transitionable, type Transitioning, type TransitionParameters} from './properties';
+import {DataConstantProperty, type PossiblyEvaluated, Properties, TRANSITION_SUFFIX, Transitionable, type Transitioning, type TransitionParameters} from './properties';
 import {Evented} from '../util/evented';
 import {EvaluationParameters} from './evaluation_parameters';
 import {emitValidationErrors, validateSky, validateStyle} from './validate_style';
@@ -38,8 +38,6 @@ const properties: Properties<SkyProps> = new Properties({
     'atmosphere-blend': new DataConstantProperty(styleSpec.sky['atmosphere-blend'] as StylePropertySpecification)
 });
 
-const TRANSITION_SUFFIX = '-transition';
-
 export class Sky extends Evented {
     properties: PossiblyEvaluated<SkyProps, SkyPropsPossiblyEvaluated>;
 
@@ -53,7 +51,7 @@ export class Sky extends Evented {
 
     constructor(sky?: SkySpecification) {
         super();
-        this._transitionable = new Transitionable(properties);
+        this._transitionable = new Transitionable(properties, undefined);
         this.setSky(sky);
         this._transitioning = this._transitionable.untransitioned();
         this.recalculate(new EvaluationParameters(0));
@@ -62,15 +60,13 @@ export class Sky extends Evented {
     setSky(sky?: SkySpecification, options: StyleSetterOptions = {}) {
         if (this._validate(validateSky, sky, options)) return;
 
-        if (!sky) {
-            sky = {
-                'sky-color': 'transparent',
-                'horizon-color': 'transparent',
-                'fog-color': 'transparent',
-                'fog-ground-blend': 1,
-                'atmosphere-blend': 0,
-            };
-        }
+        sky ||= {
+            'sky-color': 'transparent',
+            'horizon-color': 'transparent',
+            'fog-color': 'transparent',
+            'fog-ground-blend': 1,
+            'atmosphere-blend': 0,
+        };
 
         for (const name in sky) {
             const value = sky[name];

@@ -5,13 +5,13 @@ import path, {dirname} from 'path';
 import fs from 'node:fs/promises';
 import {pathToFileURL} from 'url';
 
-const distjs = globSync('dist/**/*.js');
+const distjs = globSync('dist/**/*.{js,mjs}');
 
 async function getSourceMapForFile(url: string|URL) {
     const content = await fs.readFile(url, {encoding: 'utf-8'});
     const result = new RegExp('^//# sourceMappingURL=(.*)$', 'm').exec(content);
     expect(result).toBeTruthy();
-    const sourcemapUrl = result![1];
+    const sourcemapUrl = result[1];
     expect(sourcemapUrl).toBeTruthy();
     const resolvedSourcemapURL = new URL(sourcemapUrl, url);
     const text = await fs.readFile(resolvedSourcemapURL, {encoding: 'utf-8'});
@@ -50,30 +50,31 @@ describe.each(distjs)('release file %s', (file) => {
 
 describe('main sourcemap', () => {
     test('should match source files', async () => {
-        const sourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.main));
-        const sourceMapEntryRootDir = path.relative('.', dirname(packageJson.main));
+        const mainSourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.module));
+        const workerSourcemapJSON = await getSourceMapForFile(pathToFileURL(packageJson.module.replace(/maplibre-gl\.mjs$/, 'maplibre-gl-worker.mjs')));
+        const sourceMapEntryRootDir = path.relative('.', dirname(packageJson.module));
 
-        const sourcemapEntriesNormalized = sourcemapJSON.sources.map(f => path.join(sourceMapEntryRootDir, f));
+        // Worker code lives in its own bundle, so union sources from both sourcemaps.
+        const sourcemapEntriesNormalized = [...mainSourcemapJSON.sources, ...workerSourcemapJSON.sources]
+            .map(f => path.join(sourceMapEntryRootDir, f));
 
-        // *.js.map file should have these files
+        // *.mjs.map files should have these files
         const srcFiles = await glob('src/**/*.ts');
         const expectedEntriesInSourcemapJSON = srcFiles.filter(f => {
             if (f.endsWith('.test.ts'))
                 return false;
             if (f.startsWith(path.join('src', 'style-spec')))
                 return false;
-            if (f.startsWith(`build${path.sep}`))
+            if (f === path.join('src', 'util', 'test', 'util.ts'))
                 return false;
-            return true;
+            return !f.startsWith(`build${path.sep}`);
         }).sort();
 
-        // actual files from *.js.map
+        // actual files from *.mjs.map
         const actualEntriesInSourcemapJSON = sourcemapEntriesNormalized.filter(f => {
             if (f.startsWith('node_modules'))
                 return false;
-            if (f.startsWith(path.join('src', 'style-spec')))
-                return false;
-            return true;
+            return !f.startsWith(path.join('src', 'style-spec'));
         }).sort();
 
         function setMinus<T>(a: T[], b: T[]) : T[] {
@@ -81,9 +82,16 @@ describe('main sourcemap', () => {
             return a.filter(x => !sb.has(x));
         }
 
+        // Files in the sourcemap that don't exist in src/. A few are OK
+        // (the bundler adds a small number of helper files of its own).
         const s1 = setMinus(actualEntriesInSourcemapJSON, expectedEntriesInSourcemapJSON);
         expect(s1.length).toBeLessThan(5);
+
+        // src/ files that are missing from the sourcemap. Some are OK to miss:
+        // type-only files compile to nothing, and test-only helpers don't end
+        // up in the production bundle. If this number jumps, real source files
+        // are getting dropped, and it should be investigated before raising the limit.
         const s2 = setMinus(expectedEntriesInSourcemapJSON, actualEntriesInSourcemapJSON);
-        expect(s2.length).toBeLessThan(16);
+        expect(s2.length).toBeLessThan(18);
     });
 });

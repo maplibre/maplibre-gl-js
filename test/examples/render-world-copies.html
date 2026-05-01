@@ -3,10 +3,11 @@
 <head>
     <title>Render world copies</title>
     <meta property="og:description" content="Toggle between rendering a single world and multiple copies of the world using setRenderWorldCopies." />
+    <meta property="og:created" content="2023-06-27" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -37,11 +38,14 @@
     </div>
 </div>
 
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     const map = new maplibregl.Map({
         container: 'map', // container id
-        style:
-            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL', // stylesheet location
+        style: 'https://demotiles.maplibre.org/style.json', // stylesheet location
         center: [179, 0], // starting position [lng, lat]
         zoom: 0.01 // starting zoom
     });

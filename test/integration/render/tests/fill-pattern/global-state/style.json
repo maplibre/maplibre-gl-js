@@ -1,0 +1,167 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 128,
+      "height": 64,
+      "operations": [
+        [
+          "setGlobalStateProperty",
+          "icon",
+          "zoo_icon"
+        ],
+        [
+          "wait"
+        ]
+      ]
+    }
+  },
+  "state": {
+    "icon": { "default": "generic_icon" }
+  },
+  "sources": {
+    "a": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    20,
+                    -10
+                  ],
+                  [
+                    20,
+                    10
+                  ],
+                  [
+                    40,
+                    10
+                  ],
+                  [
+                    40,
+                    -10
+                  ],
+                  [
+                    20,
+                    -10
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "b": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -10,
+                    -10
+                  ],
+                  [
+                    -10,
+                    10
+                  ],
+                  [
+                    10,
+                    10
+                  ],
+                  [
+                    10,
+                    -10
+                  ],
+                  [
+                    -10,
+                    -10
+                  ]
+                ]
+              ]
+            },
+            "properties": {
+              "icon": "hospital_icon"
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -40,
+                    -10
+                  ],
+                  [
+                    -40,
+                    10
+                  ],
+                  [
+                    -20,
+                    10
+                  ],
+                  [
+                    -20,
+                    -10
+                  ],
+                  [
+                    -40,
+                    -10
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "sprite": "local://sprites/emerald",
+  "layers": [
+    {
+      "id": "fill-a",
+      "type": "fill",
+      "source": "a",
+      "paint": {
+        "fill-antialias": false,
+        "fill-pattern": [
+          "global-state",
+          "icon"
+        ]
+      }
+    },
+    {
+      "id": "fill-b",
+      "type": "fill",
+      "source": "b",
+      "paint": {
+        "fill-antialias": false,
+        "fill-pattern": [
+          "coalesce",
+          [
+            "get",
+            "icon"
+          ],
+          [
+            "global-state",
+            "icon"
+          ]
+        ]
+      }
+    }
+  ]
+}
