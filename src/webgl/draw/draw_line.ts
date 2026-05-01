@@ -1,4 +1,6 @@
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {DepthMode} from '../depth_mode';
+import {StencilMode} from '../stencil_mode';
 import {CullFaceMode} from '../cull_face_mode';
 import {Texture} from '../texture';
 import {
@@ -6,7 +8,8 @@ import {
     linePatternUniformValues,
     lineSDFUniformValues,
     lineGradientUniformValues,
-    lineGradientSDFUniformValues
+    lineGradientSDFUniformValues,
+    lineTextureUniformValues
 } from '../program/line_program';
 
 import type {Painter, RenderOptions} from '../../render/painter';
@@ -16,6 +19,7 @@ import type {LineBucket} from '../../data/bucket/line_bucket';
 import type {OverscaledTileID} from '../../tile/tile_id';
 import type {Tile} from '../../tile/tile';
 import type {Context} from '../context';
+import type {Framebuffer} from '../framebuffer';
 import type {ProgramConfiguration} from '../../data/program_configuration';
 import {clamp, nextPowerOfTwo} from '../../util/util';
 import {renderColorRamp} from '../../util/color_ramp';
@@ -139,13 +143,82 @@ function bindGradientAndDashTextures(
 }
 
 export function drawLine(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
-    if (painter.renderPass !== 'translucent') return;
-
-    const {isRenderingToTexture} = renderOptions;
+    if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
 
     const opacity = layer.paint.get('line-opacity');
     const width = layer.paint.get('line-width');
     if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0) return;
+
+    const useOffscreen = layer.hasOffscreenPass() && !painter.style.map.terrain;
+
+    // GC the FBO if style is transtitoned from having opacity to not having opacity
+    if (!useOffscreen && layer.lineFbo) {
+        layer.lineFbo.destroy();
+        layer.lineFbo = null;
+    }
+
+    // We want self-overlap to collapse lines
+    //
+    // if the opacity is not constant (full/tansparent), we need to render to an offscreen FBO at full opacity and the
+    // composite pass will apply the opacity.
+    // If we do this any other way, there will be hideous artifacts
+    //
+    // Because terrain may have cases where we snake and thus need the opacity, we are currently accepting the artefacts.
+    // Needs more looking into how to solve this.
+    if (useOffscreen) {
+        if (painter.renderPass === 'offscreen') {
+            drawLineOffscreen(painter, tileManager, layer, coords, renderOptions);
+        } else {
+            drawLineComposite(painter, layer);
+        }
+    } else if (painter.renderPass === 'translucent') {
+        drawLineTiles(painter, tileManager, layer, coords, renderOptions, false, true);
+    }
+}
+
+function drawLineOffscreen(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
+    const context = painter.context;
+
+    layer.lineFbo ??= createLineFbo(context, painter.width, painter.height);
+
+    context.bindFramebuffer.set(layer.lineFbo.framebuffer);
+    context.viewport.set([0, 0, painter.width, painter.height]);
+    context.clear({color: Color.transparent, depth: 1, stencil: 0});
+
+    // Force stencil masks to render into the FBO
+    painter.currentStencilSource = undefined;
+    painter._renderTileClippingMasks(layer, coords, false);
+
+    drawLineTiles(painter, tileManager, layer, coords, renderOptions, true, false);
+}
+
+function drawLineComposite(painter: Painter, layer: LineStyleLayer) {
+    const fbo = layer.lineFbo;
+    if (!fbo) return;
+
+    const context = painter.context;
+    const gl = context.gl;
+
+    context.activeTexture.set(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
+
+    painter.useProgram('lineTexture').draw(context, gl.TRIANGLES,
+        DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
+        lineTextureUniformValues(painter, layer, 0), null, null,
+        layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
+        painter.viewportSegments, layer.paint, painter.transform.zoom);
+}
+
+function drawLineTiles(
+    painter: Painter,
+    tileManager: TileManager,
+    layer: LineStyleLayer,
+    coords: OverscaledTileID[],
+    renderOptions: RenderOptions,
+    forceFullOpacity: boolean,
+    useTerrain: boolean
+) {
+    const {isRenderingToTexture} = renderOptions;
 
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
@@ -183,7 +256,7 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
         const prevProgram = painter.context.program.get();
         const program = painter.useProgram(programId, programConfiguration);
         const programChanged = firstTile || program.program !== prevProgram;
-        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
+        const terrainData = useTerrain ? painter.style.map.terrain?.getTerrainData(coord) : null;
 
         const constantPattern = patternProperty.constantOr(null);
         const constantDasharray = dasharrayProperty?.constantOr(null);
@@ -193,7 +266,6 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
             const posTo = atlas.patternPositions[constantPattern.to.toString()];
             const posFrom = atlas.patternPositions[constantPattern.from.toString()];
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
-
         } else if (constantDasharray) {
             const round = layer.layout.get('line-cap').constantOr(null) === 'round';
             const dashTo = painter.lineAtlas.getDash(constantDasharray.to, round);
@@ -211,19 +283,19 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
 
         let uniformValues;
         if (image) {
-            uniformValues = linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade);
+            uniformValues = linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade, forceFullOpacity);
             bindImagePatternTextures(context, gl, tile, programConfiguration, crossfade);
         } else if (dasharray && gradient) {
-            uniformValues = lineGradientSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, bucket.lineClipsArray.length);
+            uniformValues = lineGradientSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, bucket.lineClipsArray.length, forceFullOpacity);
             bindGradientAndDashTextures(painter, tileManager, context, gl, layer, bucket, coord, programConfiguration, crossfade);
         } else if (dasharray) {
-            uniformValues = lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade);
+            uniformValues = lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, forceFullOpacity);
             bindDasharrayTextures(painter, context, gl, programConfiguration, programChanged, crossfade);
         } else if (gradient) {
-            uniformValues = lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length);
+            uniformValues = lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length, forceFullOpacity);
             bindGradientTextures(painter, tileManager, context, gl, layer, bucket, coord);
         } else {
-            uniformValues = lineUniformValues(painter, tile, layer, pixelRatio);
+            uniformValues = lineUniformValues(painter, tile, layer, pixelRatio, forceFullOpacity);
         }
 
         const stencil = painter.stencilModeForClipping(coord);
@@ -236,4 +308,22 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
         firstTile = false;
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic
     }
+}
+
+function createLineFbo(context: Context, width: number, height: number): Framebuffer {
+    const gl = context.gl;
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+    const fbo = context.createFramebuffer(width, height, true, true);
+    fbo.colorAttachment.set(texture);
+    fbo.depthAttachment.set(context.createRenderbuffer(gl.DEPTH_STENCIL, width, height));
+
+    return fbo;
 }
