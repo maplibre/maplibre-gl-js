@@ -78,6 +78,7 @@ export class TerrainTileManager extends Evented {
     destruct() {
         this.tileManager.usedForTerrain = false;
         this.tileManager.tileSize = null;
+        this.releaseRTT();
     }
 
     getSource(): Source {

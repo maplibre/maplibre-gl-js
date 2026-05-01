@@ -213,12 +213,10 @@ export class Tile {
      * available (e.g. tile created in a test without a render context), the
      * slots are simply dropped — they were never rendered into.
      */
-    releaseRTT(painter: Painter | undefined) {
+    releaseRTT(painter: Painter) {
         if (this.rttObjects.length === 0) return;
-        if (painter) {
-            for (const obj of this.rttObjects) {
-                if (obj) painter.releaseRTT(obj);
-            }
+        for (const obj of this.rttObjects) {
+            if (obj) painter.releaseRTT(obj);
         }
         this.rttObjects.length = 0;
     }
@@ -327,7 +325,7 @@ export class Tile {
         if (this.glyphAtlasTexture) {
             this.glyphAtlasTexture.destroy();
         }
-        
+
         this.imageAtlas = null;
         this.dashPositions = null;
         this.latestFeatureIndex = null;
