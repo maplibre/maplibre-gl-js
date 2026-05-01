@@ -178,7 +178,7 @@ export abstract class StyleLayer extends Evented {
 
     getLayoutProperty<K extends keyof AllLayoutProperties>(name: K): AllLayoutProperties[K] {
         if (name === 'visibility') {
-            return this.visibility;
+            return this.visibility as AllLayoutProperties[K];
         }
         if (this._transitionablePaint?.hasProperty(name)) {
             throw new Error(name + ERROR_PAINT_NOT_LAYOUT);
@@ -273,12 +273,12 @@ export abstract class StyleLayer extends Evented {
             if (baseName === 'visibility' || this._unevaluatedLayout?.hasProperty(baseName)) {
                 throw new Error(name + ERROR_LAYOUT_NOT_PAINT);
             }
-            return this._transitionablePaint.getTransition(baseName);
+            return this._transitionablePaint.getTransition(baseName) as AllPaintProperties[K];
         } else {
             if (name as any === 'visibility' || this._unevaluatedLayout?.hasProperty(name)) {
                 throw new Error(name + ERROR_LAYOUT_NOT_PAINT);
             }
-            return this._transitionablePaint.getValue(name);
+            return this._transitionablePaint.getValue(name) as AllPaintProperties[K];
         }
     }
 
