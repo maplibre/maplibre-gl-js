@@ -11,18 +11,16 @@ The bundling process can be split into several steps:
 This command will compile the css code and create the css file.
 
 `npm run build-prod` and `npm run build-dev`
-These commands will use rollup to bundle the code as ES modules. The output is two files:
+These commands will use [rolldown](https://rolldown.rs/) to bundle the code as ES modules. The output is two files:
 
 - `dist/maplibre-gl.mjs` (main bundle, entry: `src/index.ts`)
 - `dist/maplibre-gl-worker.mjs` (worker bundle, entry: `src/source/worker.ts`)
 
 The main bundle creates the worker via `new Worker(url, {type: 'module'})`, where the URL is whatever the consumer passes to `setWorkerUrl()`.
 
-`banner.ts` is used to create a banner at the beginning of the output file
+`banner.ts` is used to create a banner at the beginning of the output file.
 
-`rollup_plugins.ts` is used to define common plugins for rollup configurations (also reused by the benchmarks)
-
-`rollup_plugin_minify_style_spec.ts` is used to specify the plugin used in style spec bundling
+`rolldown_plugins.ts` defines plugins shared between the main build and the benchmarks: a transform that strips a problematic label from jsonlint's generated parser, and a bundle-size visualizer that runs when invoked via `npm run bundle-stats`.
 
 <hr>
 
