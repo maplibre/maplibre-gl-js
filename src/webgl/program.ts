@@ -209,7 +209,7 @@ export class Program<Us extends UniformBindings> {
         }
 
         if (configuration) {
-            configuration.setUniforms(context, this.binderUniforms, currentProperties, {zoom: (zoom as any)});
+            configuration.setUniforms(context, this.binderUniforms, currentProperties, {zoom});
         }
 
         let primitiveSize = 0;

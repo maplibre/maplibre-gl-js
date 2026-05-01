@@ -1,6 +1,6 @@
 import {describe, expect, test, vi} from 'vitest';
 import {Sky} from './sky';
-import {latest as styleSpec, type SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 import {type EvaluationParameters} from './evaluation_parameters';
 import {type TransitionParameters} from './properties';
 
@@ -32,7 +32,7 @@ test('Sky with interpolate function', () => {
             5, 1,
             7, 0
         ]
-    } as SkySpecification);
+    });
     sky.recalculate({zoom: 6, zoomHistory: {}} as EvaluationParameters);
 
     expect(sky.properties.get('atmosphere-blend')).toBe(0.5);
@@ -47,14 +47,14 @@ test('Sky.getSky', () => {
 describe('Sky.setSky', () => {
     test('sets Sky', () => {
         const sky = new Sky({});
-        sky.setSky({'atmosphere-blend': 1} as SkySpecification);
+        sky.setSky({'atmosphere-blend': 1});
         sky.updateTransitions({
             now: 0,
             transition: {
                 duration: 3000,
                 delay: 0
             }
-        } as any as TransitionParameters);
+        });
         sky.recalculate({zoom: 16, zoomHistory: {}, now: 1500} as EvaluationParameters);
         expect(sky.properties.get('atmosphere-blend')).toBe(0.9);
     });
@@ -75,7 +75,7 @@ describe('Sky.setSky', () => {
         const sky = new Sky({});
 
         const skySpy = vi.spyOn(sky, '_validate');
-        sky.setSky({'atmosphere-blend': -1} as any, {validate: false});
+        sky.setSky({'atmosphere-blend': -1}, {validate: false});
         sky.updateTransitions({transition: false} as any as TransitionParameters);
         sky.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);
 

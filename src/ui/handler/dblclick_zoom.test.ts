@@ -63,7 +63,7 @@ describe('dbclick_zoom', () => {
             container: window.document.createElement('div'),
             zoomSnap: 1.0,
             zoom: 9.7
-        } as any);
+        });
         const spy = vi.spyOn(map, 'easeTo');
 
         simulate.dblclick(map.getCanvas());
@@ -79,7 +79,7 @@ describe('dbclick_zoom', () => {
             container: window.document.createElement('div'),
             zoomSnap: 1.0,
             zoom: 9.7
-        } as any);
+        });
         const spy = vi.spyOn(map, 'easeTo');
 
         const canvas = map.getCanvas();

@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, type UpdateRotationArgs, cameraForBoxAndBearing} from './camera_helper';
+import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, cameraForBoxAndBearing} from './camera_helper';
 import {LngLat, type LngLatLike} from '../lng_lat';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils';
 import {clamp, createVec3f64, differenceOfAnglesDegrees, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util';
@@ -286,7 +286,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
                     endEulerAngles,
                     tr,
                     k,
-                    useSlerp: startEulerAngles.roll != endEulerAngles.roll} as UpdateRotationArgs);
+                    useSlerp: startEulerAngles.roll != endEulerAngles.roll});
             }
 
             if (doPadding) {

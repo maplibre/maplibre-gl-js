@@ -279,7 +279,7 @@ export class TaggedString {
             scale: section.scale || 1,
             verticalAlign: section.verticalAlign || 'bottom',
             fontStack: section.fontStack || defaultFontStack,
-        } as TextSectionOptions);
+        });
         const index = this.sections.length - 1;
         this.sectionIndex.push(...[...section.text].map(() => index));
     }
@@ -302,7 +302,7 @@ export class TaggedString {
             scale: 1,
             verticalAlign: section.verticalAlign || 'bottom',
             imageName,
-        } as ImageSectionOptions);
+        });
         this.sectionIndex.push(this.sections.length - 1);
     }
 

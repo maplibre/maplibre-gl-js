@@ -10,7 +10,7 @@ describe('PauseablePlacement', () => {
 
         const pp = new PauseablePlacement(
             transform,
-            undefined as any,
+            undefined,
             ['symbol-layer'],
             true,
             false,

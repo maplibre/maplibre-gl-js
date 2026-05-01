@@ -62,10 +62,10 @@ export class ConvexVolume implements IBoundingVolume {
      * @param angles - The rotation of the box. Euler angles, in degrees.
      */
     public static fromCenterSizeAngles(center: vec3, halfSize: vec3, angles: vec3): ConvexVolume {
-        const q = quat.fromEuler([] as any, angles[0], angles[1], angles[2]);
-        const axisX = vec3.transformQuat([] as any, [halfSize[0], 0, 0], q);
-        const axisY = vec3.transformQuat([] as any, [0, halfSize[1], 0], q);
-        const axisZ = vec3.transformQuat([] as any, [0, 0, halfSize[2]], q);
+        const q = quat.fromEuler([], angles[0], angles[1], angles[2]);
+        const axisX = vec3.transformQuat([], [halfSize[0], 0, 0], q);
+        const axisY = vec3.transformQuat([], [0, halfSize[1], 0], q);
+        const axisZ = vec3.transformQuat([], [0, 0, halfSize[2]], q);
         // Find the AABB min/max
         const min = [...center] as vec3;
         const max = [...center] as vec3;
@@ -82,9 +82,9 @@ export class ConvexVolume implements IBoundingVolume {
         const points = [];
         for (let i = 0; i < 8; i++) {
             const p = [...center] as vec3;
-            vec3.add(p, p, vec3.scale([] as any, axisX, ((i >> 0) & 1) === 1 ? 1 : -1));
-            vec3.add(p, p, vec3.scale([] as any, axisY, ((i >> 1) & 1) === 1 ? 1 : -1));
-            vec3.add(p, p, vec3.scale([] as any, axisZ, ((i >> 2) & 1) === 1 ? 1 : -1));
+            vec3.add(p, p, vec3.scale([], axisX, ((i >> 0) & 1) === 1 ? 1 : -1));
+            vec3.add(p, p, vec3.scale([], axisY, ((i >> 1) & 1) === 1 ? 1 : -1));
+            vec3.add(p, p, vec3.scale([], axisZ, ((i >> 2) & 1) === 1 ? 1 : -1));
             points.push(p);
         }
         return new ConvexVolume(points, [

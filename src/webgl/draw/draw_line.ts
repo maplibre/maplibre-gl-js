@@ -152,28 +152,33 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
 
     const useOffscreen = layer.hasOffscreenPass() && !painter.style.map.terrain;
 
-    // GC the FBO if style is transtitoned from having opacity to not having opacity
     if (!useOffscreen && layer.lineFbo) {
+        // GC the FBO if style is transtitoned from having opacity to not having opacity
         layer.lineFbo.destroy();
         layer.lineFbo = null;
     }
 
+    if (painter.renderPass === 'offscreen' && !useOffscreen) {
+        // No need to draw anything if this is an offscreen pass but we don't need to render to an offscreen FBO.
+        return;
+    }
     // We want self-overlap to collapse lines
-    //
-    // if the opacity is not constant (full/tansparent), we need to render to an offscreen FBO at full opacity and the
+    // if the opacity is not constant (full/transparent), we need to render to an offscreen FBO at full opacity and the
     // composite pass will apply the opacity.
     // If we do this any other way, there will be hideous artifacts
-    //
     // Because terrain may have cases where we snake and thus need the opacity, we are currently accepting the artefacts.
     // Needs more looking into how to solve this.
-    if (useOffscreen) {
-        if (painter.renderPass === 'offscreen') {
-            drawLineOffscreen(painter, tileManager, layer, coords, renderOptions);
-        } else {
-            drawLineComposite(painter, layer);
-        }
-    } else if (painter.renderPass === 'translucent') {
+    if (painter.renderPass === 'offscreen' && useOffscreen) {
+        drawLineOffscreen(painter, tileManager, layer, coords, renderOptions);
+        return;
+    }
+    if (painter.renderPass === 'translucent' && useOffscreen) {
+        drawLineComposite(painter, layer);
+        return;
+    }
+    if (painter.renderPass === 'translucent' && !useOffscreen) {
         drawLineTiles(painter, tileManager, layer, coords, renderOptions, false, true);
+        return;
     }
 }
 
