@@ -27,7 +27,7 @@ jobs:
         if: '!cancelled()'
       - run: npm run lint-css
         if: '!cancelled()'
-      - run: npm run generate-typings
+      - run: npm run build-prod
         if: '!cancelled()'
       - run: npm run typecheck
         if: '!cancelled()'

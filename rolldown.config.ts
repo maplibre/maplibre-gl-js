@@ -5,7 +5,6 @@ import banner from './build/banner';
 import packageJSON from './package.json' with {type: 'json'};
 
 const production = process.env.BUILD === 'production';
-const typesOnly = process.env.BUILD === 'types';
 const outputPostfix = production ? '' : '-dev';
 
 const bundle = (input: InputOption, file: string, format: ModuleFormat): RolldownOptions => ({
@@ -32,7 +31,7 @@ const dtsBundle: RolldownOptions = {
     plugins: [dts({emitDtsOnly: true, tsgo: true})],
 };
 
-export default defineConfig(typesOnly ? [dtsBundle] : [
+export default defineConfig([
     bundle('src/index.ts', `dist/maplibre-gl${outputPostfix}.mjs`, 'es'),
     bundle('src/source/worker.ts', `dist/maplibre-gl-worker${outputPostfix}.mjs`, 'es'),
     ...(production ? [dtsBundle] : []),

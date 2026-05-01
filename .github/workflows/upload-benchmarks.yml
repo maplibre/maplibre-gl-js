@@ -42,7 +42,6 @@ jobs:
 
       - name: Build benchmarks
         run: |
-          npm run generate-typings
           npm run build-benchmarks
 
       - name: Copy ESM benchmark artifacts
