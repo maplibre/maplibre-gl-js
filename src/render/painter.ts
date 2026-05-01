@@ -93,6 +93,11 @@ export class Painter {
     _tileTextures: {
         [_: number]: Texture[];
     };
+    /**
+     * A pool of recyclable {@link RTTObject}s, bucketed by their size (width in pixels).
+     * `acquireRTT(size)` pops from the bucket for that size; `releaseRTT(obj)`
+     * pushes back into the bucket for `obj.size`.
+     */
     _rttObjects: Record<number, RTTObject[]>;
     numSublayers: number;
     depthEpsilon: number;
