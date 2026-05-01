@@ -1669,7 +1669,7 @@ export abstract class Camera extends Evented {
      * Returns null if terrain is not enabled.
      * If terrain is enabled with some exaggeration value, the value returned here will be reflective of (multiplied by) that exaggeration value.
      * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/adding-3d-models-using-threejs-on-terrain/)
-     * @param lngLatLike - `[x,y]` or LngLat coordinates of the location
+     * @param lngLatLike - `[x, y]` or LngLat coordinates of the location
      * @returns elevation in meters
      */
     queryTerrainElevation(lngLatLike: LngLatLike): number | null {

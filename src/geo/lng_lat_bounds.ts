@@ -47,7 +47,7 @@ export class LngLatBounds {
     /**
      * @param sw - The southwest corner of the bounding box.
      * OR array of 4 numbers in the order of  west, south, east, north
-     * OR array of 2 LngLatLike: `[sw,ne]`
+     * OR array of 2 LngLatLike: `[sw, ne]`
      * @param ne - The northeast corner of the bounding box.
      * @example
      * ```ts
