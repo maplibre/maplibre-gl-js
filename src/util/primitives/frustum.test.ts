@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {mat4, type vec4} from 'gl-matrix';
+import {mat4} from 'gl-matrix';
 import {Frustum} from './frustum';
 
 describe('frustum', () => {
@@ -23,8 +23,8 @@ describe('frustum', () => {
             [-100.0, -100.0, -100.0, 1.0],
         ];
 
-        frustum.points = frustum.points.map(array => Array.from(array).map(n => Math.round(n * 10) / 10)) as vec4[];
-        frustum.planes = frustum.planes.map(array => Array.from(array).map(n => Math.round(n * 1000) / 1000)) as vec4[];
+        frustum.points = frustum.points.map(array => Array.from(array).map(n => Math.round(n * 10) / 10));
+        frustum.planes = frustum.planes.map(array => Array.from(array).map(n => Math.round(n * 1000) / 1000));
 
         const expectedFrustumPlanes = [
             [0, 0, 1.0, 0.1],

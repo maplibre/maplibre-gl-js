@@ -1,6 +1,6 @@
 import type Point from '@mapbox/point-geometry';
 import {LngLat, type LngLatLike} from '../lng_lat';
-import {cameraForBoxAndBearing, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, type UpdateRotationArgs} from './camera_helper';
+import {cameraForBoxAndBearing, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation} from './camera_helper';
 import {normalizeCenter} from '../transform_helper';
 import {rollPitchBearingEqual, scaleZoom, zoomScale} from '../../util/util';
 import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
@@ -109,7 +109,7 @@ export class MercatorCameraHelper implements ICameraHelper {
                     endEulerAngles,
                     tr,
                     k,
-                    useSlerp: startEulerAngles.roll != endEulerAngles.roll} as UpdateRotationArgs);
+                    useSlerp: startEulerAngles.roll != endEulerAngles.roll});
             }
             if (doPadding) {
                 tr.interpolatePadding(startPadding, options.padding, k);
