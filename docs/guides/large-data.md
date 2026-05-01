@@ -41,7 +41,7 @@ Data chunking is more impactful on desktop browsers than mobile browsers.
 
 ### Data Streaming
 
-Implementing data streaming techniques can further enhance loading performance. Rather than loading the entire dataset at once, data streaming allows you to load smaller portions as the user interacts with the map. This approach minimises the initial loading time and provides a more responsive experience. A template for data streaming can be found in the [Live Update Features](https://maplibre.org/maplibre-gl-js/docs/examples/live-update-feature/) example.
+Implementing data streaming techniques can further enhance loading performance. Rather than loading the entire dataset at once, data streaming allows you to load smaller portions as the user interacts with the map. This approach minimises the initial loading time and provides a more responsive experience. A template for data streaming can be found in the [Live Update Features](../examples/update-a-feature-in-realtime.md) example.
 
 ### Store GeoJSON at URL
 
@@ -49,7 +49,7 @@ For improved performance in MapLibre, it's advisable to load your GeoJSON data f
 
 ### Vector Tiling
 
-Consider converting your GeoJSON data into vector tiles, which are specifically designed for efficient rendering. An example is available on how to [add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/vector-source/).
+Consider converting your GeoJSON data into vector tiles, which are specifically designed for efficient rendering. An example is available on how to [add a vector tile source](../examples/add-a-vector-tile-source.md).
 
 ### Tiling on the server
 
@@ -75,7 +75,7 @@ map.addSource('earthquakes', {
         });
 ```
 
-You can see a full example here: [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/cluster/).
+You can see a full example here: [Create and style clusters](../examples/create-and-style-clusters.md).
 
 ### Allow Overlap
 
