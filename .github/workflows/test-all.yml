@@ -31,6 +31,8 @@ jobs:
         if: '!cancelled()'
       - run: npm run typecheck
         if: '!cancelled()'
+      - run: npm run check-isolated-declarations
+        if: '!cancelled()'
       - run: npm run generate-docs
       - name: Build docs
         run: npm run docs

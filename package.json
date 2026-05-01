@@ -173,7 +173,8 @@
     "benchmark": "node --no-warnings --loader ts-node/esm test/bench/run-benchmarks.ts",
     "gl-stats": "node --no-warnings --loader ts-node/esm test/bench/gl-stats.ts",
     "prepare": "npm run codegen",
-    "typecheck": "tsgo --noEmit && tsgo -p tsconfig.build.json --noEmit && tsgo --project tsconfig.dist.json",
+    "typecheck": "tsgo --noEmit && tsgo --project tsconfig.dist.json",
+    "check-isolated-declarations": "tsgo -p tsconfig.build.json --noEmit",
     "tsnode": "node --experimental-loader=ts-node/esm --no-warnings"
   },
   "files": [
