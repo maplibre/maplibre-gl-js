@@ -69,6 +69,18 @@ export type RenderOptions = {
 };
 
 /**
+ * Holds the GPU resources used to render a 2D tile into a texture so it can
+ * be draped over 3D terrain: an FBO with a color texture and depth-stencil
+ * renderbuffer attached. Owned by a `Tile` while in use, recycled via
+ * `Painter.releaseRTT` when the tile no longer needs it.
+ */
+export type RTTObject = {
+    fbo: Framebuffer;
+    texture: Texture;
+    size: number;
+};
+
+/**
  * @internal
  * Initialize a new painter object.
  */
@@ -877,15 +889,3 @@ export class Painter {
         return this.width !== drawingBufferWidth || this.height !== drawingBufferHeight;
     }
 }
-
-/**
- * Holds the GPU resources used to render a 2D tile into a texture so it can
- * be draped over 3D terrain: an FBO with a color texture and depth-stencil
- * renderbuffer attached. Owned by a `Tile` while in use, recycled via
- * `Painter.releaseRTT` when the tile no longer needs it.
- */
-export type RTTObject = {
-    fbo: Framebuffer;
-    texture: Texture;
-    size: number;
-};
