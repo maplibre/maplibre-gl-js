@@ -830,15 +830,13 @@ export class Painter {
             this._tileTextures = {};
         }
 
-        if (this._rttObjects) {
-            for (const size in this._rttObjects) {
-                for (const obj of this._rttObjects[size]) {
-                    obj.texture.destroy();
-                    obj.fbo.destroy();
-                }
+        for (const size in this._rttObjects) {
+            for (const obj of this._rttObjects[size]) {
+                obj.texture.destroy();
+                obj.fbo.destroy();
             }
-            this._rttObjects = {};
         }
+        this._rttObjects = {};
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
         if (this.debugBuffer) this.debugBuffer.destroy();
