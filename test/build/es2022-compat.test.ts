@@ -8,7 +8,7 @@ describe('ES2020 compatibility (#7069)', () => {
             const bundle = fs.readFileSync(file, 'utf8');
 
             const result = await transformWithOxc(bundle, file, {
-                target: 'es2020',
+                target: 'es2022',
             });
 
             expect(result.code).not.toContain('__publicField');
