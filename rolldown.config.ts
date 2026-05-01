@@ -10,7 +10,6 @@ const bundle = (input: InputOption, file: string, format: ModuleFormat): Rolldow
     platform: 'browser',
     treeshake: production,
     output: {
-        name: 'maplibregl',
         file,
         format,
         sourcemap: true,
