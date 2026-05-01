@@ -9,6 +9,7 @@ const config: ViteUserConfig = defineConfig({
             'test/integration/**/*.test.ts',
         ],
         exclude: [
+            '**/node_modules/**',
             'test/integration/render/*.*', // Render tests are run separately
         ],
         coverage: {

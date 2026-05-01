@@ -54,7 +54,7 @@ test('Light.getLight', () => {
 describe('Light.setLight', () => {
     test('sets light', () => {
         const light = new Light({});
-        light.setLight({color: 'red', 'color-transition': {duration: 3000}} as LightSpecification);
+        light.setLight({color: 'red', 'color-transition': {duration: 3000}});
         light.updateTransitions({transition: true} as any as TransitionParameters);
         light.recalculate({zoom: 16, zoomHistory: {}, now: 1500} as EvaluationParameters);
         expect(light.properties.get('color')).toEqual(new Color(1, 0.5, 0.5, 1));

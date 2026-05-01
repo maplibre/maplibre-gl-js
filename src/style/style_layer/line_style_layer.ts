@@ -11,6 +11,7 @@ import {isZoomExpression, Step, type Feature, type FeatureState, type StylePrope
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g';
+import type {Framebuffer} from '../../webgl/framebuffer';
 
 export class LineFloorwidthProperty extends DataDrivenProperty<number> {
     useIntegerZoom: true;
@@ -41,6 +42,7 @@ export class LineStyleLayer extends StyleLayer {
 
     gradientVersion: number;
     stepInterpolant: boolean;
+    lineFbo: Framebuffer | null;
 
     _transitionablePaint: Transitionable<LinePaintProps>;
     _transitioningPaint: Transitioning<LinePaintProps>;
@@ -49,6 +51,7 @@ export class LineStyleLayer extends StyleLayer {
     constructor(layer: LayerSpecification, globalState: Record<string, any>) {
         super(layer, properties, globalState);
         this.gradientVersion = 0;
+        this.lineFbo = null;
         if (!lineFloorwidthProperty) {
             lineFloorwidthProperty =
                 new LineFloorwidthProperty(properties.paint.properties['line-width'].specification);
@@ -116,6 +119,21 @@ export class LineStyleLayer extends StyleLayer {
 
     isTileClipped(): boolean {
         return true;
+    }
+
+    hasOffscreenPass() {
+        const opacity = this.paint.get('line-opacity');
+        const constantOpacity = opacity.constantOr(-1);
+        return constantOpacity > 0 && constantOpacity < 1 && !this.isHidden();
+    }
+
+    onRemove = () => {
+        this.resize();
+    };
+
+    resize() {
+        this.lineFbo?.destroy();
+        this.lineFbo = null;
     }
 }
 

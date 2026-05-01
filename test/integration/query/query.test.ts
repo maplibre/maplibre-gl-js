@@ -18,7 +18,7 @@ let maplibregl: typeof MapLibreGL;
 
 async function performQueryOnFixture(fixture)  {
 
-    async function handleOperation(map: maplibregl.Map, operation) {
+    async function handleOperation(map: MapLibreGL.Map, operation) {
         const opName = operation[0];
 
         switch (opName) {

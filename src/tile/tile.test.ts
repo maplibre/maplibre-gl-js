@@ -40,7 +40,7 @@ describe('querySourceFeatures', () => {
             expect(result).toHaveLength(1);
             expect(result[0].geometry.coordinates[0]).toEqual([-90, 0]);
             result = [];
-            tile.querySourceFeatures(result, {} as any);
+            tile.querySourceFeatures(result, {});
             expect(result).toHaveLength(1);
             expect(result[0].properties).toEqual(features[0].tags);
         });

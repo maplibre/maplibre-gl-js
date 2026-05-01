@@ -609,9 +609,9 @@ export class MercatorTransform implements ITransform {
 
         // matrix for conversion from location to clip space(-1 .. 1)
         let m: mat4;
-        m = new Float64Array(16) as any;
+        m = new Float64Array(16);
         mat4.perspective(m, this.fovInRadians, this._helper._width / this._helper._height, this._helper._nearZ, this._helper._farZ);
-        this._invProjMatrix = new Float64Array(16) as any as mat4;
+        this._invProjMatrix = new Float64Array(16);
         fastInvertProjMat4(this._invProjMatrix, m);
 
         // Apply center of perspective offset
@@ -628,18 +628,18 @@ export class MercatorTransform implements ITransform {
 
         // The mercatorMatrix can be used to transform points from mercator coordinates
         // ([0, 0] nw, [1, 1] se) to clip space.
-        this._mercatorMatrix = mat4.scale([] as any, m, [this.worldSize, this.worldSize, this.worldSize]);
+        this._mercatorMatrix = mat4.scale([], m, [this.worldSize, this.worldSize, this.worldSize]);
 
         // scale vertically to meters per pixel (inverse of ground resolution):
         mat4.scale(m, m, [1, 1, this._helper._pixelPerMeter]);
 
         // matrix for conversion from world space to screen coordinates in 2D
-        this._pixelMatrix = mat4.multiply(new Float64Array(16) as any, this.clipSpaceToPixelsMatrix, m);
+        this._pixelMatrix = mat4.multiply(new Float64Array(16), this.clipSpaceToPixelsMatrix, m);
 
         // matrix for conversion from world space to clip space (-1 .. 1)
         mat4.translate(m, m, [0, 0, -this.elevation]); // elevate camera over terrain
         this._viewProjMatrix = m;
-        this._invViewProjMatrix = mat4.invert([] as any, m);
+        this._invViewProjMatrix = mat4.invert([], m);
 
         const cameraPos: vec4 = [0, 0, -1, 1];
         vec4.transformMat4(cameraPos, cameraPos, this._invViewProjMatrix);
@@ -651,7 +651,7 @@ export class MercatorTransform implements ITransform {
 
         // create a fog matrix, same es proj-matrix but with near clipping-plane in mapcenter
         // needed to calculate a correct z-value for fog calculation, because projMatrix z value is not
-        this._fogMatrix = new Float64Array(16) as any;
+        this._fogMatrix = new Float64Array(16);
         mat4.perspective(this._fogMatrix, this.fovInRadians, this.width / this.height, cameraToSeaLevelDistance, this._helper._farZ);
         this._fogMatrix[8] = -offset.x * 2 / this.width;
         this._fogMatrix[9] = offset.y * 2 / this.height;
@@ -665,7 +665,7 @@ export class MercatorTransform implements ITransform {
         mat4.translate(this._fogMatrix, this._fogMatrix, [0, 0, -this.elevation]); // elevate camera over terrain
 
         // matrix for conversion from world space to screen coordinates in 3D
-        this._pixelMatrix3D = mat4.multiply(new Float64Array(16) as any, this.clipSpaceToPixelsMatrix, m);
+        this._pixelMatrix3D = mat4.multiply(new Float64Array(16), this.clipSpaceToPixelsMatrix, m);
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
         // We're rounding the (floating point) x/y values to achieve to avoid rendering raster images to fractional
@@ -682,7 +682,7 @@ export class MercatorTransform implements ITransform {
         this._alignedProjMatrix = alignedM;
 
         // inverse matrix for conversion from screen coordinates to location
-        m = mat4.invert(new Float64Array(16) as any, this._pixelMatrix);
+        m = mat4.invert(new Float64Array(16), this._pixelMatrix);
         if (!m) throw new Error('failed to invert matrix');
         this._pixelMatrixInverse = m;
 

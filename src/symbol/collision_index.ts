@@ -498,8 +498,8 @@ export class CollisionIndex {
     * Use this function to render e.g. collision circles on the screen.
     *   example transformation: clipPos = glCoordMatrix * viewportMatrix * circle_pos
     */
-    getViewportMatrix(): mat4 {
-        const m = mat4.identity([] as any);
+    getViewportMatrix() {
+        const m = mat4.identity([]);
         mat4.translate(m, m, [-viewportPadding, -viewportPadding, 0.0]);
         return m;
     }

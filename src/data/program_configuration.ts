@@ -569,8 +569,8 @@ export class ProgramConfiguration {
         options: PaintOptions
     ): boolean {
         let dirty: boolean = false;
-        for (const id in featureStates) {
-            const positions = featureMap.getPositions(id);
+        for (const fs of featureStates) {
+            const positions = featureMap.getPositions(fs.id);
 
             for (const pos of positions) {
                 const feature = vtLayer.feature(pos.index);
@@ -582,7 +582,7 @@ export class ProgramConfiguration {
                         //AHM: Remove after https://github.com/mapbox/mapbox-gl-js/issues/6255
                         const value = (layer.paint as any).get(property);
                         binder.expression = value.value;
-                        binder.updatePaintArray(pos.start, pos.end, feature, featureStates[id], options);
+                        binder.updatePaintArray(pos.start, pos.end, feature, fs.state, options);
                         dirty = true;
                     }
                 }

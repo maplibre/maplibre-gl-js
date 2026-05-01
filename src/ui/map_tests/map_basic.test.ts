@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {Map, type MapOptions} from '../map';
+import {Map} from '../map';
 import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '../../util/test/util';
 import {Tile} from '../../tile/tile';
 import {OverscaledTileID} from '../../tile/tile_id';
@@ -41,7 +41,7 @@ describe('Map', () => {
         expect(() => {
             new Map({
                 container: 'anElementIdWhichDoesNotExistInTheDocument'
-            } as any as MapOptions);
+            });
         }).toThrow(
             new Error('Container \'anElementIdWhichDoesNotExistInTheDocument\' not found.')
         );
@@ -58,7 +58,7 @@ describe('Map', () => {
     describe('setTransformRequest', () => {
         test('returns self', () => {
             const transformRequest = (() => {}) as any as RequestTransformFunction;
-            const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
+            const map = new Map({container: window.document.createElement('div')});
             expect(map.setTransformRequest(transformRequest)).toBe(map);
             expect(map._requestManager._transformRequestFn).toBe(transformRequest);
         });

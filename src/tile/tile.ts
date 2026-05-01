@@ -483,7 +483,7 @@ export class Tile {
             const sourceLayerId = bucket.layers[0]['sourceLayer'] || GEOJSON_TILE_LAYER_NAME;
             const sourceLayer = vtLayers[sourceLayerId];
             const sourceLayerStates = states[sourceLayerId];
-            if (!sourceLayer || !sourceLayerStates || Object.keys(sourceLayerStates).length === 0) continue;
+            if (!sourceLayer || !sourceLayerStates || sourceLayerStates.length === 0) continue;
 
             bucket.update(sourceLayerStates, sourceLayer, this.imageAtlas?.patternPositions || {}, this.dashPositions || {});
             const layer = painter?.style?.getLayer(id);

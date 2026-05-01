@@ -1,16 +1,11 @@
 import fs from 'fs';
-import replace from '@rollup/plugin-replace';
-import {plugins, nodeResolve} from '../../build/rollup_plugins';
-import commonjs from '@rollup/plugin-commonjs';
-import typescript from '@rollup/plugin-typescript';
+import {plugins} from '../../build/rolldown_plugins';
 import {execSync} from 'child_process';
-import {type RollupOptions} from 'rollup';
+import {defineConfig, type RolldownOptions} from 'rolldown';
+import {replacePlugin} from 'rolldown/plugins';
 
-/**
- * Generates the benchmark bundles. Each benchmark suite (versions, styles) emits
- * two ESM bundles: a main bundle that registers benchmarks into a window global,
- * and a worker bundle that the main bundle points at via `setWorkerUrl()`.
- */
+// Each benchmark suite (versions, styles) emits a main bundle and a worker
+// bundle the main bundle points at via `setWorkerUrl()`.
 
 let styles = ['https://tiles.openfreemap.org/styles/liberty'];
 
@@ -33,50 +28,47 @@ const gitDesc = execSync('git describe --all --always --dirty').toString().trim(
 const gitRef = execSync('git rev-parse --short=7 HEAD').toString().trim();
 const defaultBenchmarkVersion = gitDesc.replace(/^(heads|tags)\//, '') + (gitDesc.match(/^heads\//) ? ` ${gitRef}` : '');
 
-const replaceConfig = {
-    preventAssignment: true,
+const replaceValues = {
     'process.env.BENCHMARK_VERSION': JSON.stringify(process.env.BENCHMARK_VERSION || defaultBenchmarkVersion),
     'process.env.MAPLIBRE_STYLES': JSON.stringify(styles),
-    'process.env.NODE_ENV': JSON.stringify('production')
+    'process.env.NODE_ENV': JSON.stringify('production'),
 };
 
-const allPlugins = plugins(true).concat(replace(replaceConfig));
+const allPlugins = [...plugins(true), replacePlugin(replaceValues, {preventAssignment: true})];
 
-const benchmarkSuiteConfig = (name: string): RollupOptions[] => [{
+const benchmarkSuiteConfig = (name: string): RolldownOptions[] => [{
     input: `test/bench/${name}/index.ts`,
+    platform: 'browser',
     output: {
         file: `test/bench/${name}/benchmarks_generated.mjs`,
         format: 'es',
         sourcemap: true,
-        indent: false,
     },
-    plugins: allPlugins
+    plugins: allPlugins,
 }, {
     input: 'src/source/worker.ts',
+    platform: 'browser',
     output: {
         file: `test/bench/${name}/benchmarks_worker.mjs`,
         format: 'es',
         sourcemap: true,
-        indent: false,
     },
-    plugins: allPlugins
+    plugins: allPlugins,
 }];
 
-const viewConfig: RollupOptions = {
+const viewConfig: RolldownOptions = {
     input: 'test/bench/benchmarks_view.tsx',
+    platform: 'browser',
     output: {
         file: 'test/bench/benchmarks_view_generated.mjs',
         format: 'es',
-        indent: false,
-        sourcemap: false
+        sourcemap: false,
     },
-    plugins: [
-        nodeResolve,
-        typescript(),
-        commonjs(),
-        replace(replaceConfig)
-    ].filter(Boolean)
+    plugins: [replacePlugin(replaceValues, {preventAssignment: true})],
 };
 
-const config: RollupOptions[] = benchmarkSuiteConfig('versions').concat(benchmarkSuiteConfig('styles')).concat(viewConfig);
-export default config;
+export default defineConfig([
+    ...benchmarkSuiteConfig('versions'),
+    ...benchmarkSuiteConfig('styles'),
+    viewConfig,
+]);
