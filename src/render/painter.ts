@@ -81,9 +81,7 @@ export class Painter {
     _tileTextures: {
         [_: number]: Texture[];
     };
-    _rttObjects: {
-        [_: number]: RTTObject[];
-    };
+    _rttObjects: Record<number, RTTObject[]>;
     numSublayers: number;
     depthEpsilon: number;
     emptyProgramConfiguration: ProgramConfiguration;
