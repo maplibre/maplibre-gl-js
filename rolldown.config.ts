@@ -29,7 +29,7 @@ const dtsBundle: RolldownOptions = {
         format: 'es',
     },
     external: Object.keys(packageJSON.dependencies),
-    plugins: [dts({emitDtsOnly: true})],
+    plugins: [dts({emitDtsOnly: true, tsgo: true})],
 };
 
 export default defineConfig(typesOnly ? [dtsBundle] : [
