@@ -1,4 +1,4 @@
-import {describe, beforeAll, afterAll, test, expect, vi} from 'vitest';
+import {describe, beforeAll, afterAll, test, expect, vi, type Mock} from 'vitest';
 import {TerrainTileManager} from './terrain_tile_manager';
 import {Style} from '../style/style';
 import {RequestManager} from '../util/request_manager';
@@ -248,7 +248,7 @@ describe('TerrainTileManager', () => {
 
             tsc.releaseRTT();
 
-            expect((painter.releaseRTT as any).mock.calls.length).toBe(Object.keys(tiles).length);
+            expect((painter.releaseRTT as Mock<typeof painter.releaseRTT>).mock.calls.length).toBe(Object.keys(tiles).length);
             for (const key in rttObjects) {
                 expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[key]);
                 expect(tiles[key].rttObjects.length).toBe(0);
