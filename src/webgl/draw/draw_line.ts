@@ -203,7 +203,16 @@ function drawLineOffscreen(painter: Painter, tileManager: TileManager, layer: Li
     painter.currentStencilSource = undefined;
     painter._renderTileClippingMasks(layer, coords, false);
 
-    drawLineTiles(painter, tileManager, layer, coords, renderOptions, true, false, isDataDriven);
+    if (isDataDriven) {
+        // RT1 (opacity) uses MAX so self-overlap and feature crossings don't accumulate.
+        // Falls back to last-write-wins if OES_draw_buffers_indexed is unavailable.
+        const ext = context.extDrawBuffersIndexed;
+        ext?.blendEquationiOES(1, gl.MAX);
+        drawLineTiles(painter, tileManager, layer, coords, renderOptions, true, false, true);
+        ext?.blendEquationiOES(1, gl.FUNC_ADD);
+    } else {
+        drawLineTiles(painter, tileManager, layer, coords, renderOptions, true, false, false);
+    }
 }
 
 function drawLineComposite(painter: Painter, layer: LineStyleLayer) {
