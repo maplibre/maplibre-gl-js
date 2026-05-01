@@ -109,6 +109,7 @@ export const shaders: {
     linePattern: PreparedShader;
     lineSDF: PreparedShader;
     lineGradientSDF: PreparedShader;
+    lineTexture: PreparedShader;
     raster: PreparedShader;
     symbolIcon: PreparedShader;
     symbolSDF: PreparedShader;

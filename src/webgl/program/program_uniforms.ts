@@ -1,19 +1,21 @@
-import {fillExtrusionUniforms, fillExtrusionPatternUniforms} from './fill_extrusion_program';
-import {fillPatternUniforms, fillOutlineUniforms, fillOutlinePatternUniforms, fillUniforms} from './fill_program';
-import {circleUniforms} from './circle_program';
-import {collisionUniforms, collisionCircleUniforms} from './collision_program';
-import {debugUniforms} from './debug_program';
-import {heatmapUniforms, heatmapTextureUniforms} from './heatmap_program';
-import {hillshadeUniforms, hillshadePrepareUniforms} from './hillshade_program';
-import {colorReliefUniforms} from './color_relief_program';
-import {lineUniforms, lineGradientUniforms, linePatternUniforms, lineSDFUniforms, lineGradientSDFUniforms, lineTextureUniforms} from './line_program';
-import {rasterUniforms} from './raster_program';
-import {symbolIconUniforms, symbolSDFUniforms, symbolTextAndIconUniforms} from './symbol_program';
-import {backgroundUniforms, backgroundPatternUniforms} from './background_program';
-import {terrainUniforms, terrainDepthUniforms, terrainCoordsUniforms} from './terrain_program';
-import {projectionErrorMeasurementUniforms} from './projection_error_measurement_program';
-import {atmosphereUniforms} from './atmosphere_program';
-import {skyUniforms} from './sky_program';
+import {fillExtrusionUniforms, fillExtrusionPatternUniforms, type FillExtrusionUniformsType, type FillExtrusionPatternUniformsType} from './fill_extrusion_program';
+import {fillPatternUniforms, fillOutlineUniforms, fillOutlinePatternUniforms, fillUniforms, type FillUniformsType, type FillPatternUniformsType, type FillOutlineUniformsType, type FillOutlinePatternUniformsType} from './fill_program';
+import {circleUniforms, type CircleUniformsType} from './circle_program';
+import {collisionUniforms, collisionCircleUniforms, type CollisionUniformsType, type CollisionCircleUniformsType} from './collision_program';
+import {debugUniforms, type DebugUniformsType} from './debug_program';
+import {heatmapUniforms, heatmapTextureUniforms, type HeatmapUniformsType, type HeatmapTextureUniformsType} from './heatmap_program';
+import {hillshadeUniforms, hillshadePrepareUniforms, type HillshadeUniformsType, type HillshadePrepareUniformsType} from './hillshade_program';
+import {colorReliefUniforms, type ColorReliefUniformsType} from './color_relief_program';
+import {lineUniforms, lineGradientUniforms, linePatternUniforms, lineSDFUniforms, lineGradientSDFUniforms, lineTextureUniforms, type LineUniformsType, type LineGradientUniformsType, type LinePatternUniformsType, type LineSDFUniformsType, type LineGradientSDFUniformsType, type LineTextureUniformsType} from './line_program';
+import {rasterUniforms, type RasterUniformsType} from './raster_program';
+import {symbolIconUniforms, symbolSDFUniforms, symbolTextAndIconUniforms, type SymbolIconUniformsType, type SymbolSDFUniformsType, type symbolTextAndIconUniformsType} from './symbol_program';
+import {backgroundUniforms, backgroundPatternUniforms, type BackgroundUniformsType, type BackgroundPatternUniformsType} from './background_program';
+import {terrainUniforms, terrainDepthUniforms, terrainCoordsUniforms, type TerrainUniformsType, type TerrainDepthUniformsType, type TerrainCoordsUniformsType} from './terrain_program';
+import {projectionErrorMeasurementUniforms, type ProjectionErrorMeasurementUniformsType} from './projection_error_measurement_program';
+import {atmosphereUniforms, type atmosphereUniformsType} from './atmosphere_program';
+import {skyUniforms, type SkyUniformsType} from './sky_program';
+import type {Context} from '../context';
+import type {UniformLocations} from '../uniform_binding';
 
 const emptyUniforms = (_: any, __: any): any => {};
 
@@ -40,6 +42,7 @@ export const programUniforms: {
     linePattern: (context: Context, locations: UniformLocations) => LinePatternUniformsType;
     lineSDF: (context: Context, locations: UniformLocations) => LineSDFUniformsType;
     lineGradientSDF: (context: Context, locations: UniformLocations) => LineGradientSDFUniformsType;
+    lineTexture: (context: Context, locations: UniformLocations) => LineTextureUniformsType;
     raster: (context: Context, locations: UniformLocations) => RasterUniformsType;
     symbolIcon: (context: Context, locations: UniformLocations) => SymbolIconUniformsType;
     symbolSDF: (context: Context, locations: UniformLocations) => SymbolSDFUniformsType;
