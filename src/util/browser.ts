@@ -67,7 +67,9 @@ export const browser = {
         return linkEl.href;
     },
 
-    hardwareConcurrency: (typeof navigator !== 'undefined' && navigator.hardwareConcurrency || 4) as number,
+    get hardwareConcurrency(): number {
+        return (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 4;
+    },
 
     get prefersReducedMotion(): boolean {
         if (reducedMotionOverride !== undefined) return reducedMotionOverride;
