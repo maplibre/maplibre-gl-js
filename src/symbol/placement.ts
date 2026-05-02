@@ -1,27 +1,27 @@
-import {CollisionIndex, viewportPadding} from './collision_index';
-import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index';
-import {EXTENT} from '../data/extent';
-import * as symbolSize from './symbol_size';
-import * as projection from './projection';
-import {getAnchorJustification} from './symbol_layout';
-import {getAnchorAlignment, WritingMode} from './shaping';
+import {CollisionIndex, viewportPadding} from './collision_index.ts';
+import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index.ts';
+import {EXTENT} from '../data/extent.ts';
+import * as symbolSize from './symbol_size.ts';
+import * as projection from './projection.ts';
+import {getAnchorJustification} from './symbol_layout.ts';
+import {getAnchorAlignment, WritingMode} from './shaping.ts';
 import {type mat4} from 'gl-matrix';
-import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
+import {pixelsToTileUnits} from '../source/pixels_to_tile_units.ts';
 import Point from '@mapbox/point-geometry';
-import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
-import type {StyleLayer} from '../style/style_layer';
-import {type PossiblyEvaluated} from '../style/properties';
-import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
-import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mode';
+import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import {type PossiblyEvaluated} from '../style/properties.ts';
+import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
+import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mode.ts';
 
-import type {Tile} from '../tile/tile';
-import type {SymbolBucket, CollisionArrays, SingleCollisionBox, SymbolBuffers} from '../data/bucket/symbol_bucket';
-import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchorOffset} from '../data/array_types.g';
-import type {FeatureIndex} from '../data/feature_index';
-import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id';
-import {type Terrain} from '../render/terrain';
-import {translatePosition, warnOnce} from '../util/util';
-import {type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
+import type {Tile} from '../tile/tile.ts';
+import type {SymbolBucket, CollisionArrays, SingleCollisionBox, SymbolBuffers} from '../data/bucket/symbol_bucket.ts';
+import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchorOffset} from '../data/array_types.g.ts';
+import type {FeatureIndex} from '../data/feature_index.ts';
+import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
+import {type Terrain} from '../render/terrain.ts';
+import {translatePosition, warnOnce} from '../util/util.ts';
+import {type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor.ts';
 
 class OpacityState {
     opacity: number;

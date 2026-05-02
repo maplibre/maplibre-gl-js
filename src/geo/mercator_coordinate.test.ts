@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
-import {LngLat} from './lng_lat';
-import {MercatorCoordinate, mercatorScale} from './mercator_coordinate';
+import {LngLat} from './lng_lat.ts';
+import {MercatorCoordinate, mercatorScale} from './mercator_coordinate.ts';
 
 describe('LngLat', () => {
     test('constructor', () => {

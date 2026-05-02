@@ -1,15 +1,15 @@
 import {describe, test, expect, vi, type Mock} from 'vitest';
-import {OverscaledTileID} from '../../tile/tile_id';
-import {TileManager} from '../../tile/tile_manager';
-import {Tile} from '../../tile/tile';
-import {Painter, type RenderOptions} from '../../render/painter';
-import type {Map} from '../../ui/map';
-import {drawCustom} from './draw_custom';
-import {CustomStyleLayer} from '../../style/style_layer/custom_style_layer';
-import {MercatorTransform} from '../../geo/projection/mercator_transform';
-import {MercatorProjection} from '../../geo/projection/mercator_projection';
-import {type CustomRenderMethodInput} from '../../style/style_layer/custom_style_layer';
-import {expectToBeCloseToArray} from '../../util/test/util';
+import {OverscaledTileID} from '../../tile/tile_id.ts';
+import {TileManager} from '../../tile/tile_manager.ts';
+import {Tile} from '../../tile/tile.ts';
+import {Painter, type RenderOptions} from '../../render/painter.ts';
+import type {Map} from '../../ui/map.ts';
+import {drawCustom} from './draw_custom.ts';
+import {CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
+import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {MercatorProjection} from '../../geo/projection/mercator_projection.ts';
+import {type CustomRenderMethodInput} from '../../style/style_layer/custom_style_layer.ts';
+import {expectToBeCloseToArray} from '../../util/test/util.ts';
 
 vi.mock('../../render/painter');
 vi.mock('../program');

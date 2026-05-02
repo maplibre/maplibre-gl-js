@@ -1,9 +1,9 @@
 import {describe, test, expect, vi} from 'vitest';
-import {Actor, type ActorTarget} from './actor';
-import {type WorkerGlobalScopeInterface, workerFactory} from './web_worker';
-import {sleep} from './test/util';
-import {ABORT_ERROR, AbortError} from './abort_error';
-import {MessageType} from './actor_messages';
+import {Actor, type ActorTarget} from './actor.ts';
+import {type WorkerGlobalScopeInterface, workerFactory} from './web_worker.ts';
+import {sleep} from './test/util.ts';
+import {ABORT_ERROR, AbortError} from './abort_error.ts';
+import {MessageType} from './actor_messages.ts';
 
 describe('Actor', () => {
     test('removes "abort" event listener from signal on reject', async () => {

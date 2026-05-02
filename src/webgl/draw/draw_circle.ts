@@ -1,23 +1,23 @@
-import {StencilMode} from '../stencil_mode';
-import {DepthMode} from '../depth_mode';
-import {CullFaceMode} from '../cull_face_mode';
-import {type Program} from '../program';
-import {circleUniformValues} from '../program/circle_program';
-import {SegmentVector} from '../../data/segment';
-import {type OverscaledTileID} from '../../tile/tile_id';
+import {StencilMode} from '../stencil_mode.ts';
+import {DepthMode} from '../depth_mode.ts';
+import {CullFaceMode} from '../cull_face_mode.ts';
+import {type Program} from '../program.ts';
+import {circleUniformValues} from '../program/circle_program.ts';
+import {SegmentVector} from '../../data/segment.ts';
+import {type OverscaledTileID} from '../../tile/tile_id.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer';
-import type {CircleBucket} from '../../data/bucket/circle_bucket';
-import type {ProgramConfiguration} from '../../data/program_configuration';
-import type {VertexBuffer} from '../vertex_buffer';
-import type {IndexBuffer} from '../index_buffer';
-import type {UniformValues} from '../uniform_binding';
-import type {CircleUniformsType} from '../program/circle_program';
-import type {TerrainData} from '../../render/terrain';
-import {translatePosition} from '../../util/util';
-import type {ProjectionData} from '../../geo/projection/projection_data';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer.ts';
+import type {CircleBucket} from '../../data/bucket/circle_bucket.ts';
+import type {ProgramConfiguration} from '../../data/program_configuration.ts';
+import type {VertexBuffer} from '../vertex_buffer.ts';
+import type {IndexBuffer} from '../index_buffer.ts';
+import type {UniformValues} from '../uniform_binding.ts';
+import type {CircleUniformsType} from '../program/circle_program.ts';
+import type {TerrainData} from '../../render/terrain.ts';
+import {translatePosition} from '../../util/util.ts';
+import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 
 type TileRenderState = {
     programConfiguration: ProgramConfiguration;

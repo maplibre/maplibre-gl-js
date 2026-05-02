@@ -1,8 +1,8 @@
 import {describe, test, expect, vi} from 'vitest';
-import {createStyleLayer} from '../create_style_layer';
-import {extend} from '../../util/util';
-import {type LineStyleLayer} from './line_style_layer';
-import {type Framebuffer} from '../../webgl/framebuffer';
+import {createStyleLayer} from '../create_style_layer.ts';
+import {extend} from '../../util/util.ts';
+import {type LineStyleLayer} from './line_style_layer.ts';
+import {type Framebuffer} from '../../webgl/framebuffer.ts';
 
 describe('LineStyleLayer', () => {
     function createLineLayer(layer?) {

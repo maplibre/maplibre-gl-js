@@ -1,7 +1,7 @@
-import {throttle} from '../util/throttle';
-import {LngLat} from '../geo/lng_lat';
+import {throttle} from '../util/throttle.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 
-import type {Map} from './map';
+import type {Map} from './map.ts';
 
 /**
  * Adds the map's position to its page's location hash.

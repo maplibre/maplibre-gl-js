@@ -1,4 +1,4 @@
-import type {MousePitchHandler, MouseRollHandler, MouseRotateHandler} from '../mouse';
+import type {MousePitchHandler, MouseRollHandler, MouseRotateHandler} from '../mouse.ts';
 
 /**
  * Options object for `DragRotateHandler`.

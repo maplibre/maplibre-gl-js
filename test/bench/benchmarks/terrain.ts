@@ -1,6 +1,6 @@
-import {type BenchmarkLike, type Measurement} from '../lib/benchmark';
-import createMap from '../lib/create_map';
-import type {Map} from '../../../src/ui/map';
+import {type BenchmarkLike, type Measurement} from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
+import type {Map} from '../../../src/ui/map.ts';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 // STYLE_COMPLEXITY * 10 = number of layers in the style

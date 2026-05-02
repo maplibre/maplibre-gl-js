@@ -1,8 +1,8 @@
-import {StyleLayer} from '../style_layer';
-import type {Map} from '../../ui/map';
+import {StyleLayer} from '../style_layer.ts';
+import type {Map} from '../../ui/map.ts';
 import {type mat4} from 'gl-matrix';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {ProjectionData} from '../../geo/projection/projection_data';
+import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 
 /**
  * Type for an object literal that specifies a map tile.

@@ -1,5 +1,5 @@
-import {type CoveringTilesOptionsInternal} from '../../geo/projection/covering_tiles';
-import {type IBoundingVolume} from './bounding_volume';
+import {type CoveringTilesOptionsInternal} from '../../geo/projection/covering_tiles.ts';
+import {type IBoundingVolume} from './bounding_volume.ts';
 
 type BoundingVolumeFactory<T extends IBoundingVolume> = (tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal) => T;
 

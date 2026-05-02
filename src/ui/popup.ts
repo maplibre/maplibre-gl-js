@@ -1,17 +1,17 @@
-import {extend} from '../util/util';
-import {Event, Evented} from '../util/evented';
-import {DOM} from '../util/dom';
-import {LngLat} from '../geo/lng_lat';
+import {extend} from '../util/util.ts';
+import {Event, Evented} from '../util/evented.ts';
+import {DOM} from '../util/dom.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
-import {smartWrap} from '../util/smart_wrap';
-import {anchorTranslate, applyAnchorClass} from './anchor';
+import {smartWrap} from '../util/smart_wrap.ts';
+import {anchorTranslate, applyAnchorClass} from './anchor.ts';
 
-import type {MapLibreEvent, MapMouseEvent} from './events';
-import type {PositionAnchor} from './anchor';
-import type {Map} from './map';
-import type {LngLatLike} from '../geo/lng_lat';
-import type {PointLike} from './camera';
-import type {PaddingOptions} from '../geo/edge_insets';
+import type {MapLibreEvent, MapMouseEvent} from './events.ts';
+import type {PositionAnchor} from './anchor.ts';
+import type {Map} from './map.ts';
+import type {LngLatLike} from '../geo/lng_lat.ts';
+import type {PointLike} from './camera.ts';
+import type {PaddingOptions} from '../geo/edge_insets.ts';
 
 const defaultOptions = {
     closeButton: true,

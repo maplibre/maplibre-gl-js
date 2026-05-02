@@ -1,7 +1,7 @@
 import {validateStyleMin} from '@maplibre/maplibre-gl-style-spec';
-import {ErrorEvent} from '../util/evented';
+import {ErrorEvent} from '../util/evented.ts';
 
-import type {Evented} from '../util/evented';
+import type {Evented} from '../util/evented.ts';
 
 type ValidationError = {
     message: string;

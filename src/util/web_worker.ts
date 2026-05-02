@@ -1,7 +1,7 @@
-import {type AddProtocolAction, config} from './config';
-import type {default as MaplibreWorker} from '../source/worker';
-import type {WorkerSourceConstructor} from '../source/worker_source';
-import type {GetResourceResponse, RequestParameters} from './ajax';
+import {type AddProtocolAction, config} from './config.ts';
+import type {default as MaplibreWorker} from '../source/worker.ts';
+import type {WorkerSourceConstructor} from '../source/worker_source.ts';
+import type {GetResourceResponse, RequestParameters} from './ajax.ts';
 
 export interface WorkerGlobalScopeInterface {
     registerWorkerSource: (sourceName: string, sourceConstructor: WorkerSourceConstructor) => void;

@@ -1,7 +1,7 @@
-import Benchmark from '../lib/benchmark';
-import createMap from '../lib/create_map';
-import {type CustomLayerInterface, type CustomRenderMethodInput} from '../../../src/style/style_layer/custom_style_layer';
-import {type Map} from '../../../src/ui/map';
+import Benchmark from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
+import {type CustomLayerInterface, type CustomRenderMethodInput} from '../../../src/style/style_layer/custom_style_layer.ts';
+import {type Map} from '../../../src/ui/map.ts';
 
 class Tent3D implements CustomLayerInterface {
     id: string;

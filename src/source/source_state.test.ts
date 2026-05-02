@@ -1,7 +1,7 @@
 
 import {describe, test, expect, vi} from 'vitest';
-import {SourceFeatureState} from './source_state';
-import {type InViewTiles} from '../tile/tile_manager_in_view_tiles';
+import {SourceFeatureState} from './source_state.ts';
+import {type InViewTiles} from '../tile/tile_manager_in_view_tiles.ts';
 
 describe('SourceFeatureState', () => {
     test('coalesceChanges updates revision when changes occur', () => {

@@ -1,7 +1,7 @@
-import {ColorAttachment, DepthAttachment, DepthStencilAttachment} from './value';
+import {ColorAttachment, DepthAttachment, DepthStencilAttachment} from './value.ts';
 
-import type {Context} from './context';
-import {createFramebufferNotCompleteError} from '../util/framebuffer_error';
+import type {Context} from './context.ts';
+import {createFramebufferNotCompleteError} from '../util/framebuffer_error.ts';
 
 /**
  * @internal

@@ -1,8 +1,8 @@
 import Point from '@mapbox/point-geometry';
 
-import {type DragMoveHandler, type DragPanResult, type DragRotateResult, type DragPitchResult, DragHandler, type DragRollResult} from './drag_handler';
-import {MouseMoveStateManager} from './drag_move_state_manager';
-import {getAngleDelta} from '../../util/util';
+import {type DragMoveHandler, type DragPanResult, type DragRotateResult, type DragPitchResult, DragHandler, type DragRollResult} from './drag_handler.ts';
+import {MouseMoveStateManager} from './drag_move_state_manager.ts';
+import {getAngleDelta} from '../../util/util.ts';
 
 /**
  * `MousePanHandler` allows the user to pan the map by clicking and dragging

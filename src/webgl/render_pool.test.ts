@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest';
-import {Context} from './context';
-import {RenderPool} from './render_pool';
-import {createNullGL} from '../util/test/null_gl';
+import {Context} from './context.ts';
+import {RenderPool} from './render_pool.ts';
+import {createNullGL} from '../util/test/null_gl.ts';
 
 describe('render pool', () => {
     const POOL_SIZE = 3;

@@ -1,6 +1,6 @@
 import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
-import {workerFactory} from './web_worker';
-import {config} from './config';
+import {workerFactory} from './web_worker.ts';
+import {config} from './config.ts';
 
 describe('workerFactory', () => {
     const originalWorker = (globalThis as any).Worker;

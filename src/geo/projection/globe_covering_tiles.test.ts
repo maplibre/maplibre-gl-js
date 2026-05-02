@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest';
-import {expectToBeCloseToArray} from '../../util/test/util';
-import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider';
-import {ConvexVolume} from '../../util/primitives/convex_volume';
+import {expectToBeCloseToArray} from '../../util/test/util.ts';
+import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
+import {ConvexVolume} from '../../util/primitives/convex_volume.ts';
 
 describe('bounding volume creation', () => {
     test('z=0', () => {

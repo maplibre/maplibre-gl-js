@@ -1,23 +1,23 @@
-import {CanonicalTileID} from '../tile/tile_id';
-import {Event, ErrorEvent, Evented} from '../util/evented';
-import {ImageRequest} from '../util/image_request';
-import {ResourceType} from '../util/request_manager';
-import {Texture} from '../webgl/texture';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
+import {CanonicalTileID} from '../tile/tile_id.ts';
+import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {ImageRequest} from '../util/image_request.ts';
+import {ResourceType} from '../util/request_manager.ts';
+import {Texture} from '../webgl/texture.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 
-import type {Source} from './source';
-import type {CanvasSourceSpecification} from './canvas_source';
-import type {Map} from '../ui/map';
-import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from '../tile/tile';
+import type {Source} from './source.ts';
+import type {CanvasSourceSpecification} from './canvas_source.ts';
+import type {Map} from '../ui/map.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Tile} from '../tile/tile.ts';
 import type {
     ImageSourceSpecification,
     VideoSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
-import {ensureError, MAX_TILE_ZOOM} from '../util/util';
-import {Bounds} from '../geo/bounds';
-import {isAbortError} from '../util/abort_error';
+import {ensureError, MAX_TILE_ZOOM} from '../util/util.ts';
+import {Bounds} from '../geo/bounds.ts';
+import {isAbortError} from '../util/abort_error.ts';
 
 /**
  * Four geographical coordinates,

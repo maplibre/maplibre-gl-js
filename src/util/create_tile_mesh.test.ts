@@ -1,5 +1,5 @@
 import {describe, expect, test, vi} from 'vitest';
-import {createTileMesh, createTileMeshWithBuffers, type CreateTileMeshOptions} from './create_tile_mesh';
+import {createTileMesh, createTileMeshWithBuffers, type CreateTileMeshOptions} from './create_tile_mesh.ts';
 
 describe('create_tile_mesh', () => {
     test('createTileMeshWithBuffers should create buffer in the right size', () => {

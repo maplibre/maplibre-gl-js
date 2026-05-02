@@ -1,17 +1,17 @@
-import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer';
-import {LineBucket} from '../../data/bucket/line_bucket';
-import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests';
-import {getMaximumPaintValue, translateDistance, translate, offsetLine} from '../query_utils';
-import properties, {type LineLayoutPropsPossiblyEvaluated, type LinePaintPropsPossiblyEvaluated} from './line_style_layer_properties.g';
-import {extend} from '../../util/util';
-import {EvaluationParameters} from '../evaluation_parameters';
-import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated, DataDrivenProperty} from '../properties';
+import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer.ts';
+import {LineBucket} from '../../data/bucket/line_bucket.ts';
+import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests.ts';
+import {getMaximumPaintValue, translateDistance, translate, offsetLine} from '../query_utils.ts';
+import properties, {type LineLayoutPropsPossiblyEvaluated, type LinePaintPropsPossiblyEvaluated} from './line_style_layer_properties.g.ts';
+import {extend} from '../../util/util.ts';
+import {EvaluationParameters} from '../evaluation_parameters.ts';
+import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated, DataDrivenProperty} from '../properties.ts';
 
 import {isZoomExpression, Step} from '@maplibre/maplibre-gl-style-spec';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Bucket, BucketParameters} from '../../data/bucket';
-import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g';
-import type {Framebuffer} from '../../webgl/framebuffer';
+import type {Bucket, BucketParameters} from '../../data/bucket.ts';
+import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g.ts';
+import type {Framebuffer} from '../../webgl/framebuffer.ts';
 
 export class LineFloorwidthProperty extends DataDrivenProperty<number> {
     useIntegerZoom: true;

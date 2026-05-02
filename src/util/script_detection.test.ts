@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {charIsWhitespace, charAllowsLetterSpacing, charInComplexShapingScript, charInRTLScript} from './script_detection';
+import {charIsWhitespace, charAllowsLetterSpacing, charInComplexShapingScript, charInRTLScript} from './script_detection.ts';
 
 describe('charIsWhitespace', () => {
     test('detects whitespace', () => {
