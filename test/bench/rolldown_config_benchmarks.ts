@@ -1,7 +1,7 @@
 import fs from 'fs';
 import {plugins} from '../../build/rolldown_plugins';
 import {execSync} from 'child_process';
-import {defineConfig, type RolldownOptions} from 'rolldown';
+import {type RolldownOptions} from 'rolldown';
 import {replacePlugin} from 'rolldown/plugins';
 
 // Each benchmark suite (versions, styles) emits a main bundle and a worker
@@ -67,8 +67,10 @@ const viewConfig: RolldownOptions = {
     plugins: [replacePlugin(replaceValues, {preventAssignment: true})],
 };
 
-export default defineConfig([
+const config: RolldownOptions[] = [
     ...benchmarkSuiteConfig('versions'),
     ...benchmarkSuiteConfig('styles'),
     viewConfig,
-]);
+];
+
+export default config;

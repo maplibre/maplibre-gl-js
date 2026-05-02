@@ -3,6 +3,8 @@
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": false,
+    "isolatedDeclarations": true,
+    "declaration": true,
     "noEmit": true,
     "esModuleInterop": true,
     "importHelpers": false,
