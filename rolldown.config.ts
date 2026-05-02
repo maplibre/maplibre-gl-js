@@ -1,4 +1,4 @@
-import {type ModuleFormat, type RolldownOptions, type InputOption} from 'rolldown';
+import {defineConfig, type ModuleFormat, type RolldownOptions, type InputOption} from 'rolldown';
 import {dts} from 'rolldown-plugin-dts';
 import {plugins} from './build/rolldown_plugins';
 import banner from './build/banner';
@@ -32,10 +32,10 @@ const dtsBundle: RolldownOptions = {
     plugins: [dts({emitDtsOnly: true, oxc: true})],
 };
 
-const config: RolldownOptions[] = typesOnly ? [dtsBundle] : [
+const config: RolldownOptions[] = defineConfig(typesOnly ? [dtsBundle] : [
     bundle('src/index.ts', `dist/maplibre-gl${outputPostfix}.mjs`, 'es'),
     bundle('src/source/worker.ts', `dist/maplibre-gl-worker${outputPostfix}.mjs`, 'es'),
     ...(production ? [dtsBundle] : []),
-];
+]);
 
 export default config;
