@@ -1,21 +1,21 @@
-import {type PreparedShader, shaders} from '../shaders/shaders';
-import {type ProgramConfiguration} from '../data/program_configuration';
-import {VertexArrayObject} from './vertex_array_object';
-import {type Context} from './context';
+import {type PreparedShader, shaders} from '../shaders/shaders.ts';
+import {type ProgramConfiguration} from '../data/program_configuration.ts';
+import {VertexArrayObject} from './vertex_array_object.ts';
+import {type Context} from './context.ts';
 
-import type {SegmentVector} from '../data/segment';
-import type {VertexBuffer} from './vertex_buffer';
-import type {IndexBuffer} from './index_buffer';
-import type {DepthMode} from './depth_mode';
-import type {StencilMode} from './stencil_mode';
-import type {ColorMode} from './color_mode';
-import type {CullFaceMode} from './cull_face_mode';
-import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding';
-import type {BinderUniform} from '../data/program_configuration';
-import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program';
-import type {TerrainData} from '../render/terrain';
-import {projectionObjectToUniformMap, type ProjectionPreludeUniformsType, projectionUniforms} from './program/projection_program';
-import type {ProjectionData} from '../geo/projection/projection_data';
+import type {SegmentVector} from '../data/segment.ts';
+import type {VertexBuffer} from './vertex_buffer.ts';
+import type {IndexBuffer} from './index_buffer.ts';
+import type {DepthMode} from './depth_mode.ts';
+import type {StencilMode} from './stencil_mode.ts';
+import type {ColorMode} from './color_mode.ts';
+import type {CullFaceMode} from './cull_face_mode.ts';
+import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding.ts';
+import type {BinderUniform} from '../data/program_configuration.ts';
+import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program.ts';
+import type {TerrainData} from '../render/terrain.ts';
+import {projectionObjectToUniformMap, type ProjectionPreludeUniformsType, projectionUniforms} from './program/projection_program.ts';
+import type {ProjectionData} from '../geo/projection/projection_data.ts';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
 

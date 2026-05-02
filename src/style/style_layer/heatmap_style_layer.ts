@@ -1,18 +1,18 @@
-import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer';
+import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer.ts';
 
-import {HeatmapBucket} from '../../data/bucket/heatmap_bucket';
-import {type RGBAImage} from '../../util/image';
-import properties, {type HeatmapPaintPropsPossiblyEvaluated} from './heatmap_style_layer_properties.g';
-import {renderColorRamp} from '../../util/color_ramp';
-import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties';
+import {HeatmapBucket} from '../../data/bucket/heatmap_bucket.ts';
+import {type RGBAImage} from '../../util/image.ts';
+import properties, {type HeatmapPaintPropsPossiblyEvaluated} from './heatmap_style_layer_properties.g.ts';
+import {renderColorRamp} from '../../util/color_ramp.ts';
+import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties.ts';
 
-import type {Texture} from '../../webgl/texture';
-import type {Framebuffer} from '../../webgl/framebuffer';
-import type {HeatmapPaintProps} from './heatmap_style_layer_properties.g';
+import type {Texture} from '../../webgl/texture.ts';
+import type {Framebuffer} from '../../webgl/framebuffer.ts';
+import type {HeatmapPaintProps} from './heatmap_style_layer_properties.g.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-import {circleIntersection, getMaximumPaintValue} from '../query_utils';
-import type {Bucket} from '../../data/bucket';
+import {circleIntersection, getMaximumPaintValue} from '../query_utils.ts';
+import type {Bucket} from '../../data/bucket.ts';
 
 export const HEATMAP_FULL_RENDER_FBO_KEY = 'big-fb';
 

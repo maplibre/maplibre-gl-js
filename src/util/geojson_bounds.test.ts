@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {getGeoJSONBounds} from './geojson_bounds';
+import {getGeoJSONBounds} from './geojson_bounds.ts';
 
 describe('getGeoJSONBounds', () => {
     test('get bounds from empty geometry', () => {

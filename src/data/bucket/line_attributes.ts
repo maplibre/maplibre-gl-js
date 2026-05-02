@@ -1,4 +1,4 @@
-import {createLayout, type StructArrayLayout, type StructArrayMember} from '../../util/struct_array';
+import {createLayout, type StructArrayLayout, type StructArrayMember} from '../../util/struct_array.ts';
 
 export const lineLayoutAttributes: StructArrayLayout = createLayout([
     {name: 'a_pos_normal', components: 2, type: 'Int16'},

@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest';
-import {mapObject} from '../util/util';
-import {StyleLayerIndex} from './style_layer_index';
-import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
+import {mapObject} from '../util/util.ts';
+import {StyleLayerIndex} from './style_layer_index.ts';
+import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 
 describe('StyleLayerIndex', () => {
     test('StyleLayerIndex.replace', () => {

@@ -1,17 +1,17 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
-import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
-import {StyleLayerIndex} from '../style/style_layer_index';
-import {OverscaledTileID} from '../tile/tile_id';
-import {setPerformance, sleep} from '../util/test/util';
+import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source.ts';
+import {StyleLayerIndex} from '../style/style_layer_index.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {setPerformance, sleep} from '../util/test/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
-import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 
 import type {GeoJSONVT} from '@maplibre/geojson-vt';
-import type {Actor, IActor} from '../util/actor';
-import type {TileParameters, WorkerTileParameters, WorkerTileResult, WorkerTileWithData} from './worker_source';
+import type {Actor, IActor} from '../util/actor.ts';
+import type {TileParameters, WorkerTileParameters, WorkerTileResult, WorkerTileWithData} from './worker_source.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {WorkerTile} from './worker_tile';
+import type {WorkerTile} from './worker_tile.ts';
 
 const actor = {send: () => {}} as any as Actor;
 

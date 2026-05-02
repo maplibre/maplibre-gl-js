@@ -1,5 +1,5 @@
-import type {ClickZoomHandler} from '../click_zoom';
-import type {TapZoomHandler} from './../tap_zoom';
+import type {ClickZoomHandler} from '../click_zoom.ts';
+import type {TapZoomHandler} from './../tap_zoom.ts';
 
 /**
  * The `DoubleClickZoomHandler` allows the user to zoom the map at a point by

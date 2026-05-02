@@ -1,9 +1,9 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {VertexBuffer} from './vertex_buffer';
-import {StructArrayLayout3i6} from '../data/array_types.g';
-import {Context} from './context';
-import {type StructArrayMember} from '../util/struct_array';
-import {createNullGL} from '../util/test/null_gl';
+import {VertexBuffer} from './vertex_buffer.ts';
+import {StructArrayLayout3i6} from '../data/array_types.g.ts';
+import {Context} from './context.ts';
+import {type StructArrayMember} from '../util/struct_array.ts';
+import {createNullGL} from '../util/test/null_gl.ts';
 
 describe('VertexBuffer', () => {
     let gl: WebGL2RenderingContext;

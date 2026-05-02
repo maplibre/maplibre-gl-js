@@ -1,4 +1,4 @@
-import type {AlphaImage} from '../util/image';
+import type {AlphaImage} from '../util/image.ts';
 
 /**
  * Some metices related to a glyph

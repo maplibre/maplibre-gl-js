@@ -1,5 +1,5 @@
-import Benchmark from '../lib/benchmark';
-import createMap from '../lib/create_map';
+import Benchmark from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
 import style from '../data/empty.json' with {type: 'json'};
 
 export default class LineOpacityTranslucent extends Benchmark {

@@ -1,14 +1,14 @@
-import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer';
-import {FillBucket} from '../../data/bucket/fill_bucket';
-import {polygonIntersectsMultiPolygon} from '../../util/intersection_tests';
-import {translateDistance, translate} from '../query_utils';
-import properties, {type FillLayoutPropsPossiblyEvaluated, type FillPaintPropsPossiblyEvaluated} from './fill_style_layer_properties.g';
+import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer.ts';
+import {FillBucket} from '../../data/bucket/fill_bucket.ts';
+import {polygonIntersectsMultiPolygon} from '../../util/intersection_tests.ts';
+import {translateDistance, translate} from '../query_utils.ts';
+import properties, {type FillLayoutPropsPossiblyEvaluated, type FillPaintPropsPossiblyEvaluated} from './fill_style_layer_properties.g.ts';
 
-import type {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
+import type {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {BucketParameters} from '../../data/bucket';
-import type {FillLayoutProps, FillPaintProps} from './fill_style_layer_properties.g';
-import type {EvaluationParameters} from '../evaluation_parameters';
+import type {BucketParameters} from '../../data/bucket.ts';
+import type {FillLayoutProps, FillPaintProps} from './fill_style_layer_properties.g.ts';
+import type {EvaluationParameters} from '../evaluation_parameters.ts';
 
 export const isFillStyleLayer = (layer: StyleLayer): layer is FillStyleLayer => layer.type === 'fill';
 

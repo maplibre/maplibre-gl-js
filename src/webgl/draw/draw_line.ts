@@ -1,8 +1,8 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {DepthMode} from '../depth_mode';
-import {StencilMode} from '../stencil_mode';
-import {CullFaceMode} from '../cull_face_mode';
-import {Texture} from '../texture';
+import {DepthMode} from '../depth_mode.ts';
+import {StencilMode} from '../stencil_mode.ts';
+import {CullFaceMode} from '../cull_face_mode.ts';
+import {Texture} from '../texture.ts';
 import {
     lineUniformValues,
     linePatternUniformValues,
@@ -10,21 +10,21 @@ import {
     lineGradientUniformValues,
     lineGradientSDFUniformValues,
     lineTextureUniformValues
-} from '../program/line_program';
+} from '../program/line_program.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
-import type {LineBucket} from '../../data/bucket/line_bucket';
-import type {OverscaledTileID} from '../../tile/tile_id';
-import type {Tile} from '../../tile/tile';
-import type {Context} from '../context';
-import type {Framebuffer} from '../framebuffer';
-import type {ProgramConfiguration} from '../../data/program_configuration';
-import {clamp, nextPowerOfTwo} from '../../util/util';
-import {renderColorRamp} from '../../util/color_ramp';
-import {EXTENT} from '../../data/extent';
-import type {RGBAImage} from '../../util/image';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
+import type {LineBucket} from '../../data/bucket/line_bucket.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {Tile} from '../../tile/tile.ts';
+import type {Context} from '../context.ts';
+import type {Framebuffer} from '../framebuffer.ts';
+import type {ProgramConfiguration} from '../../data/program_configuration.ts';
+import {clamp, nextPowerOfTwo} from '../../util/util.ts';
+import {renderColorRamp} from '../../util/color_ramp.ts';
+import {EXTENT} from '../../data/extent.ts';
+import type {RGBAImage} from '../../util/image.ts';
 
 type GradientTexture = {
     texture?: Texture;

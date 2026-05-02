@@ -1,11 +1,11 @@
-import {now} from '../util/time_control';
-import {Placement} from '../symbol/placement';
-import {isSymbolStyleLayer, type SymbolStyleLayer} from './style_layer/symbol_style_layer';
-import type {ITransform} from '../geo/transform_interface';
-import type {StyleLayer} from './style_layer';
-import type {Tile} from '../tile/tile';
-import type {BucketPart} from '../symbol/placement';
-import type {Terrain} from '../render/terrain';
+import {now} from '../util/time_control.ts';
+import {Placement} from '../symbol/placement.ts';
+import {isSymbolStyleLayer, type SymbolStyleLayer} from './style_layer/symbol_style_layer.ts';
+import type {ITransform} from '../geo/transform_interface.ts';
+import type {StyleLayer} from './style_layer.ts';
+import type {Tile} from '../tile/tile.ts';
+import type {BucketPart} from '../symbol/placement.ts';
+import type {Terrain} from '../render/terrain.ts';
 
 class LayerPlacement {
     _sortAcrossTiles: boolean;

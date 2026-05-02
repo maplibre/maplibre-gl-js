@@ -1,5 +1,5 @@
 import {type Color} from '@maplibre/maplibre-gl-style-spec';
-import {register} from './web_worker_transfer';
+import {register} from './web_worker_transfer.ts';
 
 export type Size = {
     width: number;

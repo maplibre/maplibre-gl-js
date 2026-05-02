@@ -1,7 +1,7 @@
-import {type Handler} from '../handler_manager';
-import type {Map} from '../map';
-import {TransformProvider} from './transform-provider';
-import {evaluateZoomSnap} from '../../util/util';
+import {type Handler} from '../handler_manager.ts';
+import type {Map} from '../map.ts';
+import {TransformProvider} from './transform-provider.ts';
+import {evaluateZoomSnap} from '../../util/util.ts';
 
 const defaultOptions = {
     panStep: 100,

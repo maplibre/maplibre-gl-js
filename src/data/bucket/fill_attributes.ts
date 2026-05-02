@@ -1,4 +1,4 @@
-import {createLayout, type StructArrayLayout, type StructArrayMember} from '../../util/struct_array';
+import {createLayout, type StructArrayLayout, type StructArrayMember} from '../../util/struct_array.ts';
 
 const layout: StructArrayLayout = createLayout([
     {name: 'a_pos', components: 2, type: 'Int16'}

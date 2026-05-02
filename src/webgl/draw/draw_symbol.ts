@@ -1,44 +1,44 @@
 import Point from '@mapbox/point-geometry';
-import {drawCollisionDebug} from './draw_collision_debug';
+import {drawCollisionDebug} from './draw_collision_debug.ts';
 
-import {SegmentVector} from '../../data/segment';
-import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
-import {type EvaluatedZoomSize, evaluateSizeForFeature, evaluateSizeForZoom} from '../../symbol/symbol_size';
+import {SegmentVector} from '../../data/segment.ts';
+import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
+import {type EvaluatedZoomSize, evaluateSizeForFeature, evaluateSizeForZoom} from '../../symbol/symbol_size.ts';
 import {mat4} from 'gl-matrix';
-import {StencilMode} from '../stencil_mode';
-import {DepthMode} from '../depth_mode';
-import {CullFaceMode} from '../cull_face_mode';
-import {addDynamicAttributes} from '../../data/bucket/symbol_bucket';
-import {fastInvertTransformMat4} from '../../util/fast_maths';
-import {getAnchorAlignment, WritingMode} from '../../symbol/shaping';
-import ONE_EM from '../../symbol/one_em';
+import {StencilMode} from '../stencil_mode.ts';
+import {DepthMode} from '../depth_mode.ts';
+import {CullFaceMode} from '../cull_face_mode.ts';
+import {addDynamicAttributes} from '../../data/bucket/symbol_bucket.ts';
+import {fastInvertTransformMat4} from '../../util/fast_maths.ts';
+import {getAnchorAlignment, WritingMode} from '../../symbol/shaping.ts';
+import ONE_EM from '../../symbol/one_em.ts';
 
 import {
     type SymbolIconUniformsType,
     symbolIconUniformValues,
     symbolSDFUniformValues,
     symbolTextAndIconUniformValues
-} from '../program/symbol_program';
+} from '../program/symbol_program.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
 
-import type {Texture, TextureFilter} from '../texture';
-import type {OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id';
-import type {UniformValues} from '../uniform_binding';
-import type {SymbolSDFUniformsType} from '../program/symbol_program';
-import type {CrossTileID, VariableOffset} from '../../symbol/placement';
-import type {SymbolBucket, SymbolBuffers} from '../../data/bucket/symbol_bucket';
-import type {TerrainData} from '../../render/terrain';
+import type {Texture, TextureFilter} from '../texture.ts';
+import type {OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
+import type {UniformValues} from '../uniform_binding.ts';
+import type {SymbolSDFUniformsType} from '../program/symbol_program.ts';
+import type {CrossTileID, VariableOffset} from '../../symbol/placement.ts';
+import type {SymbolBucket, SymbolBuffers} from '../../data/bucket/symbol_bucket.ts';
+import type {TerrainData} from '../../render/terrain.ts';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform} from '../../geo/transform_interface';
-import type {ColorMode} from '../color_mode';
-import type {Program} from '../program';
-import type {TextAnchor} from '../../style/style_layer/variable_text_anchor';
-import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, type SymbolProjectionContext, updateLineLabels} from '../../symbol/projection';
-import {translatePosition} from '../../util/util';
-import type {ProjectionData} from '../../geo/projection/projection_data';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
+import type {ColorMode} from '../color_mode.ts';
+import type {Program} from '../program.ts';
+import type {TextAnchor} from '../../style/style_layer/variable_text_anchor.ts';
+import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, type SymbolProjectionContext, updateLineLabels} from '../../symbol/projection.ts';
+import {translatePosition} from '../../util/util.ts';
+import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;

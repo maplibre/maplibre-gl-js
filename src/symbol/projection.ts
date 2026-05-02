@@ -1,23 +1,23 @@
 import Point from '@mapbox/point-geometry';
 
 import {mat2, mat4, vec2, vec4} from 'gl-matrix';
-import * as symbolSize from './symbol_size';
-import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
+import * as symbolSize from './symbol_size.ts';
+import {addDynamicAttributes} from '../data/bucket/symbol_bucket.ts';
 
-import type {Painter} from '../render/painter';
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {SymbolBucket} from '../data/bucket/symbol_bucket';
+import type {Painter} from '../render/painter.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {
     GlyphOffsetArray,
     SymbolLineVertexArray,
     SymbolDynamicLayoutArray,
     PlacedSymbol,
-} from '../data/array_types.g';
-import {WritingMode} from '../symbol/shaping';
-import {findLineIntersection} from '../util/util';
-import {type UnwrappedTileID} from '../tile/tile_id';
-import {type StructArray} from '../util/struct_array';
-import {fastInvertSkewMat4} from '../util/fast_maths';
+} from '../data/array_types.g.ts';
+import {WritingMode} from '../symbol/shaping.ts';
+import {findLineIntersection} from '../util/util.ts';
+import {type UnwrappedTileID} from '../tile/tile_id.ts';
+import {type StructArray} from '../util/struct_array.ts';
+import {fastInvertSkewMat4} from '../util/fast_maths.ts';
 
 /**
  * Pre-allocate objects to avoid online allocation

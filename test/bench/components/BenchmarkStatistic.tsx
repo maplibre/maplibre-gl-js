@@ -1,4 +1,4 @@
-import {Version} from './util';
+import {Version} from './util.ts';
 import React from 'react';
 
 type BenchmarkStatisticProps = {

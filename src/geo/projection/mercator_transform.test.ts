@@ -1,15 +1,15 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../lng_lat';
-import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id';
-import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed';
-import type {Terrain} from '../../render/terrain';
-import {MercatorTransform} from './mercator_transform';
-import {LngLatBounds} from '../lng_lat_bounds';
-import {getMercatorHorizon} from './mercator_utils';
+import {LngLat} from '../lng_lat.ts';
+import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
+import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed.ts';
+import type {Terrain} from '../../render/terrain.ts';
+import {MercatorTransform} from './mercator_transform.ts';
+import {LngLatBounds} from '../lng_lat_bounds.ts';
+import {getMercatorHorizon} from './mercator_utils.ts';
 import {mat4} from 'gl-matrix';
-import {expectToBeCloseToArray} from '../../util/test/util';
-import {EXTENT} from '../../data/extent';
+import {expectToBeCloseToArray} from '../../util/test/util.ts';
+import {EXTENT} from '../../data/extent.ts';
 
 describe('transform', () => {
     test('creates a transform', () => {

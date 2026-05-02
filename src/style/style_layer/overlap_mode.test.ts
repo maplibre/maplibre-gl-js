@@ -1,8 +1,8 @@
 import {describe, test, expect} from 'vitest';
-import {getOverlapMode} from './overlap_mode';
-import {SymbolStyleLayer} from './symbol_style_layer';
-import {type ZoomHistory} from '../zoom_history';
-import {type EvaluationParameters} from '../evaluation_parameters';
+import {getOverlapMode} from './overlap_mode.ts';
+import {SymbolStyleLayer} from './symbol_style_layer.ts';
+import {type ZoomHistory} from '../zoom_history.ts';
+import {type EvaluationParameters} from '../evaluation_parameters.ts';
 
 function createSymbolLayer(layerProperties) {
     const layer = new SymbolStyleLayer(layerProperties, {});

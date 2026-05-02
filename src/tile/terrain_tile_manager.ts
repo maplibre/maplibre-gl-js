@@ -1,16 +1,16 @@
-import {type OverscaledTileID} from './tile_id';
-import {Tile} from './tile';
-import {EXTENT} from '../data/extent';
+import {type OverscaledTileID} from './tile_id.ts';
+import {Tile} from './tile.ts';
+import {EXTENT} from '../data/extent.ts';
 import {mat4} from 'gl-matrix';
-import {Evented} from '../util/evented';
-import type {ITransform} from '../geo/transform_interface';
-import type {TileManager} from './tile_manager';
-import type {Source} from '../source/source';
-import {type Terrain} from '../render/terrain';
-import {now} from '../util/time_control';
-import {coveringTiles} from '../geo/projection/covering_tiles';
-import {createMat4f64} from '../util/util';
-import {type CanonicalTileRange} from '../source/image_source';
+import {Evented} from '../util/evented.ts';
+import type {ITransform} from '../geo/transform_interface.ts';
+import type {TileManager} from './tile_manager.ts';
+import type {Source} from '../source/source.ts';
+import {type Terrain} from '../render/terrain.ts';
+import {now} from '../util/time_control.ts';
+import {coveringTiles} from '../geo/projection/covering_tiles.ts';
+import {createMat4f64} from '../util/util.ts';
+import {type CanonicalTileRange} from '../source/image_source.ts';
 
 /**
  * @internal

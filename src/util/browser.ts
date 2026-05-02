@@ -1,5 +1,5 @@
-import {AbortError} from './abort_error';
-import {subscribe} from './util';
+import {AbortError} from './abort_error.ts';
+import {subscribe} from './util.ts';
 
 let linkEl;
 

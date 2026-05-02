@@ -4,8 +4,8 @@ import st from 'st';
 import http, {type Server} from 'http';
 import type {AddressInfo} from 'net';
 
-import {sleep} from '../../../src/util/test/util';
-import {launchPuppeteer} from '../lib/puppeteer_config';
+import {sleep} from '../../../src/util/test/util.ts';
+import {launchPuppeteer} from '../lib/puppeteer_config.ts';
 import type {Map} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
 

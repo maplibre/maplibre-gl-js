@@ -1,7 +1,7 @@
-import Benchmark from '../lib/benchmark';
-import {LngLat} from '../styles';
-import {coveringTiles} from '../../../src/geo/projection/covering_tiles';
-import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
+import Benchmark from '../lib/benchmark.ts';
+import {LngLat} from '../styles/index.ts';
+import {coveringTiles} from '../../../src/geo/projection/covering_tiles.ts';
+import {MercatorTransform} from '../../../src/geo/projection/mercator_transform.ts';
 
 export default class CoveringTilesMercator extends Benchmark {
     _pitch: number;

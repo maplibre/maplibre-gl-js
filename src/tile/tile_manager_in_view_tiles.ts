@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
-import {type LayerFeatureStates} from '../source/source_state';
-import {type Tile} from './tile';
-import {compareTileId, type OverscaledTileID} from './tile_id';
+import {type LayerFeatureStates} from '../source/source_state.ts';
+import {type Tile} from './tile.ts';
+import {compareTileId, type OverscaledTileID} from './tile_id.ts';
 
 export class InViewTiles {
     private _tiles: Record<string, Tile> = {};

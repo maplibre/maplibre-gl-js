@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest';
 
-import type {StyleGlyph} from '../style/style_glyph';
-import {TaggedString, type TextSectionOptions} from './tagged_string';
+import type {StyleGlyph} from '../style/style_glyph.ts';
+import {TaggedString, type TextSectionOptions} from './tagged_string.ts';
 
 describe('TaggedString', () => {
     const textSection = {

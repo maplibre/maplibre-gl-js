@@ -1,15 +1,15 @@
 import type Point from '@mapbox/point-geometry';
-import {LngLat, type LngLatLike} from '../lng_lat';
-import {cameraForBoxAndBearing, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation} from './camera_helper';
-import {normalizeCenter} from '../transform_helper';
-import {rollPitchBearingEqual, scaleZoom, zoomScale} from '../../util/util';
-import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
+import {LngLat, type LngLatLike} from '../lng_lat.ts';
+import {cameraForBoxAndBearing, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation} from './camera_helper.ts';
+import {normalizeCenter} from '../transform_helper.ts';
+import {rollPitchBearingEqual, scaleZoom, zoomScale} from '../../util/util.ts';
+import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
-import type {IReadonlyTransform, ITransform} from '../transform_interface';
-import type {CameraForBoundsOptions} from '../../ui/camera';
-import type {PaddingOptions} from '../edge_insets';
-import type {LngLatBounds} from '../lng_lat_bounds';
+import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';
+import type {CameraForBoundsOptions} from '../../ui/camera.ts';
+import type {PaddingOptions} from '../edge_insets.ts';
+import type {LngLatBounds} from '../lng_lat_bounds.ts';
 
 /**
  * @internal

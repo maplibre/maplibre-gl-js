@@ -1,8 +1,8 @@
 import * as d3 from 'd3';
 import React from 'react';
-import {kde} from '../lib/statistics';
-import {Axis} from './Axis';
-import {formatSample, Version, versionColor} from './util';
+import {kde} from '../lib/statistics.ts';
+import {Axis} from './Axis.tsx';
+import {formatSample, Version, versionColor} from './util.ts';
 
 type StatisticsPlotProps = {
     versions: Version[];

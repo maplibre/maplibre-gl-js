@@ -3,7 +3,7 @@ import {
     codePointHasUprightVerticalOrientation,
     codePointHasNeutralVerticalOrientation,
     codePointRequiresComplexTextShaping
-} from '../util/unicode_properties.g';
+} from '../util/unicode_properties.g.ts';
 
 export function charIsWhitespace(char: number): boolean {
     return /\s/u.test(String.fromCodePoint(char));

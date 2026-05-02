@@ -1,13 +1,13 @@
 import Point from '@mapbox/point-geometry';
-import {type IReadonlyTransform, type ITransform} from '../transform_interface';
-import {type LngLat, type LngLatLike} from '../lng_lat';
-import {type CameraForBoundsOptions, type PointLike} from '../../ui/camera';
-import {type PaddingOptions} from '../edge_insets';
-import {type LngLatBounds} from '../lng_lat_bounds';
-import {degreesToRadians, getRollPitchBearing, type RollPitchBearing, rollPitchBearingToQuat, scaleZoom, warnOnce, zoomScale} from '../../util/util';
+import {type IReadonlyTransform, type ITransform} from '../transform_interface.ts';
+import {type LngLat, type LngLatLike} from '../lng_lat.ts';
+import {type CameraForBoundsOptions, type PointLike} from '../../ui/camera.ts';
+import {type PaddingOptions} from '../edge_insets.ts';
+import {type LngLatBounds} from '../lng_lat_bounds.ts';
+import {degreesToRadians, getRollPitchBearing, type RollPitchBearing, rollPitchBearingToQuat, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
 import {quat} from 'gl-matrix';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
+import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils.ts';
 
 export type MapControlsDeltas = {
     panDelta: Point;

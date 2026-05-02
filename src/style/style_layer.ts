@@ -1,4 +1,4 @@
-import {filterObject} from '../util/util';
+import {filterObject} from '../util/util.ts';
 
 import {createVisibilityExpression, featureFilter, latest as styleSpec, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {
@@ -6,11 +6,11 @@ import {
     validateLayoutProperty,
     validatePaintProperty,
     emitValidationErrors
-} from './validate_style';
-import {Evented, ErrorEvent} from '../util/evented';
-import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties';
+} from './validate_style.ts';
+import {Evented, ErrorEvent} from '../util/evented.ts';
+import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties.ts';
 
-import type {Bucket, BucketParameters} from '../data/bucket';
+import type {Bucket, BucketParameters} from '../data/bucket.ts';
 import type Point from '@mapbox/point-geometry';
 import type {
     FeatureFilter,
@@ -22,16 +22,16 @@ import type {
     AllPaintProperties,
     AllLayoutProperties,
 } from '@maplibre/maplibre-gl-style-spec';
-import type {TransitionParameters, PropertyValue} from './properties';
-import {type EvaluationParameters} from './evaluation_parameters';
-import type {CrossfadeParameters} from './evaluation_parameters';
+import type {TransitionParameters, PropertyValue} from './properties.ts';
+import {type EvaluationParameters} from './evaluation_parameters.ts';
+import type {CrossfadeParameters} from './evaluation_parameters.ts';
 
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {CustomLayerInterface} from './style_layer/custom_style_layer';
-import type {Map} from '../ui/map';
-import type {StyleSetterOptions} from './style';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
+import type {Map} from '../ui/map.ts';
+import type {StyleSetterOptions} from './style.ts';
 import {type mat4} from 'gl-matrix';
-import type {UnwrappedTileID} from '../tile/tile_id';
+import type {UnwrappedTileID} from '../tile/tile_id.ts';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 export type PaintPropertyEntry = { [K in keyof AllPaintProperties]: {name: K; value: AllPaintProperties[K]} }[keyof AllPaintProperties];

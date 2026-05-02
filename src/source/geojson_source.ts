@@ -1,24 +1,24 @@
-import {Event, ErrorEvent, Evented} from '../util/evented';
-import {ensureError, extend, warnOnce, type ExactlyOne} from '../util/util';
-import {EXTENT} from '../data/extent';
-import {ResourceType} from '../util/request_manager';
-import {browser} from '../util/browser';
-import {applySourceDiff, mergeSourceDiffs, toUpdateable} from './geojson_source_diff';
-import {getGeoJSONBounds} from '../util/geojson_bounds';
-import {MessageType} from '../util/actor_messages';
-import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds';
+import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {ensureError, extend, warnOnce, type ExactlyOne} from '../util/util.ts';
+import {EXTENT} from '../data/extent.ts';
+import {ResourceType} from '../util/request_manager.ts';
+import {browser} from '../util/browser.ts';
+import {applySourceDiff, mergeSourceDiffs, toUpdateable} from './geojson_source_diff.ts';
+import {getGeoJSONBounds} from '../util/geojson_bounds.ts';
+import {MessageType} from '../util/actor_messages.ts';
+import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds.ts';
 
-import type {LngLatBounds} from '../geo/lng_lat_bounds';
-import type {Source} from './source';
-import type {Map} from '../ui/map';
-import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from '../tile/tile';
-import type {Actor} from '../util/actor';
-import type {GeoJSONWorkerSourceLoadDataResult} from '../util/actor_messages';
+import type {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import type {Source} from './source.ts';
+import type {Map} from '../ui/map.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Tile} from '../tile/tile.ts';
+import type {Actor} from '../util/actor.ts';
+import type {GeoJSONWorkerSourceLoadDataResult} from '../util/actor_messages.ts';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {GeoJSONFeatureId, GeoJSONSourceDiff} from './geojson_source_diff';
-import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
-import type {WorkerTileParameters} from './worker_source';
+import type {GeoJSONFeatureId, GeoJSONSourceDiff} from './geojson_source_diff.ts';
+import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source.ts';
+import type {WorkerTileParameters} from './worker_source.ts';
 
 /**
  * Options object for GeoJSONSource.

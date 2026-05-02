@@ -1,8 +1,8 @@
 
-import type {Program} from './program';
-import type {VertexBuffer} from './vertex_buffer';
-import type {IndexBuffer} from './index_buffer';
-import type {Context} from './context';
+import type {Program} from './program.ts';
+import type {VertexBuffer} from './vertex_buffer.ts';
+import type {IndexBuffer} from './index_buffer.ts';
+import type {Context} from './context.ts';
 
 /**
  * @internal

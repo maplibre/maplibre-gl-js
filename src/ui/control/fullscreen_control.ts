@@ -1,10 +1,10 @@
-import {DOM} from '../../util/dom';
+import {DOM} from '../../util/dom.ts';
 
-import {warnOnce} from '../../util/util';
+import {warnOnce} from '../../util/util.ts';
 
-import {Event, Evented} from '../../util/evented';
-import type {Map} from '../map';
-import type {IControl} from './control';
+import {Event, Evented} from '../../util/evented.ts';
+import type {Map} from '../map.ts';
+import type {IControl} from './control.ts';
 
 /**
  * The {@link FullscreenControl} options object

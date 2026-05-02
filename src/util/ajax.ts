@@ -1,7 +1,7 @@
-import {ensureError, extend, isWorker} from './util';
-import {AbortError, isAbortError, throwIfAborted} from './abort_error';
-import {getProtocol} from '../source/protocol_crud';
-import {MessageType} from './actor_messages';
+import {ensureError, extend, isWorker} from './util.ts';
+import {AbortError, isAbortError, throwIfAborted} from './abort_error.ts';
+import {getProtocol} from '../source/protocol_crud.ts';
+import {MessageType} from './actor_messages.ts';
 
 /**
  * This is used to identify the global dispatcher id when sending a message from the worker without a target map id.

@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {getAnchors, getCenterAnchor} from './get_anchors';
-import {type PositionedIcon, type Shaping} from './shaping';
+import {getAnchors, getCenterAnchor} from './get_anchors.ts';
+import {type PositionedIcon, type Shaping} from './shaping.ts';
 
 const TILE_EXTENT = 4096;
 

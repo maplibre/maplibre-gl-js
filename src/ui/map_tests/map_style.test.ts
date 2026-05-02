@@ -1,13 +1,13 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {Map, type MapOptions} from '../map';
-import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '../../util/test/util';
-import {Event as EventedEvent} from '../../util/evented';
-import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed';
-import {extend} from '../../util/util';
+import {Map, type MapOptions} from '../map.ts';
+import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '../../util/test/util.ts';
+import {Event as EventedEvent} from '../../util/evented.ts';
+import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed.ts';
+import {extend} from '../../util/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {Style} from '../../style/style';
+import {Style} from '../../style/style.ts';
 import {type GeoJSONSourceSpecification, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {LngLatBounds} from '../../geo/lng_lat_bounds';
+import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
 
 let server: FakeServer;
 

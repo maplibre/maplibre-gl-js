@@ -1,12 +1,12 @@
 import Point from '@mapbox/point-geometry';
 
-import {DOM} from '../../util/dom';
-import {extend, getAngleDelta} from '../../util/util';
-import {DragHandler, type DragMoveHandler, type DragRotateResult} from '../handler/drag_handler';
-import {MouseOrTouchMoveStateManager} from '../handler/drag_move_state_manager';
+import {DOM} from '../../util/dom.ts';
+import {extend, getAngleDelta} from '../../util/util.ts';
+import {DragHandler, type DragMoveHandler, type DragRotateResult} from '../handler/drag_handler.ts';
+import {MouseOrTouchMoveStateManager} from '../handler/drag_move_state_manager.ts';
 
-import type {Map} from '../map';
-import type {IControl} from './control';
+import type {Map} from '../map.ts';
+import type {IControl} from './control.ts';
 
 /**
  * The {@link NavigationControl} options object

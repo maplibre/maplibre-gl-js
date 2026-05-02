@@ -1,12 +1,12 @@
-import {ImageSource} from './image_source';
+import {ImageSource} from './image_source.ts';
 
-import {Texture} from '../webgl/texture';
-import {Event, ErrorEvent} from '../util/evented';
+import {Texture} from '../webgl/texture.ts';
+import {Event, ErrorEvent} from '../util/evented.ts';
 import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
 
-import type {Map} from '../ui/map';
-import type {Dispatcher} from '../util/dispatcher';
-import type {Evented} from '../util/evented';
+import type {Map} from '../ui/map.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Evented} from '../util/evented.ts';
 
 /**
  * Options to add a canvas source type to the map.

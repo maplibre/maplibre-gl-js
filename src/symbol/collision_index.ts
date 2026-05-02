@@ -1,24 +1,24 @@
 import Point from '@mapbox/point-geometry';
-import {clipLine} from './clip_line';
-import {PathInterpolator} from './path_interpolator';
+import {clipLine} from './clip_line.ts';
+import {PathInterpolator} from './path_interpolator.ts';
 
-import * as intersectionTests from '../util/intersection_tests';
-import {GridIndex} from './grid_index';
+import * as intersectionTests from '../util/intersection_tests.ts';
+import {GridIndex} from './grid_index.ts';
 import {mat4, vec4} from 'gl-matrix';
-import ONE_EM from '../symbol/one_em';
+import ONE_EM from '../symbol/one_em.ts';
 
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {SingleCollisionBox} from '../data/bucket/symbol_bucket';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {SingleCollisionBox} from '../data/bucket/symbol_bucket.ts';
 import type {
     GlyphOffsetArray,
     PlacedSymbol,
     SymbolLineVertexArray
-} from '../data/array_types.g';
-import type {OverlapMode} from '../style/style_layer/overlap_mode';
-import {type OverscaledTileID, type UnwrappedTileID} from '../tile/tile_id';
-import {type PointProjection, type SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection';
-import {clamp, getAABB} from '../util/util';
-import {Bounds} from '../geo/bounds';
+} from '../data/array_types.g.ts';
+import type {OverlapMode} from '../style/style_layer/overlap_mode.ts';
+import {type OverscaledTileID, type UnwrappedTileID} from '../tile/tile_id.ts';
+import {type PointProjection, type SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection.ts';
+import {clamp, getAABB} from '../util/util.ts';
+import {Bounds} from '../geo/bounds.ts';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around

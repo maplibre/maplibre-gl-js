@@ -1,4 +1,4 @@
-import type {Map} from '../../../src/ui/map';
+import type {Map} from '../../../src/ui/map.ts';
 
 // According to https://developer.mozilla.org/en-US/docs/Web/API/Performance/now,
 // performance.now() should be accurate to 0.005ms. Set the minimum running

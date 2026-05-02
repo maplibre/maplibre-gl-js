@@ -1,17 +1,17 @@
 import {vi, expect, onTestFinished} from 'vitest';
-import {Map} from '../../ui/map';
-import {NullWebGL2RenderingContext} from './null_gl';
-import {extend} from '../../util/util';
-import {type Dispatcher} from '../../util/dispatcher';
-import {type IActor} from '../actor';
-import {Evented} from '../evented';
+import {Map} from '../../ui/map.ts';
+import {NullWebGL2RenderingContext} from './null_gl.ts';
+import {extend} from '../../util/util.ts';
+import {type Dispatcher} from '../../util/dispatcher.ts';
+import {type IActor} from '../actor.ts';
+import {Evented} from '../evented.ts';
 import {type SourceSpecification, type StyleSpecification, type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {MercatorTransform} from '../../geo/projection/mercator_transform';
-import {RequestManager} from '../request_manager';
-import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface';
-import {type Style} from '../../style/style';
-import {type Terrain} from '../../render/terrain';
-import {Frustum} from '../primitives/frustum';
+import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {RequestManager} from '../request_manager.ts';
+import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface.ts';
+import {type Style} from '../../style/style.ts';
+import {type Terrain} from '../../render/terrain.ts';
+import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
 
 export class StubMap extends Evented {

@@ -1,6 +1,6 @@
-import {warnOnce} from '../util/util';
+import {warnOnce} from '../util/util.ts';
 
-import type {Context} from '../webgl/context';
+import type {Context} from '../webgl/context.ts';
 
 /**
  * A dash entry

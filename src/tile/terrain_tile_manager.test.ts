@@ -1,15 +1,15 @@
 import {describe, beforeAll, afterAll, test, expect} from 'vitest';
-import {TerrainTileManager} from './terrain_tile_manager';
-import {Style} from '../style/style';
-import {RequestManager} from '../util/request_manager';
-import {type Dispatcher} from '../util/dispatcher';
+import {TerrainTileManager} from './terrain_tile_manager.ts';
+import {Style} from '../style/style.ts';
+import {RequestManager} from '../util/request_manager.ts';
+import {type Dispatcher} from '../util/dispatcher.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {RasterDEMTileSource} from '../source/raster_dem_tile_source';
-import {OverscaledTileID} from './tile_id';
-import {Tile} from './tile';
-import {type DEMData} from '../data/dem_data';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {StubMap} from '../util/test/util';
+import {RasterDEMTileSource} from '../source/raster_dem_tile_source.ts';
+import {OverscaledTileID} from './tile_id.ts';
+import {Tile} from './tile.ts';
+import {type DEMData} from '../data/dem_data.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {StubMap} from '../util/test/util.ts';
 
 const transform = new MercatorTransform();
 
