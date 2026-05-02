@@ -199,7 +199,7 @@ export function createStyleSource(): SourceSpecification {
             type: 'FeatureCollection',
             features: []
         }
-    } as SourceSpecification;
+    };
 }
 
 export function createStyle(): StyleSpecification {

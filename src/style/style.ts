@@ -2016,7 +2016,7 @@ export class Style extends Evented {
      *
      * @returns empty array when no sprite is set; id-url pairs otherwise
      */
-    getSprite(): {id: string; url: string}[] {
+    getSprite(): Array<{id: string; url: string}> {
         return coerceSpriteToArray(this.stylesheet.sprite);
     }
 
