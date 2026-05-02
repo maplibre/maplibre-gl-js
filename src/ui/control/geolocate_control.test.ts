@@ -1,15 +1,15 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
 import geolocation from 'mock-geolocation';
-import {LngLatBounds} from '../../geo/lng_lat_bounds';
-import {createMap, beforeMapTest, sleep} from '../../util/test/util';
-import {GeolocateControl} from './geolocate_control';
+import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
+import {createMap, beforeMapTest, sleep} from '../../util/test/util.ts';
+import {GeolocateControl} from './geolocate_control.ts';
 vi.mock('../../util/geolocation_support', () => (
     {
         checkGeolocationSupport: vi.fn()
     }
 ));
-import {checkGeolocationSupport} from '../../util/geolocation_support';
-import type {LngLat} from '../../geo/lng_lat';
+import {checkGeolocationSupport} from '../../util/geolocation_support.ts';
+import type {LngLat} from '../../geo/lng_lat.ts';
 
 /**
  * Convert the coordinates of a LngLat object to a fixed number of digits

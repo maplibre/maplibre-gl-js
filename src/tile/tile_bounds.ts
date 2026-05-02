@@ -1,7 +1,7 @@
-import {LngLatBounds, type LngLatBoundsLike} from '../geo/lng_lat_bounds';
-import {mercatorXfromLng, mercatorYfromLat} from '../geo/mercator_coordinate';
+import {LngLatBounds, type LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
+import {mercatorXfromLng, mercatorYfromLat} from '../geo/mercator_coordinate.ts';
 
-import type {CanonicalTileID} from './tile_id';
+import type {CanonicalTileID} from './tile_id.ts';
 
 export class TileBounds {
     bounds: LngLatBounds;

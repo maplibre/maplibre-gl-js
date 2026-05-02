@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect} from 'vitest';
-import {createMap, beforeMapTest, createStyleSource} from '../../util/test/util';
+import {createMap, beforeMapTest, createStyleSource} from '../../util/test/util.ts';
 
 beforeEach(() => {
     beforeMapTest();

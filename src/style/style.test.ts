@@ -1,27 +1,27 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
-import {Style} from './style';
-import {TileManager} from '../tile/tile_manager';
-import {StyleLayer} from './style_layer';
-import {extend} from '../util/util';
-import {Event} from '../util/evented';
-import {RGBAImage} from '../util/image';
-import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
-import {browser} from '../util/browser';
-import {OverscaledTileID} from '../tile/tile_id';
+import {Style} from './style.ts';
+import {TileManager} from '../tile/tile_manager.ts';
+import {StyleLayer} from './style_layer.ts';
+import {extend} from '../util/util.ts';
+import {Event} from '../util/evented.ts';
+import {RGBAImage} from '../util/image.ts';
+import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
+import {browser} from '../util/browser.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
 import {fakeServer, type FakeServer} from 'nise';
 
-import {type EvaluationParameters} from './evaluation_parameters';
+import {type EvaluationParameters} from './evaluation_parameters.ts';
 import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification, type CameraFunctionSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type GeoJSONSource} from '../source/geojson_source';
-import {StubMap, sleep, waitForEvent} from '../util/test/util';
-import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
-import {MessageType} from '../util/actor_messages';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {type Tile} from '../tile/tile';
+import {type GeoJSONSource} from '../source/geojson_source.ts';
+import {StubMap, sleep, waitForEvent} from '../util/test/util.ts';
+import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
+import {MessageType} from '../util/actor_messages.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {type Tile} from '../tile/tile.ts';
 import type Point from '@mapbox/point-geometry';
-import {type PossiblyEvaluated} from './properties';
-import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g';
-import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g';
+import {type PossiblyEvaluated} from './properties.ts';
+import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g.ts';
+import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g.ts';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({

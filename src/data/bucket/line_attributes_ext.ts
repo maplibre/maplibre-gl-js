@@ -1,4 +1,4 @@
-import {createLayout} from '../../util/struct_array';
+import {createLayout} from '../../util/struct_array.ts';
 
 export const lineLayoutAttributesExt = createLayout([
     {name: 'a_uv_x', components: 1, type: 'Float32'},

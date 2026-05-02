@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest';
-import {Layout, PropertyValue, Transitionable} from './properties';
-import symbolProperties from './style_layer/symbol_style_layer_properties.g';
-import {type EvaluationParameters} from './evaluation_parameters';
+import {Layout, PropertyValue, Transitionable} from './properties.ts';
+import symbolProperties from './style_layer/symbol_style_layer_properties.g.ts';
+import {type EvaluationParameters} from './evaluation_parameters.ts';
 
 describe('PropertyValue', () => {
     test('set global state', () => {

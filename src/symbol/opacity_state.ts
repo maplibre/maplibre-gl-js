@@ -1,4 +1,4 @@
-import {register} from '../util/web_worker_transfer';
+import {register} from '../util/web_worker_transfer.ts';
 
 export class OpacityState {
     opacity: number;

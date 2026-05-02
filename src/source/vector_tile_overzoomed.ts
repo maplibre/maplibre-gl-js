@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
-import {clipGeometry} from '../symbol/clip_line';
-import type {CanonicalTileID} from '../tile/tile_id';
+import {clipGeometry} from '../symbol/clip_line.ts';
+import type {CanonicalTileID} from '../tile/tile_id.ts';
 import type {VectorTileFeatureLike, VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
 
 class VectorTileFeatureOverzoomed implements VectorTileFeatureLike {

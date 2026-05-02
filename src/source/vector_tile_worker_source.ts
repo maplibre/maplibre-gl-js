@@ -1,23 +1,23 @@
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import {fromVectorTileJs, type VectorTileLayerLike, type VectorTileLike} from '@maplibre/vt-pbf';
-import {type ExpiryData, getArrayBuffer} from '../util/ajax';
-import {WorkerTile} from './worker_tile';
-import {WorkerTileState, type ParsingState} from './worker_tile_state';
-import {BoundedLRUCache} from '../tile/tile_cache';
-import {ensureError, extend} from '../util/util';
-import {RequestPerformance} from '../util/request_performance';
-import {VectorTileOverzoomed, sliceVectorTileLayer} from './vector_tile_overzoomed';
-import {MLTVectorTile} from './vector_tile_mlt';
+import {type ExpiryData, getArrayBuffer} from '../util/ajax.ts';
+import {WorkerTile} from './worker_tile.ts';
+import {WorkerTileState, type ParsingState} from './worker_tile_state.ts';
+import {BoundedLRUCache} from '../tile/tile_cache.ts';
+import {ensureError, extend} from '../util/util.ts';
+import {RequestPerformance} from '../util/request_performance.ts';
+import {VectorTileOverzoomed, sliceVectorTileLayer} from './vector_tile_overzoomed.ts';
+import {MLTVectorTile} from './vector_tile_mlt.ts';
 import type {
     WorkerSource,
     WorkerTileParameters,
     TileParameters,
     WorkerTileResult
-} from '../source/worker_source';
-import type {IActor} from '../util/actor';
-import type {StyleLayer} from '../style/style_layer';
-import type {StyleLayerIndex} from '../style/style_layer_index';
+} from '../source/worker_source.ts';
+import type {IActor} from '../util/actor.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 
 export type LoadVectorTileResult = {
     vectorTile: VectorTileLike;

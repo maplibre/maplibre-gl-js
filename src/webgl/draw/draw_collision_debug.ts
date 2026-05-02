@@ -1,17 +1,17 @@
-import type {Painter} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {StyleLayer} from '../../style/style_layer';
-import type {OverscaledTileID} from '../../tile/tile_id';
-import type {SymbolBucket} from '../../data/bucket/symbol_bucket';
-import {DepthMode} from '../depth_mode';
-import {StencilMode} from '../stencil_mode';
-import {CullFaceMode} from '../cull_face_mode';
-import {collisionUniformValues, collisionCircleUniformValues} from '../program/collision_program';
-import {QuadTriangleArray, CollisionCircleLayoutArray} from '../../data/array_types.g';
-import {collisionCircleLayout} from '../../data/bucket/symbol_attributes';
-import {SegmentVector} from '../../data/segment';
-import {type VertexBuffer} from '../vertex_buffer';
-import {type IndexBuffer} from '../index_buffer';
+import type {Painter} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {StyleLayer} from '../../style/style_layer.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {SymbolBucket} from '../../data/bucket/symbol_bucket.ts';
+import {DepthMode} from '../depth_mode.ts';
+import {StencilMode} from '../stencil_mode.ts';
+import {CullFaceMode} from '../cull_face_mode.ts';
+import {collisionUniformValues, collisionCircleUniformValues} from '../program/collision_program.ts';
+import {QuadTriangleArray, CollisionCircleLayoutArray} from '../../data/array_types.g.ts';
+import {collisionCircleLayout} from '../../data/bucket/symbol_attributes.ts';
+import {SegmentVector} from '../../data/segment.ts';
+import {type VertexBuffer} from '../vertex_buffer.ts';
+import {type IndexBuffer} from '../index_buffer.ts';
 
 type TileBatch = {
     circleArray: number[];

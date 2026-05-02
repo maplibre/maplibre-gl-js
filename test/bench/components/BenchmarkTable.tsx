@@ -1,4 +1,4 @@
-import {BenchmarkRow, BenchmarkRowProps} from './BenchmarkRow';
+import {BenchmarkRow, BenchmarkRowProps} from './BenchmarkRow.tsx';
 import React from 'react';
 
 type BenchmarksTableProps = {

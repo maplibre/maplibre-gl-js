@@ -1,8 +1,8 @@
-import {TransferableGridIndex} from './transferable_grid_index';
+import {TransferableGridIndex} from './transferable_grid_index.ts';
 import {Color, CompoundExpression, expressions, ResolvedImage, StylePropertyFunction,
     StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
-import {AJAXError} from './ajax';
-import {isImageBitmap} from './util';
+import {AJAXError} from './ajax.ts';
+import {isImageBitmap} from './util.ts';
 
 /**
  * A class that is serialized to and json, that can be constructed back to the original class in the worker or in the main thread

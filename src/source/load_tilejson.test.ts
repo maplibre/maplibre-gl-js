@@ -1,9 +1,9 @@
 import {describe, beforeEach, afterEach, test, expect} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
-import {loadTileJson} from './load_tilejson';
-import {RequestManager} from '../util/request_manager';
-import {ABORT_ERROR} from '../util/abort_error';
-import {sleep} from '../util/test/util';
+import {loadTileJson} from './load_tilejson.ts';
+import {RequestManager} from '../util/request_manager.ts';
+import {ABORT_ERROR} from '../util/abort_error.ts';
+import {sleep} from '../util/test/util.ts';
 
 import {type RasterSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 

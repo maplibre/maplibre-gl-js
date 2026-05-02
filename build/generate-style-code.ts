@@ -189,7 +189,7 @@ import {
     ColorRampProperty,
     PossiblyEvaluatedPropertyValue,
     CrossFaded
-} from '../properties';
+} from '../properties.ts';
 
 import type {Color, Formatted, Padding, NumberArray, ColorArray, ResolvedImage, VariableAnchorOffsetCollection} from '@maplibre/maplibre-gl-style-spec';
 import {StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';

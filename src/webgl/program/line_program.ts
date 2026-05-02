@@ -1,16 +1,16 @@
 import {mat4} from 'gl-matrix';
 
-import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, UniformMatrix4f} from '../uniform_binding';
-import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
-import {extend, translatePosition} from '../../util/util';
+import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, UniformMatrix4f} from '../uniform_binding.ts';
+import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
+import {extend, translatePosition} from '../../util/util.ts';
 
-import type {Context} from '../../webgl/context';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {IReadonlyTransform} from '../../geo/transform_interface';
-import type {Tile} from '../../tile/tile';
-import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
-import type {Painter} from '../../render/painter';
-import type {CrossfadeParameters} from '../../style/evaluation_parameters';
+import type {Context} from '../../webgl/context.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
+import type {Tile} from '../../tile/tile.ts';
+import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
 
 export type LineUniformsType = {
     'u_translation': Uniform2f;

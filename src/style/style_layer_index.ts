@@ -1,7 +1,7 @@
-import {createStyleLayer} from './create_style_layer';
+import {createStyleLayer} from './create_style_layer.ts';
 import {featureFilter, groupByLayout} from '@maplibre/maplibre-gl-style-spec';
-import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
-import type {StyleLayer} from './style_layer';
+import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
+import type {StyleLayer} from './style_layer.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type LayerConfigs = {[_: string]: LayerSpecification};
