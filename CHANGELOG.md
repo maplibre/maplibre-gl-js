@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Adopt isolatedDeclarations and switch dts emitter from tsgo to oxc ([#7566](https://github.com/maplibre/maplibre-gl-js/pull/7566)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
