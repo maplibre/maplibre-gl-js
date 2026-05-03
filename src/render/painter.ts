@@ -750,7 +750,7 @@ export class Painter {
         return {fbo, texture, size};
     }
 
-    releaseRTT(obj: RTTObject) {
+    releaseRTT(obj: RTTObject): void {
         this._rttObjectRecyclePool.push(obj);
     }
 

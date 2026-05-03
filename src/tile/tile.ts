@@ -230,7 +230,7 @@ export class Tile {
      * @internal
      * Returns all cached RTT slots to the painter's pool.
      */
-    releaseRTT(painter: Painter) {
+    releaseRTT(painter: Painter): void {
         if (this.rttObjects.length === 0) return;
         for (const obj of this.rttObjects) {
             painter.releaseRTT(obj);
