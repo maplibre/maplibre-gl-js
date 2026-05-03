@@ -77,7 +77,7 @@ export class TerrainTileManager extends Evented {
     destruct() {
         this.tileManager.usedForTerrain = false;
         this.tileManager.tileSize = null;
-        this.releaseRTT();
+        this.releaseAllRTT();
     }
 
     getSource(): Source {
@@ -123,15 +123,24 @@ export class TerrainTileManager extends Evented {
 
     /**
      * Release the RTT objects for `tileID` (and its ancestors/descendants),
-     * or for all tiles if `tileID` is omitted. RTT objects return to the
-     * painter's pool for recycling. Called when source data, image sources, or
-     * the style itself change in ways the per-tile fingerprint doesn't capture.
+     * RTT objects return to the painter's pool for recycling.
      */
-    releaseRTT(tileID?: OverscaledTileID) {
+    releaseRTT(tileID: OverscaledTileID) {
         for (const key in this._tiles) {
             const tile = this._tiles[key];
-            if (!tileID || tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
+            if (tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
                 tile.releaseRTT(this.tileManager.map.painter);
+        }
+    }
+
+    /**
+     * Release the A RTT objects for all tiles. RTT objects return to the
+     * painter's pool for recycling.
+     */
+    releaseAllRTT() {
+        for (const key in this._tiles) {
+            const tile = this._tiles[key];
+            tile.releaseRTT(this.tileManager.map.painter);
         }
     }
 

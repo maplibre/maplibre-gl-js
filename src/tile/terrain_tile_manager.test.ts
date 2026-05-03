@@ -246,7 +246,7 @@ describe('TerrainTileManager', () => {
         test('with no tileID releases every cached tile', () => {
             const {tiles, rttObjects, painter} = setupTilesWithRttObjects();
 
-            tsc.releaseRTT();
+            tsc.releaseAllRTT();
 
             expect((painter.releaseRTT as Mock<typeof painter.releaseRTT>).mock.calls.length).toBe(Object.keys(tiles).length);
             for (const key in rttObjects) {
