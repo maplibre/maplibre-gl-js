@@ -6,11 +6,10 @@
 - _...Add new stuff here..._
 
 ## 6.0.0-8
+
 ### ✨ Features and improvements
+
 - Improve 3D terrain performance ([#7549](https://github.com/maplibre/maplibre-gl-js/pull/7549)) (by [@lucaswoj](https://github.com/lucaswoj))
-
-### 🐞 Bug fixes
-
 
 ## 6.0.0-7
 
