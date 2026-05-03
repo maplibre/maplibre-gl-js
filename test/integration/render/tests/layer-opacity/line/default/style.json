@@ -27,6 +27,14 @@
               "type": "LineString",
               "coordinates": [[15, -15], [-15, 15]]
             }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [[-15, 0], [15, 0]]
+            }
           }
         ]
       }
@@ -44,8 +52,7 @@
       "source": "geojson",
       "paint": {
         "line-width": 12,
-        "line-color": "#0000ff",
-        "line-opacity": 0.5
+        "line-color": "#0000ff"
       }
     }
   ]

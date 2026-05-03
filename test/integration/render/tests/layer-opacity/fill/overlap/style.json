@@ -1,0 +1,85 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 128
+    }
+  },
+  "sources": {
+    "left": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [[[-45, -12], [-25, -12], [-35, 12], [-45, -12]]]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [[[-35, -5], [-15, -5], [-25, 19], [-35, -5]]]
+            }
+          }
+        ]
+      }
+    },
+    "right": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [[[15, -12], [35, -12], [25, 12], [15, -12]]]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [[[25, -5], [45, -5], [35, 19], [25, -5]]]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "white" }
+    },
+    {
+      "id": "opaque-fill",
+      "type": "fill",
+      "source": "left",
+      "paint": {
+        "fill-color": "#0000ff",
+        "layer-opacity": 0.5
+      }
+    },
+    {
+      "id": "transparent-fill",
+      "type": "fill",
+      "source": "right",
+      "paint": {
+        "fill-color": "#0000ff",
+        "fill-opacity": 0.5,
+        "layer-opacity": 0.5
+      }
+    }
+  ]
+}

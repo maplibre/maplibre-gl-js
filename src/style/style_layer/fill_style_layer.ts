@@ -9,6 +9,7 @@ import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket.ts';
 import type {FillLayoutProps, FillPaintProps} from './fill_style_layer_properties.g.ts';
 import type {EvaluationParameters} from '../evaluation_parameters.ts';
+import type {Framebuffer} from '../../webgl/framebuffer.ts';
 
 export const isFillStyleLayer = (layer: StyleLayer): layer is FillStyleLayer => layer.type === 'fill';
 
@@ -16,12 +17,15 @@ export class FillStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<FillLayoutProps>;
     layout: PossiblyEvaluated<FillLayoutProps, FillLayoutPropsPossiblyEvaluated>;
 
+    fillFbo: Framebuffer | null;
+
     _transitionablePaint: Transitionable<FillPaintProps>;
     _transitioningPaint: Transitioning<FillPaintProps>;
     paint: PossiblyEvaluated<FillPaintProps, FillPaintPropsPossiblyEvaluated>;
 
     constructor(layer: LayerSpecification, globalState: Record<string, any>) {
         super(layer, properties, globalState);
+        this.fillFbo = null;
     }
 
     recalculate(parameters: EvaluationParameters, availableImages: string[]) {
@@ -56,5 +60,19 @@ export class FillStyleLayer extends StyleLayer {
 
     isTileClipped() {
         return true;
+    }
+
+    hasOffscreenPass() {
+        const layerOpacity = this.paint.get('layer-opacity' as any) as number;
+        return layerOpacity > 0 && layerOpacity < 1 && !this.isHidden();
+    }
+
+    onRemove = () => {
+        this.resize();
+    };
+
+    resize() {
+        this.fillFbo?.destroy();
+        this.fillFbo = null;
     }
 }

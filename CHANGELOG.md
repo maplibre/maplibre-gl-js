@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add `layer-opacity` paint property for line layers, which applies opacity to the entire layer output uniformly.
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

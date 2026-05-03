@@ -3,6 +3,8 @@ import {createStyleLayer} from '../create_style_layer.ts';
 import {extend} from '../../util/util.ts';
 import {type LineStyleLayer} from './line_style_layer.ts';
 import {type Framebuffer} from '../../webgl/framebuffer.ts';
+import {type EvaluationParameters} from '../evaluation_parameters.ts';
+import {type ZoomHistory} from '../zoom_history.ts';
 
 describe('LineStyleLayer', () => {
     function createLineLayer(layer?) {
@@ -79,11 +81,39 @@ describe('LineStyleLayer', () => {
             const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
             const destroy = vi.fn();
             lineLayer.lineFbo = {destroy} as unknown as Framebuffer;
-    
+
             lineLayer.onRemove();
-    
+
             expect(destroy).toHaveBeenCalledOnce();
             expect(lineLayer.lineFbo).toBeNull();
+        });
+    });
+
+    describe('hasOffscreenPass', () => {
+        function createEvaluatedLineLayer(paint: Record<string, any>) {
+            const lineLayer = createStyleLayer(createLineLayer({paint}), {}) as LineStyleLayer;
+            lineLayer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
+            return lineLayer;
+        }
+
+        test('returns false by default (layer-opacity defaults to 1)', () => {
+            const lineLayer = createEvaluatedLineLayer({'line-color': 'red', 'line-width': 14});
+            expect(lineLayer.hasOffscreenPass()).toBe(false);
+        });
+
+        test('returns true when layer-opacity is between 0 and 1', () => {
+            const lineLayer = createEvaluatedLineLayer({'line-color': 'red', 'line-width': 14, 'layer-opacity': 0.5});
+            expect(lineLayer.hasOffscreenPass()).toBe(true);
+        });
+
+        test('returns false when layer-opacity is 0', () => {
+            const lineLayer = createEvaluatedLineLayer({'line-color': 'red', 'line-width': 14, 'layer-opacity': 0});
+            expect(lineLayer.hasOffscreenPass()).toBe(false);
+        });
+
+        test('returns false when layer-opacity is 1', () => {
+            const lineLayer = createEvaluatedLineLayer({'line-color': 'red', 'line-width': 14, 'layer-opacity': 1});
+            expect(lineLayer.hasOffscreenPass()).toBe(false);
         });
     });
 });

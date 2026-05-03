@@ -152,21 +152,18 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     const useOffscreen = layer.hasOffscreenPass() && !painter.style.map.terrain;
 
     if (!useOffscreen && layer.lineFbo) {
-        // GC the FBO if style is transtitoned from having opacity to not having opacity
+        // GC the FBO if layer-opacity no longer requires offscreen rendering
         layer.lineFbo.destroy();
         layer.lineFbo = null;
     }
 
     if (painter.renderPass === 'offscreen' && !useOffscreen) {
-        // No need to draw anything if this is an offscreen pass but we don't need to render to an offscreen FBO.
         return;
     }
-    // We want self-overlap to collapse lines
-    // if the opacity is not constant (full/transparent), we need to render to an offscreen FBO at full opacity and the
-    // composite pass will apply the opacity.
-    // If we do this any other way, there will be hideous artifacts
-    // Because terrain may have cases where we snake and thus need the opacity, we are currently accepting the artefacts.
-    // Needs more looking into how to solve this.
+    // When layer-opacity is set (between 0 and 1), we render the entire layer to an offscreen FBO
+    // and then composite it with the layer-opacity value. This applies opacity uniformly to the
+    // entire layer output, making transparent things more transparent and opaque things transparent.
+    // Because terrain rendering uses its own RTT system, we skip offscreen rendering with terrain.
     if (painter.renderPass === 'offscreen' && useOffscreen) {
         drawLineOffscreen(painter, tileManager, layer, coords, renderOptions);
         return;
@@ -176,7 +173,7 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
         return;
     }
     if (painter.renderPass === 'translucent' && !useOffscreen) {
-        drawLineTiles(painter, tileManager, layer, coords, renderOptions, false, true);
+        drawLineTiles(painter, tileManager, layer, coords, renderOptions, true);
         return;
     }
 }
@@ -194,7 +191,7 @@ function drawLineOffscreen(painter: Painter, tileManager: TileManager, layer: Li
     painter.currentStencilSource = undefined;
     painter._renderTileClippingMasks(layer, coords, false);
 
-    drawLineTiles(painter, tileManager, layer, coords, renderOptions, true, false);
+    drawLineTiles(painter, tileManager, layer, coords, renderOptions, false);
 }
 
 function drawLineComposite(painter: Painter, layer: LineStyleLayer) {
@@ -209,7 +206,7 @@ function drawLineComposite(painter: Painter, layer: LineStyleLayer) {
 
     painter.useProgram('lineTexture').draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
-        lineTextureUniformValues(painter, layer, 0), null, null,
+        lineTextureUniformValues(painter, layer.paint.get('layer-opacity' as any) as number, 0), null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
         painter.viewportSegments, layer.paint, painter.transform.zoom);
 }
@@ -220,7 +217,6 @@ function drawLineTiles(
     layer: LineStyleLayer,
     coords: OverscaledTileID[],
     renderOptions: RenderOptions,
-    forceFullOpacity: boolean,
     useTerrain: boolean
 ) {
     const {isRenderingToTexture} = renderOptions;
@@ -288,19 +284,19 @@ function drawLineTiles(
 
         let uniformValues;
         if (image) {
-            uniformValues = linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade, forceFullOpacity);
+            uniformValues = linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade);
             bindImagePatternTextures(context, gl, tile, programConfiguration, crossfade);
         } else if (dasharray && gradient) {
-            uniformValues = lineGradientSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, bucket.lineClipsArray.length, forceFullOpacity);
+            uniformValues = lineGradientSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, bucket.lineClipsArray.length);
             bindGradientAndDashTextures(painter, tileManager, context, gl, layer, bucket, coord, programConfiguration, crossfade);
         } else if (dasharray) {
-            uniformValues = lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade, forceFullOpacity);
+            uniformValues = lineSDFUniformValues(painter, tile, layer, pixelRatio, crossfade);
             bindDasharrayTextures(painter, context, gl, programConfiguration, programChanged, crossfade);
         } else if (gradient) {
-            uniformValues = lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length, forceFullOpacity);
+            uniformValues = lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length);
             bindGradientTextures(painter, tileManager, context, gl, layer, bucket, coord);
         } else {
-            uniformValues = lineUniformValues(painter, tile, layer, pixelRatio, forceFullOpacity);
+            uniformValues = lineUniformValues(painter, tile, layer, pixelRatio);
         }
 
         const stencil = painter.stencilModeForClipping(coord);

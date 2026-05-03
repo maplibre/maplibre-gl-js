@@ -3,7 +3,6 @@ uniform lowp float u_device_pixel_ratio;
 uniform lowp float u_lineatlas_width;
 uniform sampler2D u_image;
 uniform float u_mix;
-uniform bool u_opacity_override;
 
 in vec2 v_normal;
 in vec2 v_width2;
@@ -46,8 +45,7 @@ void main() {
     float sdfgamma = (u_lineatlas_width / 256.0 / u_device_pixel_ratio) / min(dasharray_from.w, dasharray_to.w);
     alpha *= smoothstep(0.5 - sdfgamma / floorwidth, 0.5 + sdfgamma / floorwidth, sdfdist);
 
-    float finalOpacity = u_opacity_override ? 1.0 : opacity;
-    fragColor = color * (alpha * finalOpacity);
+    fragColor = color * (alpha * opacity);
 
     #ifdef GLOBE
     if (v_depth > 1.0) {

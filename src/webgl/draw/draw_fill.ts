@@ -1,5 +1,6 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {DepthMode} from '../depth_mode.ts';
+import {StencilMode} from '../stencil_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
 import {type ColorMode} from '../color_mode.ts';
 import {
@@ -8,12 +9,15 @@ import {
     fillOutlineUniformValues,
     fillOutlinePatternUniformValues
 } from '../program/fill_program.ts';
+import {lineTextureUniformValues} from '../program/line_program.ts';
 
 import type {Painter, RenderOptions} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import type {FillBucket} from '../../data/bucket/fill_bucket.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {Context} from '../context.ts';
+import type {Framebuffer} from '../framebuffer.ts';
 import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
 import {translatePosition} from '../../util/util.ts';
 
@@ -22,6 +26,22 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
     const opacity = layer.paint.get('fill-opacity');
 
     if (opacity.constantOr(1) === 0) {
+        return;
+    }
+
+    const useOffscreen = layer.hasOffscreenPass() && !painter.style.map.terrain;
+
+    if (!useOffscreen && layer.fillFbo) {
+        layer.fillFbo.destroy();
+        layer.fillFbo = null;
+    }
+
+    if (useOffscreen) {
+        if (painter.renderPass === 'offscreen') {
+            drawFillOffscreen(painter, tileManager, layer, coords, renderOptions);
+        } else if (painter.renderPass === 'translucent') {
+            drawFillComposite(painter, layer);
+        }
         return;
     }
 
@@ -42,19 +62,55 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
 
     // Draw stroke
     if (painter.renderPass === 'translucent' && layer.paint.get('fill-antialias')) {
-
-        // If we defined a different color for the fill outline, we are
-        // going to ignore the bits in 0x07 and just care about the global
-        // clipping mask.
-        // Otherwise, we only want to drawFill the antialiased parts that are
-        // *outside* the current shape. This is important in case the fill
-        // or stroke color is translucent. If we wouldn't clip to outside
-        // the current shape, some pixels from the outline stroke overlapped
-        // the (non-antialiased) fill.
         const depthMode = painter.getDepthModeForSublayer(
             layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
         drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
     }
+}
+
+function drawFillOffscreen(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
+    const context = painter.context;
+
+    layer.fillFbo ??= createFillFbo(context, painter.width, painter.height);
+
+    context.bindFramebuffer.set(layer.fillFbo.framebuffer);
+    context.viewport.set([0, 0, painter.width, painter.height]);
+    context.clear({color: Color.transparent, depth: 1, stencil: 0});
+
+    painter.currentStencilSource = undefined;
+    painter._renderTileClippingMasks(layer, coords, false);
+
+    const {isRenderingToTexture} = renderOptions;
+    const colorMode = painter.colorModeForRenderPass();
+
+    // Draw fill
+    const depthMode = painter.getDepthModeForSublayer(1, DepthMode.ReadOnly);
+    drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
+
+    // Draw stroke
+    if (layer.paint.get('fill-antialias')) {
+        const outlineDepthMode = painter.getDepthModeForSublayer(
+            layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
+        drawFillTiles(painter, tileManager, layer, coords, outlineDepthMode, colorMode, true, isRenderingToTexture);
+    }
+}
+
+function drawFillComposite(painter: Painter, layer: FillStyleLayer) {
+    const fbo = layer.fillFbo;
+    if (!fbo) return;
+
+    const context = painter.context;
+    const gl = context.gl;
+
+    context.activeTexture.set(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
+
+    const opacity = layer.paint.get('layer-opacity' as any) as number;
+    painter.useProgram('lineTexture').draw(context, gl.TRIANGLES,
+        DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
+        lineTextureUniformValues(painter, opacity, 0), null, null,
+        layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
+        painter.viewportSegments, layer.paint, painter.transform.zoom);
 }
 
 function drawFillTiles(
@@ -135,4 +191,22 @@ function drawFillTiles(
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }
+}
+
+function createFillFbo(context: Context, width: number, height: number): Framebuffer {
+    const gl = context.gl;
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+    const fbo = context.createFramebuffer(width, height, true, true);
+    fbo.colorAttachment.set(texture);
+    fbo.depthAttachment.set(context.createRenderbuffer(gl.DEPTH_STENCIL, width, height));
+
+    return fbo;
 }
