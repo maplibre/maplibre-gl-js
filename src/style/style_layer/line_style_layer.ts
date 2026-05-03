@@ -122,9 +122,12 @@ export class LineStyleLayer extends StyleLayer {
     }
 
     hasOffscreenPass() {
-        const opacity = this.paint.get('line-opacity');
-        const constantOpacity = opacity.constantOr(-1);
-        return constantOpacity > 0 && constantOpacity < 1 && !this.isHidden();
+        if (this.isHidden()) return false;
+        const constantOpacity = this.paint.get('line-opacity').constantOr(-1);
+        // Data-driven opacity (constantOr returns -1) needs offscreen MRT rendering
+        if (constantOpacity === -1) return true;
+        // Constant partial opacity needs offscreen rendering to prevent self-overlap
+        return constantOpacity > 0 && constantOpacity < 1;
     }
 
     onRemove = () => {

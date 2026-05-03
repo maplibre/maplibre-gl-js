@@ -61,6 +61,7 @@ export type LineTextureUniformsType = {
     'u_matrix': UniformMatrix4f;
     'u_world': Uniform2f;
     'u_image': Uniform1i;
+    'u_image_opacity': Uniform1i;
     'u_opacity': Uniform1f;
 };
 
@@ -130,6 +131,7 @@ const lineTextureUniforms = (context: Context, locations: UniformLocations): Lin
     'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_world': new Uniform2f(context, locations.u_world),
     'u_image': new Uniform1i(context, locations.u_image),
+    'u_image_opacity': new Uniform1i(context, locations.u_image_opacity),
     'u_opacity': new Uniform1f(context, locations.u_opacity)
 });
 
@@ -262,18 +264,22 @@ const lineGradientSDFUniformValues = (
 const lineTextureUniformValues = (
     painter: Painter,
     layer: LineStyleLayer,
-    textureUnit: number
+    textureUnit: number,
+    opacityTextureUnit: number
 ): UniformValues<LineTextureUniformsType> => {
     const matrix = mat4.create();
     mat4.ortho(matrix, 0, painter.width, painter.height, 0, 0, 1);
 
     const gl = painter.context.gl;
 
+    // constantOr(-1) returns -1 for data-driven opacity, triggering texture sampling;
+    // for constant opacity, the exact uniform value is used to avoid R8 quantization.
     return {
         'u_matrix': matrix,
         'u_world': [gl.drawingBufferWidth, gl.drawingBufferHeight],
         'u_image': textureUnit,
-        'u_opacity': layer.paint.get('line-opacity').constantOr(1)
+        'u_image_opacity': opacityTextureUnit,
+        'u_opacity': layer.paint.get('line-opacity').constantOr(-1)
     };
 };
 

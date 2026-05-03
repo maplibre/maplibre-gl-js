@@ -22,10 +22,18 @@ in float v_depth;
 #pragma mapbox: define mediump vec4 dasharray_from
 #pragma mapbox: define mediump vec4 dasharray_to
 
+#ifdef OPACITY_MRT
+layout(location = 1) out vec4 fragOpacityOut;
+#endif
+
 void main() {
     #pragma mapbox: initialize highp vec4 color
     #pragma mapbox: initialize lowp float blur
     #pragma mapbox: initialize lowp float opacity
+
+#ifdef OPACITY_MRT
+    if (opacity <= 0.0) discard;
+#endif
     #pragma mapbox: initialize mediump float width
     #pragma mapbox: initialize lowp float floorwidth
     #pragma mapbox: initialize mediump vec4 dasharray_from
@@ -48,6 +56,10 @@ void main() {
 
     float finalOpacity = u_opacity_override ? 1.0 : opacity;
     fragColor = color * (alpha * finalOpacity);
+
+#ifdef OPACITY_MRT
+    fragOpacityOut = vec4(opacity, 0.0, 0.0, 1.0);
+#endif
 
     #ifdef GLOBE
     if (v_depth > 1.0) {

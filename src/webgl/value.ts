@@ -502,6 +502,20 @@ export class ColorAttachment extends FramebufferAttachment<WebGLTexture> {
     }
 }
 
+export class ColorAttachment1 extends FramebufferAttachment<WebGLTexture> {
+    setDirty() {
+        this.dirty = true;
+    }
+    set(v?: WebGLTexture | null): void {
+        if (v === this.current && !this.dirty) return;
+        this.context.bindFramebuffer.set(this.parent);
+        const gl = this.gl;
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, v, 0);
+        this.current = v;
+        this.dirty = false;
+    }
+}
+
 export class DepthAttachment extends FramebufferAttachment<WebGLRenderbuffer> {
     set(v?: WebGLRenderbuffer | null): void {
         if (v === this.current && !this.dirty) return;

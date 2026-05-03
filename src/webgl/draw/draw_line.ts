@@ -20,6 +20,7 @@ import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {Context} from '../context.ts';
 import type {Framebuffer} from '../framebuffer.ts';
+import {ColorAttachment1} from '../value.ts';
 import type {ProgramConfiguration} from '../../data/program_configuration.ts';
 import {clamp, nextPowerOfTwo} from '../../util/util.ts';
 import {renderColorRamp} from '../../util/color_ramp.ts';
@@ -183,10 +184,23 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
 
 function drawLineOffscreen(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
     const context = painter.context;
+    const gl = context.gl;
+    const isDataDriven = layer.paint.get('line-opacity').constantOr(-1) === -1;
 
-    layer.lineFbo ??= createLineFbo(context, painter.width, painter.height);
+    // Recreate FBO if MRT requirement changed (e.g. opacity toggled between constant and data-driven)
+    const hasMrt = layer.lineFbo?.colorAttachment1 != null;
+    if (layer.lineFbo && hasMrt !== isDataDriven) {
+        layer.lineFbo.destroy();
+        layer.lineFbo = null;
+    }
+    layer.lineFbo ??= createLineFbo(context, painter.width, painter.height, isDataDriven);
 
     context.bindFramebuffer.set(layer.lineFbo.framebuffer);
+
+    if (isDataDriven) {
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+    }
+
     context.viewport.set([0, 0, painter.width, painter.height]);
     context.clear({color: Color.transparent, depth: 1, stencil: 0});
 
@@ -194,7 +208,16 @@ function drawLineOffscreen(painter: Painter, tileManager: TileManager, layer: Li
     painter.currentStencilSource = undefined;
     painter._renderTileClippingMasks(layer, coords, false);
 
-    drawLineTiles(painter, tileManager, layer, coords, renderOptions, true, false);
+    if (isDataDriven) {
+        // RT1 (opacity) uses MAX so self-overlap and feature crossings don't accumulate.
+        // Falls back to last-write-wins if OES_draw_buffers_indexed is unavailable.
+        const ext = context.extDrawBuffersIndexed;
+        ext?.blendEquationiOES(1, gl.MAX);
+        drawLineTiles(painter, tileManager, layer, coords, renderOptions, true, false, true);
+        ext?.blendEquationiOES(1, gl.FUNC_ADD);
+    } else {
+        drawLineTiles(painter, tileManager, layer, coords, renderOptions, true, false, false);
+    }
 }
 
 function drawLineComposite(painter: Painter, layer: LineStyleLayer) {
@@ -207,9 +230,13 @@ function drawLineComposite(painter: Painter, layer: LineStyleLayer) {
     context.activeTexture.set(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
 
+    // Bind opacity texture (RT1) if available, otherwise bind color texture as dummy
+    context.activeTexture.set(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment1 ? fbo.colorAttachment1.get() : fbo.colorAttachment.get());
+
     painter.useProgram('lineTexture').draw(context, gl.TRIANGLES,
         DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
-        lineTextureUniformValues(painter, layer, 0), null, null,
+        lineTextureUniformValues(painter, layer, 0, 1), null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
         painter.viewportSegments, layer.paint, painter.transform.zoom);
 }
@@ -221,7 +248,8 @@ function drawLineTiles(
     coords: OverscaledTileID[],
     renderOptions: RenderOptions,
     forceFullOpacity: boolean,
-    useTerrain: boolean
+    useTerrain: boolean,
+    useMrt: boolean = false
 ) {
     const {isRenderingToTexture} = renderOptions;
 
@@ -259,7 +287,7 @@ function drawLineTiles(
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const prevProgram = painter.context.program.get();
-        const program = painter.useProgram(programId, programConfiguration);
+        const program = painter.useProgram(programId, programConfiguration, false, useMrt ? ['#define OPACITY_MRT'] : []);
         const programChanged = firstTile || program.program !== prevProgram;
         const terrainData = useTerrain ? painter.style.map.terrain?.getTerrainData(coord) : null;
 
@@ -315,8 +343,10 @@ function drawLineTiles(
     }
 }
 
-function createLineFbo(context: Context, width: number, height: number): Framebuffer {
+function createLineFbo(context: Context, width: number, height: number, withOpacityTarget: boolean): Framebuffer {
     const gl = context.gl;
+
+    // RT0: Color texture (RGBA)
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -328,6 +358,21 @@ function createLineFbo(context: Context, width: number, height: number): Framebu
 
     const fbo = context.createFramebuffer(width, height, true, true);
     fbo.colorAttachment.set(texture);
+
+    if (withOpacityTarget) {
+        // RT1: Per-feature opacity texture (R8) for data-driven line-opacity
+        const opacityTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, opacityTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, width, height, 0, gl.RED, gl.UNSIGNED_BYTE, null);
+
+        fbo.colorAttachment1 = new ColorAttachment1(context, fbo.framebuffer);
+        fbo.colorAttachment1.set(opacityTexture);
+    }
+
     fbo.depthAttachment.set(context.createRenderbuffer(gl.DEPTH_STENCIL, width, height));
 
     return fbo;
