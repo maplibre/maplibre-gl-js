@@ -113,9 +113,9 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         }
     }
 
-    dragStart(e: E, point: Point): any;
-    dragStart(e: E, point: Point[]): any;
-    dragStart(e: E, point: Point | Point[]): any {
+    dragStart(e: E, point: Point): void;
+    dragStart(e: E, point: Point[]): void;
+    dragStart(e: E, point: Point | Point[]): void {
         if (!this.isEnabled() || this._lastPoint) return;
 
         if (!this._moveStateManager.isValidStartEvent(e)) return;
@@ -126,9 +126,9 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         if (this._activateOnStart && this._lastPoint) this._active = true;
     }
 
-    dragMove(e: E, point: Point): any;
-    dragMove(e: E, point: Point[]): any;
-    dragMove(e: E, point: Point | Point[]): any {
+    dragMove(e: E, point: Point): T | void;
+    dragMove(e: E, point: Point[]): T | void;
+    dragMove(e: E, point: Point | Point[]): T | void {
         if (!this.isEnabled()) return;
         const lastPoint = this._lastPoint;
         if (!lastPoint) return;

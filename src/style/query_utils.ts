@@ -135,7 +135,7 @@ export function circleIntersection({
     getElevation,
     pitchAlignment = 'map',
     pitchScale = 'map'
-}: CircleIntersectionTestParams, geometry: any): boolean {
+}: CircleIntersectionTestParams, geometry: Point[][]): boolean {
     const intersectionTest = pitchAlignment === 'map'
         ? (pitchScale === 'map' ? intersectionTestMapMap : intersectionTestMapViewport)
         : (pitchScale === 'map' ? intersectionTestViewportMap : intersectionTestViewportViewport);

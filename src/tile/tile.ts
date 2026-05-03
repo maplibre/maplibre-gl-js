@@ -192,7 +192,7 @@ export class Tile {
         return this.state === 'errored' || this.state === 'loaded' || this.state === 'reloading';
     }
 
-    clearTextures(painter: any): void {
+    clearTextures(painter: Painter): void {
         if (this.demTexture) painter.saveTileTexture(this.demTexture);
         this.demTexture = null;
     }

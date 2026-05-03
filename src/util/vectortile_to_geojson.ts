@@ -120,7 +120,7 @@ export class GeoJSONFeature {
         this._geometry = g;
     }
 
-    toJSON(): any {
+    toJSON(): GeoJSON.Feature {
         const json: any = {
             geometry: this.geometry
         };

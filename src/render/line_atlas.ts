@@ -54,7 +54,7 @@ export class LineAtlas {
         return this.dashEntry[key];
     }
 
-    getDashRanges(dasharray: number[], lineAtlasWidth: number, stretch: number): any[] {
+    getDashRanges(dasharray: number[], lineAtlasWidth: number, stretch: number): Array<{left: number; right: number; isDash: boolean; zeroLength: boolean}> {
         // If dasharray has an odd length, both the first and last parts
         // are dashes and should be joined seamlessly.
         const oddDashArray = dasharray.length % 2 === 1;

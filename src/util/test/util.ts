@@ -34,7 +34,7 @@ export class StubMap extends Evented {
         return 1;
     }
 
-    setTerrain(terrain: any): void { this._terrain = terrain; }
+    setTerrain(terrain: TerrainSpecification): void { this._terrain = terrain; }
     getTerrain(): TerrainSpecification { return this._terrain; }
 
     migrateProjection(newTransform: ITransform): void {
@@ -66,7 +66,14 @@ export function createMap(options?: any): Map {
     return new Map(extend(defaultOptions, options));
 }
 
-export function equalWithPrecision(test: any, expected: any, actual: any, multiplier: any, message: any, extra: any): any {
+export function equalWithPrecision(
+    test: {equal: (a: number, b: number, message: string, extra?: unknown) => unknown},
+    expected: number,
+    actual: number,
+    multiplier: number,
+    message?: string,
+    extra?: unknown
+): unknown {
     message ||= `should be equal to within ${multiplier}`;
     const expectedRounded = Math.round(expected / multiplier) * multiplier;
     const actualRounded = Math.round(actual / multiplier) * multiplier;

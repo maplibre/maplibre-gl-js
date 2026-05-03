@@ -97,7 +97,7 @@ export class TransferableGridIndex {
         this.cells[cellIndex].push(uid);
     }
 
-    query(x1: number, y1: number, x2: number, y2: number, intersectionTest?: Function): number[] {
+    query(x1: number, y1: number, x2: number, y2: number, intersectionTest?: (x1: number, y1: number, x2: number, y2: number) => boolean): number[] {
         const min = this.min;
         const max = this.max;
         if (x1 <= min && y1 <= min && max <= x2 && max <= y2 && !intersectionTest) {
@@ -111,7 +111,7 @@ export class TransferableGridIndex {
         }
     }
 
-    _queryCell(x1: number, y1: number, x2: number, y2:number, cellIndex:number, result: any, seenUids: any, intersectionTest: Function): void {
+    _queryCell(x1: number, y1: number, x2: number, y2: number, cellIndex: number, result: number[], seenUids: Record<number, boolean>, intersectionTest: (x1: number, y1: number, x2: number, y2: number) => boolean): void {
         const cell = this.cells[cellIndex];
         if (cell !== null) {
             const keys = this.keys;
@@ -135,7 +135,7 @@ export class TransferableGridIndex {
         }
     }
 
-    _forEachCell(x1: number, y1: number, x2:number, y2:number, fn: Function, arg1: any, arg2: any, intersectionTest: any): void {
+    _forEachCell(x1: number, y1: number, x2: number, y2: number, fn: Function, arg1: unknown, arg2: unknown, intersectionTest?: (x1: number, y1: number, x2: number, y2: number) => boolean): void {
         const cx1 = this._convertToCellCoord(x1);
         const cy1 = this._convertToCellCoord(y1);
         const cx2 = this._convertToCellCoord(x2);
@@ -153,11 +153,11 @@ export class TransferableGridIndex {
         }
     }
 
-    _convertFromCellCoord (x: any): number {
+    _convertFromCellCoord(x: number): number {
         return (x - this.padding) / this.scale;
     }
 
-    _convertToCellCoord(x: any): number {
+    _convertToCellCoord(x: number): number {
         return Math.max(0, Math.min(this.d - 1, Math.floor(x * this.scale) + this.padding));
     }
 

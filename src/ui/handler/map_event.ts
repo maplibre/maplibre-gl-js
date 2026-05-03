@@ -1,5 +1,5 @@
 import {MapMouseEvent, MapTouchEvent, MapWheelEvent} from '../events.ts';
-import {type Handler} from '../handler_manager.ts';
+import {type Handler, type HandlerResult} from '../handler_manager.ts';
 import type {Map} from '../map.ts';
 import type Point from '@mapbox/point-geometry';
 
@@ -20,13 +20,13 @@ export class MapEventHandler implements Handler {
         delete this._mousedownPos;
     }
 
-    wheel(e: WheelEvent): {} {
+    wheel(e: WheelEvent): HandlerResult | void {
         // If mapEvent.preventDefault() is called by the user, prevent handlers such as:
         // - ScrollZoom
         return this._firePreventable(new MapWheelEvent(e.type, this._map, e));
     }
 
-    mousedown(e: MouseEvent, point: Point): {} {
+    mousedown(e: MouseEvent, point: Point): HandlerResult | void {
         this._mousedownPos = point;
         // If mapEvent.preventDefault() is called by the user, prevent handlers such as:
         // - MousePan
@@ -45,7 +45,7 @@ export class MapEventHandler implements Handler {
         this._map.fire(new MapMouseEvent(e.type, this._map, e));
     }
 
-    dblclick(e: MouseEvent): {} {
+    dblclick(e: MouseEvent): HandlerResult | void {
         // If mapEvent.preventDefault() is called by the user, prevent handlers such as:
         // - DblClickZoom
         return this._firePreventable(new MapMouseEvent(e.type, this._map, e));
@@ -59,7 +59,7 @@ export class MapEventHandler implements Handler {
         this._map.fire(new MapMouseEvent(e.type, this._map, e));
     }
 
-    touchstart(e: TouchEvent): {} {
+    touchstart(e: TouchEvent): HandlerResult | void {
         // If mapEvent.preventDefault() is called by the user, prevent handlers such as:
         // - TouchPan
         // - TouchZoom
@@ -82,7 +82,7 @@ export class MapEventHandler implements Handler {
         this._map.fire(new MapTouchEvent(e.type, this._map, e));
     }
 
-    _firePreventable(mapEvent: MapMouseEvent | MapTouchEvent | MapWheelEvent): {} {
+    _firePreventable(mapEvent: MapMouseEvent | MapTouchEvent | MapWheelEvent): HandlerResult | void {
         this._map.fire(mapEvent);
         if (mapEvent.defaultPrevented) {
             // returning an object marks the handler as active and resets other handlers

@@ -200,7 +200,7 @@ function setWorkerUrl(value: string): void { config.WORKER_URL = value; }
  * importScriptInWorkers('add-protocol-worker.js');
  * ```
  */
-function importScriptInWorkers(workerUrl: string): Promise<void[]> { return getGlobalDispatcher().broadcast(MessageType.importScript, workerUrl); }
+async function importScriptInWorkers(workerUrl: string): Promise<void> { await getGlobalDispatcher().broadcast(MessageType.importScript, workerUrl); }
 
 export {
     Map,

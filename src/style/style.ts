@@ -974,9 +974,10 @@ export class Style extends Evented {
         return result;
     }
 
-    addImage(id: string, image: StyleImage): this {
+    addImage(id: string, image: StyleImage): void {
         if (this.getImage(id)) {
-            return this.fire(new ErrorEvent(new Error(`An image named "${id}" already exists.`)));
+            this.fire(new ErrorEvent(new Error(`An image named "${id}" already exists.`)));
+            return;
         }
         this.imageManager.addImage(id, image);
         this._afterImageUpdated(id);
@@ -990,9 +991,10 @@ export class Style extends Evented {
         return this.imageManager.getImage(id);
     }
 
-    removeImage(id: string): this {
+    removeImage(id: string): void {
         if (!this.getImage(id)) {
-            return this.fire(new ErrorEvent(new Error(`An image named "${id}" does not exist.`)));
+            this.fire(new ErrorEvent(new Error(`An image named "${id}" does not exist.`)));
+            return;
         }
         this.imageManager.removeImage(id);
         this._afterImageUpdated(id);

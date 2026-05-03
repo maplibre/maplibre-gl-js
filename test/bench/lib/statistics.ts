@@ -23,7 +23,7 @@ export type Summary = {
     max: number;
 };
 
-export function probabilitiesOfSuperiority(before: any, after: any): {
+export function probabilitiesOfSuperiority(before: number[], after: number[]): {
     superior: number;
     inferior: number;
 } {
@@ -48,7 +48,7 @@ export function probabilitiesOfSuperiority(before: any, after: any): {
     };
 }
 
-export function summaryStatistics(data: any): Summary {
+export function summaryStatistics(data: number[]): Summary {
     const variance = d3.variance(data);
     const sorted = data.slice().sort(d3.ascending);
     const [q1, q2, q3] = [.25, .5, .75].map((d) => d3.quantile(sorted, d));

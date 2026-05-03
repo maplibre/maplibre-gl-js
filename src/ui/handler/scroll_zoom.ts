@@ -46,7 +46,7 @@ export class ScrollZoomHandler implements Handler {
     _timeout: ReturnType<typeof setTimeout>; // used for delayed-handling of a single wheel movement
     _finishTimeout: ReturnType<typeof setTimeout>; // used to delay final '{move,zoom}end' events
 
-    _lastWheelEvent: any;
+    _lastWheelEvent: WheelEvent;
     _lastWheelEventTime: number;
 
     _lastExpectedZoom: number;
@@ -269,7 +269,7 @@ export class ScrollZoomHandler implements Handler {
         needsRenderFrame: boolean;
         zoomDelta: number;
         around: Point;
-        originalEvent: any;
+        originalEvent: WheelEvent;
     } | void {
         if (!this._needsRerender) return;
         this._needsRerender = false;

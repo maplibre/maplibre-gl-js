@@ -258,7 +258,7 @@ export function distanceOfAnglesRadians(radiansA: number, radiansB: number): num
  * Modulo function, as opposed to javascript's `%`, which is a remainder.
  * This functions will return positive values, even if the first operand is negative.
  */
-export function mod(n: any, m: any): number {
+export function mod(n: number, m: number): number {
     return ((n % m) + m) % m;
 }
 

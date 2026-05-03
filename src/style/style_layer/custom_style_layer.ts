@@ -292,8 +292,8 @@ export interface CustomLayerInterface {
     onRemove?(map: Map, gl: WebGL2RenderingContext): void;
 }
 
-export function validateCustomStyleLayer(layerObject: CustomLayerInterface): any[] {
-    const errors = [];
+export function validateCustomStyleLayer(layerObject: CustomLayerInterface): Array<{message: string}> {
+    const errors: Array<{message: string}> = [];
     const id = layerObject.id;
 
     if (id === undefined) {

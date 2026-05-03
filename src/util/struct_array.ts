@@ -110,8 +110,8 @@ abstract class StructArray {
     // The following properties are defined on the prototype.
     members: StructArrayMember[];
     bytesPerElement: number;
-    abstract emplaceBack(...v: number[]): any;
-    abstract emplace(i: number, ...v: number[]): any;
+    abstract emplaceBack(...v: number[]): number;
+    abstract emplace(i: number, ...v: number[]): number;
 
     constructor() {
         this.isTransferred = false;
@@ -139,8 +139,8 @@ abstract class StructArray {
         };
     }
 
-    static deserialize(input: SerializedStructArray): any {
-        const structArray = Object.create(this.prototype);
+    static deserialize<T extends StructArray>(this: {prototype: T} & (new () => T), input: SerializedStructArray): T {
+        const structArray: T = Object.create(this.prototype);
         structArray.arrayBuffer = input.arrayBuffer;
         structArray.length = input.length;
         structArray.capacity = input.arrayBuffer.byteLength / structArray.bytesPerElement;

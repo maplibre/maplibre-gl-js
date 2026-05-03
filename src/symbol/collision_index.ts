@@ -366,7 +366,7 @@ export class CollisionIndex {
      * symbols on the map, we use the CollisionIndex to look up the symbol part of
      * `queryRenderedFeatures`.
      */
-    queryRenderedSymbols(viewportQueryGeometry: Point[]): {} {
+    queryRenderedSymbols(viewportQueryGeometry: Point[]): Record<number, number[]> {
         if (viewportQueryGeometry.length === 0 || (this.grid.keysLength() === 0 && this.ignoredGrid.keysLength() === 0)) {
             return {};
         }
@@ -442,7 +442,7 @@ export class CollisionIndex {
         y: number;
         perspectiveRatio: number;
         isOccluded: boolean;
-        signedDistanceFromCamera: any;
+        signedDistanceFromCamera: number;
     } {
         if (simpleProjectionMatrix) {
             // This branch is a fast-path for mercator transform.

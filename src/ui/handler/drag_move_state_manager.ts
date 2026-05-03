@@ -116,7 +116,7 @@ export class MouseOrTouchMoveStateManager implements DragMoveStateManager<MouseE
         private oneFingerTouchMoveStateManager: OneFingerTouchMoveStateManager = new OneFingerTouchMoveStateManager()
     ) {}
 
-    _executeRelevantHandler(e: MouseEvent | TouchEvent, onMouseEvent: (MouseEvent: any) => any, onTouchEvent: (TouchEvent: any) => any): any {
+    _executeRelevantHandler(e: MouseEvent | TouchEvent, onMouseEvent: (e: MouseEvent) => boolean | void, onTouchEvent: (e: TouchEvent) => boolean | void): boolean | void {
         if (e instanceof MouseEvent) return onMouseEvent(e);
         if (typeof TouchEvent !== 'undefined' && e instanceof TouchEvent) return onTouchEvent(e);
     }
@@ -133,20 +133,20 @@ export class MouseOrTouchMoveStateManager implements DragMoveStateManager<MouseE
             e => { this.oneFingerTouchMoveStateManager.endMove(e); });
     }
 
-    isValidStartEvent(e: MouseEvent | TouchEvent): any {
-        return this._executeRelevantHandler(e,
+    isValidStartEvent(e: MouseEvent | TouchEvent): boolean {
+        return !!this._executeRelevantHandler(e,
             e => this.mouseMoveStateManager.isValidStartEvent(e),
             e => this.oneFingerTouchMoveStateManager.isValidStartEvent(e));
     }
 
-    isValidMoveEvent(e: MouseEvent | TouchEvent): any {
-        return this._executeRelevantHandler(e,
+    isValidMoveEvent(e: MouseEvent | TouchEvent): boolean {
+        return !!this._executeRelevantHandler(e,
             e => this.mouseMoveStateManager.isValidMoveEvent(e),
             e => this.oneFingerTouchMoveStateManager.isValidMoveEvent(e));
     }
 
-    isValidEndEvent(e?: MouseEvent | TouchEvent): any {
-        return this._executeRelevantHandler(e,
+    isValidEndEvent(e?: MouseEvent | TouchEvent): boolean {
+        return !!this._executeRelevantHandler(e,
             e => this.mouseMoveStateManager.isValidEndEvent(e),
             e => this.oneFingerTouchMoveStateManager.isValidEndEvent(e));
     }
