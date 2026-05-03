@@ -158,7 +158,7 @@ export class NavigationControl implements IControl {
         delete this._map;
     }
 
-    _createButton(className: string, fn: (e?: any) => unknown): HTMLButtonElement {
+    _createButton(className: string, fn: (e?: MouseEvent) => unknown): HTMLButtonElement {
         const a = DOM.create('button', className, this._container);
         a.type = 'button';
         a.addEventListener('click', fn);
