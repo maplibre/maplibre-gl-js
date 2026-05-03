@@ -96,7 +96,7 @@ export class Painter {
     /**
      * A pool of recyclable {@link RTTObject}s
      */
-    _rttObjects: RTTObject[];
+    _rttObjectRecyclePool: RTTObject[];
     numSublayers: number;
     depthEpsilon: number;
     emptyProgramConfiguration: ProgramConfiguration;
@@ -147,7 +147,7 @@ export class Painter {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
-        this._rttObjects = [];
+        this._rttObjectRecyclePool = [];
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
@@ -724,7 +724,7 @@ export class Painter {
 
     acquireRTT(size: number): RTTObject {
         const gl = this.context.gl;
-        const obj = this._rttObjects.pop();
+        const obj = this._rttObjectRecyclePool.pop();
         if (obj) {
             if (obj.size !== size) {
                 gl.bindTexture(gl.TEXTURE_2D, obj.texture.texture);
@@ -751,7 +751,7 @@ export class Painter {
     }
 
     releaseRTT(obj: RTTObject) {
-        this._rttObjects.push(obj);
+        this._rttObjectRecyclePool.push(obj);
     }
 
     /**
@@ -859,11 +859,11 @@ export class Painter {
             this._tileTextures = {};
         }
 
-        for (const obj of this._rttObjects) {
+        for (const obj of this._rttObjectRecyclePool) {
             obj.texture.destroy();
             obj.fbo.destroy();
         }
-        this._rttObjects = [];
+        this._rttObjectRecyclePool = [];
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
         if (this.debugBuffer) this.debugBuffer.destroy();
