@@ -1,7 +1,7 @@
 {
   "name": "maplibre-gl",
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
-  "version": "6.0.0-6",
+  "version": "6.0.0-7",
   "module": "dist/maplibre-gl.mjs",
   "style": "dist/maplibre-gl.css",
   "license": "BSD-3-Clause",
@@ -126,7 +126,6 @@
     "st": "^3.0.3",
     "stylelint": "^17.9.1",
     "stylelint-config-standard": "^40.0.0",
-    "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
     "typedoc": "^0.28.19",
     "typedoc-plugin-markdown": "^4.11.0",
@@ -136,13 +135,13 @@
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
   "scripts": {
-    "generate-unicode-data": "node --no-warnings --loader ts-node/esm build/generate-unicode-data.ts",
-    "generate-shaders": "node --no-warnings --loader ts-node/esm build/generate-shaders.ts",
-    "generate-struct-arrays": "node --no-warnings --loader ts-node/esm build/generate-struct-arrays.ts",
-    "generate-style-code": "node --no-warnings --loader ts-node/esm build/generate-style-code.ts",
+    "generate-unicode-data": "node --no-warnings --experimental-transform-types build/generate-unicode-data.ts",
+    "generate-shaders": "node --no-warnings --experimental-transform-types build/generate-shaders.ts",
+    "generate-struct-arrays": "node --no-warnings --experimental-transform-types build/generate-struct-arrays.ts",
+    "generate-style-code": "node --no-warnings --experimental-transform-types build/generate-style-code.ts",
     "generate-typings": "cross-env BUILD=types rolldown -c rolldown.config.ts",
-    "generate-docs": "typedoc && node --no-warnings --loader ts-node/esm build/generate-docs.ts",
-    "generate-images": "node --no-warnings --loader ts-node/esm build/generate-doc-images.ts",
+    "generate-docs": "typedoc && node --no-warnings --experimental-transform-types build/generate-docs.ts",
+    "generate-images": "node --no-warnings --experimental-transform-types build/generate-doc-images.ts",
     "build-dist": "npm run build-css && npm run generate-unicode-data && npm run generate-shaders && npm run build-dev && npm run build-prod",
     "build-dev": "cross-env BUILD=dev rolldown -c rolldown.config.ts",
     "watch-dev": "cross-env BUILD=dev rolldown -c rolldown.config.ts --watch",
@@ -170,11 +169,10 @@
     "test-watch-roots": "vitest --config vitest.config.unit.ts --watch",
     "test-render": "vitest test/integration/render/render.test.ts",
     "codegen": "run-p --print-label generate-style-code generate-unicode-data generate-struct-arrays generate-shaders && npm run generate-typings",
-    "benchmark": "node --no-warnings --loader ts-node/esm test/bench/run-benchmarks.ts",
-    "gl-stats": "node --no-warnings --loader ts-node/esm test/bench/gl-stats.ts",
+    "benchmark": "node --no-warnings --experimental-transform-types test/bench/run-benchmarks.ts",
+    "gl-stats": "node --no-warnings --experimental-transform-types test/bench/gl-stats.ts",
     "prepare": "npm run codegen",
-    "typecheck": "tsgo --noEmit && tsgo --project tsconfig.dist.json",
-    "tsnode": "node --experimental-loader=ts-node/esm --no-warnings"
+    "typecheck": "tsgo --noEmit && tsgo --project tsconfig.dist.json"
   },
   "files": [
     "build/",

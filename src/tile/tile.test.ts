@@ -1,15 +1,15 @@
 import {describe, test, expect, vi} from 'vitest';
-import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer';
-import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
+import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer.ts';
+import {Tile} from './tile.ts';
+import {OverscaledTileID} from './tile_id.ts';
 import fs from 'fs';
 import path from 'path';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
-import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
-import {CollisionBoxArray} from '../data/array_types.g';
-import {extend} from '../util/util';
-import {serialize, deserialize} from '../util/web_worker_transfer';
-import type {Painter} from '../render/painter';
+import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
+import {CollisionBoxArray} from '../data/array_types.g.ts';
+import {extend} from '../util/util.ts';
+import {serialize, deserialize} from '../util/web_worker_transfer.ts';
+import type {Painter} from '../render/painter.ts';
 
 describe('querySourceFeatures', () => {
     const features = [{

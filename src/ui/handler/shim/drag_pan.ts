@@ -1,5 +1,5 @@
-import type {MousePanHandler} from '../mouse';
-import type {TouchPanHandler} from './../touch_pan';
+import type {MousePanHandler} from '../mouse.ts';
+import type {TouchPanHandler} from './../touch_pan.ts';
 
 /**
  * A {@link DragPanHandler} options object

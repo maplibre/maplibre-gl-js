@@ -1,12 +1,12 @@
 import KDBush from 'kdbush';
-import {EXTENT} from '../data/extent';
+import {EXTENT} from '../data/extent.ts';
 
-import type {SymbolInstance} from '../data/array_types.g';
-import {type SymbolInstanceArray} from '../data/array_types.g';
-import type {OverscaledTileID} from '../tile/tile_id';
-import type {SymbolBucket} from '../data/bucket/symbol_bucket';
-import type {StyleLayer} from '../style/style_layer';
-import type {Tile} from '../tile/tile';
+import type {SymbolInstance} from '../data/array_types.g.ts';
+import {type SymbolInstanceArray} from '../data/array_types.g.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {Tile} from '../tile/tile.ts';
 
 /*
     The CrossTileSymbolIndex generally works on the assumption that

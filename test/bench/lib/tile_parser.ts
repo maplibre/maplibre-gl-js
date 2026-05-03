@@ -2,22 +2,22 @@ import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 
 import {derefLayers} from '@maplibre/maplibre-gl-style-spec';
-import {Style} from '../../../src/style/style';
-import {type IReadonlyTransform} from '../../../src/geo/transform_interface';
-import {Evented} from '../../../src/util/evented';
-import {RequestManager} from '../../../src/util/request_manager';
-import {WorkerTile} from '../../../src/source/worker_tile';
-import {StyleLayerIndex} from '../../../src/style/style_layer_index';
+import {Style} from '../../../src/style/style.ts';
+import {type IReadonlyTransform} from '../../../src/geo/transform_interface.ts';
+import {Evented} from '../../../src/util/evented.ts';
+import {RequestManager} from '../../../src/util/request_manager.ts';
+import {WorkerTile} from '../../../src/source/worker_tile.ts';
+import {StyleLayerIndex} from '../../../src/style/style_layer_index.ts';
 
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {WorkerTileResult} from '../../../src/source/worker_source';
-import type {OverscaledTileID} from '../../../src/tile/tile_id';
-import type {TileJSON} from '../../../src/util/util';
-import type {Map} from '../../../src/ui/map';
-import type {IActor} from '../../../src/util/actor';
-import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings';
-import {MessageType} from '../../../src/util/actor_messages';
-import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
+import type {WorkerTileResult} from '../../../src/source/worker_source.ts';
+import type {OverscaledTileID} from '../../../src/tile/tile_id.ts';
+import type {TileJSON} from '../../../src/util/util.ts';
+import type {Map} from '../../../src/ui/map.ts';
+import type {IActor} from '../../../src/util/actor.ts';
+import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings.ts';
+import {MessageType} from '../../../src/util/actor_messages.ts';
+import {MercatorTransform} from '../../../src/geo/projection/mercator_transform.ts';
 
 class StubMap extends Evented {
     style: Style;

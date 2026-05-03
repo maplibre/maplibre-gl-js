@@ -1,9 +1,9 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {Map} from '../map';
-import {Marker} from '../marker';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest} from '../../util/test/util';
+import {Map} from '../map.ts';
+import {Marker} from '../marker.ts';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {beforeMapTest} from '../../util/test/util.ts';
 
 function createMap() {
     return new Map({container: DOM.create('div', '', window.document.body)});

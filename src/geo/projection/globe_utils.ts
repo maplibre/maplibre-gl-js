@@ -1,7 +1,7 @@
 import {type ReadonlyVec4, vec3} from 'gl-matrix';
-import {clamp, createVec3f64, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util';
-import {LngLat} from '../lng_lat';
-import {EXTENT} from '../../data/extent';
+import {clamp, createVec3f64, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util.ts';
+import {LngLat} from '../lng_lat.ts';
+import {EXTENT} from '../../data/extent.ts';
 import type Point from '@mapbox/point-geometry';
 
 export function getGlobeCircumferencePixels(transform: {worldSize: number; center: {lat: number}}): number {

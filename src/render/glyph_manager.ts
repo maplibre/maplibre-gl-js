@@ -1,13 +1,13 @@
-import {loadGlyphRange} from '../style/load_glyph_range';
+import {loadGlyphRange} from '../style/load_glyph_range.ts';
 
 import TinySDF from '@mapbox/tiny-sdf';
-import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g';
-import {AlphaImage} from '../util/image';
-import {ensureError, warnOnce} from '../util/util';
+import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g.ts';
+import {AlphaImage} from '../util/image.ts';
+import {ensureError, warnOnce} from '../util/util.ts';
 
-import type {StyleGlyph} from '../style/style_glyph';
-import type {RequestManager} from '../util/request_manager';
-import type {GetGlyphsResponse} from '../util/actor_messages';
+import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {RequestManager} from '../util/request_manager.ts';
+import type {GetGlyphsResponse} from '../util/actor_messages.ts';
 
 import {v8} from '@maplibre/maplibre-gl-style-spec';
 

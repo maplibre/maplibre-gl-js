@@ -1,19 +1,19 @@
-import {ensureError, extend, pick} from '../util/util';
+import {ensureError, extend, pick} from '../util/util.ts';
 
-import {ImageRequest} from '../util/image_request';
+import {ImageRequest} from '../util/image_request.ts';
 
-import {ResourceType} from '../util/request_manager';
-import {Event, ErrorEvent, Evented} from '../util/evented';
-import {loadTileJson} from './load_tilejson';
-import {TileBounds} from '../tile/tile_bounds';
-import {Texture} from '../webgl/texture';
-import {isAbortError} from '../util/abort_error';
+import {ResourceType} from '../util/request_manager.ts';
+import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {loadTileJson} from './load_tilejson.ts';
+import {TileBounds} from '../tile/tile_bounds.ts';
+import {Texture} from '../webgl/texture.ts';
+import {isAbortError} from '../util/abort_error.ts';
 
-import type {Source} from './source';
-import type {OverscaledTileID} from '../tile/tile_id';
-import type {Map} from '../ui/map';
-import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from '../tile/tile';
+import type {Source} from './source.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {Map} from '../ui/map.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Tile} from '../tile/tile.ts';
 import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification

@@ -1,7 +1,7 @@
-import {extend} from '../util/util';
-import type {Tile} from '../tile/tile';
+import {extend} from '../util/util.ts';
+import type {Tile} from '../tile/tile.ts';
 import type {FeatureState} from '@maplibre/maplibre-gl-style-spec';
-import type {InViewTiles} from '../tile/tile_manager_in_view_tiles';
+import type {InViewTiles} from '../tile/tile_manager_in_view_tiles.ts';
 
 export type FeatureStateEntry = {id: string; state: FeatureState};
 export type FeatureStates = FeatureStateEntry[];

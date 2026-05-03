@@ -1,4 +1,4 @@
-import {clamp} from '../util/util';
+import {clamp} from '../util/util.ts';
 
 /**
  * Packs two numbers, interpreted as 8-bit unsigned integers, into a single

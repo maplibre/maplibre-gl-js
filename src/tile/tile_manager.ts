@@ -1,36 +1,36 @@
-import {create as createSource} from '../source/source';
+import {create as createSource} from '../source/source.ts';
 
-import {Tile} from './tile';
-import {ErrorEvent, Event, Evented} from '../util/evented';
-import {ensureError} from '../util/util';
-import {TileCache} from './tile_cache';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
-import {EXTENT} from '../data/extent';
+import {Tile} from './tile.ts';
+import {ErrorEvent, Event, Evented} from '../util/evented.ts';
+import {ensureError} from '../util/util.ts';
+import {TileCache} from './tile_cache.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {EXTENT} from '../data/extent.ts';
 import type Point from '@mapbox/point-geometry';
-import {now} from '../util/time_control';
-import {OverscaledTileID} from './tile_id';
-import {SourceFeatureState} from '../source/source_state';
-import {config} from '../util/config';
-import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles';
-import {Bounds} from '../geo/bounds';
-import {EXTENT_BOUNDS} from '../data/extent_bounds';
-import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
-import {hasRasterTransition, isRasterType, updateFadingTiles} from './tile_manager_raster';
-import {backfillDEM} from './tile_manager_raster_dem';
-import {InViewTiles} from './tile_manager_in_view_tiles';
+import {now} from '../util/time_control.ts';
+import {OverscaledTileID} from './tile_id.ts';
+import {SourceFeatureState} from '../source/source_state.ts';
+import {config} from '../util/config.ts';
+import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles.ts';
+import {Bounds} from '../geo/bounds.ts';
+import {EXTENT_BOUNDS} from '../data/extent_bounds.ts';
+import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
+import {hasRasterTransition, isRasterType, updateFadingTiles} from './tile_manager_raster.ts';
+import {backfillDEM} from './tile_manager_raster_dem.ts';
+import {InViewTiles} from './tile_manager_in_view_tiles.ts';
 
-import type {Context} from '../webgl/context';
-import type {Source} from '../source/source';
-import type {Map} from '../ui/map';
-import type {Style} from '../style/style';
-import type {Dispatcher} from '../util/dispatcher';
-import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
-import type {TileState} from './tile';
+import type {Context} from '../webgl/context.ts';
+import type {Source} from '../source/source.ts';
+import type {Map} from '../ui/map.ts';
+import type {Style} from '../style/style.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
+import type {TileState} from './tile.ts';
 import type {ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {MapSourceDataEvent} from '../ui/events';
-import type {Terrain} from '../render/terrain';
-import type {CanvasSourceSpecification} from '../source/canvas_source';
-import type {LoadTileResult} from '../source/vector_tile_source';
+import type {MapSourceDataEvent} from '../ui/events.ts';
+import type {Terrain} from '../render/terrain.ts';
+import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
+import type {LoadTileResult} from '../source/vector_tile_source.ts';
 
 type TileResult = {
     tile: Tile;
@@ -512,7 +512,7 @@ export class TileManager extends Evented {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.type === 'vector' && this.map._zoomLevelsToOverscale !== undefined
-                    ? transform.maxZoom - this.map._zoomLevelsToOverscale
+                    ? Math.max(this._source.maxzoom, transform.maxZoom - this.map._zoomLevelsToOverscale)
                     : this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,

@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest';
-import {isInBoundsForTileZoomXY, isInBoundsForZoomLngLat} from './world_bounds';
-import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from './util';
-import {LngLat} from '../geo/lng_lat';
+import {isInBoundsForTileZoomXY, isInBoundsForZoomLngLat} from './world_bounds.ts';
+import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from './util.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 
 describe('isInBoundsForTileZoomXY', () => {
 
