@@ -863,15 +863,15 @@ export class SymbolBucket implements Bucket {
         }
     }
 
-    getSortedSymbolIndexes(angle: number): any[] {
+    getSortedSymbolIndexes(angle: number): number[] {
         if (this.sortedAngle === angle && this.symbolInstanceIndexes !== undefined) {
             return this.symbolInstanceIndexes;
         }
         const sin = Math.sin(angle);
         const cos = Math.cos(angle);
-        const rotatedYs = [];
-        const featureIndexes = [];
-        const result = [];
+        const rotatedYs: number[] = [];
+        const featureIndexes: number[] = [];
+        const result: number[] = [];
 
         for (let i = 0; i < this.symbolInstances.length; ++i) {
             result.push(i);
