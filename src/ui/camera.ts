@@ -380,7 +380,7 @@ export abstract class Camera extends Evented {
      * map.setCenter([-74, 38]);
      * ```
      */
-    setCenter(center: LngLatLike, eventData?: any): this {
+    setCenter(center: LngLatLike, eventData?: Record<string, unknown>): this {
         return this.jumpTo({center}, eventData);
     }
 
@@ -1332,7 +1332,7 @@ export abstract class Camera extends Evented {
         this.transform.apply(finalTransform, false);
     }
 
-    _fireMoveEvents(eventData?: any): void {
+    _fireMoveEvents(eventData?: Record<string, unknown>): void {
         this.fire(new Event('move', eventData));
         if (this._zooming) {
             this.fire(new Event('zoom', eventData));
@@ -1348,7 +1348,7 @@ export abstract class Camera extends Evented {
         }
     }
 
-    _afterEase(eventData?: any, easeId?: string): void {
+    _afterEase(eventData?: Record<string, unknown>, easeId?: string): void {
         // if this easing is being stopped to start another easing with
         // the same id then don't fire any events to avoid extra start/stop events
         if (this._easeId && easeId && this._easeId === easeId) {
