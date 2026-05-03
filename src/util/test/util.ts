@@ -152,7 +152,7 @@ export function getMockDispatcher(): Dispatcher {
     });
 }
 
-export function stubAjaxGetImage(createImageBitmap: any): void {
+export function stubAjaxGetImage(createImageBitmap: typeof global.createImageBitmap): void {
     global.createImageBitmap = createImageBitmap;
 
     global.URL.revokeObjectURL = () => {};
