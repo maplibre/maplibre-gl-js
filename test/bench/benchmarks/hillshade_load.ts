@@ -42,7 +42,7 @@ export default class HillshadeLoad extends Benchmark {
         };
     }
 
-    async bench() {
+    async bench(): Promise<void> {
         const map = await createMap({
             width: 1024,
             height: 1024,

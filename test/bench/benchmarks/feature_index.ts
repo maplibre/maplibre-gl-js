@@ -28,7 +28,7 @@ export default class LoadMatchingFeature extends Benchmark {
         } as unknown as VectorTileLayerLike;
     }
 
-    bench() {
+    bench(): void {
         this.featureIndex.loadMatchingFeature({}, 0, 0, 0, {needGeometry: false} as FeatureFilter, this.layerIdsToTest, [], {}, {});
     }
 }

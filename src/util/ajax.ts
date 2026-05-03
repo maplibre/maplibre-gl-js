@@ -130,7 +130,7 @@ export class AJAXError extends Error {
  * to the string(!) "null" (Firefox), or "file://" (Chrome, Safari, Edge),
  * and we will set an empty referrer. Otherwise, we're using the document's URL.
  */
-export const getReferrer = () => isWorker(self) ?
+export const getReferrer = (): string => isWorker(self) ?
     self.worker?.referrer :
     (window.location.protocol === 'blob:' ? window.parent : window).location.href;
 
@@ -285,7 +285,7 @@ export const getArrayBuffer = (requestParameters: RequestParameters, abortContro
     return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), abortController);
 };
 
-export function sameOrigin(inComingUrl: string) {
+export function sameOrigin(inComingUrl: string): boolean {
     // A relative URL "/foo" or "./foo" will throw exception in URL's ctor,
     // try-catch is expansive so just use a heuristic check to avoid it
     // also check data URL

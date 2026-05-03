@@ -7,7 +7,7 @@ import createMap from '../lib/create_map.ts';
  * using an empty style with no sources or layers.
  */
 export default class MapLoad extends Benchmark {
-    async bench() {
+    async bench(): Promise<void> {
         try {
             const map = await createMap({
                 style: {

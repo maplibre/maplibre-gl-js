@@ -22,19 +22,19 @@ export class TransformProvider {
         return this._map._requestedCameraState || this._map.transform;
     }
 
-    get center() {
+    get center(): {lng: number; lat: number} {
         return {lng: this.transform.center.lng, lat: this.transform.center.lat};
     }
 
-    get zoom() {
+    get zoom(): number {
         return this.transform.zoom;
     }
 
-    get pitch() {
+    get pitch(): number {
         return this.transform.pitch;
     }
 
-    get bearing() {
+    get bearing(): number {
         return this.transform.bearing;
     }
 

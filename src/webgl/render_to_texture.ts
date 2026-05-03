@@ -77,7 +77,7 @@ export class RenderToTexture {
         return tile.getRTT(this._stacks.length - 1).texture;
     }
 
-    prepareForRender(style: Style, zoom: number) {
+    prepareForRender(style: Style, zoom: number): void {
         this._stacks = [];
         this._prevType = null;
         this._rttTiles = [];

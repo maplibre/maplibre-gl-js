@@ -154,7 +154,7 @@ export class Terrain {
         this._coordsTextureSize = 1024;
     }
 
-    destroy() {
+    destroy(): void {
         if (this._fbo) {
             this._fbo.destroy();
             this._fbo = null;
@@ -226,7 +226,7 @@ export class Terrain {
      * @param zoom - the zoom, use {@link getElevationForLngLat} if you don't want a specific zoom level, but more accurate results.
      * @returns the elevation
      */
-    getElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+    getElevationForLngLatZoom(lnglat: LngLat, zoom: number): number {
         if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
         const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
@@ -238,7 +238,7 @@ export class Terrain {
      * @param lnglat - the location
      * @returns the elevation
      */
-    getElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform) {
+    getElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): number {
         const terrainCoveringTiles = coveringTiles(transform, {maxzoom: this.tileManager.maxzoom, minzoom: this.tileManager.minzoom, tileSize: 512, terrain: this});
         let zoom = 0;
         for (const tile of terrainCoveringTiles) {
@@ -481,7 +481,7 @@ export class Terrain {
         return 2 * Math.PI * earthRadius / Math.pow(2, Math.max(zoom, 0)) / 5;
     }
 
-    getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+    getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number): number {
         if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getMinMaxElevation(tileID).minElevation ?? 0;
@@ -522,7 +522,7 @@ export class Terrain {
     /** Add an extra frame around the mesh to avoid hairline gaps (stitching) on tile boundaries with different zoomlevels.
      * @see {@link MapOptions.terrainSkirtLength}
     */
-    _buildSkirts(vertexArray: Pos3dArray, indexArray: TriangleIndexArray, meshSize: number, delta: number, northPole: boolean, southPole: boolean) {
+    _buildSkirts(vertexArray: Pos3dArray, indexArray: TriangleIndexArray, meshSize: number, delta: number, northPole: boolean, southPole: boolean): void {
         const offsetTop = vertexArray.length;
         const offsetTopEdge = 0;
         const offsetBottom = offsetTop + (meshSize + 1);

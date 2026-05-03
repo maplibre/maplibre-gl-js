@@ -18,7 +18,7 @@ export default class MapIdle extends Benchmark {
     /**
      * Waits for map's idle event before returning.
      */
-    async createMap() {
+    async createMap(): Promise<void> {
         try {
             const map = await createMap({
                 idle: true,

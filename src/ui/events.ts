@@ -532,7 +532,7 @@ export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
      *   * On `dblclick` events, the behavior of {@link DoubleClickZoomHandler}
      *
      */
-    preventDefault() {
+    preventDefault(): void {
         this._defaultPrevented = true;
     }
 
@@ -608,7 +608,7 @@ export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
      *   * On `touchstart` events, the behavior of {@link TwoFingersTouchZoomRotateHandler}
      *
      */
-    preventDefault() {
+    preventDefault(): void {
         this._defaultPrevented = true;
     }
 
@@ -660,7 +660,7 @@ export class MapWheelEvent extends Event {
      *
      * Calling this method will prevent the behavior of {@link ScrollZoomHandler}.
      */
-    preventDefault() {
+    preventDefault(): void {
         this._defaultPrevented = true;
     }
 

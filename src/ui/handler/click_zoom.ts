@@ -20,14 +20,14 @@ export class ClickZoomHandler implements Handler {
         this.reset();
     }
 
-    reset() {
+    reset(): void {
         this._active = false;
     }
 
-    dblclick(e: MouseEvent, point: Point) {
+    dblclick(e: MouseEvent, point: Point): {cameraAnimation: (map: Map) => void} {
         e.preventDefault();
         return {
-            cameraAnimation: (map: Map) => {
+            cameraAnimation: (map: Map): void => {
                 map.easeTo({
                     duration: 300,
                     zoom: evaluateZoomSnap(this._tr.zoom + (e.shiftKey ? -1 : 1), map.getZoomSnap()),
@@ -37,20 +37,20 @@ export class ClickZoomHandler implements Handler {
         };
     }
 
-    enable() {
+    enable(): void {
         this._enabled = true;
     }
 
-    disable() {
+    disable(): void {
         this._enabled = false;
         this.reset();
     }
 
-    isEnabled() {
+    isEnabled(): boolean {
         return this._enabled;
     }
 
-    isActive() {
+    isActive(): boolean {
         return this._active;
     }
 }

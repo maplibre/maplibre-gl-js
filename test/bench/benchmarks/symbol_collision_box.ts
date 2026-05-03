@@ -105,7 +105,7 @@ export default class SymbolCollisionBox extends Benchmark {
         }
     }
 
-    async bench() {
+    async bench(): Promise<void> {
         const ci = new CollisionIndex(this._transform);
         ci.grid.hitTest = (_x1, _y1, _x2, _y2, _overlapMode, _predicate?) => {
             return true;

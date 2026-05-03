@@ -12,12 +12,12 @@ export default class StyleLayerCreate extends Benchmark {
         this.style = style;
     }
 
-    async setup() {
+    async setup(): Promise<void> {
         const json = await fetchStyle(this.style);
         this.layers = derefLayers(json.layers);
     }
 
-    bench() {
+    bench(): void {
         for (const layer of this.layers) {
             createStyleLayer(layer, {});
         }

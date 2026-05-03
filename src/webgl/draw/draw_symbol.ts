@@ -62,7 +62,7 @@ const identityMat4 = mat4.identity(new Float32Array(16));
 
 export function drawSymbols(painter: Painter, tileManager: TileManager, layer: SymbolStyleLayer, coords: OverscaledTileID[], variableOffsets: {
     [_ in CrossTileID]: VariableOffset;
-}, renderOptions: RenderOptions) {
+}, renderOptions: RenderOptions): void {
     if (painter.renderPass !== 'translucent') return;
 
     const {isRenderingToTexture} = renderOptions;

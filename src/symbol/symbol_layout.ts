@@ -79,7 +79,7 @@ export function performSymbolLayout(args: {
     showCollisionBoxes: boolean;
     canonical: CanonicalTileID;
     subdivisionGranularity: SubdivisionGranularitySetting;
-}) {
+}): void {
     args.bucket.createArrays();
 
     const tileSize = 512 * args.bucket.overscaling;

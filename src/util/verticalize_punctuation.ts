@@ -87,7 +87,7 @@ export const verticalizedCharacterMap = {
     '｣': '﹂'
 };
 
-export function verticalizePunctuation(input: string) {
+export function verticalizePunctuation(input: string): string {
     let output = '';
 
     let prevChar = {premature: true, value: undefined};

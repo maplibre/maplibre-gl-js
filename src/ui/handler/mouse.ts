@@ -24,7 +24,7 @@ export interface MouseRollHandler extends DragMoveHandler<DragRollResult, MouseE
 const LEFT_BUTTON = 0;
 const RIGHT_BUTTON = 2;
 
-const assignEvents = (handler: DragHandler<DragPanResult, MouseEvent>) => {
+const assignEvents = <T extends DragPanResult | DragRotateResult | DragPitchResult | DragRollResult>(handler: DragHandler<T, MouseEvent>): void => {
     handler.mousedown = handler.dragStart;
     handler.mousemoveWindow = handler.dragMove;
     handler.mouseup = handler.dragEnd;

@@ -46,7 +46,7 @@ export class ScrollZoomHandler implements Handler {
     _timeout: ReturnType<typeof setTimeout>; // used for delayed-handling of a single wheel movement
     _finishTimeout: ReturnType<typeof setTimeout>; // used to delay final '{move,zoom}end' events
 
-    _lastWheelEvent: any;
+    _lastWheelEvent: WheelEvent;
     _lastWheelEventTime: number;
 
     _lastExpectedZoom: number;
@@ -87,7 +87,7 @@ export class ScrollZoomHandler implements Handler {
      * map.scrollZoom.setZoomRate(1/25);
      * ```
      */
-    setZoomRate(zoomRate: number) {
+    setZoomRate(zoomRate: number): void {
         this._defaultZoomRate = zoomRate;
     }
 
@@ -100,7 +100,7 @@ export class ScrollZoomHandler implements Handler {
      * map.scrollZoom.setWheelZoomRate(1/600);
      * ```
      */
-    setWheelZoomRate(wheelZoomRate: number) {
+    setWheelZoomRate(wheelZoomRate: number): void {
         this._wheelZoomRate = wheelZoomRate;
     }
 
@@ -108,7 +108,7 @@ export class ScrollZoomHandler implements Handler {
      * Returns a Boolean indicating whether the "scroll to zoom" interaction is enabled.
      * @returns `true` if the "scroll to zoom" interaction is enabled.
      */
-    isEnabled() {
+    isEnabled(): boolean {
         return !!this._enabled;
     }
 
@@ -117,11 +117,11 @@ export class ScrollZoomHandler implements Handler {
     * render is called, so _active is not a good candidate for determining if a scroll zoom animation is in
     * progress.
     */
-    isActive() {
+    isActive(): boolean {
         return !!this._active || this._finishTimeout !== undefined;
     }
 
-    isZooming() {
+    isZooming(): boolean {
         return !!this._zooming;
     }
 
@@ -135,7 +135,7 @@ export class ScrollZoomHandler implements Handler {
      * map.scrollZoom.enable({ around: 'center' })
      * ```
      */
-    enable(options?: AroundCenterOptions | boolean) {
+    enable(options?: AroundCenterOptions | boolean): void {
         if (this.isEnabled()) return;
         this._enabled = true;
         this._aroundCenter = !!options && (options as AroundCenterOptions).around === 'center';
@@ -149,7 +149,7 @@ export class ScrollZoomHandler implements Handler {
      * map.scrollZoom.disable();
      * ```
      */
-    disable() {
+    disable(): void {
         if (!this.isEnabled()) return;
         this._enabled = false;
     }
@@ -157,7 +157,7 @@ export class ScrollZoomHandler implements Handler {
     /**
      * Determines whether or not the gesture is blocked due to cooperativeGestures.
      */
-    _shouldBePrevented(e: WheelEvent) {
+    _shouldBePrevented(e: WheelEvent): boolean {
         if (!this._map.cooperativeGestures.isEnabled()) {
             return false;
         }
@@ -168,7 +168,7 @@ export class ScrollZoomHandler implements Handler {
         return !isBypassed;
     }
 
-    wheel(e: WheelEvent) {
+    wheel(e: WheelEvent): void {
         if (!this.isEnabled()) return;
         if (this._shouldBePrevented(e)) {
             this._map.cooperativeGestures.notifyGestureBlocked('wheel_zoom', e);
@@ -225,7 +225,7 @@ export class ScrollZoomHandler implements Handler {
         e.preventDefault();
     }
 
-    _onTimeout = (initialEvent: MouseEvent) => {
+    _onTimeout = (initialEvent: MouseEvent): void => {
         this._type = 'wheel';
         this._delta -= this._lastValue;
         if (!this._active) {
@@ -233,7 +233,7 @@ export class ScrollZoomHandler implements Handler {
         }
     };
 
-    _start(e: MouseEvent) {
+    _start(e: MouseEvent): void {
         if (!this._delta) return;
 
         this._needsRerender = false;
@@ -264,7 +264,13 @@ export class ScrollZoomHandler implements Handler {
         }
     }
 
-    renderFrame() {
+    renderFrame(): {
+        noInertia: boolean;
+        needsRenderFrame: boolean;
+        zoomDelta: number;
+        around: Point;
+        originalEvent: WheelEvent;
+    } | void {
         if (!this._needsRerender) return;
         this._needsRerender = false;
 
@@ -364,7 +370,7 @@ export class ScrollZoomHandler implements Handler {
         };
     }
 
-    _smoothOutEasing(duration: number) {
+    _smoothOutEasing(duration: number): (t: number) => number {
         let easing = defaultEasing;
 
         if (this._prevEase) {
@@ -388,7 +394,7 @@ export class ScrollZoomHandler implements Handler {
         return easing;
     }
 
-    reset() {
+    reset(): void {
         this._active = false;
         this._zooming = false;
         delete this._targetZoom;

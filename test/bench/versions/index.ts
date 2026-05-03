@@ -48,7 +48,7 @@ function register(name, bench) {
 }
 
 const style = 'https://tiles.openfreemap.org/styles/liberty';
-const center = [-77.032194, 38.912753];
+const center: [number, number] = [-77.032194, 38.912753];
 const zooms = [4, 8, 11, 13, 15, 17];
 const locations = zooms.map(zoom => ({center, zoom}));
 

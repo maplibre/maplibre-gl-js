@@ -21,7 +21,7 @@ const data: GeoJSON.FeatureCollection = {
 export default class GeoJSONSourceSetData extends Benchmark {
     map: Map;
 
-    async setup() {
+    async setup(): Promise<void> {
         this.map = await createMap({
             width: 512,
             height: 512,
@@ -57,7 +57,7 @@ export default class GeoJSONSourceSetData extends Benchmark {
         });
     }
 
-    async bench() {
+    async bench(): Promise<void> {
         const source = this.map.getSource<GeoJSONSource>('points');
 
         source.setData(data);
@@ -67,7 +67,7 @@ export default class GeoJSONSourceSetData extends Benchmark {
         });
     }
 
-    teardown() {
+    teardown(): void {
         this.map.remove();
     }
 }

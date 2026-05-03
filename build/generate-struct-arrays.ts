@@ -247,7 +247,7 @@ class ${structArrayLayoutClass} extends StructArray {`);
     }
 
     output.push(`
-    _refreshViews() {`);
+    _refreshViews(): void {`);
 
     for (const type of usedTypes) {
         output.push(
@@ -279,13 +279,13 @@ class ${structArrayLayoutClass} extends StructArray {`);
 
     output.push(
         `
-    public emplaceBack(${argNamesTyped.join(', ')}) {
+    public emplaceBack(${argNamesTyped.join(', ')}): number {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, ${argNames.join(', ')});
     }
 
-    public emplace(i: number, ${argNamesTyped.join(', ')}) {`);
+    public emplace(i: number, ${argNamesTyped.join(', ')}): number {`);
 
     for (const size of usedTypeSizes) {
         output.push(
@@ -361,7 +361,7 @@ class ${structTypeClass} extends Struct {
             const componentAccess = `this._structArray.${member.view}[${index}]`;
 
             output.push(
-                `    get ${name}() { return ${componentAccess}; }`);
+                `    get ${name}(): number { return ${componentAccess}; }`);
 
             // generate setters for properties that are updated during runtime symbol placement; others are read-only
             if (name === 'crossTileID' || name === 'placedOrientation' || name === 'hidden') {
@@ -373,7 +373,7 @@ class ${structTypeClass} extends Struct {
         // Special case used for the CollisionBoxArray type
         if (hasAnchorPoint) {
             output.push(
-                '    get anchorPoint() { return new Point(this.anchorPointX, this.anchorPointY); }');
+                '    get anchorPoint(): Point { return new Point(this.anchorPointX, this.anchorPointY); }');
         }
 
         output.push(
@@ -400,7 +400,7 @@ export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
                 const componentOffset = (member.offset / member.size + c).toFixed(0);
                 const componentStride = size / member.size;
                 output.push(
-                    `    ${name}(index: number) { return this.${member.view}[index * ${componentStride} + ${componentOffset}]; }`);
+                    `    ${name}(index: number): number { return this.${member.view}[index * ${componentStride} + ${componentOffset}]; }`);
             }
         }
     } else if (includeStructAccessors) { // get(i)

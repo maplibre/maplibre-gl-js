@@ -185,7 +185,7 @@ export class TaggedString {
         this.imageSectionID = null;
     }
 
-    static fromFeature(text: Formatted, defaultFontStack: string) {
+    static fromFeature(text: Formatted, defaultFontStack: string): TaggedString {
         const result = new TaggedString();
         for (const section of text.sections) {
             if (!section.image) {
@@ -209,7 +209,7 @@ export class TaggedString {
         return this.sectionIndex[index];
     }
 
-    verticalizePunctuation() {
+    verticalizePunctuation(): void {
         this.text = verticalizePunctuation(this.text);
     }
 
@@ -223,7 +223,7 @@ export class TaggedString {
         return this.text.includes('\u200b');
     }
 
-    trim() {
+    trim(): void {
         const leadingWhitespace = this.text.match(/^\s*/);
         const leadingLength = leadingWhitespace ? leadingWhitespace[0].length : 0;
         // Require a preceding non-space character to avoid overlapping leading and trailing matches.
@@ -250,7 +250,7 @@ export class TaggedString {
         return this.text;
     }
 
-    getMaxScale() {
+    getMaxScale(): number {
         return this.sectionIndex.reduce((max, index) => Math.max(max, this.sections[index].scale), 0);
     }
 
@@ -273,7 +273,7 @@ export class TaggedString {
         return {maxImageWidth, maxImageHeight};
     }
 
-    addTextSection(section: FormattedSection, defaultFontStack: string) {
+    addTextSection(section: FormattedSection, defaultFontStack: string): void {
         this.text += section.text;
         this.sections.push({
             scale: section.scale || 1,
@@ -284,7 +284,7 @@ export class TaggedString {
         this.sectionIndex.push(...[...section.text].map(() => index));
     }
 
-    addImageSection(section: FormattedSection) {
+    addImageSection(section: FormattedSection): void {
         const imageName = section.image ? section.image.name : '';
         if (imageName.length === 0) {
             warnOnce('Can\'t add FormattedSection with an empty image.');
@@ -392,7 +392,7 @@ export class TaggedString {
             };
         },
         imagePositions: {[_: string]: ImagePosition},
-        layoutTextSize: number) {
+        layoutTextSize: number): number {
         let totalWidth = 0;
 
         let index = 0;

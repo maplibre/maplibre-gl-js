@@ -16,7 +16,11 @@ import type {TileJSON} from '../../../src/util/util.ts';
 import type {Map} from '../../../src/ui/map.ts';
 import type {IActor} from '../../../src/util/actor.ts';
 import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings.ts';
-import {MessageType} from '../../../src/util/actor_messages.ts';
+import {MessageType, type ActorMessage, type GetImagesParameters, type GetImagesResponse, type GetGlyphsParameters, type GetGlyphsResponse, type GetDashesParameters, type GetDashesResponse} from '../../../src/util/actor_messages.ts';
+
+// Distribute ActorMessage<T> over MessageType so a discriminant check on `.type`
+// properly narrows `.data` to the matching parameter type.
+type AnyActorMessage = {[K in MessageType]: ActorMessage<K>}[MessageType];
 import {MercatorTransform} from '../../../src/geo/projection/mercator_transform.ts';
 
 class StubMap extends Evented {
@@ -59,9 +63,9 @@ export default class TileParser {
     tileJSON: TileJSON;
     sourceID: string;
     layerIndex: StyleLayerIndex;
-    icons: any;
-    glyphs: any;
-    dashes: any;
+    icons: Record<string, GetImagesResponse>;
+    glyphs: Record<string, GetGlyphsResponse>;
+    dashes: Record<string, GetDashesResponse>;
     style: Style;
     actor: IActor;
 
@@ -73,7 +77,7 @@ export default class TileParser {
         this.icons = {};
     }
 
-    async loadImages(params: any) {
+    async loadImages(params: GetImagesParameters): Promise<GetImagesResponse> {
         const key = JSON.stringify(params);
         if (!this.icons[key]) {
             this.icons[key] = await this.style.getImages('', params);
@@ -81,7 +85,7 @@ export default class TileParser {
         return this.icons[key];
     }
 
-    async loadGlyphs(params: any) {
+    async loadGlyphs(params: GetGlyphsParameters): Promise<GetGlyphsResponse> {
         const key = JSON.stringify(params);
         if (!this.glyphs[key]) {
             this.glyphs[key] = await this.style.getGlyphs('', params);
@@ -89,7 +93,7 @@ export default class TileParser {
         return this.glyphs[key];
     }
 
-    async loadDashes(params: any) {
+    async loadDashes(params: GetDashesParameters): Promise<GetDashesResponse> {
         const key = JSON.stringify(params);
         if (!this.dashes[key]) {
             this.dashes[key] = await this.style.getDashes('', params);
@@ -100,7 +104,8 @@ export default class TileParser {
     setup(): Promise<void> {
         const parser = this;
         this.actor = {
-            sendAsync(message) {
+            sendAsync(rawMessage) {
+                const message = rawMessage as AnyActorMessage;
                 if (message.type === MessageType.getImages) {
                     return parser.loadImages(message.data);
                 }
@@ -123,7 +128,10 @@ export default class TileParser {
         });
     }
 
-    fetchTile(tileID: OverscaledTileID) {
+    fetchTile(tileID: OverscaledTileID): Promise<{
+        tileID: OverscaledTileID;
+        buffer: ArrayBuffer;
+    }> {
         return fetch(tileID.canonical.url(this.tileJSON.tiles, devicePixelRatio))
             .then(response => response.arrayBuffer())
             .then(buffer => ({tileID, buffer}));

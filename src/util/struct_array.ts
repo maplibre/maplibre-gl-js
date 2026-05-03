@@ -4,7 +4,15 @@
  * @internal
  * A view type size
  */
-const viewTypes = {
+const viewTypes: {
+    Int8: Int8ArrayConstructor;
+    Uint8: Uint8ArrayConstructor;
+    Int16: Int16ArrayConstructor;
+    Uint16: Uint16ArrayConstructor;
+    Int32: Int32ArrayConstructor;
+    Uint32: Uint32ArrayConstructor;
+    Float32: Float32ArrayConstructor;
+} = {
     'Int8': Int8Array,
     'Uint8': Uint8Array,
     'Int16': Int16Array,
@@ -102,8 +110,8 @@ abstract class StructArray {
     // The following properties are defined on the prototype.
     members: StructArrayMember[];
     bytesPerElement: number;
-    abstract emplaceBack(...v: number[]);
-    abstract emplace(i: number, ...v: number[]);
+    abstract emplaceBack(...v: number[]): number;
+    abstract emplace(i: number, ...v: number[]): number;
 
     constructor() {
         this.isTransferred = false;
@@ -131,8 +139,8 @@ abstract class StructArray {
         };
     }
 
-    static deserialize(input: SerializedStructArray) {
-        const structArray = Object.create(this.prototype);
+    static deserialize<T extends StructArray>(this: {prototype: T} & (new () => T), input: SerializedStructArray): T {
+        const structArray: T = Object.create(this.prototype);
         structArray.arrayBuffer = input.arrayBuffer;
         structArray.length = input.length;
         structArray.capacity = input.arrayBuffer.byteLength / structArray.bytesPerElement;
@@ -143,7 +151,7 @@ abstract class StructArray {
     /**
      * Resize the array to discard unused capacity.
      */
-    _trim() {
+    _trim(): void {
         if (this.length !== this.capacity) {
             this.capacity = this.length;
             this.arrayBuffer = this.arrayBuffer.slice(0, this.length * this.bytesPerElement);
@@ -154,7 +162,7 @@ abstract class StructArray {
     /**
      * Resets the length of the array to 0 without de-allocating capacity.
      */
-    clear() {
+    clear(): void {
         this.length = 0;
     }
 
@@ -164,7 +172,7 @@ abstract class StructArray {
      * If `n` is less than the current length then the array will be reduced to the first `n` elements.
      * @param n - The new size of the array.
      */
-    resize(n: number) {
+    resize(n: number): void {
         this.reserve(n);
         this.length = n;
     }
@@ -174,7 +182,7 @@ abstract class StructArray {
      * be done once, ahead of time.
      * @param n - The expected size of the array.
      */
-    reserve(n: number) {
+    reserve(n: number): void {
         if (n > this.capacity) {
             this.capacity = Math.max(n, Math.floor(this.capacity * RESIZE_MULTIPLIER), DEFAULT_CAPACITY);
             this.arrayBuffer = new ArrayBuffer(this.capacity * this.bytesPerElement);
@@ -188,14 +196,14 @@ abstract class StructArray {
     /**
      * Create TypedArray views for the current ArrayBuffer.
      */
-    _refreshViews() {
+    _refreshViews(): void {
         throw new Error('_refreshViews() must be implemented by each concrete StructArray layout');
     }
 
     /**
      * Replace the buffer with an empty one so typed views release the original ArrayBuffer for GC.
      */
-    freeBufferAfterUpload() {
+    freeBufferAfterUpload(): void {
         this.arrayBuffer = new ArrayBuffer(0);
         this._refreshViews();
     }

@@ -34,7 +34,7 @@ export class WorkerPool {
         return this.workers.slice();
     }
 
-    release(mapId: number | string) {
+    release(mapId: number | string): void {
         delete this.active[mapId];
         if (this.numActive() === 0) {
             for (const w of this.workers) {

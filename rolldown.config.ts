@@ -29,11 +29,13 @@ const dtsBundle: RolldownOptions = {
         format: 'es',
     },
     external: Object.keys(packageJSON.dependencies),
-    plugins: [dts({emitDtsOnly: true, tsgo: true})],
+    plugins: [dts({emitDtsOnly: true, oxc: true})],
 };
 
-export default defineConfig(typesOnly ? [dtsBundle] : [
+const config: RolldownOptions[] = defineConfig(typesOnly ? [dtsBundle] : [
     bundle('src/index.ts', `dist/maplibre-gl${outputPostfix}.mjs`, 'es'),
     bundle('src/source/worker.ts', `dist/maplibre-gl-worker${outputPostfix}.mjs`, 'es'),
     ...(production ? [dtsBundle] : []),
 ]);
+
+export default config;

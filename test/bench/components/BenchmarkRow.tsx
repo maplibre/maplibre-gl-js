@@ -13,7 +13,7 @@ export type BenchmarkRowProps = {
     finishedAll: boolean;
 }
 
-export const BenchmarkRow = (props: BenchmarkRowProps) => {
+export const BenchmarkRow = (props: BenchmarkRowProps): React.JSX.Element => {
     const endedCount = props.versions.filter(version => version.status === 'ended').length;
 
     let main: Version;

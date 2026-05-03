@@ -12,7 +12,7 @@ export class PathInterpolator {
         this.reset(points_, padding_);
     }
 
-    reset(points_?: Point[] | null, padding_?: number | null) {
+    reset(points_?: Point[] | null, padding_?: number | null): void {
         this.points = points_ || [];
 
         // Compute cumulative distance from first point to every other point in the segment.

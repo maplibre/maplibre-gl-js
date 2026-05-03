@@ -98,14 +98,14 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         this.reset();
     }
 
-    reset(e?: E) {
+    reset(e?: E): void {
         this._active = false;
         this._moved = false;
         delete this._lastPoint;
         this._moveStateManager.endMove(e);
     }
 
-    _move(...params: Parameters<DragMoveFunction<T>>) {
+    _move(...params: Parameters<DragMoveFunction<T>>): T | void {
         const move = this._moveFunction(...params);
         if (move.bearingDelta || move.pitchDelta || move.rollDelta || move.around || move.panDelta) {
             this._active = true;
@@ -113,9 +113,9 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         }
     }
 
-    dragStart(e: E, point: Point);
-    dragStart(e: E, point: Point[]);
-    dragStart(e: E, point: Point | Point[]) {
+    dragStart(e: E, point: Point): void;
+    dragStart(e: E, point: Point[]): void;
+    dragStart(e: E, point: Point | Point[]): void {
         if (!this.isEnabled() || this._lastPoint) return;
 
         if (!this._moveStateManager.isValidStartEvent(e)) return;
@@ -126,9 +126,9 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         if (this._activateOnStart && this._lastPoint) this._active = true;
     }
 
-    dragMove(e: E, point: Point);
-    dragMove(e: E, point: Point[]);
-    dragMove(e: E, point: Point | Point[]) {
+    dragMove(e: E, point: Point): T | void;
+    dragMove(e: E, point: Point[]): T | void;
+    dragMove(e: E, point: Point | Point[]): T | void {
         if (!this.isEnabled()) return;
         const lastPoint = this._lastPoint;
         if (!lastPoint) return;
@@ -148,31 +148,31 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         return this._move(lastPoint, movePoint);
     }
 
-    dragEnd(e: E) {
+    dragEnd(e: E): void {
         if (!this.isEnabled() || !this._lastPoint) return;
         if (!this._moveStateManager.isValidEndEvent(e)) return;
         if (this._moved) DOM.suppressClick();
         this.reset(e);
     }
 
-    enable() {
+    enable(): void {
         this._enabled = true;
     }
 
-    disable() {
+    disable(): void {
         this._enabled = false;
         this.reset();
     }
 
-    isEnabled() {
+    isEnabled(): boolean {
         return this._enabled;
     }
 
-    isActive() {
+    isActive(): boolean {
         return this._active;
     }
 
-    getClickTolerance() {
+    getClickTolerance(): number {
         return this._clickTolerance;
     }
 }

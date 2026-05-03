@@ -67,8 +67,10 @@ const viewConfig: RolldownOptions = {
     plugins: [replacePlugin(replaceValues, {preventAssignment: true})],
 };
 
-export default defineConfig([
+const config: RolldownOptions[] = defineConfig([
     ...benchmarkSuiteConfig('versions'),
     ...benchmarkSuiteConfig('styles'),
     viewConfig,
 ]);
+
+export default config;

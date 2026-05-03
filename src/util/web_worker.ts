@@ -12,7 +12,7 @@ export interface WorkerGlobalScopeInterface {
     worker: MaplibreWorker;
 }
 
-export function workerFactory() {
+export function workerFactory(): Worker {
     if (config.WORKER_URL?.endsWith('.mjs')) {
         try {
             return new Worker(config.WORKER_URL, {type: 'module'});

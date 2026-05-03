@@ -19,7 +19,7 @@ import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_laye
 import type {HeatmapBucket} from '../../data/bucket/heatmap_bucket.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
-export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions) {
+export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions): void {
     if (layer.paint.get('heatmap-opacity') === 0) {
         return;
     }

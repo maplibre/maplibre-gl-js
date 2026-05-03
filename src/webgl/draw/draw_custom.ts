@@ -6,7 +6,7 @@ import type {TileManager} from '../../tile/tile_manager.ts';
 import type {CustomLayerProjectionDataParams, CustomRenderMethodInput, CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 
-export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, renderOptions: RenderOptions) {
+export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, renderOptions: RenderOptions): void {
 
     const {isRenderingGlobe} = renderOptions;
     const context = painter.context;

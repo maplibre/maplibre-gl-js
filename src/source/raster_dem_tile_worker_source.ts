@@ -28,7 +28,7 @@ export class RasterDEMTileWorkerSource {
         return dem;
     }
 
-    removeTile(params: TileParameters) {
+    removeTile(params: TileParameters): void {
         const loaded = this.loaded,
             uid = params.uid;
         if (loaded?.[uid]) {

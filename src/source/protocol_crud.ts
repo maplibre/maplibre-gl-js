@@ -1,6 +1,6 @@
 import {type AddProtocolAction, config} from '../util/config.ts';
 
-export function getProtocol(url: string) {
+export function getProtocol(url: string): AddProtocolAction {
     return config.REGISTERED_PROTOCOLS[url.substring(0, url.indexOf('://'))];
 }
 /**
@@ -34,7 +34,7 @@ export function getProtocol(url: string) {
  * @see [PMTiles source and protocol](https://maplibre.org/maplibre-gl-js/docs/examples/pmtiles-source-and-protocol/)
  * @see [Use addProtocol to Transform Feature Properties](https://maplibre.org/maplibre-gl-js/docs/examples/use-addprotocol-to-transform-feature-properties/)
  */
-export function addProtocol(customProtocol: string, loadFn: AddProtocolAction) {
+export function addProtocol(customProtocol: string, loadFn: AddProtocolAction): void {
     config.REGISTERED_PROTOCOLS[customProtocol] = loadFn;
 }
 
@@ -47,6 +47,6 @@ export function addProtocol(customProtocol: string, loadFn: AddProtocolAction) {
  * removeProtocol('custom');
  * ```
  */
-export function removeProtocol(customProtocol: string) {
+export function removeProtocol(customProtocol: string): void {
     delete config.REGISTERED_PROTOCOLS[customProtocol];
 }

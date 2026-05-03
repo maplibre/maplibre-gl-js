@@ -11,7 +11,7 @@ export default class CoveringTilesMercator extends Benchmark {
         this._pitch = pitch;
     }
 
-    bench() {
+    bench(): void {
         const transform = new MercatorTransform();
         transform.setCenter(new LngLat(0, 0));
         transform.setZoom(4);

@@ -12,7 +12,7 @@ export default class CoveringTilesGlobe extends Benchmark {
         this._pitch = pitch;
     }
 
-    bench() {
+    bench(): void {
         const transform = new GlobeTransform();
         transform.setCenter(new LngLat(0, 0));
         transform.setZoom(4);

@@ -1,5 +1,5 @@
 import {vi, expect, onTestFinished} from 'vitest';
-import {Map} from '../../ui/map.ts';
+import {Map, type MapOptions} from '../../ui/map.ts';
 import {NullWebGL2RenderingContext} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
 import {type Dispatcher} from '../../util/dispatcher.ts';
@@ -11,6 +11,7 @@ import {RequestManager} from '../request_manager.ts';
 import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface.ts';
 import {type Style} from '../../style/style.ts';
 import {type Terrain} from '../../render/terrain.ts';
+import type {Framebuffer} from '../../webgl/framebuffer.ts';
 import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
 
@@ -26,24 +27,24 @@ export class StubMap extends Evented {
         this._requestManager = new RequestManager();
     }
 
-    _getMapId() {
+    _getMapId(): number {
         return 1;
     }
 
-    getPixelRatio() {
+    getPixelRatio(): number {
         return 1;
     }
 
-    setTerrain(terrain) { this._terrain = terrain; }
-    getTerrain() { return this._terrain; }
+    setTerrain(terrain: TerrainSpecification): void { this._terrain = terrain; }
+    getTerrain(): TerrainSpecification { return this._terrain; }
 
-    migrateProjection(newTransform: ITransform) {
+    migrateProjection(newTransform: ITransform): void {
         newTransform.apply(this.transform, true);
         this.transform = newTransform;
     }
 }
 
-export function createMap(options?) {
+export function createMap(options?: Partial<MapOptions> & {deleteStyle?: boolean}): Map {
     const container = window.document.createElement('div');
     const defaultOptions = {
         container,
@@ -66,7 +67,14 @@ export function createMap(options?) {
     return new Map(extend(defaultOptions, options));
 }
 
-export function equalWithPrecision(test, expected, actual, multiplier, message, extra) {
+export function equalWithPrecision(
+    test: {equal: (a: number, b: number, message: string, extra?: unknown) => unknown},
+    expected: number,
+    actual: number,
+    multiplier: number,
+    message?: string,
+    extra?: unknown
+): unknown {
     message ||= `should be equal to within ${multiplier}`;
     const expectedRounded = Math.round(expected / multiplier) * multiplier;
     const actualRounded = Math.round(actual / multiplier) * multiplier;
@@ -74,13 +82,13 @@ export function equalWithPrecision(test, expected, actual, multiplier, message, 
     return test.equal(expectedRounded, actualRounded, message, extra);
 }
 
-export function setPerformance() {
+export function setPerformance(): void {
     window.performance.mark = vi.fn();
     window.performance.clearMeasures = vi.fn();
     window.performance.clearMarks = vi.fn();
 }
 
-export function setMatchMedia() {
+export function setMatchMedia(): void {
     // https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
     Object.defineProperty(window, 'matchMedia', {
         writable: true,
@@ -114,7 +122,7 @@ function setNullGLGetContext() {
     } as any;
 }
 
-export function beforeMapTest() {
+export function beforeMapTest(): void {
     setNullGLGetContext();
     setPerformance();
     setMatchMedia();
@@ -124,7 +132,7 @@ export function beforeMapTest() {
     });
 }
 
-export function getWrapDispatcher() {
+export function getWrapDispatcher(): (actor: IActor) => Dispatcher {
     return (actor: IActor) => {
         return {
             getActor() {
@@ -134,7 +142,7 @@ export function getWrapDispatcher() {
     };
 }
 
-export function getMockDispatcher() {
+export function getMockDispatcher(): Dispatcher {
     const wrapDispatcher = getWrapDispatcher();
 
     return wrapDispatcher({
@@ -144,7 +152,7 @@ export function getMockDispatcher() {
     });
 }
 
-export function stubAjaxGetImage(createImageBitmap) {
+export function stubAjaxGetImage(createImageBitmap: typeof global.createImageBitmap): void {
     global.createImageBitmap = createImageBitmap;
 
     global.URL.revokeObjectURL = () => {};
@@ -178,7 +186,7 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
  * @param milliseconds - the amount of time to wait in milliseconds
  * @returns - a promise that resolves after the specified amount of time
  */
-export const sleep = (milliseconds: number = 0) => {
+export const sleep: (milliseconds?: number) => Promise<void> = (milliseconds: number = 0) => {
     return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 };
 
@@ -192,14 +200,14 @@ export function waitForMetadataEvent(source: Evented): Promise<void> {
     });
 }
 
-export function createStyleSource() {
+export function createStyleSource(): SourceSpecification {
     return {
         type: 'geojson',
         data: {
             type: 'FeatureCollection',
             features: []
         }
-    } as SourceSpecification;
+    };
 }
 
 export function createStyle(): StyleSpecification {
@@ -214,7 +222,7 @@ export function createStyle(): StyleSpecification {
     };
 }
 
-export function expectToBeCloseToArray(actual: number[], expected: number[], precision?: number) {
+export function expectToBeCloseToArray(actual: number[], expected: number[], precision?: number): void {
     expect(actual).toHaveLength(expected.length);
     for (let i = 0; i < expected.length; i++) {
         expect(actual[i]).toBeCloseTo(expected[i], precision);
@@ -238,7 +246,7 @@ export function createTerrain(): Terrain {
     } as any as Terrain;
 }
 
-export function createFramebuffer() {
+export function createFramebuffer(): Framebuffer {
     return {
         colorAttachment: {
             get: () => null,
@@ -249,7 +257,7 @@ export function createFramebuffer() {
             set: () => {}
         },
         destroy: () => {}
-    };
+    } as unknown as Framebuffer;
 }
 
 export function waitForEvent(evented: Evented, eventName: string, predicate: (e: any) => boolean): Promise<any> {

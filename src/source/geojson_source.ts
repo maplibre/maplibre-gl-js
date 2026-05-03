@@ -231,11 +231,11 @@ export class GeoJSONSource extends Evented implements Source {
         return effectiveClusterMaxZoom;
     }
 
-    async load() {
+    async load(): Promise<void> {
         await this._updateWorkerData();
     }
 
-    onAdd(map: Map) {
+    onAdd(map: Map): void {
         this.map = map;
         this.load();
     }
@@ -600,7 +600,7 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    async abortTile(tile: Tile) {
+    async abortTile(tile: Tile): Promise<void> {
         if (tile.abortController) {
             tile.abortController.abort();
             delete tile.abortController;
@@ -608,12 +608,12 @@ export class GeoJSONSource extends Evented implements Source {
         tile.aborted = true;
     }
 
-    async unloadTile(tile: Tile) {
+    async unloadTile(tile: Tile): Promise<void> {
         tile.unloadVectorData();
         await this.actor.sendAsync({type: MessageType.removeTile, data: {uid: tile.uid, type: this.type, source: this.id}});
     }
 
-    onRemove() {
+    onRemove(): void {
         this._removed = true;
         this.actor.sendAsync({type: MessageType.removeSource, data: {type: this.type, source: this.id}});
     }

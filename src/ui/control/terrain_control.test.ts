@@ -10,6 +10,7 @@ function createMap() {
             version: 8,
             sources: {
                 terrain: {
+                    type: 'raster-dem',
                     minzoom: 5,
                     maxzoom: 12,
                     attribution: 'MapLibre',
@@ -18,8 +19,10 @@ function createMap() {
                 },
             },
             layers: [],
-            owner: 'maplibre',
-            id: 'demotiles',
+            metadata: {
+                owner: 'maplibre',
+                id: 'demotiles',
+            },
         },
         hash: true
     });

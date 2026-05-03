@@ -26,7 +26,7 @@ class LayerPlacement {
         this._bucketParts = [];
     }
 
-    continuePlacement(tiles: Tile[], placement: Placement, showCollisionBoxes: boolean, styleLayer: StyleLayer, shouldPausePlacement: () => boolean) {
+    continuePlacement(tiles: Tile[], placement: Placement, showCollisionBoxes: boolean, styleLayer: StyleLayer, shouldPausePlacement: () => boolean): boolean {
 
         const bucketParts = this._bucketParts;
 
@@ -83,7 +83,7 @@ export class PauseablePlacement {
         this._done = false;
     }
 
-    isDone() {
+    isDone(): boolean {
         return this._done;
     }
 
@@ -91,7 +91,7 @@ export class PauseablePlacement {
         order: string[],
         layers: {[_: string]: StyleLayer},
         layerTiles: {[_: string]: Tile[]}
-    ) {
+    ): void {
         const startTime = now();
 
         const shouldPausePlacement = () => {
@@ -127,7 +127,7 @@ export class PauseablePlacement {
         this._done = true;
     }
 
-    commit(now: number) {
+    commit(now: number): Placement {
         this.placement.commit(now);
         return this.placement;
     }

@@ -69,7 +69,7 @@ export class ImageManager extends Evented {
         this.dirty = true;
     }
 
-    destroy() {
+    destroy(): void {
         // Destroy atlas texture if it exists
         if (this.atlasTexture) {
             this.atlasTexture.destroy();
@@ -84,11 +84,11 @@ export class ImageManager extends Evented {
         this.atlasImage = new RGBAImage({width: 1, height: 1});
         this.dirty = true;
     }
-    isLoaded() {
+    isLoaded(): boolean {
         return this.loaded;
     }
 
-    setLoaded(loaded: boolean) {
+    setLoaded(loaded: boolean): void {
         if (this.loaded === loaded) {
             return;
         }
@@ -122,14 +122,14 @@ export class ImageManager extends Evented {
         return image;
     }
 
-    addImage(id: string, image: StyleImage) {
+    addImage(id: string, image: StyleImage): void {
         if (this.images[id]) throw new Error(`Image id ${id} already exist, use updateImage instead`);
         if (this._validate(id, image)) {
             this.images[id] = image;
         }
     }
 
-    _validate(id: string, image: StyleImage) {
+    _validate(id: string, image: StyleImage): boolean {
         let valid = true;
         const data = image.data || image.spriteData;
         if (!this._validateStretch(image.stretchX, data?.width)) {
@@ -147,7 +147,7 @@ export class ImageManager extends Evented {
         return valid;
     }
 
-    _validateStretch(stretch: Array<[number, number]>, size: number) {
+    _validateStretch(stretch: Array<[number, number]>, size: number): boolean {
         if (!stretch) return true;
         let last = 0;
         for (const part of stretch) {
@@ -157,7 +157,7 @@ export class ImageManager extends Evented {
         return true;
     }
 
-    _validateContent(content: [number, number, number, number], image: StyleImage) {
+    _validateContent(content: [number, number, number, number], image: StyleImage): boolean {
         if (!content) return true;
         if (content.length !== 4) return false;
         const spriteData = image.spriteData;
@@ -171,7 +171,7 @@ export class ImageManager extends Evented {
         return content[3] >= content[1];
     }
 
-    updateImage(id: string, image: StyleImage, validate = true) {
+    updateImage(id: string, image: StyleImage, validate: boolean = true): void {
         const oldImage = this.getImage(id);
         if (validate && (oldImage.data.width !== image.data.width || oldImage.data.height !== image.data.height)) {
             throw new Error(`size mismatch between old image (${oldImage.data.width}x${oldImage.data.height}) and new image (${image.data.width}x${image.data.height}).`);
@@ -181,7 +181,7 @@ export class ImageManager extends Evented {
         this.updatedImages[id] = true;
     }
 
-    removeImage(id: string) {
+    removeImage(id: string): void {
         const image = this.images[id];
         delete this.images[id];
         delete this.patterns[id];
@@ -252,7 +252,7 @@ export class ImageManager extends Evented {
 
     // Pattern stuff
 
-    getPixelSize() {
+    getPixelSize(): {width: number; height: number} {
         const {width, height} = this.atlasImage;
         return {width, height};
     }
@@ -285,7 +285,7 @@ export class ImageManager extends Evented {
         return this.patterns[id].position;
     }
 
-    bind(context: Context) {
+    bind(context: Context): void {
         const gl = context.gl;
         if (!this.atlasTexture) {
             this.atlasTexture = new Texture(context, this.atlasImage, gl.RGBA);
@@ -297,7 +297,7 @@ export class ImageManager extends Evented {
         this.atlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
     }
 
-    _updatePatternAtlas() {
+    _updatePatternAtlas(): void {
         const bins = [];
         for (const id in this.patterns) {
             bins.push(this.patterns[id].bin);
@@ -328,11 +328,11 @@ export class ImageManager extends Evented {
         this.dirty = true;
     }
 
-    beginFrame() {
+    beginFrame(): void {
         this.callbackDispatchedThisFrame = {};
     }
 
-    dispatchRenderCallbacks(ids: string[]) {
+    dispatchRenderCallbacks(ids: string[]): void {
         for (const id of ids) {
 
             // the callback for the image was already dispatched for a different frame
@@ -349,7 +349,7 @@ export class ImageManager extends Evented {
         }
     }
 
-    cloneImages() {
+    cloneImages(): Record<string, StyleImage> {
         const clonedImages: Record<string, StyleImage> = {};
         for (const id in this.images) {
             const image = this.images[id];

@@ -14,7 +14,7 @@ export class Anchor extends Point {
         }
     }
 
-    clone() {
+    clone(): Anchor {
         return new Anchor(this.x, this.y, this.angle, this.segment);
     }
 }

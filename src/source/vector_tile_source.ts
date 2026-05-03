@@ -111,7 +111,7 @@ export class VectorTileSource extends Evented implements Source {
         this.setEventedParent(eventedParent);
     }
 
-    async load(sourceDataChanged: boolean = false) {
+    async load(sourceDataChanged: boolean = false): Promise<void> {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         this._tileJSONRequest = new AbortController();
@@ -144,16 +144,16 @@ export class VectorTileSource extends Evented implements Source {
         return this._loaded;
     }
 
-    hasTile(tileID: OverscaledTileID) {
+    hasTile(tileID: OverscaledTileID): boolean {
         return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
     }
 
-    onAdd(map: Map) {
+    onAdd(map: Map): void {
         this.map = map;
         this.load();
     }
 
-    setSourceProperty(callback: Function) {
+    setSourceProperty(callback: Function): void {
         if (this._tileJSONRequest) {
             this._tileJSONRequest.abort();
         }
@@ -190,7 +190,7 @@ export class VectorTileSource extends Evented implements Source {
         return this;
     }
 
-    onRemove() {
+    onRemove(): void {
         if (this._tileJSONRequest) {
             this._tileJSONRequest.abort();
             this._tileJSONRequest = null;

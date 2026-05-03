@@ -1,26 +1,26 @@
-import {createLayout} from '../../util/struct_array.ts';
+import {createLayout, type StructArrayLayout} from '../../util/struct_array.ts';
 
-export const symbolLayoutAttributes = createLayout([
+export const symbolLayoutAttributes: StructArrayLayout = createLayout([
     {name: 'a_pos_offset',  components: 4, type: 'Int16'},
     {name: 'a_data',        components: 4, type: 'Uint16'},
     {name: 'a_pixeloffset',        components: 4, type: 'Int16'}
 ], 4);
 
-export const dynamicLayoutAttributes = createLayout([
+export const dynamicLayoutAttributes: StructArrayLayout = createLayout([
     {name: 'a_projected_pos', components: 3, type: 'Float32'}
 ], 4);
 
-export const placementOpacityAttributes = createLayout([
+export const placementOpacityAttributes: StructArrayLayout = createLayout([
     {name: 'a_fade_opacity', components: 1, type: 'Uint32'}
 ], 4);
 
-export const collisionVertexAttributes = createLayout([
+export const collisionVertexAttributes: StructArrayLayout = createLayout([
     {name: 'a_placed', components: 2, type: 'Uint8'},
     {name: 'a_shift', components: 2, type: 'Float32'},
     {name: 'a_box_real', components: 2, type: 'Int16'},
 ]);
 
-export const collisionBox = createLayout([
+export const collisionBox: StructArrayLayout = createLayout([
     // the box is centered around the anchor point
     {type: 'Int16', name: 'anchorPointX'},
     {type: 'Int16', name: 'anchorPointY'},
@@ -39,23 +39,23 @@ export const collisionBox = createLayout([
     {type: 'Uint16', name: 'bucketIndex'},
 ]);
 
-export const collisionBoxLayout = createLayout([ // used to render collision boxes for debugging purposes
+export const collisionBoxLayout: StructArrayLayout = createLayout([ // used to render collision boxes for debugging purposes
     {name: 'a_pos',        components: 2, type: 'Int16'},
     {name: 'a_anchor_pos', components: 2, type: 'Int16'},
     {name: 'a_extrude',    components: 2, type: 'Int16'}
 ], 4);
 
-export const collisionCircleLayout = createLayout([ // used to render collision circles for debugging purposes
+export const collisionCircleLayout: StructArrayLayout = createLayout([ // used to render collision circles for debugging purposes
     {name: 'a_pos',        components: 2, type: 'Float32'},
     {name: 'a_radius',     components: 1, type: 'Float32'},
     {name: 'a_flags',      components: 2, type: 'Int16'}
 ], 4);
 
-export const quadTriangle = createLayout([
+export const quadTriangle: StructArrayLayout = createLayout([
     {name: 'triangle', components: 3, type: 'Uint16'},
 ]);
 
-export const placement = createLayout([
+export const placement: StructArrayLayout = createLayout([
     {type: 'Int16', name: 'anchorX'},
     {type: 'Int16', name: 'anchorY'},
     {type: 'Uint16', name: 'glyphStartIndex'},
@@ -75,7 +75,7 @@ export const placement = createLayout([
     {type: 'Int16', name: 'associatedIconIndex'}
 ]);
 
-export const symbolInstance = createLayout([
+export const symbolInstance: StructArrayLayout = createLayout([
     {type: 'Int16', name: 'anchorX'},
     {type: 'Int16', name: 'anchorY'},
     {type: 'Int16', name: 'rightJustifiedTextSymbolIndex'},
@@ -106,17 +106,17 @@ export const symbolInstance = createLayout([
     {type: 'Uint16', name: 'textAnchorOffsetEndIndex'}
 ]);
 
-export const glyphOffset = createLayout([
+export const glyphOffset: StructArrayLayout = createLayout([
     {type: 'Float32', name: 'offsetX'}
 ]);
 
-export const lineVertex = createLayout([
+export const lineVertex: StructArrayLayout = createLayout([
     {type: 'Int16', name: 'x'},
     {type: 'Int16', name: 'y'},
     {type: 'Int16', name: 'tileUnitDistanceFromAnchor'}
 ]);
 
-export const textAnchorOffset = createLayout([
+export const textAnchorOffset: StructArrayLayout = createLayout([
     {type: 'Uint16', name: 'textAnchor'},
     {type: 'Float32', components: 2, name: 'textOffset'}
 ]);

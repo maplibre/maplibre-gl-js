@@ -145,7 +145,7 @@ export class LineBucket implements Bucket {
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
     }
 
-    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID) {
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void {
         this.hasDependencies = hasPattern('line', this.layers, options) || this.hasLineDasharray(this.layers);
         const lineSortKey = this.layers[0].layout.get('line-sort-key');
         const sortFeaturesByKey = !lineSortKey.isConstant();
@@ -204,7 +204,7 @@ export class LineBucket implements Bucket {
         }
     }
 
-    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}, dashPositions: {[_: string]: DashEntry}) {
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}, dashPositions: {[_: string]: DashEntry}): void {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, {
             imagePositions,
@@ -212,21 +212,21 @@ export class LineBucket implements Bucket {
         });
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions?: {[_: string]: DashEntry}) {
+    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions?: {[_: string]: DashEntry}): void {
         for (const feature of this.patternFeatures) {
             this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, dashPositions, options.subdivisionGranularity);
         }
     }
 
-    isEmpty() {
+    isEmpty(): boolean {
         return this.layoutVertexArray.length === 0;
     }
 
-    uploadPending() {
+    uploadPending(): boolean {
         return !this.uploaded || this.programConfigurations.needsUpload;
     }
 
-    upload(context: Context) {
+    upload(context: Context): void {
         if (!this.uploaded) {
             if (this.layoutVertexArray2.length !== 0) {
                 this.layoutVertexBuffer2 = context.createVertexBuffer(this.layoutVertexArray2, layoutAttributesExt);
@@ -238,7 +238,7 @@ export class LineBucket implements Bucket {
         this.uploaded = true;
     }
 
-    destroy() {
+    destroy(): void {
         if (!this.layoutVertexBuffer) return;
         this.layoutVertexBuffer.destroy();
         this.indexBuffer.destroy();
@@ -254,7 +254,7 @@ export class LineBucket implements Bucket {
         }
     }
 
-    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>, subdivisionGranularity: SubdivisionGranularitySetting) {
+    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>, subdivisionGranularity: SubdivisionGranularitySetting): void {
         const layout = this.layers[0].layout;
         const join = layout.get('line-join').evaluate(feature, {});
         const cap = layout.get('line-cap').evaluate(feature, {});
@@ -269,7 +269,7 @@ export class LineBucket implements Bucket {
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, dashPositions, canonical});
     }
 
-    addLine(vertices: Point[], feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting) {
+    addLine(vertices: Point[], feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting): void {
         this.distance = 0;
         this.scaledDistance = 0;
         this.totalDistance = 0;
@@ -526,7 +526,7 @@ export class LineBucket implements Bucket {
      * @param segment - the segment object to add the vertex to
      * @param round - whether this is a round cap
      */
-    addCurrentVertex(p: Point, normal: Point, endLeft: number, endRight: number, segment: Segment, round: boolean = false) {
+    addCurrentVertex(p: Point, normal: Point, endLeft: number, endRight: number, segment: Segment, round: boolean = false): void {
         // left and right extrude vectors, perpendicularly shifted by endLeft/endRight
         const leftX = normal.x + normal.y * endLeft;
         const leftY = normal.y - normal.x * endLeft;
@@ -547,7 +547,7 @@ export class LineBucket implements Bucket {
         }
     }
 
-    addHalfVertex({x, y}: Point, extrudeX: number, extrudeY: number, round: boolean, up: boolean, dir: number, segment: Segment) {
+    addHalfVertex({x, y}: Point, extrudeX: number, extrudeY: number, round: boolean, up: boolean, dir: number, segment: Segment): void {
         const totalDistance = this.lineClips ? this.scaledDistance * (MAX_LINE_DISTANCE - 1) : this.scaledDistance;
         // scale down so that we can store longer distances while sacrificing precision.
         const linesofarScaled = totalDistance * LINE_DISTANCE_SCALE;
@@ -588,7 +588,7 @@ export class LineBucket implements Bucket {
         }
     }
 
-    updateScaledDistance() {
+    updateScaledDistance(): void {
         // Knowing the ratio of the full linestring covered by this tiled feature, as well
         // as the total distance (in tile units) of this tiled feature, and the distance
         // (in tile units) of the current vertex, we can determine the relative distance
@@ -598,7 +598,7 @@ export class LineBucket implements Bucket {
             this.distance;
     }
 
-    updateDistance(prev: Point, next: Point) {
+    updateDistance(prev: Point, next: Point): void {
         this.distance += prev.dist(next);
         this.updateScaledDistance();
     }

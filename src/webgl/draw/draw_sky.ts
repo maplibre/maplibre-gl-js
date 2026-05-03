@@ -39,7 +39,7 @@ function getMesh(context: Context, sky: Sky): Mesh {
     return sky.mesh;
 }
 
-export function drawSky(painter: Painter, sky: Sky) {
+export function drawSky(painter: Painter, sky: Sky): void {
     const context = painter.context;
     const gl = context.gl;
 
@@ -76,7 +76,7 @@ function getSunPos(light: Light, transform: IReadonlyTransform): vec3 {
     return lightPos;
 }
 
-export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
+export function drawAtmosphere(painter: Painter, sky: Sky, light: Light): void {
     const context = painter.context;
     const gl = context.gl;
     const program = painter.useProgram('atmosphere');

@@ -32,7 +32,7 @@ export function fillLargeMeshArrays(
     triangleIndices: number[],
     segmentsLines?: SegmentVector,
     lineIndexArray?: LineIndexArray,
-    lineList?: number[][]) {
+    lineList?: number[][]): void {
 
     const numVertices = flattened.length / 2;
     const hasLines = segmentsLines && lineIndexArray && lineList;

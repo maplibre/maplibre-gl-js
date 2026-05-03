@@ -511,22 +511,22 @@ export class Marker extends Evented {
       * marker.setSubpixelPositioning(true);
       * ```
       */
-    setSubpixelPositioning(value: boolean) {
+    setSubpixelPositioning(value: boolean): this {
         this._subpixelPositioning = value;
         return this;
     }
 
-    _onClick = (e: MouseEvent) => {
+    _onClick = (e: MouseEvent): void => {
         this.fire(new Event('click', {originalEvent: e}));
     };
 
-    _onKeyPress = (e: KeyboardEvent) => {
+    _onKeyPress = (e: KeyboardEvent): void => {
         if (e.code === 'Space' || e.code === 'Enter') {
             this.togglePopup();
         }
     };
 
-    _onMapClick = (e: MapMouseEvent) => {
+    _onMapClick = (e: MapMouseEvent): void => {
         const targetElement = e.originalEvent.target;
         const element = this._element;
 
@@ -578,7 +578,7 @@ export class Marker extends Evented {
         return this;
     }
 
-    _updateOpacity(force: boolean = false) {
+    _updateOpacity(force: boolean = false): void {
         const terrain = this._map?.terrain;
         const occluded = this._map.transform.isLocationOccluded(this._lngLat);
         if (!terrain || occluded) {
@@ -624,7 +624,7 @@ export class Marker extends Evented {
         this._element.classList.toggle('maplibregl-marker-covered', centerIsInvisible);
     }
 
-    _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }) => {
+    _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }): void => {
         if (!this._map) return;
 
         const isFullyLoaded = this._map.loaded() && !this._map.isMoving();
@@ -697,7 +697,7 @@ export class Marker extends Evented {
      * marker.addClassName('some-class')
      * ```
      */
-    addClassName(className: string) {
+    addClassName(className: string): void {
         this._element.classList.add(className);
     }
 
@@ -712,7 +712,7 @@ export class Marker extends Evented {
      * marker.removeClassName('some-class')
      * ```
      */
-    removeClassName(className: string) {
+    removeClassName(className: string): void {
         this._element.classList.remove(className);
     }
 
@@ -733,7 +733,7 @@ export class Marker extends Evented {
         return this._element.classList.toggle(className);
     }
 
-    _onMove = (e: MapMouseEvent | MapTouchEvent) => {
+    _onMove = (e: MapMouseEvent | MapTouchEvent): void => {
         if (!this._isDragging) {
             const clickTolerance = this._clickTolerance || this._map._clickTolerance;
             this._isDragging = e.point.dist(this._pointerdownPos) >= clickTolerance;
@@ -756,7 +756,7 @@ export class Marker extends Evented {
         this.fire(new Event('drag'));
     };
 
-    _onUp = () => {
+    _onUp = (): void => {
         // revert to normal pointer event handling
         this._element.style.pointerEvents = 'auto';
         this._positionDelta = null;
@@ -773,7 +773,7 @@ export class Marker extends Evented {
         this._state = 'inactive';
     };
 
-    _addDragHandler = (e: MapMouseEvent | MapTouchEvent) => {
+    _addDragHandler = (e: MapMouseEvent | MapTouchEvent): void => {
         if (this._element.contains(e.originalEvent.target as any)) {
             e.preventDefault();
 

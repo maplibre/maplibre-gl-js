@@ -16,7 +16,7 @@ class RTLWorkerPlugin implements RTLTextPlugin {
     pluginURL: string = null;
     loadScriptResolve: () => void = () => {};
 
-    private setState(state: PluginState) {
+    private setState(state: PluginState): void {
         this.pluginStatus = state.pluginStatus;
         this.pluginURL = state.pluginURL;
     }
@@ -28,7 +28,7 @@ class RTLWorkerPlugin implements RTLTextPlugin {
         };
     }
 
-    public setMethods(rtlTextPlugin: RTLTextPlugin) {
+    public setMethods(rtlTextPlugin: RTLTextPlugin): void {
         if (rtlWorkerPlugin.isParsed()) {
             throw new Error('RTL text plugin already registered.');
         }
@@ -44,7 +44,7 @@ class RTLWorkerPlugin implements RTLTextPlugin {
             this.processStyledBidirectionalText != null;
     }
 
-    public getRTLTextPluginStatus() {
+    public getRTLTextPluginStatus(): RTLPluginStatus {
         return this.pluginStatus;
     }
 
@@ -85,4 +85,4 @@ class RTLWorkerPlugin implements RTLTextPlugin {
     }
 }
 
-export const rtlWorkerPlugin = new RTLWorkerPlugin();
+export const rtlWorkerPlugin: RTLWorkerPlugin = new RTLWorkerPlugin();

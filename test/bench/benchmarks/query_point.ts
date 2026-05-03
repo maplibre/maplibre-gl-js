@@ -31,7 +31,7 @@ export default class QueryPoint extends Benchmark {
         this.locations = locations;
     }
 
-    async setup() {
+    async setup(): Promise<void> {
         try {
             this.maps = await Promise.all(this.locations.map(location => {
                 return createMap({
@@ -47,7 +47,7 @@ export default class QueryPoint extends Benchmark {
         }
     }
 
-    bench() {
+    bench(): void {
         for (const map of this.maps) {
             for (const point of points) {
                 map.queryRenderedFeatures(point, {});
@@ -55,7 +55,7 @@ export default class QueryPoint extends Benchmark {
         }
     }
 
-    teardown() {
+    teardown(): void {
         for (const map of this.maps) {
             map.remove();
         }

@@ -54,16 +54,16 @@ export class HandlerInertia {
         this.clear();
     }
 
-    clear() {
+    clear(): void {
         this._inertiaBuffer = [];
     }
 
-    record(settings: any) {
+    record(settings: any): void {
         this._drainInertiaBuffer();
         this._inertiaBuffer.push({time: now(), settings});
     }
 
-    _drainInertiaBuffer() {
+    _drainInertiaBuffer(): void {
         const inertia = this._inertiaBuffer,
             currentTime = now(),
             cutoff = 160;   //msec

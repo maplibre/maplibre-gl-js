@@ -16,7 +16,7 @@ export default class Paint extends Benchmark {
         this.locations = locations;
     }
 
-    async setup() {
+    async setup(): Promise<void> {
         try {
             this.maps = await Promise.all(this.locations.map(location => {
                 return createMap({
@@ -32,7 +32,7 @@ export default class Paint extends Benchmark {
         }
     }
 
-    bench() {
+    bench(): void {
         for (const map of this.maps) {
             map._styleDirty = true;
             map._sourcesDirty = true;
@@ -40,7 +40,7 @@ export default class Paint extends Benchmark {
         }
     }
 
-    teardown() {
+    teardown(): void {
         for (const map of this.maps) {
             map.remove();
         }

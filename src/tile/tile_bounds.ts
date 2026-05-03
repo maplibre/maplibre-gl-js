@@ -20,7 +20,7 @@ export class TileBounds {
         return [Math.max(-180, bounds[0]), Math.max(-90, bounds[1]), Math.min(180, bounds[2]), Math.min(90, bounds[3])];
     }
 
-    contains(tileID: CanonicalTileID) {
+    contains(tileID: CanonicalTileID): boolean {
         const worldSize = Math.pow(2, tileID.z);
         const level = {
             minX: Math.floor(mercatorXfromLng(this.bounds.getWest()) * worldSize),

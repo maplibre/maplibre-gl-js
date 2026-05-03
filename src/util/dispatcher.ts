@@ -50,7 +50,7 @@ export class Dispatcher {
         return this.actors[this.currentActor];
     }
 
-    remove(mapRemoved: boolean = true) {
+    remove(mapRemoved: boolean = true): void {
         for (const actor of this.actors) {
             actor.remove();
         }
@@ -58,13 +58,13 @@ export class Dispatcher {
         if (mapRemoved) this.workerPool.release(this.id);
     }
 
-    public registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>) {
+    public registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): void {
         for (const actor of this.actors) {
             actor.registerMessageHandler(type, handler);
         }
     }
 
-    public unregisterMessageHandler<T extends MessageType>(type: T) {
+    public unregisterMessageHandler<T extends MessageType>(type: T): void {
         for (const actor of this.actors) {
             actor.unregisterMessageHandler(type);
         }

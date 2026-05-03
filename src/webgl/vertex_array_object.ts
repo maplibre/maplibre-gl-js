@@ -38,7 +38,7 @@ export class VertexArrayObject {
         vertexOffset?: number | null,
         dynamicVertexBuffer?: VertexBuffer | null,
         dynamicVertexBuffer2?: VertexBuffer | null,
-        dynamicVertexBuffer3?: VertexBuffer | null) {
+        dynamicVertexBuffer3?: VertexBuffer | null): void {
 
         this.context = context;
 
@@ -92,7 +92,7 @@ export class VertexArrayObject {
         vertexOffset?: number | null,
         dynamicVertexBuffer?: VertexBuffer | null,
         dynamicVertexBuffer2?: VertexBuffer | null,
-        dynamicVertexBuffer3?: VertexBuffer | null) {
+        dynamicVertexBuffer3?: VertexBuffer | null): void {
 
         const numNextAttributes = program.numAttributes;
 
@@ -154,7 +154,7 @@ export class VertexArrayObject {
         context.currentNumAttributes = numNextAttributes;
     }
 
-    destroy() {
+    destroy(): void {
         if (this.vao) {
             this.context.deleteVertexArray(this.vao);
             this.vao = null;

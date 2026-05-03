@@ -5,7 +5,7 @@ import style from '../data/empty.json' with {type: 'json'};
 export default class LineOpacityTranslucent extends Benchmark {
     map: any;
 
-    async setup() {
+    async setup(): Promise<void> {
         const layers = [];
         for (let i = 0; i < 50; i++) {
             layers.push({
@@ -25,6 +25,6 @@ export default class LineOpacityTranslucent extends Benchmark {
         });
     }
 
-    bench() { Benchmark.renderMap(this.map); }
-    teardown() { this.map.remove(); }
+    bench(): void { Benchmark.renderMap(this.map); }
+    teardown(): void { this.map.remove(); }
 }

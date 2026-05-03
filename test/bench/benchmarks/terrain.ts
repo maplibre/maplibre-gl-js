@@ -28,7 +28,7 @@ class TerrainBase implements BenchmarkLike {
         this.projection = projection;
     }
 
-    async setup() {
+    async setup(): Promise<void> {
         const style = buildStyle();
         style.projection = {type: this.projection};
 
@@ -72,7 +72,7 @@ class TerrainBase implements BenchmarkLike {
         }
     }
 
-    teardown() {
+    teardown(): void {
         this.map.remove();
     }
 

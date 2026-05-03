@@ -192,7 +192,7 @@ function shapeText(
     return shaping;
 }
 
-function getAnchorAlignment(anchor: SymbolAnchor) {
+function getAnchorAlignment(anchor: SymbolAnchor): {horizontalAlign: number; verticalAlign: number} {
     let horizontalAlign = 0.5, verticalAlign = 0.5;
 
     switch (anchor) {

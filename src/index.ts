@@ -115,7 +115,7 @@ function getRTLTextPluginStatus(): string {
  * Returns the package version of the library
  * @returns Package version of the library
  */
-function getVersion() { return version; }
+function getVersion(): string { return version; }
 /**
  * Gets the number of web workers instantiated on a page with GL JS maps.
  * By default, workerCount is 1 except for Safari browser where it is set to half the number of CPU cores (capped at 3).
@@ -127,7 +127,7 @@ function getVersion() { return version; }
  * const workerCount = getWorkerCount()
  * ```
  */
-function getWorkerCount() { return WorkerPool.workerCount; }
+function getWorkerCount(): number { return WorkerPool.workerCount; }
 /**
  * Sets the number of web workers instantiated on a page with GL JS maps.
  * By default, workerCount is 1 except for Safari browser where it is set to half the number of CPU cores (capped at 3).
@@ -138,7 +138,7 @@ function getWorkerCount() { return WorkerPool.workerCount; }
  * setWorkerCount(2);
  * ```
  */
-function setWorkerCount(count: number) { WorkerPool.workerCount = count; }
+function setWorkerCount(count: number): void { WorkerPool.workerCount = count; }
 /**
  * Gets and sets the maximum number of images (raster tiles, sprites, icons) to load in parallel,
  * which affects performance in raster-heavy maps. 16 by default.
@@ -149,7 +149,7 @@ function setWorkerCount(count: number) { WorkerPool.workerCount = count; }
  * getMaxParallelImageRequests();
  * ```
  */
-function getMaxParallelImageRequests() { return config.MAX_PARALLEL_IMAGE_REQUESTS; }
+function getMaxParallelImageRequests(): number { return config.MAX_PARALLEL_IMAGE_REQUESTS; }
 /**
  * Sets the maximum number of images (raster tiles, sprites, icons) to load in parallel,
  * which affects performance in raster-heavy maps. 16 by default.
@@ -159,16 +159,16 @@ function getMaxParallelImageRequests() { return config.MAX_PARALLEL_IMAGE_REQUES
  * setMaxParallelImageRequests(10);
  * ```
  */
-function setMaxParallelImageRequests(numRequests: number) { config.MAX_PARALLEL_IMAGE_REQUESTS = numRequests; }
+function setMaxParallelImageRequests(numRequests: number): void { config.MAX_PARALLEL_IMAGE_REQUESTS = numRequests; }
 /**
  * Gets the worker url
  * @returns The worker url
  */
-function getWorkerUrl() { return config.WORKER_URL; }
+function getWorkerUrl(): string { return config.WORKER_URL; }
 /**
  * Sets the worker url
  */
-function setWorkerUrl(value: string) { config.WORKER_URL = value; }
+function setWorkerUrl(value: string): void { config.WORKER_URL = value; }
 /**
  * Allows loading javascript code in the worker thread.
  * *Note* that since this is using some very internal classes and flows it is considered experimental and can break at any point.
@@ -200,7 +200,7 @@ function setWorkerUrl(value: string) { config.WORKER_URL = value; }
  * importScriptInWorkers('add-protocol-worker.js');
  * ```
  */
-function importScriptInWorkers(workerUrl: string) { return getGlobalDispatcher().broadcast(MessageType.importScript, workerUrl); }
+async function importScriptInWorkers(workerUrl: string): Promise<void> { await getGlobalDispatcher().broadcast(MessageType.importScript, workerUrl); }
 
 export {
     Map,

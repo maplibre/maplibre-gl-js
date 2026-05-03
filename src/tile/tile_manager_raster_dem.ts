@@ -4,7 +4,7 @@ import {type InViewTiles} from './tile_manager_in_view_tiles.ts';
 /**
  * For raster terrain source, backfill DEM to eliminate visible tile boundaries
  */
-export function backfillDEM(tile: Tile, inViewTiles: InViewTiles) {
+export function backfillDEM(tile: Tile, inViewTiles: InViewTiles): void {
     const renderables = inViewTiles.getRenderableIds();
     for (const borderId of renderables) {
         if (!tile.neighboringTiles?.[borderId]) {

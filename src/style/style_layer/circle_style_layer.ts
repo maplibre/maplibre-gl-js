@@ -26,7 +26,7 @@ export class CircleStyleLayer extends StyleLayer {
         super(layer, properties, globalState);
     }
 
-    createBucket(parameters: BucketParameters<any>) {
+    createBucket(parameters: BucketParameters<any>): CircleBucket<any> {
         return new CircleBucket(parameters);
     }
 

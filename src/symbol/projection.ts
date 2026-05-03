@@ -102,7 +102,7 @@ export type PointProjection = {
 export function getPitchedLabelPlaneMatrix(
     rotateWithMap: boolean,
     transform: IReadonlyTransform,
-    pixelsToTileUnits: number) {
+    pixelsToTileUnits: number): mat4 {
     const m = mat4.create();
     if (!rotateWithMap) {
         const {vecSouth, vecEast} = getTileSkewVectors(transform);
@@ -129,7 +129,7 @@ export function getGlCoordMatrix(
     pitchWithMap: boolean,
     rotateWithMap: boolean,
     transform: IReadonlyTransform,
-    pixelsToTileUnits: number) {
+    pixelsToTileUnits: number): mat4 {
     if (pitchWithMap) {
         const m = mat4.create();
         if (!rotateWithMap) {
@@ -225,7 +225,7 @@ export function updateLineLabels(bucket: SymbolBucket,
     viewportWidth: number,
     viewportHeight: number,
     translation: [number, number],
-    getElevation: (x: number, y: number) => number) {
+    getElevation: (x: number, y: number) => number): void {
 
     const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
     const partiallyEvaluatedSize = symbolSize.evaluateSizeForZoom(sizeData, painter.transform.zoom);
@@ -739,7 +739,7 @@ export function findOffsetIntersectionPoint(
     offsetPreviousVertex: Point,
     lineOffsetY: number,
     projectionContext: SymbolProjectionContext,
-    syntheticVertexArgs: ProjectionSyntheticVertexArgs) {
+    syntheticVertexArgs: ProjectionSyntheticVertexArgs): Point {
     if (projectionContext.projectionCache.offsets[index]) {
         return projectionContext.projectionCache.offsets[index];
     }
@@ -909,7 +909,7 @@ const hiddenGlyphAttributes = new Float32Array([-Infinity, -Infinity, 0, -Infini
 
 // Hide them by moving them offscreen. We still need to add them to the buffer
 // because the dynamic buffer is paired with a static buffer that doesn't get updated.
-export function hideGlyphs(num: number, dynamicLayoutVertexArray: SymbolDynamicLayoutArray) {
+export function hideGlyphs(num: number, dynamicLayoutVertexArray: SymbolDynamicLayoutArray): void {
     for (let i = 0; i < num; i++) {
         const offset = dynamicLayoutVertexArray.length;
         dynamicLayoutVertexArray.resize(offset + 4);
@@ -921,7 +921,7 @@ export function hideGlyphs(num: number, dynamicLayoutVertexArray: SymbolDynamicL
 
 // For line label layout, we're not using z output and our w input is always 1
 // This custom matrix transformation ignores those components to make projection faster
-export function xyTransformMat4(out: vec4, a: vec4, m: mat4) {
+export function xyTransformMat4(out: vec4, a: vec4, m: mat4): vec4 {
     const x = a[0], y = a[1];
     out[0] = m[0] * x + m[4] * y + m[12];
     out[1] = m[1] * x + m[5] * y + m[13];

@@ -145,5 +145,5 @@ export interface Projection {
      * @internal
      * Sets the error query latidude in degrees
      */
-    setErrorQueryLatitudeDegrees(value: number);
+    setErrorQueryLatitudeDegrees(value: number): void;
 }

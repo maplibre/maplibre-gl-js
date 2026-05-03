@@ -1,12 +1,12 @@
 import {WorkerPool, PRELOAD_POOL_ID} from './worker_pool.ts';
 
-let globalWorkerPool;
+let globalWorkerPool: WorkerPool;
 
 /**
  * Creates (if necessary) and returns the single, global WorkerPool instance
  * to be shared across each Map
  */
-export function getGlobalWorkerPool() {
+export function getGlobalWorkerPool(): WorkerPool {
     globalWorkerPool ||= new WorkerPool();
     return globalWorkerPool;
 }
@@ -33,7 +33,7 @@ export function getGlobalWorkerPool() {
  * prewarm()
  * ```
  */
-export function prewarm() {
+export function prewarm(): void {
     const workerPool = getGlobalWorkerPool();
     workerPool.acquire(PRELOAD_POOL_ID);
 }
@@ -49,7 +49,7 @@ export function prewarm() {
  * clearPrewarmedResources()
  * ```
  */
-export function clearPrewarmedResources() {
+export function clearPrewarmedResources(): void {
     const pool = globalWorkerPool;
     if (pool) {
         // Remove the pool only if all maps that referenced the preloaded global worker pool have been removed.

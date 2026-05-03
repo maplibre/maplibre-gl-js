@@ -8,7 +8,7 @@ type StatisticsPlotProps = {
     versions: Version[];
 }
 
-export const StatisticsPlot = (props:StatisticsPlotProps) => {
+export const StatisticsPlot = (props:StatisticsPlotProps): React.JSX.Element => {
 
     const margin = {top: 0, right: 20, bottom: 20, left: 0};
     const width = 960 - margin.left - margin.right;

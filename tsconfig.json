@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
-    "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "allowImportingTsExtensions": true,
-    "checkJs": true,
     "isolatedModules": false,
+    "isolatedDeclarations": true,
+    "declaration": true,
     "noEmit": true,
     "esModuleInterop": true,
     "importHelpers": false,

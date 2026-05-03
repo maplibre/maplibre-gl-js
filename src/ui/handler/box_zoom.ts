@@ -62,7 +62,7 @@ export class BoxZoomHandler implements Handler {
      *
      * @returns `true` if the "box zoom" interaction is enabled.
      */
-    isEnabled() {
+    isEnabled(): boolean {
         return !!this._enabled;
     }
 
@@ -71,7 +71,7 @@ export class BoxZoomHandler implements Handler {
      *
      * @returns `true` if the "box zoom" interaction is active.
      */
-    isActive() {
+    isActive(): boolean {
         return !!this._active;
     }
 
@@ -83,7 +83,7 @@ export class BoxZoomHandler implements Handler {
      * map.boxZoom.enable();
      * ```
      */
-    enable() {
+    enable(): void {
         if (this.isEnabled()) return;
         this._enabled = true;
     }
@@ -96,12 +96,12 @@ export class BoxZoomHandler implements Handler {
      * map.boxZoom.disable();
      * ```
      */
-    disable() {
+    disable(): void {
         if (!this.isEnabled()) return;
         this._enabled = false;
     }
 
-    mousedown(e: MouseEvent, point: Point) {
+    mousedown(e: MouseEvent, point: Point): void {
         if (!this.isEnabled()) return;
         if (!(e.shiftKey && e.button === 0)) return;
 
@@ -110,7 +110,7 @@ export class BoxZoomHandler implements Handler {
         this._active = true;
     }
 
-    mousemoveWindow(e: MouseEvent, point: Point) {
+    mousemoveWindow(e: MouseEvent, point: Point): void {
         if (!this._active) return;
 
         const pos = point;
@@ -139,7 +139,7 @@ export class BoxZoomHandler implements Handler {
         this._box.style.height = `${maxY - minY}px`;
     }
 
-    mouseupWindow(e: MouseEvent, point: Point) {
+    mouseupWindow(e: MouseEvent, point: Point): {cameraAnimation: (map: Map) => Map} | void {
         if (!this._active) return;
 
         if (e.button !== 0) return;
@@ -165,7 +165,7 @@ export class BoxZoomHandler implements Handler {
         }
     }
 
-    keydown(e: KeyboardEvent) {
+    keydown(e: KeyboardEvent): void {
         if (!this._active) return;
 
         if (e.keyCode === 27) {
@@ -174,7 +174,7 @@ export class BoxZoomHandler implements Handler {
         }
     }
 
-    reset() {
+    reset(): void {
         this._active = false;
 
         this._container.classList.remove('maplibregl-crosshair');
@@ -190,7 +190,7 @@ export class BoxZoomHandler implements Handler {
         delete this._lastPos;
     }
 
-    _fireEvent(type: string, e: any) {
+    _fireEvent(type: string, e: MouseEvent | KeyboardEvent): Map {
         return this._map.fire(new Event(type, {originalEvent: e}));
     }
 }

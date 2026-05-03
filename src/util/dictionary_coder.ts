@@ -12,11 +12,11 @@ export class DictionaryCoder {
         }
     }
 
-    encode(string: string) {
+    encode(string: string): number {
         return this._stringToNumber[string];
     }
 
-    decode(n: number) {
+    decode(n: number): string {
         if (n >= this._numberToString.length) throw new Error(`Out of bounds. Index requested n=${n} can't be >= this._numberToString.length ${this._numberToString.length}`);
         return this._numberToString[n];
     }

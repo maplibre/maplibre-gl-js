@@ -598,9 +598,9 @@ export class Map extends Camera {
     _crossSourceCollisions: boolean;
     _crossFadingFactor = 1;
     _collectResourceTiming: boolean;
-    _renderTaskQueue = new TaskQueue();
+    _renderTaskQueue: TaskQueue = new TaskQueue();
     _controls: IControl[] = [];
-    _mapId = uniqueId();
+    _mapId: number = uniqueId();
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
     _requestManager: RequestManager;
@@ -878,7 +878,7 @@ export class Map extends Camera {
      * to make sure we only fire one event per instantiated map object.
      * @returns the uniq map ID
      */
-    _getMapId() {
+    _getMapId(): number {
         return this._mapId;
     }
 
@@ -889,7 +889,7 @@ export class Map extends Camera {
      * @param propertyName - The name of the state property to set.
      * @param value - The value of the state property to set.
      */
-    setGlobalStateProperty(propertyName: string, value: any) {
+    setGlobalStateProperty(propertyName: string, value: any): this {
         this.style.setGlobalStateProperty(propertyName, value);
         return this._update(true);
     }
@@ -1064,7 +1064,7 @@ export class Map extends Camera {
      *
      * @param constrainTransform - whether to constrain the transform after resizing.
      */
-    _resizeInternal(constrainTransform = true) {
+    _resizeInternal(constrainTransform = true): void {
         const [width, height] = this._containerDimensions();
 
         const clampedPixelRatio = this._getClampedPixelRatio(width, height);
@@ -1084,7 +1084,7 @@ export class Map extends Camera {
         this._resizeTransform(constrainTransform);
     }
 
-    _resizeTransform(constrainTransform = true) {
+    _resizeTransform(constrainTransform = true): void {
         const [width, height] = this._containerDimensions();
 
         this.transform.resize(width, height, constrainTransform);
@@ -1126,7 +1126,7 @@ export class Map extends Camera {
      * Note that the pixel ratio actually applied may be lower to respect maxCanvasSize.
      * @param pixelRatio - The pixel ratio.
      */
-    setPixelRatio(pixelRatio: number) {
+    setPixelRatio(pixelRatio: number): void {
         this._overridePixelRatio = pixelRatio;
         this.resize();
     }
@@ -1605,7 +1605,7 @@ export class Map extends Camera {
         this._delegatedListeners[type].push(delegatedListener);
     }
 
-    _removeDelegatedListener(type: string, layerIds: string[], listener: Listener) {
+    _removeDelegatedListener(type: string, layerIds: string[], listener: Listener): void {
         if (!this._delegatedListeners?.[type]) {
             return;
         }
@@ -2122,7 +2122,7 @@ export class Map extends Camera {
         return this;
     }
 
-    _getUIString(key: keyof typeof defaultLocale) {
+    _getUIString(key: keyof typeof defaultLocale): string {
         const str = this._locale[key];
         if (str == null) {
             throw new Error(`Missing UI string '${key}'`);
@@ -2131,7 +2131,7 @@ export class Map extends Camera {
         return str;
     }
 
-    _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
+    _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions): this {
         this._diffStyleRequest?.abort();
         this._diffStyleRequest = null;
         // transformStyle relies on having previous style serialized, if it is not loaded yet, delay _updateStyle until previous style is loaded
@@ -2171,7 +2171,7 @@ export class Map extends Camera {
         return this;
     }
 
-    _lazyInitEmptyStyle() {
+    _lazyInitEmptyStyle(): void {
         if (!this.style) {
             this.style = new Style(this, {});
             this.style.setEventedParent(this, {style: this.style});
@@ -2179,7 +2179,7 @@ export class Map extends Camera {
         }
     }
 
-    async _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
+    async _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions): Promise<void> {
         this._diffStyleRequest?.abort();
         if (typeof style === 'string') {
             const url = style;
@@ -2207,7 +2207,7 @@ export class Map extends Camera {
         }
     }
 
-    _updateDiff(style: StyleSpecification, options?: StyleSwapOptions & StyleOptions) {
+    _updateDiff(style: StyleSpecification, options?: StyleSwapOptions & StyleOptions): void {
         try {
             if (this.style.setState(style, options)) {
                 this._update(true);
@@ -2526,7 +2526,7 @@ export class Map extends Camera {
      * map.refreshTiles('satellite', [{x:1024, y: 1023, z: 11}, {x:1023, y: 1023, z: 11}]);
      * ```
      */
-    refreshTiles(sourceId: string, tileIds?: Array<{x: number; y: number; z: number}>) {
+    refreshTiles(sourceId: string, tileIds?: Array<{x: number; y: number; z: number}>): void {
         const tileManager = this.style.tileManagers[sourceId];
         if(!tileManager) {
             throw new Error(`There is no tile manager with ID "${sourceId}", cannot refresh tile`);
@@ -2733,7 +2733,7 @@ export class Map extends Camera {
      * if (map.hasImage('cat')) map.removeImage('cat');
      * ```
      */
-    removeImage(id: string) {
+    removeImage(id: string): void {
         this.style.removeImage(id);
     }
 
@@ -2852,7 +2852,7 @@ export class Map extends Camera {
      * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-vector-tile-source/)
      * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-wms-source/)
      */
-    addLayer(layer: AddLayerObject, beforeId?: string) {
+    addLayer(layer: AddLayerObject, beforeId?: string): this {
         this._lazyInitEmptyStyle();
         this.style.addLayer(layer, beforeId);
         return this._update(true);
@@ -2984,7 +2984,7 @@ export class Map extends Camera {
      * ```
      * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-time-slider/)
      */
-    setFilter(layerId: string, filter?: FilterSpecification | null, options: StyleSetterOptions = {}) {
+    setFilter(layerId: string, filter?: FilterSpecification | null, options: StyleSetterOptions = {}): this {
         this.style.setFilter(layerId, filter, options);
         return this._update(true);
     }
@@ -3116,7 +3116,7 @@ export class Map extends Camera {
      * map.removeSprite('default');
      * ```
      */
-    removeSprite(id: string) {
+    removeSprite(id: string): this {
         this._lazyInitEmptyStyle();
         this.style.removeSprite(id);
         return this._update(true);
@@ -3141,7 +3141,7 @@ export class Map extends Camera {
      * map.setSprite('YOUR_SPRITE_URL');
      * ```
      */
-    setSprite(spriteUrl: string | null, options: StyleSetterOptions = {}) {
+    setSprite(spriteUrl: string | null, options: StyleSetterOptions = {}): this {
         this._lazyInitEmptyStyle();
         this.style.setSprite(spriteUrl, options, (err) => {
             if (!err) {
@@ -3162,7 +3162,7 @@ export class Map extends Camera {
      * let layerVisibility = map.getLayoutProperty('my-layer', 'visibility');
      * ```
      */
-    setLight(light: LightSpecification, options: StyleSetterOptions = {}) {
+    setLight(light: LightSpecification, options: StyleSetterOptions = {}): this {
         this._lazyInitEmptyStyle();
         this.style.setLight(light, options);
         return this._update(true);
@@ -3188,7 +3188,7 @@ export class Map extends Camera {
      * map.setSky({'atmosphere-blend': 1.0});
      * ```
      */
-    setSky(sky: SkySpecification, options: StyleSetterOptions = {}) {
+    setSky(sky: SkySpecification, options: StyleSetterOptions = {}): this {
         this._lazyInitEmptyStyle();
         this.style.setSky(sky, options);
         return this._update(true);
@@ -3368,7 +3368,7 @@ export class Map extends Camera {
         return this._canvas;
     }
 
-    _containerDimensions() {
+    _containerDimensions(): number[] {
         let width = 0;
         let height = 0;
 
@@ -3428,7 +3428,7 @@ export class Map extends Camera {
         throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
     }
 
-    _setupContainer() {
+    _setupContainer(): void {
         const container = this._container;
         container.classList.add('maplibregl-map');
 
@@ -3457,7 +3457,7 @@ export class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
-    _resizeCanvas(width: number, height: number, pixelRatio: number) {
+    _resizeCanvas(width: number, height: number, pixelRatio: number): void {
         // Request the required canvas size taking the pixelratio into account.
         this._canvas.width = Math.floor(pixelRatio * width);
         this._canvas.height = Math.floor(pixelRatio * height);
@@ -3467,7 +3467,7 @@ export class Map extends Camera {
         this._canvas.style.height = `${height}px`;
     }
 
-    _setupPainter() {
+    _setupPainter(): void {
 
         // Maplibre WebGL context requires alpha, depth and stencil buffers. It also forces premultipliedAlpha: true.
         // We use the values provided in the map constructor for the rest of context attributes
@@ -3494,7 +3494,7 @@ export class Map extends Camera {
         this.painter = new Painter(gl, this.transform);
     }
 
-    override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper) {
+    override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
         super.migrateProjection(newTransform, newCameraHelper);
         this.painter.transform = newTransform;
         this.fire(new Event('projectiontransition', {
@@ -3502,7 +3502,7 @@ export class Map extends Camera {
         }));
     }
 
-    _contextLost = (event: any) => {
+    _contextLost = (event: WebGLContextEvent): void => {
         event.preventDefault();
         if (this._frameRequest) {
             this._frameRequest.abort();
@@ -3536,7 +3536,7 @@ export class Map extends Camera {
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
 
-    _contextRestored = (event: any) => {
+    _contextRestored = (event: WebGLContextEvent): void => {
         if (this._lostContextStyle.style) {
             this.setStyle(this._lostContextStyle.style, {diff: false});
         }
@@ -3555,7 +3555,7 @@ export class Map extends Camera {
         this.fire(new Event('webglcontextrestored', {originalEvent: event}));
     };
 
-    _onMapScroll = (event: any) => {
+    _onMapScroll = (event: UIEvent): boolean => {
         if (event.target !== this._container) return;
 
         // Revert any scroll which would move the canvas outside of the view
@@ -3584,7 +3584,7 @@ export class Map extends Camera {
      * @param updateStyle - mark the map's style for reprocessing as
      * well as its sources
      */
-    _update(updateStyle?: boolean) {
+    _update(updateStyle?: boolean): this {
         if (!this.style?._loaded) return this;
 
         this._styleDirty ||= updateStyle;
@@ -3606,7 +3606,7 @@ export class Map extends Camera {
         return this._renderTaskQueue.add(callback);
     }
 
-    _cancelRenderFrame(id: TaskID) {
+    _cancelRenderFrame(id: TaskID): void {
         this._renderTaskQueue.remove(id);
     }
 
@@ -3621,7 +3621,7 @@ export class Map extends Camera {
      *
      * @param paintStartTimeStamp - The time when the animation frame began executing.
      */
-    _render(paintStartTimeStamp: number) {
+    _render(paintStartTimeStamp: number): this {
         const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
 
         const isGlobeRendering = this.style.projection?.transitionState > 0;
@@ -3767,7 +3767,7 @@ export class Map extends Camera {
      * longer consumes browser resources. Afterwards, you must not call any other
      * methods on the map.
      */
-    remove() {
+    remove(): void {
         if (this._hash) this._hash.remove();
 
         for (const control of this._controls) control.onRemove(this);
@@ -3814,7 +3814,7 @@ export class Map extends Camera {
      * @see [Add a 3D model](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/)
      * @see [Add an animated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-animated-icon-to-the-map/)
      */
-    triggerRepaint() {
+    triggerRepaint(): void {
         if (this.style && !this._frameRequest) {
             this._frameRequest = new AbortController();
             browser.frame(
@@ -3835,7 +3835,7 @@ export class Map extends Camera {
         }
     }
 
-    _onWindowOnline = () => {
+    _onWindowOnline = (): void => {
         this._update();
     };
 
@@ -3952,7 +3952,7 @@ export class Map extends Camera {
      * @param projection - the projection specification to set
      * @returns
      */
-    setProjection(projection: ProjectionSpecification) {
+    setProjection(projection: ProjectionSpecification): this {
         this._lazyInitEmptyStyle();
         this.style.setProjection(projection);
         return this._update(true);

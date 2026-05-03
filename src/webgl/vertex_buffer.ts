@@ -53,18 +53,18 @@ export class VertexBuffer {
         }
     }
 
-    bind() {
+    bind(): void {
         this.context.bindVertexBuffer.set(this.buffer);
     }
 
-    updateData(array: StructArray) {
+    updateData(array: StructArray): void {
         if (array.length !== this.length) throw new Error(`Length of new data is ${array.length}, which doesn't match current length of ${this.length}`);
         const gl = this.context.gl;
         this.bind();
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, array.arrayBuffer);
     }
 
-    enableAttributes(gl: WebGL2RenderingContext, program: Program<any>) {
+    enableAttributes(gl: WebGL2RenderingContext, program: Program<any>): void {
         for (const member of this.attributes) {
             const attribIndex: number | void = program.attributes[member.name];
             if (attribIndex !== undefined) {
@@ -79,7 +79,7 @@ export class VertexBuffer {
      * @param program - The active WebGL program
      * @param vertexOffset - Index of the starting vertex of the segment
      */
-    setVertexAttribPointers(gl: WebGL2RenderingContext, program: Program<any>, vertexOffset?: number | null) {
+    setVertexAttribPointers(gl: WebGL2RenderingContext, program: Program<any>, vertexOffset?: number | null): void {
         for (const member of this.attributes) {
             const attribIndex: number | void = program.attributes[member.name];
 
@@ -99,7 +99,7 @@ export class VertexBuffer {
     /**
      * Destroy the GL buffer bound to the given WebGL context
      */
-    destroy() {
+    destroy(): void {
         const gl = this.context.gl;
         if (this.buffer) {
             gl.deleteBuffer(this.buffer);

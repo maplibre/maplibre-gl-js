@@ -24,7 +24,7 @@ export class FeaturePositionMap {
         this.indexed = false;
     }
 
-    add(id: unknown, index: number, start: number, end: number) {
+    add(id: unknown, index: number, start: number, end: number): void {
         this.ids.push(getNumericId(id));
         this.positions.push(index, start, end);
     }

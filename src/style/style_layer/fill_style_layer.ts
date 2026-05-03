@@ -24,7 +24,7 @@ export class FillStyleLayer extends StyleLayer {
         super(layer, properties, globalState);
     }
 
-    recalculate(parameters: EvaluationParameters, availableImages: string[]) {
+    recalculate(parameters: EvaluationParameters, availableImages: string[]): void {
         super.recalculate(parameters, availableImages);
 
         const outlineColor = this.paint._values['fill-outline-color'];
@@ -33,7 +33,7 @@ export class FillStyleLayer extends StyleLayer {
         }
     }
 
-    createBucket(parameters: BucketParameters<any>) {
+    createBucket(parameters: BucketParameters<any>): FillBucket {
         return new FillBucket(parameters);
     }
 
@@ -54,7 +54,7 @@ export class FillStyleLayer extends StyleLayer {
         return polygonIntersectsMultiPolygon(translatedPolygon, geometry);
     }
 
-    isTileClipped() {
+    isTileClipped(): boolean {
         return true;
     }
 }

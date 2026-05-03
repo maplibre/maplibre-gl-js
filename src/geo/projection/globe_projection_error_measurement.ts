@@ -115,7 +115,7 @@ export class ProjectionErrorMeasurement {
         gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
     }
 
-    public destroy() {
+    public destroy(): void {
         const gl = this._cachedRenderContext.context.gl;
         this._fullscreenTriangle.destroy();
         this._fbo.destroy();

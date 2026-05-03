@@ -13,7 +13,7 @@ test('initial bounds in constructor options', () => {
     Object.defineProperty(container, 'offsetWidth', {value: 512});
     Object.defineProperty(container, 'offsetHeight', {value: 512});
 
-    const bounds = [[-133, 16], [-68, 50]];
+    const bounds: [[number, number], [number, number]] = [[-133, 16], [-68, 50]];
     const map = createMap({container, bounds});
 
     expect(fixedLngLat(map.getCenter(), 4)).toEqual({lng: -100.5, lat: 34.7171});
@@ -21,7 +21,7 @@ test('initial bounds in constructor options', () => {
 });
 
 test('initial bounds options in constructor options', () => {
-    const bounds = [[-133, 16], [-68, 50]];
+    const bounds: [[number, number], [number, number]] = [[-133, 16], [-68, 50]];
 
     const map = (fitBoundsOptions) => {
         const container = window.document.createElement('div');

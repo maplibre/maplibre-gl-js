@@ -32,7 +32,7 @@ export default class Layout extends Benchmark {
         await Promise.all(this.tiles.map(tile => this.parser.parseTile(tile)));
     }
 
-    async bench() {
+    async bench(): Promise<void> {
         for (const tile of this.tiles) {
             await this.parser.parseTile(tile);
         }

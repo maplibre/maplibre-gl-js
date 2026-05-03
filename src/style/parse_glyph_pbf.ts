@@ -49,4 +49,4 @@ export function parseGlyphPbf(data: ArrayBuffer | Uint8Array): StyleGlyph[] {
     return new Protobuf(data).readFields(readFontstacks, []);
 }
 
-export const GLYPH_PBF_BORDER = border;
+export const GLYPH_PBF_BORDER: 3 = border;

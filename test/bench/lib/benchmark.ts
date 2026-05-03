@@ -133,7 +133,7 @@ class Benchmark implements BenchmarkLike {
      * configurations (e.g. SwiftShader), so we also read a pixel to
      * force the driver to complete all rendering.
      */
-    public static renderMap(map: Map, paintStartTimeStamp?: number) {
+    public static renderMap(map: Map, paintStartTimeStamp?: number): void {
         map._render(paintStartTimeStamp);
         const gl = map.painter.context.gl;
         gl.finish();

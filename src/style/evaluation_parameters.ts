@@ -44,7 +44,7 @@ export class EvaluationParameters implements GlobalProperties {
         }
     }
 
-    crossFadingFactor() {
+    crossFadingFactor(): number {
         if (this.fadeDuration === 0) {
             return 1;
         } else {

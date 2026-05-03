@@ -10,7 +10,7 @@ import {Tile} from './tile.ts';
 import {type DEMData} from '../data/dem_data.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {StubMap} from '../util/test/util.ts';
-import {type Painter} from '../render/painter.ts';
+import {type Painter, type RTTObject} from '../render/painter.ts';
 
 const transform = new MercatorTransform();
 
@@ -230,9 +230,9 @@ describe('TerrainTileManager', () => {
                 [sibling.key]: new Tile(sibling, 256),
             };
 
-            const rttObjects: Record<string, any> = {};
+            const rttObjects: Record<string, RTTObject> = {};
             for (const key in tiles) {
-                rttObjects[key] = {fbo: {}, texture: {}, size: 512, _key: key};
+                rttObjects[key] = {fbo: {}, texture: {}, size: 512, _key: key} as unknown as RTTObject;
                 tiles[key].rttObjects[0] = rttObjects[key];
             }
 

@@ -75,7 +75,7 @@ export class FillBucket implements Bucket {
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
     }
 
-    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID) {
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void {
         this.hasDependencies = hasPattern('fill', this.layers, options);
         const fillSortKey = this.layers[0].layout.get('fill-sort-key');
         const sortFeaturesByKey = !fillSortKey.isConstant();
@@ -128,7 +128,7 @@ export class FillBucket implements Bucket {
 
     update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {
         [_: string]: ImagePosition;
-    }) {
+    }): void {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, {
             imagePositions
@@ -137,20 +137,20 @@ export class FillBucket implements Bucket {
 
     addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {
         [_: string]: ImagePosition;
-    }) {
+    }): void {
         for (const feature of this.patternFeatures) {
             this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
         }
     }
 
-    isEmpty() {
+    isEmpty(): boolean {
         return this.layoutVertexArray.length === 0;
     }
 
     uploadPending(): boolean {
         return !this.uploaded || this.programConfigurations.needsUpload;
     }
-    upload(context: Context) {
+    upload(context: Context): void {
         if (!this.uploaded) {
             this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layoutAttributes);
             this.indexBuffer = context.createIndexBuffer(this.indexArray);
@@ -160,7 +160,7 @@ export class FillBucket implements Bucket {
         this.uploaded = true;
     }
 
-    destroy() {
+    destroy(): void {
         if (!this.layoutVertexBuffer) return;
         this.layoutVertexBuffer.destroy();
         this.indexBuffer.destroy();
@@ -172,7 +172,7 @@ export class FillBucket implements Bucket {
 
     addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {
         [_: string]: ImagePosition;
-    }, subdivisionGranularity: SubdivisionGranularitySetting) {
+    }, subdivisionGranularity: SubdivisionGranularitySetting): void {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             const subdivided = subdividePolygon(polygon, canonical, subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z));
 

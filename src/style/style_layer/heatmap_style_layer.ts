@@ -31,7 +31,7 @@ export class HeatmapStyleLayer extends StyleLayer {
     _transitioningPaint: Transitioning<HeatmapPaintProps>;
     paint: PossiblyEvaluated<HeatmapPaintProps, HeatmapPaintPropsPossiblyEvaluated>;
 
-    createBucket(options: any) {
+    createBucket(options: any): HeatmapBucket {
         return new HeatmapBucket(options);
     }
 
@@ -43,13 +43,13 @@ export class HeatmapStyleLayer extends StyleLayer {
         this._updateColorRamp();
     }
 
-    _handleSpecialPaintPropertyUpdate(name: string) {
+    _handleSpecialPaintPropertyUpdate(name: string): void {
         if (name === 'heatmap-color') {
             this._updateColorRamp();
         }
     }
 
-    _updateColorRamp() {
+    _updateColorRamp(): void {
         const expression = this._transitionablePaint._values['heatmap-color'].value.expression;
         this.colorRamp = renderColorRamp({
             expression,
@@ -59,7 +59,7 @@ export class HeatmapStyleLayer extends StyleLayer {
         this.colorRampTexture = null;
     }
 
-    resize() {
+    resize(): void {
         if (this.heatmapFbos.has(HEATMAP_FULL_RENDER_FBO_KEY)) {
             this.heatmapFbos.delete(HEATMAP_FULL_RENDER_FBO_KEY);
         }
@@ -88,7 +88,7 @@ export class HeatmapStyleLayer extends StyleLayer {
         }, geometry);
     }
 
-    hasOffscreenPass() {
+    hasOffscreenPass(): boolean {
         return this.paint.get('heatmap-opacity') !== 0 && !this.isHidden();
     }
 }

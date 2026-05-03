@@ -13,7 +13,7 @@ import {type Terrain} from '../../render/terrain.ts';
  * @param painter - the painter
  * @param terrain - the terrain
  */
-function drawDepth(painter: Painter, terrain: Terrain) {
+function drawDepth(painter: Painter, terrain: Terrain): void {
     const context = painter.context;
     const gl = context.gl;
     const tr = painter.transform;
@@ -40,7 +40,7 @@ function drawDepth(painter: Painter, terrain: Terrain) {
  * @param painter - the painter
  * @param terrain - the terrain
  */
-function drawCoords(painter: Painter, terrain: Terrain) {
+function drawCoords(painter: Painter, terrain: Terrain): void {
     const context = painter.context;
     const gl = context.gl;
     const tr = painter.transform;
@@ -69,7 +69,7 @@ function drawCoords(painter: Painter, terrain: Terrain) {
     context.viewport.set([0, 0, painter.width, painter.height]);
 }
 
-function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], renderOptions: RenderOptions) {
+function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], renderOptions: RenderOptions): void {
     const {isRenderingGlobe} = renderOptions;
     const context = painter.context;
     const gl = context.gl;

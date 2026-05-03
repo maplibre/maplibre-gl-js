@@ -308,7 +308,7 @@ export class MercatorTransform implements ITransform {
         this._helper.recalculateZoomAndCenter(elevation);
     }
 
-    setLocationAtPoint(lnglat: LngLat, point: Point) {
+    setLocationAtPoint(lnglat: LngLat, point: Point): void {
         const z = mercatorZfromAltitude(this.elevation, this.center.lat);
         const a = this.screenPointToMercatorCoordinateAtZ(point, z);
         const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, z);
@@ -720,7 +720,7 @@ export class MercatorTransform implements ITransform {
         return camMercator.toLngLat();
     }
 
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
+    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
         const coord = MercatorCoordinate.fromLngLat(lngLat);
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, this._viewProjMatrix);

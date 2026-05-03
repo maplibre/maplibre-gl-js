@@ -2,6 +2,7 @@
 import {describe, test, expect, vi} from 'vitest';
 import {SourceFeatureState} from './source_state.ts';
 import {type InViewTiles} from '../tile/tile_manager_in_view_tiles.ts';
+import type {Painter} from '../render/painter.ts';
 
 describe('SourceFeatureState', () => {
     test('coalesceChanges updates revision when changes occur', () => {
@@ -11,7 +12,7 @@ describe('SourceFeatureState', () => {
         const inViewTilesMock = {
             setFeatureState: vi.fn()
         } as unknown as InViewTiles;
-        const painterMock = {};
+        const painterMock = {} as unknown as Painter;
 
         sourceState.coalesceChanges(inViewTilesMock, painterMock);
         expect(sourceState.revision).toBe(0);
