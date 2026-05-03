@@ -208,7 +208,10 @@ export class Tile {
         this.demTexture = null;
     }
 
-    /** Returns the cached RTT object for this stack, or undefined on a cache miss. */
+    /**
+     * @internal
+     * Returns the cached RTT object for this stack, or undefined on a cache miss.
+     */
     getRTT(stack: number): RTTObject | undefined {
         return this.rttObjects[stack];
     }
@@ -223,7 +226,10 @@ export class Tile {
         return this.rttObjects[stack] = painter.acquireRTT(size);
     }
 
-    /** Returns all cached RTT slots to the painter's pool. */
+    /**
+     * @internal
+     * Returns all cached RTT slots to the painter's pool.
+     */
     releaseRTT(painter: Painter) {
         if (this.rttObjects.length === 0) return;
         for (const obj of this.rttObjects) {
