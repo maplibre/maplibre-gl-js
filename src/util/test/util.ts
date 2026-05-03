@@ -1,5 +1,5 @@
 import {vi, expect, onTestFinished} from 'vitest';
-import {Map} from '../../ui/map.ts';
+import {Map, type MapOptions} from '../../ui/map.ts';
 import {NullWebGL2RenderingContext} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
 import {type Dispatcher} from '../../util/dispatcher.ts';
@@ -43,7 +43,7 @@ export class StubMap extends Evented {
     }
 }
 
-export function createMap(options?: any): Map {
+export function createMap(options?: Partial<MapOptions> & {deleteStyle?: boolean}): Map {
     const container = window.document.createElement('div');
     const defaultOptions = {
         container,
