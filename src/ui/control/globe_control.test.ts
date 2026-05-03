@@ -9,8 +9,10 @@ function createMap() {
             version: 8,
             sources: {},
             layers: [],
-            owner: 'maplibre',
-            id: 'basic'
+            metadata: {
+                owner: 'maplibre',
+                id: 'basic',
+            },
         },
         hash: true
     });

@@ -14,8 +14,10 @@ function createMap() {
             version: 8,
             sources: {},
             layers: [],
-            owner: 'maplibre',
-            id: 'demotiles',
+            metadata: {
+                owner: 'maplibre',
+                id: 'demotiles',
+            },
         },
         hash: true
     });
