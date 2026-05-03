@@ -72,6 +72,8 @@ describe('render to texture', () => {
         useProgram: () => ({draw: () => { layersDrawn++; }}),
         _renderTileClippingMasks: vi.fn(),
         renderLayer: vi.fn(),
+        acquireRTT: (size: number) => ({fbo: {framebuffer: null, width: size, height: size}, texture: {}, size}),
+        releaseRTT: vi.fn(),
         drawFunctions: {
             terrainDepth: vi.fn(),
             terrainCoords: vi.fn(),
@@ -121,7 +123,7 @@ describe('render to texture', () => {
     painter.renderToTexture = rtt;
 
     beforeEach(() => {
-        tile.rtt = [];
+        tile.rttObjects.length = 0;
         tile.rttFingerprint = {};
     });
 
@@ -144,28 +146,31 @@ describe('render to texture', () => {
         );
     });
 
-    test('should clear tile cache when overlaid tiles change', () => {
+    test('should clear tile cache when overlaid tiles change and return rtt object to painter pool', () => {
         rtt.prepareForRender(style, 0);
 
+        const obj = {fbo: {} as any, texture: {} as any, size: 512};
         tile.rttFingerprint = {maine: '923#0'};
-        tile.rtt = [{id: 1, stamp: 123}];
+        tile.rttObjects[0] = obj;
 
         const otherTileID = new OverscaledTileID(3, 0, 2, 2, 2);
         (terrain.tileManager.getTerrainCoords as Mock).mockReturnValueOnce({[tile.tileID.key]: otherTileID});
+        (painter.releaseRTT as Mock).mockClear();
 
         rtt.prepareForRender(style, 0);
 
-        expect(tile.rtt.length).toBe(0);
+        expect(tile.getRTT(0)).toBeUndefined();
+        expect(painter.releaseRTT).toHaveBeenCalledWith(obj);
     });
 
     test('should not clear tile cache if state remains same', () => {
         rtt.prepareForRender(style, 0);
         tile.rttFingerprint = {maine: '923#0'};
-        tile.rtt = [{id: 1, stamp: 123}];
+        tile.rttObjects[0] = {fbo: {} as any, texture: {} as any, size: 512};
 
         rtt.prepareForRender(style, 0);
 
-        expect(tile.rtt.length).toBe(1);
+        expect(tile.getRTT(0)).toBeTruthy();
     });
 
     test('should render text after a line by not adding the text to the stack', () => {
@@ -214,14 +219,48 @@ describe('render to texture', () => {
         const state = {revision: 0};
         (style.tileManagers['maine'].getState as Mock).mockReturnValue(state);
 
-        tile.rtt = [{id: 1, stamp: 123}];
+        tile.rttObjects[0] = {fbo: {} as any, texture: {} as any, size: 512};
         tile.rttFingerprint = {maine: '923#0'};
 
         rtt.prepareForRender(style, 0);
-        expect(tile.rtt.length).toBe(1);
+        expect(tile.getRTT(0)).toBeTruthy();
 
         state.revision = 1;
         rtt.prepareForRender(style, 0);
-        expect(tile.rtt.length).toBe(0);
+        expect(tile.getRTT(0)).toBeUndefined();
+    });
+
+    test('cache miss acquires an rtt object from the painter and stores it on the tile', () => {
+        style._order = ['maine-fill', 'maine-symbol'];
+        rtt.prepareForRender(style, 0);
+
+        const acquireSpy = vi.spyOn(painter, 'acquireRTT');
+        acquireSpy.mockClear();
+
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        rtt.renderLayer(fillLayer, renderOptions);
+        rtt.renderLayer(symbolLayer, renderOptions);
+
+        expect(acquireSpy).toHaveBeenCalledWith(rtt.rttSize);
+        expect(tile.getRTT(0)).toBeTruthy();
+        expect(tile.getRTT(0).size).toBe(rtt.rttSize);
+    });
+
+    test('cache hit reuses cached RTT and skips acquireRTT', () => {
+        style._order = ['maine-fill', 'maine-symbol'];
+        rtt.prepareForRender(style, 0);
+
+        const cached = {fbo: {framebuffer: null} as any, texture: {} as any, size: rtt.rttSize};
+        tile.rttObjects[0] = cached;
+
+        const acquireSpy = vi.spyOn(painter, 'acquireRTT');
+        acquireSpy.mockClear();
+
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        rtt.renderLayer(fillLayer, renderOptions);
+        rtt.renderLayer(symbolLayer, renderOptions);
+
+        expect(acquireSpy).not.toHaveBeenCalled();
+        expect(tile.getRTT(0)).toBe(cached);
     });
 });

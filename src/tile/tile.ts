@@ -31,7 +31,7 @@ import type {ExpiryData} from '../util/ajax.ts';
 import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict} from '../source/query_features.ts';
 import type {DashEntry} from '../render/line_atlas.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
-import type {Painter} from '../render/painter.ts';
+import type {Painter, RTTObject} from '../render/painter.ts';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
@@ -117,7 +117,18 @@ export class Tile {
     hasSymbolBuckets: boolean;
     hasRTLText: boolean;
     dependencies: any;
-    rtt: Array<{id: number; stamp: number}>;
+    /**
+     * @internal
+     * Caches the result of rendering this 2D tile into a texture so it can be
+     * draped over 3D terrain. Indexed by stack index, where a stack is a
+     * contiguous run of RTT-eligible layers (fill, line, raster, etc.) split
+     * by non-RTT layers like symbols. So `_rttObjects[0]` holds the texture
+     * for layers below the first symbol break, `_rttObjects[1]` for layers
+     * between the first and second symbol breaks, and so on. Each entry
+     * survives across frames until the tile is unloaded or its source data
+     * changes.
+     */
+    rttObjects: Array<RTTObject | undefined>;
     rttFingerprint: {[sourceId:string]: string};
 
     /**
@@ -135,7 +146,7 @@ export class Tile {
         this.hasSymbolBuckets = false;
         this.hasRTLText = false;
         this.dependencies = {};
-        this.rtt = [];
+        this.rttObjects = [];
         this.rttFingerprint = {};
 
         // Counts the number of times a response was already expired when
@@ -195,6 +206,36 @@ export class Tile {
     clearTextures(painter: Painter): void {
         if (this.demTexture) painter.saveTileTexture(this.demTexture);
         this.demTexture = null;
+    }
+
+    /**
+     * @internal
+     * Returns the cached RTT object for this stack, or undefined on a cache miss.
+     */
+    getRTT(stack: number): RTTObject | undefined {
+        return this.rttObjects[stack];
+    }
+
+    /**
+     * @internal
+     * Allocates a fresh RTT object from the painter's pool and stores it at the
+     * given stack slot. Callers should check {@link getRTT} first; calling this
+     * over an existing slot leaks the previous object.
+     */
+    acquireRTT(painter: Painter, stack: number, size: number): RTTObject {
+        return this.rttObjects[stack] = painter.acquireRTT(size);
+    }
+
+    /**
+     * @internal
+     * Returns all cached RTT slots to the painter's pool.
+     */
+    releaseRTT(painter: Painter) {
+        if (this.rttObjects.length === 0) return;
+        for (const obj of this.rttObjects) {
+            painter.releaseRTT(obj);
+        }
+        this.rttObjects.length = 0;
     }
 
     /**
@@ -301,7 +342,7 @@ export class Tile {
         if (this.glyphAtlasTexture) {
             this.glyphAtlasTexture.destroy();
         }
-        
+
         this.imageAtlas = null;
         this.dashPositions = null;
         this.latestFeatureIndex = null;
