@@ -62,7 +62,7 @@ describe('Max Canvas Size option', () => {
 describe('WebGLContextAttributes options', () => {
     test('Optional values can be set correctly', () => {
         const container = window.document.createElement('div');
-        const canvasContextAttributes = {
+        const canvasContextAttributes: WebGLContextAttributes = {
             antialias: true,
             preserveDrawingBuffer: true,
             powerPreference: 'default',
