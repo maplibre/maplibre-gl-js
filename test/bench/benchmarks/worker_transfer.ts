@@ -38,9 +38,11 @@ export default class WorkerTransfer extends Benchmark {
         await this.parser.setup();
         const tiles = await Promise.all(tileIDs.map(tileID => this.parser.fetchTile(tileID)));
         const tileResults = await Promise.all(tiles.map(tile => this.parser.parseTile(tile)));
-        const payload = tileResults
-            .concat(Object.values(this.parser.icons))
-            .concat(Object.values(this.parser.glyphs)).map((obj) => serialize(obj, []));
+        const payload = [
+            ...tileResults,
+            ...Object.values(this.parser.icons),
+            ...Object.values(this.parser.glyphs),
+        ].map((obj) => serialize(obj, []));
         this.payloadJSON = payload.map(barePayload);
         this.payloadTiles = payload.slice(0, tileResults.length);
     }
