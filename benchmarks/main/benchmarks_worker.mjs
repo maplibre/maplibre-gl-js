@@ -12505,11 +12505,16 @@ var CollisionBoxLayoutArray = class extends StructArrayLayout2i2i2i12 {};
 var CollisionVertexArray = class extends StructArrayLayout2ub2f2i16 {};
 var TriangleIndexArray = class extends StructArrayLayout3ui6 {};
 var LineIndexArray = class extends StructArrayLayout2ui4 {};
-const { members: members$4, size: size$4, alignment: alignment$4 } = createLayout([{
+//#endregion
+//#region src/data/bucket/circle_attributes.ts
+const layout$6 = createLayout([{
 	name: "a_pos",
 	components: 2,
 	type: "Int16"
 }], 4);
+const members$4 = layout$6.members;
+layout$6.size;
+layout$6.alignment;
 //#endregion
 //#region src/data/segment.ts
 /**
@@ -14415,11 +14420,16 @@ var ColorReliefStyleLayer = class extends StyleLayer {
 		return !this.isHidden() && !!this.colorRampTextures;
 	}
 };
-const { members: members$3, size: size$3, alignment: alignment$3 } = createLayout([{
+//#endregion
+//#region src/data/bucket/fill_attributes.ts
+const layout$4 = createLayout([{
 	name: "a_pos",
 	components: 2,
 	type: "Int16"
 }], 4);
+const members$3 = layout$4.members;
+layout$4.size;
+layout$4.alignment;
 //#endregion
 //#region src/data/bucket/pattern_bucket_features.ts
 function hasPattern(type, layers, options) {
@@ -15777,7 +15787,9 @@ const centroidAttributes = createLayout([{
 	components: 2,
 	type: "Int16"
 }], 4);
-const { members: members$2, size: size$2, alignment: alignment$2 } = layout$2;
+const members$2 = layout$2.members;
+layout$2.size;
+layout$2.alignment;
 //#endregion
 //#region node_modules/@mapbox/vector-tile/index.js
 /** @import Pbf from 'pbf' */
@@ -18274,7 +18286,9 @@ var GeoJSONVT = class {
 		return this.tileIndex.getLeaves(clusterId, limit, offset);
 	}
 };
-const { members: members$1, size: size$1, alignment: alignment$1 } = createLayout([{
+//#endregion
+//#region src/data/bucket/line_attributes.ts
+const lineLayoutAttributes = createLayout([{
 	name: "a_pos_normal",
 	components: 2,
 	type: "Int16"
@@ -18283,7 +18297,12 @@ const { members: members$1, size: size$1, alignment: alignment$1 } = createLayou
 	components: 4,
 	type: "Uint8"
 }], 4);
-const { members, size, alignment } = createLayout([{
+const members$1 = lineLayoutAttributes.members;
+lineLayoutAttributes.size;
+lineLayoutAttributes.alignment;
+//#endregion
+//#region src/data/bucket/line_attributes_ext.ts
+const lineLayoutAttributesExt = createLayout([{
 	name: "a_uv_x",
 	components: 1,
 	type: "Float32"
@@ -18292,6 +18311,9 @@ const { members, size, alignment } = createLayout([{
 	components: 1,
 	type: "Float32"
 }]);
+const members = lineLayoutAttributesExt.members;
+lineLayoutAttributesExt.size;
+lineLayoutAttributesExt.alignment;
 //#endregion
 //#region src/data/bucket/line_bucket.ts
 const EXTRUDE_SCALE = 63;

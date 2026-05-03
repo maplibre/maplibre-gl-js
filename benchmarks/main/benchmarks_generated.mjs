@@ -16737,11 +16737,16 @@ var QuadTriangleArray = class extends StructArrayLayout3ui6 {};
 var TriangleIndexArray = class extends StructArrayLayout3ui6 {};
 var LineIndexArray = class extends StructArrayLayout2ui4 {};
 var LineStripIndexArray = class extends StructArrayLayout1ui2 {};
-const { members: members$4, size: size$4, alignment: alignment$4 } = createLayout([{
+//#endregion
+//#region src/data/bucket/circle_attributes.ts
+const layout$6 = createLayout([{
 	name: "a_pos",
 	components: 2,
 	type: "Int16"
 }], 4);
+const members$4 = layout$6.members;
+layout$6.size;
+layout$6.alignment;
 //#endregion
 //#region src/data/segment.ts
 /**
@@ -18742,11 +18747,16 @@ var ColorReliefStyleLayer = class extends StyleLayer {
 		return !this.isHidden() && !!this.colorRampTextures;
 	}
 };
-const { members: members$3, size: size$3, alignment: alignment$3 } = createLayout([{
+//#endregion
+//#region src/data/bucket/fill_attributes.ts
+const layout$4 = createLayout([{
 	name: "a_pos",
 	components: 2,
 	type: "Int16"
 }], 4);
+const members$3 = layout$4.members;
+layout$4.size;
+layout$4.alignment;
 //#endregion
 //#region src/data/bucket/pattern_bucket_features.ts
 function hasPattern(type, layers, options) {
@@ -20105,7 +20115,9 @@ const centroidAttributes = createLayout([{
 	components: 2,
 	type: "Int16"
 }], 4);
-const { members: members$2, size: size$2, alignment: alignment$2 } = layout$2;
+const members$2 = layout$2.members;
+layout$2.size;
+layout$2.alignment;
 //#endregion
 //#region src/data/bucket/fill_extrusion_bucket.ts
 const EARCUT_MAX_RINGS = 500;
@@ -20705,7 +20717,9 @@ var AxisType;
 })(AxisType || (AxisType = {}));
 const GEOJSONVT_CLIP_START = "geojsonvt_clip_start";
 const GEOJSONVT_CLIP_END = "geojsonvt_clip_end";
-const { members: members$1, size: size$1, alignment: alignment$1 } = createLayout([{
+//#endregion
+//#region src/data/bucket/line_attributes.ts
+const lineLayoutAttributes = createLayout([{
 	name: "a_pos_normal",
 	components: 2,
 	type: "Int16"
@@ -20714,7 +20728,12 @@ const { members: members$1, size: size$1, alignment: alignment$1 } = createLayou
 	components: 4,
 	type: "Uint8"
 }], 4);
-const { members, size, alignment } = createLayout([{
+const members$1 = lineLayoutAttributes.members;
+lineLayoutAttributes.size;
+lineLayoutAttributes.alignment;
+//#endregion
+//#region src/data/bucket/line_attributes_ext.ts
+const lineLayoutAttributesExt = createLayout([{
 	name: "a_uv_x",
 	components: 1,
 	type: "Float32"
@@ -20723,6 +20742,9 @@ const { members, size, alignment } = createLayout([{
 	components: 1,
 	type: "Float32"
 }]);
+const members = lineLayoutAttributesExt.members;
+lineLayoutAttributesExt.size;
+lineLayoutAttributesExt.alignment;
 //#endregion
 //#region src/data/bucket/line_bucket.ts
 const EXTRUDE_SCALE = 63;
@@ -23586,7 +23608,9 @@ const browser = {
 		linkEl.href = path;
 		return linkEl.href;
 	},
-	hardwareConcurrency: typeof navigator !== "undefined" && navigator.hardwareConcurrency || 4,
+	get hardwareConcurrency() {
+		return typeof navigator !== "undefined" && navigator.hardwareConcurrency || 4;
+	},
 	get prefersReducedMotion() {
 		if (reducedMotionOverride !== void 0) return reducedMotionOverride;
 		if (!matchMedia) return false;
@@ -24537,7 +24561,7 @@ var LineAtlas = class {
 			const part = ranges[i];
 			const next = ranges[i + 1];
 			if (part.zeroLength) ranges.splice(i, 1);
-			else if (next && next.isDash === part.isDash) {
+			else if (next?.isDash === part.isDash) {
 				next.left = part.left;
 				ranges.splice(i, 1);
 			}
@@ -36827,7 +36851,7 @@ var Mesh = class {
 };
 //#endregion
 //#region src/data/pos_attributes.ts
-var pos_attributes_default = createLayout([{
+const posAttributes = createLayout([{
 	name: "a_pos",
 	type: "Int16",
 	components: 2
@@ -36879,7 +36903,7 @@ var MercatorProjection = class {
 		tileExtentArray.emplaceBack(EXTENT, 0);
 		tileExtentArray.emplaceBack(0, EXTENT);
 		tileExtentArray.emplaceBack(EXTENT, EXTENT);
-		const tileExtentBuffer = context.createVertexBuffer(tileExtentArray, pos_attributes_default.members);
+		const tileExtentBuffer = context.createVertexBuffer(tileExtentArray, posAttributes.members);
 		const tileExtentSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
 		const quadTriangleIndices = new TriangleIndexArray();
 		quadTriangleIndices.emplaceBack(1, 0, 2);
@@ -38875,7 +38899,7 @@ var ProjectionErrorMeasurement = class ProjectionErrorMeasurement {
 		vertexArray.emplaceBack(-1, 2);
 		const indexArray = new TriangleIndexArray();
 		indexArray.emplaceBack(0, 1, 2);
-		this._fullscreenTriangle = new Mesh(context.createVertexBuffer(vertexArray, pos_attributes_default.members), context.createIndexBuffer(indexArray), SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length));
+		this._fullscreenTriangle = new Mesh(context.createVertexBuffer(vertexArray, posAttributes.members), context.createIndexBuffer(indexArray), SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length));
 		this._resultBuffer = new Uint8Array(4);
 		context.activeTexture.set(gl.TEXTURE1);
 		const texture = gl.createTexture();
@@ -38995,7 +39019,7 @@ function createTileMeshWithBuffers(context, options) {
 		arrayBuffer: tileMesh.indices,
 		length: tileMesh.indices.byteLength / 2 / 3
 	});
-	return new Mesh(context.createVertexBuffer(vertices, pos_attributes_default.members), context.createIndexBuffer(indices), SegmentVector.simpleSegment(0, 0, vertices.length, indices.length));
+	return new Mesh(context.createVertexBuffer(vertices, posAttributes.members), context.createIndexBuffer(indices), SegmentVector.simpleSegment(0, 0, vertices.length, indices.length));
 }
 /**
 * Creates a mesh of a quad that covers the entire tile (covering positions in range 0..EXTENT),
@@ -41859,7 +41883,10 @@ var Style = class extends Evented {
 		};
 	}
 	addImage(id, image) {
-		if (this.getImage(id)) return this.fire(new ErrorEvent(/* @__PURE__ */ new Error(`An image named "${id}" already exists.`)));
+		if (this.getImage(id)) {
+			this.fire(new ErrorEvent(/* @__PURE__ */ new Error(`An image named "${id}" already exists.`)));
+			return;
+		}
 		this.imageManager.addImage(id, image);
 		this._afterImageUpdated(id);
 	}
@@ -41870,7 +41897,10 @@ var Style = class extends Evented {
 		return this.imageManager.getImage(id);
 	}
 	removeImage(id) {
-		if (!this.getImage(id)) return this.fire(new ErrorEvent(/* @__PURE__ */ new Error(`An image named "${id}" does not exist.`)));
+		if (!this.getImage(id)) {
+			this.fire(new ErrorEvent(/* @__PURE__ */ new Error(`An image named "${id}" does not exist.`)));
+			return;
+		}
 		this.imageManager.removeImage(id);
 		this._afterImageUpdated(id);
 	}
@@ -42936,7 +42966,8 @@ var TileParser = class {
 	}
 	setup() {
 		const parser = this;
-		this.actor = { sendAsync(message) {
+		this.actor = { sendAsync(rawMessage) {
+			const message = rawMessage;
 			if (message.type === "GI") return parser.loadImages(message.data);
 			if (message.type === "GG") return parser.loadGlyphs(message.data);
 			if (message.type === "GDA") return parser.loadDashes(message.data);
@@ -43110,7 +43141,7 @@ var DOM = class DOM {
 var version$4 = "6.0.0-8";
 //#endregion
 //#region src/data/raster_bounds_attributes.ts
-var raster_bounds_attributes_default = createLayout([{
+const rasterBoundsAttributes = createLayout([{
 	name: "a_pos",
 	type: "Int16",
 	components: 2
@@ -46444,7 +46475,7 @@ function getMesh(context, sky) {
 		const indexArray = new TriangleIndexArray();
 		indexArray.emplaceBack(0, 1, 2);
 		indexArray.emplaceBack(0, 2, 3);
-		sky.mesh = new Mesh(context.createVertexBuffer(vertexArray, pos_attributes_default.members), context.createIndexBuffer(indexArray), SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length));
+		sky.mesh = new Mesh(context.createVertexBuffer(vertexArray, posAttributes.members), context.createIndexBuffer(indexArray), SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length));
 	}
 	return sky.mesh;
 }
@@ -46577,35 +46608,35 @@ var Painter = class Painter {
 		tileExtentArray.emplaceBack(EXTENT, 0);
 		tileExtentArray.emplaceBack(0, EXTENT);
 		tileExtentArray.emplaceBack(EXTENT, EXTENT);
-		this.tileExtentBuffer = context.createVertexBuffer(tileExtentArray, pos_attributes_default.members);
+		this.tileExtentBuffer = context.createVertexBuffer(tileExtentArray, posAttributes.members);
 		this.tileExtentSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
 		const debugArray = new PosArray();
 		debugArray.emplaceBack(0, 0);
 		debugArray.emplaceBack(EXTENT, 0);
 		debugArray.emplaceBack(0, EXTENT);
 		debugArray.emplaceBack(EXTENT, EXTENT);
-		this.debugBuffer = context.createVertexBuffer(debugArray, pos_attributes_default.members);
+		this.debugBuffer = context.createVertexBuffer(debugArray, posAttributes.members);
 		this.debugSegments = SegmentVector.simpleSegment(0, 0, 4, 5);
 		const rasterBoundsArray = new RasterBoundsArray();
 		rasterBoundsArray.emplaceBack(0, 0, 0, 0);
 		rasterBoundsArray.emplaceBack(EXTENT, 0, EXTENT, 0);
 		rasterBoundsArray.emplaceBack(0, EXTENT, 0, EXTENT);
 		rasterBoundsArray.emplaceBack(EXTENT, EXTENT, EXTENT, EXTENT);
-		this.rasterBoundsBuffer = context.createVertexBuffer(rasterBoundsArray, raster_bounds_attributes_default.members);
+		this.rasterBoundsBuffer = context.createVertexBuffer(rasterBoundsArray, rasterBoundsAttributes.members);
 		this.rasterBoundsSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
 		const rasterBoundsArrayPosOnly = new PosArray();
 		rasterBoundsArrayPosOnly.emplaceBack(0, 0);
 		rasterBoundsArrayPosOnly.emplaceBack(EXTENT, 0);
 		rasterBoundsArrayPosOnly.emplaceBack(0, EXTENT);
 		rasterBoundsArrayPosOnly.emplaceBack(EXTENT, EXTENT);
-		this.rasterBoundsBufferPosOnly = context.createVertexBuffer(rasterBoundsArrayPosOnly, pos_attributes_default.members);
+		this.rasterBoundsBufferPosOnly = context.createVertexBuffer(rasterBoundsArrayPosOnly, posAttributes.members);
 		this.rasterBoundsSegmentsPosOnly = SegmentVector.simpleSegment(0, 0, 4, 5);
 		const viewportArray = new PosArray();
 		viewportArray.emplaceBack(0, 0);
 		viewportArray.emplaceBack(1, 0);
 		viewportArray.emplaceBack(0, 1);
 		viewportArray.emplaceBack(1, 1);
-		this.viewportBuffer = context.createVertexBuffer(viewportArray, pos_attributes_default.members);
+		this.viewportBuffer = context.createVertexBuffer(viewportArray, posAttributes.members);
 		this.viewportSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
 		const tileLineStripIndices = new LineStripIndexArray();
 		tileLineStripIndices.emplaceBack(0);
@@ -48046,13 +48077,13 @@ var MouseOrTouchMoveStateManager = class {
 		});
 	}
 	isValidStartEvent(e) {
-		return this._executeRelevantHandler(e, (e) => this.mouseMoveStateManager.isValidStartEvent(e), (e) => this.oneFingerTouchMoveStateManager.isValidStartEvent(e));
+		return !!this._executeRelevantHandler(e, (e) => this.mouseMoveStateManager.isValidStartEvent(e), (e) => this.oneFingerTouchMoveStateManager.isValidStartEvent(e));
 	}
 	isValidMoveEvent(e) {
-		return this._executeRelevantHandler(e, (e) => this.mouseMoveStateManager.isValidMoveEvent(e), (e) => this.oneFingerTouchMoveStateManager.isValidMoveEvent(e));
+		return !!this._executeRelevantHandler(e, (e) => this.mouseMoveStateManager.isValidMoveEvent(e), (e) => this.oneFingerTouchMoveStateManager.isValidMoveEvent(e));
 	}
 	isValidEndEvent(e) {
-		return this._executeRelevantHandler(e, (e) => this.mouseMoveStateManager.isValidEndEvent(e), (e) => this.oneFingerTouchMoveStateManager.isValidEndEvent(e));
+		return !!this._executeRelevantHandler(e, (e) => this.mouseMoveStateManager.isValidEndEvent(e), (e) => this.oneFingerTouchMoveStateManager.isValidEndEvent(e));
 	}
 };
 //#endregion
@@ -51093,7 +51124,7 @@ var TaskQueue = class {
 };
 //#endregion
 //#region src/data/pos3d_attributes.ts
-var pos3d_attributes_default = createLayout([{
+const pos3dAttributes = createLayout([{
 	name: "a_pos3d",
 	type: "Int16",
 	components: 3
@@ -51684,7 +51715,7 @@ var Terrain = class {
 			indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
 		}
 		if (this._terrainSkirtLength !== "none") this._buildSkirts(vertexArray, indexArray, meshSize, delta, northPole, southPole);
-		const mesh = new Mesh(context.createVertexBuffer(vertexArray, pos3d_attributes_default.members), context.createIndexBuffer(indexArray), SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length));
+		const mesh = new Mesh(context.createVertexBuffer(vertexArray, pos3dAttributes.members), context.createIndexBuffer(indexArray), SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length));
 		this._meshCache[key] = mesh;
 		return mesh;
 	}
@@ -54705,7 +54736,11 @@ var WorkerTransfer = class extends Benchmark {
 		await this.parser.setup();
 		const tiles = await Promise.all(tileIDs.map((tileID) => this.parser.fetchTile(tileID)));
 		const tileResults = await Promise.all(tiles.map((tile) => this.parser.parseTile(tile)));
-		const payload = tileResults.concat(Object.values(this.parser.icons)).concat(Object.values(this.parser.glyphs)).map((obj) => serialize(obj, []));
+		const payload = [
+			...tileResults,
+			...Object.values(this.parser.icons),
+			...Object.values(this.parser.glyphs)
+		].map((obj) => serialize(obj, []));
 		this.payloadJSON = payload.map(barePayload);
 		this.payloadTiles = payload.slice(0, tileResults.length);
 	}
@@ -59711,8 +59746,8 @@ function setWorkerUrl(value) {
 * importScriptInWorkers('add-protocol-worker.js');
 * ```
 */
-function importScriptInWorkers(workerUrl) {
-	return getGlobalDispatcher().broadcast("IS", workerUrl);
+async function importScriptInWorkers(workerUrl) {
+	await getGlobalDispatcher().broadcast("IS", workerUrl);
 }
 //#endregion
 //#region test/bench/benchmarks/symbol_collision_box.ts
@@ -60310,7 +60345,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main ac1ca72";
+const version = "main b0494a1";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
