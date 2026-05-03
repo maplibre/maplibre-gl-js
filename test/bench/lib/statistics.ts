@@ -116,7 +116,7 @@ function leastSquaresRegression(data: Array<[number, number]>): RegressionResult
     return {correlation, slope, intercept, data};
 }
 
-export function kde(samples: any, summary: any, ticks: any): Array<[number, number]> {
+export function kde(samples: number[], summary: Summary, ticks: number[]): Array<[number, number]> {
     const kernel = kernelEpanechnikov;
 
     if (samples.length === 0) {

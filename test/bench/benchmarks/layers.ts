@@ -2,6 +2,7 @@
 import Benchmark from '../lib/benchmark.ts';
 import createMap from '../lib/create_map.ts';
 import style from '../data/empty.json' with {type: 'json'};
+import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const width = 1024;
 const height = 768;
@@ -335,8 +336,8 @@ export class LayerSymbolWithSortKey extends LayerBenchmark {
         });
     }
 
-    generateSortKeyLayers(): any[] {
-        const generated = [];
+    generateSortKeyLayers(): SymbolLayerSpecification[] {
+        const generated: SymbolLayerSpecification[] = [];
         for (let i = 0; i < layerCount; i++) {
             generated.push({
                 'id': `symbollayer${i}`,

@@ -18,11 +18,11 @@ const zoom = 4;
 
 export default class PaintStates extends Benchmark {
 
-    center: any;
-    numFeatures: any;
+    center: [number, number];
+    numFeatures: number;
     map: any;
 
-    constructor(center: any) {
+    constructor(center: [number, number]) {
         super();
         this.center = center;
     }
