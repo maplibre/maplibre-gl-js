@@ -123,7 +123,6 @@ export class TerrainTileManager extends Evented {
 
     /**
      * Release the RTT objects for `tileID` (and its ancestors/descendants),
-     * RTT objects return to the painter's pool for recycling.
      */
     releaseRTT(tileID: OverscaledTileID) {
         for (const key in this._tiles) {
@@ -134,8 +133,7 @@ export class TerrainTileManager extends Evented {
     }
 
     /**
-     * Release the A RTT objects for all tiles. RTT objects return to the
-     * painter's pool for recycling.
+     * Release the A RTT objects for all tiles.
      */
     releaseAllRTT() {
         for (const key in this._tiles) {

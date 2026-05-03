@@ -122,8 +122,8 @@ export class Tile {
      * Caches the result of rendering this 2D tile into a texture so it can be
      * draped over 3D terrain. Indexed by stack index, where a stack is a
      * contiguous run of RTT-eligible layers (fill, line, raster, etc.) split
-     * by non-RTT layers like symbols. So `rttObjects[0]` holds the texture
-     * for layers below the first symbol break, `rttObjects[1]` for layers
+     * by non-RTT layers like symbols. So `_rttObjects[0]` holds the texture
+     * for layers below the first symbol break, `_rttObjects[1]` for layers
      * between the first and second symbol breaks, and so on. Each entry
      * survives across frames until the tile is unloaded or its source data
      * changes.
@@ -208,11 +208,21 @@ export class Tile {
         this.demTexture = null;
     }
 
+    /** Returns the cached RTT object for this stack, or undefined on a cache miss. */
+    getRTT(stack: number): RTTObject | undefined {
+        return this.rttObjects[stack];
+    }
+
     /**
-     * Return all cached RTT slots to the painter's pool. If no painter is
-     * available (e.g. tile created in a test without a render context), the
-     * slots are simply dropped — they were never rendered into.
+     * Allocates a fresh RTT object from the painter's pool and stores it at the
+     * given stack slot. Callers should check {@link getRTT} first; calling this
+     * over an existing slot leaks the previous object.
      */
+    acquireRTT(painter: Painter, stack: number, size: number): RTTObject {
+        return this.rttObjects[stack] = painter.acquireRTT(size);
+    }
+
+    /** Returns all cached RTT slots to the painter's pool. */
     releaseRTT(painter: Painter) {
         if (this.rttObjects.length === 0) return;
         for (const obj of this.rttObjects) {

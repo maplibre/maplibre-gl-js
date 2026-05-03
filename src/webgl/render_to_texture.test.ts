@@ -159,7 +159,7 @@ describe('render to texture', () => {
 
         rtt.prepareForRender(style, 0);
 
-        expect(tile.rttObjects.length).toBe(0);
+        expect(tile.getRTT(0)).toBeUndefined();
         expect(painter.releaseRTT).toHaveBeenCalledWith(obj);
     });
 
@@ -170,7 +170,7 @@ describe('render to texture', () => {
 
         rtt.prepareForRender(style, 0);
 
-        expect(tile.rttObjects.length).toBe(1);
+        expect(tile.getRTT(0)).toBeTruthy();
     });
 
     test('should render text after a line by not adding the text to the stack', () => {
@@ -223,11 +223,11 @@ describe('render to texture', () => {
         tile.rttFingerprint = {maine: '923#0'};
 
         rtt.prepareForRender(style, 0);
-        expect(tile.rttObjects.length).toBe(1);
+        expect(tile.getRTT(0)).toBeTruthy();
 
         state.revision = 1;
         rtt.prepareForRender(style, 0);
-        expect(tile.rttObjects.length).toBe(0);
+        expect(tile.getRTT(0)).toBeUndefined();
     });
 
     test('cache miss acquires an rtt object from the painter and stores it on the tile', () => {
@@ -242,11 +242,11 @@ describe('render to texture', () => {
         rtt.renderLayer(symbolLayer, renderOptions);
 
         expect(acquireSpy).toHaveBeenCalledWith(rtt.rttSize);
-        expect(tile.rttObjects[0]).toBeTruthy();
-        expect(tile.rttObjects[0].size).toBe(rtt.rttSize);
+        expect(tile.getRTT(0)).toBeTruthy();
+        expect(tile.getRTT(0).size).toBe(rtt.rttSize);
     });
 
-    test('cache hit reuses tile.rttObjects[stack] and skips acquireRTT', () => {
+    test('cache hit reuses cached RTT and skips acquireRTT', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
 
@@ -261,6 +261,6 @@ describe('render to texture', () => {
         rtt.renderLayer(symbolLayer, renderOptions);
 
         expect(acquireSpy).not.toHaveBeenCalled();
-        expect(tile.rttObjects[0]).toBe(cached);
+        expect(tile.getRTT(0)).toBe(cached);
     });
 });

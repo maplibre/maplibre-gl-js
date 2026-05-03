@@ -251,7 +251,7 @@ describe('TerrainTileManager', () => {
             expect((painter.releaseRTT as Mock<typeof painter.releaseRTT>).mock.calls.length).toBe(Object.keys(tiles).length);
             for (const key in rttObjects) {
                 expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[key]);
-                expect(tiles[key].rttObjects.length).toBe(0);
+                expect(tiles[key].getRTT(0)).toBeUndefined();
             }
         });
 
@@ -260,10 +260,10 @@ describe('TerrainTileManager', () => {
 
             tsc.releaseRTT(same);
 
-            expect(tiles[parent.key].rttObjects.length).toBe(0);
-            expect(tiles[same.key].rttObjects.length).toBe(0);
-            expect(tiles[child.key].rttObjects.length).toBe(0);
-            expect(tiles[sibling.key].rttObjects.length).toBe(1);
+            expect(tiles[parent.key].getRTT(0)).toBeUndefined();
+            expect(tiles[same.key].getRTT(0)).toBeUndefined();
+            expect(tiles[child.key].getRTT(0)).toBeUndefined();
+            expect(tiles[sibling.key].getRTT(0)).toBeTruthy();
 
             expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[parent.key]);
             expect(painter.releaseRTT).toHaveBeenCalledWith(rttObjects[same.key]);

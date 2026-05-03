@@ -74,7 +74,7 @@ export class RenderToTexture {
     }
 
     getTexture(tile: Tile): Texture {
-        return tile.rttObjects[this._stacks.length - 1].texture;
+        return tile.getRTT(this._stacks.length - 1).texture;
     }
 
     prepareForRender(style: Style, zoom: number) {
@@ -162,9 +162,8 @@ export class RenderToTexture {
             for (const tile of this._renderableTiles) {
                 this._rttTiles.push(tile);
                 // Cache hit: this tile already has a RTT object for this stack from a previous frame.
-                if (tile.rttObjects[stack]) continue;
-                const obj = painter.acquireRTT(this.rttSize);
-                tile.rttObjects[stack] = obj;
+                if (tile.getRTT(stack)) continue;
+                const obj = tile.acquireRTT(painter, stack, this.rttSize);
                 painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
                 painter.context.clear({color: Color.transparent, stencil: 0});
                 painter.currentStencilSource = undefined;
