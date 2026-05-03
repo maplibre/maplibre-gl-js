@@ -11,6 +11,7 @@ import {RequestManager} from '../request_manager.ts';
 import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface.ts';
 import {type Style} from '../../style/style.ts';
 import {type Terrain} from '../../render/terrain.ts';
+import type {Framebuffer} from '../../webgl/framebuffer.ts';
 import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
 
@@ -245,17 +246,7 @@ export function createTerrain(): Terrain {
     } as any as Terrain;
 }
 
-export function createFramebuffer(): {
-    colorAttachment: {
-        get: () => any;
-        set: () => void;
-    };
-    depthAttachment: {
-        get: () => any;
-        set: () => void;
-    };
-    destroy: () => void;
-} {
+export function createFramebuffer(): Framebuffer {
     return {
         colorAttachment: {
             get: () => null,
@@ -266,7 +257,7 @@ export function createFramebuffer(): {
             set: () => {}
         },
         destroy: () => {}
-    };
+    } as unknown as Framebuffer;
 }
 
 export function waitForEvent(evented: Evented, eventName: string, predicate: (e: any) => boolean): Promise<any> {
