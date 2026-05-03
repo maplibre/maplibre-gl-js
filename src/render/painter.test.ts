@@ -1,4 +1,4 @@
-import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {Painter} from './painter';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {Style} from '../style/style';
@@ -84,14 +84,19 @@ describe('tile texture pool', () => {
 });
 
 describe('RTT pool', () => {
-    function createPainter() {
+    let painter: Painter;
+
+    beforeEach(() => {
         const gl = createNullGL();
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
-        return new Painter(gl, transform);
-    }
+        painter = new Painter(gl, transform);
+    });
+
+    afterEach(() => {
+        painter.destroy();
+    });
 
     test('acquireRTT creates on miss, recycles on hit', () => {
-        const painter = createPainter();
         const a = painter.acquireRTT(256);
         expect(a.size).toBe(256);
         expect(a.fbo).toBeTruthy();
@@ -99,11 +104,9 @@ describe('RTT pool', () => {
 
         painter.releaseRTT(a);
         expect(painter.acquireRTT(256)).toBe(a);
-        painter.destroy();
     });
 
     test('acquireRTT resizes pooled objects when sizes differ', () => {
-        const painter = createPainter();
         const a = painter.acquireRTT(256);
         const fbo = a.fbo;
         const texture = a.texture;
@@ -117,12 +120,9 @@ describe('RTT pool', () => {
         expect(b.fbo.height).toBe(512);
         expect(b.texture).toBe(texture);
         expect(b.texture.size).toEqual([512, 512]);
-        painter.destroy();
     });
 
     test('painter.destroy cleans up pooled RTT slots', () => {
-        const painter = createPainter();
-
         const objs = [];
         for (let i = 0; i < 10; i++) {
             const obj = painter.acquireRTT(128);
