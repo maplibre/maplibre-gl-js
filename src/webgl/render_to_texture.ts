@@ -5,7 +5,6 @@ import {type OverscaledTileID} from '../tile/tile_id.ts';
 import {drawTerrain} from './draw/draw_terrain.ts';
 import {type Style} from '../style/style.ts';
 import {type Terrain} from '../render/terrain.ts';
-import {RenderPool} from './render_pool.ts';
 import {type Texture} from './texture.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import {ImageSource} from '../source/image_source.ts';
@@ -24,12 +23,16 @@ const LAYERS_TO_TEXTURES: { [keyof in StyleLayer['type']]?: boolean } = {
 
 /**
  * @internal
- * A helper class to help define what should be rendered to texture and how
+ * Renders RTT-eligible layers into per-tile cached textures, then drapes
+ * them onto the terrain mesh. Slots live on each Tile so their lifetime
+ * tracks the tile itself; the underlying FBO+texture handles are recycled
+ * via the painter's RTT pool.
  */
 export class RenderToTexture {
     painter: Painter;
     terrain: Terrain;
-    pool: RenderPool;
+    /** RTT texture dimension in pixels (tile size × terrain quality factor). */
+    rttSize: number;
     /**
      * coordsAscending contains a list of all tiles which should be rendered for one render-to-texture tile
      * e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
@@ -67,15 +70,11 @@ export class RenderToTexture {
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
-        this.pool = new RenderPool(painter.context, 30, terrain.tileManager.tileSize * terrain.qualityFactor);
-    }
-
-    destruct() {
-        this.pool.destruct();
+        this.rttSize = terrain.tileManager.tileSize * terrain.qualityFactor;
     }
 
     getTexture(tile: Tile): Texture {
-        return this.pool.getObjectForId(tile.rtt[this._stacks.length - 1].id).texture;
+        return tile.getRTT(this._stacks.length - 1).texture;
     }
 
     prepareForRender(style: Style, zoom: number) {
@@ -118,10 +117,10 @@ export class RenderToTexture {
         // check tiles to render
         for (const tile of this._renderableTiles) {
             for (const source in this._rttFingerprints) {
-                // rerender if there are different coords to render than in the last rendering
-                // or if the source revision has changed
                 const fingerprint = this._rttFingerprints[source][tile.tileID.key];
-                if (fingerprint && fingerprint !== tile.rttFingerprint[source]) tile.rtt = [];
+                if (fingerprint && fingerprint !== tile.rttFingerprint[source]) {
+                    tile.releaseRTT(this.painter);
+                }
             }
         }
     }
@@ -161,27 +160,10 @@ export class RenderToTexture {
             this._prevType = type;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
             for (const tile of this._renderableTiles) {
-                // if render pool is full draw current tiles to screen and free pool
-                if (this.pool.isFull()) {
-                    drawTerrain(this.painter, this.terrain, this._rttTiles, options);
-                    this._rttTiles = [];
-                    this.pool.freeAllObjects();
-                }
                 this._rttTiles.push(tile);
-                // check for cached PoolObject
-                if (tile.rtt[stack]) {
-                    const obj = this.pool.getObjectForId(tile.rtt[stack].id);
-                    if (obj.stamp === tile.rtt[stack].stamp) {
-                        this.pool.useObject(obj);
-                        continue;
-                    }
-                }
-                // get free PoolObject
-                const obj = this.pool.getOrCreateFreeObject();
-                this.pool.useObject(obj);
-                this.pool.stampObject(obj);
-                tile.rtt[stack] = {id: obj.id, stamp: obj.stamp};
-                // prepare PoolObject for rendering
+                // Cache hit: this tile already has a RTT object for this stack from a previous frame.
+                if (tile.getRTT(stack)) continue;
+                const obj = tile.acquireRTT(painter, stack, this.rttSize);
                 painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
                 painter.context.clear({color: Color.transparent, stencil: 0});
                 painter.currentStencilSource = undefined;
@@ -196,7 +178,6 @@ export class RenderToTexture {
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles, options);
             this._rttTiles = [];
-            this.pool.freeAllObjects();
 
             return LAYERS_TO_TEXTURES[type];
         }

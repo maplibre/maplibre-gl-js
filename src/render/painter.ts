@@ -36,6 +36,7 @@ import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../webgl/types.
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
+import type {Framebuffer} from '../webgl/framebuffer.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
@@ -68,6 +69,18 @@ export type RenderOptions = {
 };
 
 /**
+ * Holds the GPU resources used to render a 2D tile into a texture so it can
+ * be draped over 3D terrain: an FBO with a color texture and depth-stencil
+ * renderbuffer attached. Owned by a `Tile` while in use, recycled via
+ * `Painter.releaseRTT` when the tile no longer needs it.
+ */
+export type RTTObject = {
+    fbo: Framebuffer;
+    texture: Texture;
+    size: number;
+};
+
+/**
  * @internal
  * Initialize a new painter object.
  */
@@ -80,6 +93,10 @@ export class Painter {
     _tileTextures: {
         [_: number]: Texture[];
     };
+    /**
+     * A pool of recyclable {@link RTTObject}s
+     */
+    _rttObjectRecyclePool: RTTObject[];
     numSublayers: number;
     depthEpsilon: number;
     emptyProgramConfiguration: ProgramConfiguration;
@@ -130,6 +147,7 @@ export class Painter {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
+        this._rttObjectRecyclePool = [];
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
@@ -704,6 +722,38 @@ export class Painter {
         return textures && textures.length > 0 ? textures.pop() : null;
     }
 
+    acquireRTT(size: number): RTTObject {
+        const gl = this.context.gl;
+        const obj = this._rttObjectRecyclePool.pop();
+        if (obj) {
+            if (obj.size !== size) {
+                gl.bindTexture(gl.TEXTURE_2D, obj.texture.texture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                obj.texture.size = [size, size];
+                this.context.bindRenderbuffer.set(obj.fbo.depthAttachment.get());
+                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, size, size);
+                this.context.bindRenderbuffer.set(null);
+                obj.fbo.width = size;
+                obj.fbo.height = size;
+                obj.size = size;
+            }
+            return obj;
+        }
+        const fbo = this.context.createFramebuffer(size, size, true, true);
+        const texture = new Texture(this.context, {width: size, height: size, data: null}, gl.RGBA);
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+        if (this.context.extTextureFilterAnisotropic) {
+            gl.texParameterf(gl.TEXTURE_2D, this.context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.context.extTextureFilterAnisotropicMax);
+        }
+        fbo.depthAttachment.set(this.context.createRenderbuffer(gl.DEPTH_STENCIL, size, size));
+        fbo.colorAttachment.set(texture.texture);
+        return {fbo, texture, size};
+    }
+
+    releaseRTT(obj: RTTObject) {
+        this._rttObjectRecyclePool.push(obj);
+    }
+
     /**
      * Checks whether a pattern image is needed, and if it is, whether it is not loaded.
      *
@@ -808,6 +858,12 @@ export class Painter {
             }
             this._tileTextures = {};
         }
+
+        for (const obj of this._rttObjectRecyclePool) {
+            obj.texture.destroy();
+            obj.fbo.destroy();
+        }
+        this._rttObjectRecyclePool = [];
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
         if (this.debugBuffer) this.debugBuffer.destroy();
