@@ -49,6 +49,7 @@ type TestData = {
     queryOptions: any;
     error?: Error;
     maxPitch: number;
+    maxZoom: number;
     continuesRepaint: boolean;
     // Crop PNG results if they're too large
     reportWidth: number;
@@ -657,7 +658,8 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             localIdeographFontFamily: options.localIdeographFontFamily || false as any,
             crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
             terrainSkirtLength: options.terrainSkirtLength,
-            maxCanvasSize: [8192, 8192]
+            maxCanvasSize: [8192, 8192],
+            maxZoom: options.maxZoom
         });
 
         let idle = false;
