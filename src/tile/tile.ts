@@ -214,6 +214,7 @@ export class Tile {
     }
 
     /**
+     * @internal
      * Allocates a fresh RTT object from the painter's pool and stores it at the
      * given stack slot. Callers should check {@link getRTT} first; calling this
      * over an existing slot leaks the previous object.
