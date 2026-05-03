@@ -16,7 +16,11 @@ import type {TileJSON} from '../../../src/util/util.ts';
 import type {Map} from '../../../src/ui/map.ts';
 import type {IActor} from '../../../src/util/actor.ts';
 import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings.ts';
-import {MessageType, type GetImagesParameters, type GetImagesResponse, type GetGlyphsParameters, type GetGlyphsResponse, type GetDashesParameters, type GetDashesResponse} from '../../../src/util/actor_messages.ts';
+import {MessageType, type ActorMessage, type GetImagesParameters, type GetImagesResponse, type GetGlyphsParameters, type GetGlyphsResponse, type GetDashesParameters, type GetDashesResponse} from '../../../src/util/actor_messages.ts';
+
+// Distribute ActorMessage<T> over MessageType so a discriminant check on `.type`
+// properly narrows `.data` to the matching parameter type.
+type AnyActorMessage = {[K in MessageType]: ActorMessage<K>}[MessageType];
 import {MercatorTransform} from '../../../src/geo/projection/mercator_transform.ts';
 
 class StubMap extends Evented {
@@ -100,7 +104,8 @@ export default class TileParser {
     setup(): Promise<void> {
         const parser = this;
         this.actor = {
-            sendAsync(message) {
+            sendAsync(rawMessage) {
+                const message = rawMessage as AnyActorMessage;
                 if (message.type === MessageType.getImages) {
                     return parser.loadImages(message.data);
                 }
