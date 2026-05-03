@@ -216,7 +216,7 @@ export class Tile {
     releaseRTT(painter: Painter) {
         if (this.rttObjects.length === 0) return;
         for (const obj of this.rttObjects) {
-            if (obj) painter.releaseRTT(obj);
+            painter.releaseRTT(obj);
         }
         this.rttObjects.length = 0;
     }
