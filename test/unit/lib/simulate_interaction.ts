@@ -6,12 +6,12 @@ function click(target: HTMLElement | Window | Element): void {
     target.dispatchEvent(new MouseEvent('click', options));
 }
 
-function drag(target: HTMLElement | Window, mousedownOptions: any, mouseUpOptions: any): void {
-    mousedownOptions = {bubbles: true, ...mousedownOptions};
-    mouseUpOptions = {bubbles: true, ...mouseUpOptions};
-    target.dispatchEvent(new MouseEvent('mousedown', mousedownOptions));
-    target.dispatchEvent(new MouseEvent('mouseup', mouseUpOptions));
-    target.dispatchEvent(new MouseEvent('click', mouseUpOptions));
+function drag(target: HTMLElement | Window, mousedownOptions?: MouseEventInit, mouseUpOptions?: MouseEventInit): void {
+    const downOpts: MouseEventInit = {bubbles: true, ...mousedownOptions};
+    const upOpts: MouseEventInit = {bubbles: true, ...mouseUpOptions};
+    target.dispatchEvent(new MouseEvent('mousedown', downOpts));
+    target.dispatchEvent(new MouseEvent('mouseup', upOpts));
+    target.dispatchEvent(new MouseEvent('click', upOpts));
 }
 
 function dragWithMove(target: HTMLElement | Window, start: {x: number; y: number}, end: {x: number; y: number}): void {
