@@ -1,6 +1,6 @@
 import {beforeEach, describe, test, expect, vi, type Mock} from 'vitest';
 import {RenderToTexture} from './render_to_texture.ts';
-import type {Painter} from '../render/painter.ts';
+import type {Painter, RTTObject} from '../render/painter.ts';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer.ts';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {Context} from '../webgl/context.ts';
@@ -149,7 +149,7 @@ describe('render to texture', () => {
     test('should clear tile cache when overlaid tiles change and return rtt object to painter pool', () => {
         rtt.prepareForRender(style, 0);
 
-        const obj = {fbo: {} as any, texture: {} as any, size: 512};
+        const obj = {fbo: {}, texture: {}, size: 512} as unknown as RTTObject;
         tile.rttFingerprint = {maine: '923#0'};
         tile.rttObjects[0] = obj;
 
@@ -166,7 +166,7 @@ describe('render to texture', () => {
     test('should not clear tile cache if state remains same', () => {
         rtt.prepareForRender(style, 0);
         tile.rttFingerprint = {maine: '923#0'};
-        tile.rttObjects[0] = {fbo: {} as any, texture: {} as any, size: 512};
+        tile.rttObjects[0] = {fbo: {}, texture: {}, size: 512} as unknown as RTTObject;
 
         rtt.prepareForRender(style, 0);
 
@@ -219,7 +219,7 @@ describe('render to texture', () => {
         const state = {revision: 0};
         (style.tileManagers['maine'].getState as Mock).mockReturnValue(state);
 
-        tile.rttObjects[0] = {fbo: {} as any, texture: {} as any, size: 512};
+        tile.rttObjects[0] = {fbo: {}, texture: {}, size: 512} as unknown as RTTObject;
         tile.rttFingerprint = {maine: '923#0'};
 
         rtt.prepareForRender(style, 0);
@@ -250,7 +250,7 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
 
-        const cached = {fbo: {framebuffer: null} as any, texture: {} as any, size: rtt.rttSize};
+        const cached = {fbo: {framebuffer: null}, texture: {}, size: rtt.rttSize} as unknown as RTTObject;
         tile.rttObjects[0] = cached;
 
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
