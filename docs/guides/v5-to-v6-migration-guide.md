@@ -51,5 +51,5 @@ img-src data: blob: 'self' ;
 
 In version 5 there was an experimental parameter added to allow slicing vector tiles instead of overscaling them.
 We tested it, and it looks like it fixes a lot of issue in labeling etc.
-It does changes rendering and the resutls of queryRenderedFeatures.
+It does changes rendering and the results of queryRenderedFeatures.
 If you would like to revert to the previous behavior you can set `zoomLevelsToOverscale: undefined` when initializing the map.
