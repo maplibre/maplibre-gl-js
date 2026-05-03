@@ -52,11 +52,17 @@ function wheelFunctionFactory(event: string): (target: HTMLElement | Window, opt
     };
 }
 
-function touchFunctionFactory(event: string): (target: HTMLElement | Window, options?: any) => void {
-    return (target: HTMLElement | Window, options?: any) => {
+type LooseTouchEventInit = Omit<TouchEventInit, 'touches' | 'targetTouches' | 'changedTouches'> & {
+    touches?: Array<Partial<Touch>>;
+    targetTouches?: Array<Partial<Touch>>;
+    changedTouches?: Array<Partial<Touch>>;
+};
+
+function touchFunctionFactory(event: string): (target: HTMLElement | Window, options?: LooseTouchEventInit) => void {
+    return (target: HTMLElement | Window, options?: LooseTouchEventInit) => {
         const defaultTouches = event.endsWith('end') || event.endsWith('cancel') ? [] : [{clientX: 0, clientY: 0}];
-        options = {bubbles: true, touches: defaultTouches, ...options};
-        target.dispatchEvent(new TouchEvent(event, options));
+        const merged = {bubbles: true, touches: defaultTouches, ...options};
+        target.dispatchEvent(new TouchEvent(event, merged as TouchEventInit));
     };
 }
 
@@ -87,10 +93,10 @@ const events: {
      * magic deltaY value that indicates the event is from a mouse wheel (rather than a trackpad)
      */
     magicWheelZoomDelta: number;
-    touchstart: (target: HTMLElement | Window, options?: any) => void;
-    touchend: (target: HTMLElement | Window, options?: any) => void;
-    touchmove: (target: HTMLElement | Window, options?: any) => void;
-    touchcancel: (target: HTMLElement | Window, options?: any) => void;
+    touchstart: (target: HTMLElement | Window, options?: LooseTouchEventInit) => void;
+    touchend: (target: HTMLElement | Window, options?: LooseTouchEventInit) => void;
+    touchmove: (target: HTMLElement | Window, options?: LooseTouchEventInit) => void;
+    touchcancel: (target: HTMLElement | Window, options?: LooseTouchEventInit) => void;
     focus: (target: HTMLElement | Window) => void;
     blur: (target: HTMLElement | Window) => void;
 } = {
