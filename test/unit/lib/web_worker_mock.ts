@@ -32,7 +32,7 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
         }
     }
 
-    postMessage(data: any): void {
+    postMessage(data: unknown): void {
         setTimeout(() => {
             try {
                 for (const listener of this.postListeners) {
