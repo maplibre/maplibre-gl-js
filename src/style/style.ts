@@ -991,9 +991,10 @@ export class Style extends Evented {
         return this.imageManager.getImage(id);
     }
 
-    removeImage(id: string): void | this {
+    removeImage(id: string): void {
         if (!this.getImage(id)) {
-            return this.fire(new ErrorEvent(new Error(`An image named "${id}" does not exist.`)));
+            this.fire(new ErrorEvent(new Error(`An image named "${id}" does not exist.`)));
+            return;
         }
         this.imageManager.removeImage(id);
         this._afterImageUpdated(id);
