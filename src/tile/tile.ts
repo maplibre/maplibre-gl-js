@@ -467,7 +467,7 @@ export class Tile {
         }
     }
 
-    setFeatureState(states: LayerFeatureStates, painter: any): void {
+    setFeatureState(states: LayerFeatureStates, painter: Painter): void {
         if (!this.latestFeatureIndex?.rawTileData ||
             Object.keys(states).length === 0) {
             return;

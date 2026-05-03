@@ -4,11 +4,11 @@ import React from 'react';
 type BenchmarkStatisticProps = {
     status: string;
     error: Error;
-    statistic: (version: Version) => any;
+    statistic: (version: Version) => React.ReactNode;
     version: Version;
 }
 
-export const BenchmarkStatistic = (props: BenchmarkStatisticProps): any => {
+export const BenchmarkStatistic = (props: BenchmarkStatisticProps): React.JSX.Element | React.ReactNode => {
 
     switch (props.status) {
         case 'waiting':

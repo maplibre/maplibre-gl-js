@@ -3503,7 +3503,7 @@ export class Map extends Camera {
         }));
     }
 
-    _contextLost = (event: any): void => {
+    _contextLost = (event: WebGLContextEvent): void => {
         event.preventDefault();
         if (this._frameRequest) {
             this._frameRequest.abort();
@@ -3537,7 +3537,7 @@ export class Map extends Camera {
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
 
-    _contextRestored = (event: any): void => {
+    _contextRestored = (event: WebGLContextEvent): void => {
         if (this._lostContextStyle.style) {
             this.setStyle(this._lostContextStyle.style, {diff: false});
         }
@@ -3556,7 +3556,7 @@ export class Map extends Camera {
         this.fire(new Event('webglcontextrestored', {originalEvent: event}));
     };
 
-    _onMapScroll = (event: any): boolean => {
+    _onMapScroll = (event: UIEvent): boolean => {
         if (event.target !== this._container) return;
 
         // Revert any scroll which would move the canvas outside of the view

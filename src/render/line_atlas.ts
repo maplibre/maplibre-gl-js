@@ -2,6 +2,8 @@ import {warnOnce} from '../util/util.ts';
 
 import type {Context} from '../webgl/context.ts';
 
+type DashRange = {left: number; right: number; isDash: boolean; zeroLength: boolean};
+
 /**
  * A dash entry
  */
@@ -54,7 +56,7 @@ export class LineAtlas {
         return this.dashEntry[key];
     }
 
-    getDashRanges(dasharray: number[], lineAtlasWidth: number, stretch: number): Array<{left: number; right: number; isDash: boolean; zeroLength: boolean}> {
+    getDashRanges(dasharray: number[], lineAtlasWidth: number, stretch: number): DashRange[] {
         // If dasharray has an odd length, both the first and last parts
         // are dashes and should be joined seamlessly.
         const oddDashArray = dasharray.length % 2 === 1;
@@ -82,7 +84,7 @@ export class LineAtlas {
         return ranges;
     }
 
-    addRoundDash(ranges: any, stretch: number, n: number): void {
+    addRoundDash(ranges: DashRange[], stretch: number, n: number): void {
         const halfStretch = stretch / 2;
 
         for (let y = -n; y <= n; y++) {
@@ -112,7 +114,7 @@ export class LineAtlas {
         }
     }
 
-    addRegularDash(ranges: any): void {
+    addRegularDash(ranges: DashRange[]): void {
 
         // Collapse any zero-length range
         // Collapse neighbouring same-type parts into a single part
@@ -121,7 +123,7 @@ export class LineAtlas {
             const next = ranges[i + 1];
             if (part.zeroLength) {
                 ranges.splice(i, 1);
-            } else if (next && next.isDash === part.isDash) {
+            } else if (next?.isDash === part.isDash) {
                 next.left = part.left;
                 ranges.splice(i, 1);
             }

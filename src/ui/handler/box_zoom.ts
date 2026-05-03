@@ -190,7 +190,7 @@ export class BoxZoomHandler implements Handler {
         delete this._lastPos;
     }
 
-    _fireEvent(type: string, e: any): Map {
+    _fireEvent(type: string, e: MouseEvent | KeyboardEvent): Map {
         return this._map.fire(new Event(type, {originalEvent: e}));
     }
 }

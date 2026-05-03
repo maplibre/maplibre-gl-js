@@ -700,7 +700,7 @@ export class SymbolBucket implements Bucket {
         );
     }
 
-    _addCollisionDebugVertex(layoutVertexArray: StructArray, collisionVertexArray: StructArray, point: Point, anchorX: number, anchorY: number, extrude: Point): any {
+    _addCollisionDebugVertex(layoutVertexArray: StructArray, collisionVertexArray: StructArray, point: Point, anchorX: number, anchorY: number, extrude: Point): number {
         collisionVertexArray.emplaceBack(0, 0);
         return layoutVertexArray.emplaceBack(
             // pos

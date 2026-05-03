@@ -2,6 +2,7 @@ import Point from '@mapbox/point-geometry';
 import {type LayerFeatureStates} from '../source/source_state.ts';
 import {type Tile} from './tile.ts';
 import {compareTileId, type OverscaledTileID} from './tile_id.ts';
+import type {Painter} from '../render/painter.ts';
 
 export class InViewTiles {
     private _tiles: Record<string, Tile> = {};
@@ -16,7 +17,7 @@ export class InViewTiles {
         this._tiles = tiles;
     }
 
-    public setFeatureState(featuresChanged: LayerFeatureStates, painter: any): void {
+    public setFeatureState(featuresChanged: LayerFeatureStates, painter: Painter): void {
         for (const id in this._tiles) {
             const tile = this._tiles[id];
             tile.setFeatureState(featuresChanged, painter);
