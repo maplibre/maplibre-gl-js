@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { Measurement } from './benchmark';
 
 export type RegressionResults = {
     correlation:number;
@@ -87,7 +88,7 @@ export function summaryStatistics(data: number[]): Summary {
     };
 }
 
-export function regression(measurements: any): RegressionResults {
+export function regression(measurements: Measurement[]): RegressionResults {
     const result = [];
     for (let i = 0, n = 1; i + n < measurements.length; i += n, n++) {
         const subset = measurements.slice(i, i + n);
