@@ -31882,7 +31882,7 @@ var Tile = class {
 		this.hasSymbolBuckets = false;
 		this.hasRTLText = false;
 		this.dependencies = {};
-		this.rtt = [];
+		this.rttObjects = [];
 		this.rttFingerprint = {};
 		this.expiredRequestCount = 0;
 		this.state = "loading";
@@ -31924,6 +31924,31 @@ var Tile = class {
 	clearTextures(painter) {
 		if (this.demTexture) painter.saveTileTexture(this.demTexture);
 		this.demTexture = null;
+	}
+	/**
+	* @internal
+	* Returns the cached RTT object for this stack, or undefined on a cache miss.
+	*/
+	getRTT(stack) {
+		return this.rttObjects[stack];
+	}
+	/**
+	* @internal
+	* Allocates a fresh RTT object from the painter's pool and stores it at the
+	* given stack slot. Callers should check {@link getRTT} first; calling this
+	* over an existing slot leaks the previous object.
+	*/
+	acquireRTT(painter, stack, size) {
+		return this.rttObjects[stack] = painter.acquireRTT(size);
+	}
+	/**
+	* @internal
+	* Returns all cached RTT slots to the painter's pool.
+	*/
+	releaseRTT(painter) {
+		if (this.rttObjects.length === 0) return;
+		for (const obj of this.rttObjects) painter.releaseRTT(obj);
+		this.rttObjects.length = 0;
 	}
 	/**
 	* Given a data object with a 'buffers' property, load it into
@@ -46521,6 +46546,7 @@ var Painter = class Painter {
 		this.context = new Context(gl);
 		this.transform = transform;
 		this._tileTextures = {};
+		this._rttObjectRecyclePool = [];
 		this.terrainFacilitator = {
 			depthDirty: true,
 			coordsDirty: false,
@@ -46938,6 +46964,42 @@ var Painter = class Painter {
 		const textures = this._tileTextures[size];
 		return textures && textures.length > 0 ? textures.pop() : null;
 	}
+	acquireRTT(size) {
+		const gl = this.context.gl;
+		const obj = this._rttObjectRecyclePool.pop();
+		if (obj) {
+			if (obj.size !== size) {
+				gl.bindTexture(gl.TEXTURE_2D, obj.texture.texture);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+				obj.texture.size = [size, size];
+				this.context.bindRenderbuffer.set(obj.fbo.depthAttachment.get());
+				gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, size, size);
+				this.context.bindRenderbuffer.set(null);
+				obj.fbo.width = size;
+				obj.fbo.height = size;
+				obj.size = size;
+			}
+			return obj;
+		}
+		const fbo = this.context.createFramebuffer(size, size, true, true);
+		const texture = new Texture(this.context, {
+			width: size,
+			height: size,
+			data: null
+		}, gl.RGBA);
+		texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+		if (this.context.extTextureFilterAnisotropic) gl.texParameterf(gl.TEXTURE_2D, this.context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.context.extTextureFilterAnisotropicMax);
+		fbo.depthAttachment.set(this.context.createRenderbuffer(gl.DEPTH_STENCIL, size, size));
+		fbo.colorAttachment.set(texture.texture);
+		return {
+			fbo,
+			texture,
+			size
+		};
+	}
+	releaseRTT(obj) {
+		this._rttObjectRecyclePool.push(obj);
+	}
 	/**
 	* Checks whether a pattern image is needed, and if it is, whether it is not loaded.
 	*
@@ -47010,6 +47072,11 @@ var Painter = class Painter {
 			}
 			this._tileTextures = {};
 		}
+		for (const obj of this._rttObjectRecyclePool) {
+			obj.texture.destroy();
+			obj.fbo.destroy();
+		}
+		this._rttObjectRecyclePool = [];
 		if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
 		if (this.debugBuffer) this.debugBuffer.destroy();
 		if (this.rasterBoundsBuffer) this.rasterBoundsBuffer.destroy();
@@ -51061,6 +51128,7 @@ var TerrainTileManager = class extends Evented {
 	destruct() {
 		this.tileManager.usedForTerrain = false;
 		this.tileManager.tileSize = null;
+		this.releaseAllRTT();
 	}
 	getSource() {
 		return this.tileManager._source;
@@ -51091,17 +51159,25 @@ var TerrainTileManager = class extends Evented {
 				this._lastTilesetChange = now();
 			}
 		}
-		for (const key in this._tiles) if (!keys[key]) delete this._tiles[key];
+		for (const key in this._tiles) if (!keys[key]) {
+			this._tiles[key].releaseRTT(this.tileManager.map.painter);
+			delete this._tiles[key];
+		}
 	}
 	/**
-	* Free render to texture cache
-	* @param tileID - optional, free only corresponding to tileID.
+	* Release the RTT objects for `tileID` (and its ancestors/descendants),
 	*/
-	freeRtt(tileID) {
+	releaseRTT(tileID) {
 		for (const key in this._tiles) {
 			const tile = this._tiles[key];
-			if (!tileID || tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID)) tile.rtt = [];
+			if (tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID)) tile.releaseRTT(this.tileManager.map.painter);
 		}
+	}
+	/**
+	* Release the A RTT objects for all tiles.
+	*/
+	releaseAllRTT() {
+		for (const key in this._tiles) this._tiles[key].releaseRTT(this.tileManager.map.painter);
 	}
 	/**
 	* get a list of tiles, which are loaded and should be rendered in the current scene
@@ -51689,75 +51765,6 @@ var Terrain = class {
 	}
 };
 //#endregion
-//#region src/webgl/render_pool.ts
-/**
-* @internal
-* `RenderPool` is a resource pool for textures and framebuffers
-*/
-var RenderPool = class {
-	constructor(_context, _size, _tileSize) {
-		this._context = _context;
-		this._size = _size;
-		this._tileSize = _tileSize;
-		this._objects = [];
-		this._recentlyUsed = [];
-		this._stamp = 0;
-	}
-	destruct() {
-		for (const obj of this._objects) {
-			obj.texture.destroy();
-			obj.fbo.destroy();
-		}
-	}
-	_createObject(id) {
-		const fbo = this._context.createFramebuffer(this._tileSize, this._tileSize, true, true);
-		const texture = new Texture(this._context, {
-			width: this._tileSize,
-			height: this._tileSize,
-			data: null
-		}, this._context.gl.RGBA);
-		texture.bind(this._context.gl.LINEAR, this._context.gl.CLAMP_TO_EDGE);
-		if (this._context.extTextureFilterAnisotropic) this._context.gl.texParameterf(this._context.gl.TEXTURE_2D, this._context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this._context.extTextureFilterAnisotropicMax);
-		fbo.depthAttachment.set(this._context.createRenderbuffer(this._context.gl.DEPTH_STENCIL, this._tileSize, this._tileSize));
-		fbo.colorAttachment.set(texture.texture);
-		return {
-			id,
-			fbo,
-			texture,
-			stamp: -1,
-			inUse: false
-		};
-	}
-	getObjectForId(id) {
-		return this._objects[id];
-	}
-	useObject(obj) {
-		obj.inUse = true;
-		this._recentlyUsed = this._recentlyUsed.filter((id) => obj.id !== id);
-		this._recentlyUsed.push(obj.id);
-	}
-	stampObject(obj) {
-		obj.stamp = ++this._stamp;
-	}
-	getOrCreateFreeObject() {
-		for (const id of this._recentlyUsed) if (!this._objects[id].inUse) return this._objects[id];
-		if (this._objects.length >= this._size) throw new Error("No free RenderPool available, call freeAllObjects() required!");
-		const obj = this._createObject(this._objects.length);
-		this._objects.push(obj);
-		return obj;
-	}
-	freeObject(obj) {
-		obj.inUse = false;
-	}
-	freeAllObjects() {
-		for (const obj of this._objects) this.freeObject(obj);
-	}
-	isFull() {
-		if (this._objects.length < this._size) return false;
-		return this._objects.some((o) => !o.inUse) === false;
-	}
-};
-//#endregion
 //#region src/webgl/render_to_texture.ts
 /**
 * lookup table which layers should rendered to texture
@@ -51772,19 +51779,19 @@ const LAYERS_TO_TEXTURES = {
 };
 /**
 * @internal
-* A helper class to help define what should be rendered to texture and how
+* Renders RTT-eligible layers into per-tile cached textures, then drapes
+* them onto the terrain mesh. Slots live on each Tile so their lifetime
+* tracks the tile itself; the underlying FBO+texture handles are recycled
+* via the painter's RTT pool.
 */
 var RenderToTexture = class {
 	constructor(painter, terrain) {
 		this.painter = painter;
 		this.terrain = terrain;
-		this.pool = new RenderPool(painter.context, 30, terrain.tileManager.tileSize * terrain.qualityFactor);
-	}
-	destruct() {
-		this.pool.destruct();
+		this.rttSize = terrain.tileManager.tileSize * terrain.qualityFactor;
 	}
 	getTexture(tile) {
-		return this.pool.getObjectForId(tile.rtt[this._stacks.length - 1].id).texture;
+		return tile.getRTT(this._stacks.length - 1).texture;
 	}
 	prepareForRender(style, zoom) {
 		this._stacks = [];
@@ -51818,7 +51825,7 @@ var RenderToTexture = class {
 		}
 		for (const tile of this._renderableTiles) for (const source in this._rttFingerprints) {
 			const fingerprint = this._rttFingerprints[source][tile.tileID.key];
-			if (fingerprint && fingerprint !== tile.rttFingerprint[source]) tile.rtt = [];
+			if (fingerprint && fingerprint !== tile.rttFingerprint[source]) tile.releaseRTT(this.painter);
 		}
 	}
 	/**
@@ -51851,26 +51858,9 @@ var RenderToTexture = class {
 			this._prevType = type;
 			const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
 			for (const tile of this._renderableTiles) {
-				if (this.pool.isFull()) {
-					drawTerrain(this.painter, this.terrain, this._rttTiles, options);
-					this._rttTiles = [];
-					this.pool.freeAllObjects();
-				}
 				this._rttTiles.push(tile);
-				if (tile.rtt[stack]) {
-					const obj = this.pool.getObjectForId(tile.rtt[stack].id);
-					if (obj.stamp === tile.rtt[stack].stamp) {
-						this.pool.useObject(obj);
-						continue;
-					}
-				}
-				const obj = this.pool.getOrCreateFreeObject();
-				this.pool.useObject(obj);
-				this.pool.stampObject(obj);
-				tile.rtt[stack] = {
-					id: obj.id,
-					stamp: obj.stamp
-				};
+				if (tile.getRTT(stack)) continue;
+				const obj = tile.acquireRTT(painter, stack, this.rttSize);
 				painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
 				painter.context.clear({
 					color: Color.transparent,
@@ -51893,7 +51883,6 @@ var RenderToTexture = class {
 			}
 			drawTerrain(this.painter, this.terrain, this._rttTiles, options);
 			this._rttTiles = [];
-			this.pool.freeAllObjects();
 			return LAYERS_TO_TEXTURES[type];
 		}
 		return false;
@@ -53282,7 +53271,6 @@ var Map$1 = class extends Camera {
 		if (!options) {
 			if (this.terrain) this.terrain.destroy();
 			this.terrain = null;
-			if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
 			this.painter.renderToTexture = null;
 			this.transform.setMinElevationForCurrentTile(0);
 			if (this._centerClampedToGround) this.transform.setElevation(0);
@@ -53300,14 +53288,14 @@ var Map$1 = class extends Camera {
 			this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
 			this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
 			this._terrainDataCallback = (e) => {
-				if (e.dataType === "style") this.terrain.tileManager.freeRtt();
+				if (e.dataType === "style") this.terrain.tileManager.releaseAllRTT();
 				else if (e.dataType === "source" && e.tile) {
 					if (e.sourceId === options.source && !this._elevationFreeze) {
 						this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
 						if (this._centerClampedToGround) this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
 					}
-					if (e.source?.type === "image") this.terrain.tileManager.freeRtt();
-					else this.terrain.tileManager.freeRtt(e.tile.tileID);
+					if (e.source?.type === "image") this.terrain.tileManager.releaseAllRTT();
+					else this.terrain.tileManager.releaseRTT(e.tile.tileID);
 				}
 			};
 			this.style.on("data", this._terrainDataCallback);
@@ -60322,7 +60310,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main b0de948";
+const version = "main 1454a12";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
