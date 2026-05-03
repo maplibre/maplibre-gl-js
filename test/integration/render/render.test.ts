@@ -876,7 +876,7 @@ describe('Render tests', () => {
     });
 
     beforeEach((ctx) => {
-        let testSuccess = testStyles.find(s => s.metadata.test.id === ctx.task.name)?.metadata.test.ok;
+        const testSuccess = testStyles.find(s => s.metadata.test.id === ctx.task.name)?.metadata.test.ok;
         if (testSuccess === false) {
             console.log(`Retry ${ctx.task.name} with console logging enabled`);
             addConsoleLogging(page);
