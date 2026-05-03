@@ -512,7 +512,7 @@ export class TileManager extends Evented {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.type === 'vector' && this.map._zoomLevelsToOverscale !== undefined
-                    ? transform.maxZoom - this.map._zoomLevelsToOverscale
+                    ? Math.max(this._source.maxzoom, transform.maxZoom - this.map._zoomLevelsToOverscale)
                     : this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,
