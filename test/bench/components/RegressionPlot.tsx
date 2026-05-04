@@ -1,13 +1,13 @@
 import * as d3 from 'd3';
 import React from 'react';
-import {Axis} from './Axis';
-import {formatSample, Version, versionColor} from './util';
+import {Axis} from './Axis.tsx';
+import {formatSample, Version, versionColor} from './util.ts';
 
 type RegressionPlotProps = {
     versions: Version[];
 }
 
-export const RegressionPlot = (props: RegressionPlotProps) => {
+export const RegressionPlot = (props: RegressionPlotProps): React.JSX.Element => {
     const margin = {top: 10, right: 20, bottom: 30, left: 0};
     const width = 960 - margin.left - margin.right;
     const height = 200 - margin.top - margin.bottom;

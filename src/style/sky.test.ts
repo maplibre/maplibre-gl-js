@@ -1,8 +1,8 @@
 import {describe, expect, test, vi} from 'vitest';
-import {Sky} from './sky';
+import {Sky} from './sky.ts';
 import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
-import {type EvaluationParameters} from './evaluation_parameters';
-import {type TransitionParameters} from './properties';
+import {type EvaluationParameters} from './evaluation_parameters.ts';
+import {type TransitionParameters} from './properties.ts';
 
 const spec = styleSpec.sky;
 

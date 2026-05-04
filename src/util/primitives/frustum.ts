@@ -1,6 +1,6 @@
 import {type mat4, vec3, vec4} from 'gl-matrix';
-import {Aabb} from './aabb';
-import {pointPlaneSignedDistance, rayPlaneIntersection} from '../util';
+import {Aabb} from './aabb.ts';
+import {pointPlaneSignedDistance, rayPlaneIntersection} from '../util.ts';
 
 export class Frustum {
 

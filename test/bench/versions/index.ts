@@ -1,37 +1,37 @@
-import locationsWithTileID from '../lib/locations_with_tile_id';
+import locationsWithTileID from '../lib/locations_with_tile_id.ts';
 import styleBenchmarkLocations from '../data/style-benchmark-locations.json' with {type: 'json'};
-import Layout from '../benchmarks/layout';
-import Placement from '../benchmarks/placement';
-import SymbolLayout from '../benchmarks/symbol_layout';
-import WorkerTransfer from '../benchmarks/worker_transfer';
-import Paint from '../benchmarks/paint';
-import PaintStates from '../benchmarks/paint_states';
-import {PropertyLevelRemove, FeatureLevelRemove, SourceLevelRemove} from '../benchmarks/remove_paint_state';
-import {LayerBackground, LayerCircle, LayerFill, LayerFillExtrusion, LayerHeatmap, LayerHillshade, LayerColorRelief2Colors, LayerColorRelief256Colors, LayerLine, LayerRaster, LayerSymbol, LayerSymbolWithHalo, LayerSymbolWithIcons, LayerTextWithVariableAnchor, LayerSymbolWithSortKey} from '../benchmarks/layers';
-import LineOpacityTranslucent from '../benchmarks/layer_line_opacity';
-import Load from '../benchmarks/map_load';
-import HillshadeLoad from '../benchmarks/hillshade_load';
-import ColorReliefLoad from '../benchmarks/color_relief_load';
-import Validate from '../benchmarks/style_validate';
-import StyleLayerCreate from '../benchmarks/style_layer_create';
-import QueryPoint from '../benchmarks/query_point';
-import QueryBox from '../benchmarks/query_box';
-import {FunctionCreate, FunctionEvaluate, ExpressionCreate, ExpressionEvaluate} from '../benchmarks/expressions';
-import FilterCreate from '../benchmarks/filter_create';
-import FilterEvaluate from '../benchmarks/filter_evaluate';
-import CustomLayer from '../benchmarks/customlayer';
-import MapIdle from '../benchmarks/map_idle';
+import Layout from '../benchmarks/layout.ts';
+import Placement from '../benchmarks/placement.ts';
+import SymbolLayout from '../benchmarks/symbol_layout.ts';
+import WorkerTransfer from '../benchmarks/worker_transfer.ts';
+import Paint from '../benchmarks/paint.ts';
+import PaintStates from '../benchmarks/paint_states.ts';
+import {PropertyLevelRemove, FeatureLevelRemove, SourceLevelRemove} from '../benchmarks/remove_paint_state.ts';
+import {LayerBackground, LayerCircle, LayerFill, LayerFillExtrusion, LayerHeatmap, LayerHillshade, LayerColorRelief2Colors, LayerColorRelief256Colors, LayerLine, LayerRaster, LayerSymbol, LayerSymbolWithHalo, LayerSymbolWithIcons, LayerTextWithVariableAnchor, LayerSymbolWithSortKey} from '../benchmarks/layers.ts';
+import LineOpacityTranslucent from '../benchmarks/layer_line_opacity.ts';
+import Load from '../benchmarks/map_load.ts';
+import HillshadeLoad from '../benchmarks/hillshade_load.ts';
+import ColorReliefLoad from '../benchmarks/color_relief_load.ts';
+import Validate from '../benchmarks/style_validate.ts';
+import StyleLayerCreate from '../benchmarks/style_layer_create.ts';
+import QueryPoint from '../benchmarks/query_point.ts';
+import QueryBox from '../benchmarks/query_box.ts';
+import {FunctionCreate, FunctionEvaluate, ExpressionCreate, ExpressionEvaluate} from '../benchmarks/expressions.ts';
+import FilterCreate from '../benchmarks/filter_create.ts';
+import FilterEvaluate from '../benchmarks/filter_evaluate.ts';
+import CustomLayer from '../benchmarks/customlayer.ts';
+import MapIdle from '../benchmarks/map_idle.ts';
 
-import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool';
-import {setWorkerUrl} from '../../../src';
-import SymbolCollisionBox from '../benchmarks/symbol_collision_box';
-import Subdivide from '../benchmarks/subdivide';
-import LoadMatchingFeature from '../benchmarks/feature_index';
-import CoveringTilesGlobe from '../benchmarks/covering_tiles_globe';
-import CoveringTilesMercator from '../benchmarks/covering_tiles_mercator';
-import GeoJSONSourceUpdateData from '../benchmarks/geojson_source_update_data';
-import GeoJSONSourceSetData from '../benchmarks/geojson_source_set_data';
-import {Terrain3DGlobe, Terrain3DMercator, Terrain2DGlobe, Terrain2DMercator} from '../benchmarks/terrain';
+import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool.ts';
+import {setWorkerUrl} from '../../../src/index.ts';
+import SymbolCollisionBox from '../benchmarks/symbol_collision_box.ts';
+import Subdivide from '../benchmarks/subdivide.ts';
+import LoadMatchingFeature from '../benchmarks/feature_index.ts';
+import CoveringTilesGlobe from '../benchmarks/covering_tiles_globe.ts';
+import CoveringTilesMercator from '../benchmarks/covering_tiles_mercator.ts';
+import GeoJSONSourceUpdateData from '../benchmarks/geojson_source_update_data.ts';
+import GeoJSONSourceSetData from '../benchmarks/geojson_source_set_data.ts';
+import {Terrain3DGlobe, Terrain3DMercator, Terrain2DGlobe, Terrain2DMercator} from '../benchmarks/terrain.ts';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as Array<GeoJSON.Feature<GeoJSON.Point>>).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
@@ -48,7 +48,7 @@ function register(name, bench) {
 }
 
 const style = 'https://tiles.openfreemap.org/styles/liberty';
-const center = [-77.032194, 38.912753];
+const center: [number, number] = [-77.032194, 38.912753];
 const zooms = [4, 8, 11, 13, 15, 17];
 const locations = zooms.map(zoom => ({center, zoom}));
 
@@ -115,4 +115,4 @@ Promise.resolve().then(() => {
     getGlobalWorkerPool().acquire(-1);
 });
 
-export * from '../../../src';
+export * from '../../../src/index.ts';

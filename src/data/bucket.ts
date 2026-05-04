@@ -1,14 +1,14 @@
-import type {CollisionBoxArray} from './array_types.g';
-import type {Style} from '../style/style';
-import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
-import type {FeatureIndex} from './feature_index';
-import type {Context} from '../webgl/context';
-import type {FeatureStates} from '../source/source_state';
-import type {ImagePosition} from '../render/image_atlas';
-import type {CanonicalTileID} from '../tile/tile_id';
+import type {CollisionBoxArray} from './array_types.g.ts';
+import type {Style} from '../style/style.ts';
+import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer.ts';
+import type {FeatureIndex} from './feature_index.ts';
+import type {Context} from '../webgl/context.ts';
+import type {FeatureStates} from '../source/source_state.ts';
+import type {ImagePosition} from '../render/image_atlas.ts';
+import type {CanonicalTileID} from '../tile/tile_id.ts';
 import type Point from '@mapbox/point-geometry';
-import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import type {DashEntry} from '../render/line_atlas';
+import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
+import type {DashEntry} from '../render/line_atlas.ts';
 import type {Feature as StyleFeature} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
 

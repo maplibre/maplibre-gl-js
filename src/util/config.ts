@@ -1,4 +1,4 @@
-import type {RequestParameters, GetResourceResponse} from './ajax';
+import type {RequestParameters, GetResourceResponse} from './ajax.ts';
 
 /**
  * This method type is used to register a protocol handler.

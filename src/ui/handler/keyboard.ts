@@ -1,7 +1,7 @@
-import {type Handler} from '../handler_manager';
-import type {Map} from '../map';
-import {TransformProvider} from './transform-provider';
-import {evaluateZoomSnap} from '../../util/util';
+import {type Handler} from '../handler_manager.ts';
+import type {Map} from '../map.ts';
+import {TransformProvider} from './transform-provider.ts';
+import {evaluateZoomSnap} from '../../util/util.ts';
 
 const defaultOptions = {
     panStep: 100,
@@ -44,11 +44,11 @@ export class KeyboardHandler implements Handler {
         this._rotationDisabled = false;
     }
 
-    reset() {
+    reset(): void {
         this._active = false;
     }
 
-    keydown(e: KeyboardEvent) {
+    keydown(e: KeyboardEvent): {cameraAnimation: (map: Map) => void} | void {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
 
         let zoomDir = 0;
@@ -142,7 +142,7 @@ export class KeyboardHandler implements Handler {
      * map.keyboard.enable();
      * ```
      */
-    enable() {
+    enable(): void {
         this._enabled = true;
     }
 
@@ -154,7 +154,7 @@ export class KeyboardHandler implements Handler {
      * map.keyboard.disable();
      * ```
      */
-    disable() {
+    disable(): void {
         this._enabled = false;
         this.reset();
     }
@@ -166,7 +166,7 @@ export class KeyboardHandler implements Handler {
      * @returns `true` if the "keyboard rotate and zoom"
      * interaction is enabled.
      */
-    isEnabled() {
+    isEnabled(): boolean {
         return this._enabled;
     }
 
@@ -177,7 +177,7 @@ export class KeyboardHandler implements Handler {
      * @returns `true` if the handler is enabled and has detected the
      * start of a zoom/rotate gesture.
      */
-    isActive() {
+    isActive(): boolean {
         return this._active;
     }
 
@@ -190,7 +190,7 @@ export class KeyboardHandler implements Handler {
      * map.keyboard.disableRotation();
      * ```
      */
-    disableRotation() {
+    disableRotation(): void {
         this._rotationDisabled = true;
     }
 
@@ -203,7 +203,7 @@ export class KeyboardHandler implements Handler {
      * map.keyboard.enableRotation();
      * ```
      */
-    enableRotation() {
+    enableRotation(): void {
         this._rotationDisabled = false;
     }
 }

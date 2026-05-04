@@ -1,6 +1,6 @@
-import {defineConfig} from 'vitest/config';
+import {defineConfig, type ViteUserConfig} from 'vitest/config';
 
-export default defineConfig({
+const config: ViteUserConfig = defineConfig({
     test: {
         globals: true,
         name: 'integration',
@@ -9,6 +9,7 @@ export default defineConfig({
             'test/integration/**/*.test.ts',
         ],
         exclude: [
+            '**/node_modules/**',
             'test/integration/render/*.*', // Render tests are run separately
         ],
         coverage: {
@@ -20,3 +21,5 @@ export default defineConfig({
         },
     },
 });
+
+export default config;

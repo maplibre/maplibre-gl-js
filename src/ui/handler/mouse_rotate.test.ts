@@ -1,10 +1,10 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {extend} from '../../util/util';
-import {Map} from '../../ui/map';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import * as timeControl from '../../util/time_control';
-import {beforeMapTest} from '../../util/test/util';
+import {extend} from '../../util/util.ts';
+import {Map} from '../../ui/map.ts';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import * as timeControl from '../../util/time_control.ts';
+import {beforeMapTest} from '../../util/test/util.ts';
 
 function createMap(options?) {
     return new Map(extend({container: DOM.create('div', '', window.document.body)}, options));

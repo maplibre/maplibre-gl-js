@@ -1,6 +1,6 @@
-import {type RGBAImage} from '../util/image';
+import {type RGBAImage} from '../util/image.ts';
 
-import type {Map} from '../ui/map';
+import type {Map} from '../ui/map.ts';
 
 export type SpriteJSON = {[id: string]: StyleImageMetadata & {
     width: number;
@@ -175,7 +175,7 @@ export interface StyleImageInterface {
     onRemove?: () => void;
 }
 
-export function renderStyleImage(image: StyleImage) {
+export function renderStyleImage(image: StyleImage): boolean {
     const {userImage} = image;
     if (userImage?.render) {
         const updated = userImage.render();

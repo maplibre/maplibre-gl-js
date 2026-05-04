@@ -1,19 +1,19 @@
-import {StencilMode} from '../stencil_mode';
-import {DepthMode} from '../depth_mode';
-import {terrainUniformValues, terrainDepthUniformValues, terrainCoordsUniformValues} from '../program/terrain_program';
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {Tile} from '../../tile/tile';
-import {CullFaceMode} from '../cull_face_mode';
+import {StencilMode} from '../stencil_mode.ts';
+import {DepthMode} from '../depth_mode.ts';
+import {terrainUniformValues, terrainDepthUniformValues, terrainCoordsUniformValues} from '../program/terrain_program.ts';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {Tile} from '../../tile/tile.ts';
+import {CullFaceMode} from '../cull_face_mode.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {ColorMode} from '../color_mode';
-import {type Terrain} from '../../render/terrain';
+import {ColorMode} from '../color_mode.ts';
+import {type Terrain} from '../../render/terrain.ts';
 
 /**
  * Redraw the Depth Framebuffer
  * @param painter - the painter
  * @param terrain - the terrain
  */
-function drawDepth(painter: Painter, terrain: Terrain) {
+function drawDepth(painter: Painter, terrain: Terrain): void {
     const context = painter.context;
     const gl = context.gl;
     const tr = painter.transform;
@@ -40,7 +40,7 @@ function drawDepth(painter: Painter, terrain: Terrain) {
  * @param painter - the painter
  * @param terrain - the terrain
  */
-function drawCoords(painter: Painter, terrain: Terrain) {
+function drawCoords(painter: Painter, terrain: Terrain): void {
     const context = painter.context;
     const gl = context.gl;
     const tr = painter.transform;
@@ -69,7 +69,7 @@ function drawCoords(painter: Painter, terrain: Terrain) {
     context.viewport.set([0, 0, painter.width, painter.height]);
 }
 
-function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], renderOptions: RenderOptions) {
+function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], renderOptions: RenderOptions): void {
     const {isRenderingGlobe} = renderOptions;
     const context = painter.context;
     const gl = context.gl;

@@ -1,27 +1,27 @@
-import {CollisionIndex, viewportPadding} from './collision_index';
-import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index';
-import {EXTENT} from '../data/extent';
-import * as symbolSize from './symbol_size';
-import * as projection from './projection';
-import {getAnchorJustification} from './symbol_layout';
-import {getAnchorAlignment, WritingMode} from './shaping';
+import {CollisionIndex, viewportPadding} from './collision_index.ts';
+import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index.ts';
+import {EXTENT} from '../data/extent.ts';
+import * as symbolSize from './symbol_size.ts';
+import * as projection from './projection.ts';
+import {getAnchorJustification} from './symbol_layout.ts';
+import {getAnchorAlignment, WritingMode} from './shaping.ts';
 import {type mat4} from 'gl-matrix';
-import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
+import {pixelsToTileUnits} from '../source/pixels_to_tile_units.ts';
 import Point from '@mapbox/point-geometry';
-import type {IReadonlyTransform, ITransform} from '../geo/transform_interface';
-import type {StyleLayer} from '../style/style_layer';
-import {type PossiblyEvaluated} from '../style/properties';
-import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
-import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mode';
+import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import {type PossiblyEvaluated} from '../style/properties.ts';
+import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
+import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mode.ts';
 
-import type {Tile} from '../tile/tile';
-import type {SymbolBucket, CollisionArrays, SingleCollisionBox, SymbolBuffers} from '../data/bucket/symbol_bucket';
-import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchorOffset} from '../data/array_types.g';
-import type {FeatureIndex} from '../data/feature_index';
-import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id';
-import {type Terrain} from '../render/terrain';
-import {translatePosition, warnOnce} from '../util/util';
-import {type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
+import type {Tile} from '../tile/tile.ts';
+import type {SymbolBucket, CollisionArrays, SingleCollisionBox, SymbolBuffers} from '../data/bucket/symbol_bucket.ts';
+import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchorOffset} from '../data/array_types.g.ts';
+import type {FeatureIndex} from '../data/feature_index.ts';
+import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
+import {type Terrain} from '../render/terrain.ts';
+import {translatePosition, warnOnce} from '../util/util.ts';
+import {type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor.ts';
 
 class OpacityState {
     opacity: number;
@@ -34,7 +34,7 @@ class OpacityState {
         }
         this.placed = placed;
     }
-    isHidden() {
+    isHidden(): boolean {
         return this.opacity === 0 && !this.placed;
     }
 }
@@ -46,7 +46,7 @@ class JointOpacityState {
         this.text = new OpacityState(prevState ? prevState.text : null, increment, placedText, skipFade);
         this.icon = new OpacityState(prevState ? prevState.icon : null, increment, placedIcon, skipFade);
     }
-    isHidden() {
+    isHidden(): boolean {
         return this.text.isHidden() && this.icon.isHidden();
     }
 }
@@ -102,7 +102,7 @@ class CollisionGroups {
         this.collisionGroups = {};
     }
 
-    get(sourceID: string) {
+    get(sourceID: string): CollisionGroup {
         // The predicate/groupID mechanism allows for arbitrary grouping,
         // but the current interface defines one source == one group when
         // crossSourceCollisions == true.
@@ -242,7 +242,7 @@ export class Placement {
         return (x: number, y: number) => terrain.getElevation(tileID, x, y);
     }
 
-    getBucketParts(results: BucketPart[], styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean) {
+    getBucketParts(results: BucketPart[], styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean): void {
         const symbolBucket = (tile.getBucket(styleLayer) as SymbolBucket);
         const bucketFeatureIndex = tile.latestFeatureIndex;
         if (!symbolBucket || !bucketFeatureIndex || styleLayer.id !== symbolBucket.layerIds[0])
@@ -324,7 +324,7 @@ export class Placement {
         pitchWithMap: boolean,
         textPixelRatio: number,
         tileID: OverscaledTileID,
-        unwrappedTileID,
+        unwrappedTileID: UnwrappedTileID,
         collisionGroup: CollisionGroup,
         textOverlapMode: OverlapMode,
         symbolInstance: SymbolInstance,
@@ -407,7 +407,7 @@ export class Placement {
 
     placeLayerBucketPart(bucketPart: BucketPart, seenCrossTileIDs: {
         [k in string | number]: boolean;
-    }, showCollisionBoxes: boolean) {
+    }, showCollisionBoxes: boolean): void {
 
         const {
             bucket,
@@ -893,7 +893,7 @@ export class Placement {
         }
     }
 
-    markUsedJustification(bucket: SymbolBucket, placedAnchor: TextAnchor, symbolInstance: SymbolInstance, orientation: number) {
+    markUsedJustification(bucket: SymbolBucket, placedAnchor: TextAnchor, symbolInstance: SymbolInstance, orientation: number): void {
         const justifications = {
             'left': symbolInstance.leftJustifiedTextSymbolIndex,
             'center': symbolInstance.centerJustifiedTextSymbolIndex,
@@ -927,7 +927,7 @@ export class Placement {
         }
     }
 
-    markUsedOrientation(bucket: SymbolBucket, orientation: number, symbolInstance: SymbolInstance) {
+    markUsedOrientation(bucket: SymbolBucket, orientation: number, symbolInstance: SymbolInstance): void {
         const horizontal = (orientation === WritingMode.horizontal || orientation === WritingMode.horizontalOnly) ? orientation : 0;
         const vertical = orientation === WritingMode.vertical ? orientation : 0;
 
@@ -1011,7 +1011,7 @@ export class Placement {
         }
     }
 
-    updateLayerOpacities(styleLayer: StyleLayer, tiles: Tile[]) {
+    updateLayerOpacities(styleLayer: StyleLayer, tiles: Tile[]): void {
         const seenCrossTileIDs = {};
         for (const tile of tiles) {
             const symbolBucket = tile.getBucket(styleLayer) as SymbolBucket;
@@ -1023,7 +1023,7 @@ export class Placement {
 
     updateBucketOpacities(bucket: SymbolBucket, tileID: OverscaledTileID, seenCrossTileIDs: {
         [k in string | number]: boolean;
-    }, collisionBoxArray?: CollisionBoxArray | null) {
+    }, collisionBoxArray?: CollisionBoxArray | null): void {
         if (bucket.hasTextData()) {
             bucket.text.opacityVertexArray.clear();
             bucket.text.hasVisibleVertices = false;
@@ -1246,13 +1246,13 @@ export class Placement {
         }
     }
 
-    symbolFadeChange(now: number) {
+    symbolFadeChange(now: number): number {
         return this.fadeDuration === 0 ?
             1 :
             ((now - this.commitTime) / this.fadeDuration + this.prevZoomAdjustment);
     }
 
-    zoomAdjustment(zoom: number) {
+    zoomAdjustment(zoom: number): number {
         // When zooming out quickly, labels can overlap each other. This
         // adjustment is used to reduce the interval between placement calculations
         // and to reduce the fade duration when zooming out quickly. Discovering the
@@ -1260,12 +1260,12 @@ export class Placement {
         return Math.max(0, (this.transform.zoom - zoom) / 1.5);
     }
 
-    hasTransitions(now: number) {
+    hasTransitions(now: number): boolean {
         return this.stale ||
             now - this.lastPlacementChangeTime < this.fadeDuration;
     }
 
-    stillRecent(now: number, zoom: number) {
+    stillRecent(now: number, zoom: number): boolean {
         // The adjustment makes placement more frequent when zooming.
         // This condition applies the adjustment only after the map has
         // stopped zooming. This avoids adding extra jank while zooming.
@@ -1277,7 +1277,7 @@ export class Placement {
         return this.commitTime + this.fadeDuration * durationAdjustment > now;
     }
 
-    setStale() {
+    setStale(): void {
         this.stale = true;
     }
 }

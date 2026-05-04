@@ -8,9 +8,9 @@ import {globSync} from 'glob';
 import http from 'http';
 import type {Page, Browser, WebWorker} from 'puppeteer';
 
-import {ensureError} from '../../../src/util/util';
-import {localizeURLs} from '../lib/localize-urls';
-import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config';
+import {ensureError} from '../../../src/util/util.ts';
+import {localizeURLs} from '../lib/localize-urls.ts';
+import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config.ts';
 import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
@@ -49,6 +49,7 @@ type TestData = {
     queryOptions: any;
     error?: Error;
     maxPitch: number;
+    maxZoom: number;
     continuesRepaint: boolean;
     // Crop PNG results if they're too large
     reportWidth: number;
@@ -657,7 +658,8 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             localIdeographFontFamily: options.localIdeographFontFamily || false as any,
             crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
             terrainSkirtLength: options.terrainSkirtLength,
-            maxCanvasSize: [8192, 8192]
+            maxCanvasSize: [8192, 8192],
+            maxZoom: options.maxZoom
         });
 
         let idle = false;
@@ -874,7 +876,9 @@ describe('Render tests', () => {
     });
 
     beforeEach((ctx) => {
-        if (!testStyles.find(s => s.metadata.test.id === ctx.task.name)?.metadata.test.ok) {
+        const previousResult = ctx.task.result;
+        const wasFailedOrTimedOut = previousResult?.state === 'fail';
+        if (wasFailedOrTimedOut) {
             console.log(`Retry ${ctx.task.name} with console logging enabled`);
             addConsoleLogging(page);
         }

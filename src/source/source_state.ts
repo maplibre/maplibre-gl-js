@@ -1,7 +1,8 @@
-import {extend} from '../util/util';
-import type {Tile} from '../tile/tile';
+import {extend} from '../util/util.ts';
+import type {Tile} from '../tile/tile.ts';
 import type {FeatureState} from '@maplibre/maplibre-gl-style-spec';
-import type {InViewTiles} from '../tile/tile_manager_in_view_tiles';
+import type {InViewTiles} from '../tile/tile_manager_in_view_tiles.ts';
+import type {Painter} from '../render/painter.ts';
 
 export type FeatureStateEntry = {id: string; state: FeatureState};
 export type FeatureStates = FeatureStateEntry[];
@@ -40,7 +41,7 @@ export class SourceFeatureState {
         this.revision = 0;
     }
 
-    updateState(sourceLayer: string, featureId: number | string, newState: any) {
+    updateState(sourceLayer: string, featureId: number | string, newState: any): void {
         const feature = String(featureId);
         this.stateChanges[sourceLayer] ||= {};
         this.stateChanges[sourceLayer][feature] ||= {};
@@ -74,7 +75,7 @@ export class SourceFeatureState {
         }
     }
 
-    removeFeatureState(sourceLayer: string, featureId?: number | string, key?: string) {
+    removeFeatureState(sourceLayer: string, featureId?: number | string, key?: string): void {
         const sourceLayerDeleted = this.deletedStates[sourceLayer] === null;
         if (sourceLayerDeleted) return;
 
@@ -102,7 +103,7 @@ export class SourceFeatureState {
 
     }
 
-    getState(sourceLayer: string, featureId: number | string) {
+    getState(sourceLayer: string, featureId: number | string): FeatureState {
         const feature = String(featureId);
         const base = this.state[sourceLayer] || {};
         const changes = this.stateChanges[sourceLayer] || {};
@@ -119,7 +120,7 @@ export class SourceFeatureState {
         return reconciledState;
     }
 
-    initializeTileState(tile: Tile, painter: any) {
+    initializeTileState(tile: Tile, painter: Painter): void {
         const layerStates: LayerFeatureStates = {};
         for (const sourceLayer in this.state) {
             layerStates[sourceLayer] = featureStatesMapToArray(this.state[sourceLayer]);
@@ -127,7 +128,7 @@ export class SourceFeatureState {
         tile.setFeatureState(layerStates, painter);
     }
 
-    coalesceChanges(inViewTiles: InViewTiles, painter: any) {
+    coalesceChanges(inViewTiles: InViewTiles, painter: Painter): void {
         //track changes with full state objects, but only for features that got modified
         //use an intermediate object keyed by feature id to naturally deduplicate entries
         const featuresChangedMap: LayerFeatureStatesMap = {};

@@ -1,24 +1,24 @@
-import {packUint8ToFloat} from '../shaders/encode_attribute';
+import {packUint8ToFloat} from '../shaders/encode_attribute.ts';
 import {type Color, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
-import {register} from '../util/web_worker_transfer';
-import {PossiblyEvaluatedPropertyValue} from '../style/properties';
-import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray, DashLayoutArray} from './array_types.g';
-import {clamp} from '../util/util';
-import {patternAttributes} from './bucket/pattern_attributes';
-import {dashAttributes} from './bucket/dash_attributes';
-import {EvaluationParameters} from '../style/evaluation_parameters';
-import {FeaturePositionMap} from './feature_position_map';
-import {type Uniform, Uniform1f, UniformColor, Uniform4f} from '../webgl/uniform_binding';
+import {register} from '../util/web_worker_transfer.ts';
+import {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
+import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray, DashLayoutArray} from './array_types.g.ts';
+import {clamp} from '../util/util.ts';
+import {patternAttributes} from './bucket/pattern_attributes.ts';
+import {dashAttributes} from './bucket/dash_attributes.ts';
+import {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import {FeaturePositionMap} from './feature_position_map.ts';
+import {type Uniform, Uniform1f, UniformColor, Uniform4f} from '../webgl/uniform_binding.ts';
 
-import type {UniformLocations} from '../webgl/uniform_binding';
+import type {UniformLocations} from '../webgl/uniform_binding.ts';
 
-import type {CanonicalTileID} from '../tile/tile_id';
-import type {Context} from '../webgl/context';
-import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
-import type {CrossfadeParameters} from '../style/evaluation_parameters';
-import type {StructArray, StructArrayMember} from '../util/struct_array';
-import type {VertexBuffer} from '../webgl/vertex_buffer';
-import type {ImagePosition} from '../render/image_atlas';
+import type {CanonicalTileID} from '../tile/tile_id.ts';
+import type {Context} from '../webgl/context.ts';
+import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer.ts';
+import type {CrossfadeParameters} from '../style/evaluation_parameters.ts';
+import type {StructArray, StructArrayMember} from '../util/struct_array.ts';
+import type {VertexBuffer} from '../webgl/vertex_buffer.ts';
+import type {ImagePosition} from '../render/image_atlas.ts';
 import type {
     Feature,
     FeatureState,
@@ -27,8 +27,8 @@ import type {
     CompositeExpression,
     FormattedSection
 } from '@maplibre/maplibre-gl-style-spec';
-import type {FeatureStates} from '../source/source_state';
-import type {DashEntry} from '../render/line_atlas';
+import type {FeatureStates} from '../source/source_state.ts';
+import type {DashEntry} from '../render/line_atlas.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 export type BinderUniform = {
@@ -538,14 +538,14 @@ export class ProgramConfiguration {
         return binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder ? binder.maxValue : 0;
     }
 
-    populatePaintArrays(newLength: number, feature: Feature, options: PaintOptions) {
+    populatePaintArrays(newLength: number, feature: Feature, options: PaintOptions): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedBinder)
                 binder.populatePaintArray(newLength, feature, options);
         }
     }
-    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition) {
+    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
@@ -553,7 +553,7 @@ export class ProgramConfiguration {
         }
     }
 
-    setConstantDashPositions(dashTo: DashEntry, dashFrom: DashEntry) {
+    setConstantDashPositions(dashTo: DashEntry, dashFrom: DashEntry): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
@@ -658,7 +658,7 @@ export class ProgramConfiguration {
         binderUniforms: BinderUniform[],
         properties: any,
         globals: GlobalProperties
-    ) {
+    ): void {
         // Uniform state bindings are owned by the Program, but we set them
         // from within the ProgramConfiguration's binder members.
         for (const {name, property, binding} of binderUniforms) {
@@ -666,7 +666,7 @@ export class ProgramConfiguration {
         }
     }
 
-    updatePaintBuffers(crossfade?: CrossfadeParameters) {
+    updatePaintBuffers(crossfade?: CrossfadeParameters): void {
         this._buffers = [];
 
         for (const property in this.binders) {
@@ -681,7 +681,7 @@ export class ProgramConfiguration {
         }
     }
 
-    upload(context: Context) {
+    upload(context: Context): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedBinder)
@@ -690,7 +690,7 @@ export class ProgramConfiguration {
         this.updatePaintBuffers();
     }
 
-    destroy() {
+    destroy(): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedBinder)
@@ -715,7 +715,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this._bufferOffset = 0;
     }
 
-    populatePaintArrays(length: number, feature: Feature, index: number, options: PaintOptions) {
+    populatePaintArrays(length: number, feature: Feature, index: number, options: PaintOptions): void {
         for (const key in this.programConfigurations) {
             this.programConfigurations[key].populatePaintArrays(length, feature, options);
         }
@@ -728,17 +728,17 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this.needsUpload = true;
     }
 
-    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayerLike, layers: readonly TypedStyleLayer[], options: PaintOptions) {
+    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayerLike, layers: readonly TypedStyleLayer[], options: PaintOptions): void {
         for (const layer of layers) {
             this.needsUpload = this.programConfigurations[layer.id].updatePaintArrays(featureStates, this._featureMap, vtLayer, layer, options) || this.needsUpload;
         }
     }
 
-    get(layerId: string) {
+    get(layerId: string): ProgramConfiguration {
         return this.programConfigurations[layerId];
     }
 
-    upload(context: Context) {
+    upload(context: Context): void {
         if (!this.needsUpload) return;
         for (const layerId in this.programConfigurations) {
             this.programConfigurations[layerId].upload(context);
@@ -746,7 +746,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this.needsUpload = false;
     }
 
-    destroy() {
+    destroy(): void {
         for (const layerId in this.programConfigurations) {
             this.programConfigurations[layerId].destroy();
         }

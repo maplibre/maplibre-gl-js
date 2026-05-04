@@ -1,18 +1,18 @@
-import {StencilMode} from '../stencil_mode';
-import {DepthMode} from '../depth_mode';
-import {CullFaceMode} from '../cull_face_mode';
+import {StencilMode} from '../stencil_mode.ts';
+import {DepthMode} from '../depth_mode.ts';
+import {CullFaceMode} from '../cull_face_mode.ts';
 import {
     backgroundUniformValues,
     backgroundPatternUniformValues
-} from '../program/background_program';
+} from '../program/background_program.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {BackgroundStyleLayer} from '../../style/style_layer/background_style_layer';
-import {type OverscaledTileID} from '../../tile/tile_id';
-import {coveringTiles} from '../../geo/projection/covering_tiles';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {BackgroundStyleLayer} from '../../style/style_layer/background_style_layer.ts';
+import {type OverscaledTileID} from '../../tile/tile_id.ts';
+import {coveringTiles} from '../../geo/projection/covering_tiles.ts';
 
-export function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
+export function drawBackground(painter: Painter, tileManager: TileManager, layer: BackgroundStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
     const color = layer.paint.get('background-color');
     const opacity = layer.paint.get('background-opacity');
 

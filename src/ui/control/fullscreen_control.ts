@@ -1,10 +1,10 @@
-import {DOM} from '../../util/dom';
+import {DOM} from '../../util/dom.ts';
 
-import {warnOnce} from '../../util/util';
+import {warnOnce} from '../../util/util.ts';
 
-import {Event, Evented} from '../../util/evented';
-import type {Map} from '../map';
-import type {IControl} from './control';
+import {Event, Evented} from '../../util/evented.ts';
+import type {Map} from '../map.ts';
+import type {IControl} from './control.ts';
 
 /**
  * The {@link FullscreenControl} options object
@@ -90,13 +90,13 @@ export class FullscreenControl extends Evented implements IControl {
     }
 
     /** {@inheritDoc IControl.onRemove} */
-    onRemove() {
+    onRemove(): void {
         this._controlContainer.remove();
         this._map = null;
         window.document.removeEventListener(this._fullscreenchange, this._onFullscreenChange);
     }
 
-    _setupUI() {
+    _setupUI(): void {
         const button = this._fullscreenButton = DOM.create('button', (('maplibregl-ctrl-fullscreen')), this._controlContainer);
         DOM.create('span', 'maplibregl-ctrl-icon', button).setAttribute('aria-hidden', 'true');
         button.type = 'button';
@@ -105,21 +105,21 @@ export class FullscreenControl extends Evented implements IControl {
         window.document.addEventListener(this._fullscreenchange, this._onFullscreenChange);
     }
 
-    _updateTitle() {
+    _updateTitle(): void {
         const title = this._getTitle();
         this._fullscreenButton.setAttribute('aria-label', title);
         this._fullscreenButton.title = title;
     }
 
-    _getTitle() {
+    _getTitle(): string {
         return this._map._getUIString(this._isFullscreen() ? 'FullscreenControl.Exit' : 'FullscreenControl.Enter');
     }
 
-    _isFullscreen() {
+    _isFullscreen(): boolean {
         return this._fullscreen;
     }
 
-    _onFullscreenChange = () => {
+    _onFullscreenChange = (): void => {
         // WebKit due to https://caniuse.com/mdn-api_document_fullscreenelement
         let fullscreenElement =
             window.document.fullscreenElement ||
@@ -134,7 +134,7 @@ export class FullscreenControl extends Evented implements IControl {
         }
     };
 
-    _handleFullscreenChange() {
+    _handleFullscreenChange(): void {
         this._fullscreen = !this._fullscreen;
         this._fullscreenButton.classList.toggle('maplibregl-ctrl-shrink');
         this._fullscreenButton.classList.toggle('maplibregl-ctrl-fullscreen');
@@ -152,7 +152,7 @@ export class FullscreenControl extends Evented implements IControl {
         }
     }
 
-    _onClickFullscreen = () => {
+    _onClickFullscreen = (): void => {
         if (this._isFullscreen()) {
             this._exitFullscreen();
         } else {
@@ -160,7 +160,7 @@ export class FullscreenControl extends Evented implements IControl {
         }
     };
 
-    _exitFullscreen() {
+    _exitFullscreen(): void {
         if (this._pseudo) {
             this._togglePseudoFullScreen();
         } else if (window.document.exitFullscreen) {
@@ -173,7 +173,7 @@ export class FullscreenControl extends Evented implements IControl {
         }
     }
 
-    _requestFullscreen() {
+    _requestFullscreen(): void {
         if (this._pseudo) {
             this._togglePseudoFullScreen();
         } else if (this._container.requestFullscreen) {
@@ -186,7 +186,7 @@ export class FullscreenControl extends Evented implements IControl {
         }
     }
 
-    _togglePseudoFullScreen() {
+    _togglePseudoFullScreen(): void {
         this._container.classList.toggle('maplibregl-pseudo-fullscreen');
         this._handleFullscreenChange();
         this._map.resize();

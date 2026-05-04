@@ -1,6 +1,6 @@
-import type {Context} from './context';
-import type {RGBAImage, AlphaImage} from '../util/image';
-import {premultiplyAlpha} from '../util/image';
+import type {Context} from './context.ts';
+import type {RGBAImage, AlphaImage} from '../util/image.ts';
+import {premultiplyAlpha} from '../util/image.ts';
 
 export type TextureFormat = WebGLRenderingContextBase['RGBA'] | WebGLRenderingContextBase['ALPHA'];
 export type TextureFilter = WebGLRenderingContextBase['LINEAR'] | WebGLRenderingContextBase['LINEAR_MIPMAP_NEAREST'] | WebGLRenderingContextBase['NEAREST'];
@@ -52,7 +52,7 @@ export class Texture {
     } | null, position?: {
         x: number;
         y: number;
-    }) {
+    }): void {
         const {width, height} = image as {width: number; height: number};
         const resize = (this.size?.[0] !== width || this.size[1] !== height) && !position;
         const {context} = this;
@@ -116,7 +116,7 @@ export class Texture {
         gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, data);
     }
 
-    bind(filter: TextureFilter, wrap: TextureWrap, minFilter?: TextureFilter | null) {
+    bind(filter: TextureFilter, wrap: TextureWrap, minFilter?: TextureFilter | null): void {
         const {context} = this;
         const {gl} = context;
 
@@ -143,11 +143,11 @@ export class Texture {
         }
     }
 
-    isSizePowerOfTwo() {
+    isSizePowerOfTwo(): boolean {
         return this.size[0] === this.size[1] && (Math.log(this.size[0]) / Math.LN2) % 1 === 0;
     }
 
-    destroy() {
+    destroy(): void {
         const {gl} = this.context;
         gl.deleteTexture(this.texture);
         this.texture = null;

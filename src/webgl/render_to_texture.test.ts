@@ -1,23 +1,23 @@
 import {beforeEach, describe, test, expect, vi, type Mock} from 'vitest';
-import {RenderToTexture} from './render_to_texture';
-import type {Painter} from '../render/painter';
-import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
-import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
-import {Context} from '../webgl/context';
-import {ColorMode} from '../webgl/color_mode';
-import {Terrain} from '../render/terrain';
-import {type Style} from '../style/style';
-import {Tile} from '../tile/tile';
-import {type Map} from '../ui/map';
-import {OverscaledTileID} from '../tile/tile_id';
-import {type TileManager} from '../tile/tile_manager';
+import {RenderToTexture} from './render_to_texture.ts';
+import type {Painter, RTTObject} from '../render/painter.ts';
+import type {LineStyleLayer} from '../style/style_layer/line_style_layer.ts';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
+import {Context} from '../webgl/context.ts';
+import {ColorMode} from '../webgl/color_mode.ts';
+import {Terrain} from '../render/terrain.ts';
+import {type Style} from '../style/style.ts';
+import {Tile} from '../tile/tile.ts';
+import {type Map} from '../ui/map.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {type TileManager} from '../tile/tile_manager.ts';
 import {type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type FillStyleLayer} from '../style/style_layer/fill_style_layer';
-import {type RasterStyleLayer} from '../style/style_layer/raster_style_layer';
-import {type HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
-import {type BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
-import {DepthMode} from '../webgl/depth_mode';
-import {createNullGL} from '../util/test/null_gl';
+import {type FillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
+import {type RasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
+import {type HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
+import {type BackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
+import {DepthMode} from '../webgl/depth_mode.ts';
+import {createNullGL} from '../util/test/null_gl.ts';
 
 describe('render to texture', () => {
     const gl = createNullGL();
@@ -72,6 +72,8 @@ describe('render to texture', () => {
         useProgram: () => ({draw: () => { layersDrawn++; }}),
         _renderTileClippingMasks: vi.fn(),
         renderLayer: vi.fn(),
+        acquireRTT: (size: number) => ({fbo: {framebuffer: null, width: size, height: size}, texture: {}, size}),
+        releaseRTT: vi.fn(),
         drawFunctions: {
             terrainDepth: vi.fn(),
             terrainCoords: vi.fn(),
@@ -121,7 +123,7 @@ describe('render to texture', () => {
     painter.renderToTexture = rtt;
 
     beforeEach(() => {
-        tile.rtt = [];
+        tile.rttObjects.length = 0;
         tile.rttFingerprint = {};
     });
 
@@ -144,28 +146,31 @@ describe('render to texture', () => {
         );
     });
 
-    test('should clear tile cache when overlaid tiles change', () => {
+    test('should clear tile cache when overlaid tiles change and return rtt object to painter pool', () => {
         rtt.prepareForRender(style, 0);
 
+        const obj = {fbo: {}, texture: {}, size: 512} as unknown as RTTObject;
         tile.rttFingerprint = {maine: '923#0'};
-        tile.rtt = [{id: 1, stamp: 123}];
+        tile.rttObjects[0] = obj;
 
         const otherTileID = new OverscaledTileID(3, 0, 2, 2, 2);
         (terrain.tileManager.getTerrainCoords as Mock).mockReturnValueOnce({[tile.tileID.key]: otherTileID});
+        (painter.releaseRTT as Mock).mockClear();
 
         rtt.prepareForRender(style, 0);
 
-        expect(tile.rtt.length).toBe(0);
+        expect(tile.getRTT(0)).toBeUndefined();
+        expect(painter.releaseRTT).toHaveBeenCalledWith(obj);
     });
 
     test('should not clear tile cache if state remains same', () => {
         rtt.prepareForRender(style, 0);
         tile.rttFingerprint = {maine: '923#0'};
-        tile.rtt = [{id: 1, stamp: 123}];
+        tile.rttObjects[0] = {fbo: {}, texture: {}, size: 512} as unknown as RTTObject;
 
         rtt.prepareForRender(style, 0);
 
-        expect(tile.rtt.length).toBe(1);
+        expect(tile.getRTT(0)).toBeTruthy();
     });
 
     test('should render text after a line by not adding the text to the stack', () => {
@@ -214,14 +219,48 @@ describe('render to texture', () => {
         const state = {revision: 0};
         (style.tileManagers['maine'].getState as Mock).mockReturnValue(state);
 
-        tile.rtt = [{id: 1, stamp: 123}];
+        tile.rttObjects[0] = {fbo: {}, texture: {}, size: 512} as unknown as RTTObject;
         tile.rttFingerprint = {maine: '923#0'};
 
         rtt.prepareForRender(style, 0);
-        expect(tile.rtt.length).toBe(1);
+        expect(tile.getRTT(0)).toBeTruthy();
 
         state.revision = 1;
         rtt.prepareForRender(style, 0);
-        expect(tile.rtt.length).toBe(0);
+        expect(tile.getRTT(0)).toBeUndefined();
+    });
+
+    test('cache miss acquires an rtt object from the painter and stores it on the tile', () => {
+        style._order = ['maine-fill', 'maine-symbol'];
+        rtt.prepareForRender(style, 0);
+
+        const acquireSpy = vi.spyOn(painter, 'acquireRTT');
+        acquireSpy.mockClear();
+
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        rtt.renderLayer(fillLayer, renderOptions);
+        rtt.renderLayer(symbolLayer, renderOptions);
+
+        expect(acquireSpy).toHaveBeenCalledWith(rtt.rttSize);
+        expect(tile.getRTT(0)).toBeTruthy();
+        expect(tile.getRTT(0).size).toBe(rtt.rttSize);
+    });
+
+    test('cache hit reuses cached RTT and skips acquireRTT', () => {
+        style._order = ['maine-fill', 'maine-symbol'];
+        rtt.prepareForRender(style, 0);
+
+        const cached = {fbo: {framebuffer: null}, texture: {}, size: rtt.rttSize} as unknown as RTTObject;
+        tile.rttObjects[0] = cached;
+
+        const acquireSpy = vi.spyOn(painter, 'acquireRTT');
+        acquireSpy.mockClear();
+
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        rtt.renderLayer(fillLayer, renderOptions);
+        rtt.renderLayer(symbolLayer, renderOptions);
+
+        expect(acquireSpy).not.toHaveBeenCalled();
+        expect(tile.getRTT(0)).toBe(cached);
     });
 });

@@ -1,4 +1,4 @@
-import {filterObject} from '../util/util';
+import {filterObject} from '../util/util.ts';
 
 import {createVisibilityExpression, featureFilter, latest as styleSpec, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {
@@ -6,11 +6,11 @@ import {
     validateLayoutProperty,
     validatePaintProperty,
     emitValidationErrors
-} from './validate_style';
-import {Evented, ErrorEvent} from '../util/evented';
-import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties';
+} from './validate_style.ts';
+import {Evented, ErrorEvent} from '../util/evented.ts';
+import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties.ts';
 
-import type {Bucket, BucketParameters} from '../data/bucket';
+import type {Bucket, BucketParameters} from '../data/bucket.ts';
 import type Point from '@mapbox/point-geometry';
 import type {
     FeatureFilter,
@@ -22,16 +22,16 @@ import type {
     AllPaintProperties,
     AllLayoutProperties,
 } from '@maplibre/maplibre-gl-style-spec';
-import type {TransitionParameters, PropertyValue} from './properties';
-import {type EvaluationParameters} from './evaluation_parameters';
-import type {CrossfadeParameters} from './evaluation_parameters';
+import type {TransitionParameters, PropertyValue} from './properties.ts';
+import {type EvaluationParameters} from './evaluation_parameters.ts';
+import type {CrossfadeParameters} from './evaluation_parameters.ts';
 
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {CustomLayerInterface} from './style_layer/custom_style_layer';
-import type {Map} from '../ui/map';
-import type {StyleSetterOptions} from './style';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
+import type {Map} from '../ui/map.ts';
+import type {StyleSetterOptions} from './style.ts';
 import {type mat4} from 'gl-matrix';
-import type {UnwrappedTileID} from '../tile/tile_id';
+import type {UnwrappedTileID} from '../tile/tile_id.ts';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 export type PaintPropertyEntry = { [K in keyof AllPaintProperties]: {name: K; value: AllPaintProperties[K]} }[keyof AllPaintProperties];
@@ -167,12 +167,12 @@ export abstract class StyleLayer extends Evented {
         }
     }
 
-    setFilter(filter: FilterSpecification | void) {
+    setFilter(filter: FilterSpecification | void): void {
         this.filter = filter;
         this._featureFilter = featureFilter(filter, this._globalState);
     }
 
-    getCrossfadeParameters() {
+    getCrossfadeParameters(): CrossfadeParameters {
         return this._crossfadeParameters;
     }
 
@@ -246,11 +246,11 @@ export abstract class StyleLayer extends Evented {
      * Get list of global state references that are used within visibility expression.
      * This is used to determine if layer visibility needs to be updated when global state property changes.
      */
-    getVisibilityAffectingGlobalStateRefs() {
+    getVisibilityAffectingGlobalStateRefs(): Set<string> {
         return this._visibilityExpression.getGlobalStateRefs();
     }
 
-    setLayoutProperty<K extends keyof AllLayoutProperties>(name: K, value: AllLayoutProperties[K], options: StyleSetterOptions = {}) {
+    setLayoutProperty<K extends keyof AllLayoutProperties>(name: K, value: AllLayoutProperties[K], options: StyleSetterOptions = {}): void {
         if (name === 'visibility') {
             this.visibility = value as VisibilitySpecification;
             this._visibilityExpression.setValue(value as VisibilitySpecification);
@@ -285,7 +285,7 @@ export abstract class StyleLayer extends Evented {
         }
     }
 
-    setPaintProperty<K extends keyof AllPaintProperties>(name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}) {
+    setPaintProperty<K extends keyof AllPaintProperties>(name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}): boolean {
         if (name as any === 'visibility' || this._unevaluatedLayout?.hasProperty(name)) {
             this.fire(new ErrorEvent(new Error(name + ERROR_LAYOUT_NOT_PAINT)));
             return false;
@@ -316,7 +316,7 @@ export abstract class StyleLayer extends Evented {
         }
     }
 
-    _handleSpecialPaintPropertyUpdate(_: string) {
+    _handleSpecialPaintPropertyUpdate(_: string): void {
         // No-op; can be overridden by derived classes.
     }
 
@@ -326,25 +326,25 @@ export abstract class StyleLayer extends Evented {
         return false;
     }
 
-    isHidden(zoom: number = this.minzoom, roundMinZoom: boolean = false) {
+    isHidden(zoom: number = this.minzoom, roundMinZoom: boolean = false): boolean {
         if (this.minzoom && zoom < (roundMinZoom ? Math.floor(this.minzoom) : this.minzoom)) return true;
         if (this.maxzoom && zoom >= this.maxzoom) return true;
         return this._evaluatedVisibility === 'none';
     }
 
-    updateTransitions(parameters: TransitionParameters) {
+    updateTransitions(parameters: TransitionParameters): void {
         this._transitioningPaint = this._transitionablePaint.transitioned(parameters, this._transitioningPaint);
     }
 
-    hasTransition() {
+    hasTransition(): boolean {
         return this._transitioningPaint.hasTransition();
     }
 
-    recalculateVisibility() {
+    recalculateVisibility(): void {
         this._evaluatedVisibility = this._visibilityExpression.evaluate();
     }
 
-    recalculate(parameters: EvaluationParameters, availableImages: string[]) {
+    recalculate(parameters: EvaluationParameters, availableImages: string[]): void {
         if (parameters.getCrossfadeParameters) {
             this._crossfadeParameters = parameters.getCrossfadeParameters();
         }
@@ -382,7 +382,7 @@ export abstract class StyleLayer extends Evented {
         });
     }
 
-    _validate(validate: Function, key: string, name: string, value: unknown, options: StyleSetterOptions = {}) {
+    _validate(validate: Function, key: string, name: string, value: unknown, options: StyleSetterOptions = {}): boolean {
         if (options?.validate === false) {
             return false;
         }
@@ -397,23 +397,23 @@ export abstract class StyleLayer extends Evented {
         }));
     }
 
-    is3D() {
+    is3D(): boolean {
         return false;
     }
 
-    isTileClipped() {
+    isTileClipped(): boolean {
         return false;
     }
 
-    hasOffscreenPass() {
+    hasOffscreenPass(): boolean {
         return false;
     }
 
-    resize() {
+    resize(): void {
         // noop
     }
 
-    isStateDependent() {
+    isStateDependent(): boolean {
         for (const property in (this as any).paint._values) {
             const value = (this as any).paint.get(property);
             if (!(value instanceof PossiblyEvaluatedPropertyValue) || !supportsPropertyExpression(value.property.specification)) {

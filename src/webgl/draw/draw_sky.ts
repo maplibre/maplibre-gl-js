@@ -1,20 +1,20 @@
-import {StencilMode} from '../stencil_mode';
-import {DepthMode} from '../depth_mode';
-import {CullFaceMode} from '../cull_face_mode';
-import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
-import posAttributes from '../../data/pos_attributes';
-import {SegmentVector} from '../../data/segment';
-import {skyUniformValues} from '../program/sky_program';
-import {atmosphereUniformValues} from '../program/atmosphere_program';
-import {type Sky} from '../../style/sky';
-import {type Light} from '../../style/light';
-import {Mesh} from '../../render/mesh';
+import {StencilMode} from '../stencil_mode.ts';
+import {DepthMode} from '../depth_mode.ts';
+import {CullFaceMode} from '../cull_face_mode.ts';
+import {PosArray, TriangleIndexArray} from '../../data/array_types.g.ts';
+import posAttributes from '../../data/pos_attributes.ts';
+import {SegmentVector} from '../../data/segment.ts';
+import {skyUniformValues} from '../program/sky_program.ts';
+import {atmosphereUniformValues} from '../program/atmosphere_program.ts';
+import {type Sky} from '../../style/sky.ts';
+import {type Light} from '../../style/light.ts';
+import {Mesh} from '../../render/mesh.ts';
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {type IReadonlyTransform} from '../../geo/transform_interface';
-import {ColorMode} from '../color_mode';
-import type {Painter} from '../../render/painter';
-import {type Context} from '../context';
-import {getGlobeRadiusPixels} from '../../geo/projection/globe_utils';
+import {type IReadonlyTransform} from '../../geo/transform_interface.ts';
+import {ColorMode} from '../color_mode.ts';
+import type {Painter} from '../../render/painter.ts';
+import {type Context} from '../context.ts';
+import {getGlobeRadiusPixels} from '../../geo/projection/globe_utils.ts';
 
 function getMesh(context: Context, sky: Sky): Mesh {
     // Create the Sky mesh the first time we need it
@@ -39,7 +39,7 @@ function getMesh(context: Context, sky: Sky): Mesh {
     return sky.mesh;
 }
 
-export function drawSky(painter: Painter, sky: Sky) {
+export function drawSky(painter: Painter, sky: Sky): void {
     const context = painter.context;
     const gl = context.gl;
 
@@ -76,7 +76,7 @@ function getSunPos(light: Light, transform: IReadonlyTransform): vec3 {
     return lightPos;
 }
 
-export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
+export function drawAtmosphere(painter: Painter, sky: Sky, light: Light): void {
     const context = painter.context;
     const gl = context.gl;
     const program = painter.useProgram('atmosphere');

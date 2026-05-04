@@ -1,4 +1,4 @@
-import {isCounterClockwise} from './util';
+import {isCounterClockwise} from './util.ts';
 
 import Point from '@mapbox/point-geometry';
 
@@ -10,7 +10,7 @@ type Ring = Point[];
 type Polygon = Point[];
 type MultiPolygon = Polygon[];
 
-function polygonIntersectsPolygon(polygonA: Polygon, polygonB: Polygon) {
+function polygonIntersectsPolygon(polygonA: Polygon, polygonB: Polygon): boolean {
     for (const point of polygonA) {
         if (polygonContainsPoint(polygonB, point)) return true;
     }
@@ -22,12 +22,12 @@ function polygonIntersectsPolygon(polygonA: Polygon, polygonB: Polygon) {
     return lineIntersectsLine(polygonA, polygonB);
 }
 
-function polygonIntersectsBufferedPoint(polygon: Polygon, point: Point, radius: number) {
+function polygonIntersectsBufferedPoint(polygon: Polygon, point: Point, radius: number): boolean {
     if (polygonContainsPoint(polygon, point)) return true;
     return pointIntersectsBufferedLine(point, polygon, radius);
 }
 
-function polygonIntersectsMultiPolygon(polygon: Polygon, multiPolygon: MultiPolygon) {
+function polygonIntersectsMultiPolygon(polygon: Polygon, multiPolygon: MultiPolygon): boolean {
 
     if (polygon.length === 1) {
         return multiPolygonContainsPoint(multiPolygon, polygon[0]);
@@ -50,7 +50,7 @@ function polygonIntersectsMultiPolygon(polygon: Polygon, multiPolygon: MultiPoly
     return false;
 }
 
-function polygonIntersectsBufferedMultiLine(polygon: Polygon, multiLine: MultiLine, radius: number) {
+function polygonIntersectsBufferedMultiLine(polygon: Polygon, multiLine: MultiLine, radius: number): boolean {
     for (const line of multiLine) {
 
         if (polygon.length >= 3) {
@@ -116,7 +116,7 @@ function pointIntersectsBufferedLine(p: Point, line: Line, radius: number) {
 }
 
 // Code from https://stackoverflow.com/a/1501725/331379.
-function distToSegmentSquared(p: Point, v: Point, w: Point) {
+function distToSegmentSquared(p: Point, v: Point, w: Point): number {
     const l2 = v.distSqr(w);
     if (l2 === 0) return p.distSqr(v);
     const t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
@@ -155,7 +155,7 @@ function polygonContainsPoint(ring: Ring, p: Point) {
     return c;
 }
 
-function polygonIntersectsBox(ring: Ring, boxX1: number, boxY1: number, boxX2: number, boxY2: number) {
+function polygonIntersectsBox(ring: Ring, boxX1: number, boxY1: number, boxX2: number, boxY2: number): boolean {
     for (const p of ring) {
         if (boxX1 <= p.x &&
             boxY1 <= p.y &&

@@ -1,82 +1,82 @@
 import packageJSON from '../package.json' with {type: 'json'};
-import {Map, type MapOptions, type WebGLContextAttributesWithType} from './ui/map';
-import {NavigationControl, type NavigationControlOptions} from './ui/control/navigation_control';
-import {GeolocateControl, type GeolocateControlOptions} from './ui/control/geolocate_control';
-import {AttributionControl, type AttributionControlOptions} from './ui/control/attribution_control';
-import {LogoControl, type LogoControlOptions} from './ui/control/logo_control';
-import {ScaleControl, type ScaleControlOptions, type Unit} from './ui/control/scale_control';
-import {FullscreenControl, type FullscreenControlOptions} from './ui/control/fullscreen_control';
-import {TerrainControl} from './ui/control/terrain_control';
-import {GlobeControl} from './ui/control/globe_control';
-import {type Offset, Popup, type PopupOptions} from './ui/popup';
-import {type Alignment, Marker, type MarkerOptions} from './ui/marker';
-import {type AddLayerObject, type FeatureIdentifier, Style, type StyleOptions, type StyleSetterOptions, type StyleSwapOptions, type TransformStyleFunction} from './style/style';
-import {LngLat, type LngLatLike} from './geo/lng_lat';
-import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds';
+import {Map, type MapOptions, type WebGLContextAttributesWithType} from './ui/map.ts';
+import {NavigationControl, type NavigationControlOptions} from './ui/control/navigation_control.ts';
+import {GeolocateControl, type GeolocateControlOptions} from './ui/control/geolocate_control.ts';
+import {AttributionControl, type AttributionControlOptions} from './ui/control/attribution_control.ts';
+import {LogoControl, type LogoControlOptions} from './ui/control/logo_control.ts';
+import {ScaleControl, type ScaleControlOptions, type Unit} from './ui/control/scale_control.ts';
+import {FullscreenControl, type FullscreenControlOptions} from './ui/control/fullscreen_control.ts';
+import {TerrainControl} from './ui/control/terrain_control.ts';
+import {GlobeControl} from './ui/control/globe_control.ts';
+import {type Offset, Popup, type PopupOptions} from './ui/popup.ts';
+import {type Alignment, Marker, type MarkerOptions} from './ui/marker.ts';
+import {type AddLayerObject, type FeatureIdentifier, Style, type StyleOptions, type StyleSetterOptions, type StyleSwapOptions, type TransformStyleFunction} from './style/style.ts';
+import {LngLat, type LngLatLike} from './geo/lng_lat.ts';
+import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
-import {MercatorCoordinate} from './geo/mercator_coordinate';
-import {Evented, type ErrorEvent, Event, type Listener} from './util/evented';
-import {type AddProtocolAction, config} from './util/config';
-import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
-import {now, setNow, restoreNow, isTimeFrozen} from './util/time_control';
-import {WorkerPool} from './util/worker_pool';
-import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
-import {AJAXError, type ExpiryData, type GetResourceResponse, type RequestParameters} from './util/ajax';
-import {GeoJSONSource, type SetClusterOptions} from './source/geojson_source';
-import {CanvasSource, type CanvasSourceSpecification} from './source/canvas_source';
-import {type CanonicalTileRange, type Coordinates, ImageSource, type UpdateImageOptions} from './source/image_source';
-import {RasterDEMTileSource} from './source/raster_dem_tile_source';
-import {RasterTileSource} from './source/raster_tile_source';
-import {VectorTileSource, type LoadTileResult} from './source/vector_tile_source';
-import {VideoSource} from './source/video_source';
-import {type Source, type SourceClass, addSourceType} from './source/source';
-import {addProtocol, removeProtocol} from './source/protocol_crud';
-import {type Dispatcher, getGlobalDispatcher} from './util/dispatcher';
-import {EdgeInsets, type PaddingOptions} from './geo/edge_insets';
-import {type MapTerrainEvent, type MapStyleImageMissingEvent, type MapStyleDataEvent, type MapSourceDataEvent, type MapLibreZoomEvent, type MapLibreEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, type MapDataEvent, type MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type MapProjectionEvent} from './ui/events';
-import {BoxZoomHandler, type BoxZoomEndHandler, type BoxZoomHandlerOptions} from './ui/handler/box_zoom';
-import {DragRotateHandler} from './ui/handler/shim/drag_rotate';
-import {DragPanHandler, type DragPanOptions} from './ui/handler/shim/drag_pan';
-import {ScrollZoomHandler} from './ui/handler/scroll_zoom';
-import {TwoFingersTouchZoomRotateHandler} from './ui/handler/shim/two_fingers_touch';
-import {Hash} from './ui/hash';
-import {CooperativeGesturesHandler, type GestureOptions} from './ui/handler/cooperative_gestures';
-import {DoubleClickZoomHandler} from './ui/handler/shim/dblclick_zoom';
-import {KeyboardHandler} from './ui/handler/keyboard';
-import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler, type AroundCenterOptions} from './ui/handler/two_fingers_touch';
-import {MessageType, type ActorMessage, type RequestResponseMessageMap} from './util/actor_messages';
-import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileMesh} from './util/create_tile_mesh';
-import {GPUInitializationError} from './util/gpu_initialization_error';
-import {EXTENT} from './data/extent';
+import {MercatorCoordinate} from './geo/mercator_coordinate.ts';
+import {Evented, type ErrorEvent, Event, type Listener} from './util/evented.ts';
+import {type AddProtocolAction, config} from './util/config.ts';
+import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread.ts';
+import {now, setNow, restoreNow, isTimeFrozen} from './util/time_control.ts';
+import {WorkerPool} from './util/worker_pool.ts';
+import {prewarm, clearPrewarmedResources} from './util/global_worker_pool.ts';
+import {AJAXError, type ExpiryData, type GetResourceResponse, type RequestParameters} from './util/ajax.ts';
+import {GeoJSONSource, type SetClusterOptions} from './source/geojson_source.ts';
+import {CanvasSource, type CanvasSourceSpecification} from './source/canvas_source.ts';
+import {type CanonicalTileRange, type Coordinates, ImageSource, type UpdateImageOptions} from './source/image_source.ts';
+import {RasterDEMTileSource} from './source/raster_dem_tile_source.ts';
+import {RasterTileSource} from './source/raster_tile_source.ts';
+import {VectorTileSource, type LoadTileResult} from './source/vector_tile_source.ts';
+import {VideoSource} from './source/video_source.ts';
+import {type Source, type SourceClass, addSourceType} from './source/source.ts';
+import {addProtocol, removeProtocol} from './source/protocol_crud.ts';
+import {type Dispatcher, getGlobalDispatcher} from './util/dispatcher.ts';
+import {EdgeInsets, type PaddingOptions} from './geo/edge_insets.ts';
+import {type MapTerrainEvent, type MapStyleImageMissingEvent, type MapStyleDataEvent, type MapSourceDataEvent, type MapLibreZoomEvent, type MapLibreEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, type MapDataEvent, type MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type MapProjectionEvent} from './ui/events.ts';
+import {BoxZoomHandler, type BoxZoomEndHandler, type BoxZoomHandlerOptions} from './ui/handler/box_zoom.ts';
+import {DragRotateHandler} from './ui/handler/shim/drag_rotate.ts';
+import {DragPanHandler, type DragPanOptions} from './ui/handler/shim/drag_pan.ts';
+import {ScrollZoomHandler} from './ui/handler/scroll_zoom.ts';
+import {TwoFingersTouchZoomRotateHandler} from './ui/handler/shim/two_fingers_touch.ts';
+import {Hash} from './ui/hash.ts';
+import {CooperativeGesturesHandler, type GestureOptions} from './ui/handler/cooperative_gestures.ts';
+import {DoubleClickZoomHandler} from './ui/handler/shim/dblclick_zoom.ts';
+import {KeyboardHandler} from './ui/handler/keyboard.ts';
+import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler, type AroundCenterOptions} from './ui/handler/two_fingers_touch.ts';
+import {MessageType, type ActorMessage, type RequestResponseMessageMap} from './util/actor_messages.ts';
+import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileMesh} from './util/create_tile_mesh.ts';
+import {GPUInitializationError} from './util/gpu_initialization_error.ts';
+import {EXTENT} from './data/extent.ts';
 
-import type {ControlPosition, IControl} from './ui/control/control';
-import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer';
-import type {AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera';
-import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeature} from './util/vectortile_to_geojson';
-import type {Handler, HandlerResult} from './ui/handler_manager';
-import type {Complete, RequireAtLeastOne, Subscription} from './util/util';
-import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles';
-import type {TransformConstrainFunction} from './geo/transform_interface';
-import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, TextFit} from './style/style_image';
-import type {StyleLayer, PaintPropertyEntry} from './style/style_layer';
-import type {Tile} from './tile/tile';
-import type {GeoJSONFeatureDiff, GeoJSONFeatureId, GeoJSONSourceDiff} from './source/geojson_source_diff';
-import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from './source/query_features';
-import type {RequestTransformFunction, ResourceType} from './util/request_manager';
-import type {OverscaledTileID} from './tile/tile_id';
-import type {PositionAnchor} from './ui/anchor';
-import type {ProjectionData, ProjectionDataParams} from './geo/projection/projection_data';
-import type {WorkerTileResult} from './source/worker_source';
-import type {Actor, IActor} from './util/actor';
-import type {Bucket} from './data/bucket';
-import type {CollisionBoxArray} from './data/array_types.g';
-import type {AlphaImage} from './util/image';
-import type {GlyphPosition, GlyphPositions} from './render/glyph_atlas';
-import type {ImageAtlas} from './render/image_atlas';
-import type {StyleGlyph} from './style/style_glyph';
-import type {FeatureIndex} from './data/feature_index';
-import type {DashEntry} from './render/line_atlas';
-import type {Painter} from './render/painter';
+import type {ControlPosition, IControl} from './ui/control/control.ts';
+import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer.ts';
+import type {AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera.ts';
+import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeature} from './util/vectortile_to_geojson.ts';
+import type {Handler, HandlerResult} from './ui/handler_manager.ts';
+import type {Complete, RequireAtLeastOne, Subscription} from './util/util.ts';
+import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles.ts';
+import type {TransformConstrainFunction} from './geo/transform_interface.ts';
+import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, TextFit} from './style/style_image.ts';
+import type {StyleLayer, PaintPropertyEntry} from './style/style_layer.ts';
+import type {Tile} from './tile/tile.ts';
+import type {GeoJSONFeatureDiff, GeoJSONFeatureId, GeoJSONSourceDiff} from './source/geojson_source_diff.ts';
+import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from './source/query_features.ts';
+import type {RequestTransformFunction, ResourceType} from './util/request_manager.ts';
+import type {OverscaledTileID} from './tile/tile_id.ts';
+import type {PositionAnchor} from './ui/anchor.ts';
+import type {ProjectionData, ProjectionDataParams} from './geo/projection/projection_data.ts';
+import type {WorkerTileResult} from './source/worker_source.ts';
+import type {Actor, IActor} from './util/actor.ts';
+import type {Bucket} from './data/bucket.ts';
+import type {CollisionBoxArray} from './data/array_types.g.ts';
+import type {AlphaImage} from './util/image.ts';
+import type {GlyphPosition, GlyphPositions} from './render/glyph_atlas.ts';
+import type {ImageAtlas} from './render/image_atlas.ts';
+import type {StyleGlyph} from './style/style_glyph.ts';
+import type {FeatureIndex} from './data/feature_index.ts';
+import type {DashEntry} from './render/line_atlas.ts';
+import type {Painter} from './render/painter.ts';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -115,7 +115,7 @@ function getRTLTextPluginStatus(): string {
  * Returns the package version of the library
  * @returns Package version of the library
  */
-function getVersion() { return version; }
+function getVersion(): string { return version; }
 /**
  * Gets the number of web workers instantiated on a page with GL JS maps.
  * By default, workerCount is 1 except for Safari browser where it is set to half the number of CPU cores (capped at 3).
@@ -127,7 +127,7 @@ function getVersion() { return version; }
  * const workerCount = getWorkerCount()
  * ```
  */
-function getWorkerCount() { return WorkerPool.workerCount; }
+function getWorkerCount(): number { return WorkerPool.workerCount; }
 /**
  * Sets the number of web workers instantiated on a page with GL JS maps.
  * By default, workerCount is 1 except for Safari browser where it is set to half the number of CPU cores (capped at 3).
@@ -138,7 +138,7 @@ function getWorkerCount() { return WorkerPool.workerCount; }
  * setWorkerCount(2);
  * ```
  */
-function setWorkerCount(count: number) { WorkerPool.workerCount = count; }
+function setWorkerCount(count: number): void { WorkerPool.workerCount = count; }
 /**
  * Gets and sets the maximum number of images (raster tiles, sprites, icons) to load in parallel,
  * which affects performance in raster-heavy maps. 16 by default.
@@ -149,7 +149,7 @@ function setWorkerCount(count: number) { WorkerPool.workerCount = count; }
  * getMaxParallelImageRequests();
  * ```
  */
-function getMaxParallelImageRequests() { return config.MAX_PARALLEL_IMAGE_REQUESTS; }
+function getMaxParallelImageRequests(): number { return config.MAX_PARALLEL_IMAGE_REQUESTS; }
 /**
  * Sets the maximum number of images (raster tiles, sprites, icons) to load in parallel,
  * which affects performance in raster-heavy maps. 16 by default.
@@ -159,16 +159,16 @@ function getMaxParallelImageRequests() { return config.MAX_PARALLEL_IMAGE_REQUES
  * setMaxParallelImageRequests(10);
  * ```
  */
-function setMaxParallelImageRequests(numRequests: number) { config.MAX_PARALLEL_IMAGE_REQUESTS = numRequests; }
+function setMaxParallelImageRequests(numRequests: number): void { config.MAX_PARALLEL_IMAGE_REQUESTS = numRequests; }
 /**
  * Gets the worker url
  * @returns The worker url
  */
-function getWorkerUrl() { return config.WORKER_URL; }
+function getWorkerUrl(): string { return config.WORKER_URL; }
 /**
  * Sets the worker url
  */
-function setWorkerUrl(value: string) { config.WORKER_URL = value; }
+function setWorkerUrl(value: string): void { config.WORKER_URL = value; }
 /**
  * Allows loading javascript code in the worker thread.
  * *Note* that since this is using some very internal classes and flows it is considered experimental and can break at any point.
@@ -200,7 +200,7 @@ function setWorkerUrl(value: string) { config.WORKER_URL = value; }
  * importScriptInWorkers('add-protocol-worker.js');
  * ```
  */
-function importScriptInWorkers(workerUrl: string) { return getGlobalDispatcher().broadcast(MessageType.importScript, workerUrl); }
+async function importScriptInWorkers(workerUrl: string): Promise<void> { await getGlobalDispatcher().broadcast(MessageType.importScript, workerUrl); }
 
 export {
     Map,

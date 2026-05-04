@@ -1,6 +1,6 @@
-import {OverscaledTileID} from '../../../src/tile/tile_id';
-import Benchmark from '../lib/benchmark';
-import {FeatureIndex} from '../../../src/data/feature_index';
+import {OverscaledTileID} from '../../../src/tile/tile_id.ts';
+import Benchmark from '../lib/benchmark.ts';
+import {FeatureIndex} from '../../../src/data/feature_index.ts';
 import {type FeatureFilter} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
 
@@ -28,7 +28,7 @@ export default class LoadMatchingFeature extends Benchmark {
         } as unknown as VectorTileLayerLike;
     }
 
-    bench() {
+    bench(): void {
         this.featureIndex.loadMatchingFeature({}, 0, 0, 0, {needGeometry: false} as FeatureFilter, this.layerIdsToTest, [], {}, {});
     }
 }

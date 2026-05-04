@@ -1,16 +1,16 @@
-import {type OverscaledTileID} from './tile_id';
-import {Tile} from './tile';
-import {EXTENT} from '../data/extent';
+import {type OverscaledTileID} from './tile_id.ts';
+import {Tile} from './tile.ts';
+import {EXTENT} from '../data/extent.ts';
 import {mat4} from 'gl-matrix';
-import {Evented} from '../util/evented';
-import type {ITransform} from '../geo/transform_interface';
-import type {TileManager} from './tile_manager';
-import type {Source} from '../source/source';
-import {type Terrain} from '../render/terrain';
-import {now} from '../util/time_control';
-import {coveringTiles} from '../geo/projection/covering_tiles';
-import {createMat4f64} from '../util/util';
-import {type CanonicalTileRange} from '../source/image_source';
+import {Evented} from '../util/evented.ts';
+import type {ITransform} from '../geo/transform_interface.ts';
+import type {TileManager} from './tile_manager.ts';
+import type {Source} from '../source/source.ts';
+import {type Terrain} from '../render/terrain.ts';
+import {now} from '../util/time_control.ts';
+import {coveringTiles} from '../geo/projection/covering_tiles.ts';
+import {createMat4f64} from '../util/util.ts';
+import {type CanonicalTileRange} from '../source/image_source.ts';
 
 /**
  * @internal
@@ -74,9 +74,10 @@ export class TerrainTileManager extends Evented {
         tileManager.tileSize = this.tileSize;
     }
 
-    destruct() {
+    destruct(): void {
         this.tileManager.usedForTerrain = false;
         this.tileManager.tileSize = null;
+        this.releaseAllRTT();
     }
 
     getSource(): Source {
@@ -113,19 +114,31 @@ export class TerrainTileManager extends Evented {
         }
         // free unused tiles
         for (const key in this._tiles) {
-            if (!keys[key]) delete this._tiles[key];
+            if (!keys[key]) {
+                this._tiles[key].releaseRTT(this.tileManager.map.painter);
+                delete this._tiles[key];
+            }
         }
     }
 
     /**
-     * Free render to texture cache
-     * @param tileID - optional, free only corresponding to tileID.
+     * Release the RTT objects for `tileID` (and its ancestors/descendants),
      */
-    freeRtt(tileID?: OverscaledTileID) {
+    releaseRTT(tileID: OverscaledTileID): void {
         for (const key in this._tiles) {
             const tile = this._tiles[key];
-            if (!tileID || tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
-                tile.rtt = [];
+            if (tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
+                tile.releaseRTT(this.tileManager.map.painter);
+        }
+    }
+
+    /**
+     * Release the A RTT objects for all tiles.
+     */
+    releaseAllRTT(): void {
+        for (const key in this._tiles) {
+            const tile = this._tiles[key];
+            tile.releaseRTT(this.tileManager.map.painter);
         }
     }
 
@@ -297,7 +310,7 @@ export class TerrainTileManager extends Evented {
      * @param time - the time
      * @returns true if any tiles came into view at or after the specified time
      */
-    anyTilesAfterTime(time = Date.now()): boolean {
+    anyTilesAfterTime(time: number = Date.now()): boolean {
         return this._lastTilesetChange >= time;
     }
 

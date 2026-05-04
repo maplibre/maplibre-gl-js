@@ -1,12 +1,12 @@
-import {type Subscription, ensureError, isWorker, subscribe} from './util';
-import {serialize, deserialize, type Serialized} from './web_worker_transfer';
-import {ThrottledInvoker} from './throttled_invoker';
+import {type Subscription, ensureError, isWorker, subscribe} from './util.ts';
+import {serialize, deserialize, type Serialized} from './web_worker_transfer.ts';
+import {ThrottledInvoker} from './throttled_invoker.ts';
 
 import {
     type MessageType,
     type ActorMessage,
     type RequestResponseMessageMap,
-} from './actor_messages';
+} from './actor_messages.ts';
 
 /**
  * An interface to be sent to the actor in order for it to allow communication between the worker and the main thread
@@ -84,11 +84,11 @@ export class Actor implements IActor {
         this.globalScope = isWorker(self) ? target : window;
     }
 
-    registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>) {
+    registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): void {
         (this.messageHandlers as Record<T, MessageHandler<T>>)[type] = handler;
     }
 
-    unregisterMessageHandler<T extends MessageType>(type: T) {
+    unregisterMessageHandler<T extends MessageType>(type: T): void {
         delete this.messageHandlers[type];
     }
 
@@ -144,7 +144,7 @@ export class Actor implements IActor {
         });
     }
 
-    receive(message: {data: MessageData}) {
+    receive(message: {data: MessageData}): void {
         const data = message.data;
         const id = data.id;
 
@@ -190,7 +190,7 @@ export class Actor implements IActor {
         this.processTask(id, data);
     }
 
-    process() {
+    process(): void {
         if (this.taskQueue.length === 0) {
             return;
         }
@@ -211,7 +211,7 @@ export class Actor implements IActor {
         this.processTask(id, task);
     }
 
-    async processTask(id: string, task: MessageData) {
+    async processTask(id: string, task: MessageData): Promise<void> {
         if (task.type === '<response>') {
             // The `completeTask` function in the counterpart actor has been called, and we are now
             // resolving or rejecting the promise in the originating actor, if there is one.
@@ -243,7 +243,7 @@ export class Actor implements IActor {
         }
     }
 
-    completeTask(id: string, err: Error, data?: RequestResponseMessageMap[MessageType][1]) {
+    completeTask(id: string, err: Error, data?: RequestResponseMessageMap[MessageType][1]): void {
         const buffers: Transferable[] = [];
         delete this.abortControllers[id];
         const responseMessage: MessageData = {
@@ -257,7 +257,7 @@ export class Actor implements IActor {
         this.target.postMessage(responseMessage, {transfer: buffers});
     }
 
-    remove() {
+    remove(): void {
         this.invoker.remove();
         this.subscription.unsubscribe();
     }

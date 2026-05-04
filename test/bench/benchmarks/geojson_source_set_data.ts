@@ -1,7 +1,7 @@
-import Benchmark from '../lib/benchmark';
-import createMap from '../lib/create_map';
-import type {Map} from '../../../src/ui/map';
-import type {GeoJSONSource} from '../../../src/source/geojson_source';
+import Benchmark from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
+import type {Map} from '../../../src/ui/map.ts';
+import type {GeoJSONSource} from '../../../src/source/geojson_source.ts';
 
 const data: GeoJSON.FeatureCollection = {
     type: 'FeatureCollection',
@@ -21,7 +21,7 @@ const data: GeoJSON.FeatureCollection = {
 export default class GeoJSONSourceSetData extends Benchmark {
     map: Map;
 
-    async setup() {
+    async setup(): Promise<void> {
         this.map = await createMap({
             width: 512,
             height: 512,
@@ -57,7 +57,7 @@ export default class GeoJSONSourceSetData extends Benchmark {
         });
     }
 
-    async bench() {
+    async bench(): Promise<void> {
         const source = this.map.getSource<GeoJSONSource>('points');
 
         source.setData(data);
@@ -67,7 +67,7 @@ export default class GeoJSONSourceSetData extends Benchmark {
         });
     }
 
-    teardown() {
+    teardown(): void {
         this.map.remove();
     }
 }

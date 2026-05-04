@@ -1,8 +1,8 @@
-import {DOM} from '../../util/dom';
-import {Event} from '../../util/evented';
-import {type Handler} from '../handler_manager';
+import {DOM} from '../../util/dom.ts';
+import {Event} from '../../util/evented.ts';
+import {type Handler} from '../handler_manager.ts';
 
-import type {Map} from '../map';
+import type {Map} from '../map.ts';
 
 /**
  * The {@link CooperativeGesturesHandler} options object for the gesture settings
@@ -44,7 +44,7 @@ export class CooperativeGesturesHandler implements Handler {
     }
     reset(): void {}
 
-    _setupUI() {
+    _setupUI(): void {
         if (this._container) return;
         const mapCanvasContainer = this._map.getCanvasContainer();
         // Add a cooperative gestures class (enable touch-action: pan-x pan-y;)
@@ -69,7 +69,7 @@ export class CooperativeGesturesHandler implements Handler {
         this._container.setAttribute('aria-hidden', 'true');
     }
 
-    _destroyUI() {
+    _destroyUI(): void {
         if (this._container) {
             this._container.remove();
             const mapCanvasContainer = this._map.getCanvasContainer();
@@ -78,25 +78,25 @@ export class CooperativeGesturesHandler implements Handler {
         delete this._container;
     }
 
-    enable() {
+    enable(): void {
         this._setupUI();
         this._enabled = true;
     }
 
-    disable() {
+    disable(): void {
         this._enabled = false;
         this._destroyUI();
     }
 
-    isEnabled() {
+    isEnabled(): boolean {
         return this._enabled;
     }
 
-    isBypassed(event: MouseEvent | WheelEvent | PointerEvent) {
+    isBypassed(event: MouseEvent | WheelEvent | PointerEvent): boolean {
         return event[this._bypassKey];
     }
 
-    notifyGestureBlocked(gestureType: 'wheel_zoom' | 'touch_pan', originalEvent: Event) {
+    notifyGestureBlocked(gestureType: 'wheel_zoom' | 'touch_pan', originalEvent: Event): void {
         if (!this._enabled) return;
 
         // notify subscribers that a cooperative gesture was prevented

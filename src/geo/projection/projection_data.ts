@@ -1,5 +1,5 @@
 import type {mat4} from 'gl-matrix';
-import type {OverscaledTileID} from '../../tile/tile_id';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
 /**
  * This type contains all data necessary to project a tile to screen in MapLibre's shader system.

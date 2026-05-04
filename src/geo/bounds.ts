@@ -151,7 +151,7 @@ export class Bounds implements ReadOnlyBounds {
         return this.maxY - this.minY;
     }
 
-    covers(other: ReadOnlyBounds) {
+    covers(other: ReadOnlyBounds): boolean {
         return !this.empty() && !other.empty() &&
             other.minX >= this.minX &&
             other.maxX <= this.maxX &&
@@ -159,7 +159,7 @@ export class Bounds implements ReadOnlyBounds {
             other.maxY <= this.maxY;
     }
 
-    intersects(other: ReadOnlyBounds) {
+    intersects(other: ReadOnlyBounds): boolean {
         return !this.empty() && !other.empty() &&
             other.minX <= this.maxX &&
             other.maxX >= this.minX &&

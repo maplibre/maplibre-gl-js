@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {mat4} from 'gl-matrix';
-import {Frustum} from './frustum';
+import {Frustum} from './frustum.ts';
 
 describe('frustum', () => {
     test('Create a frustum from inverse projection matrix', () => {

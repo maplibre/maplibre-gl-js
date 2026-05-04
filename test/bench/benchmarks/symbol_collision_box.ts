@@ -1,15 +1,15 @@
 import Point from '@mapbox/point-geometry';
-import {type ITransform} from '../../../src/geo/transform_interface';
-import {CollisionIndex} from '../../../src/symbol/collision_index';
-import Benchmark from '../lib/benchmark';
-import {type OverlapMode} from '../../../src/style/style_layer/overlap_mode';
-import {OverscaledTileID, type UnwrappedTileID} from '../../../src/tile/tile_id';
-import {type SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
-import {EXTENT} from '../../../src/data/extent';
-import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
+import {type ITransform} from '../../../src/geo/transform_interface.ts';
+import {CollisionIndex} from '../../../src/symbol/collision_index.ts';
+import Benchmark from '../lib/benchmark.ts';
+import {type OverlapMode} from '../../../src/style/style_layer/overlap_mode.ts';
+import {OverscaledTileID, type UnwrappedTileID} from '../../../src/tile/tile_id.ts';
+import {type SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket.ts';
+import {EXTENT} from '../../../src/data/extent.ts';
+import {MercatorTransform} from '../../../src/geo/projection/mercator_transform.ts';
 import {type mat4} from 'gl-matrix';
-import {GlobeProjection} from '../../../src/geo/projection/globe_projection';
-import {GlobeTransform} from '../../../src/geo/projection/globe_transform';
+import {GlobeProjection} from '../../../src/geo/projection/globe_projection.ts';
+import {GlobeTransform} from '../../../src/geo/projection/globe_transform.ts';
 
 type TestSymbol = {
     collisionBox: SingleCollisionBox;
@@ -105,7 +105,7 @@ export default class SymbolCollisionBox extends Benchmark {
         }
     }
 
-    async bench() {
+    async bench(): Promise<void> {
         const ci = new CollisionIndex(this._transform);
         ci.grid.hitTest = (_x1, _y1, _x2, _y2, _overlapMode, _predicate?) => {
             return true;

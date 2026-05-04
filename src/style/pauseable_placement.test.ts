@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest';
-import {PauseablePlacement} from './pauseable_placement';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import type {StyleLayer} from './style_layer';
+import {PauseablePlacement} from './pauseable_placement.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import type {StyleLayer} from './style_layer.ts';
 
 describe('PauseablePlacement', () => {
     test('should skip symbol layers whose layout is not yet hydrated', () => {

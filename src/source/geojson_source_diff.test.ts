@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect} from 'vitest';
-import {setPerformance} from '../util/test/util';
-import {type GeoJSONFeatureId, type GeoJSONSourceDiff, toUpdateable, applySourceDiff, mergeSourceDiffs} from './geojson_source_diff';
+import {setPerformance} from '../util/test/util.ts';
+import {type GeoJSONFeatureId, type GeoJSONSourceDiff, toUpdateable, applySourceDiff, mergeSourceDiffs} from './geojson_source_diff.ts';
 
 beforeEach(() => {
     setPerformance();

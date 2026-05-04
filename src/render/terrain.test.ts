@@ -1,20 +1,20 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
-import {Terrain} from './terrain';
-import {Context} from '../webgl/context';
-import {RGBAImage} from '../util/image';
-import {OverscaledTileID} from '../tile/tile_id';
-import {Tile} from '../tile/tile';
-import {LngLat} from '../geo/lng_lat';
-import {EXTENT} from '../data/extent';
-import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import type {TileManager} from '../tile/tile_manager';
+import {Terrain} from './terrain.ts';
+import {Context} from '../webgl/context.ts';
+import {RGBAImage} from '../util/image.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {Tile} from '../tile/tile.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import {EXTENT} from '../data/extent.ts';
+import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {DEMData} from '../data/dem_data';
-import type {Painter} from './painter';
-import {createNullGL} from '../util/test/null_gl';
+import type {DEMData} from '../data/dem_data.ts';
+import type {Painter} from './painter.ts';
+import {createNullGL} from '../util/test/null_gl.ts';
 
 describe('Terrain', () => {
     let gl: WebGL2RenderingContext;

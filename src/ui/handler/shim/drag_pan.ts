@@ -1,5 +1,5 @@
-import type {MousePanHandler} from '../mouse';
-import type {TouchPanHandler} from './../touch_pan';
+import type {MousePanHandler} from '../mouse.ts';
+import type {TouchPanHandler} from './../touch_pan.ts';
 
 /**
  * A {@link DragPanHandler} options object
@@ -63,7 +63,7 @@ export class DragPanHandler {
      *   });
      * ```
      */
-    enable(options?: DragPanOptions | boolean) {
+    enable(options?: DragPanOptions | boolean): void {
         this._inertiaOptions = options || {};
         this._mousePan.enable();
         this._touchPan.enable();
@@ -78,7 +78,7 @@ export class DragPanHandler {
      * map.dragPan.disable();
      * ```
      */
-    disable() {
+    disable(): void {
         this._mousePan.disable();
         this._touchPan.disable();
         this._el.classList.remove('maplibregl-touch-drag-pan');
@@ -89,7 +89,7 @@ export class DragPanHandler {
      *
      * @returns `true` if the "drag to pan" interaction is enabled.
      */
-    isEnabled() {
+    isEnabled(): boolean {
         return this._mousePan.isEnabled() && this._touchPan.isEnabled();
     }
 
@@ -98,7 +98,7 @@ export class DragPanHandler {
      *
      * @returns `true` if the "drag to pan" interaction is active.
      */
-    isActive() {
+    isActive(): boolean {
         return this._mousePan.isActive() || this._touchPan.isActive();
     }
 }

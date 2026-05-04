@@ -1,14 +1,14 @@
-import {Event, Evented} from '../../util/evented';
-import {DOM} from '../../util/dom';
-import {extend, warnOnce} from '../../util/util';
-import {checkGeolocationSupport} from '../../util/geolocation_support';
-import {LngLat} from '../../geo/lng_lat';
-import {Marker} from '../marker';
+import {Event, Evented} from '../../util/evented.ts';
+import {DOM} from '../../util/dom.ts';
+import {extend, warnOnce} from '../../util/util.ts';
+import {checkGeolocationSupport} from '../../util/geolocation_support.ts';
+import {LngLat} from '../../geo/lng_lat.ts';
+import {Marker} from '../marker.ts';
 
-import type {Map} from '../map';
-import type {FitBoundsOptions} from '../camera';
-import type {IControl} from './control';
-import {LngLatBounds} from '../../geo/lng_lat_bounds';
+import type {Map} from '../map.ts';
+import type {FitBoundsOptions} from '../camera.ts';
+import type {IControl} from './control.ts';
+import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
 
 /**
  * The {@link GeolocateControl} options object
@@ -278,7 +278,7 @@ export class GeolocateControl extends Evented implements IControl {
     }
 
     /** {@inheritDoc IControl.onAdd} */
-    onAdd(map: Map) {
+    onAdd(map: Map): HTMLElement {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
         this._setupUI();
@@ -287,7 +287,7 @@ export class GeolocateControl extends Evented implements IControl {
     }
 
     /** {@inheritDoc IControl.onRemove} */
-    onRemove() {
+    onRemove(): void {
         // clear the geolocation watch if exists
         if (this._geolocationWatchID !== undefined) {
             window.navigator.geolocation.clearWatch(this._geolocationWatchID);
@@ -319,7 +319,7 @@ export class GeolocateControl extends Evented implements IControl {
      * @param position - the Geolocation API Position
      * @returns `true` if position is outside the map's `maxBounds`, otherwise returns `false`.
      */
-    _isOutOfMapMaxBounds(position: GeolocationPosition) {
+    _isOutOfMapMaxBounds(position: GeolocationPosition): boolean {
         const bounds = this._map.getMaxBounds();
         const coordinates = position.coords;
 
@@ -331,7 +331,7 @@ export class GeolocateControl extends Evented implements IControl {
         );
     }
 
-    _setErrorState() {
+    _setErrorState(): void {
         switch (this._watchState) {
             case 'WAITING_ACTIVE':
                 this._watchState = 'ACTIVE_ERROR';
@@ -372,7 +372,7 @@ export class GeolocateControl extends Evented implements IControl {
      *
      * @param position - the Geolocation API Position
      */
-    _onSuccess = (position: GeolocationPosition) => {
+    _onSuccess = (position: GeolocationPosition): void => {
         if (!this._map) {
             // control has since been removed
             return;
@@ -439,7 +439,7 @@ export class GeolocateControl extends Evented implements IControl {
      *
      * @param position - the Geolocation API Position
      */
-    _updateCamera = (position: GeolocationPosition) => {
+    _updateCamera = (position: GeolocationPosition): void => {
         const center = new LngLat(position.coords.longitude, position.coords.latitude);
         const radius = position.coords.accuracy;
         const bearing = this._map.getBearing();
@@ -456,7 +456,7 @@ export class GeolocateControl extends Evented implements IControl {
      *
      * @param position - the Geolocation API Position
      */
-    _updateMarker = (position?: GeolocationPosition | null) => {
+    _updateMarker = (position?: GeolocationPosition | null): void => {
         if (position) {
             const center = new LngLat(position.coords.longitude, position.coords.latitude);
             this._accuracyCircleMarker.setLngLat(center).addTo(this._map);
@@ -469,7 +469,7 @@ export class GeolocateControl extends Evented implements IControl {
         }
     };
 
-    _updateCircleRadiusIfNeeded() {
+    _updateCircleRadiusIfNeeded(): void {
         const userLocation = this._userLocationDotMarker.getLngLat();
         if (!this.options.showUserLocation || !this.options.showAccuracyCircle || !this._accuracy || !userLocation) {
             return;
@@ -482,11 +482,11 @@ export class GeolocateControl extends Evented implements IControl {
         this._circleElement.style.height = `${circleDiameter.toFixed(2)}px`;
     }
 
-    _onUpdate = () => {
+    _onUpdate = (): void => {
         this._updateCircleRadiusIfNeeded();
     };
 
-    _onError = (error: GeolocationPositionError) => {
+    _onError = (error: GeolocationPositionError): void => {
         if (!this._map) {
             // control has since been removed
             return;
@@ -527,12 +527,12 @@ export class GeolocateControl extends Evented implements IControl {
         this._finish();
     };
 
-    _finish = () => {
+    _finish = (): void => {
         if (this._timeoutId) { clearTimeout(this._timeoutId); }
         this._timeoutId = undefined;
     };
 
-    _onMoveStart = (event: any) => {
+    _onMoveStart = (event: any): void => {
         if (!this._map) return;
         const fromResize = event?.[0] instanceof ResizeObserverEntry;
         if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize && !this._map.isZooming()) {
@@ -545,7 +545,7 @@ export class GeolocateControl extends Evented implements IControl {
         }
     };
 
-    _setupUI = () => {
+    _setupUI = (): void => {
         // the control could have been removed before reaching here
         if (!this._map) {
             return;
@@ -558,7 +558,7 @@ export class GeolocateControl extends Evented implements IControl {
         this._geolocateButton.disabled = true;
     };
 
-    _finishSetupUI = (supported: boolean) => {
+    _finishSetupUI = (supported: boolean): void => {
         // this method is called asynchronously during onAdd
         if (!this._map) {
             // control has since been removed
@@ -724,7 +724,7 @@ export class GeolocateControl extends Evented implements IControl {
         return true;
     }
 
-    _clearWatch() {
+    _clearWatch(): void {
         window.navigator.geolocation.clearWatch(this._geolocationWatchID);
 
         this._geolocationWatchID = undefined;

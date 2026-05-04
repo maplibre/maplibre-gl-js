@@ -1,8 +1,11 @@
 import {defineConfig, type ModuleFormat, type RolldownOptions, type InputOption} from 'rolldown';
+import {dts} from 'rolldown-plugin-dts';
 import {plugins} from './build/rolldown_plugins';
 import banner from './build/banner';
+import packageJSON from './package.json' with {type: 'json'};
 
 const production = process.env.BUILD === 'production';
+const typesOnly = process.env.BUILD === 'types';
 const outputPostfix = production ? '' : '-dev';
 
 const bundle = (input: InputOption, file: string, format: ModuleFormat): RolldownOptions => ({
@@ -10,7 +13,6 @@ const bundle = (input: InputOption, file: string, format: ModuleFormat): Rolldow
     platform: 'browser',
     treeshake: production,
     output: {
-        name: 'maplibregl',
         file,
         format,
         sourcemap: true,
@@ -20,7 +22,20 @@ const bundle = (input: InputOption, file: string, format: ModuleFormat): Rolldow
     plugins: plugins(production),
 });
 
-export default defineConfig([
+const dtsBundle: RolldownOptions = {
+    input: {'maplibre-gl': 'src/index.ts'},
+    output: {
+        dir: 'dist',
+        format: 'es',
+    },
+    external: Object.keys(packageJSON.dependencies),
+    plugins: [dts({emitDtsOnly: true, oxc: true})],
+};
+
+const config: RolldownOptions[] = defineConfig(typesOnly ? [dtsBundle] : [
     bundle('src/index.ts', `dist/maplibre-gl${outputPostfix}.mjs`, 'es'),
     bundle('src/source/worker.ts', `dist/maplibre-gl-worker${outputPostfix}.mjs`, 'es'),
+    ...(production ? [dtsBundle] : []),
 ]);
+
+export default config;

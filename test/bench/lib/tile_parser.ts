@@ -2,22 +2,26 @@ import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 
 import {derefLayers} from '@maplibre/maplibre-gl-style-spec';
-import {Style} from '../../../src/style/style';
-import {type IReadonlyTransform} from '../../../src/geo/transform_interface';
-import {Evented} from '../../../src/util/evented';
-import {RequestManager} from '../../../src/util/request_manager';
-import {WorkerTile} from '../../../src/source/worker_tile';
-import {StyleLayerIndex} from '../../../src/style/style_layer_index';
+import {Style} from '../../../src/style/style.ts';
+import {type IReadonlyTransform} from '../../../src/geo/transform_interface.ts';
+import {Evented} from '../../../src/util/evented.ts';
+import {RequestManager} from '../../../src/util/request_manager.ts';
+import {WorkerTile} from '../../../src/source/worker_tile.ts';
+import {StyleLayerIndex} from '../../../src/style/style_layer_index.ts';
 
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {WorkerTileResult} from '../../../src/source/worker_source';
-import type {OverscaledTileID} from '../../../src/tile/tile_id';
-import type {TileJSON} from '../../../src/util/util';
-import type {Map} from '../../../src/ui/map';
-import type {IActor} from '../../../src/util/actor';
-import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings';
-import {MessageType} from '../../../src/util/actor_messages';
-import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
+import type {WorkerTileResult} from '../../../src/source/worker_source.ts';
+import type {OverscaledTileID} from '../../../src/tile/tile_id.ts';
+import type {TileJSON} from '../../../src/util/util.ts';
+import type {Map} from '../../../src/ui/map.ts';
+import type {IActor} from '../../../src/util/actor.ts';
+import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings.ts';
+import {MessageType, type ActorMessage, type GetImagesParameters, type GetImagesResponse, type GetGlyphsParameters, type GetGlyphsResponse, type GetDashesParameters, type GetDashesResponse} from '../../../src/util/actor_messages.ts';
+
+// Distribute ActorMessage<T> over MessageType so a discriminant check on `.type`
+// properly narrows `.data` to the matching parameter type.
+type AnyActorMessage = {[K in MessageType]: ActorMessage<K>}[MessageType];
+import {MercatorTransform} from '../../../src/geo/projection/mercator_transform.ts';
 
 class StubMap extends Evented {
     style: Style;
@@ -59,9 +63,9 @@ export default class TileParser {
     tileJSON: TileJSON;
     sourceID: string;
     layerIndex: StyleLayerIndex;
-    icons: any;
-    glyphs: any;
-    dashes: any;
+    icons: Record<string, GetImagesResponse>;
+    glyphs: Record<string, GetGlyphsResponse>;
+    dashes: Record<string, GetDashesResponse>;
     style: Style;
     actor: IActor;
 
@@ -73,7 +77,7 @@ export default class TileParser {
         this.icons = {};
     }
 
-    async loadImages(params: any) {
+    async loadImages(params: GetImagesParameters): Promise<GetImagesResponse> {
         const key = JSON.stringify(params);
         if (!this.icons[key]) {
             this.icons[key] = await this.style.getImages('', params);
@@ -81,7 +85,7 @@ export default class TileParser {
         return this.icons[key];
     }
 
-    async loadGlyphs(params: any) {
+    async loadGlyphs(params: GetGlyphsParameters): Promise<GetGlyphsResponse> {
         const key = JSON.stringify(params);
         if (!this.glyphs[key]) {
             this.glyphs[key] = await this.style.getGlyphs('', params);
@@ -89,7 +93,7 @@ export default class TileParser {
         return this.glyphs[key];
     }
 
-    async loadDashes(params: any) {
+    async loadDashes(params: GetDashesParameters): Promise<GetDashesResponse> {
         const key = JSON.stringify(params);
         if (!this.dashes[key]) {
             this.dashes[key] = await this.style.getDashes('', params);
@@ -100,7 +104,8 @@ export default class TileParser {
     setup(): Promise<void> {
         const parser = this;
         this.actor = {
-            sendAsync(message) {
+            sendAsync(rawMessage) {
+                const message = rawMessage as AnyActorMessage;
                 if (message.type === MessageType.getImages) {
                     return parser.loadImages(message.data);
                 }
@@ -123,7 +128,10 @@ export default class TileParser {
         });
     }
 
-    fetchTile(tileID: OverscaledTileID) {
+    fetchTile(tileID: OverscaledTileID): Promise<{
+        tileID: OverscaledTileID;
+        buffer: ArrayBuffer;
+    }> {
         return fetch(tileID.canonical.url(this.tileJSON.tiles, devicePixelRatio))
             .then(response => response.arrayBuffer())
             .then(buffer => ({tileID, buffer}));

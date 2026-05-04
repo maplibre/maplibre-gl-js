@@ -1,26 +1,26 @@
 import {mat4, vec2} from 'gl-matrix';
-import {OverscaledTileID} from '../tile/tile_id';
-import {RGBAImage} from '../util/image';
-import {warnOnce} from '../util/util';
-import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
-import pos3dAttributes from '../data/pos3d_attributes';
-import {SegmentVector} from '../data/segment';
-import {Texture} from '../webgl/texture';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
-import {TerrainTileManager} from '../tile/terrain_tile_manager';
-import {EXTENT} from '../data/extent';
-import {earthRadius, type LngLat} from '../geo/lng_lat';
-import {Mesh} from './mesh';
-import {isInBoundsForZoomLngLat} from '../util/world_bounds';
-import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision';
-import {coveringTiles} from '../geo/projection/covering_tiles';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {RGBAImage} from '../util/image.ts';
+import {warnOnce} from '../util/util.ts';
+import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g.ts';
+import pos3dAttributes from '../data/pos3d_attributes.ts';
+import {SegmentVector} from '../data/segment.ts';
+import {Texture} from '../webgl/texture.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {TerrainTileManager} from '../tile/terrain_tile_manager.ts';
+import {EXTENT} from '../data/extent.ts';
+import {earthRadius, type LngLat} from '../geo/lng_lat.ts';
+import {Mesh} from './mesh.ts';
+import {isInBoundsForZoomLngLat} from '../util/world_bounds.ts';
+import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision.ts';
+import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import type Point from '@mapbox/point-geometry';
-import type {Tile} from '../tile/tile';
-import type {Framebuffer} from '../webgl/framebuffer';
-import type {TileManager} from '../tile/tile_manager';
+import type {Tile} from '../tile/tile.ts';
+import type {Framebuffer} from '../webgl/framebuffer.ts';
+import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Painter} from './painter';
-import type {IReadonlyTransform} from '../geo/transform_interface';
+import type {Painter} from './painter.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 
 /**
  * @internal
@@ -154,7 +154,7 @@ export class Terrain {
         this._coordsTextureSize = 1024;
     }
 
-    destroy() {
+    destroy(): void {
         if (this._fbo) {
             this._fbo.destroy();
             this._fbo = null;
@@ -226,7 +226,7 @@ export class Terrain {
      * @param zoom - the zoom, use {@link getElevationForLngLat} if you don't want a specific zoom level, but more accurate results.
      * @returns the elevation
      */
-    getElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+    getElevationForLngLatZoom(lnglat: LngLat, zoom: number): number {
         if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
         const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
@@ -238,7 +238,7 @@ export class Terrain {
      * @param lnglat - the location
      * @returns the elevation
      */
-    getElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform) {
+    getElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): number {
         const terrainCoveringTiles = coveringTiles(transform, {maxzoom: this.tileManager.maxzoom, minzoom: this.tileManager.minzoom, tileSize: 512, terrain: this});
         let zoom = 0;
         for (const tile of terrainCoveringTiles) {
@@ -481,7 +481,7 @@ export class Terrain {
         return 2 * Math.PI * earthRadius / Math.pow(2, Math.max(zoom, 0)) / 5;
     }
 
-    getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+    getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number): number {
         if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getMinMaxElevation(tileID).minElevation ?? 0;
@@ -522,7 +522,7 @@ export class Terrain {
     /** Add an extra frame around the mesh to avoid hairline gaps (stitching) on tile boundaries with different zoomlevels.
      * @see {@link MapOptions.terrainSkirtLength}
     */
-    _buildSkirts(vertexArray: Pos3dArray, indexArray: TriangleIndexArray, meshSize: number, delta: number, northPole: boolean, southPole: boolean) {
+    _buildSkirts(vertexArray: Pos3dArray, indexArray: TriangleIndexArray, meshSize: number, delta: number, northPole: boolean, southPole: boolean): void {
         const offsetTop = vertexArray.length;
         const offsetTopEdge = 0;
         const offsetBottom = offsetTop + (meshSize + 1);

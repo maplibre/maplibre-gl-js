@@ -1,6 +1,6 @@
 import {vec3, type vec4} from 'gl-matrix';
-import {type Frustum} from './frustum';
-import {IntersectionResult, type IBoundingVolume} from './bounding_volume';
+import {type Frustum} from './frustum.ts';
+import {IntersectionResult, type IBoundingVolume} from './bounding_volume.ts';
 
 export class Aabb implements IBoundingVolume {
     min: vec3;
