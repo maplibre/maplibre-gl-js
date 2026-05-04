@@ -151,10 +151,10 @@ To add a new render test:
 
 3. Generate an `expected.png` image from the given style by running the new test with the `UPDATE` flag enabled:
    ```
-   UPDATE=1 npm run test-render -- <property-name>/<new-test-name>
+   UPDATE=1 npm run test-render -- -t "<property-name>/<new-test-name>"
    ```
 
-4. Manually inspect `expected.png` to verify it looks as expected, and optionally run the test again without the update flag (`npm run test-render <property-name>/<new-test-name>`) to watch it pass (enjoy that dopamine kick!)
+4. Manually inspect `expected.png` to verify it looks as expected, and optionally run the test again without the update flag (`npm run test-render -t "<property-name>/<new-test-name>"`) to watch it pass (enjoy that dopamine kick!)
 
 5. Commit the new `style.json` and `expected.png` :rocket:
 
