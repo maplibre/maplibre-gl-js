@@ -30,7 +30,7 @@ describe('SourceFeatureState', () => {
 
         sourceState.updateState('layer1', 'feature1', {a: 1, b: 2});
         sourceState.updateState('layer1', 'feature2', {c: 3});
-        sourceState.coalesceChanges(inViewTilesMock, {});
+        sourceState.coalesceChanges(inViewTilesMock, {} as unknown as Painter);
 
         sourceState.removeFeatureState('layer1');
 
@@ -49,7 +49,7 @@ describe('SourceFeatureState', () => {
         } as unknown as InViewTiles;
 
         sourceState.updateState('layer1', 'feature1', {a: 1, b: 2, c: 3});
-        sourceState.coalesceChanges(inViewTilesMock, {});
+        sourceState.coalesceChanges(inViewTilesMock, {} as unknown as Painter);
 
         sourceState.removeFeatureState('layer1', 'feature1');
         expect(sourceState.deletedStates['layer1']['feature1']).toBeNull();
