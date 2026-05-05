@@ -1,20 +1,20 @@
 import {describe, test, expect, vi, beforeEach} from 'vitest';
-import {Tile} from '../tile/tile';
-import {OverscaledTileID} from '../tile/tile_id';
-import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions, type GeoJSONSourceOptions} from './geojson_source';
-import {EXTENT} from '../data/extent';
-import {LngLat} from '../geo/lng_lat';
-import {extend} from '../util/util';
-import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {sleep, waitForEvent} from '../util/test/util';
-import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages';
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {Dispatcher} from '../util/dispatcher';
-import type {RequestManager} from '../util/request_manager';
-import type {IActor} from '../util/actor';
-import type {MapSourceDataEvent} from '../ui/events';
-import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff';
+import {Tile} from '../tile/tile.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions, type GeoJSONSourceOptions} from './geojson_source.ts';
+import {EXTENT} from '../data/extent.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import {extend} from '../util/util.ts';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {sleep, waitForEvent} from '../util/test/util.ts';
+import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {RequestManager} from '../util/request_manager.ts';
+import type {IActor} from '../util/actor.ts';
+import type {MapSourceDataEvent} from '../ui/events.ts';
+import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff.ts';
 
 const wrapDispatcher = (dispatcher: IActor) => {
     return {

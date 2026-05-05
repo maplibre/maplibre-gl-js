@@ -1,6 +1,6 @@
-import {LngLat} from './lng_lat';
-import type {LngLatLike} from './lng_lat';
-import {wrap} from '../util/util';
+import {LngLat} from './lng_lat.ts';
+import type {LngLatLike} from './lng_lat.ts';
+import {wrap} from '../util/util.ts';
 
 /**
  * A {@link LngLatBounds} object, an array of {@link LngLatLike} objects in `[sw, ne]` order,
@@ -255,7 +255,7 @@ export class LngLatBounds {
      *
      * @returns True if bounds have been defined, otherwise false.
      */
-    isEmpty() {
+    isEmpty(): boolean {
         return !(this._sw && this._ne);
     }
 
@@ -276,7 +276,7 @@ export class LngLatBounds {
      * console.log(llb.contains(ll)); // = true
      * ```
      */
-    contains(lnglat: LngLatLike) {
+    contains(lnglat: LngLatLike): boolean {
         const {lng, lat} = LngLat.convert(lnglat);
 
         const containsLatitude = this._sw.lat <= lat && lat <= this._ne.lat;

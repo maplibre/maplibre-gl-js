@@ -1,14 +1,14 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
-import {CanvasSource, type CanvasSourceSpecification} from '../source/canvas_source';
-import {Event, Evented} from '../util/evented';
-import {extend} from '../util/util';
-import {Tile} from '../tile/tile';
-import {OverscaledTileID} from '../tile/tile_id';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {waitForEvent} from '../util/test/util';
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {Dispatcher} from '../util/dispatcher';
-import type {MapSourceDataEvent} from '../ui/events';
+import {CanvasSource, type CanvasSourceSpecification} from '../source/canvas_source.ts';
+import {Event, Evented} from '../util/evented.ts';
+import {extend} from '../util/util.ts';
+import {Tile} from '../tile/tile.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {waitForEvent} from '../util/test/util.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {MapSourceDataEvent} from '../ui/events.ts';
 
 function createSource(options?: { canvas?: any; eventedParent?: any} & Partial<CanvasSourceSpecification>) {
     const c = options?.canvas || window.document.createElement('canvas');

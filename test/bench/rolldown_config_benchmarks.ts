@@ -1,5 +1,5 @@
 import fs from 'fs';
-import {plugins} from '../../build/rolldown_plugins';
+import {plugins} from '../../build/rolldown_plugins.ts';
 import {execSync} from 'child_process';
 import {defineConfig, type RolldownOptions} from 'rolldown';
 import {replacePlugin} from 'rolldown/plugins';
@@ -67,8 +67,10 @@ const viewConfig: RolldownOptions = {
     plugins: [replacePlugin(replaceValues, {preventAssignment: true})],
 };
 
-export default defineConfig([
+const config: RolldownOptions[] = defineConfig([
     ...benchmarkSuiteConfig('versions'),
     ...benchmarkSuiteConfig('styles'),
     viewConfig,
 ]);
+
+export default config;

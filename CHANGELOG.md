@@ -1,12 +1,29 @@
 ## main
 ### ✨ Features and improvements
+- Adopt isolatedDeclarations and switch dts emitter from tsgo to oxc ([#7566](https://github.com/maplibre/maplibre-gl-js/pull/7566)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 6.0.0-8
+
+### ✨ Features and improvements
+
+- Improve 3D terrain performance ([#7549](https://github.com/maplibre/maplibre-gl-js/pull/7549)) (by [@lucaswoj](https://github.com/lucaswoj))
+
+## 6.0.0-7
+
+### ✨ Features and improvements
+
+- Replace dts-bundle-generator with rolldown-plugin-dts for 78.2x faster .d.ts generation. ([#7564](https://github.com/maplibre/maplibre-gl-js/pull/7564)) (by [@birkskyum](https://github.com/birkskyum))
+- Replace ts-node with Node 24's native TypeScript support for build scripts. ([#7565](https://github.com/maplibre/maplibre-gl-js/pull/7565)) (by [@birkskyum](https://github.com/birkskyum))
+- Bump typescript to v7 beta - 3.5x faster typecheck ([#7556](https://github.com/maplibre/maplibre-gl-js/pull/7556)) (by [@birkskyum](https://github.com/birkskyum))
 
 ### 🐞 Bug fixes
 
 - ⚠️ Fix transparent, overlapping lines creating artefacts. This is fixed for `line-opacity`, but purposefully not for transparent `line-color` properties, thus still allowing transparent colors to stack their effect. ([#7490](https://github.com/maplibre/maplibre-gl-js/pull/7490)) (by [@CommanderStorm](https://github.com/CommanderStorm))
-- Replace dts-bundle-generator with rolldown-plugin-dts for 78.2x faster .d.ts generation. ([#7564](https://github.com/maplibre/maplibre-gl-js/pull/7564)) (by [@birkskyum](https://github.com/birkskyum))
-- _...Add new stuff here..._
+- Fix issue when map's max zoom and source max zoom are close to eachother ([#7567](https://github.com/maplibre/maplibre-gl-js/issues/7567)) (by [@HarelM](https://github.com/HarelM))
 
 ## 6.0.0-6
 

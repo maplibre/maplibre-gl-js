@@ -1,37 +1,37 @@
-import {uniqueId, parseCacheControl} from '../util/util';
-import {deserialize as deserializeBucket} from '../data/bucket';
-import {GEOJSON_TILE_LAYER_NAME, type FeatureIndex, type QueryResults} from '../data/feature_index';
-import {GeoJSONFeature} from '../util/vectortile_to_geojson';
+import {uniqueId, parseCacheControl} from '../util/util.ts';
+import {deserialize as deserializeBucket} from '../data/bucket.ts';
+import {GEOJSON_TILE_LAYER_NAME, type FeatureIndex, type QueryResults} from '../data/feature_index.ts';
+import {GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
-import {SymbolBucket} from '../data/bucket/symbol_bucket';
-import {CollisionBoxArray} from '../data/array_types.g';
-import {Texture} from '../webgl/texture';
-import {now} from '../util/time_control';
-import {toEvaluationFeature} from '../data/evaluation_feature';
-import {EvaluationParameters} from '../style/evaluation_parameters';
-import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
+import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+import {CollisionBoxArray} from '../data/array_types.g.ts';
+import {Texture} from '../webgl/texture.ts';
+import {now} from '../util/time_control.ts';
+import {toEvaluationFeature} from '../data/evaluation_feature.ts';
+import {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
 
-import type {SourceFeatureState} from '../source/source_state';
-import type {Bucket} from '../data/bucket';
-import type {StyleLayer} from '../style/style_layer';
-import type {TileEncoding, WorkerTileResult} from '../source/worker_source';
-import type {Actor} from '../util/actor';
-import type {DEMData} from '../data/dem_data';
-import type {AlphaImage} from '../util/image';
-import type {ImageAtlas} from '../render/image_atlas';
-import type {ImageManager} from '../render/image_manager';
-import type {Context} from '../webgl/context';
-import type {OverscaledTileID} from './tile_id';
-import type {Framebuffer} from '../webgl/framebuffer';
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {LayerFeatureStates} from '../source/source_state';
+import type {SourceFeatureState} from '../source/source_state.ts';
+import type {Bucket} from '../data/bucket.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {TileEncoding, WorkerTileResult} from '../source/worker_source.ts';
+import type {Actor} from '../util/actor.ts';
+import type {DEMData} from '../data/dem_data.ts';
+import type {AlphaImage} from '../util/image.ts';
+import type {ImageAtlas} from '../render/image_atlas.ts';
+import type {ImageManager} from '../render/image_manager.ts';
+import type {Context} from '../webgl/context.ts';
+import type {OverscaledTileID} from './tile_id.ts';
+import type {Framebuffer} from '../webgl/framebuffer.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {LayerFeatureStates} from '../source/source_state.ts';
 import type Point from '@mapbox/point-geometry';
 import type {mat4} from 'gl-matrix';
-import type {ExpiryData} from '../util/ajax';
-import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict} from '../source/query_features';
-import type {DashEntry} from '../render/line_atlas';
+import type {ExpiryData} from '../util/ajax.ts';
+import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict} from '../source/query_features.ts';
+import type {DashEntry} from '../render/line_atlas.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
-import type {Painter} from '../render/painter';
+import type {Painter, RTTObject} from '../render/painter.ts';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
@@ -117,7 +117,18 @@ export class Tile {
     hasSymbolBuckets: boolean;
     hasRTLText: boolean;
     dependencies: any;
-    rtt: Array<{id: number; stamp: number}>;
+    /**
+     * @internal
+     * Caches the result of rendering this 2D tile into a texture so it can be
+     * draped over 3D terrain. Indexed by stack index, where a stack is a
+     * contiguous run of RTT-eligible layers (fill, line, raster, etc.) split
+     * by non-RTT layers like symbols. So `_rttObjects[0]` holds the texture
+     * for layers below the first symbol break, `_rttObjects[1]` for layers
+     * between the first and second symbol breaks, and so on. Each entry
+     * survives across frames until the tile is unloaded or its source data
+     * changes.
+     */
+    rttObjects: Array<RTTObject | undefined>;
     rttFingerprint: {[sourceId:string]: string};
 
     /**
@@ -135,7 +146,7 @@ export class Tile {
         this.hasSymbolBuckets = false;
         this.hasRTLText = false;
         this.dependencies = {};
-        this.rtt = [];
+        this.rttObjects = [];
         this.rttFingerprint = {};
 
         // Counts the number of times a response was already expired when
@@ -159,7 +170,7 @@ export class Tile {
      * @internal
      * Many-to-one crossfade between a base tile and parent/ancestor tile (when zooming)
      */
-    setCrossFadeLogic({fadingRole, fadingDirection, fadingParentID, fadeEndTime}: CrossFadeArgs) {
+    setCrossFadeLogic({fadingRole, fadingDirection, fadingParentID, fadeEndTime}: CrossFadeArgs): void {
         this.resetFadeLogic();
 
         this.fadingRole = fadingRole;
@@ -171,13 +182,13 @@ export class Tile {
     /**
      * Self fading for edge tiles (when panning map)
      */
-    setSelfFadeLogic(fadeEndTime: number) {
+    setSelfFadeLogic(fadeEndTime: number): void {
         this.resetFadeLogic();
         this.selfFading = true;
         this.fadeEndTime = fadeEndTime;
     }
 
-    resetFadeLogic() {
+    resetFadeLogic(): void {
         this.fadingRole = null;
         this.fadingDirection = null;
         this.fadingParentID = null;
@@ -188,13 +199,43 @@ export class Tile {
         this.fadeOpacity = 1;
     }
 
-    wasRequested() {
+    wasRequested(): boolean {
         return this.state === 'errored' || this.state === 'loaded' || this.state === 'reloading';
     }
 
-    clearTextures(painter: any) {
+    clearTextures(painter: Painter): void {
         if (this.demTexture) painter.saveTileTexture(this.demTexture);
         this.demTexture = null;
+    }
+
+    /**
+     * @internal
+     * Returns the cached RTT object for this stack, or undefined on a cache miss.
+     */
+    getRTT(stack: number): RTTObject | undefined {
+        return this.rttObjects[stack];
+    }
+
+    /**
+     * @internal
+     * Allocates a fresh RTT object from the painter's pool and stores it at the
+     * given stack slot. Callers should check {@link getRTT} first; calling this
+     * over an existing slot leaks the previous object.
+     */
+    acquireRTT(painter: Painter, stack: number, size: number): RTTObject {
+        return this.rttObjects[stack] = painter.acquireRTT(size);
+    }
+
+    /**
+     * @internal
+     * Returns all cached RTT slots to the painter's pool.
+     */
+    releaseRTT(painter: Painter): void {
+        if (this.rttObjects.length === 0) return;
+        for (const obj of this.rttObjects) {
+            painter.releaseRTT(obj);
+        }
+        this.rttObjects.length = 0;
     }
 
     /**
@@ -206,7 +247,7 @@ export class Tile {
      * @param painter - the painter
      * @param justReloaded - `true` to just reload
      */
-    loadVectorData(data: WorkerTileResult, painter: Painter, justReloaded?: boolean | null) {
+    loadVectorData(data: WorkerTileResult, painter: Painter, justReloaded?: boolean | null): void {
         if (data?.etagUnmodified === true) {
             this.state = 'loaded';
             return;
@@ -288,7 +329,7 @@ export class Tile {
     /**
      * Release any data or WebGL resources referenced by this tile.
      */
-    unloadVectorData() {
+    unloadVectorData(): void {
         for (const id in this.buckets) {
             this.buckets[id].destroy();
         }
@@ -301,18 +342,18 @@ export class Tile {
         if (this.glyphAtlasTexture) {
             this.glyphAtlasTexture.destroy();
         }
-        
+
         this.imageAtlas = null;
         this.dashPositions = null;
         this.latestFeatureIndex = null;
         this.state = 'unloaded';
     }
 
-    getBucket(layer: StyleLayer) {
+    getBucket(layer: StyleLayer): Bucket {
         return this.buckets[layer.id];
     }
 
-    upload(context: Context) {
+    upload(context: Context): void {
         for (const id in this.buckets) {
             const bucket = this.buckets[id];
             if (bucket.uploadPending()) {
@@ -332,7 +373,7 @@ export class Tile {
         }
     }
 
-    prepare(imageManager: ImageManager) {
+    prepare(imageManager: ImageManager): void {
         if (this.imageAtlas) {
             this.imageAtlas.patchUpdatedImages(imageManager, this.imageAtlasTexture);
         }
@@ -369,7 +410,7 @@ export class Tile {
         }, layers, serializedLayers, sourceFeatureState);
     }
 
-    querySourceFeatures(result: GeoJSONFeature[], params?: QuerySourceFeatureOptionsStrict) {
+    querySourceFeatures(result: GeoJSONFeature[], params?: QuerySourceFeatureOptionsStrict): void {
         const featureIndex = this.latestFeatureIndex;
         if (!featureIndex?.rawTileData) return;
 
@@ -399,15 +440,15 @@ export class Tile {
         }
     }
 
-    hasData() {
+    hasData(): boolean {
         return this.state === 'loaded' || this.state === 'reloading' || this.state === 'expired';
     }
 
-    patternsLoaded() {
+    patternsLoaded(): boolean {
         return this.imageAtlas && !!Object.keys(this.imageAtlas.patternPositions).length;
     }
 
-    setExpiryData(data: ExpiryData) {
+    setExpiryData(data: ExpiryData): void {
         const prior = this.expirationTime;
 
         if (data.cacheControl) {
@@ -456,7 +497,7 @@ export class Tile {
         }
     }
 
-    getExpiryTimeout() {
+    getExpiryTimeout(): number {
         if (this.expirationTime) {
             if (this.expiredRequestCount) {
                 return 1000 * (1 << Math.min(this.expiredRequestCount - 1, 31));
@@ -467,7 +508,7 @@ export class Tile {
         }
     }
 
-    setFeatureState(states: LayerFeatureStates, painter: any) {
+    setFeatureState(states: LayerFeatureStates, painter: Painter): void {
         if (!this.latestFeatureIndex?.rawTileData ||
             Object.keys(states).length === 0) {
             return;
@@ -501,15 +542,15 @@ export class Tile {
         return !this.symbolFadeHoldUntil || this.symbolFadeHoldUntil < now();
     }
 
-    clearSymbolFadeHold() {
+    clearSymbolFadeHold(): void {
         this.symbolFadeHoldUntil = undefined;
     }
 
-    setSymbolHoldDuration(duration: number) {
+    setSymbolHoldDuration(duration: number): void {
         this.symbolFadeHoldUntil = now() + duration;
     }
 
-    setDependencies(namespace: string, dependencies: string[]) {
+    setDependencies(namespace: string, dependencies: string[]): void {
         const index = {};
         for (const dep of dependencies) {
             index[dep] = true;
@@ -517,7 +558,7 @@ export class Tile {
         this.dependencies[namespace] = index;
     }
 
-    hasDependency(namespaces: string[], keys: string[]) {
+    hasDependency(namespaces: string[], keys: string[]): boolean {
         for (const namespace of namespaces) {
             const dependencies = this.dependencies[namespace];
             if (dependencies) {

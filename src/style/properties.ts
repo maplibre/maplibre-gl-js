@@ -1,4 +1,4 @@
-import {clone, extend, easeCubicInOut} from '../util/util';
+import {clone, extend, easeCubicInOut} from '../util/util.ts';
 import {interpolates, type Color, type StylePropertySpecification, normalizePropertyExpression,
     type Feature,
     type FeatureState,
@@ -6,10 +6,10 @@ import {interpolates, type Color, type StylePropertySpecification, normalizeProp
     type SourceExpression,
     type CompositeExpression, type TransitionSpecification,
     type PropertyValueSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {register} from '../util/web_worker_transfer';
-import {EvaluationParameters} from './evaluation_parameters';
+import {register} from '../util/web_worker_transfer.ts';
+import {EvaluationParameters} from './evaluation_parameters.ts';
 
-import {type CanonicalTileID} from '../tile/tile_id';
+import {type CanonicalTileID} from '../tile/tile_id.ts';
 
 type TimePoint = number;
 
@@ -158,7 +158,7 @@ export class Transitionable<Props> {
         return clone(this._values[name].value.value);
     }
 
-    setValue<S extends keyof Props, T>(name: S, value: PropertyValueSpecification<T> | void) {
+    setValue<S extends keyof Props, T>(name: S, value: PropertyValueSpecification<T> | void): void {
         if (!Object.hasOwn(this._values, name)) {
             this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._globalState);
         }
@@ -171,14 +171,14 @@ export class Transitionable<Props> {
         return clone(this._values[name].transition);
     }
 
-    setTransition<S extends keyof Props>(name: S, value: TransitionSpecification | void) {
+    setTransition<S extends keyof Props>(name: S, value: TransitionSpecification | void): void {
         if (!Object.hasOwn(this._values, name)) {
             this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._globalState);
         }
         this._values[name].transition = clone(value) || undefined;
     }
 
-    serialize() {
+    serialize(): any {
         const result: any = {};
         for (const property of Object.keys(this._values)) {
             const value = this.getValue(property as keyof Props);
@@ -299,7 +299,7 @@ export class Transitioning<Props> {
         return result;
     }
 
-    hasTransition() {
+    hasTransition(): boolean {
         for (const property of Object.keys(this._values)) {
             if (this._values[property].prior) {
                 return true;
@@ -331,7 +331,7 @@ export class Layout<Props> {
         this._globalState = globalState;
     }
 
-    hasValue<S extends keyof Props>(name: S) {
+    hasValue<S extends keyof Props>(name: S): boolean {
         return this._values[name].value !== undefined;
     }
 
@@ -339,15 +339,15 @@ export class Layout<Props> {
         return name in this._properties.defaultPropertyValues;
     }
 
-    getValue<S extends keyof Props>(name: S) {
+    getValue<S extends keyof Props>(name: S): any {
         return clone(this._values[name].value);
     }
 
-    setValue<S extends keyof Props>(name: S, value: any) {
+    setValue<S extends keyof Props>(name: S, value: any): void {
         this._values[name] = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value), this._globalState) as any;
     }
 
-    serialize() {
+    serialize(): any {
         const result: any = {};
         for (const property of Object.keys(this._values)) {
             const value = this.getValue(property as keyof Props);

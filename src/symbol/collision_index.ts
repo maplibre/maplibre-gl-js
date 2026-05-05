@@ -1,24 +1,24 @@
 import Point from '@mapbox/point-geometry';
-import {clipLine} from './clip_line';
-import {PathInterpolator} from './path_interpolator';
+import {clipLine} from './clip_line.ts';
+import {PathInterpolator} from './path_interpolator.ts';
 
-import * as intersectionTests from '../util/intersection_tests';
-import {GridIndex} from './grid_index';
+import * as intersectionTests from '../util/intersection_tests.ts';
+import {GridIndex} from './grid_index.ts';
 import {mat4, vec4} from 'gl-matrix';
-import ONE_EM from '../symbol/one_em';
+import ONE_EM from '../symbol/one_em.ts';
 
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {SingleCollisionBox} from '../data/bucket/symbol_bucket';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {SingleCollisionBox} from '../data/bucket/symbol_bucket.ts';
 import type {
     GlyphOffsetArray,
     PlacedSymbol,
     SymbolLineVertexArray
-} from '../data/array_types.g';
-import type {OverlapMode} from '../style/style_layer/overlap_mode';
-import {type OverscaledTileID, type UnwrappedTileID} from '../tile/tile_id';
-import {type PointProjection, type SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection';
-import {clamp, getAABB} from '../util/util';
-import {Bounds} from '../geo/bounds';
+} from '../data/array_types.g.ts';
+import type {OverlapMode} from '../style/style_layer/overlap_mode.ts';
+import {type OverscaledTileID, type UnwrappedTileID} from '../tile/tile_id.ts';
+import {type PointProjection, type SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection.ts';
+import {clamp, getAABB} from '../util/util.ts';
+import {Bounds} from '../geo/bounds.ts';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -83,8 +83,8 @@ export class CollisionIndex {
 
     constructor(
         transform: IReadonlyTransform,
-        grid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
-        ignoredGrid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
+        grid: GridIndex<FeatureKey> = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
+        ignoredGrid: GridIndex<FeatureKey> = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
     ) {
         this.transform = transform;
 
@@ -366,7 +366,7 @@ export class CollisionIndex {
      * symbols on the map, we use the CollisionIndex to look up the symbol part of
      * `queryRenderedFeatures`.
      */
-    queryRenderedSymbols(viewportQueryGeometry: Point[]) {
+    queryRenderedSymbols(viewportQueryGeometry: Point[]): Record<number, number[]> {
         if (viewportQueryGeometry.length === 0 || (this.grid.keysLength() === 0 && this.ignoredGrid.keysLength() === 0)) {
             return {};
         }
@@ -421,14 +421,14 @@ export class CollisionIndex {
         return result;
     }
 
-    insertCollisionBox(collisionBox: number[], overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
+    insertCollisionBox(collisionBox: number[], overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number): void {
         const grid = ignorePlacement ? this.ignoredGrid : this.grid;
 
         const key = {bucketInstanceId, featureIndex, collisionGroupID, overlapMode};
         grid.insert(key, collisionBox[0], collisionBox[1], collisionBox[2], collisionBox[3]);
     }
 
-    insertCollisionCircles(collisionCircles: number[], overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number) {
+    insertCollisionCircles(collisionCircles: number[], overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number): void {
         const grid = ignorePlacement ? this.ignoredGrid : this.grid;
 
         const key = {bucketInstanceId, featureIndex, collisionGroupID, overlapMode};
@@ -437,7 +437,13 @@ export class CollisionIndex {
         }
     }
 
-    projectAndGetPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number, simpleProjectionMatrix?: mat4) {
+    projectAndGetPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number, simpleProjectionMatrix?: mat4): {
+        x: number;
+        y: number;
+        perspectiveRatio: number;
+        isOccluded: boolean;
+        signedDistanceFromCamera: number;
+    } {
         if (simpleProjectionMatrix) {
             // This branch is a fast-path for mercator transform.
             // The code here is a copy of MercatorTransform.projectTileCoordinates, slightly modified for extra performance.
@@ -479,11 +485,11 @@ export class CollisionIndex {
         return 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera);
     }
 
-    isOffscreen(x1: number, y1: number, x2: number, y2: number) {
+    isOffscreen(x1: number, y1: number, x2: number, y2: number): boolean {
         return x2 < viewportPadding || x1 >= this.screenRightBoundary || y2 < viewportPadding || y1 > this.screenBottomBoundary;
     }
 
-    isInsideGrid(x1: number, y1: number, x2: number, y2: number) {
+    isInsideGrid(x1: number, y1: number, x2: number, y2: number): boolean {
         return x2 >= 0 && x1 < this.gridRightBoundary && y2 >= 0 && y1 < this.gridBottomBoundary;
     }
 
@@ -492,7 +498,7 @@ export class CollisionIndex {
     * Use this function to render e.g. collision circles on the screen.
     *   example transformation: clipPos = glCoordMatrix * viewportMatrix * circle_pos
     */
-    getViewportMatrix() {
+    getViewportMatrix(): mat4 {
         const m = mat4.identity([]);
         mat4.translate(m, m, [-viewportPadding, -viewportPadding, 0.0]);
         return m;

@@ -1,53 +1,54 @@
-import {now} from '../util/time_control';
+import {now} from '../util/time_control.ts';
 import {mat4} from 'gl-matrix';
-import {TileManager} from '../tile/tile_manager';
-import {EXTENT} from '../data/extent';
-import {SegmentVector} from '../data/segment';
-import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
-import rasterBoundsAttributes from '../data/raster_bounds_attributes';
-import posAttributes from '../data/pos_attributes';
-import {type ProgramConfiguration} from '../data/program_configuration';
-import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
-import {shaders} from '../shaders/shaders';
-import {Program} from '../webgl/program';
-import {programUniforms} from '../webgl/program/program_uniforms';
-import {Context} from '../webgl/context';
-import {DepthMode} from '../webgl/depth_mode';
-import {StencilMode} from '../webgl/stencil_mode';
-import {ColorMode} from '../webgl/color_mode';
-import {CullFaceMode} from '../webgl/cull_face_mode';
-import {Texture} from '../webgl/texture';
+import {TileManager} from '../tile/tile_manager.ts';
+import {EXTENT} from '../data/extent.ts';
+import {SegmentVector} from '../data/segment.ts';
+import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g.ts';
+import rasterBoundsAttributes from '../data/raster_bounds_attributes.ts';
+import posAttributes from '../data/pos_attributes.ts';
+import {type ProgramConfiguration} from '../data/program_configuration.ts';
+import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
+import {shaders} from '../shaders/shaders.ts';
+import {Program} from '../webgl/program.ts';
+import {programUniforms} from '../webgl/program/program_uniforms.ts';
+import {Context} from '../webgl/context.ts';
+import {DepthMode} from '../webgl/depth_mode.ts';
+import {StencilMode} from '../webgl/stencil_mode.ts';
+import {ColorMode} from '../webgl/color_mode.ts';
+import {CullFaceMode} from '../webgl/cull_face_mode.ts';
+import {Texture} from '../webgl/texture.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webgl/draw';
-import {type OverscaledTileID} from '../tile/tile_id';
-import {Mesh} from './mesh';
-import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection';
+import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webgl/draw/index.ts';
+import {type OverscaledTileID} from '../tile/tile_id.ts';
+import {Mesh} from './mesh.ts';
+import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
 
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {Style} from '../style/style';
-import type {StyleLayer} from '../style/style_layer';
-import type {CrossFaded} from '../style/properties';
-import type {LineAtlas} from './line_atlas';
-import type {ImageManager} from './image_manager';
-import type {GlyphManager} from './glyph_manager';
-import type {VertexBuffer} from '../webgl/vertex_buffer';
-import type {IndexBuffer} from '../webgl/index_buffer';
-import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../webgl/types';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {Style} from '../style/style.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {CrossFaded} from '../style/properties.ts';
+import type {LineAtlas} from './line_atlas.ts';
+import type {ImageManager} from './image_manager.ts';
+import type {GlyphManager} from './glyph_manager.ts';
+import type {VertexBuffer} from '../webgl/vertex_buffer.ts';
+import type {IndexBuffer} from '../webgl/index_buffer.ts';
+import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../webgl/types.ts';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import type {IRenderToTexture} from './render_to_texture_interface';
-import type {ProjectionData} from '../geo/projection/projection_data';
-import {coveringTiles} from '../geo/projection/covering_tiles';
-import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
-import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer';
-import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer';
-import {isLineStyleLayer} from '../style/style_layer/line_style_layer';
-import {isFillStyleLayer} from '../style/style_layer/fill_style_layer';
-import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer';
-import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
-import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer';
-import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer';
-import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer';
-import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer';
+import type {IRenderToTexture} from './render_to_texture_interface.ts';
+import type {ProjectionData} from '../geo/projection/projection_data.ts';
+import type {Framebuffer} from '../webgl/framebuffer.ts';
+import {coveringTiles} from '../geo/projection/covering_tiles.ts';
+import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
+import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
+import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer.ts';
+import {isLineStyleLayer} from '../style/style_layer/line_style_layer.ts';
+import {isFillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
+import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
+import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
+import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer.ts';
+import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
+import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
+import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -68,6 +69,18 @@ export type RenderOptions = {
 };
 
 /**
+ * Holds the GPU resources used to render a 2D tile into a texture so it can
+ * be draped over 3D terrain: an FBO with a color texture and depth-stencil
+ * renderbuffer attached. Owned by a `Tile` while in use, recycled via
+ * `Painter.releaseRTT` when the tile no longer needs it.
+ */
+export type RTTObject = {
+    fbo: Framebuffer;
+    texture: Texture;
+    size: number;
+};
+
+/**
  * @internal
  * Initialize a new painter object.
  */
@@ -80,6 +93,10 @@ export class Painter {
     _tileTextures: {
         [_: number]: Texture[];
     };
+    /**
+     * A pool of recyclable {@link RTTObject}s
+     */
+    _rttObjectRecyclePool: RTTObject[];
     numSublayers: number;
     depthEpsilon: number;
     emptyProgramConfiguration: ProgramConfiguration;
@@ -130,6 +147,7 @@ export class Painter {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
+        this._rttObjectRecyclePool = [];
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
@@ -146,7 +164,7 @@ export class Painter {
      * Update the GL viewport, projection matrix, and transforms to compensate
      * for a new width and height value.
      */
-    resize(width: number, height: number, pixelRatio: number) {
+    resize(width: number, height: number, pixelRatio: number): void {
         this.width = Math.floor(width * pixelRatio);
         this.height = Math.floor(height * pixelRatio);
         this.pixelRatio = pixelRatio;
@@ -159,7 +177,7 @@ export class Painter {
         }
     }
 
-    setup() {
+    setup(): void {
         const context = this.context;
 
         const tileExtentArray = new PosArray();
@@ -225,7 +243,7 @@ export class Painter {
      * Reset the drawing canvas by clearing the stencil buffer so that we can draw
      * new tiles at the same location, while retaining previously drawn pixels.
      */
-    clearStencil() {
+    clearStencil(): void {
         const context = this.context;
         const gl = context.gl;
 
@@ -257,7 +275,7 @@ export class Painter {
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }
 
-    _renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean) {
+    _renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean): void {
         if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs?.length) {
             return;
         }
@@ -291,7 +309,7 @@ export class Painter {
         this._tileClippingMaskIDs = stencilRefs;
     }
 
-    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: OverscaledTileID[], renderToTexture: boolean, useBorders: boolean) {
+    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: OverscaledTileID[], renderToTexture: boolean, useBorders: boolean): void {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.projection;
@@ -321,7 +339,7 @@ export class Painter {
      * Fills the depth buffer with the geometry of all supplied tiles.
      * Does not change the color buffer or the stencil buffer.
      */
-    _renderTilesDepthBuffer() {
+    _renderTilesDepthBuffer(): void {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.projection;
@@ -463,11 +481,11 @@ export class Painter {
      * This returns true for layers that can be drawn using the
      * opaque pass.
      */
-    opaquePassEnabledForLayer() {
+    opaquePassEnabledForLayer(): boolean {
         return this.currentLayer < this.opaquePassCutoff;
     }
 
-    render(style: Style, options: PainterOptions) {
+    render(style: Style, options: PainterOptions): void {
         this.style = style;
         this.options = options;
 
@@ -621,7 +639,7 @@ export class Painter {
      * Update the depth framebuffer if the camera has moved or tiles have reloaded.
      * Marks coords as depthDirty so they are re-rendered on next demand.
      */
-    maybeDrawDepth(requireExact: boolean) {
+    maybeDrawDepth(requireExact: boolean): void {
         if (!this.style?.map?.terrain) {
             return;
         }
@@ -647,7 +665,7 @@ export class Painter {
     /**
      * Render the coords framebuffer if it is coordsDirty
      */
-    maybeDrawCoords() {
+    maybeDrawCoords(): void {
         if (!this.style?.map?.terrain || !this.terrainFacilitator.coordsDirty) {
             return;
         }
@@ -655,7 +673,7 @@ export class Painter {
         this.drawFunctions.terrainCoords(this, this.style.map.terrain);
     }
 
-    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
+    renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
@@ -688,7 +706,7 @@ export class Painter {
 
     static readonly MAX_TEXTURE_POOL_SIZE_PER_BUCKET = 50;
 
-    saveTileTexture(texture: Texture) {
+    saveTileTexture(texture: Texture): void {
         const textures = this._tileTextures[texture.size[0]];
         if (!textures) {
             this._tileTextures[texture.size[0]] = [texture];
@@ -699,9 +717,41 @@ export class Painter {
         }
     }
 
-    getTileTexture(size: number) {
+    getTileTexture(size: number): Texture {
         const textures = this._tileTextures[size];
         return textures && textures.length > 0 ? textures.pop() : null;
+    }
+
+    acquireRTT(size: number): RTTObject {
+        const gl = this.context.gl;
+        const obj = this._rttObjectRecyclePool.pop();
+        if (obj) {
+            if (obj.size !== size) {
+                gl.bindTexture(gl.TEXTURE_2D, obj.texture.texture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                obj.texture.size = [size, size];
+                this.context.bindRenderbuffer.set(obj.fbo.depthAttachment.get());
+                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, size, size);
+                this.context.bindRenderbuffer.set(null);
+                obj.fbo.width = size;
+                obj.fbo.height = size;
+                obj.size = size;
+            }
+            return obj;
+        }
+        const fbo = this.context.createFramebuffer(size, size, true, true);
+        const texture = new Texture(this.context, {width: size, height: size, data: null}, gl.RGBA);
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+        if (this.context.extTextureFilterAnisotropic) {
+            gl.texParameterf(gl.TEXTURE_2D, this.context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.context.extTextureFilterAnisotropicMax);
+        }
+        fbo.depthAttachment.set(this.context.createRenderbuffer(gl.DEPTH_STENCIL, size, size));
+        fbo.colorAttachment.set(texture.texture);
+        return {fbo, texture, size};
+    }
+
+    releaseRTT(obj: RTTObject): void {
+        this._rttObjectRecyclePool.push(obj);
     }
 
     /**
@@ -761,7 +811,7 @@ export class Painter {
      * Reset some GL state to default values to avoid hard-to-debug bugs
      * in custom layers.
      */
-    setCustomLayerDefaults() {
+    setCustomLayerDefaults(): void {
         // Prevent custom layers from unintentionally modify the last VAO used.
         // All other state is state is restored on it's own, but for VAOs it's
         // simpler to unbind so that we don't have to track the state of VAOs.
@@ -779,14 +829,14 @@ export class Painter {
     /*
      * Set GL state that is shared by all layers.
      */
-    setBaseState() {
+    setBaseState(): void {
         const gl = this.context.gl;
         this.context.cullFace.set(false);
         this.context.viewport.set([0, 0, this.width, this.height]);
         this.context.blendEquation.set(gl.FUNC_ADD);
     }
 
-    initDebugOverlayCanvas() {
+    initDebugOverlayCanvas(): void {
         if (this.debugOverlayCanvas == null) {
             this.debugOverlayCanvas = document.createElement('canvas');
             this.debugOverlayCanvas.width = 512;
@@ -796,7 +846,7 @@ export class Painter {
         }
     }
 
-    destroy() {
+    destroy(): void {
         if (this._tileTextures) {
             for (const size in this._tileTextures) {
                 const textures = this._tileTextures[size];
@@ -808,6 +858,12 @@ export class Painter {
             }
             this._tileTextures = {};
         }
+
+        for (const obj of this._rttObjectRecyclePool) {
+            obj.texture.destroy();
+            obj.fbo.destroy();
+        }
+        this._rttObjectRecyclePool = [];
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
         if (this.debugBuffer) this.debugBuffer.destroy();
@@ -843,7 +899,7 @@ export class Painter {
      * That means that we've reached GL limits somehow.
      * Note: drawing buffer size changes only when canvas size changes
      */
-    overLimit() {
+    overLimit(): boolean {
         const {drawingBufferWidth, drawingBufferHeight} = this.context.gl;
         return this.width !== drawingBufferWidth || this.height !== drawingBufferHeight;
     }

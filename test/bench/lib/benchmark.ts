@@ -1,4 +1,4 @@
-import type {Map} from '../../../src/ui/map';
+import type {Map} from '../../../src/ui/map.ts';
 
 // According to https://developer.mozilla.org/en-US/docs/Web/API/Performance/now,
 // performance.now() should be accurate to 0.005ms. Set the minimum running
@@ -133,7 +133,7 @@ class Benchmark implements BenchmarkLike {
      * configurations (e.g. SwiftShader), so we also read a pixel to
      * force the driver to complete all rendering.
      */
-    public static renderMap(map: Map, paintStartTimeStamp?: number) {
+    public static renderMap(map: Map, paintStartTimeStamp?: number): void {
         map._render(paintStartTimeStamp);
         const gl = map.painter.context.gl;
         gl.finish();

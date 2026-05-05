@@ -1,22 +1,22 @@
-import {DepthMode} from '../depth_mode';
-import {StencilMode} from '../stencil_mode';
-import {ColorMode} from '../color_mode';
-import {CullFaceMode} from '../cull_face_mode';
+import {DepthMode} from '../depth_mode.ts';
+import {StencilMode} from '../stencil_mode.ts';
+import {ColorMode} from '../color_mode.ts';
+import {CullFaceMode} from '../cull_face_mode.ts';
 import {
     fillExtrusionUniformValues,
     fillExtrusionPatternUniformValues,
-} from '../program/fill_extrusion_program';
+} from '../program/fill_extrusion_program.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer';
-import type {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket';
-import type {OverscaledTileID} from '../../tile/tile_id';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
+import type {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
-import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program';
-import {translatePosition} from '../../util/util';
+import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
+import {translatePosition} from '../../util/util.ts';
 
-export function drawFillExtrusion(painter: Painter, tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
+export function drawFillExtrusion(painter: Painter, tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
     const opacity = layer.paint.get('fill-extrusion-opacity');
     if (opacity === 0) {
         return;

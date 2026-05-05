@@ -1,19 +1,19 @@
-import {Event, ErrorEvent, Evented} from '../util/evented';
+import {Event, ErrorEvent, Evented} from '../util/evented.ts';
 
-import {ensureError, extend, pick} from '../util/util';
-import {loadTileJson} from './load_tilejson';
-import {TileBounds} from '../tile/tile_bounds';
-import {ResourceType} from '../util/request_manager';
-import {MessageType} from '../util/actor_messages';
-import {isAbortError} from '../util/abort_error';
+import {ensureError, extend, pick} from '../util/util.ts';
+import {loadTileJson} from './load_tilejson.ts';
+import {TileBounds} from '../tile/tile_bounds.ts';
+import {ResourceType} from '../util/request_manager.ts';
+import {MessageType} from '../util/actor_messages.ts';
+import {isAbortError} from '../util/abort_error.ts';
 
-import type {Source} from './source';
-import type {OverscaledTileID} from '../tile/tile_id';
-import type {Map} from '../ui/map';
-import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from '../tile/tile';
+import type {Source} from './source.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {Map} from '../ui/map.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Tile} from '../tile/tile.ts';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEncoding} from './worker_source';
+import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEncoding} from './worker_source.ts';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
@@ -111,7 +111,7 @@ export class VectorTileSource extends Evented implements Source {
         this.setEventedParent(eventedParent);
     }
 
-    async load(sourceDataChanged: boolean = false) {
+    async load(sourceDataChanged: boolean = false): Promise<void> {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         this._tileJSONRequest = new AbortController();
@@ -144,16 +144,16 @@ export class VectorTileSource extends Evented implements Source {
         return this._loaded;
     }
 
-    hasTile(tileID: OverscaledTileID) {
+    hasTile(tileID: OverscaledTileID): boolean {
         return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
     }
 
-    onAdd(map: Map) {
+    onAdd(map: Map): void {
         this.map = map;
         this.load();
     }
 
-    setSourceProperty(callback: Function) {
+    setSourceProperty(callback: Function): void {
         if (this._tileJSONRequest) {
             this._tileJSONRequest.abort();
         }
@@ -190,7 +190,7 @@ export class VectorTileSource extends Evented implements Source {
         return this;
     }
 
-    onRemove() {
+    onRemove(): void {
         if (this._tileJSONRequest) {
             this._tileJSONRequest.abort();
             this._tileJSONRequest = null;

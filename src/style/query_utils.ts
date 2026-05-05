@@ -1,12 +1,12 @@
 import Point from '@mapbox/point-geometry';
 
-import type {PossiblyEvaluatedPropertyValue} from './properties';
-import type {StyleLayer} from '../style/style_layer';
-import type {CircleBucket} from '../data/bucket/circle_bucket';
-import type {LineBucket} from '../data/bucket/line_bucket';
-import {polygonIntersectsBufferedPoint} from '../util/intersection_tests';
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {UnwrappedTileID} from '../tile/tile_id';
+import type {PossiblyEvaluatedPropertyValue} from './properties.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {CircleBucket} from '../data/bucket/circle_bucket.ts';
+import type {LineBucket} from '../data/bucket/line_bucket.ts';
+import {polygonIntersectsBufferedPoint} from '../util/intersection_tests.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {UnwrappedTileID} from '../tile/tile_id.ts';
 
 export function getMaximumPaintValue(
     property: string,
@@ -21,7 +21,7 @@ export function getMaximumPaintValue(
     }
 }
 
-export function translateDistance(translate: [number, number]) {
+export function translateDistance(translate: [number, number]): number {
     return Math.sqrt(translate[0] * translate[0] + translate[1] * translate[1]);
 }
 
@@ -71,7 +71,7 @@ function _stripDuplicates(ring: Point[]): Point[] {
     return filteredRing;
 }
 
-export function offsetLine(rings: Point[][], offset: number) {
+export function offsetLine(rings: Point[][], offset: number): Point[][] {
     const newRings: Point[][] = [];
     for (const rawRing of rings) {
         const ring = _stripDuplicates(rawRing);
@@ -135,7 +135,7 @@ export function circleIntersection({
     getElevation,
     pitchAlignment = 'map',
     pitchScale = 'map'
-}: CircleIntersectionTestParams, geometry): boolean {
+}: CircleIntersectionTestParams, geometry: Point[][]): boolean {
     const intersectionTest = pitchAlignment === 'map'
         ? (pitchScale === 'map' ? intersectionTestMapMap : intersectionTestMapViewport)
         : (pitchScale === 'map' ? intersectionTestViewportMap : intersectionTestViewportViewport);
@@ -161,7 +161,7 @@ function projectPoint(tilePoint: Point, transform: IReadonlyTransform, unwrapped
     );
 }
 
-export function projectQueryGeometry(queryGeometry: Point[], transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)) {
+export function projectQueryGeometry(queryGeometry: Point[], transform: IReadonlyTransform, unwrappedTileID: UnwrappedTileID, getElevation: undefined | ((x: number, y: number) => number)): Point[] {
     return queryGeometry.map((p) => {
         return projectPoint(p, transform, unwrappedTileID, getElevation);
     });

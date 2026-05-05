@@ -1,12 +1,12 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {type StyleLayer} from '../../style/style_layer';
-import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util';
-import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
-import {type MapLibreEvent} from '../events';
-import {Map} from '../map';
-import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
-import {GlobeProjection} from '../../geo/projection/globe_projection';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {type StyleLayer} from '../../style/style_layer.ts';
+import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util.ts';
+import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
+import {type MapLibreEvent} from '../events.ts';
+import {Map} from '../map.ts';
+import {Event as EventedEvent, ErrorEvent} from '../../util/evented.ts';
+import {GlobeProjection} from '../../geo/projection/globe_projection.ts';
 import {type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;

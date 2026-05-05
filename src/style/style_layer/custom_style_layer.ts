@@ -1,8 +1,8 @@
-import {StyleLayer} from '../style_layer';
-import type {Map} from '../../ui/map';
+import {StyleLayer} from '../style_layer.ts';
+import type {Map} from '../../ui/map.ts';
 import {type mat4} from 'gl-matrix';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {ProjectionData} from '../../geo/projection/projection_data';
+import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 
 /**
  * Type for an object literal that specifies a map tile.
@@ -292,8 +292,8 @@ export interface CustomLayerInterface {
     onRemove?(map: Map, gl: WebGL2RenderingContext): void;
 }
 
-export function validateCustomStyleLayer(layerObject: CustomLayerInterface) {
-    const errors = [];
+export function validateCustomStyleLayer(layerObject: CustomLayerInterface): Array<{message: string}> {
+    const errors: Array<{message: string}> = [];
     const id = layerObject.id;
 
     if (id === undefined) {
@@ -330,29 +330,29 @@ export class CustomStyleLayer extends StyleLayer {
         this.implementation = implementation;
     }
 
-    is3D() {
+    is3D(): boolean {
         return this.implementation.renderingMode === '3d';
     }
 
-    hasOffscreenPass() {
+    hasOffscreenPass(): boolean {
         return this.implementation.prerender !== undefined;
     }
 
-    recalculate() {}
-    updateTransitions() {}
-    hasTransition() { return false; }
+    recalculate(): void {}
+    updateTransitions(): void {}
+    hasTransition(): boolean { return false; }
 
     serialize(): LayerSpecification {
         throw new Error('Custom layers cannot be serialized');
     }
 
-    onAdd = (map: Map) => {
+    onAdd: (map: Map) => void = (map: Map) => {
         if (this.implementation.onAdd) {
             this.implementation.onAdd(map, map.painter.context.gl);
         }
     };
 
-    onRemove = (map: Map) => {
+    onRemove: (map: Map) => void = (map: Map) => {
         if (this.implementation.onRemove) {
             this.implementation.onRemove(map, map.painter.context.gl);
         }

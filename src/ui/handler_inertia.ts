@@ -1,9 +1,9 @@
-import {now} from '../util/time_control';
-import type {Map} from './map';
-import {bezier, clamp, extend, evaluateZoomSnap} from '../util/util';
+import {now} from '../util/time_control.ts';
+import type {Map} from './map.ts';
+import {bezier, clamp, extend, evaluateZoomSnap} from '../util/util.ts';
 import Point from '@mapbox/point-geometry';
-import type {DragPanOptions} from './handler/shim/drag_pan';
-import {type EaseToOptions} from './camera';
+import type {DragPanOptions} from './handler/shim/drag_pan.ts';
+import {type EaseToOptions} from './camera.ts';
 
 const defaultInertiaOptions = {
     linearity: 0.3,
@@ -54,16 +54,16 @@ export class HandlerInertia {
         this.clear();
     }
 
-    clear() {
+    clear(): void {
         this._inertiaBuffer = [];
     }
 
-    record(settings: any) {
+    record(settings: any): void {
         this._drainInertiaBuffer();
         this._inertiaBuffer.push({time: now(), settings});
     }
 
-    _drainInertiaBuffer() {
+    _drainInertiaBuffer(): void {
         const inertia = this._inertiaBuffer,
             currentTime = now(),
             cutoff = 160;   //msec

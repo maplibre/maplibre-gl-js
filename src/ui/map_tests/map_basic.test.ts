@@ -1,13 +1,13 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {Map} from '../map';
-import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '../../util/test/util';
-import {Tile} from '../../tile/tile';
-import {OverscaledTileID} from '../../tile/tile_id';
-import {fixedLngLat} from '../../../test/unit/lib/fixed';
-import {type RequestTransformFunction, ResourceType} from '../../util/request_manager';
-import {type MapSourceDataEvent} from '../events';
-import {MessageType} from '../../util/actor_messages';
-import {Style} from '../../style/style';
+import {Map} from '../map.ts';
+import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '../../util/test/util.ts';
+import {Tile} from '../../tile/tile.ts';
+import {OverscaledTileID} from '../../tile/tile_id.ts';
+import {fixedLngLat} from '../../../test/unit/lib/fixed.ts';
+import {type RequestTransformFunction, ResourceType} from '../../util/request_manager.ts';
+import {type MapSourceDataEvent} from '../events.ts';
+import {MessageType} from '../../util/actor_messages.ts';
+import {Style} from '../../style/style.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -197,7 +197,7 @@ describe('Map', () => {
         const map = createMap({style});
         await map.once('style.load');
         const abortControllers: AbortController[] = [];
-        const getJSONSpy = vi.spyOn(await import('../../util/ajax'), 'getJSON')
+        const getJSONSpy = vi.spyOn(await import('../../util/ajax.ts'), 'getJSON')
             .mockImplementation((_req, abortController) => {
                 abortControllers.push(abortController);
                 return Promise.resolve({data: style, cacheControl: null, expires: null});

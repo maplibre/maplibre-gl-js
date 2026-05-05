@@ -1,13 +1,13 @@
 import {describe, test, expect} from 'vitest';
-import {createStyleLayer} from './create_style_layer';
-import {FillStyleLayer} from './style_layer/fill_style_layer';
-import {extend} from '../util/util';
+import {createStyleLayer} from './create_style_layer.ts';
+import {FillStyleLayer} from './style_layer/fill_style_layer.ts';
+import {extend} from '../util/util.ts';
 import {Color, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type EvaluationParameters} from './evaluation_parameters';
-import {type TransitionParameters} from './properties';
-import {type BackgroundStyleLayer} from './style_layer/background_style_layer';
-import {type SymbolStyleLayer} from './style_layer/symbol_style_layer';
-import {type CircleStyleLayer} from './style_layer/circle_style_layer';
+import {type EvaluationParameters} from './evaluation_parameters.ts';
+import {type TransitionParameters} from './properties.ts';
+import {type BackgroundStyleLayer} from './style_layer/background_style_layer.ts';
+import {type SymbolStyleLayer} from './style_layer/symbol_style_layer.ts';
+import {type CircleStyleLayer} from './style_layer/circle_style_layer.ts';
 
 describe('StyleLayer', () => {
     test('instantiates the correct subclass', () => {

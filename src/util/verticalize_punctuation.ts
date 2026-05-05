@@ -1,4 +1,4 @@
-import {charHasRotatedVerticalOrientation} from './script_detection';
+import {charHasRotatedVerticalOrientation} from './script_detection.ts';
 
 export const verticalizedCharacterMap = {
     '!': '︕',
@@ -87,7 +87,7 @@ export const verticalizedCharacterMap = {
     '｣': '﹂'
 };
 
-export function verticalizePunctuation(input: string) {
+export function verticalizePunctuation(input: string): string {
     let output = '';
 
     let prevChar = {premature: true, value: undefined};

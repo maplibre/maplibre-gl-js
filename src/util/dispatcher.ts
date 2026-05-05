@@ -1,10 +1,10 @@
-import {Actor, type MessageHandler} from './actor';
-import {getGlobalWorkerPool} from './global_worker_pool';
-import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax';
+import {Actor, type MessageHandler} from './actor.ts';
+import {getGlobalWorkerPool} from './global_worker_pool.ts';
+import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 
-import type {WorkerPool} from './worker_pool';
-import type {RequestResponseMessageMap} from './actor_messages';
-import {MessageType} from './actor_messages';
+import type {WorkerPool} from './worker_pool.ts';
+import type {RequestResponseMessageMap} from './actor_messages.ts';
+import {MessageType} from './actor_messages.ts';
 
 /**
  * Responsible for sending messages from a {@link Source} to an associated worker source (usually with the same name).
@@ -50,7 +50,7 @@ export class Dispatcher {
         return this.actors[this.currentActor];
     }
 
-    remove(mapRemoved: boolean = true) {
+    remove(mapRemoved: boolean = true): void {
         for (const actor of this.actors) {
             actor.remove();
         }
@@ -58,13 +58,13 @@ export class Dispatcher {
         if (mapRemoved) this.workerPool.release(this.id);
     }
 
-    public registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>) {
+    public registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): void {
         for (const actor of this.actors) {
             actor.registerMessageHandler(type, handler);
         }
     }
 
-    public unregisterMessageHandler<T extends MessageType>(type: T) {
+    public unregisterMessageHandler<T extends MessageType>(type: T): void {
         for (const actor of this.actors) {
             actor.unregisterMessageHandler(type);
         }

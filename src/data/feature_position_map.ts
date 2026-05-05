@@ -1,5 +1,5 @@
 import murmur3 from 'murmurhash-js';
-import {register} from '../util/web_worker_transfer';
+import {register} from '../util/web_worker_transfer.ts';
 
 type SerializedFeaturePositionMap = {
     ids: Float64Array;
@@ -24,7 +24,7 @@ export class FeaturePositionMap {
         this.indexed = false;
     }
 
-    add(id: unknown, index: number, start: number, end: number) {
+    add(id: unknown, index: number, start: number, end: number): void {
         this.ids.push(getNumericId(id));
         this.positions.push(index, start, end);
     }

@@ -1,15 +1,15 @@
 import {ProjectionDefinition, type ProjectionDefinitionSpecification, type ProjectionSpecification, type StylePropertySpecification, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
-import {DataConstantProperty, type PossiblyEvaluated, Properties, Transitionable, type Transitioning, type TransitionParameters} from '../../style/properties';
-import {Evented} from '../../util/evented';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
-import {MercatorProjection} from './mercator_projection';
-import {VerticalPerspectiveProjection} from './vertical_perspective_projection';
-import {type Projection, type ProjectionGPUContext, type TileMeshUsage} from './projection';
-import {type PreparedShader} from '../../shaders/shaders';
-import {type SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {type Context} from '../../webgl/context';
-import {type CanonicalTileID} from '../../tile/tile_id';
-import {type Mesh} from '../../render/mesh';
+import {DataConstantProperty, type PossiblyEvaluated, Properties, Transitionable, type Transitioning, type TransitionParameters} from '../../style/properties.ts';
+import {Evented} from '../../util/evented.ts';
+import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import {MercatorProjection} from './mercator_projection.ts';
+import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
+import {type Projection, type ProjectionGPUContext, type TileMeshUsage} from './projection.ts';
+import {type PreparedShader} from '../../shaders/shaders.ts';
+import {type SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
+import {type Context} from '../../webgl/context.ts';
+import {type CanonicalTileID} from '../../tile/tile_id.ts';
+import {type Mesh} from '../../render/mesh.ts';
 
 type ProjectionProps = {
     type: DataConstantProperty<ProjectionDefinitionSpecification>;
@@ -116,11 +116,11 @@ export class GlobeProjection extends Evented implements Projection {
         return this.currentProjection.getMeshFromTileID(context, _tileID, _hasBorder, _allowPoles, _usage);
     }
 
-    setProjection(projection?: ProjectionSpecification) {
+    setProjection(projection?: ProjectionSpecification): void {
         this._transitionable.setValue('type', projection?.type || 'mercator');
     }
 
-    updateTransitions(parameters: TransitionParameters) {
+    updateTransitions(parameters: TransitionParameters): void {
         this._transitioning = this._transitionable.transitioned(parameters, this._transitioning);
     }
 
@@ -128,11 +128,11 @@ export class GlobeProjection extends Evented implements Projection {
         return this._transitioning.hasTransition() || this.currentProjection.hasTransition();
     }
 
-    recalculate(parameters: EvaluationParameters) {
+    recalculate(parameters: EvaluationParameters): void {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
-    setErrorQueryLatitudeDegrees(value: number) {
+    setErrorQueryLatitudeDegrees(value: number): void {
         this._verticalPerspectiveProjection.setErrorQueryLatitudeDegrees(value);
         this._mercatorProjection.setErrorQueryLatitudeDegrees(value);
     }

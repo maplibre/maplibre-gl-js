@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest';
-import {CanonicalTileID, OverscaledTileID} from './tile_id';
-import {EXTENT} from '../data/extent';
-import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
+import {CanonicalTileID, OverscaledTileID} from './tile_id.ts';
+import {EXTENT} from '../data/extent.ts';
+import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 
 describe('CanonicalTileID', () => {
     test('constructor', () => {

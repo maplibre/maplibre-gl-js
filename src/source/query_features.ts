@@ -1,14 +1,14 @@
 import {mat4} from 'gl-matrix';
 import type Point from '@mapbox/point-geometry';
-import type {TileManager} from '../tile/tile_manager';
-import type {StyleLayer} from '../style/style_layer';
-import type {CollisionIndex} from '../symbol/collision_index';
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {RetainedQueryData} from '../symbol/placement';
+import type {TileManager} from '../tile/tile_manager.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {CollisionIndex} from '../symbol/collision_index.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {RetainedQueryData} from '../symbol/placement.ts';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import type {QueryResults, QueryResultsItem} from '../data/feature_index';
-import type {OverscaledTileID} from '../tile/tile_id';
+import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
+import type {QueryResults, QueryResultsItem} from '../data/feature_index.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
 
 type RenderedFeatureLayer = {
     wrappedTileID: string;

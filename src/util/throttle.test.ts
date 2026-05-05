@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
-import {sleep} from './test/util';
-import {throttle} from './throttle';
+import {sleep} from './test/util.ts';
+import {throttle} from './throttle.ts';
 
 describe('throttle', () => {
 

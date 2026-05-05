@@ -22,7 +22,7 @@ To run specific tests:
  - Unit test by file name : `npm run test-unit -- draw_symbol.test.ts`
  - Integration test by file name : `npm run test-integration -- browser`
  want to change the headless mode in the test file to be `false` to see what's happening in the browser.
- - Render tests that matches a folder or file names: `npm run test-render -- render-test-name` (e.g. `npm run test-render -- text-rotation-alignment`)
+ - Render tests that matches a folder or file names: `npm run test-render -- -t "render-test-name"` (e.g. `npm run test-render -- -t "slant"`)
 
 To run folders in watch mode, meaning they will run continuously as you make changes to relevant code, (i.e. for test driven development): use `npm run test-watch-roots *folder1* [*folder2*...]` (e.g. `npm run test-watch-roots ./src/ui/control`)
 

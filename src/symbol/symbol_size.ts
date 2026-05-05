@@ -1,13 +1,13 @@
 import {Interpolate, interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {clamp} from '../util/util';
-import {EvaluationParameters} from '../style/evaluation_parameters';
+import {clamp} from '../util/util.ts';
+import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 
-import type {PropertyValue, PossiblyEvaluatedPropertyValue} from '../style/properties';
+import type {PropertyValue, PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
 import type {InterpolationType} from '@maplibre/maplibre-gl-style-spec';
 
 const MAX_GLYPH_ICON_SIZE = 255;
 const SIZE_PACK_FACTOR = 128;
-const MAX_PACKED_SIZE = MAX_GLYPH_ICON_SIZE * SIZE_PACK_FACTOR;
+const MAX_PACKED_SIZE: number = MAX_GLYPH_ICON_SIZE * SIZE_PACK_FACTOR;
 
 export {getSizeData, evaluateSizeForFeature, evaluateSizeForZoom, SIZE_PACK_FACTOR, MAX_GLYPH_ICON_SIZE, MAX_PACKED_SIZE};
 

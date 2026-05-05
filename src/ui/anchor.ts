@@ -18,7 +18,7 @@ export const anchorTranslate: {
     'right': 'translate(-100%,-50%)'
 };
 
-export function applyAnchorClass(element: HTMLElement, anchor: PositionAnchor, prefix: string) {
+export function applyAnchorClass(element: HTMLElement, anchor: PositionAnchor, prefix: string): void {
     const classList = element.classList;
     for (const key in anchorTranslate) {
         classList.remove(`maplibregl-${prefix}-anchor-${key}`);

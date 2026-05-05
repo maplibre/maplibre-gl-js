@@ -1,7 +1,7 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest, sleep} from '../../util/test/util';
-import {Map, type MapOptions} from '../map';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {beforeMapTest, sleep} from '../../util/test/util.ts';
+import {Map, type MapOptions} from '../map.ts';
 
 function createMap(options: any = {}) {
     return new Map({

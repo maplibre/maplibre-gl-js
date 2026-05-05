@@ -1,12 +1,12 @@
 import Point from '@mapbox/point-geometry';
 import UnitBezier from '@mapbox/unitbezier';
-import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
-import type {Size} from './image';
-import type {WorkerGlobalScopeInterface} from './web_worker';
+import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted.ts';
+import type {Size} from './image.ts';
+import type {WorkerGlobalScopeInterface} from './web_worker.ts';
 import {mat3, mat4, quat, vec2, vec3, type vec4} from 'gl-matrix';
-import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
-import {type OverscaledTileID} from '../tile/tile_id';
-import type {Event} from './evented';
+import {pixelsToTileUnits} from '../source/pixels_to_tile_units.ts';
+import {type OverscaledTileID} from '../tile/tile_id.ts';
+import type {Event} from './evented.ts';
 
 export const JSON_PREFIX = '__$json__:';
 
@@ -258,7 +258,7 @@ export function distanceOfAnglesRadians(radiansA: number, radiansB: number): num
  * Modulo function, as opposed to javascript's `%`, which is a remainder.
  * This functions will return positive values, even if the first operand is negative.
  */
-export function mod(n, m) {
+export function mod(n: number, m: number): number {
     return ((n % m) + m) % m;
 }
 
@@ -375,7 +375,7 @@ export function bezier(p1x: number, p1y: number, p2x: number, p2y: number): (t: 
  * A default bezier-curve powered easing function with
  * control points (0.25, 0.1) and (0.25, 1)
  */
-export const defaultEasing = bezier(0.25, 0.1, 0.25, 1);
+export const defaultEasing: (t: number) => number = bezier(0.25, 0.1, 0.25, 1);
 
 /**
  * constrain n to the given range via min + max
@@ -501,12 +501,12 @@ export function nextPowerOfTwo(value: number): number {
 /**
  * Computes scaling from zoom level.
  */
-export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
+export function zoomScale(zoom: number): number { return Math.pow(2, zoom); }
 
 /**
  * Computes zoom level from scaling.
  */
-export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
+export function scaleZoom(scale: number): number { return Math.log(scale) / Math.LN2; }
 
 /**
  * Evaluates the snapped zoom level based on zoomSnap. If zoomSnap is 0 or less, the zoom level is returned unchanged.
@@ -755,7 +755,7 @@ export function storageAvailable(type: string): boolean {
 
 // The following methods are from https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding#The_Unicode_Problem
 //Unicode compliant base64 encoder for strings
-export function b64EncodeUnicode(str: string) {
+export function b64EncodeUnicode(str: string): string {
     return btoa(
         encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
             (match, p1) => {
@@ -766,7 +766,7 @@ export function b64EncodeUnicode(str: string) {
 }
 
 // Unicode compliant decoder for base64-encoded strings
-export function b64DecodeUnicode(str: string) {
+export function b64DecodeUnicode(str: string): string {
     return decodeURIComponent(atob(str).split('').map((c) => {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); //eslint-disable-line
     }).join(''));

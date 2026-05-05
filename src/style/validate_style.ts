@@ -1,7 +1,7 @@
 import {validateStyleMin} from '@maplibre/maplibre-gl-style-spec';
-import {ErrorEvent} from '../util/evented';
+import {ErrorEvent} from '../util/evented.ts';
 
-import type {Evented} from '../util/evented';
+import type {Evented} from '../util/evented.ts';
 
 type ValidationError = {
     message: string;
@@ -27,13 +27,13 @@ type ValidateStyle = {
 
 export const validateStyle = (validateStyleMin as unknown as ValidateStyle);
 
-export const validateSource = validateStyle.source;
-export const validateLight = validateStyle.light;
-export const validateSky = validateStyle.sky;
-export const validateTerrain = validateStyle.terrain;
-export const validateFilter = validateStyle.filter;
-export const validatePaintProperty = validateStyle.paintProperty;
-export const validateLayoutProperty = validateStyle.layoutProperty;
+export const validateSource: Validator = validateStyle.source;
+export const validateLight: Validator = validateStyle.light;
+export const validateSky: Validator = validateStyle.sky;
+export const validateTerrain: Validator = validateStyle.terrain;
+export const validateFilter: Validator = validateStyle.filter;
+export const validatePaintProperty: Validator = validateStyle.paintProperty;
+export const validateLayoutProperty: Validator = validateStyle.layoutProperty;
 
 export function emitValidationErrors(
     emitter: Evented,
