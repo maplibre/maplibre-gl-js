@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+- Fix Large number of feature state keys leads to zoom lag when loading cached tiles ([#6633](https://github.com/maplibre/maplibre-gl-js/pull/7590)) (by [@xavierjs](https://github.com/xavierjs))
 
 ## 6.0.0-8
 
