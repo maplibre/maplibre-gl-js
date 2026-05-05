@@ -32368,10 +32368,13 @@ var SourceFeatureState = class {
 		extend(this.stateChanges[sourceLayer][feature], newState);
 		if (this.deletedStates[sourceLayer] === null) {
 			this.deletedStates[sourceLayer] = {};
-			for (const ft in this.state[sourceLayer]) if (ft !== feature) this.deletedStates[sourceLayer][ft] = null;
+			for (const ft in this.state[sourceLayer]) if (ft === feature) {
+				this.deletedStates[sourceLayer][feature] = {};
+				for (const prop in this.state[sourceLayer][ft]) if (newState[prop] === void 0) this.deletedStates[sourceLayer][feature][prop] = null;
+			} else this.deletedStates[sourceLayer][ft] = null;
 		} else if (this.deletedStates[sourceLayer]?.[feature] === null) {
 			this.deletedStates[sourceLayer][feature] = {};
-			for (const prop in this.state[sourceLayer][feature]) if (!newState[prop]) this.deletedStates[sourceLayer][feature][prop] = null;
+			for (const prop in this.state[sourceLayer][feature]) if (newState[prop] === void 0) this.deletedStates[sourceLayer][feature][prop] = null;
 		} else for (const key in newState) if (this.deletedStates[sourceLayer]?.[feature]?.[key] === null) delete this.deletedStates[sourceLayer][feature][key];
 	}
 	removeFeatureState(sourceLayer, featureId, key) {
@@ -42203,7 +42206,19 @@ var Style = class extends Evented {
 			this.fire(new ErrorEvent(/* @__PURE__ */ new Error("The sourceLayer parameter must be provided for vector source types.")));
 			return;
 		}
-		if (target.id === void 0) this.fire(new ErrorEvent(/* @__PURE__ */ new Error("The feature id parameter must be provided.")));
+		if (target.id === void 0) {
+			this.fire(new ErrorEvent(/* @__PURE__ */ new Error("The feature id parameter must be provided.")));
+			return;
+		}
+		const forbiddenStateKeys = [
+			"__proto__",
+			"constructor",
+			"prototype"
+		];
+		if (state && Object.keys(state).some((stateKey) => forbiddenStateKeys.includes(stateKey))) {
+			this.fire(new ErrorEvent(/* @__PURE__ */ new Error(`The feature state should not include one of the following keys: ${forbiddenStateKeys}`)));
+			return;
+		}
 		tileManager.setFeatureState(sourceLayer, target.id, state);
 	}
 	removeFeatureState(target, key) {
@@ -60345,7 +60360,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 16bcf1c";
+const version = "main 4db852a";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
