@@ -23,7 +23,6 @@
 
 ### 🐞 Bug fixes
 
-- _...Add new stuff here..._
 - ⚠️ Fix transparent, overlapping lines creating artefacts. This is fixed for `line-opacity`, but purposefully not for transparent `line-color` properties, thus still allowing transparent colors to stack their effect. ([#7490](https://github.com/maplibre/maplibre-gl-js/pull/7490)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Fix issue when map's max zoom and source max zoom are close to eachother ([#7567](https://github.com/maplibre/maplibre-gl-js/issues/7567)) (by [@HarelM](https://github.com/HarelM))
 
