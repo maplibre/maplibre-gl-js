@@ -9,6 +9,7 @@
 }
 
 /* stylelint-disable selector-class-pattern */
+/* stylelint-disable custom-property-pattern */
 
 /* Examples overview card grid */
 .examples-grid {
@@ -86,3 +87,4 @@
 }
 
 /* stylelint-enable selector-class-pattern */
+/* stylelint-enable custom-property-pattern */
