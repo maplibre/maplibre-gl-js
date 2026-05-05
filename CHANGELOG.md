@@ -6,6 +6,7 @@
 ### 🐞 Bug fixes
 - Remove error when actor doesn't have a registered message type for better usability of custom messages in workers ([#7589](https://github.com/maplibre/maplibre-gl-js/issues/7589)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
+- Fix Large number of feature state keys leads to zoom lag when loading cached tiles ([#6633](https://github.com/maplibre/maplibre-gl-js/pull/7590)) (by [@xavierjs](https://github.com/xavierjs))
 
 ## 6.0.0-8
 

@@ -17,10 +17,10 @@ export class InViewTiles {
         this._tiles = tiles;
     }
 
-    public setFeatureState(featuresChanged: LayerFeatureStates, painter: Painter): void {
+    public setFeatureState(featuresChanged: LayerFeatureStates, painter: Painter, revision: number): void {
         for (const id in this._tiles) {
             const tile = this._tiles[id];
-            tile.setFeatureState(featuresChanged, painter);
+            tile.setFeatureState(featuresChanged, painter, revision);
         }
     }
 
