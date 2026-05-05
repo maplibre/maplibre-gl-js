@@ -10,7 +10,30 @@
 
 /* stylelint-disable selector-class-pattern */
 
-/* Example card hover */
+/* Examples overview card grid */
+.examples-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.example-card {
+    border: 1px solid var(--md-default-fg-color--lightest);
+    border-radius: 0.5rem;
+    text-decoration: none !important;
+    color: inherit !important;
+    transition: box-shadow 0.2s, transform 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.example-card-image {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
 .example-card:hover {
     box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
     transform: translateY(-2px);
@@ -20,9 +43,46 @@
     box-shadow: 0 4px 16px rgb(0 0 0 / 0.4);
 }
 
+.example-card img {
+    width: 100%;
+    aspect-ratio: 12 / 5;
+    object-fit: cover;
+    display: block;
+}
+
+.example-card-content {
+    padding: 0.6rem 0.8rem;
+}
+
+.example-card-content h3 {
+    margin: 0 0 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.example-card-content p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--md-default-fg-color--light);
+    line-height: 1.4;
+}
+
 /* Hide the right sidebar (TOC) when it has no entries */
 .md-sidebar--secondary:not(:has(.md-nav__list)) {
     display: none;
+}
+
+.example-card-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: #285DAA;
+    color: white;
+    border-radius: 0.25rem;
 }
 
 /* stylelint-enable selector-class-pattern */
