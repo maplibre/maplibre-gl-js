@@ -118,7 +118,7 @@ export class SourceFeatureState {
         for (const sourceLayer in this.state) {
             layerStates[sourceLayer] = featureStatesMapToArray(this.state[sourceLayer]);
         }
-        tile.setFeatureState(layerStates, painter);
+        tile.setFeatureState(layerStates, painter, this.revision);
     }
 
     coalesceChanges(inViewTiles: InViewTiles, painter: Painter): void {
@@ -171,6 +171,6 @@ export class SourceFeatureState {
             featuresChanged[sourceLayer] = featureStatesMapToArray(featuresChangedMap[sourceLayer]);
         }
 
-        inViewTiles.setFeatureState(featuresChanged, painter);
+        inViewTiles.setFeatureState(featuresChanged, painter, this.revision);
     }
 }
