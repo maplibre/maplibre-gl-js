@@ -215,7 +215,7 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        await expect(actor.sendAsync({type: "custom" as any, data: {type: 'geojson'} as any})).resolves.toBeNull();
+        await expect(actor.sendAsync({type: 'custom' as any, data: {type: 'geojson'} as any})).resolves.toBeNull();
     });
 
     test('should not process a message with the wrong map id', async () => {
