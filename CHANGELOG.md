@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Remove error when actor doesn't have a registered message type for better usability of custom messages in workers ([#7589](https://github.com/maplibre/maplibre-gl-js/issues/7589)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 6.0.0-8
