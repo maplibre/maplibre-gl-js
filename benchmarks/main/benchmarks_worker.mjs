@@ -10191,7 +10191,7 @@ var Actor = class {
 			return;
 		}
 		if (!this.messageHandlers[task.type]) {
-			this.completeTask(id, /* @__PURE__ */ new Error(`Could not find a registered handler for ${task.type}, map ID: ${this.mapId}, available handlers: ${Object.keys(this.messageHandlers).join(", ")}`));
+			this.completeTask(id, null, null);
 			return;
 		}
 		const params = deserialize(task.data);
