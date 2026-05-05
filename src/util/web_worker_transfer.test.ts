@@ -62,6 +62,10 @@ describe('web worker transfer', () => {
         expect(deserialized instanceof Klass).toBeTruthy();
     });
 
+    test('null', () => {
+        expect(() => serialize(null)).not.toThrow();
+    });
+
     test('custom serialization', () => {
         class CustomSerialization {
             id;
