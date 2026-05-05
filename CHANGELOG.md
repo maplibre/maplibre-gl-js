@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix feature state bulk remove + feature set per-id set does not remove state of first feature ([#7554](https://github.com/maplibre/maplibre-gl-js/pull/7554)) (by [@xavierjs](https://github.com/xavierjs))
 - Remove error when actor doesn't have a registered message type for better usability of custom messages in workers ([#7589](https://github.com/maplibre/maplibre-gl-js/issues/7589)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
