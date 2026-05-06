@@ -110,8 +110,7 @@ async function packImages(indexArray: HtmlDoc[]) {
     for (const indexArrayItem of indexArray) {
         const imagePath = `docs/assets/examples/${indexArrayItem.mdFileName.replace('.md', '.png')}`;
         const outputPath = imagePath.replace('.png', '.webp');
-        promises.push(sharp(imagePath).webp({quality: 90, lossless: false}).toFile(
-        ));
+        promises.push(sharp(imagePath).webp({quality: 90, lossless: false}).toFile());
     }
     await Promise.all(promises);
 }
