@@ -313,6 +313,9 @@ export class TileManager extends Evented {
         if (this.getSource().type === 'raster-dem' && tile.dem) {
             backfillDEM(tile, this._inViewTiles);
         }
+        // Reset feature state revision so initializeTileState re-applies
+        // feature state to the tile's new bucket data after a reload.
+        tile.featureStateRevision = -1;
         this._state.initializeTileState(tile, this.map ? this.map.painter : null);
 
         if (!tile.aborted) {
