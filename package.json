@@ -83,7 +83,7 @@
     "canvas": "^3.2.3",
     "cross-env": "^10.1.0",
     "cspell": "^10.0.0",
-    "cssnano": "^7.1.7",
+    "cssnano": "^7.1.8",
     "d3": "^7.9.0",
     "d3-queue": "^3.0.7",
     "devtools-protocol": "^0.0.1624250",
