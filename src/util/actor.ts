@@ -229,7 +229,10 @@ export class Actor implements IActor {
             return;
         }
         if (!this.messageHandlers[task.type]) {
-            this.completeTask(id, new Error(`Could not find a registered handler for ${task.type}, map ID: ${this.mapId}, available handlers: ${Object.keys(this.messageHandlers).join(', ')}`));
+            // This might be the case of a custom worker code sending messages to the main thread. 
+            // No need to do anything.
+            // This can be changed for debug in case there's a need to make sure all messages are being handled.
+            this.completeTask(id, null, null);
             return;
         }
         const params = deserialize(task.data) as RequestResponseMessageMap[MessageType][0];

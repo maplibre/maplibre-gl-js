@@ -77,6 +77,7 @@ import type {StyleGlyph} from './style/style_glyph.ts';
 import type {FeatureIndex} from './data/feature_index.ts';
 import type {DashEntry} from './render/line_atlas.ts';
 import type {Painter} from './render/painter.ts';
+import type {WorkerGlobalScopeInterface} from './util/web_worker.ts';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -371,6 +372,7 @@ export {
     type CoveringTilesOptions,
     type DashEntry,
     type Painter,
+    type WorkerGlobalScopeInterface,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,
