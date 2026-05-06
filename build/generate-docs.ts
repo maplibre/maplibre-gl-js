@@ -116,12 +116,22 @@ async function packImages(indexArray: HtmlDoc[]) {
 }
 
 function generateMarkdownIndexFileOfAllExamples(indexArray: HtmlDoc[]): string {
-    let indexMarkdown = '# Overview \n\n';
+    let indexMarkdown = '# Overview\n\n<div class="examples-grid">\n';
     for (const indexArrayItem of indexArray) {
-        const imagePath = `../assets/examples/${indexArrayItem.mdFileName.replace('.md', '.webp')}`;
-        indexMarkdown += `\n## [${indexArrayItem.title}](./${indexArrayItem.mdFileName})\n\n`;
-        indexMarkdown += `![${indexArrayItem.description}](${imagePath.replace('docs/', '../')}){ loading=lazy }\n\n`;
-        indexMarkdown += `${indexArrayItem.description}\n`;
+        const cardImg = `../assets/examples/${indexArrayItem.mdFileName.replace('.md', '.webp')}`;
+        const desc = indexArrayItem.description || '';
+        const cardFileName = indexArrayItem.mdFileName.replace(/.md$/, '/');
+        indexMarkdown += `<a class="example-card" href="./${cardFileName}">
+<div class="example-card-image">
+<img src="${cardImg}" loading="lazy" alt="${desc}">
+${indexArrayItem.isNew ? '<span class="example-card-badge">new</span>' : ''}
+</div>
+<div class="example-card-content">
+<h3>${indexArrayItem.title}</h3>
+<p>${desc}</p>
+</div>
+</a>
+`;
     }
     return indexMarkdown;
 }
