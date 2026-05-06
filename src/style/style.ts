@@ -1408,6 +1408,12 @@ export class Style extends Evented {
         }
         if (target.id === undefined) {
             this.fire(new ErrorEvent(new Error('The feature id parameter must be provided.')));
+            return;
+        }
+        const forbiddenStateKeys = ['__proto__', 'constructor', 'prototype'];
+        if (state && Object.keys(state).some((stateKey: string) => forbiddenStateKeys.includes(stateKey))){
+            this.fire(new ErrorEvent(new Error(`The feature state should not include one of the following keys: ${forbiddenStateKeys}`)));
+            return;
         }
 
         tileManager.setFeatureState(sourceLayer, target.id, state);
