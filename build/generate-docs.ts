@@ -101,22 +101,38 @@ ${codeBlock}
 `;
 }
 
-async function generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray: HtmlDoc[]): Promise<string> {
-    let indexMarkdown = '# Overview \n\n';
+/**
+ * This method converts png files to webp files in order to improve performance of docs,
+ * This is considered a build artifact and should not be checked in, but generated as part of the docs generation process.
+ */
+async function packImages(indexArray: HtmlDoc[]) {
     const promises: Array<Promise<any>> = [];
     for (const indexArrayItem of indexArray) {
         const imagePath = `docs/assets/examples/${indexArrayItem.mdFileName.replace('.md', '.png')}`;
         const outputPath = imagePath.replace('.png', '.webp');
         promises.push(sharp(imagePath).webp({quality: 90, lossless: false}).toFile(outputPath));
-        indexMarkdown += `
-## [${indexArrayItem.title}](./${indexArrayItem.mdFileName})
-
-![${indexArrayItem.description}](${outputPath.replace('docs/', '../')}){ loading=lazy }
-
-${indexArrayItem.description}
-`;
     }
     await Promise.all(promises);
+}
+
+function generateMarkdownIndexFileOfAllExamples(indexArray: HtmlDoc[]): string {
+    let indexMarkdown = '# Overview\n\n<div class="examples-grid">\n';
+    for (const indexArrayItem of indexArray) {
+        const cardImg = `../assets/examples/${indexArrayItem.mdFileName.replace('.md', '.webp')}`;
+        const desc = indexArrayItem.description || '';
+        const cardFileName = indexArrayItem.mdFileName.replace(/.md$/, '/');
+        indexMarkdown += `<a class="example-card" href="./${cardFileName}">
+<div class="example-card-image">
+<img src="${cardImg}" loading="lazy" alt="${desc}">
+${indexArrayItem.isNew ? '<span class="example-card-badge">new</span>' : ''}
+</div>
+<div class="example-card-content">
+<h3>${indexArrayItem.title}</h3>
+<p>${desc}</p>
+</div>
+</a>
+`;
+    }
     return indexMarkdown;
 }
 
@@ -169,8 +185,8 @@ async function generateExamplesFolder() {
         const exampleMarkdown = generateMarkdownForExample(title, description, file, htmlContent, isNew);
         fs.writeFileSync(path.join(examplesDocsFolder, mdFileName), exampleMarkdown);
     }
-
-    const indexMarkdown = await generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray);
+    await packImages(indexArray);
+    const indexMarkdown = generateMarkdownIndexFileOfAllExamples(indexArray);
     fs.writeFileSync(path.join(examplesDocsFolder, 'index.md'), indexMarkdown);
 }
 

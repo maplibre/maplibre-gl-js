@@ -211,13 +211,11 @@ describe('Actor', () => {
         expect(response).toBe(42);
     });
 
-    test('send a message is not registered should throw', async () => {
+    test('send a message is not registered should return null', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        delete worker.worker.actor.messageHandlers[MessageType.abortTile];
-
-        await expect(async () => actor.sendAsync({type: MessageType.abortTile, data: {type: 'geojson'} as any})).rejects.toThrow(/Could not find a registered handler for.*/);
+        await expect(actor.sendAsync({type: 'custom' as any, data: {type: 'geojson'} as any})).resolves.toBeNull();
     });
 
     test('should not process a message with the wrong map id', async () => {

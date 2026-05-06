@@ -50,14 +50,21 @@ export class SourceFeatureState {
         if (this.deletedStates[sourceLayer] === null) {
             this.deletedStates[sourceLayer] = {};
             for (const ft in this.state[sourceLayer]) {
-                if (ft !== feature) this.deletedStates[sourceLayer][ft] = null;
+                if (ft === feature){
+                    this.deletedStates[sourceLayer][feature] = {};
+                    for (const prop in this.state[sourceLayer][ft]){
+                        if (newState[prop] === undefined) this.deletedStates[sourceLayer][feature][prop] = null;
+                    }
+                } else {
+                    this.deletedStates[sourceLayer][ft] = null;
+                }
             }
         } else {
             const featureDeletionQueued = this.deletedStates[sourceLayer]?.[feature] === null;
             if (featureDeletionQueued) {
                 this.deletedStates[sourceLayer][feature] = {};
                 for (const prop in this.state[sourceLayer][feature]) {
-                    if (!newState[prop]) this.deletedStates[sourceLayer][feature][prop] = null;
+                    if (newState[prop] === undefined) this.deletedStates[sourceLayer][feature][prop] = null;
                 }
             } else {
                 for (const key in newState) {
