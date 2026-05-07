@@ -3,12 +3,12 @@ import {
     Uniform1f,
     Uniform2f,
     Uniform4f
-} from '../uniform_binding';
+} from '../uniform_binding.ts';
 
-import type {Context} from '../../webgl/context';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {ColorReliefStyleLayer} from '../../style/style_layer/color_relief_style_layer';
-import type {DEMData} from '../../data/dem_data';
+import type {Context} from '../../webgl/context.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {ColorReliefStyleLayer} from '../../style/style_layer/color_relief_style_layer.ts';
+import type {DEMData} from '../../data/dem_data.ts';
 
 export type ColorReliefUniformsType = {
     'u_image': Uniform1i;

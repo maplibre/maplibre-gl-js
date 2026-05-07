@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest';
-import {DOM} from './dom';
+import {DOM} from './dom.ts';
 
 describe('DOM', () => {
 

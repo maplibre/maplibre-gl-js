@@ -1,14 +1,13 @@
 import puppeteer, {Page} from 'puppeteer';
 import fs from 'fs';
+import http from 'http';
 import zlib from 'zlib';
 import {execSync} from 'child_process';
+import st from 'st';
+import type {AddressInfo} from 'net';
 
-const maplibreGLJSSrc = fs.readFileSync('dist/maplibre-gl.js');
+const maplibreGLJSSrc = fs.readFileSync('dist/maplibre-gl.mjs');
 const maplibreGLCSSSrc = fs.readFileSync('dist/maplibre-gl.css');
-const benchSrc = fs.readFileSync('test/bench/gl-stats.html', 'utf8');
-
-const benchHTML = benchSrc
-    .replace('<script src="/dist\/maplibre-gl.js"></script>', `<script src="data:text/javascript;base64,${maplibreGLJSSrc.toString('base64')}"></script>`);
 
 function waitForConsole(page: Page): Promise<string> {
     return new Promise((resolve) => {
@@ -20,6 +19,10 @@ function waitForConsole(page: Page): Promise<string> {
     });
 }
 
+const server = http.createServer(st({path: process.cwd(), cors: true}));
+await new Promise<void>((resolve) => server.listen(resolve));
+const port = (server.address() as AddressInfo).port;
+
 const browser = await puppeteer.launch({headless: true});
 try {
 
@@ -27,7 +30,7 @@ try {
     await page.setViewport({width: 600, height: 600, deviceScaleFactor: 2});
 
     console.log('collecting stats...');
-    await page.setContent(benchHTML);
+    await page.goto(`http://localhost:${port}/test/bench/gl-stats.html`);
 
     const stats = JSON.parse(await waitForConsole(page));
     stats['bundle_size'] = maplibreGLJSSrc.length + maplibreGLCSSSrc.length;
@@ -42,4 +45,5 @@ try {
     await page.close();
 } finally {
     await browser.close();
+    server.close();
 }

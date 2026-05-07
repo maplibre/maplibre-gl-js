@@ -1,25 +1,25 @@
-import {Texture} from '../texture';
+import {Texture} from '../texture.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {DepthMode} from '../depth_mode';
-import {StencilMode} from '../stencil_mode';
-import {ColorMode} from '../color_mode';
-import {CullFaceMode} from '../cull_face_mode';
-import {type Context} from '../context';
-import {type Framebuffer} from '../framebuffer';
-import {type Tile} from '../../tile/tile';
+import {DepthMode} from '../depth_mode.ts';
+import {StencilMode} from '../stencil_mode.ts';
+import {ColorMode} from '../color_mode.ts';
+import {CullFaceMode} from '../cull_face_mode.ts';
+import {type Context} from '../context.ts';
+import {type Framebuffer} from '../framebuffer.ts';
+import {type Tile} from '../../tile/tile.ts';
 import {
     heatmapUniformValues,
     heatmapTextureUniformValues
-} from '../program/heatmap_program';
-import {HEATMAP_FULL_RENDER_FBO_KEY} from '../../style/style_layer/heatmap_style_layer';
+} from '../program/heatmap_program.ts';
+import {HEATMAP_FULL_RENDER_FBO_KEY} from '../../style/style_layer/heatmap_style_layer.ts';
 
-import type {Painter, RenderOptions} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer';
-import type {HeatmapBucket} from '../../data/bucket/heatmap_bucket';
-import type {OverscaledTileID} from '../../tile/tile_id';
+import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer.ts';
+import type {HeatmapBucket} from '../../data/bucket/heatmap_bucket.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
-export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions) {
+export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, tileIDs: OverscaledTileID[], renderOptions: RenderOptions): void {
     if (layer.paint.get('heatmap-opacity') === 0) {
         return;
     }
@@ -217,12 +217,7 @@ function createHeatmapFbo(context: Context, width: number, height: number): Fram
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-    // Use the higher precision half-float texture where available (producing much smoother looking heatmaps);
-    // Otherwise, fall back to a low precision texture
-    const numType = context.HALF_FLOAT ?? gl.UNSIGNED_BYTE;
-    const internalFormat = context.RGBA16F ?? gl.RGBA;
-
-    gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, width, height, 0, gl.RGBA, numType, null);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.HALF_FLOAT, null);
 
     const fbo = context.createFramebuffer(width, height, false, false);
     fbo.colorAttachment.set(texture);
@@ -231,8 +226,6 @@ function createHeatmapFbo(context: Context, width: number, height: number): Fram
 }
 
 function getColorRampTexture(context: Context, layer: HeatmapStyleLayer): Texture {
-    if (!layer.colorRampTexture) {
-        layer.colorRampTexture = new Texture(context, layer.colorRamp, context.gl.RGBA);
-    }
+    layer.colorRampTexture ||= new Texture(context, layer.colorRamp, context.gl.RGBA);
     return layer.colorRampTexture;
 }

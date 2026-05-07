@@ -33,7 +33,7 @@ jobs:
           ref: ${{ steps.ref.outputs.ref || 'refs/heads/main' }}
 
       - name: Use Node.js from nvmrc
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v4
         with:
           node-version-file: '.nvmrc'
 
@@ -45,11 +45,13 @@ jobs:
           npm run generate-typings
           npm run build-benchmarks
 
-      - name: Copy benchmarks_generated.js
+      - name: Copy ESM benchmark artifacts
         run: |
           mkdir tmp
-          cp test/bench/versions/benchmarks_generated.js tmp
-          cp test/bench/versions/benchmarks_generated.js.map tmp
+          cp test/bench/versions/benchmarks_generated.mjs tmp
+          cp test/bench/versions/benchmarks_generated.mjs.map tmp
+          cp test/bench/versions/benchmarks_worker.mjs tmp
+          cp test/bench/versions/benchmarks_worker.mjs.map tmp
 
       - name: Upload to GitHub Pages
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0

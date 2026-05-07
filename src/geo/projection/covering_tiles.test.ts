@@ -1,10 +1,10 @@
 import {beforeEach, describe, expect, test} from 'vitest';
-import {GlobeTransform} from './globe_transform';
-import {LngLat} from '../lng_lat';
-import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringTilesOptions} from './covering_tiles';
-import {OverscaledTileID} from '../../tile/tile_id';
-import {MercatorTransform} from './mercator_transform';
-import {globeConstants} from './vertical_perspective_projection';
+import {GlobeTransform} from './globe_transform.ts';
+import {LngLat} from '../lng_lat.ts';
+import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringTilesOptions} from './covering_tiles.ts';
+import {OverscaledTileID} from '../../tile/tile_id.ts';
+import {MercatorTransform} from './mercator_transform.ts';
+import {globeConstants} from './vertical_perspective_projection.ts';
 
 describe('coveringTiles', () => {
     describe('globe', () => {

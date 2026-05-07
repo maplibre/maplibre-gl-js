@@ -1,9 +1,9 @@
-import {AlphaImage} from '../util/image';
+import {AlphaImage} from '../util/image.ts';
 
 import Protobuf from 'pbf';
 const border = 3;
 
-import type {StyleGlyph} from './style_glyph';
+import type {StyleGlyph} from './style_glyph.ts';
 
 type RawGlyph = {
     id: number;
@@ -49,4 +49,4 @@ export function parseGlyphPbf(data: ArrayBuffer | Uint8Array): StyleGlyph[] {
     return new Protobuf(data).readFields(readFontstacks, []);
 }
 
-export const GLYPH_PBF_BORDER = border;
+export const GLYPH_PBF_BORDER: 3 = border;

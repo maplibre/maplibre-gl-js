@@ -40,6 +40,15 @@ Some best practices for PRs for bugfixes are as follows:
 
 This is not intended to be a strict process but rather a guideline that will build confidence that your PR is addressing the problem.
 
+## AI-Assisted Contributions
+
+MapLibre welcomes contributors who use AI coding tools, but we must be vigilant to not incorporate copyrighted materials. You are responsible for everything you submit. Maintainers will not merge code that the author cannot explain or defend in review, regardless of how it was produced, and will need to close your PR or issue if you are not able to meet this bar.
+
+The full policy is at
+[maplibre/maplibre/AI_POLICY.md](https://github.com/maplibre/maplibre/blob/main/AI_POLICY.md). Please review this policy before submitting a PR or bug report.
+
+**Disclosure:** Disclose significant AI assistance in your PR (the PR template has a checkbox).
+
 ## Preparing your Development Environment
 
 ### CodeSpaces
@@ -158,14 +167,13 @@ copy node_modules/headless-gl/deps/windows/dll/x64/*.dll c:\windows\system32
 
 ## Creating a Standalone Build
 
-A standalone build allows you to turn the contents of this repository into `maplibre-gl.js` and `maplibre-gl.css` files that can be included on an html page.
+A standalone build allows you to turn the contents of this repository into `maplibre-gl.mjs`, `maplibre-gl-worker.mjs` and `maplibre-gl.css` files that can be included on an html page.
 
 To create a standalone build, run
 ```bash
-npm run build-prod
-npm run build-css
+npm run build-dist
 ```
-Once those commands finish, you will have a standalone build at `dist/maplibre-gl.js` and `dist/maplibre-gl.css`
+Once that finishes, you will have a standalone build at `dist/maplibre-gl.mjs`, `dist/maplibre-gl-worker.mjs` and `dist/maplibre-gl.css`. Load it via `<script type="module">` and call `setWorkerUrl()` to point at the worker file.
 
 ## Analyze your Standalone Build
 

@@ -1,4 +1,4 @@
-import type {Map} from '../../../src/ui/map';
+import type {Map} from '../../../src/ui/map.ts';
 
 // According to https://developer.mozilla.org/en-US/docs/Web/API/Performance/now,
 // performance.now() should be accurate to 0.005ms. Set the minimum running
@@ -11,7 +11,11 @@ export type Measurement = {
     time: number;
 };
 
-class Benchmark {
+export interface BenchmarkLike {
+    run(): Promise<Measurement[]>;
+}
+
+class Benchmark implements BenchmarkLike {
     /**
      * The `setup` method is intended to be overridden by subclasses. It will be called once, prior to
      * running any benchmark iterations, and may set state on `this` which the benchmark later accesses.
@@ -129,7 +133,7 @@ class Benchmark {
      * configurations (e.g. SwiftShader), so we also read a pixel to
      * force the driver to complete all rendering.
      */
-    public static renderMap(map: Map, paintStartTimeStamp?: number) {
+    public static renderMap(map: Map, paintStartTimeStamp?: number): void {
         map._render(paintStartTimeStamp);
         const gl = map.painter.context.gl;
         gl.finish();

@@ -1,23 +1,23 @@
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
-import {TransformHelper} from '../transform_helper';
-import {LngLat, type LngLatLike, earthRadius} from '../lng_lat';
-import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce} from '../../util/util';
-import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id';
+import {TransformHelper} from '../transform_helper.ts';
+import {LngLat, type LngLatLike, earthRadius} from '../lng_lat.ts';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce} from '../../util/util.ts';
+import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
-import {MercatorCoordinate} from '../mercator_coordinate';
-import {LngLatBounds} from '../lng_lat_bounds';
-import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
-import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
-import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider';
-import {Frustum} from '../../util/primitives/frustum';
+import {MercatorCoordinate} from '../mercator_coordinate.ts';
+import {LngLatBounds} from '../lng_lat_bounds.ts';
+import {tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
+import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils.ts';
+import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
+import {Frustum} from '../../util/primitives/frustum.ts';
 
-import type {Terrain} from '../../render/terrain';
-import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface';
-import type {TransformOptions} from '../transform_helper';
-import type {PaddingOptions} from '../edge_insets';
-import type {ProjectionData, ProjectionDataParams} from './projection_data';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import type {Terrain} from '../../render/terrain.ts';
+import type {PointProjection} from '../../symbol/projection.ts';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {TransformOptions} from '../transform_helper.ts';
+import type {PaddingOptions} from '../edge_insets.ts';
+import type {ProjectionData, ProjectionDataParams} from './projection_data.ts';
+import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
 /**
  * Describes the intersection of ray and sphere.

@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {MercatorProjection} from '../../geo/projection/mercator_projection';
-import {createMap, beforeMapTest, sleep} from '../../util/test/util';
+import {MercatorProjection} from '../../geo/projection/mercator_projection.ts';
+import {createMap, beforeMapTest, sleep} from '../../util/test/util.ts';
 
 beforeEach(() => {
     beforeMapTest();

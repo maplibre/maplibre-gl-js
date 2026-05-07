@@ -39,7 +39,7 @@ type AxisProps = {
     transform?: string;
 }
 
-export const Axis = (props: AxisProps) => {
+export const Axis = (props: AxisProps): React.JSX.Element => {
 
     const scale = props.scale;
     const orient = props.orientation || 'left';

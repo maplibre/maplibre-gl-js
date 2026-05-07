@@ -44,6 +44,8 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.escapeall:
       hardbreak: True
       nbsp: True
@@ -51,6 +53,8 @@ markdown_extensions:
   - admonition
 
 extra:
+  status:
+    new: Recently added
   social:
     - icon: fontawesome/brands/bluesky
       link: https://bsky.app/profile/maplibre.org
@@ -75,3 +79,6 @@ validation:
   absolute_links: warn
   unrecognized_links: warn
   anchors: warn
+
+exclude_docs: |
+  README.md

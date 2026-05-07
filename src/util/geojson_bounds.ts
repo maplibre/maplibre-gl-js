@@ -1,4 +1,4 @@
-import {LngLatBounds} from '../geo/lng_lat_bounds';
+import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 
 type DeepCoordinates = GeoJSON.Position | DeepCoordinates[];
 

@@ -1,8 +1,8 @@
-import {now} from '../util/time_control';
-import {getEdgeTiles} from '../util/util';
-import {FadingDirections, FadingRoles, type Tile} from './tile';
-import {type OverscaledTileID} from './tile_id';
-import {type InViewTiles} from './tile_manager_in_view_tiles';
+import {now} from '../util/time_control.ts';
+import {getEdgeTiles} from '../util/util.ts';
+import {FadingDirections, FadingRoles, type Tile} from './tile.ts';
+import {type OverscaledTileID} from './tile_id.ts';
+import {type InViewTiles} from './tile_manager_in_view_tiles.ts';
 
 export function isRasterType(type: string): boolean {
     return type === 'raster' || type === 'image' || type === 'video';
@@ -27,7 +27,7 @@ export function updateFadingTiles(
     maxFadingAncestorLevels: number,
     sourceMinZoom: number,
     sourceMaxZoom: number,
-    rasterFadeDuration: number) {
+    rasterFadeDuration: number): void {
     const currentTime: number = now();
     const edgeTileIDs: Set<OverscaledTileID> = getEdgeTiles(idealTileIDs);
 
@@ -206,7 +206,7 @@ function updateFadingEdge(idealTile: Tile, edgeTileIDs: Set<OverscaledTileID>, n
     return false;
 }
 
-export function hasRasterTransition(inViewTiles: InViewTiles, rasterFadeDuration: number) {
+export function hasRasterTransition(inViewTiles: InViewTiles, rasterFadeDuration: number): boolean {
     if (rasterFadeDuration <= 0) {
         return false;
     }

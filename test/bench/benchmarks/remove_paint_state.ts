@@ -1,7 +1,7 @@
 
 import emptystyle from '../data/empty.json' with {type: 'json'};
-import Benchmark from '../lib/benchmark';
-import createMap from '../lib/create_map';
+import Benchmark from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
 
 function generateLayers(layer) {
     const generated = [];
@@ -18,16 +18,16 @@ const zoom = 4;
 
 class RemovePaintState extends Benchmark {
 
-    center: any;
-    numFeatures: any;
+    center: [number, number];
+    numFeatures: number;
     map: any;
 
-    constructor(center) {
+    constructor(center: [number, number]) {
         super();
         this.center = center;
     }
 
-    async setup() {
+    async setup(): Promise<void> {
         const response = await fetch('/test/bench/data/naturalearth-land.json');
         const data = await response.json();
         this.numFeatures = data.features.length;
@@ -60,19 +60,19 @@ class RemovePaintState extends Benchmark {
         }
     }
 
-    bench() {
+    bench(): void {
         this.map._styleDirty = true;
         this.map._sourcesDirty = true;
         Benchmark.renderMap(this.map);
     }
 
-    teardown() {
+    teardown(): void {
         this.map.remove();
     }
 }
 
 export class PropertyLevelRemove extends RemovePaintState {
-    bench() {
+    bench(): void {
 
         for (let i = 0; i < this.numFeatures; i += 50) {
             this.map.setFeatureState({source: 'land', id: i}, {bench: true});
@@ -86,7 +86,7 @@ export class PropertyLevelRemove extends RemovePaintState {
 }
 
 export class FeatureLevelRemove extends RemovePaintState {
-    bench() {
+    bench(): void {
 
         for (let i = 0; i < this.numFeatures; i += 50) {
             this.map.setFeatureState({source: 'land', id: i}, {bench: true});
@@ -100,7 +100,7 @@ export class FeatureLevelRemove extends RemovePaintState {
 }
 
 export class SourceLevelRemove extends RemovePaintState {
-    bench() {
+    bench(): void {
 
         for (let i = 0; i < this.numFeatures; i += 50) {
             this.map.setFeatureState({source: 'land', id: i}, {bench: true});

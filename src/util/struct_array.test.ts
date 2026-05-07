@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {StructArrayLayout3i6, FeatureIndexArray} from '../data/array_types.g';
+import {StructArrayLayout3i6, FeatureIndexArray} from '../data/array_types.g.ts';
 
 describe('StructArray', () => {
     class TestArray extends StructArrayLayout3i6 {}

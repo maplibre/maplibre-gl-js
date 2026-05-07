@@ -1,23 +1,23 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {Camera, type CameraOptions, type PointLike} from '../ui/camera';
-import {TaskQueue, type TaskID} from '../util/task_queue';
-import * as timeControl from '../util/time_control';
-import {browser} from '../util/browser';
-import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
-import {setMatchMedia} from '../util/test/util';
-import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
-import {LngLat, type LngLatLike} from '../geo/lng_lat';
-import {LngLatBounds} from '../geo/lng_lat_bounds';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {GlobeTransform} from '../geo/projection/globe_transform';
-import {getZoomAdjustment} from '../geo/projection/globe_utils';
-import {GlobeCameraHelper} from '../geo/projection/globe_camera_helper';
-import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper';
-import {getMercatorHorizon} from '../geo/projection/mercator_utils';
+import {Camera, type CameraOptions, type PointLike} from '../ui/camera.ts';
+import {TaskQueue, type TaskID} from '../util/task_queue.ts';
+import * as timeControl from '../util/time_control.ts';
+import {browser} from '../util/browser.ts';
+import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed.ts';
+import {setMatchMedia} from '../util/test/util.ts';
+import {mercatorZfromAltitude} from '../geo/mercator_coordinate.ts';
+import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
+import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {GlobeTransform} from '../geo/projection/globe_transform.ts';
+import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
+import {GlobeCameraHelper} from '../geo/projection/globe_camera_helper.ts';
+import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper.ts';
+import {getMercatorHorizon} from '../geo/projection/mercator_utils.ts';
 import Point from '@mapbox/point-geometry';
 
-import type {GlobeProjection} from '../geo/projection/globe_projection';
-import type {Terrain} from '../render/terrain';
+import type {GlobeProjection} from '../geo/projection/globe_projection.ts';
+import type {Terrain} from '../render/terrain.ts';
 
 beforeEach(() => {
     setMatchMedia();
@@ -44,7 +44,7 @@ function attachSimulateFrame(camera) {
 }
 
 function createCamera(options?): Camera & { simulateFrame: () => void } {
-    options = options || {};
+    options ||= {};
 
     const transform = options.globe ? new GlobeTransform() : new MercatorTransform();
     transform.setMinZoom(0);
@@ -70,7 +70,7 @@ function createCamera(options?): Camera & { simulateFrame: () => void } {
 }
 
 function createCameraGlobe(options?) {
-    options = options || {};
+    options ||= {};
     options.globe = true;
     return createCamera(options);
 }
@@ -94,7 +94,7 @@ describe('calculateCameraOptionsFromTo', () => {
     });
 
     test('look at west', () => {
-        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0} as LngLat, 0, {lng: 0, lat: 0} as LngLat);
+        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 0, lat: 0});
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.bearing).toBeCloseTo(-90);
         expect(cameraOptions.roll).toBeUndefined();
@@ -1924,7 +1924,7 @@ describe('flyTo', () => {
         let leftWorld0 = false;
 
         camera.on('move', () => {
-            leftWorld0 = leftWorld0 || (camera.getCenter().lng < -180);
+            leftWorld0 ||= (camera.getCenter().lng < -180);
         });
 
         const promise = camera.once('moveend');
@@ -3781,7 +3781,7 @@ describe('flyTo globe projection', () => {
             let leftWorld0 = false;
 
             camera.on('move', () => {
-                leftWorld0 = leftWorld0 || (camera.getCenter().lng < -180);
+                leftWorld0 ||= (camera.getCenter().lng < -180);
             });
 
             const promise = camera.once('moveend');

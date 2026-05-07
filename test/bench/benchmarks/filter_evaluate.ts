@@ -1,5 +1,5 @@
 
-import Benchmark from '../lib/benchmark';
+import Benchmark from '../lib/benchmark.ts';
 import {VectorTile} from '@mapbox/vector-tile';
 import Pbf from 'pbf';
 import {featureFilter as createFilter, type FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -8,7 +8,7 @@ import filters from '../data/filters.json' with {type: 'json'};
 export default class FilterEvaluate extends Benchmark {
     layers: any[];
 
-    async setup() {
+    async setup(): Promise<void> {
         const response = await fetch('/test/bench/data/785.vector.pbf');
         const data = await response.arrayBuffer();
         const tile = new VectorTile(new Pbf(data));
@@ -35,7 +35,7 @@ export default class FilterEvaluate extends Benchmark {
         }
     }
 
-    bench() {
+    bench(): void {
         for (const layer of this.layers) {
             for (const filter of layer.filters) {
                 for (const feature of layer.features) {

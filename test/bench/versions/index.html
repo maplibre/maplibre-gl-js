@@ -10,9 +10,33 @@
 
 <body>
     <div id="benchmarks"></div>
-    <script src="/test/bench/benchmarks_view_generated.js"></script>
-    <script>
+    <script type="module">
+        import * as Benchmarks from '/test/bench/benchmarks_view_generated.mjs';
+        window.Benchmarks = Benchmarks;
         runComparison();
+
+        function isUmdVersion(version) {
+            const m = /^v?(\d+)/.exec(version);
+            return m ? parseInt(m[1], 10) <= 5 : null;
+        }
+
+        async function loadVersion(v) {
+            const base = `https://maplibre.org/maplibre-gl-js/benchmarks/${v}`;
+            const umd = isUmdVersion(v);
+            if (umd === true) {
+                await loadScript(`${base}/benchmarks_generated.js`);
+                return;
+            }
+            if (umd === false) {
+                await import(`${base}/benchmarks_generated.mjs`);
+                return;
+            }
+            try {
+                await import(`${base}/benchmarks_generated.mjs`);
+            } catch (err) {
+                await loadScript(`${base}/benchmarks_generated.js`);
+            }
+        }
 
         async function runComparison() {
             try {
@@ -24,11 +48,12 @@
                     window.versionsDisplayName = [responseJson['tag_name'], 'main'];
                 }
                 console.log(`Comparing versions: ${window.versionsDisplayName}`);
-                const versionsScripts = window.versionsDisplayName.map(v => `https://maplibre.org/maplibre-gl-js/benchmarks/${v}/benchmarks_generated.js`)
-                    .concat('/test/bench/versions/benchmarks_generated.js');
-                for (const script of versionsScripts) {
-                    await loadScript(script);
+
+                for (const v of window.versionsDisplayName) {
+                    await loadVersion(v);
                 }
+                await import('/test/bench/versions/benchmarks_generated.mjs');
+
                 const benchmarks = [];
                 const benchmarkNameList = Object.keys(window.maplibreglBenchmarks).sort();
                 for (const benchmarkName of benchmarkNameList) {
@@ -55,7 +80,7 @@
                 }
 
                 const results = await window.Benchmarks.run(benchmarks);
-                 
+
                 window.maplibreglBenchmarkResults = {};
                 for (const result of results) {
                     window.maplibreglBenchmarkResults[result.name] = {};
@@ -63,7 +88,7 @@
                         window.maplibreglBenchmarkResults[result.name][version.name] = {name: version.name, summary: version.summary, regression: version.regression};
                     }
                 }
-                 
+
                 window.maplibreglBenchmarkFinished = true;
             } catch (ex) {
                 console.error(ex);

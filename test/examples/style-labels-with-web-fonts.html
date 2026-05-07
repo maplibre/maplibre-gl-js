@@ -3,10 +3,11 @@
 <head>
     <title>Style labels with Web fonts</title>
     <meta property="og:description" content="Apply Web fonts to your style’s text labels. Unlike signed distance field (SDF) glyph sets, Web fonts are available from a variety of providers, or your can make your own using popular tools. This option is suitable for fonts that are only available through a third-party content delivery network (CDN) for technical or legal reasons, as well as fonts that are incompatible with SDF, such as variable fonts. For compatibility with Android and iOS applications, specify equivalent fonts in the style’s font-faces property.">
+    <meta property="og:created" content="2025-10-31" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css'>
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rampart+One&amp;display=swap" rel="stylesheet">
@@ -17,7 +18,11 @@
 </head>
 <body>
 <div id="map"></div>
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     document.fonts.load("24px 'Rampart One'");
     const map = new maplibregl.Map({
         container: 'map',

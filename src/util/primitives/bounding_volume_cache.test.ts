@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest';
-import {GlobeCoveringTilesDetailsProvider} from '../../geo/projection/globe_covering_tiles_details_provider';
+import {GlobeCoveringTilesDetailsProvider} from '../../geo/projection/globe_covering_tiles_details_provider.ts';
 
 describe('bounding volume cache', () => {
     test('retains bounding volumes from last frame', () => {

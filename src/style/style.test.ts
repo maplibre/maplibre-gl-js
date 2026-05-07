@@ -1,27 +1,27 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
-import {Style} from './style';
-import {TileManager} from '../tile/tile_manager';
-import {StyleLayer} from './style_layer';
-import {extend} from '../util/util';
-import {Event} from '../util/evented';
-import {RGBAImage} from '../util/image';
-import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
-import {browser} from '../util/browser';
-import {OverscaledTileID} from '../tile/tile_id';
+import {Style} from './style.ts';
+import {TileManager} from '../tile/tile_manager.ts';
+import {StyleLayer} from './style_layer.ts';
+import {extend} from '../util/util.ts';
+import {Event} from '../util/evented.ts';
+import {RGBAImage} from '../util/image.ts';
+import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
+import {browser} from '../util/browser.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
 import {fakeServer, type FakeServer} from 'nise';
 
-import {type EvaluationParameters} from './evaluation_parameters';
-import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type GeoJSONSource} from '../source/geojson_source';
-import {StubMap, sleep, waitForEvent} from '../util/test/util';
-import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
-import {MessageType} from '../util/actor_messages';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {type Tile} from '../tile/tile';
+import {type EvaluationParameters} from './evaluation_parameters.ts';
+import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification, type CameraFunctionSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type GeoJSONSource} from '../source/geojson_source.ts';
+import {StubMap, sleep, waitForEvent} from '../util/test/util.ts';
+import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
+import {MessageType} from '../util/actor_messages.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {type Tile} from '../tile/tile.ts';
 import type Point from '@mapbox/point-geometry';
-import {type PossiblyEvaluated} from './properties';
-import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g';
-import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g';
+import {type PossiblyEvaluated} from './properties.ts';
+import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g.ts';
+import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g.ts';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -794,17 +794,17 @@ describe('Style.setState', () => {
         await style.once('style.load');
         const spys = [];
         spys.push(vi.spyOn(style, 'addLayer').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'removeLayer').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setPaintProperty').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setLayoutProperty').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setFilter').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'addSource').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'removeLayer').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setPaintProperty').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setLayoutProperty').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setFilter').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'addSource').mockImplementation((() => {})));
         spys.push(vi.spyOn(style, 'removeSource').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setLayerZoomRange').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setLight').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setGlobalState').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setLayerZoomRange').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setLight').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setSky').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setGlobalState').mockImplementation((() => {})));
         const didChange = style.setState(createStyleJSON());
         expect(didChange).toBeFalsy();
         for (const spy of spys) {
@@ -847,21 +847,21 @@ describe('Style.setState', () => {
         await style.once('style.load');
         const spys = [];
         spys.push(vi.spyOn(style, 'addLayer').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'removeLayer').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setPaintProperty').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setLayoutProperty').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setFilter').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'addSource').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'removeLayer').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setPaintProperty').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setLayoutProperty').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setFilter').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'addSource').mockImplementation((() => {})));
         spys.push(vi.spyOn(style, 'removeSource').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setLayerZoomRange').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setLight').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setGlyphs').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setSprite').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setProjection').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setLayerZoomRange').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setLight').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setGlyphs').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setSprite').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setProjection').mockImplementation((() => {})));
         spys.push(vi.spyOn(style.map, 'setTerrain').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setGlobalState').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setSky').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setGlobalState').mockImplementation((() => {})));
 
         const newStyle = JSON.parse(JSON.stringify(styleJson)) as StyleSpecification;
         newStyle.state.accentColor.default = 'red';
@@ -939,19 +939,19 @@ describe('Style.setState', () => {
         await style.once('style.load');
         const spys = [];
         spys.push(vi.spyOn(style, 'addLayer').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'removeLayer').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setPaintProperty').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setLayoutProperty').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setFilter').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'addSource').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'removeLayer').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setPaintProperty').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setLayoutProperty').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setFilter').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'addSource').mockImplementation((() => {})));
         spys.push(vi.spyOn(style, 'removeSource').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setLayerZoomRange').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setLight').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setGlyphs').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setSprite').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setLayerZoomRange').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setLight').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setGlyphs').mockImplementation((() => {})));
+        spys.push(vi.spyOn(style, 'setSprite').mockImplementation((() => {})));
         spys.push(vi.spyOn(style.map, 'setTerrain').mockImplementation((() => {}) as any));
-        spys.push(vi.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
+        spys.push(vi.spyOn(style, 'setSky').mockImplementation((() => {})));
 
         const newStyleJson = createStyleJSON();
         newStyleJson.transition = {duration: 5};
@@ -977,7 +977,7 @@ describe('Style.setState', () => {
         server.respond();
         await promise;
         const spyRemove = vi.spyOn(style, 'removeSource').mockImplementation((() => {}) as any);
-        const spyAdd = vi.spyOn(style, 'addSource').mockImplementation((() => {}) as any);
+        const spyAdd = vi.spyOn(style, 'addSource').mockImplementation((() => {}));
         style.setState(initial);
         expect(spyRemove).not.toHaveBeenCalled();
         expect(spyAdd).not.toHaveBeenCalled();
@@ -2626,7 +2626,7 @@ describe('Style.setPaintProperty', () => {
         });
 
         await style.once('style.load');
-        const value = {stops: [[0, 'red'], [10, 'blue']]};
+        const value: CameraFunctionSpecification<string> = {type: 'exponential', stops: [[0, 'red'], [10, 'blue']]};
         style.setPaintProperty('background', 'background-color', value);
         expect(style.getPaintProperty('background', 'background-color')).not.toBe(value);
         expect(style._changed).toBeTruthy();
@@ -2684,12 +2684,12 @@ describe('Style.getPaintProperty', () => {
         });
 
         await style.once('style.load');
-        style.setPaintProperty('background', 'background-color', {stops: [[0, 'red'], [10, 'blue']]});
+        style.setPaintProperty('background', 'background-color', {type: 'exponential', stops: [[0, 'red'], [10, 'blue']]});
         style.update({} as EvaluationParameters);
         expect(style._changed).toBeFalsy();
 
-        const value = style.getPaintProperty('background', 'background-color');
-        value['stops'][0][0] = 1;
+        const value = style.getPaintProperty('background', 'background-color') as CameraFunctionSpecification<string>;
+        value.stops[0][0] = 1;
         style.setPaintProperty('background', 'background-color', value);
         expect(style._changed).toBeTruthy();
     });
@@ -2719,7 +2719,7 @@ describe('Style.setLayoutProperty', () => {
         });
 
         await style.once('style.load');
-        const value = {stops: [[0, 'butt'], [10, 'round']]};
+        const value: CameraFunctionSpecification<'butt' | 'round' | 'square'> = {type: 'interval', stops: [[0, 'butt'], [10, 'round']]};
         style.setLayoutProperty('line', 'line-cap', value);
         expect(style.getLayoutProperty('line', 'line-cap')).not.toBe(value);
         expect(style._changed).toBeTruthy();
@@ -2758,13 +2758,13 @@ describe('Style.setLayoutProperty', () => {
         const lineLayer = style.getLayer('line');
         const validate = vi.spyOn(lineLayer, '_validate');
 
-        style.setLayoutProperty('line', 'line-cap', 'invalidcap', {validate: false});
+        style.setLayoutProperty('line', 'line-cap', 'invalidcap' as any, {validate: false});
         expect(validate.mock.calls[0][4]).toEqual({validate: false});
         expect(mockConsoleError).not.toHaveBeenCalled();
         expect(style._changed).toBeTruthy();
         style.update({} as EvaluationParameters);
 
-        style.setLayoutProperty('line', 'line-cap', 'differentinvalidcap');
+        style.setLayoutProperty('line', 'line-cap', 'differentinvalidcap' as any);
         expect(mockConsoleError).toHaveBeenCalledTimes(1);
         expect(validate.mock.calls[1][4]).toEqual({});
     });
@@ -2794,11 +2794,11 @@ describe('Style.getLayoutProperty', () => {
         });
 
         await style.once('style.load');
-        style.setLayoutProperty('line', 'line-cap', {stops: [[0, 'butt'], [10, 'round']]});
+        style.setLayoutProperty('line', 'line-cap', {type: 'interval', stops: [[0, 'butt'], [10, 'round']]});
         style.update({} as EvaluationParameters);
         expect(style._changed).toBeFalsy();
 
-        const value = style.getLayoutProperty('line', 'line-cap');
+        const value = style.getLayoutProperty('line', 'line-cap') as CameraFunctionSpecification<'butt' | 'round' | 'square'>;
         value.stops[0][0] = 1;
         style.setLayoutProperty('line', 'line-cap', value);
         expect(style._changed).toBeTruthy();
@@ -3618,5 +3618,31 @@ describe('Style.serialize', () => {
         expect(typeof result['4,2,true'].width).toBe('number');
         expect(typeof result['4,2,true'].height).toBe('number');
         expect(typeof result['4,2,true'].y).toBe('number');
+    });
+});
+
+describe('Style#setFeatureState', () => {
+    test('fires an error if state contains a forbidden key', async () => {
+        const style = createStyle();
+        style.loadJSON({
+            'version': 8,
+            'sources': {
+                'vector': {
+                    type: 'vector',
+                    tiles: ['http://example.com/{z}/{x}/{y}.png']
+                }
+            },
+            'layers': []
+        });
+
+        await style.once('style.load');
+
+        const spy = vi.fn();
+        style.on('error', spy);
+
+        style.setFeatureState({source: 'vector', sourceLayer: 'layer', id: 1}, {'constructor': true});
+
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls[0][0].error.message).toMatch(/The feature state should not include one of the following keys/);
     });
 });

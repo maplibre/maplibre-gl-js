@@ -1,14 +1,14 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 
-import type {HandlerManager, MapControlsScenarioOptions, EventInProgress, EventsInProgress} from './handler_manager';
-import type {Map} from './map';
-import {LngLat} from '../geo/lng_lat';
-import type {ICameraHelper, MapControlsDeltas} from '../geo/projection/camera_helper';
-import type {Terrain} from '../render/terrain';
-import type {ITransform} from '../geo/transform_interface';
-import {Event as MapEvent} from '../util/evented';
-import {beforeMapTest, createMap} from '../util/test/util';
+import type {HandlerManager, MapControlsScenarioOptions, EventInProgress, EventsInProgress} from './handler_manager.ts';
+import type {Map} from './map.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import type {ICameraHelper, MapControlsDeltas} from '../geo/projection/camera_helper.ts';
+import type {Terrain} from '../render/terrain.ts';
+import type {ITransform} from '../geo/transform_interface.ts';
+import {Event as MapEvent} from '../util/evented.ts';
+import {beforeMapTest, createMap} from '../util/test/util.ts';
 
 let map: Map;
 let manager: HandlerManager;

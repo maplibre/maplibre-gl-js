@@ -1,7 +1,7 @@
-import Benchmark from '../lib/benchmark';
-import createMap from '../lib/create_map';
-import type {Map} from '../../../src/ui/map';
-import type {LngLatLike} from '../../../src/geo/lng_lat';
+import Benchmark from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
+import type {Map} from '../../../src/ui/map.ts';
+import type {LngLatLike} from '../../../src/geo/lng_lat.ts';
 
 const width = 1024;
 const height = 768;
@@ -31,7 +31,7 @@ export default class QueryPoint extends Benchmark {
         this.locations = locations;
     }
 
-    async setup() {
+    async setup(): Promise<void> {
         try {
             this.maps = await Promise.all(this.locations.map(location => {
                 return createMap({
@@ -47,7 +47,7 @@ export default class QueryPoint extends Benchmark {
         }
     }
 
-    bench() {
+    bench(): void {
         for (const map of this.maps) {
             for (const point of points) {
                 map.queryRenderedFeatures(point, {});
@@ -55,7 +55,7 @@ export default class QueryPoint extends Benchmark {
         }
     }
 
-    teardown() {
+    teardown(): void {
         for (const map of this.maps) {
             map.remove();
         }

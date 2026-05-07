@@ -1,7 +1,7 @@
-import {RGBAImage} from '../util/image';
+import {RGBAImage} from '../util/image.ts';
 
-import {warnOnce} from '../util/util';
-import {register} from '../util/web_worker_transfer';
+import {warnOnce} from '../util/util.ts';
+import {register} from '../util/web_worker_transfer.ts';
 
 /**
  * The possible DEM encoding types
@@ -109,22 +109,22 @@ export class DEMData {
         }
     }
 
-    get(x: number, y: number) {
+    get(x: number, y: number): number {
         const pixels = new Uint8Array(this.data.buffer);
         const index = this._idx(x, y) * 4;
         return this.unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
     }
 
-    getUnpackVector() {
+    getUnpackVector(): number[] {
         return [this.redFactor, this.greenFactor, this.blueFactor, this.baseShift];
     }
 
-    _idx(x: number, y: number) {
+    _idx(x: number, y: number): number {
         if (x < -1 || x >= this.dim + 1 ||  y < -1 || y >= this.dim + 1) throw new RangeError(`Out of range source coordinates for DEM data. x: ${x}, y: ${y}, dim: ${this.dim}`);
         return (y + 1) * this.stride + (x + 1);
     }
 
-    unpack(r: number, g: number, b: number) {
+    unpack(r: number, g: number, b: number): number {
         return (r * this.redFactor + g * this.greenFactor + b * this.blueFactor - this.baseShift);
     }
 
@@ -132,11 +132,11 @@ export class DEMData {
         return packDEMData(v, this.getUnpackVector());
     }
 
-    getPixels() {
+    getPixels(): RGBAImage {
         return new RGBAImage({width: this.stride, height: this.stride}, new Uint8Array(this.data.buffer));
     }
 
-    backfillBorder(borderTile: DEMData, dx: number, dy: number) {
+    backfillBorder(borderTile: DEMData, dx: number, dy: number): void {
         if (this.dim !== borderTile.dim) throw new Error('dem dimension mismatch');
 
         let xMin = dx * this.dim,

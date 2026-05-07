@@ -1,5 +1,5 @@
-import type {Context} from '../../webgl/context';
-import {type UniformValues, type UniformLocations, Uniform1f, Uniform3f, UniformMatrix4f} from '../uniform_binding';
+import type {Context} from '../../webgl/context.ts';
+import {type UniformValues, type UniformLocations, Uniform1f, Uniform3f, UniformMatrix4f} from '../uniform_binding.ts';
 import {type mat4, type vec3} from 'gl-matrix';
 
 export type atmosphereUniformsType = {

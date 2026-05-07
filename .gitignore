@@ -19,6 +19,11 @@ coverage
 .nyc_output
 *_generated.js
 *_generated.js.map
+*_generated.mjs
+*_generated.mjs.map
+test/bench/**/benchmarks_worker.mjs
+test/bench/**/benchmarks_worker.mjs.map
+test/bench/data.json.gz
 test/integration/**/results*.html
 test/integration/**/actual.png
 test/integration/**/actual.json
@@ -40,4 +45,3 @@ npm-debug.log
 *.iml
 /.vs/
 .*.swp
-junit.xml

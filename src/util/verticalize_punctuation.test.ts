@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {verticalizePunctuation} from './verticalize_punctuation';
+import {verticalizePunctuation} from './verticalize_punctuation.ts';
 
 describe('verticalizePunctuation', () => {
     test('preserves characters without fullwidth variants', () => {

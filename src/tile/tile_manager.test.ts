@@ -1,23 +1,23 @@
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
-import {TileManager} from './tile_manager';
-import {addSourceType, type Source} from '../source/source';
-import {FadingDirections, FadingRoles, Tile} from './tile';
-import {CanonicalTileID, OverscaledTileID} from './tile_id';
-import {LngLat} from '../geo/lng_lat';
+import {TileManager} from './tile_manager.ts';
+import {addSourceType, type Source} from '../source/source.ts';
+import {FadingDirections, FadingRoles, Tile} from './tile.ts';
+import {CanonicalTileID, OverscaledTileID} from './tile_id.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
-import {ErrorEvent, Event, Evented} from '../util/evented';
-import {extend} from '../util/util';
-import {type Dispatcher} from '../util/dispatcher';
-import {TileBounds} from './tile_bounds';
-import {beforeMapTest, createMap as globalCreateMap, sleep, waitForEvent} from '../util/test/util';
-import {now} from '../util/time_control';
+import {ErrorEvent, Event, Evented} from '../util/evented.ts';
+import {extend} from '../util/util.ts';
+import {type Dispatcher} from '../util/dispatcher.ts';
+import {TileBounds} from './tile_bounds.ts';
+import {beforeMapTest, createMap as globalCreateMap, sleep, waitForEvent} from '../util/test/util.ts';
+import {now} from '../util/time_control.ts';
 
-import {type Map} from '../ui/map';
-import {type TileCache} from './tile_cache';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {GlobeTransform} from '../geo/projection/globe_transform';
-import {coveringTiles} from '../geo/projection/covering_tiles';
+import {type Map} from '../ui/map.ts';
+import {type TileCache} from './tile_cache.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {GlobeTransform} from '../geo/projection/globe_transform.ts';
+import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 
 class SourceMock extends Evented implements Source {
     id: string;

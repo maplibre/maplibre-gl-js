@@ -1,8 +1,8 @@
-import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, Uniform4f} from '../uniform_binding';
+import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, Uniform4f} from '../uniform_binding.ts';
 
-import type {Context} from '../../webgl/context';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer';
+import type {Context} from '../../webgl/context.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
 import type Point from '@mapbox/point-geometry';
 
 export type RasterUniformsType = {

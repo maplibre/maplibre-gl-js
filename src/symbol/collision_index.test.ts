@@ -1,7 +1,7 @@
 import {vi, describe, test, expect} from 'vitest';
-import {CollisionIndex} from './collision_index';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {CanonicalTileID, UnwrappedTileID} from '../tile/tile_id';
+import {CollisionIndex} from './collision_index.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {CanonicalTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import {mat4} from 'gl-matrix';
 
 describe('CollisionIndex', () => {

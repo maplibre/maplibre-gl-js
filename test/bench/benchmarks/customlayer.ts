@@ -1,7 +1,7 @@
-import Benchmark from '../lib/benchmark';
-import createMap from '../lib/create_map';
-import {type CustomLayerInterface, type CustomRenderMethodInput} from '../../../src/style/style_layer/custom_style_layer';
-import {type Map} from '../../../src/ui/map';
+import Benchmark from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
+import {type CustomLayerInterface, type CustomRenderMethodInput} from '../../../src/style/style_layer/custom_style_layer.ts';
+import {type Map} from '../../../src/ui/map.ts';
 
 class Tent3D implements CustomLayerInterface {
     id: string;
@@ -89,7 +89,7 @@ class Tent3D implements CustomLayerInterface {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArray, gl.STATIC_DRAW);
     }
 
-    render(gl: WebGLRenderingContext | WebGL2RenderingContext, options: CustomRenderMethodInput) {
+    render(gl: WebGL2RenderingContext, options: CustomRenderMethodInput) {
         gl.useProgram(this.program);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
@@ -128,14 +128,14 @@ export default class CustomLayer extends Benchmark {
         });
     }
 
-    bench() {
+    bench(): void {
         const customLayer = new Tent3D();
         this.map.addLayer(customLayer);
         this.map._styleDirty = true;
         this.map._sourcesDirty = true;
         Benchmark.renderMap(this.map, Date.now());
     }
-    teardown() {
+    teardown(): void {
         this.map.remove();
     }
 }

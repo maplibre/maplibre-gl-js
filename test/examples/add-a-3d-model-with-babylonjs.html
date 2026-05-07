@@ -3,10 +3,11 @@
 <head>
     <title>Add a 3D model with babylon.js</title>
     <meta property="og:description" content="Use a custom style layer with babylon.js to add a 3D model to the map." />
+    <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -16,7 +17,11 @@
 <script src="https://unpkg.com/babylonjs@5.42.2/babylon.js"></script>
 <script src="https://unpkg.com/babylonjs-loaders@5.42.2/babylonjs.loaders.min.js"></script>
 <div id="map"></div>
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     const BABYLON = window.BABYLON;
 
     const map = new maplibregl.Map({

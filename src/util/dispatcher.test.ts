@@ -1,8 +1,8 @@
 import {describe, test, expect, vi} from 'vitest';
-import {Actor} from './actor';
-import {Dispatcher} from './dispatcher';
-import {workerFactory} from './web_worker';
-import {WorkerPool} from './worker_pool';
+import {Actor} from './actor.ts';
+import {Dispatcher} from './dispatcher.ts';
+import {workerFactory} from './web_worker.ts';
+import {WorkerPool} from './worker_pool.ts';
 
 describe('Dispatcher', () => {
     test('requests and releases workers from pool', () => {
@@ -32,9 +32,7 @@ describe('Dispatcher', () => {
         const releaseCalled = [];
         const workerPool = {
             acquire () {
-                if (!workers) {
-                    workers = [workerFactory(), workerFactory()];
-                }
+                workers ||= [workerFactory(), workerFactory()];
                 return workers;
             },
             release (id) {

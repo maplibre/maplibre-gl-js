@@ -1,8 +1,8 @@
-import Layout from './layout';
-import {SymbolBucket} from '../../../src/data/bucket/symbol_bucket';
-import {performSymbolLayout} from '../../../src/symbol/symbol_layout';
-import {type OverscaledTileID} from '../../../src/tile/tile_id';
-import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings';
+import Layout from './layout.ts';
+import {SymbolBucket} from '../../../src/data/bucket/symbol_bucket.ts';
+import {performSymbolLayout} from '../../../src/symbol/symbol_layout.ts';
+import {type OverscaledTileID} from '../../../src/tile/tile_id.ts';
+import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings.ts';
 
 export default class SymbolLayout extends Layout {
     parsedTiles: any[];
@@ -22,7 +22,7 @@ export default class SymbolLayout extends Layout {
         }
     }
 
-    async bench() {
+    async bench(): Promise<void> {
         for (const tileResult of this.parsedTiles) {
             for (const bucket of tileResult.buckets) {
                 if (bucket instanceof SymbolBucket) {

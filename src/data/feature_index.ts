@@ -1,30 +1,31 @@
 import type Point from '@mapbox/point-geometry';
-import {loadGeometry} from './load_geometry';
-import {toEvaluationFeature} from './evaluation_feature';
-import {EXTENT} from './extent';
-import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
-import {TransferableGridIndex} from '../util/transferable_grid_index';
-import {DictionaryCoder} from '../util/dictionary_coder';
-import Protobuf from 'pbf';
-import {GeoJSONFeature} from '../util/vectortile_to_geojson';
-import {mapObject, extend} from '../util/util';
-import {register} from '../util/web_worker_transfer';
-import {EvaluationParameters} from '../style/evaluation_parameters';
-import {polygonIntersectsBox} from '../util/intersection_tests';
-import {PossiblyEvaluated} from '../style/properties';
-import {FeatureIndexArray} from './array_types.g';
-
-import {MLTVectorTile} from '../source/vector_tile_mlt';
-import {Bounds} from '../geo/bounds';
-import type {OverscaledTileID} from '../tile/tile_id';
-import type {SourceFeatureState} from '../source/source_state';
-import type {mat4} from 'gl-matrix';
-import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import type {StyleLayer} from '../style/style_layer';
-import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform} from '../geo/transform_interface';
 import {type VectorTileFeatureLike, type VectorTileLayerLike, GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
+import {loadGeometry} from './load_geometry.ts';
+import {toEvaluationFeature} from './evaluation_feature.ts';
+import {EXTENT} from './extent.ts';
+import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
+import {TransferableGridIndex} from '../util/transferable_grid_index.ts';
+import {DictionaryCoder} from '../util/dictionary_coder.ts';
+import Protobuf from 'pbf';
+import {GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
+import {mapObject, extend} from '../util/util.ts';
+import {register} from '../util/web_worker_transfer.ts';
+import {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import {polygonIntersectsBox} from '../util/intersection_tests.ts';
+import {PossiblyEvaluated} from '../style/properties.ts';
+import {FeatureIndexArray} from './array_types.g.ts';
+import {MLTVectorTile} from '../source/vector_tile_mlt.ts';
+import {Bounds} from '../geo/bounds.ts';
 import {VectorTile} from '@mapbox/vector-tile';
+
+import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {SourceFeatureState} from '../source/source_state.ts';
+import type {mat4} from 'gl-matrix';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {TileEncoding} from '../source/worker_source.ts';
 
 export {GEOJSON_TILE_LAYER_NAME};
 
@@ -67,7 +68,7 @@ export class FeatureIndex {
     grid3D: TransferableGridIndex;
     featureIndexArray: FeatureIndexArray;
     promoteId?: PromoteIdSpecification;
-    encoding: string;
+    encoding: TileEncoding;
     rawTileData: ArrayBuffer;
     bucketLayerIDs: string[][];
 
@@ -85,7 +86,7 @@ export class FeatureIndex {
         this.promoteId = promoteId;
     }
 
-    insert(feature: VectorTileFeatureLike, geometry: Point[][], featureIndex: number, sourceLayerIndex: number, bucketIndex: number, is3D?: boolean) {
+    insert(feature: VectorTileFeatureLike, geometry: Point[][], featureIndex: number, sourceLayerIndex: number, bucketIndex: number, is3D?: boolean): void {
         const key = this.featureIndexArray.length;
         this.featureIndexArray.emplaceBack(featureIndex, sourceLayerIndex, bucketIndex);
 
@@ -112,9 +113,14 @@ export class FeatureIndex {
 
     loadVTLayers(): {[_: string]: VectorTileLayerLike} {
         if (!this.vtLayers) {
-            this.vtLayers = this.encoding !== 'mlt' 
-                ? new VectorTile(new Protobuf(this.rawTileData)).layers
-                : new MLTVectorTile(this.rawTileData).layers;
+            switch (this.encoding) {
+                case 'mlt':
+                    this.vtLayers = new MLTVectorTile(this.rawTileData).layers;
+                    break;
+                case 'mvt':
+                default:
+                    this.vtLayers = new VectorTile(new Protobuf(this.rawTileData)).layers;
+            }
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : [GEOJSON_TILE_LAYER_NAME]);
         }
         return this.vtLayers;
@@ -174,9 +180,7 @@ export class FeatureIndex {
                 serializedLayers,
                 sourceFeatureState,
                 (feature: VectorTileFeatureLike, styleLayer: StyleLayer, featureState: FeatureState) => {
-                    if (!featureGeometry) {
-                        featureGeometry = loadGeometry(feature);
-                    }
+                    featureGeometry ||= loadGeometry(feature);
 
                     return styleLayer.queryIntersectsFeature({
                         queryGeometry,
@@ -213,7 +217,7 @@ export class FeatureIndex {
             styleLayer: StyleLayer,
             featureState: any,
             id: string | number | void
-        ) => boolean | number) {
+        ) => boolean | number): void {
 
         const layerIDs = this.bucketLayerIDs[bucketIndex];
         if (filterLayerIDs && !layerIDs.some(id => filterLayerIDs.has(id)))
@@ -306,7 +310,7 @@ export class FeatureIndex {
         return result;
     }
 
-    hasLayer(id: string) {
+    hasLayer(id: string): boolean {
         for (const layerIDs of this.bucketLayerIDs) {
             for (const layerID of layerIDs) {
                 if (id === layerID) return true;

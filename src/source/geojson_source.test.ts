@@ -1,20 +1,20 @@
 import {describe, test, expect, vi, beforeEach} from 'vitest';
-import {Tile} from '../tile/tile';
-import {OverscaledTileID} from '../tile/tile_id';
-import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions, type GeoJSONSourceOptions} from './geojson_source';
-import {EXTENT} from '../data/extent';
-import {LngLat} from '../geo/lng_lat';
-import {extend} from '../util/util';
-import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {sleep, waitForEvent} from '../util/test/util';
-import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages';
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {Dispatcher} from '../util/dispatcher';
-import type {RequestManager} from '../util/request_manager';
-import type {IActor} from '../util/actor';
-import type {MapSourceDataEvent} from '../ui/events';
-import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff';
+import {Tile} from '../tile/tile.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions, type GeoJSONSourceOptions} from './geojson_source.ts';
+import {EXTENT} from '../data/extent.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import {extend} from '../util/util.ts';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {sleep, waitForEvent} from '../util/test/util.ts';
+import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {RequestManager} from '../util/request_manager.ts';
+import type {IActor} from '../util/actor.ts';
+import type {MapSourceDataEvent} from '../ui/events.ts';
+import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff.ts';
 
 const wrapDispatcher = (dispatcher: IActor) => {
     return {
@@ -94,7 +94,7 @@ describe('GeoJSONSource.constructor', () => {
 
 describe('GeoJSONSource.setData', () => {
     function createSource(opts?) {
-        opts = opts || {};
+        opts ||= {};
         opts = extend(opts, {data: {}});
         return new GeoJSONSource('id', opts, wrapDispatcher({
             sendAsync(_message) {
@@ -104,11 +104,6 @@ describe('GeoJSONSource.setData', () => {
             }
         }), undefined);
     }
-
-    test('returns self', () => {
-        const source = createSource();
-        expect(source.setData({} as GeoJSON.GeoJSON)).toBe(source);
-    });
 
     test('fires "data" event', async () => {
         const source = createSource();
@@ -176,11 +171,11 @@ describe('GeoJSONSource.setData', () => {
             return new Promise((resolve) => {
                 if (message.type === MessageType.loadData) {
                     spy(message);
-                    resolve({} as any);
+                    resolve({});
                 }
             });
         };
-        await source.setData('http://localhost/nonexistent', true);
+        await source.setData('http://localhost/nonexistent');
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].data.request.collectResourceTiming).toBeTruthy();
     });
@@ -225,18 +220,6 @@ describe('GeoJSONSource.setData', () => {
         source.setData({} as GeoJSON.GeoJSON);
         await promise;
         expect(source.loaded()).toBeTruthy();
-    });
-
-    test('setData with waitForCompletion=true returns promise that resolves to this', async () => {
-        const source = new GeoJSONSource('id', {} as any, wrapDispatcher({
-            sendAsync(_message: ActorMessage<MessageType>) {
-                return new Promise((resolve) => {
-                    setTimeout(() => resolve({abandoned: true} as GeoJSONWorkerSourceLoadDataResult), 0);
-                });
-            }
-        }), undefined);
-        const result = source.setData({} as GeoJSON.GeoJSON, true);
-        expect(result).toBeInstanceOf(Promise);
     });
 });
 
@@ -706,7 +689,7 @@ describe('GeoJSONSource.getData', () => {
         const diff: GeoJSONSourceDiff = {
             update: [{id: 0, newGeometry: {type: 'Point', coordinates: [0, 1]}}]
         };
-        await source.updateData(diff, true);
+        await source.updateData(diff);
         const data = await source.getData();
         expect(data).toStrictEqual({
             type: 'FeatureCollection',
@@ -748,8 +731,8 @@ describe('GeoJSONSource.updateData', () => {
             add: [{id: '5', type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}],
             update: [{id: '6', addOrUpdateProperties: [], newGeometry: {type: 'LineString', coordinates: []}}]
         } satisfies GeoJSONSourceDiff;
-        await source.updateData(update1, true);
-        await source.updateData(update2, true);
+        await source.updateData(update1);
+        await source.updateData(update2);
 
         expect(spy).toHaveBeenCalledTimes(2);
         expect(spy.mock.calls[0][0].data.dataDiff).toEqual(update1);
@@ -1031,7 +1014,7 @@ describe('GeoJSONSource.applyDiff', () => {
         const diff: GeoJSONSourceDiff = {
             update: [{id: 0, newGeometry: {type: 'Point', coordinates: [0, 1]}}]
         };
-        await source.updateData(diff, true);
+        await source.updateData(diff);
 
         expect(source.serialize().data).toEqual({
             type: 'FeatureCollection',
@@ -1076,7 +1059,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
                 shouldReloadTileOptions = e.shouldReloadTileOptions;
             }
         });
-        await source.updateData(diff, true);
+        await source.updateData(diff);
 
         expect(shouldReloadTileOptions).toBeUndefined();
     });
@@ -1095,8 +1078,8 @@ describe('GeoJSONSource.shoudReloadTile', () => {
                 shouldReloadTileOptions = e.shouldReloadTileOptions;
             }
         });
-        await source.setData({type: 'FeatureCollection', features: [{type: 'Feature', id: 0, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}}]}, true);
-        await source.updateData(diff, true);
+        await source.setData({type: 'FeatureCollection', features: [{type: 'Feature', id: 0, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}}]});
+        await source.updateData(diff);
         const result = source.shouldReloadTile(tile, shouldReloadTileOptions);
 
         expect(result).toBeTruthy();
@@ -1110,7 +1093,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
                 shouldReloadTileOptions = e.shouldReloadTileOptions;
             }
         });
-        await source.updateData(diff, true);
+        await source.updateData(diff);
         const result = source.shouldReloadTile(tile, shouldReloadTileOptions);
 
         expect(result).toBe(false);
@@ -1134,7 +1117,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
                 shouldReloadTileOptions = e.shouldReloadTileOptions;
             }
         });
-        await source.updateData(diff, true);
+        await source.updateData(diff);
         const result = source.shouldReloadTile(tile, shouldReloadTileOptions);
 
         expect(result).toBe(false);
@@ -1149,7 +1132,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
                 shouldReloadTileOptions = e.shouldReloadTileOptions;
             }
         });
-        await source.updateData(diff, true);
+        await source.updateData(diff);
         const result = source.shouldReloadTile(tile, shouldReloadTileOptions);
 
         expect(result).toBe(false);
@@ -1164,7 +1147,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
                 shouldReloadTileOptions = e.shouldReloadTileOptions;
             }
         });
-        await source.updateData(diff, true);
+        await source.updateData(diff);
 
         expect(shouldReloadTileOptions.affectedBounds).toHaveLength(0);
     });
@@ -1179,7 +1162,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
                 shouldReloadTileOptions = e.shouldReloadTileOptions;
             }
         });
-        await source.updateData(diff, true);
+        await source.updateData(diff);
 
         expect(shouldReloadTileOptions).toBeUndefined();
     });

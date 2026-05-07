@@ -1,24 +1,24 @@
-import {Event, ErrorEvent, Evented} from '../util/evented';
-import {ensureError, extend, warnOnce, type ExactlyOne} from '../util/util';
-import {EXTENT} from '../data/extent';
-import {ResourceType} from '../util/request_manager';
-import {browser} from '../util/browser';
-import {applySourceDiff, mergeSourceDiffs, toUpdateable} from './geojson_source_diff';
-import {getGeoJSONBounds} from '../util/geojson_bounds';
-import {MessageType} from '../util/actor_messages';
-import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds';
+import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {ensureError, extend, warnOnce, type ExactlyOne} from '../util/util.ts';
+import {EXTENT} from '../data/extent.ts';
+import {ResourceType} from '../util/request_manager.ts';
+import {browser} from '../util/browser.ts';
+import {applySourceDiff, mergeSourceDiffs, toUpdateable} from './geojson_source_diff.ts';
+import {getGeoJSONBounds} from '../util/geojson_bounds.ts';
+import {MessageType} from '../util/actor_messages.ts';
+import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds.ts';
 
-import type {LngLatBounds} from '../geo/lng_lat_bounds';
-import type {Source} from './source';
-import type {Map} from '../ui/map';
-import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from '../tile/tile';
-import type {Actor} from '../util/actor';
-import type {GeoJSONWorkerSourceLoadDataResult} from '../util/actor_messages';
+import type {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import type {Source} from './source.ts';
+import type {Map} from '../ui/map.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Tile} from '../tile/tile.ts';
+import type {Actor} from '../util/actor.ts';
+import type {GeoJSONWorkerSourceLoadDataResult} from '../util/actor_messages.ts';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {GeoJSONFeatureId, GeoJSONSourceDiff} from './geojson_source_diff';
-import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
-import type {WorkerTileParameters} from './worker_source';
+import type {GeoJSONFeatureId, GeoJSONSourceDiff} from './geojson_source_diff.ts';
+import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source.ts';
+import type {WorkerTileParameters} from './worker_source.ts';
 
 /**
  * Options object for GeoJSONSource.
@@ -231,11 +231,11 @@ export class GeoJSONSource extends Evented implements Source {
         return effectiveClusterMaxZoom;
     }
 
-    async load() {
+    async load(): Promise<void> {
         await this._updateWorkerData();
     }
 
-    onAdd(map: Map) {
+    onAdd(map: Map): void {
         this.map = map;
         this.load();
     }
@@ -244,16 +244,11 @@ export class GeoJSONSource extends Evented implements Source {
      * Sets the GeoJSON data and re-renders the map.
      *
      * @param data - A GeoJSON data object or a URL to one. The latter is preferable in the case of large GeoJSON files.
-     * @param waitForCompletion - If true, the method will return a promise that resolves when set data is complete.
      */
-    setData(data: GeoJSON.GeoJSON | string, waitForCompletion: true): Promise<void>;
-    setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: false): this;
-    setData(data: GeoJSON.GeoJSON | string, waitForCompletion?: boolean): this | Promise<void> {
+    setData(data: GeoJSON.GeoJSON | string): Promise<void> {
         this._data = typeof data === 'string' ? {url: data} : {geojson: data};
         this._pendingWorkerUpdate = {data};
-        const updatePromise = this._updateWorkerData();
-        if (waitForCompletion) return updatePromise;
-        return this;
+        return this._updateWorkerData();
     }
 
     /**
@@ -269,15 +264,10 @@ export class GeoJSONSource extends Evented implements Source {
      * Updates are applied on a best-effort basis, updating an ID that does not exist will not result in an error.
      *
      * @param diff - The changes that need to be applied.
-     * @param waitForCompletion - If true, the method will return a promise that resolves when the update is complete.
      */
-    updateData(diff: GeoJSONSourceDiff, waitForCompletion: true): Promise<void>;
-    updateData(diff: GeoJSONSourceDiff, waitForCompletion?: false): this;
-    updateData(diff: GeoJSONSourceDiff, waitForCompletion?: boolean): this | Promise<void> {
+    updateData(diff: GeoJSONSourceDiff): Promise<void> {
         this._pendingWorkerUpdate.diff = mergeSourceDiffs(this._pendingWorkerUpdate.diff, diff);
-        const updatePromise = this._updateWorkerData();
-        if (waitForCompletion) return updatePromise;
-        return this;
+        return this._updateWorkerData();
     }
 
     /**
@@ -316,7 +306,7 @@ export class GeoJSONSource extends Evented implements Source {
      * map.getSource('some id').setClusterOptions({cluster: false, clusterRadius: 50, clusterMaxZoom: 14});
      * ```
      */
-    setClusterOptions(options: SetClusterOptions): this {
+    setClusterOptions(options: SetClusterOptions): Promise<void> {
         this.workerOptions.geojsonVtOptions.cluster = options.cluster;
         if (options.clusterRadius !== undefined) {
             this.workerOptions.geojsonVtOptions.clusterOptions.radius = this._pixelsToTileUnits(options.clusterRadius);
@@ -325,8 +315,7 @@ export class GeoJSONSource extends Evented implements Source {
             this.workerOptions.geojsonVtOptions.clusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
         }
         this._pendingWorkerUpdate.updateCluster = true;
-        this._updateWorkerData();
-        return this;
+        return this._updateWorkerData();
     }
 
     /**
@@ -557,7 +546,7 @@ export class GeoJSONSource extends Evented implements Source {
      * Determine whether a tile should be reloaded based on a set of options associated with a {@link MapSourceDataChangedEvent}.
      * @internal
      */
-    shouldReloadTile(tile: Tile, {affectedBounds}: GeoJSONSourceShouldReloadTileOptions) : boolean {
+    shouldReloadTile(tile: Tile, {affectedBounds}: GeoJSONSourceShouldReloadTileOptions): boolean {
         if (tile.state === 'loading') {
             return true;
         }
@@ -611,7 +600,7 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    async abortTile(tile: Tile) {
+    async abortTile(tile: Tile): Promise<void> {
         if (tile.abortController) {
             tile.abortController.abort();
             delete tile.abortController;
@@ -619,12 +608,12 @@ export class GeoJSONSource extends Evented implements Source {
         tile.aborted = true;
     }
 
-    async unloadTile(tile: Tile) {
+    async unloadTile(tile: Tile): Promise<void> {
         tile.unloadVectorData();
         await this.actor.sendAsync({type: MessageType.removeTile, data: {uid: tile.uid, type: this.type, source: this.id}});
     }
 
-    onRemove() {
+    onRemove(): void {
         this._removed = true;
         this.actor.sendAsync({type: MessageType.removeSource, data: {type: this.type, source: this.id}});
     }

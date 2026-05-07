@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest';
-import {FillLayoutArray, TriangleIndexArray} from './array_types.g';
-import {SegmentVector} from './segment';
+import {FillLayoutArray, TriangleIndexArray} from './array_types.g.ts';
+import {SegmentVector} from './segment.ts';
 
 describe('SegmentVector', () => {
     test('constructor', () => {

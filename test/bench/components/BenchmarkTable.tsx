@@ -1,4 +1,4 @@
-import {BenchmarkRow, BenchmarkRowProps} from './BenchmarkRow';
+import {BenchmarkRow, BenchmarkRowProps} from './BenchmarkRow.tsx';
 import React from 'react';
 
 type BenchmarksTableProps = {
@@ -6,7 +6,7 @@ type BenchmarksTableProps = {
     benchmarks: BenchmarkRowProps[];
 }
 
-export const BenchmarksTable = (props: BenchmarksTableProps) => (
+export const BenchmarksTable = (props: BenchmarksTableProps): React.JSX.Element => (
     <div style={{width: 960, margin: '2em auto'}}>
         <h1>TITLE</h1>
         <h1 className="space-bottom1">MapLibre GL JS Benchmarks – {

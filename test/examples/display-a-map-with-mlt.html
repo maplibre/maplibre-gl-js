@@ -3,10 +3,11 @@
 <head>
     <title>Display a map with MLT</title>
     <meta property="og:description" content="Initialize a map in an HTML element with MapLibre GL JS. This example is using a style that uses MLT (MapLibre Tiles). The example is very similar to the regular one except the tiles are in a different encoding." />
+    <meta property="og:created" content="2025-11-09" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -14,7 +15,11 @@
 </head>
 <body>
 <div id="map"></div>
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     const map = new maplibregl.Map({
         container: 'map', // container id
         style: 'https://demotiles.maplibre.org/tiles-mlt/plain.json', // style URL

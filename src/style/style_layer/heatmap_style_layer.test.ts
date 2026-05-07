@@ -1,11 +1,11 @@
 import {describe, test, expect} from 'vitest';
-import {HeatmapStyleLayer} from './heatmap_style_layer';
+import {HeatmapStyleLayer} from './heatmap_style_layer.ts';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type EvaluationParameters} from '../evaluation_parameters';
-import {type CanonicalTileID, UnwrappedTileID} from '../../tile/tile_id';
+import {type EvaluationParameters} from '../evaluation_parameters.ts';
+import {type CanonicalTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
-import {GlobeTransform} from '../../geo/projection/globe_transform';
-import {MercatorTransform} from '../../geo/projection/mercator_transform';
+import {GlobeTransform} from '../../geo/projection/globe_transform.ts';
+import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 describe('HeatmapStyleLayer.queryIntersectsFeature', () => {

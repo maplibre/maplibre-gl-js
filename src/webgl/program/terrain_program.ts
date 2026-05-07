@@ -4,10 +4,10 @@ import {
     Uniform4f,
     UniformMatrix4f,
     UniformColor
-} from '../uniform_binding';
-import type {Context} from '../../webgl/context';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import {type Sky} from '../../style/sky';
+} from '../uniform_binding.ts';
+import type {Context} from '../../webgl/context.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import {type Sky} from '../../style/sky.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {type mat4} from 'gl-matrix';
 

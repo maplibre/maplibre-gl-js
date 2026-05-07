@@ -1,19 +1,19 @@
-import {bgPatternUniformValues} from './pattern';
+import {bgPatternUniformValues} from './pattern.ts';
 import {
     Uniform1i,
     Uniform1f,
     Uniform2f,
     UniformColor
-} from '../uniform_binding';
-import {extend} from '../../util/util';
+} from '../uniform_binding.ts';
+import {extend} from '../../util/util.ts';
 
-import type {Painter} from '../../render/painter';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {Context} from '../../webgl/context';
+import type {Painter} from '../../render/painter.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {Context} from '../../webgl/context.ts';
 import type {Color, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import type {CrossFaded} from '../../style/properties';
-import type {CrossfadeParameters} from '../../style/evaluation_parameters';
-import type {OverscaledTileID} from '../../tile/tile_id';
+import type {CrossFaded} from '../../style/properties.ts';
+import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
 export type BackgroundUniformsType = {
     'u_opacity': Uniform1f;

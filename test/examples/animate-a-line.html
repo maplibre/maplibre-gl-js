@@ -3,10 +3,11 @@
 <head>
     <title>Animate a line</title>
     <meta property="og:description" content="Animate a line by updating a GeoJSON source on each frame." />
+    <meta property="og:created" content="2023-06-27" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -30,7 +31,11 @@
 </style>
 <div id="map"></div>
 <button id="pause"></button>
-<script>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
+
     const map = new maplibregl.Map({
         container: 'map',
         style: 'https://demotiles.maplibre.org/style.json',

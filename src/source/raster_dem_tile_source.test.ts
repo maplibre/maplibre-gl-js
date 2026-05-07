@@ -1,12 +1,12 @@
 import {describe, beforeEach, afterEach, test, expect, vi, it} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
-import {RasterDEMTileSource} from './raster_dem_tile_source';
-import {OverscaledTileID} from '../tile/tile_id';
-import {RequestManager} from '../util/request_manager';
-import {type Tile} from '../tile/tile';
-import {getMockDispatcher} from '../util/test/util';
-import {sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util';
-import type {MapSourceDataEvent} from '../ui/events';
+import {RasterDEMTileSource} from './raster_dem_tile_source.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {RequestManager} from '../util/request_manager.ts';
+import {type Tile} from '../tile/tile.ts';
+import {getMockDispatcher} from '../util/test/util.ts';
+import {sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
+import type {MapSourceDataEvent} from '../ui/events.ts';
 
 function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, getMockDispatcher(), options.eventedParent);

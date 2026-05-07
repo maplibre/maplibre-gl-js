@@ -1,10 +1,23 @@
-import {extend} from '../util/util';
-import type {Tile} from '../tile/tile';
+import {extend} from '../util/util.ts';
+import type {Tile} from '../tile/tile.ts';
 import type {FeatureState} from '@maplibre/maplibre-gl-style-spec';
-import type {InViewTiles} from '../tile/tile_manager_in_view_tiles';
+import type {InViewTiles} from '../tile/tile_manager_in_view_tiles.ts';
+import type {Painter} from '../render/painter.ts';
 
-export type FeatureStates = {[featureId: string]: FeatureState};
-export type LayerFeatureStates = {[layer: string]: FeatureStates};
+export type FeatureStateEntry = {id: string; state: FeatureState};
+export type FeatureStates = FeatureStateEntry[];
+export type LayerFeatureStates = Record<string, FeatureStates>;
+
+type FeatureStatesMap = Record<string, FeatureState>;
+type LayerFeatureStatesMap = Record<string, FeatureStatesMap>;
+
+function featureStatesMapToArray(map: FeatureStatesMap): FeatureStates {
+    const result: FeatureStates = [];
+    for (const id in map) {
+        result.push({id, state: map[id]});
+    }
+    return result;
+}
 
 /**
  * @internal
@@ -16,8 +29,8 @@ export type LayerFeatureStates = {[layer: string]: FeatureStates};
  * In deletedStates, all null's denote complete removal of state at that scope
 */
 export class SourceFeatureState {
-    state: LayerFeatureStates;
-    stateChanges: LayerFeatureStates;
+    state: LayerFeatureStatesMap;
+    stateChanges: LayerFeatureStatesMap;
     deletedStates: {};
     revision: number;
 
@@ -28,23 +41,30 @@ export class SourceFeatureState {
         this.revision = 0;
     }
 
-    updateState(sourceLayer: string, featureId: number | string, newState: any) {
+    updateState(sourceLayer: string, featureId: number | string, newState: any): void {
         const feature = String(featureId);
-        this.stateChanges[sourceLayer] = this.stateChanges[sourceLayer] || {};
-        this.stateChanges[sourceLayer][feature] = this.stateChanges[sourceLayer][feature] || {};
+        this.stateChanges[sourceLayer] ||= {};
+        this.stateChanges[sourceLayer][feature] ||= {};
         extend(this.stateChanges[sourceLayer][feature], newState);
 
         if (this.deletedStates[sourceLayer] === null) {
             this.deletedStates[sourceLayer] = {};
             for (const ft in this.state[sourceLayer]) {
-                if (ft !== feature) this.deletedStates[sourceLayer][ft] = null;
+                if (ft === feature){
+                    this.deletedStates[sourceLayer][feature] = {};
+                    for (const prop in this.state[sourceLayer][ft]){
+                        if (newState[prop] === undefined) this.deletedStates[sourceLayer][feature][prop] = null;
+                    }
+                } else {
+                    this.deletedStates[sourceLayer][ft] = null;
+                }
             }
         } else {
             const featureDeletionQueued = this.deletedStates[sourceLayer]?.[feature] === null;
             if (featureDeletionQueued) {
                 this.deletedStates[sourceLayer][feature] = {};
                 for (const prop in this.state[sourceLayer][feature]) {
-                    if (!newState[prop]) this.deletedStates[sourceLayer][feature][prop] = null;
+                    if (newState[prop] === undefined) this.deletedStates[sourceLayer][feature][prop] = null;
                 }
             } else {
                 for (const key in newState) {
@@ -55,17 +75,17 @@ export class SourceFeatureState {
         }
     }
 
-    removeFeatureState(sourceLayer: string, featureId?: number | string, key?: string) {
+    removeFeatureState(sourceLayer: string, featureId?: number | string, key?: string): void {
         const sourceLayerDeleted = this.deletedStates[sourceLayer] === null;
         if (sourceLayerDeleted) return;
 
         const feature = String(featureId);
 
-        this.deletedStates[sourceLayer] = this.deletedStates[sourceLayer] || {};
+        this.deletedStates[sourceLayer] ||= {};
 
         if (key && featureId !== undefined) {
             if (this.deletedStates[sourceLayer][feature] !== null) {
-                this.deletedStates[sourceLayer][feature] = this.deletedStates[sourceLayer][feature] || {};
+                this.deletedStates[sourceLayer][feature] ||= {};
                 this.deletedStates[sourceLayer][feature][key] = null;
             }
         } else if (featureId !== undefined) {
@@ -83,7 +103,7 @@ export class SourceFeatureState {
 
     }
 
-    getState(sourceLayer: string, featureId: number | string) {
+    getState(sourceLayer: string, featureId: number | string): FeatureState {
         const feature = String(featureId);
         const base = this.state[sourceLayer] || {};
         const changes = this.stateChanges[sourceLayer] || {};
@@ -100,33 +120,37 @@ export class SourceFeatureState {
         return reconciledState;
     }
 
-    initializeTileState(tile: Tile, painter: any) {
-        tile.setFeatureState(this.state, painter);
+    initializeTileState(tile: Tile, painter: Painter): void {
+        const layerStates: LayerFeatureStates = {};
+        for (const sourceLayer in this.state) {
+            layerStates[sourceLayer] = featureStatesMapToArray(this.state[sourceLayer]);
+        }
+        tile.setFeatureState(layerStates, painter);
     }
 
-    coalesceChanges(inViewTiles: InViewTiles, painter: any) {
+    coalesceChanges(inViewTiles: InViewTiles, painter: Painter): void {
         //track changes with full state objects, but only for features that got modified
-        const featuresChanged: LayerFeatureStates = {};
+        //use an intermediate object keyed by feature id to naturally deduplicate entries
+        const featuresChangedMap: LayerFeatureStatesMap = {};
 
         for (const sourceLayer in this.stateChanges) {
-            this.state[sourceLayer]  = this.state[sourceLayer] || {};
-            const layerStates = {};
+            this.state[sourceLayer] ||= {};
+            featuresChangedMap[sourceLayer] ||= {};
             for (const feature in this.stateChanges[sourceLayer]) {
-                if (!this.state[sourceLayer][feature]) this.state[sourceLayer][feature] = {};
+                this.state[sourceLayer][feature] ||= {};
                 extend(this.state[sourceLayer][feature], this.stateChanges[sourceLayer][feature]);
-                layerStates[feature] = this.state[sourceLayer][feature];
+                featuresChangedMap[sourceLayer][feature] = this.state[sourceLayer][feature];
             }
-            featuresChanged[sourceLayer] = layerStates;
         }
 
         for (const sourceLayer in this.deletedStates) {
-            this.state[sourceLayer]  = this.state[sourceLayer] || {};
-            const layerStates = {};
+            this.state[sourceLayer] ||= {};
+            featuresChangedMap[sourceLayer] ||= {};
 
             if (this.deletedStates[sourceLayer] === null) {
                 for (const ft in this.state[sourceLayer]) {
-                    layerStates[ft] = {};
                     this.state[sourceLayer][ft] = {};
+                    featuresChangedMap[sourceLayer][ft] = {};
                 }
             } else {
                 for (const feature in this.deletedStates[sourceLayer]) {
@@ -137,20 +161,22 @@ export class SourceFeatureState {
                             delete this.state[sourceLayer][feature][key];
                         }
                     }
-                    layerStates[feature] = this.state[sourceLayer][feature];
+                    featuresChangedMap[sourceLayer][feature] = this.state[sourceLayer][feature];
                 }
             }
-
-            featuresChanged[sourceLayer] = featuresChanged[sourceLayer] || {};
-            extend(featuresChanged[sourceLayer], layerStates);
         }
 
         this.stateChanges = {};
         this.deletedStates = {};
 
-        if (Object.keys(featuresChanged).length === 0) return;
+        if (Object.keys(featuresChangedMap).length === 0) return;
 
         this.revision++;
+
+        const featuresChanged: LayerFeatureStates = {};
+        for (const sourceLayer in featuresChangedMap) {
+            featuresChanged[sourceLayer] = featureStatesMapToArray(featuresChangedMap[sourceLayer]);
+        }
 
         inViewTiles.setFeatureState(featuresChanged, painter);
     }

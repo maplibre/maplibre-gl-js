@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest';
-import {InViewTiles} from './tile_manager_in_view_tiles';
-import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
+import {InViewTiles} from './tile_manager_in_view_tiles.ts';
+import {Tile} from './tile.ts';
+import {OverscaledTileID} from './tile_id.ts';
 
 describe('InViewTiles', () => {
     test('getRenderableIds returns only renderable tiles', () => {

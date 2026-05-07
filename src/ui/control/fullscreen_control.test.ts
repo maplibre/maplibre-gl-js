@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util';
-import {FullscreenControl} from './fullscreen_control';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import {FullscreenControl} from './fullscreen_control.ts';
 
 beforeEach(() => {
     beforeMapTest();

@@ -1,4 +1,4 @@
-import {filterObject} from '../util/util';
+import {filterObject} from '../util/util.ts';
 
 import {createVisibilityExpression, featureFilter, latest as styleSpec, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {
@@ -6,11 +6,11 @@ import {
     validateLayoutProperty,
     validatePaintProperty,
     emitValidationErrors
-} from './validate_style';
-import {Evented, ErrorEvent} from '../util/evented';
-import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties';
+} from './validate_style.ts';
+import {Evented, ErrorEvent} from '../util/evented.ts';
+import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties.ts';
 
-import type {Bucket, BucketParameters} from '../data/bucket';
+import type {Bucket, BucketParameters} from '../data/bucket.ts';
 import type Point from '@mapbox/point-geometry';
 import type {
     FeatureFilter,
@@ -18,19 +18,23 @@ import type {
     LayerSpecification,
     FilterSpecification,
     VisibilitySpecification,
-    VisibilityExpression
+    VisibilityExpression,
+    AllPaintProperties,
+    AllLayoutProperties,
 } from '@maplibre/maplibre-gl-style-spec';
-import type {TransitionParameters, PropertyValue} from './properties';
-import {type EvaluationParameters} from './evaluation_parameters';
-import type {CrossfadeParameters} from './evaluation_parameters';
+import type {TransitionParameters, PropertyValue} from './properties.ts';
+import {type EvaluationParameters} from './evaluation_parameters.ts';
+import type {CrossfadeParameters} from './evaluation_parameters.ts';
 
-import type {IReadonlyTransform} from '../geo/transform_interface';
-import type {CustomLayerInterface} from './style_layer/custom_style_layer';
-import type {Map} from '../ui/map';
-import type {StyleSetterOptions} from './style';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
+import type {Map} from '../ui/map.ts';
+import type {StyleSetterOptions} from './style.ts';
 import {type mat4} from 'gl-matrix';
-import type {UnwrappedTileID} from '../tile/tile_id';
+import type {UnwrappedTileID} from '../tile/tile_id.ts';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
+
+export type PaintPropertyEntry = { [K in keyof AllPaintProperties]: {name: K; value: AllPaintProperties[K]} }[keyof AllPaintProperties];
 
 export type QueryIntersectsFeatureParams = {
     /**
@@ -132,8 +136,6 @@ export abstract class StyleLayer extends Evented {
 
         if (layer.type === 'custom') return;
 
-        layer = (layer as any as LayerSpecification);
-
         this.metadata = layer.metadata;
         this.minzoom = layer.minzoom;
         this.maxzoom = layer.maxzoom;
@@ -153,10 +155,10 @@ export abstract class StyleLayer extends Evented {
             this._transitionablePaint = new Transitionable(properties.paint, globalState);
 
             for (const property in layer.paint) {
-                this.setPaintProperty(property, layer.paint[property], {validate: false});
+                this.setPaintProperty(property as keyof AllPaintProperties, layer.paint[property as keyof typeof layer.paint], {validate: false});
             }
             for (const property in layer.layout) {
-                this.setLayoutProperty(property, layer.layout[property], {validate: false});
+                this.setLayoutProperty(property as keyof AllLayoutProperties, layer.layout[property as keyof typeof layer.layout], {validate: false});
             }
 
             this._transitioningPaint = this._transitionablePaint.untransitioned();
@@ -165,18 +167,19 @@ export abstract class StyleLayer extends Evented {
         }
     }
 
-    setFilter(filter: FilterSpecification | void) {
+    setFilter(filter: FilterSpecification | void): void {
         this.filter = filter;
         this._featureFilter = featureFilter(filter, this._globalState);
     }
 
-    getCrossfadeParameters() {
+    getCrossfadeParameters(): CrossfadeParameters {
         return this._crossfadeParameters;
     }
 
-    getLayoutProperty(name: string) {
+    getLayoutProperty<K extends keyof AllLayoutProperties>(name: K): AllLayoutProperties[K] {
         if (name === 'visibility') {
-            return this.visibility;
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- otherwise typescript fails with error TS2590: Expression produces a union type that is too complex to represent
+            return this.visibility as AllLayoutProperties[K];
         }
         if (this._transitionablePaint?.hasProperty(name)) {
             throw new Error(name + ERROR_PAINT_NOT_LAYOUT);
@@ -221,8 +224,8 @@ export abstract class StyleLayer extends Evented {
      * This is used to determine if layer needs to be repainted when global state property changes.
      *
      */
-    getPaintAffectingGlobalStateRefs(): globalThis.Map<string, Array<{name: string; value: any}>> {
-        const globalStateRefs = new globalThis.Map<string, Array<{name: string; value: any}>>();
+    getPaintAffectingGlobalStateRefs(): globalThis.Map<string, PaintPropertyEntry[]> {
+        const globalStateRefs = new globalThis.Map<string, PaintPropertyEntry[]>();
 
         if (this._transitionablePaint) {
             for (const propertyName in this._transitionablePaint._values) {
@@ -230,7 +233,7 @@ export abstract class StyleLayer extends Evented {
 
                 for (const globalStateRef of value.getGlobalStateRefs()) {
                     const properties = globalStateRefs.get(globalStateRef) ?? [];
-                    properties.push({name: propertyName, value: value.value});
+                    properties.push({name: propertyName as keyof AllPaintProperties, value: value.value} as PaintPropertyEntry);
                     globalStateRefs.set(globalStateRef, properties);
                 }
             }
@@ -243,14 +246,14 @@ export abstract class StyleLayer extends Evented {
      * Get list of global state references that are used within visibility expression.
      * This is used to determine if layer visibility needs to be updated when global state property changes.
      */
-    getVisibilityAffectingGlobalStateRefs() {
+    getVisibilityAffectingGlobalStateRefs(): Set<string> {
         return this._visibilityExpression.getGlobalStateRefs();
     }
 
-    setLayoutProperty(name: string, value: any, options: StyleSetterOptions = {}) {
+    setLayoutProperty<K extends keyof AllLayoutProperties>(name: K, value: AllLayoutProperties[K], options: StyleSetterOptions = {}): void {
         if (name === 'visibility') {
-            this.visibility = value;
-            this._visibilityExpression.setValue(value);
+            this.visibility = value as VisibilitySpecification;
+            this._visibilityExpression.setValue(value as VisibilitySpecification);
             this.recalculateVisibility();
             return;
         }
@@ -265,23 +268,25 @@ export abstract class StyleLayer extends Evented {
         this._unevaluatedLayout.setValue(name, value);
     }
 
-    getPaintProperty(name: string) {
+    getPaintProperty<K extends keyof AllPaintProperties>(name: K): AllPaintProperties[K] {
         if (name.endsWith(TRANSITION_SUFFIX)) {
             const baseName = name.slice(0, -TRANSITION_SUFFIX.length);
             if (baseName === 'visibility' || this._unevaluatedLayout?.hasProperty(baseName)) {
                 throw new Error(name + ERROR_LAYOUT_NOT_PAINT);
             }
-            return this._transitionablePaint.getTransition(baseName);
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- otherwise typescript fails with error TS2590: Expression produces a union type that is too complex to represent
+            return this._transitionablePaint.getTransition(baseName) as AllPaintProperties[K];
         } else {
-            if (name === 'visibility' || this._unevaluatedLayout?.hasProperty(name)) {
+            if (name as any === 'visibility' || this._unevaluatedLayout?.hasProperty(name)) {
                 throw new Error(name + ERROR_LAYOUT_NOT_PAINT);
             }
-            return this._transitionablePaint.getValue(name);
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- otherwise typescript fails with error TS2590: Expression produces a union type that is too complex to represent
+            return this._transitionablePaint.getValue(name) as AllPaintProperties[K];
         }
     }
 
-    setPaintProperty(name: string, value: unknown, options: StyleSetterOptions = {}) {
-        if (name === 'visibility' || (this._unevaluatedLayout?.hasProperty(name))) {
+    setPaintProperty<K extends keyof AllPaintProperties>(name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}): boolean {
+        if (name as any === 'visibility' || this._unevaluatedLayout?.hasProperty(name)) {
             this.fire(new ErrorEvent(new Error(name + ERROR_LAYOUT_NOT_PAINT)));
             return false;
         }
@@ -297,7 +302,8 @@ export abstract class StyleLayer extends Evented {
             const wasDataDriven = transitionable.value.isDataDriven();
             const oldValue = transitionable.value;
 
-            this._transitionablePaint.setValue(name, value);
+            // Transitionable.setValue uses a free-floating T that can't unify with the AllPaintProperties union -> better types downstream of this code needed
+            this._transitionablePaint.setValue(name, value as any);
             this._handleSpecialPaintPropertyUpdate(name);
 
             const newValue = this._transitionablePaint._values[name].value;
@@ -310,7 +316,7 @@ export abstract class StyleLayer extends Evented {
         }
     }
 
-    _handleSpecialPaintPropertyUpdate(_: string) {
+    _handleSpecialPaintPropertyUpdate(_: string): void {
         // No-op; can be overridden by derived classes.
     }
 
@@ -320,25 +326,25 @@ export abstract class StyleLayer extends Evented {
         return false;
     }
 
-    isHidden(zoom: number = this.minzoom, roundMinZoom: boolean = false) {
+    isHidden(zoom: number = this.minzoom, roundMinZoom: boolean = false): boolean {
         if (this.minzoom && zoom < (roundMinZoom ? Math.floor(this.minzoom) : this.minzoom)) return true;
         if (this.maxzoom && zoom >= this.maxzoom) return true;
         return this._evaluatedVisibility === 'none';
     }
 
-    updateTransitions(parameters: TransitionParameters) {
+    updateTransitions(parameters: TransitionParameters): void {
         this._transitioningPaint = this._transitionablePaint.transitioned(parameters, this._transitioningPaint);
     }
 
-    hasTransition() {
+    hasTransition(): boolean {
         return this._transitioningPaint.hasTransition();
     }
 
-    recalculateVisibility() {
+    recalculateVisibility(): void {
         this._evaluatedVisibility = this._visibilityExpression.evaluate();
     }
 
-    recalculate(parameters: EvaluationParameters, availableImages: string[]) {
+    recalculate(parameters: EvaluationParameters, availableImages: string[]): void {
         if (parameters.getCrossfadeParameters) {
             this._crossfadeParameters = parameters.getCrossfadeParameters();
         }
@@ -365,7 +371,7 @@ export abstract class StyleLayer extends Evented {
         };
 
         if (this.visibility) {
-            output.layout = output.layout || {};
+            output.layout ||= {};
             output.layout.visibility = this.visibility;
         }
 
@@ -376,7 +382,7 @@ export abstract class StyleLayer extends Evented {
         });
     }
 
-    _validate(validate: Function, key: string, name: string, value: unknown, options: StyleSetterOptions = {}) {
+    _validate(validate: Function, key: string, name: string, value: unknown, options: StyleSetterOptions = {}): boolean {
         if (options?.validate === false) {
             return false;
         }
@@ -391,23 +397,23 @@ export abstract class StyleLayer extends Evented {
         }));
     }
 
-    is3D() {
+    is3D(): boolean {
         return false;
     }
 
-    isTileClipped() {
+    isTileClipped(): boolean {
         return false;
     }
 
-    hasOffscreenPass() {
+    hasOffscreenPass(): boolean {
         return false;
     }
 
-    resize() {
+    resize(): void {
         // noop
     }
 
-    isStateDependent() {
+    isStateDependent(): boolean {
         for (const property in (this as any).paint._values) {
             const value = (this as any).paint.get(property);
             if (!(value instanceof PossiblyEvaluatedPropertyValue) || !supportsPropertyExpression(value.property.specification)) {

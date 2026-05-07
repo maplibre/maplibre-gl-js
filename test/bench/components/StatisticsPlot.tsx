@@ -1,14 +1,14 @@
 import * as d3 from 'd3';
 import React from 'react';
-import {kde} from '../lib/statistics';
-import {Axis} from './Axis';
-import {formatSample, Version, versionColor} from './util';
+import {kde} from '../lib/statistics.ts';
+import {Axis} from './Axis.tsx';
+import {formatSample, Version, versionColor} from './util.ts';
 
 type StatisticsPlotProps = {
     versions: Version[];
 }
 
-export const StatisticsPlot = (props:StatisticsPlotProps) => {
+export const StatisticsPlot = (props:StatisticsPlotProps): React.JSX.Element => {
 
     const margin = {top: 0, right: 20, bottom: 20, left: 0};
     const width = 960 - margin.left - margin.right;

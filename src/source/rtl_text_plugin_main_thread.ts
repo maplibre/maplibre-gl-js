@@ -1,9 +1,9 @@
 
-import {browser} from '../util/browser';
-import {Event, Evented} from '../util/evented';
-import {type RTLPluginStatus, RTLPluginLoadedEventName, type PluginState} from './rtl_text_plugin_status';
-import {type Dispatcher, getGlobalDispatcher} from '../util/dispatcher';
-import {MessageType} from '../util/actor_messages';
+import {browser} from '../util/browser.ts';
+import {Event, Evented} from '../util/evented.ts';
+import {type RTLPluginStatus, RTLPluginLoadedEventName, type PluginState} from './rtl_text_plugin_status.ts';
+import {type Dispatcher, getGlobalDispatcher} from '../util/dispatcher.ts';
+import {MessageType} from '../util/actor_messages.ts';
 
 class RTLMainThreadPlugin extends Evented {
     status: RTLPluginStatus = 'unavailable';
@@ -82,8 +82,6 @@ class RTLMainThreadPlugin extends Evented {
 let rtlMainThreadPlugin: RTLMainThreadPlugin = null;
 
 export function rtlMainThreadPluginFactory(): RTLMainThreadPlugin {
-    if (!rtlMainThreadPlugin) {
-        rtlMainThreadPlugin = new RTLMainThreadPlugin();
-    }
+    rtlMainThreadPlugin ||= new RTLMainThreadPlugin();
     return rtlMainThreadPlugin;
 }

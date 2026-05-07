@@ -1,9 +1,9 @@
 import {describe, test, expect, vi} from 'vitest';
-import {backfillDEM} from './tile_manager_raster_dem';
-import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
-import {InViewTiles} from './tile_manager_in_view_tiles';
-import type {DEMData} from '../data/dem_data';
+import {backfillDEM} from './tile_manager_raster_dem.ts';
+import {Tile} from './tile.ts';
+import {OverscaledTileID} from './tile_id.ts';
+import {InViewTiles} from './tile_manager_in_view_tiles.ts';
+import type {DEMData} from '../data/dem_data.ts';
 
 describe('backfillDEM', () => {
 

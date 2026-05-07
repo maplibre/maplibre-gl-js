@@ -1,26 +1,26 @@
 import {mat4, vec2} from 'gl-matrix';
-import {OverscaledTileID} from '../tile/tile_id';
-import {RGBAImage} from '../util/image';
-import {warnOnce} from '../util/util';
-import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
-import pos3dAttributes from '../data/pos3d_attributes';
-import {SegmentVector} from '../data/segment';
-import {Texture} from '../webgl/texture';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
-import {TerrainTileManager} from '../tile/terrain_tile_manager';
-import {EXTENT} from '../data/extent';
-import {earthRadius, type LngLat} from '../geo/lng_lat';
-import {Mesh} from './mesh';
-import {isInBoundsForZoomLngLat} from '../util/world_bounds';
-import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision';
-import {coveringTiles} from '../geo/projection/covering_tiles';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {RGBAImage} from '../util/image.ts';
+import {warnOnce} from '../util/util.ts';
+import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g.ts';
+import pos3dAttributes from '../data/pos3d_attributes.ts';
+import {SegmentVector} from '../data/segment.ts';
+import {Texture} from '../webgl/texture.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {TerrainTileManager} from '../tile/terrain_tile_manager.ts';
+import {EXTENT} from '../data/extent.ts';
+import {earthRadius, type LngLat} from '../geo/lng_lat.ts';
+import {Mesh} from './mesh.ts';
+import {isInBoundsForZoomLngLat} from '../util/world_bounds.ts';
+import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision.ts';
+import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import type Point from '@mapbox/point-geometry';
-import type {Tile} from '../tile/tile';
-import type {Framebuffer} from '../webgl/framebuffer';
-import type {TileManager} from '../tile/tile_manager';
+import type {Tile} from '../tile/tile.ts';
+import type {Framebuffer} from '../webgl/framebuffer.ts';
+import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Painter} from './painter';
-import type {IReadonlyTransform} from '../geo/transform_interface';
+import type {Painter} from './painter.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 
 /**
  * @internal
@@ -136,12 +136,17 @@ export class Terrain {
      * matrices to transform from vector-tile coords to raster-dem-tile coords.
      */
     _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
-
-    constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification) {
+    /**
+     * Controls how terrain skirt length is calculated.
+     * @see {@link MapOptions.terrainSkirtLength}
+     */
+    _terrainSkirtLength: 'none' | 'auto';
+    constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification, terrainSkirtLength: 'none' | 'auto' = 'auto') {
         this.painter = painter;
         this.tileManager = new TerrainTileManager(tileManager);
         this.options = options;
         this.exaggeration = typeof options.exaggeration === 'number' ? options.exaggeration : 1.0;
+        this._terrainSkirtLength = terrainSkirtLength;
         this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = {};
@@ -149,7 +154,7 @@ export class Terrain {
         this._coordsTextureSize = 1024;
     }
 
-    destroy() {
+    destroy(): void {
         if (this._fbo) {
             this._fbo.destroy();
             this._fbo = null;
@@ -199,7 +204,7 @@ export class Terrain {
         const dem = terrain.tile?.dem;
         if (!dem) return 0;
 
-        const pos = vec2.transformMat4([] as any, [normalized.x / extent * EXTENT, normalized.y / extent * EXTENT], terrain.u_terrain_matrix);
+        const pos = vec2.transformMat4([], [normalized.x / extent * EXTENT, normalized.y / extent * EXTENT], terrain.u_terrain_matrix);
         const coord = [pos[0] * dem.dim, pos[1] * dem.dim];
 
         // bilinear interpolation
@@ -221,7 +226,7 @@ export class Terrain {
      * @param zoom - the zoom, use {@link getElevationForLngLat} if you don't want a specific zoom level, but more accurate results.
      * @returns the elevation
      */
-    getElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+    getElevationForLngLatZoom(lnglat: LngLat, zoom: number): number {
         if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
         const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
@@ -233,7 +238,7 @@ export class Terrain {
      * @param lnglat - the location
      * @returns the elevation
      */
-    getElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform) {
+    getElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): number {
         const terrainCoveringTiles = coveringTiles(transform, {maxzoom: this.tileManager.maxzoom, minzoom: this.tileManager.minzoom, tileSize: 512, terrain: this});
         let zoom = 0;
         for (const tile of terrainCoveringTiles) {
@@ -271,7 +276,7 @@ export class Terrain {
             this._emptyDemUnpack = [0, 0, 0, 0];
             this._emptyDemTexture = new Texture(context, new RGBAImage({width: 1, height: 1}), context.gl.RGBA, {premultiply: false});
             this._emptyDemTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
-            this._emptyDemMatrix = mat4.identity([] as any);
+            this._emptyDemMatrix = mat4.identity([]);
         }
         // find covering dem tile and prepare demTexture
         const sourceTile = this.tileManager.getSourceTile(tileID, true);
@@ -294,7 +299,7 @@ export class Terrain {
             }
             const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
             const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
-            const demMatrix = mat4.fromScaling(new Float64Array(16) as any, [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
+            const demMatrix = mat4.fromScaling(new Float64Array(16), [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
             mat4.translate(demMatrix, demMatrix, [dx * EXTENT, dy * EXTENT, 0]);
             this._demMatrixCache[matrixKey] = {matrix: demMatrix, coord: tileID};
         }
@@ -452,39 +457,8 @@ export class Terrain {
             indexArray.emplaceBack(x + y, meshSize + x + y + 1, meshSize + x + y + 2);
             indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
         }
-        // add an extra frame around the mesh to avoid stitching on tile boundaries with different zoomlevels
-        // top-bottom frame + pole vertices, if needed
-        const offsetTop = vertexArray.length;
-        const offsetTopEdge = 0;
-        const offsetBottom = offsetTop + (meshSize + 1);
-        const offsetBottomEdge = (meshSize + 1) * meshSize;
-        const northY = northPole ? NORTH_POLE_Y : 0;
-        const northZ = northPole ? 0 : 1;
-        const southY = southPole ? SOUTH_POLE_Y : EXTENT;
-        const southZ = southPole ? 0 : 1;
-        for (let x = 0; x <= meshSize; x++) {
-            vertexArray.emplaceBack(x * delta, northY, northZ);
-        }
-        for (let x = 0; x <= meshSize; x++) {
-            vertexArray.emplaceBack(x * delta, southY, southZ);
-        }
-        for (let x = 0; x < meshSize; x++) {
-            indexArray.emplaceBack(offsetBottomEdge + x, offsetBottom + x, offsetBottom + x + 1);
-            indexArray.emplaceBack(offsetBottomEdge + x, offsetBottom + x + 1, offsetBottomEdge + x + 1);
-            indexArray.emplaceBack(offsetTopEdge + x, offsetTop + x + 1, offsetTop + x);
-            indexArray.emplaceBack(offsetTopEdge + x, offsetTopEdge + x + 1, offsetTop + x + 1);
-        }
-        // left-right frame
-        const offsetLeft = vertexArray.length;
-        const offsetRight = offsetLeft + (meshSize + 1) * 2;
-        for (const x of [0, 1]) for (let y = 0; y <= meshSize; y++) for (const z of [0, 1]) {
-            vertexArray.emplaceBack(x * EXTENT, y * delta, z);
-        }
-        for (let y = 0; y < meshSize * 2; y += 2) {
-            indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 1, offsetLeft + y + 3);
-            indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 3, offsetLeft + y + 2);
-            indexArray.emplaceBack(offsetRight + y, offsetRight + y + 3, offsetRight + y + 1);
-            indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
+        if (this._terrainSkirtLength !== 'none') {
+            this._buildSkirts(vertexArray, indexArray, meshSize, delta, northPole, southPole);
         }
 
         const mesh = new Mesh(
@@ -497,17 +471,17 @@ export class Terrain {
     }
 
     /**
-     * Calculates a height of the frame around the terrain-mesh to avoid stitching between
-     * tile boundaries in different zoomlevels.
+     * Calculates the height of the tile skirts for the "auto" strategy.
+     * @see {@link MapOptions.terrainSkirtLength}
      * @param zoom - current zoomlevel
      * @returns the elevation delta in meters
      */
-    getMeshFrameDelta(zoom: number): number {
+    getSkirtLength(zoom: number): number {
         // divide by 5 is evaluated by trial & error to get a frame in the right height
         return 2 * Math.PI * earthRadius / Math.pow(2, Math.max(zoom, 0)) / 5;
     }
 
-    getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+    getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number): number {
         if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getMinMaxElevation(tileID).minElevation ?? 0;
@@ -543,5 +517,43 @@ export class Terrain {
             mercatorX,
             mercatorY
         };
+    }
+
+    /** Add an extra frame around the mesh to avoid hairline gaps (stitching) on tile boundaries with different zoomlevels.
+     * @see {@link MapOptions.terrainSkirtLength}
+    */
+    _buildSkirts(vertexArray: Pos3dArray, indexArray: TriangleIndexArray, meshSize: number, delta: number, northPole: boolean, southPole: boolean): void {
+        const offsetTop = vertexArray.length;
+        const offsetTopEdge = 0;
+        const offsetBottom = offsetTop + (meshSize + 1);
+        const offsetBottomEdge = (meshSize + 1) * meshSize;
+        const northY = northPole ? NORTH_POLE_Y : 0;
+        const northZ = northPole ? 0 : 1;
+        const southY = southPole ? SOUTH_POLE_Y : EXTENT;
+        const southZ = southPole ? 0 : 1;
+        for (let x = 0; x <= meshSize; x++) {
+            vertexArray.emplaceBack(x * delta, northY, northZ);
+        }
+        for (let x = 0; x <= meshSize; x++) {
+            vertexArray.emplaceBack(x * delta, southY, southZ);
+        }
+        for (let x = 0; x < meshSize; x++) {
+            indexArray.emplaceBack(offsetBottomEdge + x, offsetBottom + x, offsetBottom + x + 1);
+            indexArray.emplaceBack(offsetBottomEdge + x, offsetBottom + x + 1, offsetBottomEdge + x + 1);
+            indexArray.emplaceBack(offsetTopEdge + x, offsetTop + x + 1, offsetTop + x);
+            indexArray.emplaceBack(offsetTopEdge + x, offsetTopEdge + x + 1, offsetTop + x + 1);
+        }
+        // left-right frame
+        const offsetLeft = vertexArray.length;
+        const offsetRight = offsetLeft + (meshSize + 1) * 2;
+        for (const x of [0, 1]) for (let y = 0; y <= meshSize; y++) for (const z of [0, 1]) {
+            vertexArray.emplaceBack(x * EXTENT, y * delta, z);
+        }
+        for (let y = 0; y < meshSize * 2; y += 2) {
+            indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 1, offsetLeft + y + 3);
+            indexArray.emplaceBack(offsetLeft + y, offsetLeft + y + 3, offsetLeft + y + 2);
+            indexArray.emplaceBack(offsetRight + y, offsetRight + y + 3, offsetRight + y + 1);
+            indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
+        }
     }
 }

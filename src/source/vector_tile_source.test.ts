@@ -1,19 +1,19 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
-import {type Source} from './source';
-import {VectorTileSource} from './vector_tile_source';
-import {type Tile} from '../tile/tile';
-import {AJAXError} from '../util/ajax';
-import {OverscaledTileID} from '../tile/tile_id';
-import {Evented} from '../util/evented';
-import {RequestManager} from '../util/request_manager';
+import {type Source} from './source.ts';
+import {VectorTileSource} from './vector_tile_source.ts';
+import {type Tile} from '../tile/tile.ts';
+import {AJAXError} from '../util/ajax.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {Evented} from '../util/evented.ts';
+import {RequestManager} from '../util/request_manager.ts';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
-import {getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util';
-import {type Map} from '../ui/map';
-import {type WorkerTileParameters} from './worker_source';
-import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import {type ActorMessage, MessageType} from '../util/actor_messages';
-import {type MapSourceDataEvent} from '../ui/events';
+import {getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
+import {type Map} from '../ui/map.ts';
+import {type WorkerTileParameters} from './worker_source.ts';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
+import {type ActorMessage, MessageType} from '../util/actor_messages.ts';
+import {type MapSourceDataEvent} from '../ui/events.ts';
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);

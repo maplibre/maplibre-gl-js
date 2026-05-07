@@ -1,11 +1,11 @@
-import type {CanonicalTileID} from '../../tile/tile_id';
-import type {PreparedShader} from '../../shaders/shaders';
-import type {Context} from '../../webgl/context';
-import type {Mesh} from '../../render/mesh';
-import type {Program} from '../../webgl/program';
-import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import type {CanonicalTileID} from '../../tile/tile_id.ts';
+import type {PreparedShader} from '../../shaders/shaders.ts';
+import type {Context} from '../../webgl/context.ts';
+import type {Mesh} from '../../render/mesh.ts';
+import type {Program} from '../../webgl/program.ts';
+import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {EvaluationParameters} from '../../style/evaluation_parameters';
+import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 
 /**
  * Custom projections are handled both by a class which implements this `Projection` interface,
@@ -145,5 +145,5 @@ export interface Projection {
      * @internal
      * Sets the error query latidude in degrees
      */
-    setErrorQueryLatitudeDegrees(value: number);
+    setErrorQueryLatitudeDegrees(value: number): void;
 }
