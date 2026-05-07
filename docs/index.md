@@ -14,8 +14,6 @@ It is part of the MapLibre ecosystem, with a counterpart for Android, iOS and ot
 <script type="module">
     import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0-8/dist/maplibre-gl.mjs';
 
-    maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@^6.0.0-8/dist/maplibre-gl-worker.mjs');
-
     const map = new maplibregl.Map({
         container: 'map', // container id
         style: 'https://demotiles.maplibre.org/globe.json', // style URL
@@ -188,8 +186,6 @@ Pick your setup:
     <script type="module">
         import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0-8/dist/maplibre-gl.mjs';
 
-        maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@^6.0.0-8/dist/maplibre-gl-worker.mjs');
-
         const map = new maplibregl.Map({
             container: 'map',
             style: 'https://demotiles.maplibre.org/style.json',
@@ -197,6 +193,14 @@ Pick your setup:
             zoom: 1
         });
     </script>
+    ```
+
+    The worker is auto-detected from the imported module's URL and laundered through a same-origin Blob URL, so cross-origin CDN loading works out of the box.
+
+    Under a strict CSP that disallows `blob:` in `worker-src`, set the worker URL explicitly to a same-origin location:
+
+    ```js
+    maplibregl.setWorkerUrl('/path/to/maplibre-gl-worker.mjs');
     ```
 
     See the [Display a map](./examples/display-a-map.md) example for a runnable version.
