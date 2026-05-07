@@ -69,4 +69,105 @@ describe('workerFactory', () => {
             expect.any(Error)
         );
     });
+
+    test('returns a deferred proxy for cross-origin URLs and constructs the real worker from a Blob URL after fetch', async () => {
+        const WorkerSpy = vi.fn(function() {
+            return {
+                postMessage: vi.fn(),
+                addEventListener: vi.fn(),
+                removeEventListener: vi.fn(),
+                terminate: vi.fn(),
+            };
+        });
+        (globalThis as any).Worker = WorkerSpy;
+
+        const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+            ok: true,
+            text: () => Promise.resolve('// worker code'),
+        } as any);
+
+        const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:http://localhost/abc');
+        const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+        config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs';
+
+        const proxy = workerFactory();
+
+        expect(WorkerSpy).not.toHaveBeenCalled();
+        expect(typeof (proxy as any).postMessage).toBe('function');
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(fetchSpy).toHaveBeenCalledWith('https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs');
+        expect(createObjectURLSpy).toHaveBeenCalled();
+        expect(WorkerSpy).toHaveBeenCalledTimes(1);
+        expect(WorkerSpy.mock.calls[0]).toEqual(['blob:http://localhost/abc', {type: 'module'}]);
+        expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:http://localhost/abc');
+    });
+
+    test('deferred proxy queues postMessage and addEventListener until the real worker is ready', async () => {
+        const realWorker = {
+            postMessage: vi.fn(),
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+            terminate: vi.fn(),
+        };
+        const WorkerSpy = vi.fn(function() { return realWorker; });
+        (globalThis as any).Worker = WorkerSpy;
+
+        vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+            ok: true,
+            text: () => Promise.resolve('// worker code'),
+        } as any);
+        vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:http://localhost/abc');
+        vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+        config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs';
+
+        const proxy = workerFactory();
+
+        const listener = vi.fn();
+        proxy.addEventListener('message', listener, false);
+        proxy.postMessage({type: 'test'}, {transfer: []});
+
+        expect(realWorker.addEventListener).not.toHaveBeenCalled();
+        expect(realWorker.postMessage).not.toHaveBeenCalled();
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(realWorker.addEventListener).toHaveBeenCalledWith('message', listener, false);
+        expect(realWorker.postMessage).toHaveBeenCalledWith({type: 'test'}, {transfer: []});
+    });
+
+    test('terminate before the real worker exists prevents replay', async () => {
+        const realWorker = {
+            postMessage: vi.fn(),
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+            terminate: vi.fn(),
+        };
+        const WorkerSpy = vi.fn(function() { return realWorker; });
+        (globalThis as any).Worker = WorkerSpy;
+
+        vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+            ok: true,
+            text: () => Promise.resolve('// worker code'),
+        } as any);
+        vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:http://localhost/abc');
+        vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+        config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs';
+
+        const proxy = workerFactory();
+        proxy.postMessage({type: 'test'});
+        proxy.terminate?.();
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(realWorker.postMessage).not.toHaveBeenCalled();
+        expect(realWorker.terminate).toHaveBeenCalled();
+    });
 });

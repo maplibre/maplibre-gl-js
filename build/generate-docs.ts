@@ -95,7 +95,7 @@ function generateMarkdownForExample(title: string, description: string, file: st
 
 ${description}
 
-<iframe src="../${file}" width="100%" style="border:none; height:400px"></iframe>
+<iframe src="${file}" width="100%" style="border:none; height:400px"></iframe>
 
 ${codeBlock}
 `;
