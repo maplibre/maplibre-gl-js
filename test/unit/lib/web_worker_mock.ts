@@ -1,6 +1,9 @@
 import MapLibreWorker from '../../../src/source/worker.ts';
+import {config} from '../../../src/util/config.ts';
 import type {WorkerGlobalScopeInterface} from '../../../src/util/web_worker.ts';
 import type {ActorTarget} from '../../../src/util/actor.ts';
+
+config.WORKER_URL = '';
 
 export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
     addListeners: EventListener[];

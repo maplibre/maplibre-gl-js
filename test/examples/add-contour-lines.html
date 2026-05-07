@@ -19,8 +19,6 @@
 <script type="module">
     import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
 
-    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
-
     const demSource = new mlcontour.DemSource({
         url: 'https://demotiles.maplibre.org/terrain-tiles/{z}/{x}/{y}.png',
         encoding: 'mapbox',
