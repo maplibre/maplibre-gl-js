@@ -14,12 +14,10 @@ export class WorkerPool {
     active: {
         [_ in number | string]: boolean;
     };
-    workers: ActorTarget[];
-    private workersPromise: Promise<ActorTarget[]> | null;
+    workersPromise: Promise<ActorTarget[]> | null;
 
     constructor() {
         this.active = {};
-        this.workers = null;
         this.workersPromise = null;
     }
 
@@ -30,10 +28,7 @@ export class WorkerPool {
             while (promises.length < WorkerPool.workerCount) {
                 promises.push(workerFactory());
             }
-            this.workersPromise = Promise.all(promises).then(workers => {
-                this.workers = workers;
-                return workers;
-            });
+            this.workersPromise = Promise.all(promises);
         }
         return (await this.workersPromise).slice();
     }
@@ -43,7 +38,6 @@ export class WorkerPool {
         if (this.numActive() === 0 && this.workersPromise) {
             const promise = this.workersPromise;
             this.workersPromise = null;
-            this.workers = null;
             promise.then(workers => {
                 for (const w of workers) {
                     w.terminate();

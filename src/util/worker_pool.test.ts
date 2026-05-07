@@ -7,7 +7,7 @@ describe('WorkerPool', () => {
 
         const pool = new WorkerPool();
 
-        expect(pool.workers).toBeFalsy();
+        expect(pool.workersPromise).toBeFalsy();
         const workers1 = await pool.acquire('map-1');
         const workers2 = await pool.acquire('map-2');
         expect(workers1).toHaveLength(4);
@@ -33,11 +33,11 @@ describe('WorkerPool', () => {
         await Promise.resolve();
 
         expect(workersTerminated).toBe(0);
-        expect(pool.workers.length > 0).toBeTruthy();
+        expect(pool.workersPromise).toBeTruthy();
 
         pool.release('map-1');
         await Promise.resolve();
         expect(workersTerminated).toBe(4);
-        expect(pool.workers).toBeFalsy();
+        expect(pool.workersPromise).toBeFalsy();
     });
 });
