@@ -32,15 +32,24 @@ If you load maplibre-gl via `<script src>`, switch to a module script:
 </script>
 ```
 
-## `setWorkerUrl()` is now required
+## `setWorkerUrl()` is bundler-only
 
-Every consumer needs a one-time [`setWorkerUrl()`](../API/functions/setWorkerUrl.md) call to point MapLibre at the worker file. The exact form depends on your bundler. See [Installation](../index.md#installation) for per-bundler snippets.
+For direct browser ESM (loading from a CDN like unpkg via a `<script type="module">` tag), the worker URL is auto-detected from `import.meta.url` and laundered through a same-origin Blob URL when needed, so no [`setWorkerUrl()`](../API/functions/setWorkerUrl.md) call is required.
+
+For bundlers (Vite, webpack, esbuild, rspack, Rollup), `import.meta.url` doesn't reliably resolve to the worker file inside the bundler's module graph, so each consumer still needs a one-time `setWorkerUrl()` call. See [Installation](../index.md#installation) for per-bundler snippets.
 
 ## CSP directives
 
-The dedicated CSP bundle from v5 is no longer needed. The default ESM build loads the worker from a real URL (set via `setWorkerUrl()`), so the `blob:` worker source is no longer required. If your CSP previously included `worker-src blob:` or `child-src blob:` only because of MapLibre, you can drop those.
+The dedicated CSP bundle from v5 is no longer needed.
 
-The required directives now reduce to:
+If you load MapLibre from a CDN cross-origin to your page (e.g. unpkg), the worker is constructed from a same-origin Blob URL, so your CSP needs to allow `blob:` in `worker-src`:
+
+```
+worker-src 'self' blob: ;
+img-src data: blob: 'self' ;
+```
+
+If you self-host the worker file (any bundler setup), the worker URL is same-origin and `blob:` is not required:
 
 ```
 worker-src 'self' ;
