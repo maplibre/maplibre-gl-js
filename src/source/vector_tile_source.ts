@@ -220,9 +220,12 @@ export class VectorTileSource extends Evented implements Source {
             etag: tile.etag
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
+        if (!this.dispatcher.actors.length) {
+            await this.dispatcher.actorsPromise;
+        }
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
         if (!tile.actor || tile.state === 'expired') {
-            tile.actor = this.dispatcher.getActor();
+            tile.actor = this.dispatcher.getReadyActor();
             messageType = MessageType.loadTile;
         } else if (tile.state === 'loading') {
             return new Promise<void>((resolve, reject) => {
@@ -231,7 +234,7 @@ export class VectorTileSource extends Evented implements Source {
         }
         tile.abortController = new AbortController();
         try {
-            const data = await (await tile.actor).sendAsync({type: messageType, data: params}, tile.abortController);
+            const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
             delete tile.abortController;
 
             if (tile.aborted) {
@@ -300,7 +303,7 @@ export class VectorTileSource extends Evented implements Source {
             delete tile.abortController;
         }
         if (tile.actor) {
-            await (await tile.actor).sendAsync({
+            await tile.actor.sendAsync({
                 type: MessageType.abortTile,
                 data: {uid: tile.uid, type: this.type, source: this.id}
             });
@@ -310,7 +313,7 @@ export class VectorTileSource extends Evented implements Source {
     async unloadTile(tile: Tile): Promise<void> {
         tile.unloadVectorData();
         if (tile.actor) {
-            await (await tile.actor).sendAsync({
+            await tile.actor.sendAsync({
                 type: MessageType.removeTile,
                 data: {
                     uid: tile.uid,

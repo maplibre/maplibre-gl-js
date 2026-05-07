@@ -575,7 +575,7 @@ export class GeoJSONSource extends Evented implements Source {
 
     async loadTile(tile: Tile): Promise<void> {
         const message = !tile.actor ?  MessageType.loadTile :  MessageType.reloadTile;
-        tile.actor = this.actorPromise;
+        tile.actor = await this.actorPromise;
         const params: WorkerTileParameters = {
             type: this.type,
             uid: tile.uid,

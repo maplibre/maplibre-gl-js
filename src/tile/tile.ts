@@ -95,7 +95,7 @@ export class Tile {
     redoWhenDone: boolean;
     showCollisionBoxes: boolean;
     placementSource: any;
-    actor: Promise<Actor>;
+    actor: Actor;
     vtLayers: {[_: string]: VectorTileLayerLike};
 
     neighboringTiles: Record<string, {backfilled: boolean}>;

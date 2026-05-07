@@ -87,10 +87,13 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 if (tile.actor && tile.state !== 'expired' && tile.state !== 'reloading') {
                     return;
                 }
-                if (!tile.actor || tile.state === 'expired') {
-                    tile.actor = this.dispatcher.getActor();
+                if (!this.dispatcher.actors.length) {
+                    await this.dispatcher.actorsPromise;
                 }
-                tile.dem = await (await tile.actor).sendAsync({type: MessageType.loadDEMTile, data: params});
+                if (!tile.actor || tile.state === 'expired') {
+                    tile.actor = this.dispatcher.getReadyActor();
+                }
+                tile.dem = await tile.actor.sendAsync({type: MessageType.loadDEMTile, data: params});
                 tile.needsHillshadePrepare = true;
                 tile.needsTerrainPrepare = true;
                 tile.state = 'loaded';
@@ -160,7 +163,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
         tile.state = 'unloaded';
         if (tile.actor) {
-            await (await tile.actor).sendAsync({type: MessageType.removeDEMTile, data: {type: this.type, uid: tile.uid, source: this.id}});
+            await tile.actor.sendAsync({type: MessageType.removeDEMTile, data: {type: this.type, uid: tile.uid, source: this.id}});
         }
     }
 }

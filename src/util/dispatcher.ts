@@ -56,6 +56,11 @@ export class Dispatcher {
         return actors[this.currentActor];
     }
 
+    getReadyActor(): Actor {
+        this.currentActor = (this.currentActor + 1) % this.actors.length;
+        return this.actors[this.currentActor];
+    }
+
     remove(mapRemoved: boolean = true): void {
         this.removed = true;
         for (const actor of this.actors) {
