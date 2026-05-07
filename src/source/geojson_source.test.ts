@@ -16,12 +16,12 @@ import type {IActor} from '../util/actor.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff.ts';
 
-const wrapDispatcher = (dispatcher: IActor) => {
+const wrapDispatcher = (actor: IActor) => {
     return {
         getActor() {
-            return dispatcher;
+            return Promise.resolve(actor);
         }
-    } as Dispatcher;
+    } as unknown as Dispatcher;
 };
 
 const mockDispatcher = wrapDispatcher({
@@ -143,7 +143,8 @@ describe('GeoJSONSource.setData', () => {
             } as any as RequestManager
         } as any;
         const spy = vi.fn();
-        source.actor.sendAsync = (message: ActorMessage<MessageType>) => {
+        const actor = await source.actor;
+        actor.sendAsync = (message: ActorMessage<MessageType>) => {
             return new Promise((resolve, reject) => {
                 if (message.type === MessageType.loadData) {
                     setTimeout(() => resolve({} as any), 0);
@@ -167,7 +168,8 @@ describe('GeoJSONSource.setData', () => {
             } as any as RequestManager
         } as any;
         const spy = vi.fn();
-        source.actor.sendAsync = (message: ActorMessage<MessageType>) => {
+        const actor = await source.actor;
+        actor.sendAsync = (message: ActorMessage<MessageType>) => {
             return new Promise((resolve) => {
                 if (message.type === MessageType.loadData) {
                     spy(message);
@@ -224,7 +226,7 @@ describe('GeoJSONSource.setData', () => {
 });
 
 describe('GeoJSONSource.onRemove', () => {
-    test('broadcasts "removeSource" event', () => {
+    test('broadcasts "removeSource" event', async () => {
         const spy = vi.fn();
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message: ActorMessage<MessageType>) {
@@ -233,6 +235,7 @@ describe('GeoJSONSource.onRemove', () => {
             }
         }), undefined);
         source.onRemove();
+        await sleep(0);
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.removeSource);
         expect(spy.mock.calls[0][0].data).toEqual({type: 'geojson', source: 'id'});

@@ -222,7 +222,7 @@ export class VectorTileSource extends Evented implements Source {
         params.request.collectResourceTiming = this._collectResourceTiming;
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
         if (!tile.actor || tile.state === 'expired') {
-            tile.actor = this.dispatcher.getActor();
+            tile.actor = await this.dispatcher.getActor();
             messageType = MessageType.loadTile;
         } else if (tile.state === 'loading') {
             return new Promise<void>((resolve, reject) => {

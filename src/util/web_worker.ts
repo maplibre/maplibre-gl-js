@@ -1,5 +1,4 @@
 import {type AddProtocolAction, config} from './config.ts';
-import {type ActorTarget} from './actor.ts';
 import type {default as MaplibreWorker} from '../source/worker.ts';
 import type {WorkerSourceConstructor} from '../source/worker_source.ts';
 import type {GetResourceResponse, RequestParameters} from './ajax.ts';
@@ -45,70 +44,7 @@ async function fetchAsBlobUrl(url: string): Promise<string> {
     return URL.createObjectURL(blob);
 }
 
-class DeferredWorker implements ActorTarget {
-    private worker: Worker | null = null;
-    private terminated = false;
-    private pendingMessages: Array<{message: any; options?: any}> = [];
-    private pendingListeners: Array<{type: string; listener: any; options?: any}> = [];
-
-    constructor(workerPromise: Promise<Worker>) {
-        workerPromise.then(worker => {
-            if (this.terminated) {
-                worker.terminate();
-                return;
-            }
-            this.worker = worker;
-            for (const {type, listener, options} of this.pendingListeners) {
-                worker.addEventListener(type, listener, options);
-            }
-            this.pendingListeners = [];
-            for (const {message, options} of this.pendingMessages) {
-                worker.postMessage(message, options);
-            }
-            this.pendingMessages = [];
-        }).catch(err => {
-            console.error('Failed to load worker script', err);
-        });
-    }
-
-    postMessage(message: any, options?: any): void {
-        if (this.worker) {
-            this.worker.postMessage(message, options);
-        } else if (!this.terminated) {
-            this.pendingMessages.push({message, options});
-        }
-    }
-
-    addEventListener(type: string, listener: any, options?: any): void {
-        if (this.worker) {
-            this.worker.addEventListener(type, listener, options);
-        } else {
-            this.pendingListeners.push({type, listener, options});
-        }
-    }
-
-    removeEventListener(type: string, listener: any, options?: any): void {
-        if (this.worker) {
-            this.worker.removeEventListener(type, listener, options);
-        } else {
-            this.pendingListeners = this.pendingListeners.filter(
-                l => !(l.type === type && l.listener === listener)
-            );
-        }
-    }
-
-    terminate(): void {
-        this.terminated = true;
-        this.pendingMessages = [];
-        this.pendingListeners = [];
-        if (this.worker) {
-            this.worker.terminate();
-            this.worker = null;
-        }
-    }
-}
-
-export function workerFactory(): ActorTarget {
+export async function workerFactory(): Promise<Worker> {
     const url = config.WORKER_URL;
     const asModule = url?.endsWith('.mjs') ?? false;
 
@@ -116,11 +52,10 @@ export function workerFactory(): ActorTarget {
         return createWorker(url, asModule);
     }
 
-    const workerPromise = fetchAsBlobUrl(url).then(blobUrl => {
-        const worker = createWorker(blobUrl, asModule);
+    const blobUrl = await fetchAsBlobUrl(url);
+    try {
+        return createWorker(blobUrl, asModule);
+    } finally {
         URL.revokeObjectURL(blobUrl);
-        return worker;
-    });
-
-    return new DeferredWorker(workerPromise);
+    }
 }
