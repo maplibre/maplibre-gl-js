@@ -31938,6 +31938,7 @@ var Tile = class {
 		this.rttFingerprint = {};
 		this.expiredRequestCount = 0;
 		this.state = "loading";
+		this.featureStateRevision = -1;
 	}
 	isRenderable(symbolLayer) {
 		return this.hasData() && (!this.fadeEndTime || this.fadeOpacity > 0) && (symbolLayer || !this.holdingForSymbolFade());
@@ -32171,8 +32172,10 @@ var Tile = class {
 		if (this.expirationTime) if (this.expiredRequestCount) return 1e3 * (1 << Math.min(this.expiredRequestCount - 1, 31));
 		else return Math.min(this.expirationTime - (/* @__PURE__ */ new Date()).getTime(), Math.pow(2, 31) - 1);
 	}
-	setFeatureState(states, painter) {
+	setFeatureState(states, painter, revision) {
 		if (!this.latestFeatureIndex?.rawTileData || Object.keys(states).length === 0) return;
+		if (this.featureStateRevision === revision) return;
+		this.featureStateRevision = revision;
 		const vtLayers = this.latestFeatureIndex.loadVTLayers();
 		for (const id in this.buckets) {
 			if (!painter.style.hasLayer(id)) continue;
@@ -32436,7 +32439,7 @@ var SourceFeatureState = class {
 	initializeTileState(tile, painter) {
 		const layerStates = {};
 		for (const sourceLayer in this.state) layerStates[sourceLayer] = featureStatesMapToArray(this.state[sourceLayer]);
-		tile.setFeatureState(layerStates, painter);
+		tile.setFeatureState(layerStates, painter, this.revision);
 	}
 	coalesceChanges(inViewTiles, painter) {
 		const featuresChangedMap = {};
@@ -32468,7 +32471,7 @@ var SourceFeatureState = class {
 		this.revision++;
 		const featuresChanged = {};
 		for (const sourceLayer in featuresChangedMap) featuresChanged[sourceLayer] = featureStatesMapToArray(featuresChangedMap[sourceLayer]);
-		inViewTiles.setFeatureState(featuresChanged, painter);
+		inViewTiles.setFeatureState(featuresChanged, painter, this.revision);
 	}
 };
 //#endregion
@@ -32907,8 +32910,8 @@ var InViewTiles = class {
 		}
 		this._tiles = tiles;
 	}
-	setFeatureState(featuresChanged, painter) {
-		for (const id in this._tiles) this._tiles[id].setFeatureState(featuresChanged, painter);
+	setFeatureState(featuresChanged, painter, revision) {
+		for (const id in this._tiles) this._tiles[id].setFeatureState(featuresChanged, painter, revision);
 	}
 	getAllTiles() {
 		return Object.values(this._tiles);
@@ -33124,6 +33127,7 @@ var TileManager = class TileManager extends Evented {
 		this._setTileReloadTimer(id, tile);
 		if (result?.unmodified) return;
 		if (this.getSource().type === "raster-dem" && tile.dem) backfillDEM(tile, this._inViewTiles);
+		tile.featureStateRevision = -1;
 		this._state.initializeTileState(tile, this.map ? this.map.painter : null);
 		if (!tile.aborted) this._source.fire(new Event("data", {
 			dataType: "source",
@@ -60388,7 +60392,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 71542f1";
+const version = "main 619e913";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
