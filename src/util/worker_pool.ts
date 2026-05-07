@@ -41,14 +41,19 @@ export class WorkerPool {
     release(mapId: number | string): void {
         delete this.active[mapId];
         if (this.numActive() === 0 && this.workersPromise) {
-            const promise = this.workersPromise;
-            this.workersPromise = null;
-            this.workers = null;
-            promise.then(workers => {
-                for (const w of workers) {
+            if (this.workers) {
+                for (const w of this.workers) {
                     w.terminate();
                 }
-            });
+            } else {
+                this.workersPromise.then(workers => {
+                    for (const w of workers) {
+                        w.terminate();
+                    }
+                });
+            }
+            this.workersPromise = null;
+            this.workers = null;
         }
     }
 
