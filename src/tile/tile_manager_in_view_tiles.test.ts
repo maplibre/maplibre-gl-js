@@ -118,7 +118,7 @@ describe('InViewTiles', () => {
         inViewTiles.setTile(tile1.tileID.key, tile1);
         inViewTiles.setTile(tile2.tileID.key, tile2);
 
-        const states = {road: [{id: 1, state: {hover: true}}]};
+        const states = {road: [{id: '1', state: {hover: true}}]};
         const painter = {style: {}} as unknown as Painter;
         const revision = 3;
 

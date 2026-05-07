@@ -307,7 +307,7 @@ describe('setFeatureState', () => {
         );
 
         const loadVTLayersSpy = vi.spyOn(tile.latestFeatureIndex, 'loadVTLayers');
-        const states = {road: [{id: 1, state: {hover: true}}]};
+        const states = {road: [{id: '1', state: {hover: true}}]};
         const painter = createPainter({
             hasLayer: () => true,
             getLayer: () => ({queryRadius: () => 0}),
