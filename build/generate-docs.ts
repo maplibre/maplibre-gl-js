@@ -251,7 +251,7 @@ function updateMapLibreVersionForUNPKG() {
     let indexContent = fs.readFileSync(indexPath, 'utf-8');
 
     // Replace the version number
-    indexContent = indexContent.replace(/unpkg\.com\/maplibre-gl@\^(\d+\.\d+\.\d+)/g, `unpkg.com/maplibre-gl@^${packageJson.version}`);
+    indexContent = indexContent.replace(/unpkg\.com\/maplibre-gl@\^[^/'"]+/g, `unpkg.com/maplibre-gl@^${packageJson.version}`);
 
     // Save index.md
     fs.writeFileSync(indexPath, indexContent);
