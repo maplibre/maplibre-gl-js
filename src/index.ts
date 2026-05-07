@@ -19,7 +19,7 @@ import {Evented, type ErrorEvent, Event, type Listener} from './util/evented.ts'
 import {type AddProtocolAction, config} from './util/config.ts';
 import {defaultWorkerUrl} from './util/default_worker_url.ts';
 
-config.WORKER_URL = defaultWorkerUrl;
+config.WORKER_URL = defaultWorkerUrl();
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread.ts';
 import {now, setNow, restoreNow, isTimeFrozen} from './util/time_control.ts';
 import {WorkerPool} from './util/worker_pool.ts';

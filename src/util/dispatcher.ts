@@ -1,15 +1,10 @@
-import {Actor, type MessageHandler} from './actor.ts';
+import {Actor, type ActorTarget, type MessageHandler} from './actor.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 
 import type {WorkerPool} from './worker_pool.ts';
 import type {RequestResponseMessageMap} from './actor_messages.ts';
 import {MessageType} from './actor_messages.ts';
-
-type PendingHandler<T extends MessageType = MessageType> = {
-    type: T;
-    handler: MessageHandler<T> | null;
-};
 
 /**
  * Responsible for sending messages from a {@link Source} to an associated worker source (usually with the same name).
@@ -20,7 +15,6 @@ export class Dispatcher {
     actorsPromise: Promise<Actor[]>;
     currentActor: number;
     id: string | number;
-    private pendingHandlers: PendingHandler[];
     private removed: boolean;
 
     constructor(workerPool: WorkerPool, mapId: string | number) {
@@ -28,26 +22,20 @@ export class Dispatcher {
         this.actors = [];
         this.currentActor = 0;
         this.id = mapId;
-        this.pendingHandlers = [];
         this.removed = false;
-        this.actorsPromise = workerPool.acquire(mapId).then(workers => {
-            if (this.removed) return [];
-            this.actors = workers.map((worker, i) => {
-                const actor = new Actor(worker, mapId);
-                actor.name = `Worker ${i}`;
-                for (const {type, handler} of this.pendingHandlers) {
-                    if (handler) {
-                        actor.registerMessageHandler(type, handler);
-                    } else {
-                        actor.unregisterMessageHandler(type);
-                    }
-                }
-                return actor;
-            });
-            this.pendingHandlers = [];
-            if (!this.actors.length) throw new Error('No actors found');
-            return this.actors;
+        this.actorsPromise = this.initActors(mapId);
+    }
+
+    private async initActors(mapId: string | number): Promise<Actor[]> {
+        const workers = await this.workerPool.acquire(mapId);
+        if (this.removed) return [];
+        this.actors = workers.map((worker: ActorTarget, i: number) => {
+            const actor = new Actor(worker, mapId);
+            actor.name = `Worker ${i}`;
+            return actor;
         });
+        if (!this.actors.length) throw new Error('No actors found');
+        return this.actors;
     }
 
     /**
@@ -74,27 +62,20 @@ export class Dispatcher {
             actor.remove();
         }
         this.actors = [];
-        this.pendingHandlers = [];
         if (mapRemoved) this.workerPool.release(this.id);
     }
 
-    public registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): void {
-        if (this.actors.length) {
-            for (const actor of this.actors) {
-                actor.registerMessageHandler(type, handler);
-            }
-        } else {
-            this.pendingHandlers.push({type, handler});
+    public async registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): Promise<void> {
+        const actors = await this.actorsPromise;
+        for (const actor of actors) {
+            actor.registerMessageHandler(type, handler);
         }
     }
 
-    public unregisterMessageHandler<T extends MessageType>(type: T): void {
-        if (this.actors.length) {
-            for (const actor of this.actors) {
-                actor.unregisterMessageHandler(type);
-            }
-        } else {
-            this.pendingHandlers.push({type, handler: null});
+    public async unregisterMessageHandler<T extends MessageType>(type: T): Promise<void> {
+        const actors = await this.actorsPromise;
+        for (const actor of actors) {
+            actor.unregisterMessageHandler(type);
         }
     }
 }

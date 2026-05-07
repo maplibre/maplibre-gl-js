@@ -1,4 +1,4 @@
-export const defaultWorkerUrl: string = (() => {
+export function defaultWorkerUrl(): string {
     try {
         const moduleUrl = import.meta.url;
         const workerName = moduleUrl.endsWith('-dev.mjs')
@@ -8,4 +8,4 @@ export const defaultWorkerUrl: string = (() => {
     } catch {
         return '';
     }
-})();
+}
