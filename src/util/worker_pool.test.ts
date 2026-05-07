@@ -30,11 +30,13 @@ describe('WorkerPool', () => {
         }
 
         pool.release('map-2');
+        await Promise.resolve();
 
         expect(workersTerminated).toBe(0);
         expect(pool.workers.length > 0).toBeTruthy();
 
         pool.release('map-1');
+        await Promise.resolve();
         expect(workersTerminated).toBe(4);
         expect(pool.workers).toBeFalsy();
     });
