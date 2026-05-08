@@ -5,20 +5,18 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-- [FIX] Fix Large number of feature state keys leads to zoom lag when loading cached tiles - 6633 ([#7590](https://github.com/maplibre/maplibre-gl-js/pull/7590)) (by [@xavierjs](https://github.com/xavierjs))
-- rolldown v1 bump ([#7599](https://github.com/maplibre/maplibre-gl-js/pull/7599)) (by [@birkskyum](https://github.com/birkskyum))
-- docs: make the guides on the examples-docs overview page more discoverable to help people discover which guides we have ([#7441](https://github.com/maplibre/maplibre-gl-js/pull/7441)) (by [@CommanderStorm](https://github.com/CommanderStorm))
-- Split image compression and markdown generation in docs generation ([#7591](https://github.com/maplibre/maplibre-gl-js/pull/7591)) (by [@HarelM](https://github.com/HarelM))
-- Update readme with render tests' vitest changes ([#7577](https://github.com/maplibre/maplibre-gl-js/pull/7577)) (by [@HarelM](https://github.com/HarelM))
 ## 6.0.0-9
+
 ### ✨ Features and improvements
+
 - Adopt isolatedDeclarations and switch dts emitter from tsgo to oxc ([#7566](https://github.com/maplibre/maplibre-gl-js/pull/7566)) (by [@birkskyum](https://github.com/birkskyum))
 
 ### 🐞 Bug fixes
+
 - Fix feature state bulk remove + feature set per-id set does not remove state of first feature ([#7554](https://github.com/maplibre/maplibre-gl-js/pull/7554)) (by [@xavierjs](https://github.com/xavierjs))
 - Remove error when actor doesn't have a registered message type for better usability of custom messages in workers ([#7589](https://github.com/maplibre/maplibre-gl-js/issues/7589)) (by [@HarelM](https://github.com/HarelM))
 - Auto-load worker module for CDN usage ([#7595](https://github.com/maplibre/maplibre-gl-js/pull/7595)) (by [@birkskyum](https://github.com/birkskyum))
-- Fix Large number of feature state keys leads to zoom lag when loading cached tiles ([#6633](https://github.com/maplibre/maplibre-gl-js/pull/7590)) (by [@xavierjs](https://github.com/xavierjs))
+- Fix Large number of feature state keys leads to zoom lag when loading cached tiles ([#7590](https://github.com/maplibre/maplibre-gl-js/pull/7590)) (by [@xavierjs](https://github.com/xavierjs))
 
 ## 6.0.0-8
 
