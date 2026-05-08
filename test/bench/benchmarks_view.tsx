@@ -6,6 +6,8 @@ import {summaryStatistics, regression, Summary} from './lib/statistics.ts';
 import {ensureError} from '../../src/util/util.ts';
 import type {BenchmarkRowProps} from './components/BenchmarkRow.tsx';
 
+(window as any).GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+
 function updateUI(benchmarks: BenchmarkRowProps[], finished?: boolean) {
     finished = !!finished;
     const root = createRoot(document.getElementById('benchmarks'));

@@ -32,6 +32,7 @@ const replaceValues = {
     'process.env.BENCHMARK_VERSION': JSON.stringify(process.env.BENCHMARK_VERSION || defaultBenchmarkVersion),
     'process.env.MAPLIBRE_STYLES': JSON.stringify(styles),
     'process.env.NODE_ENV': JSON.stringify('production'),
+    'process.env.GITHUB_TOKEN': JSON.stringify(process.env.GITHUB_TOKEN || ''),
 };
 
 const allPlugins = [...plugins(true), replacePlugin(replaceValues, {preventAssignment: true})];
