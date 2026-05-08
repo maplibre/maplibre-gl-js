@@ -18,8 +18,10 @@ import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff.t
 
 const wrapDispatcher = (actor: IActor) => {
     return {
-        actors: [actor],
         actorsPromise: Promise.resolve([actor]),
+        waitForInitComplete() {
+            return Promise.resolve();
+        },
         getActor() {
             return Promise.resolve(actor);
         },

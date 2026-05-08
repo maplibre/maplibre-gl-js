@@ -56,6 +56,12 @@ export class Dispatcher {
         return actors[this.currentActor];
     }
 
+    async waitForInitComplete(): Promise<void> {
+        if (this.actors.length === 0) {
+            await this.actorsPromise;
+        }
+    }
+
     getReadyActor(): Actor {
         this.currentActor = (this.currentActor + 1) % this.actors.length;
         return this.actors[this.currentActor];
