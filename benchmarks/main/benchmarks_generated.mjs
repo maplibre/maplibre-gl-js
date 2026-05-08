@@ -24947,13 +24947,51 @@ var Actor = class {
 };
 //#endregion
 //#region src/util/web_worker.ts
-function workerFactory() {
-	if (config.WORKER_URL?.endsWith(".mjs")) try {
-		return new Worker(config.WORKER_URL, { type: "module" });
+function isCrossOrigin(url) {
+	if (!url) return false;
+	const loc = globalThis.location;
+	if (!loc) return false;
+	try {
+		return new URL(url, loc.href).origin !== loc.origin;
+	} catch {
+		return false;
+	}
+}
+function defaultWorkerUrl() {
+	try {
+		const moduleUrl = import.meta.url;
+		if (!/^https?:/.test(moduleUrl)) return "";
+		const workerName = moduleUrl.endsWith("-dev.mjs") ? "maplibre-gl-worker-dev.mjs" : "maplibre-gl-worker.mjs";
+		return new URL(`./${workerName}`, moduleUrl).href;
+	} catch {
+		return "";
+	}
+}
+function createWorker(url, asModule) {
+	if (asModule) try {
+		return new Worker(url, { type: "module" });
 	} catch (e) {
 		console.warn("Module worker not supported, falling back to classic worker", e);
 	}
-	return new Worker(config.WORKER_URL);
+	return new Worker(url);
+}
+async function fetchAsBlobUrl(url) {
+	const response = await fetch(url);
+	if (!response.ok) throw new Error(`Failed to fetch worker script (${response.status}): ${url}`);
+	const code = await response.text();
+	const blob = new Blob([code], { type: "text/javascript" });
+	return URL.createObjectURL(blob);
+}
+async function workerFactory() {
+	const url = config.WORKER_URL || defaultWorkerUrl();
+	const asModule = url?.endsWith(".mjs") ?? false;
+	if (!isCrossOrigin(url)) return createWorker(url, asModule);
+	const blobUrl = await fetchAsBlobUrl(url);
+	try {
+		return createWorker(blobUrl, asModule);
+	} finally {
+		URL.revokeObjectURL(blobUrl);
+	}
 }
 //#endregion
 //#region src/util/worker_pool.ts
@@ -24964,20 +25002,25 @@ const PRELOAD_POOL_ID = "maplibre_preloaded_worker_pool";
 var WorkerPool = class WorkerPool {
 	constructor() {
 		this.active = {};
+		this.workersPromise = null;
 	}
-	acquire(mapId) {
-		if (!this.workers) {
-			this.workers = [];
-			while (this.workers.length < WorkerPool.workerCount) this.workers.push(workerFactory());
-		}
+	async acquire(mapId) {
 		this.active[mapId] = true;
-		return this.workers.slice();
+		if (!this.workersPromise) {
+			const promises = [];
+			while (promises.length < WorkerPool.workerCount) promises.push(workerFactory());
+			this.workersPromise = Promise.all(promises);
+		}
+		return (await this.workersPromise).slice();
 	}
 	release(mapId) {
 		delete this.active[mapId];
-		if (this.numActive() === 0) {
-			for (const w of this.workers) w.terminate();
-			this.workers = null;
+		if (this.numActive() === 0 && this.workersPromise) {
+			const promise = this.workersPromise;
+			this.workersPromise = null;
+			promise.then((workers) => {
+				for (const w of workers) w.terminate();
+			});
 		}
 	}
 	isPreloaded() {
@@ -25054,51 +25097,66 @@ var Dispatcher = class {
 		this.actors = [];
 		this.currentActor = 0;
 		this.id = mapId;
-		const workers = this.workerPool.acquire(mapId);
-		for (let i = 0; i < workers.length; i++) {
-			const worker = workers[i];
+		this.removed = false;
+		this.actorsPromise = this.initActors(mapId);
+	}
+	async initActors(mapId) {
+		const workers = await this.workerPool.acquire(mapId);
+		if (this.removed) return [];
+		this.actors = workers.map((worker, i) => {
 			const actor = new Actor(worker, mapId);
 			actor.name = `Worker ${i}`;
-			this.actors.push(actor);
-		}
+			return actor;
+		});
 		if (!this.actors.length) throw new Error("No actors found");
+		return this.actors;
 	}
 	/**
 	* Broadcast a message to all Workers.
 	*/
-	broadcast(type, data) {
-		const promises = [];
-		for (const actor of this.actors) promises.push(actor.sendAsync({
+	async broadcast(type, data) {
+		const actors = await this.actorsPromise;
+		return Promise.all(actors.map((actor) => actor.sendAsync({
 			type,
 			data
-		}));
-		return Promise.all(promises);
+		})));
 	}
 	/**
 	* Acquires an actor to dispatch messages to. The actors are distributed in round-robin fashion.
 	* @returns An actor object backed by a web worker for processing messages.
 	*/
-	getActor() {
+	async getActor() {
+		const actors = await this.actorsPromise;
+		this.currentActor = (this.currentActor + 1) % actors.length;
+		return actors[this.currentActor];
+	}
+	async waitForInitComplete() {
+		if (this.actors.length === 0) await this.actorsPromise;
+	}
+	getReadyActor() {
 		this.currentActor = (this.currentActor + 1) % this.actors.length;
 		return this.actors[this.currentActor];
 	}
 	remove(mapRemoved = true) {
+		this.removed = true;
 		for (const actor of this.actors) actor.remove();
 		this.actors = [];
 		if (mapRemoved) this.workerPool.release(this.id);
 	}
-	registerMessageHandler(type, handler) {
-		for (const actor of this.actors) actor.registerMessageHandler(type, handler);
+	async registerMessageHandler(type, handler) {
+		const actors = await this.actorsPromise;
+		for (const actor of actors) actor.registerMessageHandler(type, handler);
 	}
-	unregisterMessageHandler(type) {
-		for (const actor of this.actors) actor.unregisterMessageHandler(type);
+	async unregisterMessageHandler(type) {
+		const actors = await this.actorsPromise;
+		for (const actor of actors) actor.unregisterMessageHandler(type);
 	}
 };
 let globalDispatcher;
 /**
 * This function is used to get the global dispatcher that is shared across all maps instances.
 * It is used by the main thread to send messages to the workers, and by the workers to send messages back to the main thread.
-* If you import a script into the worker and need to send a message to the workers to pass some parameters for example, 
+* If you import a script into the worker and need to send a message to the workers to pass some parameters for example,
 * you can use this function to get the global dispatcher and send a message to the workers.
 * @returns The global dispatcher instance.
 */
@@ -25762,9 +25820,10 @@ var VectorTileSource = class extends Evented {
 			etag: tile.etag
 		};
 		params.request.collectResourceTiming = this._collectResourceTiming;
+		await this.dispatcher.waitForInitComplete();
 		let messageType = "RT";
 		if (!tile.actor || tile.state === "expired") {
-			tile.actor = this.dispatcher.getActor();
+			tile.actor = this.dispatcher.getReadyActor();
 			messageType = "LT";
 		} else if (tile.state === "loading") return new Promise((resolve, reject) => {
 			tile.reloadPromise = {
@@ -26084,7 +26143,8 @@ var RasterDEMTileSource = class extends RasterTileSource {
 					baseShift: this.baseShift
 				};
 				if (tile.actor && tile.state !== "expired" && tile.state !== "reloading") return;
-				if (!tile.actor || tile.state === "expired") tile.actor = this.dispatcher.getActor();
+				await this.dispatcher.waitForInitComplete();
+				if (!tile.actor || tile.state === "expired") tile.actor = this.dispatcher.getReadyActor();
 				tile.dem = await tile.actor.sendAsync({
 					type: "LDT",
 					data: params
@@ -26467,7 +26527,7 @@ var GeoJSONSource = class extends Evented {
 		this._removed = false;
 		this._isUpdatingWorker = false;
 		this._pendingWorkerUpdate = { data: options.data };
-		this.actor = dispatcher.getActor();
+		this.actorPromise = dispatcher.getActor();
 		this.setEventedParent(eventedParent);
 		this._data = typeof options.data === "string" ? { url: options.data } : { geojson: options.data };
 		this._options = extend({}, options);
@@ -26590,8 +26650,8 @@ var GeoJSONSource = class extends Evented {
 	* @param clusterId - The value of the cluster's `cluster_id` property.
 	* @returns a promise that is resolved with the zoom number
 	*/
-	getClusterExpansionZoom(clusterId) {
-		return this.actor.sendAsync({
+	async getClusterExpansionZoom(clusterId) {
+		return (await this.actorPromise).sendAsync({
 			type: "GCEZ",
 			data: {
 				type: this.type,
@@ -26606,8 +26666,8 @@ var GeoJSONSource = class extends Evented {
 	* @param clusterId - The value of the cluster's `cluster_id` property.
 	* @returns a promise that is resolved when the features are retrieved
 	*/
-	getClusterChildren(clusterId) {
-		return this.actor.sendAsync({
+	async getClusterChildren(clusterId) {
+		return (await this.actorPromise).sendAsync({
 			type: "GCC",
 			data: {
 				type: this.type,
@@ -26641,8 +26701,8 @@ var GeoJSONSource = class extends Evented {
 	* });
 	* ```
 	*/
-	getClusterLeaves(clusterId, limit, offset) {
-		return this.actor.sendAsync({
+	async getClusterLeaves(clusterId, limit, offset) {
+		return (await this.actorPromise).sendAsync({
 			type: "GCL",
 			data: {
 				type: this.type,
@@ -26702,7 +26762,7 @@ var GeoJSONSource = class extends Evented {
 		this.fire(new Event("dataloading", { dataType: "source" }));
 		try {
 			const options = await optionsPromise;
-			const result = await this.actor.sendAsync({
+			const result = await (await this.actorPromise).sendAsync({
 				type: "LD",
 				data: options
 			});
@@ -26733,7 +26793,7 @@ var GeoJSONSource = class extends Evented {
 			}
 			this.fire(new ErrorEvent(ensureError(err)));
 		} finally {
-			if (this._hasPendingWorkerUpdate()) this._updateWorkerData();
+			if (this._hasPendingWorkerUpdate()) await this._updateWorkerData();
 		}
 	}
 	/**
@@ -26791,7 +26851,7 @@ var GeoJSONSource = class extends Evented {
 	}
 	async loadTile(tile) {
 		const message = !tile.actor ? "LT" : "RT";
-		tile.actor = this.actor;
+		tile.actor = await this.actorPromise;
 		const params = {
 			type: this.type,
 			uid: tile.uid,
@@ -26806,7 +26866,7 @@ var GeoJSONSource = class extends Evented {
 			subdivisionGranularity: this.map.style.projection.subdivisionGranularity
 		};
 		tile.abortController = new AbortController();
-		const data = await this.actor.sendAsync({
+		const data = await (await this.actorPromise).sendAsync({
 			type: message,
 			data: params
 		}, tile.abortController);
@@ -26823,7 +26883,7 @@ var GeoJSONSource = class extends Evented {
 	}
 	async unloadTile(tile) {
 		tile.unloadVectorData();
-		await this.actor.sendAsync({
+		await (await this.actorPromise).sendAsync({
 			type: "RMT",
 			data: {
 				uid: tile.uid,
@@ -26834,13 +26894,13 @@ var GeoJSONSource = class extends Evented {
 	}
 	onRemove() {
 		this._removed = true;
-		this.actor.sendAsync({
+		this.actorPromise.then((actor) => actor.sendAsync({
 			type: "RS",
 			data: {
 				type: this.type,
 				source: this.id
 			}
-		});
+		}));
 	}
 	serialize() {
 		return extend({}, this._options, {
@@ -60392,7 +60452,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 619e913";
+const version = "main a17e824";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
