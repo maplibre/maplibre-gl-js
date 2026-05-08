@@ -4,7 +4,7 @@ import type {Map} from '../../../src/ui/map.ts';
 // performance.now() should be accurate to 0.005ms. Set the minimum running
 // time for a single measurement at 5ms, so that the error due to timer
 // precision is < 0.1%.
-const minTimeForMeasurement = 0.005 * 1000;
+const minTimeForMeasurement = 0.02 * 1000;
 
 export type Measurement = {
     iterations: number;
@@ -89,6 +89,7 @@ class Benchmark implements BenchmarkLike {
             this._elapsed += time;
             if (time < minTimeForMeasurement) {
                 this._iterationsPerMeasurement++;
+                this._iterationsPerMeasurement = Math.floor(this._iterationsPerMeasurement * 1.2);
             } else {
                 this._measurements.push({time, iterations: this._iterationsPerMeasurement});
             }
@@ -108,6 +109,7 @@ class Benchmark implements BenchmarkLike {
             this._elapsed += time;
             if (time < minTimeForMeasurement) {
                 this._iterationsPerMeasurement++;
+                this._iterationsPerMeasurement = Math.floor(this._iterationsPerMeasurement * 1.2);
             } else {
                 this._measurements.push({time, iterations: this._iterationsPerMeasurement});
             }
