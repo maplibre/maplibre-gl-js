@@ -1,0 +1,36 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64,
+      "operations": [
+        ["addImage", "sdf-stripes", "image/stripes.sdf.png", {"sdf": true}],
+        ["wait"],
+        ["addSource", "geojson", {
+          "type": "geojson",
+          "data": {
+            "type": "Polygon",
+            "coordinates": [[[-10, -10], [-10, 10], [10, 10], [10, -10], [-10, -10]]]
+          }
+        }],
+        ["wait"],
+        ["addLayer", {
+          "id": "fill",
+          "type": "fill",
+          "source": "geojson",
+          "paint": {
+            "fill-antialias": false,
+            "fill-pattern": "sdf-stripes",
+            "fill-color": "#0000ff"
+          }
+        }],
+        ["wait"],
+        ["setPaintProperty", "fill", "fill-pattern-background-color", "#ffff00", {"validate": false}],
+        ["wait"]
+      ]
+    }
+  },
+  "sources": {},
+  "layers": []
+}

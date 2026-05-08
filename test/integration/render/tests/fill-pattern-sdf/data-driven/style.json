@@ -1,0 +1,53 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64,
+      "operations": [
+        ["addImage", "sdf-stripes", "image/stripes.sdf.png", {"sdf": true}],
+        ["wait"],
+        ["addSource", "geojson", {
+          "type": "geojson",
+          "data": {
+            "type": "FeatureCollection",
+            "features": [
+              {
+                "type": "Feature",
+                "properties": {"fg": "#ff0000", "bg": "#00ff00"},
+                "geometry": {
+                  "type": "Polygon",
+                  "coordinates": [[[-10, 0], [-10, 10], [0, 10], [0, 0], [-10, 0]]]
+                }
+              },
+              {
+                "type": "Feature",
+                "properties": {"fg": "#0000ff", "bg": "#ffff00"},
+                "geometry": {
+                  "type": "Polygon",
+                  "coordinates": [[[0, -10], [0, 0], [10, 0], [10, -10], [0, -10]]]
+                }
+              }
+            ]
+          }
+        }],
+        ["wait"],
+        ["addLayer", {
+          "id": "fill",
+          "type": "fill",
+          "source": "geojson",
+          "paint": {
+            "fill-antialias": false,
+            "fill-pattern": "sdf-stripes",
+            "fill-color": ["get", "fg"]
+          }
+        }],
+        ["wait"],
+        ["setPaintProperty", "fill", "fill-pattern-background-color", ["get", "bg"], {"validate": false}],
+        ["wait"]
+      ]
+    }
+  },
+  "sources": {},
+  "layers": []
+}
