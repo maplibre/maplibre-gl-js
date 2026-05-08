@@ -189,6 +189,17 @@ export class WorkerTile {
             } else if (bucket.hasDependencies && (bucket instanceof FillBucket || bucket instanceof FillExtrusionBucket || bucket instanceof LineBucket)) {
                 recalculateLayers(bucket.layers, this.zoom, availableImages);
                 bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions, dashPositions);
+                if (bucket instanceof FillBucket) {
+                    for (const feature of bucket.patternFeatures) {
+                        for (const layerId in feature.patterns) {
+                            const p = feature.patterns[layerId];
+                            if ((patternMap[p.min]?.sdf) || (patternMap[p.mid]?.sdf) || (patternMap[p.max]?.sdf)) {
+                                bucket.sdfPatterns = true; break;
+                            }
+                        }
+                        if (bucket.sdfPatterns) break;
+                    }
+                }
             }
         }
 

@@ -2,6 +2,7 @@
 uniform vec2 u_texsize;
 uniform sampler2D u_image;
 uniform float u_fade;
+uniform lowp float u_device_pixel_ratio;
 
 in vec2 v_pos_a;
 in vec2 v_pos_b;
@@ -13,11 +14,15 @@ in float v_depth;
 #pragma mapbox: define lowp float opacity
 #pragma mapbox: define lowp vec4 pattern_from
 #pragma mapbox: define lowp vec4 pattern_to
+#pragma mapbox: define highp vec4 color
+#pragma mapbox: define highp vec4 pattern_background_color
 
 void main() {
     #pragma mapbox: initialize lowp float opacity
     #pragma mapbox: initialize mediump vec4 pattern_from
     #pragma mapbox: initialize mediump vec4 pattern_to
+    #pragma mapbox: initialize highp vec4 color
+    #pragma mapbox: initialize highp vec4 pattern_background_color
 
     vec2 pattern_tl_a = pattern_from.xy;
     vec2 pattern_br_a = pattern_from.zw;
@@ -37,7 +42,17 @@ void main() {
     float dist = length(v_pos - gl_FragCoord.xy);
     float alpha = 1.0 - smoothstep(0.0, 1.0, dist);
 
+#ifdef SDF_PATTERN
+    float sdf_dist_a = color1.a;
+    float sdf_dist_b = color2.a;
+    float sdf_dist = mix(sdf_dist_a, sdf_dist_b, u_fade);
+    highp float sdf_edge = (256.0 - 64.0) / 256.0;
+    highp float sdf_gamma = 0.105 / u_device_pixel_ratio;
+    float sdf_alpha = smoothstep(sdf_edge - sdf_gamma, sdf_edge + sdf_gamma, sdf_dist);
+    fragColor = mix(pattern_background_color, color, sdf_alpha) * alpha * opacity;
+#else
     fragColor = mix(color1, color2, u_fade) * alpha * opacity;
+#endif
 
     #ifdef GLOBE
     if (v_depth > 1.0) {
