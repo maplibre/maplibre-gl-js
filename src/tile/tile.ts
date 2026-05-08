@@ -131,6 +131,8 @@ export class Tile {
     rttObjects: Array<RTTObject | undefined>;
     rttFingerprint: {[sourceId:string]: string};
 
+    featureStateRevision: number;
+
     /**
      * @param tileID - the tile ID
      * @param size - The tile size
@@ -156,6 +158,7 @@ export class Tile {
         this.expiredRequestCount = 0;
 
         this.state = 'loading';
+        this.featureStateRevision = -1;
     }
 
     isRenderable(symbolLayer: boolean): boolean {
@@ -508,11 +511,17 @@ export class Tile {
         }
     }
 
-    setFeatureState(states: LayerFeatureStates, painter: Painter): void {
+    setFeatureState(states: LayerFeatureStates, painter: Painter, revision: number): void {
         if (!this.latestFeatureIndex?.rawTileData ||
             Object.keys(states).length === 0) {
             return;
         }
+
+        // Skip bucket updates if we already processed this revision
+        if (this.featureStateRevision === revision) {
+            return;
+        }
+        this.featureStateRevision = revision;
 
         const vtLayers = this.latestFeatureIndex.loadVTLayers();
 
