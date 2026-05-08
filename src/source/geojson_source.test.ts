@@ -7,29 +7,14 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {extend} from '../util/util.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {sleep, waitForEvent} from '../util/test/util.ts';
+import {getWrapDispatcher, sleep, waitForEvent} from '../util/test/util.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
-import type {Dispatcher} from '../util/dispatcher.ts';
 import type {RequestManager} from '../util/request_manager.ts';
-import type {IActor} from '../util/actor.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff.ts';
 
-const wrapDispatcher = (actor: IActor) => {
-    return {
-        actorsPromise: Promise.resolve([actor]),
-        waitForInitComplete() {
-            return Promise.resolve();
-        },
-        getActor() {
-            return Promise.resolve(actor);
-        },
-        getReadyActor() {
-            return actor;
-        }
-    } as unknown as Dispatcher;
-};
+const wrapDispatcher = getWrapDispatcher();
 
 const mockDispatcher = wrapDispatcher({
     sendAsync() { return Promise.resolve({}); }
