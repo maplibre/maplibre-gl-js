@@ -14,33 +14,35 @@ export class WorkerPool {
     active: {
         [_ in number | string]: boolean;
     };
-    workers: ActorTarget[];
+    workersPromise: Promise<ActorTarget[]> | null;
 
     constructor() {
         this.active = {};
+        this.workersPromise = null;
     }
 
-    acquire(mapId: number | string): ActorTarget[] {
-        if (!this.workers) {
-            // Lazily look up the value of getWorkerCount so that
-            // client code has had a chance to set it.
-            this.workers = [];
-            while (this.workers.length < WorkerPool.workerCount) {
-                this.workers.push(workerFactory());
-            }
-        }
-
+    async acquire(mapId: number | string): Promise<ActorTarget[]> {
         this.active[mapId] = true;
-        return this.workers.slice();
+        if (!this.workersPromise) {
+            const promises: Array<Promise<Worker>> = [];
+            while (promises.length < WorkerPool.workerCount) {
+                promises.push(workerFactory());
+            }
+            this.workersPromise = Promise.all(promises);
+        }
+        return (await this.workersPromise).slice();
     }
 
     release(mapId: number | string): void {
         delete this.active[mapId];
-        if (this.numActive() === 0) {
-            for (const w of this.workers) {
-                w.terminate();
-            }
-            this.workers = null;
+        if (this.numActive() === 0 && this.workersPromise) {
+            const promise = this.workersPromise;
+            this.workersPromise = null;
+            promise.then(workers => {
+                for (const w of workers) {
+                    w.terminate();
+                }
+            });
         }
     }
 

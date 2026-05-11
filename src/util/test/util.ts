@@ -135,7 +135,14 @@ export function beforeMapTest(): void {
 export function getWrapDispatcher(): (actor: IActor) => Dispatcher {
     return (actor: IActor) => {
         return {
+            actorsPromise: Promise.resolve([actor]),
+            waitForInitComplete() {
+                return Promise.resolve();
+            },
             getActor() {
+                return Promise.resolve(actor);
+            },
+            getReadyActor() {
                 return actor;
             }
         } as any as Dispatcher;
