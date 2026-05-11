@@ -137,6 +137,16 @@ export class Terrain {
      */
     _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
     /**
+     * Per-frame cache of {@link TerrainData} results keyed by `tileID.key`.
+     * `getTerrainData` is called many times per frame from different layers
+     * with the same tileID. Within a frame the dependencies (source tile,
+     * demTexture, depthTexture, _demMatrixCache entry) are stable, so we
+     * memoize the wrapper object and avoid allocating it on every call.
+     * Cleared at the start of each painter `render()` by
+     * {@link invalidatePerFrameCaches}.
+     */
+    _terrainDataCache: Map<string, TerrainData> = new Map();
+    /**
      * Controls how terrain skirt length is calculated.
      * @see {@link MapOptions.terrainSkirtLength}
      */
@@ -262,11 +272,22 @@ export class Terrain {
     }
 
     /**
+     * Clears caches whose lifetime is one painter frame. Called from
+     * `Painter.render` so subsequent `getTerrainData`/elevation queries
+     * within the same frame can hit cached results.
+     */
+    invalidatePerFrameCaches(): void {
+        this._terrainDataCache.clear();
+    }
+
+    /**
      * returns a Terrain Object for a tile. Unless the tile corresponds to data (e.g. tile is loading), return a flat dem object
      * @param tileID - the tile to get the terrain for
      * @returns the terrain data to use in the program
      */
     getTerrainData(tileID: OverscaledTileID): TerrainData {
+        const cached = this._terrainDataCache.get(tileID.key);
+        if (cached) return cached;
         // create empty DEM Objects, which will used while raster-dem tiles are loading.
         // creates an empty depth-buffer texture which is needed, during the initialization process of the 3d mesh..
         if (!this._emptyDemTexture) {
@@ -304,7 +325,7 @@ export class Terrain {
             this._demMatrixCache[matrixKey] = {matrix: demMatrix, coord: tileID};
         }
         // return uniform values & textures
-        return {
+        const result: TerrainData = {
             'u_depth': 2,
             'u_terrain': 3,
             'u_terrain_dim': sourceTile?.dem?.dim || 1,
@@ -315,6 +336,8 @@ export class Terrain {
             depthTexture: (this._fboDepthTexture || this._emptyDepthTexture).texture,
             tile: sourceTile
         };
+        this._terrainDataCache.set(tileID.key, result);
+        return result;
     }
 
     /**

@@ -39,7 +39,7 @@ describe('render', () => {
     test('calls terrainDepth but not terrainCoords', () => {
         const terrainDepth = vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
         const terrainCoords = vi.spyOn(painter.drawFunctions, 'terrainCoords').mockImplementation(() => {});
-        map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
+        map.terrain = {tileManager: {anyTilesAfterTime: () => false}, invalidatePerFrameCaches: () => {}};
 
         painter.render(style, renderOptions);
 

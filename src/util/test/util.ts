@@ -245,6 +245,7 @@ export function createTerrain(): Terrain {
         getFramebuffer: () => ({}),
         getCoordsTexture: () => ({}),
         depthAtPoint: () => .9,
+        invalidatePerFrameCaches: () => {},
         tileManager: {
             update: () => {},
             getRenderableTiles: () => [],

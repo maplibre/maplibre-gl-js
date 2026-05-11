@@ -373,6 +373,28 @@ describe('Terrain', () => {
         });
     });
 
+    test('getTerrainData memoizes within a frame and re-computes after invalidate', () => {
+        const context = new Context(gl);
+        const painter = {context, getTileTexture: () => null, _tileTextures: {}} as any as Painter;
+        const tileManager = {
+            _source: {minzoom: 0, maxzoom: 14, tileSize: 512},
+            _cache: {max: 10},
+        } as any as TileManager;
+        const terrain = new Terrain(painter, tileManager, {exaggeration: 1} as any as TerrainSpecification);
+        const sourceTileSpy = vi.spyOn(terrain.tileManager, 'getSourceTile').mockReturnValue(undefined);
+
+        const tileID = new OverscaledTileID(2, 0, 2, 1, 1);
+        const a = terrain.getTerrainData(tileID);
+        const b = terrain.getTerrainData(tileID);
+        expect(b).toBe(a);                        // same reference within a frame
+        expect(sourceTileSpy).toHaveBeenCalledTimes(1);
+
+        terrain.invalidatePerFrameCaches();
+        const c = terrain.getTerrainData(tileID);
+        expect(c).not.toBe(a);
+        expect(sourceTileSpy).toHaveBeenCalledTimes(2);
+    });
+
     test('destroy does not throw', () => {
         const context = new Context(gl);
         const painter = {

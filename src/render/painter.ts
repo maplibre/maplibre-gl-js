@@ -496,6 +496,7 @@ export class Painter {
         this.symbolFadeChange = style.placement.symbolFadeChange(now());
 
         this.imageManager.beginFrame();
+        style.map.terrain?.invalidatePerFrameCaches();
 
         const layerIds = this.style._order;
         const tileManagers = this.style.tileManagers;
