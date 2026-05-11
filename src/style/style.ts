@@ -600,7 +600,6 @@ export class Style extends Evented {
         this._spritesImagesIds = {};
         this._availableImages = this.imageManager.listImages();
         this._changed = true;
-        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new Event('data', {dataType: 'style'}));
     }
 
@@ -733,6 +732,14 @@ export class Style extends Evented {
 
         const changed = this._changed;
         if (changed) {
+            // Broadcast available images once per frame, debounced from
+            // _afterImageUpdated. This must happen before any other worker
+            // messages (updateLayers, reloadSource, reloadTile) so the worker
+            // has the current list before any tile parsing begins.
+            if (Object.keys(this._changedImages).length) {
+                this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
+            }
+
             const updatedIds = Object.keys(this._updatedLayers);
             const removedIds = Object.keys(this._removedLayers);
 
@@ -1004,7 +1011,6 @@ export class Style extends Evented {
         this._availableImages = this.imageManager.listImages();
         this._changedImages[id] = true;
         this._changed = true;
-        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new Event('data', {dataType: 'style'}));
     }
 
@@ -2015,7 +2021,6 @@ export class Style extends Evented {
         delete this._spritesImagesIds[id];
         this._availableImages = this.imageManager.listImages();
         this._changed = true;
-        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new Event('data', {dataType: 'style'}));
     }
 
