@@ -85,6 +85,9 @@ Gold:
 
 <a href="https://www.microsoft.com/"><img src="https://maplibre.org/img/msft-logo.svg" alt="Logo MSFT" width="25%"/></a>
 
+<a href="https://aws.amazon.com/location"><img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/></a>
+
+
 Silver:
 
 <a href="https://www.mierune.co.jp/?lang=en"><img src="https://maplibre.org/img/mierune-logo.svg" alt="Logo MIERUNE" width="25%"/></a>
@@ -99,9 +102,9 @@ Silver:
 
 <a href="https://www.maptiler.com/"><img src="https://maplibre.org/img/maptiler-logo.svg" alt="Logo maptiler" width="25%"/></a>
 
-<a href="https://aws.amazon.com/location"><img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/></a>
+<a href="https://www.caltopo.com/"><img src="https://maplibre.org/img/caltopo-logo.svg" alt="Logo Caltopo" width="25%"/></a>
 
-<a href="https://www.caltopo.com/"><img src="https://maplibre.org/img/caltopo-logo.svg" alt="Caltopo AWS" width="25%"/></a>
+<a href="https://www.caltopo.com/"><img src="https://maplibre.org/img/smartmaps-logo.svg" alt="Logo SmartMaps" width="25%"/></a>
 
 Backers and Supporters:
 
