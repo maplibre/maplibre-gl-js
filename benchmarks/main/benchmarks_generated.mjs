@@ -24082,7 +24082,7 @@ var TinySDF = class {
 	draw(char) {
 		const { width: glyphAdvance, actualBoundingBoxAscent, actualBoundingBoxDescent, actualBoundingBoxLeft, actualBoundingBoxRight } = this.ctx.measureText(char);
 		const glyphTop = Math.ceil(actualBoundingBoxAscent);
-		const glyphLeft = Math.floor(actualBoundingBoxLeft);
+		const glyphLeft = Math.floor(-actualBoundingBoxLeft);
 		const glyphWidth = Math.max(0, Math.min(this.size - this.buffer, Math.ceil(actualBoundingBoxRight) - glyphLeft));
 		const glyphHeight = Math.max(0, Math.min(this.size - this.buffer, glyphTop + Math.ceil(actualBoundingBoxDescent)));
 		const width = glyphWidth + 2 * this.buffer;
@@ -24119,7 +24119,8 @@ var TinySDF = class {
 			}
 		}
 		edt(gridOuter, 0, 0, width, height, width, this.f, this.v, this.z);
-		edt(gridInner, buffer, buffer, glyphWidth, glyphHeight, width, this.f, this.v, this.z);
+		const pad = Math.min(buffer, 1);
+		edt(gridInner, buffer - pad, buffer - pad, glyphWidth + 2 * pad, glyphHeight + 2 * pad, width, this.f, this.v, this.z);
 		const scale = 255 / this.radius;
 		const base = 255 * (1 - this.cutoff);
 		for (let i = 0; i < len; i++) {
@@ -60452,7 +60453,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main b37801b";
+const version = "main 430564a";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
