@@ -3,7 +3,6 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix Benchmark stall issue ([#7606](https://github.com/maplibre/maplibre-gl-js/pull//7606)) (by [@xavierjs](https://github.com/xavierjs))
 - _...Add new stuff here..._
 
 ## 6.0.0-9
