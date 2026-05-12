@@ -1,0 +1,16 @@
+services:
+  docs:
+    image: zensical/zensical:0.0.38
+    volumes:
+      - .:/docs
+    working_dir: /docs
+    command: build --strict
+
+  docs-serve:
+    image: zensical/zensical:0.0.38
+    volumes:
+      - .:/docs
+    working_dir: /docs
+    ports:
+      - "8000:8000"
+    command: serve --open --dev-addr=0.0.0.0:8000
