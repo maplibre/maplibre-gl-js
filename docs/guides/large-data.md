@@ -41,7 +41,7 @@ Data chunking is more impactful on desktop browsers than mobile browsers.
 
 ### Data Streaming
 
-Implementing data streaming techniques can further enhance loading performance. Rather than loading the entire dataset at once, data streaming allows you to load smaller portions as the user interacts with the map. This approach minimises the initial loading time and provides a more responsive experience. A template for data streaming can be found in the [Live Update Features](../examples/update-a-feature-in-realtime.md) example.
+Implementing data streaming techniques can further enhance loading performance. Rather than loading the entire dataset at once, data streaming allows you to load smaller portions as the user interacts with the map. This approach minimises the initial loading time and provides a more responsive experience. A template for data streaming can be found in the [Update a feature in realtime](../examples/update-a-feature-in-realtime.md) example.
 
 ### Store GeoJSON at URL
 
