@@ -10,6 +10,9 @@ updates:
       vitest:
         patterns:
           - "*vitest*"
+      eslint:
+        patterns:
+          - "*eslint*"
     cooldown:
       default-days: 5
       semver-major-days: 5
