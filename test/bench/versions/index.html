@@ -43,9 +43,9 @@
                 const params = new URL(location).searchParams;
                 window.versionsDisplayName = params.getAll('compare').filter(Boolean);
                 if (!params.has('compare')) {
-                    const response = await fetch('https://api.github.com/repos/maplibre/maplibre-gl-js/releases/latest');
+                    const response = await fetch('https://registry.npmjs.org/maplibre-gl/latest', {});
                     const responseJson = await response.json();
-                    window.versionsDisplayName = [responseJson['tag_name'], 'main'];
+                    window.versionsDisplayName = [`v${responseJson['version']}`, 'main'];
                 }
                 console.log(`Comparing versions: ${window.versionsDisplayName}`);
 

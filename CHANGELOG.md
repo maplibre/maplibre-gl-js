@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix Benchmarks remote compare issue ([#7607](https://github.com/maplibre/maplibre-gl-js/pull/7607)) (by [@xavierjs](https://github.com/xavierjs))
 - _...Add new stuff here..._
 
 ## 6.0.0-9
