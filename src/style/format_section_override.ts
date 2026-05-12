@@ -1,7 +1,7 @@
 import type {Expression, EvaluationContext, Type, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
 import {NullType} from '@maplibre/maplibre-gl-style-spec';
-import {type PossiblyEvaluatedPropertyValue} from './properties';
-import {register} from '../util/web_worker_transfer';
+import {type PossiblyEvaluatedPropertyValue} from './properties.ts';
+import {register} from '../util/web_worker_transfer.ts';
 
 // This is an internal expression class. It is only used in GL JS and
 // has GL JS dependencies which can break the standalone style-spec module
@@ -15,7 +15,7 @@ export class FormatSectionOverride<T> implements Expression {
         this.defaultValue = defaultValue;
     }
 
-    evaluate(ctx: EvaluationContext) {
+    evaluate(ctx: EvaluationContext): any {
         if (ctx.formattedSection) {
             const overrides = this.defaultValue.property.overrides;
             if (overrides?.hasOverride(ctx.formattedSection)) {
@@ -30,7 +30,7 @@ export class FormatSectionOverride<T> implements Expression {
         return this.defaultValue.property.specification.default;
     }
 
-    eachChild(fn: (_: Expression) => void) {
+    eachChild(fn: (_: Expression) => void): void {
         if (!this.defaultValue.isConstant()) {
             const expr: ZoomConstantExpression<'source'> = (this.defaultValue.value as any);
             fn(expr._styleExpression.expression);

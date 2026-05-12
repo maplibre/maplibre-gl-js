@@ -1,14 +1,14 @@
 import path from 'path';
 import {readFileSync} from 'fs';
 import {describe, expect, test} from 'vitest';
-import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from './feature_index';
+import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from './feature_index.ts';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper, type VectorTileFeatureLike} from '@maplibre/vt-pbf';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {OverscaledTileID} from '../tile/tile_id';
-import {CircleStyleLayer} from '../style/style_layer/circle_style_layer';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {CircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
 import Point from '@mapbox/point-geometry';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {EvaluationParameters} from '../style/evaluation_parameters';
+import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
 
 describe('FeatureIndex', () => {
     describe('getId', () => {

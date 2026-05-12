@@ -1,13 +1,13 @@
-import {loadGlyphRange} from '../style/load_glyph_range';
+import {loadGlyphRange} from '../style/load_glyph_range.ts';
 
 import TinySDF from '@mapbox/tiny-sdf';
-import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g';
-import {AlphaImage} from '../util/image';
-import {ensureError, warnOnce} from '../util/util';
+import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g.ts';
+import {AlphaImage} from '../util/image.ts';
+import {ensureError, warnOnce} from '../util/util.ts';
 
-import type {StyleGlyph} from '../style/style_glyph';
-import type {RequestManager} from '../util/request_manager';
-import type {GetGlyphsResponse} from '../util/actor_messages';
+import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {RequestManager} from '../util/request_manager.ts';
+import type {GetGlyphsResponse} from '../util/actor_messages.ts';
 
 import {v8} from '@maplibre/maplibre-gl-style-spec';
 
@@ -50,8 +50,8 @@ export class GlyphManager {
     lang?: string;
 
     // exposed as statistics to enable stubbing in unit tests
-    static loadGlyphRange = loadGlyphRange;
-    static TinySDF = TinySDF;
+    static loadGlyphRange: typeof loadGlyphRange = loadGlyphRange;
+    static TinySDF: typeof TinySDF = TinySDF;
 
     constructor(requestManager: RequestManager, localIdeographFontFamily?: string | false, lang?: string) {
         this.requestManager = requestManager;
@@ -60,7 +60,7 @@ export class GlyphManager {
         this.lang = lang;
     }
 
-    setURL(url?: string | null) {
+    setURL(url?: string | null): void {
         this.url = url;
     }
 
@@ -137,7 +137,7 @@ export class GlyphManager {
         }
     }
 
-    _warnOnMissingGlyphRange(glyph: StyleGlyph, range: number, id: number, err: Error) {
+    _warnOnMissingGlyphRange(glyph: StyleGlyph, range: number, id: number, err: Error): void {
         const begin = range * 256;
         const end = begin + 255;
         const codePoint = id.toString(16).padStart(4, '0').toUpperCase();
@@ -256,7 +256,7 @@ export class GlyphManager {
         return match;
     }
 
-    destroy() {
+    destroy(): void {
         for (const stack in this.entries) {
             const entry = this.entries[stack];
             entry.tinySDF = null;

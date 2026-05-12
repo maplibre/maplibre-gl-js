@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import {type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-export function localizeURLs(style: any, port: number, baseTestsDir: string) {
+export function localizeURLs(style: any, port: number, baseTestsDir: string): void {
     localizeStyleURLs(style, port);
     if (style.metadata?.test?.operations) {
         for (const op of style.metadata.test.operations) {

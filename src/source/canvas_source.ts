@@ -1,12 +1,12 @@
-import {ImageSource} from './image_source';
+import {ImageSource} from './image_source.ts';
 
-import {Texture} from '../webgl/texture';
-import {Event, ErrorEvent} from '../util/evented';
+import {Texture} from '../webgl/texture.ts';
+import {Event, ErrorEvent} from '../util/evented.ts';
 import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
 
-import type {Map} from '../ui/map';
-import type {Dispatcher} from '../util/dispatcher';
-import type {Evented} from '../util/evented';
+import type {Map} from '../ui/map.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Evented} from '../util/evented.ts';
 
 /**
  * Options to add a canvas source type to the map.
@@ -105,7 +105,7 @@ export class CanvasSource extends ImageSource {
         this.animate = options.animate !== undefined ? options.animate : true;
     }
 
-    async load() {
+    async load(): Promise<void> {
         this._loaded = true;
         this.canvas ||= (this.options.canvas instanceof HTMLCanvasElement) ?
             this.options.canvas :
@@ -144,7 +144,7 @@ export class CanvasSource extends ImageSource {
         return this.canvas;
     }
 
-    onAdd(map: Map) {
+    onAdd(map: Map): void {
         this.map = map;
         this.load();
         if (this.canvas) {
@@ -152,11 +152,11 @@ export class CanvasSource extends ImageSource {
         }
     }
 
-    onRemove() {
+    onRemove(): void {
         this.pause();
     }
 
-    prepare() {
+    prepare(): void {
         let resize = false;
         if (this.canvas.width !== this.width) {
             this.width = this.canvas.width;
@@ -205,11 +205,11 @@ export class CanvasSource extends ImageSource {
         };
     }
 
-    hasTransition() {
+    hasTransition(): boolean {
         return this._playing;
     }
 
-    _hasInvalidDimensions() {
+    _hasInvalidDimensions(): boolean {
         for (const x of [this.canvas.width, this.canvas.height]) {
             if (isNaN(x) || x <= 0) return true;
         }

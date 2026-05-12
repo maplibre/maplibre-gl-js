@@ -1,20 +1,20 @@
 import {
     codePointHasUprightVerticalOrientation
-} from '../util/unicode_properties.g';
+} from '../util/unicode_properties.g.ts';
 import {
     charIsWhitespace,
     charInComplexShapingScript
-} from '../util/script_detection';
-import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker';
-import ONE_EM from './one_em';
+} from '../util/script_detection.ts';
+import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
+import ONE_EM from './one_em.ts';
 
-import {TaggedString, type TextSectionOptions, type ImageSectionOptions} from './tagged_string';
-import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph';
-import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
-import {TextFit} from '../style/style_image';
-import type {ImagePosition} from '../render/image_atlas';
-import {IMAGE_PADDING} from '../render/image_atlas';
-import type {Rect, GlyphPosition} from '../render/glyph_atlas';
+import {TaggedString, type TextSectionOptions, type ImageSectionOptions} from './tagged_string.ts';
+import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph.ts';
+import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf.ts';
+import {TextFit} from '../style/style_image.ts';
+import type {ImagePosition} from '../render/image_atlas.ts';
+import {IMAGE_PADDING} from '../render/image_atlas.ts';
+import type {Rect, GlyphPosition} from '../render/glyph_atlas.ts';
 import type {Formatted, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 
 enum WritingMode {
@@ -192,7 +192,7 @@ function shapeText(
     return shaping;
 }
 
-function getAnchorAlignment(anchor: SymbolAnchor) {
+function getAnchorAlignment(anchor: SymbolAnchor): {horizontalAlign: number; verticalAlign: number} {
     let horizontalAlign = 0.5, verticalAlign = 0.5;
 
     switch (anchor) {

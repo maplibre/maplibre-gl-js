@@ -1,22 +1,22 @@
-import {Actor, type ActorTarget, type IActor} from '../util/actor';
-import {StyleLayerIndex} from '../style/style_layer_index';
-import {VectorTileWorkerSource} from './vector_tile_worker_source';
-import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source';
-import {rtlWorkerPlugin, type RTLTextPlugin} from './rtl_text_plugin_worker';
-import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source';
-import {isWorker} from '../util/util';
-import {addProtocol, removeProtocol} from './protocol_crud';
-import {makeRequest} from '../util/ajax';
+import {Actor, type ActorTarget, type IActor} from '../util/actor.ts';
+import {StyleLayerIndex} from '../style/style_layer_index.ts';
+import {VectorTileWorkerSource} from './vector_tile_worker_source.ts';
+import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source.ts';
+import {rtlWorkerPlugin, type RTLTextPlugin} from './rtl_text_plugin_worker.ts';
+import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source.ts';
+import {isWorker} from '../util/util.ts';
+import {addProtocol, removeProtocol} from './protocol_crud.ts';
+import {makeRequest} from '../util/ajax.ts';
 
-import {type PluginState} from './rtl_text_plugin_status';
+import {type PluginState} from './rtl_text_plugin_status.ts';
 import type {
     WorkerSource,
     WorkerSourceConstructor,
     WorkerTileParameters,
     WorkerDEMTileParameters,
     TileParameters
-} from '../source/worker_source';
-import type {WorkerGlobalScopeInterface} from '../util/web_worker';
+} from '../source/worker_source.ts';
+import type {WorkerGlobalScopeInterface} from '../util/web_worker.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {
     MessageType,
@@ -24,7 +24,7 @@ import {
     type GetClusterLeavesParams,
     type RemoveSourceParams,
     type UpdateLayersParameters
-} from '../util/actor_messages';
+} from '../util/actor_messages.ts';
 
 /**
  * Loads an external script into worker (global) scope. The loader picks a

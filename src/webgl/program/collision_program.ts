@@ -1,7 +1,7 @@
-import {Uniform2f} from '../uniform_binding';
-import type {Context} from '../../webgl/context';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {IReadonlyTransform} from '../../geo/transform_interface';
+import {Uniform2f} from '../uniform_binding.ts';
+import type {Context} from '../../webgl/context.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 
 export type CollisionUniformsType = {
     'u_pixel_extrude_scale': Uniform2f;

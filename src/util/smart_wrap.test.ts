@@ -1,8 +1,8 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../geo/lng_lat';
-import {smartWrap} from './smart_wrap';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {LngLat} from '../geo/lng_lat.ts';
+import {smartWrap} from './smart_wrap.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 
 const transform = new MercatorTransform();
 transform.resize(100, 100);

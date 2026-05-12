@@ -29,8 +29,6 @@ Include the following code in the `<body>` of your HTML file.
 <script type='module'>
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.mjs';
 
-maplibregl.setWorkerUrl('https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl-worker.mjs');
-
 const map = new maplibregl.Map({
   container: 'map',
   style: 'https://demotiles.maplibre.org/style.json', // stylesheet location

@@ -1,6 +1,6 @@
-import {latFromMercatorY, lngFromMercatorX} from '../geo/mercator_coordinate';
-import {LngLatBounds} from '../geo/lng_lat_bounds';
-import type {CanonicalTileID} from './tile_id';
+import {latFromMercatorY, lngFromMercatorX} from '../geo/mercator_coordinate.ts';
+import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import type {CanonicalTileID} from './tile_id.ts';
 
 export function tileIdToLngLatBounds(
     {x,y,z}: CanonicalTileID,

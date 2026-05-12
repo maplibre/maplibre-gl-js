@@ -1,8 +1,8 @@
 import {describe, expect, test} from 'vitest';
-import {Context} from './context';
-import {Texture} from './texture';
-import {premultiplyAlpha, RGBAImage} from '../util/image';
-import {createNullGL} from '../util/test/null_gl';
+import {Context} from './context.ts';
+import {Texture} from './texture.ts';
+import {premultiplyAlpha, RGBAImage} from '../util/image.ts';
+import {createNullGL} from '../util/test/null_gl.ts';
 
 describe('Texture', () => {
     describe('glPixelStore state is reset after texture creation', () => {

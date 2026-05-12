@@ -1,19 +1,19 @@
-import {IndexBuffer} from './index_buffer';
+import {IndexBuffer} from './index_buffer.ts';
 
-import {VertexBuffer} from './vertex_buffer';
-import {Framebuffer} from './framebuffer';
-import {type DepthMode} from './depth_mode';
-import {type StencilMode} from './stencil_mode';
-import {ColorMode} from './color_mode';
-import {type CullFaceMode} from './cull_face_mode';
-import {deepEqual} from '../util/util';
-import {ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, BlendEquation, CullFace, CullFaceSide, FrontFace, ProgramValue, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArray, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha, PixelStoreUnpackFlipY} from './value';
+import {VertexBuffer} from './vertex_buffer.ts';
+import {Framebuffer} from './framebuffer.ts';
+import {type DepthMode} from './depth_mode.ts';
+import {type StencilMode} from './stencil_mode.ts';
+import {ColorMode} from './color_mode.ts';
+import {type CullFaceMode} from './cull_face_mode.ts';
+import {deepEqual} from '../util/util.ts';
+import {ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, BlendEquation, CullFace, CullFaceSide, FrontFace, ProgramValue, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArray, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha, PixelStoreUnpackFlipY} from './value.ts';
 
-import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type';
+import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type.ts';
 import type {
     StructArray,
     StructArrayMember
-} from '../util/struct_array';
+} from '../util/struct_array.ts';
 import type {Color} from '@maplibre/maplibre-gl-style-spec';
 
 type ClearArgs = {
@@ -113,7 +113,7 @@ export class Context {
         gl.getExtension('EXT_color_buffer_float');
     }
 
-    setDefault() {
+    setDefault(): void {
         this.unbindVAO();
 
         this.clearColor.setDefault();
@@ -143,7 +143,7 @@ export class Context {
         this.pixelStoreUnpackFlipY.setDefault();
     }
 
-    setDirty() {
+    setDirty(): void {
         this.clearColor.dirty = true;
         this.clearDepth.dirty = true;
         this.clearStencil.dirty = true;
@@ -177,15 +177,15 @@ export class Context {
         this.pixelStoreUnpackFlipY.dirty = true;
     }
 
-    createIndexBuffer(array: TriangleIndexArray | LineIndexArray | LineStripIndexArray, dynamicDraw?: boolean) {
+    createIndexBuffer(array: TriangleIndexArray | LineIndexArray | LineStripIndexArray, dynamicDraw?: boolean): IndexBuffer {
         return new IndexBuffer(this, array, dynamicDraw);
     }
 
-    createVertexBuffer(array: StructArray, attributes: readonly StructArrayMember[], dynamicDraw?: boolean) {
+    createVertexBuffer(array: StructArray, attributes: readonly StructArrayMember[], dynamicDraw?: boolean): VertexBuffer {
         return new VertexBuffer(this, array, attributes, dynamicDraw);
     }
 
-    createRenderbuffer(storageFormat: number, width: number, height: number) {
+    createRenderbuffer(storageFormat: number, width: number, height: number): WebGLRenderbuffer {
         const gl = this.gl;
 
         const rbo = gl.createRenderbuffer();
@@ -196,7 +196,7 @@ export class Context {
         return rbo;
     }
 
-    createFramebuffer(width: number, height: number, hasDepth: boolean, hasStencil: boolean) {
+    createFramebuffer(width: number, height: number, hasDepth: boolean, hasStencil: boolean): Framebuffer {
         return new Framebuffer(this, width, height, hasDepth, hasStencil);
     }
 
@@ -204,7 +204,7 @@ export class Context {
         color,
         depth,
         stencil
-    }: ClearArgs) {
+    }: ClearArgs): void {
         const gl = this.gl;
         let mask = 0;
 
@@ -234,7 +234,7 @@ export class Context {
         gl.clear(mask);
     }
 
-    setCullFace(cullFaceMode: Readonly<CullFaceMode>) {
+    setCullFace(cullFaceMode: Readonly<CullFaceMode>): void {
         if (cullFaceMode.enable === false) {
             this.cullFace.set(false);
         } else {
@@ -244,7 +244,7 @@ export class Context {
         }
     }
 
-    setDepthMode(depthMode: Readonly<DepthMode>) {
+    setDepthMode(depthMode: Readonly<DepthMode>): void {
         if (depthMode.func === this.gl.ALWAYS && !depthMode.mask) {
             this.depthTest.set(false);
         } else {
@@ -255,7 +255,7 @@ export class Context {
         }
     }
 
-    setStencilMode(stencilMode: Readonly<StencilMode>) {
+    setStencilMode(stencilMode: Readonly<StencilMode>): void {
         if (stencilMode.test.func === this.gl.ALWAYS && !stencilMode.mask) {
             this.stencilTest.set(false);
         } else {
@@ -270,7 +270,7 @@ export class Context {
         }
     }
 
-    setColorMode(colorMode: Readonly<ColorMode>) {
+    setColorMode(colorMode: Readonly<ColorMode>): void {
         if (deepEqual(colorMode.blendFunction, ColorMode.Replace)) {
             this.blend.set(false);
         } else {
@@ -286,11 +286,11 @@ export class Context {
         return this.gl.createVertexArray();
     }
 
-    deleteVertexArray(x: WebGLVertexArrayObject | undefined) {
+    deleteVertexArray(x: WebGLVertexArrayObject | undefined): void {
         this.gl.deleteVertexArray(x);
     }
 
-    unbindVAO() {
+    unbindVAO(): void {
         // Unbinding the VAO prevents other things (custom layers, new buffer creation) from
         // unintentionally changing the state of the last VAO used.
         this.bindVertexArray.set(null);

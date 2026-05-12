@@ -1,6 +1,6 @@
-import {Uniform1f} from '../uniform_binding';
-import type {Context} from '../../webgl/context';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
+import {Uniform1f} from '../uniform_binding.ts';
+import type {Context} from '../../webgl/context.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 
 export type ProjectionErrorMeasurementUniformsType = {
     'u_input': Uniform1f;

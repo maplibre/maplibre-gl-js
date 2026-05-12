@@ -19,8 +19,6 @@
 <script type="module">
     import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
 
-    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
-
     // add the PMTiles plugin to the maplibregl global.
     const protocol = new pmtiles.Protocol();
     maplibregl.addProtocol('pmtiles', protocol.tile);

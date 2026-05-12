@@ -5,6 +5,46 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+## 6.0.0-9
+
+### ✨ Features and improvements
+
+- Adopt isolatedDeclarations and switch dts emitter from tsgo to oxc ([#7566](https://github.com/maplibre/maplibre-gl-js/pull/7566)) (by [@birkskyum](https://github.com/birkskyum))
+
+### 🐞 Bug fixes
+
+- Fix feature state bulk remove + feature set per-id set does not remove state of first feature ([#7554](https://github.com/maplibre/maplibre-gl-js/pull/7554)) (by [@xavierjs](https://github.com/xavierjs))
+- Remove error when actor doesn't have a registered message type for better usability of custom messages in workers ([#7589](https://github.com/maplibre/maplibre-gl-js/issues/7589)) (by [@HarelM](https://github.com/HarelM))
+- Auto-load worker module for CDN usage ([#7595](https://github.com/maplibre/maplibre-gl-js/pull/7595)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix Large number of feature state keys leads to zoom lag when loading cached tiles ([#7590](https://github.com/maplibre/maplibre-gl-js/pull/7590)) (by [@xavierjs](https://github.com/xavierjs))
+
+## 6.0.0-8
+
+### ✨ Features and improvements
+
+- Improve 3D terrain performance ([#7549](https://github.com/maplibre/maplibre-gl-js/pull/7549)) (by [@lucaswoj](https://github.com/lucaswoj))
+
+## 6.0.0-7
+
+### ✨ Features and improvements
+
+- Replace dts-bundle-generator with rolldown-plugin-dts for 78.2x faster .d.ts generation. ([#7564](https://github.com/maplibre/maplibre-gl-js/pull/7564)) (by [@birkskyum](https://github.com/birkskyum))
+- Replace ts-node with Node 24's native TypeScript support for build scripts. ([#7565](https://github.com/maplibre/maplibre-gl-js/pull/7565)) (by [@birkskyum](https://github.com/birkskyum))
+- Bump typescript to v7 beta - 3.5x faster typecheck ([#7556](https://github.com/maplibre/maplibre-gl-js/pull/7556)) (by [@birkskyum](https://github.com/birkskyum))
+
+### 🐞 Bug fixes
+
+- ⚠️ Fix transparent, overlapping lines creating artefacts. This is fixed for `line-opacity`, but purposefully not for transparent `line-color` properties, thus still allowing transparent colors to stack their effect. ([#7490](https://github.com/maplibre/maplibre-gl-js/pull/7490)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Fix issue when map's max zoom and source max zoom are close to eachother ([#7567](https://github.com/maplibre/maplibre-gl-js/issues/7567)) (by [@HarelM](https://github.com/HarelM))
+
+## 6.0.0-6
+
+### ✨ Features and improvements
+
+- Add a new map creation option, `terrainSkirtLength`, which allows the removal of visually unappealing vertical artifacts when using a terrain along with a transparent background ([#7523](https://github.com/maplibre/maplibre-gl-js/pull/7523)) (by [@safwat-halaby](https://github.com/safwat-halaby))
+- Bundle with Rolldown instead of Rollup ([#7555](https://github.com/maplibre/maplibre-gl-js/pull/7555)) (by [@birkskyum](https://github.com/birkskyum))
+- Optimization for Feature State: Replace String-Indexed Object with Array (up to 3.4X speedup) ([#7550](https://github.com/maplibre/maplibre-gl-js/pull/7550)) (by [@xavierjs](https://github.com/xavierjs))
+
 ## 6.0.0-5
 
 ### ✨ Features and improvements

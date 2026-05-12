@@ -1,9 +1,9 @@
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import Benchmark from '../lib/benchmark';
-import fetchStyle from '../lib/fetch_style';
-import TileParser from '../lib/tile_parser';
-import {OverscaledTileID} from '../../../src/tile/tile_id';
-import {serialize, deserialize} from '../../../src/util/web_worker_transfer';
+import Benchmark from '../lib/benchmark.ts';
+import fetchStyle from '../lib/fetch_style.ts';
+import TileParser from '../lib/tile_parser.ts';
+import {OverscaledTileID} from '../../../src/tile/tile_id.ts';
+import {serialize, deserialize} from '../../../src/util/web_worker_transfer.ts';
 
 export default class WorkerTransfer extends Benchmark {
     parser: TileParser;
@@ -38,9 +38,11 @@ export default class WorkerTransfer extends Benchmark {
         await this.parser.setup();
         const tiles = await Promise.all(tileIDs.map(tileID => this.parser.fetchTile(tileID)));
         const tileResults = await Promise.all(tiles.map(tile => this.parser.parseTile(tile)));
-        const payload = tileResults
-            .concat(Object.values(this.parser.icons))
-            .concat(Object.values(this.parser.glyphs)).map((obj) => serialize(obj, []));
+        const payload = [
+            ...tileResults,
+            ...Object.values(this.parser.icons),
+            ...Object.values(this.parser.glyphs),
+        ].map((obj) => serialize(obj, []));
         this.payloadJSON = payload.map(barePayload);
         this.payloadTiles = payload.slice(0, tileResults.length);
     }

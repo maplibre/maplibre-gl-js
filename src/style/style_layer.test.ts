@@ -1,13 +1,13 @@
 import {describe, test, expect} from 'vitest';
-import {createStyleLayer} from './create_style_layer';
-import {FillStyleLayer} from './style_layer/fill_style_layer';
-import {extend} from '../util/util';
+import {createStyleLayer} from './create_style_layer.ts';
+import {FillStyleLayer} from './style_layer/fill_style_layer.ts';
+import {extend} from '../util/util.ts';
 import {Color, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type EvaluationParameters} from './evaluation_parameters';
-import {type TransitionParameters} from './properties';
-import {type BackgroundStyleLayer} from './style_layer/background_style_layer';
-import {type SymbolStyleLayer} from './style_layer/symbol_style_layer';
-import {type CircleStyleLayer} from './style_layer/circle_style_layer';
+import {type EvaluationParameters} from './evaluation_parameters.ts';
+import {type TransitionParameters} from './properties.ts';
+import {type BackgroundStyleLayer} from './style_layer/background_style_layer.ts';
+import {type SymbolStyleLayer} from './style_layer/symbol_style_layer.ts';
+import {type CircleStyleLayer} from './style_layer/circle_style_layer.ts';
 
 describe('StyleLayer', () => {
     test('instantiates the correct subclass', () => {
@@ -72,7 +72,7 @@ describe('StyleLayer.setPaintProperty', () => {
                 'background-color-transition': {
                     duration: 600
                 }
-            } as any
+            }
         }, {});
 
         layer.setPaintProperty('background-color', 'blue');
@@ -248,7 +248,7 @@ describe('StyleLayer.getLayoutProperty', () => {
         const layer = createStyleLayer({
             'id': 'background',
             'type': 'background',
-        } as LayerSpecification, {});
+        }, {});
 
         expect(() => layer.getLayoutProperty('some-property' as any)).toThrow(
             'Cannot get layout property "some-property" on layer type "background" which has no layout properties.'
@@ -347,7 +347,7 @@ describe('StyleLayer.getLayoutAffectingGlobalStateRefs', () => {
             'paint': {
                 'background-color': '#000000'
             }
-        } as LayerSpecification, {});
+        }, {});
 
         expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new Set<string>());
     });
@@ -385,7 +385,7 @@ describe('StyleLayer.getLayoutAffectingGlobalStateRefs', () => {
             layout: {
                 'visibility': ['global-state', 'visibility']
             }
-        } as LayerSpecification, {});
+        }, {});
 
         expect(layer.getLayoutAffectingGlobalStateRefs()).toEqual(new Set<string>(['visibility']));
     });
@@ -399,7 +399,7 @@ describe('StyleLayer.getPaintAffectingGlobalStateRefs', () => {
             'paint': {
                 'background-color': '#000000'
             }
-        } as LayerSpecification, {});
+        }, {});
 
         expect(layer.getPaintAffectingGlobalStateRefs()).toEqual(new Map<string, Array<{name: string; value: any}>>());
     });
@@ -604,7 +604,7 @@ describe('StyleLayer.globalState', () => {
             layout: {
                 'visibility': ['global-state', 'visibility']
             }
-        } as LayerSpecification, globalState) as BackgroundStyleLayer;
+        }, globalState) as BackgroundStyleLayer;
 
         expect(layer.isHidden()).toBe(true);
 

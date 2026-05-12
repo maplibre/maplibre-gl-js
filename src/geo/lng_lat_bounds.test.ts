@@ -1,9 +1,9 @@
 import {describe, test, expect} from 'vitest';
-import {LngLat} from './lng_lat';
-import {LngLatBounds} from './lng_lat_bounds';
-import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds';
-import {CanonicalTileID} from '../tile/tile_id';
-import {EXTENT} from '../data/extent';
+import {LngLat} from './lng_lat.ts';
+import {LngLatBounds} from './lng_lat_bounds.ts';
+import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds.ts';
+import {CanonicalTileID} from '../tile/tile_id.ts';
+import {EXTENT} from '../data/extent.ts';
 
 describe('LngLatBounds', () => {
     test('constructor', () => {

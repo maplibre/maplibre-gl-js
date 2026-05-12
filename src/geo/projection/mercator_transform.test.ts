@@ -1,15 +1,15 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../lng_lat';
-import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id';
-import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed';
-import type {Terrain} from '../../render/terrain';
-import {MercatorTransform} from './mercator_transform';
-import {LngLatBounds} from '../lng_lat_bounds';
-import {getMercatorHorizon} from './mercator_utils';
+import {LngLat} from '../lng_lat.ts';
+import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
+import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed.ts';
+import type {Terrain} from '../../render/terrain.ts';
+import {MercatorTransform} from './mercator_transform.ts';
+import {LngLatBounds} from '../lng_lat_bounds.ts';
+import {getMercatorHorizon} from './mercator_utils.ts';
 import {mat4} from 'gl-matrix';
-import {expectToBeCloseToArray} from '../../util/test/util';
-import {EXTENT} from '../../data/extent';
+import {expectToBeCloseToArray} from '../../util/test/util.ts';
+import {EXTENT} from '../../data/extent.ts';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -47,7 +47,7 @@ describe('transform', () => {
         expect(transform.farZ).toBe(804.8028169246645);
         expect([...transform.projectionMatrix]).toEqual([3, 0, 0, 0, 0, 3, 0, 0, -0, 0, -1.0251635313034058, -1, 0, 0, -20.25163459777832, 0]);
         expectToBeCloseToArray([...transform.inverseProjectionMatrix], [0.3333333333333333, 0, 0, 0, 0, 0.3333333333333333, 0, 0, 0, 0, 0, -0.04937872980873673, 0, 0, -1, 0.05062127019126326], 10);
-        expectToBeCloseToArray([...mat4.multiply(new Float64Array(16) as any, transform.projectionMatrix, transform.inverseProjectionMatrix)], [
+        expectToBeCloseToArray([...mat4.multiply(new Float64Array(16), transform.projectionMatrix, transform.inverseProjectionMatrix)], [
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,

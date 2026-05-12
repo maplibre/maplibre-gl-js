@@ -1,0 +1,46 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "maxZoom": 16
+    }
+  },
+  "center": [
+    13.429056,
+    52.498167
+  ],
+  "zoom": 15,
+  "sources": {
+    "maplibre": {
+      "type": "vector",
+      "maxzoom": 14,
+      "tiles": [
+        "local://tiles/{z}-{x}-{y}.mvt"
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "road",
+      "type": "line",
+      "source": "maplibre",
+      "source-layer": "building",
+      "paint": {
+        "line-width": 4,
+        "line-color": "#000",
+        "line-dasharray": [
+          2.5,
+          2.5
+        ]
+      }
+    }
+  ]
+}

@@ -1,9 +1,9 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, getEdgeTiles, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance, evaluateZoomSnap} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, getEdgeTiles, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance, evaluateZoomSnap} from './util.ts';
 import {Canvas} from 'canvas';
-import {OverscaledTileID} from '../tile/tile_id';
-import {expectToBeCloseToArray} from './test/util';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {expectToBeCloseToArray} from './test/util.ts';
 import {vec3, type vec4} from 'gl-matrix';
 
 describe('util', () => {
@@ -631,8 +631,8 @@ describe('threePlaneIntersection', () => {
     const precision = 10;
 
     function createPlane(origin: number[], direction: number[]): vec4 {
-        const normalized = vec3.normalize([] as any, direction as vec3);
-        const dist = vec3.dot(normalized, origin as vec3);
+        const normalized = vec3.normalize([], direction);
+        const dist = vec3.dot(normalized, origin);
         return [normalized[0], normalized[1], normalized[2], -dist];
     }
 

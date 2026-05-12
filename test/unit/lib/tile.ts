@@ -2,10 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import {OverscaledTileID} from '../../../src/tile/tile_id';
-import {FeatureIndex} from '../../../src/data/feature_index';
-import type {IndexedFeature, PopulateParameters} from '../../../src/data/bucket';
-import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings';
+import {OverscaledTileID} from '../../../src/tile/tile_id.ts';
+import {FeatureIndex} from '../../../src/data/feature_index.ts';
+import type {IndexedFeature, PopulateParameters} from '../../../src/data/bucket.ts';
+import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 export type CreateBucketParameters = {
@@ -28,7 +28,7 @@ export function getFeaturesFromLayer(sourceLayer: VectorTileLayerLike): IndexedF
     return features;
 }
 
-export function createPopulateOptions(availableImages): PopulateParameters {
+export function createPopulateOptions(availableImages: string[]): PopulateParameters {
     return {
         featureIndex: new FeatureIndex(new OverscaledTileID(0, 0, 0, 0, 0)),
         iconDependencies: {},

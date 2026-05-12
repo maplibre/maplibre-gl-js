@@ -1,12 +1,12 @@
-import {DataConstantProperty, type PossiblyEvaluated, Properties, TRANSITION_SUFFIX, Transitionable, type Transitioning, type TransitionParameters} from './properties';
-import {Evented} from '../util/evented';
-import {EvaluationParameters} from './evaluation_parameters';
-import {emitValidationErrors, validateSky, validateStyle} from './validate_style';
-import {extend} from '../util/util';
+import {DataConstantProperty, type PossiblyEvaluated, Properties, TRANSITION_SUFFIX, Transitionable, type Transitioning, type TransitionParameters} from './properties.ts';
+import {Evented} from '../util/evented.ts';
+import {EvaluationParameters} from './evaluation_parameters.ts';
+import {emitValidationErrors, validateSky, validateStyle} from './validate_style.ts';
+import {extend} from '../util/util.ts';
 import {type Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
-import {type Mesh} from '../render/mesh';
+import {type Mesh} from '../render/mesh.ts';
 import type {StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {StyleSetterOptions} from './style';
+import type {StyleSetterOptions} from './style.ts';
 
 type SkyProps = {
     'sky-color': DataConstantProperty<Color>;
@@ -57,7 +57,7 @@ export class Sky extends Evented {
         this.recalculate(new EvaluationParameters(0));
     }
 
-    setSky(sky?: SkySpecification, options: StyleSetterOptions = {}) {
+    setSky(sky?: SkySpecification, options: StyleSetterOptions = {}): void {
         if (this._validate(validateSky, sky, options)) return;
 
         sky ||= {
@@ -82,19 +82,19 @@ export class Sky extends Evented {
         return this._transitionable.serialize();
     }
 
-    updateTransitions(parameters: TransitionParameters) {
+    updateTransitions(parameters: TransitionParameters): void {
         this._transitioning = this._transitionable.transitioned(parameters, this._transitioning);
     }
 
-    hasTransition() {
+    hasTransition(): boolean {
         return this._transitioning.hasTransition();
     }
 
-    recalculate(parameters: EvaluationParameters) {
+    recalculate(parameters: EvaluationParameters): void {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
-    _validate(validate: Function, value: unknown, options: StyleSetterOptions = {}) {
+    _validate(validate: Function, value: unknown, options: StyleSetterOptions = {}): boolean {
         if (options?.validate === false) {
             return false;
         }
@@ -116,7 +116,7 @@ export class Sky extends Evented {
      * the corresponding opacity values. Below pitch 60 the fog is completely
      * invisible.
      */
-    calculateFogBlendOpacity(pitch: number) {
+    calculateFogBlendOpacity(pitch: number): number {
         if (pitch < 60) return 0; // disable
         if (pitch < 70) return (pitch - 60) / 10; // fade in
         return 1;

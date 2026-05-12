@@ -1,10 +1,10 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
-import {Popup, type Offset} from './popup';
-import {LngLat} from '../geo/lng_lat';
+import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util.ts';
+import {Popup, type Offset} from './popup.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
-import simulate from '../../test/unit/lib/simulate_interaction';
-import {type PositionAnchor} from './anchor';
+import simulate from '../../test/unit/lib/simulate_interaction.ts';
+import {type PositionAnchor} from './anchor.ts';
 
 const containerWidth = 512;
 const containerHeight = 512;

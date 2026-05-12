@@ -1,7 +1,7 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
-import {NavigationControl} from './navigation_control';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util.ts';
+import {NavigationControl} from './navigation_control.ts';
 
 function createMap() {
     return globalCreateMap();

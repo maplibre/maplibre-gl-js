@@ -17,7 +17,7 @@ export class ThrottledInvoker {
         };
     }
 
-    trigger() {
+    trigger(): void {
         if (this._triggered) {
             return;
         }
@@ -25,7 +25,7 @@ export class ThrottledInvoker {
         this._channel?.port1.postMessage(true);
     }
 
-    remove() {
+    remove(): void {
         delete this._channel;
         this._methodToThrottle = () => {};
     }

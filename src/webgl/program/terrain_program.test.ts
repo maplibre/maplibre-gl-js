@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest';
-import {terrainUniformValues} from './terrain_program';
-import {Sky} from '../../style/sky';
+import {terrainUniformValues} from './terrain_program.ts';
+import {Sky} from '../../style/sky.ts';
 import {mat4} from 'gl-matrix';
 
 describe('terrainUniformValues', () => {

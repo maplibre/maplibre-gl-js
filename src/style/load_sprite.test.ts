@@ -1,13 +1,13 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import {RequestManager} from '../util/request_manager';
-import {loadSprite, normalizeSpriteURL} from './load_sprite';
+import {RequestManager} from '../util/request_manager.ts';
+import {loadSprite, normalizeSpriteURL} from './load_sprite.ts';
 import {type FakeServer, fakeServer} from 'nise';
-import {bufferToArrayBuffer, sleep} from '../util/test/util';
-import {ABORT_ERROR} from '../util/abort_error';
-import * as util from '../util/util';
-import {ensureError} from '../util/util';
+import {bufferToArrayBuffer, sleep} from '../util/test/util.ts';
+import {ABORT_ERROR} from '../util/abort_error.ts';
+import * as util from '../util/util.ts';
+import {ensureError} from '../util/util.ts';
 
 describe('normalizeSpriteURL', () => {
     test('concantenates path, ratio, and extension for non-mapbox:// scheme', () => {

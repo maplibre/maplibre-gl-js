@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {findPoleOfInaccessibility, getCentroidCell} from './find_pole_of_inaccessibility';
+import {findPoleOfInaccessibility, getCentroidCell} from './find_pole_of_inaccessibility.ts';
 
 describe('findPoleOfInaccessibility', () => {
     test('should find the pole of inaccessibility for a simple polygon', () => {

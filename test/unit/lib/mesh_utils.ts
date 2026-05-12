@@ -1,5 +1,5 @@
-import {EXTENT} from '../../../src/data/extent';
-import {clamp} from '../../../src/util/util';
+import {EXTENT} from '../../../src/data/extent.ts';
+import {clamp} from '../../../src/util/util.ts';
 
 export type SimpleSegment = {
     vertexOffset: number;

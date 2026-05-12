@@ -102,7 +102,7 @@ export class SubdivisionGranularitySetting {
     /**
      * Granularity settings that disable subdivision altogether.
      */
-    public static readonly noSubdivision = new SubdivisionGranularitySetting({
+    public static readonly noSubdivision: SubdivisionGranularitySetting = new SubdivisionGranularitySetting({
         fill: new SubdivisionGranularityExpression(0, 0),
         line: new SubdivisionGranularityExpression(0, 0),
         tile: new SubdivisionGranularityExpression(0, 0),

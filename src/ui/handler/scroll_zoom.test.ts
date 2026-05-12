@@ -1,9 +1,9 @@
 import {describe, beforeEach, test, expect, vi, type MockInstance} from 'vitest';
-import * as timeControl from '../../util/time_control';
-import {Map, type MapOptions} from '../../ui/map';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {setPerformance, beforeMapTest, createTerrain} from '../../util/test/util';
+import * as timeControl from '../../util/time_control.ts';
+import {Map, type MapOptions} from '../../ui/map.ts';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {setPerformance, beforeMapTest, createTerrain} from '../../util/test/util.ts';
 
 function createMap(options: Partial<MapOptions> = {}) {
     return new Map({

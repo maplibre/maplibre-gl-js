@@ -1,23 +1,23 @@
 import {interpolates, type Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 
-import {sphericalToCartesian} from '../util/util';
-import {Evented} from '../util/evented';
+import {sphericalToCartesian} from '../util/util.ts';
+import {Evented} from '../util/evented.ts';
 import {
     validateStyle,
     validateLight,
     emitValidationErrors
-} from './validate_style';
+} from './validate_style.ts';
 
 import type {StylePropertySpecification, LightSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {EvaluationParameters} from './evaluation_parameters';
-import type {StyleSetterOptions} from '../style/style';
-import {Properties, Transitionable, type Transitioning, type PossiblyEvaluated, DataConstantProperty, TRANSITION_SUFFIX} from './properties';
+import type {EvaluationParameters} from './evaluation_parameters.ts';
+import type {StyleSetterOptions} from '../style/style.ts';
+import {Properties, Transitionable, type Transitioning, type PossiblyEvaluated, DataConstantProperty, TRANSITION_SUFFIX} from './properties.ts';
 
 import type {
     Property,
     PropertyValue,
     TransitionParameters
-} from './properties';
+} from './properties.ts';
 
 type LightPosition = {
     x: number;
@@ -89,7 +89,7 @@ export class Light extends Evented {
         return this._transitionable.serialize();
     }
 
-    setLight(light?: LightSpecification, options: StyleSetterOptions = {}) {
+    setLight(light?: LightSpecification, options: StyleSetterOptions = {}): void {
         if (this._validate(validateLight, light, options)) {
             return;
         }
@@ -104,21 +104,21 @@ export class Light extends Evented {
         }
     }
 
-    updateTransitions(parameters: TransitionParameters) {
+    updateTransitions(parameters: TransitionParameters): void {
         this._transitioning = this._transitionable.transitioned(parameters, this._transitioning);
     }
 
-    hasTransition() {
+    hasTransition(): boolean {
         return this._transitioning.hasTransition();
     }
 
-    recalculate(parameters: EvaluationParameters) {
+    recalculate(parameters: EvaluationParameters): void {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
     _validate(validate: Function, value: unknown, options?: {
         validate?: boolean;
-    }) {
+    }): boolean {
         if (options?.validate === false) {
             return false;
         }

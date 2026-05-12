@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {type mat4} from 'gl-matrix';
-import {type Context} from './context';
+import {type Context} from './context.ts';
 import {
     Uniform1i,
     Uniform1f,
@@ -10,7 +10,7 @@ import {
     UniformFloatArray,
     UniformColorArray,
     UniformMatrix4f
-} from './uniform_binding';
+} from './uniform_binding.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 
 describe('Uniform Binding', () => {

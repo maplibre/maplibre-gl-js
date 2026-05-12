@@ -1,8 +1,8 @@
-import {type RequestParameters, makeRequest, sameOrigin, type GetResourceResponse} from './ajax';
-import {arrayBufferToImageBitmap, arrayBufferToImage, ensureError, extend, isWorker, isImageBitmap} from './util';
-import {config} from './config';
-import {AbortError} from './abort_error';
-import {getProtocol} from '../source/protocol_crud';
+import {type RequestParameters, makeRequest, sameOrigin, type GetResourceResponse} from './ajax.ts';
+import {arrayBufferToImageBitmap, arrayBufferToImage, ensureError, extend, isWorker, isImageBitmap} from './util.ts';
+import {config} from './config.ts';
+import {AbortError} from './abort_error.ts';
+import {getProtocol} from '../source/protocol_crud.ts';
 
 type ImageQueueThrottleControlCallback = () => boolean;
 
@@ -166,7 +166,7 @@ export namespace ImageRequest {
             if (response.data instanceof HTMLImageElement || isImageBitmap(response.data)) {
                 // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
                 // If HtmlImageElement is used to get image then response type will be HTMLImageElement
-                onSuccess(response as GetResourceResponse<HTMLImageElement | ImageBitmap | null>);
+                onSuccess(response);
             } else if (response.data) {
                 const img = await arrayBufferToCanvasImageSource(response.data);
                 onSuccess({data: img, cacheControl: response.cacheControl, expires: response.expires});

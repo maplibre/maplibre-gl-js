@@ -1,12 +1,12 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {type StyleLayer} from '../../style/style_layer';
-import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util';
-import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
-import {type MapLibreEvent} from '../events';
-import {Map, type MapOptions} from '../map';
-import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
-import {GlobeProjection} from '../../geo/projection/globe_projection';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {type StyleLayer} from '../../style/style_layer.ts';
+import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util.ts';
+import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
+import {type MapLibreEvent} from '../events.ts';
+import {Map} from '../map.ts';
+import {Event as EventedEvent, ErrorEvent} from '../../util/evented.ts';
+import {GlobeProjection} from '../../geo/projection/globe_projection.ts';
 import {type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
@@ -157,7 +157,7 @@ describe('map events', () => {
     test('Map.on adds a listener not triggered when the specified layer does not exist', () => {
         const map = createMap();
 
-        vi.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);
+        vi.spyOn(map, 'getLayer').mockReturnValue(null);
 
         const spy = vi.fn();
 
@@ -474,7 +474,7 @@ describe('map events', () => {
     test.each(mouseInteractionEvents)('Map.on %s does not fire if the specified layer does not exist', (event) => {
         const map = createMap();
 
-        vi.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);
+        vi.spyOn(map, 'getLayer').mockReturnValue(null);
 
         const spy = vi.fn();
 
@@ -941,7 +941,7 @@ describe('map events', () => {
     });
 
     test('emits load event after a style is set', async () => {
-        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
+        const map = new Map({container: window.document.createElement('div')});
 
         const failSpy = vi.fn();
 
@@ -956,7 +956,7 @@ describe('map events', () => {
     });
 
     test('errors inside load event are not suppressed', async () => {
-        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
+        const map = new Map({container: window.document.createElement('div')});
 
         const loadHandler = vi.fn(() => {
             throw new Error('Error in load handler');

@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {LineAtlas} from './line_atlas';
+import {LineAtlas} from './line_atlas.ts';
 
 describe('LineAtlas', () => {
     const lineAtlas = new LineAtlas(64, 64);

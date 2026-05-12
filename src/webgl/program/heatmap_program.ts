@@ -5,15 +5,15 @@ import {
     Uniform1f,
     Uniform2f,
     UniformMatrix4f
-} from '../uniform_binding';
-import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
+} from '../uniform_binding.ts';
+import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
 
-import type {Context} from '../../webgl/context';
-import type {Tile} from '../../tile/tile';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {Painter} from '../../render/painter';
-import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer';
-import {EXTENT} from '../../data/extent';
+import type {Context} from '../../webgl/context.ts';
+import type {Tile} from '../../tile/tile.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer.ts';
+import {EXTENT} from '../../data/extent.ts';
 
 export type HeatmapUniformsType = {
     'u_extrude_scale': Uniform1f;

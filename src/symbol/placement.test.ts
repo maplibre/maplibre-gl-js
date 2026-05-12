@@ -1,11 +1,11 @@
 import {beforeEach, describe, expect, test} from 'vitest';
-import {Placement, RetainedQueryData} from './placement';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
-import {type EvaluationParameters} from '../style/evaluation_parameters';
-import {CollisionBoxArray, SymbolInstanceArray} from '../data/array_types.g';
-import {OverscaledTileID} from '../tile/tile_id';
-import {FeatureIndex} from '../data/feature_index';
+import {Placement, RetainedQueryData} from './placement.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
+import {type EvaluationParameters} from '../style/evaluation_parameters.ts';
+import {CollisionBoxArray, SymbolInstanceArray} from '../data/array_types.g.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {FeatureIndex} from '../data/feature_index.ts';
 
 describe('placement', () => {
     let placement: Placement;
@@ -13,7 +13,7 @@ describe('placement', () => {
     beforeEach(() => {
         transform = new MercatorTransform();
         transform.resize(512, 512);
-        placement = new Placement(transform, undefined as any, 0, true);
+        placement = new Placement(transform, undefined, 0, true);
     });
 
     test('should not throw on integer overflow', () => {

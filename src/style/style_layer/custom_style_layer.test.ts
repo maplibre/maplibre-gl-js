@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest';
-import {CustomStyleLayer, type CustomLayerInterface} from './custom_style_layer';
+import {CustomStyleLayer, type CustomLayerInterface} from './custom_style_layer.ts';
 
 describe('CustomStyleLayer', () => {
     test('set visibility', () => {

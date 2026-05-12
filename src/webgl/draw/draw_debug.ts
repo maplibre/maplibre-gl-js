@@ -1,14 +1,14 @@
-import {DepthMode} from '../depth_mode';
-import {StencilMode} from '../stencil_mode';
-import {CullFaceMode} from '../cull_face_mode';
-import {debugUniformValues} from '../program/debug_program';
+import {DepthMode} from '../depth_mode.ts';
+import {StencilMode} from '../stencil_mode.ts';
+import {CullFaceMode} from '../cull_face_mode.ts';
+import {debugUniformValues} from '../program/debug_program.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {ColorMode} from '../color_mode';
+import {ColorMode} from '../color_mode.ts';
 
-import type {Painter} from '../../render/painter';
-import type {TileManager} from '../../tile/tile_manager';
-import type {OverscaledTileID} from '../../tile/tile_id';
-import {type Style} from '../../style/style';
+import type {Painter} from '../../render/painter.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import {type Style} from '../../style/style.ts';
 
 const topColor = new Color(1, 0, 0, 1);
 const btmColor = new Color(0, 1, 0, 1);
@@ -16,7 +16,7 @@ const leftColor = new Color(0, 0, 1, 1);
 const rightColor = new Color(1, 0, 1, 1);
 const centerColor = new Color(0, 1, 1, 1);
 
-export function drawDebugPadding(painter: Painter) {
+export function drawDebugPadding(painter: Painter): void {
     const padding = painter.transform.padding;
     const lineWidth = 3;
     // Top
@@ -59,7 +59,7 @@ function drawDebugSSRect(painter: Painter, x: number, y: number, width: number, 
     gl.disable(gl.SCISSOR_TEST);
 }
 
-export function drawDebug(painter: Painter, tileManager: TileManager, coords: OverscaledTileID[]) {
+export function drawDebug(painter: Painter, tileManager: TileManager, coords: OverscaledTileID[]): void {
     for (const coord of coords) {
         drawDebugTile(painter, tileManager, coord);
     }

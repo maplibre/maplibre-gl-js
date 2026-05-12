@@ -1,6 +1,6 @@
 import {beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util';
-import {GPUInitializationError} from '../../util/gpu_initialization_error';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import {GPUInitializationError} from '../../util/gpu_initialization_error.ts';
 
 let originalGetContext: typeof HTMLCanvasElement.prototype.getContext;
 beforeEach(() => {

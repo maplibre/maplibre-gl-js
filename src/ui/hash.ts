@@ -1,7 +1,7 @@
-import {throttle} from '../util/throttle';
-import {LngLat} from '../geo/lng_lat';
+import {throttle} from '../util/throttle.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 
-import type {Map} from './map';
+import type {Map} from './map.ts';
 
 /**
  * Adds the map's position to its page's location hash.
@@ -22,7 +22,7 @@ export class Hash {
      *
      * @param map - The map object
      */
-    addTo(map: Map) {
+    addTo(map: Map): this {
         this._map = map;
         addEventListener('hashchange', this._onHashChange, false);
         this._map.on('moveend', this._updateHash);
@@ -32,7 +32,7 @@ export class Hash {
     /**
      * Removes hash
      */
-    remove() {
+    remove(): this {
         removeEventListener('hashchange', this._onHashChange, false);
         this._map.off('moveend', this._updateHash);
         clearTimeout(this._updateHash());
@@ -42,7 +42,7 @@ export class Hash {
         return this;
     }
 
-    getHashString(mapFeedback?: boolean) {
+    getHashString(mapFeedback?: boolean): string {
         const center = this._map.getCenter(),
             zoom = Math.round(this._map.getZoom() * 100) / 100,
             // derived from equation: 512px * 2^z / 360 / 10^d < 0.5px
@@ -73,11 +73,11 @@ export class Hash {
         return `#${hash}`;
     }
 
-    _getHashParams = () => {
+    _getHashParams = (): URLSearchParams => {
         return new URLSearchParams(window.location.hash.replace('#', ''));
     };
 
-    _getCurrentHash = () => {
+    _getCurrentHash = (): string[] => {
         const params = this._getHashParams();
         if (this._hashName) {
             return (params.get(this._hashName) || '').split('/');
@@ -87,7 +87,7 @@ export class Hash {
         return hash.split('/');
     };
 
-    _onHashChange = () => {
+    _onHashChange = (): boolean => {
         const hash = this._getCurrentHash();
 
         if (!this._isValidHash(hash)) {
@@ -105,12 +105,12 @@ export class Hash {
         return true;
     };
 
-    _updateHashUnthrottled = () => {
+    _updateHashUnthrottled = (): void => {
         const location = window.location.href.replace(/(#.*)?$/, this.getHashString());
         window.history.replaceState(window.history.state, null, location);
     };
 
-    _removeHash = () => {
+    _removeHash = (): void => {
         const params = this._getHashParams();
 
         if (this._hashName) {
@@ -135,7 +135,7 @@ export class Hash {
      */
     _updateHash: () => ReturnType<typeof setTimeout> = throttle(this._updateHashUnthrottled, 30 * 1000 / 100);
 
-    _isValidHash(hash: string[]) {
+    _isValidHash(hash: string[]): boolean {
         if (hash.length < 3 || hash.some(h => isNaN(+h))) {
             return false;
         }

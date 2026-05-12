@@ -1,5 +1,5 @@
 import {type vec4} from 'gl-matrix';
-import {type Frustum} from './frustum';
+import {type Frustum} from './frustum.ts';
 
 export const enum IntersectionResult {
     None = 0,

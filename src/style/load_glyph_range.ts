@@ -1,10 +1,10 @@
-import {getArrayBuffer} from '../util/ajax';
-import {ResourceType} from '../util/request_manager';
+import {getArrayBuffer} from '../util/ajax.ts';
+import {ResourceType} from '../util/request_manager.ts';
 
-import {parseGlyphPbf} from './parse_glyph_pbf';
+import {parseGlyphPbf} from './parse_glyph_pbf.ts';
 
-import type {StyleGlyph} from './style_glyph';
-import type {RequestManager} from '../util/request_manager';
+import type {StyleGlyph} from './style_glyph.ts';
+import type {RequestManager} from '../util/request_manager.ts';
 
 export async function loadGlyphRange(fontstack: string,
     range: number,

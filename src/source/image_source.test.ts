@@ -1,16 +1,16 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {ImageSource} from './image_source';
-import {Evented} from '../util/evented';
-import {type IReadonlyTransform} from '../geo/transform_interface';
-import {extend, MAX_TILE_ZOOM} from '../util/util';
+import {ImageSource} from './image_source.ts';
+import {Evented} from '../util/evented.ts';
+import {type IReadonlyTransform} from '../geo/transform_interface.ts';
+import {extend, MAX_TILE_ZOOM} from '../util/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
-import {type RequestManager} from '../util/request_manager';
-import {sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util';
-import {Tile} from '../tile/tile';
-import {OverscaledTileID} from '../tile/tile_id';
-import {type Texture} from '../webgl/texture';
+import {type RequestManager} from '../util/request_manager.ts';
+import {sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
+import {Tile} from '../tile/tile.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {type Texture} from '../webgl/texture.ts';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 
 function createSource(options) {
     options = extend({

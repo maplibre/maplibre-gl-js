@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {GlobeControl} from './globe_control';
-import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
+import {GlobeControl} from './globe_control.ts';
+import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util.ts';
 
 function createMap() {
     return globalCreateMap({
@@ -9,8 +9,10 @@ function createMap() {
             version: 8,
             sources: {},
             layers: [],
-            owner: 'maplibre',
-            id: 'basic'
+            metadata: {
+                owner: 'maplibre',
+                id: 'basic',
+            },
         },
         hash: true
     });

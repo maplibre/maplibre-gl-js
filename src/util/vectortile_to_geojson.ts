@@ -1,6 +1,6 @@
 import type Point from '@mapbox/point-geometry';
 import {classifyRings} from '@mapbox/vector-tile';
-import {JSON_PREFIX} from './util';
+import {JSON_PREFIX} from './util.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
@@ -120,7 +120,7 @@ export class GeoJSONFeature {
         this._geometry = g;
     }
 
-    toJSON() {
+    toJSON(): GeoJSON.Feature {
         const json: any = {
             geometry: this.geometry
         };

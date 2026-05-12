@@ -1,15 +1,15 @@
 import {describe, test, expect, vi} from 'vitest';
-import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer';
-import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
+import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer.ts';
+import {Tile} from './tile.ts';
+import {OverscaledTileID} from './tile_id.ts';
 import fs from 'fs';
 import path from 'path';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
-import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index';
-import {CollisionBoxArray} from '../data/array_types.g';
-import {extend} from '../util/util';
-import {serialize, deserialize} from '../util/web_worker_transfer';
-import type {Painter} from '../render/painter';
+import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
+import {CollisionBoxArray} from '../data/array_types.g.ts';
+import {extend} from '../util/util.ts';
+import {serialize, deserialize} from '../util/web_worker_transfer.ts';
+import type {Painter} from '../render/painter.ts';
 
 describe('querySourceFeatures', () => {
     const features = [{
@@ -40,7 +40,7 @@ describe('querySourceFeatures', () => {
             expect(result).toHaveLength(1);
             expect(result[0].geometry.coordinates[0]).toEqual([-90, 0]);
             result = [];
-            tile.querySourceFeatures(result, {} as any);
+            tile.querySourceFeatures(result, {});
             expect(result).toHaveLength(1);
             expect(result[0].properties).toEqual(features[0].tags);
         });
@@ -296,6 +296,30 @@ describe('rtl text detection', () => {
         expect(tile.hasRTLText).toBeTruthy();
     });
 
+});
+
+describe('setFeatureState', () => {
+    test('skips bucket updates when revision has already been processed', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
+        tile.loadVectorData(
+            createVectorData({rawTileData: createRawTileData()}),
+            createPainter()
+        );
+
+        const loadVTLayersSpy = vi.spyOn(tile.latestFeatureIndex, 'loadVTLayers');
+        const states = {road: [{id: '1', state: {hover: true}}]};
+        const painter = createPainter({
+            hasLayer: () => true,
+            getLayer: () => ({queryRadius: () => 0}),
+        });
+
+        // Simulate that revision 5 was already processed
+        tile.featureStateRevision = 5;
+
+        // Calling with the same revision should not trigger any work
+        tile.setFeatureState(states, painter, 5);
+        expect(loadVTLayersSpy).not.toHaveBeenCalled();
+    });
 });
 
 function createRawTileData() {

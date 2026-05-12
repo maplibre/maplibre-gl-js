@@ -1,4 +1,4 @@
-import {extend, type Subscription} from './util';
+import {extend, type Subscription} from './util.ts';
 
 /**
  * A listener method used as a callback to events
@@ -87,7 +87,7 @@ export class Evented {
      * @param type - The event type to remove listeners for.
      * @param listener - The listener function to remove.
      */
-    off(type: string, listener: Listener) {
+    off(type: string, listener: Listener): this {
         _removeEventListener(type, listener, this._listeners);
         _removeEventListener(type, listener, this._oneTimeListeners);
 
@@ -113,7 +113,7 @@ export class Evented {
         return this;
     }
 
-    fire(event: Event | string, properties?: any) {
+    fire(event: Event | string, properties?: any): this {
         // Compatibility with (type: string, properties: Object) signature from previous versions.
         // See https://github.com/mapbox/mapbox-gl-js/issues/6522,
         //     https://github.com/mapbox/mapbox-gl-draw/issues/766
@@ -173,7 +173,7 @@ export class Evented {
     /**
      * Bubble all events fired by this instance of Evented to this parent instance of Evented.
      */
-    setEventedParent(parent?: Evented | null, data?: any | (() => any)) {
+    setEventedParent(parent?: Evented | null, data?: any | (() => any)): this {
         this._eventedParent = parent;
         this._eventedParentData = data;
 

@@ -1,15 +1,14 @@
 import {describe, test, expect} from 'vitest';
 import fs from 'fs';
-import {transform} from 'esbuild';
+import {transformWithOxc} from 'vite';
 
-describe('ES2020 compatibility (#7069)', () => {
+describe('ES2022 compatibility (https://github.com/maplibre/maplibre-gl-js/pull/7404)', () => {
     for (const file of ['dist/maplibre-gl.mjs', 'dist/maplibre-gl-worker.mjs']) {
         test(`${file} does not require ES2022+ downleveling helpers`, async () => {
             const bundle = fs.readFileSync(file, 'utf8');
 
-            const result = await transform(bundle, {
-                target: 'es2020',
-                format: 'esm',
+            const result = await transformWithOxc(bundle, file, {
+                target: 'es2022',
             });
 
             expect(result.code).not.toContain('__publicField');

@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
-import {type PluginState} from './rtl_text_plugin_status';
-import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
+import {type PluginState} from './rtl_text_plugin_status.ts';
+import {rtlWorkerPlugin} from './rtl_text_plugin_worker.ts';
 
 describe('RTLWorkerPlugin', () => {
     beforeEach(() => {

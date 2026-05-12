@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
-import {AJAXError} from './ajax';
-import {register, serialize, deserialize} from './web_worker_transfer';
+import {AJAXError} from './ajax.ts';
+import {register, serialize, deserialize} from './web_worker_transfer.ts';
 
 describe('web worker transfer', () => {
     test('round trip', () => {
@@ -60,6 +60,10 @@ describe('web worker transfer', () => {
         const x = new Klass();
         const deserialized = deserialize(serialize(x));
         expect(deserialized instanceof Klass).toBeTruthy();
+    });
+
+    test('null', () => {
+        expect(() => serialize(null)).not.toThrow();
     });
 
     test('custom serialization', () => {

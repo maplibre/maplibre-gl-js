@@ -1,8 +1,8 @@
 import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {EXTENT} from '../data/extent';
-import {scanlineTriangulateVertexRing, subdividePolygon, subdivideVertexLine} from './subdivision';
-import {CanonicalTileID} from '../tile/tile_id';
+import {EXTENT} from '../data/extent.ts';
+import {scanlineTriangulateVertexRing, subdividePolygon, subdivideVertexLine} from './subdivision.ts';
+import {CanonicalTileID} from '../tile/tile_id.ts';
 
 /**
  * With this granularity, all geometry should be subdivided along axes divisible by 4.
