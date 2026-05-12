@@ -13326,7 +13326,7 @@ var features = [
 ];
 //#endregion
 //#region test/bench/lib/benchmark.ts
-const minTimeForMeasurement = .005 * 1e3;
+const minTimeForMeasurement = .02 * 1e3;
 var Benchmark = class {
 	constructor() {
 		this.minimumMeasurements = 210;
@@ -13378,8 +13378,10 @@ var Benchmark = class {
 		while (true) {
 			const time = performance.now() - this._start;
 			this._elapsed += time;
-			if (time < minTimeForMeasurement) this._iterationsPerMeasurement++;
-			else this._measurements.push({
+			if (time < minTimeForMeasurement) {
+				this._iterationsPerMeasurement++;
+				this._iterationsPerMeasurement = Math.floor(this._iterationsPerMeasurement * 1.2);
+			} else this._measurements.push({
 				time,
 				iterations: this._iterationsPerMeasurement
 			});
@@ -13392,8 +13394,10 @@ var Benchmark = class {
 		while (true) {
 			const time = performance.now() - this._start;
 			this._elapsed += time;
-			if (time < minTimeForMeasurement) this._iterationsPerMeasurement++;
-			else this._measurements.push({
+			if (time < minTimeForMeasurement) {
+				this._iterationsPerMeasurement++;
+				this._iterationsPerMeasurement = Math.floor(this._iterationsPerMeasurement * 1.2);
+			} else this._measurements.push({
 				time,
 				iterations: this._iterationsPerMeasurement
 			});
@@ -60453,7 +60457,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 430564a";
+const version = "main c14d979";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
