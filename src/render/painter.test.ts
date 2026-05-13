@@ -176,6 +176,166 @@ describe('translucent cache', () => {
         // segments
         expect(args[12]).toBe(painter.viewportSegments);
     });
+
+    test('cache is valid when size matches and enough stable layers', () => {
+        // Simulate an existing cache
+        painter._snapshotTranslucentCache(5);
+        expect(painter._translucentCachedLayerCount).toBe(5);
+
+        const drawCacheSpy = vi.spyOn(painter, '_drawTranslucentCacheTexture').mockImplementation(() => {});
+        const clearStencilSpy = vi.spyOn(painter, 'clearStencil').mockImplementation(() => {});
+
+        // Set up a mock style with stable layers
+        const mockLayers: Record<string, any> = {};
+        const layerIds: string[] = [];
+        for (let i = 0; i < 7; i++) {
+            const id = `layer-${i}`;
+            layerIds.push(id);
+            mockLayers[id] = {
+                id,
+                type: 'fill',
+                source: 'test',
+                _unchangedFrameCount: 10,
+                isHidden: () => false,
+                is3D: () => false,
+                hasOffscreenPass: () => false,
+            };
+        }
+
+        painter.style = {
+            _order: layerIds,
+            _layers: mockLayers,
+            tileManagers: {},
+            placement: {symbolFadeChange: () => 1},
+            projection: null,
+            sky: null,
+            lineAtlas: null,
+            imageManager: {beginFrame: vi.fn()},
+            glyphManager: null,
+        } as any;
+        painter.translucentCacheEnabled = true;
+        painter.translucentCacheMinLayers = 1;
+
+        painter.render(painter.style, {
+            fadeDuration: 0, moving: false, rotating: false, zooming: false,
+            showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
+            anisotropicFilterPitch: 20,
+        });
+
+        // Cache should have been reused
+        expect(drawCacheSpy).toHaveBeenCalled();
+        expect(clearStencilSpy).toHaveBeenCalled();
+    });
+
+    test('cache is invalidated when width changes', () => {
+        painter._snapshotTranslucentCache(3);
+        expect(painter._translucentCachedLayerCount).toBe(3);
+
+        // Change width — cache should become invalid
+        painter.width = 1024;
+
+        const drawCacheSpy = vi.spyOn(painter, '_drawTranslucentCacheTexture').mockImplementation(() => {});
+
+        painter.style = {
+            _order: [],
+            _layers: {},
+            tileManagers: {},
+            placement: {symbolFadeChange: () => 1},
+            projection: null,
+            sky: null,
+            lineAtlas: null,
+            imageManager: {beginFrame: vi.fn()},
+            glyphManager: null,
+        } as any;
+        painter.translucentCacheEnabled = true;
+
+        painter.render(painter.style, {
+            fadeDuration: 0, moving: false, rotating: false, zooming: false,
+            showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
+            anisotropicFilterPitch: 20,
+        });
+
+        expect(drawCacheSpy).not.toHaveBeenCalled();
+        expect(painter._translucentCachedLayerCount).toBe(0);
+    });
+
+    test('cache is invalidated when height changes', () => {
+        painter._snapshotTranslucentCache(3);
+        expect(painter._translucentCachedLayerCount).toBe(3);
+
+        // Change height — cache should become invalid
+        painter.height = 1024;
+
+        const drawCacheSpy = vi.spyOn(painter, '_drawTranslucentCacheTexture').mockImplementation(() => {});
+
+        painter.style = {
+            _order: [],
+            _layers: {},
+            tileManagers: {},
+            placement: {symbolFadeChange: () => 1},
+            projection: null,
+            sky: null,
+            lineAtlas: null,
+            imageManager: {beginFrame: vi.fn()},
+            glyphManager: null,
+        } as any;
+        painter.translucentCacheEnabled = true;
+
+        painter.render(painter.style, {
+            fadeDuration: 0, moving: false, rotating: false, zooming: false,
+            showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
+            anisotropicFilterPitch: 20,
+        });
+
+        expect(drawCacheSpy).not.toHaveBeenCalled();
+        expect(painter._translucentCachedLayerCount).toBe(0);
+    });
+
+    test('snapshot is taken when stable layers exceed minimum', () => {
+        const snapshotSpy = vi.spyOn(painter, '_snapshotTranslucentCache');
+
+        const mockLayers: Record<string, any> = {};
+        const layerIds: string[] = [];
+        for (let i = 0; i < 6; i++) {
+            const id = `layer-${i}`;
+            layerIds.push(id);
+            mockLayers[id] = {
+                id,
+                type: 'fill',
+                source: 'test',
+                _unchangedFrameCount: 10,
+                isHidden: () => false,
+                is3D: () => false,
+                hasOffscreenPass: () => false,
+            };
+        }
+        // Last layer is unstable
+        mockLayers['layer-5']._unchangedFrameCount = 0;
+
+        painter.style = {
+            _order: layerIds,
+            _layers: mockLayers,
+            tileManagers: {},
+            placement: {symbolFadeChange: () => 1},
+            projection: null,
+            sky: null,
+            lineAtlas: null,
+            imageManager: {beginFrame: vi.fn()},
+            glyphManager: null,
+        } as any;
+        painter.translucentCacheEnabled = true;
+        painter.translucentCacheMinLayers = 1;
+
+        painter.render(painter.style, {
+            fadeDuration: 0, moving: false, rotating: false, zooming: false,
+            showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
+            anisotropicFilterPitch: 20,
+        });
+
+        // Should have snapshotted the first 5 stable layers
+        expect(snapshotSpy).toHaveBeenCalledWith(5);
+        expect(painter._translucentCachedLayerCount).toBe(5);
+    });
 });
 
 describe('RTT pool', () => {
