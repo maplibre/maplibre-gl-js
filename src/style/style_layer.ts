@@ -113,6 +113,8 @@ export abstract class StyleLayer extends Evented {
 
     _visibilityExpression: VisibilityExpression;
 
+    _unchangedFrameCount: number = 0;
+
     readonly onAdd: ((map: Map) => void);
     readonly onRemove: ((map: Map) => void);
 

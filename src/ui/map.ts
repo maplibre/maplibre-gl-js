@@ -430,6 +430,13 @@ export type MapOptions = {
      *   to bearing change regardless of cursor position.
      */
     aroundCenter?: boolean;
+    /**
+     * If `true`, the first N stable translucent layers are cached into a texture
+     * and reused across frames, avoiding redundant re-rendering when only upper
+     * layers change and the camera is static.
+     * @defaultValue true
+     */
+    optimizationFlagCacheFirstLayersRendering?: boolean;
 };
 
 export type AddImageOptions = {
@@ -526,6 +533,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     terrainSkirtLength: 'auto',
     zoomLevelsToOverscale: 4,
     anisotropicFilterPitch: defaultAnisotropicFilterPitch,
+    optimizationFlagCacheFirstLayersRendering: true,
 };
 
 /**
@@ -583,6 +591,7 @@ export class Map extends Camera {
     _sourcesDirty: boolean;
     _placementDirty: boolean;
     _anisotropicFilterPitch: number;
+    _optimizationFlagCacheFirstLayersRendering: boolean;
 
     _loaded: boolean;
     _idleTriggered = false;
@@ -781,6 +790,7 @@ export class Map extends Camera {
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
         this.setAnisotropicFilterPitch(resolvedOptions.anisotropicFilterPitch);
+        this._optimizationFlagCacheFirstLayersRendering = resolvedOptions.optimizationFlagCacheFirstLayersRendering === true;
 
         if (resolvedOptions.reduceMotion !== undefined) {
             browser.prefersReducedMotion = resolvedOptions.reduceMotion;
@@ -3492,6 +3502,7 @@ export class Map extends Camera {
         }
 
         this.painter = new Painter(gl, this.transform);
+        this.painter.translucentCacheEnabled = this._optimizationFlagCacheFirstLayersRendering;
     }
 
     override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
@@ -3660,6 +3671,10 @@ export class Map extends Camera {
             }
 
             this.style.update(parameters);
+        } else if (this.style) {
+            // Even if the style didn't change, update per-layer unchanged
+            // frame counters so the translucent layer cache can track stability.
+            this.style._updateUnchangedFrameCounters();
         }
 
         const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;

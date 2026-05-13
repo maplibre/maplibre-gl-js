@@ -761,6 +761,10 @@ export class Style extends Evented {
             this.light.updateTransitions(parameters);
             this.sky.updateTransitions(parameters);
 
+            // Update per-layer unchanged frame counters before resetting,
+            // so we can read _updatedLayers, _updatedPaintProps, _updatedSources.
+            this._updateUnchangedFrameCounters();
+
             this._resetUpdates();
         }
 
@@ -840,6 +844,27 @@ export class Style extends Evented {
             layers: this._serializeByIds(updatedIds, false),
             removedIds
         });
+    }
+
+    _updateUnchangedFrameCounters(): void {
+        const reloadedSources = new Set<string>();
+        for (const id in this._updatedSources) {
+            if (this._updatedSources[id] === 'reload') {
+                reloadedSources.add(id);
+            }
+        }
+        for (const layerId of this._order) {
+            const layer = this._layers[layerId];
+            const layerChanged = this._updatedLayers[layerId] ||
+                this._updatedPaintProps[layerId] ||
+                layer.hasTransition() ||
+                (layer.source && reloadedSources.has(layer.source));
+            if (layerChanged) {
+                layer._unchangedFrameCount = 0;
+            } else {
+                layer._unchangedFrameCount++;
+            }
+        }
     }
 
     _resetUpdates(): void {

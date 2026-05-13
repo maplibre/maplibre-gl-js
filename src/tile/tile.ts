@@ -287,6 +287,17 @@ export class Tile {
         this.collisionBoxArray = data.collisionBoxArray;
         this.buckets = deserializeBucket(data.buckets, painter?.style);
 
+        // Reset unchanged frame counters for layers whose buckets just loaded,
+        // so the translucent layer cache knows this layer's content has changed.
+        if (painter?.style) {
+            for (const id in this.buckets) {
+                const layer = painter.style.getLayer(id);
+                if (layer) {
+                    layer._unchangedFrameCount = 0;
+                }
+            }
+        }
+
         this.hasSymbolBuckets = false;
         for (const id in this.buckets) {
             const bucket = this.buckets[id];

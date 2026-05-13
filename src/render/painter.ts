@@ -49,6 +49,7 @@ import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_l
 import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
 import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
 import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
+import {translucentCacheUniformValues} from '../webgl/program/translucent_cache_program.ts';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -142,6 +143,18 @@ export class Painter {
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
     terrainFacilitator: {depthDirty: boolean; coordsDirty: boolean; matrix: mat4; renderTime: number};
 
+    // Translucent layer cache: snapshots the screen after rendering the first
+    // N stable translucent layers, reuses that snapshot on subsequent frames.
+    _translucentCacheTexture: Texture | null;
+    _translucentCachedLayerCount: number;
+    _translucentCacheWidth: number;
+    _translucentCacheHeight: number;
+    clipSpaceBuffer: VertexBuffer;
+    clipSpaceSegments: SegmentVector;
+    translucentCacheEnabled: boolean;
+    translucentCacheStabilityThreshold: number;
+    translucentCacheMinLayers: number;
+
     constructor(gl: WebGL2RenderingContext, transform: IReadonlyTransform) {
         this.drawFunctions = webglDrawFunctions;
         this.context = new Context(gl);
@@ -149,6 +162,14 @@ export class Painter {
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
+
+        this._translucentCacheTexture = null;
+        this._translucentCachedLayerCount = 0;
+        this._translucentCacheWidth = 0;
+        this._translucentCacheHeight = 0;
+        this.translucentCacheEnabled = true;
+        this.translucentCacheStabilityThreshold = 3;
+        this.translucentCacheMinLayers = 5;
 
         this.setup();
 
@@ -169,6 +190,9 @@ export class Painter {
         this.height = Math.floor(height * pixelRatio);
         this.pixelRatio = pixelRatio;
         this.context.viewport.set([0, 0, this.width, this.height]);
+
+        // Invalidate translucent layer cache on resize
+        this._translucentCachedLayerCount = 0;
 
         if (this.style) {
             for (const layerId of this.style._order) {
@@ -219,6 +243,14 @@ export class Painter {
         viewportArray.emplaceBack(1, 1);
         this.viewportBuffer = context.createVertexBuffer(viewportArray, posAttributes.members);
         this.viewportSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
+
+        const clipSpaceArray = new PosArray();
+        clipSpaceArray.emplaceBack(-1, -1);
+        clipSpaceArray.emplaceBack(1, -1);
+        clipSpaceArray.emplaceBack(-1, 1);
+        clipSpaceArray.emplaceBack(1, 1);
+        this.clipSpaceBuffer = context.createVertexBuffer(clipSpaceArray, posAttributes.members);
+        this.clipSpaceSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
 
         const tileLineStripIndices = new LineStripIndexArray();
         tileLineStripIndices.emplaceBack(0);
@@ -590,7 +622,57 @@ export class Painter {
 
         let globeDepthRendered = false;
 
-        for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
+        // Compute N: number of consecutive stable layers from the bottom
+        let stableLayerCount = 0;
+        if (!this.translucentCacheEnabled) {
+            // Caching disabled — fall through to render all layers normally
+        } else for (let i = 0; i < layerIds.length; i++) {
+            const layer = this.style._layers[layerIds[i]];
+            if (layer.isHidden(this.transform.zoom)) {
+                // Hidden layers don't break the stable chain — they won't be rendered anyway
+                stableLayerCount++;
+                continue;
+            }
+            if (layer._unchangedFrameCount >= this.translucentCacheStabilityThreshold) {
+                stableLayerCount++;
+            } else {
+                break;
+            }
+        }
+
+        // Invalidate cache during any camera movement
+        const cameraMoving = options.moving || options.zooming || options.rotating;
+        if (cameraMoving) {
+            this._translucentCachedLayerCount = 0;
+        }
+
+        // Check if existing cache is still valid
+        const cacheValid = this._translucentCachedLayerCount > 0 &&
+            stableLayerCount >= this._translucentCachedLayerCount &&
+            this._translucentCacheWidth === this.width &&
+            this._translucentCacheHeight === this.height;
+
+        // Determine the cache start layer index for the remaining pass
+        let cacheStartLayer = 0;
+        // Whether we need to snapshot the screen after rendering cached layers
+        let needsSnapshot = false;
+
+        if (cacheValid) {
+            // Reuse existing cache — blit cached texture then skip to remaining layers
+            this._drawTranslucentCacheTexture();
+            this.clearStencil();
+            cacheStartLayer = this._translucentCachedLayerCount;
+        } else if (!cameraMoving && stableLayerCount >= this.translucentCacheMinLayers) {
+            // Will render these layers normally, then snapshot the screen
+            needsSnapshot = true;
+            this._translucentCachedLayerCount = 0;
+        } else {
+            // Not enough stable layers or camera moving — no caching
+            this._translucentCachedLayerCount = 0;
+        }
+
+        // Render layers (either all, or starting from cacheStartLayer)
+        for (this.currentLayer = cacheStartLayer; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const tileManager = tileManagers[layer.source];
 
@@ -598,20 +680,20 @@ export class Painter {
 
             if (!this.opaquePassEnabledForLayer() && !globeDepthRendered) {
                 globeDepthRendered = true;
-                // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
-                // There should be no need for explicitly writing tile depths when terrain is enabled.
                 if (renderOptions.isRenderingGlobe && !this.style.map.terrain) {
                     this._renderTilesDepthBuffer();
                 }
             }
 
-            // For symbol layers in the translucent pass, we add extra tiles to the renderable set
-            // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render
-            // separate clipping masks
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
             this.renderLayer(this, tileManager, layer, coords, renderOptions);
+
+            // After rendering the last stable layer, snapshot the screen
+            if (needsSnapshot && this.currentLayer === stableLayerCount - 1) {
+                this._snapshotTranslucentCache(stableLayerCount);
+            }
         }
 
         // Render atmosphere, only for Globe projection
@@ -702,6 +784,68 @@ export class Painter {
         } else if (isCustomStyleLayer(layer)) {
             draw.custom(painter, tileManager, layer, renderOptions);
         }
+    }
+
+    /**
+     * After rendering the first N translucent layers to screen normally,
+     * copy the current screen content into a cache texture for reuse on
+     * subsequent frames. This avoids a separate FBO and guarantees identical
+     * blending (layers blend against the real opaque-pass output, not a
+     * transparent clear color).
+     */
+    _snapshotTranslucentCache(layerCount: number): void {
+        const context = this.context;
+        const gl = context.gl;
+
+        // Create or resize the cache texture
+        if (!this._translucentCacheTexture ||
+            this._translucentCacheWidth !== this.width ||
+            this._translucentCacheHeight !== this.height) {
+            if (this._translucentCacheTexture) {
+                this._translucentCacheTexture.destroy();
+            }
+            this._translucentCacheTexture = new Texture(context, {width: this.width, height: this.height, data: null}, gl.RGBA);
+            this._translucentCacheTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+            this._translucentCacheWidth = this.width;
+            this._translucentCacheHeight = this.height;
+        }
+
+        // Copy the current screen framebuffer into the cache texture
+        gl.bindTexture(gl.TEXTURE_2D, this._translucentCacheTexture.texture);
+        gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 0, 0, this.width, this.height);
+
+        this._translucentCachedLayerCount = layerCount;
+    }
+
+    /**
+     * Draw the cached translucent layers texture as a fullscreen quad.
+     * Uses unblended (replace) mode since the snapshot includes the full
+     * screen content (opaque pass + cached translucent layers).
+     */
+    _drawTranslucentCacheTexture(): void {
+        const context = this.context;
+        const gl = context.gl;
+
+        context.activeTexture.set(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this._translucentCacheTexture.texture);
+
+        const program = this.useProgram('translucentCache', null, true);
+
+        program.draw(
+            context,
+            gl.TRIANGLES,
+            DepthMode.disabled,
+            StencilMode.disabled,
+            ColorMode.unblended,
+            CullFaceMode.disabled,
+            translucentCacheUniformValues(0),
+            null,
+            undefined,
+            '$translucentCache',
+            this.clipSpaceBuffer,
+            this.quadTriangleIndexBuffer,
+            this.clipSpaceSegments,
+        );
     }
 
     static readonly MAX_TEXTURE_POOL_SIZE_PER_BUCKET = 50;
@@ -870,6 +1014,8 @@ export class Painter {
         if (this.rasterBoundsBuffer) this.rasterBoundsBuffer.destroy();
         if (this.rasterBoundsBufferPosOnly) this.rasterBoundsBufferPosOnly.destroy();
         if (this.viewportBuffer) this.viewportBuffer.destroy();
+        if (this.clipSpaceBuffer) this.clipSpaceBuffer.destroy();
+        if (this._translucentCacheTexture) this._translucentCacheTexture.destroy();
         if (this.tileBorderIndexBuffer) this.tileBorderIndexBuffer.destroy();
         if (this.quadTriangleIndexBuffer) this.quadTriangleIndexBuffer.destroy();
         if (this.tileExtentMesh) this.tileExtentMesh.vertexBuffer?.destroy();
