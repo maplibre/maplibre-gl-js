@@ -83,6 +83,71 @@ describe('tile texture pool', () => {
     });
 });
 
+describe('translucent cache', () => {
+    let painter: Painter;
+    let gl: WebGL2RenderingContext;
+
+    beforeEach(() => {
+        gl = createNullGL();
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(512, 512);
+        painter = new Painter(gl, transform);
+        painter.width = 512;
+        painter.height = 512;
+    });
+
+    afterEach(() => {
+        painter.destroy();
+    });
+
+    test('_snapshotTranslucentCache creates texture and copies framebuffer', () => {
+        expect(painter._translucentCacheTexture).toBeNull();
+        expect(painter._translucentCachedLayerCount).toBe(0);
+
+        painter._snapshotTranslucentCache(7);
+
+        expect(painter._translucentCacheTexture).toBeTruthy();
+        expect(painter._translucentCacheWidth).toBe(512);
+        expect(painter._translucentCacheHeight).toBe(512);
+        expect(painter._translucentCachedLayerCount).toBe(7);
+        expect(gl.copyTexSubImage2D).toHaveBeenCalledWith(
+            gl.TEXTURE_2D, 0, 0, 0, 0, 0, 512, 512
+        );
+    });
+
+    test('_snapshotTranslucentCache reuses texture when size unchanged', () => {
+        painter._snapshotTranslucentCache(3);
+        const firstTexture = painter._translucentCacheTexture;
+
+        painter._snapshotTranslucentCache(5);
+        expect(painter._translucentCacheTexture).toBe(firstTexture);
+        expect(painter._translucentCachedLayerCount).toBe(5);
+    });
+
+    test('_snapshotTranslucentCache recreates texture on resize', () => {
+        painter._snapshotTranslucentCache(3);
+        const firstTexture = painter._translucentCacheTexture;
+        const destroySpy = vi.spyOn(firstTexture, 'destroy');
+
+        painter.width = 1024;
+        painter.height = 768;
+        painter._snapshotTranslucentCache(4);
+
+        expect(destroySpy).toHaveBeenCalled();
+        expect(painter._translucentCacheTexture).not.toBe(firstTexture);
+        expect(painter._translucentCacheWidth).toBe(1024);
+        expect(painter._translucentCacheHeight).toBe(768);
+    });
+
+    test('destroy cleans up cache texture', () => {
+        painter._snapshotTranslucentCache(3);
+        const destroySpy = vi.spyOn(painter._translucentCacheTexture, 'destroy');
+
+        painter.destroy();
+        expect(destroySpy).toHaveBeenCalled();
+    });
+});
+
 describe('RTT pool', () => {
     let painter: Painter;
 
