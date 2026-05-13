@@ -149,8 +149,6 @@ export class Painter {
     _translucentCachedLayerCount: number;
     _translucentCacheWidth: number;
     _translucentCacheHeight: number;
-    clipSpaceBuffer: VertexBuffer;
-    clipSpaceSegments: SegmentVector;
     translucentCacheEnabled: boolean;
     translucentCacheStabilityThreshold: number;
     translucentCacheMinLayers: number;
@@ -243,14 +241,6 @@ export class Painter {
         viewportArray.emplaceBack(1, 1);
         this.viewportBuffer = context.createVertexBuffer(viewportArray, posAttributes.members);
         this.viewportSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
-
-        const clipSpaceArray = new PosArray();
-        clipSpaceArray.emplaceBack(-1, -1);
-        clipSpaceArray.emplaceBack(1, -1);
-        clipSpaceArray.emplaceBack(-1, 1);
-        clipSpaceArray.emplaceBack(1, 1);
-        this.clipSpaceBuffer = context.createVertexBuffer(clipSpaceArray, posAttributes.members);
-        this.clipSpaceSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
 
         const tileLineStripIndices = new LineStripIndexArray();
         tileLineStripIndices.emplaceBack(0);
@@ -624,19 +614,19 @@ export class Painter {
 
         // Compute N: number of consecutive stable layers from the bottom
         let stableLayerCount = 0;
-        if (!this.translucentCacheEnabled) {
-            // Caching disabled — fall through to render all layers normally
-        } else for (let i = 0; i < layerIds.length; i++) {
-            const layer = this.style._layers[layerIds[i]];
-            if (layer.isHidden(this.transform.zoom)) {
-                // Hidden layers don't break the stable chain — they won't be rendered anyway
-                stableLayerCount++;
-                continue;
-            }
-            if (layer._unchangedFrameCount >= this.translucentCacheStabilityThreshold) {
-                stableLayerCount++;
-            } else {
-                break;
+        if (this.translucentCacheEnabled) {
+            for (const layerId of layerIds) {
+                const layer = this.style._layers[layerId];
+                if (layer.isHidden(this.transform.zoom)) {
+                    // Hidden layers don't break the stable chain — they won't be rendered anyway
+                    stableLayerCount++;
+                    continue;
+                }
+                if (layer._unchangedFrameCount >= this.translucentCacheStabilityThreshold) {
+                    stableLayerCount++;
+                } else {
+                    break;
+                }
             }
         }
 
@@ -680,11 +670,16 @@ export class Painter {
 
             if (!this.opaquePassEnabledForLayer() && !globeDepthRendered) {
                 globeDepthRendered = true;
+                // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
+                // There should be no need for explicitly writing tile depths when terrain is enabled.
                 if (renderOptions.isRenderingGlobe && !this.style.map.terrain) {
                     this._renderTilesDepthBuffer();
                 }
             }
 
+            // For symbol layers in the translucent pass, we add extra tiles to the renderable set
+            // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render
+            // separate clipping masks
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
@@ -842,9 +837,9 @@ export class Painter {
             null,
             undefined,
             '$translucentCache',
-            this.clipSpaceBuffer,
+            this.viewportBuffer,
             this.quadTriangleIndexBuffer,
-            this.clipSpaceSegments,
+            this.viewportSegments,
         );
     }
 
@@ -1014,7 +1009,6 @@ export class Painter {
         if (this.rasterBoundsBuffer) this.rasterBoundsBuffer.destroy();
         if (this.rasterBoundsBufferPosOnly) this.rasterBoundsBufferPosOnly.destroy();
         if (this.viewportBuffer) this.viewportBuffer.destroy();
-        if (this.clipSpaceBuffer) this.clipSpaceBuffer.destroy();
         if (this._translucentCacheTexture) this._translucentCacheTexture.destroy();
         if (this.tileBorderIndexBuffer) this.tileBorderIndexBuffer.destroy();
         if (this.quadTriangleIndexBuffer) this.quadTriangleIndexBuffer.destroy();
