@@ -99,41 +99,56 @@ describe('RTT pool', () => {
     test('acquireRTT creates on miss, recycles on hit', () => {
         const a = painter.acquireRTT(256);
         expect(a.size).toBe(256);
-        expect(a.fbo).toBeTruthy();
         expect(a.texture).toBeTruthy();
 
         painter.releaseRTT(a);
         expect(painter.acquireRTT(256)).toBe(a);
     });
 
-    test('acquireRTT resizes pooled objects when sizes differ', () => {
+    test('acquireRTT resizes pooled textures when sizes differ', () => {
         const a = painter.acquireRTT(256);
-        const fbo = a.fbo;
         const texture = a.texture;
         painter.releaseRTT(a);
 
         const b = painter.acquireRTT(512);
         expect(b).toBe(a);
         expect(b.size).toBe(512);
-        expect(b.fbo).toBe(fbo);
-        expect(b.fbo.width).toBe(512);
-        expect(b.fbo.height).toBe(512);
         expect(b.texture).toBe(texture);
         expect(b.texture.size).toEqual([512, 512]);
     });
 
-    test('painter.destroy cleans up pooled RTT slots', () => {
+    test('bindRTT lazily creates shared FBO and binds texture', () => {
+        expect(painter._rttFbo).toBeNull();
+        const obj = painter.acquireRTT(256);
+        painter.bindRTT(obj);
+        expect(painter._rttFbo).toBeTruthy();
+        expect(painter._rttFboSize).toBe(256);
+    });
+
+    test('bindRTT resizes shared depth-stencil when size changes', () => {
+        const a = painter.acquireRTT(256);
+        painter.bindRTT(a);
+        expect(painter._rttFboSize).toBe(256);
+
+        const b = painter.acquireRTT(512);
+        painter.bindRTT(b);
+        expect(painter._rttFboSize).toBe(512);
+    });
+
+    test('painter.destroy cleans up pooled RTT textures and shared FBO', () => {
         const objs = [];
         for (let i = 0; i < 10; i++) {
             const obj = painter.acquireRTT(128);
             vi.spyOn(obj.texture, 'destroy');
-            vi.spyOn(obj.fbo, 'destroy');
             objs.push(obj);
         }
+        // Bind one to force shared FBO creation
+        painter.bindRTT(objs[0]);
         for (const obj of objs) painter.releaseRTT(obj);
 
         painter.destroy();
-        const destroyed = objs.filter(o => o.texture.destroy.mock.calls.length > 0).length;
+        const destroyed = objs.filter(o => (o.texture.destroy as any).mock.calls.length > 0).length;
         expect(destroyed).toBe(10);
+        expect(painter._rttFbo).toBeNull();
     });
 });
