@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Optimization: Cache stable translucent layers to avoid redundant re-rendering ([#7607](https://github.com/maplibre/maplibre-gl-js/pull/7635)) (by [@xavierjs](https://github.com/xavierjs))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
