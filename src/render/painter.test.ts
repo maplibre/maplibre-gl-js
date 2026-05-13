@@ -146,6 +146,36 @@ describe('translucent cache', () => {
         painter.destroy();
         expect(destroySpy).toHaveBeenCalled();
     });
+
+    test('_drawTranslucentCacheTexture binds texture and draws quad', () => {
+        // First create a cache texture via snapshot
+        painter._snapshotTranslucentCache(5);
+
+        const drawSpy = vi.fn();
+        vi.spyOn(painter, 'useProgram').mockReturnValue({draw: drawSpy} as any);
+
+        painter._drawTranslucentCacheTexture();
+
+        expect(gl.bindTexture).toHaveBeenCalledWith(
+            gl.TEXTURE_2D, painter._translucentCacheTexture.texture
+        );
+        expect(painter.useProgram).toHaveBeenCalledWith('translucentCache', null, true);
+        expect(drawSpy).toHaveBeenCalledTimes(1);
+
+        const args = drawSpy.mock.calls[0];
+        // context
+        expect(args[0]).toBe(painter.context);
+        // gl.TRIANGLES
+        expect(args[1]).toBe(gl.TRIANGLES);
+        // layer name
+        expect(args[9]).toBe('$translucentCache');
+        // vertex buffer
+        expect(args[10]).toBe(painter.viewportBuffer);
+        // index buffer
+        expect(args[11]).toBe(painter.quadTriangleIndexBuffer);
+        // segments
+        expect(args[12]).toBe(painter.viewportSegments);
+    });
 });
 
 describe('RTT pool', () => {
