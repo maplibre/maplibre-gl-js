@@ -199,6 +199,7 @@ describe('translucent cache', () => {
                 isHidden: () => false,
                 is3D: () => false,
                 hasOffscreenPass: () => false,
+                isTileClipped: () => false,
             };
         }
 
@@ -206,6 +207,7 @@ describe('translucent cache', () => {
             _order: layerIds,
             _layers: mockLayers,
             tileManagers: {},
+            map: {terrain: null},
             placement: {symbolFadeChange: () => 1},
             projection: null,
             sky: null,
@@ -240,6 +242,7 @@ describe('translucent cache', () => {
             _order: [],
             _layers: {},
             tileManagers: {},
+            map: {terrain: null},
             placement: {symbolFadeChange: () => 1},
             projection: null,
             sky: null,
@@ -272,6 +275,7 @@ describe('translucent cache', () => {
             _order: [],
             _layers: {},
             tileManagers: {},
+            map: {terrain: null},
             placement: {symbolFadeChange: () => 1},
             projection: null,
             sky: null,
@@ -307,6 +311,7 @@ describe('translucent cache', () => {
                 isHidden: () => false,
                 is3D: () => false,
                 hasOffscreenPass: () => false,
+                isTileClipped: () => false,
             };
         }
         // Last layer is unstable
@@ -316,6 +321,7 @@ describe('translucent cache', () => {
             _order: layerIds,
             _layers: mockLayers,
             tileManagers: {},
+            map: {terrain: null},
             placement: {symbolFadeChange: () => 1},
             projection: null,
             sky: null,
