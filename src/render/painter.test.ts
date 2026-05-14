@@ -147,7 +147,7 @@ describe('RTT pool', () => {
         for (const obj of objs) painter.releaseRTT(obj);
 
         painter.destroy();
-        const destroyed = objs.filter(o => (o.texture.destroy as any).mock.calls.length > 0).length;
+        const destroyed = objs.filter(o => o.texture.destroy.mock.calls.length > 0).length;
         expect(destroyed).toBe(10);
         expect(painter._rttFbo).toBeNull();
     });
