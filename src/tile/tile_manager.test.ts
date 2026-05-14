@@ -588,6 +588,35 @@ describe('TileManager / Source lifecycle', () => {
 
     });
 
+    test('does not call update in _dataHandler when used is undefined', () => {
+        const transform = new MercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(0);
+
+        const tileManager = createTileManager();
+        // Simulate the race: content event fires before style.recalculate() sets used=true
+        (tileManager as any).used = undefined;
+
+        const updateSpy = vi.spyOn(tileManager, 'update');
+
+        tileManager.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                // Set transform directly so _dataHandler's `if (this.transform)` check passes,
+                // without going through update() which would change used
+                (tileManager as any).transform = transform;
+                // Fire content event while used is still undefined (microtask race scenario)
+                tileManager.getSource().fire(new Event('data', {
+                    dataType: 'source',
+                    sourceDataType: 'content',
+                    sourceDataChanged: true,
+                }));
+            }
+        });
+
+        tileManager.onAdd(undefined);
+        expect(updateSpy).not.toHaveBeenCalled();
+    });
+
 });
 
 describe('TileManager.update', () => {
