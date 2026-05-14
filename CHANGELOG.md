@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - Fix Benchmarks remote compare issue ([#7607](https://github.com/maplibre/maplibre-gl-js/pull/7607)) (by [@xavierjs](https://github.com/xavierjs))
+- Fix `TileManager` calling `update()` in `_dataHandler` when `used` is `undefined`, causing tile eviction and empty `querySourceFeatures()` results when `setData()` is called before the first render frame ([#7636](https://github.com/maplibre/maplibre-gl-js/pull/7636)) (by [@dojchek-sg](https://github.com/dojchek-sg))
 - _...Add new stuff here..._
 
 ## 6.0.0-9
