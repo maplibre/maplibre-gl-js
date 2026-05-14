@@ -813,7 +813,7 @@ export class TileManager extends Evented {
         }
 
         this.reload(e.sourceDataChanged, e.shouldReloadTileOptions);
-        if (this.transform) {
+        if (this.transform && this.used) {
             this.update(this.transform, this.terrain);
         }
         this._didEmitContent = true;
