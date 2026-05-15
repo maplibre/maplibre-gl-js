@@ -785,14 +785,8 @@ export class Painter {
         this.context.bindFramebuffer.set(this._rttFbo.framebuffer);
     }
 
-    static readonly MAX_RTT_POOL_SIZE = 512;
-
     releaseRTT(obj: RTTObject): void {
-        if (this._rttObjectRecyclePool.length < Painter.MAX_RTT_POOL_SIZE) {
-            this._rttObjectRecyclePool.push(obj);
-        } else {
-            obj.texture.destroy();
-        }
+        this._rttObjectRecyclePool.push(obj);
     }
 
     /**
