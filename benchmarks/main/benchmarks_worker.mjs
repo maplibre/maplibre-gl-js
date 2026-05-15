@@ -14178,7 +14178,7 @@ var Texture = class {
 				this._updateDomImage(image, x, y, gl);
 			}
 		}
-		if (this.useMipmap && this.isSizePowerOfTwo()) gl.generateMipmap(gl.TEXTURE_2D);
+		if (this.useMipmap) gl.generateMipmap(gl.TEXTURE_2D);
 		context.pixelStoreUnpackFlipY.setDefault();
 		context.pixelStoreUnpack.setDefault();
 		context.pixelStoreUnpackPremultiplyAlpha.setDefault();
@@ -14204,7 +14204,7 @@ var Texture = class {
 		const { gl } = context;
 		if (this.texture !== this._ownedHandle) this.texture = this._ownedHandle;
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
-		if (minFilter === gl.LINEAR_MIPMAP_NEAREST && !this.isSizePowerOfTwo()) minFilter = gl.LINEAR;
+		if (minFilter === gl.LINEAR_MIPMAP_NEAREST && !this.useMipmap) minFilter = gl.LINEAR;
 		if (filter !== this.filter) {
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, minFilter || filter);
@@ -14215,9 +14215,6 @@ var Texture = class {
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
 			this.wrap = wrap;
 		}
-	}
-	isSizePowerOfTwo() {
-		return this.size[0] === this.size[1] && Math.log(this.size[0]) / Math.LN2 % 1 === 0;
 	}
 	destroy() {
 		const { gl } = this.context;
