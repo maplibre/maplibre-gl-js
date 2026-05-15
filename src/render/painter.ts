@@ -119,6 +119,13 @@ export class Painter {
     tileBorderIndexBuffer: IndexBuffer;
     _tileClippingMaskIDs: {[_: string]: number};
     stencilClearMode: StencilMode;
+
+    // Pre-allocated buffers for batched stencil mask rendering (Mercator, no terrain)
+    _batchStencilPosArray: InstanceType<typeof PosArray>;
+    _batchStencilVertexBuffer: VertexBuffer;
+    _batchStencilIndexBuffer: IndexBuffer;
+    _batchStencilSegment: SegmentVector;
+    _batchStencilProjectionData: ProjectionData;
     style: Style;
     options: PainterOptions;
     lineAtlas: LineAtlas;
@@ -237,6 +244,37 @@ export class Painter {
         this.stencilClearMode = new StencilMode({func: gl.ALWAYS, mask: 0}, 0x0, 0xFF, gl.ZERO, gl.ZERO, gl.ZERO);
 
         this.tileExtentMesh = new Mesh(this.tileExtentBuffer, this.quadTriangleIndexBuffer, this.tileExtentSegments);
+
+        // Pre-allocate buffers for batched stencil mask rendering.
+        // Supports up to 256 tiles (the stencil ID limit).
+        const maxBatchTiles = 256;
+        const batchPosArray = new PosArray();
+        for (let i = 0; i < maxBatchTiles * 4; i++) {
+            batchPosArray.emplaceBack(0, 0);
+        }
+        this._batchStencilPosArray = batchPosArray;
+        this._batchStencilVertexBuffer = context.createVertexBuffer(batchPosArray, posAttributes.members, true);
+
+        const batchIndexArray = new TriangleIndexArray();
+        for (let i = 0; i < maxBatchTiles; i++) {
+            const base = i * 4;
+            batchIndexArray.emplaceBack(base + 1, base, base + 2);
+            batchIndexArray.emplaceBack(base + 1, base + 2, base + 3);
+        }
+        this._batchStencilIndexBuffer = context.createIndexBuffer(batchIndexArray);
+        this._batchStencilSegment = SegmentVector.simpleSegment(0, 0, 4, 2);
+
+        // Scaling matrix that maps Int16-encoded NDC positions back to [-1, 1]
+        const scalingMatrix = mat4.create();
+        scalingMatrix[0] = 1.0 / 32767.0;
+        scalingMatrix[5] = 1.0 / 32767.0;
+        this._batchStencilProjectionData = {
+            mainMatrix: scalingMatrix,
+            tileMercatorCoords: [0, 0, 1, 1],
+            clippingPlane: [0, 0, 0, 0],
+            projectionTransition: 0.0,
+            fallbackMatrix: scalingMatrix,
+        };
     }
 
     /*
@@ -298,13 +336,25 @@ export class Painter {
             stencilRefs[tileID.key] = this.nextStencilID++;
         }
 
-        // A two-pass approach is needed. See comment in draw_raster.ts for more details.
-        // However, we use a simpler approach because we don't care about overdraw here.
+        const useSubdivision = this.style.projection.useSubdivision;
+        const hasTerrain = !!this.style.map.terrain;
 
-        // First pass - draw tiles with borders and with GL_ALWAYS
-        this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, true);
-        // Second pass - draw borderless tiles with GL_ALWAYS
-        this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, false);
+        if (!useSubdivision && !hasTerrain) {
+            // Mercator without terrain: batched single-pass path.
+            // All tile meshes are identical quads (getMeshFromTileID ignores hasBorder),
+            // so the second pass is redundant. Pre-transform positions on CPU to avoid
+            // per-tile uniform updates and use a tight draw loop.
+            this._renderTileMasksBatched(stencilRefs, tileIDs, renderToTexture);
+        } else if (!useSubdivision) {
+            // Mercator with terrain: single pass (bordered/borderless meshes are the same),
+            // but need per-tile terrain data so we use the standard draw path.
+            this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, false);
+        } else {
+            // Subdivided projection (globe): two passes are needed because bordered and
+            // borderless meshes differ. See comment in draw_raster.ts for details.
+            this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, true);
+            this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, false);
+        }
 
         this._tileClippingMaskIDs = stencilRefs;
     }
@@ -332,6 +382,66 @@ export class Painter {
                 ColorMode.disabled, renderToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null,
                 terrainData, projectionData, '$clipping', mesh.vertexBuffer,
                 mesh.indexBuffer, mesh.segments);
+        }
+    }
+
+    /**
+     * Batched stencil mask rendering for non-subdivided projections (Mercator) without terrain.
+     * Pre-transforms all tile quad corners to clip space on CPU, stores them in a single shared
+     * buffer, and draws each tile with minimal per-tile GL overhead (stencil ref change + drawElements).
+     */
+    _renderTileMasksBatched(tileStencilRefs: {[_: string]: number}, tileIDs: OverscaledTileID[], renderToTexture: boolean): void {
+        const context = this.context;
+        const gl = context.gl;
+        const transform = this.transform;
+        const posArray = this._batchStencilPosArray;
+
+        // Tile corner X,Y coordinates in tile-local space: (0,0), (EXTENT,0), (0,EXTENT), (EXTENT,EXTENT)
+        const cornersX = [0, EXTENT, 0, EXTENT];
+        const cornersY = [0, 0, EXTENT, EXTENT];
+
+        // Pre-transform tile quad corners to NDC and encode as Int16
+        for (let i = 0; i < tileIDs.length; i++) {
+            const tileID = tileIDs[i];
+            const projectionData = transform.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix: !renderToTexture, applyTerrainMatrix: false});
+            const m = projectionData.mainMatrix;
+
+            for (let c = 0; c < 4; c++) {
+                const cx = cornersX[c];
+                const cy = cornersY[c];
+                // clipPos = mainMatrix * vec4(cx, cy, 0, 1)  (column-major mat4)
+                const clipX = m[0] * cx + m[4] * cy + m[12];
+                const clipY = m[1] * cx + m[5] * cy + m[13];
+                const clipW = m[3] * cx + m[7] * cy + m[15];
+                // Perspective divide and encode as Int16 (±32767)
+                posArray.emplace(i * 4 + c,
+                    Math.round(clipX / clipW * 32767),
+                    Math.round(clipY / clipW * 32767));
+            }
+        }
+
+        // Upload pre-transformed positions to GPU
+        this._batchStencilVertexBuffer.updateData(posArray);
+
+        // Use program.draw() for the first tile to set up all GL state:
+        // program activation, VAO binding, depth/color/cull modes, projection uniforms.
+        const program = this.useProgram('clippingMask', null, true);
+        const firstRef = tileStencilRefs[tileIDs[0].key];
+        const cullFace = renderToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW;
+
+        program.draw(context, gl.TRIANGLES, DepthMode.disabled,
+            new StencilMode({func: gl.ALWAYS, mask: 0}, firstRef, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
+            ColorMode.disabled, cullFace, null,
+            null, this._batchStencilProjectionData, '$clipping',
+            this._batchStencilVertexBuffer,
+            this._batchStencilIndexBuffer, this._batchStencilSegment);
+
+        // Tight loop for remaining tiles: only change stencil ref and issue drawElements.
+        // The VAO, program, projection uniforms, and other GL state remain bound from above.
+        for (let i = 1; i < tileIDs.length; i++) {
+            const ref = tileStencilRefs[tileIDs[i].key];
+            context.stencilFunc.set({func: gl.ALWAYS, ref, mask: 0});
+            gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, i * 6 * 2);
         }
     }
 
