@@ -1,6 +1,6 @@
 uniform vec2 u_fill_translate;
 
-in vec2 a_pos;
+layout(location = 0) in vec2 a_pos;
 
 #pragma mapbox: define highp vec4 color
 #pragma mapbox: define lowp float opacity

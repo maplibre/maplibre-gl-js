@@ -1,7 +1,7 @@
 uniform vec2 u_world;
 uniform vec2 u_fill_translate;
 
-in vec2 a_pos;
+layout(location = 0) in vec2 a_pos;
 
 out vec2 v_pos;
 #ifdef GLOBE

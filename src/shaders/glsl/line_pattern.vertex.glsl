@@ -10,8 +10,8 @@
 // long distances for long segments. Use this value to unscale the distance.
 #define LINE_DISTANCE_SCALE 2.0
 
-in vec2 a_pos_normal;
-in vec4 a_data;
+layout(location = 0) in vec2 a_pos_normal;
+layout(location = 1) in vec4 a_data;
 
 uniform vec2 u_translation;
 uniform vec2 u_units_to_pixels;

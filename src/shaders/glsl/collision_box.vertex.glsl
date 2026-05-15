@@ -1,6 +1,6 @@
-in vec2 a_anchor_pos;
-in vec2 a_placed;
-in vec2 a_box_real;
+layout(location = 0) in vec2 a_anchor_pos;
+layout(location = 1) in vec2 a_placed;
+layout(location = 2) in vec2 a_box_real;
 
 uniform vec2 u_pixel_extrude_scale;
 

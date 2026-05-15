@@ -1,8 +1,8 @@
-in vec4 a_pos_offset;
-in vec4 a_data;
-in vec4 a_pixeloffset;
-in vec3 a_projected_pos;
-in float a_fade_opacity;
+layout(location = 0) in vec4 a_pos_offset;
+layout(location = 1) in vec4 a_data;
+layout(location = 2) in vec4 a_pixeloffset;
+layout(location = 3) in vec3 a_projected_pos;
+layout(location = 4) in float a_fade_opacity;
 
 uniform bool u_is_size_zoom_constant;
 uniform bool u_is_size_feature_constant;
