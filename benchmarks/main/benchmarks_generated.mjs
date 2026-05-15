@@ -18482,13 +18482,30 @@ var Texture = class {
 		const { context } = this;
 		const { gl } = context;
 		this.useMipmap = Boolean(options?.useMipmap);
+		if (resize && this.size && this.format === gl.RGBA) {
+			gl.deleteTexture(this.texture);
+			this.texture = gl.createTexture();
+			this._ownedHandle = this.texture;
+		}
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		context.pixelStoreUnpackFlipY.set(false);
 		context.pixelStoreUnpack.set(1);
 		const wantPremultiply = this.format === gl.RGBA && options?.premultiply !== false;
 		if (resize) {
 			this.size = [width, height];
-			if (hasDataProperty(image)) {
+			if (this.format === gl.RGBA && width > 0 && height > 0) {
+				const mipLevels = this.useMipmap ? Math.floor(Math.log2(Math.max(width, height))) + 1 : 1;
+				gl.texStorage2D(gl.TEXTURE_2D, mipLevels, gl.RGBA8, width, height);
+				if (hasDataProperty(image)) {
+					context.pixelStoreUnpackPremultiplyAlpha.set(false);
+					let { data } = image;
+					if (wantPremultiply && data) data = premultiplyAlpha(data);
+					if (data) gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, data);
+				} else {
+					context.pixelStoreUnpackPremultiplyAlpha.set(wantPremultiply);
+					gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, image);
+				}
+			} else if (hasDataProperty(image)) {
 				context.pixelStoreUnpackPremultiplyAlpha.set(false);
 				this._uploadRawData(image, wantPremultiply, width, height, gl);
 			} else {
@@ -39005,7 +39022,7 @@ var ProjectionErrorMeasurement = class ProjectionErrorMeasurement {
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-		gl.texImage2D(gl.TEXTURE_2D, 0, this._texFormat, this._texWidth, this._texHeight, 0, this._texFormat, this._texType, null);
+		gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, this._texWidth, this._texHeight);
 		this._fbo = context.createFramebuffer(this._texWidth, this._texHeight, false, false);
 		this._fbo.colorAttachment.set(texture);
 		this._pbo = gl.createBuffer();
@@ -45619,7 +45636,7 @@ function createHeatmapFbo(context, width, height) {
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.HALF_FLOAT, null);
+	gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA16F, width, height);
 	const fbo = context.createFramebuffer(width, height, false, false);
 	fbo.colorAttachment.set(texture);
 	return fbo;
@@ -45806,7 +45823,7 @@ function createLineFbo(context, width, height) {
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+	gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, width, height);
 	const fbo = context.createFramebuffer(width, height, true, true);
 	fbo.colorAttachment.set(texture);
 	fbo.depthAttachment.set(context.createRenderbuffer(gl.DEPTH_STENCIL, width, height));
@@ -60454,7 +60471,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 9f57bd8";
+const version = "main 474a3ea";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;

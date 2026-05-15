@@ -14152,13 +14152,30 @@ var Texture = class {
 		const { context } = this;
 		const { gl } = context;
 		this.useMipmap = Boolean(options?.useMipmap);
+		if (resize && this.size && this.format === gl.RGBA) {
+			gl.deleteTexture(this.texture);
+			this.texture = gl.createTexture();
+			this._ownedHandle = this.texture;
+		}
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		context.pixelStoreUnpackFlipY.set(false);
 		context.pixelStoreUnpack.set(1);
 		const wantPremultiply = this.format === gl.RGBA && options?.premultiply !== false;
 		if (resize) {
 			this.size = [width, height];
-			if (hasDataProperty(image)) {
+			if (this.format === gl.RGBA && width > 0 && height > 0) {
+				const mipLevels = this.useMipmap ? Math.floor(Math.log2(Math.max(width, height))) + 1 : 1;
+				gl.texStorage2D(gl.TEXTURE_2D, mipLevels, gl.RGBA8, width, height);
+				if (hasDataProperty(image)) {
+					context.pixelStoreUnpackPremultiplyAlpha.set(false);
+					let { data } = image;
+					if (wantPremultiply && data) data = premultiplyAlpha(data);
+					if (data) gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, data);
+				} else {
+					context.pixelStoreUnpackPremultiplyAlpha.set(wantPremultiply);
+					gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, image);
+				}
+			} else if (hasDataProperty(image)) {
 				context.pixelStoreUnpackPremultiplyAlpha.set(false);
 				this._uploadRawData(image, wantPremultiply, width, height, gl);
 			} else {
