@@ -1,26 +1,13 @@
-/**
- * std140-laid-out uniform block.
- * Owns a CPU shadow (Float32Array) of the block bytes.
- *
- * Use `write(name, value)` to set fields by name, then `upload()` to push the CPU
- * shadow into the attached GPU buffer.
- *
- * For pool-acquired buffers (drawable-tier UBOs), call `attachBuffer(buffer)` before `upload()`
- */
-
-export type Std140Type = 'float' | 'vec2' | 'vec3' | 'vec4' | 'mat4';
-
-export type Std140Field = {name: string; type: Std140Type};
-
-const TYPE_INFO: Record<Std140Type, {align: number; size: number; floats: number}> = {
+const TYPE_INFO = {
     float: {align: 4, size: 4, floats: 1},
     vec2: {align: 8, size: 8, floats: 2},
     vec3: {align: 16, size: 12, floats: 3},
     vec4: {align: 16, size: 16, floats: 4},
     mat4: {align: 16, size: 64, floats: 16},
-};
+} as const;
 
-const BLOCK_ALIGN = 16;
+export type Std140Type = keyof typeof TYPE_INFO;
+export type Std140Field = {name: string; type: Std140Type};
 
 function alignUp(offset: number, alignment: number): number {
     return Math.ceil(offset / alignment) * alignment;
@@ -28,6 +15,11 @@ function alignUp(offset: number, alignment: number): number {
 
 type FieldInfo = {offset: number; floats: number};
 
+/**
+ * std140-laid-out uniform block with a CPU shadow (`_data`) mirroring the GPU buffer.
+ * The buffer may be owned (lazily created on first `upload()`) or pool-supplied
+ * via `attachBuffer()` before the first `upload()`.
+ */
 export class UniformBlock {
     private readonly _gl: WebGL2RenderingContext;
     private readonly _fields: Map<string, FieldInfo>;
@@ -47,7 +39,7 @@ export class UniformBlock {
             cursor = aligned + info.size;
         }
 
-        this._byteLength = alignUp(cursor, BLOCK_ALIGN) || BLOCK_ALIGN;
+        this._byteLength = alignUp(cursor, 16);
         this._data = new Float32Array(this._byteLength / 4);
         this._buffer = null;
     }

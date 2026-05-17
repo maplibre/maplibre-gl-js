@@ -1,13 +1,9 @@
 /**
  * Frame-arena pool of WebGL2 uniform buffers, keyed by exact byte size.
  *
- * `acquire(sizeBytes)` returns a pre-allocated buffer (createBuffer + bufferData)
- * the first time a given size is requested, and a recycled buffer afterwards.
- *
- * `endFrame()` returns all in-flight buffers from the current frame to per-size
- * freelists. This avoids buffer-renaming / in-flight-rewrite stalls — callers
- * never write to a buffer that the GPU might still be reading from in the
- * previous frame.
+ * A buffer acquired in frame N is never returned to the freelist until
+ * `endFrame()` is called for frame N — so callers can write into it without
+ * fearing the GPU is still reading the previous frame's contents from it.
  */
 export class DrawableUBOPool {
     private readonly _gl: WebGL2RenderingContext;
@@ -29,6 +25,9 @@ export class DrawableUBOPool {
             const gl = this._gl;
             buffer = gl.createBuffer();
             gl.bindBuffer(gl.UNIFORM_BUFFER, buffer);
+            // Allocate storage up front so callers can use `bufferSubData` on every
+            // upload (including the first).
+            // Without this, the first upload would need `bufferData` and a branch in the caller.
             gl.bufferData(gl.UNIFORM_BUFFER, sizeBytes, gl.DYNAMIC_DRAW);
         }
 
