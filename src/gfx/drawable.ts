@@ -55,11 +55,8 @@ export type DrawableOptions = {
  *
  * Built per-frame by the per-layer draw function (e.g. `drawBackground`),
  * carrying everything `draw()` needs to issue GL calls without consulting any
- * mutable shared state. Resolves its GLSL program lazily via
- * `painter.useProgram(this.shaderName)`.
- *
- * Mid-2.x: only Background uses Drawable; other layers still go through
- * `Program.draw()`. Both paths coexist until the migration is complete.
+ * mutable shared state.
+ * Resolves its GLSL program lazily via `painter.useProgram(this.shaderName)`.
  */
 export class Drawable {
     readonly shaderName: string;
