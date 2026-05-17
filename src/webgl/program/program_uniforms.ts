@@ -9,7 +9,6 @@ import {colorReliefUniforms, type ColorReliefUniformsType} from './color_relief_
 import {lineUniforms, lineGradientUniforms, linePatternUniforms, lineSDFUniforms, lineGradientSDFUniforms, lineTextureUniforms, type LineUniformsType, type LineGradientUniformsType, type LinePatternUniformsType, type LineSDFUniformsType, type LineGradientSDFUniformsType, type LineTextureUniformsType} from './line_program.ts';
 import {rasterUniforms, type RasterUniformsType} from './raster_program.ts';
 import {symbolIconUniforms, symbolSDFUniforms, symbolTextAndIconUniforms, type SymbolIconUniformsType, type SymbolSDFUniformsType, type symbolTextAndIconUniformsType} from './symbol_program.ts';
-import {backgroundUniforms, backgroundPatternUniforms, type BackgroundUniformsType, type BackgroundPatternUniformsType} from './background_program.ts';
 import {terrainUniforms, terrainDepthUniforms, terrainCoordsUniforms, type TerrainUniformsType, type TerrainDepthUniformsType, type TerrainCoordsUniformsType} from './terrain_program.ts';
 import {projectionErrorMeasurementUniforms, type ProjectionErrorMeasurementUniformsType} from './projection_error_measurement_program.ts';
 import {atmosphereUniforms, type atmosphereUniformsType} from './atmosphere_program.ts';
@@ -47,8 +46,8 @@ export const programUniforms: {
     symbolIcon: (context: Context, locations: UniformLocations) => SymbolIconUniformsType;
     symbolSDF: (context: Context, locations: UniformLocations) => SymbolSDFUniformsType;
     symbolTextAndIcon: (context: Context, locations: UniformLocations) => symbolTextAndIconUniformsType;
-    background: (context: Context, locations: UniformLocations) => BackgroundUniformsType;
-    backgroundPattern: (context: Context, locations: UniformLocations) => BackgroundPatternUniformsType;
+    background: (_: any, __: any) => any;
+    backgroundPattern: (_: any, __: any) => any;
     terrain: (context: Context, locations: UniformLocations) => TerrainUniformsType;
     terrainDepth: (context: Context, locations: UniformLocations) => TerrainDepthUniformsType;
     terrainCoords: (context: Context, locations: UniformLocations) => TerrainCoordsUniformsType;
@@ -83,8 +82,10 @@ export const programUniforms: {
     symbolIcon: symbolIconUniforms,
     symbolSDF: symbolSDFUniforms,
     symbolTextAndIcon: symbolTextAndIconUniforms,
-    background: backgroundUniforms,
-    backgroundPattern: backgroundPatternUniforms,
+    // background/backgroundPattern: paint state lives entirely in std140 UBOs
+    // (LayerUBO/DrawableUBO) and the u_image sampler defaults to TEXTURE0.
+    background: emptyUniforms,
+    backgroundPattern: emptyUniforms,
     terrain: terrainUniforms,
     terrainDepth: terrainDepthUniforms,
     terrainCoords: terrainCoordsUniforms,

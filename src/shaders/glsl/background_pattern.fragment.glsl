@@ -1,10 +1,16 @@
-uniform vec2 u_pattern_tl_a;
-uniform vec2 u_pattern_br_a;
-uniform vec2 u_pattern_tl_b;
-uniform vec2 u_pattern_br_b;
-uniform vec2 u_texsize;
-uniform float u_mix;
-uniform float u_opacity;
+layout(std140) uniform LayerUBO {
+    mediump vec2 u_pattern_tl_a;
+    mediump vec2 u_pattern_br_a;
+    mediump vec2 u_pattern_tl_b;
+    mediump vec2 u_pattern_br_b;
+    mediump vec2 u_texsize;
+    mediump vec2 u_pattern_size_a;
+    mediump vec2 u_pattern_size_b;
+    mediump float u_mix;
+    mediump float u_scale_a;
+    mediump float u_scale_b;
+    mediump float u_opacity;
+};
 
 uniform sampler2D u_image;
 

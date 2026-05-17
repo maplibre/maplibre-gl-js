@@ -7,29 +7,9 @@ import {
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
 
 import type {Painter} from '../../render/painter.ts';
-import type {OverscaledTileID} from '../../tile/tile_id.ts';
-import type {CrossFaded} from '../../style/properties.ts';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
 import type {UniformValues} from '../uniform_binding.ts';
 import type {Tile} from '../../tile/tile.ts';
-import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-
-type BackgroundPatternUniformsType = {
-    'u_image': Uniform1i;
-    'u_pattern_tl_a': Uniform2f;
-    'u_pattern_br_a': Uniform2f;
-    'u_pattern_tl_b': Uniform2f;
-    'u_pattern_br_b': Uniform2f;
-    'u_texsize': Uniform2f;
-    'u_mix': Uniform1f;
-    'u_pattern_size_a': Uniform2f;
-    'u_pattern_size_b': Uniform2f;
-    'u_scale_a': Uniform1f;
-    'u_scale_b': Uniform1f;
-    'u_pixel_coord_upper': Uniform2f;
-    'u_pixel_coord_lower': Uniform2f;
-    'u_tile_units_to_pixels': Uniform1f;
-};
 
 export type PatternUniformsType = {
     // pattern uniforms:
@@ -62,41 +42,4 @@ function patternUniformValues(crossfade: CrossfadeParameters, painter: Painter, 
     };
 }
 
-function bgPatternUniformValues(
-    image: CrossFaded<ResolvedImage>,
-    crossfade: CrossfadeParameters,
-    painter: Painter,
-    tile: {
-        tileID: OverscaledTileID;
-        tileSize: number;
-    }
-): UniformValues<BackgroundPatternUniformsType> {
-    const imagePosA = painter.imageManager.getPattern(image.from.toString());
-    const imagePosB = painter.imageManager.getPattern(image.to.toString());
-    const {width, height} = painter.imageManager.getPixelSize();
-
-    const numTiles = Math.pow(2, tile.tileID.overscaledZ);
-    const tileSizeAtNearestZoom = tile.tileSize * Math.pow(2, painter.transform.tileZoom) / numTiles;
-
-    const pixelX = tileSizeAtNearestZoom * (tile.tileID.canonical.x + tile.tileID.wrap * numTiles);
-    const pixelY = tileSizeAtNearestZoom * tile.tileID.canonical.y;
-
-    return {
-        'u_image': 0,
-        'u_pattern_tl_a': (imagePosA as any).tl,
-        'u_pattern_br_a': (imagePosA as any).br,
-        'u_pattern_tl_b': (imagePosB as any).tl,
-        'u_pattern_br_b': (imagePosB as any).br,
-        'u_texsize': [width, height],
-        'u_mix': crossfade.t,
-        'u_pattern_size_a': (imagePosA as any).displaySize,
-        'u_pattern_size_b': (imagePosB as any).displaySize,
-        'u_scale_a': crossfade.fromScale,
-        'u_scale_b': crossfade.toScale,
-        'u_tile_units_to_pixels': 1 / pixelsToTileUnits(tile, 1, painter.transform.tileZoom),
-        // split the pixel coord into two pairs of 16 bit numbers. The glsl spec only guarantees 16 bits of precision.
-        'u_pixel_coord_upper': [pixelX >> 16, pixelY >> 16],
-        'u_pixel_coord_lower': [pixelX & 0xFFFF, pixelY & 0xFFFF]
-    };
-}
-export {bgPatternUniformValues, patternUniformValues};
+export {patternUniformValues};

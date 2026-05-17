@@ -15,6 +15,7 @@ import type {BinderUniform} from '../data/program_configuration.ts';
 import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program.ts';
 import type {TerrainData} from '../render/terrain.ts';
 import {projectionObjectToUniformMap, type ProjectionPreludeUniformsType, projectionUniforms} from './program/projection_program.ts';
+import {applyUBOBindings} from '../gfx/ubo_bindings.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
@@ -141,6 +142,11 @@ export class Program<Us extends UniformBindings> {
         if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
             throw new Error(`Program failed to link: ${gl.getProgramInfoLog(this.program)}`);
         }
+
+        // Bind any active std140 UBO blocks in the shader (LayerUBO / DrawableUBO / GlobalUBO)
+        // to their fixed binding indices so that bindBufferBase at draw time is the only
+        // per-frame uniform setup required for migrated layers.
+        applyUBOBindings(gl, this.program);
 
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);

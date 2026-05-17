@@ -133,6 +133,10 @@ export class NullWebGL2RenderingContext {
     WAIT_FAILED: number = 0x911D;
     SYNC_FLUSH_COMMANDS_BIT: number = 0x00000001;
     READ_BUFFER: number = 0x0C02;
+    UNIFORM_BUFFER: number = 0x8A11;
+    ACTIVE_UNIFORM_BLOCKS: number = 0x8A36;
+    UNIFORM_BLOCK_BINDING: number = 0x8A3F;
+    UNIFORM_BLOCK_DATA_SIZE: number = 0x8A40;
 
     constructor(canvas: HTMLCanvasElement, contextAttributes?: WebGLContextAttributes) {
         this.canvas = canvas;
@@ -188,6 +192,10 @@ export class NullWebGL2RenderingContext {
     getBufferSubData: Mock<GL['getBufferSubData']> = vi.fn();
     bindBufferBase: Mock<GL['bindBufferBase']> = vi.fn();
     bindBufferRange: Mock<GL['bindBufferRange']> = vi.fn();
+    uniformBlockBinding: Mock<GL['uniformBlockBinding']> = vi.fn();
+    getUniformBlockIndex: Mock<GL['getUniformBlockIndex']> = vi.fn();
+    getActiveUniformBlockName: Mock<GL['getActiveUniformBlockName']> = vi.fn();
+    getActiveUniformBlockParameter: Mock<GL['getActiveUniformBlockParameter']> = vi.fn();
     beginQuery: Mock<GL['beginQuery']> = vi.fn();
     endQuery: Mock<GL['endQuery']> = vi.fn();
     getQuery: Mock<GL['getQuery']> = vi.fn();

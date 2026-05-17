@@ -22,6 +22,8 @@ import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webg
 import {type OverscaledTileID} from '../tile/tile_id.ts';
 import {Mesh} from './mesh.ts';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
+import {DrawableUBOPool} from '../gfx/drawable_ubo_pool.ts';
+import {type UniformBlock} from '../gfx/uniform_block.ts';
 
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Style} from '../style/style.ts';
@@ -142,6 +144,18 @@ export class Painter {
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
     terrainFacilitator: {depthDirty: boolean; coordsDirty: boolean; matrix: mat4; renderTime: number};
 
+    /**
+     * Per-layer std140 uniform blocks.
+     * Keyed by `${layerID}:${shaderName}` so the same layer using different shader
+     * variants (background vs backgroundPattern) gets a distinct block.
+     * Persistent across frames.
+     * Values are re-uploaded each render.
+     */
+    layerUBOs: Map<string, UniformBlock>;
+
+    /** Frame-arena pool of drawable-tier UBO buffers (drained via `endFrame()` after each `render()`). */
+    drawableUBOPool: DrawableUBOPool;
+
     constructor(gl: WebGL2RenderingContext, transform: IReadonlyTransform) {
         this.drawFunctions = webglDrawFunctions;
         this.context = new Context(gl);
@@ -149,6 +163,8 @@ export class Painter {
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
+        this.layerUBOs = new Map();
+        this.drawableUBOPool = new DrawableUBOPool(gl);
 
         this.setup();
 
@@ -629,6 +645,12 @@ export class Painter {
         if (this.options.showPadding) {
             this.drawFunctions.debugPadding(this);
         }
+
+        // Return per-frame drawable UBO buffers to their size-keyed freelists for
+        // reuse on the next frame. This must happen after every draw call has
+        // been issued (and conceptually after the GPU has consumed them, but the
+        // frame-arena model side-steps the in-flight-rewrite problem).
+        this.drawableUBOPool.endFrame();
 
         // Set defaults for most GL values so that anyone using the state after the render
         // encounters more expected values.

@@ -1,5 +1,7 @@
-uniform vec4 u_color;
-uniform float u_opacity;
+layout(std140) uniform LayerUBO {
+    mediump vec4 u_color;
+    mediump float u_opacity;
+};
 
 void main() {
     fragColor = u_color * u_opacity;
