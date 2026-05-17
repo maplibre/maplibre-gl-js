@@ -1,0 +1,46 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests that a translucent background layer renders correctly over a raster underlay under the globe projection."
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    15.0,
+    0.0
+  ],
+  "zoom": 1,
+  "sources": {
+    "satellite": {
+      "type": "raster",
+      "tiles": [
+        "local://tiles/{z}-{x}-{y}.satellite.png"
+      ],
+      "minzoom": 1,
+      "maxzoom": 1,
+      "tileSize": 256
+    }
+  },
+  "projection": { "type": "globe" },
+  "layers": [
+    {
+      "id": "raster",
+      "type": "raster",
+      "source": "satellite",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    },
+    {
+      "id": "background_overlay",
+      "type": "background",
+      "paint": {
+        "background-opacity": 0.5,
+        "background-color": "green"
+      }
+    }
+  ]
+}
