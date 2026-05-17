@@ -298,6 +298,30 @@ describe('rtl text detection', () => {
 
 });
 
+describe('setFeatureState', () => {
+    test('skips bucket updates when revision has already been processed', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
+        tile.loadVectorData(
+            createVectorData({rawTileData: createRawTileData()}),
+            createPainter()
+        );
+
+        const loadVTLayersSpy = vi.spyOn(tile.latestFeatureIndex, 'loadVTLayers');
+        const states = {road: [{id: '1', state: {hover: true}}]};
+        const painter = createPainter({
+            hasLayer: () => true,
+            getLayer: () => ({queryRadius: () => 0}),
+        });
+
+        // Simulate that revision 5 was already processed
+        tile.featureStateRevision = 5;
+
+        // Calling with the same revision should not trigger any work
+        tile.setFeatureState(states, painter, 5);
+        expect(loadVTLayersSpy).not.toHaveBeenCalled();
+    });
+});
+
 function createRawTileData() {
     return fs.readFileSync(path.join(__dirname, '../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
 }

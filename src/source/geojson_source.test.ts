@@ -7,22 +7,14 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {extend} from '../util/util.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {sleep, waitForEvent} from '../util/test/util.ts';
+import {getWrapDispatcher, sleep, waitForEvent} from '../util/test/util.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
-import type {Dispatcher} from '../util/dispatcher.ts';
 import type {RequestManager} from '../util/request_manager.ts';
-import type {IActor} from '../util/actor.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff.ts';
 
-const wrapDispatcher = (dispatcher: IActor) => {
-    return {
-        getActor() {
-            return dispatcher;
-        }
-    } as Dispatcher;
-};
+const wrapDispatcher = getWrapDispatcher();
 
 const mockDispatcher = wrapDispatcher({
     sendAsync() { return Promise.resolve({}); }
@@ -136,23 +128,24 @@ describe('GeoJSONSource.setData', () => {
     });
 
     test('respects collectResourceTiming parameter on source', async () => {
-        const source = createSource({collectResourceTiming: true});
+        const spy = vi.fn();
+        const source = new GeoJSONSource('id', {collectResourceTiming: true} as any, wrapDispatcher({
+            sendAsync(message: ActorMessage<MessageType>) {
+                return new Promise((resolve, reject) => {
+                    if (message.type === MessageType.loadData) {
+                        setTimeout(() => resolve({} as any), 0);
+                        spy(message);
+                    } else {
+                        reject(new Error(`MessageType.loadData is expected but got ${message.type}`));
+                    }
+                });
+            }
+        }), undefined);
         source.map = {
             _requestManager: {
                 transformRequest: (url:string) => ({url})
             } as any as RequestManager
         } as any;
-        const spy = vi.fn();
-        source.actor.sendAsync = (message: ActorMessage<MessageType>) => {
-            return new Promise((resolve, reject) => {
-                if (message.type === MessageType.loadData) {
-                    setTimeout(() => resolve({} as any), 0);
-                    spy(message);
-                } else {
-                    reject(new Error(`MessageType.loadData is expected but got ${message.type}`));
-                }
-            });
-        };
         source.setData('http://localhost/nonexistent');
         await sleep(0);
         expect(spy).toHaveBeenCalledTimes(1);
@@ -160,21 +153,22 @@ describe('GeoJSONSource.setData', () => {
     });
 
     test('respects collectResourceTiming parameter on source (async transformRequest)', async () => {
-        const source = createSource({collectResourceTiming: true});
+        const spy = vi.fn();
+        const source = new GeoJSONSource('id', {collectResourceTiming: true} as any, wrapDispatcher({
+            sendAsync(message: ActorMessage<MessageType>) {
+                return new Promise((resolve) => {
+                    if (message.type === MessageType.loadData) {
+                        spy(message);
+                        resolve({});
+                    }
+                });
+            }
+        }), undefined);
         source.map = {
             _requestManager: {
                 transformRequest: async (url: string) => ({url})
             } as any as RequestManager
         } as any;
-        const spy = vi.fn();
-        source.actor.sendAsync = (message: ActorMessage<MessageType>) => {
-            return new Promise((resolve) => {
-                if (message.type === MessageType.loadData) {
-                    spy(message);
-                    resolve({});
-                }
-            });
-        };
         await source.setData('http://localhost/nonexistent');
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].data.request.collectResourceTiming).toBeTruthy();
@@ -224,7 +218,7 @@ describe('GeoJSONSource.setData', () => {
 });
 
 describe('GeoJSONSource.onRemove', () => {
-    test('broadcasts "removeSource" event', () => {
+    test('broadcasts "removeSource" event', async () => {
         const spy = vi.fn();
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message: ActorMessage<MessageType>) {
@@ -233,6 +227,7 @@ describe('GeoJSONSource.onRemove', () => {
             }
         }), undefined);
         source.onRemove();
+        await sleep(0);
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.removeSource);
         expect(spy.mock.calls[0][0].data).toEqual({type: 'geojson', source: 'id'});

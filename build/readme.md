@@ -16,7 +16,7 @@ These commands will use [rolldown](https://rolldown.rs/) to bundle the code as E
 - `dist/maplibre-gl.mjs` (main bundle, entry: `src/index.ts`)
 - `dist/maplibre-gl-worker.mjs` (worker bundle, entry: `src/source/worker.ts`)
 
-The main bundle creates the worker via `new Worker(url, {type: 'module'})`, where the URL is whatever the consumer passes to `setWorkerUrl()`.
+The main bundle creates the worker via `new Worker(url, {type: 'module'})`. The URL defaults to a sibling of the loaded module (resolved via `import.meta.url`) and can be overridden by calling `setWorkerUrl()`. Cross-origin URLs are fetched via CORS and laundered through a same-origin Blob URL, since the `Worker` constructor rejects cross-origin URLs even when CORS allows the fetch.
 
 `banner.ts` is used to create a banner at the beginning of the output file.
 

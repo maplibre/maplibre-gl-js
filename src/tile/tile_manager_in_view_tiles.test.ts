@@ -1,7 +1,8 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {InViewTiles} from './tile_manager_in_view_tiles.ts';
 import {Tile} from './tile.ts';
 import {OverscaledTileID} from './tile_id.ts';
+import type {Painter} from '../render/painter.ts';
 
 describe('InViewTiles', () => {
     test('getRenderableIds returns only renderable tiles', () => {
@@ -105,5 +106,25 @@ describe('InViewTiles', () => {
         
         expect(inViewTiles.getTileById(updatedTile1.tileID.key)).toBe(updatedTile1);
         expect(inViewTiles.getTileById(updatedTile2.tileID.key)).toBe(updatedTile2);
+    });
+
+    test('setFeatureState calls setFeatureState on each tile', () => {
+        const inViewTiles = new InViewTiles();
+        const tile1 = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), 512);
+        const tile2 = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        const spy1 = vi.spyOn(tile1, 'setFeatureState').mockImplementation(() => {});
+        const spy2 = vi.spyOn(tile2, 'setFeatureState').mockImplementation(() => {});
+
+        inViewTiles.setTile(tile1.tileID.key, tile1);
+        inViewTiles.setTile(tile2.tileID.key, tile2);
+
+        const states = {road: [{id: '1', state: {hover: true}}]};
+        const painter = {style: {}} as unknown as Painter;
+        const revision = 3;
+
+        inViewTiles.setFeatureState(states, painter, revision);
+
+        expect(spy1).toHaveBeenCalledWith(states, painter, revision);
+        expect(spy2).toHaveBeenCalledWith(states, painter, revision);
     });
 });

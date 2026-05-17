@@ -140,7 +140,7 @@ export class GeoJSONSource extends Evented implements Source {
     _options: GeoJSONSourceInternalOptions;
     workerOptions: GeoJSONWorkerOptions;
     map: Map;
-    actor: Actor;
+    actorPromise: Promise<Actor>;
     _isUpdatingWorker: boolean;
     _pendingWorkerUpdate: {
         data?: GeoJSON.GeoJSON | string;
@@ -169,7 +169,7 @@ export class GeoJSONSource extends Evented implements Source {
         this._isUpdatingWorker = false;
         this._pendingWorkerUpdate = {data: options.data};
 
-        this.actor = dispatcher.getActor();
+        this.actorPromise = dispatcher.getActor();
         this.setEventedParent(eventedParent);
 
         this._data = typeof options.data === 'string' ? {url: options.data} : {geojson: options.data};
@@ -324,8 +324,8 @@ export class GeoJSONSource extends Evented implements Source {
      * @param clusterId - The value of the cluster's `cluster_id` property.
      * @returns a promise that is resolved with the zoom number
      */
-    getClusterExpansionZoom(clusterId: number): Promise<number> {
-        return this.actor.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: this.type, clusterId, source: this.id}});
+    async getClusterExpansionZoom(clusterId: number): Promise<number> {
+        return (await this.actorPromise).sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: this.type, clusterId, source: this.id}});
     }
 
     /**
@@ -334,8 +334,8 @@ export class GeoJSONSource extends Evented implements Source {
      * @param clusterId - The value of the cluster's `cluster_id` property.
      * @returns a promise that is resolved when the features are retrieved
      */
-    getClusterChildren(clusterId: number): Promise<GeoJSON.Feature[]> {
-        return this.actor.sendAsync({type: MessageType.getClusterChildren, data: {type: this.type, clusterId, source: this.id}});
+    async getClusterChildren(clusterId: number): Promise<GeoJSON.Feature[]> {
+        return (await this.actorPromise).sendAsync({type: MessageType.getClusterChildren, data: {type: this.type, clusterId, source: this.id}});
     }
 
     /**
@@ -363,8 +363,8 @@ export class GeoJSONSource extends Evented implements Source {
      * });
      * ```
      */
-    getClusterLeaves(clusterId: number, limit: number, offset: number): Promise<GeoJSON.Feature[]> {
-        return this.actor.sendAsync({type: MessageType.getClusterLeaves, data: {
+    async getClusterLeaves(clusterId: number, limit: number, offset: number): Promise<GeoJSON.Feature[]> {
+        return (await this.actorPromise).sendAsync({type: MessageType.getClusterLeaves, data: {
             type: this.type,
             source: this.id,
             clusterId,
@@ -442,7 +442,7 @@ export class GeoJSONSource extends Evented implements Source {
 
         try {
             const options = await optionsPromise;
-            const result = await this.actor.sendAsync({type: MessageType.loadData, data: options});
+            const result = await (await this.actorPromise).sendAsync({type: MessageType.loadData, data: options});
             this._isUpdatingWorker = false;
 
             if (this._removed || result.abandoned) {
@@ -476,7 +476,7 @@ export class GeoJSONSource extends Evented implements Source {
         } finally {
             // If there is more pending data, update the worker again.
             if (this._hasPendingWorkerUpdate()) {
-                this._updateWorkerData();
+                await this._updateWorkerData();
             }
         }
     }
@@ -575,7 +575,7 @@ export class GeoJSONSource extends Evented implements Source {
 
     async loadTile(tile: Tile): Promise<void> {
         const message = !tile.actor ?  MessageType.loadTile :  MessageType.reloadTile;
-        tile.actor = this.actor;
+        tile.actor = await this.actorPromise;
         const params: WorkerTileParameters = {
             type: this.type,
             uid: tile.uid,
@@ -591,7 +591,7 @@ export class GeoJSONSource extends Evented implements Source {
         };
 
         tile.abortController = new AbortController();
-        const data = await this.actor.sendAsync({type: message, data: params}, tile.abortController);
+        const data = await (await this.actorPromise).sendAsync({type: message, data: params}, tile.abortController);
         delete tile.abortController;
         tile.unloadVectorData();
 
@@ -610,12 +610,12 @@ export class GeoJSONSource extends Evented implements Source {
 
     async unloadTile(tile: Tile): Promise<void> {
         tile.unloadVectorData();
-        await this.actor.sendAsync({type: MessageType.removeTile, data: {uid: tile.uid, type: this.type, source: this.id}});
+        await (await this.actorPromise).sendAsync({type: MessageType.removeTile, data: {uid: tile.uid, type: this.type, source: this.id}});
     }
 
     onRemove(): void {
         this._removed = true;
-        this.actor.sendAsync({type: MessageType.removeSource, data: {type: this.type, source: this.id}});
+        this.actorPromise.then(actor => actor.sendAsync({type: MessageType.removeSource, data: {type: this.type, source: this.id}}));
     }
 
     serialize(): GeoJSONSourceSpecification {

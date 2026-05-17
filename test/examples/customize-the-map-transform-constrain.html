@@ -22,8 +22,6 @@
 <script type="module">
     import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
 
-    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
-
     function customTransformConstrain(lngLat, zoom) {
         return {center: lngLat, zoom: zoom ?? 0}
     };

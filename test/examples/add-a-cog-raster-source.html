@@ -19,8 +19,6 @@
 <script type="module">
     import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
 
-    maplibregl.setWorkerUrl('../../dist/maplibre-gl-worker-dev.mjs');
-
     maplibregl.addProtocol('cog', MaplibreCOGProtocol.cogProtocol);
 
     const map = new maplibregl.Map({
