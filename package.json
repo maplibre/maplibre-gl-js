@@ -88,7 +88,7 @@
     "d3-queue": "^3.0.7",
     "devtools-protocol": "^0.0.1629771",
     "diff": "^9.0.0",
-    "eslint": "^10.3.0",
+    "eslint": "^10.4.0",
     "eslint-plugin-html": "^8.1.4",
     "eslint-plugin-tsdoc": "0.5.2",
     "expect": "^30.4.1",
