@@ -597,18 +597,6 @@ export class GeoJSONSource extends Evented implements Source {
 
         if (!tile.aborted) {
             tile.loadVectorData(data, this.map.painter, message ===  MessageType.reloadTile);
-
-            // Reset unchanged frame counters for layers whose buckets just loaded,
-            // so the translucent layer cache knows this layer's content has changed.
-            const style = this.map.painter?.style;
-            if (style) {
-                for (const id in tile.buckets) {
-                    const layer = style.getLayer(id);
-                    if (layer) {
-                        layer._unchangedFrameCount = 0;
-                    }
-                }
-            }
         }
     }
 

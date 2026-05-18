@@ -234,6 +234,7 @@ export class Style extends Evented {
     _changedImages: {[_: string]: true};
     _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
+    _sourcesWithTileUpdates: Set<string>;
     _layerOrderChanged: boolean;
     // image ids of images loaded from style's sprite
     _spritesImagesIds: {[spriteId: string]: string[]};
@@ -274,6 +275,12 @@ export class Style extends Evented {
         rtlMainThreadPluginFactory().on(RTLPluginLoadedEventName, this._rtlPluginLoaded);
 
         this.on('data', (event) => {
+            // Track sources that had tiles loaded, so the static base cache
+            // can reset layer stability counters without circular dependencies.
+            if (event.dataType === 'source' && event.tile && event.sourceId) {
+                this._sourcesWithTileUpdates.add(event.sourceId);
+            }
+
             if (event.dataType !== 'source' || event.sourceDataType !== 'metadata') {
                 return;
             }
@@ -298,6 +305,7 @@ export class Style extends Evented {
     }
 
     private _setInitialValues() {
+        this._sourcesWithTileUpdates = new Set();
         this._spritesImagesIds = {};
         this._layers = {};
         this._order = [];
@@ -858,13 +866,15 @@ export class Style extends Evented {
             const layerChanged = this._updatedLayers[layerId] ||
                 this._updatedPaintProps[layerId] ||
                 layer.hasTransition() ||
-                (layer.source && reloadedSources.has(layer.source));
+                (layer.source && (reloadedSources.has(layer.source) ||
+                    this._sourcesWithTileUpdates.has(layer.source)));
             if (layerChanged) {
                 layer._unchangedFrameCount = 0;
             } else {
                 layer._unchangedFrameCount++;
             }
         }
+        this._sourcesWithTileUpdates.clear();
     }
 
     _resetUpdates(): void {
