@@ -7,6 +7,8 @@ import {fullscreenTextureUniformValues} from '../webgl/program/fullscreen_textur
 
 import type {Painter} from './painter.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
+import type {ImageManager} from './image_manager.ts';
+import type {TileManager} from '../tile/tile_manager.ts';
 
 type PainterOptions = {
     moving: boolean;
@@ -43,6 +45,8 @@ export class StaticBaseCache {
         layers: {[_: string]: StyleLayer},
         zoom: number,
         options: PainterOptions,
+        imageManager: ImageManager,
+        tileManagers: {[_: string]: TileManager},
     ): {cacheStartLayer: number; needsSnapshot: boolean; stableLayerCount: number} {
         // Compute N: number of consecutive stable layers from the bottom
         let stableLayerCount = 0;
@@ -50,19 +54,37 @@ export class StaticBaseCache {
             for (const layerId of layerIds) {
                 const layer = layers[layerId];
                 if (layer.isHidden(zoom)) {
-                    // Hidden layers don't break the stable chain — they won't be rendered anyway
                     stableLayerCount++;
                     continue;
                 }
-                if (layer._unchangedFrameCount >= this.stabilityThreshold) {
-                    stableLayerCount++;
-                } else {
+                if (layer._unchangedFrameCount < this.stabilityThreshold) {
                     break;
                 }
+                // If any visible tile for this layer's source uses a dynamic
+                // image (one with a render callback), the layer's visual content
+                // may change every frame — break the stable chain here.
+                if (imageManager.dynamicImageUpdatedThisFrame && layer.source && tileManagers[layer.source]) {
+                    const coords = tileManagers[layer.source].getVisibleCoordinates(false);
+                    let hasDynamic = false;
+                    for (const coord of coords) {
+                        const tile = tileManagers[layer.source].getTile(coord);
+                        if (tile?.imageAtlas?.haveRenderCallbacks?.length > 0) {
+                            hasDynamic = true;
+                            break;
+                        }
+                    }
+                    if (hasDynamic) {
+                        break;
+                    }
+                }
+                stableLayerCount++;
             }
         }
 
-        // Invalidate cache during any camera movement
+        // Invalidate cache during camera movement.
+        // Note: dynamic image updates don't invalidate the cache because the
+        // per-layer check above already excludes layers with dynamic images
+        // from the stable set — the cached layers are guaranteed static.
         const cameraMoving = options.moving || options.zooming || options.rotating;
         if (cameraMoving) {
             this._cachedLayerCount = 0;

@@ -599,7 +599,7 @@ export class Painter {
         let globeDepthRendered = false;
 
         const {cacheStartLayer, needsSnapshot, stableLayerCount} = this.staticBaseCache.prepareTranslucentPass(
-            this, layerIds, this.style._layers, this.transform.zoom, options
+            this, layerIds, this.style._layers, this.transform.zoom, options, this.imageManager, tileManagers
         );
 
         // Render layers (either all, or starting from cacheStartLayer)

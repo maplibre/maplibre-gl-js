@@ -328,8 +328,27 @@ export class ImageManager extends Evented {
         this.dirty = true;
     }
 
+    /**
+     * Whether any dynamic image (with a render callback) was updated this frame.
+     * Used by the static base cache to invalidate layers that depend on dynamic images.
+     */
+    dynamicImageUpdatedThisFrame: boolean;
+
+    /**
+     * Returns true if any registered image has a render callback.
+     */
+    hasImagesWithRenderCallbacks(): boolean {
+        for (const id in this.images) {
+            if (this.images[id].userImage?.render) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     beginFrame(): void {
         this.callbackDispatchedThisFrame = {};
+        this.dynamicImageUpdatedThisFrame = false;
     }
 
     dispatchRenderCallbacks(ids: string[]): void {
@@ -345,6 +364,7 @@ export class ImageManager extends Evented {
             const updated = renderStyleImage(image);
             if (updated) {
                 this.updateImage(id, image);
+                this.dynamicImageUpdatedThisFrame = true;
             }
         }
     }
