@@ -4,7 +4,7 @@ uniform float u_opacity;
 uniform float u_intensity;
 uniform highp float u_globe_extrude_scale;
 
-in vec2 a_pos;
+layout(location = 0) in vec2 a_pos;
 
 out vec2 v_extrude;
 

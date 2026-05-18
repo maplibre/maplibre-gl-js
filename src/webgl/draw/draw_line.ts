@@ -324,7 +324,7 @@ function createLineFbo(context: Context, width: number, height: number): Framebu
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, width, height);
 
     const fbo = context.createFramebuffer(width, height, true, true);
     fbo.colorAttachment.set(texture);

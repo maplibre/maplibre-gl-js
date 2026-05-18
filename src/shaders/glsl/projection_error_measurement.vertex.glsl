@@ -1,4 +1,4 @@
-in vec2 a_pos;
+layout(location = 0) in vec2 a_pos;
 
 uniform highp float u_input;
 uniform highp float u_output_expected;

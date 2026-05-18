@@ -1,6 +1,6 @@
-in vec2 a_pos;
-in float a_radius;
-in vec2 a_flags;
+layout(location = 0) in vec2 a_pos;
+layout(location = 1) in float a_radius;
+layout(location = 2) in vec2 a_flags;
 
 uniform vec2 u_viewport_size;
 

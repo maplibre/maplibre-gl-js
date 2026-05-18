@@ -6,7 +6,7 @@ uniform lowp float u_device_pixel_ratio;
 uniform highp float u_camera_to_center_distance;
 uniform vec2 u_translate;
 
-in vec2 a_pos;
+layout(location = 0) in vec2 a_pos;
 
 out vec3 v_data;
 out float v_visibility;

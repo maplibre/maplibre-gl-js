@@ -6,10 +6,10 @@
 // #define scale 63.0
 #define scale 0.015873016
 
-in vec2 a_pos_normal;
-in vec4 a_data;
-in float a_uv_x;
-in float a_split_index;
+layout(location = 0) in vec2 a_pos_normal;
+layout(location = 1) in vec4 a_data;
+layout(location = 2) in float a_uv_x;
+layout(location = 3) in float a_split_index;
 
 uniform vec2 u_translation;
 uniform mediump float u_ratio;

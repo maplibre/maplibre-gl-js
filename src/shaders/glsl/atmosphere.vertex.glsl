@@ -1,4 +1,4 @@
-in vec2 a_pos;
+layout(location = 0) in vec2 a_pos;
 
 uniform mat4 u_inv_proj_matrix;
 

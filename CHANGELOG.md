@@ -1,6 +1,11 @@
 ## main
 ### ✨ Features and improvements
+<<<<<<< HEAD
 - Optimization: Cache stable translucent layers to avoid redundant re-rendering ([#7607](https://github.com/maplibre/maplibre-gl-js/pull/7635)) (by [@xavierjs](https://github.com/xavierjs))
+=======
+- Enable mipmaps for non-power-of-two raster tiles, reducing aliasing at high pitch ([#7641](https://github.com/maplibre/maplibre-gl-js/pull/7641)) (by [@birkskyum](https://github.com/birkskyum))
+- Use GLSL ES 3.00 layout qualifiers for vertex attribute locations, replacing runtime `bindAttribLocation` calls ([#7644](https://github.com/maplibre/maplibre-gl-js/pull/7644)) (by [@birkskyum](https://github.com/birkskyum))
+>>>>>>> main
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
