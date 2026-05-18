@@ -436,7 +436,7 @@ export type MapOptions = {
      * layers change and the camera is static.
      * @defaultValue true
      */
-    optimizationFlagCacheFirstLayersRendering?: boolean;
+    optimizeStaticBase?: boolean;
 };
 
 export type AddImageOptions = {
@@ -533,7 +533,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     terrainSkirtLength: 'auto',
     zoomLevelsToOverscale: 4,
     anisotropicFilterPitch: defaultAnisotropicFilterPitch,
-    optimizationFlagCacheFirstLayersRendering: true,
+    optimizeStaticBase: true,
 };
 
 /**
@@ -591,7 +591,7 @@ export class Map extends Camera {
     _sourcesDirty: boolean;
     _placementDirty: boolean;
     _anisotropicFilterPitch: number;
-    _optimizationFlagCacheFirstLayersRendering: boolean;
+    _optimizeStaticBase: boolean;
 
     _loaded: boolean;
     _idleTriggered = false;
@@ -790,7 +790,7 @@ export class Map extends Camera {
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
         this.setAnisotropicFilterPitch(resolvedOptions.anisotropicFilterPitch);
-        this._optimizationFlagCacheFirstLayersRendering = resolvedOptions.optimizationFlagCacheFirstLayersRendering === true;
+        this._optimizeStaticBase = resolvedOptions.optimizeStaticBase === true;
 
         if (resolvedOptions.reduceMotion !== undefined) {
             browser.prefersReducedMotion = resolvedOptions.reduceMotion;
@@ -3502,7 +3502,7 @@ export class Map extends Camera {
         }
 
         this.painter = new Painter(gl, this.transform);
-        this.painter.translucentCacheEnabled = this._optimizationFlagCacheFirstLayersRendering;
+        this.painter.translucentCacheEnabled = this._optimizeStaticBase;
     }
 
     override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
