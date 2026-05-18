@@ -3,21 +3,21 @@ import {Uniform1i} from '../uniform_binding.ts';
 import type {Context} from '../../webgl/context.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 
-export type TranslucentCacheUniformsType = {
+export type FullscreenTextureUniformsType = {
     'u_image': Uniform1i;
 };
 
-const translucentCacheUniforms = (context: Context, locations: UniformLocations): TranslucentCacheUniformsType => ({
+const fullscreenTextureUniforms = (context: Context, locations: UniformLocations): FullscreenTextureUniformsType => ({
     'u_image': new Uniform1i(context, locations.u_image),
 });
 
-const translucentCacheUniformValues = (
+const fullscreenTextureUniformValues = (
     textureUnit: number,
-): UniformValues<TranslucentCacheUniformsType> => ({
+): UniformValues<FullscreenTextureUniformsType> => ({
     'u_image': textureUnit,
 });
 
 export {
-    translucentCacheUniforms,
-    translucentCacheUniformValues
+    fullscreenTextureUniforms,
+    fullscreenTextureUniformValues
 };

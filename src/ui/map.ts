@@ -3502,7 +3502,7 @@ export class Map extends Camera {
         }
 
         this.painter = new Painter(gl, this.transform);
-        this.painter.translucentCacheEnabled = this._optimizeStaticBase;
+        this.painter.staticBaseCache.enabled = this._optimizeStaticBase;
     }
 
     override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {

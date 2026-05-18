@@ -100,92 +100,89 @@ describe('translucent cache', () => {
         painter.destroy();
     });
 
-    test('_snapshotTranslucentCache creates texture and copies framebuffer', () => {
-        expect(painter._translucentCacheTexture).toBeNull();
-        expect(painter._translucentCachedLayerCount).toBe(0);
+    test('snapshot creates texture and copies framebuffer', () => {
+        const cache = painter.staticBaseCache;
+        expect(cache._texture).toBeNull();
+        expect(cache._cachedLayerCount).toBe(0);
 
-        painter._snapshotTranslucentCache(7);
+        cache.snapshot(painter, 7);
 
-        expect(painter._translucentCacheTexture).toBeTruthy();
-        expect(painter._translucentCacheWidth).toBe(512);
-        expect(painter._translucentCacheHeight).toBe(512);
-        expect(painter._translucentCachedLayerCount).toBe(7);
+        expect(cache._texture).toBeTruthy();
+        expect(cache._width).toBe(512);
+        expect(cache._height).toBe(512);
+        expect(cache._cachedLayerCount).toBe(7);
         expect(gl.copyTexSubImage2D).toHaveBeenCalledWith(
             gl.TEXTURE_2D, 0, 0, 0, 0, 0, 512, 512
         );
     });
 
-    test('_snapshotTranslucentCache reuses texture when size unchanged', () => {
-        painter._snapshotTranslucentCache(3);
-        const firstTexture = painter._translucentCacheTexture;
+    test('snapshot reuses texture when size unchanged', () => {
+        const cache = painter.staticBaseCache;
+        cache.snapshot(painter, 3);
+        const firstTexture = cache._texture;
 
-        painter._snapshotTranslucentCache(5);
-        expect(painter._translucentCacheTexture).toBe(firstTexture);
-        expect(painter._translucentCachedLayerCount).toBe(5);
+        cache.snapshot(painter, 5);
+        expect(cache._texture).toBe(firstTexture);
+        expect(cache._cachedLayerCount).toBe(5);
     });
 
-    test('_snapshotTranslucentCache recreates texture on resize', () => {
-        painter._snapshotTranslucentCache(3);
-        const firstTexture = painter._translucentCacheTexture;
+    test('snapshot recreates texture on resize', () => {
+        const cache = painter.staticBaseCache;
+        cache.snapshot(painter, 3);
+        const firstTexture = cache._texture;
         const destroySpy = vi.spyOn(firstTexture, 'destroy');
 
         painter.width = 1024;
         painter.height = 768;
-        painter._snapshotTranslucentCache(4);
+        cache.snapshot(painter, 4);
 
         expect(destroySpy).toHaveBeenCalled();
-        expect(painter._translucentCacheTexture).not.toBe(firstTexture);
-        expect(painter._translucentCacheWidth).toBe(1024);
-        expect(painter._translucentCacheHeight).toBe(768);
+        expect(cache._texture).not.toBe(firstTexture);
+        expect(cache._width).toBe(1024);
+        expect(cache._height).toBe(768);
     });
 
     test('destroy cleans up cache texture', () => {
-        painter._snapshotTranslucentCache(3);
-        const destroySpy = vi.spyOn(painter._translucentCacheTexture, 'destroy');
+        const cache = painter.staticBaseCache;
+        cache.snapshot(painter, 3);
+        const destroySpy = vi.spyOn(cache._texture, 'destroy');
 
         painter.destroy();
         expect(destroySpy).toHaveBeenCalled();
     });
 
-    test('_drawTranslucentCacheTexture binds texture and draws quad', () => {
-        // First create a cache texture via snapshot
-        painter._snapshotTranslucentCache(5);
+    test('_draw binds texture and draws quad', () => {
+        const cache = painter.staticBaseCache;
+        cache.snapshot(painter, 5);
 
         const drawSpy = vi.fn();
         vi.spyOn(painter, 'useProgram').mockReturnValue({draw: drawSpy} as any);
 
-        painter._drawTranslucentCacheTexture();
+        cache._draw(painter);
 
         expect(gl.bindTexture).toHaveBeenCalledWith(
-            gl.TEXTURE_2D, painter._translucentCacheTexture.texture
+            gl.TEXTURE_2D, cache._texture.texture
         );
-        expect(painter.useProgram).toHaveBeenCalledWith('translucentCache', null, true);
+        expect(painter.useProgram).toHaveBeenCalledWith('fullscreenTexture', null, true);
         expect(drawSpy).toHaveBeenCalledTimes(1);
 
         const args = drawSpy.mock.calls[0];
-        // context
         expect(args[0]).toBe(painter.context);
-        // gl.TRIANGLES
         expect(args[1]).toBe(gl.TRIANGLES);
-        // layer name
-        expect(args[9]).toBe('$translucentCache');
-        // vertex buffer
+        expect(args[9]).toBe('$fullscreenTexture');
         expect(args[10]).toBe(painter.viewportBuffer);
-        // index buffer
         expect(args[11]).toBe(painter.quadTriangleIndexBuffer);
-        // segments
         expect(args[12]).toBe(painter.viewportSegments);
     });
 
     test('cache is valid when size matches and enough stable layers', () => {
-        // Simulate an existing cache
-        painter._snapshotTranslucentCache(5);
-        expect(painter._translucentCachedLayerCount).toBe(5);
+        const cache = painter.staticBaseCache;
+        cache.snapshot(painter, 5);
+        expect(cache._cachedLayerCount).toBe(5);
 
-        const drawCacheSpy = vi.spyOn(painter, '_drawTranslucentCacheTexture').mockImplementation(() => {});
+        const drawSpy = vi.spyOn(cache, '_draw').mockImplementation(() => {});
         const clearStencilSpy = vi.spyOn(painter, 'clearStencil').mockImplementation(() => {});
 
-        // Set up a mock style with stable layers
         const mockLayers: Record<string, any> = {};
         const layerIds: string[] = [];
         for (let i = 0; i < 7; i++) {
@@ -215,8 +212,8 @@ describe('translucent cache', () => {
             imageManager: {beginFrame: vi.fn()},
             glyphManager: null,
         } as any;
-        painter.translucentCacheEnabled = true;
-        painter.translucentCacheMinLayers = 1;
+        cache.enabled = true;
+        cache.minLayers = 1;
 
         painter.render(painter.style, {
             fadeDuration: 0, moving: false, rotating: false, zooming: false,
@@ -224,19 +221,18 @@ describe('translucent cache', () => {
             anisotropicFilterPitch: 20,
         });
 
-        // Cache should have been reused
-        expect(drawCacheSpy).toHaveBeenCalled();
+        expect(drawSpy).toHaveBeenCalled();
         expect(clearStencilSpy).toHaveBeenCalled();
     });
 
     test('cache is invalidated when width changes', () => {
-        painter._snapshotTranslucentCache(3);
-        expect(painter._translucentCachedLayerCount).toBe(3);
+        const cache = painter.staticBaseCache;
+        cache.snapshot(painter, 3);
+        expect(cache._cachedLayerCount).toBe(3);
 
-        // Change width — cache should become invalid
         painter.width = 1024;
 
-        const drawCacheSpy = vi.spyOn(painter, '_drawTranslucentCacheTexture').mockImplementation(() => {});
+        const drawSpy = vi.spyOn(cache, '_draw').mockImplementation(() => {});
 
         painter.style = {
             _order: [],
@@ -250,7 +246,7 @@ describe('translucent cache', () => {
             imageManager: {beginFrame: vi.fn()},
             glyphManager: null,
         } as any;
-        painter.translucentCacheEnabled = true;
+        cache.enabled = true;
 
         painter.render(painter.style, {
             fadeDuration: 0, moving: false, rotating: false, zooming: false,
@@ -258,18 +254,18 @@ describe('translucent cache', () => {
             anisotropicFilterPitch: 20,
         });
 
-        expect(drawCacheSpy).not.toHaveBeenCalled();
-        expect(painter._translucentCachedLayerCount).toBe(0);
+        expect(drawSpy).not.toHaveBeenCalled();
+        expect(cache._cachedLayerCount).toBe(0);
     });
 
     test('cache is invalidated when height changes', () => {
-        painter._snapshotTranslucentCache(3);
-        expect(painter._translucentCachedLayerCount).toBe(3);
+        const cache = painter.staticBaseCache;
+        cache.snapshot(painter, 3);
+        expect(cache._cachedLayerCount).toBe(3);
 
-        // Change height — cache should become invalid
         painter.height = 1024;
 
-        const drawCacheSpy = vi.spyOn(painter, '_drawTranslucentCacheTexture').mockImplementation(() => {});
+        const drawSpy = vi.spyOn(cache, '_draw').mockImplementation(() => {});
 
         painter.style = {
             _order: [],
@@ -283,7 +279,7 @@ describe('translucent cache', () => {
             imageManager: {beginFrame: vi.fn()},
             glyphManager: null,
         } as any;
-        painter.translucentCacheEnabled = true;
+        cache.enabled = true;
 
         painter.render(painter.style, {
             fadeDuration: 0, moving: false, rotating: false, zooming: false,
@@ -291,12 +287,13 @@ describe('translucent cache', () => {
             anisotropicFilterPitch: 20,
         });
 
-        expect(drawCacheSpy).not.toHaveBeenCalled();
-        expect(painter._translucentCachedLayerCount).toBe(0);
+        expect(drawSpy).not.toHaveBeenCalled();
+        expect(cache._cachedLayerCount).toBe(0);
     });
 
     test('snapshot is taken when stable layers exceed minimum', () => {
-        const snapshotSpy = vi.spyOn(painter, '_snapshotTranslucentCache');
+        const cache = painter.staticBaseCache;
+        const snapshotSpy = vi.spyOn(cache, 'snapshot');
 
         const mockLayers: Record<string, any> = {};
         const layerIds: string[] = [];
@@ -314,7 +311,6 @@ describe('translucent cache', () => {
                 isTileClipped: () => false,
             };
         }
-        // Last layer is unstable
         mockLayers['layer-5']._unchangedFrameCount = 0;
 
         painter.style = {
@@ -329,8 +325,8 @@ describe('translucent cache', () => {
             imageManager: {beginFrame: vi.fn()},
             glyphManager: null,
         } as any;
-        painter.translucentCacheEnabled = true;
-        painter.translucentCacheMinLayers = 1;
+        cache.enabled = true;
+        cache.minLayers = 1;
 
         painter.render(painter.style, {
             fadeDuration: 0, moving: false, rotating: false, zooming: false,
@@ -338,9 +334,8 @@ describe('translucent cache', () => {
             anisotropicFilterPitch: 20,
         });
 
-        // Should have snapshotted the first 5 stable layers
-        expect(snapshotSpy).toHaveBeenCalledWith(5);
-        expect(painter._translucentCachedLayerCount).toBe(5);
+        expect(snapshotSpy).toHaveBeenCalledWith(painter, 5);
+        expect(cache._cachedLayerCount).toBe(5);
     });
 });
 
