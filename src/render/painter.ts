@@ -102,9 +102,11 @@ export class Painter {
      * swapped to the target RTTObject's texture via {@link bindRTT}.
      * Created lazily on first use.
      */
-    _rttFbo: Framebuffer | null;
-    _rttDepthRenderbuffer: WebGLRenderbuffer | null;
-    _rttFboSize: number;
+    _rttSharedFbo: {
+        fbo: Framebuffer;
+        depthRenderbuffer: WebGLRenderbuffer;
+        size: number;
+    } | null;
     numSublayers: number;
     depthEpsilon: number;
     emptyProgramConfiguration: ProgramConfiguration;
@@ -156,9 +158,7 @@ export class Painter {
         this.transform = transform;
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
-        this._rttFbo = null;
-        this._rttDepthRenderbuffer = null;
-        this._rttFboSize = 0;
+        this._rttSharedFbo = null;
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
@@ -763,26 +763,26 @@ export class Painter {
         const size = obj.size;
 
         // Lazy-create the shared FBO + depth-stencil renderbuffer
-        if (!this._rttFbo) {
-            this._rttFbo = this.context.createFramebuffer(size, size, true, true);
-            this._rttDepthRenderbuffer = this.context.createRenderbuffer(gl.DEPTH_STENCIL, size, size);
-            this._rttFbo.depthAttachment.set(this._rttDepthRenderbuffer);
-            this._rttFboSize = size;
+        if (!this._rttSharedFbo) {
+            const fbo = this.context.createFramebuffer(size, size, true, true);
+            const depthRenderbuffer = this.context.createRenderbuffer(gl.DEPTH_STENCIL, size, size);
+            fbo.depthAttachment.set(depthRenderbuffer);
+            this._rttSharedFbo = {fbo, depthRenderbuffer, size};
         }
 
         // Resize the shared depth-stencil renderbuffer if needed
-        if (this._rttFboSize !== size) {
-            this.context.bindRenderbuffer.set(this._rttDepthRenderbuffer);
+        if (this._rttSharedFbo.size !== size) {
+            this.context.bindRenderbuffer.set(this._rttSharedFbo.depthRenderbuffer);
             gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, size, size);
             this.context.bindRenderbuffer.set(null);
-            this._rttFbo.width = size;
-            this._rttFbo.height = size;
-            this._rttFboSize = size;
+            this._rttSharedFbo.fbo.width = size;
+            this._rttSharedFbo.fbo.height = size;
+            this._rttSharedFbo.size = size;
         }
 
         // Swap in the target texture and bind
-        this._rttFbo.colorAttachment.set(obj.texture.texture);
-        this.context.bindFramebuffer.set(this._rttFbo.framebuffer);
+        this._rttSharedFbo.fbo.colorAttachment.set(obj.texture.texture);
+        this.context.bindFramebuffer.set(this._rttSharedFbo.fbo.framebuffer);
     }
 
     releaseRTT(obj: RTTObject): void {
@@ -899,17 +899,15 @@ export class Painter {
         }
         this._rttObjectRecyclePool = [];
 
-        if (this._rttFbo) {
+        if (this._rttSharedFbo) {
             // Detach so Framebuffer.destroy() doesn't delete the texture/renderbuffer
             // that we already manage separately.
-            this._rttFbo.colorAttachment.set(null);
-            this._rttFbo.depthAttachment.set(null);
+            this._rttSharedFbo.fbo.colorAttachment.set(null);
+            this._rttSharedFbo.fbo.depthAttachment.set(null);
             const gl = this.context.gl;
-            if (this._rttDepthRenderbuffer) gl.deleteRenderbuffer(this._rttDepthRenderbuffer);
-            gl.deleteFramebuffer(this._rttFbo.framebuffer);
-            this._rttFbo = null;
-            this._rttDepthRenderbuffer = null;
-            this._rttFboSize = 0;
+            gl.deleteRenderbuffer(this._rttSharedFbo.depthRenderbuffer);
+            gl.deleteFramebuffer(this._rttSharedFbo.fbo.framebuffer);
+            this._rttSharedFbo = null;
         }
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();

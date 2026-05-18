@@ -118,21 +118,21 @@ describe('RTT pool', () => {
     });
 
     test('bindRTT lazily creates shared FBO and binds texture', () => {
-        expect(painter._rttFbo).toBeNull();
+        expect(painter._rttSharedFbo).toBeNull();
         const obj = painter.acquireRTT(256);
         painter.bindRTT(obj);
-        expect(painter._rttFbo).toBeTruthy();
-        expect(painter._rttFboSize).toBe(256);
+        expect(painter._rttSharedFbo).toBeTruthy();
+        expect(painter._rttSharedFbo.size).toBe(256);
     });
 
     test('bindRTT resizes shared depth-stencil when size changes', () => {
         const a = painter.acquireRTT(256);
         painter.bindRTT(a);
-        expect(painter._rttFboSize).toBe(256);
+        expect(painter._rttSharedFbo.size).toBe(256);
 
         const b = painter.acquireRTT(512);
         painter.bindRTT(b);
-        expect(painter._rttFboSize).toBe(512);
+        expect(painter._rttSharedFbo.size).toBe(512);
     });
 
     test('painter.destroy cleans up pooled RTT textures and shared FBO', () => {
@@ -149,6 +149,6 @@ describe('RTT pool', () => {
         painter.destroy();
         const destroyed = objs.filter(o => o.texture.destroy.mock.calls.length > 0).length;
         expect(destroyed).toBe(10);
-        expect(painter._rttFbo).toBeNull();
+        expect(painter._rttSharedFbo).toBeNull();
     });
 });
