@@ -125,12 +125,18 @@ export class Program<Us extends UniformBindings> {
 
         for (let i = 0; i < this.numAttributes; i++) {
             if (allAttrInfo[i]) {
-                gl.bindAttribLocation(this.program, i, allAttrInfo[i]);
                 this.attributes[allAttrInfo[i]] = i;
             }
         }
 
         gl.linkProgram(this.program);
+
+        for (const name in this.attributes) {
+            const actual = gl.getAttribLocation(this.program, name);
+            if (actual >= 0) {
+                this.attributes[name] = actual;
+            }
+        }
 
         if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
             throw new Error(`Program failed to link: ${gl.getProgramInfoLog(this.program)}`);

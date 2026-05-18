@@ -4,7 +4,7 @@ uniform vec2 u_pixel_coord_lower;
 uniform vec3 u_scale;
 uniform vec2 u_fill_translate;
 
-in vec2 a_pos;
+layout(location = 0) in vec2 a_pos;
 
 out vec2 v_pos_a;
 out vec2 v_pos_b;

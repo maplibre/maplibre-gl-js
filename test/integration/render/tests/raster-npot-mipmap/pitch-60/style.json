@@ -1,0 +1,33 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 256,
+      "description": "Non-power-of-two raster tile (300x200) with 1px checkerboard at high pitch. Without mipmaps the distant tiles alias into moire patterns. With mipmaps they blend smoothly to grey."
+    }
+  },
+  "center": [0, 30],
+  "zoom": 3,
+  "bearing": 0,
+  "pitch": 70,
+  "sources": {
+    "raster": {
+      "tiles": [
+        "local://tiles/raster-npot-mipmap/tile.png"
+      ],
+      "type": "raster",
+      "tileSize": 300
+    }
+  },
+  "layers": [
+    {
+      "id": "raster",
+      "type": "raster",
+      "source": "raster",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    }
+  ]
+}

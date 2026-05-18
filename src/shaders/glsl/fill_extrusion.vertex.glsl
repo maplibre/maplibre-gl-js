@@ -6,11 +6,11 @@ uniform float u_vertical_gradient;
 uniform lowp float u_opacity;
 uniform vec2 u_fill_translate;
 
-in vec2 a_pos;
-in vec4 a_normal_ed;
+layout(location = 0) in vec2 a_pos;
+layout(location = 1) in vec4 a_normal_ed;
 
 #ifdef TERRAIN3D
-    in vec2 a_centroid;
+    layout(location = 2) in vec2 a_centroid;
 #endif
 
 
