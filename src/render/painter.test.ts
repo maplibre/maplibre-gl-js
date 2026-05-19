@@ -197,6 +197,7 @@ describe('translucent cache', () => {
                 is3D: () => false,
                 hasOffscreenPass: () => false,
                 isTileClipped: () => false,
+                hasActiveTransition: () => false,
             };
         }
 
@@ -306,6 +307,7 @@ describe('translucent cache', () => {
                 is3D: () => false,
                 hasOffscreenPass: () => false,
                 isTileClipped: () => false,
+                hasActiveTransition: () => false,
             };
         }
         mockLayers['layer-5']._unchangedFrameCount = 0;
