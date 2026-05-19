@@ -1,6 +1,6 @@
-in float v_radius;
+flat in float v_radius;
 in vec2 v_extrude;
-in float v_collision;
+flat in float v_collision;
 
 void main() {
     float alpha = 0.5;
