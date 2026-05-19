@@ -41,20 +41,28 @@
         async function runComparison() {
             try {
                 const params = new URL(location).searchParams;
-                window.versionsDisplayName = params.getAll('compare').filter(Boolean);
+                const requestedVersionsDisplayName = params.getAll('compare').filter(Boolean);
                 if (!params.has('compare')) {
-                    const response = await fetch('https://registry.npmjs.org/maplibre-gl/latest', {});
+                    const response = await fetch('https://registry.npmjs.org/maplibre-gl/latest');
                     const responseJson = await response.json();
-                    window.versionsDisplayName = [`v${responseJson['version']}`, 'main'];
+                    requestedVersionsDisplayName.push(responseJson['version'], 'main');
                 }
-                console.log(`Comparing versions: ${window.versionsDisplayName}`);
+                console.log(`Comparing versions: ${requestedVersionsDisplayName}`);
 
-                for (const v of window.versionsDisplayName) {
+                const versionDisplayNameByVersion = {};
+                for (const v of requestedVersionsDisplayName) {
+                    const beforeVersions = getBenchmarkVersions();
                     await loadVersion(v);
+                    const afterVersions = getBenchmarkVersions();
+                    const newVersions = afterVersions.filter(version => !beforeVersions.includes(version));
+                    for (const version of newVersions) {
+                        versionDisplayNameByVersion[version] = v;
+                    }
                 }
                 await import('/test/bench/versions/benchmarks_generated.mjs');
 
                 const benchmarks = [];
+                window.versionsDisplayName = [];
                 const benchmarkNameList = Object.keys(window.maplibreglBenchmarks).sort();
                 for (const benchmarkName of benchmarkNameList) {
                     const versions = [];
@@ -66,11 +74,10 @@
 
                     let index = 0;
                     for (const version in window.maplibreglBenchmarks[benchmarkName]) {
-                        if (!window.versionsDisplayName[index]) {
-                            window.versionsDisplayName[index] = version;
-                        }
+                        const displayName = versionDisplayNameByVersion[version] || version;
+                        window.versionsDisplayName[index] = displayName;
                         versions.push({
-                            displayName: window.versionsDisplayName[index],
+                            displayName,
                             name: version,
                             bench: window.maplibreglBenchmarks[benchmarkName][version]
                         });
@@ -92,6 +99,26 @@
                 window.maplibreglBenchmarkFinished = true;
             } catch (ex) {
                 console.error(ex);
+            }
+        }
+
+        function getBenchmarkVersions() {
+            const versions = new Set();
+            addBenchmarkVersions(window.maplibreglBenchmarks, versions);
+            addBenchmarkVersions(window.mapboxglBenchmarks, versions);
+            return Array.from(versions);
+        }
+
+        function addBenchmarkVersions(benchmarks, versions) {
+            if (!benchmarks) {
+                return;
+            }
+            const benchmarkName = Object.keys(benchmarks)[0];
+            if (!benchmarkName) {
+                return;
+            }
+            for (const version of Object.keys(benchmarks[benchmarkName])) {
+                versions.add(version);
             }
         }
 
