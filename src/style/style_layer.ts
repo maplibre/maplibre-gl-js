@@ -342,6 +342,10 @@ export abstract class StyleLayer extends Evented {
         return this._transitioningPaint.hasTransition();
     }
 
+    hasActiveTransition(now: number): boolean {
+        return this._transitioningPaint?.hasActiveTransition(now) ?? false;
+    }
+
     recalculateVisibility(): void {
         this._evaluatedVisibility = this._visibilityExpression.evaluate();
     }

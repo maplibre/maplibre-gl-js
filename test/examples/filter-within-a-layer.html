@@ -146,8 +146,8 @@
         switch (e.target.id) {
             /// example: `map.setFilter("earthquakes", ["any", [">", "felt", 16.0]])`
             case 'felt':
-                operatorFelt = document.getElementById('operator-felt');
-                felt = document.getElementById('range-felt');
+                const operatorFelt = document.getElementById('operator-felt');
+                const felt = document.getElementById('range-felt');
                 operator = operatorFelt.value;
 
                 e.target.checked ? data.felt = Number(felt.value) : delete data['felt'];
@@ -156,8 +156,8 @@
 
             /// example: `map.setFilter("earthquakes", ["any", [">", "mag", 5.0]])`
             case 'mag':
-                operatorMag = document.getElementById('operator-mag');
-                mag = document.getElementById('range-mag');
+                const operatorMag = document.getElementById('operator-mag');
+                const mag = document.getElementById('range-mag');
                 operator = operatorMag.value;
 
                 e.target.checked ? data.mag = Number(mag.value) : delete data['mag'];
@@ -166,7 +166,7 @@
 
             /// example: `map.setFilter("earthquakes", ["any", [">", "tsunami", 0]])`
             case 'tsunami':
-                tsunami = document.querySelector('input[type="radio"][name=tsunami]:checked');
+                const tsunami = document.querySelector('input[type="radio"][name=tsunami]:checked');
                 operator = '==';
 
                 e.target.checked ? data.tsunami = Number(tsunami.value) : delete data['tsunami'];
@@ -178,8 +178,8 @@
 
         filterOnValue = Object.keys(data);
 
-        mapLibreFilterSpread = ['all', ...filterOnValue.map(id => [operator, id, data[id]])];
-        mapLibreFilter = mapLibreFilterSpread;
+        const mapLibreFilterSpread = ['all', ...filterOnValue.map(id => [operator, id, data[id]])];
+        const mapLibreFilter = mapLibreFilterSpread;
 
         document.getElementById('filter-result').textContent = JSON.stringify(mapLibreFilter);
 

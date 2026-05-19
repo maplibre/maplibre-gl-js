@@ -769,11 +769,14 @@ export class Style extends Evented {
             this.light.updateTransitions(parameters);
             this.sky.updateTransitions(parameters);
 
-            // Update per-layer unchanged frame counters before resetting,
-            // so we can read _updatedLayers, _updatedPaintProps, _updatedSources.
             this._updateUnchangedFrameCounters();
 
             this._resetUpdates();
+        } else {
+            // Even when no style properties changed, update per-layer
+            // unchanged frame counters (e.g. when _styleDirty is true only
+            // because a source like canvas/video has transitions).
+            this._updateUnchangedFrameCounters();
         }
 
         const managersUsedBefore = {};
@@ -861,11 +864,12 @@ export class Style extends Evented {
                 reloadedSources.add(id);
             }
         }
+        const currentTime = now();
         for (const layerId of this._order) {
             const layer = this._layers[layerId];
             const layerChanged = this._updatedLayers[layerId] ||
                 this._updatedPaintProps[layerId] ||
-                layer.hasTransition() ||
+                layer.hasActiveTransition(currentTime) ||
                 (layer.source && (reloadedSources.has(layer.source) ||
                     this._sourcesWithTileUpdates.has(layer.source)));
             if (layerChanged) {

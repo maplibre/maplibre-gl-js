@@ -1,3 +1,4 @@
+import {now} from '../util/time_control.ts';
 import {Texture} from '../webgl/texture.ts';
 import {DepthMode} from '../webgl/depth_mode.ts';
 import {StencilMode} from '../webgl/stencil_mode.ts';
@@ -28,7 +29,7 @@ export class StaticBaseCache {
     _height: number = 0;
     enabled: boolean = true;
     stabilityThreshold: number = 3;
-    minLayers: number = 1;
+    minLayers: number = 5;
 
     /**
      * Determine how the translucent pass should be rendered: from cache,
@@ -62,10 +63,10 @@ export class StaticBaseCache {
                 }
                 if (layer.source && tileManagers[layer.source]) {
                     const tm = tileManagers[layer.source];
-                    // Video and canvas sources update their texture directly via
-                    // GL calls each frame, bypassing change detection.
-                    const sourceType = tm.getSource().type;
-                    if (sourceType === 'video' || sourceType === 'canvas') {
+                    // Sources with active transitions (e.g. video playing,
+                    // canvas animating) update their texture directly via GL
+                    // calls each frame, bypassing change detection.
+                    if (tm.getSource().hasTransition?.()) {
                         break;
                     }
                     // Don't cache layers whose tiles are still loading — the
@@ -108,10 +109,13 @@ export class StaticBaseCache {
         // If any layer has an active paint transition (e.g. from setPaintProperty),
         // the opaque pass is mid-transition and the snapshot would be stale.
         // Don't build or reuse a cache while transitions are active.
+        // Uses hasActiveTransition(now) instead of hasTransition() to ignore
+        // expired transitions whose prior reference hasn't been cleared yet.
+        const currentTime = now();
         let hasActiveTransition = false;
         for (const layerId of layerIds) {
             const layer = layers[layerId];
-            if (!layer.isHidden(zoom) && layer.hasTransition()) {
+            if (!layer.isHidden(zoom) && layer.hasActiveTransition(currentTime)) {
                 hasActiveTransition = true;
                 break;
             }
