@@ -870,6 +870,9 @@ export class Map extends Camera {
                 this.jumpTo(coercedOptions);
             }
         });
+        this.on('move', () => {
+            this.painter?.staticBaseCache.invalidate();
+        });
         this.on('data', (event: MapDataEvent) => {
             this._update(event.dataType === 'style');
             this.fire(new Event(`${event.dataType}data`, event));
@@ -2865,6 +2868,7 @@ export class Map extends Camera {
     addLayer(layer: AddLayerObject, beforeId?: string): this {
         this._lazyInitEmptyStyle();
         this.style.addLayer(layer, beforeId);
+        this.painter?.staticBaseCache.invalidate();
         return this._update(true);
     }
 
@@ -2900,6 +2904,7 @@ export class Map extends Camera {
      */
     removeLayer(id: string): this {
         this.style.removeLayer(id);
+        this.painter?.staticBaseCache.invalidate();
         return this._update(true);
     }
 
@@ -2958,6 +2963,7 @@ export class Map extends Camera {
      */
     setLayerZoomRange(layerId: string, minzoom: number, maxzoom: number): this {
         this.style.setLayerZoomRange(layerId, minzoom, maxzoom);
+        this.painter?.staticBaseCache.invalidate();
         return this._update(true);
     }
 
@@ -2996,6 +3002,7 @@ export class Map extends Camera {
      */
     setFilter(layerId: string, filter?: FilterSpecification | null, options: StyleSetterOptions = {}): this {
         this.style.setFilter(layerId, filter, options);
+        this.painter?.staticBaseCache.invalidate();
         return this._update(true);
     }
 
@@ -3027,6 +3034,7 @@ export class Map extends Camera {
      */
     setPaintProperty<K extends keyof AllPaintProperties>(layerId: string, name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}): this {
         this.style.setPaintProperty(layerId, name, value, options);
+        this.painter?.staticBaseCache.invalidate();
         return this._update(true);
     }
 
@@ -3055,6 +3063,7 @@ export class Map extends Camera {
      */
     setLayoutProperty<K extends keyof AllLayoutProperties>(layerId: string, name: K, value: AllLayoutProperties[K], options: StyleSetterOptions = {}): this {
         this.style.setLayoutProperty(layerId, name, value, options);
+        this.painter?.staticBaseCache.invalidate();
         return this._update(true);
     }
 
@@ -3175,6 +3184,7 @@ export class Map extends Camera {
     setLight(light: LightSpecification, options: StyleSetterOptions = {}): this {
         this._lazyInitEmptyStyle();
         this.style.setLight(light, options);
+        this.painter?.staticBaseCache.invalidate();
         return this._update(true);
     }
 
@@ -3201,6 +3211,7 @@ export class Map extends Camera {
     setSky(sky: SkySpecification, options: StyleSetterOptions = {}): this {
         this._lazyInitEmptyStyle();
         this.style.setSky(sky, options);
+        this.painter?.staticBaseCache.invalidate();
         return this._update(true);
     }
 
@@ -3256,6 +3267,7 @@ export class Map extends Camera {
      */
     setFeatureState(feature: FeatureIdentifier, state: any): this {
         this.style.setFeatureState(feature, state);
+        this.painter?.staticBaseCache.invalidate();
         return this._update();
     }
 
@@ -3307,6 +3319,7 @@ export class Map extends Camera {
      */
     removeFeatureState(target: FeatureIdentifier, key?: string): this {
         this.style.removeFeatureState(target, key);
+        this.painter?.staticBaseCache.invalidate();
         return this._update();
     }
 

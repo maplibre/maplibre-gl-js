@@ -14,7 +14,7 @@ describe('render', () => {
         fadeDuration: 0,
         moving: false,
         rotating: false,
-        showOverdrawInspector: false,
+                showOverdrawInspector: false,
         showPadding: false,
         showTileBoundaries: false,
         zooming: false,
@@ -216,8 +216,7 @@ describe('translucent cache', () => {
         cache.minLayers = 1;
 
         painter.render(painter.style, {
-            fadeDuration: 0, moving: false, rotating: false, zooming: false,
-            showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
+            fadeDuration: 0, moving: false, rotating: false, zooming: false,             showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
             anisotropicFilterPitch: 20,
         });
 
@@ -249,8 +248,7 @@ describe('translucent cache', () => {
         cache.enabled = true;
 
         painter.render(painter.style, {
-            fadeDuration: 0, moving: false, rotating: false, zooming: false,
-            showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
+            fadeDuration: 0, moving: false, rotating: false, zooming: false,             showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
             anisotropicFilterPitch: 20,
         });
 
@@ -282,8 +280,7 @@ describe('translucent cache', () => {
         cache.enabled = true;
 
         painter.render(painter.style, {
-            fadeDuration: 0, moving: false, rotating: false, zooming: false,
-            showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
+            fadeDuration: 0, moving: false, rotating: false, zooming: false,             showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
             anisotropicFilterPitch: 20,
         });
 
@@ -329,8 +326,7 @@ describe('translucent cache', () => {
         cache.minLayers = 1;
 
         painter.render(painter.style, {
-            fadeDuration: 0, moving: false, rotating: false, zooming: false,
-            showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
+            fadeDuration: 0, moving: false, rotating: false, zooming: false,             showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
             anisotropicFilterPitch: 20,
         });
 

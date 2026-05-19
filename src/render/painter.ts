@@ -136,6 +136,7 @@ export class Painter {
     cache: {[_: string]: Program<any>};
     crossTileSymbolIndex: CrossTileSymbolIndex;
     symbolFadeChange: number;
+    symbolsAreFading: boolean;
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
     // this object stores the current camera-matrix and the last render time
@@ -501,7 +502,9 @@ export class Painter {
         this.imageManager = style.imageManager;
         this.glyphManager = style.glyphManager;
 
-        this.symbolFadeChange = style.placement.symbolFadeChange(now());
+        const currentTime = now();
+        this.symbolFadeChange = style.placement.symbolFadeChange(currentTime);
+        this.symbolsAreFading = currentTime - style.placement.lastPlacementChangeTime < style.placement.fadeDuration;
 
         this.imageManager.beginFrame();
 
@@ -598,9 +601,14 @@ export class Painter {
 
         let globeDepthRendered = false;
 
-        const {cacheStartLayer, needsSnapshot, stableLayerCount} = this.staticBaseCache.prepareTranslucentPass(
-            this, layerIds, this.style._layers, this.transform.zoom, options, this.imageManager, tileManagers
-        );
+        // Disable static base cache when render-to-texture is active (terrain/globe) —
+        // the RTT system renders layers into per-tile textures, and a screen-space
+        // cache snapshot would capture incorrect content.
+        const useStaticBaseCache = !this.renderToTexture;
+        const {cacheStartLayer, needsSnapshot, stableLayerCount} = useStaticBaseCache
+            ? this.staticBaseCache.prepareTranslucentPass(
+                this, layerIds, this.style._layers, this.transform.zoom, options, this.imageManager, tileManagers)
+            : {cacheStartLayer: 0, needsSnapshot: false, stableLayerCount: 0};
 
         // Render layers (either all, or starting from cacheStartLayer)
         for (this.currentLayer = cacheStartLayer; this.currentLayer < layerIds.length; this.currentLayer++) {

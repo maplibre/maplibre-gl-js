@@ -28,7 +28,7 @@ export class StaticBaseCache {
     _height: number = 0;
     enabled: boolean = true;
     stabilityThreshold: number = 3;
-    minLayers: number = 5;
+    minLayers: number = 1;
 
     /**
      * Determine how the translucent pass should be rendered: from cache,
@@ -57,8 +57,22 @@ export class StaticBaseCache {
                     stableLayerCount++;
                     continue;
                 }
-                if (layer._unchangedFrameCount < this.stabilityThreshold) {
+                if (layer.type === 'custom' || layer._unchangedFrameCount < this.stabilityThreshold) {
                     break;
+                }
+                if (layer.source && tileManagers[layer.source]) {
+                    const tm = tileManagers[layer.source];
+                    // Video and canvas sources update their texture directly via
+                    // GL calls each frame, bypassing change detection.
+                    const sourceType = tm.getSource().type;
+                    if (sourceType === 'video' || sourceType === 'canvas') {
+                        break;
+                    }
+                    // Don't cache layers whose tiles are still loading — the
+                    // snapshot would capture incomplete content (e.g. missing symbols).
+                    if (!tm.loaded()) {
+                        break;
+                    }
                 }
                 // If any visible tile for this layer's source uses a dynamic
                 // image (one with a render callback), the layer's visual content
@@ -86,12 +100,26 @@ export class StaticBaseCache {
         // per-layer check above already excludes layers with dynamic images
         // from the stable set — the cached layers are guaranteed static.
         const cameraMoving = options.moving || options.zooming || options.rotating;
-        if (cameraMoving) {
+        if (cameraMoving || painter.symbolsAreFading) {
             this._cachedLayerCount = 0;
+        }
+
+        // The snapshot captures the opaque pass content for ALL layers.
+        // If any layer has an active paint transition (e.g. from setPaintProperty),
+        // the opaque pass is mid-transition and the snapshot would be stale.
+        // Don't build or reuse a cache while transitions are active.
+        let hasActiveTransition = false;
+        for (const layerId of layerIds) {
+            const layer = layers[layerId];
+            if (!layer.isHidden(zoom) && layer.hasTransition()) {
+                hasActiveTransition = true;
+                break;
+            }
         }
 
         // Check if existing cache is still valid
         const cacheValid = this._cachedLayerCount > 0 &&
+            !hasActiveTransition &&
             stableLayerCount >= this._cachedLayerCount &&
             this._width === painter.width &&
             this._height === painter.height;
@@ -104,7 +132,7 @@ export class StaticBaseCache {
             this._draw(painter);
             painter.clearStencil();
             cacheStartLayer = this._cachedLayerCount;
-        } else if (!cameraMoving && stableLayerCount >= this.minLayers) {
+        } else if (!cameraMoving && !hasActiveTransition && stableLayerCount >= this.minLayers) {
             // Will render these layers normally, then snapshot the screen
             needsSnapshot = true;
             this._cachedLayerCount = 0;

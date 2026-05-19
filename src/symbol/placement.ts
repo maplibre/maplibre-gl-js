@@ -1265,6 +1265,7 @@ export class Placement {
             now - this.lastPlacementChangeTime < this.fadeDuration;
     }
 
+
     stillRecent(now: number, zoom: number): boolean {
         // The adjustment makes placement more frequent when zooming.
         // This condition applies the adjustment only after the map has
