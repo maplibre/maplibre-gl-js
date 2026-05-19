@@ -14,7 +14,7 @@ describe('render', () => {
         fadeDuration: 0,
         moving: false,
         rotating: false,
-                showOverdrawInspector: false,
+        showOverdrawInspector: false,
         showPadding: false,
         showTileBoundaries: false,
         zooming: false,

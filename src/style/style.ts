@@ -872,11 +872,7 @@ export class Style extends Evented {
                 layer.hasActiveTransition(currentTime) ||
                 (layer.source && (reloadedSources.has(layer.source) ||
                     this._sourcesWithTileUpdates.has(layer.source)));
-            if (layerChanged) {
-                layer._unchangedFrameCount = 0;
-            } else {
-                layer._unchangedFrameCount++;
-            }
+            layer._unchangedFrameCount = (layerChanged) ? 0 : layer._unchangedFrameCount + 1;
         }
         this._sourcesWithTileUpdates.clear();
     }
