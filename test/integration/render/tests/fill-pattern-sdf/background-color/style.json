@@ -22,11 +22,11 @@
           "paint": {
             "fill-antialias": false,
             "fill-pattern": "sdf-stripes",
-            "fill-color": "#0000ff"
+            "fill-color": "#ffff00"
           }
         }],
         ["wait"],
-        ["setPaintProperty", "fill", "fill-pattern-background-color", "#ffff00", {"validate": false}],
+        ["setPaintProperty", "fill", "fill-pattern-color", "#0000ff", {"validate": false}],
         ["wait"]
       ]
     }

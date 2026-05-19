@@ -39,11 +39,11 @@
           "paint": {
             "fill-antialias": false,
             "fill-pattern": "sdf-stripes",
-            "fill-color": ["get", "fg"]
+            "fill-color": ["get", "bg"]
           }
         }],
         ["wait"],
-        ["setPaintProperty", "fill", "fill-pattern-background-color", ["get", "bg"], {"validate": false}],
+        ["setPaintProperty", "fill", "fill-pattern-color", ["get", "fg"], {"validate": false}],
         ["wait"]
       ]
     }
