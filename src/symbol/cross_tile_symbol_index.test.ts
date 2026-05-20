@@ -114,6 +114,12 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         index.addLayer(styleLayer, [childTile], 0);
         expect(childInstances[0].crossTileID).toBe(2);
 
+        // Simulate a fresh bucket from the worker (crossTileID reset to 0,
+        // as it would be for features without a pre-assigned layout ID).
+        // In real code, the worker creates a new bucket each time a tile is
+        // loaded, so the crossTileID starts at whatever was set during layout.
+        mainInstances[0].crossTileID = 0;
+
         // overwrites the old id to match the already-added tile
         index.addLayer(styleLayer, [mainTile, childTile], 0);
         expect(mainInstances[0].crossTileID).toBe(2);

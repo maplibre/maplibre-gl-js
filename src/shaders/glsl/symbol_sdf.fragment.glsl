@@ -40,7 +40,12 @@ void main() {
     if (u_is_plain){
         highp float gamma_scaled = gamma * gamma_scale;
         highp float alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
-        color_alpha_out_text = total_opacity * alpha * fill_color;
+        // TEMP DEBUG: tint fading-in symbols bright blue
+        vec4 debug_fill = fill_color;
+        if (total_opacity < 0.99) {
+            debug_fill = vec4(0.0, 0.4, 1.0, fill_color.a);
+        }
+        color_alpha_out_text = total_opacity * alpha * debug_fill;
     }
     if (u_is_halo) {
         float gamma_halo = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * u_gamma_scale);
