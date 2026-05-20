@@ -79,6 +79,7 @@ export function performSymbolLayout(args: {
     showCollisionBoxes: boolean;
     canonical: CanonicalTileID;
     subdivisionGranularity: SubdivisionGranularitySetting;
+    crossTileIDs?: Map<string, number>;
 }): void {
     args.bucket.createArrays();
 
@@ -253,7 +254,7 @@ export function performSymbolLayout(args: {
         const shapedText = getDefaultHorizontalShaping(shapedTextOrientations.horizontal) || shapedTextOrientations.vertical;
         args.bucket.iconsInText ||= shapedText ? shapedText.iconsInText : false;
         if (shapedText || shapedIcon) {
-            addFeature(args.bucket, feature, shapedTextOrientations, shapedIcon, args.imageMap, sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, args.canonical, args.subdivisionGranularity);
+            addFeature(args.bucket, feature, shapedTextOrientations, shapedIcon, args.imageMap, sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, args.canonical, args.subdivisionGranularity, args.crossTileIDs);
         }
     }
 
@@ -294,7 +295,8 @@ function addFeature(bucket: SymbolBucket,
     textOffset: [number, number],
     isSDFIcon: boolean,
     canonical: CanonicalTileID,
-    subdivisionGranularity: SubdivisionGranularitySetting) {
+    subdivisionGranularity: SubdivisionGranularitySetting,
+    crossTileIDs?: Map<string, number>) {
     // To reduce the number of labels that jump around when zooming we need
     // to use a text-size value that is the same for all zoom levels.
     // bucket calculates text-size at a high zoom level so that all tiles can
@@ -347,7 +349,7 @@ function addFeature(bucket: SymbolBucket,
             bucket.collisionBoxArray, feature.index, feature.sourceLayerIndex, bucket.index,
             textBoxScale, [textPadding, textPadding, textPadding, textPadding], textAlongLine, textOffset,
             iconBoxScale, iconPadding, iconAlongLine, iconOffset,
-            feature, sizes, isSDFIcon, canonical, layoutTextSize);
+            feature, sizes, isSDFIcon, canonical, layoutTextSize, crossTileIDs);
     };
 
     if (symbolPlacement === 'line') {
@@ -529,7 +531,8 @@ function addSymbol(bucket: SymbolBucket,
     sizes: Sizes,
     isSDFIcon: boolean,
     canonical: CanonicalTileID,
-    layoutTextSize: number) {
+    layoutTextSize: number,
+    crossTileIDs?: Map<string, number>) {
 
     const lineArray = bucket.addToLineVertexArray(anchor, line);
 
@@ -699,7 +702,7 @@ function addSymbol(bucket: SymbolBucket,
     const variableAnchorOffset = getTextVariableAnchorOffset(layer, feature, canonical);
     const [textAnchorOffsetStartIndex, textAnchorOffsetEndIndex] = addTextVariableAnchorOffsets(bucket.textAnchorOffsets, variableAnchorOffset);
 
-    const crossTileID = feature.id != null && layer.id ? getCrossTileID(`${feature.id}-${layer.id}`) : 0;
+    const crossTileID = feature.id != null && layer.id && crossTileIDs ? getCrossTileID(`${feature.id}-${layer.id}`, crossTileIDs) : 0;
 
     bucket.symbolInstances.emplaceBack(
         anchor.x,
@@ -750,14 +753,11 @@ function anchorIsTooClose(bucket: SymbolBucket, text: string, repeatDistance: nu
     return false;
 }
 
-let maxCrossTileID = 0;
-const crossTileIDsByKey = new Map<string, number>();
-
-function getCrossTileID(key: string): number {
-    let id = crossTileIDsByKey.get(key);
+function getCrossTileID(key: string, crossTileIDs: Map<string, number>): number {
+    let id = crossTileIDs.get(key);
     if (id === undefined) {
-        id = ++maxCrossTileID;
-        crossTileIDsByKey.set(key, id);
+        id = crossTileIDs.size + 1;
+        crossTileIDs.set(key, id);
     }
     return id;
 }

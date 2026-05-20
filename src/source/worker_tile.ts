@@ -60,7 +60,7 @@ export class WorkerTile {
         this.inFlightDependencies = [];
     }
 
-    async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: string[], actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
+    async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: string[], actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting, crossTileIDs?: Map<string, number>): Promise<WorkerTileResult> {
         this.status = 'parsing';
         this.data = data;
 
@@ -184,7 +184,8 @@ export class WorkerTile {
                     imagePositions: imageAtlas.iconPositions,
                     showCollisionBoxes: this.showCollisionBoxes,
                     canonical: this.tileID.canonical,
-                    subdivisionGranularity: options.subdivisionGranularity
+                    subdivisionGranularity: options.subdivisionGranularity,
+                    crossTileIDs
                 });
             } else if (bucket.hasDependencies && (bucket instanceof FillBucket || bucket instanceof FillExtrusionBucket || bucket instanceof LineBucket)) {
                 recalculateLayers(bucket.layers, this.zoom, availableImages);
