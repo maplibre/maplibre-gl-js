@@ -32079,7 +32079,7 @@ var Tile = class {
 	*/
 	releaseRTT(painter) {
 		if (this.rttObjects.length === 0) return;
-		for (const obj of this.rttObjects) painter.releaseRTT(obj);
+		for (const obj of this.rttObjects) if (obj) painter.releaseRTT(obj);
 		this.rttObjects.length = 0;
 	}
 	/**
@@ -46706,6 +46706,7 @@ var Painter = class Painter {
 		this.transform = transform;
 		this._tileTextures = {};
 		this._rttObjectRecyclePool = [];
+		this._rttSharedFbo = null;
 		this.terrainFacilitator = {
 			depthDirty: true,
 			coordsDirty: false,
@@ -47131,16 +47132,10 @@ var Painter = class Painter {
 				gl.bindTexture(gl.TEXTURE_2D, obj.texture.texture);
 				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 				obj.texture.size = [size, size];
-				this.context.bindRenderbuffer.set(obj.fbo.depthAttachment.get());
-				gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, size, size);
-				this.context.bindRenderbuffer.set(null);
-				obj.fbo.width = size;
-				obj.fbo.height = size;
 				obj.size = size;
 			}
 			return obj;
 		}
-		const fbo = this.context.createFramebuffer(size, size, true, true);
 		const texture = new Texture(this.context, {
 			width: size,
 			height: size,
@@ -47148,13 +47143,39 @@ var Painter = class Painter {
 		}, gl.RGBA);
 		texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
 		if (this.context.extTextureFilterAnisotropic) gl.texParameterf(gl.TEXTURE_2D, this.context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.context.extTextureFilterAnisotropicMax);
-		fbo.depthAttachment.set(this.context.createRenderbuffer(gl.DEPTH_STENCIL, size, size));
-		fbo.colorAttachment.set(texture.texture);
 		return {
-			fbo,
 			texture,
 			size
 		};
+	}
+	/**
+	* Binds the shared RTT FBO with the given RTTObject's texture attached
+	* as color target. Creates / resizes the shared FBO and depth-stencil
+	* renderbuffer lazily.
+	*/
+	bindRTT(obj) {
+		const gl = this.context.gl;
+		const size = obj.size;
+		if (!this._rttSharedFbo) {
+			const fbo = this.context.createFramebuffer(size, size, true, true);
+			const depthRenderbuffer = this.context.createRenderbuffer(gl.DEPTH_STENCIL, size, size);
+			fbo.depthAttachment.set(depthRenderbuffer);
+			this._rttSharedFbo = {
+				fbo,
+				depthRenderbuffer,
+				size
+			};
+		}
+		if (this._rttSharedFbo.size !== size) {
+			this.context.bindRenderbuffer.set(this._rttSharedFbo.depthRenderbuffer);
+			gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, size, size);
+			this.context.bindRenderbuffer.set(null);
+			this._rttSharedFbo.fbo.width = size;
+			this._rttSharedFbo.fbo.height = size;
+			this._rttSharedFbo.size = size;
+		}
+		this._rttSharedFbo.fbo.colorAttachment.set(obj.texture.texture);
+		this.context.bindFramebuffer.set(this._rttSharedFbo.fbo.framebuffer);
 	}
 	releaseRTT(obj) {
 		this._rttObjectRecyclePool.push(obj);
@@ -47231,11 +47252,16 @@ var Painter = class Painter {
 			}
 			this._tileTextures = {};
 		}
-		for (const obj of this._rttObjectRecyclePool) {
-			obj.texture.destroy();
-			obj.fbo.destroy();
-		}
+		for (const obj of this._rttObjectRecyclePool) obj.texture.destroy();
 		this._rttObjectRecyclePool = [];
+		if (this._rttSharedFbo) {
+			this._rttSharedFbo.fbo.colorAttachment.set(null);
+			this._rttSharedFbo.fbo.depthAttachment.set(null);
+			const gl = this.context.gl;
+			gl.deleteRenderbuffer(this._rttSharedFbo.depthRenderbuffer);
+			gl.deleteFramebuffer(this._rttSharedFbo.fbo.framebuffer);
+			this._rttSharedFbo = null;
+		}
 		if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
 		if (this.debugBuffer) this.debugBuffer.destroy();
 		if (this.rasterBoundsBuffer) this.rasterBoundsBuffer.destroy();
@@ -52020,7 +52046,7 @@ var RenderToTexture = class {
 				this._rttTiles.push(tile);
 				if (tile.getRTT(stack)) continue;
 				const obj = tile.acquireRTT(painter, stack, this.rttSize);
-				painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
+				painter.bindRTT(obj);
 				painter.context.clear({
 					color: Color.transparent,
 					stencil: 0
@@ -52032,8 +52058,8 @@ var RenderToTexture = class {
 					painter.context.viewport.set([
 						0,
 						0,
-						obj.fbo.width,
-						obj.fbo.height
+						this.rttSize,
+						this.rttSize
 					]);
 					painter._renderTileClippingMasks(layer, coords, true);
 					painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, options);
@@ -60473,7 +60499,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 8f1bcac";
+const version = "main 7b77f12";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
