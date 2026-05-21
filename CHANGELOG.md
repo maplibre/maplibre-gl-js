@@ -1,13 +1,21 @@
 ## main
 ### ✨ Features and improvements
-- Enable mipmaps for non-power-of-two raster tiles, reducing aliasing at high pitch ([#7641](https://github.com/maplibre/maplibre-gl-js/pull/7641)) (by [@birkskyum](https://github.com/birkskyum))
-- Use GLSL ES 3.00 layout qualifiers for vertex attribute locations, replacing runtime `bindAttribLocation` calls ([#7644](https://github.com/maplibre/maplibre-gl-js/pull/7644)) (by [@birkskyum](https://github.com/birkskyum))
-- Minor memory optimizations for PR7549 (redesigning terrain RTT cache) [#7637](https://github.com/maplibre/maplibre-gl-js/pull/7637) (by [@xavierjs](https://github.com/xavierjs))
+- Use a shared FBO for the terrain cache render to texture [#7637](https://github.com/maplibre/maplibre-gl-js/pull/7637) (by [@xavierjs](https://github.com/xavierjs))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix Benchmarks remote compare issue ([#7607](https://github.com/maplibre/maplibre-gl-js/pull/7607)) (by [@xavierjs](https://github.com/xavierjs))
 - _...Add new stuff here..._
+
+
+
+
+## 6.0.0-10
+
+### ✨ Features and improvements
+
+- Replace texImage2D with texStorage2D for immutable textures ([#7643](https://github.com/maplibre/maplibre-gl-js/pull/7643)) (by [@birkskyum](https://github.com/birkskyum))
+- Enable mipmaps for non-power-of-two raster tiles, reducing aliasing at high pitch ([#7641](https://github.com/maplibre/maplibre-gl-js/pull/7641)) (by [@birkskyum](https://github.com/birkskyum))
+- Use GLSL ES 3.00 layout qualifiers for vertex attribute locations, replacing runtime `bindAttribLocation` calls ([#7644](https://github.com/maplibre/maplibre-gl-js/pull/7644)) (by [@birkskyum](https://github.com/birkskyum))
 
 ## 6.0.0-9
 
