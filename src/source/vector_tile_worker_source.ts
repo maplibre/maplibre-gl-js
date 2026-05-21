@@ -34,7 +34,6 @@ export class VectorTileWorkerSource implements WorkerSource {
     availableImages: string[];
     tileState: WorkerTileState;
     overzoomedTileResultCache: BoundedLRUCache<string, LoadVectorTileResult>;
-    _crossTileIDs: Map<string, number>;
 
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[]) {
         this.actor = actor;
@@ -42,7 +41,6 @@ export class VectorTileWorkerSource implements WorkerSource {
         this.availableImages = availableImages;
         this.tileState = new WorkerTileState();
         this.overzoomedTileResultCache = new BoundedLRUCache<string, LoadVectorTileResult>(1000);
-        this._crossTileIDs = new Map();
     }
 
     /**
@@ -131,7 +129,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     }
 
     async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
-        let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity, this._crossTileIDs);
+        let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 
         if (parseState) {
             const {rawData, cacheControl, resourceTiming} = parseState;
