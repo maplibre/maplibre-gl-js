@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Use a shared FBO for the terrain cache render to texture [#7637](https://github.com/maplibre/maplibre-gl-js/pull/7637) (by [@xavierjs](https://github.com/xavierjs))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

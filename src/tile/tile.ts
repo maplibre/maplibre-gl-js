@@ -236,7 +236,8 @@ export class Tile {
     releaseRTT(painter: Painter): void {
         if (this.rttObjects.length === 0) return;
         for (const obj of this.rttObjects) {
-            painter.releaseRTT(obj);
+            // Release RTT only if defined (undefined for holes in sparse array)
+            if (obj) painter.releaseRTT(obj);
         }
         this.rttObjects.length = 0;
     }
