@@ -727,9 +727,12 @@ export class Painter {
         const obj = this._rttObjectRecyclePool.pop();
         if (obj) {
             if (obj.size !== size) {
-                gl.bindTexture(gl.TEXTURE_2D, obj.texture.texture);
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-                obj.texture.size = [size, size];
+                obj.texture.update({width: size, height: size, data: null}, {premultiply: false, useMipmap: true});
+                obj.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
+                if (this.context.extTextureFilterAnisotropic) {
+                    gl.texParameterf(gl.TEXTURE_2D, this.context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.context.extTextureFilterAnisotropicMax);
+                }
+                obj.fbo.colorAttachment.set(obj.texture.texture);
                 this.context.bindRenderbuffer.set(obj.fbo.depthAttachment.get());
                 gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, size, size);
                 this.context.bindRenderbuffer.set(null);
@@ -740,8 +743,8 @@ export class Painter {
             return obj;
         }
         const fbo = this.context.createFramebuffer(size, size, true, true);
-        const texture = new Texture(this.context, {width: size, height: size, data: null}, gl.RGBA);
-        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+        const texture = new Texture(this.context, {width: size, height: size, data: null}, gl.RGBA, {premultiply: false, useMipmap: true});
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
         if (this.context.extTextureFilterAnisotropic) {
             gl.texParameterf(gl.TEXTURE_2D, this.context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, this.context.extTextureFilterAnisotropicMax);
         }

@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - _...Add new stuff here..._
+- Improve terrain render-to-texture filtering by enabling mipmaps and trilinear sampling.
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
