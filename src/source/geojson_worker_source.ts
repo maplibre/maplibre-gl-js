@@ -149,7 +149,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
     }
 
     async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
-        let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity, this._crossTileIDs);
+        let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity, params.promoteId ? this._crossTileIDs : undefined);
 
         if (parseState) {
             const {rawData} = parseState;
