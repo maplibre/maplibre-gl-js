@@ -72,7 +72,8 @@ describe('render to texture', () => {
         useProgram: () => ({draw: () => { layersDrawn++; }}),
         _renderTileClippingMasks: vi.fn(),
         renderLayer: vi.fn(),
-        acquireRTT: (size: number) => ({fbo: {framebuffer: null, width: size, height: size}, texture: {}, size}),
+        acquireRTT: (size: number) => ({texture: {}, size}),
+        bindRTT: vi.fn(),
         releaseRTT: vi.fn(),
         drawFunctions: {
             terrainDepth: vi.fn(),
@@ -149,7 +150,7 @@ describe('render to texture', () => {
     test('should clear tile cache when overlaid tiles change and return rtt object to painter pool', () => {
         rtt.prepareForRender(style, 0);
 
-        const obj = {fbo: {}, texture: {}, size: 512} as unknown as RTTObject;
+        const obj = {texture: {}, size: 512} as unknown as RTTObject;
         tile.rttFingerprint = {maine: '923#0'};
         tile.rttObjects[0] = obj;
 
@@ -166,7 +167,7 @@ describe('render to texture', () => {
     test('should not clear tile cache if state remains same', () => {
         rtt.prepareForRender(style, 0);
         tile.rttFingerprint = {maine: '923#0'};
-        tile.rttObjects[0] = {fbo: {}, texture: {}, size: 512} as unknown as RTTObject;
+        tile.rttObjects[0] = {texture: {}, size: 512} as unknown as RTTObject;
 
         rtt.prepareForRender(style, 0);
 
@@ -219,7 +220,7 @@ describe('render to texture', () => {
         const state = {revision: 0};
         (style.tileManagers['maine'].getState as Mock).mockReturnValue(state);
 
-        tile.rttObjects[0] = {fbo: {}, texture: {}, size: 512} as unknown as RTTObject;
+        tile.rttObjects[0] = {texture: {}, size: 512} as unknown as RTTObject;
         tile.rttFingerprint = {maine: '923#0'};
 
         rtt.prepareForRender(style, 0);
@@ -250,7 +251,7 @@ describe('render to texture', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
 
-        const cached = {fbo: {framebuffer: null}, texture: {}, size: rtt.rttSize} as unknown as RTTObject;
+        const cached = {texture: {}, size: rtt.rttSize} as unknown as RTTObject;
         tile.rttObjects[0] = cached;
 
         const acquireSpy = vi.spyOn(painter, 'acquireRTT');
