@@ -232,7 +232,7 @@ describe('TerrainTileManager', () => {
 
             const rttObjects: Record<string, RTTObject> = {};
             for (const key in tiles) {
-                rttObjects[key] = {fbo: {}, texture: {}, size: 512, _key: key} as unknown as RTTObject;
+                rttObjects[key] = {texture: {}, size: 512, _key: key} as unknown as RTTObject;
                 tiles[key].rttObjects[0] = rttObjects[key];
             }
 
