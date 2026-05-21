@@ -5,13 +5,12 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-- Add CrossTileSymbolIndex benchmark ([#7664](https://github.com/maplibre/maplibre-gl-js/pull/7664)) (by [@bradymadden97](https://github.com/bradymadden97))
 ## 6.0.0-11
+
 ### ✨ Features and improvements
+
 - Use a shared FBO for the terrain cache render to texture [#7637](https://github.com/maplibre/maplibre-gl-js/pull/7637) (by [@xavierjs](https://github.com/xavierjs))
 - Use `flat` to opt out of interpolation for constant shader varyings ([#7661](https://github.com/maplibre/maplibre-gl-js/pull/7661)) (by [@birkskyum](https://github.com/birkskyum))
-
-### 🐞 Bug fixes
 
 ## 6.0.0-10
 
