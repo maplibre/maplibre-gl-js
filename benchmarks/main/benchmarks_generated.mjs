@@ -59984,6 +59984,59 @@ var SymbolCollisionBox = class extends Benchmark {
 	}
 };
 //#endregion
+//#region test/bench/benchmarks/cross_tile_symbol_index.ts
+const styleLayer = { id: "test" };
+const SYMBOL_COUNT = 3e3;
+const makeSymbolInstance = (x, y, key, crossTileID = 0) => {
+	return {
+		anchorX: x,
+		anchorY: y,
+		key,
+		crossTileID
+	};
+};
+const makeTile = (tileID, symbolInstances) => {
+	const bucket = {
+		symbolInstances: {
+			get(i) {
+				return symbolInstances[i];
+			},
+			length: symbolInstances.length
+		},
+		layerIds: ["test"]
+	};
+	return {
+		tileID,
+		getBucket: () => bucket,
+		latestFeatureIndex: {}
+	};
+};
+/**
+* Benchmarks CrossTileSymbolIndex.addLayer with 3000 symbols that have
+* pre-assigned crossTileIDs — simulating features with IDs (via promoteId
+* or generateId). All symbols share the same key and coordinates, which is
+* the pathological case for coordinate-based findMatches.
+*/
+var CrossTileSymbolIndexBench = class extends Benchmark {
+	async setup() {
+		const mainID = new OverscaledTileID(6, 0, 6, 8, 8);
+		const childID = new OverscaledTileID(7, 0, 7, 16, 16);
+		const mainInstances = [];
+		const childInstances = [];
+		for (let i = 0; i < SYMBOL_COUNT; i++) {
+			mainInstances.push(makeSymbolInstance(0, 0, "", i + 1));
+			childInstances.push(makeSymbolInstance(0, 0, "", i + 1));
+		}
+		this._mainTile = makeTile(mainID, mainInstances);
+		this._childTile = makeTile(childID, childInstances);
+	}
+	bench() {
+		const index = new CrossTileSymbolIndex();
+		index.addLayer(styleLayer, [this._mainTile], 0);
+		index.addLayer(styleLayer, [this._childTile], 0);
+	}
+};
+//#endregion
 //#region test/bench/benchmarks/subdivide.ts
 var Subdivide = class extends Benchmark {
 	async setup() {
@@ -60499,7 +60552,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 7b77f12";
+const version = "main dff986c";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
@@ -60562,6 +60615,7 @@ register("CustomLayer", new CustomLayer());
 register("MapIdle", new MapIdle());
 register("SymbolCollisionBox", new SymbolCollisionBox(false));
 register("SymbolCollisionBoxGlobe", new SymbolCollisionBox(true));
+register("CrossTileSymbolIndex", new CrossTileSymbolIndexBench());
 register("Subdivide", new Subdivide());
 register("CoveringTilesGlobe", new CoveringTilesGlobe(0));
 register("CoveringTilesGlobePitched", new CoveringTilesGlobe(60));
