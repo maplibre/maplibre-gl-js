@@ -1,12 +1,23 @@
 ## main
 ### ✨ Features and improvements
-- Enable mipmaps for non-power-of-two raster tiles, reducing aliasing at high pitch ([#7641](https://github.com/maplibre/maplibre-gl-js/pull/7641)) (by [@birkskyum](https://github.com/birkskyum))
-- Use GLSL ES 3.00 layout qualifiers for vertex attribute locations, replacing runtime `bindAttribLocation` calls ([#7644](https://github.com/maplibre/maplibre-gl-js/pull/7644)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix Benchmarks remote compare issue ([#7607](https://github.com/maplibre/maplibre-gl-js/pull/7607)) (by [@xavierjs](https://github.com/xavierjs))
 - _...Add new stuff here..._
+
+- test: add more render tests for backgrounds ([#7647](https://github.com/maplibre/maplibre-gl-js/pull/7647)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- GM1.2 Replace texImage2D with texStorage2D for immutable textures ([#7643](https://github.com/maplibre/maplibre-gl-js/pull/7643)) (by [@birkskyum](https://github.com/birkskyum))
+- add Styl to spellcheck dictionary ([#7642](https://github.com/maplibre/maplibre-gl-js/pull/7642)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix benchmark stall issue ([#7606](https://github.com/maplibre/maplibre-gl-js/pull/7606)) (by [@xavierjs](https://github.com/xavierjs))
+- Fix broken docs links ([#7547](https://github.com/maplibre/maplibre-gl-js/pull/7547)) (by [@julienr](https://github.com/julienr))
+- Pin zensical version to 0.0.38 ([#7628](https://github.com/maplibre/maplibre-gl-js/pull/7628)) (by [@HarelM](https://github.com/HarelM))
+## 6.0.0-10
+### ✨ Features and improvements
+- Enable mipmaps for non-power-of-two raster tiles, reducing aliasing at high pitch ([#7641](https://github.com/maplibre/maplibre-gl-js/pull/7641)) (by [@birkskyum](https://github.com/birkskyum))
+- Use GLSL ES 3.00 layout qualifiers for vertex attribute locations, replacing runtime `bindAttribLocation` calls ([#7644](https://github.com/maplibre/maplibre-gl-js/pull/7644)) (by [@birkskyum](https://github.com/birkskyum))
+
+### 🐞 Bug fixes
+- Fix Benchmarks remote compare issue ([#7607](https://github.com/maplibre/maplibre-gl-js/pull/7607)) (by [@xavierjs](https://github.com/xavierjs))
 
 ## 6.0.0-9
 
