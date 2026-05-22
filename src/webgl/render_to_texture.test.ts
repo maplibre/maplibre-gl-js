@@ -64,7 +64,6 @@ describe('render to texture', () => {
 
     let layersDrawn = 0;
     const createMockRTTObject = (size: number) => ({
-        fbo: {framebuffer: null, width: size, height: size},
         texture: {texture: gl.createTexture(), bind: vi.fn()},
         size
     });
@@ -78,6 +77,7 @@ describe('render to texture', () => {
         _renderTileClippingMasks: vi.fn(),
         renderLayer: vi.fn(),
         acquireRTT: (size: number) => createMockRTTObject(size),
+        bindRTT: vi.fn(),
         releaseRTT: vi.fn(),
         drawFunctions: {
             terrainDepth: vi.fn(),
@@ -154,7 +154,7 @@ describe('render to texture', () => {
     test('should clear tile cache when overlaid tiles change and return rtt object to painter pool', () => {
         rtt.prepareForRender(style, 0);
 
-        const obj = {fbo: {}, texture: {}, size: 512} as unknown as RTTObject;
+        const obj = {texture: {}, size: 512} as unknown as RTTObject;
         tile.rttFingerprint = {maine: '923#0'};
         tile.rttObjects[0] = obj;
 
@@ -171,7 +171,7 @@ describe('render to texture', () => {
     test('should not clear tile cache if state remains same', () => {
         rtt.prepareForRender(style, 0);
         tile.rttFingerprint = {maine: '923#0'};
-        tile.rttObjects[0] = {fbo: {}, texture: {}, size: 512} as unknown as RTTObject;
+        tile.rttObjects[0] = {texture: {}, size: 512} as unknown as RTTObject;
 
         rtt.prepareForRender(style, 0);
 
@@ -224,7 +224,7 @@ describe('render to texture', () => {
         const state = {revision: 0};
         (style.tileManagers['maine'].getState as Mock).mockReturnValue(state);
 
-        tile.rttObjects[0] = {fbo: {}, texture: {}, size: 512} as unknown as RTTObject;
+        tile.rttObjects[0] = {texture: {}, size: 512} as unknown as RTTObject;
         tile.rttFingerprint = {maine: '923#0'};
 
         rtt.prepareForRender(style, 0);

@@ -4,9 +4,9 @@ layout(location = 2) in vec2 a_flags;
 
 uniform vec2 u_viewport_size;
 
-out float v_radius;
+flat out float v_radius;
 out vec2 v_extrude;
-out float v_collision;
+flat out float v_collision;
 
 void main() {
     float radius = a_radius;
