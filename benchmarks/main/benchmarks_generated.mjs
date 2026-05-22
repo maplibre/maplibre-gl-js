@@ -20930,7 +20930,7 @@ var LineBucket = class {
 		while (len >= 2 && vertices[len - 1].equals(vertices[len - 2])) len--;
 		let first = 0;
 		while (first < len - 1 && vertices[first].equals(vertices[first + 1])) first++;
-		if (len < (isPolygon ? 3 : 2)) return;
+		if (len - first < (isPolygon ? 3 : 2)) return;
 		if (join === "bevel") miterLimit = 1.05;
 		const sharpCornerOffset = this.overscaling <= 16 ? SHARP_CORNER_OFFSET * EXTENT / (512 * this.overscaling) : 0;
 		const segment = this.segments.prepareSegment(len * 10, this.layoutVertexArray, this.indexArray);
@@ -60552,7 +60552,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main a93eb96";
+const version = "main 55b4923";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
