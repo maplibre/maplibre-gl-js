@@ -202,18 +202,12 @@ describe('LineBucket', () => {
             properties: {}
         } as BucketFeature;
 
-        // These geometries pass the first check (len >= threshold) but have too few
-        // unique vertices after trimming leading duplicates (len - first < threshold).
-        // They should be silently ignored without adding any vertices.
-
-        // Line: [P1, P1, P1] - after trimming trailing dupes, len=2, first=1, effective=1 (< 2 for line)
         bucket.addLine([
             new Point(0, 0),
             new Point(0, 0),
             new Point(0, 0)
         ], line, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
-        // Polygon: [P1, P1, P2, P2] - after trimming trailing dupes, len=3, first=1, effective=2 (< 3 for polygon)
         bucket.addLine([
             new Point(0, 0),
             new Point(0, 0),
@@ -221,7 +215,6 @@ describe('LineBucket', () => {
             new Point(10, 10)
         ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
-        // Polygon: [P1, P1, P1, P2] - after trimming trailing dupes, len=4, first=2, effective=2 (< 3 for polygon)
         bucket.addLine([
             new Point(0, 0),
             new Point(0, 0),
@@ -229,7 +222,6 @@ describe('LineBucket', () => {
             new Point(10, 10)
         ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
-        // All three should be rejected - no vertices should have been added
         expect(bucket.isEmpty()).toBe(true);
     });
 });
