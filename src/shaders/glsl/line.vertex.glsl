@@ -15,7 +15,7 @@ uniform vec2 u_units_to_pixels;
 uniform lowp float u_device_pixel_ratio;
 
 out vec2 v_normal;
-out vec2 v_width2;
+flat out vec2 v_width2;
 out float v_gamma_scale;
 out highp float v_linesofar;
 #ifdef GLOBE
