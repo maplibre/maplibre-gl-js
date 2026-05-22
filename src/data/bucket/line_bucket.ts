@@ -301,7 +301,7 @@ export class LineBucket implements Bucket {
         }
 
         // Ignore invalid geometry.
-        if (len < (isPolygon ? 3 : 2)) return;
+        if (len - first < (isPolygon ? 3 : 2)) return;
 
         if (join === 'bevel') miterLimit = 1.05;
 
