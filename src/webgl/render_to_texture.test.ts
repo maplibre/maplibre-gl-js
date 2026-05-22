@@ -253,6 +253,23 @@ describe('render to texture', () => {
         expect(gl.generateMipmap).toHaveBeenCalledWith(gl.TEXTURE_2D);
     });
 
+    test('RTT rendering generates mipmaps and terrain samples with trilinear filtering', () => {
+        style._order = ['maine-fill', 'maine-symbol'];
+        rtt.prepareForRender(style, 0);
+
+        vi.mocked(gl.bindTexture).mockClear();
+        vi.mocked(gl.generateMipmap).mockClear();
+
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        rtt.renderLayer(fillLayer, renderOptions);
+        rtt.renderLayer(symbolLayer, renderOptions);
+
+        const rttObject = tile.getRTT(0);
+        expect(gl.bindTexture).toHaveBeenCalledWith(gl.TEXTURE_2D, rttObject.texture.texture);
+        expect(gl.generateMipmap).toHaveBeenCalledWith(gl.TEXTURE_2D);
+        expect(rttObject.texture.bind).toHaveBeenCalledWith(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
+    });
+
     test('cache hit reuses cached RTT and skips acquireRTT', () => {
         style._order = ['maine-fill', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
