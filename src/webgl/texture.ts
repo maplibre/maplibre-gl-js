@@ -29,6 +29,7 @@ export class Texture {
     texture: WebGLTexture;
     format: TextureFormat;
     filter: TextureFilter | null;
+    minFilter: TextureFilter | null;
     wrap: TextureWrap | null;
     useMipmap: boolean;
 
@@ -43,6 +44,9 @@ export class Texture {
         this.format = format;
         this.texture = context.gl.createTexture();
         this._ownedHandle = this.texture;
+        this.filter = null;
+        this.minFilter = null;
+        this.wrap = null;
         this.update(image, options);
     }
 
@@ -65,6 +69,7 @@ export class Texture {
             this.texture = gl.createTexture();
             this._ownedHandle = this.texture;
             this.filter = null;
+            this.minFilter = null;
             this.wrap = null;
         }
 
@@ -155,11 +160,16 @@ export class Texture {
         if ((minFilter === gl.LINEAR_MIPMAP_NEAREST || minFilter === gl.LINEAR_MIPMAP_LINEAR) && !this.useMipmap) {
             minFilter = gl.LINEAR;
         }
+        const effectiveMinFilter = minFilter || filter;
 
         if (filter !== this.filter) {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, minFilter || filter);
             this.filter = filter;
+        }
+
+        if (effectiveMinFilter !== this.minFilter) {
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, effectiveMinFilter);
+            this.minFilter = effectiveMinFilter;
         }
 
         if (wrap !== this.wrap) {

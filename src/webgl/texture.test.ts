@@ -1,4 +1,4 @@
-import {describe, expect, test} from 'vitest';
+import {describe, expect, test, vi} from 'vitest';
 import {Context} from './context.ts';
 import {Texture} from './texture.ts';
 import {premultiplyAlpha, RGBAImage} from '../util/image.ts';
@@ -66,6 +66,21 @@ describe('Texture', () => {
         expect(texture.size).toEqual([4, 4]);
         expect(texture.texture).not.toBe(firstHandle);
         expect(gl.deleteTexture).toHaveBeenCalled();
+    });
+
+    test('bind updates min filter independently from mag filter', () => {
+        const gl = createNullGL();
+        const context = new Context(gl);
+        const image = new RGBAImage({width: 2, height: 2}, new Uint8Array(2 * 2 * 4));
+        const texture = new Texture(context, image, gl.RGBA, {useMipmap: true});
+
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
+        vi.mocked(gl.texParameteri).mockClear();
+
+        texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
+
+        expect(gl.texParameteri).toHaveBeenCalledTimes(1);
+        expect(gl.texParameteri).toHaveBeenCalledWith(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     });
 
     test('premultiplyAlpha produces correct output', () => {
