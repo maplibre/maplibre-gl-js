@@ -90,7 +90,7 @@ void main() {
     mediump float t = 1.0 - abs(u);
     mediump vec2 offset2 = offset * a_extrude * scale * normal.y * mat2(t, -u, u, t);
 
-    float adjustedThickness = projectLineThickness(pos.y);  // ← اول این
+    float adjustedThickness = projectLineThickness(pos.y); 
 
     float offset_linesofar = a_linesofar + a_direction * length(offset2) * u_ratio / adjustedThickness;
     float adjustedThickness = projectLineThickness(pos.y);
