@@ -32,7 +32,7 @@ updates:
       # => no specific configuration for this
       include:
         - "*"
-  - package-ecosystem: "docker"
+  - package-ecosystem: "docker-compose"
     directory: "/"
     schedule:
       interval: "daily"
