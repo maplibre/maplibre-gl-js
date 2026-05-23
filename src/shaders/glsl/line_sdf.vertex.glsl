@@ -90,6 +90,9 @@ void main() {
     mediump float t = 1.0 - abs(u);
     mediump vec2 offset2 = offset * a_extrude * scale * normal.y * mat2(t, -u, u, t);
 
+    float adjustedThickness = projectLineThickness(pos.y);  // ← اول این
+
+    float offset_linesofar = a_linesofar + a_direction * length(offset2) * u_ratio / adjustedThickness;
     float adjustedThickness = projectLineThickness(pos.y);
     vec4 projected_no_extrude = projectTile(pos + offset2 / u_ratio * adjustedThickness + u_translation);
     vec4 projected_with_extrude = projectTile(pos + offset2 / u_ratio * adjustedThickness + u_translation + dist / u_ratio * adjustedThickness);
@@ -112,7 +115,7 @@ void main() {
     float u_patternscale_b_x = u_tileratio / dasharray_to.w / u_crossfade_to;
     float u_patternscale_b_y = -dasharray_to.z / 2.0 / u_lineatlas_height;
 
-    v_tex_a = vec2(a_linesofar * u_patternscale_a_x / floorwidth, normal.y * u_patternscale_a_y + (float(dasharray_from.y) + 0.5) / u_lineatlas_height);
-    v_tex_b = vec2(a_linesofar * u_patternscale_b_x / floorwidth, normal.y * u_patternscale_b_y + (float(dasharray_to.y) + 0.5) / u_lineatlas_height);
+    v_tex_a = vec2(offset_linesofar * u_patternscale_a_x / floorwidth, normal.y * u_patternscale_a_y + (float(dasharray_from.y) + 0.5) / u_lineatlas_height);
+    v_tex_b = vec2(offset_linesofar * u_patternscale_b_x / floorwidth, normal.y * u_patternscale_b_y + (float(dasharray_to.y) + 0.5) / u_lineatlas_height);
     v_width2 = vec2(outset, inset);
 }

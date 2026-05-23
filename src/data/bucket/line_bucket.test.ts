@@ -224,4 +224,35 @@ describe('LineBucket', () => {
 
         expect(bucket.isEmpty()).toBe(true);
     });
+    test('linesofar values should be consistent with and without offset joins', () => {
+        const bucket = createLineBucket({id: 'test'});
+
+        const line = {
+            type: 2,
+            properties: {}
+        } as BucketFeature;
+
+        bucket.addLine([
+            new Point(0, 0),
+            new Point(100, 0),
+            new Point(100, 100)
+        ], line, 'miter', 'butt', 2, 1.05, undefined, noSubdivision);
+
+        const LINE_DISTANCE_SCALE = 1 / 2;
+        const arr = bucket.layoutVertexArray;
+        const linsofarValues = [];
+
+        // هر vertex = 8 byte، a_data از byte 4 شروع می‌شود
+        // a_data[2] = byte 6، a_data[3] = byte 7
+        for (let i = 0; i < arr.length; i++) {
+            const z = arr.uint8[i * 8 + 6];  // a_data[2]
+            const w = arr.uint8[i * 8 + 7];  // a_data[3]
+            const linesofarScaled = ((z >> 2) & 0x3F) | (w << 6);
+            const linesofar = linesofarScaled / LINE_DISTANCE_SCALE;
+            linsofarValues.push(Math.round(linesofar));
+        }
+
+        console.log('مقادیر linesofar:', linsofarValues);
+        expect(bucket.distance).toBe(200);
+    });
 });
