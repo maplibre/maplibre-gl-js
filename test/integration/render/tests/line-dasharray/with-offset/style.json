@@ -1,0 +1,52 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64
+    }
+  },
+  "sources": {
+    "a": {
+      "type": "geojson",
+      "data": {
+        "type": "LineString",
+        "coordinates": [
+          [-10, 5],
+          [10, 5]
+        ]
+      }
+    },
+    "b": {
+      "type": "geojson",
+      "data": {
+        "type": "LineString",
+        "coordinates": [
+          [-10, -5],
+          [10, -5]
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "line-no-offset",
+      "type": "line",
+      "source": "a",
+      "paint": {
+        "line-width": 4,
+        "line-dasharray": [2, 2]
+      }
+    },
+    {
+      "id": "line-with-offset",
+      "type": "line",
+      "source": "b",
+      "paint": {
+        "line-width": 4,
+        "line-dasharray": [2, 2],
+        "line-offset": -8
+      }
+    }
+  ]
+}
