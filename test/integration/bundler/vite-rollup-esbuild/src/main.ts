@@ -1,6 +1,6 @@
 import {Map, setWorkerFactory} from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import Worker from 'maplibre-gl/dist/maplibre-gl-worker.mjs';
+import Worker from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker';
 
 setWorkerFactory(() => new Worker());
 
