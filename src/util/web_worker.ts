@@ -59,7 +59,7 @@ async function fetchAsBlobUrl(url: string): Promise<string> {
 
 export async function workerFactory(): Promise<Worker> {
     if (config.WORKER_FACTORY) {
-        return config.FACTORY();
+        return config.WORKER_FACTORY();
     }
 
     const url = config.WORKER_URL || defaultWorkerUrl();
