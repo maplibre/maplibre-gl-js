@@ -18,6 +18,7 @@ type Config = {
     MAX_TILE_CACHE_ZOOM_LEVELS: number;
     REGISTERED_PROTOCOLS: {[x: string]: AddProtocolAction };
     WORKER_URL: string;
+    WORKER_FACTORY: (() => Promise<Worker>)|null;
 };
 
 export const config: Config = {
