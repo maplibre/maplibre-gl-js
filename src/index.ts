@@ -171,6 +171,15 @@ function getWorkerUrl(): string { return config.WORKER_URL; }
  */
 function setWorkerUrl(value: string): void { config.WORKER_URL = value; }
 /**
+ * Gets the worker factory
+ * @returns The factory function.
+ */
+function getWorkerFactory(): (() => Promise<Worker>)|null { return config.WORKER_FACTORY; }
+/**
+ * Sets the worker factory
+ */
+function setWorkerFactory(factory: (() => Promise<Worker>)|null): void { config.WORKER_FACTORY = factory; } 
+/**
  * Allows loading javascript code in the worker thread.
  * *Note* that since this is using some very internal classes and flows it is considered experimental and can break at any point.
  *
@@ -384,6 +393,8 @@ export {
     setMaxParallelImageRequests,
     getWorkerUrl,
     setWorkerUrl,
+    getWorkerClass,
+    setWorkerClass,
     addProtocol,
     removeProtocol,
     addSourceType,

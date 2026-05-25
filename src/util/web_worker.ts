@@ -58,6 +58,10 @@ async function fetchAsBlobUrl(url: string): Promise<string> {
 }
 
 export async function workerFactory(): Promise<Worker> {
+    if (config.WORKER_FACTORY) {
+        return config.FACTORY();
+    }
+
     const url = config.WORKER_URL || defaultWorkerUrl();
     const asModule = url?.endsWith('.mjs') ?? false;
 
