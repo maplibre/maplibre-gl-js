@@ -1,8 +1,8 @@
-import {Map, setWorkerUrl} from 'maplibre-gl';
+import {Map, setWorkerFactory} from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+import Worker from 'maplibre-gl/dist/maplibre-gl-worker.mjs';
 
-setWorkerUrl(workerUrl);
+setWorkerFactory(() => new Worker());
 
 new Map({
     container: 'map',
