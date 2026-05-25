@@ -82,14 +82,14 @@ Pick your setup:
 
 === "Vite"
 
-    Use Vite's `?url` query to get the worker file's bundled URL:
+    Use Vite's `?worker` query to get the worker class:
 
     ```ts
-    import {Map, setWorkerUrl} from 'maplibre-gl';
+    import {Map, setWorkerFactory} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
-    import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+    import Worker from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker';
 
-    setWorkerUrl(workerUrl);
+    setWorkerFactory(() => new Worker());
 
     const map = new Map({/* … */});
     ```
