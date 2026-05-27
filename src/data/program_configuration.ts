@@ -387,7 +387,7 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
 
     protected abstract getPositionIds(feature: Feature): {min: string; mid: string; max: string};
     protected abstract getPositions(options: PaintOptions): {[_: string]: T};
-    protected abstract emplace(array: StructArray, index: number, midPos: T, minMaxPos: T): void;
+    protected abstract emplace(array: StructArray, index: number, fromPos: T, toPos: T): void;
 
     protected _setPaintValues(start: number, end: number, positionIds: {min: string; mid: string; max: string}, options: PaintOptions) {
         const positions = this.getPositions(options);
@@ -400,9 +400,14 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
         // We populate two paint arrays because, for cross-faded properties, we don't know which direction
         // we're cross-fading to at layout time. In order to keep vertex attributes to a minimum and not pass
         // unnecessary vertex data to the shaders, we determine which to upload at draw time.
+        //
+        // The crossfade `from` vertex is the value at the previous integer zoom (min when zooming in,
+        // max when zooming out) and `to` is the value at the current integer zoom (mid). This matches the
+        // convention used by CrossFadedConstantBinder, where `u_dasharray_to` / `u_pattern_to` carry the
+        // current zoom's value and the crossfade `t` blends from the previous value to it.
         for (let i = start; i < end; i++) {
-            this.emplace(this.zoomInPaintVertexArray, i, mid, min);
-            this.emplace(this.zoomOutPaintVertexArray, i, mid, max);
+            this.emplace(this.zoomInPaintVertexArray, i, min, mid);
+            this.emplace(this.zoomOutPaintVertexArray, i, max, mid);
         }
     }
 
@@ -433,12 +438,12 @@ class CrossFadedPatternBinder extends CrossFadedBinder<ImagePosition> {
         return patternAttributes.members;
     }
 
-    protected emplace(array: StructArray, index: number, midPos: ImagePosition, minMaxPos: ImagePosition): void {
+    protected emplace(array: StructArray, index: number, fromPos: ImagePosition, toPos: ImagePosition): void {
         array.emplace(index,
-            midPos.tlbr[0], midPos.tlbr[1], midPos.tlbr[2], midPos.tlbr[3],
-            minMaxPos.tlbr[0], minMaxPos.tlbr[1], minMaxPos.tlbr[2], minMaxPos.tlbr[3],
-            midPos.pixelRatio,
-            minMaxPos.pixelRatio,
+            fromPos.tlbr[0], fromPos.tlbr[1], fromPos.tlbr[2], fromPos.tlbr[3],
+            toPos.tlbr[0], toPos.tlbr[1], toPos.tlbr[2], toPos.tlbr[3],
+            fromPos.pixelRatio,
+            toPos.pixelRatio,
         );
     }
 }
@@ -456,10 +461,10 @@ class CrossFadedDasharrayBinder extends CrossFadedBinder<DashEntry> {
         return dashAttributes.members;
     }
 
-    protected emplace(array: StructArray, index: number, midPos: DashEntry, minMaxPos: DashEntry): void {
+    protected emplace(array: StructArray, index: number, fromPos: DashEntry, toPos: DashEntry): void {
         array.emplace(index,
-            0, midPos.y, midPos.height, midPos.width,
-            0, minMaxPos.y, minMaxPos.height, minMaxPos.width,
+            0, fromPos.y, fromPos.height, fromPos.width,
+            0, toPos.y, toPos.height, toPos.width,
         );
     }
 }
