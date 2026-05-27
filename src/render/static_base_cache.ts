@@ -6,6 +6,7 @@ import {ColorMode} from '../webgl/color_mode.ts';
 import {CullFaceMode} from '../webgl/cull_face_mode.ts';
 import {fullscreenTextureUniformValues} from '../webgl/program/fullscreen_texture_program.ts';
 
+import type {Context} from '../webgl/context.ts';
 import type {Painter} from './painter.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {ImageManager} from './image_manager.ts';
@@ -171,24 +172,23 @@ export class StaticBaseCache {
      * Call this after rendering the first N stable translucent layers to
      * the main framebuffer.
      */
-    snapshot(painter: Painter, layerCount: number): void {
-        const context = painter.context;
+    snapshot(context: Context, width: number, height: number, layerCount: number): void {
         const gl = context.gl;
 
         // Create or resize the cache texture
         if (!this._texture ||
-            this._width !== painter.width ||
-            this._height !== painter.height) {
+            this._width !== width ||
+            this._height !== height) {
             this._texture?.destroy();
-            this._texture = new Texture(context, {width: painter.width, height: painter.height, data: null}, gl.RGBA);
+            this._texture = new Texture(context, {width, height, data: null}, gl.RGBA);
             this._texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
-            this._width = painter.width;
-            this._height = painter.height;
+            this._width = width;
+            this._height = height;
         }
 
         // Copy the current screen framebuffer into the cache texture
         gl.bindTexture(gl.TEXTURE_2D, this._texture.texture);
-        gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 0, 0, painter.width, painter.height);
+        gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
 
         this._cachedLayerCount = layerCount;
     }

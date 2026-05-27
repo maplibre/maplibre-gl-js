@@ -646,7 +646,7 @@ export class Painter {
 
             // After rendering the last stable layer, snapshot the screen
             if (needsSnapshot && this.currentLayer === stableLayerCount - 1) {
-                this.staticBaseCache.snapshot(this, stableLayerCount);
+                this.staticBaseCache.snapshot(this.context, this.width, this.height, stableLayerCount);
             }
         }
 
