@@ -1,5 +1,5 @@
 in vec3 v_data;
-in float v_visibility;
+flat in float v_visibility;
 
 #pragma mapbox: define highp vec4 color
 #pragma mapbox: define mediump float radius

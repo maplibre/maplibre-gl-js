@@ -1,7 +1,7 @@
 uniform lowp float u_device_pixel_ratio;
 uniform bool u_opacity_override;
 
-in vec2 v_width2;
+flat in vec2 v_width2;
 in vec2 v_normal;
 in float v_gamma_scale;
 #ifdef GLOBE

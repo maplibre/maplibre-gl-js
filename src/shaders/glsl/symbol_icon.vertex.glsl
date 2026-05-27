@@ -24,7 +24,7 @@ uniform vec2 u_translation;
 uniform float u_pitched_scale;
 
 out vec2 v_tex;
-out float v_total_opacity;
+flat out float v_total_opacity;
 
 #pragma mapbox: define lowp float opacity
 
