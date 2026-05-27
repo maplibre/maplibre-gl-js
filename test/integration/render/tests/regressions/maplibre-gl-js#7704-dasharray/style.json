@@ -2,7 +2,7 @@
   "version": 8,
   "metadata": {
     "test": {
-      "description": "A line with a top-level zoom `step` whose branches each evaluate to a feature-dependent dasharray. Because branches reference `[\"get\"]`, the expression is composite (data-driven) and goes through CrossFadedDasharrayBinder rather than the constant uniform path. At zoom 10.5 (past the step), the line should render with short dashes ([2,2]). Demonstrates issue #7704 where the data-driven path lags one zoom level and would instead render the pre-step [8,4] dashes.",
+      "description": "Regression test for https://github.com/maplibre/maplibre-gl-js/issues/7704. A line with a top-level zoom `step` whose branches each evaluate to a feature-dependent dasharray. Because branches reference `[\"get\"]`, the expression is composite (data-driven) and routes through `CrossFadedDasharrayBinder` rather than the constant uniform path. At zoom 10.5 (past the step), the line should render with short dashes ([2,2]). Before the fix, the data-driven path swapped the cross-fade `from` and `to` attributes relative to the constant path, so the pre-step [8,4] dashes were rendered instead.",
       "width": 64,
       "height": 64
     }
