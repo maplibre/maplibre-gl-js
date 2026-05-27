@@ -187,7 +187,6 @@ export class Painter {
         this.pixelRatio = pixelRatio;
         this.context.viewport.set([0, 0, this.width, this.height]);
 
-        // Invalidate translucent layer cache on resize
         this.staticBaseCache.invalidate();
 
         if (this.style) {

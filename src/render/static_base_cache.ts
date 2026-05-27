@@ -17,6 +17,15 @@ type PainterOptions = {
     zooming: boolean;
 };
 
+type TranslucentPassPlan = {
+    /** Index at which the main rendering loop should start. */
+    cacheStartLayer: number;
+    /** Whether to call {@link StaticBaseCache.snapshot} after rendering layer `stableLayerCount - 1`. */
+    needsSnapshot: boolean;
+    /** Number of consecutive stable layers from the bottom. */
+    stableLayerCount: number;
+};
+
 /**
  * Caches the screen content after rendering the first N stable translucent
  * layers, and reuses that snapshot on subsequent frames to avoid redundant
@@ -32,13 +41,63 @@ export class StaticBaseCache {
     minLayers: number = 5;
 
     /**
+     * Check whether a visible layer is stable enough to be cached.
+     * Returns false if the layer is custom, recently changed, has a source
+     * with active transitions or incomplete tiles, or uses dynamic images.
+     */
+    _isLayerStable(layer: StyleLayer, imageManager: ImageManager, tileManagers: {[_: string]: TileManager}): boolean {
+        if (layer.type === 'custom' || layer._unchangedFrameCount < this.stabilityThreshold) {
+            return false;
+        }
+        if (layer.source && tileManagers[layer.source]) {
+            const tm = tileManagers[layer.source];
+            // Sources with active transitions (e.g. video playing,
+            // canvas animating) update their texture directly via GL
+            // calls each frame, bypassing change detection.
+            if (tm.getSource().hasTransition?.()) {
+                return false;
+            }
+            // Don't cache layers whose tiles are still loading — the
+            // snapshot would capture incomplete content (e.g. missing symbols).
+            if (!tm.loaded()) {
+                return false;
+            }
+        }
+        // If any visible tile for this layer's source uses a dynamic
+        // image (one with a render callback), the layer's visual content
+        // may change every frame.
+        if (imageManager.dynamicImageUpdatedThisFrame && layer.source && tileManagers[layer.source]) {
+            const coords = tileManagers[layer.source].getVisibleCoordinates(false);
+            for (const coord of coords) {
+                const tile = tileManagers[layer.source].getTile(coord);
+                if (tile?.imageAtlas?.haveRenderCallbacks?.length > 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Returns true if any visible layer has an active paint transition
+     * (e.g. from setPaintProperty). Uses hasActiveTransition(now) instead
+     * of hasTransition() to ignore expired transitions whose prior
+     * reference hasn't been cleared yet.
+     */
+    _hasActiveTransitions(layerIds: string[], layers: {[_: string]: StyleLayer}, zoom: number): boolean {
+        const currentTime = now();
+        for (const layerId of layerIds) {
+            const layer = layers[layerId];
+            if (!layer.isHidden(zoom) && layer.hasActiveTransition(currentTime)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Determine how the translucent pass should be rendered: from cache,
      * with a snapshot to build the cache, or normally.
-     *
-     * @returns An object with:
-     *   - `cacheStartLayer`: index at which the main rendering loop should start
-     *   - `needsSnapshot`: whether to call {@link snapshot} after rendering layer `stableLayerCount - 1`
-     *   - `stableLayerCount`: number of consecutive stable layers from the bottom
      */
     prepareTranslucentPass(
         painter: Painter,
@@ -48,7 +107,7 @@ export class StaticBaseCache {
         options: PainterOptions,
         imageManager: ImageManager,
         tileManagers: {[_: string]: TileManager},
-    ): {cacheStartLayer: number; needsSnapshot: boolean; stableLayerCount: number} {
+    ): TranslucentPassPlan {
         // Compute N: number of consecutive stable layers from the bottom
         let stableLayerCount = 0;
         if (this.enabled) {
@@ -58,39 +117,8 @@ export class StaticBaseCache {
                     stableLayerCount++;
                     continue;
                 }
-                if (layer.type === 'custom' || layer._unchangedFrameCount < this.stabilityThreshold) {
+                if (!this._isLayerStable(layer, imageManager, tileManagers)) {
                     break;
-                }
-                if (layer.source && tileManagers[layer.source]) {
-                    const tm = tileManagers[layer.source];
-                    // Sources with active transitions (e.g. video playing,
-                    // canvas animating) update their texture directly via GL
-                    // calls each frame, bypassing change detection.
-                    if (tm.getSource().hasTransition?.()) {
-                        break;
-                    }
-                    // Don't cache layers whose tiles are still loading — the
-                    // snapshot would capture incomplete content (e.g. missing symbols).
-                    if (!tm.loaded()) {
-                        break;
-                    }
-                }
-                // If any visible tile for this layer's source uses a dynamic
-                // image (one with a render callback), the layer's visual content
-                // may change every frame — break the stable chain here.
-                if (imageManager.dynamicImageUpdatedThisFrame && layer.source && tileManagers[layer.source]) {
-                    const coords = tileManagers[layer.source].getVisibleCoordinates(false);
-                    let hasDynamic = false;
-                    for (const coord of coords) {
-                        const tile = tileManagers[layer.source].getTile(coord);
-                        if (tile?.imageAtlas?.haveRenderCallbacks?.length > 0) {
-                            hasDynamic = true;
-                            break;
-                        }
-                    }
-                    if (hasDynamic) {
-                        break;
-                    }
                 }
                 stableLayerCount++;
             }
@@ -109,17 +137,7 @@ export class StaticBaseCache {
         // If any layer has an active paint transition (e.g. from setPaintProperty),
         // the opaque pass is mid-transition and the snapshot would be stale.
         // Don't build or reuse a cache while transitions are active.
-        // Uses hasActiveTransition(now) instead of hasTransition() to ignore
-        // expired transitions whose prior reference hasn't been cleared yet.
-        const currentTime = now();
-        let hasActiveTransition = false;
-        for (const layerId of layerIds) {
-            const layer = layers[layerId];
-            if (!layer.isHidden(zoom) && layer.hasActiveTransition(currentTime)) {
-                hasActiveTransition = true;
-                break;
-            }
-        }
+        const hasActiveTransition = this._hasActiveTransitions(layerIds, layers, zoom);
 
         // Check if existing cache is still valid
         const cacheValid = this._cachedLayerCount > 0 &&
@@ -161,9 +179,7 @@ export class StaticBaseCache {
         if (!this._texture ||
             this._width !== painter.width ||
             this._height !== painter.height) {
-            if (this._texture) {
-                this._texture.destroy();
-            }
+            this._texture?.destroy();
             this._texture = new Texture(context, {width: painter.width, height: painter.height, data: null}, gl.RGBA);
             this._texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             this._width = painter.width;
@@ -213,9 +229,7 @@ export class StaticBaseCache {
     }
 
     destroy(): void {
-        if (this._texture) {
-            this._texture.destroy();
-            this._texture = null;
-        }
+        this._texture?.destroy();
+        this._texture = null;
     }
 }

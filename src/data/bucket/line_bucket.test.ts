@@ -188,4 +188,40 @@ describe('LineBucket', () => {
             test: {min: '3,3,false', mid: '3,3,false', max: '3,3,false'}
         });
     });
+
+    test('LineBucket ignores geometry with insufficient unique vertices after trimming duplicates', () => {
+        const bucket = createLineBucket({id: 'test'});
+
+        const line = {
+            type: 2,
+            properties: {}
+        } as BucketFeature;
+
+        const polygon = {
+            type: 3,
+            properties: {}
+        } as BucketFeature;
+
+        bucket.addLine([
+            new Point(0, 0),
+            new Point(0, 0),
+            new Point(0, 0)
+        ], line, undefined, undefined, undefined, undefined, undefined, noSubdivision);
+
+        bucket.addLine([
+            new Point(0, 0),
+            new Point(0, 0),
+            new Point(10, 10),
+            new Point(10, 10)
+        ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
+
+        bucket.addLine([
+            new Point(0, 0),
+            new Point(0, 0),
+            new Point(0, 0),
+            new Point(10, 10)
+        ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
+
+        expect(bucket.isEmpty()).toBe(true);
+    });
 });
