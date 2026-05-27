@@ -105,7 +105,7 @@ describe('translucent cache', () => {
         expect(cache._texture).toBeNull();
         expect(cache._cachedLayerCount).toBe(0);
 
-        cache.snapshot(painter, 7);
+        cache.snapshot(painter.context, painter.width, painter.height, 7);
 
         expect(cache._texture).toBeTruthy();
         expect(cache._width).toBe(512);
@@ -118,23 +118,23 @@ describe('translucent cache', () => {
 
     test('snapshot reuses texture when size unchanged', () => {
         const cache = painter.staticBaseCache;
-        cache.snapshot(painter, 3);
+        cache.snapshot(painter.context, painter.width, painter.height, 3);
         const firstTexture = cache._texture;
 
-        cache.snapshot(painter, 5);
+        cache.snapshot(painter.context, painter.width, painter.height, 5);
         expect(cache._texture).toBe(firstTexture);
         expect(cache._cachedLayerCount).toBe(5);
     });
 
     test('snapshot recreates texture on resize', () => {
         const cache = painter.staticBaseCache;
-        cache.snapshot(painter, 3);
+        cache.snapshot(painter.context, painter.width, painter.height, 3);
         const firstTexture = cache._texture;
         const destroySpy = vi.spyOn(firstTexture, 'destroy');
 
         painter.width = 1024;
         painter.height = 768;
-        cache.snapshot(painter, 4);
+        cache.snapshot(painter.context, painter.width, painter.height, 4);
 
         expect(destroySpy).toHaveBeenCalled();
         expect(cache._texture).not.toBe(firstTexture);
@@ -144,7 +144,7 @@ describe('translucent cache', () => {
 
     test('destroy cleans up cache texture', () => {
         const cache = painter.staticBaseCache;
-        cache.snapshot(painter, 3);
+        cache.snapshot(painter.context, painter.width, painter.height, 3);
         const destroySpy = vi.spyOn(cache._texture, 'destroy');
 
         painter.destroy();
@@ -153,7 +153,7 @@ describe('translucent cache', () => {
 
     test('_draw binds texture and draws quad', () => {
         const cache = painter.staticBaseCache;
-        cache.snapshot(painter, 5);
+        cache.snapshot(painter.context, painter.width, painter.height, 5);
 
         const drawSpy = vi.fn();
         vi.spyOn(painter, 'useProgram').mockReturnValue({draw: drawSpy} as any);
@@ -177,7 +177,7 @@ describe('translucent cache', () => {
 
     test('cache is valid when size matches and enough stable layers', () => {
         const cache = painter.staticBaseCache;
-        cache.snapshot(painter, 5);
+        cache.snapshot(painter.context, painter.width, painter.height, 5);
         expect(cache._cachedLayerCount).toBe(5);
 
         const drawSpy = vi.spyOn(cache, '_draw').mockImplementation(() => {});
@@ -227,7 +227,7 @@ describe('translucent cache', () => {
 
     test('cache is invalidated when width changes', () => {
         const cache = painter.staticBaseCache;
-        cache.snapshot(painter, 3);
+        cache.snapshot(painter.context, painter.width, painter.height, 3);
         expect(cache._cachedLayerCount).toBe(3);
 
         painter.width = 1024;
@@ -259,7 +259,7 @@ describe('translucent cache', () => {
 
     test('cache is invalidated when height changes', () => {
         const cache = painter.staticBaseCache;
-        cache.snapshot(painter, 3);
+        cache.snapshot(painter.context, painter.width, painter.height, 3);
         expect(cache._cachedLayerCount).toBe(3);
 
         painter.height = 1024;
@@ -332,7 +332,7 @@ describe('translucent cache', () => {
             anisotropicFilterPitch: 20,
         });
 
-        expect(snapshotSpy).toHaveBeenCalledWith(painter, 5);
+        expect(snapshotSpy).toHaveBeenCalledWith(painter.context, painter.width, painter.height, 5);
         expect(cache._cachedLayerCount).toBe(5);
     });
 });
