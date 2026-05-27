@@ -1,0 +1,46 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "A line with a top-level zoom `step` whose branches each evaluate to a feature-dependent dasharray. Because branches reference `[\"get\"]`, the expression is composite (data-driven) and goes through CrossFadedDasharrayBinder rather than the constant uniform path. At zoom 10.5 (past the step), the line should render with short dashes ([2,2]). Demonstrates issue #7704 where the data-driven path lags one zoom level and would instead render the pre-step [8,4] dashes.",
+      "width": 64,
+      "height": 64
+    }
+  },
+  "zoom": 10.5,
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {"foo": 0},
+            "geometry": {
+              "coordinates": [[-1, 0], [1, 0]],
+              "type": "LineString"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "line",
+      "type": "line",
+      "source": "geojson",
+      "paint": {
+        "line-width": 4,
+        "line-dasharray": [
+          "step",
+          ["zoom"],
+          ["case", ["==", ["get", "foo"], 0], ["literal", [8, 4]], ["literal", [8, 4]]],
+          10,
+          ["case", ["==", ["get", "foo"], 0], ["literal", [2, 2]], ["literal", [2, 2]]]
+        ]
+      }
+    }
+  ]
+}
