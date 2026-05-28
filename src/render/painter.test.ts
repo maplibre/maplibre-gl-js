@@ -101,11 +101,12 @@ describe('translucent cache', () => {
     });
 
     test('captureCache creates texture and copies framebuffer', () => {
-        const cache = painter.staticBaseCache;
+        const manager = painter.staticBaseCache;
+        const cache = manager._cache;
         expect(cache._texture).toBeNull();
         expect(cache._cachedLayerCount).toBe(0);
 
-        cache.captureCache(painter.context, painter.width, painter.height, 7);
+        manager.captureCache(painter.context, painter.width, painter.height, 7);
 
         expect(cache._texture).toBeTruthy();
         expect(cache._width).toBe(512);
@@ -117,24 +118,26 @@ describe('translucent cache', () => {
     });
 
     test('captureCache reuses texture when size unchanged', () => {
-        const cache = painter.staticBaseCache;
-        cache.captureCache(painter.context, painter.width, painter.height, 3);
+        const manager = painter.staticBaseCache;
+        const cache = manager._cache;
+        manager.captureCache(painter.context, painter.width, painter.height, 3);
         const firstTexture = cache._texture;
 
-        cache.captureCache(painter.context, painter.width, painter.height, 5);
+        manager.captureCache(painter.context, painter.width, painter.height, 5);
         expect(cache._texture).toBe(firstTexture);
         expect(cache._cachedLayerCount).toBe(5);
     });
 
     test('captureCache recreates texture on resize', () => {
-        const cache = painter.staticBaseCache;
-        cache.captureCache(painter.context, painter.width, painter.height, 3);
+        const manager = painter.staticBaseCache;
+        const cache = manager._cache;
+        manager.captureCache(painter.context, painter.width, painter.height, 3);
         const firstTexture = cache._texture;
         const destroySpy = vi.spyOn(firstTexture, 'destroy');
 
         painter.width = 1024;
         painter.height = 768;
-        cache.captureCache(painter.context, painter.width, painter.height, 4);
+        manager.captureCache(painter.context, painter.width, painter.height, 4);
 
         expect(destroySpy).toHaveBeenCalled();
         expect(cache._texture).not.toBe(firstTexture);
@@ -143,8 +146,9 @@ describe('translucent cache', () => {
     });
 
     test('destroy cleans up cache texture', () => {
-        const cache = painter.staticBaseCache;
-        cache.captureCache(painter.context, painter.width, painter.height, 3);
+        const manager = painter.staticBaseCache;
+        const cache = manager._cache;
+        manager.captureCache(painter.context, painter.width, painter.height, 3);
         const destroySpy = vi.spyOn(cache._texture, 'destroy');
 
         painter.destroy();
@@ -152,8 +156,9 @@ describe('translucent cache', () => {
     });
 
     test('_blitCacheToScreen binds texture and draws quad', () => {
-        const cache = painter.staticBaseCache;
-        cache.captureCache(painter.context, painter.width, painter.height, 5);
+        const manager = painter.staticBaseCache;
+        const cache = manager._cache;
+        manager.captureCache(painter.context, painter.width, painter.height, 5);
 
         const drawSpy = vi.fn();
         vi.spyOn(painter, 'useProgram').mockReturnValue({draw: drawSpy} as any);
@@ -176,8 +181,9 @@ describe('translucent cache', () => {
     });
 
     test('cache is valid when size matches and enough stable layers', () => {
-        const cache = painter.staticBaseCache;
-        cache.captureCache(painter.context, painter.width, painter.height, 5);
+        const manager = painter.staticBaseCache;
+        const cache = manager._cache;
+        manager.captureCache(painter.context, painter.width, painter.height, 5);
         expect(cache._cachedLayerCount).toBe(5);
 
         const drawSpy = vi.spyOn(cache, '_blitCacheToScreen').mockImplementation(() => {});
@@ -213,8 +219,8 @@ describe('translucent cache', () => {
             imageManager: {beginFrame: vi.fn()},
             glyphManager: null,
         } as any;
-        cache.enabled = true;
-        cache.minLayers = 1;
+        manager.enabled = true;
+        manager.minLayers = 1;
 
         painter.render(painter.style, {
             fadeDuration: 0, moving: false, rotating: false, zooming: false,             showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
@@ -226,8 +232,9 @@ describe('translucent cache', () => {
     });
 
     test('cache is invalidated when width changes', () => {
-        const cache = painter.staticBaseCache;
-        cache.captureCache(painter.context, painter.width, painter.height, 3);
+        const manager = painter.staticBaseCache;
+        const cache = manager._cache;
+        manager.captureCache(painter.context, painter.width, painter.height, 3);
         expect(cache._cachedLayerCount).toBe(3);
 
         painter.width = 1024;
@@ -246,7 +253,7 @@ describe('translucent cache', () => {
             imageManager: {beginFrame: vi.fn()},
             glyphManager: null,
         } as any;
-        cache.enabled = true;
+        manager.enabled = true;
 
         painter.render(painter.style, {
             fadeDuration: 0, moving: false, rotating: false, zooming: false,             showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
@@ -258,8 +265,9 @@ describe('translucent cache', () => {
     });
 
     test('cache is invalidated when height changes', () => {
-        const cache = painter.staticBaseCache;
-        cache.captureCache(painter.context, painter.width, painter.height, 3);
+        const manager = painter.staticBaseCache;
+        const cache = manager._cache;
+        manager.captureCache(painter.context, painter.width, painter.height, 3);
         expect(cache._cachedLayerCount).toBe(3);
 
         painter.height = 1024;
@@ -278,7 +286,7 @@ describe('translucent cache', () => {
             imageManager: {beginFrame: vi.fn()},
             glyphManager: null,
         } as any;
-        cache.enabled = true;
+        manager.enabled = true;
 
         painter.render(painter.style, {
             fadeDuration: 0, moving: false, rotating: false, zooming: false,             showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
@@ -290,8 +298,9 @@ describe('translucent cache', () => {
     });
 
     test('cache is captured when stable layers exceed minimum', () => {
-        const cache = painter.staticBaseCache;
-        const captureSpy = vi.spyOn(cache, 'captureCache');
+        const manager = painter.staticBaseCache;
+        const cache = manager._cache;
+        const captureSpy = vi.spyOn(manager, 'captureCache');
 
         const mockLayers: Record<string, any> = {};
         const layerIds: string[] = [];
@@ -324,8 +333,8 @@ describe('translucent cache', () => {
             imageManager: {beginFrame: vi.fn()},
             glyphManager: null,
         } as any;
-        cache.enabled = true;
-        cache.minLayers = 1;
+        manager.enabled = true;
+        manager.minLayers = 1;
 
         painter.render(painter.style, {
             fadeDuration: 0, moving: false, rotating: false, zooming: false,             showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,

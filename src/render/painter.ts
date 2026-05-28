@@ -49,7 +49,7 @@ import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_l
 import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
 import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
 import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
-import {StaticBaseCache} from './static_base_cache.ts';
+import {StaticBaseCacheManager} from './static_base_cache_manager.ts';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -154,7 +154,7 @@ export class Painter {
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
     terrainFacilitator: {depthDirty: boolean; coordsDirty: boolean; matrix: mat4; renderTime: number};
 
-    staticBaseCache: StaticBaseCache;
+    staticBaseCache: StaticBaseCacheManager;
 
     constructor(gl: WebGL2RenderingContext, transform: IReadonlyTransform) {
         this.drawFunctions = webglDrawFunctions;
@@ -165,7 +165,7 @@ export class Painter {
         this._rttSharedFbo = null;
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
-        this.staticBaseCache = new StaticBaseCache();
+        this.staticBaseCache = new StaticBaseCacheManager();
 
         this.setup();
 
