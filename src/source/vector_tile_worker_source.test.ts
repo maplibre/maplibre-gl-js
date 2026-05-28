@@ -258,6 +258,42 @@ describe('vector tile worker source', () => {
         expect(getOverzoomTileSpy).toHaveBeenCalledWith(params, mockVectorTile);
     });
 
+    test('VectorTileWorkerSource uses mvt encoding for overzoomed mlt tiles', async () => {
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
+        const mockVectorTile = {layers: {}} as any;
+
+        source.loadVectorTile = vi.fn().mockReturnValue({
+            vectorTile: mockVectorTile,
+            rawData: new ArrayBuffer(0)
+        });
+
+        vi.spyOn(source as any, '_getOverzoomTile').mockReturnValue({
+            vectorTile: mockVectorTile,
+            rawData: new ArrayBuffer(0)
+        });
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf'}, new ArrayBuffer(0) as any);
+        });
+
+        const params = {
+            uid: '1',
+            tileID: new OverscaledTileID(16, 0, 16, 100, 100),
+            source: 'test',
+            encoding: 'mlt',
+            overzoomParameters: {
+                maxZoomTileID: new CanonicalTileID(14, 25, 25),
+                overzoomRequest: {url: ''}
+            }
+        } as WorkerTileParameters;
+
+        const promise = source.loadTile(params);
+        server.respond();
+        const res = await promise as WorkerTileWithData;
+
+        expect(res.encoding).toBe('mvt');
+    });
+
     test('VectorTileWorkerSource.reloadTile does not reparse tiles with no vectorTile data but does call callback', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = vi.fn();
