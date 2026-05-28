@@ -36,7 +36,7 @@
     "@mapbox/whoots-js": "^3.1.0",
     "@maplibre/geojson-vt": "^6.1.0",
     "@maplibre/maplibre-gl-style-spec": "^24.8.5",
-    "@maplibre/mlt": "^1.1.10",
+    "@maplibre/mlt": "^1.1.11",
     "@maplibre/vt-pbf": "^4.3.0",
     "@types/geojson": "^7946.0.16",
     "earcut": "^3.0.2",
