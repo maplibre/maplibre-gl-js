@@ -55,6 +55,11 @@ export class ImageManager extends Evented {
     atlasImage: RGBAImage;
     atlasTexture: Texture;
     dirty: boolean;
+    /**
+     * Whether any dynamic image (with a render callback) was updated this frame.
+     * Used by the static base cache to invalidate layers that depend on dynamic images.
+     */
+    dynamicImageUpdatedThisFrame: boolean;
 
     constructor() {
         super();
@@ -327,12 +332,6 @@ export class ImageManager extends Evented {
 
         this.dirty = true;
     }
-
-    /**
-     * Whether any dynamic image (with a render callback) was updated this frame.
-     * Used by the static base cache to invalidate layers that depend on dynamic images.
-     */
-    dynamicImageUpdatedThisFrame: boolean;
 
     /**
      * Returns true if any registered image has a render callback.

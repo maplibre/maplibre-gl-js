@@ -21,15 +21,15 @@ type PainterOptions = {
 type TranslucentPassPlan = {
     /** Index at which the main rendering loop should start. */
     cacheStartLayer: number;
-    /** Whether to call {@link StaticBaseCache.snapshot} after rendering layer `stableLayerCount - 1`. */
-    needsSnapshot: boolean;
+    /** Whether to call {@link StaticBaseCache.captureCache} after rendering layer `stableLayerCount - 1`. */
+    needsCapture: boolean;
     /** Number of consecutive stable layers from the bottom. */
     stableLayerCount: number;
 };
 
 /**
  * Caches the screen content after rendering the first N stable translucent
- * layers, and reuses that snapshot on subsequent frames to avoid redundant
+ * layers, and reuses that cached content on subsequent frames to avoid redundant
  * re-rendering when only upper layers change and the camera is static.
  */
 export class StaticBaseCache {
@@ -46,7 +46,7 @@ export class StaticBaseCache {
      * Returns false if the layer is custom, recently changed, has a source
      * with active transitions or incomplete tiles, or uses dynamic images.
      */
-    _isLayerStable(layer: StyleLayer, imageManager: ImageManager, tileManagers: {[_: string]: TileManager}): boolean {
+    _isLayerCacheable(layer: StyleLayer, imageManager: ImageManager, tileManagers: {[_: string]: TileManager}): boolean {
         if (layer.type === 'custom' || layer._unchangedFrameCount < this.stabilityThreshold) {
             return false;
         }
@@ -58,8 +58,8 @@ export class StaticBaseCache {
             if (tm.getSource().hasTransition?.()) {
                 return false;
             }
-            // Don't cache layers whose tiles are still loading — the
-            // snapshot would capture incomplete content (e.g. missing symbols).
+            // Don't cache layers whose tiles are still loading —
+            // the cache would capture incomplete content (e.g. missing symbols).
             if (!tm.loaded()) {
                 return false;
             }
@@ -98,9 +98,9 @@ export class StaticBaseCache {
 
     /**
      * Determine how the translucent pass should be rendered: from cache,
-     * with a snapshot to build the cache, or normally.
+     * with a capture to build the cache, or normally.
      */
-    prepareTranslucentPass(
+    planTranslucentPassCaching(
         painter: Painter,
         layerIds: string[],
         layers: {[_: string]: StyleLayer},
@@ -118,7 +118,7 @@ export class StaticBaseCache {
                     stableLayerCount++;
                     continue;
                 }
-                if (!this._isLayerStable(layer, imageManager, tileManagers)) {
+                if (!this._isLayerCacheable(layer, imageManager, tileManagers)) {
                     break;
                 }
                 stableLayerCount++;
@@ -134,9 +134,9 @@ export class StaticBaseCache {
             this._cachedLayerCount = 0;
         }
 
-        // The snapshot captures the opaque pass content for ALL layers.
+        // The cache captures the opaque pass content for ALL layers.
         // If any layer has an active paint transition (e.g. from setPaintProperty),
-        // the opaque pass is mid-transition and the snapshot would be stale.
+        // the opaque pass is mid-transition and the cache would be stale.
         // Don't build or reuse a cache while transitions are active.
         const hasActiveTransition = this._hasActiveTransitions(layerIds, layers, zoom);
 
@@ -148,23 +148,23 @@ export class StaticBaseCache {
             this._height === painter.height;
 
         let cacheStartLayer = 0;
-        let needsSnapshot = false;
+        let needsCapture = false;
 
         if (cacheValid) {
             // Reuse existing cache — blit cached texture then skip to remaining layers
-            this._draw(painter);
+            this._blitCacheToScreen(painter);
             painter.clearStencil();
             cacheStartLayer = this._cachedLayerCount;
         } else if (!cameraMoving && !hasActiveTransition && stableLayerCount >= this.minLayers) {
-            // Will render these layers normally, then snapshot the screen
-            needsSnapshot = true;
+            // Will render these layers normally, then capture the screen
+            needsCapture = true;
             this._cachedLayerCount = 0;
         } else {
             // Not enough stable layers or camera moving — no caching
             this._cachedLayerCount = 0;
         }
 
-        return {cacheStartLayer, needsSnapshot, stableLayerCount};
+        return {cacheStartLayer, needsCapture, stableLayerCount};
     }
 
     /**
@@ -172,7 +172,7 @@ export class StaticBaseCache {
      * Call this after rendering the first N stable translucent layers to
      * the main framebuffer.
      */
-    snapshot(context: Context, width: number, height: number, layerCount: number): void {
+    captureCache(context: Context, width: number, height: number, layerCount: number): void {
         const gl = context.gl;
 
         // Create or resize the cache texture
@@ -195,10 +195,10 @@ export class StaticBaseCache {
 
     /**
      * Draw the cached texture as a fullscreen quad.
-     * Uses unblended (replace) mode since the snapshot includes the full
+     * Uses unblended (replace) mode since the cache includes the full
      * screen content (opaque pass + cached translucent layers).
      */
-    _draw(painter: Painter): void {
+    _blitCacheToScreen(painter: Painter): void {
         const context = painter.context;
         const gl = context.gl;
 

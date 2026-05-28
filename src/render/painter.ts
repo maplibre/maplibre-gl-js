@@ -613,12 +613,12 @@ export class Painter {
 
         // Disable static base cache when render-to-texture is active (terrain/globe) —
         // the RTT system renders layers into per-tile textures, and a screen-space
-        // cache snapshot would capture incorrect content.
+        // the static base cache would capture incorrect content.
         const useStaticBaseCache = !this.renderToTexture;
-        const {cacheStartLayer, needsSnapshot, stableLayerCount} = useStaticBaseCache
-            ? this.staticBaseCache.prepareTranslucentPass(
+        const {cacheStartLayer, needsCapture, stableLayerCount} = useStaticBaseCache
+            ? this.staticBaseCache.planTranslucentPassCaching(
                 this, layerIds, this.style._layers, this.transform.zoom, options, this.imageManager, tileManagers)
-            : {cacheStartLayer: 0, needsSnapshot: false, stableLayerCount: 0};
+            : {cacheStartLayer: 0, needsCapture: false, stableLayerCount: 0};
 
         // Render layers (either all, or starting from cacheStartLayer)
         for (this.currentLayer = cacheStartLayer; this.currentLayer < layerIds.length; this.currentLayer++) {
@@ -644,9 +644,9 @@ export class Painter {
             this._renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
             this.renderLayer(this, tileManager, layer, coords, renderOptions);
 
-            // After rendering the last stable layer, snapshot the screen
-            if (needsSnapshot && this.currentLayer === stableLayerCount - 1) {
-                this.staticBaseCache.snapshot(this.context, this.width, this.height, stableLayerCount);
+            // After rendering the last stable layer, capture the screen into the static base cache
+            if (needsCapture && this.currentLayer === stableLayerCount - 1) {
+                this.staticBaseCache.captureCache(this.context, this.width, this.height, stableLayerCount);
             }
         }
 
