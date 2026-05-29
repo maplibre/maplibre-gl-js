@@ -32,7 +32,7 @@
     "@mapbox/point-geometry": "^1.1.0",
     "@mapbox/tiny-sdf": "^2.2.0",
     "@mapbox/unitbezier": "^0.0.1",
-    "@mapbox/vector-tile": "^2.0.4",
+    "@mapbox/vector-tile": "^2.0.5",
     "@mapbox/whoots-js": "^3.1.0",
     "@maplibre/geojson-vt": "^6.1.0",
     "@maplibre/maplibre-gl-style-spec": "^24.8.5",
