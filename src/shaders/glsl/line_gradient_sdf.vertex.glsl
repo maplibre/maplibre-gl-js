@@ -54,6 +54,11 @@ void main() {
     #pragma mapbox: initialize mediump vec4 dasharray_from
     #pragma mapbox: initialize mediump vec4 dasharray_to
 
+    if (opacity < 0.01) {
+        gl_Position = vec4(-2.0, -2.0, -2.0, 1.0);
+        return;
+    }
+
     // the distance over which the line edge fades out.
     // Retina devices need a smaller distance to avoid aliasing.
     float ANTIALIASING = 1.0 / u_device_pixel_ratio / 2.0;
