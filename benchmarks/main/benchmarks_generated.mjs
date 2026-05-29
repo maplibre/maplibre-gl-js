@@ -14170,7 +14170,7 @@ var VectorTileFeature = class {
 	*/
 	constructor(pbf, end, extent, keys, values) {
 		/** @type {Record<string, number | string | boolean>} */
-		this.properties = {};
+		this.properties = Object.create(null);
 		this.extent = extent;
 		/** @type {0 | 1 | 2 | 3} */
 		this.type = 0;
@@ -14184,9 +14184,25 @@ var VectorTileFeature = class {
 		this._keys = keys;
 		/** @private */
 		this._values = values;
-		pbf.readFields(readFeature, this, end);
+		while (pbf.pos < end) {
+			const tag = pbf.readVarint();
+			if (tag === 8) this.id = pbf.readVarint();
+			else if (tag === 18) {
+				const tagsEnd = pbf.readVarint() + pbf.pos;
+				while (pbf.pos < tagsEnd) {
+					const key = keys[pbf.readVarint()];
+					const value = values[pbf.readVarint()];
+					this.properties[key] = value;
+				}
+			} else if (tag === 24) this.type = pbf.readVarint();
+			else if (tag === 34) {
+				this._geometry = pbf.pos;
+				pbf.skip(tag);
+			} else pbf.skip(tag);
+		}
 	}
 	loadGeometry() {
+		if (this._geometry < 0) throw new Error("feature has no geometry");
 		const pbf = this._pbf;
 		pbf.pos = this._geometry;
 		const end = pbf.readVarint() + pbf.pos;
@@ -14203,15 +14219,17 @@ var VectorTileFeature = class {
 				const cmdLen = pbf.readVarint();
 				cmd = cmdLen & 7;
 				length = cmdLen >> 3;
+				if (length === 0) continue;
 			}
 			length--;
-			if (cmd === 1 || cmd === 2) {
+			if (cmd === 1) {
 				x += pbf.readSVarint();
 				y += pbf.readSVarint();
-				if (cmd === 1) {
-					if (line) lines.push(line);
-					line = [];
-				}
+				if (line) lines.push(line);
+				line = [new Point(x, y)];
+			} else if (cmd === 2) {
+				x += pbf.readSVarint();
+				y += pbf.readSVarint();
 				if (line) line.push(new Point(x, y));
 			} else if (cmd === 7) {
 				if (line) line.push(line[0].clone());
@@ -14221,6 +14239,7 @@ var VectorTileFeature = class {
 		return lines;
 	}
 	bbox() {
+		if (this._geometry < 0) throw new Error("feature has no geometry");
 		const pbf = this._pbf;
 		pbf.pos = this._geometry;
 		const end = pbf.readVarint() + pbf.pos;
@@ -14230,6 +14249,7 @@ var VectorTileFeature = class {
 				const cmdLen = pbf.readVarint();
 				cmd = cmdLen & 7;
 				length = cmdLen >> 3;
+				if (length === 0) continue;
 			}
 			length--;
 			if (cmd === 1 || cmd === 2) {
@@ -14315,29 +14335,6 @@ VectorTileFeature.types = [
 	"LineString",
 	"Polygon"
 ];
-/**
-* @param {number} tag
-* @param {VectorTileFeature} feature
-* @param {Pbf} pbf
-*/
-function readFeature(tag, feature, pbf) {
-	if (tag === 1) feature.id = pbf.readVarint();
-	else if (tag === 2) readTag(pbf, feature);
-	else if (tag === 3) feature.type = pbf.readVarint();
-	else if (tag === 4) feature._geometry = pbf.pos;
-}
-/**
-* @param {Pbf} pbf
-* @param {VectorTileFeature} feature
-*/
-function readTag(pbf, feature) {
-	const end = pbf.readVarint() + pbf.pos;
-	while (pbf.pos < end) {
-		const key = feature._keys[pbf.readVarint()];
-		const value = feature._values[pbf.readVarint()];
-		feature.properties[key] = value;
-	}
-}
 /** classifies an array of rings into polygons with outer rings and holes
 * @param {Point[][]} rings
 */
@@ -14389,7 +14386,19 @@ var VectorTileLayer = class {
 		/** @private
 		* @type {number[]} */
 		this._features = [];
-		pbf.readFields(readLayer, this, end);
+		if (end === void 0) end = pbf.length;
+		while (pbf.pos < end) {
+			const tag = pbf.readVarint();
+			if (tag === 10) this.name = pbf.readString();
+			else if (tag === 18) {
+				this._features.push(pbf.pos);
+				pbf.skip(tag);
+			} else if (tag === 26) this._keys.push(pbf.readString());
+			else if (tag === 34) this._values.push(readValueMessage(pbf));
+			else if (tag === 40) this.extent = pbf.readVarint();
+			else if (tag === 120) this.version = pbf.readVarint();
+			else pbf.skip(tag);
+		}
 		this.length = this._features.length;
 	}
 	/** return feature `i` from this layer as a `VectorTileFeature`
@@ -14403,27 +14412,14 @@ var VectorTileLayer = class {
 	}
 };
 /**
-* @param {number} tag
-* @param {VectorTileLayer} layer
-* @param {Pbf} pbf
-*/
-function readLayer(tag, layer, pbf) {
-	if (tag === 15) layer.version = pbf.readVarint();
-	else if (tag === 1) layer.name = pbf.readString();
-	else if (tag === 5) layer.extent = pbf.readVarint();
-	else if (tag === 2) layer._features.push(pbf.pos);
-	else if (tag === 3) layer._keys.push(pbf.readString());
-	else if (tag === 4) layer._values.push(readValueMessage(pbf));
-}
-/**
 * @param {Pbf} pbf
 */
 function readValueMessage(pbf) {
 	let value = null;
 	const end = pbf.readVarint() + pbf.pos;
 	while (pbf.pos < end) {
-		const tag = pbf.readVarint() >> 3;
-		value = tag === 1 ? pbf.readString() : tag === 2 ? pbf.readFloat() : tag === 3 ? pbf.readDouble() : tag === 4 ? pbf.readVarint64() : tag === 5 ? pbf.readVarint() : tag === 6 ? pbf.readSVarint() : tag === 7 ? pbf.readBoolean() : null;
+		const tag = pbf.readVarint();
+		value = tag === 10 ? pbf.readString() : tag === 21 ? pbf.readFloat() : tag === 25 ? pbf.readDouble() : tag === 32 ? pbf.readVarint64() : tag === 40 ? pbf.readVarint() : tag === 48 ? pbf.readSVarint() : tag === 56 ? pbf.readBoolean() : (pbf.skip(tag), null);
 	}
 	if (value == null) throw new Error("unknown feature value");
 	return value;
@@ -14433,22 +14429,19 @@ var VectorTile = class {
 	* @param {Pbf} pbf
 	* @param {number} [end]
 	*/
-	constructor(pbf, end) {
+	constructor(pbf, end = pbf.length) {
 		/** @type {Record<string, VectorTileLayer>} */
-		this.layers = pbf.readFields(readTile, {}, end);
+		const layers = Object.create(null);
+		while (pbf.pos < end) {
+			const tag = pbf.readVarint();
+			if (tag === 26) {
+				const layer = new VectorTileLayer(pbf, pbf.readVarint() + pbf.pos);
+				if (layer.length) layers[layer.name] = layer;
+			} else pbf.skip(tag);
+		}
+		this.layers = layers;
 	}
 };
-/**
-* @param {number} tag
-* @param {Record<string, VectorTileLayer>} layers
-* @param {Pbf} pbf
-*/
-function readTile(tag, layers, pbf) {
-	if (tag === 3) {
-		const layer = new VectorTileLayer(pbf, pbf.readVarint() + pbf.pos);
-		if (layer.length) layers[layer.name] = layer;
-	}
-}
 //#endregion
 //#region src/util/evented.ts
 function _addEventListener(type, listener, listenerList) {
@@ -60564,7 +60557,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 69296f2";
+const version = "main 09349fb";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
