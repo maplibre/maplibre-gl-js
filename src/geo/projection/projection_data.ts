@@ -2,6 +2,16 @@ import type {mat4} from 'gl-matrix';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
 /**
+ * A 4x4 matrix backed by 32-bit floats for direct use with WebGL matrix uniforms.
+ */
+export type mat4f32 = mat4 & Float32Array;
+
+/**
+ * A 4x4 matrix backed by 64-bit floats for higher-precision CPU-side projection math.
+ */
+export type mat4f64 = mat4 & Float64Array;
+
+/**
  * This type contains all data necessary to project a tile to screen in MapLibre's shader system.
  * Contains data used for both mercator and globe projection.
  */
@@ -10,6 +20,11 @@ export type ProjectionData = {
      * The main projection matrix. For mercator projection, it usually projects in-tile coordinates 0..EXTENT to screen,
      * for globe projection, it projects a unit sphere planet to screen.
      * Uniform name: `u_projection_matrix`.
+     *
+     * Renderer projection matrices are commonly 32-bit (`mat4f32`) because they are passed directly to
+     * WebGL matrix uniforms. Projection matrices exposed to custom layers can be 64-bit (`mat4f64`) to
+     * preserve precision for user transformations before they are uploaded to WebGL. The field is typed as
+     * `mat4` for compatibility with gl-matrix, whose matrix operations do not preserve typed array backing types.
      */
     mainMatrix: mat4;
     /**
@@ -42,6 +57,11 @@ export type ProjectionData = {
      * Fallback matrix that projects the current tile according to mercator projection.
      * Used by globe projection to fall back to mercator projection in an animated way.
      * Uniform name: `u_projection_fallback_matrix`.
+     *
+     * Renderer projection matrices are commonly 32-bit (`mat4f32`) because they are passed directly to
+     * WebGL matrix uniforms. Projection matrices exposed to custom layers can be 64-bit (`mat4f64`) to
+     * preserve precision for user transformations before they are uploaded to WebGL. The field is typed as
+     * `mat4` for compatibility with gl-matrix, whose matrix operations do not preserve typed array backing types.
      */
     fallbackMatrix: mat4;
 };
