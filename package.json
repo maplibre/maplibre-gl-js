@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@mapbox/mapbox-gl-rtl-text": "^0.4.0",
-    "@mapbox/mvt-fixtures": "^3.10.0",
+    "@mapbox/mvt-fixtures": "^4.0.0",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@types/benchmark": "^2.1.5",
     "@types/d3": "^7.4.3",
