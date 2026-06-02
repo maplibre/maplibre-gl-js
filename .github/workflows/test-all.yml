@@ -205,7 +205,7 @@ jobs:
 
       - name: Code Coverage Annotation
         if: github.event.pull_request.head.repo.full_name == github.repository
-        uses: ggilder/codecoverage@9f2933bb9cc49ffb598575216e12c102b0716219
+        uses: ggilder/codecoverage@514398418f7b48751a38255eb34fc74fe6680b1e
         with:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           COVERAGE_FILE_PATH: "./coverage-merged/lcov.info"
