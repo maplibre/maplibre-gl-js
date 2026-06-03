@@ -3678,7 +3678,7 @@ export class Map extends Camera {
         } else if (this.style) {
             // Even if the style didn't change, update per-layer unchanged
             // frame counters so the translucent layer cache can track stability.
-            this.style._updateUnchangedFrameCounters();
+            this.style.updateUnchangedFrameCounters();
         }
 
         const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;

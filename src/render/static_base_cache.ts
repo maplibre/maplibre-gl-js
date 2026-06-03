@@ -48,7 +48,7 @@ export class StaticBaseCache {
      * Uses unblended (replace) mode since the cache includes the full
      * screen content (opaque pass + cached translucent layers).
      */
-    _blitCacheToScreen(painter: Painter): void {
+    blitCacheToScreen(painter: Painter): void {
         const context = painter.context;
         const gl = context.gl;
 

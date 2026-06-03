@@ -145,7 +145,7 @@ export class StaticBaseCacheManager {
 
         if (cacheValid) {
             // Reuse existing cache — blit cached texture then skip to remaining layers
-            cache._blitCacheToScreen(painter);
+            cache.blitCacheToScreen(painter);
             painter.clearStencil();
             cacheStartLayer = cache._cachedLayerCount;
         } else if (!cameraMoving && !hasActiveTransition && stableLayerCount >= this.minLayers) {

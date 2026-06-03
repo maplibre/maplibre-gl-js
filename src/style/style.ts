@@ -769,14 +769,14 @@ export class Style extends Evented {
             this.light.updateTransitions(parameters);
             this.sky.updateTransitions(parameters);
 
-            this._updateUnchangedFrameCounters();
+            this.updateUnchangedFrameCounters();
 
             this._resetUpdates();
         } else {
             // Even when no style properties changed, update per-layer
             // unchanged frame counters (e.g. when _styleDirty is true only
             // because a source like canvas/video has transitions).
-            this._updateUnchangedFrameCounters();
+            this.updateUnchangedFrameCounters();
         }
 
         const managersUsedBefore = {};
@@ -857,7 +857,7 @@ export class Style extends Evented {
         });
     }
 
-    _updateUnchangedFrameCounters(): void {
+    updateUnchangedFrameCounters(): void {
         const reloadedSources = new Set<string>();
         for (const id in this._updatedSources) {
             if (this._updatedSources[id] === 'reload') {

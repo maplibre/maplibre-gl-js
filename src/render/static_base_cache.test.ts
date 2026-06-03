@@ -75,7 +75,7 @@ describe('StaticBaseCache', () => {
         expect(destroySpy).toHaveBeenCalled();
     });
 
-    test('_blitCacheToScreen binds texture and draws quad', () => {
+    test('blitCacheToScreen binds texture and draws quad', () => {
         const manager = painter.staticBaseCache;
         const cache = manager._cache;
         manager.captureCache(painter.context, painter.width, painter.height, 5);
@@ -83,7 +83,7 @@ describe('StaticBaseCache', () => {
         const drawSpy = vi.fn();
         vi.spyOn(painter, 'useProgram').mockReturnValue({draw: drawSpy} as any);
 
-        cache._blitCacheToScreen(painter);
+        cache.blitCacheToScreen(painter);
 
         expect(gl.bindTexture).toHaveBeenCalledWith(
             gl.TEXTURE_2D, cache._texture.texture
