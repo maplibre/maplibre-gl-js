@@ -434,7 +434,7 @@ export type MapOptions = {
      * If `true`, the first N stable translucent layers are cached into a texture
      * and reused across frames, avoiding redundant re-rendering when only upper
      * layers change and the camera is static.
-     * @defaultValue true
+     * @defaultValue false
      */
     optimizeStaticBase?: boolean;
 };
@@ -810,8 +810,8 @@ export class Map extends Camera {
         this._setupPainter();
         if (!this.painter) return;
 
-        this.on('move', () => this._update(false));
-        this.on('moveend', () => this._update(false));
+        this.on('move', () => this._update(false, true));
+        this.on('moveend', () => this._update());
         this.on('zoom', () => this._update(true));
         this.on('terrain', () => {
             this.painter.terrainFacilitator.depthDirty = true;
@@ -870,11 +870,8 @@ export class Map extends Camera {
                 this.jumpTo(coercedOptions);
             }
         });
-        this.on('move', () => {
-            this.painter?.staticBaseCache.invalidate();
-        });
         this.on('data', (event: MapDataEvent) => {
-            this._update(event.dataType === 'style');
+            this._update(event.dataType === 'style', false);
             this.fire(new Event(`${event.dataType}data`, event));
         });
         this.on('dataloading', (event: MapDataEvent) => {
@@ -2868,8 +2865,7 @@ export class Map extends Camera {
     addLayer(layer: AddLayerObject, beforeId?: string): this {
         this._lazyInitEmptyStyle();
         this.style.addLayer(layer, beforeId);
-        this.painter?.staticBaseCache.invalidate();
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -2904,8 +2900,7 @@ export class Map extends Camera {
      */
     removeLayer(id: string): this {
         this.style.removeLayer(id);
-        this.painter?.staticBaseCache.invalidate();
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -2963,8 +2958,7 @@ export class Map extends Camera {
      */
     setLayerZoomRange(layerId: string, minzoom: number, maxzoom: number): this {
         this.style.setLayerZoomRange(layerId, minzoom, maxzoom);
-        this.painter?.staticBaseCache.invalidate();
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -3002,8 +2996,7 @@ export class Map extends Camera {
      */
     setFilter(layerId: string, filter?: FilterSpecification | null, options: StyleSetterOptions = {}): this {
         this.style.setFilter(layerId, filter, options);
-        this.painter?.staticBaseCache.invalidate();
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -3034,8 +3027,7 @@ export class Map extends Camera {
      */
     setPaintProperty<K extends keyof AllPaintProperties>(layerId: string, name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}): this {
         this.style.setPaintProperty(layerId, name, value, options);
-        this.painter?.staticBaseCache.invalidate();
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -3063,8 +3055,7 @@ export class Map extends Camera {
      */
     setLayoutProperty<K extends keyof AllLayoutProperties>(layerId: string, name: K, value: AllLayoutProperties[K], options: StyleSetterOptions = {}): this {
         this.style.setLayoutProperty(layerId, name, value, options);
-        this.painter?.staticBaseCache.invalidate();
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -3184,8 +3175,7 @@ export class Map extends Camera {
     setLight(light: LightSpecification, options: StyleSetterOptions = {}): this {
         this._lazyInitEmptyStyle();
         this.style.setLight(light, options);
-        this.painter?.staticBaseCache.invalidate();
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -3211,8 +3201,7 @@ export class Map extends Camera {
     setSky(sky: SkySpecification, options: StyleSetterOptions = {}): this {
         this._lazyInitEmptyStyle();
         this.style.setSky(sky, options);
-        this.painter?.staticBaseCache.invalidate();
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -3267,8 +3256,7 @@ export class Map extends Camera {
      */
     setFeatureState(feature: FeatureIdentifier, state: any): this {
         this.style.setFeatureState(feature, state);
-        this.painter?.staticBaseCache.invalidate();
-        return this._update();
+        return this._update(false, true);
     }
 
     /**
@@ -3319,8 +3307,7 @@ export class Map extends Camera {
      */
     removeFeatureState(target: FeatureIdentifier, key?: string): this {
         this.style.removeFeatureState(target, key);
-        this.painter?.staticBaseCache.invalidate();
-        return this._update();
+        return this._update(false, true);
     }
 
     /**
@@ -3607,12 +3594,16 @@ export class Map extends Camera {
      *
      * @param updateStyle - mark the map's style for reprocessing as
      * well as its sources
+     * @param invalidateStaticBaseCache - force the static base cache to be invalidated
      */
-    _update(updateStyle?: boolean): this {
+    _update(updateStyle: boolean = false, invalidateStaticBaseCache: boolean = false): this {
         if (!this.style?._loaded) return this;
 
         this._styleDirty ||= updateStyle;
         this._sourcesDirty = true;
+        if (invalidateStaticBaseCache) {
+            this.painter?.staticBaseCache.invalidate();
+        }
         this.triggerRepaint();
 
         return this;
