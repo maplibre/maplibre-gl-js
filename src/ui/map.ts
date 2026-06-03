@@ -811,7 +811,7 @@ export class Map extends Camera {
         if (!this.painter) return;
 
         this.on('move', () => this._update(false, true));
-        this.on('moveend', () => this._update());
+        this.on('moveend', () => this._update(false));
         this.on('zoom', () => this._update(true));
         this.on('terrain', () => {
             this.painter.terrainFacilitator.depthDirty = true;
@@ -871,7 +871,7 @@ export class Map extends Camera {
             }
         });
         this.on('data', (event: MapDataEvent) => {
-            this._update(event.dataType === 'style', false);
+            this._update(event.dataType === 'style');
             this.fire(new Event(`${event.dataType}data`, event));
         });
         this.on('dataloading', (event: MapDataEvent) => {
@@ -3596,7 +3596,7 @@ export class Map extends Camera {
      * well as its sources
      * @param invalidateStaticBaseCache - force the static base cache to be invalidated
      */
-    _update(updateStyle: boolean = false, invalidateStaticBaseCache: boolean = false): this {
+    _update(updateStyle?: boolean, invalidateStaticBaseCache?: boolean): this {
         if (!this.style?._loaded) return this;
 
         this._styleDirty ||= updateStyle;
