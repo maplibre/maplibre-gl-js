@@ -533,7 +533,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     terrainSkirtLength: 'auto',
     zoomLevelsToOverscale: 4,
     anisotropicFilterPitch: defaultAnisotropicFilterPitch,
-    optimizeStaticBase: true,
+    optimizeStaticBase: false,
 };
 
 /**
