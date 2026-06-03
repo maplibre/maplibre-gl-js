@@ -816,8 +816,12 @@ export class MercatorTransform implements ITransform {
         return m;
     }
 
-    getProjectionDataForCustomLayer(_applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
+    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const projectionData: CustomLayerProjectionData = this.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix});
+
+        projectionData.tileMercatorCoords = [0, 0, 1, 1];
+
         const tileMatrix = calculateTileMatrix(tileID, this.worldSize);
         mat4.multiply(tileMatrix, this._viewProjMatrix, tileMatrix);
 
@@ -833,13 +837,9 @@ export class MercatorTransform implements ITransform {
         const projectionMatrixScaled = createMat4f64();
         mat4.scale(projectionMatrixScaled, tileMatrix, scale);
 
-        return {
-            mainMatrix: projectionMatrixScaled,
-            tileMercatorCoords: [0, 0, 1, 1],
-            clippingPlane: [0, 0, 0, 0],
-            projectionTransition: 0.0,
-            fallbackMatrix: projectionMatrixScaled,
-        };
+        projectionData.fallbackMatrix = projectionMatrixScaled;
+        projectionData.mainMatrix = projectionMatrixScaled;
+        return projectionData;
     }
 
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
