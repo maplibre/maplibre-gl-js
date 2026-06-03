@@ -2477,7 +2477,7 @@ export class Map extends Camera {
      * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/add-live-realtime-data/)
      */
     getSource<TSource extends Source>(id: string): TSource | undefined {
-        return this.style.getSource(id) as TSource;
+        return this.style?.getSource(id) as TSource | undefined;
     }
 
     /**
@@ -2770,7 +2770,7 @@ export class Map extends Camera {
      * ```
      */
     listImages(): string[] {
-        return this.style.listImages();
+        return this.style?.listImages() ?? [];
     }
 
     /**
@@ -2908,7 +2908,7 @@ export class Map extends Camera {
      * @see [Filter symbols by text input](https://maplibre.org/maplibre-gl-js/docs/examples/filter-symbols-by-text-input/)
      */
     getLayer(id: string): StyleLayer | undefined {
-        return this.style.getLayer(id);
+        return this.style?.getLayer(id);
     }
 
     /**
@@ -2922,7 +2922,7 @@ export class Map extends Camera {
      * ```
      */
     getLayersOrder(): string[] {
-        return this.style.getLayersOrder();
+        return this.style?.getLayersOrder() ?? [];
     }
 
     /**
@@ -2985,7 +2985,7 @@ export class Map extends Camera {
      * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-time-slider/)
      */
     setFilter(layerId: string, filter?: FilterSpecification | null, options: StyleSetterOptions = {}): this {
-        this.style.setFilter(layerId, filter, options);
+        this.style?.setFilter(layerId, filter, options);
         return this._update(true);
     }
 
@@ -3016,7 +3016,7 @@ export class Map extends Camera {
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
      */
     setPaintProperty<K extends keyof AllPaintProperties>(layerId: string, name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}): this {
-        this.style.setPaintProperty(layerId, name, value, options);
+        this.style?.setPaintProperty(layerId, name, value, options);
         return this._update(true);
     }
 
