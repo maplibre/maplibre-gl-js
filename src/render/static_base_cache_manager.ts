@@ -38,7 +38,7 @@ export class StaticBaseCacheManager {
      * with active transitions or incomplete tiles, or uses dynamic images.
      */
     _isLayerCacheable(layer: StyleLayer, imageManager: ImageManager, tileManagers: {[_: string]: TileManager}): boolean {
-        if (layer.type === 'custom' || layer._unchangedFrameCount < this.stabilityThreshold) {
+        if (layer.type === 'custom' || layer.unchangedFrameCount < this.stabilityThreshold) {
             return false;
         }
         if (layer.source && tileManagers[layer.source]) {
