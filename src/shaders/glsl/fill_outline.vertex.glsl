@@ -15,6 +15,7 @@ void main() {
     #pragma mapbox: initialize highp vec4 outline_color
     #pragma mapbox: initialize lowp float opacity
 
+    // Move vertex outside clip space to discard triangle when opacity is negligible
     if (opacity < 0.01) {
         gl_Position = vec4(-2.0, -2.0, -2.0, 1.0);
         return;

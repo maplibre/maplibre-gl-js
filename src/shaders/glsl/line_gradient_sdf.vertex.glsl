@@ -54,6 +54,7 @@ void main() {
     #pragma mapbox: initialize mediump vec4 dasharray_from
     #pragma mapbox: initialize mediump vec4 dasharray_to
 
+    // Move vertex outside clip space to discard triangle when opacity is negligible
     if (opacity < 0.01) {
         gl_Position = vec4(-2.0, -2.0, -2.0, 1.0);
         return;
