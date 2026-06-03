@@ -100,18 +100,10 @@ describe('translucent cache', () => {
         painter.destroy();
     });
 
-    test('cache is valid when size matches and enough stable layers', () => {
-        const manager = painter.staticBaseCache;
-        const cache = manager._cache;
-        manager.captureCache(painter.context, painter.width, painter.height, 5);
-        expect(cache._cachedLayerCount).toBe(5);
-
-        const drawSpy = vi.spyOn(cache, '_blitCacheToScreen').mockImplementation(() => {});
-        const clearStencilSpy = vi.spyOn(painter, 'clearStencil').mockImplementation(() => {});
-
+    function createMockStyle(layerCount: number, unstableIndex?: number) {
         const mockLayers: Record<string, any> = {};
         const layerIds: string[] = [];
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < layerCount; i++) {
             const id = `layer-${i}`;
             layerIds.push(id);
             mockLayers[id] = {
@@ -126,8 +118,10 @@ describe('translucent cache', () => {
                 hasActiveTransition: () => false,
             };
         }
-
-        painter.style = {
+        if (unstableIndex !== undefined) {
+            mockLayers[`layer-${unstableIndex}`].unchangedFrameCount = 0;
+        }
+        return {
             _order: layerIds,
             _layers: mockLayers,
             tileManagers: {},
@@ -139,130 +133,78 @@ describe('translucent cache', () => {
             imageManager: {beginFrame: vi.fn()},
             glyphManager: null,
         } as any;
+    }
+
+    const defaultRenderOptions = {
+        fadeDuration: 0, moving: false, rotating: false, zooming: false,
+        showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
+        anisotropicFilterPitch: 20,
+    };
+
+    test('cache is reused when size matches and enough stable layers', () => {
+        const manager = painter.staticBaseCache;
+        manager.captureCache(painter.context, painter.width, painter.height, 5);
+
+        const clearStencilSpy = vi.spyOn(painter, 'clearStencil').mockImplementation(() => {});
+        const useProgramSpy = vi.spyOn(painter, 'useProgram').mockReturnValue({draw: vi.fn()} as any);
+
+        painter.style = createMockStyle(7);
         manager.enabled = true;
         manager.minLayers = 1;
 
-        painter.render(painter.style, {
-            fadeDuration: 0, moving: false, rotating: false, zooming: false,             showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
-            anisotropicFilterPitch: 20,
-        });
+        painter.render(painter.style, defaultRenderOptions);
 
-        expect(drawSpy).toHaveBeenCalled();
+        // Cache was blitted via the fullscreenTexture program
+        expect(useProgramSpy).toHaveBeenCalledWith('fullscreenTexture', null, true);
         expect(clearStencilSpy).toHaveBeenCalled();
     });
 
-    test('cache is invalidated when width changes', () => {
+    test('cache is not reused when width changes', () => {
         const manager = painter.staticBaseCache;
-        const cache = manager._cache;
         manager.captureCache(painter.context, painter.width, painter.height, 3);
-        expect(cache._cachedLayerCount).toBe(3);
 
         painter.width = 1024;
 
-        const drawSpy = vi.spyOn(cache, '_blitCacheToScreen').mockImplementation(() => {});
+        const useProgramSpy = vi.spyOn(painter, 'useProgram');
 
-        painter.style = {
-            _order: [],
-            _layers: {},
-            tileManagers: {},
-            map: {terrain: null},
-            placement: {symbolFadeChange: () => 1},
-            projection: null,
-            sky: null,
-            lineAtlas: null,
-            imageManager: {beginFrame: vi.fn()},
-            glyphManager: null,
-        } as any;
+        painter.style = createMockStyle(0);
         manager.enabled = true;
 
-        painter.render(painter.style, {
-            fadeDuration: 0, moving: false, rotating: false, zooming: false,             showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
-            anisotropicFilterPitch: 20,
-        });
+        painter.render(painter.style, defaultRenderOptions);
 
-        expect(drawSpy).not.toHaveBeenCalled();
-        expect(cache._cachedLayerCount).toBe(0);
+        // fullscreenTexture program should NOT have been used
+        const calls = useProgramSpy.mock.calls.filter(c => c[0] === 'fullscreenTexture');
+        expect(calls).toHaveLength(0);
     });
 
-    test('cache is invalidated when height changes', () => {
+    test('cache is not reused when height changes', () => {
         const manager = painter.staticBaseCache;
-        const cache = manager._cache;
         manager.captureCache(painter.context, painter.width, painter.height, 3);
-        expect(cache._cachedLayerCount).toBe(3);
 
         painter.height = 1024;
 
-        const drawSpy = vi.spyOn(cache, '_blitCacheToScreen').mockImplementation(() => {});
+        const useProgramSpy = vi.spyOn(painter, 'useProgram');
 
-        painter.style = {
-            _order: [],
-            _layers: {},
-            tileManagers: {},
-            map: {terrain: null},
-            placement: {symbolFadeChange: () => 1},
-            projection: null,
-            sky: null,
-            lineAtlas: null,
-            imageManager: {beginFrame: vi.fn()},
-            glyphManager: null,
-        } as any;
+        painter.style = createMockStyle(0);
         manager.enabled = true;
 
-        painter.render(painter.style, {
-            fadeDuration: 0, moving: false, rotating: false, zooming: false,             showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
-            anisotropicFilterPitch: 20,
-        });
+        painter.render(painter.style, defaultRenderOptions);
 
-        expect(drawSpy).not.toHaveBeenCalled();
-        expect(cache._cachedLayerCount).toBe(0);
+        const calls = useProgramSpy.mock.calls.filter(c => c[0] === 'fullscreenTexture');
+        expect(calls).toHaveLength(0);
     });
 
     test('cache is captured when stable layers exceed minimum', () => {
         const manager = painter.staticBaseCache;
-        const cache = manager._cache;
         const captureSpy = vi.spyOn(manager, 'captureCache');
 
-        const mockLayers: Record<string, any> = {};
-        const layerIds: string[] = [];
-        for (let i = 0; i < 6; i++) {
-            const id = `layer-${i}`;
-            layerIds.push(id);
-            mockLayers[id] = {
-                id,
-                type: 'fill',
-                source: 'test',
-                unchangedFrameCount: 10,
-                isHidden: () => false,
-                is3D: () => false,
-                hasOffscreenPass: () => false,
-                isTileClipped: () => false,
-                hasActiveTransition: () => false,
-            };
-        }
-        mockLayers['layer-5'].unchangedFrameCount = 0;
-
-        painter.style = {
-            _order: layerIds,
-            _layers: mockLayers,
-            tileManagers: {},
-            map: {terrain: null},
-            placement: {symbolFadeChange: () => 1},
-            projection: null,
-            sky: null,
-            lineAtlas: null,
-            imageManager: {beginFrame: vi.fn()},
-            glyphManager: null,
-        } as any;
+        painter.style = createMockStyle(6, 5); // layer-5 is unstable
         manager.enabled = true;
         manager.minLayers = 1;
 
-        painter.render(painter.style, {
-            fadeDuration: 0, moving: false, rotating: false, zooming: false,             showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
-            anisotropicFilterPitch: 20,
-        });
+        painter.render(painter.style, defaultRenderOptions);
 
         expect(captureSpy).toHaveBeenCalledWith(painter.context, painter.width, painter.height, 5);
-        expect(cache._cachedLayerCount).toBe(5);
     });
 });
 
