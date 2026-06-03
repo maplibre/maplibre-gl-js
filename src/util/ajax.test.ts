@@ -134,19 +134,21 @@ describe('ajax', () => {
         }
     });
 
-    test('getReferrer method (outside Worker)', () => {
+    test('getReferrer method (outside Worker), same origin https URL', () => {
         vi.spyOn(window, 'location', 'get').mockReturnValue({
             href: 'https://somewhere.com',
             protocol: 'https:'
         } as any);
 
         expect(getReferrer()).toBe('https://somewhere.com');
+    });
 
+    test('getReferrer method (outside Worker), same origin blob URL', () => {
         vi.spyOn(window, 'parent', 'get').mockReturnValue({
             location: {
                 href: 'https://somewhere.com',
                 protocol: 'https:',
-                host: 'elsewhere.com'
+                host: 'somewhere.com'
             }
         } as any);
         vi.spyOn(window, 'location', 'get').mockReturnValue({
@@ -156,7 +158,9 @@ describe('ajax', () => {
         } as any);
 
         expect(getReferrer()).toBe('https://somewhere.com');
+    });
 
+    test('getReferrer method (outside Worker), different origin https URL', () => {
         vi.spyOn(window, 'parent', 'get').mockReturnValue({
             location: {
                 get href() {
@@ -169,6 +173,34 @@ describe('ajax', () => {
                     throw new DOMException();
                 }
             }
+        } as any);
+        vi.spyOn(window, 'location', 'get').mockReturnValue({
+            href: 'https://somewhere.com',
+            protocol: 'https:',
+            host: 'somewhere.com'
+        } as any);
+
+        expect(getReferrer()).toBe('https://somewhere.com');
+    });
+
+    test('getReferrer method (outside Worker), different origin blob URL', () => {
+        vi.spyOn(window, 'parent', 'get').mockReturnValue({
+            location: {
+                get href() {
+                    throw new DOMException();
+                },
+                get protocol() {
+                    throw new DOMException();
+                },
+                get host() {
+                    throw new DOMException();
+                }
+            }
+        } as any);
+        vi.spyOn(window, 'location', 'get').mockReturnValue({
+            href: 'blob:https://somewhere.com/123e4567-e89b-12d3-a456-426614174000',
+            protocol: 'blob:',
+            host: ''
         } as any);
 
         expect(getReferrer()).toBe('blob:https://somewhere.com/123e4567-e89b-12d3-a456-426614174000');
