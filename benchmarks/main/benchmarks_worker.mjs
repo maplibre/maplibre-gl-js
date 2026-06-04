@@ -320,60 +320,40 @@ Point.convert = function(p) {
 	throw new Error("Expected [x, y] or {x, y} point format");
 };
 //#endregion
-//#region src/util/offscreen_canvas_supported.ts
-var import_unitbezier$1 = /* @__PURE__ */ __toESM$1((/* @__PURE__ */ __commonJSMin$1(((exports, module) => {
-	module.exports = UnitBezier;
-	function UnitBezier(p1x, p1y, p2x, p2y) {
-		this.cx = 3 * p1x;
-		this.bx = 3 * (p2x - p1x) - this.cx;
-		this.ax = 1 - this.cx - this.bx;
-		this.cy = 3 * p1y;
-		this.by = 3 * (p2y - p1y) - this.cy;
-		this.ay = 1 - this.cy - this.by;
-		this.p1x = p1x;
-		this.p1y = p1y;
-		this.p2x = p2x;
-		this.p2y = p2y;
-	}
-	UnitBezier.prototype = {
-		sampleCurveX: function(t) {
-			return ((this.ax * t + this.bx) * t + this.cx) * t;
-		},
-		sampleCurveY: function(t) {
-			return ((this.ay * t + this.by) * t + this.cy) * t;
-		},
-		sampleCurveDerivativeX: function(t) {
-			return (3 * this.ax * t + 2 * this.bx) * t + this.cx;
-		},
-		solveCurveX: function(x, epsilon) {
-			if (epsilon === void 0) epsilon = 1e-6;
-			if (x < 0) return 0;
-			if (x > 1) return 1;
-			var t = x;
-			for (var i = 0; i < 8; i++) {
-				var x2 = this.sampleCurveX(t) - x;
-				if (Math.abs(x2) < epsilon) return t;
-				var d2 = this.sampleCurveDerivativeX(t);
-				if (Math.abs(d2) < 1e-6) break;
-				t = t - x2 / d2;
-			}
-			var t0 = 0;
-			var t1 = 1;
-			t = x;
-			for (i = 0; i < 20; i++) {
-				x2 = this.sampleCurveX(t);
-				if (Math.abs(x2 - x) < epsilon) break;
-				if (x > x2) t0 = t;
-				else t1 = t;
-				t = (t1 - t0) * .5 + t0;
-			}
-			return t;
-		},
-		solve: function(x, epsilon) {
-			return this.sampleCurveY(this.solveCurveX(x, epsilon));
+//#region node_modules/@mapbox/unitbezier/index.js
+function unitBezier(p1x, p1y, p2x, p2y) {
+	const cx = 3 * p1x;
+	const bx = 3 * (p2x - p1x) - cx;
+	const ax = 1 - cx - bx;
+	const cy = 3 * p1y;
+	const by = 3 * (p2y - p1y) - cy;
+	const ay = 1 - cy - by;
+	return function solve(x, epsilon = 1e-6) {
+		if (x <= 0) return 0;
+		if (x >= 1) return 1;
+		let t = x;
+		for (let i = 0; i < 8; i++) {
+			const x2 = ((ax * t + bx) * t + cx) * t - x;
+			if (Math.abs(x2) < epsilon) return ((ay * t + by) * t + cy) * t;
+			const d2 = (3 * ax * t + 2 * bx) * t + cx;
+			if (Math.abs(d2) < 1e-6) break;
+			t -= x2 / d2;
 		}
+		let t0 = 0;
+		let t1 = 1;
+		t = x;
+		for (let i = 0; i < 20; i++) {
+			const x2 = ((ax * t + bx) * t + cx) * t;
+			if (Math.abs(x2 - x) < epsilon) break;
+			if (x > x2) t0 = t;
+			else t1 = t;
+			t = (t0 + t1) * .5;
+		}
+		return ((ay * t + by) * t + cy) * t;
 	};
-})))(), 1);
+}
+//#endregion
+//#region src/util/offscreen_canvas_supported.ts
 let supportsOffscreenCanvas;
 function offscreenCanvasSupported() {
 	supportsOffscreenCanvas ??= typeof OffscreenCanvas !== "undefined" && new OffscreenCanvas(1, 1).getContext("2d") && typeof createImageBitmap === "function";
@@ -523,10 +503,7 @@ function easeCubicInOut(t) {
 * @param p2y - control point 2 y coordinate
 */
 function bezier(p1x, p1y, p2x, p2y) {
-	const bezier = new import_unitbezier$1.default(p1x, p1y, p2x, p2y);
-	return (t) => {
-		return bezier.solve(t);
-	};
+	return unitBezier(p1x, p1y, p2x, p2y);
 }
 bezier(.25, .1, .25, 1);
 /**
@@ -24099,6 +24076,48 @@ var LengthType;
 })(LengthType || (LengthType = {}));
 //#endregion
 //#region node_modules/@maplibre/mlt/dist/metadata/tile/streamMetadataDecoder.js
+const PHYSICAL_STREAM_TYPE_BY_ID = [
+	PhysicalStreamType.PRESENT,
+	PhysicalStreamType.DATA,
+	PhysicalStreamType.OFFSET,
+	PhysicalStreamType.LENGTH
+];
+const LOGICAL_LEVEL_TECHNIQUE_BY_ID = [
+	LogicalLevelTechnique.NONE,
+	LogicalLevelTechnique.DELTA,
+	LogicalLevelTechnique.COMPONENTWISE_DELTA,
+	LogicalLevelTechnique.RLE,
+	LogicalLevelTechnique.MORTON,
+	LogicalLevelTechnique.PDE
+];
+const PHYSICAL_LEVEL_TECHNIQUE_BY_ID = [
+	PhysicalLevelTechnique.NONE,
+	PhysicalLevelTechnique.FAST_PFOR,
+	PhysicalLevelTechnique.VARINT
+];
+const DICTIONARY_TYPE_BY_ID = [
+	DictionaryType.NONE,
+	DictionaryType.SINGLE,
+	DictionaryType.SHARED,
+	DictionaryType.VERTEX,
+	DictionaryType.MORTON,
+	DictionaryType.FSST
+];
+const OFFSET_TYPE_BY_ID = [
+	OffsetType.VERTEX,
+	OffsetType.INDEX,
+	OffsetType.STRING,
+	OffsetType.KEY
+];
+const LENGTH_TYPE_BY_ID = [
+	LengthType.VAR_BINARY,
+	LengthType.GEOMETRIES,
+	LengthType.PARTS,
+	LengthType.RINGS,
+	LengthType.TRIANGLES,
+	LengthType.SYMBOL,
+	LengthType.DICTIONARY
+];
 function decodeStreamMetadata(tile, offset) {
 	const streamMetadata = decodeStreamMetadataInternal(tile, offset);
 	if (streamMetadata.logicalLevelTechnique1 === LogicalLevelTechnique.MORTON) return decodePartialMortonEncodedStreamMetadata(streamMetadata, tile, offset);
@@ -24137,24 +24156,24 @@ function decodePartialRleEncodedStreamMetadata(streamMetadata, tile, offset) {
 }
 function decodeStreamMetadataInternal(tile, offset) {
 	const stream_type = tile[offset.get()];
-	const physicalStreamType = Object.values(PhysicalStreamType)[stream_type >> 4];
-	let logicalStreamType = null;
+	const physicalStreamType = PHYSICAL_STREAM_TYPE_BY_ID[stream_type >> 4];
+	let logicalStreamType = {};
 	switch (physicalStreamType) {
 		case PhysicalStreamType.DATA:
-			logicalStreamType = { dictionaryType: Object.values(DictionaryType)[stream_type & 15] };
+			logicalStreamType = { dictionaryType: DICTIONARY_TYPE_BY_ID[stream_type & 15] };
 			break;
 		case PhysicalStreamType.OFFSET:
-			logicalStreamType = { offsetType: Object.values(OffsetType)[stream_type & 15] };
+			logicalStreamType = { offsetType: OFFSET_TYPE_BY_ID[stream_type & 15] };
 			break;
 		case PhysicalStreamType.LENGTH:
-			logicalStreamType = { lengthType: Object.values(LengthType)[stream_type & 15] };
+			logicalStreamType = { lengthType: LENGTH_TYPE_BY_ID[stream_type & 15] };
 			break;
 	}
 	offset.increment();
 	const encodings_header = tile[offset.get()];
-	const llt1 = Object.values(LogicalLevelTechnique)[encodings_header >> 5];
-	const llt2 = Object.values(LogicalLevelTechnique)[encodings_header >> 2 & 7];
-	const plt = Object.values(PhysicalLevelTechnique)[encodings_header & 3];
+	const llt1 = LOGICAL_LEVEL_TECHNIQUE_BY_ID[encodings_header >> 5];
+	const llt2 = LOGICAL_LEVEL_TECHNIQUE_BY_ID[encodings_header >> 2 & 7];
+	const plt = PHYSICAL_LEVEL_TECHNIQUE_BY_ID[encodings_header & 3];
 	offset.increment();
 	const sizeInfo = decodeVarintInt32(tile, offset, 2);
 	const numValues = sizeInfo[0];
