@@ -133,8 +133,10 @@ export class VectorTileWorkerSource implements WorkerSource {
 
         if (parseState) {
             const {rawData, cacheControl, resourceTiming} = parseState;
+            // Overzoomed tiles are always re-encoded to MVT protobuf by _getOverzoomTile
+            const encoding = params.overzoomParameters ? 'mvt' : params.encoding;
             // Transferring a copy of rawTileData because the worker needs to retain its copy.
-            result = extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
+            result = extend({rawTileData: rawData.slice(0), encoding}, result, cacheControl, resourceTiming);
         }
 
         return result;
