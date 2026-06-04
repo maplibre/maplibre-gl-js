@@ -818,11 +818,9 @@ export class MercatorTransform implements ITransform {
 
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const projectionData: CustomLayerProjectionData = this.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix});
+        const rendererProjectionData = this.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix});
         const tileMatrix = calculateTileMatrix(tileID, this.worldSize);
         mat4.multiply(tileMatrix, this._viewProjMatrix, tileMatrix);
-
-        projectionData.tileMercatorCoords = [0, 0, 1, 1];
 
         // Even though we requested projection data for the mercator base tile which covers the entire mercator range,
         // the shader projection machinery still expects inputs to be in tile units range [0..EXTENT].
@@ -836,9 +834,12 @@ export class MercatorTransform implements ITransform {
         const projectionMatrixScaled = createMat4f64();
         mat4.scale(projectionMatrixScaled, tileMatrix, scale);
 
-        projectionData.fallbackMatrix = projectionMatrixScaled;
-        projectionData.mainMatrix = projectionMatrixScaled;
-        return projectionData;
+        return {
+            ...rendererProjectionData,
+            tileMercatorCoords: [0, 0, 1, 1],
+            fallbackMatrix: projectionMatrixScaled,
+            mainMatrix: projectionMatrixScaled,
+        };
     }
 
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
