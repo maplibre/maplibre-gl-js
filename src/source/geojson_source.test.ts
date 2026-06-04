@@ -186,6 +186,25 @@ describe('GeoJSONSource.setData', () => {
         expect(source.loaded()).toBeTruthy();
     });
 
+    test('resolves the returned promise only after the queued update completes', async () => {
+        let spy = vi.fn();
+        const source = new GeoJSONSource('id', {data: {}} as any, wrapDispatcher({
+            sendAsync(message) {
+                return new Promise((resolve) => {
+                    setTimeout(() => { spy(message); resolve({}); }, 0);
+                });
+            }
+        }), undefined);
+
+        const firstPromise = source.setData({} as GeoJSON.GeoJSON);
+        const secondPromise = source.setData({} as GeoJSON.GeoJSON);
+
+        await secondPromise;
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(source.loaded()).toBeTruthy();
+        await firstPromise;
+    });
+
     test('marks source as not loaded before firing "dataloading" event', async () => {
         const source = createSource();
         const setDataPromise = source.once('dataloading');
@@ -393,9 +412,7 @@ describe('GeoJSONSource.update', () => {
         // Immediately modify data again, and update cluster options
         const sourceData2 = {id: 'test-2', type: 'FeatureCollection', features: []} as GeoJSON.GeoJSON;
         source.setData(sourceData2);
-        source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
-
-        await sleep(0);
+        await source.setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
 
         expect(spy).toHaveBeenCalledTimes(3);
         expect(spy.mock.calls[0][0].type).toBe(MessageType.loadData);
@@ -667,6 +684,27 @@ describe('GeoJSONSource.getData', () => {
         source.load();
         const data = await source.getData();
         expect(data).toStrictEqual(hawkHill);
+    });
+
+    test('returns added features from getData when updateData is called immediately after initialization', async () => {
+        const source = new GeoJSONSource('id', {data: {type: 'FeatureCollection', features: []}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.load();
+
+        const diff: GeoJSONSourceDiff = {
+            add: [
+                {type: 'Feature', id: 0, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}},
+                {type: 'Feature', id: 1, properties: {}, geometry: {type: 'Point', coordinates: [1, 1]}},
+            ]
+        };
+        await source.updateData(diff);
+        const data = await source.getData();
+        expect(data).toStrictEqual({
+            type: 'FeatureCollection',
+            features: [
+                {type: 'Feature', id: 0, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}},
+                {type: 'Feature', id: 1, properties: {}, geometry: {type: 'Point', coordinates: [1, 1]}},
+            ]
+        });
     });
 
     test('waits for data to load when source is updateable after update data', async () => {
