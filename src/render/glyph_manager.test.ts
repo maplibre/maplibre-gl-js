@@ -239,4 +239,66 @@ describe('GlyphManager', () => {
         await manager.getGlyphs({'Arial Unicode MS': [0x30c6]});
         expect(langSpy).toHaveBeenCalledWith(expect.objectContaining({lang: 'zh'}));
     });
+
+    describe('document.fonts.load integration', () => {
+        const installDocumentFontsMock = (impl: (font: string) => Promise<unknown>) => {
+            const loadSpy = vi.fn(impl);
+            Object.defineProperty(document, 'fonts', {
+                configurable: true,
+                value: {load: loadSpy}
+            });
+            return loadSpy;
+        };
+
+        afterEach(() => {
+            // Remove the mocked FontFaceSet so other tests see the original (absent) jsdom state.
+            delete (document as any).fonts;
+        });
+
+        test('awaits document.fonts.load before instantiating TinySDF', async () => {
+            const order: string[] = [];
+            const loadSpy = installDocumentFontsMock(() => {
+                order.push('fonts.load');
+                return Promise.resolve([]);
+            });
+            GlyphManager.TinySDF = vi.fn().mockImplementation(function () {
+                order.push('TinySDF');
+                return {draw: () => GLYPHS[0]};
+            });
+
+            const manager = createGlyphManager(false, 'sans-serif');
+            await manager.getGlyphs({'Arial Unicode MS': [0x41]});
+
+            expect(loadSpy).toHaveBeenCalledTimes(1);
+            expect(order).toEqual(['fonts.load', 'TinySDF']);
+        });
+
+        test('still instantiates TinySDF when document.fonts.load rejects', async () => {
+            const loadSpy = installDocumentFontsMock(() => Promise.reject(new Error('font not found')));
+            const tinySdfSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(function () {
+                return {draw: () => GLYPHS[0]};
+            });
+
+            const manager = createGlyphManager(false, 'sans-serif');
+            const result = await manager.getGlyphs({'Arial Unicode MS': [0x41]});
+
+            expect(loadSpy).toHaveBeenCalledTimes(1);
+            expect(tinySdfSpy).toHaveBeenCalledTimes(1);
+            expect(result['Arial Unicode MS'][0x41]).toBeDefined();
+        });
+
+        test('memoizes document.fonts.load per fontstack', async () => {
+            const loadSpy = installDocumentFontsMock(() => Promise.resolve([]));
+            GlyphManager.TinySDF = vi.fn().mockImplementation(function () {
+                return {draw: () => GLYPHS[0]};
+            });
+
+            const manager = createGlyphManager(false, 'sans-serif');
+            await manager.getGlyphs({'Arial Unicode MS': [0x41]});
+            await manager.getGlyphs({'Arial Unicode MS': [0x42]});
+            await manager.getGlyphs({'Arial Unicode MS': [0x43]});
+
+            expect(loadSpy).toHaveBeenCalledTimes(1);
+        });
+    });
 });

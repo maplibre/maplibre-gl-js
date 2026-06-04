@@ -22,8 +22,8 @@ type Entry = {
     ranges: {
         [range: number]: boolean | null;
     };
-    tinySDF?: TinySDF;
-    ideographTinySDF?: TinySDF;
+    tinySDF?: Promise<TinySDF>;
+    ideographTinySDF?: Promise<TinySDF>;
 };
 
 /**
@@ -103,7 +103,7 @@ export class GlyphManager {
 
         // If the style hasn’t opted into server-side fonts or this codepoint is CJK, draw the glyph locally and cache it.
         if (!this.url || this._charUsesLocalIdeographFontFamily(id)) {
-            glyph = entry.glyphs[id] = this._drawGlyph(entry, stack, id);
+            glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id);
             return {stack, id, glyph};
         }
 
@@ -131,7 +131,7 @@ export class GlyphManager {
             return {stack, id, glyph: response[id] || null};
         } catch (e) {
             // Fall back to drawing the glyph locally and caching it.
-            const glyph = entry.glyphs[id] = this._drawGlyph(entry, stack, id);
+            const glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id);
             this._warnOnMissingGlyphRange(glyph, range, id, ensureError(e));
             return {stack, id, glyph};
         }
@@ -154,14 +154,15 @@ export class GlyphManager {
     /**
      * Draws a glyph offscreen using TinySDF, creating a TinySDF instance lazily.
      */
-    _drawGlyph(entry: Entry, stack: string, id: number): StyleGlyph {
+    async _drawGlyph(entry: Entry, stack: string, id: number): Promise<StyleGlyph> {
         // The CJK fallback font specified by the developer takes precedence over the last resort fontstack in the style specification.
         const usesLocalIdeographFontFamily = stack === defaultStack && this.localIdeographFontFamily !== '' && this._charUsesLocalIdeographFontFamily(id);
 
         // Keep a separate TinySDF instance for when we need to apply the localIdeographFontFamily fallback to keep the font selection from bleeding into non-CJK text.
         const tinySDFKey = usesLocalIdeographFontFamily ? 'ideographTinySDF' : 'tinySDF';
         entry[tinySDFKey] ||= this._createTinySDF(usesLocalIdeographFontFamily ? this.localIdeographFontFamily : stack);
-        const char = entry[tinySDFKey].draw(String.fromCodePoint(id));
+        const tinySDF = await entry[tinySDFKey];
+        const char = tinySDF.draw(String.fromCodePoint(id));
 
         /**
          * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.
@@ -197,7 +198,7 @@ export class GlyphManager {
         };
     }
 
-    _createTinySDF(stack: String | false): TinySDF {
+    async _createTinySDF(stack: String | false): Promise<TinySDF> {
         // Escape and quote the font family list for use in CSS.
         const fontFamilies = stack ? stack.split(',') : [];
         fontFamilies.push(defaultGenericFontFamily);
@@ -205,14 +206,29 @@ export class GlyphManager {
             /[-\w]+/.test(fontName) ? fontName : `'${CSS.escape(fontName)}'`
         ).join(',');
 
+        const fontSize = 24 * textureScale;
+        const fontWeight = this._fontWeight(fontFamilies[0]);
+        const fontStyle = this._fontStyle(fontFamilies[0]);
+
+        // Wait for web fonts to load before rasterizing glyphs, otherwise TinySDF
+        // will draw with whatever fallback the browser has cached at this point
+        // and cache that bitmap forever. See #7307.
+        if (typeof document !== 'undefined' && document.fonts && document.fonts.load) {
+            try {
+                await document.fonts.load(`${fontStyle} ${fontWeight || 'normal'} ${fontSize}px ${fontFamily}`);
+            } catch (e) {
+                warnOnce(`Failed to load font "${fontFamily}": ${ensureError(e).message}`);
+            }
+        }
+
         return new GlyphManager.TinySDF({
-            fontSize: 24 * textureScale,
+            fontSize,
             buffer: 3 * textureScale,
             radius: 8 * textureScale,
             cutoff: 0.25,
             fontFamily,
-            fontWeight: this._fontWeight(fontFamilies[0]),
-            fontStyle: this._fontStyle(fontFamilies[0]),
+            fontWeight,
+            fontStyle,
             lang: this.lang
         });
     }
