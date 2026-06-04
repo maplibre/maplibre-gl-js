@@ -213,7 +213,7 @@ export class GlyphManager {
         // Wait for web fonts to load before rasterizing glyphs, otherwise TinySDF
         // will draw with whatever fallback the browser has cached at this point
         // and cache that bitmap forever. See #7307.
-        if (typeof document !== 'undefined' && document.fonts && document.fonts.load) {
+        if (typeof document !== 'undefined' && document.fonts?.load) {
             try {
                 await document.fonts.load(`${fontStyle} ${fontWeight || 'normal'} ${fontSize}px ${fontFamily}`);
             } catch (e) {
