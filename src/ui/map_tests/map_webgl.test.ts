@@ -55,6 +55,26 @@ test('handles "webglcontextrestored" when map is created without style', async (
     map.remove();
 });
 
+test('style methods do not throw after WebGL context loss', async () => {
+    const map = createMap();
+    const canvas = map.getCanvas();
+
+    const contextLostPromise = map.once('webglcontextlost');
+    canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    await contextLostPromise;
+
+    expect(() => {
+        map.getLayer('missing-layer');
+        map.getSource('missing-source');
+        map.getLayersOrder();
+        map.listImages();
+        map.setFilter('missing-layer', null);
+        map.setPaintProperty('missing-layer', 'background-color', '#000000');
+    }).not.toThrow();
+
+    map.remove();
+});
+
 test('does not fire "webglcontextrestored" after remove has been called', async () => {
     const map = createMap();
     const canvas = map.getCanvas();
