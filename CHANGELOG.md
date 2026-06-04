@@ -5,6 +5,7 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 - Fix geometry length check for polygons and lines in LineBucket after duplicate vertex trimming([#7638](https://github.com/maplibre/maplibre-gl-js/pull/7638)) (by [@widefire](https://github.com/widefire))
+- Fix a race condition in geojson source after init and fast update data ([#7734](https://github.com/maplibre/maplibre-gl-js/issues/7734)) (by [@HarelM](https://github.com/HarelM))
 
 ## 6.0.0-11
 
