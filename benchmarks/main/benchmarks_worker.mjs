@@ -9827,8 +9827,16 @@ var AJAXError = class extends Error {
 * For files loaded from the local file system, `location.origin` will be set
 * to the string(!) "null" (Firefox), or "file://" (Chrome, Safari, Edge),
 * and we will set an empty referrer. Otherwise, we're using the document's URL.
+* If we're on a blob URL and parent window is cross-origin, parent.location throws
+* SecurityError DOMException, this means we are probably not in blob URL worker bundle.
 */
-const getReferrer = () => isWorker(self) ? self.worker?.referrer : (window.location.protocol === "blob:" ? window.parent : window).location.href;
+function getReferrer() {
+	if (isWorker(self)) return self.worker?.referrer;
+	if (window.location.protocol === "blob:") try {
+		return window.parent.location.href;
+	} catch {}
+	return window.location.href;
+}
 /**
 * Determines whether a URL is a file:// URL. This is obviously the case if it begins
 * with file://. Relative URLs are also file:// URLs iff the original document was loaded
@@ -11200,7 +11208,7 @@ var StyleLayer = class extends Evented {
 			return;
 		}
 		if (this._transitionablePaint?.hasProperty(name)) {
-			this.fire(new ErrorEvent(new Error(name + ERROR_PAINT_NOT_LAYOUT)));
+			this.fire(new ErrorEvent(/* @__PURE__ */ new Error(name + ERROR_PAINT_NOT_LAYOUT)));
 			return;
 		}
 		if (value !== null && value !== void 0 && this._validate(validateLayoutProperty, `layers.${this.id}.layout.${name}`, name, value, options)) return;
@@ -11218,7 +11226,7 @@ var StyleLayer = class extends Evented {
 	}
 	setPaintProperty(name, value, options = {}) {
 		if (name === "visibility" || this._unevaluatedLayout?.hasProperty(name)) {
-			this.fire(new ErrorEvent(new Error(name + ERROR_LAYOUT_NOT_PAINT)));
+			this.fire(new ErrorEvent(/* @__PURE__ */ new Error(name + ERROR_LAYOUT_NOT_PAINT)));
 			return false;
 		}
 		if (value !== null && value !== void 0 && this._validate(validatePaintProperty, `layers.${this.id}.paint.${name}`, name, value, options)) return false;

@@ -12575,8 +12575,16 @@ var AJAXError = class extends Error {
 * For files loaded from the local file system, `location.origin` will be set
 * to the string(!) "null" (Firefox), or "file://" (Chrome, Safari, Edge),
 * and we will set an empty referrer. Otherwise, we're using the document's URL.
+* If we're on a blob URL and parent window is cross-origin, parent.location throws
+* SecurityError DOMException, this means we are probably not in blob URL worker bundle.
 */
-const getReferrer = () => isWorker(self) ? self.worker?.referrer : (window.location.protocol === "blob:" ? window.parent : window).location.href;
+function getReferrer() {
+	if (isWorker(self)) return self.worker?.referrer;
+	if (window.location.protocol === "blob:") try {
+		return window.parent.location.href;
+	} catch {}
+	return window.location.href;
+}
 /**
 * Determines whether a URL is a file:// URL. This is obviously the case if it begins
 * with file://. Relative URLs are also file:// URLs iff the original document was loaded
@@ -12702,8 +12710,30 @@ const getJSON = (requestParameters, abortController) => {
 const getArrayBuffer = (requestParameters, abortController) => {
 	return makeRequest(extend(requestParameters, { type: "arrayBuffer" }), abortController);
 };
+/** 
+* Determines whether a URL is same origin as the current location. Supports relative URLs too.
+* 
+* A relative URL "/foo" or "./foo" will throw exception in URL's ctor,
+* try-catch is expansive so just use a heuristic check to avoid it
+* 
+* - Relative URL and empty URL are always same origin.
+* - data URL containing an image is always same origin.
+* - blob URL is checked using `URL` constructor by its parent URL; opaque blob URL is never same origin.
+* - Absolute URL is checked using `URL` constructor.
+* 
+* Checks blob URL before relative URL because opaque blob URL does not contain `://` too.
+* 
+* @param inComingUrl - The URL to check
+* @returns `true` if the URL is same origin as current location, `false` otherwise
+*/
 function sameOrigin(inComingUrl) {
-	if (!inComingUrl || inComingUrl.indexOf("://") <= 0 || inComingUrl.startsWith("data:image/") || inComingUrl.startsWith("blob:")) return true;
+	if (!inComingUrl) return true;
+	if (inComingUrl.startsWith("data:image/")) return true;
+	if (inComingUrl.startsWith("blob:")) {
+		inComingUrl = inComingUrl.slice(5);
+		if (inComingUrl.startsWith("null")) return false;
+	}
+	if (inComingUrl.indexOf("://") <= 0) return true;
 	const urlObj = new URL(inComingUrl);
 	const locationObj = window.location;
 	return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
@@ -15399,7 +15429,7 @@ var StyleLayer = class extends Evented {
 			return;
 		}
 		if (this._transitionablePaint?.hasProperty(name)) {
-			this.fire(new ErrorEvent(new Error(name + ERROR_PAINT_NOT_LAYOUT)));
+			this.fire(new ErrorEvent(/* @__PURE__ */ new Error(name + ERROR_PAINT_NOT_LAYOUT)));
 			return;
 		}
 		if (value !== null && value !== void 0 && this._validate(validateLayoutProperty, `layers.${this.id}.layout.${name}`, name, value, options)) return;
@@ -15417,7 +15447,7 @@ var StyleLayer = class extends Evented {
 	}
 	setPaintProperty(name, value, options = {}) {
 		if (name === "visibility" || this._unevaluatedLayout?.hasProperty(name)) {
-			this.fire(new ErrorEvent(new Error(name + ERROR_LAYOUT_NOT_PAINT)));
+			this.fire(new ErrorEvent(/* @__PURE__ */ new Error(name + ERROR_LAYOUT_NOT_PAINT)));
 			return false;
 		}
 		if (value !== null && value !== void 0 && this._validate(validatePaintProperty, `layers.${this.id}.paint.${name}`, name, value, options)) return false;
@@ -44869,7 +44899,7 @@ function isFramebufferNotCompleteError(error) {
 * @returns An error object with the message "Framebuffer is not complete"
 */
 function createFramebufferNotCompleteError() {
-	return new Error(FRAMEBUFFER_NOT_COMPLETE_ERROR);
+	return /* @__PURE__ */ new Error(FRAMEBUFFER_NOT_COMPLETE_ERROR);
 }
 //#endregion
 //#region src/webgl/framebuffer.ts
@@ -60557,7 +60587,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 09349fb";
+const version = "main e9d5ae9";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
