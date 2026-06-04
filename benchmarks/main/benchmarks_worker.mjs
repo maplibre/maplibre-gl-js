@@ -15819,11 +15819,11 @@ layout$2.size;
 layout$2.alignment;
 //#endregion
 //#region node_modules/@mapbox/vector-tile/index.js
-/** @import Pbf from 'pbf' */
+/** @import {PbfReader} from 'pbf' */
 /** @import {Feature} from 'geojson' */
 var VectorTileFeature = class {
 	/**
-	* @param {Pbf} pbf
+	* @param {PbfReader} pbf
 	* @param {number} end
 	* @param {number} extent
 	* @param {string[]} keys
@@ -16028,7 +16028,7 @@ function signedArea(ring) {
 }
 var VectorTileLayer = class {
 	/**
-	* @param {Pbf} pbf
+	* @param {PbfReader} pbf
 	* @param {number} [end]
 	*/
 	constructor(pbf, end) {
@@ -16073,21 +16073,21 @@ var VectorTileLayer = class {
 	}
 };
 /**
-* @param {Pbf} pbf
+* @param {PbfReader} pbf
 */
 function readValueMessage(pbf) {
 	let value = null;
 	const end = pbf.readVarint() + pbf.pos;
 	while (pbf.pos < end) {
 		const tag = pbf.readVarint();
-		value = tag === 10 ? pbf.readString() : tag === 21 ? pbf.readFloat() : tag === 25 ? pbf.readDouble() : tag === 32 ? pbf.readVarint64() : tag === 40 ? pbf.readVarint() : tag === 48 ? pbf.readSVarint() : tag === 56 ? pbf.readBoolean() : (pbf.skip(tag), null);
+		value = tag === 10 ? pbf.readString() : tag === 21 ? pbf.readFloat() : tag === 25 ? pbf.readDouble() : tag === 32 ? pbf.readVarint(true) : tag === 40 ? pbf.readVarint() : tag === 48 ? pbf.readSVarint() : tag === 56 ? pbf.readBoolean() : (pbf.skip(tag), null);
 	}
 	if (value == null) throw new Error("unknown feature value");
 	return value;
 }
 var VectorTile = class {
 	/**
-	* @param {Pbf} pbf
+	* @param {PbfReader} pbf
 	* @param {number} [end]
 	*/
 	constructor(pbf, end = pbf.length) {
@@ -19538,35 +19538,32 @@ const PBF_VARINT = 0;
 const PBF_FIXED64 = 1;
 const PBF_BYTES = 2;
 const PBF_FIXED32 = 5;
-var Pbf = class {
+var PbfReader = class {
 	/**
-	* @param {Uint8Array | ArrayBuffer} [buf]
+	* @param {Uint8Array | ArrayBuffer} buf
 	*/
-	constructor(buf = new Uint8Array(16)) {
+	constructor(buf) {
 		this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf);
 		this.dataView = new DataView(this.buf.buffer);
 		this.pos = 0;
 		this.type = 0;
+		this._valueStart = -1;
 		this.length = this.buf.length;
 	}
 	/**
 	* @template T
-	* @param {(tag: number, result: T, pbf: Pbf) => void} readField
+	* @param {(tag: number, result: T, pbf: PbfReader) => void} readField
 	* @param {T} result
 	* @param {number} [end]
 	*/
 	readFields(readField, result, end = this.length) {
-		while (this.pos < end) {
-			const val = this.readVarint(), tag = val >> 3, startPos = this.pos;
-			this.type = val & 7;
-			readField(tag, result, this);
-			if (this.pos === startPos) this.skip(val);
-		}
+		let field;
+		while (field = this.nextField(end)) readField(field, result, this);
 		return result;
 	}
 	/**
 	* @template T
-	* @param {(tag: number, result: T, pbf: Pbf) => void} readField
+	* @param {(tag: number, result: T, pbf: PbfReader) => void} readField
 	* @param {T} result
 	*/
 	readMessage(readField, result) {
@@ -19607,10 +19604,9 @@ var Pbf = class {
 	*/
 	readVarint(isSigned) {
 		const buf = this.buf;
-		let val, b;
-		b = buf[this.pos++];
-		val = b & 127;
-		if (b < 128) return val;
+		const b0 = buf[this.pos++];
+		if (b0 < 128) return b0;
+		let val = b0 & 127, b;
 		b = buf[this.pos++];
 		val |= (b & 127) << 7;
 		if (b < 128) return val;
@@ -19623,9 +19619,6 @@ var Pbf = class {
 		b = buf[this.pos];
 		val |= (b & 15) << 28;
 		return readVarintRemainder(val, isSigned, this);
-	}
-	readVarint64() {
-		return this.readVarint(true);
 	}
 	readSVarint() {
 		const num = this.readVarint();
@@ -19706,6 +19699,18 @@ var Pbf = class {
 	readPackedEnd() {
 		return this.type === PBF_BYTES ? this.readVarint() + this.pos : this.pos + 1;
 	}
+	/**
+	* Advance to the next field. Returns the field number, or 0 at end-of-message.
+	* @param {number} [end]
+	*/
+	nextField(end = this.length) {
+		if (this.pos === this._valueStart) this.skip(this.type);
+		if (this.pos >= end) return 0;
+		const tag = this.readVarint();
+		this.type = tag & 7;
+		this._valueStart = this.pos;
+		return tag >>> 3;
+	}
 	/** @param {number} val */
 	skip(val) {
 		const type = val & 7;
@@ -19714,6 +19719,17 @@ var Pbf = class {
 		else if (type === PBF_FIXED32) this.pos += 4;
 		else if (type === PBF_FIXED64) this.pos += 8;
 		else throw new Error(`Unimplemented type: ${type}`);
+	}
+};
+var PbfWriter = class {
+	/**
+	* @param {Uint8Array | ArrayBuffer} [buf]
+	*/
+	constructor(buf = new Uint8Array(16)) {
+		this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf);
+		this.dataView = new DataView(this.buf.buffer);
+		this.pos = 0;
+		this.length = this.buf.length;
 	}
 	/**
 	* @param {number} tag
@@ -19768,6 +19784,11 @@ var Pbf = class {
 	/** @param {number} val */
 	writeVarint(val) {
 		val = +val || 0;
+		if (val >= 0 && val < 128) {
+			if (this.pos >= this.length) this.realloc(1);
+			this.buf[this.pos++] = val;
+			return;
+		}
 		if (val > 268435455 || val < 0) {
 			writeBigVarint(val, this);
 			return;
@@ -19819,11 +19840,12 @@ var Pbf = class {
 		const len = buffer.length;
 		this.writeVarint(len);
 		this.realloc(len);
-		for (let i = 0; i < len; i++) this.buf[this.pos++] = buffer[i];
+		this.buf.set(buffer, this.pos);
+		this.pos += len;
 	}
 	/**
 	* @template T
-	* @param {(obj: T, pbf: Pbf) => void} fn
+	* @param {(obj: T, pbf: PbfWriter) => void} fn
 	* @param {T} obj
 	*/
 	writeRawMessage(fn, obj) {
@@ -19839,7 +19861,7 @@ var Pbf = class {
 	/**
 	* @template T
 	* @param {number} tag
-	* @param {(obj: T, pbf: Pbf) => void} fn
+	* @param {(obj: T, pbf: PbfWriter) => void} fn
 	* @param {T} obj
 	*/
 	writeMessage(tag, fn, obj) {
@@ -20000,7 +20022,7 @@ var Pbf = class {
 /**
 * @param {number} l
 * @param {boolean | undefined} s
-* @param {Pbf} p
+* @param {PbfReader} p
 */
 function readVarintRemainder(l, s, p) {
 	const buf = p.buf;
@@ -20035,7 +20057,7 @@ function toNum(low, high, isSigned) {
 }
 /**
 * @param {number} val
-* @param {Pbf} pbf
+* @param {PbfWriter} pbf
 */
 function writeBigVarint(val, pbf) {
 	let low, high;
@@ -20059,7 +20081,7 @@ function writeBigVarint(val, pbf) {
 /**
 * @param {number} high
 * @param {number} low
-* @param {Pbf} pbf
+* @param {PbfWriter} pbf
 */
 function writeBigVarintLow(low, high, pbf) {
 	pbf.buf[pbf.pos++] = low & 127 | 128;
@@ -20074,7 +20096,7 @@ function writeBigVarintLow(low, high, pbf) {
 }
 /**
 * @param {number} high
-* @param {Pbf} pbf
+* @param {PbfWriter} pbf
 */
 function writeBigVarintHigh(high, pbf) {
 	const lsb = (high & 7) << 4;
@@ -20093,72 +20115,72 @@ function writeBigVarintHigh(high, pbf) {
 /**
 * @param {number} startPos
 * @param {number} len
-* @param {Pbf} pbf
+* @param {PbfWriter} pbf
 */
 function makeRoomForExtraLength(startPos, len, pbf) {
 	const extraLen = len <= 16383 ? 1 : len <= 2097151 ? 2 : len <= 268435455 ? 3 : Math.floor(Math.log(len) / (Math.LN2 * 7));
 	pbf.realloc(extraLen);
-	for (let i = pbf.pos - 1; i >= startPos; i--) pbf.buf[i + extraLen] = pbf.buf[i];
+	pbf.buf.copyWithin(startPos + extraLen, startPos, pbf.pos);
 }
 /**
 * @param {number[]} arr
-* @param {Pbf} pbf
+* @param {PbfWriter} pbf
 */
 function writePackedVarint(arr, pbf) {
 	for (let i = 0; i < arr.length; i++) pbf.writeVarint(arr[i]);
 }
 /**
 * @param {number[]} arr
-* @param {Pbf} pbf
+* @param {PbfWriter} pbf
 */
 function writePackedSVarint(arr, pbf) {
 	for (let i = 0; i < arr.length; i++) pbf.writeSVarint(arr[i]);
 }
 /**
 * @param {number[]} arr
-* @param {Pbf} pbf
+* @param {PbfWriter} pbf
 */
 function writePackedFloat(arr, pbf) {
 	for (let i = 0; i < arr.length; i++) pbf.writeFloat(arr[i]);
 }
 /**
 * @param {number[]} arr
-* @param {Pbf} pbf
+* @param {PbfWriter} pbf
 */
 function writePackedDouble(arr, pbf) {
 	for (let i = 0; i < arr.length; i++) pbf.writeDouble(arr[i]);
 }
 /**
 * @param {boolean[]} arr
-* @param {Pbf} pbf
+* @param {PbfWriter} pbf
 */
 function writePackedBoolean(arr, pbf) {
 	for (let i = 0; i < arr.length; i++) pbf.writeBoolean(arr[i]);
 }
 /**
 * @param {number[]} arr
-* @param {Pbf} pbf
+* @param {PbfWriter} pbf
 */
 function writePackedFixed32(arr, pbf) {
 	for (let i = 0; i < arr.length; i++) pbf.writeFixed32(arr[i]);
 }
 /**
 * @param {number[]} arr
-* @param {Pbf} pbf
+* @param {PbfWriter} pbf
 */
 function writePackedSFixed32(arr, pbf) {
 	for (let i = 0; i < arr.length; i++) pbf.writeSFixed32(arr[i]);
 }
 /**
 * @param {number[]} arr
-* @param {Pbf} pbf
+* @param {PbfWriter} pbf
 */
 function writePackedFixed64(arr, pbf) {
 	for (let i = 0; i < arr.length; i++) pbf.writeFixed64(arr[i]);
 }
 /**
 * @param {number[]} arr
-* @param {Pbf} pbf
+* @param {PbfWriter} pbf
 */
 function writePackedSFixed64(arr, pbf) {
 	for (let i = 0; i < arr.length; i++) pbf.writeSFixed64(arr[i]);
@@ -21745,7 +21767,7 @@ var GeoJSONWrapper = class {
 * @return uncompressed, pbf-serialized tile data
 */
 function fromVectorTileJs(tile, jsonPrefix = "") {
-	const out = new Pbf();
+	const out = new PbfWriter();
 	writeTile(tile, out, jsonPrefix);
 	return out.finish();
 }
@@ -26190,7 +26212,7 @@ var FeatureIndex = class {
 				case "mlt":
 					this.vtLayers = new MLTVectorTile(this.rawTileData).layers;
 					break;
-				default: this.vtLayers = new VectorTile(new Pbf(this.rawTileData)).layers;
+				default: this.vtLayers = new VectorTile(new PbfReader(this.rawTileData)).layers;
 			}
 			this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : [GEOJSON_TILE_LAYER_NAME]);
 		}
@@ -28339,7 +28361,7 @@ var VectorTileWorkerSource = class {
 	loadVectorTile(params, rawData) {
 		try {
 			return {
-				vectorTile: params.encoding !== "mlt" ? new VectorTile(new Pbf(rawData)) : new MLTVectorTile(rawData),
+				vectorTile: params.encoding !== "mlt" ? new VectorTile(new PbfReader(rawData)) : new MLTVectorTile(rawData),
 				rawData
 			};
 		} catch (ex) {
