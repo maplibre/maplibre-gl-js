@@ -187,7 +187,7 @@ describe('GeoJSONSource.setData', () => {
     });
 
     test('resolves the returned promise only after the queued update completes', async () => {
-        let spy = vi.fn();
+        const spy = vi.fn();
         const source = new GeoJSONSource('id', {data: {}} as any, wrapDispatcher({
             sendAsync(message) {
                 return new Promise((resolve) => {
