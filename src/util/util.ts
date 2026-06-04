@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import UnitBezier from '@mapbox/unitbezier';
+import unitBezierFactory from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted.ts';
 import type {Size} from './image.ts';
 import type {WorkerGlobalScopeInterface} from './web_worker.ts';
@@ -365,10 +365,7 @@ export function easeCubicInOut(t: number): number {
  * @param p2y - control point 2 y coordinate
  */
 export function bezier(p1x: number, p1y: number, p2x: number, p2y: number): (t: number) => number {
-    const bezier = new UnitBezier(p1x, p1y, p2x, p2y);
-    return (t: number) => {
-        return bezier.solve(t);
-    };
+    return unitBezierFactory(p1x, p1y, p2x, p2y);
 }
 
 /**
