@@ -95,8 +95,9 @@ function drawFillTiles(
         const bucket: FillBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
+        const sdfDefines = bucket.sdfPatterns ? ['#define SDF_PATTERN'] : [];
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const program = painter.useProgram(programName, programConfiguration);
+        const program = painter.useProgram(programName, programConfiguration, false, sdfDefines);
         const terrainData = painter.style.map.terrain?.getTerrainData(coord);
 
         if (image) {

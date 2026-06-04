@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+- Add SDF rendering support for fill patterns, allowing `fill-color` to colorize SDF fill patterns
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
