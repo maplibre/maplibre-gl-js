@@ -1,4 +1,4 @@
-import {describe, expect, test} from 'vitest';
+import {describe, expect, test, vi} from 'vitest';
 import {EXTENT} from '../../data/extent.ts';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
@@ -9,6 +9,7 @@ import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from './mercator_utils.ts';
 import {MercatorTransform} from './mercator_transform.ts';
+import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {globeConstants} from './vertical_perspective_projection.ts';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: number[]) {
@@ -601,6 +602,75 @@ describe('GlobeTransform', () => {
             mercator.apply(globeTransform, false);
 
             expect(mercator.renderWorldCopies).toBeTruthy();
+        });
+    });
+
+    // Regression tests for #7025: camera jump on dragend with globe + terrain.
+    // Previously GlobeTransform.recalculateZoomAndCenter called both sub-transforms
+    // unconditionally, which mutated the shared TransformHelper from a non-rendering
+    // sub-transform and wiped terrain elevation. The fix delegates to currentTransform.
+    describe('recalculateZoomAndCenter delegation (#7025)', () => {
+        const terrain = {
+            getElevationForLngLatZoom: () => 200,
+            pointCoordinate: () => null
+        } as any;
+
+        test('delegates only to vertical-perspective sub-transform when globe is rendering', () => {
+            const globeTransform = createGlobeTransform();
+            globeTransform.setTransitionState(1, 0);
+            const mercatorSpy = vi.spyOn((globeTransform as any)._mercatorTransform, 'recalculateZoomAndCenter');
+            const verticalSpy = vi.spyOn((globeTransform as any)._verticalPerspectiveTransform, 'recalculateZoomAndCenter');
+
+            globeTransform.recalculateZoomAndCenter(terrain);
+
+            expect(verticalSpy).toHaveBeenCalledTimes(1);
+            expect(mercatorSpy).not.toHaveBeenCalled();
+        });
+
+        test('delegates only to mercator sub-transform when mercator is rendering', () => {
+            const globeTransform = createGlobeTransform();
+            globeTransform.setTransitionState(0, 0);
+            const mercatorSpy = vi.spyOn((globeTransform as any)._mercatorTransform, 'recalculateZoomAndCenter');
+            const verticalSpy = vi.spyOn((globeTransform as any)._verticalPerspectiveTransform, 'recalculateZoomAndCenter');
+
+            globeTransform.recalculateZoomAndCenter(terrain);
+
+            expect(mercatorSpy).toHaveBeenCalledTimes(1);
+            expect(verticalSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('VerticalPerspectiveTransform.recalculateZoomAndCenter terrain handling (#7025)', () => {
+        const terrain = {
+            getElevationForLngLatZoom: () => 200,
+            pointCoordinate: () => null
+        } as any;
+
+        test('is a no-op when terrain is provided (does not wipe elevation)', () => {
+            const transform = new VerticalPerspectiveTransform();
+            transform.resize(640, 480);
+            transform.setCenter(new LngLat(10, 50));
+            transform.setElevation(200);
+            const originalCenter = transform.center;
+            const originalZoom = transform.zoom;
+
+            transform.recalculateZoomAndCenter(terrain);
+
+            expect(transform.elevation).toBe(200);
+            expect(transform.center.lng).toBeCloseTo(originalCenter.lng, 10);
+            expect(transform.center.lat).toBeCloseTo(originalCenter.lat, 10);
+            expect(transform.zoom).toBe(originalZoom);
+        });
+
+        test('still resets elevation when terrain is not provided', () => {
+            const transform = new VerticalPerspectiveTransform();
+            transform.resize(640, 480);
+            transform.setCenter(new LngLat(10, 50));
+            transform.setElevation(200);
+
+            transform.recalculateZoomAndCenter();
+
+            expect(transform.elevation).toBe(0);
         });
     });
 });
