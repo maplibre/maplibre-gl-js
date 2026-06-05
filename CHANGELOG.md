@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix camera jump on dragend with globe + terrain at low pitch ([#7736](https://github.com/maplibre/maplibre-gl-js/pull/7736))
 - Fix handling cross-origin blob URL in Ajax utils ([#7675](https://github.com/maplibre/maplibre-gl-js/pull/7675)) (by [@katemihalikova](https://github.com/katemihalikova))
 - _...Add new stuff here..._
 - Avoid TypeErrors from style methods while the WebGL context is lost ([#7710](https://github.com/maplibre/maplibre-gl-js/issues/7710)) (by [@cyphercodes](https://github.com/cyphercodes))
