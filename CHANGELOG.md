@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Remove the framebuffer completeness check that threw an unhandled `Framebuffer is not complete` error on transient GPU resource loss (e.g. when a tab wakes from sleep); incomplete framebuffers now self-heal on the next frame instead ([#7303](https://github.com/maplibre/maplibre-gl-js/pull/7303)) (by [@johanrd](https://github.com/johanrd))
 - Fix handling cross-origin blob URL in Ajax utils ([#7675](https://github.com/maplibre/maplibre-gl-js/pull/7675)) (by [@katemihalikova](https://github.com/katemihalikova))
 - _...Add new stuff here..._
 - Avoid TypeErrors from style methods while the WebGL context is lost ([#7710](https://github.com/maplibre/maplibre-gl-js/issues/7710)) (by [@cyphercodes](https://github.com/cyphercodes))
