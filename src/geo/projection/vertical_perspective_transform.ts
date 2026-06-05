@@ -533,7 +533,11 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     recalculateZoomAndCenter(terrain?: Terrain): void {
         if (terrain) {
-            warnOnce('terrain is not fully supported on vertical perspective projection.');
+            // Terrain is not fully supported on vertical perspective projection.
+            // Skip recalculation entirely instead of writing elevation = 0 to the
+            // shared helper, which on globe + terrain caused a visible center/zoom
+            // jump on dragend at low pitch. See #7025.
+            return;
         }
         this._helper.recalculateZoomAndCenter(0);
     }
