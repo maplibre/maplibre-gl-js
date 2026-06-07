@@ -1,7 +1,7 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import Protobuf from 'pbf';
+import {PbfReader} from 'pbf';
 import {VectorTileWorkerSource} from '../source/vector_tile_worker_source.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
 import {fakeServer, type FakeServer} from 'nise';
@@ -172,7 +172,7 @@ describe('vector tile worker source', () => {
         const rawTileData = new ArrayBuffer(0);
         const loadVectorData = (_params, _rawData) => {
             return {
-                vectorTile: new VectorTile(new Protobuf(rawTileData)),
+                vectorTile: new VectorTile(new PbfReader(rawTileData)),
                 rawData: rawTileData,
                 encoding: 'mvt'
             };
@@ -376,7 +376,7 @@ describe('vector tile worker source', () => {
 
         const loadVectorData = (_params, _rawData) => {
             return {
-                vectorTile: new VectorTile(new Protobuf(rawTileData)),
+                vectorTile: new VectorTile(new PbfReader(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
                 expires: null,
@@ -440,7 +440,7 @@ describe('vector tile worker source', () => {
 
         const loadVectorData = (_params, _rawData) => {
             return {
-                vectorTile: new VectorTile(new Protobuf(rawTileData)),
+                vectorTile: new VectorTile(new PbfReader(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
                 expires: null,

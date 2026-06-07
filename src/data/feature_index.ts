@@ -6,7 +6,7 @@ import {EXTENT} from './extent.ts';
 import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
 import {TransferableGridIndex} from '../util/transferable_grid_index.ts';
 import {DictionaryCoder} from '../util/dictionary_coder.ts';
-import Protobuf from 'pbf';
+import {PbfReader} from 'pbf';
 import {GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import {mapObject, extend} from '../util/util.ts';
 import {register} from '../util/web_worker_transfer.ts';
@@ -119,7 +119,7 @@ export class FeatureIndex {
                     break;
                 case 'mvt':
                 default:
-                    this.vtLayers = new VectorTile(new Protobuf(this.rawTileData)).layers;
+                    this.vtLayers = new VectorTile(new PbfReader(this.rawTileData)).layers;
             }
             this.sourceLayerCoder = new DictionaryCoder(this.vtLayers ? Object.keys(this.vtLayers).sort() : [GEOJSON_TILE_LAYER_NAME]);
         }
