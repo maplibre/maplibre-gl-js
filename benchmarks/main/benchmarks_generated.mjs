@@ -32209,7 +32209,8 @@ function calculateTileMatrix(unwrappedTileID, worldSize) {
 	const canonical = unwrappedTileID.canonical;
 	const scale = worldSize / zoomScale(canonical.z);
 	const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
-	const worldMatrix = identity(new Float64Array(16));
+	const worldMatrix = new Float64Array(16);
+	identity(worldMatrix);
 	translate$1(worldMatrix, worldMatrix, [
 		unwrappedX * scale,
 		canonical.y * scale,
@@ -37980,14 +37981,7 @@ var MercatorTransform = class MercatorTransform {
 		if (terrain) return terrain.pointCoordinate(p) != null;
 		return p.y > this.height / 2 - getMercatorHorizon(this);
 	}
-	/**
-	* Calculate the posMatrix that, given a tile coordinate, would be used to display the tile on a map.
-	* This function is specific to the mercator projection.
-	* @param tileID - the tile ID
-	* @param aligned - whether to use a pixel-aligned matrix variant, intended for rendering raster tiles
-	* @param useFloat32 - when true, returns a float32 matrix instead of float64. Use float32 for matrices that are passed to shaders, use float64 for everything else.
-	*/
-	calculatePosMatrix(tileID, aligned = false, useFloat32) {
+	calculatePosMatrix(tileID, aligned = false, useFloat32 = false) {
 		const posMatrixKey = tileID.key ?? calculateTileKey(tileID.wrap, tileID.canonical.z, tileID.canonical.z, tileID.canonical.x, tileID.canonical.y);
 		const cache = aligned ? this._alignedPosMatrixCache : this._posMatrixCache;
 		if (cache.has(posMatrixKey)) {
@@ -38270,18 +38264,12 @@ var MercatorTransform = class MercatorTransform {
 	}
 	getProjectionDataForCustomLayer(applyGlobeMatrix = true) {
 		const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-		const projectionData = this.getProjectionData({
+		const rendererProjectionData = this.getProjectionData({
 			overscaledTileID: tileID,
 			applyGlobeMatrix
 		});
 		const tileMatrix = calculateTileMatrix(tileID, this.worldSize);
 		multiply$1(tileMatrix, this._viewProjMatrix, tileMatrix);
-		projectionData.tileMercatorCoords = [
-			0,
-			0,
-			1,
-			1
-		];
 		const scale = [
 			EXTENT,
 			EXTENT,
@@ -38289,9 +38277,17 @@ var MercatorTransform = class MercatorTransform {
 		];
 		const projectionMatrixScaled = createMat4f64();
 		scale$3(projectionMatrixScaled, tileMatrix, scale);
-		projectionData.fallbackMatrix = projectionMatrixScaled;
-		projectionData.mainMatrix = projectionMatrixScaled;
-		return projectionData;
+		return {
+			...rendererProjectionData,
+			tileMercatorCoords: [
+				0,
+				0,
+				1,
+				1
+			],
+			fallbackMatrix: projectionMatrixScaled,
+			mainMatrix: projectionMatrixScaled
+		};
 	}
 	getFastPathSimpleProjectionMatrix(tileID) {
 		return this.calculatePosMatrix(tileID);
@@ -50938,7 +50934,7 @@ var TerrainTileManager = class extends Evented {
 			keys[tileID.key] = true;
 			this._renderableTilesKeys.push(tileID.key);
 			if (!this._tiles[tileID.key]) {
-				tileID.terrainRttPosMatrix32f = new Float64Array(16);
+				tileID.terrainRttPosMatrix32f = new Float32Array(16);
 				ortho(tileID.terrainRttPosMatrix32f, 0, EXTENT, EXTENT, 0, 0, 1);
 				this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
 				this._lastTilesetChange = now();
@@ -60244,7 +60240,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 9ed2206";
+const version = "main c5d67db";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
