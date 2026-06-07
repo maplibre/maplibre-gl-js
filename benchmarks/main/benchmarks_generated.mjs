@@ -44441,27 +44441,6 @@ var DepthStencilAttachment = class extends FramebufferAttachment {
 	}
 };
 //#endregion
-//#region src/util/framebuffer_error.ts
-/**
-* Error message to use when framebuffer is incomplete
-*/
-const FRAMEBUFFER_NOT_COMPLETE_ERROR = "Framebuffer is not complete";
-/**
-* Check if an error is a framebuffer not complete error
-* @param error - An error object
-* @returns - true if the error is a framebuffer not complete error
-*/
-function isFramebufferNotCompleteError(error) {
-	return error.message === FRAMEBUFFER_NOT_COMPLETE_ERROR;
-}
-/**
-* Use this when you need to create a framebuffer not complete error.
-* @returns An error object with the message "Framebuffer is not complete"
-*/
-function createFramebufferNotCompleteError() {
-	return /* @__PURE__ */ new Error(FRAMEBUFFER_NOT_COMPLETE_ERROR);
-}
-//#endregion
 //#region src/webgl/framebuffer.ts
 /**
 * @internal
@@ -44477,7 +44456,6 @@ var Framebuffer = class {
 		this.colorAttachment = new ColorAttachment(context, fbo);
 		if (hasDepth) this.depthAttachment = hasStencil ? new DepthStencilAttachment(context, fbo) : new DepthAttachment(context, fbo);
 		else if (hasStencil) throw new Error("Stencil cannot be set without depth");
-		if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) throw createFramebufferNotCompleteError();
 	}
 	destroy() {
 		const gl = this.context.gl;
@@ -54246,7 +54224,7 @@ var Map$1 = class extends Camera {
 				try {
 					this._render(paintStartTimeStamp);
 				} catch (error) {
-					if (!isAbortError(error) && !isFramebufferNotCompleteError(error)) throw error;
+					if (!isAbortError(error)) throw error;
 				}
 			}, () => {}, this._ownerWindow);
 		}
@@ -60240,7 +60218,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main c5d67db";
+const version = "main 2075bcd";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
