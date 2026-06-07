@@ -534,6 +534,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     recalculateZoomAndCenter(terrain?: Terrain): void {
         if (terrain) {
             warnOnce('terrain is not fully supported on vertical perspective projection.');
+            return;
         }
         this._helper.recalculateZoomAndCenter(0);
     }

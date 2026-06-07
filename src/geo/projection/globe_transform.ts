@@ -365,8 +365,7 @@ export class GlobeTransform implements ITransform {
     }
 
     recalculateZoomAndCenter(terrain?: Terrain): void {
-        this._mercatorTransform.recalculateZoomAndCenter(terrain);
-        this._verticalPerspectiveTransform.recalculateZoomAndCenter(terrain);
+        this.currentTransform.recalculateZoomAndCenter(terrain);
     }
 
     maxPitchScaleFactor(): number {
