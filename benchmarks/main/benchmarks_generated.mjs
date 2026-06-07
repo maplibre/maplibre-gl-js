@@ -23799,7 +23799,7 @@ var GlyphManager = class GlyphManager {
 			glyph
 		};
 		if (!this.url || this._charUsesLocalIdeographFontFamily(id)) {
-			glyph = entry.glyphs[id] = this._drawGlyph(entry, stack, id);
+			glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id);
 			return {
 				stack,
 				id,
@@ -23827,7 +23827,7 @@ var GlyphManager = class GlyphManager {
 				glyph: response[id] || null
 			};
 		} catch (e) {
-			const glyph = entry.glyphs[id] = this._drawGlyph(entry, stack, id);
+			const glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id);
 			this._warnOnMissingGlyphRange(glyph, range, id, ensureError(e));
 			return {
 				stack,
@@ -23849,11 +23849,11 @@ var GlyphManager = class GlyphManager {
 	/**
 	* Draws a glyph offscreen using TinySDF, creating a TinySDF instance lazily.
 	*/
-	_drawGlyph(entry, stack, id) {
+	async _drawGlyph(entry, stack, id) {
 		const usesLocalIdeographFontFamily = stack === defaultStack && this.localIdeographFontFamily !== "" && this._charUsesLocalIdeographFontFamily(id);
 		const tinySDFKey = usesLocalIdeographFontFamily ? "ideographTinySDF" : "tinySDF";
 		entry[tinySDFKey] ||= this._createTinySDF(usesLocalIdeographFontFamily ? this.localIdeographFontFamily : stack);
-		const char = entry[tinySDFKey].draw(String.fromCodePoint(id));
+		const char = (await entry[tinySDFKey]).draw(String.fromCodePoint(id));
 		/**
 		* TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.
 		* Server-generated fonts specify "top" relative to an origin above the em box (the origin
@@ -23886,18 +23886,26 @@ var GlyphManager = class GlyphManager {
 			}
 		};
 	}
-	_createTinySDF(stack) {
+	async _createTinySDF(stack) {
 		const fontFamilies = stack ? stack.split(",") : [];
 		fontFamilies.push(defaultGenericFontFamily);
 		const fontFamily = fontFamilies.map((fontName) => /[-\w]+/.test(fontName) ? fontName : `'${CSS.escape(fontName)}'`).join(",");
+		const fontSize = 24 * textureScale;
+		const fontWeight = this._fontWeight(fontFamilies[0]);
+		const fontStyle = this._fontStyle(fontFamilies[0]);
+		if (typeof document !== "undefined" && document.fonts?.load) try {
+			await document.fonts.load(`${fontStyle} ${fontWeight || "normal"} ${fontSize}px ${fontFamily}`);
+		} catch (e) {
+			warnOnce(`Failed to load font "${fontFamily}": ${ensureError(e).message}`);
+		}
 		return new GlyphManager.TinySDF({
-			fontSize: 24 * textureScale,
+			fontSize,
 			buffer: 3 * textureScale,
 			radius: 8 * textureScale,
 			cutoff: .25,
 			fontFamily,
-			fontWeight: this._fontWeight(fontFamilies[0]),
-			fontStyle: this._fontStyle(fontFamilies[0]),
+			fontWeight,
+			fontStyle,
 			lang: this.lang
 		});
 	}
@@ -60220,7 +60228,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main eeb84fc";
+const version = "main a93a5d6";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
