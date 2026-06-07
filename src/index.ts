@@ -54,7 +54,7 @@ import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, 
 import type {AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera.ts';
 import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeature} from './util/vectortile_to_geojson.ts';
 import type {Handler, HandlerResult} from './ui/handler_manager.ts';
-import type {Complete, RequireAtLeastOne, Subscription} from './util/util.ts';
+import type {Complete, Mat4f32, Mat4f64, RequireAtLeastOne, Subscription} from './util/util.ts';
 import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles.ts';
 import type {TransformConstrainFunction} from './geo/transform_interface.ts';
 import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, TextFit} from './style/style_image.ts';
@@ -65,7 +65,7 @@ import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from './so
 import type {RequestTransformFunction, ResourceType} from './util/request_manager.ts';
 import type {OverscaledTileID} from './tile/tile_id.ts';
 import type {PositionAnchor} from './ui/anchor.ts';
-import type {ProjectionData, ProjectionDataParams} from './geo/projection/projection_data.ts';
+import type {CustomLayerProjectionData, ProjectionData, ProjectionDataParams, ProjectionMatrix, RendererProjectionData} from './geo/projection/projection_data.ts';
 import type {WorkerTileResult} from './source/worker_source.ts';
 import type {Actor, IActor} from './util/actor.ts';
 import type {Bucket} from './data/bucket.ts';
@@ -318,6 +318,11 @@ export {
     type PositionAnchor,
     type ProjectionData,
     type ProjectionDataParams,
+    type CustomLayerProjectionData,
+    type Mat4f32,
+    type Mat4f64,
+    type ProjectionMatrix,
+    type RendererProjectionData,
     type GeoJSONFeatureId,
     type GeoJSONFeatureDiff,
     type TextFit,

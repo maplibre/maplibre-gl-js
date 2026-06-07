@@ -1,4 +1,4 @@
-import Protobuf from 'pbf';
+import {PbfReader} from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import {fromVectorTileJs, type VectorTileLayerLike, type VectorTileLike} from '@maplibre/vt-pbf';
 import {type ExpiryData, getArrayBuffer} from '../util/ajax.ts';
@@ -49,7 +49,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     loadVectorTile(params: WorkerTileParameters, rawData: ArrayBuffer): LoadVectorTileResult {
         try {
             const vectorTile = params.encoding !== 'mlt'
-                ? new VectorTile(new Protobuf(rawData))
+                ? new VectorTile(new PbfReader(rawData))
                 : new MLTVectorTile(rawData);
 
             return {vectorTile, rawData};

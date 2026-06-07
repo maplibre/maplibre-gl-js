@@ -7,7 +7,7 @@ import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../tile/t
 import type {PaddingOptions} from './edge_insets.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {PointProjection} from '../symbol/projection.ts';
-import type {ProjectionData, ProjectionDataParams} from './projection/projection_data.ts';
+import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection/projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider.ts';
 import type {Frustum} from '../util/primitives/frustum.ts';
 
@@ -446,7 +446,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
      * @param params - Parameters for the projection data generation.
      */
-    getProjectionData(params: ProjectionDataParams): ProjectionData;
+    getProjectionData(params: ProjectionDataParams): RendererProjectionData;
 
     /**
      * @internal
@@ -505,7 +505,7 @@ export interface IReadonlyTransform extends ITransformGetters {
     /**
      * Return projection data such that coordinates in mercator projection in range 0..1 will get projected to the map correctly.
      */
-    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean): ProjectionData;
+    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean): CustomLayerProjectionData;
 
     /**
      * Returns a tile-specific projection matrix. Used for symbol placement fast-path for mercator transform.
