@@ -172,7 +172,10 @@ export class MercatorCameraHelper implements ICameraHelper {
 
         const easeFunc = (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => {
             tr.setZoom(k === 1 ? targetZoom : startZoom + scaleZoom(scale));
-            const newCenter = k === 1 ? targetCenter : unprojectFromWorldCoordinates(tr.worldSize, from.add(delta.mult(centerFactor)).mult(scale));
+
+            // Use actual zoom after setZoom; minZoom clamping makes theoretical scale inconsistent with tr.worldSize.
+            const actualScale = zoomScale(tr.zoom - startZoom);
+            const newCenter = k === 1 ? targetCenter : unprojectFromWorldCoordinates(tr.worldSize, from.add(delta.mult(centerFactor)).mult(actualScale));
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
         };
 
