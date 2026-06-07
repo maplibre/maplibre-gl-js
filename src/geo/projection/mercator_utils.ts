@@ -1,6 +1,6 @@
 import {mat4} from 'gl-matrix';
 import {EXTENT} from '../../data/extent.ts';
-import {clamp, degreesToRadians, MAX_VALID_LATITUDE, zoomScale} from '../../util/util.ts';
+import {clamp, degreesToRadians, MAX_VALID_LATITUDE, zoomScale, type Mat4f64} from '../../util/util.ts';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
 import type {UnwrappedTileIDType} from '../transform_helper.ts';
@@ -73,12 +73,13 @@ export function getMercatorHorizon(transform: {pitch: number; cameraToCenterDist
         Math.tan(degreesToRadians(maxMercatorHorizonAngle - transform.pitch)));
 }
 
-export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldSize: number): mat4 {
+export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldSize: number): Mat4f64 {
     const canonical = unwrappedTileID.canonical;
     const scale = worldSize / zoomScale(canonical.z);
     const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
 
-    const worldMatrix = mat4.identity(new Float64Array(16));
+    const worldMatrix: Mat4f64 = new Float64Array(16);
+    mat4.identity(worldMatrix);
     mat4.translate(worldMatrix, worldMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
     mat4.scale(worldMatrix, worldMatrix, [scale / EXTENT, scale / EXTENT, 1]);
     return worldMatrix;
