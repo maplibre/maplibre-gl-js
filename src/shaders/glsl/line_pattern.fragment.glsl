@@ -10,10 +10,10 @@ uniform sampler2D u_image;
 uniform bool u_opacity_override;
 
 in vec2 v_normal;
-in vec2 v_width2;
+flat in vec2 v_width2;
 in float v_linesofar;
 in float v_gamma_scale;
-in float v_width;
+flat in float v_width;
 #ifdef GLOBE
 in float v_depth;
 #endif

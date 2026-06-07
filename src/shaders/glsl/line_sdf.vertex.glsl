@@ -23,7 +23,7 @@ uniform float u_crossfade_to;
 uniform float u_lineatlas_height;
 
 out vec2 v_normal;
-out vec2 v_width2;
+flat out vec2 v_width2;
 out vec2 v_tex_a;
 out vec2 v_tex_b;
 out float v_gamma_scale;

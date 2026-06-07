@@ -6,7 +6,7 @@ uniform lowp float u_lineatlas_width;
 uniform bool u_opacity_override;
 
 in vec2 v_normal;
-in vec2 v_width2;
+flat in vec2 v_width2;
 in vec2 v_tex_a;
 in vec2 v_tex_b;
 in float v_gamma_scale;

@@ -9,7 +9,7 @@ uniform vec2 u_translate;
 layout(location = 0) in vec2 a_pos;
 
 out vec3 v_data;
-out float v_visibility;
+flat out float v_visibility;
 
 #pragma mapbox: define highp vec4 color
 #pragma mapbox: define mediump float radius

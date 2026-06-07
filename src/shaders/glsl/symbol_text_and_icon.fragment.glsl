@@ -11,7 +11,8 @@ uniform highp float u_gamma_scale;
 uniform lowp float u_device_pixel_ratio;
 
 in vec4 v_data0;
-in vec4 v_data1;
+in vec3 v_data1;
+flat in float v_is_sdf;
 
 #pragma mapbox: define highp vec4 fill_color
 #pragma mapbox: define highp vec4 halo_color
@@ -26,7 +27,7 @@ void main() {
 
     float total_opacity = v_data1[2];
 
-    if (v_data1.w == ICON) {
+    if (v_is_sdf == ICON) {
         vec2 tex_icon = v_data0.zw;
         fragColor = texture(u_texture_icon, tex_icon) * total_opacity;
 

@@ -18,7 +18,7 @@ uniform vec2 u_units_to_pixels;
 uniform float u_image_height;
 
 out vec2 v_normal;
-out vec2 v_width2;
+flat out vec2 v_width2;
 out float v_gamma_scale;
 out highp vec2 v_uv;
 #ifdef GLOBE
