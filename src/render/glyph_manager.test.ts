@@ -242,14 +242,9 @@ describe('GlyphManager', () => {
     });
 
     test('awaits document.fonts.load before instantiating TinySDF', async () => {
-        const order: string[] = [];
-        const loadSpy = vi.fn(() => {
-            order.push('fonts.load');
-            return Promise.resolve([]);
-        });
+        const loadSpy = vi.fn(() => Promise.resolve([]));
         Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
-        GlyphManager.TinySDF = vi.fn().mockImplementation(function () {
-            order.push('TinySDF');
+        const tinySdfSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(function () {
             return {draw: () => GLYPHS[0]};
         });
 
@@ -257,7 +252,8 @@ describe('GlyphManager', () => {
         await manager.getGlyphs({'Arial Unicode MS': [0x41]});
 
         expect(loadSpy).toHaveBeenCalledTimes(1);
-        expect(order).toEqual(['fonts.load', 'TinySDF']);
+        expect(tinySdfSpy).toHaveBeenCalledTimes(1);
+        expect(loadSpy.mock.invocationCallOrder[0]).toBeLessThan(tinySdfSpy.mock.invocationCallOrder[0]);
     });
 
     test('still instantiates TinySDF when document.fonts.load rejects', async () => {
