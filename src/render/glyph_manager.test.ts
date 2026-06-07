@@ -32,6 +32,7 @@ describe('GlyphManager', () => {
 
     afterEach(() => {
         vi.clearAllMocks();
+        delete (document as any).fonts;
     });
 
     test('GlyphManager requests 0-255 PBF', async () => {
@@ -238,5 +239,50 @@ describe('GlyphManager', () => {
         const manager = createGlyphManager(true, 'sans-serif', 'zh');
         await manager.getGlyphs({'Arial Unicode MS': [0x30c6]});
         expect(langSpy).toHaveBeenCalledWith(expect.objectContaining({lang: 'zh'}));
+    });
+
+    test('awaits document.fonts.load before instantiating TinySDF', async () => {
+        const loadSpy = vi.fn(() => Promise.resolve([]));
+        Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
+        const tinySdfSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(function () {
+            return {draw: () => GLYPHS[0]};
+        });
+
+        const manager = createGlyphManager(false, 'sans-serif');
+        await manager.getGlyphs({'Arial Unicode MS': [0x41]});
+
+        expect(loadSpy).toHaveBeenCalledTimes(1);
+        expect(tinySdfSpy).toHaveBeenCalledTimes(1);
+        expect(loadSpy.mock.invocationCallOrder[0]).toBeLessThan(tinySdfSpy.mock.invocationCallOrder[0]);
+    });
+
+    test('still instantiates TinySDF when document.fonts.load rejects', async () => {
+        const loadSpy = vi.fn(() => Promise.reject(new Error('font not found')));
+        Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
+        const tinySdfSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(function () {
+            return {draw: () => GLYPHS[0]};
+        });
+
+        const manager = createGlyphManager(false, 'sans-serif');
+        const result = await manager.getGlyphs({'Arial Unicode MS': [0x41]});
+
+        expect(loadSpy).toHaveBeenCalledTimes(1);
+        expect(tinySdfSpy).toHaveBeenCalledTimes(1);
+        expect(result['Arial Unicode MS'][0x41]).toBeDefined();
+    });
+
+    test('memoizes document.fonts.load per fontstack', async () => {
+        const loadSpy = vi.fn(() => Promise.resolve([]));
+        Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
+        GlyphManager.TinySDF = vi.fn().mockImplementation(function () {
+            return {draw: () => GLYPHS[0]};
+        });
+
+        const manager = createGlyphManager(false, 'sans-serif');
+        await manager.getGlyphs({'Arial Unicode MS': [0x41]});
+        await manager.getGlyphs({'Arial Unicode MS': [0x42]});
+        await manager.getGlyphs({'Arial Unicode MS': [0x43]});
+
+        expect(loadSpy).toHaveBeenCalledTimes(1);
     });
 });
