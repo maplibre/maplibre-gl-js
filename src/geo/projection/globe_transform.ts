@@ -15,7 +15,7 @@ import type {PointProjection} from '../../symbol/projection.ts';
 import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
-import type {ProjectionData, ProjectionDataParams} from './projection_data.ts';
+import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
 /**
@@ -285,7 +285,7 @@ export class GlobeTransform implements ITransform {
 
     public get cameraPosition(): vec3 { return this.currentTransform.cameraPosition; }
 
-    getProjectionData(params: ProjectionDataParams): ProjectionData {
+    getProjectionData(params: ProjectionDataParams): RendererProjectionData {
         const mercatorProjectionData = this._mercatorTransform.getProjectionData(params);
         const verticalPerspectiveProjectionData = this._verticalPerspectiveTransform.getProjectionData(params);
 
@@ -453,7 +453,7 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.getMatrixForModel(location, altitude);
     }
 
-    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): ProjectionData {
+    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
         const mercatorData = this._mercatorTransform.getProjectionDataForCustomLayer(applyGlobeMatrix);
 
         if (!this.isGlobeRendering) {

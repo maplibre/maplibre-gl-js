@@ -8,6 +8,15 @@ import {pixelsToTileUnits} from '../source/pixels_to_tile_units.ts';
 import {type OverscaledTileID} from '../tile/tile_id.ts';
 import type {Event} from './evented.ts';
 
+/**
+ * A 4x4 gl-matrix matrix backed by 32-bit floats.
+ */
+export type Mat4f32 = mat4 & Float32Array;
+/**
+ * A 4x4 gl-matrix matrix backed by 64-bit floats.
+ */
+export type Mat4f64 = mat4 & Float64Array;
+
 export const JSON_PREFIX = '__$json__:';
 
 /**
@@ -31,24 +40,24 @@ export function createVec3f64(): vec3 { return new Float64Array(3); }
 /**
  * Returns a new 64 bit float mat4 of zeroes.
  */
-export function createMat4f64(): mat4 { return new Float64Array(16); }
+export function createMat4f64(): Mat4f64 { return new Float64Array(16); }
 /**
  * Returns a new 32 bit float mat4 of zeroes.
  */
-export function createMat4f32(): mat4 { return new Float32Array(16); }
+export function createMat4f32(): Mat4f32 { return new Float32Array(16); }
 /**
  * Returns a new 64 bit float mat4 set to identity.
  */
-export function createIdentityMat4f64(): mat4 {
-    const m = new Float64Array(16) as any;
+export function createIdentityMat4f64(): Mat4f64 {
+    const m: Mat4f64 = new Float64Array(16);
     mat4.identity(m);
     return m;
 }
 /**
  * Returns a new 32 bit float mat4 set to identity.
  */
-export function createIdentityMat4f32(): mat4 {
-    const m = new Float32Array(16) as any;
+export function createIdentityMat4f32(): Mat4f32 {
+    const m: Mat4f32 = new Float32Array(16);
     mat4.identity(m);
     return m;
 }

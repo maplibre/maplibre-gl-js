@@ -3,9 +3,8 @@ import {EXTENT} from '../data/extent.ts';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {register} from '../util/web_worker_transfer.ts';
-import {type mat4} from 'gl-matrix';
+import {type Mat4f32, MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {type ICanonicalTileID, type IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
-import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {isInBoundsForTileZoomXY} from '../util/world_bounds.ts';
 
 /**
@@ -97,7 +96,7 @@ export class OverscaledTileID {
      * and should be used, otherwise this matrix will be null.
      * The matrix should be float32 in order to avoid slow WebGL calls in Chrome.
      */
-    terrainRttPosMatrix32f: mat4 | null = null;
+    terrainRttPosMatrix32f: Mat4f32 | null = null;
 
     constructor(overscaledZ: number, wrap: number, z: number, x: number, y: number) {
         if (overscaledZ < z) throw new Error(`overscaledZ should be >= z; overscaledZ = ${overscaledZ}; z = ${z}`);
