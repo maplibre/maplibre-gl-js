@@ -40041,7 +40041,10 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		return this._coveringTilesDetailsProvider;
 	}
 	recalculateZoomAndCenter(terrain) {
-		if (terrain) warnOnce("terrain is not fully supported on vertical perspective projection.");
+		if (terrain) {
+			warnOnce("terrain is not fully supported on vertical perspective projection.");
+			return;
+		}
 		this._helper.recalculateZoomAndCenter(0);
 	}
 	maxPitchScaleFactor() {
@@ -40675,8 +40678,7 @@ var GlobeTransform = class GlobeTransform {
 		return this.currentTransform.getCoveringTilesDetailsProvider();
 	}
 	recalculateZoomAndCenter(terrain) {
-		this._mercatorTransform.recalculateZoomAndCenter(terrain);
-		this._verticalPerspectiveTransform.recalculateZoomAndCenter(terrain);
+		this.currentTransform.recalculateZoomAndCenter(terrain);
 	}
 	maxPitchScaleFactor() {
 		return this._mercatorTransform.maxPitchScaleFactor();
@@ -60218,7 +60220,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 2075bcd";
+const version = "main eeb84fc";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
