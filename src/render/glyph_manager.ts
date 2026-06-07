@@ -231,7 +231,6 @@ export class GlyphManager {
         });
     }
 
-
     /**
      * Sniffs the font style out of a font family name.
      */
