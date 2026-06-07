@@ -5,13 +5,14 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-- fix: guard style methods after WebGL context loss ([#7726](https://github.com/maplibre/maplibre-gl-js/pull/7726)) (by [@cyphercodes](https://github.com/cyphercodes))
-- Change package ecosystem from 'docker' to 'docker-compose' ([#7682](https://github.com/maplibre/maplibre-gl-js/pull/7682)) (by [@HarelM](https://github.com/HarelM))
 ## 6.0.0-12
+
 ### ✨ Features and improvements
+
 - Optimization: vertex shader opacity culling for lines and fills [#7711](https://github.com/maplibre/maplibre-gl-js/pull/7711) (by [@xavierjs](https://github.com/xavierjs))
 
 ### 🐞 Bug fixes
+
 - Fix handling cross-origin blob URL in Ajax utils ([#7675](https://github.com/maplibre/maplibre-gl-js/pull/7675)) (by [@katemihalikova](https://github.com/katemihalikova))
 - Avoid TypeErrors from style methods while the WebGL context is lost ([#7710](https://github.com/maplibre/maplibre-gl-js/issues/7710)) (by [@cyphercodes](https://github.com/cyphercodes))
 - querySourceFeatures() throws 'Block overruns tile' on overzoomed MLT tiles because the reported encoding doesn't match the re-encoded MVT data ([#7707](https://github.com/maplibre/maplibre-gl-js/pull/7707)) (by [@ted-piotrowski](https://github.com/ted-piotrowski))
