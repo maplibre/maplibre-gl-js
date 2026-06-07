@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+- Debounce `setImages` broadcast to once per animation frame, fixing O(n²) serialization overhead when adding many images ([#7614](https://github.com/maplibre/maplibre-gl-js/pull/7614)) (by [@bradymadden97](https://github.com/bradymadden97))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
