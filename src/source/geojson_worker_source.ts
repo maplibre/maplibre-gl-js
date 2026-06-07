@@ -70,6 +70,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONVT;
     _createGeoJSONIndex: typeof createGeoJSONIndex;
+    _crossTileIDs: Map<string, number>;
 
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[], createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
         this.actor = actor;
@@ -77,6 +78,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         this.availableImages = availableImages;
         this.tileState = new WorkerTileState();
         this._createGeoJSONIndex = createGeoJSONIndexFunc;
+        this._crossTileIDs = new Map();
     }
 
     /**
@@ -126,7 +128,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
     async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters): Promise<WorkerTileResult> {
         const parseState = this.tileState.getParsing(workerTile.uid);
 
-        let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
+        let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity, params.promoteId ? this._crossTileIDs : undefined);
 
         // We need to pass rawTileData back to the main thread so that it can be stored in the Tile and FeatureIndex.
         // After the main thread has successfully received and stored rawTileData,

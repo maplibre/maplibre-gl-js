@@ -61,6 +61,7 @@ export type BucketDependencyParameters = {
     patternPositions: Record<string, ImagePosition>;
     dashPositions: Record<string, DashEntry>;
     showCollisionBoxes: boolean;
+    crossTileIDs?: Map<string, number>;
 };
 
 export type IndexedFeature = {
