@@ -2,7 +2,6 @@
 uniform vec2 u_texsize;
 uniform sampler2D u_image;
 uniform float u_fade;
-uniform lowp float u_device_pixel_ratio;
 
 in vec2 v_pos_a;
 in vec2 v_pos_b;
@@ -42,9 +41,10 @@ void main() {
 
 #ifdef SDF_PATTERN
     highp float sdf_edge = (256.0 - 64.0) / 256.0;
-    highp float sdf_gamma = 0.105 / u_device_pixel_ratio;
-    float sdf_alpha_a = smoothstep(sdf_edge - sdf_gamma, sdf_edge + sdf_gamma, color1.a);
-    float sdf_alpha_b = smoothstep(sdf_edge - sdf_gamma, sdf_edge + sdf_gamma, color2.a);
+    highp float sdf_gamma_a = fwidth(color1.a) * 0.5;
+    highp float sdf_gamma_b = fwidth(color2.a) * 0.5;
+    float sdf_alpha_a = smoothstep(sdf_edge - sdf_gamma_a, sdf_edge + sdf_gamma_a, color1.a);
+    float sdf_alpha_b = smoothstep(sdf_edge - sdf_gamma_b, sdf_edge + sdf_gamma_b, color2.a);
     vec4 sdf_color_a = color * sdf_alpha_a;
     vec4 sdf_color_b = color * sdf_alpha_b;
     fragColor = mix(sdf_color_a, sdf_color_b, u_fade) * alpha * opacity;
