@@ -6,6 +6,7 @@
 ### 🐞 Bug fixes
 - Fix camera jump on dragend with globe + terrain at low pitch ([#7736](https://github.com/maplibre/maplibre-gl-js/pull/7736)) (by @kodeezabdullah)
 - Remove the framebuffer completeness check that threw an unhandled `Framebuffer is not complete` error on transient GPU resource loss (e.g. when a tab wakes from sleep); incomplete framebuffers now self-heal on the next frame instead ([#7303](https://github.com/maplibre/maplibre-gl-js/pull/7303)) (by [@johanrd](https://github.com/johanrd))
+- ⚠️ Fix icon scalling with offset, this is somewhat of a render breaking change which we have decided to incorporate in both maplibre-gl-js and maplibre-native ([#7742](https://github.com/maplibre/maplibre-gl-js/issues/7742)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 6.0.0-12
