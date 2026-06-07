@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Fix camera jump on dragend with globe + terrain at low pitch ([#7736](https://github.com/maplibre/maplibre-gl-js/pull/7736)) (by @kodeezabdullah)
+- Fix web font rendering by awaiting document.fonts.load() before TinySDF instantiation ([#7735](https://github.com/maplibre/maplibre-gl-js/pull/7735)) (by [@kodeezabdullah](https://github.com/kodeezabdullah))
 - Remove the framebuffer completeness check that threw an unhandled `Framebuffer is not complete` error on transient GPU resource loss (e.g. when a tab wakes from sleep); incomplete framebuffers now self-heal on the next frame instead ([#7303](https://github.com/maplibre/maplibre-gl-js/pull/7303)) (by [@johanrd](https://github.com/johanrd))
 - _...Add new stuff here..._
 
