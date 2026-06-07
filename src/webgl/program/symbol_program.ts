@@ -26,6 +26,7 @@ export type SymbolIconUniformsType = {
     'u_texture': Uniform1i;
     'u_translation': Uniform2f;
     'u_pitched_scale': Uniform1f;
+    'u_is_offset': Uniform1i;
 };
 
 export type SymbolSDFUniformsType = {
@@ -52,6 +53,7 @@ export type SymbolSDFUniformsType = {
     'u_is_plain': Uniform1i;
     'u_translation': Uniform2f;
     'u_pitched_scale': Uniform1f;
+    'u_is_offset': Uniform1i;
 };
 
 export type symbolTextAndIconUniformsType = {
@@ -79,6 +81,7 @@ export type symbolTextAndIconUniformsType = {
     'u_is_halo': Uniform1i;
     'u_translation': Uniform2f;
     'u_pitched_scale': Uniform1f;
+    'u_is_offset': Uniform1i;
 };
 
 const symbolIconUniforms = (context: Context, locations: UniformLocations): SymbolIconUniformsType => ({
@@ -101,6 +104,7 @@ const symbolIconUniforms = (context: Context, locations: UniformLocations): Symb
     'u_texture': new Uniform1i(context, locations.u_texture),
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_pitched_scale': new Uniform1f(context, locations.u_pitched_scale),
+    'u_is_offset': new Uniform1i(context, locations.u_is_offset),
 });
 
 const symbolSDFUniforms = (context: Context, locations: UniformLocations): SymbolSDFUniformsType => ({
@@ -127,6 +131,7 @@ const symbolSDFUniforms = (context: Context, locations: UniformLocations): Symbo
     'u_is_plain': new Uniform1i(context, locations.u_is_plain),
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_pitched_scale': new Uniform1f(context, locations.u_pitched_scale),
+    'u_is_offset': new Uniform1i(context, locations.u_is_offset),
 });
 
 const symbolTextAndIconUniforms = (context: Context, locations: UniformLocations): symbolTextAndIconUniformsType => ({
@@ -154,6 +159,7 @@ const symbolTextAndIconUniforms = (context: Context, locations: UniformLocations
     'u_is_halo': new Uniform1i(context, locations.u_is_halo),
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_pitched_scale': new Uniform1f(context, locations.u_pitched_scale),
+    'u_is_offset': new Uniform1i(context, locations.u_is_offset),
 });
 
 const symbolIconUniformValues = (
@@ -172,7 +178,8 @@ const symbolIconUniformValues = (
     translation: [number, number],
     isText: boolean,
     texSize: [number, number],
-    pitchedScale: number
+    pitchedScale: number,
+    isOffset: boolean
 ): UniformValues<SymbolIconUniformsType> => {
     const transform = painter.transform;
 
@@ -195,7 +202,8 @@ const symbolIconUniformValues = (
         'u_texsize': texSize,
         'u_texture': 0,
         'u_translation': translation,
-        'u_pitched_scale': pitchedScale
+        'u_pitched_scale': pitchedScale,
+        'u_is_offset': isOffset,
     };
 };
 
@@ -216,13 +224,14 @@ const symbolSDFUniformValues = (
     isText: boolean,
     texSize: [number, number],
     isHalo: boolean,
-    pitchedScale: number
+    pitchedScale: number,
+    isOffset: boolean
 ): UniformValues<SymbolSDFUniformsType> => {
     const transform = painter.transform;
 
     return extend(symbolIconUniformValues(functionType, size,
         rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
-        glCoordMatrix, translation, isText, texSize, pitchedScale), {
+        glCoordMatrix, translation, isText, texSize, pitchedScale, isOffset), {
         'u_gamma_scale': (pitchWithMap ? Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance : 1),
         'u_device_pixel_ratio': painter.pixelRatio,
         'u_is_halo': isHalo ? 1 : 0,
@@ -246,11 +255,12 @@ const symbolTextAndIconUniformValues = (
     translation: [number, number],
     texSizeSDF: [number, number],
     texSizeIcon: [number, number],
-    pitchedScale: number
+    pitchedScale: number,
+    isOffset: boolean        
 ): UniformValues<SymbolIconUniformsType> => {
     return extend(symbolSDFUniformValues(functionType, size,
         rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
-        glCoordMatrix, translation, true, texSizeSDF, true, pitchedScale), {
+        glCoordMatrix, translation, true, texSizeSDF, true, pitchedScale, isOffset), {
         'u_texsize_icon': texSizeIcon,
         'u_texture_icon': 1
     });
