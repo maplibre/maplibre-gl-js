@@ -604,13 +604,9 @@ describe('GlobeTransform', () => {
         });
     });
 
-    // Regression test for #7025: camera jump on dragend with globe + terrain.
-    // Before the fix, recalculateZoomAndCenter on a GlobeTransform in globe-rendering
-    // mode mutated the center via the shared TransformHelper when terrain was present,
-    // producing a visible jump on dragend at low pitch.
     test('recalculateZoomAndCenter does not jump center on globe + terrain (#7025)', () => {
         const globeTransform = createGlobeTransform();
-        globeTransform.setTransitionState(1, 0); // globe is rendering
+        globeTransform.setTransitionState(1, 0);
         globeTransform.setCenter(new LngLat(10, 50));
         const originalLng = globeTransform.center.lng;
         const originalLat = globeTransform.center.lat;
