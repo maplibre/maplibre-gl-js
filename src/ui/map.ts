@@ -32,7 +32,6 @@ import {defaultLocale} from './default_locale.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper.ts';
 import {isAbortError} from '../util/abort_error.ts';
-import {isFramebufferNotCompleteError} from '../util/framebuffer_error.ts';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
 import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id.ts';
 
@@ -3824,7 +3823,7 @@ export class Map extends Camera {
                     try {
                         this._render(paintStartTimeStamp);
                     } catch(error) {
-                        if (!isAbortError(error) && !isFramebufferNotCompleteError(error)) {
+                        if (!isAbortError(error)) {
                             throw error;
                         }
                     }
