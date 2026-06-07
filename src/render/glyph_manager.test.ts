@@ -32,6 +32,7 @@ describe('GlyphManager', () => {
 
     afterEach(() => {
         vi.clearAllMocks();
+        delete (document as any).fonts;
     });
 
     test('GlyphManager requests 0-255 PBF', async () => {
@@ -240,25 +241,13 @@ describe('GlyphManager', () => {
         expect(langSpy).toHaveBeenCalledWith(expect.objectContaining({lang: 'zh'}));
     });
 
-    const installDocumentFontsMock = (impl: (font: string) => Promise<unknown>) => {
-        const loadSpy = vi.fn(impl);
-        Object.defineProperty(document, 'fonts', {
-            configurable: true,
-            value: {load: loadSpy}
-        });
-        return loadSpy;
-    };
-
-    afterEach(() => {
-        delete (document as any).fonts;
-    });
-
     test('awaits document.fonts.load before instantiating TinySDF', async () => {
         const order: string[] = [];
-        const loadSpy = installDocumentFontsMock(() => {
+        const loadSpy = vi.fn(() => {
             order.push('fonts.load');
             return Promise.resolve([]);
         });
+        Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
         GlyphManager.TinySDF = vi.fn().mockImplementation(function () {
             order.push('TinySDF');
             return {draw: () => GLYPHS[0]};
@@ -272,7 +261,8 @@ describe('GlyphManager', () => {
     });
 
     test('still instantiates TinySDF when document.fonts.load rejects', async () => {
-        const loadSpy = installDocumentFontsMock(() => Promise.reject(new Error('font not found')));
+        const loadSpy = vi.fn(() => Promise.reject(new Error('font not found')));
+        Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
         const tinySdfSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(function () {
             return {draw: () => GLYPHS[0]};
         });
@@ -286,7 +276,8 @@ describe('GlyphManager', () => {
     });
 
     test('memoizes document.fonts.load per fontstack', async () => {
-        const loadSpy = installDocumentFontsMock(() => Promise.resolve([]));
+        const loadSpy = vi.fn(() => Promise.resolve([]));
+        Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
         GlyphManager.TinySDF = vi.fn().mockImplementation(function () {
             return {draw: () => GLYPHS[0]};
         });
