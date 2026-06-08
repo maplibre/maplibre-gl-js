@@ -23,7 +23,21 @@ function isCrossOrigin(url: string): boolean {
     }
 }
 
+function importWorker() {
+    // Bundlers resolve this import to the final output filename.
+    // defaultWorkerUrl() extracts the resolved path via toString().
+    import('../source/worker.ts');
+}
+
 function defaultWorkerUrl(): string {
+    try {
+        const workerPath = importWorker.toString().match(/["'`](.+?)["'`]/)?.[1];
+        if (workerPath) {
+            return new URL(workerPath, import.meta.url).href;
+        }
+    } catch {
+        // fall through
+    }
     try {
         const moduleUrl = import.meta.url;
         if (!/^https?:/.test(moduleUrl)) return '';
@@ -59,7 +73,7 @@ async function fetchAsBlobUrl(url: string): Promise<string> {
 
 export async function workerFactory(): Promise<Worker> {
     const url = config.WORKER_URL || defaultWorkerUrl();
-    const asModule = url?.endsWith('.mjs') ?? false;
+    const asModule = url?.endsWith('.cjs') ? false : true;
 
     if (!isCrossOrigin(url)) {
         return createWorker(url, asModule);
