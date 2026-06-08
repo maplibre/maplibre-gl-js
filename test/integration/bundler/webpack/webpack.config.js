@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     entry: './src/index.ts',
@@ -19,7 +20,13 @@ module.exports = {
         ]
     },
     plugins: [
-        new HtmlWebpackPlugin({template: './index.html'})
+        new HtmlWebpackPlugin({template: './index.html'}),
+        new CopyPlugin({
+            patterns: [
+                {from: 'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs', to: 'maplibre-gl-worker.mjs'},
+                {from: 'node_modules/maplibre-gl/dist/maplibre-gl-shared.mjs', to: 'maplibre-gl-shared.mjs'},
+            ],
+        }),
     ],
     devServer: {
         port: 3000,

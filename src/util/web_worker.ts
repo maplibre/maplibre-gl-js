@@ -29,11 +29,28 @@ function importWorker() {
     import('../source/worker.ts');
 }
 
+// This is a hack to signal to bundlers that this module is async (has top-level await)
+// in order to prevent the shared module from being inlined into main.
+//
+// Rollup/rolldown by default inlines the shared module into the main bundle
+// if the app has only one entry point.
+// The worker would then import the shared module from the main bundle,
+// which fails because main uses APIs that are not available in workers.
+//
+// To work around this, we make main async with a no-op `await import()` at the top level.
+// Bundler deadlock guard would prevent the shared module from being inlined into main.
+try {
+    let src: string;
+    await import(src);
+} catch {}
+
 function defaultWorkerUrl(): string {
     try {
+        const moduleUrl = import.meta.url;
+        if (!/^https?:/.test(moduleUrl)) return '';
         const workerPath = importWorker.toString().match(/["'`](.+?)["'`]/)?.[1];
         if (workerPath) {
-            return new URL(workerPath, import.meta.url).href;
+            return new URL(workerPath, moduleUrl).href;
         }
     } catch {
         // fall through
