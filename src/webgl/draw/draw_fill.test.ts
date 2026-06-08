@@ -16,6 +16,7 @@ import {drawFill} from './draw_fill.ts';
 import {FillBucket} from '../../data/bucket/fill_bucket.ts';
 import {type ProgramConfiguration, type ProgramConfigurationSet} from '../../data/program_configuration.ts';
 import type {ProjectionData} from '../../geo/projection/projection_data.ts';
+import {createIdentityMat4f32} from '../../util/util.ts';
 
 vi.mock('../../render/painter');
 vi.mock('../program');
@@ -118,7 +119,7 @@ describe('drawFill', () => {
 
     function constructMockTile(layer: FillStyleLayer): Tile {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.terrainRttPosMatrix32f = mat4.create();
+        tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
 
         const tile = new Tile(tileId, 256);
         tile.tileID = tileId;

@@ -17,6 +17,7 @@ import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type Style} from '../../style/style.ts';
 import {MercatorProjection} from '../../geo/projection/mercator_projection.ts';
 import type {ProjectionData} from '../../geo/projection/projection_data.ts';
+import {createIdentityMat4f32} from '../../util/util.ts';
 
 vi.mock('../../render/painter');
 vi.mock('../program');
@@ -90,7 +91,7 @@ describe('drawSymbol', () => {
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.terrainRttPosMatrix32f = mat4.create();
+        tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
         const programMock = new Program(null, null, null, null, null, null, null, null);
         (painterMock.useProgram as Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
@@ -153,7 +154,7 @@ describe('drawSymbol', () => {
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.terrainRttPosMatrix32f = mat4.create();
+        tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
         const programMock = new Program(null, null, null, null, null, null, null, null);
         (painterMock.useProgram as Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
@@ -220,7 +221,7 @@ describe('drawSymbol', () => {
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.terrainRttPosMatrix32f = mat4.create();
+        tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
         const programMock = new Program(null, null, null, null, null, null, null, null);
         (painterMock.useProgram as Mock).mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);

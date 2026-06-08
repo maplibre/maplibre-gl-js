@@ -1,4 +1,4 @@
-import Protobuf from 'pbf';
+import {PbfReader} from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import {fromVectorTileJs, type VectorTileLayerLike, type VectorTileLike} from '@maplibre/vt-pbf';
 import {type ExpiryData, getArrayBuffer} from '../util/ajax.ts';
@@ -49,7 +49,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     loadVectorTile(params: WorkerTileParameters, rawData: ArrayBuffer): LoadVectorTileResult {
         try {
             const vectorTile = params.encoding !== 'mlt'
-                ? new VectorTile(new Protobuf(rawData))
+                ? new VectorTile(new PbfReader(rawData))
                 : new MLTVectorTile(rawData);
 
             return {vectorTile, rawData};
@@ -133,8 +133,10 @@ export class VectorTileWorkerSource implements WorkerSource {
 
         if (parseState) {
             const {rawData, cacheControl, resourceTiming} = parseState;
+            // Overzoomed tiles are always re-encoded to MVT protobuf by _getOverzoomTile
+            const encoding = params.overzoomParameters ? 'mvt' : params.encoding;
             // Transferring a copy of rawTileData because the worker needs to retain its copy.
-            result = extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
+            result = extend({rawTileData: rawData.slice(0), encoding}, result, cacheControl, resourceTiming);
         }
 
         return result;

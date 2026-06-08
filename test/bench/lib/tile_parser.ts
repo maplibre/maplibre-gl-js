@@ -1,4 +1,4 @@
-import Protobuf from 'pbf';
+import {PbfReader} from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 
 import {derefLayers} from '@maplibre/maplibre-gl-style-spec';
@@ -160,7 +160,7 @@ export default class TileParser {
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
         });
 
-        const vectorTile = new VectorTile(new Protobuf(tile.buffer));
+        const vectorTile = new VectorTile(new PbfReader(tile.buffer));
 
         return workerTile.parse(vectorTile, this.layerIndex, [], this.actor, SubdivisionGranularitySetting.noSubdivision);
     }
