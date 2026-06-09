@@ -11,6 +11,7 @@ import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
 import {shaders} from '../shaders/shaders.ts';
 import {Program} from '../webgl/program.ts';
 import {programUniforms} from '../webgl/program/program_uniforms.ts';
+import {layerOpacityUniformValues} from '../webgl/program/layer_opacity_program.ts';
 import {Context} from '../webgl/context.ts';
 import {DepthMode} from '../webgl/depth_mode.ts';
 import {StencilMode} from '../webgl/stencil_mode.ts';
@@ -41,8 +42,8 @@ import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
 import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer.ts';
-import {isLineStyleLayer} from '../style/style_layer/line_style_layer.ts';
-import {isFillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
+import {isLineStyleLayer, type LineStyleLayer} from '../style/style_layer/line_style_layer.ts';
+import {isFillStyleLayer, type FillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
 import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
 import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
 import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer.ts';
@@ -107,6 +108,28 @@ export class Painter {
         depthRenderbuffer: WebGLRenderbuffer;
         size: number;
     } | null;
+    /**
+     * Shared scratch FBO (color + depth-stencil) used by `{line,fill}-layer-opacity`.
+     * The layer is rendered into this FBO, then composited into whatever framebuffer was previously bound
+     * The canvas in the flat case, the per-terrain-tile RTT texture in the terrain case.
+     * Resized in place to match the target dimensions.
+     */
+    private _layerOpacityScratchFbo: {
+        fbo: Framebuffer;
+        width: number;
+        height: number;
+    } | null;
+    /**
+     * Transient state for an in-flight `{line,fill}-layer-opacity` subpass.
+     * Set by {@link beginLayerOpacitySubpass}, cleared by {@link endLayerOpacitySubpass}.
+     * Non-null exactly while a subpass is in flight.
+     */
+    private _layerOpacitySubpass: {
+        /** Framebuffer to composite the scratch FBO back into when the subpass ends. */
+        compositeTarget: WebGLFramebuffer;
+        /** Viewport to restore for the composite draw. */
+        compositeViewport: [number, number, number, number];
+    } | null;
     numSublayers: number;
     depthEpsilon: number;
     emptyProgramConfiguration: ProgramConfiguration;
@@ -159,6 +182,8 @@ export class Painter {
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
         this._rttSharedFbo = null;
+        this._layerOpacityScratchFbo = null;
+        this._layerOpacitySubpass = null;
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
@@ -790,6 +815,87 @@ export class Painter {
     }
 
     /**
+     * Begin a `{line,fill}-layer-opacity` subpass. Saves the currently bound framebuffer / viewport,
+     * binds the shared scratch FBO at the target's resolution, clears it, and writes the layer's clipping masks.
+     * The caller then renders the layer into the scratch FBO and finishes with {@link endLayerOpacitySubpass}.
+     */
+    beginLayerOpacitySubpass(layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[], terrain: boolean): void {
+        const context = this.context;
+        const compositeTarget = context.bindFramebuffer.get();
+        const compositeViewport = context.viewport.get();
+        const [, , width, height] = compositeViewport;
+
+        this._bindLayerOpacityScratch(width, height);
+        this._layerOpacitySubpass = {compositeTarget, compositeViewport};
+
+        context.viewport.set([0, 0, width, height]);
+        context.clear({color: Color.transparent, depth: 1, stencil: 0});
+
+        this.currentStencilSource = undefined;
+        this._renderTileClippingMasks(layer, coords, terrain);
+    }
+
+    /**
+     * Finish a `{line,fill}-layer-opacity` subpass started by {@link beginLayerOpacitySubpass}.
+     * Restores the previously bound framebuffer / viewport and composites the scratch FBO's color attachment
+     * with `opacity` as a uniform multiplier.
+     */
+    endLayerOpacitySubpass(layer: LineStyleLayer | FillStyleLayer, opacity: number): void {
+        const context = this.context;
+        const gl = context.gl;
+        const {compositeTarget, compositeViewport} = this._layerOpacitySubpass;
+        const scratchFbo = this._layerOpacityScratchFbo.fbo;
+
+        context.bindFramebuffer.set(compositeTarget);
+        context.viewport.set(compositeViewport);
+
+        context.activeTexture.set(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, scratchFbo.colorAttachment.get());
+
+        this.useProgram('layerOpacity').draw(context, gl.TRIANGLES,
+            DepthMode.disabled, StencilMode.disabled, this.colorModeForRenderPass(), CullFaceMode.disabled,
+            layerOpacityUniformValues(opacity, 0), null, null,
+            layer.id, this.viewportBuffer, this.quadTriangleIndexBuffer,
+            this.viewportSegments, layer.paint, this.transform.zoom);
+
+        this._layerOpacitySubpass = null;
+    }
+    
+    /**
+        * Binds the shared `{line,fill}-layer-opacity` scratch FBO at `width x height`.
+        * Lazy-creates/resizes its color texture and depth-stencil renderbuffer as needed.
+        */
+    private _bindLayerOpacityScratch(width: number, height: number): Framebuffer {
+        const gl = this.context.gl;
+
+        if (!this._layerOpacityScratchFbo) {
+            const fbo = this.context.createFramebuffer(width, height, true, true);
+            const texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            fbo.colorAttachment.set(texture);
+            fbo.depthAttachment.set(this.context.createRenderbuffer(gl.DEPTH_STENCIL, width, height));
+            this._layerOpacityScratchFbo = {fbo, width, height};
+        } else if (this._layerOpacityScratchFbo.width !== width || this._layerOpacityScratchFbo.height !== height) {
+            const slot = this._layerOpacityScratchFbo;
+            gl.bindTexture(gl.TEXTURE_2D, slot.fbo.colorAttachment.get());
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            this.context.bindRenderbuffer.set(slot.fbo.depthAttachment.get());
+            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
+            this.context.bindRenderbuffer.set(null);
+            slot.fbo.width = slot.width = width;
+            slot.fbo.height = slot.height = height;
+        }
+
+        this.context.bindFramebuffer.set(this._layerOpacityScratchFbo.fbo.framebuffer);
+        return this._layerOpacityScratchFbo.fbo;
+    }
+
+    /**
      * Checks whether a pattern image is needed, and if it is, whether it is not loaded.
      *
      * @returns true if a needed image is missing and rendering needs to be skipped.
@@ -909,6 +1015,9 @@ export class Painter {
             gl.deleteFramebuffer(this._rttSharedFbo.fbo.framebuffer);
             this._rttSharedFbo = null;
         }
+
+        this._layerOpacityScratchFbo?.fbo.destroy();
+        this._layerOpacityScratchFbo = null;
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
         if (this.debugBuffer) this.debugBuffer.destroy();

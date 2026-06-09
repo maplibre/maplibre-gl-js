@@ -1,0 +1,72 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 521,
+      "height": 521,
+      "allowed": 0.005
+    }
+  },
+  "center": [11.52517, 47.34487],
+  "zoom": 13,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 12,
+      "tileSize": 256
+    },
+    "osm": {
+      "type": "raster",
+      "tiles": ["local://tiles/number/{z}.png"],
+      "maxzoom": 17,
+      "tileSize": 256
+    },
+    "polygon": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[
+            [11.5250, 47.3569],
+            [11.5214, 47.3494],
+            [11.5099, 47.3494],
+            [11.5193, 47.3448],
+            [11.5157, 47.3374],
+            [11.5250, 47.3420],
+            [11.5343, 47.3374],
+            [11.5307, 47.3448],
+            [11.5401, 47.3494],
+            [11.5286, 47.3494],
+            [11.5250, 47.3569]
+          ]]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "raster",
+      "type": "raster",
+      "source": "osm",
+      "paint": {
+        "raster-opacity": 1.0
+      }
+    },
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "polygon",
+      "paint": {
+        "fill-color": "#ff0000",
+        "fill-layer-opacity": 0.5
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  }
+}

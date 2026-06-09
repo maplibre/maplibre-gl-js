@@ -20,7 +20,22 @@ import {translatePosition} from '../../util/util.ts';
 export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
-    if (opacity.constantOr(1) === 0) return;
+    const layerOpacity = layer.paint.get('fill-layer-opacity');
+    if (opacity.constantOr(1) === 0 || layerOpacity === 0) return;
+
+    // Partial fill-layer-opacity
+    // Render the whole layer to a scratch FBO, then composite with `layerOpacity`.
+    // Applies opacity uniformly to the layer instead of accumulating alpha across overlapping polygons.
+    if (layerOpacity < 1) {
+        if (painter.renderPass !== 'translucent') return;
+        const useTerrain = !!painter.style.map.terrain;
+
+        painter.beginLayerOpacitySubpass(layer, coords, useTerrain);
+        drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
+        painter.endLayerOpacitySubpass(layer, layerOpacity);
+
+        return;
+    }
 
     const pattern = layer.paint.get('fill-pattern');
     const fillEligibleForOpaque = painter.opaquePassEnabledForLayer() &&
@@ -49,6 +64,8 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
 
 /**
  * Draw fill + outline in a single translucent pass with ReadOnly depth.
+ * Shared by the layer-opacity subpass (always) and the normal translucent path
+ * (when the fill is not opaque-pass-eligible).
  */
 function drawFillAndOutline(
     painter: Painter,
