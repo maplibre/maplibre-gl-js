@@ -74,7 +74,7 @@ test('no render before style loaded', async () => {
 
     // Force a update should not call triggerRepaint till style is loaded.
     // Once style is loaded, it will trigger the update.
-    map._update();
+    map._update(false, false);
     expect(loaded).toBeTruthy();
     server.respond();
     expect(loaded).toBeTruthy();

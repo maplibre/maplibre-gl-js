@@ -28,7 +28,6 @@ type TranslucentPassPlan = {
  */
 export class StaticBaseCacheManager {
     _cache: StaticBaseCache = new StaticBaseCache();
-    enabled: boolean = true;
     stabilityThreshold: number = 3;
     minLayers: number = 5;
 
@@ -104,18 +103,16 @@ export class StaticBaseCacheManager {
 
         // Compute N: number of consecutive stable layers from the bottom
         let stableLayerCount = 0;
-        if (this.enabled) {
-            for (const layerId of layerIds) {
-                const layer = layers[layerId];
-                if (layer.isHidden(zoom)) {
-                    stableLayerCount++;
-                    continue;
-                }
-                if (!this._isLayerCacheable(layer, imageManager, tileManagers)) {
-                    break;
-                }
+        for (const layerId of layerIds) {
+            const layer = layers[layerId];
+            if (layer.isHidden(zoom)) {
                 stableLayerCount++;
+                continue;
             }
+            if (!this._isLayerCacheable(layer, imageManager, tileManagers)) {
+                break;
+            }
+            stableLayerCount++;
         }
 
         // Invalidate cache during camera movement.

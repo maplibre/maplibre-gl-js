@@ -154,9 +154,9 @@ export class Painter {
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
     terrainFacilitator: {depthDirty: boolean; coordsDirty: boolean; matrix: mat4; renderTime: number};
 
-    staticBaseCache: StaticBaseCacheManager;
+    staticBaseCache: StaticBaseCacheManager | null;
 
-    constructor(gl: WebGL2RenderingContext, transform: IReadonlyTransform) {
+    constructor(gl: WebGL2RenderingContext, transform: IReadonlyTransform, cacheStaticTranslucentLayersOptimization?: boolean) {
         this.drawFunctions = webglDrawFunctions;
         this.context = new Context(gl);
         this.transform = transform;
@@ -165,7 +165,7 @@ export class Painter {
         this._rttSharedFbo = null;
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
-        this.staticBaseCache = new StaticBaseCacheManager();
+        this.staticBaseCache = cacheStaticTranslucentLayersOptimization ? new StaticBaseCacheManager() : null;
 
         this.setup();
 
@@ -187,7 +187,7 @@ export class Painter {
         this.pixelRatio = pixelRatio;
         this.context.viewport.set([0, 0, this.width, this.height]);
 
-        this.staticBaseCache.invalidate();
+        this.staticBaseCache?.invalidate();
 
         if (this.style) {
             for (const layerId of this.style._order) {
@@ -614,7 +614,7 @@ export class Painter {
         // Disable static base cache when render-to-texture is active (terrain/globe) —
         // the RTT system renders layers into per-tile textures, and a screen-space
         // the static base cache would capture incorrect content.
-        const useStaticBaseCache = !this.renderToTexture;
+        const useStaticBaseCache = this.staticBaseCache && !this.renderToTexture;
         const {cacheStartLayer, needsCapture, stableLayerCount} = useStaticBaseCache
             ? this.staticBaseCache.planTranslucentPassCaching(
                 this, layerIds, this.style._layers, this.transform.zoom, options, this.imageManager, tileManagers)
@@ -646,7 +646,7 @@ export class Painter {
 
             // After rendering the last stable layer, capture the screen into the static base cache
             if (needsCapture && this.currentLayer === stableLayerCount - 1) {
-                this.staticBaseCache.captureCache(this.context, this.width, this.height, stableLayerCount);
+                this.staticBaseCache?.captureCache(this.context, this.width, this.height, stableLayerCount);
             }
         }
 
@@ -940,7 +940,7 @@ export class Painter {
         if (this.rasterBoundsBuffer) this.rasterBoundsBuffer.destroy();
         if (this.rasterBoundsBufferPosOnly) this.rasterBoundsBufferPosOnly.destroy();
         if (this.viewportBuffer) this.viewportBuffer.destroy();
-        this.staticBaseCache.destroy();
+        this.staticBaseCache?.destroy();
         if (this.tileBorderIndexBuffer) this.tileBorderIndexBuffer.destroy();
         if (this.quadTriangleIndexBuffer) this.quadTriangleIndexBuffer.destroy();
         if (this.tileExtentMesh) this.tileExtentMesh.vertexBuffer?.destroy();

@@ -91,7 +91,7 @@ describe('translucent cache', () => {
         gl = createNullGL();
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(512, 512);
-        painter = new Painter(gl, transform);
+        painter = new Painter(gl, transform, true);
         painter.width = 512;
         painter.height = 512;
     });
@@ -149,7 +149,7 @@ describe('translucent cache', () => {
         const useProgramSpy = vi.spyOn(painter, 'useProgram').mockReturnValue({draw: vi.fn()} as any);
 
         painter.style = createMockStyle(7);
-        manager.enabled = true;
+
         manager.minLayers = 1;
 
         painter.render(painter.style, defaultRenderOptions);
@@ -168,7 +168,7 @@ describe('translucent cache', () => {
         const useProgramSpy = vi.spyOn(painter, 'useProgram');
 
         painter.style = createMockStyle(0);
-        manager.enabled = true;
+
 
         painter.render(painter.style, defaultRenderOptions);
 
@@ -186,7 +186,7 @@ describe('translucent cache', () => {
         const useProgramSpy = vi.spyOn(painter, 'useProgram');
 
         painter.style = createMockStyle(0);
-        manager.enabled = true;
+
 
         painter.render(painter.style, defaultRenderOptions);
 
@@ -199,7 +199,7 @@ describe('translucent cache', () => {
         const captureSpy = vi.spyOn(manager, 'captureCache');
 
         painter.style = createMockStyle(6, 5); // layer-5 is unstable
-        manager.enabled = true;
+
         manager.minLayers = 1;
 
         painter.render(painter.style, defaultRenderOptions);

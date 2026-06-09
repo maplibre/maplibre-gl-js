@@ -576,7 +576,7 @@ export class HandlerManager {
 
         map._applyUpdatedTransform(tr);
 
-        this._map._update();
+        this._map._update(false, false);
         if (!combinedResult.noInertia) this._inertia.record(combinedResult);
         this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
 

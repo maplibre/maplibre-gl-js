@@ -11,7 +11,7 @@ describe('StaticBaseCache', () => {
         gl = createNullGL();
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(512, 512);
-        painter = new Painter(gl, transform);
+        painter = new Painter(gl, transform, true);
         painter.width = 512;
         painter.height = 512;
     });
