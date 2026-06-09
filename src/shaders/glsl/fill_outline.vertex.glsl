@@ -8,12 +8,12 @@ out vec2 v_pos;
 out float v_depth;
 #endif
 
-#pragma mapbox: define highp vec4 outline_color
-#pragma mapbox: define lowp float opacity
+#pragma maplibre: define highp vec4 outline_color
+#pragma maplibre: define lowp float opacity
 
 void main() {
-    #pragma mapbox: initialize highp vec4 outline_color
-    #pragma mapbox: initialize lowp float opacity
+    #pragma maplibre: initialize highp vec4 outline_color
+    #pragma maplibre: initialize lowp float opacity
 
     // Move vertex outside clip space to discard triangle when opacity is negligible
     if (opacity < 0.01) {

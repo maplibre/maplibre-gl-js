@@ -8,8 +8,8 @@ layout(location = 0) in vec2 a_pos;
 
 out vec2 v_extrude;
 
-#pragma mapbox: define highp float weight
-#pragma mapbox: define mediump float radius
+#pragma maplibre: define highp float weight
+#pragma maplibre: define mediump float radius
 
 // Effective "0" in the kernel density texture to adjust the kernel size to;
 // this empirically chosen number minimizes artifacts on overlapping kernels
@@ -20,8 +20,8 @@ const highp float ZERO = 1.0 / 255.0 / 16.0;
 #define GAUSS_COEF 0.3989422804014327
 
 void main(void) {
-    #pragma mapbox: initialize highp float weight
-    #pragma mapbox: initialize mediump float radius
+    #pragma maplibre: initialize highp float weight
+    #pragma maplibre: initialize mediump float radius
 
     // decode the extrusion vector that we snuck into the a_pos vector
     vec2 pos_raw = a_pos + 32768.0;

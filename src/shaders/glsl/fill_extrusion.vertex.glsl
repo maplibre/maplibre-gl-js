@@ -16,15 +16,15 @@ layout(location = 1) in vec4 a_normal_ed;
 
 out vec4 v_color;
 
-#pragma mapbox: define highp float base
-#pragma mapbox: define highp float height
+#pragma maplibre: define highp float base
+#pragma maplibre: define highp float height
 
-#pragma mapbox: define highp vec4 color
+#pragma maplibre: define highp vec4 color
 
 void main() {
-    #pragma mapbox: initialize highp float base
-    #pragma mapbox: initialize highp float height
-    #pragma mapbox: initialize highp vec4 color
+    #pragma maplibre: initialize highp float base
+    #pragma maplibre: initialize highp float height
+    #pragma maplibre: initialize highp vec4 color
 
     vec3 normal = a_normal_ed.xyz;
 
