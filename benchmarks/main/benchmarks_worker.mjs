@@ -1,22 +1,22 @@
 //#region \0rolldown/runtime.js
-var __create$1 = Object.create;
-var __defProp$1 = Object.defineProperty;
-var __getOwnPropDesc$1 = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames$1 = Object.getOwnPropertyNames;
-var __getProtoOf$1 = Object.getPrototypeOf;
-var __hasOwnProp$1 = Object.prototype.hasOwnProperty;
-var __commonJSMin$1 = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
-var __copyProps$1 = (to, from, except, desc) => {
-	if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames$1(from), i = 0, n = keys.length, key; i < n; i++) {
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
+var __copyProps = (to, from, except, desc) => {
+	if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
 		key = keys[i];
-		if (!__hasOwnProp$1.call(to, key) && key !== except) __defProp$1(to, key, {
+		if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
 			get: ((k) => from[k]).bind(null, key),
-			enumerable: !(desc = __getOwnPropDesc$1(from, key)) || desc.enumerable
+			enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
 		});
 	}
 	return to;
 };
-var __toESM$1 = (mod, isNodeMode, target) => (target = mod != null ? __create$1(__getProtoOf$1(mod)) : {}, __copyProps$1(isNodeMode || !mod || !mod.__esModule ? __defProp$1(target, "default", {
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
 	value: mod,
 	enumerable: true
 }) : target, mod));
@@ -321,7 +321,7 @@ Point.convert = function(p) {
 };
 //#endregion
 //#region node_modules/@mapbox/unitbezier/index.js
-function unitBezier(p1x, p1y, p2x, p2y) {
+function unitBezier$1(p1x, p1y, p2x, p2y) {
 	const cx = 3 * p1x;
 	const bx = 3 * (p2x - p1x) - cx;
 	const ax = 1 - cx - bx;
@@ -503,7 +503,7 @@ function easeCubicInOut(t) {
 * @param p2y - control point 2 y coordinate
 */
 function bezier(p1x, p1y, p2x, p2y) {
-	return unitBezier(p1x, p1y, p2x, p2y);
+	return unitBezier$1(p1x, p1y, p2x, p2y);
 }
 bezier(.25, .1, .25, 1);
 /**
@@ -866,29 +866,6 @@ var TransferableGridIndex = class TransferableGridIndex {
 		return new TransferableGridIndex(serialized.buffer);
 	}
 };
-//#endregion
-//#region node_modules/@maplibre/maplibre-gl-style-spec/dist/index.mjs
-var __create = Object.create;
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
-var __copyProps = (to, from, except, desc) => {
-	if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
-		key = keys[i];
-		if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
-			get: ((k) => from[k]).bind(null, key),
-			enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
-		});
-	}
-	return to;
-};
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
-	value: mod,
-	enumerable: true
-}) : target, mod));
 var v8_default = {
 	$version: 8,
 	$root: {
@@ -2328,6 +2305,18 @@ var v8_default = {
 			},
 			"property-type": "data-driven"
 		},
+		"fill-layer-opacity": {
+			"type": "number",
+			"default": 1,
+			"minimum": 0,
+			"maximum": 1,
+			"transition": true,
+			"expression": {
+				"interpolated": true,
+				"parameters": ["zoom"]
+			},
+			"property-type": "data-constant"
+		},
 		"fill-color": {
 			"type": "color",
 			"default": "#000000",
@@ -2517,6 +2506,18 @@ var v8_default = {
 				]
 			},
 			"property-type": "data-driven"
+		},
+		"line-layer-opacity": {
+			"type": "number",
+			"default": 1,
+			"minimum": 0,
+			"maximum": 1,
+			"transition": true,
+			"expression": {
+				"interpolated": true,
+				"parameters": ["zoom"]
+			},
+			"property-type": "data-constant"
 		},
 		"line-color": {
 			"type": "color",
@@ -5872,59 +5873,37 @@ var Step = class Step {
 		return this.outputs.every((out) => out.outputDefined());
 	}
 };
-var import_unitbezier = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
-	module.exports = UnitBezier;
-	function UnitBezier(p1x, p1y, p2x, p2y) {
-		this.cx = 3 * p1x;
-		this.bx = 3 * (p2x - p1x) - this.cx;
-		this.ax = 1 - this.cx - this.bx;
-		this.cy = 3 * p1y;
-		this.by = 3 * (p2y - p1y) - this.cy;
-		this.ay = 1 - this.cy - this.by;
-		this.p1x = p1x;
-		this.p1y = p1y;
-		this.p2x = p2x;
-		this.p2y = p2y;
-	}
-	UnitBezier.prototype = {
-		sampleCurveX: function(t) {
-			return ((this.ax * t + this.bx) * t + this.cx) * t;
-		},
-		sampleCurveY: function(t) {
-			return ((this.ay * t + this.by) * t + this.cy) * t;
-		},
-		sampleCurveDerivativeX: function(t) {
-			return (3 * this.ax * t + 2 * this.bx) * t + this.cx;
-		},
-		solveCurveX: function(x, epsilon) {
-			if (epsilon === void 0) epsilon = 1e-6;
-			if (x < 0) return 0;
-			if (x > 1) return 1;
-			var t = x;
-			for (var i = 0; i < 8; i++) {
-				var x2 = this.sampleCurveX(t) - x;
-				if (Math.abs(x2) < epsilon) return t;
-				var d2 = this.sampleCurveDerivativeX(t);
-				if (Math.abs(d2) < 1e-6) break;
-				t = t - x2 / d2;
-			}
-			var t0 = 0;
-			var t1 = 1;
-			t = x;
-			for (i = 0; i < 20; i++) {
-				x2 = this.sampleCurveX(t);
-				if (Math.abs(x2 - x) < epsilon) break;
-				if (x > x2) t0 = t;
-				else t1 = t;
-				t = (t1 - t0) * .5 + t0;
-			}
-			return t;
-		},
-		solve: function(x, epsilon) {
-			return this.sampleCurveY(this.solveCurveX(x, epsilon));
+function unitBezier(p1x, p1y, p2x, p2y) {
+	const cx = 3 * p1x;
+	const bx = 3 * (p2x - p1x) - cx;
+	const ax = 1 - cx - bx;
+	const cy = 3 * p1y;
+	const by = 3 * (p2y - p1y) - cy;
+	const ay = 1 - cy - by;
+	return function solve(x, epsilon = 1e-6) {
+		if (x <= 0) return 0;
+		if (x >= 1) return 1;
+		let t = x;
+		for (let i = 0; i < 8; i++) {
+			const x2 = ((ax * t + bx) * t + cx) * t - x;
+			if (Math.abs(x2) < epsilon) return ((ay * t + by) * t + cy) * t;
+			const d2 = (3 * ax * t + 2 * bx) * t + cx;
+			if (Math.abs(d2) < 1e-6) break;
+			t -= x2 / d2;
 		}
+		let t0 = 0;
+		let t1 = 1;
+		t = x;
+		for (let i = 0; i < 20; i++) {
+			const x2 = ((ax * t + bx) * t + cx) * t;
+			if (Math.abs(x2 - x) < epsilon) break;
+			if (x > x2) t0 = t;
+			else t1 = t;
+			t = (t0 + t1) * .5;
+		}
+		return ((ay * t + by) * t + cy) * t;
 	};
-})))(), 1);
+}
 var Interpolate = class Interpolate {
 	constructor(type, operator, interpolation, input, stops) {
 		this.type = type;
@@ -5944,7 +5923,7 @@ var Interpolate = class Interpolate {
 		else if (interpolation.name === "linear") t = exponentialInterpolation(input, 1, lower, upper);
 		else if (interpolation.name === "cubic-bezier") {
 			const c = interpolation.controlPoints;
-			t = new import_unitbezier.default(c[0], c[1], c[2], c[3]).solve(exponentialInterpolation(input, 1, lower, upper));
+			t = unitBezier(c[0], c[1], c[2], c[3])(exponentialInterpolation(input, 1, lower, upper));
 		}
 		return t;
 	}
@@ -12649,7 +12628,7 @@ const dashAttributes = createLayout([{
 }]);
 //#endregion
 //#region node_modules/murmurhash-js/murmurhash3_gc.js
-var require_murmurhash3_gc = /* @__PURE__ */ __commonJSMin$1(((exports, module) => {
+var require_murmurhash3_gc = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	/**
 	* JS Implementation of MurmurHash3 (r136) (as of May 20, 2011)
 	* 
@@ -12698,7 +12677,7 @@ var require_murmurhash3_gc = /* @__PURE__ */ __commonJSMin$1(((exports, module) 
 }));
 //#endregion
 //#region node_modules/murmurhash-js/murmurhash2_gc.js
-var require_murmurhash2_gc = /* @__PURE__ */ __commonJSMin$1(((exports, module) => {
+var require_murmurhash2_gc = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	/**
 	* JS Implementation of MurmurHash2
 	* 
@@ -12738,7 +12717,7 @@ var require_murmurhash2_gc = /* @__PURE__ */ __commonJSMin$1(((exports, module) 
 }));
 //#endregion
 //#region src/data/feature_position_map.ts
-var import_murmurhash_js = /* @__PURE__ */ __toESM$1((/* @__PURE__ */ __commonJSMin$1(((exports, module) => {
+var import_murmurhash_js = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var murmur3 = require_murmurhash3_gc();
 	var murmur2 = require_murmurhash2_gc();
 	module.exports = murmur3;
@@ -15759,6 +15738,7 @@ let paint$5;
 const getPaint$5 = () => paint$5 = paint$5 || new Properties({
 	"fill-antialias": new DataConstantProperty(latest_default["paint_fill"]["fill-antialias"]),
 	"fill-opacity": new DataDrivenProperty(latest_default["paint_fill"]["fill-opacity"]),
+	"fill-layer-opacity": new DataConstantProperty(latest_default["paint_fill"]["fill-layer-opacity"]),
 	"fill-color": new DataDrivenProperty(latest_default["paint_fill"]["fill-color"]),
 	"fill-outline-color": new DataDrivenProperty(latest_default["paint_fill"]["fill-outline-color"]),
 	"fill-translate": new DataConstantProperty(latest_default["paint_fill"]["fill-translate"]),
@@ -18693,6 +18673,7 @@ const getLayout$1 = () => layout$1 = layout$1 || new Properties({
 let paint$3;
 const getPaint$3 = () => paint$3 = paint$3 || new Properties({
 	"line-opacity": new DataDrivenProperty(latest_default["paint_line"]["line-opacity"]),
+	"line-layer-opacity": new DataConstantProperty(latest_default["paint_line"]["line-layer-opacity"]),
 	"line-color": new DataDrivenProperty(latest_default["paint_line"]["line-color"]),
 	"line-translate": new DataConstantProperty(latest_default["paint_line"]["line-translate"]),
 	"line-translate-anchor": new DataConstantProperty(latest_default["paint_line"]["line-translate-anchor"]),
