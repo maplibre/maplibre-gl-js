@@ -958,10 +958,8 @@ export class Painter {
             this._rttSharedFbo = null;
         }
 
-        if (this._layerOpacityScratchFbo) {
-            this._layerOpacityScratchFbo.fbo.destroy();
-            this._layerOpacityScratchFbo = null;
-        }
+        this._layerOpacityScratchFbo?.fbo.destroy();
+        this._layerOpacityScratchFbo = null;
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
         if (this.debugBuffer) this.debugBuffer.destroy();

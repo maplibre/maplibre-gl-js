@@ -21,20 +21,17 @@ import {translatePosition} from '../../util/util.ts';
 export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
-
-    if (opacity.constantOr(1) === 0) {
-        return;
-    }
-
     const layerOpacity = layer.paint.get('fill-layer-opacity');
-    const terrain = !!painter.style.map.terrain;
+    if (opacity.constantOr(1) === 0 || layerOpacity === 0) return;
 
-    // fill-layer-opacity between 0 and 1: render the whole layer to a scratch FBO, then
-    // composite with `layerOpacity`. Applies opacity uniformly to the layer instead of
-    // accumulating alpha across overlapping polygons.
-    if (layerOpacity > 0 && layerOpacity < 1) {
+    const useTerrain = !!painter.style.map.terrain;
+
+    // Partial fill-layer-opacity: render the whole layer to a scratch FBO, then composite
+    // with `layerOpacity`. Applies opacity uniformly to the layer instead of accumulating
+    // alpha across overlapping polygons.
+    if (layerOpacity < 1) {
         if (painter.renderPass !== 'translucent') return;
-        drawLayerOpacitySubpass(painter, layer, coords, layerOpacity, terrain,
+        drawLayerOpacitySubpass(painter, layer, coords, layerOpacity, useTerrain,
             () => drawFillAndOutline(painter, tileManager, layer, coords, renderOptions));
         return;
     }

@@ -144,21 +144,21 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
 
     const opacity = layer.paint.get('line-opacity');
     const width = layer.paint.get('line-width');
-    if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0) return;
-
     const layerOpacity = layer.paint.get('line-layer-opacity');
-    const terrain = !!painter.style.map.terrain;
+    if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0 || layerOpacity === 0) return;
 
-    // line-layer-opacity between 0 and 1: render the whole layer to a scratch FBO, then
-    // composite with `layerOpacity`. Applies opacity uniformly to the layer instead of
-    // accumulating alpha across overlapping segments.
-    if (layerOpacity > 0 && layerOpacity < 1) {
-        drawLayerOpacitySubpass(painter, layer, coords, layerOpacity, terrain,
-            () => drawLineTiles(painter, tileManager, layer, coords, renderOptions, terrain));
+    const useTerrain = !!painter.style.map.terrain;
+
+    // Partial line-layer-opacity: render the whole layer to a scratch FBO, then composite
+    // with `layerOpacity`. Applies opacity uniformly to the layer instead of accumulating
+    // alpha across overlapping segments.
+    if (layerOpacity < 1) {
+        drawLayerOpacitySubpass(painter, layer, coords, layerOpacity, useTerrain,
+            () => drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain));
         return;
     }
 
-    drawLineTiles(painter, tileManager, layer, coords, renderOptions, terrain);
+    drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain);
 }
 
 function drawLineTiles(
