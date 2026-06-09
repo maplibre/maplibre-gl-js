@@ -163,7 +163,7 @@ export const shaders: {
 
 /** Expand #pragmas to #ifdefs, extract attributes and uniforms */
 function prepare(fragmentSource: string, vertexSource: string): PreparedShader {
-    const re = /#pragma mapbox: ([\w]+) ([\w]+) ([\w]+) ([\w]+)/g;
+    const re = /#pragma maplibre: ([\w]+) ([\w]+) ([\w]+) ([\w]+)/g;
 
     const vertexAttributes = vertexSource.match(/in ([\w]+) ([\w]+)/g);
     const fragmentUniforms = fragmentSource.match(/uniform ([\w]+) ([\w]+)([\s]*)([\w]*)/g);

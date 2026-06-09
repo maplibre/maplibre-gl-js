@@ -27,10 +27,10 @@ uniform bool u_is_offset;
 out vec2 v_tex;
 flat out float v_total_opacity;
 
-#pragma mapbox: define lowp float opacity
+#pragma maplibre: define lowp float opacity
 
 void main() {
-    #pragma mapbox: initialize lowp float opacity
+    #pragma maplibre: initialize lowp float opacity
 
     vec2 a_pos = a_pos_offset.xy;
     vec2 a_offset = a_pos_offset.zw;
