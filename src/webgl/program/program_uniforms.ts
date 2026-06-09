@@ -6,7 +6,8 @@ import {debugUniforms, type DebugUniformsType} from './debug_program.ts';
 import {heatmapUniforms, heatmapTextureUniforms, type HeatmapUniformsType, type HeatmapTextureUniformsType} from './heatmap_program.ts';
 import {hillshadeUniforms, hillshadePrepareUniforms, type HillshadeUniformsType, type HillshadePrepareUniformsType} from './hillshade_program.ts';
 import {colorReliefUniforms, type ColorReliefUniformsType} from './color_relief_program.ts';
-import {lineUniforms, lineGradientUniforms, linePatternUniforms, lineSDFUniforms, lineGradientSDFUniforms, lineTextureUniforms, type LineUniformsType, type LineGradientUniformsType, type LinePatternUniformsType, type LineSDFUniformsType, type LineGradientSDFUniformsType, type LineTextureUniformsType} from './line_program.ts';
+import {lineUniforms, lineGradientUniforms, linePatternUniforms, lineSDFUniforms, lineGradientSDFUniforms, type LineUniformsType, type LineGradientUniformsType, type LinePatternUniformsType, type LineSDFUniformsType, type LineGradientSDFUniformsType} from './line_program.ts';
+import {layerOpacityUniforms, type LayerOpacityUniformsType} from './layer_opacity_program.ts';
 import {rasterUniforms, type RasterUniformsType} from './raster_program.ts';
 import {symbolIconUniforms, symbolSDFUniforms, symbolTextAndIconUniforms, type SymbolIconUniformsType, type SymbolSDFUniformsType, type symbolTextAndIconUniformsType} from './symbol_program.ts';
 import {backgroundUniforms, backgroundPatternUniforms, type BackgroundUniformsType, type BackgroundPatternUniformsType} from './background_program.ts';
@@ -42,7 +43,7 @@ export const programUniforms: {
     linePattern: (context: Context, locations: UniformLocations) => LinePatternUniformsType;
     lineSDF: (context: Context, locations: UniformLocations) => LineSDFUniformsType;
     lineGradientSDF: (context: Context, locations: UniformLocations) => LineGradientSDFUniformsType;
-    lineTexture: (context: Context, locations: UniformLocations) => LineTextureUniformsType;
+    layerOpacity: (context: Context, locations: UniformLocations) => LayerOpacityUniformsType;
     raster: (context: Context, locations: UniformLocations) => RasterUniformsType;
     symbolIcon: (context: Context, locations: UniformLocations) => SymbolIconUniformsType;
     symbolSDF: (context: Context, locations: UniformLocations) => SymbolSDFUniformsType;
@@ -78,7 +79,7 @@ export const programUniforms: {
     linePattern: linePatternUniforms,
     lineSDF: lineSDFUniforms,
     lineGradientSDF: lineGradientSDFUniforms,
-    lineTexture: lineTextureUniforms,
+    layerOpacity: layerOpacityUniforms,
     raster: rasterUniforms,
     symbolIcon: symbolIconUniforms,
     symbolSDF: symbolSDFUniforms,

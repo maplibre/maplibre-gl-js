@@ -122,9 +122,8 @@ export class LineStyleLayer extends StyleLayer {
     }
 
     hasOffscreenPass(): boolean {
-        const opacity = this.paint.get('line-opacity');
-        const constantOpacity = opacity.constantOr(-1);
-        return constantOpacity > 0 && constantOpacity < 1 && !this.isHidden();
+        const layerOpacity = this.paint.get('line-layer-opacity');
+        return layerOpacity > 0 && layerOpacity < 1 && !this.isHidden();
     }
 
     onRemove: () => void = () => {

@@ -47,7 +47,7 @@
         "line-width": 6,
         "line-offset": 3,
         "line-color": "#006400",
-        "line-opacity": 0.2
+        "line-layer-opacity": 0.2
       },
       "layout": {
         "line-join": "miter",
