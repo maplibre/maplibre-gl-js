@@ -748,17 +748,6 @@ export function isSafari(scope: any): boolean {
     return _isSafari;
 }
 
-export function storageAvailable(type: string): boolean {
-    try {
-        const storage = window[type];
-        storage.setItem('_mapbox_test_', 1);
-        storage.removeItem('_mapbox_test_');
-        return true;
-    } catch {
-        return false;
-    }
-}
-
 // The following methods are from https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding#The_Unicode_Problem
 //Unicode compliant base64 encoder for strings
 export function b64EncodeUnicode(str: string): string {

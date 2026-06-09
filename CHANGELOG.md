@@ -1,14 +1,25 @@
 ## main
 ### ✨ Features and improvements
 - Revert the `line-opacity`-driven offscreen rendering introduced in [#7490](https://github.com/maplibre/maplibre-gl-js/pull/7490).
+- ⚠️ Removed the remaining mapbox references in the code and in the tests. This changes the `#pragma mapbox` to `#pragma maplibre` in case you have shader code that relied on it. ([#7761](https://github.com/maplibre/maplibre-gl-js/issues/7761)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- Fix a race condition in geojson source after init and fast update data ([#7734](https://github.com/maplibre/maplibre-gl-js/issues/7734)) (by [@HarelM](https://github.com/HarelM))
+- _...Add new stuff here..._
+
+## 6.0.0-13
+
+### ✨ Features and improvements
+
 - Improve `ProjectionData` matrix backing types for renderer and custom layer projection matrices ([#6316](https://github.com/maplibre/maplibre-gl-js/issues/6316)) (by [@cat0825](https://github.com/cat0825))
 
 ### 🐞 Bug fixes
+
 - Fix camera jump on dragend with globe + terrain at low pitch ([#7736](https://github.com/maplibre/maplibre-gl-js/pull/7736)) (by @kodeezabdullah)
 - Fix web font rendering by awaiting document.fonts.load() before TinySDF instantiation ([#7735](https://github.com/maplibre/maplibre-gl-js/pull/7735)) (by [@kodeezabdullah](https://github.com/kodeezabdullah))
 - Remove the framebuffer completeness check that threw an unhandled `Framebuffer is not complete` error on transient GPU resource loss (e.g. when a tab wakes from sleep); incomplete framebuffers now self-heal on the next frame instead ([#7303](https://github.com/maplibre/maplibre-gl-js/pull/7303)) (by [@johanrd](https://github.com/johanrd))
-- _...Add new stuff here..._
+- ⚠️ Disable icon scaling with offset, this is a render breaking change which we have decided to incorporate in both maplibre-gl-js and maplibre-native ([#7742](https://github.com/maplibre/maplibre-gl-js/issues/7742)) (by [@springmeyer](https://github.com/springmeyer) and [@HarelM](https://github.com/HarelM))
 
 ## 6.0.0-12
 

@@ -9,12 +9,12 @@ in highp vec2 v_uv;
 in float v_depth;
 #endif
 
-#pragma mapbox: define lowp float blur
-#pragma mapbox: define lowp float opacity
+#pragma maplibre: define lowp float blur
+#pragma maplibre: define lowp float opacity
 
 void main() {
-    #pragma mapbox: initialize lowp float blur
-    #pragma mapbox: initialize lowp float opacity
+    #pragma maplibre: initialize lowp float blur
+    #pragma maplibre: initialize lowp float opacity
 
     // Calculate the distance of the pixel from the line in pixels.
     float dist = length(v_normal) * v_width2.s;
