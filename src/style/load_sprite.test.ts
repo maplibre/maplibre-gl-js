@@ -10,7 +10,7 @@ import * as util from '../util/util.ts';
 import {ensureError} from '../util/util.ts';
 
 describe('normalizeSpriteURL', () => {
-    test('concantenates path, ratio, and extension for non-mapbox:// scheme', () => {
+    test('concantenates path, ratio, and extension for scheme', () => {
         expect(
             normalizeSpriteURL('http://www.foo.com/bar', '@2x', '.png')
         ).toBe('http://www.foo.com/bar@2x.png');
@@ -22,7 +22,7 @@ describe('normalizeSpriteURL', () => {
         ).toBe('file:///path/to/bar@2x.png');
     });
 
-    test('normalizes non-mapbox:// scheme when query string exists', () => {
+    test('normalizes scheme when query string exists', () => {
         expect(
             normalizeSpriteURL('http://www.foo.com/bar?fresh=true', '@2x', '.png')
         ).toBe('http://www.foo.com/bar@2x.png?fresh=true');

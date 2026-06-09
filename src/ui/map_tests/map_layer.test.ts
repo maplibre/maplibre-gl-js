@@ -21,7 +21,7 @@ test('moveLayer', async () => {
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
-                mapbox: {
+                maplibre: {
                     type: 'vector',
                     minzoom: 1,
                     maxzoom: 10,
@@ -31,12 +31,12 @@ test('moveLayer', async () => {
             layers: [{
                 id: 'layerId1',
                 type: 'circle',
-                source: 'mapbox',
+                source: 'maplibre',
                 'source-layer': 'sourceLayer'
             }, {
                 id: 'layerId2',
                 type: 'circle',
-                source: 'mapbox',
+                source: 'maplibre',
                 'source-layer': 'sourceLayer'
             }]
         })
@@ -52,13 +52,13 @@ test('getLayer', async () => {
     const layer = {
         id: 'layerId',
         type: 'circle',
-        source: 'mapbox',
+        source: 'maplibre',
         'source-layer': 'sourceLayer'
     };
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
-                mapbox: {
+                maplibre: {
                     type: 'vector',
                     minzoom: 1,
                     maxzoom: 10,
@@ -80,7 +80,7 @@ test('removeLayer restores Map.loaded() to true', async () => {
     const map = createMap({
         style: extend(createStyle(), {
             sources: {
-                mapbox: {
+                maplibre: {
                     type: 'vector',
                     minzoom: 1,
                     maxzoom: 10,
@@ -90,7 +90,7 @@ test('removeLayer restores Map.loaded() to true', async () => {
             layers: [{
                 id: 'layerId',
                 type: 'circle',
-                source: 'mapbox',
+                source: 'maplibre',
                 'source-layer': 'sourceLayer'
             }]
         })

@@ -21,7 +21,7 @@
       "type": "town"
     },
     "id": 1540753080,
-    "source": "mapbox",
+    "source": "maplibre",
     "sourceLayer": "place_label",
     "state": {}
   }

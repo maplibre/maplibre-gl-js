@@ -20,14 +20,6 @@
     "zoom": 15,
     "pitch": 85,
     "sources": {
-        "hillshadeSource": {
-            "type": "raster-dem",
-            "tiles": [
-                "local://tiles/zero-elevation-terrain-tile.png"
-            ],
-            "minzoom": 0,
-            "maxzoom": 12
-        },
         "terrain": {
             "type": "raster-dem",
             "tiles": [
