@@ -8,7 +8,6 @@ import {
     lineGradientUniformValues,
     lineGradientSDFUniformValues
 } from '../program/line_program.ts';
-import {drawLayerOpacitySubpass} from '../program/layer_opacity_program.ts';
 
 import type {Painter, RenderOptions} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -153,8 +152,9 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     // with `layerOpacity`. Applies opacity uniformly to the layer instead of accumulating
     // alpha across overlapping segments.
     if (layerOpacity < 1) {
-        drawLayerOpacitySubpass(painter, layer, coords, layerOpacity, useTerrain,
-            () => drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain));
+        painter.beginLayerOpacitySubpass(layer, coords, useTerrain);
+        drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain);
+        painter.endLayerOpacitySubpass(layer, layerOpacity);
         return;
     }
 

@@ -8,7 +8,6 @@ import {
     fillOutlineUniformValues,
     fillOutlinePatternUniformValues
 } from '../program/fill_program.ts';
-import {drawLayerOpacitySubpass} from '../program/layer_opacity_program.ts';
 
 import type {Painter, RenderOptions} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -31,8 +30,9 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
     // alpha across overlapping polygons.
     if (layerOpacity < 1) {
         if (painter.renderPass !== 'translucent') return;
-        drawLayerOpacitySubpass(painter, layer, coords, layerOpacity, useTerrain,
-            () => drawFillAndOutline(painter, tileManager, layer, coords, renderOptions));
+        painter.beginLayerOpacitySubpass(layer, coords, useTerrain);
+        drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
+        painter.endLayerOpacitySubpass(layer, layerOpacity);
         return;
     }
 
