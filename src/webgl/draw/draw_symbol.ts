@@ -385,6 +385,7 @@ function drawLayerSymbols(
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&
             hasVariableAnchors &&
             bucket.hasIconData();
+        const isOffset = layer._unevaluatedLayout.hasValue('icon-offset');
 
         if (alongLine) {
             const pitchedLabelPlaneMatrixInverse = mat4.create();
@@ -410,16 +411,16 @@ function drawLayerSymbols(
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
-                    uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, hasHalo, pitchedTextRescaling);
+                    uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, hasHalo, pitchedTextRescaling, isOffset);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
-                    uLabelPlaneMatrix, glCoordMatrixForShader, translation, texSize, texSizeIcon, pitchedTextRescaling);
+                    uLabelPlaneMatrix, glCoordMatrixForShader, translation, texSize, texSizeIcon, pitchedTextRescaling, isOffset);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
                 size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
-                uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, pitchedTextRescaling);
+                uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, pitchedTextRescaling, isOffset);
         }
 
         const state = {
