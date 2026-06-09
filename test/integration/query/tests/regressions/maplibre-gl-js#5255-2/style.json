@@ -10,11 +10,6 @@
     "projection": { "type": "globe" },
     "zoom": 14,
     "sources": {
-        "maplibre": {
-            "type": "vector",
-            "maxzoom": 14,
-            "tiles": ["local://tiles/{z}-{x}-{y}.mvt"]
-        },
         "circle": {
             "type": "geojson",
             "data": {
