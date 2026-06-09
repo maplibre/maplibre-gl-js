@@ -114,7 +114,7 @@ export class Painter {
      * The canvas in the flat case, the per-terrain-tile RTT texture in the terrain case.
      * Resized in place to match the target dimensions.
      */
-    _layerOpacityScratchFbo: {
+    private _layerOpacityScratchFbo: {
         fbo: Framebuffer;
         width: number;
         height: number;
@@ -122,11 +122,13 @@ export class Painter {
     /**
      * Transient state for an in-flight `{line,fill}-layer-opacity` subpass.
      * Set by {@link beginLayerOpacitySubpass}, cleared by {@link endLayerOpacitySubpass}.
-     * Holds the framebuffer/viewport to restore after the layer has been rendered into the scratch FBO.
+     * Non-null exactly while a subpass is in flight.
      */
-    _layerOpacitySubpass: {
-        prevFramebuffer: WebGLFramebuffer;
-        prevViewport: [number, number, number, number];
+    private _layerOpacitySubpass: {
+        /** Framebuffer to composite the scratch FBO back into when the subpass ends. */
+        compositeTarget: WebGLFramebuffer;
+        /** Viewport to restore for the composite draw. */
+        compositeViewport: [number, number, number, number];
     } | null;
     numSublayers: number;
     depthEpsilon: number;
@@ -819,15 +821,13 @@ export class Painter {
      */
     beginLayerOpacitySubpass(layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[], terrain: boolean): void {
         const context = this.context;
-        const prevViewport = context.viewport.get();
-        const [, , width, height] = prevViewport;
-
-        this._layerOpacitySubpass = {
-            prevFramebuffer: context.bindFramebuffer.get(),
-            prevViewport,
-        };
+        const compositeTarget = context.bindFramebuffer.get();
+        const compositeViewport = context.viewport.get();
+        const [, , width, height] = compositeViewport;
 
         this._bindLayerOpacityScratch(width, height);
+        this._layerOpacitySubpass = {compositeTarget, compositeViewport};
+
         context.viewport.set([0, 0, width, height]);
         context.clear({color: Color.transparent, depth: 1, stencil: 0});
 
@@ -843,11 +843,11 @@ export class Painter {
     endLayerOpacitySubpass(layer: LineStyleLayer | FillStyleLayer, opacity: number): void {
         const context = this.context;
         const gl = context.gl;
-        const {prevFramebuffer, prevViewport} = this._layerOpacitySubpass;
+        const {compositeTarget, compositeViewport} = this._layerOpacitySubpass;
         const scratchFbo = this._layerOpacityScratchFbo.fbo;
 
-        context.bindFramebuffer.set(prevFramebuffer);
-        context.viewport.set(prevViewport);
+        context.bindFramebuffer.set(compositeTarget);
+        context.viewport.set(compositeViewport);
 
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, scratchFbo.colorAttachment.get());
