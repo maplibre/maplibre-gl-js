@@ -114,11 +114,7 @@ export class Painter {
      * The canvas in the flat case, the per-terrain-tile RTT texture in the terrain case.
      * Resized in place to match the target dimensions.
      */
-    private _layerOpacityFbo: {
-        fbo: Framebuffer;
-        width: number;
-        height: number;
-    } | null;
+    private _layerOpacityFbo: Framebuffer | null;
     /**
      * Transient state for an in-flight `{line,fill}-layer-opacity` subpass.
      * Set by {@link beginLayerOpacitySubpass}, cleared by {@link endLayerOpacitySubpass}.
@@ -844,7 +840,7 @@ export class Painter {
         const context = this.context;
         const gl = context.gl;
         const {compositeTarget, compositeViewport} = this._layerOpacitySubpass;
-        const scratchFbo = this._layerOpacityFbo.fbo;
+        const scratchFbo = this._layerOpacityFbo;
 
         context.bindFramebuffer.set(compositeTarget);
         context.viewport.set(compositeViewport);
@@ -879,20 +875,20 @@ export class Painter {
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
             fbo.colorAttachment.set(texture);
             fbo.depthAttachment.set(this.context.createRenderbuffer(gl.DEPTH_STENCIL, width, height));
-            this._layerOpacityFbo = {fbo, width, height};
+            this._layerOpacityFbo = fbo;
         } else if (this._layerOpacityFbo.width !== width || this._layerOpacityFbo.height !== height) {
-            const slot = this._layerOpacityFbo;
-            gl.bindTexture(gl.TEXTURE_2D, slot.fbo.colorAttachment.get());
+            const fbo = this._layerOpacityFbo;
+            gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-            this.context.bindRenderbuffer.set(slot.fbo.depthAttachment.get());
+            this.context.bindRenderbuffer.set(fbo.depthAttachment.get());
             gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
             this.context.bindRenderbuffer.set(null);
-            slot.fbo.width = slot.width = width;
-            slot.fbo.height = slot.height = height;
+            fbo.width = width;
+            fbo.height = height;
         }
 
-        this.context.bindFramebuffer.set(this._layerOpacityFbo.fbo.framebuffer);
-        return this._layerOpacityFbo.fbo;
+        this.context.bindFramebuffer.set(this._layerOpacityFbo.framebuffer);
+        return this._layerOpacityFbo;
     }
 
     /**
@@ -968,7 +964,7 @@ export class Painter {
     }
 
     /*
-     * Set GL state that is shared by all layers.
+     * Set GL state shared by all layers.
      */
     setBaseState(): void {
         const gl = this.context.gl;
@@ -1016,7 +1012,7 @@ export class Painter {
             this._rttSharedFbo = null;
         }
 
-        this._layerOpacityFbo?.fbo.destroy();
+        this._layerOpacityFbo?.destroy();
         this._layerOpacityFbo = null;
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
