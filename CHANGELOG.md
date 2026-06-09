@@ -1,12 +1,20 @@
 ## main
 ### ✨ Features and improvements
-- Revert the `line-opacity`-driven offscreen rendering introduced in [#7490](https://github.com/maplibre/maplibre-gl-js/pull/7490).
-- ⚠️ Removed the remaining mapbox references in the code and in the tests. This changes the `#pragma mapbox` to `#pragma maplibre` in case you have shader code that relied on it. ([#7761](https://github.com/maplibre/maplibre-gl-js/issues/7761)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix a race condition in geojson source after init and fast update data ([#7734](https://github.com/maplibre/maplibre-gl-js/issues/7734)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
+
+## 6.0.0-14
+
+### ✨ Features and improvements
+
+- Revert the `line-opacity`-driven offscreen rendering introduced in [#7490](https://github.com/maplibre/maplibre-gl-js/pull/7490) ([#7764](https://github.com/maplibre/maplibre-gl-js/pull/7764)) (by [@CommanderStorm](https://github.com/CommanderStorm)).
+- ⚠️ Removed the remaining mapbox references in the code and in the tests. This changes the `#pragma mapbox` to `#pragma maplibre` in case you have shader code that relied on it. ([#7761](https://github.com/maplibre/maplibre-gl-js/issues/7761)) (by [@HarelM](https://github.com/HarelM))
+
+### 🐞 Bug fixes
+
+- Fix a race condition in geojson source after init and fast update data ([#7734](https://github.com/maplibre/maplibre-gl-js/issues/7734)) (by [@HarelM](https://github.com/HarelM))
 
 ## 6.0.0-13
 
