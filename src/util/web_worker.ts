@@ -37,12 +37,9 @@ function importWorker() {
 // The worker would then import the shared module from the main bundle,
 // which fails because main uses APIs that are not available in workers.
 //
-// To work around this, we make main async with a no-op `await import()` at the top level.
+// To work around this, we make main async with a no-op `await Promise.resolve()` at the top level.
 // Bundler deadlock guard would prevent the shared module from being inlined into main.
-try {
-    let src: string;
-    await import(src);
-} catch {}
+await Promise.resolve();
 
 function defaultWorkerUrl(): string {
     try {

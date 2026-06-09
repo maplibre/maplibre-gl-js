@@ -23,8 +23,16 @@ module.exports = {
         new HtmlWebpackPlugin({template: './index.html'}),
         new CopyPlugin({
             patterns: [
-                {from: 'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs', to: 'maplibre-gl-worker.mjs'},
-                {from: 'node_modules/maplibre-gl/dist/maplibre-gl-shared.mjs', to: 'maplibre-gl-shared.mjs'},
+                {
+                    from: require.resolve('maplibre-gl/dist/maplibre-gl-worker.mjs'),
+                    to: 'maplibre-gl-worker.mjs',
+                    info: {minimized: true}
+                },
+                {
+                    from: require.resolve('maplibre-gl/dist/maplibre-gl-shared.mjs'),
+                    to: 'maplibre-gl-shared.mjs',
+                    info: {minimized: true}
+                }
             ],
         }),
     ],
