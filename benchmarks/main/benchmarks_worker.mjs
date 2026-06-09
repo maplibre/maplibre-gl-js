@@ -2332,7 +2332,6 @@ var v8_default = {
 			"type": "color",
 			"default": "#000000",
 			"transition": true,
-			"requires": [{ "!": "fill-pattern" }],
 			"expression": {
 				"interpolated": true,
 				"parameters": [
@@ -7361,7 +7360,7 @@ var GlobalState = class GlobalState {
 	evaluate(ctx) {
 		const globalState = ctx.globals?.globalState;
 		if (!globalState || Object.keys(globalState).length === 0) return null;
-		return getOwn(globalState, this.key);
+		return getOwn(globalState, this.key) ?? null;
 	}
 	eachChild() {}
 	outputDefined() {

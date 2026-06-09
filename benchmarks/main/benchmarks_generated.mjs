@@ -4535,7 +4535,6 @@ var v8_default = {
 			"type": "color",
 			"default": "#000000",
 			"transition": true,
-			"requires": [{ "!": "fill-pattern" }],
 			"expression": {
 				"interpolated": true,
 				"parameters": [
@@ -9906,7 +9905,7 @@ var GlobalState = class GlobalState {
 	evaluate(ctx) {
 		const globalState = ctx.globals?.globalState;
 		if (!globalState || Object.keys(globalState).length === 0) return null;
-		return getOwn(globalState, this.key);
+		return getOwn(globalState, this.key) ?? null;
 	}
 	eachChild() {}
 	outputDefined() {
@@ -42871,7 +42870,7 @@ var DOM = class DOM {
 };
 //#endregion
 //#region package.json
-var version$4 = "6.0.0-12";
+var version$4 = "6.0.0-13";
 //#endregion
 //#region src/data/raster_bounds_attributes.ts
 const rasterBoundsAttributes = createLayout([{
@@ -60233,7 +60232,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 98c5bc8";
+const version = "main 33e1422";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
