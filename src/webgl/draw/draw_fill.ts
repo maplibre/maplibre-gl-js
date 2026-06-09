@@ -49,8 +49,6 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
 
 /**
  * Draw fill + outline in a single translucent pass with ReadOnly depth.
- * Shared by the layer-opacity subpass (always) and the normal translucent path
- * (when the fill is not opaque-pass-eligible).
  */
 function drawFillAndOutline(
     painter: Painter,
