@@ -36,37 +36,37 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
         return;
     }
 
-    const {isRenderingToTexture} = renderOptions;
-    const colorMode = painter.colorModeForRenderPass();
     const pattern = layer.paint.get('fill-pattern');
-    const pass = painter.opaquePassEnabledForLayer() &&
-        (!pattern.constantOr(1 as any) &&
-            color.constantOr(Color.transparent).a === 1 &&
-            opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
+    const fillEligibleForOpaque = painter.opaquePassEnabledForLayer() &&
+        !pattern.constantOr(1 as any) &&
+        color.constantOr(Color.transparent).a === 1 &&
+        opacity.constantOr(0) === 1;
 
-    // Draw fill
-    if (painter.renderPass === pass) {
-        const depthMode = painter.getDepthModeForSublayer(
-            1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
+    if (fillEligibleForOpaque && painter.renderPass === 'opaque') {
+        // Opaque-eligible fill draws standalone in the opaque pass with ReadWrite depth;
+        // its outline (always translucent) runs in the translucent pass below.
+        const {isRenderingToTexture} = renderOptions;
+        const colorMode = painter.colorModeForRenderPass();
+        const depthMode = painter.getDepthModeForSublayer(1, DepthMode.ReadWrite);
         drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
+        return;
     }
 
-    // Draw stroke
-    if (painter.renderPass === 'translucent' && layer.paint.get('fill-antialias')) {
-        // If we defined a different color for the fill outline, we are
-        // going to ignore the bits in 0x07 and just care about the global
-        // clipping mask.
-        // Otherwise, we only want to drawFill the antialiased parts that are
-        // *outside* the current shape. This is important in case the fill
-        // or stroke color is translucent. If we wouldn't clip to outside
-        // the current shape, some pixels from the outline stroke overlapped
-        // the (non-antialiased) fill.
-        const depthMode = painter.getDepthModeForSublayer(
-            layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
-        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
+    if (painter.renderPass === 'translucent') {
+        if (fillEligibleForOpaque) {
+            // Fill already drew in the opaque pass; just draw the outline here.
+            drawOutline(painter, tileManager, layer, coords, renderOptions);
+        } else {
+            drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
+        }
     }
 }
 
+/**
+ * Draw fill + outline in a single translucent pass with ReadOnly depth.
+ * Shared by the layer-opacity subpass (always) and the normal translucent path
+ * (when the fill is not opaque-pass-eligible).
+ */
 function drawFillAndOutline(
     painter: Painter,
     tileManager: TileManager,
@@ -80,11 +80,31 @@ function drawFillAndOutline(
     const fillDepthMode = painter.getDepthModeForSublayer(1, DepthMode.ReadOnly);
     drawFillTiles(painter, tileManager, layer, coords, fillDepthMode, colorMode, false, isRenderingToTexture);
 
-    if (layer.paint.get('fill-antialias')) {
-        const outlineDepthMode = painter.getDepthModeForSublayer(
-            layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
-        drawFillTiles(painter, tileManager, layer, coords, outlineDepthMode, colorMode, true, isRenderingToTexture);
-    }
+    drawOutline(painter, tileManager, layer, coords, renderOptions);
+}
+
+function drawOutline(
+    painter: Painter,
+    tileManager: TileManager,
+    layer: FillStyleLayer,
+    coords: OverscaledTileID[],
+    renderOptions: RenderOptions
+) {
+    if (!layer.paint.get('fill-antialias')) return;
+
+    // If we defined a different color for the fill outline, we are
+    // going to ignore the bits in 0x07 and just care about the global
+    // clipping mask.
+    // Otherwise, we only want to drawFill the antialiased parts that are
+    // *outside* the current shape. This is important in case the fill
+    // or stroke color is translucent. If we wouldn't clip to outside
+    // the current shape, some pixels from the outline stroke overlapped
+    // the (non-antialiased) fill.
+    const {isRenderingToTexture} = renderOptions;
+    const colorMode = painter.colorModeForRenderPass();
+    const depthMode = painter.getDepthModeForSublayer(
+        layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
+    drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
 }
 
 function drawFillTiles(
