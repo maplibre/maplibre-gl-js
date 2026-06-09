@@ -42,9 +42,9 @@ function importWorker() {
 await Promise.resolve();
 
 function defaultWorkerUrl(): string {
+    const moduleUrl = import.meta.url;
+    if (!/^https?:/.test(moduleUrl)) return '';
     try {
-        const moduleUrl = import.meta.url;
-        if (!/^https?:/.test(moduleUrl)) return '';
         const workerPath = importWorker.toString().match(/["'`](.+?)["'`]/)?.[1];
         if (workerPath) {
             return new URL(workerPath, moduleUrl).href;
@@ -53,8 +53,6 @@ function defaultWorkerUrl(): string {
         // fall through
     }
     try {
-        const moduleUrl = import.meta.url;
-        if (!/^https?:/.test(moduleUrl)) return '';
         const workerName = moduleUrl.endsWith('-dev.mjs')
             ? 'maplibre-gl-worker-dev.mjs'
             : 'maplibre-gl-worker.mjs';
