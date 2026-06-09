@@ -1120,6 +1120,56 @@ describe('TileManager._updateRetainedTiles', () => {
         expect(Object.keys(retained).sort()).toEqual(expectedTiles.map(t => t.key).sort());
     });
 
+    test('ideal tiles are present in the tile map after retention, making the v4.1.x terrain access safe (issue #3982)', () => {
+        // Regression guard for the rapid-zoom terrain crash (#3982).
+        //
+        // v4.1.x source_cache.ts ran, inside `if (terrain)`:
+        //     for (const tileID of idealTileIDs)
+        //         if (this._tiles[tileID.key].hasData())   // <-- unguarded
+        // During rapid zoom an ideal tile id could be absent from `_tiles`, so the
+        // lookup returned undefined and `.hasData()` threw "this._tiles[T] is undefined".
+        //
+        // The same reconstructed access has been confirmed to throw when run
+        // against the v4.1.2 sources on CI:
+        // https://github.com/kodeezabdullah/maplibre-gl-js/actions/runs/27195385474
+        //
+        // On current main, _updateRetainedTiles() routes every ideal tile through
+        // _addTile(), which always returns a Tile and registers it in the in-view
+        // tile map. This test reconstructs the same v4.1.x access pattern against
+        // the current TileManager and asserts every ideal key now resolves to a
+        // defined tile, so the access can no longer throw.
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'errored';
+        };
+
+        const idealTileIDs = [
+            new OverscaledTileID(2, 0, 2, 1, 1),
+            new OverscaledTileID(2, 0, 2, 1, 2),
+            new OverscaledTileID(2, 0, 2, 2, 1),
+            new OverscaledTileID(2, 0, 2, 2, 2)
+        ];
+
+        // Precondition: none of the ideal tiles are in the map yet — this is the
+        // state in which v4.1.x's unguarded `_tiles[key]` returned undefined.
+        for (const tileID of idealTileIDs) {
+            expect(tileManager._inViewTiles.getTileById(tileID.key)).toBeFalsy();
+        }
+
+        tileManager._updateRetainedTiles(idealTileIDs, 2);
+
+        // Reconstruct the exact v4.1.x access pattern. On v4.1.x `this._tiles[key]`
+        // would be undefined here and `.hasData()` would throw; on current main
+        // every ideal tile is present, so the access is safe.
+        expect(() => {
+            for (const tileID of idealTileIDs) {
+                const tile = tileManager._inViewTiles.getTileById(tileID.key);
+                expect(tile).toBeDefined();
+                tile.hasData(); // the call that threw in v4.1.x
+            }
+        }).not.toThrow();
+    });
+
     for (const pitch of [0, 20, 40, 65, 75, 85]) {
         test(`retains loaded children for pitch: ${pitch}`, () => {
             const transform = new MercatorTransform();
