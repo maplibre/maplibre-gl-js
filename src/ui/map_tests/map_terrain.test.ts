@@ -51,6 +51,33 @@ describe('getTerrain', () => {
     });
 });
 
+describe('rapid zoom with terrain (issue #3982)', () => {
+    test('does not throw when zooming in then out quickly with raster-dem terrain', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 5,
+            maxzoom: 12,
+            tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
+            bounds: [-47, -7, -45, -5]
+        }));
+
+        await map.once('load');
+        map.addSource('terrainrgb', {type: 'raster-dem', url: '/source.json'});
+        server.respond();
+        map.setTerrain({source: 'terrainrgb'});
+
+        // Rapidly zoom in and back out before tiles finish loading, the
+        // sequence that crashed with raster-dem terrain in 4.1.x.
+        expect(() => {
+            for (let i = 0; i < 10; i++) {
+                map.jumpTo({center: [-46, -6], zoom: 12});
+                map._render(0);
+                map.jumpTo({center: [-46, -6], zoom: 5});
+                map._render(0);
+            }
+        }).not.toThrow();
+    });
+});
+
 describe('getCameraTargetElevation', () => {
     test('Elevation is zero without terrain, and matches any given terrain', () => {
         expect(map.getCameraTargetElevation()).toBe(0);
