@@ -169,7 +169,6 @@ describe('translucent cache', () => {
 
         painter.style = createMockStyle(0);
 
-
         painter.render(painter.style, defaultRenderOptions);
 
         // fullscreenTexture program should NOT have been used
@@ -186,7 +185,6 @@ describe('translucent cache', () => {
         const useProgramSpy = vi.spyOn(painter, 'useProgram');
 
         painter.style = createMockStyle(0);
-
 
         painter.render(painter.style, defaultRenderOptions);
 
