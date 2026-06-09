@@ -143,20 +143,9 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
 
     const opacity = layer.paint.get('line-opacity');
     const width = layer.paint.get('line-width');
-    const layerOpacity = layer.paint.get('line-layer-opacity');
-    if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0 || layerOpacity === 0) return;
+    if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0) return;
 
     const useTerrain = !!painter.style.map.terrain;
-
-    // Partial line-layer-opacity: render the whole layer to a scratch FBO, then composite
-    // with `layerOpacity`. Applies opacity uniformly to the layer instead of accumulating
-    // alpha across overlapping segments.
-    if (layerOpacity < 1) {
-        painter.beginLayerOpacitySubpass(layer, coords, useTerrain);
-        drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain);
-        painter.endLayerOpacitySubpass(layer, layerOpacity);
-        return;
-    }
 
     drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain);
 }

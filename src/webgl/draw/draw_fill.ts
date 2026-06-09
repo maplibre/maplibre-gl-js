@@ -20,21 +20,7 @@ import {translatePosition} from '../../util/util.ts';
 export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
-    const layerOpacity = layer.paint.get('fill-layer-opacity');
-    if (opacity.constantOr(1) === 0 || layerOpacity === 0) return;
-
-    const useTerrain = !!painter.style.map.terrain;
-
-    // Partial fill-layer-opacity: render the whole layer to a scratch FBO, then composite
-    // with `layerOpacity`. Applies opacity uniformly to the layer instead of accumulating
-    // alpha across overlapping polygons.
-    if (layerOpacity < 1) {
-        if (painter.renderPass !== 'translucent') return;
-        painter.beginLayerOpacitySubpass(layer, coords, useTerrain);
-        drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
-        painter.endLayerOpacitySubpass(layer, layerOpacity);
-        return;
-    }
+    if (opacity.constantOr(1) === 0) return;
 
     const pattern = layer.paint.get('fill-pattern');
     const fillEligibleForOpaque = painter.opaquePassEnabledForLayer() &&
@@ -51,14 +37,13 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
         drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
         return;
     }
-
+    if (fillEligibleForOpaque && painter.renderPass === 'translucent') {
+        // Fill already drew in the opaque pass; just draw the outline here.
+        drawOutline(painter, tileManager, layer, coords, renderOptions);
+        return;
+    }
     if (painter.renderPass === 'translucent') {
-        if (fillEligibleForOpaque) {
-            // Fill already drew in the opaque pass; just draw the outline here.
-            drawOutline(painter, tileManager, layer, coords, renderOptions);
-        } else {
-            drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
-        }
+        drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
     }
 }
 
