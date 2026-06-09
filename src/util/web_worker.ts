@@ -23,43 +23,13 @@ function isCrossOrigin(url: string): boolean {
     }
 }
 
-function importWorker() {
-    // Bundlers resolve this import to the final output filename.
-    // defaultWorkerUrl() extracts the resolved path via toString().
-    import('../source/worker.ts');
-}
-
-// This is a hack to signal to bundlers that this module is async (has top-level await)
-// in order to prevent the shared module from being inlined into main.
-//
-// Rollup/rolldown by default inlines the shared module into the main bundle
-// if the app has only one entry point.
-// The worker would then import the shared module from the main bundle,
-// which fails because main uses APIs that are not available in workers.
-//
-// To work around this, we make main async with a no-op `await Promise.resolve()` at the top level.
-// Bundler deadlock guard would prevent the shared module from being inlined into main.
-await Promise.resolve();
-
 function defaultWorkerUrl(): string {
     const moduleUrl = import.meta.url;
     if (!/^https?:/.test(moduleUrl)) return '';
-    try {
-        const workerPath = importWorker.toString().match(/["'`](.+?)["'`]/)?.[1];
-        if (workerPath) {
-            return new URL(workerPath, moduleUrl).href;
-        }
-    } catch {
-        // fall through
-    }
-    try {
-        const workerName = moduleUrl.endsWith('-dev.mjs')
-            ? 'maplibre-gl-worker-dev.mjs'
-            : 'maplibre-gl-worker.mjs';
-        return new URL(`./${workerName}`, moduleUrl).href;
-    } catch {
-        return '';
-    }
+    const workerName = moduleUrl.endsWith('-dev.mjs')
+        ? 'maplibre-gl-worker-dev.mjs'
+        : 'maplibre-gl-worker.mjs';
+    return new URL(`./${workerName}`, moduleUrl).href;
 }
 
 function createWorker(url: string, asModule: boolean): Worker {
