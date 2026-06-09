@@ -1,6 +1,4 @@
-import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {DepthMode} from '../depth_mode.ts';
-import {StencilMode} from '../stencil_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
 import {Texture} from '../texture.ts';
 import {
@@ -10,7 +8,7 @@ import {
     lineGradientUniformValues,
     lineGradientSDFUniformValues
 } from '../program/line_program.ts';
-import {layerOpacityUniformValues} from '../program/layer_opacity_program.ts';
+import {drawLayerOpacitySubpass} from '../program/layer_opacity_program.ts';
 
 import type {Painter, RenderOptions} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -19,7 +17,6 @@ import type {LineBucket} from '../../data/bucket/line_bucket.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {Context} from '../context.ts';
-import type {Framebuffer} from '../framebuffer.ts';
 import type {ProgramConfiguration} from '../../data/program_configuration.ts';
 import {clamp, nextPowerOfTwo} from '../../util/util.ts';
 import {renderColorRamp} from '../../util/color_ramp.ts';
@@ -143,72 +140,25 @@ function bindGradientAndDashTextures(
 }
 
 export function drawLine(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
-    if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
+    if (painter.renderPass !== 'translucent') return;
 
     const opacity = layer.paint.get('line-opacity');
     const width = layer.paint.get('line-width');
     if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0) return;
 
-    const useOffscreen = layer.hasOffscreenPass() && !painter.style.map.terrain;
+    const layerOpacity = layer.paint.get('line-layer-opacity');
+    const terrain = !!painter.style.map.terrain;
 
-    if (!useOffscreen && layer.lineFbo) {
-        // GC the FBO if line-layer-opacity no longer requires offscreen rendering
-        layer.lineFbo.destroy();
-        layer.lineFbo = null;
-    }
-
-    if (painter.renderPass === 'offscreen' && !useOffscreen) {
+    // line-layer-opacity between 0 and 1: render the whole layer to a scratch FBO, then
+    // composite with `layerOpacity`. Applies opacity uniformly to the layer instead of
+    // accumulating alpha across overlapping segments.
+    if (layerOpacity > 0 && layerOpacity < 1) {
+        drawLayerOpacitySubpass(painter, layer, coords, layerOpacity, terrain,
+            () => drawLineTiles(painter, tileManager, layer, coords, renderOptions, terrain));
         return;
     }
-    // When line-layer-opacity is set (between 0 and 1), we render the entire layer to an offscreen FBO
-    // and then composite it with the line-layer-opacity value. This applies opacity uniformly to the
-    // entire layer output, making transparent things more transparent and opaque things transparent.
-    // Because terrain rendering uses its own RTT system, we skip offscreen rendering with terrain.
-    if (painter.renderPass === 'offscreen' && useOffscreen) {
-        drawLineOffscreen(painter, tileManager, layer, coords, renderOptions);
-        return;
-    }
-    if (painter.renderPass === 'translucent' && useOffscreen) {
-        drawLineComposite(painter, layer);
-        return;
-    }
-    if (painter.renderPass === 'translucent' && !useOffscreen) {
-        drawLineTiles(painter, tileManager, layer, coords, renderOptions, true);
-        return;
-    }
-}
 
-function drawLineOffscreen(painter: Painter, tileManager: TileManager, layer: LineStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions) {
-    const context = painter.context;
-
-    layer.lineFbo ??= createLineFbo(context, painter.width, painter.height);
-
-    context.bindFramebuffer.set(layer.lineFbo.framebuffer);
-    context.viewport.set([0, 0, painter.width, painter.height]);
-    context.clear({color: Color.transparent, depth: 1, stencil: 0});
-
-    // Force stencil masks to render into the FBO
-    painter.currentStencilSource = undefined;
-    painter._renderTileClippingMasks(layer, coords, false);
-
-    drawLineTiles(painter, tileManager, layer, coords, renderOptions, false);
-}
-
-function drawLineComposite(painter: Painter, layer: LineStyleLayer) {
-    const fbo = layer.lineFbo;
-    if (!fbo) return;
-
-    const context = painter.context;
-    const gl = context.gl;
-
-    context.activeTexture.set(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
-
-    painter.useProgram('layerOpacity').draw(context, gl.TRIANGLES,
-        DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled,
-        layerOpacityUniformValues(painter, layer.paint.get('line-layer-opacity'), 0), null, null,
-        layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
-        painter.viewportSegments, layer.paint, painter.transform.zoom);
+    drawLineTiles(painter, tileManager, layer, coords, renderOptions, terrain);
 }
 
 function drawLineTiles(
@@ -311,20 +261,3 @@ function drawLineTiles(
     }
 }
 
-function createLineFbo(context: Context, width: number, height: number): Framebuffer {
-    const gl = context.gl;
-    const texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-    gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, width, height);
-
-    const fbo = context.createFramebuffer(width, height, true, true);
-    fbo.colorAttachment.set(texture);
-    fbo.depthAttachment.set(context.createRenderbuffer(gl.DEPTH_STENCIL, width, height));
-
-    return fbo;
-}

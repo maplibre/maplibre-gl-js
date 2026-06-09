@@ -107,6 +107,17 @@ export class Painter {
         depthRenderbuffer: WebGLRenderbuffer;
         size: number;
     } | null;
+    /**
+     * Shared scratch FBO (color + depth-stencil) used by `{line,fill}-layer-opacity`.
+     * The layer is rendered into this FBO, then composited into whatever framebuffer was previously bound
+     * The canvas in the flat case, the per-terrain-tile RTT texture in the terrain case.
+     * Resized in place to match the target dimensions.
+     */
+    _layerOpacityScratchFbo: {
+        fbo: Framebuffer;
+        width: number;
+        height: number;
+    } | null;
     numSublayers: number;
     depthEpsilon: number;
     emptyProgramConfiguration: ProgramConfiguration;
@@ -159,6 +170,7 @@ export class Painter {
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
         this._rttSharedFbo = null;
+        this._layerOpacityScratchFbo = null;
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
@@ -790,6 +802,42 @@ export class Painter {
     }
 
     /**
+     * Binds the shared `{line,fill}-layer-opacity` scratch FBO at `width x height`.
+     * Lazy-creates/resizes its color texture and depth-stencil renderbuffer as needed.
+     * A caller renders the layer image into this FBO, restores their previous framebuffer / viewport,
+     * then composites the FBO's color attachment.
+     */
+    bindLayerOpacityScratch(width: number, height: number): Framebuffer {
+        const gl = this.context.gl;
+
+        if (!this._layerOpacityScratchFbo) {
+            const fbo = this.context.createFramebuffer(width, height, true, true);
+            const texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            fbo.colorAttachment.set(texture);
+            fbo.depthAttachment.set(this.context.createRenderbuffer(gl.DEPTH_STENCIL, width, height));
+            this._layerOpacityScratchFbo = {fbo, width, height};
+        } else if (this._layerOpacityScratchFbo.width !== width || this._layerOpacityScratchFbo.height !== height) {
+            const slot = this._layerOpacityScratchFbo;
+            gl.bindTexture(gl.TEXTURE_2D, slot.fbo.colorAttachment.get());
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            this.context.bindRenderbuffer.set(slot.fbo.depthAttachment.get());
+            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
+            this.context.bindRenderbuffer.set(null);
+            slot.fbo.width = slot.width = width;
+            slot.fbo.height = slot.height = height;
+        }
+
+        this.context.bindFramebuffer.set(this._layerOpacityScratchFbo.fbo.framebuffer);
+        return this._layerOpacityScratchFbo.fbo;
+    }
+
+    /**
      * Checks whether a pattern image is needed, and if it is, whether it is not loaded.
      *
      * @returns true if a needed image is missing and rendering needs to be skipped.
@@ -908,6 +956,11 @@ export class Painter {
             gl.deleteRenderbuffer(this._rttSharedFbo.depthRenderbuffer);
             gl.deleteFramebuffer(this._rttSharedFbo.fbo.framebuffer);
             this._rttSharedFbo = null;
+        }
+
+        if (this._layerOpacityScratchFbo) {
+            this._layerOpacityScratchFbo.fbo.destroy();
+            this._layerOpacityScratchFbo = null;
         }
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
