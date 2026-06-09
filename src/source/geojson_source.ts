@@ -399,7 +399,6 @@ export class GeoJSONSource extends Evented implements Source {
             this._pendingWorkerUpdate.updateCluster = undefined;
         }
 
-        this._isUpdatingWorker = true;
         this._updatePromise = this._dispatchWorkerUpdate(params);
         await this._updatePromise;
     }
@@ -440,6 +439,7 @@ export class GeoJSONSource extends Evented implements Source {
      * Send the worker update data from the main thread to the worker
      */
     private async _dispatchWorkerUpdate(optionsPromise: Promise<LoadGeoJSONParameters>) {
+        this._isUpdatingWorker = true;
         this.fire(new Event('dataloading', {dataType: 'source'}));
 
         try {
@@ -456,6 +456,7 @@ export class GeoJSONSource extends Evented implements Source {
             if (result.data) {
                 this._data = {geojson: result.data};
             }
+
             const affectedGeometries = this._applyDiffToSource(options.dataDiff);
             const shouldReloadTileOptions = this._getShouldReloadTileOptions(affectedGeometries);
 
