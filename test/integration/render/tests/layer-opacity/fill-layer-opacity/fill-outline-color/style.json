@@ -35,7 +35,7 @@
       "source": "geojson",
       "paint": {
         "fill-color": "#0000ff",
-        "fill-outline-color": "#ff0000",
+        "fill-outline-color": "rgb(255, 0, 0)",
         "fill-layer-opacity": 0.5
       }
     }

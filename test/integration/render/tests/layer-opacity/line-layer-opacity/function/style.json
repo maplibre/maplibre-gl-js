@@ -2,42 +2,30 @@
   "version": 8,
   "metadata": {
     "test": {
-      "width": 128,
+      "width": 256,
       "height": 128
     }
   },
   "center": [0, 0],
-  "zoom": 1.5,
+  "zoom": 1,
   "sources": {
-    "geojson": {
+    "left": {
       "type": "geojson",
       "data": {
         "type": "FeatureCollection",
         "features": [
-          {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-              "type": "LineString",
-              "coordinates": [[-15, -15], [15, 15]]
-            }
-          },
-          {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-              "type": "LineString",
-              "coordinates": [[15, -15], [-15, 15]]
-            }
-          },
-          {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-              "type": "LineString",
-              "coordinates": [[-15, 0], [15, 0]]
-            }
-          }
+          { "type": "Feature", "properties": {}, "geometry": { "type": "LineString", "coordinates": [[-20, -15], [-5, 15]] } },
+          { "type": "Feature", "properties": {}, "geometry": { "type": "LineString", "coordinates": [[-5, -15], [-20, 15]] } }
+        ]
+      }
+    },
+    "right": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          { "type": "Feature", "properties": {}, "geometry": { "type": "LineString", "coordinates": [[5, -15], [20, 15]] } },
+          { "type": "Feature", "properties": {}, "geometry": { "type": "LineString", "coordinates": [[20, -15], [5, 15]] } }
         ]
       }
     }
@@ -49,9 +37,9 @@
       "paint": { "background-color": "white" }
     },
     {
-      "id": "line",
+      "id": "low-opacity-at-this-zoom",
       "type": "line",
-      "source": "geojson",
+      "source": "left",
       "paint": {
         "line-width": 12,
         "line-color": "#0000ff",
@@ -59,6 +47,21 @@
           "stops": [
             [0, 0.0],
             [3, 1.0]
+          ]
+        }
+      }
+    },
+    {
+      "id": "high-opacity-at-this-zoom",
+      "type": "line",
+      "source": "right",
+      "paint": {
+        "line-width": 12,
+        "line-color": "#0000ff",
+        "line-layer-opacity": {
+          "stops": [
+            [0, 1.0],
+            [3, 0.0]
           ]
         }
       }

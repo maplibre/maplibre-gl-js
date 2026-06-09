@@ -2,25 +2,25 @@
   "version": 8,
   "metadata": {
     "test": {
-      "width": 256,
-      "height": 128
+      "width": 128,
+      "height": 64
     }
   },
   "center": [0, 0],
-  "zoom": 1.5,
+  "zoom": 1,
   "sources": {
     "left": {
       "type": "geojson",
       "data": {
         "type": "Polygon",
-        "coordinates": [[[-45, -12], [-25, -12], [-35, 12], [-45, -12]]]
+        "coordinates": [[[-20, -12], [-5, -12], [-12, 12], [-20, -12]]]
       }
     },
     "right": {
       "type": "geojson",
       "data": {
         "type": "Polygon",
-        "coordinates": [[[15, -12], [35, -12], [25, 12], [15, -12]]]
+        "coordinates": [[[5, -12], [20, -12], [12, 12], [5, -12]]]
       }
     }
   },

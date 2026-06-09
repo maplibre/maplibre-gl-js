@@ -2,23 +2,44 @@
   "version": 8,
   "metadata": {
     "test": {
-      "width": 128,
-      "height": 128
+      "width": 64,
+      "height": 64
     }
   },
   "sources": {
-    "polygon": {
+    "blue-fill": {
       "type": "geojson",
       "data": {
         "type": "Polygon",
-        "coordinates": [[[-12, -12], [12, -12], [12, 12], [-12, 12], [-12, -12]]]
+        "coordinates": [[[-18, 5], [-5, 5], [-5, 18], [-18, 18], [-18, 5]]]
       }
     },
-    "line": {
+    "green-fill": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [[[5, -18], [18, -18], [18, -5], [5, -5], [5, -18]]]
+      }
+    },
+    "magenta-fill": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [[[-6, -6], [6, -6], [6, 6], [-6, 6], [-6, -6]]]
+      }
+    },
+    "fuchsia-line": {
       "type": "geojson",
       "data": {
         "type": "LineString",
-        "coordinates": [[-20, -20], [20, 20]]
+        "coordinates": [[-18, -18], [18, 18]]
+      }
+    },
+    "red-line": {
+      "type": "geojson",
+      "data": {
+        "type": "LineString",
+        "coordinates": [[-18, 18], [18, -18]]
       }
     }
   },
@@ -29,22 +50,49 @@
       "paint": { "background-color": "white" }
     },
     {
-      "id": "fill",
+      "id": "fill-blue",
       "type": "fill",
-      "source": "polygon",
+      "source": "blue-fill",
       "paint": {
         "fill-color": "#0000ff",
-        "fill-layer-opacity": 0.5
+        "fill-layer-opacity": 0.3
       }
     },
     {
-      "id": "line",
+      "id": "line-red",
       "type": "line",
-      "source": "line",
+      "source": "red-line",
       "paint": {
         "line-width": 8,
-        "line-color": "#ff0000",
+        "line-color": "#ff0000"
+      }
+    },
+    {
+      "id": "fill-green",
+      "type": "fill",
+      "source": "green-fill",
+      "paint": {
+        "fill-color": "#00ff00",
+        "fill-layer-opacity": 0.7
+      }
+    },
+    {
+      "id": "line-fuchsia",
+      "type": "line",
+      "source": "fuchsia-line",
+      "paint": {
+        "line-width": 8,
+        "line-color": "#ff8800",
         "line-layer-opacity": 0.5
+      }
+    },
+    {
+      "id": "fill-magenta",
+      "type": "fill",
+      "source": "magenta-fill",
+      "paint": {
+        "fill-color": "#ff00ff",
+        "fill-layer-opacity": 0.5
       }
     }
   ]
