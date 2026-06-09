@@ -52,6 +52,7 @@ export class FillBucket implements Bucket {
     indexBuffer2: IndexBuffer;
 
     hasDependencies: boolean;
+    sdfPatterns: boolean;
     programConfigurations: ProgramConfigurationSet<FillStyleLayer>;
     segments: SegmentVector;
     segments2: SegmentVector;
@@ -64,6 +65,7 @@ export class FillBucket implements Bucket {
         this.layerIds = this.layers.map(layer => layer.id);
         this.index = options.index;
         this.hasDependencies = false;
+        this.sdfPatterns = false;
         this.patternFeatures = [];
 
         this.layoutVertexArray = new FillLayoutArray();

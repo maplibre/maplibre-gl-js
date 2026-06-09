@@ -18,6 +18,7 @@ out float v_depth;
 #pragma mapbox: define lowp vec4 pattern_to
 #pragma mapbox: define lowp float pixel_ratio_from
 #pragma mapbox: define lowp float pixel_ratio_to
+#pragma mapbox: define highp vec4 color
 
 void main() {
     #pragma mapbox: initialize lowp float opacity
@@ -25,6 +26,7 @@ void main() {
     #pragma mapbox: initialize mediump vec4 pattern_to
     #pragma mapbox: initialize lowp float pixel_ratio_from
     #pragma mapbox: initialize lowp float pixel_ratio_to
+    #pragma mapbox: initialize highp vec4 color
 
     // Move vertex outside clip space to discard triangle when opacity is negligible
     if (opacity < 0.01) {

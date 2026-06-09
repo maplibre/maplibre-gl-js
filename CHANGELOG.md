@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+- Add SDF rendering support for fill patterns, allowing `fill-color` to colorize SDF fill patterns
 - Improve `ProjectionData` matrix backing types for renderer and custom layer projection matrices ([#6316](https://github.com/maplibre/maplibre-gl-js/issues/6316)) (by [@cat0825](https://github.com/cat0825))
 
 ### 🐞 Bug fixes

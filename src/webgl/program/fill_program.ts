@@ -56,7 +56,7 @@ const fillPatternUniforms = (context: Context, locations: UniformLocations): Fil
     'u_pixel_coord_lower': new Uniform2f(context, locations.u_pixel_coord_lower),
     'u_scale': new Uniform3f(context, locations.u_scale),
     'u_fade': new Uniform1f(context, locations.u_fade),
-    'u_fill_translate': new Uniform2f(context, locations.u_fill_translate)
+    'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
 });
 
 const fillOutlineUniforms = (context: Context, locations: UniformLocations): FillOutlineUniformsType => ({
@@ -72,7 +72,7 @@ const fillOutlinePatternUniforms = (context: Context, locations: UniformLocation
     'u_pixel_coord_lower': new Uniform2f(context, locations.u_pixel_coord_lower),
     'u_scale': new Uniform3f(context, locations.u_scale),
     'u_fade': new Uniform1f(context, locations.u_fade),
-    'u_fill_translate': new Uniform2f(context, locations.u_fill_translate)
+    'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
 });
 
 const fillPatternUniformValues = (

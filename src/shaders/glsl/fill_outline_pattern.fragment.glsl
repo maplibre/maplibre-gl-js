@@ -13,11 +13,13 @@ in float v_depth;
 #pragma mapbox: define lowp float opacity
 #pragma mapbox: define lowp vec4 pattern_from
 #pragma mapbox: define lowp vec4 pattern_to
+#pragma mapbox: define highp vec4 color
 
 void main() {
     #pragma mapbox: initialize lowp float opacity
     #pragma mapbox: initialize mediump vec4 pattern_from
     #pragma mapbox: initialize mediump vec4 pattern_to
+    #pragma mapbox: initialize highp vec4 color
 
     vec2 pattern_tl_a = pattern_from.xy;
     vec2 pattern_br_a = pattern_from.zw;
@@ -37,7 +39,18 @@ void main() {
     float dist = length(v_pos - gl_FragCoord.xy);
     float alpha = 1.0 - smoothstep(0.0, 1.0, dist);
 
+#ifdef SDF_PATTERN
+    highp float sdf_edge = (256.0 - 64.0) / 256.0;
+    highp float sdf_gamma_a = fwidth(color1.a) * 0.5;
+    highp float sdf_gamma_b = fwidth(color2.a) * 0.5;
+    float sdf_alpha_a = smoothstep(sdf_edge - sdf_gamma_a, sdf_edge + sdf_gamma_a, color1.a);
+    float sdf_alpha_b = smoothstep(sdf_edge - sdf_gamma_b, sdf_edge + sdf_gamma_b, color2.a);
+    vec4 sdf_color_a = color * sdf_alpha_a;
+    vec4 sdf_color_b = color * sdf_alpha_b;
+    fragColor = mix(sdf_color_a, sdf_color_b, u_fade) * alpha * opacity;
+#else
     fragColor = mix(color1, color2, u_fade) * alpha * opacity;
+#endif
 
     #ifdef GLOBE
     if (v_depth > 1.0) {
