@@ -603,4 +603,22 @@ describe('GlobeTransform', () => {
             expect(mercator.renderWorldCopies).toBeTruthy();
         });
     });
+
+    test('recalculateZoomAndCenter does not jump center on globe + terrain (#7025)', () => {
+        const globeTransform = createGlobeTransform();
+        globeTransform.setTransitionState(1, 0);
+        globeTransform.setCenter(new LngLat(10, 50));
+        const originalLng = globeTransform.center.lng;
+        const originalLat = globeTransform.center.lat;
+
+        const terrain = {
+            getElevationForLngLatZoom: () => 200,
+            pointCoordinate: () => null
+        } as any;
+
+        globeTransform.recalculateZoomAndCenter(terrain);
+
+        expect(globeTransform.center.lng).toBeCloseTo(originalLng, 10);
+        expect(globeTransform.center.lat).toBeCloseTo(originalLat, 10);
+    });
 });

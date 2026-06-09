@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import Protobuf from 'pbf';
+import {PbfReader} from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import {OverscaledTileID} from '../../../src/tile/tile_id.ts';
 import {FeatureIndex} from '../../../src/data/feature_index.ts';
@@ -17,7 +17,7 @@ export type CreateBucketParameters = {
 };
 
 export function loadVectorTile(name = 'mbsv5-6-18-23.vector.pbf'): VectorTile {
-    return new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets', name))));
+    return new VectorTile(new PbfReader(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets', name))));
 }
 
 export function getFeaturesFromLayer(sourceLayer: VectorTileLayerLike): IndexedFeature[] {

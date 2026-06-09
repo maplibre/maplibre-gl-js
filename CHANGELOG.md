@@ -3,8 +3,31 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix handling cross-origin blob URL in Ajax utils ([#7675](https://github.com/maplibre/maplibre-gl-js/pull/7675)) (by [@katemihalikova](https://github.com/katemihalikova))
 - _...Add new stuff here..._
+
+## 6.0.0-13
+
+### ✨ Features and improvements
+
+- Improve `ProjectionData` matrix backing types for renderer and custom layer projection matrices ([#6316](https://github.com/maplibre/maplibre-gl-js/issues/6316)) (by [@cat0825](https://github.com/cat0825))
+
+### 🐞 Bug fixes
+
+- Fix camera jump on dragend with globe + terrain at low pitch ([#7736](https://github.com/maplibre/maplibre-gl-js/pull/7736)) (by @kodeezabdullah)
+- Fix web font rendering by awaiting document.fonts.load() before TinySDF instantiation ([#7735](https://github.com/maplibre/maplibre-gl-js/pull/7735)) (by [@kodeezabdullah](https://github.com/kodeezabdullah))
+- Remove the framebuffer completeness check that threw an unhandled `Framebuffer is not complete` error on transient GPU resource loss (e.g. when a tab wakes from sleep); incomplete framebuffers now self-heal on the next frame instead ([#7303](https://github.com/maplibre/maplibre-gl-js/pull/7303)) (by [@johanrd](https://github.com/johanrd))
+- ⚠️ Disable icon scaling with offset, this is a render breaking change which we have decided to incorporate in both maplibre-gl-js and maplibre-native ([#7742](https://github.com/maplibre/maplibre-gl-js/issues/7742)) (by [@springmeyer](https://github.com/springmeyer) and [@HarelM](https://github.com/HarelM))
+
+## 6.0.0-12
+
+### ✨ Features and improvements
+
+- Optimization: vertex shader opacity culling for lines and fills [#7711](https://github.com/maplibre/maplibre-gl-js/pull/7711) (by [@xavierjs](https://github.com/xavierjs))
+
+### 🐞 Bug fixes
+
+- Fix handling cross-origin blob URL in Ajax utils ([#7675](https://github.com/maplibre/maplibre-gl-js/pull/7675)) (by [@katemihalikova](https://github.com/katemihalikova))
+- Avoid TypeErrors from style methods while the WebGL context is lost ([#7710](https://github.com/maplibre/maplibre-gl-js/issues/7710)) (by [@cyphercodes](https://github.com/cyphercodes))
 - querySourceFeatures() throws 'Block overruns tile' on overzoomed MLT tiles because the reported encoding doesn't match the re-encoded MVT data ([#7707](https://github.com/maplibre/maplibre-gl-js/pull/7707)) (by [@ted-piotrowski](https://github.com/ted-piotrowski))
 - Fix geometry length check for polygons and lines in LineBucket after duplicate vertex trimming([#7638](https://github.com/maplibre/maplibre-gl-js/pull/7638)) (by [@widefire](https://github.com/widefire))
 - Fix a race condition in geojson source after init and fast update data ([#7734](https://github.com/maplibre/maplibre-gl-js/issues/7734)) (by [@HarelM](https://github.com/HarelM))
