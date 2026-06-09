@@ -9,8 +9,6 @@
   },
   "center": [11.52517, 47.34487],
   "zoom": 13,
-  "pitch": 20,
-  "bearing": 20,
   "sources": {
     "terrain": {
       "type": "raster-dem",
