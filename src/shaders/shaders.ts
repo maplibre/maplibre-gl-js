@@ -49,8 +49,6 @@ import lineSDFFrag from './glsl/line_sdf.fragment.glsl.g.ts';
 import lineSDFVert from './glsl/line_sdf.vertex.glsl.g.ts';
 import lineGradientSDFFrag from './glsl/line_gradient_sdf.fragment.glsl.g.ts';
 import lineGradientSDFVert from './glsl/line_gradient_sdf.vertex.glsl.g.ts';
-import lineTextureFrag from './glsl/line_texture.fragment.glsl.g.ts';
-import lineTextureVert from './glsl/line_texture.vertex.glsl.g.ts';
 import rasterFrag from './glsl/raster.fragment.glsl.g.ts';
 import rasterVert from './glsl/raster.vertex.glsl.g.ts';
 import symbolIconFrag from './glsl/symbol_icon.fragment.glsl.g.ts';
@@ -109,7 +107,6 @@ export const shaders: {
     linePattern: PreparedShader;
     lineSDF: PreparedShader;
     lineGradientSDF: PreparedShader;
-    lineTexture: PreparedShader;
     raster: PreparedShader;
     symbolIcon: PreparedShader;
     symbolSDF: PreparedShader;
@@ -148,7 +145,6 @@ export const shaders: {
     linePattern: prepare(linePatternFrag, linePatternVert),
     lineSDF: prepare(lineSDFFrag, lineSDFVert),
     lineGradientSDF: prepare(lineGradientSDFFrag, lineGradientSDFVert),
-    lineTexture: prepare(lineTextureFrag, lineTextureVert),
     raster: prepare(rasterFrag, rasterVert),
     symbolIcon: prepare(symbolIconFrag, symbolIconVert),
     symbolSDF: prepare(symbolSDFFrag, symbolSDFVert),
