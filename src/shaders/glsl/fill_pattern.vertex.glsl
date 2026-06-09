@@ -8,18 +8,18 @@ layout(location = 0) in vec2 a_pos;
 out vec2 v_pos_a;
 out vec2 v_pos_b;
 
-#pragma mapbox: define lowp float opacity
-#pragma mapbox: define lowp vec4 pattern_from
-#pragma mapbox: define lowp vec4 pattern_to
-#pragma mapbox: define lowp float pixel_ratio_from
-#pragma mapbox: define lowp float pixel_ratio_to
+#pragma maplibre: define lowp float opacity
+#pragma maplibre: define lowp vec4 pattern_from
+#pragma maplibre: define lowp vec4 pattern_to
+#pragma maplibre: define lowp float pixel_ratio_from
+#pragma maplibre: define lowp float pixel_ratio_to
 
 void main() {
-    #pragma mapbox: initialize lowp float opacity
-    #pragma mapbox: initialize mediump vec4 pattern_from
-    #pragma mapbox: initialize mediump vec4 pattern_to
-    #pragma mapbox: initialize lowp float pixel_ratio_from
-    #pragma mapbox: initialize lowp float pixel_ratio_to
+    #pragma maplibre: initialize lowp float opacity
+    #pragma maplibre: initialize mediump vec4 pattern_from
+    #pragma maplibre: initialize mediump vec4 pattern_to
+    #pragma maplibre: initialize lowp float pixel_ratio_from
+    #pragma maplibre: initialize lowp float pixel_ratio_to
 
     // Move vertex outside clip space to discard triangle when opacity is negligible
     if (opacity < 0.01) {

@@ -14,22 +14,22 @@ in float v_gamma_scale;
 in float v_depth;
 #endif
 
-#pragma mapbox: define highp vec4 color
-#pragma mapbox: define lowp float blur
-#pragma mapbox: define lowp float opacity
-#pragma mapbox: define mediump float width
-#pragma mapbox: define lowp float floorwidth
-#pragma mapbox: define mediump vec4 dasharray_from
-#pragma mapbox: define mediump vec4 dasharray_to
+#pragma maplibre: define highp vec4 color
+#pragma maplibre: define lowp float blur
+#pragma maplibre: define lowp float opacity
+#pragma maplibre: define mediump float width
+#pragma maplibre: define lowp float floorwidth
+#pragma maplibre: define mediump vec4 dasharray_from
+#pragma maplibre: define mediump vec4 dasharray_to
 
 void main() {
-    #pragma mapbox: initialize highp vec4 color
-    #pragma mapbox: initialize lowp float blur
-    #pragma mapbox: initialize lowp float opacity
-    #pragma mapbox: initialize mediump float width
-    #pragma mapbox: initialize lowp float floorwidth
-    #pragma mapbox: initialize mediump vec4 dasharray_from
-    #pragma mapbox: initialize mediump vec4 dasharray_to
+    #pragma maplibre: initialize highp vec4 color
+    #pragma maplibre: initialize lowp float blur
+    #pragma maplibre: initialize lowp float opacity
+    #pragma maplibre: initialize mediump float width
+    #pragma maplibre: initialize lowp float floorwidth
+    #pragma maplibre: initialize mediump vec4 dasharray_from
+    #pragma maplibre: initialize mediump vec4 dasharray_to
 
     // Calculate the distance of the pixel from the line in pixels.
     float dist = length(v_normal) * v_width2.s;

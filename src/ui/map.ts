@@ -2305,10 +2305,10 @@ export class Map extends Camera {
      *     "type": "Feature",
      *     "geometry": {
      *       "type": "Point",
-     *       "coordinates": [-77.0323, 38.9131]
+     *       "coordinates": [-77.0396, 38.8891]
      *     },
      *     "properties": {
-     *       "title": "Mapbox DC",
+     *       "title": "Washington DC",
      *       "marker-symbol": "monument"
      *     }
      *   }

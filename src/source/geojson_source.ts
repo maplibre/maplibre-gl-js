@@ -142,6 +142,7 @@ export class GeoJSONSource extends Evented implements Source {
     map: Map;
     actorPromise: Promise<Actor>;
     _isUpdatingWorker: boolean;
+    _updatePromise: Promise<void>;
     _pendingWorkerUpdate: {
         data?: GeoJSON.GeoJSON | string;
         diff?: GeoJSONSourceDiff;
@@ -379,7 +380,7 @@ export class GeoJSONSource extends Evented implements Source {
      * using geojson-vt or supercluster as appropriate.
      */
     async _updateWorkerData(): Promise<void> {
-        if (this._isUpdatingWorker) return;
+        if (this._isUpdatingWorker) return this._updatePromise;
 
         if (!this._hasPendingWorkerUpdate()) {
             warnOnce(`No pending worker updates for GeoJSONSource ${this.id}.`);
@@ -398,7 +399,8 @@ export class GeoJSONSource extends Evented implements Source {
             this._pendingWorkerUpdate.updateCluster = undefined;
         }
 
-        await this._dispatchWorkerUpdate(params);
+        this._updatePromise = this._dispatchWorkerUpdate(params);
+        await this._updatePromise;
     }
 
     /**
