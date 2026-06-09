@@ -11,7 +11,7 @@ import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
 import {shaders} from '../shaders/shaders.ts';
 import {Program} from '../webgl/program.ts';
 import {programUniforms} from '../webgl/program/program_uniforms.ts';
-import {layerOpacityUniformValues, type LayerOpacityLayer} from '../webgl/program/layer_opacity_program.ts';
+import {layerOpacityUniformValues} from '../webgl/program/layer_opacity_program.ts';
 import {Context} from '../webgl/context.ts';
 import {DepthMode} from '../webgl/depth_mode.ts';
 import {StencilMode} from '../webgl/stencil_mode.ts';

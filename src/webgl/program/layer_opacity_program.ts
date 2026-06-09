@@ -2,8 +2,6 @@ import {Uniform1i, Uniform1f} from '../uniform_binding.ts';
 
 import type {Context} from '../../webgl/context.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
-import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
-import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 
 export type LayerOpacityUniformsType = {
     'u_image': Uniform1i;
