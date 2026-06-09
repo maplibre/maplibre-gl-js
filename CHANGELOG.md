@@ -1,6 +1,13 @@
 ## main
 ### ✨ Features and improvements
 - _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+- Improve projection data matrix types ([#7725](https://github.com/maplibre/maplibre-gl-js/pull/7725)) (by [@cat0825](https://github.com/cat0825))
+## 6.0.0-13
+### ✨ Features and improvements
 - Improve `ProjectionData` matrix backing types for renderer and custom layer projection matrices ([#6316](https://github.com/maplibre/maplibre-gl-js/issues/6316)) (by [@cat0825](https://github.com/cat0825))
 
 ### 🐞 Bug fixes
@@ -8,7 +15,6 @@
 - Fix web font rendering by awaiting document.fonts.load() before TinySDF instantiation ([#7735](https://github.com/maplibre/maplibre-gl-js/pull/7735)) (by [@kodeezabdullah](https://github.com/kodeezabdullah))
 - Remove the framebuffer completeness check that threw an unhandled `Framebuffer is not complete` error on transient GPU resource loss (e.g. when a tab wakes from sleep); incomplete framebuffers now self-heal on the next frame instead ([#7303](https://github.com/maplibre/maplibre-gl-js/pull/7303)) (by [@johanrd](https://github.com/johanrd))
 - ⚠️ Disable icon scaling with offset, this is a render breaking change which we have decided to incorporate in both maplibre-gl-js and maplibre-native ([#7742](https://github.com/maplibre/maplibre-gl-js/issues/7742)) (by [@HarelM](https://github.com/HarelM))
-- _...Add new stuff here..._
 
 ## 6.0.0-12
 
