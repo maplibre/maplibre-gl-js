@@ -49,6 +49,7 @@ import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_l
 import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
 import {isBackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
 import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
+import {StaticBaseCacheManager} from './static_base_cache_manager.ts';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -145,6 +146,7 @@ export class Painter {
     cache: {[_: string]: Program<any>};
     crossTileSymbolIndex: CrossTileSymbolIndex;
     symbolFadeChange: number;
+    symbolsAreFading: boolean;
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
     // this object stores the current camera-matrix and the last render time
@@ -152,7 +154,9 @@ export class Painter {
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
     terrainFacilitator: {depthDirty: boolean; coordsDirty: boolean; matrix: mat4; renderTime: number};
 
-    constructor(gl: WebGL2RenderingContext, transform: IReadonlyTransform) {
+    staticBaseCache: StaticBaseCacheManager | null;
+
+    constructor(gl: WebGL2RenderingContext, transform: IReadonlyTransform, cacheStaticTranslucentLayersOptimization?: boolean) {
         this.drawFunctions = webglDrawFunctions;
         this.context = new Context(gl);
         this.transform = transform;
@@ -160,6 +164,8 @@ export class Painter {
         this._rttObjectRecyclePool = [];
         this._rttSharedFbo = null;
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
+
+        this.staticBaseCache = cacheStaticTranslucentLayersOptimization ? new StaticBaseCacheManager() : null;
 
         this.setup();
 
@@ -180,6 +186,8 @@ export class Painter {
         this.height = Math.floor(height * pixelRatio);
         this.pixelRatio = pixelRatio;
         this.context.viewport.set([0, 0, this.width, this.height]);
+
+        this.staticBaseCache?.invalidate();
 
         if (this.style) {
             for (const layerId of this.style._order) {
@@ -504,7 +512,9 @@ export class Painter {
         this.imageManager = style.imageManager;
         this.glyphManager = style.glyphManager;
 
-        this.symbolFadeChange = style.placement.symbolFadeChange(now());
+        const currentTime = now();
+        this.symbolFadeChange = style.placement.symbolFadeChange(currentTime);
+        this.symbolsAreFading = currentTime - style.placement.lastPlacementChangeTime < style.placement.fadeDuration;
 
         this.imageManager.beginFrame();
 
@@ -601,7 +611,17 @@ export class Painter {
 
         let globeDepthRendered = false;
 
-        for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
+        // Disable static base cache when render-to-texture is active (terrain/globe) —
+        // the RTT system renders layers into per-tile textures, and a screen-space
+        // the static base cache would capture incorrect content.
+        const useStaticBaseCache = this.staticBaseCache && !this.renderToTexture;
+        const {cacheStartLayer, needsCapture, stableLayerCount} = useStaticBaseCache
+            ? this.staticBaseCache.planTranslucentPassCaching(
+                this, layerIds, this.style._layers, this.transform.zoom, options, this.imageManager, tileManagers)
+            : {cacheStartLayer: 0, needsCapture: false, stableLayerCount: 0};
+
+        // Render layers (either all, or starting from cacheStartLayer)
+        for (this.currentLayer = cacheStartLayer; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const tileManager = tileManagers[layer.source];
 
@@ -623,6 +643,11 @@ export class Painter {
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
             this.renderLayer(this, tileManager, layer, coords, renderOptions);
+
+            // After rendering the last stable layer, capture the screen into the static base cache
+            if (needsCapture && this.currentLayer === stableLayerCount - 1) {
+                this.staticBaseCache?.captureCache(this.context, this.width, this.height, stableLayerCount);
+            }
         }
 
         // Render atmosphere, only for Globe projection
@@ -915,6 +940,7 @@ export class Painter {
         if (this.rasterBoundsBuffer) this.rasterBoundsBuffer.destroy();
         if (this.rasterBoundsBufferPosOnly) this.rasterBoundsBufferPosOnly.destroy();
         if (this.viewportBuffer) this.viewportBuffer.destroy();
+        this.staticBaseCache?.destroy();
         if (this.tileBorderIndexBuffer) this.tileBorderIndexBuffer.destroy();
         if (this.quadTriangleIndexBuffer) this.quadTriangleIndexBuffer.destroy();
         if (this.tileExtentMesh) this.tileExtentMesh.vertexBuffer?.destroy();

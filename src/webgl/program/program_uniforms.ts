@@ -14,6 +14,7 @@ import {terrainUniforms, terrainDepthUniforms, terrainCoordsUniforms, type Terra
 import {projectionErrorMeasurementUniforms, type ProjectionErrorMeasurementUniformsType} from './projection_error_measurement_program.ts';
 import {atmosphereUniforms, type atmosphereUniformsType} from './atmosphere_program.ts';
 import {skyUniforms, type SkyUniformsType} from './sky_program.ts';
+import {fullscreenTextureUniforms, type FullscreenTextureUniformsType} from './fullscreen_texture_program.ts';
 import type {Context} from '../context.ts';
 import type {UniformLocations} from '../uniform_binding.ts';
 
@@ -54,6 +55,7 @@ export const programUniforms: {
     terrainCoords: (context: Context, locations: UniformLocations) => TerrainCoordsUniformsType;
     projectionErrorMeasurement: (context: Context, locations: UniformLocations) => ProjectionErrorMeasurementUniformsType;
     atmosphere: (context: Context, locations: UniformLocations) => atmosphereUniformsType;
+    fullscreenTexture: (context: Context, locations: UniformLocations) => FullscreenTextureUniformsType;
     sky: (context: Context, locations: UniformLocations) => SkyUniformsType;
 } = {
     fillExtrusion: fillExtrusionUniforms,
@@ -89,6 +91,7 @@ export const programUniforms: {
     terrainDepth: terrainDepthUniforms,
     terrainCoords: terrainCoordsUniforms,
     projectionErrorMeasurement: projectionErrorMeasurementUniforms,
+    fullscreenTexture: fullscreenTextureUniforms,
     atmosphere: atmosphereUniforms,
     sky: skyUniforms
 };

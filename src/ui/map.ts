@@ -429,6 +429,13 @@ export type MapOptions = {
      *   to bearing change regardless of cursor position.
      */
     aroundCenter?: boolean;
+    /**
+     * If `true`, the first N stable translucent layers are cached into a texture
+     * and reused across frames, avoiding redundant re-rendering when only upper
+     * layers change and the camera is static.
+     * @defaultValue false
+     */
+    cacheStaticTranslucentLayersOptimization?: boolean;
 };
 
 export type AddImageOptions = {
@@ -525,6 +532,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     terrainSkirtLength: 'auto',
     zoomLevelsToOverscale: 4,
     anisotropicFilterPitch: defaultAnisotropicFilterPitch,
+    cacheStaticTranslucentLayersOptimization: false,
 };
 
 /**
@@ -582,6 +590,7 @@ export class Map extends Camera {
     _sourcesDirty: boolean;
     _placementDirty: boolean;
     _anisotropicFilterPitch: number;
+    _cacheStaticTranslucentLayersOptimization: boolean;
 
     _loaded: boolean;
     _idleTriggered = false;
@@ -780,6 +789,7 @@ export class Map extends Camera {
         this.transformConstrain = resolvedOptions.transformConstrain;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
         this.setAnisotropicFilterPitch(resolvedOptions.anisotropicFilterPitch);
+        this._cacheStaticTranslucentLayersOptimization = resolvedOptions.cacheStaticTranslucentLayersOptimization === true;
 
         if (resolvedOptions.reduceMotion !== undefined) {
             browser.prefersReducedMotion = resolvedOptions.reduceMotion;
@@ -799,12 +809,12 @@ export class Map extends Camera {
         this._setupPainter();
         if (!this.painter) return;
 
-        this.on('move', () => this._update(false));
-        this.on('moveend', () => this._update(false));
-        this.on('zoom', () => this._update(true));
+        this.on('move', () => this._update(false, true));
+        this.on('moveend', () => this._update(false, false));
+        this.on('zoom', () => this._update(true, false));
         this.on('terrain', () => {
             this.painter.terrainFacilitator.depthDirty = true;
-            this._update(true);
+            this._update(true, false);
         });
         this.once('idle', () => this._idleTriggered = true);
 
@@ -860,7 +870,7 @@ export class Map extends Camera {
             }
         });
         this.on('data', (event: MapDataEvent) => {
-            this._update(event.dataType === 'style');
+            this._update(event.dataType === 'style', false);
             this.fire(new Event(`${event.dataType}data`, event));
         });
         this.on('dataloading', (event: MapDataEvent) => {
@@ -890,7 +900,7 @@ export class Map extends Camera {
      */
     setGlobalStateProperty(propertyName: string, value: any): this {
         this.style.setGlobalStateProperty(propertyName, value);
-        return this._update(true);
+        return this._update(true, false);
     }
 
     /**
@@ -1178,7 +1188,7 @@ export class Map extends Camera {
      */
     setMaxBounds(bounds?: LngLatBoundsLike | null): this {
         this.transform.setMaxBounds(LngLatBounds.convert(bounds));
-        return this._update();
+        return this._update(false, false);
     }
 
     /**
@@ -1210,7 +1220,7 @@ export class Map extends Camera {
             const tr = this._getTransformForUpdate();
             tr.setMinZoom(minZoom);
             this._applyUpdatedTransform(tr);
-            this._update();
+            this._update(false, false);
             if (zoomBefore !== this.transform.zoom) {
                 this.fire(new Event('zoomstart'))
                     .fire(new Event('zoom'))
@@ -1260,7 +1270,7 @@ export class Map extends Camera {
             const tr = this._getTransformForUpdate();
             tr.setMaxZoom(maxZoom);
             this._applyUpdatedTransform(tr);
-            this._update();
+            this._update(false, false);
             if (zoomBefore !== this.transform.zoom) {
                 this.fire(new Event('zoomstart'))
                     .fire(new Event('zoom'))
@@ -1310,7 +1320,7 @@ export class Map extends Camera {
             const tr = this._getTransformForUpdate();
             tr.setMinPitch(minPitch);
             this._applyUpdatedTransform(tr);
-            this._update();
+            this._update(false, false);
             if (pitchBefore !== this.transform.pitch) {
                 this.fire(new Event('pitchstart'))
                     .fire(new Event('pitch'))
@@ -1356,7 +1366,7 @@ export class Map extends Camera {
             const tr = this._getTransformForUpdate();
             tr.setMaxPitch(maxPitch);
             this._applyUpdatedTransform(tr);
-            this._update();
+            this._update(false, false);
             if (pitchBefore !== this.transform.pitch) {
                 this.fire(new Event('pitchstart'))
                     .fire(new Event('pitch'))
@@ -1417,7 +1427,7 @@ export class Map extends Camera {
         }
 
         this._anisotropicFilterPitch = anisotropicFilterPitch;
-        return this._update();
+        return this._update(false, false);
     }
 
     /**
@@ -1455,7 +1465,7 @@ export class Map extends Camera {
      */
     setRenderWorldCopies(renderWorldCopies?: boolean | null): this {
         this.transform.setRenderWorldCopies(renderWorldCopies);
-        return this._update();
+        return this._update(false, false);
     }
 
     /** Sets or clears the callback overriding how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
@@ -1474,7 +1484,7 @@ export class Map extends Camera {
      */
     setTransformConstrain(constrain?: TransformConstrainFunction | null): this {
         this.transform.setConstrainOverride(constrain);
-        return this._update();
+        return this._update(false, false);
     }
 
     /**
@@ -2209,7 +2219,7 @@ export class Map extends Camera {
     _updateDiff(style: StyleSpecification, options?: StyleSwapOptions & StyleOptions): void {
         try {
             if (this.style.setState(style, options)) {
-                this._update(true);
+                this._update(true, false);
             }
         } catch (e) {
             warnOnce(
@@ -2309,7 +2319,7 @@ export class Map extends Camera {
     addSource(id: string, source: SourceSpecification | CanvasSourceSpecification): this {
         this._lazyInitEmptyStyle();
         this.style.addSource(id, source);
-        return this._update(true);
+        return this._update(true, false);
     }
 
     /**
@@ -2450,7 +2460,7 @@ export class Map extends Camera {
      */
     removeSource(id: string): this {
         this.style.removeSource(id);
-        return this._update(true);
+        return this._update(true, false);
     }
 
     /**
@@ -2511,7 +2521,7 @@ export class Map extends Camera {
                 this.style.tileManagers[id].getSource().calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
             }
         }
-        this._update(true);
+        this._update(true, false);
         return this;
     }
 
@@ -2854,7 +2864,7 @@ export class Map extends Camera {
     addLayer(layer: AddLayerObject, beforeId?: string): this {
         this._lazyInitEmptyStyle();
         this.style.addLayer(layer, beforeId);
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -2871,7 +2881,7 @@ export class Map extends Camera {
      */
     moveLayer(id: string, beforeId?: string): this {
         this.style.moveLayer(id, beforeId);
-        return this._update(true);
+        return this._update(true, false);
     }
 
     /**
@@ -2889,7 +2899,7 @@ export class Map extends Camera {
      */
     removeLayer(id: string): this {
         this.style.removeLayer(id);
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -2947,7 +2957,7 @@ export class Map extends Camera {
      */
     setLayerZoomRange(layerId: string, minzoom: number, maxzoom: number): this {
         this.style.setLayerZoomRange(layerId, minzoom, maxzoom);
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -2985,7 +2995,7 @@ export class Map extends Camera {
      */
     setFilter(layerId: string, filter?: FilterSpecification | null, options: StyleSetterOptions = {}): this {
         this.style?.setFilter(layerId, filter, options);
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -3016,7 +3026,7 @@ export class Map extends Camera {
      */
     setPaintProperty<K extends keyof AllPaintProperties>(layerId: string, name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}): this {
         this.style?.setPaintProperty(layerId, name, value, options);
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -3044,7 +3054,7 @@ export class Map extends Camera {
      */
     setLayoutProperty<K extends keyof AllLayoutProperties>(layerId: string, name: K, value: AllLayoutProperties[K], options: StyleSetterOptions = {}): this {
         this.style.setLayoutProperty(layerId, name, value, options);
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -3072,7 +3082,7 @@ export class Map extends Camera {
     setGlyphs(glyphsUrl: string | null | undefined, options: StyleSetterOptions = {}): this {
         this._lazyInitEmptyStyle();
         this.style.setGlyphs(glyphsUrl, options);
-        return this._update(true);
+        return this._update(true, false);
     }
 
     /**
@@ -3099,7 +3109,7 @@ export class Map extends Camera {
         this._lazyInitEmptyStyle();
         this.style.addSprite(id, url, options, (err) => {
             if (!err) {
-                this._update(true);
+                this._update(true, false);
             }
         });
         return this;
@@ -3118,7 +3128,7 @@ export class Map extends Camera {
     removeSprite(id: string): this {
         this._lazyInitEmptyStyle();
         this.style.removeSprite(id);
-        return this._update(true);
+        return this._update(true, false);
     }
 
     /**
@@ -3144,7 +3154,7 @@ export class Map extends Camera {
         this._lazyInitEmptyStyle();
         this.style.setSprite(spriteUrl, options, (err) => {
             if (!err) {
-                this._update(true);
+                this._update(true, false);
             }
         });
         return this;
@@ -3164,7 +3174,7 @@ export class Map extends Camera {
     setLight(light: LightSpecification, options: StyleSetterOptions = {}): this {
         this._lazyInitEmptyStyle();
         this.style.setLight(light, options);
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -3190,7 +3200,7 @@ export class Map extends Camera {
     setSky(sky: SkySpecification, options: StyleSetterOptions = {}): this {
         this._lazyInitEmptyStyle();
         this.style.setSky(sky, options);
-        return this._update(true);
+        return this._update(true, true);
     }
 
     /**
@@ -3245,7 +3255,7 @@ export class Map extends Camera {
      */
     setFeatureState(feature: FeatureIdentifier, state: any): this {
         this.style.setFeatureState(feature, state);
-        return this._update();
+        return this._update(false, true);
     }
 
     /**
@@ -3296,7 +3306,7 @@ export class Map extends Camera {
      */
     removeFeatureState(target: FeatureIdentifier, key?: string): this {
         this.style.removeFeatureState(target, key);
-        return this._update();
+        return this._update(false, true);
     }
 
     /**
@@ -3490,7 +3500,7 @@ export class Map extends Camera {
             return;
         }
 
-        this.painter = new Painter(gl, this.transform);
+        this.painter = new Painter(gl, this.transform, this._cacheStaticTranslucentLayersOptimization);
     }
 
     override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
@@ -3549,7 +3559,7 @@ export class Map extends Camera {
         this._setupPainter();
         if (!this.painter) return;
         this.resize();
-        this._update();
+        this._update(false, false);
         this._resizeInternal();
         this.fire(new Event('webglcontextrestored', {originalEvent: event}));
     };
@@ -3582,12 +3592,16 @@ export class Map extends Camera {
      *
      * @param updateStyle - mark the map's style for reprocessing as
      * well as its sources
+     * @param invalidateStaticBaseCache - force the static base cache to be invalidated
      */
-    _update(updateStyle?: boolean): this {
+    _update(updateStyle: boolean, invalidateStaticBaseCache: boolean): this {
         if (!this.style?._loaded) return this;
 
         this._styleDirty ||= updateStyle;
         this._sourcesDirty = true;
+        if (invalidateStaticBaseCache) {
+            this.painter?.staticBaseCache?.invalidate();
+        }
         this.triggerRepaint();
 
         return this;
@@ -3601,7 +3615,7 @@ export class Map extends Camera {
      * @returns An id that can be used to cancel the callback
      */
     _requestRenderFrame(callback: () => void): TaskID {
-        this._update();
+        this._update(false, false);
         return this._renderTaskQueue.add(callback);
     }
 
@@ -3659,6 +3673,10 @@ export class Map extends Camera {
             }
 
             this.style.update(parameters);
+        } else if (this.style) {
+            // Even if the style didn't change, update per-layer unchanged
+            // frame counters so the translucent layer cache can track stability.
+            this.style.updateUnchangedFrameCounters();
         }
 
         const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
@@ -3835,7 +3853,7 @@ export class Map extends Camera {
     }
 
     _onWindowOnline = (): void => {
-        this._update();
+        this._update(false, false);
     };
 
     /**
@@ -3855,7 +3873,7 @@ export class Map extends Camera {
     set showTileBoundaries(value: boolean) {
         if (this._showTileBoundaries === value) return;
         this._showTileBoundaries = value;
-        this._update();
+        this._update(false, false);
     }
 
     /**
@@ -3866,7 +3884,7 @@ export class Map extends Camera {
     set showPadding(value: boolean) {
         if (this._showPadding === value) return;
         this._showPadding = value;
-        this._update();
+        this._update(false, false);
     }
 
     /**
@@ -3885,7 +3903,7 @@ export class Map extends Camera {
             this.style._generateCollisionBoxes();
         } else {
             // Otherwise, call an update to remove collision boxes
-            this._update();
+            this._update(false, false);
         }
     }
 
@@ -3900,7 +3918,7 @@ export class Map extends Camera {
     set showOverdrawInspector(value: boolean) {
         if (this._showOverdrawInspector === value) return;
         this._showOverdrawInspector = value;
-        this._update();
+        this._update(false, false);
     }
 
     /**
@@ -3916,7 +3934,7 @@ export class Map extends Camera {
     }
     // show vertices
     get vertices(): boolean { return !!this._vertices; }
-    set vertices(value: boolean) { this._vertices = value; this._update(); }
+    set vertices(value: boolean) { this._vertices = value; this._update(false, false); }
 
     /**
      * Returns the package version of the library
@@ -3954,6 +3972,6 @@ export class Map extends Camera {
     setProjection(projection: ProjectionSpecification): this {
         this._lazyInitEmptyStyle();
         this.style.setProjection(projection);
-        return this._update(true);
+        return this._update(true, false);
     }
 }

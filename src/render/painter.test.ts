@@ -83,6 +83,129 @@ describe('tile texture pool', () => {
     });
 });
 
+describe('translucent cache', () => {
+    let painter: Painter;
+    let gl: WebGL2RenderingContext;
+
+    beforeEach(() => {
+        gl = createNullGL();
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(512, 512);
+        painter = new Painter(gl, transform, true);
+        painter.width = 512;
+        painter.height = 512;
+    });
+
+    afterEach(() => {
+        painter.destroy();
+    });
+
+    function createMockStyle(layerCount: number, unstableIndex?: number) {
+        const mockLayers: Record<string, any> = {};
+        const layerIds: string[] = [];
+        for (let i = 0; i < layerCount; i++) {
+            const id = `layer-${i}`;
+            layerIds.push(id);
+            mockLayers[id] = {
+                id,
+                type: 'fill',
+                source: 'test',
+                unchangedFrameCount: 10,
+                isHidden: () => false,
+                is3D: () => false,
+                hasOffscreenPass: () => false,
+                isTileClipped: () => false,
+                hasActiveTransition: () => false,
+            };
+        }
+        if (unstableIndex !== undefined) {
+            mockLayers[`layer-${unstableIndex}`].unchangedFrameCount = 0;
+        }
+        return {
+            _order: layerIds,
+            _layers: mockLayers,
+            tileManagers: {},
+            map: {terrain: null},
+            placement: {symbolFadeChange: () => 1},
+            projection: null,
+            sky: null,
+            lineAtlas: null,
+            imageManager: {beginFrame: vi.fn()},
+            glyphManager: null,
+        } as any;
+    }
+
+    const defaultRenderOptions = {
+        fadeDuration: 0, moving: false, rotating: false, zooming: false,
+        showOverdrawInspector: false, showPadding: false, showTileBoundaries: false,
+        anisotropicFilterPitch: 20,
+    };
+
+    test('cache is reused when size matches and enough stable layers', () => {
+        const manager = painter.staticBaseCache;
+        manager.captureCache(painter.context, painter.width, painter.height, 5);
+
+        const clearStencilSpy = vi.spyOn(painter, 'clearStencil').mockImplementation(() => {});
+        const useProgramSpy = vi.spyOn(painter, 'useProgram').mockReturnValue({draw: vi.fn()} as any);
+
+        painter.style = createMockStyle(7);
+
+        manager.minLayers = 1;
+
+        painter.render(painter.style, defaultRenderOptions);
+
+        // Cache was blitted via the fullscreenTexture program
+        expect(useProgramSpy).toHaveBeenCalledWith('fullscreenTexture', null, true);
+        expect(clearStencilSpy).toHaveBeenCalled();
+    });
+
+    test('cache is not reused when width changes', () => {
+        const manager = painter.staticBaseCache;
+        manager.captureCache(painter.context, painter.width, painter.height, 3);
+
+        painter.width = 1024;
+
+        const useProgramSpy = vi.spyOn(painter, 'useProgram');
+
+        painter.style = createMockStyle(0);
+
+        painter.render(painter.style, defaultRenderOptions);
+
+        // fullscreenTexture program should NOT have been used
+        const calls = useProgramSpy.mock.calls.filter(c => c[0] === 'fullscreenTexture');
+        expect(calls).toHaveLength(0);
+    });
+
+    test('cache is not reused when height changes', () => {
+        const manager = painter.staticBaseCache;
+        manager.captureCache(painter.context, painter.width, painter.height, 3);
+
+        painter.height = 1024;
+
+        const useProgramSpy = vi.spyOn(painter, 'useProgram');
+
+        painter.style = createMockStyle(0);
+
+        painter.render(painter.style, defaultRenderOptions);
+
+        const calls = useProgramSpy.mock.calls.filter(c => c[0] === 'fullscreenTexture');
+        expect(calls).toHaveLength(0);
+    });
+
+    test('cache is captured when stable layers exceed minimum', () => {
+        const manager = painter.staticBaseCache;
+        const captureSpy = vi.spyOn(manager, 'captureCache');
+
+        painter.style = createMockStyle(6, 5); // layer-5 is unstable
+
+        manager.minLayers = 1;
+
+        painter.render(painter.style, defaultRenderOptions);
+
+        expect(captureSpy).toHaveBeenCalledWith(painter.context, painter.width, painter.height, 5);
+    });
+});
+
 describe('RTT pool', () => {
     let painter: Painter;
 

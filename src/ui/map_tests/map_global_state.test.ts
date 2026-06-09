@@ -32,7 +32,7 @@ describe('setGlobalStateProperty', () => {
         map.setGlobalStateProperty('backgroundColor', 'blue');
 
         expect(map.getGlobalState()).toEqual({backgroundColor: 'blue'});
-        expect(map._update).toHaveBeenCalledWith(true);
+        expect(map._update).toHaveBeenCalledWith(true, false);
     });
 
     test('resets state to default value when called with null', async () => {
@@ -62,12 +62,12 @@ describe('setGlobalStateProperty', () => {
 
         expect(map.getGlobalState()).toEqual({backgroundColor: 'blue'});
         expect(map._update).toHaveBeenCalledTimes(1);
-        expect(map._update).toHaveBeenCalledWith(true);
+        expect(map._update).toHaveBeenCalledWith(true, false);
 
         map.setGlobalStateProperty('backgroundColor', null);
 
         expect(map.getGlobalState()).toEqual({backgroundColor: 'red'});
         expect(map._update).toHaveBeenCalledTimes(2);
-        expect(map._update).toHaveBeenNthCalledWith(2, true);
+        expect(map._update).toHaveBeenNthCalledWith(2, true, false);
     });
 });

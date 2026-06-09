@@ -1,7 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - ⚠️ Removed the remaining mapbox references in the code and in the tests. This changes the `#pragma mapbox` to `#pragma maplibre` in case you have shader code that relied on it. ([#7761](https://github.com/maplibre/maplibre-gl-js/issues/7761)) (by [@HarelM](https://github.com/HarelM))
-- _...Add new stuff here..._
+- Optimization: Cache stable translucent layers to avoid redundant re-rendering ([#7607](https://github.com/maplibre/maplibre-gl-js/pull/7635)) (by [@xavierjs](https://- - - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix a race condition in geojson source after init and fast update data ([#7734](https://github.com/maplibre/maplibre-gl-js/issues/7734)) (by [@HarelM](https://github.com/HarelM))

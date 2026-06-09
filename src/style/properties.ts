@@ -307,6 +307,20 @@ export class Transitioning<Props> {
         }
         return false;
     }
+
+    /**
+     * Like {@link hasTransition}, but ignores expired transitions whose
+     * `prior` hasn't been cleared yet (which only happens in `possiblyEvaluate`).
+     */
+    hasActiveTransition(now: TimePoint): boolean {
+        for (const property of Object.keys(this._values)) {
+            const value = this._values[property];
+            if (value.prior && now <= value.end) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 // ------- Layout -------

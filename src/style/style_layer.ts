@@ -113,6 +113,8 @@ export abstract class StyleLayer extends Evented {
 
     _visibilityExpression: VisibilityExpression;
 
+    unchangedFrameCount: number = 0;
+
     readonly onAdd: ((map: Map) => void);
     readonly onRemove: ((map: Map) => void);
 
@@ -338,6 +340,10 @@ export abstract class StyleLayer extends Evented {
 
     hasTransition(): boolean {
         return this._transitioningPaint.hasTransition();
+    }
+
+    hasActiveTransition(now: number): boolean {
+        return this._transitioningPaint?.hasActiveTransition(now) ?? false;
     }
 
     recalculateVisibility(): void {

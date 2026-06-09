@@ -69,6 +69,8 @@ import projectionErrorMeasurementVert from './glsl/projection_error_measurement.
 import projectionErrorMeasurementFrag from './glsl/projection_error_measurement.fragment.glsl.g.ts';
 import projectionMercatorVert from './glsl/_projection_mercator.vertex.glsl.g.ts';
 import projectionGlobeVert from './glsl/_projection_globe.vertex.glsl.g.ts';
+import fullscreenTextureFrag from './glsl/fullscreen_texture.fragment.glsl.g.ts';
+import fullscreenTextureVert from './glsl/fullscreen_texture.vertex.glsl.g.ts';
 import atmosphereFrag from './glsl/atmosphere.fragment.glsl.g.ts';
 import atmosphereVert from './glsl/atmosphere.vertex.glsl.g.ts';
 import skyFrag from './glsl/sky.fragment.glsl.g.ts';
@@ -118,6 +120,7 @@ export const shaders: {
     terrainDepth: PreparedShader;
     terrainCoords: PreparedShader;
     projectionErrorMeasurement: PreparedShader;
+    fullscreenTexture: PreparedShader;
     atmosphere: PreparedShader;
     sky: PreparedShader;
 } = {
@@ -157,6 +160,7 @@ export const shaders: {
     terrainDepth: prepare(terrainDepthFrag, terrainVertDepth),
     terrainCoords: prepare(terrainCoordsFrag, terrainVertCoords),
     projectionErrorMeasurement: prepare(projectionErrorMeasurementFrag, projectionErrorMeasurementVert),
+    fullscreenTexture: prepare(fullscreenTextureFrag, fullscreenTextureVert),
     atmosphere: prepare(atmosphereFrag, atmosphereVert),
     sky: prepare(skyFrag, skyVert),
 };
