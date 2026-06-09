@@ -24515,14 +24515,10 @@ function isCrossOrigin(url) {
 	}
 }
 function defaultWorkerUrl() {
-	try {
-		const moduleUrl = import.meta.url;
-		if (!/^https?:/.test(moduleUrl)) return "";
-		const workerName = moduleUrl.endsWith("-dev.mjs") ? "maplibre-gl-worker-dev.mjs" : "maplibre-gl-worker.mjs";
-		return new URL(`./${workerName}`, moduleUrl).href;
-	} catch {
-		return "";
-	}
+	const moduleUrl = import.meta.url;
+	if (!/^https?:/.test(moduleUrl)) return "";
+	const workerName = moduleUrl.endsWith("-dev.mjs") ? "maplibre-gl-worker-dev.mjs" : "maplibre-gl-worker.mjs";
+	return new URL(`./${workerName}`, moduleUrl).href;
 }
 function createWorker(url, asModule) {
 	if (asModule) try {
@@ -24541,7 +24537,7 @@ async function fetchAsBlobUrl(url) {
 }
 async function workerFactory() {
 	const url = config.WORKER_URL || defaultWorkerUrl();
-	const asModule = url?.endsWith(".mjs") ?? false;
+	const asModule = url?.endsWith(".cjs") ? false : true;
 	if (!isCrossOrigin(url)) return createWorker(url, asModule);
 	const blobUrl = await fetchAsBlobUrl(url);
 	try {
@@ -60109,7 +60105,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main dfa640c";
+const version = "main 06ee5a2";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
