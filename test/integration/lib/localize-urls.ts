@@ -48,13 +48,9 @@ function localizeSourceURLs(source: any, port: number) {
         source.tiles[tile] = localizeURL(source.tiles[tile], port);
     }
 
-    if (source.urls) {
-        source.urls = source.urls.map((url) => localizeURL(url, port));
-    }
+    source.urls &&= source.urls.map((url) => localizeURL(url, port));
 
-    if (source.url) {
-        source.url = localizeURL(source.url, port);
-    }
+    source.url &&= localizeURL(source.url, port);
 
     if (source.data && typeof source.data == 'string') {
         source.data = localizeURL(source.data, port);
@@ -76,7 +72,5 @@ function localizeStyleURLs(style: StyleSpecification, port: number) {
         }
     }
 
-    if (style.glyphs) {
-        style.glyphs = localizeURL(style.glyphs, port);
-    }
+    style.glyphs &&= localizeURL(style.glyphs, port);
 }

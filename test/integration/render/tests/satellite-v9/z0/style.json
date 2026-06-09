@@ -12,7 +12,7 @@
           "sources": {
             "satellite": {
               "type": "raster",
-              "url": "local://tilesets/satellite",
+              "url": "local://tilesets/satellite.json",
               "tileSize": 256
             }
           },

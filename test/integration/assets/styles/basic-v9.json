@@ -3,7 +3,7 @@
     "name": "Basic",
     "sources": {
         "maplibre": {
-            "url": "local://tilesets/streets-v7",
+            "url": "local://tilesets/streets-v7.json",
             "type": "vector"
         }
     },
