@@ -10,7 +10,7 @@
     "projection": { "type": "globe" },
     "zoom": 0,
     "sources": {
-        "mapbox": {
+        "maplibre": {
             "type": "vector",
             "maxzoom": 14,
             "tiles": ["local://tiles/{z}-{x}-{y}.mvt"]
