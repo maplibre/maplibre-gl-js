@@ -114,7 +114,7 @@ export class Painter {
      * The canvas in the flat case, the per-terrain-tile RTT texture in the terrain case.
      * Resized in place to match the target dimensions.
      */
-    private _layerOpacityScratchFbo: {
+    private _layerOpacityFbo: {
         fbo: Framebuffer;
         width: number;
         height: number;
@@ -182,7 +182,7 @@ export class Painter {
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
         this._rttSharedFbo = null;
-        this._layerOpacityScratchFbo = null;
+        this._layerOpacityFbo = null;
         this._layerOpacitySubpass = null;
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
@@ -844,7 +844,7 @@ export class Painter {
         const context = this.context;
         const gl = context.gl;
         const {compositeTarget, compositeViewport} = this._layerOpacitySubpass;
-        const scratchFbo = this._layerOpacityScratchFbo.fbo;
+        const scratchFbo = this._layerOpacityFbo.fbo;
 
         context.bindFramebuffer.set(compositeTarget);
         context.viewport.set(compositeViewport);
@@ -860,7 +860,7 @@ export class Painter {
 
         this._layerOpacitySubpass = null;
     }
-    
+
     /**
         * Binds the shared `{line,fill}-layer-opacity` scratch FBO at `width x height`.
         * Lazy-creates/resizes its color texture and depth-stencil renderbuffer as needed.
@@ -868,7 +868,7 @@ export class Painter {
     private _bindLayerOpacityScratch(width: number, height: number): Framebuffer {
         const gl = this.context.gl;
 
-        if (!this._layerOpacityScratchFbo) {
+        if (!this._layerOpacityFbo) {
             const fbo = this.context.createFramebuffer(width, height, true, true);
             const texture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -879,9 +879,9 @@ export class Painter {
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
             fbo.colorAttachment.set(texture);
             fbo.depthAttachment.set(this.context.createRenderbuffer(gl.DEPTH_STENCIL, width, height));
-            this._layerOpacityScratchFbo = {fbo, width, height};
-        } else if (this._layerOpacityScratchFbo.width !== width || this._layerOpacityScratchFbo.height !== height) {
-            const slot = this._layerOpacityScratchFbo;
+            this._layerOpacityFbo = {fbo, width, height};
+        } else if (this._layerOpacityFbo.width !== width || this._layerOpacityFbo.height !== height) {
+            const slot = this._layerOpacityFbo;
             gl.bindTexture(gl.TEXTURE_2D, slot.fbo.colorAttachment.get());
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
             this.context.bindRenderbuffer.set(slot.fbo.depthAttachment.get());
@@ -891,8 +891,8 @@ export class Painter {
             slot.fbo.height = slot.height = height;
         }
 
-        this.context.bindFramebuffer.set(this._layerOpacityScratchFbo.fbo.framebuffer);
-        return this._layerOpacityScratchFbo.fbo;
+        this.context.bindFramebuffer.set(this._layerOpacityFbo.fbo.framebuffer);
+        return this._layerOpacityFbo.fbo;
     }
 
     /**
@@ -1016,8 +1016,8 @@ export class Painter {
             this._rttSharedFbo = null;
         }
 
-        this._layerOpacityScratchFbo?.fbo.destroy();
-        this._layerOpacityScratchFbo = null;
+        this._layerOpacityFbo?.fbo.destroy();
+        this._layerOpacityFbo = null;
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
         if (this.debugBuffer) this.debugBuffer.destroy();
