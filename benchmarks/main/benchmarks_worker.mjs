@@ -28167,16 +28167,13 @@ var WorkerTileState = class {
 		tile.abort.abort();
 		delete this.loading[uid];
 	}
+	getParsing(uid) {
+		return this.parsing[uid];
+	}
 	setParsing(uid, state) {
 		this.parsing[uid] = state;
 	}
-	consumeParsing(uid) {
-		const state = this.parsing[uid];
-		if (!state) return void 0;
-		delete this.parsing[uid];
-		return state;
-	}
-	clearParsing(uid) {
+	removeParsing(uid) {
 		delete this.parsing[uid];
 	}
 	markLoaded(uid, tile) {
@@ -28376,7 +28373,7 @@ var VectorTileWorkerSource = class {
 			try {
 				return await this._parseWorkerTile(workerTile, params, parseState);
 			} finally {
-				this.tileState.clearParsing(uid);
+				this.tileState.removeParsing(uid);
 			}
 		} catch (err) {
 			this.tileState.finishLoading(uid);
@@ -28452,8 +28449,12 @@ var VectorTileWorkerSource = class {
 		if (!workerTile) throw new Error("Should not be trying to reload a tile that was never loaded or has been removed");
 		workerTile.showCollisionBoxes = params.showCollisionBoxes;
 		if (workerTile.status === "parsing") {
-			const parseState = this.tileState.consumeParsing(uid);
-			return await this._parseWorkerTile(workerTile, params, parseState);
+			const parseState = this.tileState.getParsing(uid);
+			try {
+				return await this._parseWorkerTile(workerTile, params, parseState);
+			} finally {
+				this.tileState.removeParsing(uid);
+			}
 		}
 		if (workerTile.status === "done" && workerTile.vectorTile) return await this._parseWorkerTile(workerTile, params);
 	}
@@ -28546,7 +28547,7 @@ var GeoJSONWorkerSource = class {
 			try {
 				return await this._parseWorkerTile(workerTile, params, parseState);
 			} finally {
-				this.tileState.clearParsing(uid);
+				this.tileState.removeParsing(uid);
 			}
 		} catch (err) {
 			workerTile.status = "done";
@@ -28560,8 +28561,12 @@ var GeoJSONWorkerSource = class {
 		if (!workerTile) throw new Error("Should not be trying to reload a tile that was never loaded or has been removed");
 		workerTile.showCollisionBoxes = params.showCollisionBoxes;
 		if (workerTile.status === "parsing") {
-			const parseState = this.tileState.consumeParsing(uid);
-			return await this._parseWorkerTile(workerTile, params, parseState);
+			const parseState = this.tileState.getParsing(uid);
+			try {
+				return await this._parseWorkerTile(workerTile, params, parseState);
+			} finally {
+				this.tileState.removeParsing(uid);
+			}
 		}
 		if (workerTile.status === "done" && workerTile.vectorTile) return await this._parseWorkerTile(workerTile, params);
 	}

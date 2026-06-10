@@ -60105,7 +60105,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 06ee5a2";
+const version = "main ae782be";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
