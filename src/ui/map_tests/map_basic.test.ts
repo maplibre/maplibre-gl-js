@@ -143,6 +143,63 @@ describe('Map', () => {
             map.style.tileManagers.geojson._inViewTiles.getTileById(fakeTileId.key).state = 'loaded';
             expect(map.areTilesLoaded()).toBe(true);
         });
+
+        test('Map.getViewportTileProgress returns zero counts before any source is added', async () => {
+            const style = createStyle();
+            const map = createMap({style});
+            await map.once('load');
+            const progress = map.getViewportTileProgress();
+            expect(progress).toEqual({loaded: 0, loading: 0, failed: 0, total: 0, complete: true});
+        });
+
+        test('Map.getViewportTileProgress aggregates across sources', async () => {
+            const style = createStyle();
+            const map = createMap({style});
+            await map.once('load');
+            map.addSource('geojson', createStyleSource());
+            const aID = new OverscaledTileID(1, 0, 1, 0, 0);
+            const bID = new OverscaledTileID(1, 0, 1, 1, 0);
+            const aTile = new Tile(aID, undefined); aTile.state = 'loading';
+            const bTile = new Tile(bID, undefined); bTile.state = 'loaded';
+            map.style.tileManagers.geojson._inViewTiles.setTile(aID.key, aTile);
+            map.style.tileManagers.geojson._inViewTiles.setTile(bID.key, bTile);
+
+            const progress = map.getViewportTileProgress();
+            expect(progress.total).toBe(2);
+            expect(progress.loaded).toBe(1);
+            expect(progress.loading).toBe(1);
+            expect(progress.failed).toBe(0);
+            expect(progress.complete).toBe(false);
+        });
+
+        test('Map fires viewporttilesloaded on rising-edge transitions', async () => {
+            const style = createStyle();
+            const map = createMap({style});
+            await map.once('load');
+
+            map.addSource('geojson', createStyleSource());
+            const fakeTileId = new OverscaledTileID(0, 0, 0, 0, 0);
+            const tile = new Tile(fakeTileId, undefined);
+            tile.state = 'loading';
+            map.style.tileManagers.geojson._inViewTiles.setTile(fakeTileId.key, tile);
+
+            // Force one render with a pending tile so the next completion is
+            // a rising-edge transition.
+            map.redraw();
+            expect(map.areTilesLoaded()).toBe(false);
+
+            const spy = vi.fn();
+            map.on('viewporttilesloaded', spy);
+
+            // Promote tile to loaded and re-render. Event must fire exactly once.
+            map.style.tileManagers.geojson._inViewTiles.getTileById(fakeTileId.key).state = 'loaded';
+            map.redraw();
+            expect(spy).toHaveBeenCalledTimes(1);
+
+            // No rising-edge if we render again with everything still loaded.
+            map.redraw();
+            expect(spy).toHaveBeenCalledTimes(1);
+        });
     });
 
     test('remove', () => {

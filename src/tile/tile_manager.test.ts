@@ -2586,3 +2586,50 @@ describe('TileManager / etag', () => {
         expect(tile.etag).toBe(tileEtag);
     });
 });
+
+describe('TileManager.getViewportTileProgress', () => {
+    test('returns zero counts and complete=true when no tiles are in view', () => {
+        const tileManager = createTileManager();
+        const progress = tileManager.getViewportTileProgress();
+        expect(progress).toEqual({loaded: 0, loading: 0, failed: 0, total: 0, complete: true});
+    });
+
+    test('classifies tiles by state', () => {
+        const tileManager = createTileManager();
+        // Use distinct tile coords at z=3 (8x8 grid) to get unique keys.
+        const states: Array<['loaded' | 'loading' | 'reloading' | 'errored' | 'unloaded' | 'expired', number, number]> = [
+            ['loaded', 0, 0],
+            ['loaded', 1, 0],
+            ['loading', 2, 0],
+            ['reloading', 3, 0],
+            ['errored', 4, 0],
+            ['expired', 5, 0],
+        ];
+        for (const [state, x, y] of states) {
+            const tileID = new OverscaledTileID(3, 0, 3, x, y);
+            const tile = new Tile(tileID, undefined);
+            tile.state = state;
+            tileManager._inViewTiles.setTile(tileID.key, tile);
+        }
+        const progress = tileManager.getViewportTileProgress();
+        // 2 loaded, 1 errored, 3 in-flight (loading, reloading, expired)
+        expect(progress.loaded).toBe(2);
+        expect(progress.failed).toBe(1);
+        expect(progress.loading).toBe(3);
+        expect(progress.total).toBe(6);
+        expect(progress.complete).toBe(false);
+    });
+
+    test('complete=true when only loaded and errored tiles remain', () => {
+        const tileManager = createTileManager();
+        const aID = new OverscaledTileID(1, 0, 1, 0, 0);
+        const bID = new OverscaledTileID(1, 0, 1, 1, 0);
+        const a = new Tile(aID, undefined); a.state = 'loaded';
+        const b = new Tile(bID, undefined); b.state = 'errored';
+        tileManager._inViewTiles.setTile(aID.key, a);
+        tileManager._inViewTiles.setTile(bID.key, b);
+        const progress = tileManager.getViewportTileProgress();
+        expect(progress.complete).toBe(true);
+        expect(progress.loading).toBe(0);
+    });
+});

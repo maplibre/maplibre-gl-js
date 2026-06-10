@@ -585,6 +585,9 @@ export class Map extends Camera {
 
     _loaded: boolean;
     _idleTriggered = false;
+    // tracks whether the most recent emitted viewport-tile state was 'complete',
+    // so we only fire viewporttilesloaded on rising-edge transitions
+    _viewportTilesComplete = true;
     // accounts for placement finishing as well
     _fullyLoaded: boolean;
     _trackResize: boolean;
@@ -2440,6 +2443,37 @@ export class Map extends Camera {
     }
 
     /**
+     * Returns aggregate counts of tiles needed for the current viewport, broken
+     * down by loading state. This complements {@link Map.areTilesLoaded} for use
+     * cases (e.g. headless video export, screenshot capture) that need fine-grained
+     * visibility into how many tiles are still in flight versus painted.
+     *
+     * @returns Counts of viewport tiles by state, plus a `complete` flag that is
+     * true when no tiles remain pending. When the style has no tile sources,
+     * `total` is 0 and `complete` is true.
+     * @example
+     * ```ts
+     * const progress = map.getViewportTileProgress();
+     * console.log(`${progress.loaded}/${progress.total} viewport tiles loaded`);
+     * if (progress.complete) capture();
+     * ```
+     */
+    getViewportTileProgress(): {loaded: number; loading: number; failed: number; total: number; complete: boolean} {
+        const result = {loaded: 0, loading: 0, failed: 0, total: 0, complete: true};
+        const tileManagers = this.style?.tileManagers;
+        if (!tileManagers) return result;
+        for (const tileManager of Object.values(tileManagers)) {
+            const sub = tileManager.getViewportTileProgress();
+            result.loaded += sub.loaded;
+            result.loading += sub.loading;
+            result.failed += sub.failed;
+            result.total += sub.total;
+        }
+        result.complete = result.loading === 0;
+        return result;
+    }
+
+    /**
      * Removes a source from the map's style.
      *
      * @param id - The ID of the source to remove.
@@ -3702,6 +3736,18 @@ export class Map extends Camera {
         });
 
         this.fire(new Event('render'));
+
+        // Fire `viewporttilesloaded` on rising-edge transitions to "all viewport
+        // tiles loaded". This gives capture/export pipelines a low-latency signal
+        // that the visible tile pyramid has been painted, without waiting on the
+        // ~300ms `idle` debounce (label fades, placement, etc.).
+        const tilesComplete = this.areTilesLoaded();
+        if (tilesComplete && !this._viewportTilesComplete) {
+            this._viewportTilesComplete = true;
+            this.fire(new Event('viewporttilesloaded'));
+        } else if (!tilesComplete) {
+            this._viewportTilesComplete = false;
+        }
 
         if (this.loaded() && !this._loaded) {
             this._loaded = true;

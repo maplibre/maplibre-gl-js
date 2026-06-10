@@ -991,4 +991,35 @@ export class TileManager extends Evented {
         }
         return true;
     }
+
+    /**
+     * Returns counts of tiles in the current viewport by their loading state.
+     * Unlike {@link areTilesLoaded}, this also exposes loading/failed counts so
+     * callers (e.g. video export pipelines) can wait on viewport completion with
+     * fine-grained visibility, without inspecting private fields.
+     */
+    getViewportTileProgress(): {loaded: number; loading: number; failed: number; total: number; complete: boolean} {
+        let loaded = 0;
+        let loading = 0;
+        let failed = 0;
+        let total = 0;
+        for (const tile of this._inViewTiles.getAllTiles()) {
+            total++;
+            if (tile.state === 'loaded') {
+                loaded++;
+            } else if (tile.state === 'errored') {
+                failed++;
+            } else {
+                // 'loading', 'reloading', 'unloaded', or 'expired' — still in flight
+                loading++;
+            }
+        }
+        return {
+            loaded,
+            loading,
+            failed,
+            total,
+            complete: loading === 0,
+        };
+    }
 }

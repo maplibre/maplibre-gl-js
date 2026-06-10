@@ -193,6 +193,17 @@ export type MapEventType = {
      */
     resize: MapLibreEvent;
     /**
+     * Fired on the rising edge of "all viewport tiles loaded": when, after
+     * one or more tiles in the current viewport were pending, all of those
+     * tiles have transitioned to a loaded or errored state and the viewport
+     * is fully painted. This is finer-grained than `idle` (which also waits on
+     * label fades, placement, and animations) and intended for capture/export
+     * pipelines that need a low-latency frame-ready signal.
+     *
+     * Use {@link Map.getViewportTileProgress} to read counts at any time.
+     */
+    viewporttilesloaded: MapLibreEvent;
+    /**
      * Fired when the WebGL context is lost.
      */
     webglcontextlost: MapContextEvent;
