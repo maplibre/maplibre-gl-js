@@ -4,6 +4,7 @@
 - Build main and worker in same build context to extract shared chunk ([#7745](https://github.com/maplibre/maplibre-gl-js/pull/7745)) (by [@dangkyokhoang](https://github.com/dangkyokhoang))
 
 ### 🐞 Bug fixes
+- Fix conflicting reloads of tiles causing an error in `queryRenderedFeatures` (#7765) (by @ckolin)
 - _...Add new stuff here..._
 
 ## 6.0.0-14
