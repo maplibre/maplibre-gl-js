@@ -19,8 +19,8 @@ function createStyle(map = new StubMap()) {
     return new Style(map as any);
 }
 
-describe('setImages broadcast after styleimagemissing', () => {
-    test('setImages is broadcast with newly added image after styleimagemissing fires during getImages', async () => {
+describe('setImages broadcast is not prevented by getImages', () => {
+    test('setImages broadcasts even when getImages is called between addImage and update', async () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON());
         await style.once('style.load');
@@ -28,9 +28,42 @@ describe('setImages broadcast after styleimagemissing', () => {
         const broadcastSpy = vi.fn().mockReturnValue(Promise.resolve({}));
         style.dispatcher.broadcast = broadcastSpy;
 
-        // Simulate what happens when a user listens for styleimagemissing:
-        // When imageManager can't find an image, it fires styleimagemissing,
-        // and the user's handler adds the image synchronously.
+        // User adds an image — broadcast is deferred to next update()
+        style.addImage('new-image', {
+            data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)),
+            pixelRatio: 1,
+            sdf: false,
+        });
+
+        // Before update() runs, a worker tile happens to call getImages
+        // for an unrelated image. This clears _changedImages internally
+        // but should not prevent the setImages broadcast.
+        await style.getImages('0', {
+            icons: ['some-other-image'],
+            source: 'test-source',
+            tileID: {key: 'test-tile'} as any,
+            type: 'icons',
+        });
+
+        // Next animation frame
+        style.update({} as EvaluationParameters);
+
+        const setImagesCalls = broadcastSpy.mock.calls.filter(
+            (c) => c[0] === MessageType.setImages
+        );
+        expect(setImagesCalls.length).toBeGreaterThanOrEqual(1);
+        expect(setImagesCalls.flatMap((c) => c[1])).toContain('new-image');
+    });
+
+    test('setImages broadcasts after styleimagemissing handler adds an image', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        const broadcastSpy = vi.fn().mockReturnValue(Promise.resolve({}));
+        style.dispatcher.broadcast = broadcastSpy;
+
+        // User listens for styleimagemissing and adds the image synchronously
         style.imageManager.on('styleimagemissing', (e: {id: string}) => {
             style.addImage(e.id, {
                 data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)),
@@ -39,9 +72,8 @@ describe('setImages broadcast after styleimagemissing', () => {
             });
         });
 
-        // Trigger the flow: worker requests an image that doesn't exist.
-        // This calls imageManager.getImages() which fires styleimagemissing,
-        // then _updateTilesForChangedImages() clears _changedImages.
+        // Worker tile requests a missing image — triggers styleimagemissing,
+        // handler adds it, then getImages clears _changedImages internally.
         await style.getImages('0', {
             icons: ['missing-image'],
             source: 'test-source',
@@ -49,16 +81,13 @@ describe('setImages broadcast after styleimagemissing', () => {
             type: 'icons',
         });
 
-        // Now simulate the next animation frame
+        // Next animation frame
         style.update({} as EvaluationParameters);
 
-        // Verify that setImages was broadcast at least once with the new image
         const setImagesCalls = broadcastSpy.mock.calls.filter(
             (c) => c[0] === MessageType.setImages
         );
         expect(setImagesCalls.length).toBeGreaterThanOrEqual(1);
-
-        const broadcastedImages = setImagesCalls.flatMap((c) => c[1]);
-        expect(broadcastedImages).toContain('missing-image');
+        expect(setImagesCalls.flatMap((c) => c[1])).toContain('missing-image');
     });
 });

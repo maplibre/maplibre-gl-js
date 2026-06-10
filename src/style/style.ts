@@ -232,6 +232,7 @@ export class Style extends Evented {
     _updatedLayers: {[_: string]: true};
     _removedLayers: {[_: string]: StyleLayer};
     _changedImages: {[_: string]: true};
+    _imagesListDirty: boolean;
     _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
@@ -304,6 +305,7 @@ export class Style extends Evented {
         this.tileManagers = {};
         this.zoomHistory = new ZoomHistory();
         this._availableImages = [];
+        this._imagesListDirty = false;
         this._globalState = {};
         this._serializedLayers = {};
         this.stylesheet = null;
@@ -599,6 +601,7 @@ export class Style extends Evented {
 
         this._spritesImagesIds = {};
         this._availableImages = this.imageManager.listImages();
+        this._imagesListDirty = true;
         this._changed = true;
         this.fire(new Event('data', {dataType: 'style'}));
     }
@@ -736,8 +739,9 @@ export class Style extends Evented {
             // _afterImageUpdated. This must happen before any other worker
             // messages (updateLayers, reloadSource, reloadTile) so the worker
             // has the current list before any tile parsing begins.
-            if (Object.keys(this._changedImages).length) {
+            if (this._imagesListDirty) {
                 this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
+                this._imagesListDirty = false;
             }
 
             const updatedIds = Object.keys(this._updatedLayers);
@@ -1010,6 +1014,7 @@ export class Style extends Evented {
     _afterImageUpdated(id: string): void {
         this._availableImages = this.imageManager.listImages();
         this._changedImages[id] = true;
+        this._imagesListDirty = true;
         this._changed = true;
         this.fire(new Event('data', {dataType: 'style'}));
     }
@@ -2020,6 +2025,7 @@ export class Style extends Evented {
 
         delete this._spritesImagesIds[id];
         this._availableImages = this.imageManager.listImages();
+        this._imagesListDirty = true;
         this._changed = true;
         this.fire(new Event('data', {dataType: 'style'}));
     }
