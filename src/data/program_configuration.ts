@@ -476,8 +476,8 @@ class CrossFadedDasharrayBinder extends CrossFadedBinder<DashEntry> {
  *
  * Non-data-driven property values are bound to shader uniforms. Data-driven property
  * values are bound to vertex attributes. In order to support a uniform GLSL syntax over
- * both, [Mapbox GL Shaders](https://github.com/mapbox/mapbox-gl-shaders) defines a `#pragma`
- * abstraction, which ProgramConfiguration is responsible for implementing. At runtime,
+ * both, the [shaders](../shaders/README.md) define a `#pragma` abstraction, which
+ * ProgramConfiguration is responsible for implementing. At runtime,
  * it examines the attributes of a particular layer, combines this with fixed knowledge
  * about how layers of the particular type are implemented, and determines which uniforms
  * and vertex attributes will be required. It can then substitute the appropriate text

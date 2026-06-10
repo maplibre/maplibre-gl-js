@@ -27,28 +27,28 @@ flat out float v_width;
 out float v_depth;
 #endif
 
-#pragma mapbox: define lowp float blur
-#pragma mapbox: define lowp float opacity
-#pragma mapbox: define lowp float offset
-#pragma mapbox: define mediump float gapwidth
-#pragma mapbox: define mediump float width
-#pragma mapbox: define lowp float floorwidth
-#pragma mapbox: define lowp vec4 pattern_from
-#pragma mapbox: define lowp vec4 pattern_to
-#pragma mapbox: define lowp float pixel_ratio_from
-#pragma mapbox: define lowp float pixel_ratio_to
+#pragma maplibre: define lowp float blur
+#pragma maplibre: define lowp float opacity
+#pragma maplibre: define lowp float offset
+#pragma maplibre: define mediump float gapwidth
+#pragma maplibre: define mediump float width
+#pragma maplibre: define lowp float floorwidth
+#pragma maplibre: define lowp vec4 pattern_from
+#pragma maplibre: define lowp vec4 pattern_to
+#pragma maplibre: define lowp float pixel_ratio_from
+#pragma maplibre: define lowp float pixel_ratio_to
 
 void main() {
-    #pragma mapbox: initialize lowp float blur
-    #pragma mapbox: initialize lowp float opacity
-    #pragma mapbox: initialize lowp float offset
-    #pragma mapbox: initialize mediump float gapwidth
-    #pragma mapbox: initialize mediump float width
-    #pragma mapbox: initialize lowp float floorwidth
-    #pragma mapbox: initialize mediump vec4 pattern_from
-    #pragma mapbox: initialize mediump vec4 pattern_to
-    #pragma mapbox: initialize lowp float pixel_ratio_from
-    #pragma mapbox: initialize lowp float pixel_ratio_to
+    #pragma maplibre: initialize lowp float blur
+    #pragma maplibre: initialize lowp float opacity
+    #pragma maplibre: initialize lowp float offset
+    #pragma maplibre: initialize mediump float gapwidth
+    #pragma maplibre: initialize mediump float width
+    #pragma maplibre: initialize lowp float floorwidth
+    #pragma maplibre: initialize mediump vec4 pattern_from
+    #pragma maplibre: initialize mediump vec4 pattern_to
+    #pragma maplibre: initialize lowp float pixel_ratio_from
+    #pragma maplibre: initialize lowp float pixel_ratio_to
 
     // Move vertex outside clip space to discard triangle when opacity is negligible
     if (opacity < 0.01) {

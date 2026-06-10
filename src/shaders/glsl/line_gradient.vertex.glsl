@@ -25,18 +25,18 @@ out highp vec2 v_uv;
 out float v_depth;
 #endif
 
-#pragma mapbox: define lowp float blur
-#pragma mapbox: define lowp float opacity
-#pragma mapbox: define mediump float gapwidth
-#pragma mapbox: define lowp float offset
-#pragma mapbox: define mediump float width
+#pragma maplibre: define lowp float blur
+#pragma maplibre: define lowp float opacity
+#pragma maplibre: define mediump float gapwidth
+#pragma maplibre: define lowp float offset
+#pragma maplibre: define mediump float width
 
 void main() {
-    #pragma mapbox: initialize lowp float blur
-    #pragma mapbox: initialize lowp float opacity
-    #pragma mapbox: initialize mediump float gapwidth
-    #pragma mapbox: initialize lowp float offset
-    #pragma mapbox: initialize mediump float width
+    #pragma maplibre: initialize lowp float blur
+    #pragma maplibre: initialize lowp float opacity
+    #pragma maplibre: initialize mediump float gapwidth
+    #pragma maplibre: initialize lowp float offset
+    #pragma maplibre: initialize mediump float width
 
     // Move vertex outside clip space to discard triangle when opacity is negligible
     if (opacity < 0.01) {

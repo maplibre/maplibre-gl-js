@@ -49,7 +49,7 @@ export class Program<Us extends UniformBindings> {
         configuration: ProgramConfiguration,
         fixedUniforms: (b: Context, a: UniformLocations) => Us,
         showOverdrawInspector: boolean,
-        hasTerrain: boolean,
+        useTerrain: boolean,
         projectionPrelude: PreparedShader,
         projectionDefine: string,
         extraDefines: string[] = []) {
@@ -77,7 +77,7 @@ export class Program<Us extends UniformBindings> {
         if (showOverdrawInspector) {
             defines.push('#define OVERDRAW_INSPECTOR;');
         }
-        if (hasTerrain) {
+        if (useTerrain) {
             defines.push('#define TERRAIN3D;');
         }
         if (projectionDefine) {
