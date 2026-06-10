@@ -28,7 +28,7 @@ jobs:
           TAG="${{ inputs.tag }}"
           echo "ref=refs/tags/${TAG}" >> $GITHUB_OUTPUT
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ steps.ref.outputs.ref || 'refs/heads/main' }}
 
@@ -54,7 +54,7 @@ jobs:
           cp test/bench/versions/benchmarks_worker.mjs.map tmp
 
       - name: Upload to GitHub Pages
-        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: tmp

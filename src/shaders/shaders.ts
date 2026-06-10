@@ -49,8 +49,6 @@ import lineSDFFrag from './glsl/line_sdf.fragment.glsl.g.ts';
 import lineSDFVert from './glsl/line_sdf.vertex.glsl.g.ts';
 import lineGradientSDFFrag from './glsl/line_gradient_sdf.fragment.glsl.g.ts';
 import lineGradientSDFVert from './glsl/line_gradient_sdf.vertex.glsl.g.ts';
-import lineTextureFrag from './glsl/line_texture.fragment.glsl.g.ts';
-import lineTextureVert from './glsl/line_texture.vertex.glsl.g.ts';
 import rasterFrag from './glsl/raster.fragment.glsl.g.ts';
 import rasterVert from './glsl/raster.vertex.glsl.g.ts';
 import symbolIconFrag from './glsl/symbol_icon.fragment.glsl.g.ts';
@@ -109,7 +107,6 @@ export const shaders: {
     linePattern: PreparedShader;
     lineSDF: PreparedShader;
     lineGradientSDF: PreparedShader;
-    lineTexture: PreparedShader;
     raster: PreparedShader;
     symbolIcon: PreparedShader;
     symbolSDF: PreparedShader;
@@ -148,7 +145,6 @@ export const shaders: {
     linePattern: prepare(linePatternFrag, linePatternVert),
     lineSDF: prepare(lineSDFFrag, lineSDFVert),
     lineGradientSDF: prepare(lineGradientSDFFrag, lineGradientSDFVert),
-    lineTexture: prepare(lineTextureFrag, lineTextureVert),
     raster: prepare(rasterFrag, rasterVert),
     symbolIcon: prepare(symbolIconFrag, symbolIconVert),
     symbolSDF: prepare(symbolSDFFrag, symbolSDFVert),
@@ -163,12 +159,15 @@ export const shaders: {
 
 /** Expand #pragmas to #ifdefs, extract attributes and uniforms */
 function prepare(fragmentSource: string, vertexSource: string): PreparedShader {
-    const re = /#pragma mapbox: ([\w]+) ([\w]+) ([\w]+) ([\w]+)/g;
+    const re = /#pragma maplibre: ([\w]+) ([\w]+) ([\w]+) ([\w]+)/g;
 
     const vertexAttributes = vertexSource.match(/in ([\w]+) ([\w]+)/g);
     const fragmentUniforms = fragmentSource.match(/uniform ([\w]+) ([\w]+)([\s]*)([\w]*)/g);
     const vertexUniforms = vertexSource.match(/uniform ([\w]+) ([\w]+)([\s]*)([\w]*)/g);
     const shaderUniforms = vertexUniforms ? vertexUniforms.concat(fragmentUniforms) : fragmentUniforms;
+
+    const staticLayoutCount = vertexAttributes ? vertexAttributes.length : 0;
+    let locationCounter = staticLayoutCount;
 
     const fragmentPragmas = {};
 
@@ -197,10 +196,11 @@ uniform ${precision} ${type} u_${name};
 
         if (fragmentPragmas[name]) {
             if (operation === 'define') {
+                const loc = locationCounter++;
                 return `
 #ifndef HAS_UNIFORM_u_${name}
 uniform lowp float u_${name}_t;
-in ${precision} ${attrType} a_${name};
+layout(location = ${loc}) in ${precision} ${attrType} a_${name};
 out ${precision} ${type} ${name};
 #else
 uniform ${precision} ${type} u_${name};
@@ -228,10 +228,11 @@ uniform ${precision} ${type} u_${name};
             }
         } else {
             if (operation === 'define') {
+                const loc = locationCounter++;
                 return `
 #ifndef HAS_UNIFORM_u_${name}
 uniform lowp float u_${name}_t;
-in ${precision} ${attrType} a_${name};
+layout(location = ${loc}) in ${precision} ${attrType} a_${name};
 #else
 uniform ${precision} ${type} u_${name};
 #endif

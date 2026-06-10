@@ -1,4 +1,4 @@
-in vec2 a_pos;
+layout(location = 0) in vec2 a_pos;
 
 void main() {
     #ifdef GLOBE

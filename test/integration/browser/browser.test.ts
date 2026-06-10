@@ -197,7 +197,7 @@ describe('Browser tests', () => {
 
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
-        await page.mouse.click(canvasBB?.x, canvasBB?.y, {clickCount: 2});
+        await page.mouse.click(canvasBB?.x, canvasBB?.y, {count: 2});
 
         // Wait until the map has settled, then report the zoom level back.
         const zoom = await page.evaluate(() => {

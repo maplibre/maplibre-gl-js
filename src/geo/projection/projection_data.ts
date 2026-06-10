@@ -1,17 +1,33 @@
 import type {mat4} from 'gl-matrix';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {Mat4f32, Mat4f64} from '../../util/util.ts';
+
+export type ProjectionMatrix = Mat4f32 | Mat4f64;
+
+/**
+ * Projection data used by renderer shader uniforms. Renderer matrices are stored
+ * as 32-bit floats so WebGL can consume them directly without per-upload copies.
+ */
+export type RendererProjectionData = ProjectionData<Mat4f32>;
+
+/**
+ * Projection data exposed to custom layers. Some matrices are stored as 64-bit
+ * floats so custom layer code can apply additional CPU-side transforms before
+ * converting to 32-bit floats for WebGL upload when necessary.
+ */
+export type CustomLayerProjectionData = ProjectionData<ProjectionMatrix, ProjectionMatrix>;
 
 /**
  * This type contains all data necessary to project a tile to screen in MapLibre's shader system.
  * Contains data used for both mercator and globe projection.
  */
-export type ProjectionData = {
+export type ProjectionData<MainMatrix extends mat4 = mat4, FallbackMatrix extends mat4 = MainMatrix> = {
     /**
      * The main projection matrix. For mercator projection, it usually projects in-tile coordinates 0..EXTENT to screen,
      * for globe projection, it projects a unit sphere planet to screen.
      * Uniform name: `u_projection_matrix`.
      */
-    mainMatrix: mat4;
+    mainMatrix: MainMatrix;
     /**
      * The extent of current tile in the mercator square.
      * Used by globe projection.
@@ -43,7 +59,7 @@ export type ProjectionData = {
      * Used by globe projection to fall back to mercator projection in an animated way.
      * Uniform name: `u_projection_fallback_matrix`.
      */
-    fallbackMatrix: mat4;
+    fallbackMatrix: FallbackMatrix;
 };
 
 /**

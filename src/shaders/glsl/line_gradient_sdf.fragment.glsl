@@ -3,10 +3,9 @@ uniform sampler2D u_image;
 uniform sampler2D u_image_dash;
 uniform float u_mix;
 uniform lowp float u_lineatlas_width;
-uniform bool u_opacity_override;
 
 in vec2 v_normal;
-in vec2 v_width2;
+flat in vec2 v_width2;
 in vec2 v_tex_a;
 in vec2 v_tex_b;
 in float v_gamma_scale;
@@ -15,20 +14,20 @@ in highp vec2 v_uv;
 in float v_depth;
 #endif
 
-#pragma mapbox: define lowp float blur
-#pragma mapbox: define lowp float opacity
-#pragma mapbox: define mediump float width
-#pragma mapbox: define lowp float floorwidth
-#pragma mapbox: define mediump vec4 dasharray_from
-#pragma mapbox: define mediump vec4 dasharray_to
+#pragma maplibre: define lowp float blur
+#pragma maplibre: define lowp float opacity
+#pragma maplibre: define mediump float width
+#pragma maplibre: define lowp float floorwidth
+#pragma maplibre: define mediump vec4 dasharray_from
+#pragma maplibre: define mediump vec4 dasharray_to
 
 void main() {
-    #pragma mapbox: initialize lowp float blur
-    #pragma mapbox: initialize lowp float opacity
-    #pragma mapbox: initialize mediump float width
-    #pragma mapbox: initialize lowp float floorwidth
-    #pragma mapbox: initialize mediump vec4 dasharray_from
-    #pragma mapbox: initialize mediump vec4 dasharray_to
+    #pragma maplibre: initialize lowp float blur
+    #pragma maplibre: initialize lowp float opacity
+    #pragma maplibre: initialize mediump float width
+    #pragma maplibre: initialize lowp float floorwidth
+    #pragma maplibre: initialize mediump vec4 dasharray_from
+    #pragma maplibre: initialize mediump vec4 dasharray_to
 
     // Calculate the distance of the pixel from the line in pixels.
     float dist = length(v_normal) * v_width2.s;
@@ -50,8 +49,7 @@ void main() {
     float dash_alpha = smoothstep(0.5 - sdfgamma / floorwidth, 0.5 + sdfgamma / floorwidth, sdfdist);
 
     // Combine gradient color with dash pattern
-    float finalOpacity = u_opacity_override ? 1.0 : opacity;
-    fragColor = color * (alpha * dash_alpha * finalOpacity);
+    fragColor = color * (alpha * dash_alpha * opacity);
 
     #ifdef GLOBE
     if (v_depth > 1.0) {

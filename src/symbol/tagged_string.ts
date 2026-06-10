@@ -216,7 +216,7 @@ export class TaggedString {
     /**
      * Returns whether the text contains zero-width spaces.
      *
-     * Some tilesets such as Mapbox Streets insert ZWSPs as hints for line
+     * Some tilesets such as Streets insert ZWSPs as hints for line
      * breaking in CJK text.
      */
     hasZeroWidthSpaces(): boolean {

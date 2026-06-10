@@ -217,7 +217,7 @@ function createHeatmapFbo(context: Context, width: number, height: number): Fram
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.HALF_FLOAT, null);
+    gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA16F, width, height);
 
     const fbo = context.createFramebuffer(width, height, false, false);
     fbo.colorAttachment.set(texture);

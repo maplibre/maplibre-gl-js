@@ -1,9 +1,9 @@
-in vec2 a_pos;
+layout(location = 0) in vec2 a_pos;
 
 uniform highp float u_input;
 uniform highp float u_output_expected;
 
-out vec4 v_output_error_encoded;
+flat out vec4 v_output_error_encoded;
 
 void main() {
     float real_output = 2.0 * atan(exp(PI - (u_input * PI * 2.0))) - PI * 0.5;

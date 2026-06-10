@@ -6,8 +6,8 @@
 // #define scale 63.0
 #define scale 0.015873016
 
-in vec2 a_pos_normal;
-in vec4 a_data;
+layout(location = 0) in vec2 a_pos_normal;
+layout(location = 1) in vec4 a_data;
 
 uniform vec2 u_translation;
 uniform mediump float u_ratio;
@@ -15,27 +15,33 @@ uniform vec2 u_units_to_pixels;
 uniform lowp float u_device_pixel_ratio;
 
 out vec2 v_normal;
-out vec2 v_width2;
+flat out vec2 v_width2;
 out float v_gamma_scale;
 out highp float v_linesofar;
 #ifdef GLOBE
 out float v_depth;
 #endif
 
-#pragma mapbox: define highp vec4 color
-#pragma mapbox: define lowp float blur
-#pragma mapbox: define lowp float opacity
-#pragma mapbox: define mediump float gapwidth
-#pragma mapbox: define lowp float offset
-#pragma mapbox: define mediump float width
+#pragma maplibre: define highp vec4 color
+#pragma maplibre: define lowp float blur
+#pragma maplibre: define lowp float opacity
+#pragma maplibre: define mediump float gapwidth
+#pragma maplibre: define lowp float offset
+#pragma maplibre: define mediump float width
 
 void main() {
-    #pragma mapbox: initialize highp vec4 color
-    #pragma mapbox: initialize lowp float blur
-    #pragma mapbox: initialize lowp float opacity
-    #pragma mapbox: initialize mediump float gapwidth
-    #pragma mapbox: initialize lowp float offset
-    #pragma mapbox: initialize mediump float width
+    #pragma maplibre: initialize highp vec4 color
+    #pragma maplibre: initialize lowp float blur
+    #pragma maplibre: initialize lowp float opacity
+    #pragma maplibre: initialize mediump float gapwidth
+    #pragma maplibre: initialize lowp float offset
+    #pragma maplibre: initialize mediump float width
+
+    // Move vertex outside clip space to discard triangle when opacity is negligible
+    if (opacity < 0.01) {
+        gl_Position = vec4(-2.0, -2.0, -2.0, 1.0);
+        return;
+    }
 
     // the distance over which the line edge fades out.
     // Retina devices need a smaller distance to avoid aliasing.

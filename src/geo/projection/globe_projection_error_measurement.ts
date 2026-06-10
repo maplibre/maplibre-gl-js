@@ -104,7 +104,7 @@ export class ProjectionErrorMeasurement {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texImage2D(gl.TEXTURE_2D, 0, this._texFormat, this._texWidth, this._texHeight, 0, this._texFormat, this._texType, null);
+        gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, this._texWidth, this._texHeight);
 
         this._fbo = context.createFramebuffer(this._texWidth, this._texHeight, false, false);
         this._fbo.colorAttachment.set(texture);

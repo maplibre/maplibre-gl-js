@@ -1,11 +1,11 @@
-in vec2 a_anchor_pos;
-in vec2 a_placed;
-in vec2 a_box_real;
+layout(location = 0) in vec2 a_anchor_pos;
+layout(location = 1) in vec2 a_placed;
+layout(location = 2) in vec2 a_box_real;
 
 uniform vec2 u_pixel_extrude_scale;
 
-out float v_placed;
-out float v_notUsed;
+flat out float v_placed;
+flat out float v_notUsed;
 
 void main() {
     gl_Position = projectTileWithElevation(a_anchor_pos, get_elevation(a_anchor_pos));

@@ -1,8 +1,7 @@
-import {describe, test, expect, vi} from 'vitest';
+import {describe, test, expect} from 'vitest';
 import {createStyleLayer} from '../create_style_layer.ts';
 import {extend} from '../../util/util.ts';
 import {type LineStyleLayer} from './line_style_layer.ts';
-import {type Framebuffer} from '../../webgl/framebuffer.ts';
 
 describe('LineStyleLayer', () => {
     function createLineLayer(layer?) {
@@ -50,40 +49,4 @@ describe('LineStyleLayer', () => {
         expect(lineLayer.gradientVersion).toBeGreaterThan(gradientVersion);
     });
 
-    describe('lineFbo', () => {
-        test('resize destroys lineFbo and sets it to null', () => {
-            const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
-            const destroy = vi.fn();
-            lineLayer.lineFbo = {destroy} as unknown as Framebuffer;
-    
-            lineLayer.resize();
-    
-            expect(destroy).toHaveBeenCalledOnce();
-            expect(lineLayer.lineFbo).toBeNull();
-        });
-        
-        test('resize is a no-op when lineFbo is null', () => {
-            const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
-            
-            lineLayer.resize();
-            expect(lineLayer.lineFbo).toBeNull();
-        });
-        
-        test('does not exist by default', () => {
-            const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
-            
-            expect(lineLayer.lineFbo).toBeNull();
-        });
-    
-        test('onRemove destroys lineFbo', () => {
-            const lineLayer = createStyleLayer(createLineLayer(), {}) as LineStyleLayer;
-            const destroy = vi.fn();
-            lineLayer.lineFbo = {destroy} as unknown as Framebuffer;
-    
-            lineLayer.onRemove();
-    
-            expect(destroy).toHaveBeenCalledOnce();
-            expect(lineLayer.lineFbo).toBeNull();
-        });
-    });
 });

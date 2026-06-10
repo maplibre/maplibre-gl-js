@@ -1,22 +1,22 @@
 in vec3 v_data;
-in float v_visibility;
+flat in float v_visibility;
 
-#pragma mapbox: define highp vec4 color
-#pragma mapbox: define mediump float radius
-#pragma mapbox: define lowp float blur
-#pragma mapbox: define lowp float opacity
-#pragma mapbox: define highp vec4 stroke_color
-#pragma mapbox: define mediump float stroke_width
-#pragma mapbox: define lowp float stroke_opacity
+#pragma maplibre: define highp vec4 color
+#pragma maplibre: define mediump float radius
+#pragma maplibre: define lowp float blur
+#pragma maplibre: define lowp float opacity
+#pragma maplibre: define highp vec4 stroke_color
+#pragma maplibre: define mediump float stroke_width
+#pragma maplibre: define lowp float stroke_opacity
 
 void main() {
-    #pragma mapbox: initialize highp vec4 color
-    #pragma mapbox: initialize mediump float radius
-    #pragma mapbox: initialize lowp float blur
-    #pragma mapbox: initialize lowp float opacity
-    #pragma mapbox: initialize highp vec4 stroke_color
-    #pragma mapbox: initialize mediump float stroke_width
-    #pragma mapbox: initialize lowp float stroke_opacity
+    #pragma maplibre: initialize highp vec4 color
+    #pragma maplibre: initialize mediump float radius
+    #pragma maplibre: initialize lowp float blur
+    #pragma maplibre: initialize lowp float opacity
+    #pragma maplibre: initialize highp vec4 stroke_color
+    #pragma maplibre: initialize mediump float stroke_width
+    #pragma maplibre: initialize lowp float stroke_opacity
 
     vec2 extrude = v_data.xy;
     float extrude_length = length(extrude);

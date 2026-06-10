@@ -51,6 +51,23 @@ describe('Texture', () => {
         expect(texture.texture).toBe(originalHandle);
     });
 
+    test('RGBA texture recreates on resize via texStorage2D', () => {
+        const gl = createNullGL();
+        const context = new Context(gl);
+        const image1 = new RGBAImage({width: 2, height: 2}, new Uint8Array(2 * 2 * 4));
+        const texture = new Texture(context, image1, gl.RGBA);
+
+        const firstHandle = texture.texture;
+        expect(texture.size).toEqual([2, 2]);
+
+        const image2 = new RGBAImage({width: 4, height: 4}, new Uint8Array(4 * 4 * 4));
+        texture.update(image2);
+
+        expect(texture.size).toEqual([4, 4]);
+        expect(texture.texture).not.toBe(firstHandle);
+        expect(gl.deleteTexture).toHaveBeenCalled();
+    });
+
     test('premultiplyAlpha produces correct output', () => {
         // pixel: r=200, g=100, b=50, a=128 (half transparent)
         const data = new Uint8Array([200, 100, 50, 128]);

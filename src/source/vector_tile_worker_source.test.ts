@@ -1,7 +1,7 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import Protobuf from 'pbf';
+import {PbfReader} from 'pbf';
 import {VectorTileWorkerSource} from '../source/vector_tile_worker_source.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
 import {fakeServer, type FakeServer} from 'nise';
@@ -172,7 +172,7 @@ describe('vector tile worker source', () => {
         const rawTileData = new ArrayBuffer(0);
         const loadVectorData = (_params, _rawData) => {
             return {
-                vectorTile: new VectorTile(new Protobuf(rawTileData)),
+                vectorTile: new VectorTile(new PbfReader(rawTileData)),
                 rawData: rawTileData,
                 encoding: 'mvt'
             };
@@ -223,6 +223,69 @@ describe('vector tile worker source', () => {
         await expect(loadPromise).resolves.toBeTruthy();
     });
 
+    test('VectorTileWorkerSource.reloadTile during loadTile returns data even if interrupted by another reloadTile', async () => {
+        const rawTileData = new ArrayBuffer(0);
+        const loadVectorData = (_params, _rawData) => {
+            return {
+                vectorTile: new VectorTile(new PbfReader(rawTileData)),
+                rawData: rawTileData,
+                encoding: 'mvt'
+            };
+        };
+
+        const layerIndex = new StyleLayerIndex([{
+            id: 'test',
+            source: 'source',
+            'source-layer': 'test',
+            type: 'fill'
+        }]);
+
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
+        source.loadVectorTile = loadVectorData;
+
+        const parseWorkerTileMock = vi
+            .spyOn(WorkerTile.prototype, 'parse')
+            .mockImplementation(function(this: WorkerTile, _data, _layerIndex, _availableImages, _actor) {
+                this.status = 'parsing';
+                return new Promise((resolve) => {
+                    setTimeout(() => resolve({} as WorkerTileResult), 20);
+                });
+            });
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any);
+        });
+
+        const loadPromise = source.loadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            request: {url: 'http://localhost:2900/faketile.pbf'}
+        } as any as WorkerTileParameters);
+
+        server.respond();
+
+        // Let the load start
+        await sleep(0);
+
+        // This reload will be interrupted by the next one
+        source.reloadTile({
+            source: 'source',
+            uid: '0',
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+        } as any as WorkerTileParameters);
+
+        const res = await source.reloadTile({
+            source: 'source',
+            uid: '0',
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+        } as any as WorkerTileParameters);
+        expect(res).toBeDefined();
+        expect((res as WorkerTileWithData).rawTileData).toBeDefined();
+        expect(parseWorkerTileMock).toHaveBeenCalledTimes(3);
+        await expect(loadPromise).resolves.toBeTruthy();
+    });
+
     test('VectorTileWorkerSource loadTile uses _getOverzoomTile when overzoomParameters is provided', async () => {
         const source = new VectorTileWorkerSource({} as any, new StyleLayerIndex(), []);
         const mockVectorTile = {layers: {}} as any;
@@ -256,6 +319,42 @@ describe('vector tile worker source', () => {
         await promise;
 
         expect(getOverzoomTileSpy).toHaveBeenCalledWith(params, mockVectorTile);
+    });
+
+    test('VectorTileWorkerSource uses mvt encoding for overzoomed mlt tiles', async () => {
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
+        const mockVectorTile = {layers: {}} as any;
+
+        source.loadVectorTile = vi.fn().mockReturnValue({
+            vectorTile: mockVectorTile,
+            rawData: new ArrayBuffer(0)
+        });
+
+        vi.spyOn(source as any, '_getOverzoomTile').mockReturnValue({
+            vectorTile: mockVectorTile,
+            rawData: new ArrayBuffer(0)
+        });
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf'}, new ArrayBuffer(0) as any);
+        });
+
+        const params = {
+            uid: '1',
+            tileID: new OverscaledTileID(16, 0, 16, 100, 100),
+            source: 'test',
+            encoding: 'mlt',
+            overzoomParameters: {
+                maxZoomTileID: new CanonicalTileID(14, 25, 25),
+                overzoomRequest: {url: ''}
+            }
+        } as WorkerTileParameters;
+
+        const promise = source.loadTile(params);
+        server.respond();
+        const res = await promise as WorkerTileWithData;
+
+        expect(res.encoding).toBe('mvt');
     });
 
     test('VectorTileWorkerSource.reloadTile does not reparse tiles with no vectorTile data but does call callback', async () => {
@@ -340,7 +439,7 @@ describe('vector tile worker source', () => {
 
         const loadVectorData = (_params, _rawData) => {
             return {
-                vectorTile: new VectorTile(new Protobuf(rawTileData)),
+                vectorTile: new VectorTile(new PbfReader(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
                 expires: null,
@@ -404,7 +503,7 @@ describe('vector tile worker source', () => {
 
         const loadVectorData = (_params, _rawData) => {
             return {
-                vectorTile: new VectorTile(new Protobuf(rawTileData)),
+                vectorTile: new VectorTile(new PbfReader(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
                 expires: null,
