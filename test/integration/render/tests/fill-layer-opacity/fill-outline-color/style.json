@@ -10,15 +10,24 @@
     "geojson": {
       "type": "geojson",
       "data": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [-10, -10],
-            [-10, 10],
-            [10, 10],
-            [10, -10],
-            [-10, -10]
-          ]
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [[[-15, -15], [5, -15], [5, 5], [-15, 5], [-15, -15]]]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [[[-5, -5], [15, -5], [15, 15], [-5, 15], [-5, -5]]]
+            }
+          }
         ]
       }
     }
