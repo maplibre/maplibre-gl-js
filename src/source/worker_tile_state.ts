@@ -27,18 +27,15 @@ export class WorkerTileState {
         delete this.loading[uid];
     }
 
+    getParsing(uid: string | number): ParsingState | undefined {
+        return this.parsing[uid];
+    }
+
     setParsing(uid: string | number, state: ParsingState): void {
         this.parsing[uid] = state;
     }
 
-    consumeParsing(uid: string | number): ParsingState | undefined {
-        const state = this.parsing[uid];
-        if (!state) return undefined;
-        delete this.parsing[uid];
-        return state;
-    }
-
-    clearParsing(uid: string | number): void {
+    removeParsing(uid: string | number): void {
         delete this.parsing[uid];
     }
 
