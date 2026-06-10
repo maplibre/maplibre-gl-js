@@ -2,7 +2,7 @@
   "version": 8,
   "metadata": {
     "test": {
-      "width": 128,
+      "width": 64,
       "height": 64
     }
   },
@@ -13,14 +13,14 @@
       "type": "geojson",
       "data": {
         "type": "Polygon",
-        "coordinates": [[[-20, -12], [-5, -12], [-12, 12], [-20, -12]]]
+        "coordinates": [[[-9, -8], [-1, -8], [-5, 8], [-9, -8]]]
       }
     },
     "right": {
       "type": "geojson",
       "data": {
         "type": "Polygon",
-        "coordinates": [[[5, -12], [20, -12], [12, 12], [5, -12]]]
+        "coordinates": [[[1, -8], [9, -8], [5, 8], [1, -8]]]
       }
     }
   },
