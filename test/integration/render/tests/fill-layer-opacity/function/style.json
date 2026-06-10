@@ -13,14 +13,14 @@
       "type": "geojson",
       "data": {
         "type": "Polygon",
-        "coordinates": [[[-9, -8], [-1, -8], [-5, 8], [-9, -8]]]
+        "coordinates": [[[-10, -10], [3, -10], [3, 3], [-10, 3], [-10, -10]]]
       }
     },
     "right": {
       "type": "geojson",
       "data": {
         "type": "Polygon",
-        "coordinates": [[[1, -8], [9, -8], [5, 8], [1, -8]]]
+        "coordinates": [[[-3, -3], [10, -3], [10, 10], [-3, 10], [-3, -3]]]
       }
     }
   },
