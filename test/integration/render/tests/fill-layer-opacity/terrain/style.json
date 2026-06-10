@@ -25,19 +25,37 @@
     "polygon": {
       "type": "geojson",
       "data": {
-        "type": "Feature",
-        "properties": {},
-        "geometry": {
-          "type": "Polygon",
-          "coordinates": [[
-            [11.5250, 47.3569],
-            [11.5157, 47.3374],
-            [11.5401, 47.3494],
-            [11.5099, 47.3494],
-            [11.5343, 47.3374],
-            [11.5250, 47.3569]
-          ]]
-        }
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [[
+                [11.510, 47.337],
+                [11.530, 47.337],
+                [11.530, 47.353],
+                [11.510, 47.353],
+                [11.510, 47.337]
+              ]]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [[
+                [11.520, 47.343],
+                [11.540, 47.343],
+                [11.540, 47.359],
+                [11.520, 47.359],
+                [11.520, 47.343]
+              ]]
+            }
+          }
+        ]
       }
     }
   },

@@ -25,19 +25,37 @@
     "line": {
       "type": "geojson",
       "data": {
-        "type": "Feature",
-        "properties": {},
-        "geometry": {
-          "type": "LineString",
-          "coordinates": [
-            [11.5250, 47.3569],
-            [11.5179, 47.3353],
-            [11.5364, 47.3487],
-            [11.5136, 47.3487],
-            [11.5321, 47.3353],
-            [11.5250, 47.3569]
-          ]
-        }
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [11.510, 47.337],
+                [11.530, 47.337],
+                [11.530, 47.353],
+                [11.510, 47.353],
+                [11.510, 47.337]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [11.520, 47.343],
+                [11.540, 47.343],
+                [11.540, 47.359],
+                [11.520, 47.359],
+                [11.520, 47.343]
+              ]
+            }
+          }
+        ]
       }
     }
   },
