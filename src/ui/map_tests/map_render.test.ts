@@ -99,13 +99,8 @@ test('render event carries timing metadata', async () => {
     const event = await renderPromise;
 
     expect(event.timing).toBeDefined();
-    expect(typeof event.timing.renderStart).toBe('number');
-    expect(typeof event.timing.commandsSubmitted).toBe('number');
-    expect(typeof event.timing.renderDuration).toBe('number');
-    // Sanity: end is at or after start, duration matches the bracket.
-    expect(event.timing.commandsSubmitted).toBeGreaterThanOrEqual(event.timing.renderStart);
-    expect(event.timing.renderDuration).toBeCloseTo(event.timing.commandsSubmitted - event.timing.renderStart, 5);
-    // Duration should be non-negative and reasonable for a synthetic test (well under a second).
-    expect(event.timing.renderDuration).toBeGreaterThanOrEqual(0);
-    expect(event.timing.renderDuration).toBeLessThan(1000);
+    expect(event.timing.end).toBeGreaterThanOrEqual(event.timing.start);
+    expect(event.timing.duration).toBeCloseTo(event.timing.end - event.timing.start, 5);
+    expect(event.timing.duration).toBeGreaterThanOrEqual(0);
+    expect(event.timing.duration).toBeLessThan(1000);
 });

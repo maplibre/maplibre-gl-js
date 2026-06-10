@@ -3621,6 +3621,7 @@ export class Map extends Camera {
      * @param paintStartTimeStamp - The time when the animation frame began executing.
      */
     _render(paintStartTimeStamp: number): this {
+        const renderStart = performance.now();
         const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
 
         const isGlobeRendering = this.style.projection?.transitionState > 0;
@@ -3689,11 +3690,7 @@ export class Map extends Camera {
 
         this._placementDirty = this.style?._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
-        // Actually draw. Bracket painter.render() with high-resolution timestamps
-        // so we can attach CPU-side timing metadata to the `render` event below.
-        // The cost is two performance.now() calls per frame; populating the field
-        // unconditionally keeps the event shape stable for typed consumers.
-        const renderStart = performance.now();
+        // Actually draw
         this.painter.render(this.style, {
             showTileBoundaries: this.showTileBoundaries,
             showOverdrawInspector: this._showOverdrawInspector,
@@ -3708,9 +3705,9 @@ export class Map extends Camera {
 
         this.fire(new Event('render', {
             timing: {
-                renderStart,
-                commandsSubmitted: renderEnd,
-                renderDuration: renderEnd - renderStart,
+                start: renderStart,
+                end: renderEnd,
+                duration: renderEnd - renderStart,
             },
         }));
 

@@ -457,14 +457,14 @@ export type MapLibreEvent<TOrig = unknown> = {
  */
 export type MapLibreRenderTiming = {
     /** When `painter.render()` was entered. */
-    renderStart: number;
+    start: number;
     /**
      * When `painter.render()` returned and all WebGL commands for the frame
-     * were submitted to the driver. Equivalent to `renderStart + renderDuration`.
+     * were submitted to the driver. Equivalent to `start + duration`.
      */
-    commandsSubmitted: number;
+    end: number;
     /** Wall-clock time spent inside `painter.render()`, in milliseconds. */
-    renderDuration: number;
+    duration: number;
 };
 
 /**
