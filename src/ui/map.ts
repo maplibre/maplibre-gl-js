@@ -3689,7 +3689,11 @@ export class Map extends Camera {
 
         this._placementDirty = this.style?._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
-        // Actually draw
+        // Actually draw. Bracket painter.render() with high-resolution timestamps
+        // so we can attach CPU-side timing metadata to the `render` event below.
+        // The cost is two performance.now() calls per frame; populating the field
+        // unconditionally keeps the event shape stable for typed consumers.
+        const renderStart = performance.now();
         this.painter.render(this.style, {
             showTileBoundaries: this.showTileBoundaries,
             showOverdrawInspector: this._showOverdrawInspector,
@@ -3700,8 +3704,15 @@ export class Map extends Camera {
             showPadding: this.showPadding,
             anisotropicFilterPitch: this.getAnisotropicFilterPitch(),
         });
+        const renderEnd = performance.now();
 
-        this.fire(new Event('render'));
+        this.fire(new Event('render', {
+            timing: {
+                renderStart,
+                commandsSubmitted: renderEnd,
+                renderDuration: renderEnd - renderStart,
+            },
+        }));
 
         if (this.loaded() && !this._loaded) {
             this._loaded = true;

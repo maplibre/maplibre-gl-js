@@ -186,8 +186,11 @@ export type MapEventType = {
      * - a change to the map's style
      * - a change to a GeoJSON source
      * - the loading of a vector tile, GeoJSON file, glyph, or sprite
+     *
+     * The event carries a `timing` object with high-resolution CPU-side timing
+     * data; see {@link MapLibreRenderEvent}.
      */
-    render: MapLibreEvent;
+    render: MapLibreRenderEvent;
     /**
      * Fired immediately after the map has been resized.
      */
@@ -438,6 +441,40 @@ export type MapLibreEvent<TOrig = unknown> = {
     type: keyof MapEventType | keyof MapLayerEventType;
     target: Map;
     originalEvent: TOrig;
+};
+
+/**
+ * Timing metadata attached to the `render` event. All timestamps are in
+ * `performance.now()`-space (DOMHighResTimeStamp, milliseconds since the
+ * page navigation timeline origin).
+ *
+ * Note: these are CPU-side timestamps. WebGL exposes no portable signal for
+ * GPU buffer-swap completion, so callers needing true frame readiness for
+ * capture/export should additionally listen for `viewporttilesloaded` (when
+ * available) or sample `canvas.captureStream(0)`.
+ *
+ * @group Event Related
+ */
+export type MapLibreRenderTiming = {
+    /** When `painter.render()` was entered. */
+    renderStart: number;
+    /**
+     * When `painter.render()` returned and all WebGL commands for the frame
+     * were submitted to the driver. Equivalent to `renderStart + renderDuration`.
+     */
+    commandsSubmitted: number;
+    /** Wall-clock time spent inside `painter.render()`, in milliseconds. */
+    renderDuration: number;
+};
+
+/**
+ * The render event. Carries CPU-side timing information for the just-completed
+ * frame (see {@link MapLibreRenderTiming}).
+ *
+ * @group Event Related
+ */
+export type MapLibreRenderEvent = MapLibreEvent & {
+    timing: MapLibreRenderTiming;
 };
 
 /**
