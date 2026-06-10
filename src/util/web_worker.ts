@@ -24,16 +24,12 @@ function isCrossOrigin(url: string): boolean {
 }
 
 function defaultWorkerUrl(): string {
-    try {
-        const moduleUrl = import.meta.url;
-        if (!/^https?:/.test(moduleUrl)) return '';
-        const workerName = moduleUrl.endsWith('-dev.mjs')
-            ? 'maplibre-gl-worker-dev.mjs'
-            : 'maplibre-gl-worker.mjs';
-        return new URL(`./${workerName}`, moduleUrl).href;
-    } catch {
-        return '';
-    }
+    const moduleUrl = import.meta.url;
+    if (!/^https?:/.test(moduleUrl)) return '';
+    const workerName = moduleUrl.endsWith('-dev.mjs')
+        ? 'maplibre-gl-worker-dev.mjs'
+        : 'maplibre-gl-worker.mjs';
+    return new URL(`./${workerName}`, moduleUrl).href;
 }
 
 function createWorker(url: string, asModule: boolean): Worker {
@@ -59,7 +55,7 @@ async function fetchAsBlobUrl(url: string): Promise<string> {
 
 export async function workerFactory(): Promise<Worker> {
     const url = config.WORKER_URL || defaultWorkerUrl();
-    const asModule = url?.endsWith('.mjs') ?? false;
+    const asModule = url?.endsWith('.cjs') ? false : true;
 
     if (!isCrossOrigin(url)) {
         return createWorker(url, asModule);

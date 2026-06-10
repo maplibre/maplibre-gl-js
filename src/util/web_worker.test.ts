@@ -16,25 +16,25 @@ describe('workerFactory', () => {
         vi.restoreAllMocks();
     });
 
-    test('creates a classic worker when WORKER_URL is empty', async () => {
+    test('creates a module worker when WORKER_URL is empty', async () => {
         const WorkerSpy = vi.fn();
         (globalThis as any).Worker = WorkerSpy;
 
         await workerFactory();
 
         expect(WorkerSpy).toHaveBeenCalledTimes(1);
-        expect(WorkerSpy.mock.calls[0]).toEqual(['']);
+        expect(WorkerSpy.mock.calls[0]).toEqual(['', {type: 'module'}]);
     });
 
-    test('creates a classic worker when WORKER_URL ends with .js', async () => {
+    test('creates a classic worker when WORKER_URL ends with .cjs', async () => {
         const WorkerSpy = vi.fn();
         (globalThis as any).Worker = WorkerSpy;
-        config.WORKER_URL = '/path/to/worker.js';
+        config.WORKER_URL = '/path/to/worker.cjs';
 
         await workerFactory();
 
         expect(WorkerSpy).toHaveBeenCalledTimes(1);
-        expect(WorkerSpy.mock.calls[0]).toEqual(['/path/to/worker.js']);
+        expect(WorkerSpy.mock.calls[0]).toEqual(['/path/to/worker.cjs']);
     });
 
     test('creates a module worker when WORKER_URL ends with .mjs', async () => {

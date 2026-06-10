@@ -2,6 +2,7 @@ import * as esbuild from 'esbuild';
 import {copyFileSync, existsSync, mkdirSync} from 'fs';
 
 const workerSrc = 'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs';
+const sharedSrc = 'node_modules/maplibre-gl/dist/maplibre-gl-shared.mjs';
 
 if (!existsSync(workerSrc)) {
     console.error(
@@ -22,3 +23,4 @@ await esbuild.build({
 
 mkdirSync('dist', {recursive: true});
 copyFileSync(workerSrc, 'dist/maplibre-gl-worker.mjs');
+copyFileSync(sharedSrc, 'dist/maplibre-gl-shared.mjs');

@@ -3,7 +3,7 @@
 Minimal webpack app exercising the ESM build:
 
 - `import {Map} from 'maplibre-gl'` and `import 'maplibre-gl/dist/maplibre-gl.css'` resolve via the package's `exports` field.
-- `setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString())` constructs the worker URL. webpack recognizes the `new URL(..., import.meta.url)` pattern, resolves the package specifier, copies the worker file to the build output, and rewrites the URL at build time.
+- `copy-webpack-plugin` copies the pre-built worker and shared files to the output directory. The worker's internal `import from './maplibre-gl-shared.mjs'` resolves because both files are copied side-by-side.
 
 ## Setup
 
