@@ -2033,6 +2033,43 @@ describe('flyTo', () => {
         expect(lat).toBeCloseTo(34);
     });
 
+    test('center moves toward target at intermediate frames when transform minZoom limits zoom', async () => {
+        const transform = new MercatorTransform({minZoom: 10, maxZoom: 20, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(512, 512);
+
+        const camera = attachSimulateFrame(new CameraMock(transform, new MercatorCameraHelper(), {} as any));
+        camera._update = () => {};
+        camera.jumpTo({center: [0, 0], zoom: 10});
+
+        let midLng: number | undefined;
+        camera.on('move', () => {
+            if (midLng === undefined) midLng = camera.getCenter().lng;
+        });
+
+        const promise = camera.once('moveend');
+        const stub = vi.spyOn(timeControl, 'now');
+        stub.mockImplementation(() => 0);
+        camera.flyTo({center: [40, 0], zoom: 10, duration: 10});
+
+        setTimeout(() => {
+            stub.mockImplementation(() => 5);
+            camera.simulateFrame();
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 10);
+                camera.simulateFrame();
+            }, 0);
+        }, 0);
+
+        await promise;
+
+        const startLng = 0;
+        const targetLng = 40;
+        expect(midLng).toBeGreaterThan((startLng + targetLng) / 2);
+        expect(midLng).toBeLessThanOrEqual(targetLng);
+        expect(camera.getCenter().lng).toBeCloseTo(targetLng);
+    });
+
     test('resets duration to 0 if it exceeds maxDuration', async () => {
         let startTime: number;
         const camera = createCamera({center: [37.63454, 55.75868], zoom: 18});
