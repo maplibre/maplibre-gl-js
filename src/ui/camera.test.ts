@@ -1946,20 +1946,20 @@ describe('flyTo', () => {
         expect(leftWorld0).toBeFalsy();
     });
 
-    test('peaks at the specified zoom level', async () => {
+    test('flight arc does not zoom below the minZoom flyTo option', async () => {
         const camera = createCamera({zoom: 20});
         const stub = vi.spyOn(timeControl, 'now');
 
-        const minZoom = 1;
+        const minZoom = 10;
         let zoomed = false;
 
         camera.on('zoom', () => {
             const zoom = camera.getZoom();
-            if (zoom < 1) {
+            if (zoom < minZoom) {
                 throw new Error(`${zoom} should be >= ${minZoom} during flyTo`);
             }
 
-            if (camera.getZoom() < (minZoom + 1)) {
+            if (zoom < (minZoom + 1)) {
                 zoomed = true;
             }
         });
@@ -1970,6 +1970,46 @@ describe('flyTo', () => {
         camera.flyTo({center: [1, 0], zoom: 20, minZoom, duration: 10});
 
         setTimeout(() => {
+            // arc bottom falls near t=3ms due to non-linear easing compressing the arc early
+            stub.mockImplementation(() => 3);
+            camera.simulateFrame();
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 10);
+                camera.simulateFrame();
+            }, 0);
+        }, 0);
+
+        await promise;
+        expect(zoomed).toBeTruthy();
+    });
+
+    test('flight arc does not zoom below transform minZoom when only map setMinZoom is used', async () => {
+        const camera = createCamera({zoom: 20});
+        camera.transform.setMinZoom(10);
+        const stub = vi.spyOn(timeControl, 'now');
+
+        const mapMinZoom = 10;
+        let zoomed = false;
+
+        camera.on('zoom', () => {
+            const zoom = camera.getZoom();
+            if (zoom < mapMinZoom) {
+                throw new Error(`${zoom} should be >= ${mapMinZoom} during flyTo`);
+            }
+
+            if (zoom < (mapMinZoom + 1)) {
+                zoomed = true;
+            }
+        });
+
+        const promise = camera.once('moveend');
+
+        stub.mockImplementation(() => 0);
+        camera.flyTo({center: [1, 0], zoom: 20, duration: 10});
+
+        setTimeout(() => {
+            // arc bottom falls near t=3ms due to non-linear easing compressing the arc early
             stub.mockImplementation(() => 3);
             camera.simulateFrame();
 
@@ -3840,21 +3880,19 @@ describe('flyTo globe projection', () => {
             expect(leftWorld0).toBeFalsy();
         });
 
-        test('peaks at the specified zoom level', async () => {
+        test('flight arc does not zoom below the minZoom flyTo option', async () => {
             const camera = createCameraGlobe({zoom: 20});
             const stub = vi.spyOn(timeControl, 'now');
 
-            const minZoom = 1;
+            const minZoom = 10;
             let zoomed = false;
 
-            let leastZoom = 200;
             camera.on('zoom', () => {
                 const zoom = camera.getZoom();
-                if (zoom < 1) {
+                if (zoom < minZoom) {
                     throw new Error(`${zoom} should be >= ${minZoom} during flyTo`);
                 }
 
-                leastZoom = Math.min(leastZoom, zoom);
                 if (zoom < (minZoom + 1)) {
                     zoomed = true;
                 }
@@ -3866,6 +3904,45 @@ describe('flyTo globe projection', () => {
             camera.flyTo({center: [1, 0], zoom: 20, minZoom, duration: 10});
 
             setTimeout(() => {
+                stub.mockImplementation(() => 3);
+                camera.simulateFrame();
+
+                setTimeout(() => {
+                    stub.mockImplementation(() => 10);
+                    camera.simulateFrame();
+                }, 0);
+            }, 0);
+
+            await promise;
+            expect(zoomed).toBeTruthy();
+        });
+
+        test('flight arc does not zoom below transform minZoom when only map setMinZoom is used', async () => {
+            const camera = createCameraGlobe({zoom: 20});
+            camera.transform.setMinZoom(10);
+            const stub = vi.spyOn(timeControl, 'now');
+
+            const mapMinZoom = 10;
+            let zoomed = false;
+
+            camera.on('zoom', () => {
+                const zoom = camera.getZoom();
+                if (zoom < mapMinZoom) {
+                    throw new Error(`${zoom} should be >= ${mapMinZoom} during flyTo`);
+                }
+
+                if (zoom < (mapMinZoom + 1)) {
+                    zoomed = true;
+                }
+            });
+
+            const promise = camera.once('moveend');
+
+            stub.mockImplementation(() => 0);
+            camera.flyTo({center: [1, 0], zoom: 20, duration: 10});
+
+            setTimeout(() => {
+                // arc bottom falls near t=3ms due to non-linear easing compressing the arc early
                 stub.mockImplementation(() => 3);
                 camera.simulateFrame();
 
