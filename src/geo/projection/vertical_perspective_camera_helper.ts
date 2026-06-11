@@ -362,12 +362,15 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         const scaleOfZoom = zoomScale(normalizedTargetZoom - normalizedStartZoom);
 
         const optionsMinZoom = typeof options.minZoom === 'number';
+        const DEFAULT_MAP_MIN_ZOOM = -2; // See map.ts defaultMinZoom.
+        const hasMapMinZoomConstraint = tr.minZoom > DEFAULT_MAP_MIN_ZOOM;
 
         let scaleOfMinZoom: number;
 
-        if (optionsMinZoom) {
-            const normalizedOptionsMinZoom = +options.minZoom + getZoomAdjustment(targetCenter.lat, 0);
-            const normalizedMinZoomPreConstrain = Math.min(normalizedOptionsMinZoom, normalizedStartZoom, normalizedTargetZoom);
+        if (optionsMinZoom || hasMapMinZoomConstraint) {
+            const effectiveMinZoom = optionsMinZoom ? +options.minZoom : tr.minZoom;
+            const normalizedEffectiveMinZoom = effectiveMinZoom + getZoomAdjustment(targetCenter.lat, 0);
+            const normalizedMinZoomPreConstrain = Math.min(normalizedEffectiveMinZoom, normalizedStartZoom, normalizedTargetZoom);
             const minZoomPreConstrain = normalizedMinZoomPreConstrain + getZoomAdjustment(0, targetCenter.lat);
             const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
             const normalizedMinZoom = minZoom + getZoomAdjustment(targetCenter.lat, 0);
