@@ -152,9 +152,9 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     // render the whole layer to a scratch FBO, then composite with `layerOpacity`.
     // Applies opacity uniformly to the layer instead of accumulating alpha across overlapping segments.
     if (layerOpacity < 1) {
-        painter.beginLayerOpacitySubpass(layer, coords, useTerrain);
+        const subpass = painter.redirectLayerToScratch(layer, coords, useTerrain);
         drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain);
-        painter.endLayerOpacitySubpass(layer, layerOpacity);
+        subpass.compositeWithOpacity(layerOpacity);
         return;
     }
 

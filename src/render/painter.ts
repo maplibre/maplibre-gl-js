@@ -11,7 +11,6 @@ import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
 import {shaders} from '../shaders/shaders.ts';
 import {Program} from '../webgl/program.ts';
 import {programUniforms} from '../webgl/program/program_uniforms.ts';
-import {layerOpacityUniformValues} from '../webgl/program/layer_opacity_program.ts';
 import {Context} from '../webgl/context.ts';
 import {DepthMode} from '../webgl/depth_mode.ts';
 import {StencilMode} from '../webgl/stencil_mode.ts';
@@ -44,6 +43,7 @@ import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
 import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer.ts';
 import {isLineStyleLayer, type LineStyleLayer} from '../style/style_layer/line_style_layer.ts';
 import {isFillStyleLayer, type FillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
+import {PendingLayerComposite} from '../webgl/draw/draw_layer_opacity.ts';
 import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
 import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
 import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer.ts';
@@ -85,7 +85,6 @@ export type RTTObject = {
  * @internal
  * Initialize a new painter object.
  */
-
 export class Painter {
     drawFunctions: DrawFunctions;
     context: Context;
@@ -115,17 +114,6 @@ export class Painter {
      * Resized in place to match the target dimensions.
      */
     private _layerOpacityFbo: Framebuffer | null;
-    /**
-     * Transient state for an in-flight `{line,fill}-layer-opacity` subpass.
-     * Set by {@link beginLayerOpacitySubpass}, cleared by {@link endLayerOpacitySubpass}.
-     * Non-null exactly while a subpass is in flight.
-     */
-    private _layerOpacitySubpass: {
-        /** Framebuffer to composite the scratch FBO back into when the subpass ends. */
-        compositeTarget: WebGLFramebuffer;
-        /** Viewport to restore for the composite draw. */
-        compositeViewport: [number, number, number, number];
-    } | null;
     numSublayers: number;
     depthEpsilon: number;
     emptyProgramConfiguration: ProgramConfiguration;
@@ -179,7 +167,6 @@ export class Painter {
         this._rttObjectRecyclePool = [];
         this._rttSharedFbo = null;
         this._layerOpacityFbo = null;
-        this._layerOpacitySubpass = null;
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
@@ -811,56 +798,33 @@ export class Painter {
     }
 
     /**
-     * Begin a `{line,fill}-layer-opacity` subpass. Saves the currently bound framebuffer / viewport,
-     * binds the shared scratch FBO at the target's resolution, clears it, and writes the layer's clipping masks.
-     * The caller then renders the layer into the scratch FBO and finishes with {@link endLayerOpacitySubpass}.
+     * Begin a `{line,fill}-layer-opacity` subpass.
+     * 
+     * Saves the currently bound framebuffer / viewport, binds the shared scratch FBO at the target's resolution, clears it, and writes the layer's clipping masks.
+     * The returned {@link PendingLayerComposite} owns the captured composite state.
+     * The caller renders the layer into the scratch FBO and finishes by calling {@link PendingLayerComposite.compositeWithOpacity}.
      */
-    beginLayerOpacitySubpass(layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[], terrain: boolean): void {
+    redirectLayerToScratch(layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[], terrain: boolean): PendingLayerComposite {
         const context = this.context;
         const compositeTarget = context.bindFramebuffer.get();
         const compositeViewport = context.viewport.get();
         const [, , width, height] = compositeViewport;
 
-        this._bindLayerOpacityScratch(width, height);
-        this._layerOpacitySubpass = {compositeTarget, compositeViewport};
+        const scratchFbo = this._bindLayerOpacityScratch(width, height);
 
         context.viewport.set([0, 0, width, height]);
         context.clear({color: Color.transparent, depth: 1, stencil: 0});
 
         this.currentStencilSource = undefined;
         this._renderTileClippingMasks(layer, coords, terrain);
+
+        return new PendingLayerComposite(this, layer, scratchFbo, compositeTarget, compositeViewport);
     }
 
     /**
-     * Finish a `{line,fill}-layer-opacity` subpass started by {@link beginLayerOpacitySubpass}.
-     * Restores the previously bound framebuffer / viewport and composites the scratch FBO's color attachment
-     * with `opacity` as a uniform multiplier.
+     * Binds the shared `{line,fill}-layer-opacity` scratch FBO at `width x height`.
+     * Lazy-creates/resizes its color texture and depth-stencil renderbuffer as needed.
      */
-    endLayerOpacitySubpass(layer: LineStyleLayer | FillStyleLayer, opacity: number): void {
-        const context = this.context;
-        const gl = context.gl;
-        const {compositeTarget, compositeViewport} = this._layerOpacitySubpass;
-        const scratchFbo = this._layerOpacityFbo;
-
-        context.bindFramebuffer.set(compositeTarget);
-        context.viewport.set(compositeViewport);
-
-        context.activeTexture.set(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, scratchFbo.colorAttachment.get());
-
-        this.useProgram('layerOpacity').draw(context, gl.TRIANGLES,
-            DepthMode.disabled, StencilMode.disabled, this.colorModeForRenderPass(), CullFaceMode.disabled,
-            layerOpacityUniformValues(opacity, 0), null, null,
-            layer.id, this.viewportBuffer, this.quadTriangleIndexBuffer,
-            this.viewportSegments, layer.paint, this.transform.zoom);
-
-        this._layerOpacitySubpass = null;
-    }
-
-    /**
-        * Binds the shared `{line,fill}-layer-opacity` scratch FBO at `width x height`.
-        * Lazy-creates/resizes its color texture and depth-stencil renderbuffer as needed.
-        */
     private _bindLayerOpacityScratch(width: number, height: number): Framebuffer {
         const gl = this.context.gl;
 

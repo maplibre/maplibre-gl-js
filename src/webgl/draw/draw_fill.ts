@@ -30,9 +30,9 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
         if (painter.renderPass !== 'translucent') return;
         const useTerrain = !!painter.style.map.terrain;
 
-        painter.beginLayerOpacitySubpass(layer, coords, useTerrain);
+        const subpass = painter.redirectLayerToScratch(layer, coords, useTerrain);
         drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
-        painter.endLayerOpacitySubpass(layer, layerOpacity);
+        subpass.compositeWithOpacity(layerOpacity);
 
         return;
     }
