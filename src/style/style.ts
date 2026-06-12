@@ -196,6 +196,12 @@ export type StyleSwapOptions = {
      * that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
      */
     transformStyle?: TransformStyleFunction;
+    /**
+     * The URL of the style source, used to track the original style URL
+     * when the style is loaded from a JSON object via diffing or fallback.
+     * This is used internally by {@link Map.getStyleUrl}.
+     */
+    sourceUrl?: string;
 };
 
 /**
@@ -458,8 +464,8 @@ export class Style extends Evented {
         }
     }
 
-    loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification, sourceUrl?: string): void {
-        this._styleUrl = sourceUrl ?? null;
+    loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification): void {
+        this._styleUrl = options.sourceUrl ?? null;
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
         this._frameRequest = new AbortController();
@@ -869,7 +875,7 @@ export class Style extends Evented {
      *
      * @returns true if any changes were made; false otherwise
      */
-    setState(nextState: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions = {}, sourceUrl?: string): boolean {
+    setState(nextState: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions = {}): boolean {
         this._checkLoaded();
 
         const serializedStyle =  this.serialize();
@@ -889,7 +895,7 @@ export class Style extends Evented {
 
         if (operations.operations.length === 0) {
             // Update styleUrl even when there are no diff operations
-            this._styleUrl = sourceUrl ?? null;
+            this._styleUrl = options.sourceUrl ?? null;
             return false;
         }
 
@@ -903,7 +909,7 @@ export class Style extends Evented {
         this._serializedLayers = null;
 
         // Update styleUrl when setState succeeds
-        this._styleUrl = sourceUrl ?? null;
+        this._styleUrl = options.sourceUrl ?? null;
         this.fire(new Event('style.load', {style: this}));
 
         return true;

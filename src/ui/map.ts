@@ -2130,12 +2130,12 @@ export class Map extends Camera {
         return str;
     }
 
-    _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions, sourceUrl?: string): this {
+    _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions): this {
         this._diffStyleRequest?.abort();
         this._diffStyleRequest = null;
         // transformStyle relies on having previous style serialized, if it is not loaded yet, delay _updateStyle until previous style is loaded
         if (options?.transformStyle && this.style && !this.style._loaded) {
-            this.style.once('style.load', () => this._updateStyle(style, options, sourceUrl));
+            this.style.once('style.load', () => this._updateStyle(style, options));
             return;
         }
 
@@ -2164,7 +2164,8 @@ export class Map extends Camera {
         if (typeof style === 'string') {
             this.style.loadURL(style, options, previousStyle);
         } else {
-            this.style.loadJSON(style, options, previousStyle, sourceUrl);
+            // options.sourceUrl is read by loadJSON to track the URL
+            this.style.loadJSON(style, options, previousStyle);
         }
 
         return this;
@@ -2193,7 +2194,8 @@ export class Map extends Camera {
 
                 const response = await getJSON<StyleSpecification>(request, abortController);
                 this._diffStyleRequest = null;
-                this._updateDiff(response.data, options, url);
+                // Spread sourceUrl into options so setState and loadJSON can track it
+                this._updateDiff(response.data, {...options, sourceUrl: url});
             } catch (error) {
                 this._diffStyleRequest = null;
                 if (!isAbortError(error)) {
@@ -2206,17 +2208,17 @@ export class Map extends Camera {
         }
     }
 
-    _updateDiff(style: StyleSpecification, options?: StyleSwapOptions & StyleOptions, sourceUrl?: string): void {
+    _updateDiff(style: StyleSpecification, options?: StyleSwapOptions & StyleOptions): void {
         try {
-            if (this.style.setState(style, options, sourceUrl)) {
+            if (this.style.setState(style, options)) {
                 this._update(true);
             }
         } catch (e) {
             warnOnce(
                 `Unable to perform style diff: ${ensureError(e).message}.  Rebuilding the style from scratch.`
             );
-            // When falling back, rebuild and pass sourceUrl so loadJSON picks it up
-            this._updateStyle(style, options, sourceUrl);
+            // options.sourceUrl is preserved so loadJSON picks it up on fallback
+            this._updateStyle(style, options);
         }
     }
 
