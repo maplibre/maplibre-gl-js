@@ -590,14 +590,14 @@ describe('getStyle', () => {
 });
 
 describe('getStyleUrl', () => {
-    test('returns undefined when map is initialized without a style', () => {
+    test('returns null when map is initialized without a style', () => {
         const map = new Map({container: window.document.createElement('div')});
-        expect(map.getStyleUrl()).toBeUndefined();
+        expect(map.getStyleUrl()).toBeNull();
     });
 
-    test('returns undefined when map is initialized with a style object', () => {
+    test('returns null when map is initialized with a style object', () => {
         const map = createMap({style: {version: 8, sources: {}, layers: []}});
-        expect(map.getStyleUrl()).toBeUndefined();
+        expect(map.getStyleUrl()).toBeNull();
     });
 
     test('returns the URL when map is initialized with a style URL string', () => {
@@ -608,29 +608,29 @@ describe('getStyleUrl', () => {
 
     test('returns the URL after setStyle is called with a URL', () => {
         const map = createMap({style: {version: 8, sources: {}, layers: []}});
-        expect(map.getStyleUrl()).toBeUndefined();
+        expect(map.getStyleUrl()).toBeNull();
 
         server.respondWith('https://example.com/style.json', JSON.stringify(createStyle()));
         map.setStyle('https://example.com/style.json', {diff: false});
         expect(map.getStyleUrl()).toBe('https://example.com/style.json');
     });
 
-    test('returns undefined after setStyle is called with a style object', () => {
+    test('returns null after setStyle is called with a style object', () => {
         server.respondWith('style.json', JSON.stringify(createStyle()));
         const map = createMap({style: 'style.json'});
         expect(map.getStyleUrl()).toBe('style.json');
 
         map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
-        expect(map.getStyleUrl()).toBeUndefined();
+        expect(map.getStyleUrl()).toBeNull();
     });
 
-    test('returns undefined after setStyle is called with null', () => {
+    test('returns null after setStyle is called with null', () => {
         server.respondWith('style.json', JSON.stringify(createStyle()));
         const map = createMap({style: 'style.json'});
         expect(map.getStyleUrl()).toBe('style.json');
 
         map.setStyle(null);
-        expect(map.getStyleUrl()).toBeUndefined();
+        expect(map.getStyleUrl()).toBeNull();
     });
 
     test('updates to the latest URL when setStyle is called multiple times with URLs', () => {

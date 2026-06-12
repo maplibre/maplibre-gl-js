@@ -244,6 +244,7 @@ export class Style extends Evented {
     pauseablePlacement: PauseablePlacement;
     placement: Placement;
     z: number;
+    _styleUrl: string | null;
 
     constructor(map: Map, options: StyleOptions = {}) {
         super();
@@ -325,6 +326,7 @@ export class Style extends Evented {
         this.pauseablePlacement = undefined;
         this.placement = undefined;
         this.z = 0;
+        this._styleUrl = null;
     }
 
     _rtlPluginLoaded: () => void = () => {
@@ -426,6 +428,7 @@ export class Style extends Evented {
     }
 
     async loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification): Promise<void> {
+        this._styleUrl = url;
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
         options.validate = typeof options.validate === 'boolean' ?
@@ -455,7 +458,8 @@ export class Style extends Evented {
         }
     }
 
-    loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification): void {
+    loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification, sourceUrl?: string): void {
+        this._styleUrl = sourceUrl ?? null;
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
         this._frameRequest = new AbortController();
@@ -467,6 +471,7 @@ export class Style extends Evented {
     }
 
     loadEmpty(): void {
+        this._styleUrl = null;
         this.fire(new Event('dataloading', {dataType: 'style'}));
         this._load(empty, {validate: false});
     }
@@ -864,7 +869,7 @@ export class Style extends Evented {
      *
      * @returns true if any changes were made; false otherwise
      */
-    setState(nextState: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions = {}): boolean {
+    setState(nextState: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions = {}, sourceUrl?: string): boolean {
         this._checkLoaded();
 
         const serializedStyle =  this.serialize();
@@ -883,6 +888,8 @@ export class Style extends Evented {
         }
 
         if (operations.operations.length === 0) {
+            // Update styleUrl even when there are no diff operations
+            this._styleUrl = sourceUrl ?? null;
             return false;
         }
 
@@ -895,9 +902,21 @@ export class Style extends Evented {
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
 
+        // Update styleUrl when setState succeeds
+        this._styleUrl = sourceUrl ?? null;
         this.fire(new Event('style.load', {style: this}));
 
         return true;
+    }
+
+    /**
+     * Returns the URL of the style if it was loaded from a URL, or `null` if it was
+     * loaded from a JSON object or the style has not been set yet.
+     *
+     * @returns The style URL, or `null`.
+     */
+    getStyleUrl(): string | null {
+        return this._styleUrl;
     }
 
     _getOperationsToPerform(diff: Array<DiffCommand<DiffOperations>>): {operations: Function[]; unimplemented: string[]} {

@@ -613,8 +613,6 @@ export class Map extends Camera {
     /** @internal */
     _zoomLevelsToOverscale: number | undefined;
     _terrainSkirtLength: 'none' | 'auto';
-    /** @internal */
-    _styleUrl: string | undefined;
 
     /**
      * @internal
@@ -2132,16 +2130,16 @@ export class Map extends Camera {
         return str;
     }
 
-    _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions): this {
+    _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions, sourceUrl?: string): this {
         this._diffStyleRequest?.abort();
         this._diffStyleRequest = null;
         // transformStyle relies on having previous style serialized, if it is not loaded yet, delay _updateStyle until previous style is loaded
-        if (options.transformStyle && this.style && !this.style._loaded) {
-            this.style.once('style.load', () => this._updateStyle(style, options));
+        if (options?.transformStyle && this.style && !this.style._loaded) {
+            this.style.once('style.load', () => this._updateStyle(style, options, sourceUrl));
             return;
         }
 
-        const previousStyle = this.style && options.transformStyle ? this.style.serialize() : undefined;
+        const previousStyle = this.style && options?.transformStyle ? this.style.serialize() : undefined;
         if (this.style) {
             this.style.setEventedParent(null);
 
@@ -2156,7 +2154,6 @@ export class Map extends Camera {
             }
             this.style?.projection?.destroy();
             delete this.style;
-            this._styleUrl = undefined;
             return this;
         } else {
             this.style = new Style(this, options || {});
@@ -2165,11 +2162,9 @@ export class Map extends Camera {
         this.style.setEventedParent(this, {style: this.style});
 
         if (typeof style === 'string') {
-            this._styleUrl = style;
             this.style.loadURL(style, options, previousStyle);
         } else {
-            this._styleUrl = undefined;
-            this.style.loadJSON(style, options, previousStyle);
+            this.style.loadJSON(style, options, previousStyle, sourceUrl);
         }
 
         return this;
@@ -2198,7 +2193,7 @@ export class Map extends Camera {
 
                 const response = await getJSON<StyleSpecification>(request, abortController);
                 this._diffStyleRequest = null;
-                this._updateDiff(response.data, options);
+                this._updateDiff(response.data, options, url);
             } catch (error) {
                 this._diffStyleRequest = null;
                 if (!isAbortError(error)) {
@@ -2211,27 +2206,29 @@ export class Map extends Camera {
         }
     }
 
-    _updateDiff(style: StyleSpecification, options?: StyleSwapOptions & StyleOptions): void {
+    _updateDiff(style: StyleSpecification, options?: StyleSwapOptions & StyleOptions, sourceUrl?: string): void {
         try {
-            if (this.style.setState(style, options)) {
+            if (this.style.setState(style, options, sourceUrl)) {
                 this._update(true);
             }
         } catch (e) {
             warnOnce(
                 `Unable to perform style diff: ${ensureError(e).message}.  Rebuilding the style from scratch.`
             );
-            this._updateStyle(style, options);
+            // When falling back, rebuild and pass sourceUrl so loadJSON picks it up
+            this._updateStyle(style, options, sourceUrl);
         }
     }
 
     /**
-     * Returns the original style URL used to set the map's style, or `undefined`
-     * if the style was set using a style object rather than a URL.
+     * Returns the original style URL used to set the map's style, or `null`
+     * if the style was set using a style object rather than a URL, or no style
+     * has been set yet.
      *
      * The value is updated whenever {@link Map.setStyle} is called with a string URL,
-     * and is cleared (set to `undefined`) when a style object or `null` is passed.
+     * and is cleared (set to `null`) when a style object or `null` is passed.
      *
-     * @returns The style URL string, or `undefined`.
+     * @returns The style URL string, or `null`.
      *
      * @example
      * ```ts
@@ -2243,13 +2240,13 @@ export class Map extends Camera {
      * map.setStyle('https://example.com/style.json');
      * map.getStyleUrl(); // 'https://example.com/style.json'
      *
-     * // If style was set as an object, returns undefined
+     * // If style was set as an object, returns null
      * map.setStyle({ version: 8, sources: {}, layers: [] });
-     * map.getStyleUrl(); // undefined
+     * map.getStyleUrl(); // null
      * ```
      */
-    getStyleUrl(): string | undefined {
-        return this._styleUrl;
+    getStyleUrl(): string | null {
+        return this.style?.getStyleUrl() ?? null;
     }
 
     /**
