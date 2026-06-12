@@ -613,6 +613,8 @@ export class Map extends Camera {
     /** @internal */
     _zoomLevelsToOverscale: number | undefined;
     _terrainSkirtLength: 'none' | 'auto';
+    /** @internal */
+    _styleUrl: string | undefined;
 
     /**
      * @internal
@@ -2154,6 +2156,7 @@ export class Map extends Camera {
             }
             this.style?.projection?.destroy();
             delete this.style;
+            this._styleUrl = undefined;
             return this;
         } else {
             this.style = new Style(this, options || {});
@@ -2162,8 +2165,10 @@ export class Map extends Camera {
         this.style.setEventedParent(this, {style: this.style});
 
         if (typeof style === 'string') {
+            this._styleUrl = style;
             this.style.loadURL(style, options, previousStyle);
         } else {
+            this._styleUrl = undefined;
             this.style.loadJSON(style, options, previousStyle);
         }
 
@@ -2217,6 +2222,34 @@ export class Map extends Camera {
             );
             this._updateStyle(style, options);
         }
+    }
+
+    /**
+     * Returns the original style URL used to set the map's style, or `undefined`
+     * if the style was set using a style object rather than a URL.
+     *
+     * The value is updated whenever {@link Map.setStyle} is called with a string URL,
+     * and is cleared (set to `undefined`) when a style object or `null` is passed.
+     *
+     * @returns The style URL string, or `undefined`.
+     *
+     * @example
+     * ```ts
+     * // Initialize with a URL
+     * const map = new Map({ container: 'map', style: 'https://demotiles.maplibre.org/style.json' });
+     * map.getStyleUrl(); // 'https://demotiles.maplibre.org/style.json'
+     *
+     * // After setStyle() with a URL, it updates accordingly
+     * map.setStyle('https://example.com/style.json');
+     * map.getStyleUrl(); // 'https://example.com/style.json'
+     *
+     * // If style was set as an object, returns undefined
+     * map.setStyle({ version: 8, sources: {}, layers: [] });
+     * map.getStyleUrl(); // undefined
+     * ```
+     */
+    getStyleUrl(): string | undefined {
+        return this._styleUrl;
     }
 
     /**

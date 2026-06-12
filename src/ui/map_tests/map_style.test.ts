@@ -588,3 +588,59 @@ describe('getStyle', () => {
     });
 
 });
+
+describe('getStyleUrl', () => {
+    test('returns undefined when map is initialized without a style', () => {
+        const map = new Map({container: window.document.createElement('div')});
+        expect(map.getStyleUrl()).toBeUndefined();
+    });
+
+    test('returns undefined when map is initialized with a style object', () => {
+        const map = createMap({style: {version: 8, sources: {}, layers: []}});
+        expect(map.getStyleUrl()).toBeUndefined();
+    });
+
+    test('returns the URL when map is initialized with a style URL string', () => {
+        server.respondWith('style.json', JSON.stringify(createStyle()));
+        const map = createMap({style: 'style.json'});
+        expect(map.getStyleUrl()).toBe('style.json');
+    });
+
+    test('returns the URL after setStyle is called with a URL', () => {
+        const map = createMap({style: {version: 8, sources: {}, layers: []}});
+        expect(map.getStyleUrl()).toBeUndefined();
+
+        server.respondWith('https://example.com/style.json', JSON.stringify(createStyle()));
+        map.setStyle('https://example.com/style.json', {diff: false});
+        expect(map.getStyleUrl()).toBe('https://example.com/style.json');
+    });
+
+    test('returns undefined after setStyle is called with a style object', () => {
+        server.respondWith('style.json', JSON.stringify(createStyle()));
+        const map = createMap({style: 'style.json'});
+        expect(map.getStyleUrl()).toBe('style.json');
+
+        map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
+        expect(map.getStyleUrl()).toBeUndefined();
+    });
+
+    test('returns undefined after setStyle is called with null', () => {
+        server.respondWith('style.json', JSON.stringify(createStyle()));
+        const map = createMap({style: 'style.json'});
+        expect(map.getStyleUrl()).toBe('style.json');
+
+        map.setStyle(null);
+        expect(map.getStyleUrl()).toBeUndefined();
+    });
+
+    test('updates to the latest URL when setStyle is called multiple times with URLs', () => {
+        server.respondWith('style-v1.json', JSON.stringify(createStyle()));
+        server.respondWith('style-v2.json', JSON.stringify(createStyle()));
+
+        const map = createMap({style: 'style-v1.json'});
+        expect(map.getStyleUrl()).toBe('style-v1.json');
+
+        map.setStyle('style-v2.json', {diff: false});
+        expect(map.getStyleUrl()).toBe('style-v2.json');
+    });
+});
