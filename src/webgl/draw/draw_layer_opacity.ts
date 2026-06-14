@@ -14,6 +14,11 @@ export type PrepareDraLayerOpacityResult = {
     compositeViewport: [number, number, number, number];
 };
 
+/**
+ * Partial line-layer-opacity
+ * render the whole layer to a scratch FBO, then composite with `layerOpacity`.
+ * Applies opacity uniformly to the layer instead of accumulating alpha across overlapping segments.
+ */
 export function prepareDrawLayerOpacity(painter: Painter, layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[], terrain: boolean): PrepareDraLayerOpacityResult {
     const context = painter.context;
     const compositeTarget = context.bindFramebuffer.get();
