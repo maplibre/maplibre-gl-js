@@ -876,9 +876,7 @@ describe('Render tests', () => {
     });
 
     beforeEach((ctx) => {
-        const previousResult = ctx.task.result;
-        const wasFailedOrTimedOut = previousResult?.state === 'fail';
-        if (wasFailedOrTimedOut) {
+        if (ctx.task.result?.retryCount > 0) {
             console.log(`Retry ${ctx.task.name} with console logging enabled`);
             addConsoleLogging(page);
         }
