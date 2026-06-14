@@ -41,9 +41,8 @@ import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {isCircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
 import {isHeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer.ts';
-import {isLineStyleLayer, type LineStyleLayer} from '../style/style_layer/line_style_layer.ts';
-import {isFillStyleLayer, type FillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
-import {PendingLayerComposite} from '../webgl/draw/draw_layer_opacity.ts';
+import {isLineStyleLayer} from '../style/style_layer/line_style_layer.ts';
+import {isFillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
 import {isFillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
 import {isHillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
 import {isColorReliefStyleLayer} from '../style/style_layer/color_relief_style_layer.ts';
@@ -113,7 +112,7 @@ export class Painter {
      * The canvas in the flat case, the per-terrain-tile RTT texture in the terrain case.
      * Resized in place to match the target dimensions.
      */
-    private _layerOpacityFbo: Framebuffer | null;
+    layerOpacityFbo: Framebuffer | null;
     numSublayers: number;
     depthEpsilon: number;
     emptyProgramConfiguration: ProgramConfiguration;
@@ -163,10 +162,10 @@ export class Painter {
         this.drawFunctions = webglDrawFunctions;
         this.context = new Context(gl);
         this.transform = transform;
+        this.layerOpacityFbo = null;
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
         this._rttSharedFbo = null;
-        this._layerOpacityFbo = null;
         this.terrainFacilitator = {depthDirty: true, coordsDirty: false, matrix: mat4.identity(new Float64Array(16)), renderTime: 0};
 
         this.setup();
@@ -294,7 +293,7 @@ export class Painter {
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }
 
-    _renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean): void {
+    renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean): void {
         if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs?.length) {
             return;
         }
@@ -598,7 +597,7 @@ export class Painter {
                 const tileManager = tileManagers[layer.source];
                 const coords = coordsAscending[layer.source];
 
-                this._renderTileClippingMasks(layer, coords, false);
+                this.renderTileClippingMasks(layer, coords, false);
                 this.renderLayer(this, tileManager, layer, coords, renderOptions);
             }
         }
@@ -629,7 +628,7 @@ export class Painter {
             // separate clipping masks
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
-            this._renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
+            this.renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
             this.renderLayer(this, tileManager, layer, coords, renderOptions);
         }
 
@@ -798,64 +797,6 @@ export class Painter {
     }
 
     /**
-     * Begin a `{line,fill}-layer-opacity` subpass.
-     * 
-     * Saves the currently bound framebuffer / viewport, binds the shared scratch FBO at the target's resolution, clears it, and writes the layer's clipping masks.
-     * The returned {@link PendingLayerComposite} owns the captured composite state.
-     * The caller renders the layer into the scratch FBO and finishes by calling {@link PendingLayerComposite.compositeWithOpacity}.
-     */
-    redirectLayerToScratch(layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[], terrain: boolean): PendingLayerComposite {
-        const context = this.context;
-        const compositeTarget = context.bindFramebuffer.get();
-        const compositeViewport = context.viewport.get();
-        const [, , width, height] = compositeViewport;
-
-        const scratchFbo = this._bindLayerOpacityScratch(width, height);
-
-        context.viewport.set([0, 0, width, height]);
-        context.clear({color: Color.transparent, depth: 1, stencil: 0});
-
-        this.currentStencilSource = undefined;
-        this._renderTileClippingMasks(layer, coords, terrain);
-
-        return new PendingLayerComposite(this, layer, scratchFbo, compositeTarget, compositeViewport);
-    }
-
-    /**
-     * Binds the shared `{line,fill}-layer-opacity` scratch FBO at `width x height`.
-     * Lazy-creates/resizes its color texture and depth-stencil renderbuffer as needed.
-     */
-    private _bindLayerOpacityScratch(width: number, height: number): Framebuffer {
-        const gl = this.context.gl;
-
-        if (!this._layerOpacityFbo) {
-            const fbo = this.context.createFramebuffer(width, height, true, true);
-            const texture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-            fbo.colorAttachment.set(texture);
-            fbo.depthAttachment.set(this.context.createRenderbuffer(gl.DEPTH_STENCIL, width, height));
-            this._layerOpacityFbo = fbo;
-        } else if (this._layerOpacityFbo.width !== width || this._layerOpacityFbo.height !== height) {
-            const fbo = this._layerOpacityFbo;
-            gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-            this.context.bindRenderbuffer.set(fbo.depthAttachment.get());
-            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
-            this.context.bindRenderbuffer.set(null);
-            fbo.width = width;
-            fbo.height = height;
-        }
-
-        this.context.bindFramebuffer.set(this._layerOpacityFbo.framebuffer);
-        return this._layerOpacityFbo;
-    }
-
-    /**
      * Checks whether a pattern image is needed, and if it is, whether it is not loaded.
      *
      * @returns true if a needed image is missing and rendering needs to be skipped.
@@ -976,8 +917,8 @@ export class Painter {
             this._rttSharedFbo = null;
         }
 
-        this._layerOpacityFbo?.destroy();
-        this._layerOpacityFbo = null;
+        this.layerOpacityFbo?.destroy();
+        this.layerOpacityFbo = null;
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
         if (this.debugBuffer) this.debugBuffer.destroy();

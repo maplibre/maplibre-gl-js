@@ -8,6 +8,10 @@ import {
     lineGradientUniformValues,
     lineGradientSDFUniformValues
 } from '../program/line_program.ts';
+import {clamp, nextPowerOfTwo} from '../../util/util.ts';
+import {renderColorRamp} from '../../util/color_ramp.ts';
+import {EXTENT} from '../../data/extent.ts';
+import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
 
 import type {Painter, RenderOptions} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -17,9 +21,6 @@ import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {Context} from '../context.ts';
 import type {ProgramConfiguration} from '../../data/program_configuration.ts';
-import {clamp, nextPowerOfTwo} from '../../util/util.ts';
-import {renderColorRamp} from '../../util/color_ramp.ts';
-import {EXTENT} from '../../data/extent.ts';
 import type {RGBAImage} from '../../util/image.ts';
 
 type GradientTexture = {
@@ -152,9 +153,9 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
     // render the whole layer to a scratch FBO, then composite with `layerOpacity`.
     // Applies opacity uniformly to the layer instead of accumulating alpha across overlapping segments.
     if (layerOpacity < 1) {
-        const subpass = painter.redirectLayerToScratch(layer, coords, useTerrain);
+        const results = prepareDrawLayerOpacity(painter, layer, coords, useTerrain);
         drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain);
-        subpass.compositeWithOpacity(layerOpacity);
+        drawLayerOpacity(painter, layerOpacity, results, layer);
         return;
     }
 
