@@ -57,7 +57,7 @@ function bindLayerOpacity(painter: Painter, width: number, height: number): void
         painter.context.bindFramebuffer.set(painter.layerOpacityFbo.framebuffer);
         return;
     }
-    if (painter.layerOpacityFbo.width === width || painter.layerOpacityFbo.height === height) {
+    if (painter.layerOpacityFbo.width === width && painter.layerOpacityFbo.height === height) {
         painter.context.bindFramebuffer.set(painter.layerOpacityFbo.framebuffer);
         return;
     }
