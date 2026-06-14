@@ -1,0 +1,49 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 256,
+      "allowed": 0.001,
+      "description": "High-frequency raster content draped over pitched terrain. Without mipmaps and trilinear filtering on the terrain render-to-texture result, the distant terrain aliases into moire patterns instead of filtering smoothly."
+    }
+  },
+  "center": [11.52517, 47.34487],
+  "zoom": 13,
+  "bearing": 0,
+  "pitch": 70,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"],
+      "maxzoom": 12,
+      "tileSize": 256
+    },
+    "checkerboard": {
+      "type": "raster",
+      "tiles": ["local://tiles/raster-npot-mipmap/tile.png"],
+      "tileSize": 300
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "checkerboard",
+      "type": "raster",
+      "source": "checkerboard",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  }
+}
