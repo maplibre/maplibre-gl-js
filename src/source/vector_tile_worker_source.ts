@@ -112,7 +112,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             try {
                 return await this._parseWorkerTile(workerTile, params, parseState);
             } finally {
-                this.tileState.clearParsing(uid);
+                this.tileState.removeParsing(uid);
             }
         } catch (err) {
             this.tileState.finishLoading(uid);
@@ -217,8 +217,12 @@ export class VectorTileWorkerSource implements WorkerSource {
 
         if (workerTile.status === 'parsing') {
             // if we are cancelling the original parse, make sure to pass the rawTileData from the original parse
-            const parseState = this.tileState.consumeParsing(uid);
-            return await this._parseWorkerTile(workerTile, params, parseState);
+            const parseState = this.tileState.getParsing(uid);
+            try {
+                return await this._parseWorkerTile(workerTile, params, parseState);
+            } finally {
+                this.tileState.removeParsing(uid);
+            }
         }
 
         // If there was no vector tile data on the initial load, don't try and reparse the tile.
