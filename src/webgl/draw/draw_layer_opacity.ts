@@ -9,7 +9,7 @@ import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
 import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
-export type PrepareDraLayerOpacityResult = {
+export type PrepareDrawLayerOpacityResult = {
     compositeTarget: WebGLFramebuffer;
     compositeViewport: [number, number, number, number];
 };
@@ -19,7 +19,7 @@ export type PrepareDraLayerOpacityResult = {
  * render the whole layer to a scratch FBO, then composite with `layerOpacity`.
  * Applies opacity uniformly to the layer instead of accumulating alpha across overlapping segments.
  */
-export function prepareDrawLayerOpacity(painter: Painter, layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[], terrain: boolean): PrepareDraLayerOpacityResult {
+export function prepareDrawLayerOpacity(painter: Painter, layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[], terrain: boolean): PrepareDrawLayerOpacityResult {
     const context = painter.context;
     const compositeTarget = context.bindFramebuffer.get();
     const compositeViewport = context.viewport.get();
@@ -71,7 +71,7 @@ function bindLayerOpacity(painter: Painter, width: number, height: number): void
     painter.context.bindFramebuffer.set(fbo.framebuffer);
 }
 
-export function drawLayerOpacity(painter: Painter, opacity: number, prepareDrawLayerOpacityResult: PrepareDraLayerOpacityResult, layer: LineStyleLayer | FillStyleLayer): void {
+export function drawLayerOpacity(painter: Painter, opacity: number, prepareDrawLayerOpacityResult: PrepareDrawLayerOpacityResult, layer: LineStyleLayer | FillStyleLayer): void {
     const context = painter.context;
     const gl = context.gl;
 
