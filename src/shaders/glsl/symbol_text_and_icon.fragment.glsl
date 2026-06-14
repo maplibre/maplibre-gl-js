@@ -14,16 +14,16 @@ in vec4 v_data0;
 in vec3 v_data1;
 flat in float v_is_sdf;
 
-#pragma mapbox: define highp vec4 fill_color
-#pragma mapbox: define highp vec4 halo_color
-#pragma mapbox: define lowp float halo_width
-#pragma mapbox: define lowp float halo_blur
+#pragma maplibre: define highp vec4 fill_color
+#pragma maplibre: define highp vec4 halo_color
+#pragma maplibre: define lowp float halo_width
+#pragma maplibre: define lowp float halo_blur
 
 void main() {
-    #pragma mapbox: initialize highp vec4 fill_color
-    #pragma mapbox: initialize highp vec4 halo_color
-    #pragma mapbox: initialize lowp float halo_width
-    #pragma mapbox: initialize lowp float halo_blur
+    #pragma maplibre: initialize highp vec4 fill_color
+    #pragma maplibre: initialize highp vec4 halo_color
+    #pragma maplibre: initialize lowp float halo_width
+    #pragma maplibre: initialize lowp float halo_blur
 
     float total_opacity = v_data1[2];
 

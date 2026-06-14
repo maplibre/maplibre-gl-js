@@ -22,14 +22,15 @@ uniform bool u_is_along_line;
 uniform bool u_is_variable_anchor;
 uniform vec2 u_translation;
 uniform float u_pitched_scale;
+uniform bool u_is_offset;
 
 out vec2 v_tex;
 flat out float v_total_opacity;
 
-#pragma mapbox: define lowp float opacity
+#pragma maplibre: define lowp float opacity
 
 void main() {
-    #pragma mapbox: initialize lowp float opacity
+    #pragma maplibre: initialize lowp float opacity
 
     vec2 a_pos = a_pos_offset.xy;
     vec2 a_offset = a_pos_offset.zw;
@@ -76,7 +77,9 @@ void main() {
             0.0, // Prevents oversized near-field symbols in pitched/overzoomed tiles
             4.0);
 
-    size *= perspective_ratio;
+    if (!u_is_offset) {
+        size *= perspective_ratio;
+    }
 
     float fontScale = u_is_text ? size / 24.0 : size;
 

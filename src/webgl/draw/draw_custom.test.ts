@@ -80,6 +80,8 @@ describe('drawCustom', () => {
         expect(result.args.modelViewProjectionMatrix).toEqual(mockPainter.transform.modelViewProjectionMatrix);
         expect(result.args.projectionMatrix).toEqual(mockPainter.transform.projectionMatrix);
         expectToBeCloseToArray(result.args.defaultProjectionData.tileMercatorCoords, [0, 0, 1, 1]);
+        expect(result.args.defaultProjectionData.mainMatrix).toBeInstanceOf(Float64Array);
+        expect(result.args.defaultProjectionData.fallbackMatrix).toBeInstanceOf(Float64Array);
         expect(result.args.defaultProjectionData.mainMatrix[0]).toEqual(1536);
         expect(result.args.defaultProjectionData.mainMatrix[5]).toEqual(-1512.6647086267515);
         expect(result.args.defaultProjectionData.mainMatrix[15]).toEqual(794.4539334827342);
@@ -96,6 +98,8 @@ describe('drawCustom', () => {
             }
         });
         expectToBeCloseToArray(tileProjectionData.tileMercatorCoords, [0.5, 0, 0.00006103515625, 0.00006103515625]);
+        expect(tileProjectionData.mainMatrix).toBeInstanceOf(Float32Array);
+        expect(tileProjectionData.fallbackMatrix).toBeInstanceOf(Float32Array);
         expect(tileProjectionData.mainMatrix[0]).toBeCloseTo(0.09375, 6);
         expect(tileProjectionData.mainMatrix[5]).toBeCloseTo(-0.09232572466135025, 6);
         expect(tileProjectionData.mainMatrix[15]).toBeCloseTo(794.4539184570312, 6);

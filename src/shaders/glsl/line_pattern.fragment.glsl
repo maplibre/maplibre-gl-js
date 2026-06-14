@@ -7,7 +7,6 @@ uniform float u_fade;
 uniform mediump vec3 u_scale;
 
 uniform sampler2D u_image;
-uniform bool u_opacity_override;
 
 in vec2 v_normal;
 flat in vec2 v_width2;
@@ -18,21 +17,21 @@ flat in float v_width;
 in float v_depth;
 #endif
 
-#pragma mapbox: define lowp vec4 pattern_from
-#pragma mapbox: define lowp vec4 pattern_to
-#pragma mapbox: define lowp float pixel_ratio_from
-#pragma mapbox: define lowp float pixel_ratio_to
-#pragma mapbox: define lowp float blur
-#pragma mapbox: define lowp float opacity
+#pragma maplibre: define lowp vec4 pattern_from
+#pragma maplibre: define lowp vec4 pattern_to
+#pragma maplibre: define lowp float pixel_ratio_from
+#pragma maplibre: define lowp float pixel_ratio_to
+#pragma maplibre: define lowp float blur
+#pragma maplibre: define lowp float opacity
 
 void main() {
-    #pragma mapbox: initialize mediump vec4 pattern_from
-    #pragma mapbox: initialize mediump vec4 pattern_to
-    #pragma mapbox: initialize lowp float pixel_ratio_from
-    #pragma mapbox: initialize lowp float pixel_ratio_to
+    #pragma maplibre: initialize mediump vec4 pattern_from
+    #pragma maplibre: initialize mediump vec4 pattern_to
+    #pragma maplibre: initialize lowp float pixel_ratio_from
+    #pragma maplibre: initialize lowp float pixel_ratio_to
 
-    #pragma mapbox: initialize lowp float blur
-    #pragma mapbox: initialize lowp float opacity
+    #pragma maplibre: initialize lowp float blur
+    #pragma maplibre: initialize lowp float opacity
 
     vec2 pattern_tl_a = pattern_from.xy;
     vec2 pattern_br_a = pattern_from.zw;
@@ -73,8 +72,7 @@ void main() {
 
     vec4 color = mix(texture(u_image, pos_a), texture(u_image, pos_b), u_fade);
 
-    float finalOpacity = u_opacity_override ? 1.0 : opacity;
-    fragColor = color * alpha * finalOpacity;
+    fragColor = color * alpha * opacity;
 
     #ifdef GLOBE
     if (v_depth > 1.0) {
