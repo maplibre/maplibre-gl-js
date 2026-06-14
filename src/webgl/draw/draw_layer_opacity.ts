@@ -58,6 +58,7 @@ function bindLayerOpacity(painter: Painter, width: number, height: number): void
         return;
     }
     if (painter.layerOpacityFbo.width === width || painter.layerOpacityFbo.height === height) {
+        painter.context.bindFramebuffer.set(painter.layerOpacityFbo.framebuffer);
         return;
     }
     const fbo = painter.layerOpacityFbo;
