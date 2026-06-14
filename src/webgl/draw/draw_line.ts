@@ -8,6 +8,10 @@ import {
     lineGradientUniformValues,
     lineGradientSDFUniformValues
 } from '../program/line_program.ts';
+import {clamp, nextPowerOfTwo} from '../../util/util.ts';
+import {renderColorRamp} from '../../util/color_ramp.ts';
+import {EXTENT} from '../../data/extent.ts';
+import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
 
 import type {Painter, RenderOptions} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
@@ -17,9 +21,6 @@ import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {Context} from '../context.ts';
 import type {ProgramConfiguration} from '../../data/program_configuration.ts';
-import {clamp, nextPowerOfTwo} from '../../util/util.ts';
-import {renderColorRamp} from '../../util/color_ramp.ts';
-import {EXTENT} from '../../data/extent.ts';
 import type {RGBAImage} from '../../util/image.ts';
 
 type GradientTexture = {
@@ -143,9 +144,17 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
 
     const opacity = layer.paint.get('line-opacity');
     const width = layer.paint.get('line-width');
-    if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0) return;
+    const layerOpacity = layer.paint.get('line-layer-opacity');
+    if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0 || layerOpacity === 0) return;
 
     const useTerrain = !!painter.style.map.terrain;
+
+    if (layerOpacity < 1) {
+        const results = prepareDrawLayerOpacity(painter, layer, coords, useTerrain);
+        drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain);
+        drawLayerOpacity(painter, layerOpacity, results, layer);
+        return;
+    }
 
     drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain);
 }

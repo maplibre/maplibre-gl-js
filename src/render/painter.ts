@@ -84,7 +84,6 @@ export type RTTObject = {
  * @internal
  * Initialize a new painter object.
  */
-
 export class Painter {
     drawFunctions: DrawFunctions;
     context: Context;
@@ -107,6 +106,13 @@ export class Painter {
         depthRenderbuffer: WebGLRenderbuffer;
         size: number;
     } | null;
+    /**
+     * Shared scratch FBO (color + depth-stencil) used by `{line,fill}-layer-opacity`.
+     * The layer is rendered into this FBO, then composited into whatever framebuffer was previously bound
+     * The canvas in the flat case, the per-terrain-tile RTT texture in the terrain case.
+     * Resized in place to match the target dimensions.
+     */
+    layerOpacityFbo: Framebuffer | null;
     numSublayers: number;
     depthEpsilon: number;
     emptyProgramConfiguration: ProgramConfiguration;
@@ -156,6 +162,7 @@ export class Painter {
         this.drawFunctions = webglDrawFunctions;
         this.context = new Context(gl);
         this.transform = transform;
+        this.layerOpacityFbo = null;
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
         this._rttSharedFbo = null;
@@ -286,7 +293,7 @@ export class Painter {
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }
 
-    _renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean): void {
+    renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], renderToTexture: boolean): void {
         if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs?.length) {
             return;
         }
@@ -590,7 +597,7 @@ export class Painter {
                 const tileManager = tileManagers[layer.source];
                 const coords = coordsAscending[layer.source];
 
-                this._renderTileClippingMasks(layer, coords, false);
+                this.renderTileClippingMasks(layer, coords, false);
                 this.renderLayer(this, tileManager, layer, coords, renderOptions);
             }
         }
@@ -621,7 +628,7 @@ export class Painter {
             // separate clipping masks
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
-            this._renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
+            this.renderTileClippingMasks(layer, coordsAscending[layer.source], !!this.renderToTexture);
             this.renderLayer(this, tileManager, layer, coords, renderOptions);
         }
 
@@ -862,7 +869,7 @@ export class Painter {
     }
 
     /*
-     * Set GL state that is shared by all layers.
+     * Set GL state shared by all layers.
      */
     setBaseState(): void {
         const gl = this.context.gl;
@@ -909,6 +916,9 @@ export class Painter {
             gl.deleteFramebuffer(this._rttSharedFbo.fbo.framebuffer);
             this._rttSharedFbo = null;
         }
+
+        this.layerOpacityFbo?.destroy();
+        this.layerOpacityFbo = null;
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
         if (this.debugBuffer) this.debugBuffer.destroy();
