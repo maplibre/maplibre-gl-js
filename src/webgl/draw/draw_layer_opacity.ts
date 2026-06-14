@@ -36,9 +36,8 @@ export function prepareDrawLayerOpacity(painter: Painter, layer: LineStyleLayer 
 
 function bindLayerOpacity(painter: Painter, width: number, height: number): void {
     const gl = painter.context.gl;
-    const opacityFbo = painter.layerOpacityFbo;
 
-    if (!opacityFbo) {
+    if (!painter.layerOpacityFbo) {
         const fbo = painter.context.createFramebuffer(width, height, true, true);
         const texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -50,19 +49,21 @@ function bindLayerOpacity(painter: Painter, width: number, height: number): void
         fbo.colorAttachment.set(texture);
         fbo.depthAttachment.set(painter.context.createRenderbuffer(gl.DEPTH_STENCIL, width, height));
         painter.layerOpacityFbo = fbo;
-    } else if (opacityFbo.width !== width || opacityFbo.height !== height) {
-        const fbo = opacityFbo;
-        gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-        painter.context.bindRenderbuffer.set(fbo.depthAttachment.get());
-        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
-        painter.context.bindRenderbuffer.set(null);
-        fbo.width = width;
-        fbo.height = height;
+        painter.context.bindFramebuffer.set(painter.layerOpacityFbo.framebuffer);
+        return;
     }
-
-    painter.context.bindFramebuffer.set(opacityFbo.framebuffer);
-    painter.layerOpacityFbo = opacityFbo;
+    if (painter.layerOpacityFbo.width === width || painter.layerOpacityFbo.height === height) {
+        return;
+    }
+    const fbo = painter.layerOpacityFbo;
+    gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    painter.context.bindRenderbuffer.set(fbo.depthAttachment.get());
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
+    painter.context.bindRenderbuffer.set(null);
+    fbo.width = width;
+    fbo.height = height;
+    painter.context.bindFramebuffer.set(fbo.framebuffer);
 }
 
 export function drawLayerOpacity(painter: Painter, opacity: number, prepareDrawLayerOpacityResult: PrepareDraLayerOpacityResult, layer: LineStyleLayer | FillStyleLayer): void {
