@@ -63,10 +63,12 @@ describe('render to texture', () => {
     } as any as SymbolStyleLayer;
 
     let layersDrawn = 0;
-    const createMockRTTObject = (size: number) => ({
-        texture: {texture: gl.createTexture(), bind: vi.fn()},
-        size
-    });
+    function createMockRTTObject(size: number) {
+        return {
+            texture: {texture: gl.createTexture(), bind: vi.fn()},
+            size
+        };
+    }
     const painter = {
         layersDrawn: 0,
         context: new Context(gl),
