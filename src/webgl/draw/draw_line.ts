@@ -149,9 +149,6 @@ export function drawLine(painter: Painter, tileManager: TileManager, layer: Line
 
     const useTerrain = !!painter.style.map.terrain;
 
-    // Partial line-layer-opacity
-    // render the whole layer to a scratch FBO, then composite with `layerOpacity`.
-    // Applies opacity uniformly to the layer instead of accumulating alpha across overlapping segments.
     if (layerOpacity < 1) {
         const results = prepareDrawLayerOpacity(painter, layer, coords, useTerrain);
         drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTerrain);
