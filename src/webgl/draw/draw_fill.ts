@@ -24,9 +24,6 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
     const layerOpacity = layer.paint.get('fill-layer-opacity');
     if (opacity.constantOr(1) === 0 || layerOpacity === 0) return;
 
-    // Partial fill-layer-opacity
-    // Render the whole layer to a scratch FBO, then composite with `layerOpacity`.
-    // Applies opacity uniformly to the layer instead of accumulating alpha across overlapping polygons.
     if (layerOpacity < 1) {
         if (painter.renderPass !== 'translucent') return;
         const useTerrain = !!painter.style.map.terrain;
