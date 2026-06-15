@@ -1,12 +1,19 @@
 ## main
 ### ✨ Features and improvements
-- Add `fill-layer-opacity` and `line-layer-opacity` paint properties, which apply opacity to the entire layer output uniformly.
-- Build main and worker in same build context to extract shared chunk ([#7745](https://github.com/maplibre/maplibre-gl-js/pull/7745)) (by [@dangkyokhoang](https://github.com/dangkyokhoang))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix conflicting reloads of tiles causing an error in `queryRenderedFeatures` ([#7765](https://github.com/maplibre/maplibre-gl-js/pull/7765)) (by [@ckolin](https://github.com/ckolin))
 - _...Add new stuff here..._
+
+- feat: implement `{line,fill}-layer-opacity` ([#7570](https://github.com/maplibre/maplibre-gl-js/pull/7570)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- chore: fix missing console logging of render test failures ([#7780](https://github.com/maplibre/maplibre-gl-js/pull/7780)) (by [@HarelM](https://github.com/HarelM))
+## 6.0.0-15
+### ✨ Features and improvements
+- Add `fill-layer-opacity` and `line-layer-opacity` paint properties, which apply opacity to the entire layer output uniformly.
+- Build main and worker in same build context to extract shared chunk ([#7745](https://github.com/maplibre/maplibre-gl-js/pull/7745)) (by [@dangkyokhoang](https://github.com/dangkyokhoang))
+
+### 🐞 Bug fixes
+- Fix conflicting reloads of tiles causing an error in `queryRenderedFeatures` ([#7765](https://github.com/maplibre/maplibre-gl-js/pull/7765)) (by [@ckolin](https://github.com/ckolin))
 
 ## 6.0.0-14
 
