@@ -1,5 +1,5 @@
-import {extend} from '../util/util.ts';
-import {Event, Evented} from '../util/evented.ts';
+import {extend, type Subscription} from '../util/util.ts';
+import {Event, Evented, type Listener} from '../util/evented.ts';
 import {DOM} from '../util/dom.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
@@ -175,6 +175,36 @@ const focusQuerySelector = [
  *
  * **Event** `close` of type {@link Event} will be fired when the popup is closed manually or programmatically.
  */
+/**
+ * The event class for popup events (`open` and `close`).
+ *
+ * @group Event Related
+ */
+export class PopupEvent extends Event {
+    type: 'open' | 'close';
+    /**
+     * The `Popup` object that fired the event.
+     */
+    target: Popup;
+}
+
+/**
+ * `PopupEventType` - a mapping between the popup event name and the event value.
+ * These events are used with the {@link Popup.on} method.
+ *
+ * @group Event Related
+ */
+export type PopupEventType = {
+    /**
+     * Fired when the popup is opened manually or programmatically.
+     */
+    open: PopupEvent;
+    /**
+     * Fired when the popup is closed manually or programmatically.
+     */
+    close: PopupEvent;
+};
+
 export class Popup extends Evented {
     _map: Map;
     options: PopupOptions;
@@ -186,6 +216,43 @@ export class Popup extends Evented {
     _trackPointer: boolean;
     _pos: Point;
     _flatPos: Point;
+
+    /**
+     * Adds a listener to a specified event type.
+     *
+     * @param type - The event type to listen for.
+     * @param listener - The function to be called when the event is fired.
+     */
+    on<T extends keyof PopupEventType>(type: T, listener: (e: PopupEventType[T]) => void): Subscription;
+    on(type: string, listener: Listener): Subscription;
+    on(type: string, listener: Listener): Subscription {
+        return super.on(type, listener);
+    }
+
+    /**
+     * Adds a listener that will be called only once to a specified event type.
+     *
+     * @param type - The event type to listen for.
+     * @param listener - The function to be called when the event is fired the first time.
+     */
+    once<T extends keyof PopupEventType>(type: T, listener: (e: PopupEventType[T]) => void): this;
+    once<T extends keyof PopupEventType>(type: T): Promise<PopupEventType[T]>;
+    once(type: string, listener?: Listener): this | Promise<any>;
+    once(type: string, listener?: Listener): this | Promise<any> {
+        return super.once(type, listener);
+    }
+
+    /**
+     * Removes a previously registered event listener.
+     *
+     * @param type - The event type to remove listeners for.
+     * @param listener - The listener function to remove.
+     */
+    off<T extends keyof PopupEventType>(type: T, listener: (e: PopupEventType[T]) => void): this;
+    off(type: string, listener: Listener): this;
+    off(type: string, listener: Listener): this {
+        return super.off(type, listener);
+    }
 
     /**
      * @param options - the options
@@ -240,7 +307,7 @@ export class Popup extends Evented {
             this._map.on('move', this._update);
         }
 
-        this.fire(new Event('open'));
+        this.fire(new PopupEvent('open'));
 
         return this;
     }
@@ -297,7 +364,7 @@ export class Popup extends Evented {
             this._map.off('drag', this._update);
             this._map._canvasContainer.classList.remove('maplibregl-track-pointer');
             delete this._map;
-            this.fire(new Event('close'));
+            this.fire(new PopupEvent('close'));
         }
 
         return this;

@@ -1,5 +1,6 @@
 import {DOM} from '../../util/dom.ts';
-import {Event} from '../../util/evented.ts';
+import {type Event} from '../../util/evented.ts';
+import {MapLibreEvent} from '../events.ts';
 import {type Handler} from '../handler_manager.ts';
 
 import type {Map} from '../map.ts';
@@ -100,7 +101,7 @@ export class CooperativeGesturesHandler implements Handler {
         if (!this._enabled) return;
 
         // notify subscribers that a cooperative gesture was prevented
-        this._map.fire(new Event('cooperativegestureprevented', {gestureType, originalEvent}));
+        this._map.fire(new MapLibreEvent('cooperativegestureprevented', {gestureType, originalEvent}));
 
         // Alert user how to scroll/pan
         this._container.classList.add('maplibregl-show');

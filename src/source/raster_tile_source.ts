@@ -3,7 +3,8 @@ import {ensureError, extend, pick} from '../util/util.ts';
 import {ImageRequest} from '../util/image_request.ts';
 
 import {ResourceType} from '../util/request_manager.ts';
-import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {ErrorEvent, Evented} from '../util/evented.ts';
+import {MapDataEvent} from '../ui/events.ts';
 import {loadTileJson} from './load_tilejson.ts';
 import {TileBounds} from '../tile/tile_bounds.ts';
 import {Texture} from '../webgl/texture.ts';
@@ -90,7 +91,7 @@ export class RasterTileSource extends Evented implements Source {
 
     async load(sourceDataChanged: boolean = false): Promise<void> {
         this._loaded = false;
-        this.fire(new Event('dataloading', {dataType: 'source'}));
+        this.fire(new MapDataEvent('dataloading', {dataType: 'source'}));
         this._tileJSONRequest = new AbortController();
         try {
             const tileJSON = await loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest, this.map._ownerWindow);
@@ -103,8 +104,8 @@ export class RasterTileSource extends Evented implements Source {
                 // `content` is included here to prevent a race condition where `Style._updateSources` is called
                 // before the TileJSON arrives. this makes sure the tiles needed are loaded once TileJSON arrives
                 // ref: https://github.com/mapbox/mapbox-gl-js/pull/4347#discussion_r104418088
-                this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
-                this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content', sourceDataChanged}));
+                this.fire(new MapDataEvent('data', {dataType: 'source', sourceDataType: 'metadata'}));
+                this.fire(new MapDataEvent('data', {dataType: 'source', sourceDataType: 'content', sourceDataChanged}));
             }
         } catch (err) {
             this._tileJSONRequest = null;

@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+- ⚠️ All map events are now real classes that are instantiated when they are fired, so `instanceof` checks work for every event (e.g. `MapDataEvent`, `MapTerrainEvent`, `MapProjectionEvent`). Renamed `MapLibreZoomEvent` to `MapBoxZoomEvent`, added the `rollstart`/`roll`/`rollend` and `style.load` events to `MapEventType`, and added typed events (with `instanceof` support and typed `on`/`once`/`off`) for `Marker`, `Popup`, `GeolocateControl` and `FullscreenControl`. (by [@HarelM](https://github.com/HarelM))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._

@@ -1,8 +1,8 @@
 import {DOM} from '../../util/dom.ts';
 
-import {warnOnce} from '../../util/util.ts';
+import {warnOnce, type Subscription} from '../../util/util.ts';
 
-import {Event, Evented} from '../../util/evented.ts';
+import {Event, Evented, type Listener} from '../../util/evented.ts';
 import type {Map} from '../map.ts';
 import type {IControl} from './control.ts';
 
@@ -43,6 +43,36 @@ export type FullscreenControlOptions = {
  *
  * **Event** `fullscreenend` of type {@link Event} will be fired when fullscreen mode has ended.
  */
+/**
+ * The event class for fullscreen control events (`fullscreenstart` and `fullscreenend`).
+ *
+ * @group Event Related
+ */
+export class FullscreenEvent extends Event {
+    type: 'fullscreenstart' | 'fullscreenend';
+    /**
+     * The `FullscreenControl` object that fired the event.
+     */
+    target: FullscreenControl;
+}
+
+/**
+ * `FullscreenControlEventType` - a mapping between the fullscreen control event name and the event value.
+ * These events are used with the {@link FullscreenControl.on} method.
+ *
+ * @group Event Related
+ */
+export type FullscreenControlEventType = {
+    /**
+     * Fired when fullscreen mode has started.
+     */
+    fullscreenstart: FullscreenEvent;
+    /**
+     * Fired when fullscreen mode has ended.
+     */
+    fullscreenend: FullscreenEvent;
+};
+
 export class FullscreenControl extends Evented implements IControl {
     _map: Map;
     _controlContainer: HTMLElement;
@@ -52,6 +82,43 @@ export class FullscreenControl extends Evented implements IControl {
     _container: HTMLElement;
     _prevCooperativeGesturesEnabled: boolean;
     _pseudo: boolean;
+
+    /**
+     * Adds a listener to a specified event type.
+     *
+     * @param type - The event type to listen for.
+     * @param listener - The function to be called when the event is fired.
+     */
+    on<T extends keyof FullscreenControlEventType>(type: T, listener: (e: FullscreenControlEventType[T]) => void): Subscription;
+    on(type: string, listener: Listener): Subscription;
+    on(type: string, listener: Listener): Subscription {
+        return super.on(type, listener);
+    }
+
+    /**
+     * Adds a listener that will be called only once to a specified event type.
+     *
+     * @param type - The event type to listen for.
+     * @param listener - The function to be called when the event is fired the first time.
+     */
+    once<T extends keyof FullscreenControlEventType>(type: T, listener: (e: FullscreenControlEventType[T]) => void): this;
+    once<T extends keyof FullscreenControlEventType>(type: T): Promise<FullscreenControlEventType[T]>;
+    once(type: string, listener?: Listener): this | Promise<any>;
+    once(type: string, listener?: Listener): this | Promise<any> {
+        return super.once(type, listener);
+    }
+
+    /**
+     * Removes a previously registered event listener.
+     *
+     * @param type - The event type to remove listeners for.
+     * @param listener - The listener function to remove.
+     */
+    off<T extends keyof FullscreenControlEventType>(type: T, listener: (e: FullscreenControlEventType[T]) => void): this;
+    off(type: string, listener: Listener): this;
+    off(type: string, listener: Listener): this {
+        return super.off(type, listener);
+    }
 
     /**
      * @param options - the control's options
@@ -141,11 +208,11 @@ export class FullscreenControl extends Evented implements IControl {
         this._updateTitle();
 
         if (this._fullscreen) {
-            this.fire(new Event('fullscreenstart'));
+            this.fire(new FullscreenEvent('fullscreenstart'));
             this._prevCooperativeGesturesEnabled = this._map.cooperativeGestures.isEnabled();
             this._map.cooperativeGestures.disable();
         } else {
-            this.fire(new Event('fullscreenend'));
+            this.fire(new FullscreenEvent('fullscreenend'));
             if (this._prevCooperativeGesturesEnabled) {
                 this._map.cooperativeGestures.enable();
             }

@@ -1,5 +1,6 @@
 import {CanonicalTileID} from '../tile/tile_id.ts';
-import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {ErrorEvent, Evented} from '../util/evented.ts';
+import {MapDataEvent} from '../ui/events.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {Texture} from '../webgl/texture.ts';
@@ -145,7 +146,7 @@ export class ImageSource extends Evented implements Source {
 
     async load(newCoordinates?: Coordinates): Promise<void> {
         this._loaded = false;
-        this.fire(new Event('dataloading', {dataType: 'source'}));
+        this.fire(new MapDataEvent('dataloading', {dataType: 'source'}));
 
         this.url = this.options.url;
 
@@ -199,7 +200,7 @@ export class ImageSource extends Evented implements Source {
     _finishLoading(): void {
         if (this.map) {
             this.setCoordinates(this.coordinates);
-            this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
+            this.fire(new MapDataEvent('data', {dataType: 'source', sourceDataType: 'metadata'}));
         }
     }
 
@@ -251,7 +252,7 @@ export class ImageSource extends Evented implements Source {
         this.tileCoords = cornerCoords.map((coord) => this.tileID.getTilePoint(coord)._round());
         this.flippedWindingOrder = hasWrongWindingOrder(this.tileCoords);
 
-        this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
+        this.fire(new MapDataEvent('data', {dataType: 'source', sourceDataType: 'content'}));
         return this;
     }
 
@@ -279,7 +280,7 @@ export class ImageSource extends Evented implements Source {
         }
 
         if (newTilesLoaded) {
-            this.fire(new Event('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
+            this.fire(new MapDataEvent('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
         }
     }
 

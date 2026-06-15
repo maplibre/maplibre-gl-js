@@ -5,7 +5,8 @@ import {now} from '../util/time_control.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
-import {Event, Evented} from '../util/evented.ts';
+import {Evented} from '../util/evented.ts';
+import {MapLibreEvent} from './events.ts';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 
 import type {Terrain} from '../render/terrain.ts';
@@ -582,9 +583,9 @@ export abstract class Camera extends Evented {
     setVerticalFieldOfView(fov: number, eventData?: any): this {
         if (fov != this.transform.fov) {
             this.transform.setFov(fov);
-            this.fire(new Event('movestart', eventData))
-                .fire(new Event('move', eventData))
-                .fire(new Event('moveend', eventData));
+            this.fire(new MapLibreEvent('movestart', eventData))
+                .fire(new MapLibreEvent('move', eventData))
+                .fire(new MapLibreEvent('moveend', eventData));
         }
         return this;
     }
@@ -989,34 +990,34 @@ export abstract class Camera extends Evented {
         }
         this._applyUpdatedTransform(tr);
 
-        this.fire(new Event('movestart', eventData))
-            .fire(new Event('move', eventData));
+        this.fire(new MapLibreEvent('movestart', eventData))
+            .fire(new MapLibreEvent('move', eventData));
 
         if (zoomChanged) {
-            this.fire(new Event('zoomstart', eventData))
-                .fire(new Event('zoom', eventData))
-                .fire(new Event('zoomend', eventData));
+            this.fire(new MapLibreEvent('zoomstart', eventData))
+                .fire(new MapLibreEvent('zoom', eventData))
+                .fire(new MapLibreEvent('zoomend', eventData));
         }
 
         if (bearingChanged) {
-            this.fire(new Event('rotatestart', eventData))
-                .fire(new Event('rotate', eventData))
-                .fire(new Event('rotateend', eventData));
+            this.fire(new MapLibreEvent('rotatestart', eventData))
+                .fire(new MapLibreEvent('rotate', eventData))
+                .fire(new MapLibreEvent('rotateend', eventData));
         }
 
         if (pitchChanged) {
-            this.fire(new Event('pitchstart', eventData))
-                .fire(new Event('pitch', eventData))
-                .fire(new Event('pitchend', eventData));
+            this.fire(new MapLibreEvent('pitchstart', eventData))
+                .fire(new MapLibreEvent('pitch', eventData))
+                .fire(new MapLibreEvent('pitchend', eventData));
         }
 
         if (rollChanged) {
-            this.fire(new Event('rollstart', eventData))
-                .fire(new Event('roll', eventData))
-                .fire(new Event('rollend', eventData));
+            this.fire(new MapLibreEvent('rollstart', eventData))
+                .fire(new MapLibreEvent('roll', eventData))
+                .fire(new MapLibreEvent('rollend', eventData));
         }
 
-        return this.fire(new Event('moveend', eventData));
+        return this.fire(new MapLibreEvent('moveend', eventData));
     }
 
     /**
@@ -1201,19 +1202,19 @@ export abstract class Camera extends Evented {
         currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {}): void {
         this._moving = true;
         if (!noMoveStart && !currently.moving) {
-            this.fire(new Event('movestart', eventData));
+            this.fire(new MapLibreEvent('movestart', eventData));
         }
         if (this._zooming && !currently.zooming) {
-            this.fire(new Event('zoomstart', eventData));
+            this.fire(new MapLibreEvent('zoomstart', eventData));
         }
         if (this._rotating && !currently.rotating) {
-            this.fire(new Event('rotatestart', eventData));
+            this.fire(new MapLibreEvent('rotatestart', eventData));
         }
         if (this._pitching && !currently.pitching) {
-            this.fire(new Event('pitchstart', eventData));
+            this.fire(new MapLibreEvent('pitchstart', eventData));
         }
         if (this._rolling && !currently.rolling) {
-            this.fire(new Event('rollstart', eventData));
+            this.fire(new MapLibreEvent('rollstart', eventData));
         }
     }
 
@@ -1333,18 +1334,18 @@ export abstract class Camera extends Evented {
     }
 
     _fireMoveEvents(eventData?: Record<string, unknown>): void {
-        this.fire(new Event('move', eventData));
+        this.fire(new MapLibreEvent('move', eventData));
         if (this._zooming) {
-            this.fire(new Event('zoom', eventData));
+            this.fire(new MapLibreEvent('zoom', eventData));
         }
         if (this._rotating) {
-            this.fire(new Event('rotate', eventData));
+            this.fire(new MapLibreEvent('rotate', eventData));
         }
         if (this._pitching) {
-            this.fire(new Event('pitch', eventData));
+            this.fire(new MapLibreEvent('pitch', eventData));
         }
         if (this._rolling) {
-            this.fire(new Event('roll', eventData));
+            this.fire(new MapLibreEvent('roll', eventData));
         }
     }
 
@@ -1368,18 +1369,18 @@ export abstract class Camera extends Evented {
         this._padding = false;
 
         if (wasZooming) {
-            this.fire(new Event('zoomend', eventData));
+            this.fire(new MapLibreEvent('zoomend', eventData));
         }
         if (wasRotating) {
-            this.fire(new Event('rotateend', eventData));
+            this.fire(new MapLibreEvent('rotateend', eventData));
         }
         if (wasPitching) {
-            this.fire(new Event('pitchend', eventData));
+            this.fire(new MapLibreEvent('pitchend', eventData));
         }
         if (wasRolling) {
-            this.fire(new Event('rollend', eventData));
+            this.fire(new MapLibreEvent('rollend', eventData));
         }
-        this.fire(new Event('moveend', eventData));
+        this.fire(new MapLibreEvent('moveend', eventData));
     }
 
     /**

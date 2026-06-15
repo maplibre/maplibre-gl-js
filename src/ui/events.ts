@@ -233,6 +233,11 @@ export type MapEventType = {
      */
     styledata: MapStyleDataEvent;
     /**
+     * Fired once the map's style has fully loaded or changed, after all
+     * necessary resources referenced by the style have been requested.
+     */
+    'style.load': MapLibreEvent;
+    /**
      * Fired when an icon or pattern needed by the style is missing. The missing image can
      * be added with {@link Map.addImage} within this event listener callback to prevent the image from
      * being skipped. This event can be used to dynamically generate icons and patterns.
@@ -251,15 +256,15 @@ export type MapEventType = {
      * Fired when the user cancels a "box zoom" interaction, or when the bounding box does not meet the minimum size threshold.
      * See {@link BoxZoomHandler}.
      */
-    boxzoomcancel: MapLibreZoomEvent;
+    boxzoomcancel: MapBoxZoomEvent;
     /**
      * Fired when a "box zoom" interaction starts. See {@link BoxZoomHandler}.
      */
-    boxzoomstart: MapLibreZoomEvent;
+    boxzoomstart: MapBoxZoomEvent;
     /**
      * Fired when a "box zoom" interaction ends.  See {@link BoxZoomHandler}.
      */
-    boxzoomend: MapLibreZoomEvent;
+    boxzoomend: MapBoxZoomEvent;
     /**
      * Fired when a [`touchcancel`](https://developer.mozilla.org/en-US/docs/Web/Events/touchcancel) event occurs within the map.
      */
@@ -409,6 +414,22 @@ export type MapEventType = {
      */
     pitchend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
     /**
+     * Fired whenever the map's roll begins a change as
+     * the result of either user interaction or methods such as {@link Map.flyTo}.
+     */
+    rollstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    /**
+     * Fired repeatedly during the map's roll animation between
+     * one state and another as the result of either user interaction
+     * or methods such as {@link Map.flyTo}.
+     */
+    roll: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    /**
+     * Fired immediately after the map's roll finishes changing as
+     * the result of either user interaction or methods such as {@link Map.flyTo}.
+     */
+    rollend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    /**
      * Fired when a [`wheel`](https://developer.mozilla.org/en-US/docs/Web/Events/wheel) event occurs within the map.
      */
     wheel: MapWheelEvent;
@@ -434,27 +455,27 @@ export type MapEventType = {
  *
  * @group Event Related
  */
-export type MapLibreEvent<TOrig = unknown> = {
+export class MapLibreEvent<TOrig = unknown> extends Event {
     type: keyof MapEventType | keyof MapLayerEventType;
     target: Map;
     originalEvent: TOrig;
-};
+}
 
 /**
  * The style data event
  *
  * @group Event Related
  */
-export type MapStyleDataEvent = MapLibreEvent & {
+export class MapStyleDataEvent extends MapLibreEvent {
     dataType: 'style';
-};
+}
 
 /**
  * The source data event interface
  *
  * @group Event Related
  */
-export type MapSourceDataEvent = MapLibreEvent & {
+export class MapSourceDataEvent extends MapLibreEvent {
     dataType: 'source';
     /**
      * True if the event has a `dataType` of `source` and the source has no outstanding network requests.
@@ -495,7 +516,7 @@ export type MapSourceDataEvent = MapLibreEvent & {
  * });
  * ```
  */
-export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
+export class MapMouseEvent extends MapLibreEvent<MouseEvent> {
     /**
      * The event type
      */
@@ -560,7 +581,7 @@ export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
  *
  * @group Event Related
  */
-export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
+export class MapTouchEvent extends MapLibreEvent<TouchEvent> {
     /**
      * The event type.
      */
@@ -639,7 +660,7 @@ export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
  *
  * @group Event Related
  */
-export class MapWheelEvent extends Event {
+export class MapWheelEvent extends MapLibreEvent<WheelEvent> {
     /**
      * The event type.
      */
@@ -674,18 +695,18 @@ export class MapWheelEvent extends Event {
     _defaultPrevented: boolean;
 
     /** */
-    constructor(type: string, map: Map, originalEvent: WheelEvent) {
-        super(type, {originalEvent});
+    constructor(map: Map, originalEvent: WheelEvent) {
+        super('wheel', {originalEvent});
         this._defaultPrevented = false;
     }
 }
 
 /**
- * A `MapLibreZoomEvent` is the event type for the boxzoom-related map events emitted by the {@link BoxZoomHandler}.
+ * A `MapBoxZoomEvent` is the event type for the boxzoom-related map events emitted by the {@link BoxZoomHandler}.
  *
  * @group Event Related
  */
-export type MapLibreZoomEvent = {
+export class MapBoxZoomEvent extends MapLibreEvent<MouseEvent> {
     /**
      * The type of boxzoom event. One of `boxzoomstart`, `boxzoomend` or `boxzoomcancel`
      */
@@ -728,15 +749,15 @@ export type MapLibreZoomEvent = {
  * });
  * ```
  */
-export type MapDataEvent = {
+export class MapDataEvent extends MapLibreEvent {
     /**
      * The event type.
      */
-    type: string;
+    type: 'dataloading' | 'data' | 'dataabort';
     /**
      * The type of data that has changed. One of `'source'`, `'style'`.
      */
-    dataType: string;
+    dataType: 'source' | 'style';
     /**
      *  Included if the event has a `dataType` of `source` and the event signals that internal data has been received or changed. Possible values are `metadata`, `content`, `visibility` and `idle`.
      */
@@ -748,8 +769,12 @@ export type MapDataEvent = {
  *
  * @group Event Related
  */
-export type MapTerrainEvent = {
+export class MapTerrainEvent extends MapLibreEvent {
     type: 'terrain';
+
+    constructor(data: any = {}) {
+        super('terrain', data);
+    }
 };
 
 /**
@@ -757,7 +782,7 @@ export type MapTerrainEvent = {
  *
  * @group Event Related
  */
-export type MapProjectionEvent = {
+export class MapProjectionEvent extends MapLibreEvent {
     type: 'projectiontransition';
     /**
      * Specifies the name of the new projection.
@@ -768,14 +793,18 @@ export type MapProjectionEvent = {
      *  - `mercator` to describe mercator projection
      */
     newProjection: ProjectionSpecification['type'];
-};
+
+    constructor(data: any = {}) {
+        super('projectiontransition', data);
+    }
+}
 
 /**
  * An event related to the web gl context
  *
  * @group Event Related
  */
-export type MapContextEvent = {
+export class MapContextEvent extends MapLibreEvent<WebGLContextEvent> {
     type: 'webglcontextlost' | 'webglcontextrestored';
     originalEvent: WebGLContextEvent;
 };
@@ -787,7 +816,11 @@ export type MapContextEvent = {
  *
  * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/generate-and-add-a-missing-icon-to-the-map/)
  */
-export type MapStyleImageMissingEvent = MapLibreEvent & {
+export class MapStyleImageMissingEvent extends MapLibreEvent {
     type: 'styleimagemissing';
     id: string;
+
+    constructor(data: any = {}) {
+        super('styleimagemissing', data);
+    }
 };

@@ -1,4 +1,5 @@
-import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {ErrorEvent, Evented} from '../util/evented.ts';
+import {MapDataEvent} from '../ui/events.ts';
 import {ensureError, extend, warnOnce, type ExactlyOne} from '../util/util.ts';
 import {EXTENT} from '../data/extent.ts';
 import {ResourceType} from '../util/request_manager.ts';
@@ -440,7 +441,7 @@ export class GeoJSONSource extends Evented implements Source {
      */
     private async _dispatchWorkerUpdate(optionsPromise: Promise<LoadGeoJSONParameters>) {
         this._isUpdatingWorker = true;
-        this.fire(new Event('dataloading', {dataType: 'source'}));
+        this.fire(new MapDataEvent('dataloading', {dataType: 'source'}));
 
         try {
             const options = await optionsPromise;
@@ -448,7 +449,7 @@ export class GeoJSONSource extends Evented implements Source {
             this._isUpdatingWorker = false;
 
             if (this._removed || result.abandoned) {
-                this.fire(new Event('dataabort', {dataType: 'source'}));
+                this.fire(new MapDataEvent('dataabort', {dataType: 'source'}));
                 return;
             }
 
@@ -464,13 +465,13 @@ export class GeoJSONSource extends Evented implements Source {
             this._applyResourceTiming(eventData, result);
 
             // Fire the metadata event to let the TileManager know it's ok to start requesting tiles.
-            this.fire(new Event('data', {...eventData, sourceDataType: 'metadata'}));
-            this.fire(new Event('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions}));
+            this.fire(new MapDataEvent('data', {...eventData, sourceDataType: 'metadata'}));
+            this.fire(new MapDataEvent('data', {...eventData, sourceDataType: 'content', shouldReloadTileOptions}));
         } catch (err) {
             this._isUpdatingWorker = false;
 
             if (this._removed) {
-                this.fire(new Event('dataabort', {dataType: 'source'}));
+                this.fire(new MapDataEvent('dataabort', {dataType: 'source'}));
                 return;
             }
 

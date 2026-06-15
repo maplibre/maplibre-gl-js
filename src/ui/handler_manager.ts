@@ -1,4 +1,5 @@
 import {Event} from '../util/evented.ts';
+import {MapLibreEvent} from './events.ts';
 import {DOM} from '../util/dom.ts';
 import {type Map, type CompleteMapOptions} from './map.ts';
 import {HandlerInertia} from './handler_inertia.ts';
@@ -696,7 +697,7 @@ export class HandlerManager {
                 inertialEase.freezeElevation = true;
                 this._map.easeTo(inertialEase, {originalEvent: originalEndEvent});
             } else {
-                this._map.fire(new Event('moveend', {originalEvent: originalEndEvent}));
+                this._map.fire(new MapLibreEvent('moveend', {originalEvent: originalEndEvent}));
                 if (shouldSnapToNorth(this._map.getBearing())) {
                     this._map.resetNorth();
                 }
@@ -707,7 +708,7 @@ export class HandlerManager {
     }
 
     _fireEvent(type: string, e?: Event): void {
-        this._map.fire(new Event(type, e ? {originalEvent: e} : {}));
+        this._map.fire(new MapLibreEvent(type, e ? {originalEvent: e} : {}));
     }
 
     _requestFrame(): number {

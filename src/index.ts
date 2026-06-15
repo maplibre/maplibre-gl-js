@@ -1,15 +1,15 @@
 import packageJSON from '../package.json' with {type: 'json'};
 import {Map, type MapOptions, type WebGLContextAttributesWithType} from './ui/map.ts';
 import {NavigationControl, type NavigationControlOptions} from './ui/control/navigation_control.ts';
-import {GeolocateControl, type GeolocateControlOptions} from './ui/control/geolocate_control.ts';
+import {GeolocateControl, GeolocateEvent, GeolocatePositionEvent, GeolocateErrorEvent, type GeolocateControlEventType, type GeolocateControlOptions} from './ui/control/geolocate_control.ts';
 import {AttributionControl, type AttributionControlOptions} from './ui/control/attribution_control.ts';
 import {LogoControl, type LogoControlOptions} from './ui/control/logo_control.ts';
 import {ScaleControl, type ScaleControlOptions, type Unit} from './ui/control/scale_control.ts';
-import {FullscreenControl, type FullscreenControlOptions} from './ui/control/fullscreen_control.ts';
+import {FullscreenControl, FullscreenEvent, type FullscreenControlEventType, type FullscreenControlOptions} from './ui/control/fullscreen_control.ts';
 import {TerrainControl} from './ui/control/terrain_control.ts';
 import {GlobeControl} from './ui/control/globe_control.ts';
-import {type Offset, Popup, type PopupOptions} from './ui/popup.ts';
-import {type Alignment, Marker, type MarkerOptions} from './ui/marker.ts';
+import {type Offset, Popup, PopupEvent, type PopupEventType, type PopupOptions} from './ui/popup.ts';
+import {type Alignment, Marker, MarkerDragEvent, MarkerClickEvent, type MarkerEventType, type MarkerOptions} from './ui/marker.ts';
 import {type AddLayerObject, type FeatureIdentifier, Style, type StyleOptions, type StyleSetterOptions, type StyleSwapOptions, type TransformStyleFunction} from './style/style.ts';
 import {LngLat, type LngLatLike} from './geo/lng_lat.ts';
 import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds.ts';
@@ -33,7 +33,7 @@ import {type Source, type SourceClass, addSourceType} from './source/source.ts';
 import {addProtocol, removeProtocol} from './source/protocol_crud.ts';
 import {type Dispatcher, getGlobalDispatcher} from './util/dispatcher.ts';
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets.ts';
-import {type MapTerrainEvent, type MapStyleImageMissingEvent, type MapStyleDataEvent, type MapSourceDataEvent, type MapLibreZoomEvent, type MapLibreEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, type MapDataEvent, type MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type MapProjectionEvent} from './ui/events.ts';
+import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapSourceDataEvent, MapBoxZoomEvent, MapLibreEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, MapDataEvent, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, MapProjectionEvent} from './ui/events.ts';
 import {BoxZoomHandler, type BoxZoomEndHandler, type BoxZoomHandlerOptions} from './ui/handler/box_zoom.ts';
 import {DragRotateHandler} from './ui/handler/shim/drag_rotate.ts';
 import {DragPanHandler, type DragPanOptions} from './ui/handler/shim/drag_pan.ts';
@@ -208,15 +208,26 @@ export {
     Map as MapLibreMap,
     NavigationControl,
     GeolocateControl,
+    GeolocateEvent,
+    GeolocatePositionEvent,
+    GeolocateErrorEvent,
+    type GeolocateControlEventType,
     AttributionControl,
     LogoControl,
     ScaleControl,
     FullscreenControl,
+    FullscreenEvent,
+    type FullscreenControlEventType,
     TerrainControl,
     GlobeControl,
     Hash,
     Popup,
+    PopupEvent,
+    type PopupEventType,
     Marker,
+    MarkerDragEvent,
+    MarkerClickEvent,
+    type MarkerEventType,
     Style,
     LngLat,
     LngLatBounds,
@@ -359,19 +370,19 @@ export {
     type PointLike,
     type LngLatBoundsLike,
     type Source,
-    type MapProjectionEvent,
-    type MapTerrainEvent,
-    type MapStyleImageMissingEvent,
-    type MapStyleDataEvent,
-    type MapSourceDataEvent,
-    type MapLibreZoomEvent,
-    type MapLibreEvent,
+    MapProjectionEvent,
+    MapTerrainEvent,
+    MapStyleImageMissingEvent,
+    MapStyleDataEvent,
+    MapSourceDataEvent,
+    MapBoxZoomEvent,
+    MapLibreEvent,
     type MapLayerTouchEvent,
     type MapLayerMouseEvent,
     type MapLayerEventType,
     type MapEventType,
-    type MapDataEvent,
-    type MapContextEvent,
+    MapDataEvent,
+    MapContextEvent,
     type ErrorEvent,
     type GeoJSONFeature,
     type CoveringTilesOptions,

@@ -19,8 +19,8 @@ import Point from '@mapbox/point-geometry';
 import {AttributionControl, type AttributionControlOptions, defaultAttributionControlOptions} from './control/attribution_control.ts';
 import {LogoControl} from './control/logo_control.ts';
 import {RGBAImage} from '../util/image.ts';
-import {Event, ErrorEvent, type Listener} from '../util/evented.ts';
-import {type MapEventType, type MapLayerEventType, MapMouseEvent, type MapSourceDataEvent, type MapStyleDataEvent} from './events.ts';
+import {type Event, ErrorEvent, type Listener} from '../util/evented.ts';
+import {type MapEventType, type MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent, MapLibreEvent, MapTerrainEvent, MapProjectionEvent, MapContextEvent} from './events.ts';
 import {TaskQueue} from '../util/task_queue.ts';
 import {throttle} from '../util/throttle.ts';
 import {type Source} from '../source/source.ts';
@@ -861,13 +861,13 @@ export class Map extends Camera {
         });
         this.on('data', (event: MapDataEvent) => {
             this._update(event.dataType === 'style');
-            this.fire(new Event(`${event.dataType}data`, event));
+            this.fire(event.dataType === 'style' ? new MapStyleDataEvent(`${event.dataType}data`, event) : new MapSourceDataEvent(`${event.dataType}data`, event));
         });
         this.on('dataloading', (event: MapDataEvent) => {
-            this.fire(new Event(`${event.dataType}dataloading`, event));
+            this.fire(event.dataType === 'style' ? new MapStyleDataEvent(`${event.dataType}dataloading`, event) : new MapSourceDataEvent(`${event.dataType}dataloading`, event));
         });
         this.on('dataabort', (event: MapDataEvent) => {
-            this.fire(new Event('sourcedataabort', event));
+            this.fire(new MapSourceDataEvent('sourcedataabort', event));
         });
     }
 
@@ -1040,13 +1040,13 @@ export class Map extends Camera {
         const fireMoving = !this._moving;
         if (fireMoving) {
             this.stop();
-            this.fire(new Event('movestart', eventData))
-                .fire(new Event('move', eventData));
+            this.fire(new MapLibreEvent('movestart', eventData))
+                .fire(new MapLibreEvent('move', eventData));
         }
 
-        this.fire(new Event('resize', eventData));
+        this.fire(new MapLibreEvent('resize', eventData));
 
-        if (fireMoving) this.fire(new Event('moveend', eventData));
+        if (fireMoving) this.fire(new MapLibreEvent('moveend', eventData));
 
         return this;
     }
@@ -1212,12 +1212,12 @@ export class Map extends Camera {
             this._applyUpdatedTransform(tr);
             this._update();
             if (zoomBefore !== this.transform.zoom) {
-                this.fire(new Event('zoomstart'))
-                    .fire(new Event('zoom'))
-                    .fire(new Event('zoomend'))
-                    .fire(new Event('movestart'))
-                    .fire(new Event('move'))
-                    .fire(new Event('moveend'));
+                this.fire(new MapLibreEvent('zoomstart'))
+                    .fire(new MapLibreEvent('zoom'))
+                    .fire(new MapLibreEvent('zoomend'))
+                    .fire(new MapLibreEvent('movestart'))
+                    .fire(new MapLibreEvent('move'))
+                    .fire(new MapLibreEvent('moveend'));
             }
 
             return this;
@@ -1262,12 +1262,12 @@ export class Map extends Camera {
             this._applyUpdatedTransform(tr);
             this._update();
             if (zoomBefore !== this.transform.zoom) {
-                this.fire(new Event('zoomstart'))
-                    .fire(new Event('zoom'))
-                    .fire(new Event('zoomend'))
-                    .fire(new Event('movestart'))
-                    .fire(new Event('move'))
-                    .fire(new Event('moveend'));
+                this.fire(new MapLibreEvent('zoomstart'))
+                    .fire(new MapLibreEvent('zoom'))
+                    .fire(new MapLibreEvent('zoomend'))
+                    .fire(new MapLibreEvent('movestart'))
+                    .fire(new MapLibreEvent('move'))
+                    .fire(new MapLibreEvent('moveend'));
             }
 
             return this;
@@ -1312,12 +1312,12 @@ export class Map extends Camera {
             this._applyUpdatedTransform(tr);
             this._update();
             if (pitchBefore !== this.transform.pitch) {
-                this.fire(new Event('pitchstart'))
-                    .fire(new Event('pitch'))
-                    .fire(new Event('pitchend'))
-                    .fire(new Event('movestart'))
-                    .fire(new Event('move'))
-                    .fire(new Event('moveend'));
+                this.fire(new MapLibreEvent('pitchstart'))
+                    .fire(new MapLibreEvent('pitch'))
+                    .fire(new MapLibreEvent('pitchend'))
+                    .fire(new MapLibreEvent('movestart'))
+                    .fire(new MapLibreEvent('move'))
+                    .fire(new MapLibreEvent('moveend'));
             }
 
             return this;
@@ -1358,12 +1358,12 @@ export class Map extends Camera {
             this._applyUpdatedTransform(tr);
             this._update();
             if (pitchBefore !== this.transform.pitch) {
-                this.fire(new Event('pitchstart'))
-                    .fire(new Event('pitch'))
-                    .fire(new Event('pitchend'))
-                    .fire(new Event('movestart'))
-                    .fire(new Event('move'))
-                    .fire(new Event('moveend'));
+                this.fire(new MapLibreEvent('pitchstart'))
+                    .fire(new MapLibreEvent('pitch'))
+                    .fire(new MapLibreEvent('pitchend'))
+                    .fire(new MapLibreEvent('movestart'))
+                    .fire(new MapLibreEvent('move'))
+                    .fire(new MapLibreEvent('moveend'));
             }
 
             return this;
@@ -1803,8 +1803,19 @@ export class Map extends Camera {
     once<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
-        listener?: (ev: MapLayerEventType[T] & Object) => void,
-    ): this | Promise<MapLayerEventType[T] & Object>;
+        listener: (ev: MapLayerEventType[T] & Object) => void,
+    ): this;
+    /**
+     * Overload of the `once` method that, with a single layer and no listener, returns a promise
+     * resolving with the event for easier usage of async/await.
+     * @event
+     * @param type - The type of the event.
+     * @param layer - The ID of the style layer.
+     */
+    once<T extends keyof MapLayerEventType>(
+        type: T,
+        layer: string,
+    ): Promise<MapLayerEventType[T] & Object>;
     /**
      * Overload of the `once` method that allows to listen to events specifying multiple layers.
      * @event
@@ -1815,15 +1826,33 @@ export class Map extends Camera {
     once<T extends keyof MapLayerEventType>(
         type: T,
         layerIds: string[],
-        listener?: (ev: MapLayerEventType[T] & Object) => void
-    ): this | Promise<any>;
+        listener: (ev: MapLayerEventType[T] & Object) => void
+    ): this;
+    /**
+     * Overload of the `once` method that, with multiple layers and no listener, returns a promise
+     * resolving with the event for easier usage of async/await.
+     * @event
+     * @param type - The type of the event.
+     * @param layerIds - The array of style layer IDs.
+     */
+    once<T extends keyof MapLayerEventType>(
+        type: T,
+        layerIds: string[],
+    ): Promise<MapLayerEventType[T] & Object>;
     /**
      * Overload of the `once` method that allows to listen to events without specifying a layer.
      * @event
      * @param type - The type of the event.
      * @param listener - The listener callback.
      */
-    once<T extends keyof MapEventType>(type: T, listener?: (ev: MapEventType[T] & Object) => void): this | Promise<any>;
+    once<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
+    /**
+     * Overload of the `once` method that returns a promise resolving with the event,
+     * for easier usage of async/await, when no listener is provided.
+     * @event
+     * @param type - The type of the event.
+     */
+    once<T extends keyof MapEventType>(type: T): Promise<MapEventType[T] & Object>;
     /**
      * Overload of the `once` method that allows to listen to events without specifying a layer.
      * @event
@@ -1831,7 +1860,7 @@ export class Map extends Camera {
      * @param listener - The listener callback.
      */
     once(type: keyof MapEventType | string, listener?: Listener): this | Promise<any>;
-    once(type: keyof MapEventType | string, layerIdsOrListener: string | string[] | Listener, listener?: Listener): this | Promise<any> {
+    once(type: keyof MapEventType | string, layerIdsOrListener?: string | string[] | Listener, listener?: Listener): this | Promise<any> {
         if (listener === undefined) {
             return super.once(type, layerIdsOrListener as Listener);
         }
@@ -2403,7 +2432,7 @@ export class Map extends Camera {
             this.style.on('data', this._terrainDataCallback);
         }
 
-        this.fire(new Event('terrain', {terrain: options}));
+        this.fire(new MapTerrainEvent({terrain: options}));
         return this;
     }
 
@@ -3496,7 +3525,7 @@ export class Map extends Camera {
     override migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
         super.migrateProjection(newTransform, newCameraHelper);
         this.painter.transform = newTransform;
-        this.fire(new Event('projectiontransition', {
+        this.fire(new MapProjectionEvent({
             newProjection: this.style.projection.name,
         }));
     }
@@ -3512,7 +3541,7 @@ export class Map extends Camera {
         this._lostContextStyle = this._getStyleAndImages();
 
         if (!this.style) {
-            this.fire(new Event('webglcontextlost', {originalEvent: event}));
+            this.fire(new MapContextEvent('webglcontextlost', {originalEvent: event}));
             return;
         }
 
@@ -3532,7 +3561,7 @@ export class Map extends Camera {
         this.style.destroy();
         this.style = null;
 
-        this.fire(new Event('webglcontextlost', {originalEvent: event}));
+        this.fire(new MapContextEvent('webglcontextlost', {originalEvent: event}));
     };
 
     _contextRestored = (event: WebGLContextEvent): void => {
@@ -3551,7 +3580,7 @@ export class Map extends Camera {
         this.resize();
         this._update();
         this._resizeInternal();
-        this.fire(new Event('webglcontextrestored', {originalEvent: event}));
+        this.fire(new MapContextEvent('webglcontextrestored', {originalEvent: event}));
     };
 
     _onMapScroll = (event: UIEvent): boolean => {
@@ -3701,11 +3730,11 @@ export class Map extends Camera {
             anisotropicFilterPitch: this.getAnisotropicFilterPitch(),
         });
 
-        this.fire(new Event('render'));
+        this.fire(new MapLibreEvent('render'));
 
         if (this.loaded() && !this._loaded) {
             this._loaded = true;
-            this.fire(new Event('load'));
+            this.fire(new MapLibreEvent('load'));
         }
 
         if (this.style && (this.style.hasTransitions() || crossFading)) {
@@ -3728,7 +3757,7 @@ export class Map extends Camera {
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {
-            this.fire(new Event('idle'));
+            this.fire(new MapLibreEvent('idle'));
         }
 
         if (this._loaded && !this._fullyLoaded && !somethingDirty) {
@@ -3799,7 +3828,7 @@ export class Map extends Camera {
         this._container.classList.remove('maplibregl-map');
 
         this._removed = true;
-        this.fire(new Event('remove'));
+        this.fire(new MapLibreEvent('remove'));
     }
 
     /**

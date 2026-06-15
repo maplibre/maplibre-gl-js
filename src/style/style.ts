@@ -1,5 +1,6 @@
 import {throwIfAborted} from '../util/abort_error.ts';
-import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {ErrorEvent, Evented} from '../util/evented.ts';
+import {MapDataEvent, MapLibreEvent} from '../ui/events.ts';
 import {type StyleLayer} from './style_layer.ts';
 import {isRasterStyleLayer} from './style_layer/raster_style_layer.ts';
 import {createStyleLayer} from './create_style_layer.ts';
@@ -426,7 +427,7 @@ export class Style extends Evented {
     }
 
     async loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification): Promise<void> {
-        this.fire(new Event('dataloading', {dataType: 'style'}));
+        this.fire(new MapDataEvent('dataloading', {dataType: 'style'}));
 
         options.validate = typeof options.validate === 'boolean' ?
             options.validate : true;
@@ -456,7 +457,7 @@ export class Style extends Evented {
     }
 
     loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification): void {
-        this.fire(new Event('dataloading', {dataType: 'style'}));
+        this.fire(new MapDataEvent('dataloading', {dataType: 'style'}));
 
         this._frameRequest = new AbortController();
         browser.frameAsync(this._frameRequest, this.map._ownerWindow).then(() => {
@@ -467,7 +468,7 @@ export class Style extends Evented {
     }
 
     loadEmpty(): void {
-        this.fire(new Event('dataloading', {dataType: 'style'}));
+        this.fire(new MapDataEvent('dataloading', {dataType: 'style'}));
         this._load(empty, {validate: false});
     }
 
@@ -502,8 +503,8 @@ export class Style extends Evented {
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
 
-        this.fire(new Event('data', {dataType: 'style'}));
-        this.fire(new Event('style.load'));
+        this.fire(new MapDataEvent('data', {dataType: 'style'}));
+        this.fire(new MapLibreEvent('style.load'));
     }
 
     private _createLayers() {
@@ -583,7 +584,7 @@ export class Style extends Evented {
             }
 
             this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
-            this.fire(new Event('data', {dataType: 'style'}));
+            this.fire(new MapDataEvent('data', {dataType: 'style'}));
 
             if (completion) {
                 completion(err);
@@ -601,7 +602,7 @@ export class Style extends Evented {
         this._availableImages = this.imageManager.listImages();
         this._changed = true;
         this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
-        this.fire(new Event('data', {dataType: 'style'}));
+        this.fire(new MapDataEvent('data', {dataType: 'style'}));
     }
 
     _validateLayer(layer: StyleLayer): void {
@@ -794,7 +795,7 @@ export class Style extends Evented {
             // (undefine !== false) will evaluate to true and fire an useless visibility event
             // need force "falsy" values to boolean to avoid the case above
             if (!!managersUsedBefore[id] !== !!tileManager.used) {
-                tileManager.fire(new Event('data',
+                tileManager.fire(new MapDataEvent('data',
                     {
                         sourceDataType: 'visibility',
                         dataType: 'source',
@@ -809,7 +810,7 @@ export class Style extends Evented {
         this.z = parameters.zoom;
 
         if (changed) {
-            this.fire(new Event('data', {dataType: 'style'}));
+            this.fire(new MapDataEvent('data', {dataType: 'style'}));
         }
     }
 
@@ -895,7 +896,7 @@ export class Style extends Evented {
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
 
-        this.fire(new Event('style.load', {style: this}));
+        this.fire(new MapLibreEvent('style.load', {style: this}));
 
         return true;
     }
@@ -1005,7 +1006,7 @@ export class Style extends Evented {
         this._changedImages[id] = true;
         this._changed = true;
         this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
-        this.fire(new Event('data', {dataType: 'style'}));
+        this.fire(new MapDataEvent('data', {dataType: 'style'}));
     }
 
     listImages(): string[] {
@@ -1061,7 +1062,7 @@ export class Style extends Evented {
         const tileManager = this.tileManagers[id];
         delete this.tileManagers[id];
         delete this._updatedSources[id];
-        tileManager.fire(new Event('data', {sourceDataType: 'metadata', dataType: 'source', sourceId: id}));
+        tileManager.fire(new MapDataEvent('data', {sourceDataType: 'metadata', dataType: 'source', sourceId: id}));
         tileManager.setEventedParent(null);
         tileManager.onRemove(this.map);
         this._changed = true;
@@ -2016,7 +2017,7 @@ export class Style extends Evented {
         this._availableImages = this.imageManager.listImages();
         this._changed = true;
         this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
-        this.fire(new Event('data', {dataType: 'style'}));
+        this.fire(new MapDataEvent('data', {dataType: 'style'}));
     }
 
     /**

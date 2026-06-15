@@ -5,7 +5,8 @@ import Point from '@mapbox/point-geometry';
 import {smartWrap} from '../util/smart_wrap.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
 import type {PositionAnchor} from './anchor.ts';
-import {Event, Evented} from '../util/evented.ts';
+import {Event, Evented, type Listener} from '../util/evented.ts';
+import {type Subscription} from '../util/util.ts';
 import type {Map} from './map.ts';
 import {type Popup, type Offset} from './popup.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
@@ -145,6 +146,61 @@ export type MarkerOptions = {
  * }
  * ```
  */
+/**
+ * The event class for marker drag events (`dragstart`, `drag` and `dragend`).
+ *
+ * @group Event Related
+ */
+export class MarkerDragEvent extends Event {
+    type: 'dragstart' | 'drag' | 'dragend';
+    /**
+     * The `Marker` object that fired the event.
+     */
+    target: Marker;
+}
+
+/**
+ * The event class for the marker `click` event.
+ *
+ * @group Event Related
+ */
+export class MarkerClickEvent extends Event {
+    type: 'click';
+    /**
+     * The `Marker` object that fired the event.
+     */
+    target: Marker;
+    /**
+     * The DOM event which caused the marker click event.
+     */
+    originalEvent: MouseEvent;
+}
+
+/**
+ * `MarkerEventType` - a mapping between the marker event name and the event value.
+ * These events are used with the {@link Marker.on} method.
+ *
+ * @group Event Related
+ */
+export type MarkerEventType = {
+    /**
+     * Fired when dragging starts.
+     */
+    dragstart: MarkerDragEvent;
+    /**
+     * Fired while dragging.
+     */
+    drag: MarkerDragEvent;
+    /**
+     * Fired when the marker is finished being dragged.
+     */
+    dragend: MarkerDragEvent;
+    /**
+     * Fired when the marker is clicked.
+     */
+    click: MarkerClickEvent;
+};
+
 export class Marker extends Evented {
     _map: Map;
     _anchor: PositionAnchor;
@@ -171,6 +227,43 @@ export class Marker extends Evented {
     _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
     _subpixelPositioning: boolean;
+
+    /**
+     * Adds a listener to a specified event type.
+     *
+     * @param type - The event type to listen for.
+     * @param listener - The function to be called when the event is fired.
+     */
+    on<T extends keyof MarkerEventType>(type: T, listener: (e: MarkerEventType[T]) => void): Subscription;
+    on(type: string, listener: Listener): Subscription;
+    on(type: string, listener: Listener): Subscription {
+        return super.on(type, listener);
+    }
+
+    /**
+     * Adds a listener that will be called only once to a specified event type.
+     *
+     * @param type - The event type to listen for.
+     * @param listener - The function to be called when the event is fired the first time.
+     */
+    once<T extends keyof MarkerEventType>(type: T, listener: (e: MarkerEventType[T]) => void): this;
+    once<T extends keyof MarkerEventType>(type: T): Promise<MarkerEventType[T]>;
+    once(type: string, listener?: Listener): this | Promise<any>;
+    once(type: string, listener?: Listener): this | Promise<any> {
+        return super.once(type, listener);
+    }
+
+    /**
+     * Removes a previously registered event listener.
+     *
+     * @param type - The event type to remove listeners for.
+     * @param listener - The listener function to remove.
+     */
+    off<T extends keyof MarkerEventType>(type: T, listener: (e: MarkerEventType[T]) => void): this;
+    off(type: string, listener: Listener): this;
+    off(type: string, listener: Listener): this {
+        return super.off(type, listener);
+    }
 
     /**
      * @param options - the options
@@ -517,7 +610,7 @@ export class Marker extends Evented {
     }
 
     _onClick = (e: MouseEvent): void => {
-        this.fire(new Event('click', {originalEvent: e}));
+        this.fire(new MarkerClickEvent('click', {originalEvent: e}));
     };
 
     _onKeyPress = (e: KeyboardEvent): void => {
@@ -751,9 +844,9 @@ export class Marker extends Evented {
         // imply that a drag is about to happen.
         if (this._state === 'pending') {
             this._state = 'active';
-            this.fire(new Event('dragstart'));
+            this.fire(new MarkerDragEvent('dragstart'));
         }
-        this.fire(new Event('drag'));
+        this.fire(new MarkerDragEvent('drag'));
     };
 
     _onUp = (): void => {
@@ -767,7 +860,7 @@ export class Marker extends Evented {
 
         // only fire dragend if it was preceded by at least one drag event
         if (this._state === 'active') {
-            this.fire(new Event('dragend'));
+            this.fire(new MarkerDragEvent('dragend'));
         }
 
         this._state = 'inactive';
