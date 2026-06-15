@@ -41173,7 +41173,7 @@ var Style = class extends Evented {
 		this._glyphsDidChange = false;
 		this._updatedPaintProps = {};
 		this._layerOrderChanged = false;
-		this.crossTileSymbolIndex = new (this.crossTileSymbolIndex?.constructor || Object)();
+		this.crossTileSymbolIndex = new ((this.crossTileSymbolIndex?.constructor) || Object)();
 		this.pauseablePlacement = void 0;
 		this.placement = void 0;
 		this.z = 0;
@@ -42836,7 +42836,7 @@ var DOM = class DOM {
 };
 //#endregion
 //#region package.json
-var version$4 = "6.0.0-14";
+var version$4 = "6.0.0-15";
 //#endregion
 //#region src/data/raster_bounds_attributes.ts
 const rasterBoundsAttributes = createLayout([{
@@ -60209,7 +60209,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 64482eb";
+const version = "main 8a6b900";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
