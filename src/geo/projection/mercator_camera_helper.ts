@@ -161,18 +161,11 @@ export class MercatorCameraHelper implements ICameraHelper {
 
         const scaleOfZoom = zoomScale(targetZoom - startZoom);
 
-        const optionsMinZoom = typeof options.minZoom !== 'undefined';
-        const DEFAULT_MAP_MIN_ZOOM = -2; // See map.ts defaultMinZoom.
-        const hasMapMinZoomConstraint = tr.minZoom > DEFAULT_MAP_MIN_ZOOM;
-
-        let scaleOfMinZoom: number;
-
-        if (optionsMinZoom || hasMapMinZoomConstraint) {
-            const effectiveMinZoom = optionsMinZoom ? +options.minZoom : tr.minZoom;
-            const minZoomPreConstrain = Math.min(effectiveMinZoom, startZoom, targetZoom);
-            const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
-            scaleOfMinZoom = zoomScale(minZoom - startZoom);
-        }
+        const requestedMinZoom = typeof options.minZoom !== 'undefined' ? +options.minZoom : tr.minZoom;
+        const effectiveMinZoom = Math.max(requestedMinZoom, tr.minZoom);
+        const minZoomPreConstrain = Math.min(effectiveMinZoom, startZoom, targetZoom);
+        const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
+        const scaleOfMinZoom = zoomScale(minZoom - startZoom);
 
         const easeFunc = (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => {
             tr.setZoom(k === 1 ? targetZoom : startZoom + scaleZoom(scale));

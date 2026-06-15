@@ -361,21 +361,14 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         const normalizedTargetZoom = targetZoom + getZoomAdjustment(targetCenter.lat, 0);
         const scaleOfZoom = zoomScale(normalizedTargetZoom - normalizedStartZoom);
 
-        const optionsMinZoom = typeof options.minZoom === 'number';
-        const DEFAULT_MAP_MIN_ZOOM = -2; // See map.ts defaultMinZoom.
-        const hasMapMinZoomConstraint = tr.minZoom > DEFAULT_MAP_MIN_ZOOM;
-
-        let scaleOfMinZoom: number;
-
-        if (optionsMinZoom || hasMapMinZoomConstraint) {
-            const effectiveMinZoom = optionsMinZoom ? +options.minZoom : tr.minZoom;
-            const normalizedEffectiveMinZoom = effectiveMinZoom + getZoomAdjustment(targetCenter.lat, 0);
-            const normalizedMinZoomPreConstrain = Math.min(normalizedEffectiveMinZoom, normalizedStartZoom, normalizedTargetZoom);
-            const minZoomPreConstrain = normalizedMinZoomPreConstrain + getZoomAdjustment(0, targetCenter.lat);
-            const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
-            const normalizedMinZoom = minZoom + getZoomAdjustment(targetCenter.lat, 0);
-            scaleOfMinZoom = zoomScale(normalizedMinZoom - normalizedStartZoom);
-        }
+        const requestedMinZoom = typeof options.minZoom === 'number' ? +options.minZoom : tr.minZoom;
+        const effectiveMinZoom = Math.max(requestedMinZoom, tr.minZoom);
+        const normalizedEffectiveMinZoom = effectiveMinZoom + getZoomAdjustment(targetCenter.lat, 0);
+        const normalizedMinZoomPreConstrain = Math.min(normalizedEffectiveMinZoom, normalizedStartZoom, normalizedTargetZoom);
+        const minZoomPreConstrain = normalizedMinZoomPreConstrain + getZoomAdjustment(0, targetCenter.lat);
+        const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
+        const normalizedMinZoom = minZoom + getZoomAdjustment(targetCenter.lat, 0);
+        const scaleOfMinZoom = zoomScale(normalizedMinZoom - normalizedStartZoom);
 
         const deltaLng = differenceOfAnglesDegrees(startCenter.lng, targetCenter.lng);
         const deltaLat = differenceOfAnglesDegrees(startCenter.lat, targetCenter.lat);
