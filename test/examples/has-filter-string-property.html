@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Has filter on string property</title>
+    <meta property="og:description" content="Test whether the 'has' filter matches properties that are undefined vs not declared at all." />
+    <meta property="og:created" content="2026-06-16" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            z-index: 1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+<div id="info">
+    <b>Has filter test on "testProperty"</b><br><br>
+    <span style="color:green">&#9679;</span> Feature 1: testProperty = "test" (green = shown by filter)<br>
+    <span style="color:red">&#9679;</span> Feature 2: testProperty = undefined (red = not shown by filter)<br>
+    <span style="color:blue">&#9679;</span> Feature 3: testProperty not declared (blue = not shown by filter)<br>
+    <br>
+    Green layer uses: ["has", "testProperty"]
+</div>
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    const geojsonData = {
+        type: 'FeatureCollection',
+        features: [
+            {
+                type: 'Feature',
+                properties: {
+                    name: 'Feature 1 - value is "test"',
+                    testProperty: 'test'
+                },
+                geometry: {
+                    type: 'Point',
+                    coordinates: [0, 3]
+                }
+            },
+            {
+                type: 'Feature',
+                properties: {
+                    name: 'Feature 2 - value is undefined',
+                    testProperty: undefined
+                },
+                geometry: {
+                    type: 'Point',
+                    coordinates: [0, 0]
+                }
+            },
+            {
+                type: 'Feature',
+                properties: {
+                    name: 'Feature 3 - property not declared'
+                },
+                geometry: {
+                    type: 'Point',
+                    coordinates: [0, -3]
+                }
+            }
+        ]
+    };
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [0, 0],
+        zoom: 5
+    });
+
+    map.on('load', () => {
+        map.addSource('test-points', {
+            type: 'geojson',
+            data: geojsonData
+        });
+
+        // Layer showing only features that pass the "has" filter (green)
+        map.addLayer({
+            id: 'has-filter-points',
+            type: 'circle',
+            source: 'test-points',
+            filter: ['has', 'testProperty'],
+            paint: {
+                'circle-color': '#22cc22',
+                'circle-radius': 14,
+                'circle-stroke-width': 2,
+                'circle-stroke-color': '#000'
+            }
+        });
+
+        // Layer showing features that do NOT pass the "has" filter (red)
+        map.addLayer({
+            id: 'no-has-filter-points',
+            type: 'circle',
+            source: 'test-points',
+            filter: ['!', ['has', 'testProperty']],
+            paint: {
+                'circle-color': '#dd3333',
+                'circle-radius': 14,
+                'circle-stroke-width': 2,
+                'circle-stroke-color': '#000'
+            }
+        });
+
+        // Labels
+        map.addLayer({
+            id: 'point-labels',
+            type: 'symbol',
+            source: 'test-points',
+            layout: {
+                'text-field': ['get', 'name'],
+                'text-font': ['Noto Sans Regular'],
+                'text-size': 12,
+                'text-offset': [0, 1.5],
+                'text-anchor': 'top'
+            },
+            paint: {
+                'text-color': '#333',
+                'text-halo-color': '#fff',
+                'text-halo-width': 1
+            }
+        });
+    });
+</script>
+</body>
+</html>
