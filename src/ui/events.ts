@@ -471,6 +471,10 @@ export type SourceEventType = {
      * Fired when a request for the source's data is aborted.
      */
     dataabort: MapSourceDataEvent;
+    /**
+     * Fired when there's an error
+     */ 
+    error: ErrorEvent;
 };
 
 /**

@@ -5,9 +5,9 @@ import {extend, type Subscription} from './util.ts';
  */
 export type Listener = (a: any) => any;
 
-type Listeners = {[_: string]: Listener[]};
+type Listeners<EventType extends Record<string, any>> = {[_ in keyof EventType]?: Listener[]};
 
-function _addEventListener(type: string, listener: Listener, listenerList: Listeners) {
+function _addEventListener<T extends Record<string, any>>(type: keyof T, listener: Listener, listenerList: Listeners<T>) {
     const listenerExists = listenerList[type]?.includes(listener);
     if (!listenerExists) {
         listenerList[type] ||= [];
@@ -15,7 +15,7 @@ function _addEventListener(type: string, listener: Listener, listenerList: Liste
     }
 }
 
-function _removeEventListener(type: string, listener: Listener, listenerList: Listeners) {
+function _removeEventListener<T extends Record<string, any>>(type: keyof T, listener: Listener, listenerList: Listeners<T>) {
     if (listenerList?.[type]) {
         const index = listenerList[type].indexOf(listener);
         if (index !== -1) {
@@ -61,9 +61,9 @@ export class ErrorEvent extends Event {
  *
  * @group Event Related
  */
-export abstract class Evented<EventType extends {[_: string]: any} = {[_: string]: any}> {
-    _listeners: Listeners;
-    _oneTimeListeners: Listeners;
+export abstract class Evented<EventType extends Record<string, any> = Record<string, any>> {
+    _listeners: Listeners<EventType>;
+    _oneTimeListeners: Listeners<EventType>;
     _eventedParent: Evented;
     _eventedParentData: any | (() => any);
 
@@ -75,9 +75,7 @@ export abstract class Evented<EventType extends {[_: string]: any} = {[_: string
      * The listener function is called with the data object passed to `fire`,
      * extended with `target` and `type` properties.
      */
-    on<T extends keyof EventType & string>(type: T, listener: (event: EventType[T]) => void): Subscription;
-    on(type: string, listener: Listener): Subscription;
-    on(type: string, listener: Listener): Subscription {
+    on<T extends keyof EventType>(type: T, listener: (event: EventType[T]) => void): Subscription {
         this._listeners ||= {};
         _addEventListener(type, listener, this._listeners);
 
@@ -94,9 +92,7 @@ export abstract class Evented<EventType extends {[_: string]: any} = {[_: string
      * @param type - The event type to remove listeners for.
      * @param listener - The listener function to remove.
      */
-    off<T extends keyof EventType & string>(type: T, listener: (event: EventType[T]) => void): this;
-    off(type: string, listener: Listener): this;
-    off(type: string, listener: Listener): this {
+    off<T extends keyof EventType>(type: T, listener: (event: EventType[T]) => void): this {
         _removeEventListener(type, listener, this._listeners);
         _removeEventListener(type, listener, this._oneTimeListeners);
 
@@ -112,10 +108,9 @@ export abstract class Evented<EventType extends {[_: string]: any} = {[_: string
      * @param listener - The function to be called when the event is fired the first time.
      * @returns `this` when a listener is provided, or a promise that resolves with the event otherwise
      */
-    once<T extends keyof EventType & string>(type: T, listener: (event: EventType[T]) => void): this;
-    once<T extends keyof EventType & string>(type: T): Promise<EventType[T]>;
-    once(type: string, listener?: Listener): this | Promise<any>;
-    once(type: string, listener?: Listener): this | Promise<any> {
+    once<T extends keyof EventType>(type: T): Promise<EventType[T]>;
+    once<T extends keyof EventType>(type: T, listener: (event: EventType[T]) => void): this; 
+    once<T extends keyof EventType>(type: T, listener?: (event: EventType[T]) => void): this | Promise<EventType[T]> {
         if (!listener) {
             return new Promise((resolve) => this.once(type, resolve));
         }

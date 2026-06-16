@@ -591,7 +591,7 @@ export class Map extends Camera {
     _canvasContextAttributes: WebGLContextAttributesWithType;
     _refreshExpiredTiles: boolean;
     _hash: Hash;
-    _delegatedListeners: Record<string, DelegatedListener[]>;
+    _delegatedListeners: Record<keyof MapEventType, DelegatedListener[]>;
     _fadeDuration: number;
     _crossSourceCollisions: boolean;
     _crossFadingFactor = 1;
@@ -1598,7 +1598,7 @@ export class Map extends Camera {
     }
 
     _saveDelegatedListener(type: keyof MapEventType | string, delegatedListener: DelegatedListener): void {
-        this._delegatedListeners ||= {};
+        this._delegatedListeners ||= {} as Record<keyof MapEventType, DelegatedListener[]>;
         this._delegatedListeners[type] ||= [];
         this._delegatedListeners[type].push(delegatedListener);
     }
@@ -1617,7 +1617,7 @@ export class Map extends Camera {
                 delegatedListener.layers.every((layerId: string) => layerIds.includes(layerId))
             ) {
                 for (const event in delegatedListener.delegates) {
-                    this.off(event, delegatedListener.delegates[event]);
+                    this.off(event as keyof MapEventType, delegatedListener.delegates[event]);
                 }
                 listeners.splice(i, 1);
                 return;
@@ -1760,8 +1760,8 @@ export class Map extends Camera {
      * @param type - The type of the event.
      * @param listener - The listener callback.
      */
-    on(type: keyof MapEventType | string, listener: Listener): Subscription;
-    on(type: keyof MapEventType | string, layerIdsOrListener: string | string[] | Listener, listener?: Listener): Subscription {
+    on(type: keyof MapEventType, listener: Listener): Subscription;
+    on(type: keyof MapEventType, layerIdsOrListener: string | string[] | Listener, listener?: Listener): Subscription {
         if (listener === undefined) {
             return super.on(type, layerIdsOrListener as Listener);
         }
@@ -1773,7 +1773,7 @@ export class Map extends Camera {
         this._saveDelegatedListener(type, delegatedListener);
 
         for (const event in delegatedListener.delegates) {
-            this.on(event, delegatedListener.delegates[event]);
+            this.on(event as keyof MapEventType, delegatedListener.delegates[event]);
         }
 
         return {
@@ -1858,8 +1858,8 @@ export class Map extends Camera {
      * @param type - The type of the event.
      * @param listener - The listener callback.
      */
-    once(type: keyof MapEventType | string, listener?: Listener): this | Promise<any>;
-    once(type: keyof MapEventType | string, layerIdsOrListener?: string | string[] | Listener, listener?: Listener): this | Promise<any> {
+    once(type: keyof MapEventType, listener?: Listener): this | Promise<any>;
+    once(type: keyof MapEventType, layerIdsOrListener?: string | string[] | Listener, listener?: Listener): this | Promise<any> {
         if (listener === undefined) {
             return super.once(type, layerIdsOrListener as Listener);
         }
@@ -1879,7 +1879,7 @@ export class Map extends Camera {
         this._saveDelegatedListener(type, delegatedListener);
 
         for (const event in delegatedListener.delegates) {
-            this.once(event, delegatedListener.delegates[event]);
+            this.once(event as keyof MapEventType, delegatedListener.delegates[event]);
         }
 
         return this;
@@ -1924,8 +1924,8 @@ export class Map extends Camera {
      * @param type - The type of the event.
      * @param listener - The function previously installed as a listener.
      */
-    off(type: keyof MapEventType | string, listener: Listener): this;
-    off(type: keyof MapEventType | string, layerIdsOrListener: string | string[] | Listener, listener?: Listener): this {
+    off(type: keyof MapEventType, listener: Listener): this;
+    off(type: keyof MapEventType, layerIdsOrListener: string | string[] | Listener, listener?: Listener): this {
         if (listener === undefined) {
             return super.off(type, layerIdsOrListener as Listener);
         }
