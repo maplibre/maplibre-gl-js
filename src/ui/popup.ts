@@ -122,7 +122,7 @@ const focusQuerySelector = [
  * @group Event Related
  */
 export class PopupEvent extends Event {
-    type: 'open' | 'close';
+    type: keyof PopupEventType;
     /**
      * The `Popup` object that fired the event.
      */

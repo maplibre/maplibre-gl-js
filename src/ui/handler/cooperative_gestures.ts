@@ -1,6 +1,7 @@
 import {DOM} from '../../util/dom.ts';
-import {type Event} from '../../util/evented.ts';
 import {MapLibreEvent} from '../events.ts';
+
+import {type Event} from '../../util/evented.ts';
 import {type Handler} from '../handler_manager.ts';
 
 import type {Map} from '../map.ts';

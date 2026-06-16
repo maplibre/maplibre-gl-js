@@ -15,6 +15,8 @@ import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_s
 import {type ActorMessage, MessageType} from '../util/actor_messages.ts';
 import {type MapSourceDataEvent} from '../ui/events.ts';
 
+class StubbedEvented extends Evented {}
+
 function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
     source.onAdd({
@@ -115,7 +117,7 @@ describe('VectorTileSource', () => {
 
     test('fires "dataloading" event', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
-        const evented = new Evented();
+        const evented = new StubbedEvented();
         const dataloadingSpy = vi.fn();
         evented.on('dataloading', dataloadingSpy);
         const source = createSource({url: '/source.json', eventedParent: evented});

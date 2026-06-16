@@ -61,7 +61,7 @@ export class ErrorEvent extends Event {
  *
  * @group Event Related
  */
-export class Evented<EventType extends {[_: string]: any} = {[_: string]: any}> {
+export abstract class Evented<EventType extends {[_: string]: any} = {[_: string]: any}> {
     _listeners: Listeners;
     _oneTimeListeners: Listeners;
     _eventedParent: Evented;

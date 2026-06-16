@@ -1,7 +1,6 @@
 import {throwIfAborted} from '../util/abort_error.ts';
 import {ErrorEvent, Evented} from '../util/evented.ts';
-import {MapSourceDataEvent, MapStyleDataEvent, MapLibreEvent} from '../ui/events.ts';
-import {type StyleLayer} from './style_layer.ts';
+import {MapSourceDataEvent, MapStyleDataEvent, MapStyleLoadEvent, type MapEventType} from '../ui/events.ts';
 import {isRasterStyleLayer} from './style_layer/raster_style_layer.ts';
 import {createStyleLayer} from './create_style_layer.ts';
 import {loadSprite} from './load_sprite.ts';
@@ -18,10 +17,8 @@ import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
 import {Dispatcher} from '../util/dispatcher.ts';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style.ts';
-import {type Source} from '../source/source.ts';
 import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features.ts';
 import {TileManager} from '../tile/tile_manager.ts';
-import {type GeoJSONSource} from '../source/geojson_source.ts';
 import {latest as styleSpec, derefLayers, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
@@ -30,6 +27,10 @@ import {PauseablePlacement} from './pauseable_placement.ts';
 import {ZoomHistory} from './zoom_history.ts';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
 import {validateCustomStyleLayer} from './style_layer/custom_style_layer.ts';
+
+import type {Source} from '../source/source.ts';
+import type {GeoJSONSource} from '../source/geojson_source.ts';
+import type {StyleLayer} from './style_layer.ts';
 import type {MapGeoJSONFeature, GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type Point from '@mapbox/point-geometry';
 
@@ -208,7 +209,7 @@ export type AddLayerObject = LayerSpecification | (Omit<LayerSpecification, 'sou
 /**
  * The Style base class
  */
-export class Style extends Evented {
+export class Style extends Evented<MapEventType> {
     map: Map;
     stylesheet: StyleSpecification;
     dispatcher: Dispatcher;
@@ -504,7 +505,7 @@ export class Style extends Evented {
         this.map.setTerrain(this.stylesheet.terrain ?? null);
 
         this.fire(new MapStyleDataEvent('data'));
-        this.fire(new MapLibreEvent('style.load'));
+        this.fire(new MapStyleLoadEvent());
     }
 
     private _createLayers() {
@@ -895,7 +896,7 @@ export class Style extends Evented {
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
 
-        this.fire(new MapLibreEvent('style.load', {style: this}));
+        this.fire(new MapStyleLoadEvent({style: this}));
 
         return true;
     }

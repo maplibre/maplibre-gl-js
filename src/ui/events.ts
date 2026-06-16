@@ -237,7 +237,7 @@ export type MapEventType = {
      * Fired once the map's style has fully loaded or changed, after all
      * necessary resources referenced by the style have been requested.
      */
-    'style.load': MapLibreEvent;
+    'style.load': MapStyleLoadEvent;
     /**
      * Fired when an icon or pattern needed by the style is missing. The missing image can
      * be added with {@link Map.addImage} within this event listener callback to prevent the image from
@@ -497,6 +497,19 @@ export class MapMovementEvent extends MapLibreEvent<MouseEvent | TouchEvent | Wh
     type: 'movestart' | 'move' | 'moveend' | 'zoomstart' | 'zoom' | 'zoomend' |
     'rotatestart' | 'rotate' | 'rotateend' | 'dragstart' | 'drag' | 'dragend' |
     'pitchstart' | 'pitch' | 'pitchend' | 'rollstart' | 'roll' | 'rollend';
+}
+
+/**
+ * The `style.load` event, fired once the map's style has fully loaded or changed.
+ *
+ * @group Event Related
+ */
+export class MapStyleLoadEvent extends MapLibreEvent {
+    type: 'style.load';
+
+    constructor(data: any = {}) {
+        super('style.load', data);
+    }
 }
 
 /**
