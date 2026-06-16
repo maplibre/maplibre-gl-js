@@ -212,7 +212,6 @@ export type MapEventType = {
      * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
      */
     data: MapSourceDataEvent | MapStyleDataEvent;
-    tiledataloading: MapSourceDataEvent;
     /**
      * Fired when one of the map's sources begins loading or changing asynchronously.
      * All `sourcedataloading` events are followed by a `sourcedata`, `sourcedataabort` or `error` event.
