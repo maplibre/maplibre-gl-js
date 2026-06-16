@@ -23,27 +23,6 @@ export type FullscreenControlOptions = {
 };
 
 /**
- * A `FullscreenControl` control contains a button for toggling the map in and out of fullscreen mode.
- * When [requestFullscreen](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullscreen) is not supported, fullscreen is handled via CSS properties.
- * The map's `cooperativeGestures` option is temporarily disabled while the map
- * is in fullscreen mode, and is restored when the map exist fullscreen mode.
- *
- * @group Markers and Controls
- * @param options - the full screen control options
- *
- * @example
- * ```ts
- * map.addControl(new FullscreenControl({container: document.querySelector('body')}));
- * ```
- * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js/docs/examples/view-a-fullscreen-map/)
- *
- * ## Events
- *
- * **Event** `fullscreenstart` of type {@link Event} will be fired when fullscreen mode has started.
- *
- * **Event** `fullscreenend` of type {@link Event} will be fired when fullscreen mode has ended.
- */
-/**
  * The event class for fullscreen control events (`fullscreenstart` and `fullscreenend`).
  *
  * @group Event Related
@@ -73,6 +52,27 @@ export type FullscreenControlEventType = {
     fullscreenend: FullscreenEvent;
 };
 
+/**
+ * A `FullscreenControl` control contains a button for toggling the map in and out of fullscreen mode.
+ * When [requestFullscreen](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullscreen) is not supported, fullscreen is handled via CSS properties.
+ * The map's `cooperativeGestures` option is temporarily disabled while the map
+ * is in fullscreen mode, and is restored when the map exist fullscreen mode.
+ *
+ * @group Markers and Controls
+ * @param options - the full screen control options
+ *
+ * @example
+ * ```ts
+ * map.addControl(new FullscreenControl({container: document.querySelector('body')}));
+ * ```
+ * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js/docs/examples/view-a-fullscreen-map/)
+ *
+ * ## Events
+ *
+ * **Event** `fullscreenstart` of type {@link FullscreenEvent} will be fired when fullscreen mode has started.
+ *
+ * **Event** `fullscreenend` of type {@link FullscreenEvent} will be fired when fullscreen mode has ended.
+ */
 export class FullscreenControl extends Evented implements IControl {
     _map: Map;
     _controlContainer: HTMLElement;

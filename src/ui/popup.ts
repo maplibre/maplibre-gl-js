@@ -117,6 +117,36 @@ const focusQuerySelector = [
 ].join(', ');
 
 /**
+ * The event class for popup events (`open` and `close`).
+ *
+ * @group Event Related
+ */
+export class PopupEvent extends Event {
+    type: 'open' | 'close';
+    /**
+     * The `Popup` object that fired the event.
+     */
+    target: Popup;
+}
+
+/**
+ * `PopupEventType` - a mapping between the popup event name and the event value.
+ * These events are used with the {@link Popup.on} method.
+ *
+ * @group Event Related
+ */
+export type PopupEventType = {
+    /**
+     * Fired when the popup is opened manually or programmatically.
+     */
+    open: PopupEvent;
+    /**
+     * Fired when the popup is closed manually or programmatically.
+     */
+    close: PopupEvent;
+};
+
+/**
  * A popup component.
  *
  * @group Markers and Controls
@@ -171,40 +201,10 @@ const focusQuerySelector = [
  *
  * ## Events
  *
- * **Event** `open` of type {@link Event} will be fired when the popup is opened manually or programmatically.
+ * **Event** `open` of type {@link PopupEvent} will be fired when the popup is opened manually or programmatically.
  *
- * **Event** `close` of type {@link Event} will be fired when the popup is closed manually or programmatically.
+ * **Event** `close` of type {@link PopupEvent} will be fired when the popup is closed manually or programmatically.
  */
-/**
- * The event class for popup events (`open` and `close`).
- *
- * @group Event Related
- */
-export class PopupEvent extends Event {
-    type: 'open' | 'close';
-    /**
-     * The `Popup` object that fired the event.
-     */
-    target: Popup;
-}
-
-/**
- * `PopupEventType` - a mapping between the popup event name and the event value.
- * These events are used with the {@link Popup.on} method.
- *
- * @group Event Related
- */
-export type PopupEventType = {
-    /**
-     * Fired when the popup is opened manually or programmatically.
-     */
-    open: PopupEvent;
-    /**
-     * Fired when the popup is closed manually or programmatically.
-     */
-    close: PopupEvent;
-};
-
 export class Popup extends Evented {
     _map: Map;
     options: PopupOptions;

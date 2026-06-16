@@ -58,6 +58,101 @@ let numberOfWatches = 0;
 let noTimeout = false;
 
 /**
+ * The event class for geolocate control state events
+ * (`trackuserlocationstart`, `trackuserlocationend`, `userlocationfocus` and `userlocationlostfocus`).
+ *
+ * @group Event Related
+ */
+export class GeolocateEvent extends Event {
+    type: 'trackuserlocationstart' | 'trackuserlocationend' | 'userlocationfocus' | 'userlocationlostfocus';
+    /**
+     * The `GeolocateControl` object that fired the event.
+     */
+    target: GeolocateControl;
+}
+
+/**
+ * The event class for the geolocate control `geolocate` and `outofmaxbounds` events.
+ * Carries the [Position](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationPosition) returned by the Geolocation API.
+ *
+ * @group Event Related
+ */
+export class GeolocatePositionEvent extends Event {
+    type: 'geolocate' | 'outofmaxbounds';
+    /**
+     * The `GeolocateControl` object that fired the event.
+     */
+    target: GeolocateControl;
+    /**
+     * The geographic position returned by the Geolocation API.
+     */
+    coords: GeolocationCoordinates;
+    /**
+     * The time at which the position was acquired, in milliseconds since the Unix epoch.
+     */
+    timestamp: number;
+}
+
+/**
+ * The event class for the geolocate control `error` event.
+ * Carries the [PositionError](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationPositionError) returned by the Geolocation API.
+ *
+ * @group Event Related
+ */
+export class GeolocateErrorEvent extends Event {
+    type: 'error';
+    /**
+     * The `GeolocateControl` object that fired the event.
+     */
+    target: GeolocateControl;
+    /**
+     * The error code returned by the Geolocation API.
+     */
+    code: number;
+    /**
+     * The error message returned by the Geolocation API.
+     */
+    message: string;
+}
+
+/**
+ * `GeolocateControlEventType` - a mapping between the geolocate control event name and the event value.
+ * These events are used with the {@link GeolocateControl.on} method.
+ *
+ * @group Event Related
+ */
+export type GeolocateControlEventType = {
+    /**
+     * Fired on each Geolocation API position update which returned as success.
+     */
+    geolocate: GeolocatePositionEvent;
+    /**
+     * Fired on each Geolocation API position update which returned as an error.
+     */
+    error: GeolocateErrorEvent;
+    /**
+     * Fired on each Geolocation API position update which returned as success but the user position is out of map `maxBounds`.
+     */
+    outofmaxbounds: GeolocatePositionEvent;
+    /**
+     * Fired when the geolocate control changes to the active lock state.
+     */
+    trackuserlocationstart: GeolocateEvent;
+    /**
+     * Fired when the geolocate control changes to the background state.
+     */
+    trackuserlocationend: GeolocateEvent;
+    /**
+     * Fired when the geolocate control's button is clicked in the active lock state.
+     */
+    userlocationfocus: GeolocateEvent;
+    /**
+     * Fired when the user changes the viewport while in the active lock state.
+     */
+    userlocationlostfocus: GeolocateEvent;
+};
+
+/**
  * A `GeolocateControl` control provides a button that uses the browser's geolocation
  * API to locate the user on the map.
  *
@@ -237,101 +332,6 @@ let noTimeout = false;
  * });
  * ```
  */
-/**
- * The event class for geolocate control state events
- * (`trackuserlocationstart`, `trackuserlocationend`, `userlocationfocus` and `userlocationlostfocus`).
- *
- * @group Event Related
- */
-export class GeolocateEvent extends Event {
-    type: 'trackuserlocationstart' | 'trackuserlocationend' | 'userlocationfocus' | 'userlocationlostfocus';
-    /**
-     * The `GeolocateControl` object that fired the event.
-     */
-    target: GeolocateControl;
-}
-
-/**
- * The event class for the geolocate control `geolocate` and `outofmaxbounds` events.
- * Carries the [Position](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationPosition) returned by the Geolocation API.
- *
- * @group Event Related
- */
-export class GeolocatePositionEvent extends Event {
-    type: 'geolocate' | 'outofmaxbounds';
-    /**
-     * The `GeolocateControl` object that fired the event.
-     */
-    target: GeolocateControl;
-    /**
-     * The geographic position returned by the Geolocation API.
-     */
-    coords: GeolocationCoordinates;
-    /**
-     * The time at which the position was acquired, in milliseconds since the Unix epoch.
-     */
-    timestamp: number;
-}
-
-/**
- * The event class for the geolocate control `error` event.
- * Carries the [PositionError](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationPositionError) returned by the Geolocation API.
- *
- * @group Event Related
- */
-export class GeolocateErrorEvent extends Event {
-    type: 'error';
-    /**
-     * The `GeolocateControl` object that fired the event.
-     */
-    target: GeolocateControl;
-    /**
-     * The error code returned by the Geolocation API.
-     */
-    code: number;
-    /**
-     * The error message returned by the Geolocation API.
-     */
-    message: string;
-}
-
-/**
- * `GeolocateControlEventType` - a mapping between the geolocate control event name and the event value.
- * These events are used with the {@link GeolocateControl.on} method.
- *
- * @group Event Related
- */
-export type GeolocateControlEventType = {
-    /**
-     * Fired on each Geolocation API position update which returned as success.
-     */
-    geolocate: GeolocatePositionEvent;
-    /**
-     * Fired on each Geolocation API position update which returned as an error.
-     */
-    error: GeolocateErrorEvent;
-    /**
-     * Fired on each Geolocation API position update which returned as success but the user position is out of map `maxBounds`.
-     */
-    outofmaxbounds: GeolocatePositionEvent;
-    /**
-     * Fired when the geolocate control changes to the active lock state.
-     */
-    trackuserlocationstart: GeolocateEvent;
-    /**
-     * Fired when the geolocate control changes to the background state.
-     */
-    trackuserlocationend: GeolocateEvent;
-    /**
-     * Fired when the geolocate control's button is clicked in the active lock state.
-     */
-    userlocationfocus: GeolocateEvent;
-    /**
-     * Fired when the user changes the viewport while in the active lock state.
-     */
-    userlocationlostfocus: GeolocateEvent;
-};
-
 export class GeolocateControl extends Evented implements IControl {
     _map: Map;
     options: GeolocateControlOptions;
@@ -369,6 +369,7 @@ export class GeolocateControl extends Evented implements IControl {
      *
      * @param type - The event type to listen for.
      * @param listener - The function to be called when the event is fired.
+     * @returns A {@link Subscription} with a `unsubscribe` method to remove the listener.
      */
     on<T extends keyof GeolocateControlEventType>(type: T, listener: (e: GeolocateControlEventType[T]) => void): Subscription;
     on(type: string, listener: Listener): Subscription;

@@ -96,57 +96,6 @@ export type MarkerOptions = {
 };
 
 /**
- * Creates a marker component
- *
- * @group Markers and Controls
- *
- * @example
- * ```ts
- * let marker = new Marker()
- *   .setLngLat([30.5, 50.5])
- *   .addTo(map);
- * ```
- *
- * @example
- * Set options
- * ```ts
- * let marker = new Marker({
- *     color: "#FFFFFF",
- *     draggable: true
- *   }).setLngLat([30.5, 50.5])
- *   .addTo(map);
- * ```
- * @see [Add a default marker](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-default-marker/)
- * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/add-custom-icons-with-markers/)
- * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-marker/)
- * @see [Animate a marker](https://maplibre.org/maplibre-gl-js/docs/examples/animate-a-marker/)
- * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/attach-a-popup-to-a-marker-instance/)
- *
- * ## Events
- *
- * **Event** `dragstart` of type {@link Event} will be fired when dragging starts.
- *
- * **Event** `drag` of type {@link Event} will be fired while dragging.
- *
- * **Event** `dragend` of type {@link Event} will be fired when the marker is finished being dragged.
- *
- * **Event** `click` of type {@link Event} will be fired when the marker is clicked.
- *
- * ## CSS Classes
- *
- * **CSS class** `maplibregl-marker-covered` is toggled on the marker element when the marker
- * is hidden behind 3D terrain or on the back of a globe.
- * Use this class to apply custom styles to covered markers.
- *
- * @example
- * ```css
- * .maplibregl-marker-covered {
- *     pointer-events: none;
- *     cursor: default;
- * }
- * ```
- */
-/**
  * The event class for marker drag events (`dragstart`, `drag` and `dragend`).
  *
  * @group Event Related
@@ -201,6 +150,57 @@ export type MarkerEventType = {
     click: MarkerClickEvent;
 };
 
+/**
+ * Creates a marker component
+ *
+ * @group Markers and Controls
+ *
+ * @example
+ * ```ts
+ * let marker = new Marker()
+ *   .setLngLat([30.5, 50.5])
+ *   .addTo(map);
+ * ```
+ *
+ * @example
+ * Set options
+ * ```ts
+ * let marker = new Marker({
+ *     color: "#FFFFFF",
+ *     draggable: true
+ *   }).setLngLat([30.5, 50.5])
+ *   .addTo(map);
+ * ```
+ * @see [Add a default marker](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-default-marker/)
+ * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/add-custom-icons-with-markers/)
+ * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-marker/)
+ * @see [Animate a marker](https://maplibre.org/maplibre-gl-js/docs/examples/animate-a-marker/)
+ * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/attach-a-popup-to-a-marker-instance/)
+ *
+ * ## Events
+ *
+ * **Event** `dragstart` of type {@link MarkerDragEvent} will be fired when dragging starts.
+ *
+ * **Event** `drag` of type {@link MarkerDragEvent} will be fired while dragging.
+ *
+ * **Event** `dragend` of type {@link MarkerDragEvent} will be fired when the marker is finished being dragged.
+ *
+ * **Event** `click` of type {@link MarkerClickEvent} will be fired when the marker is clicked.
+ *
+ * ## CSS Classes
+ *
+ * **CSS class** `maplibregl-marker-covered` is toggled on the marker element when the marker
+ * is hidden behind 3D terrain or on the back of a globe.
+ * Use this class to apply custom styles to covered markers.
+ *
+ * @example
+ * ```css
+ * .maplibregl-marker-covered {
+ *     pointer-events: none;
+ *     cursor: default;
+ * }
+ * ```
+ */
 export class Marker extends Evented {
     _map: Map;
     _anchor: PositionAnchor;
