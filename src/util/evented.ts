@@ -105,10 +105,18 @@ export abstract class Evented<EventType extends Record<string, any> = Record<str
      * The listener will be called first time the event fires after the listener is registered.
      *
      * @param type - The event type to listen for.
-     * @param listener - The function to be called when the event is fired the first time.
-     * @returns `this` when a listener is provided, or a promise that resolves with the event otherwise
+     * @returns a promise that resolves with the event
      */
     once<T extends keyof EventType>(type: T): Promise<EventType[T]>;
+    /**
+     * Adds a listener that will be called only once to a specified event type.
+     *
+     * The listener will be called first time the event fires after the listener is registered.
+     *
+     * @param type - The event type to listen for.
+     * @param listener - The function to be called when the event is fired the first time.
+     * @returns `this` when a listener is provided
+     */
     once<T extends keyof EventType>(type: T, listener: (event: EventType[T]) => void): this; 
     once<T extends keyof EventType>(type: T, listener?: (event: EventType[T]) => void): this | Promise<EventType[T]> {
         if (!listener) {
