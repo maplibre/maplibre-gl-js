@@ -29,6 +29,11 @@ function _removeEventListener(type: string, listener: Listener, listenerList: Li
  */
 export class Event {
     readonly type: string;
+    /**
+     * The object that fired the event. Set when the event is fired, and narrowed to a more
+     * specific type (e.g. `Map`, `Marker`) by the event subclasses.
+     */
+    target?: unknown;
 
     constructor(type: string, data: any = {}) {
         extend(this, data);
@@ -124,7 +129,7 @@ export class Evented {
         const type = event.type;
 
         if (this.listens(type)) {
-            (event as any).target = this;
+            event.target = this;
 
             // make sure adding or removing listeners inside other listeners won't cause an infinite loop
             const listeners = this._listeners?.[type] ? this._listeners[type].slice() : [];

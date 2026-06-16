@@ -20,7 +20,7 @@ import {AttributionControl, type AttributionControlOptions, defaultAttributionCo
 import {LogoControl} from './control/logo_control.ts';
 import {RGBAImage} from '../util/image.ts';
 import {type Event, ErrorEvent, type Listener} from '../util/evented.ts';
-import {type MapEventType, type MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent, MapLibreEvent, MapTerrainEvent, MapProjectionEvent, MapContextEvent} from './events.ts';
+import {type MapEventType, type MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent, MapLibreEvent, MapMovementEvent, MapTerrainEvent, MapProjectionEvent, MapContextEvent} from './events.ts';
 import {TaskQueue} from '../util/task_queue.ts';
 import {throttle} from '../util/throttle.ts';
 import {type Source} from '../source/source.ts';
@@ -39,7 +39,6 @@ import type {RequestTransformFunction} from '../util/request_manager.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {AddLayerObject, FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style.ts';
-import type {MapDataEvent} from './events.ts';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image.ts';
 import type {PointLike} from './camera.ts';
 import type {ScrollZoomHandler} from './handler/scroll_zoom.ts';
@@ -859,14 +858,14 @@ export class Map extends Camera {
                 this.jumpTo(coercedOptions);
             }
         });
-        this.on('data', (event: MapDataEvent) => {
+        this.on('data', (event: MapSourceDataEvent | MapStyleDataEvent) => {
             this._update(event.dataType === 'style');
             this.fire(event.dataType === 'style' ? new MapStyleDataEvent(`${event.dataType}data`, event) : new MapSourceDataEvent(`${event.dataType}data`, event));
         });
-        this.on('dataloading', (event: MapDataEvent) => {
+        this.on('dataloading', (event: MapSourceDataEvent | MapStyleDataEvent) => {
             this.fire(event.dataType === 'style' ? new MapStyleDataEvent(`${event.dataType}dataloading`, event) : new MapSourceDataEvent(`${event.dataType}dataloading`, event));
         });
-        this.on('dataabort', (event: MapDataEvent) => {
+        this.on('dataabort', (event: MapSourceDataEvent | MapStyleDataEvent) => {
             this.fire(new MapSourceDataEvent('sourcedataabort', event));
         });
     }
@@ -1040,13 +1039,13 @@ export class Map extends Camera {
         const fireMoving = !this._moving;
         if (fireMoving) {
             this.stop();
-            this.fire(new MapLibreEvent('movestart', eventData))
-                .fire(new MapLibreEvent('move', eventData));
+            this.fire(new MapMovementEvent('movestart', eventData))
+                .fire(new MapMovementEvent('move', eventData));
         }
 
         this.fire(new MapLibreEvent('resize', eventData));
 
-        if (fireMoving) this.fire(new MapLibreEvent('moveend', eventData));
+        if (fireMoving) this.fire(new MapMovementEvent('moveend', eventData));
 
         return this;
     }
@@ -1212,12 +1211,12 @@ export class Map extends Camera {
             this._applyUpdatedTransform(tr);
             this._update();
             if (zoomBefore !== this.transform.zoom) {
-                this.fire(new MapLibreEvent('zoomstart'))
-                    .fire(new MapLibreEvent('zoom'))
-                    .fire(new MapLibreEvent('zoomend'))
-                    .fire(new MapLibreEvent('movestart'))
-                    .fire(new MapLibreEvent('move'))
-                    .fire(new MapLibreEvent('moveend'));
+                this.fire(new MapMovementEvent('zoomstart'))
+                    .fire(new MapMovementEvent('zoom'))
+                    .fire(new MapMovementEvent('zoomend'))
+                    .fire(new MapMovementEvent('movestart'))
+                    .fire(new MapMovementEvent('move'))
+                    .fire(new MapMovementEvent('moveend'));
             }
 
             return this;
@@ -1262,12 +1261,12 @@ export class Map extends Camera {
             this._applyUpdatedTransform(tr);
             this._update();
             if (zoomBefore !== this.transform.zoom) {
-                this.fire(new MapLibreEvent('zoomstart'))
-                    .fire(new MapLibreEvent('zoom'))
-                    .fire(new MapLibreEvent('zoomend'))
-                    .fire(new MapLibreEvent('movestart'))
-                    .fire(new MapLibreEvent('move'))
-                    .fire(new MapLibreEvent('moveend'));
+                this.fire(new MapMovementEvent('zoomstart'))
+                    .fire(new MapMovementEvent('zoom'))
+                    .fire(new MapMovementEvent('zoomend'))
+                    .fire(new MapMovementEvent('movestart'))
+                    .fire(new MapMovementEvent('move'))
+                    .fire(new MapMovementEvent('moveend'));
             }
 
             return this;
@@ -1312,12 +1311,12 @@ export class Map extends Camera {
             this._applyUpdatedTransform(tr);
             this._update();
             if (pitchBefore !== this.transform.pitch) {
-                this.fire(new MapLibreEvent('pitchstart'))
-                    .fire(new MapLibreEvent('pitch'))
-                    .fire(new MapLibreEvent('pitchend'))
-                    .fire(new MapLibreEvent('movestart'))
-                    .fire(new MapLibreEvent('move'))
-                    .fire(new MapLibreEvent('moveend'));
+                this.fire(new MapMovementEvent('pitchstart'))
+                    .fire(new MapMovementEvent('pitch'))
+                    .fire(new MapMovementEvent('pitchend'))
+                    .fire(new MapMovementEvent('movestart'))
+                    .fire(new MapMovementEvent('move'))
+                    .fire(new MapMovementEvent('moveend'));
             }
 
             return this;
@@ -1358,12 +1357,12 @@ export class Map extends Camera {
             this._applyUpdatedTransform(tr);
             this._update();
             if (pitchBefore !== this.transform.pitch) {
-                this.fire(new MapLibreEvent('pitchstart'))
-                    .fire(new MapLibreEvent('pitch'))
-                    .fire(new MapLibreEvent('pitchend'))
-                    .fire(new MapLibreEvent('movestart'))
-                    .fire(new MapLibreEvent('move'))
-                    .fire(new MapLibreEvent('moveend'));
+                this.fire(new MapMovementEvent('pitchstart'))
+                    .fire(new MapMovementEvent('pitch'))
+                    .fire(new MapMovementEvent('pitchend'))
+                    .fire(new MapMovementEvent('movestart'))
+                    .fire(new MapMovementEvent('move'))
+                    .fire(new MapMovementEvent('moveend'));
             }
 
             return this;

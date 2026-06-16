@@ -15,7 +15,7 @@ import {LngLat, type LngLatLike} from './geo/lng_lat.ts';
 import {LngLatBounds, type LngLatBoundsLike} from './geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate.ts';
-import {Evented, type ErrorEvent, Event, type Listener} from './util/evented.ts';
+import {Evented, ErrorEvent, Event, type Listener} from './util/evented.ts';
 import {type AddProtocolAction, config} from './util/config.ts';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread.ts';
 import {now, setNow, restoreNow, isTimeFrozen} from './util/time_control.ts';
@@ -33,7 +33,7 @@ import {type Source, type SourceClass, addSourceType} from './source/source.ts';
 import {addProtocol, removeProtocol} from './source/protocol_crud.ts';
 import {type Dispatcher, getGlobalDispatcher} from './util/dispatcher.ts';
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets.ts';
-import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapSourceDataEvent, MapBoxZoomEvent, MapLibreEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, MapDataEvent, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, MapProjectionEvent} from './ui/events.ts';
+import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapSourceDataEvent, MapBoxZoomEvent, MapLibreEvent, MapMovementEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, MapProjectionEvent} from './ui/events.ts';
 import {BoxZoomHandler, type BoxZoomEndHandler, type BoxZoomHandlerOptions} from './ui/handler/box_zoom.ts';
 import {DragRotateHandler} from './ui/handler/shim/drag_rotate.ts';
 import {DragPanHandler, type DragPanOptions} from './ui/handler/shim/drag_pan.ts';
@@ -211,23 +211,19 @@ export {
     GeolocateEvent,
     GeolocatePositionEvent,
     GeolocateErrorEvent,
-    type GeolocateControlEventType,
     AttributionControl,
     LogoControl,
     ScaleControl,
     FullscreenControl,
     FullscreenEvent,
-    type FullscreenControlEventType,
     TerrainControl,
     GlobeControl,
     Hash,
     Popup,
     PopupEvent,
-    type PopupEventType,
     Marker,
     MarkerDragEvent,
     MarkerClickEvent,
-    type MarkerEventType,
     Style,
     LngLat,
     LngLatBounds,
@@ -261,6 +257,16 @@ export {
     MapWheelEvent,
     MapTouchEvent,
     MapMouseEvent,
+    MapProjectionEvent,
+    MapTerrainEvent,
+    MapStyleImageMissingEvent,
+    MapStyleDataEvent,
+    MapSourceDataEvent,
+    MapBoxZoomEvent,
+    MapLibreEvent,
+    MapMovementEvent,
+    MapContextEvent,
+    ErrorEvent,
     type Handler,
     type RequireAtLeastOne,
     type CameraUpdateTransformFunction,
@@ -370,20 +376,14 @@ export {
     type PointLike,
     type LngLatBoundsLike,
     type Source,
-    MapProjectionEvent,
-    MapTerrainEvent,
-    MapStyleImageMissingEvent,
-    MapStyleDataEvent,
-    MapSourceDataEvent,
-    MapBoxZoomEvent,
-    MapLibreEvent,
     type MapLayerTouchEvent,
     type MapLayerMouseEvent,
     type MapLayerEventType,
     type MapEventType,
-    MapDataEvent,
-    MapContextEvent,
-    type ErrorEvent,
+    type GeolocateControlEventType,
+    type FullscreenControlEventType,
+    type PopupEventType,
+    type MarkerEventType,
     type GeoJSONFeature,
     type CoveringTilesOptions,
     type DashEntry,

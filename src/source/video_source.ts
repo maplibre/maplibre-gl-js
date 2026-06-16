@@ -4,7 +4,7 @@ import {ResourceType} from '../util/request_manager.ts';
 import {ImageSource} from './image_source.ts';
 import {Texture} from '../webgl/texture.ts';
 import {ErrorEvent} from '../util/evented.ts';
-import {MapDataEvent} from '../ui/events.ts';
+import {MapSourceDataEvent} from '../ui/events.ts';
 import {ensureError} from '../util/util.ts';
 import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
 
@@ -188,7 +188,7 @@ export class VideoSource extends ImageSource {
         }
 
         if (newTilesLoaded) {
-            this.fire(new MapDataEvent('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
+            this.fire(new MapSourceDataEvent('data', {sourceDataType: 'idle', sourceId: this.id}));
         }
     }
 

@@ -2,7 +2,7 @@ import {DOM} from '../../util/dom.ts';
 
 import type {Map} from '../map.ts';
 import type {ControlPosition, IControl} from './control.ts';
-import type {MapDataEvent, MapTerrainEvent} from '../events.ts';
+import type {MapSourceDataEvent, MapStyleDataEvent, MapTerrainEvent} from '../events.ts';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 /**
  * The {@link AttributionControl} options object
@@ -115,8 +115,8 @@ export class AttributionControl implements IControl {
         }
     };
 
-    _updateData = (e: MapDataEvent | MapTerrainEvent): void => {
-        if (e && (e.type === 'terrain' || e.sourceDataType === 'metadata' || e.sourceDataType === 'visibility' || e.dataType === 'style')) {
+    _updateData = (e: MapSourceDataEvent | MapStyleDataEvent | MapTerrainEvent): void => {
+        if (e && (e.type === 'terrain' || e.dataType === 'style' || (e.dataType === 'source' && (e.sourceDataType === 'metadata' || e.sourceDataType === 'visibility')))) {
             this._updateAttributions();
         }
     };

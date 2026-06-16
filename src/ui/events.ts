@@ -8,7 +8,8 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {Map} from './map.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {ProjectionSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type GeoJSONSourceShouldReloadTileOptions} from '../source/geojson_source.ts';
+import type {GeoJSONSourceShouldReloadTileOptions} from '../source/geojson_source.ts';
+import type {OverscaledTileID} from '../tile/tile_id.ts';
 
 /**
  * An event from the mouse relevant to a specific layer.
@@ -205,13 +206,13 @@ export type MapEventType = {
      * changing asynchronously. All `dataloading` events are followed by a `data`,
      * `dataabort` or `error` event.
      */
-    dataloading: MapDataEvent;
+    dataloading: MapSourceDataEvent | MapStyleDataEvent;
     /**
-     * Fired when any map data loads or changes. See {@link MapDataEvent} for more information.
+     * Fired when any map data loads or changes. See {@link MapSourceDataEvent} and {@link MapStyleDataEvent} for more information.
      * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
      */
-    data: MapDataEvent;
-    tiledataloading: MapDataEvent;
+    data: MapSourceDataEvent | MapStyleDataEvent;
+    tiledataloading: MapSourceDataEvent;
     /**
      * Fired when one of the map's sources begins loading or changing asynchronously.
      * All `sourcedataloading` events are followed by a `sourcedata`, `sourcedataabort` or `error` event.
@@ -247,7 +248,7 @@ export type MapEventType = {
     /**
      * Fired when a request for one of the map's sources' tiles or data is aborted.
      */
-    dataabort: MapDataEvent;
+    dataabort: MapSourceDataEvent;
     /**
      * Fired when a request for one of the map's sources' data is aborted.
      */
@@ -342,93 +343,93 @@ export type MapEventType = {
      * view to another, as the result of either user interaction or methods such as {@link Map.jumpTo}.
      *
      */
-    movestart: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+    movestart: MapMovementEvent;
     /**
      * Fired repeatedly during an animated transition from one view to
      * another, as the result of either user interaction or methods such as {@link Map.flyTo}.
      *
      * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
      */
-    move: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+    move: MapMovementEvent;
     /**
      * Fired just after the map completes a transition from one
      * view to another, as the result of either user interaction or methods such as {@link Map.jumpTo}.
      *
      * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
      */
-    moveend: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+    moveend: MapMovementEvent;
     /**
      * Fired just before the map begins a transition from one zoom level to another,
      * as the result of either user interaction or methods such as {@link Map.flyTo}.
      */
-    zoomstart: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+    zoomstart: MapMovementEvent;
     /**
      * Fired repeatedly during an animated transition from one zoom level to another,
      * as the result of either user interaction or methods such as {@link Map.flyTo}.
      */
-    zoom: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+    zoom: MapMovementEvent;
     /**
      * Fired just after the map completes a transition from one zoom level to another,
      * as the result of either user interaction or methods such as {@link Map.flyTo}.
      */
-    zoomend: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+    zoomend: MapMovementEvent;
     /**
      * Fired when a "drag to rotate" interaction starts. See {@link DragRotateHandler}.
      */
-    rotatestart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    rotatestart: MapMovementEvent;
     /**
      * Fired repeatedly during a "drag to rotate" interaction. See {@link DragRotateHandler}.
      */
-    rotate: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    rotate: MapMovementEvent;
     /**
      * Fired when a "drag to rotate" interaction ends. See {@link DragRotateHandler}.
      */
-    rotateend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    rotateend: MapMovementEvent;
     /**
      * Fired when a "drag to pan" interaction starts. See {@link DragPanHandler}.
      */
-    dragstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    dragstart: MapMovementEvent;
     /**
      * Fired repeatedly during a "drag to pan" interaction. See {@link DragPanHandler}.
      */
-    drag: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    drag: MapMovementEvent;
     /**
      * Fired when a "drag to pan" interaction ends. See {@link DragPanHandler}.
      * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-marker/)
      */
-    dragend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    dragend: MapMovementEvent;
     /**
      * Fired whenever the map's pitch (tilt) begins a change as
      * the result of either user interaction or methods such as {@link Map.flyTo} .
      */
-    pitchstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    pitchstart: MapMovementEvent;
     /**
      * Fired repeatedly during the map's pitch (tilt) animation between
      * one state and another as the result of either user interaction
      * or methods such as {@link Map.flyTo}.
      */
-    pitch: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    pitch: MapMovementEvent;
     /**
      * Fired immediately after the map's pitch (tilt) finishes changing as
      * the result of either user interaction or methods such as {@link Map.flyTo}.
      */
-    pitchend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    pitchend: MapMovementEvent;
     /**
      * Fired whenever the map's roll begins a change as
      * the result of either user interaction or methods such as {@link Map.flyTo}.
      */
-    rollstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    rollstart: MapMovementEvent;
     /**
      * Fired repeatedly during the map's roll animation between
      * one state and another as the result of either user interaction
      * or methods such as {@link Map.flyTo}.
      */
-    roll: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    roll: MapMovementEvent;
     /**
      * Fired immediately after the map's roll finishes changing as
      * the result of either user interaction or methods such as {@link Map.flyTo}.
      */
-    rollend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+    rollend: MapMovementEvent;
     /**
      * Fired when a [`wheel`](https://developer.mozilla.org/en-US/docs/Web/Events/wheel) event occurs within the map.
      */
@@ -462,20 +463,61 @@ export class MapLibreEvent<TOrig = unknown> extends Event {
 }
 
 /**
+ * `MapMovementEvent` is the event type for the camera-transition map events:
+ * `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `rotatestart`, `rotate`, `rotateend`,
+ * `dragstart`, `drag`, `dragend`, `pitchstart`, `pitch`, `pitchend`, `rollstart`, `roll` and `rollend`.
+ * These are fired as the map's view changes, as a result of either user interaction or methods such
+ * as {@link Map.jumpTo} / {@link Map.flyTo}.
+ *
+ * @group Event Related
+ */
+export class MapMovementEvent extends MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined> {
+    type: 'movestart' | 'move' | 'moveend' | 'zoomstart' | 'zoom' | 'zoomend' |
+    'rotatestart' | 'rotate' | 'rotateend' | 'dragstart' | 'drag' | 'dragend' |
+    'pitchstart' | 'pitch' | 'pitchend' | 'rollstart' | 'roll' | 'rollend';
+}
+
+/**
  * The style data event
  *
  * @group Event Related
  */
 export class MapStyleDataEvent extends MapLibreEvent {
+    type: 'data' | 'dataloading' | 'styledata' | 'styledataloading';
     dataType: 'style';
+
+    constructor(type: MapStyleDataEvent['type'], data: Omit<Partial<MapStyleDataEvent>, 'type' | 'dataType' | 'target'> = {}) {
+        super(type, data);
+        this.dataType = 'style';
+    }
 }
 
 /**
- * The source data event interface
+ * A `MapSourceDataEvent` is emitted with the source-related `data`, `dataloading`, `dataabort`,
+ * `sourcedata`, `sourcedataloading` and `sourcedataabort` events. Its `dataType` is always `'source'`.
+ *
+ * Possible values for `sourceDataType`s are:
+ *
+ * - `'metadata'`: indicates that any necessary source metadata has been loaded (such as TileJSON) and it is ok to start loading tiles
+ * - `'content'`: indicates the source data has changed (such as when source.setData() has been called on GeoJSONSource)
+ * - `'visibility'`: send when the source becomes used when at least one of its layers becomes visible in style sense (inside the layer's zoom range and with layout.visibility set to 'visible')
+ * - `'idle'`: indicates that no new source data has been fetched (but the source has done loading)
  *
  * @group Event Related
+ *
+ * @example
+ * ```ts
+ * // The sourcedata event is an example of a MapSourceDataEvent.
+ * // Set up an event listener on the map.
+ * map.on('sourcedata', (e) => {
+ *    if (e.isSourceLoaded) {
+ *        // Do something when the source has finished loading
+ *    }
+ * });
+ * ```
  */
 export class MapSourceDataEvent extends MapLibreEvent {
+    type: 'data' | 'dataloading' | 'dataabort' | 'sourcedata' | 'sourcedataloading' | 'sourcedataabort';
     dataType: 'source';
     /**
      * True if the event has a `dataType` of `source` and the source has no outstanding network requests.
@@ -493,12 +535,25 @@ export class MapSourceDataEvent extends MapLibreEvent {
      * the event is related to loading of a tile.
      */
     tile: any;
+    /**
+     * The tile ID of the tile being loaded or changed, if the event is related to loading of a tile.
+     */
+    coord: OverscaledTileID;
+    /**
+     * Resource timing data, if `collectResourceTiming` is enabled for the source.
+     */
+    resourceTiming?: PerformanceResourceTiming[];
 
     /**
      * Options to determine whether a tile should be reloaded.
      * @internal
      */
     shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions;
+
+    constructor(type: MapSourceDataEvent['type'], data: Omit<Partial<MapSourceDataEvent>, 'type' | 'dataType' | 'target'> = {}) {
+        super(type, data);
+        this.dataType = 'source';
+    }
 };
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.
@@ -719,49 +774,6 @@ export class MapBoxZoomEvent extends MapLibreEvent<MouseEvent> {
      * The DOM event that triggered the boxzoom event. Can be a `MouseEvent` or `KeyboardEvent`
      */
     originalEvent: MouseEvent;
-};
-
-/**
- * A `MapDataEvent` object is emitted with the `data`
- * and `dataloading` events. Possible values for
- * `dataType`s are:
- *
- * - `'source'`: The non-tile data associated with any source
- * - `'style'`: The [style](https://maplibre.org/maplibre-style-spec/) used by the map
- *
- * Possible values for `sourceDataType`s are:
- *
- * - `'metadata'`: indicates that any necessary source metadata has been loaded (such as TileJSON) and it is ok to start loading tiles
- * - `'content'`: indicates the source data has changed (such as when source.setData() has been called on GeoJSONSource)
- * - `'visibility'`: send when the source becomes used when at least one of its layers becomes visible in style sense (inside the layer's zoom range and with layout.visibility set to 'visible')
- * - `'idle'`: indicates that no new source data has been fetched (but the source has done loading)
- *
- * @group Event Related
- *
- * @example
- * ```ts
- * // The sourcedata event is an example of MapDataEvent.
- * // Set up an event listener on the map.
- * map.on('sourcedata', (e) => {
- *    if (e.isSourceLoaded) {
- *        // Do something when the source has finished loading
- *    }
- * });
- * ```
- */
-export class MapDataEvent extends MapLibreEvent {
-    /**
-     * The event type.
-     */
-    type: 'dataloading' | 'data' | 'dataabort';
-    /**
-     * The type of data that has changed. One of `'source'`, `'style'`.
-     */
-    dataType: 'source' | 'style';
-    /**
-     *  Included if the event has a `dataType` of `source` and the event signals that internal data has been received or changed. Possible values are `metadata`, `content`, `visibility` and `idle`.
-     */
-    sourceDataType: MapSourceDataType;
 };
 
 /**

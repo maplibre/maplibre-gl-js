@@ -2,7 +2,7 @@ import {ImageSource} from './image_source.ts';
 
 import {Texture} from '../webgl/texture.ts';
 import {ErrorEvent} from '../util/evented.ts';
-import {MapDataEvent} from '../ui/events.ts';
+import {MapSourceDataEvent} from '../ui/events.ts';
 import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
 
 import type {Map} from '../ui/map.ts';
@@ -193,7 +193,7 @@ export class CanvasSource extends ImageSource {
         }
 
         if (newTilesLoaded) {
-            this.fire(new MapDataEvent('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
+            this.fire(new MapSourceDataEvent('data', {sourceDataType: 'idle', sourceId: this.id}));
         }
     }
 
