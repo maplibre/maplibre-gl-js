@@ -33,7 +33,7 @@ import {type Source, type SourceClass, addSourceType} from './source/source.ts';
 import {addProtocol, removeProtocol} from './source/protocol_crud.ts';
 import {type Dispatcher, getGlobalDispatcher} from './util/dispatcher.ts';
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets.ts';
-import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapSourceDataEvent, MapBoxZoomEvent, MapLibreEvent, MapMovementEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, MapProjectionEvent} from './ui/events.ts';
+import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapSourceDataEvent, MapBoxZoomEvent, MapLibreEvent, MapMovementEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type SourceEventType, MapProjectionEvent} from './ui/events.ts';
 import {BoxZoomHandler, type BoxZoomEndHandler, type BoxZoomHandlerOptions} from './ui/handler/box_zoom.ts';
 import {DragRotateHandler} from './ui/handler/shim/drag_rotate.ts';
 import {DragPanHandler, type DragPanOptions} from './ui/handler/shim/drag_pan.ts';
@@ -380,6 +380,7 @@ export {
     type MapLayerMouseEvent,
     type MapLayerEventType,
     type MapEventType,
+    type SourceEventType,
     type GeolocateControlEventType,
     type FullscreenControlEventType,
     type PopupEventType,

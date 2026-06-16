@@ -162,7 +162,6 @@ export abstract class StyleLayer extends Evented {
             }
 
             this._transitioningPaint = this._transitionablePaint.untransitioned();
-            //$FlowFixMe
             this.paint = new PossiblyEvaluated(properties.paint);
         }
     }

@@ -9,6 +9,7 @@ import {Evented} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 
+import type {MapEventType} from './events.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {ITransform} from '../geo/transform_interface.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
@@ -254,7 +255,7 @@ export type CameraUpdateTransformFunction =  (next: {
     elevation?: number;
 };
 
-export abstract class Camera extends Evented {
+export abstract class Camera extends Evented<MapEventType> {
     transform: ITransform;
     cameraHelper: ICameraHelper;
     terrain: Terrain;

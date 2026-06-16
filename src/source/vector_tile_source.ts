@@ -1,5 +1,5 @@
 import {ErrorEvent, Evented} from '../util/evented.ts';
-import {MapSourceDataEvent} from '../ui/events.ts';
+import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 
 import {ensureError, extend, pick} from '../util/util.ts';
 import {loadTileJson} from './load_tilejson.ts';
@@ -63,7 +63,7 @@ export type LoadTileResult = {
  * ```
  * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-vector-tile-source/)
  */
-export class VectorTileSource extends Evented implements Source {
+export class VectorTileSource extends Evented<SourceEventType> implements Source {
     type: 'vector';
     id: string;
     minzoom: number;

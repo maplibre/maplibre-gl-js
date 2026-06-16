@@ -860,10 +860,10 @@ export class Map extends Camera {
         });
         this.on('data', (event: MapSourceDataEvent | MapStyleDataEvent) => {
             this._update(event.dataType === 'style');
-            this.fire(event.dataType === 'style' ? new MapStyleDataEvent(`${event.dataType}data`, event) : new MapSourceDataEvent(`${event.dataType}data`, event));
+            this.fire(event.dataType === 'style' ? new MapStyleDataEvent('styledata', event) : new MapSourceDataEvent('sourcedata', event));
         });
         this.on('dataloading', (event: MapSourceDataEvent | MapStyleDataEvent) => {
-            this.fire(event.dataType === 'style' ? new MapStyleDataEvent(`${event.dataType}dataloading`, event) : new MapSourceDataEvent(`${event.dataType}dataloading`, event));
+            this.fire(event.dataType === 'style' ? new MapStyleDataEvent('styledataloading', event) : new MapSourceDataEvent('sourcedataloading', event));
         });
         this.on('dataabort', (event: MapSourceDataEvent | MapStyleDataEvent) => {
             this.fire(new MapSourceDataEvent('sourcedataabort', event));

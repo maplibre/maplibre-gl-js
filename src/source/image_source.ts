@@ -1,6 +1,6 @@
 import {CanonicalTileID} from '../tile/tile_id.ts';
 import {ErrorEvent, Evented} from '../util/evented.ts';
-import {MapSourceDataEvent} from '../ui/events.ts';
+import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {Texture} from '../webgl/texture.ts';
@@ -99,7 +99,7 @@ export type CanonicalTileRange = {
  * map.removeSource('some id');  // remove
  * ```
  */
-export class ImageSource extends Evented implements Source {
+export class ImageSource extends Evented<SourceEventType> implements Source {
     type: string;
     id: string;
     minzoom: number;

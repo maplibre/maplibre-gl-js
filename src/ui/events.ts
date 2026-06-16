@@ -452,6 +452,28 @@ export type MapEventType = {
 };
 
 /**
+ * `SourceEventType` - a mapping between the source data event names and their event value.
+ * These are the events fired by a {@link Source} as its data loads or changes; they also bubble
+ * up to the {@link Map}. See {@link MapSourceDataEvent} for the event shape.
+ *
+ * @group Event Related
+ */
+export type SourceEventType = {
+    /**
+     * Fired when the source's data loads or changes.
+     */
+    data: MapSourceDataEvent;
+    /**
+     * Fired when the source begins loading or changing data.
+     */
+    dataloading: MapSourceDataEvent;
+    /**
+     * Fired when a request for the source's data is aborted.
+     */
+    dataabort: MapSourceDataEvent;
+};
+
+/**
  * The base event for MapLibre
  *
  * @group Event Related

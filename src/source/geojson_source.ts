@@ -1,5 +1,5 @@
 import {ErrorEvent, Evented} from '../util/evented.ts';
-import {MapSourceDataEvent} from '../ui/events.ts';
+import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 import {ensureError, extend, warnOnce, type ExactlyOne} from '../util/util.ts';
 import {EXTENT} from '../data/extent.ts';
 import {ResourceType} from '../util/request_manager.ts';
@@ -122,7 +122,7 @@ export type SetClusterOptions = {
  * @see [Create a heatmap from points](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-heatmap-layer/)
  * @see [Create and style clusters](https://maplibre.org/maplibre-gl-js/docs/examples/create-and-style-clusters/)
  */
-export class GeoJSONSource extends Evented implements Source {
+export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     type: 'geojson';
     id: string;
     minzoom: number;

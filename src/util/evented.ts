@@ -61,7 +61,7 @@ export class ErrorEvent extends Event {
  *
  * @group Event Related
  */
-export class Evented {
+export class Evented<EventType extends {[_: string]: any} = {[_: string]: any}> {
     _listeners: Listeners;
     _oneTimeListeners: Listeners;
     _eventedParent: Evented;
@@ -75,6 +75,8 @@ export class Evented {
      * The listener function is called with the data object passed to `fire`,
      * extended with `target` and `type` properties.
      */
+    on<T extends keyof EventType & string>(type: T, listener: (event: EventType[T]) => void): Subscription;
+    on(type: string, listener: Listener): Subscription;
     on(type: string, listener: Listener): Subscription {
         this._listeners ||= {};
         _addEventListener(type, listener, this._listeners);
@@ -92,6 +94,8 @@ export class Evented {
      * @param type - The event type to remove listeners for.
      * @param listener - The listener function to remove.
      */
+    off<T extends keyof EventType & string>(type: T, listener: (event: EventType[T]) => void): this;
+    off(type: string, listener: Listener): this;
     off(type: string, listener: Listener): this {
         _removeEventListener(type, listener, this._listeners);
         _removeEventListener(type, listener, this._oneTimeListeners);
@@ -106,8 +110,11 @@ export class Evented {
      *
      * @param type - The event type to listen for.
      * @param listener - The function to be called when the event is fired the first time.
-     * @returns `this` or a promise if a listener is not provided
+     * @returns `this` when a listener is provided, or a promise that resolves with the event otherwise
      */
+    once<T extends keyof EventType & string>(type: T, listener: (event: EventType[T]) => void): this;
+    once<T extends keyof EventType & string>(type: T): Promise<EventType[T]>;
+    once(type: string, listener?: Listener): this | Promise<any>;
     once(type: string, listener?: Listener): this | Promise<any> {
         if (!listener) {
             return new Promise((resolve) => this.once(type, resolve));

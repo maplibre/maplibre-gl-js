@@ -1,8 +1,8 @@
 import {DOM} from '../../util/dom.ts';
 
-import {warnOnce, type Subscription} from '../../util/util.ts';
+import {warnOnce} from '../../util/util.ts';
 
-import {Event, Evented, type Listener} from '../../util/evented.ts';
+import {Event, Evented} from '../../util/evented.ts';
 import type {Map} from '../map.ts';
 import type {IControl} from './control.ts';
 
@@ -73,7 +73,7 @@ export type FullscreenControlEventType = {
  *
  * **Event** `fullscreenend` of type {@link FullscreenEvent} will be fired when fullscreen mode has ended.
  */
-export class FullscreenControl extends Evented implements IControl {
+export class FullscreenControl extends Evented<FullscreenControlEventType> implements IControl {
     _map: Map;
     _controlContainer: HTMLElement;
     _fullscreen: boolean;
@@ -82,43 +82,6 @@ export class FullscreenControl extends Evented implements IControl {
     _container: HTMLElement;
     _prevCooperativeGesturesEnabled: boolean;
     _pseudo: boolean;
-
-    /**
-     * Adds a listener to a specified event type.
-     *
-     * @param type - The event type to listen for.
-     * @param listener - The function to be called when the event is fired.
-     */
-    on<T extends keyof FullscreenControlEventType>(type: T, listener: (e: FullscreenControlEventType[T]) => void): Subscription;
-    on(type: string, listener: Listener): Subscription;
-    on(type: string, listener: Listener): Subscription {
-        return super.on(type, listener);
-    }
-
-    /**
-     * Adds a listener that will be called only once to a specified event type.
-     *
-     * @param type - The event type to listen for.
-     * @param listener - The function to be called when the event is fired the first time.
-     */
-    once<T extends keyof FullscreenControlEventType>(type: T, listener: (e: FullscreenControlEventType[T]) => void): this;
-    once<T extends keyof FullscreenControlEventType>(type: T): Promise<FullscreenControlEventType[T]>;
-    once(type: string, listener?: Listener): this | Promise<any>;
-    once(type: string, listener?: Listener): this | Promise<any> {
-        return super.once(type, listener);
-    }
-
-    /**
-     * Removes a previously registered event listener.
-     *
-     * @param type - The event type to remove listeners for.
-     * @param listener - The listener function to remove.
-     */
-    off<T extends keyof FullscreenControlEventType>(type: T, listener: (e: FullscreenControlEventType[T]) => void): this;
-    off(type: string, listener: Listener): this;
-    off(type: string, listener: Listener): this {
-        return super.off(type, listener);
-    }
 
     /**
      * @param options - the control's options

@@ -5,8 +5,7 @@ import Point from '@mapbox/point-geometry';
 import {smartWrap} from '../util/smart_wrap.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
 import type {PositionAnchor} from './anchor.ts';
-import {Event, Evented, type Listener} from '../util/evented.ts';
-import {type Subscription} from '../util/util.ts';
+import {Event, Evented} from '../util/evented.ts';
 import type {Map} from './map.ts';
 import {type Popup, type Offset} from './popup.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
@@ -201,7 +200,7 @@ export type MarkerEventType = {
  * }
  * ```
  */
-export class Marker extends Evented {
+export class Marker extends Evented<MarkerEventType> {
     _map: Map;
     _anchor: PositionAnchor;
     _offset: Point;
@@ -227,43 +226,6 @@ export class Marker extends Evented {
     _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
     _subpixelPositioning: boolean;
-
-    /**
-     * Adds a listener to a specified event type.
-     *
-     * @param type - The event type to listen for.
-     * @param listener - The function to be called when the event is fired.
-     */
-    on<T extends keyof MarkerEventType>(type: T, listener: (e: MarkerEventType[T]) => void): Subscription;
-    on(type: string, listener: Listener): Subscription;
-    on(type: string, listener: Listener): Subscription {
-        return super.on(type, listener);
-    }
-
-    /**
-     * Adds a listener that will be called only once to a specified event type.
-     *
-     * @param type - The event type to listen for.
-     * @param listener - The function to be called when the event is fired the first time.
-     */
-    once<T extends keyof MarkerEventType>(type: T, listener: (e: MarkerEventType[T]) => void): this;
-    once<T extends keyof MarkerEventType>(type: T): Promise<MarkerEventType[T]>;
-    once(type: string, listener?: Listener): this | Promise<any>;
-    once(type: string, listener?: Listener): this | Promise<any> {
-        return super.once(type, listener);
-    }
-
-    /**
-     * Removes a previously registered event listener.
-     *
-     * @param type - The event type to remove listeners for.
-     * @param listener - The listener function to remove.
-     */
-    off<T extends keyof MarkerEventType>(type: T, listener: (e: MarkerEventType[T]) => void): this;
-    off(type: string, listener: Listener): this;
-    off(type: string, listener: Listener): this {
-        return super.off(type, listener);
-    }
 
     /**
      * @param options - the options

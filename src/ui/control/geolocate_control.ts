@@ -1,6 +1,6 @@
-import {Event, Evented, type Listener} from '../../util/evented.ts';
+import {Event, Evented} from '../../util/evented.ts';
 import {DOM} from '../../util/dom.ts';
-import {extend, warnOnce, type Subscription} from '../../util/util.ts';
+import {extend, warnOnce} from '../../util/util.ts';
 import {checkGeolocationSupport} from '../../util/geolocation_support.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
 import {Marker} from '../marker.ts';
@@ -332,7 +332,7 @@ export type GeolocateControlEventType = {
  * });
  * ```
  */
-export class GeolocateControl extends Evented implements IControl {
+export class GeolocateControl extends Evented<GeolocateControlEventType> implements IControl {
     _map: Map;
     options: GeolocateControlOptions;
     _container: HTMLElement;
@@ -363,44 +363,6 @@ export class GeolocateControl extends Evented implements IControl {
     _accuracyCircleMarker: Marker;
     _accuracy: number;
     _setup: boolean; // set to true once the control has been setup
-
-    /**
-     * Adds a listener to a specified event type.
-     *
-     * @param type - The event type to listen for.
-     * @param listener - The function to be called when the event is fired.
-     * @returns A {@link Subscription} with a `unsubscribe` method to remove the listener.
-     */
-    on<T extends keyof GeolocateControlEventType>(type: T, listener: (e: GeolocateControlEventType[T]) => void): Subscription;
-    on(type: string, listener: Listener): Subscription;
-    on(type: string, listener: Listener): Subscription {
-        return super.on(type, listener);
-    }
-
-    /**
-     * Adds a listener that will be called only once to a specified event type.
-     *
-     * @param type - The event type to listen for.
-     * @param listener - The function to be called when the event is fired the first time.
-     */
-    once<T extends keyof GeolocateControlEventType>(type: T, listener: (e: GeolocateControlEventType[T]) => void): this;
-    once<T extends keyof GeolocateControlEventType>(type: T): Promise<GeolocateControlEventType[T]>;
-    once(type: string, listener?: Listener): this | Promise<any>;
-    once(type: string, listener?: Listener): this | Promise<any> {
-        return super.once(type, listener);
-    }
-
-    /**
-     * Removes a previously registered event listener.
-     *
-     * @param type - The event type to remove listeners for.
-     * @param listener - The listener function to remove.
-     */
-    off<T extends keyof GeolocateControlEventType>(type: T, listener: (e: GeolocateControlEventType[T]) => void): this;
-    off(type: string, listener: Listener): this;
-    off(type: string, listener: Listener): this {
-        return super.off(type, listener);
-    }
 
     /**
      * @param options - the control's options

@@ -4,7 +4,7 @@ import {ImageRequest} from '../util/image_request.ts';
 
 import {ResourceType} from '../util/request_manager.ts';
 import {ErrorEvent, Evented} from '../util/evented.ts';
-import {MapSourceDataEvent} from '../ui/events.ts';
+import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 import {loadTileJson} from './load_tilejson.ts';
 import {TileBounds} from '../tile/tile_bounds.ts';
 import {Texture} from '../webgl/texture.ts';
@@ -51,7 +51,7 @@ import type {
  * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-wms-source/)
  * @see [Display a satellite map](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-satellite-map/)
  */
-export class RasterTileSource extends Evented implements Source {
+export class RasterTileSource extends Evented<SourceEventType> implements Source {
     type: 'raster' | 'raster-dem';
     id: string;
     minzoom: number;

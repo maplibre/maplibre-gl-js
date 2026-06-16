@@ -1,5 +1,5 @@
-import {extend, type Subscription} from '../util/util.ts';
-import {Event, Evented, type Listener} from '../util/evented.ts';
+import {extend} from '../util/util.ts';
+import {Event, Evented} from '../util/evented.ts';
 import {DOM} from '../util/dom.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
@@ -205,7 +205,7 @@ export type PopupEventType = {
  *
  * **Event** `close` of type {@link PopupEvent} will be fired when the popup is closed manually or programmatically.
  */
-export class Popup extends Evented {
+export class Popup extends Evented<PopupEventType> {
     _map: Map;
     options: PopupOptions;
     _content: HTMLElement;
@@ -216,43 +216,6 @@ export class Popup extends Evented {
     _trackPointer: boolean;
     _pos: Point;
     _flatPos: Point;
-
-    /**
-     * Adds a listener to a specified event type.
-     *
-     * @param type - The event type to listen for.
-     * @param listener - The function to be called when the event is fired.
-     */
-    on<T extends keyof PopupEventType>(type: T, listener: (e: PopupEventType[T]) => void): Subscription;
-    on(type: string, listener: Listener): Subscription;
-    on(type: string, listener: Listener): Subscription {
-        return super.on(type, listener);
-    }
-
-    /**
-     * Adds a listener that will be called only once to a specified event type.
-     *
-     * @param type - The event type to listen for.
-     * @param listener - The function to be called when the event is fired the first time.
-     */
-    once<T extends keyof PopupEventType>(type: T, listener: (e: PopupEventType[T]) => void): this;
-    once<T extends keyof PopupEventType>(type: T): Promise<PopupEventType[T]>;
-    once(type: string, listener?: Listener): this | Promise<any>;
-    once(type: string, listener?: Listener): this | Promise<any> {
-        return super.once(type, listener);
-    }
-
-    /**
-     * Removes a previously registered event listener.
-     *
-     * @param type - The event type to remove listeners for.
-     * @param listener - The listener function to remove.
-     */
-    off<T extends keyof PopupEventType>(type: T, listener: (e: PopupEventType[T]) => void): this;
-    off(type: string, listener: Listener): this;
-    off(type: string, listener: Listener): this {
-        return super.off(type, listener);
-    }
 
     /**
      * @param options - the options
