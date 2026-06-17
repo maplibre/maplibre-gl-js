@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- ⚠️ Update maplibre-gl-style-spec to version 25, which has a breaking change in legacy expression validation ([#7792](https://github.com/maplibre/maplibre-gl-js/issues/7792)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
