@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+- Fix cross-origin module worker loading to preserve ESM semantics ([#7796](https://github.com/maplibre/maplibre-gl-js/pull/7796)) (by [@dangkyokhoang](https://github.com/dangkyokhoang))
 
 ## 6.0.0-15
 
