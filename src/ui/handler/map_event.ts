@@ -23,7 +23,7 @@ export class MapEventHandler implements Handler {
     wheel(e: WheelEvent): HandlerResult | void {
         // If mapEvent.preventDefault() is called by the user, prevent handlers such as:
         // - ScrollZoom
-        return this._firePreventable(new MapWheelEvent(e.type, this._map, e));
+        return this._firePreventable(new MapWheelEvent(this._map, e));
     }
 
     mousedown(e: MouseEvent, point: Point): HandlerResult | void {

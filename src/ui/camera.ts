@@ -1,13 +1,15 @@
+import Point from '@mapbox/point-geometry';
 import {extend, wrap, defaultEasing, pick, scaleZoom, evaluateZoomSnap} from '../util/util.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
-import Point from '@mapbox/point-geometry';
-import {Event, Evented} from '../util/evented.ts';
+import {Evented} from '../util/evented.ts';
+import {MapMovementEvent} from './events.ts';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 
+import type {MapEventType} from './events.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {ITransform} from '../geo/transform_interface.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
@@ -253,7 +255,7 @@ export type CameraUpdateTransformFunction =  (next: {
     elevation?: number;
 };
 
-export abstract class Camera extends Evented {
+export abstract class Camera extends Evented<MapEventType> {
     transform: ITransform;
     cameraHelper: ICameraHelper;
     terrain: Terrain;
@@ -582,9 +584,9 @@ export abstract class Camera extends Evented {
     setVerticalFieldOfView(fov: number, eventData?: any): this {
         if (fov != this.transform.fov) {
             this.transform.setFov(fov);
-            this.fire(new Event('movestart', eventData))
-                .fire(new Event('move', eventData))
-                .fire(new Event('moveend', eventData));
+            this.fire(new MapMovementEvent('movestart', eventData))
+                .fire(new MapMovementEvent('move', eventData))
+                .fire(new MapMovementEvent('moveend', eventData));
         }
         return this;
     }
@@ -989,34 +991,34 @@ export abstract class Camera extends Evented {
         }
         this._applyUpdatedTransform(tr);
 
-        this.fire(new Event('movestart', eventData))
-            .fire(new Event('move', eventData));
+        this.fire(new MapMovementEvent('movestart', eventData))
+            .fire(new MapMovementEvent('move', eventData));
 
         if (zoomChanged) {
-            this.fire(new Event('zoomstart', eventData))
-                .fire(new Event('zoom', eventData))
-                .fire(new Event('zoomend', eventData));
+            this.fire(new MapMovementEvent('zoomstart', eventData))
+                .fire(new MapMovementEvent('zoom', eventData))
+                .fire(new MapMovementEvent('zoomend', eventData));
         }
 
         if (bearingChanged) {
-            this.fire(new Event('rotatestart', eventData))
-                .fire(new Event('rotate', eventData))
-                .fire(new Event('rotateend', eventData));
+            this.fire(new MapMovementEvent('rotatestart', eventData))
+                .fire(new MapMovementEvent('rotate', eventData))
+                .fire(new MapMovementEvent('rotateend', eventData));
         }
 
         if (pitchChanged) {
-            this.fire(new Event('pitchstart', eventData))
-                .fire(new Event('pitch', eventData))
-                .fire(new Event('pitchend', eventData));
+            this.fire(new MapMovementEvent('pitchstart', eventData))
+                .fire(new MapMovementEvent('pitch', eventData))
+                .fire(new MapMovementEvent('pitchend', eventData));
         }
 
         if (rollChanged) {
-            this.fire(new Event('rollstart', eventData))
-                .fire(new Event('roll', eventData))
-                .fire(new Event('rollend', eventData));
+            this.fire(new MapMovementEvent('rollstart', eventData))
+                .fire(new MapMovementEvent('roll', eventData))
+                .fire(new MapMovementEvent('rollend', eventData));
         }
 
-        return this.fire(new Event('moveend', eventData));
+        return this.fire(new MapMovementEvent('moveend', eventData));
     }
 
     /**
@@ -1201,19 +1203,19 @@ export abstract class Camera extends Evented {
         currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {}): void {
         this._moving = true;
         if (!noMoveStart && !currently.moving) {
-            this.fire(new Event('movestart', eventData));
+            this.fire(new MapMovementEvent('movestart', eventData));
         }
         if (this._zooming && !currently.zooming) {
-            this.fire(new Event('zoomstart', eventData));
+            this.fire(new MapMovementEvent('zoomstart', eventData));
         }
         if (this._rotating && !currently.rotating) {
-            this.fire(new Event('rotatestart', eventData));
+            this.fire(new MapMovementEvent('rotatestart', eventData));
         }
         if (this._pitching && !currently.pitching) {
-            this.fire(new Event('pitchstart', eventData));
+            this.fire(new MapMovementEvent('pitchstart', eventData));
         }
         if (this._rolling && !currently.rolling) {
-            this.fire(new Event('rollstart', eventData));
+            this.fire(new MapMovementEvent('rollstart', eventData));
         }
     }
 
@@ -1333,18 +1335,18 @@ export abstract class Camera extends Evented {
     }
 
     _fireMoveEvents(eventData?: Record<string, unknown>): void {
-        this.fire(new Event('move', eventData));
+        this.fire(new MapMovementEvent('move', eventData));
         if (this._zooming) {
-            this.fire(new Event('zoom', eventData));
+            this.fire(new MapMovementEvent('zoom', eventData));
         }
         if (this._rotating) {
-            this.fire(new Event('rotate', eventData));
+            this.fire(new MapMovementEvent('rotate', eventData));
         }
         if (this._pitching) {
-            this.fire(new Event('pitch', eventData));
+            this.fire(new MapMovementEvent('pitch', eventData));
         }
         if (this._rolling) {
-            this.fire(new Event('roll', eventData));
+            this.fire(new MapMovementEvent('roll', eventData));
         }
     }
 
@@ -1368,18 +1370,18 @@ export abstract class Camera extends Evented {
         this._padding = false;
 
         if (wasZooming) {
-            this.fire(new Event('zoomend', eventData));
+            this.fire(new MapMovementEvent('zoomend', eventData));
         }
         if (wasRotating) {
-            this.fire(new Event('rotateend', eventData));
+            this.fire(new MapMovementEvent('rotateend', eventData));
         }
         if (wasPitching) {
-            this.fire(new Event('pitchend', eventData));
+            this.fire(new MapMovementEvent('pitchend', eventData));
         }
         if (wasRolling) {
-            this.fire(new Event('rollend', eventData));
+            this.fire(new MapMovementEvent('rollend', eventData));
         }
-        this.fire(new Event('moveend', eventData));
+        this.fire(new MapMovementEvent('moveend', eventData));
     }
 
     /**
