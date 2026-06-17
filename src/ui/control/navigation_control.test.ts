@@ -242,7 +242,7 @@ describe('NavigationControl', () => {
         map.setZoom(9.7);
         map.addControl(new NavigationControl());
 
-        const spy = vi.spyOn(map, 'zoomTo');
+        const spy = vi.spyOn(map._camera, 'zoomTo');
         const zoomInButton = map.getContainer().querySelector('.maplibregl-ctrl-zoom-in');
         simulate.click(zoomInButton);
 

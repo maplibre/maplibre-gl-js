@@ -1,6 +1,7 @@
-import type {Map} from '../map.ts';
+import type {Camera} from '../camera.ts';
 import type {PointLike} from '../camera.ts';
 import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
+import type {Terrain} from '../../render/terrain.ts';
 import Point from '@mapbox/point-geometry';
 import {type LngLat} from '../../geo/lng_lat.ts';
 
@@ -12,14 +13,16 @@ import {type LngLat} from '../../geo/lng_lat.ts';
  * handlers need the "desired state" to track accumulated changes.
  */
 export class TransformProvider {
-    _map: Map;
+    _camera: Camera;
+    _getTerrain: () => Terrain | null;
 
-    constructor(map: Map) {
-        this._map = map;
+    constructor(camera: Camera, getTerrain: () => Terrain | null) {
+        this._camera = camera;
+        this._getTerrain = getTerrain;
     }
 
     get transform(): IReadonlyTransform {
-        return this._map._requestedCameraState || this._map.transform;
+        return this._camera._requestedCameraState || this._camera.transform;
     }
 
     get center(): {lng: number; lat: number} {
@@ -39,6 +42,6 @@ export class TransformProvider {
     }
 
     unproject(point: PointLike): LngLat {
-        return this.transform.screenPointToLocation(Point.convert(point), this._map.terrain);
+        return this.transform.screenPointToLocation(Point.convert(point), this._getTerrain());
     }
 }

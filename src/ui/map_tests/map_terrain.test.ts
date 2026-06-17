@@ -100,3 +100,24 @@ describe('Keep camera outside terrain', () => {
         expect(map.transform.getCameraAltitude()).toBeGreaterThan(terrainElevation);
     });
 });
+
+describe('queryTerrainElevation', () => {
+    test('should return null if terrain is not set', () => {
+        map.terrain = null;
+        const result = map.queryTerrainElevation([0, 0]);
+        expect(result).toBeNull();
+    });
+
+    test('Calls getElevationForLngLatZoom with correct arguments', () => {
+        const getElevationForLngLat = vi.fn();
+        map.terrain = {getElevationForLngLat} as any as Terrain;
+        map.transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+
+        map.queryTerrainElevation([1, 2]);
+
+        expect(map.terrain.getElevationForLngLat).toHaveBeenCalledWith(
+            expect.objectContaining({lng: 1, lat: 2,}),
+            map.transform
+        );
+    });
+});

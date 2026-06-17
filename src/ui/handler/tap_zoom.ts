@@ -15,8 +15,8 @@ export class TapZoomHandler implements Handler {
     _zoomIn: TapRecognizer;
     _zoomOut: TapRecognizer;
 
-    constructor(map: Map) {
-        this._tr = new TransformProvider(map);
+    constructor(map: Map, transformProvider: TransformProvider) {
+        this._tr = transformProvider;
         this._zoomIn = new TapRecognizer({
             numTouches: 1,
             numTaps: 2

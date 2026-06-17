@@ -46,9 +46,9 @@ export class BoxZoomHandler implements Handler {
     constructor(map: Map, options: {
         clickTolerance: number;
         boxZoom?: boolean | BoxZoomHandlerOptions;
-    }) {
+    }, transformProvider: TransformProvider) {
         this._map = map;
-        this._tr = new TransformProvider(map);
+        this._tr = transformProvider;
         this._el = map.getCanvasContainer();
         this._container = map.getContainer();
         this._clickTolerance = options.clickTolerance || 1;

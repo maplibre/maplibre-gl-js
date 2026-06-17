@@ -2,6 +2,7 @@ import {Event} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
 import {DOM} from '../util/dom.ts';
 import {type Map, type CompleteMapOptions} from './map.ts';
+import {type Camera} from './camera.ts';
 import {HandlerInertia} from './handler_inertia.ts';
 import {MapEventHandler, BlockableMapEventHandler} from './handler/map_event.ts';
 import {BoxZoomHandler} from './handler/box_zoom.ts';
@@ -18,6 +19,7 @@ import {DragPanHandler} from './handler/shim/drag_pan.ts';
 import {DragRotateHandler} from './handler/shim/drag_rotate.ts';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch.ts';
 import {CooperativeGesturesHandler} from './handler/cooperative_gestures.ts';
+import {TransformProvider} from './handler/transform-provider.ts';
 import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} from '../util/util.ts';
 import {browser} from '../util/browser.ts';
 import Point from '@mapbox/point-geometry';
@@ -143,6 +145,8 @@ function hasChange(result: HandlerResult) {
 
 export class HandlerManager {
     _map: Map;
+    _camera: Camera;
+    _transformProvider: TransformProvider;
     _el: HTMLElement;
     _handlers: Array<{
         handlerName: string;
@@ -182,6 +186,8 @@ export class HandlerManager {
 
     constructor(map: Map, options: CompleteMapOptions) {
         this._map = map;
+        this._camera = map._camera;
+        this._transformProvider = new TransformProvider(this._camera, () => map.terrain);
         this._el = this._map.getCanvasContainer();
         this._handlers = [];
         this._handlersById = {};
@@ -253,7 +259,7 @@ export class HandlerManager {
         const el = map.getCanvasContainer();
         this._add('mapEvent', new MapEventHandler(map, options));
 
-        const boxZoom = map.boxZoom = new BoxZoomHandler(map, options);
+        const boxZoom = map.boxZoom = new BoxZoomHandler(map, options, this._transformProvider);
         this._add('boxZoom', boxZoom);
         if (options.interactive && options.boxZoom) {
             boxZoom.enable();
@@ -265,8 +271,8 @@ export class HandlerManager {
             cooperativeGestures.enable();
         }
 
-        const tapZoom = new TapZoomHandler(map);
-        const clickZoom = new ClickZoomHandler(map);
+        const tapZoom = new TapZoomHandler(map, this._transformProvider);
+        const clickZoom = new ClickZoomHandler(map, this._transformProvider);
         map.doubleClickZoom = new DoubleClickZoomHandler(clickZoom, tapZoom);
         this._add('tapZoom', tapZoom);
         this._add('clickZoom', clickZoom);
@@ -314,13 +320,13 @@ export class HandlerManager {
 
         this._add('blockableMapEvent', new BlockableMapEventHandler(map));
 
-        const scrollZoom = map.scrollZoom = new ScrollZoomHandler(map, () => this._triggerRenderFrame());
+        const scrollZoom = map.scrollZoom = new ScrollZoomHandler(map, () => this._triggerRenderFrame(), this._transformProvider);
         this._add('scrollZoom', scrollZoom, ['mousePan']);
         if (options.interactive && options.scrollZoom) {
             map.scrollZoom.enable(options.scrollZoom);
         }
 
-        const keyboard = map.keyboard = new KeyboardHandler(map);
+        const keyboard = map.keyboard = new KeyboardHandler(map, this._transformProvider);
         this._add('keyboard', keyboard);
         if (options.interactive && options.keyboard) {
             map.keyboard.enable();
@@ -453,7 +459,7 @@ export class HandlerManager {
         }
 
         if (Object.keys(activeHandlers).length || hasChange(mergedHandlerResult)) {
-            this._map._stop(true);
+            this._camera.stop(true);
         }
 
         this._updatingCamera = false;
@@ -525,7 +531,7 @@ export class HandlerManager {
         combinedEventsInProgress: EventsInProgress,
         deactivatedHandlers: {[handlerName: string]: Event}): void {
         const map = this._map;
-        const tr = map._getTransformForUpdate();
+        const tr = this._camera.getTransformForUpdate();
         const terrain = map.terrain;
 
         if (!hasChange(combinedResult) && !(terrain && this._terrainMovement)) {
@@ -533,7 +539,7 @@ export class HandlerManager {
         }
 
         // stop any ongoing camera animations (easeTo, flyTo)
-        map._stop(true);
+        this._camera.stop(true);
 
         let {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta, around, pinchAround} = combinedResult;
 
@@ -557,7 +563,7 @@ export class HandlerManager {
         };
 
         // Pre-zoom location under the mouse cursor is required for accurate mercator panning and zooming
-        if (this._map.cameraHelper.useGlobeControls && !tr.isPointOnMapSurface(around)) {
+        if (this._camera.cameraHelper.useGlobeControls && !tr.isPointOnMapSurface(around)) {
             around = tr.centerPoint;
         }
         // If we are rotating about the center point, avoid numerical issues near the horizon by using the transform's
@@ -575,7 +581,7 @@ export class HandlerManager {
             panDelta,
         });
 
-        map._applyUpdatedTransform(tr);
+        this._camera.applyUpdatedTransform(tr);
 
         this._map._update();
         if (!combinedResult.noInertia) this._inertia.record(combinedResult);
@@ -591,7 +597,7 @@ export class HandlerManager {
         combinedEventsInProgress,
         panDelta}: MapControlsScenarioOptions): void {
 
-        const cameraHelper = this._map.cameraHelper;
+        const cameraHelper = this._camera.cameraHelper;
 
         cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
 
@@ -603,7 +609,7 @@ export class HandlerManager {
         if (cameraHelper.useGlobeControls) {
             if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
                 this._terrainMovement = true;
-                this._map._elevationFreeze = true;
+                this._camera._elevationFreeze = true;
             }
             cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
@@ -611,7 +617,7 @@ export class HandlerManager {
 
         if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
             this._terrainMovement = true;
-            this._map._elevationFreeze = true;
+            this._camera._elevationFreeze = true;
             cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
         }
@@ -676,13 +682,13 @@ export class HandlerManager {
         const stillMoving = isMoving(this._eventsInProgress);
         const finishedMoving = (wasMoving || nowMoving) && !stillMoving;
         if (finishedMoving && this._terrainMovement) {
-            this._map._elevationFreeze = false;
+            this._camera._elevationFreeze = false;
             this._terrainMovement = false;
-            const tr = this._map._getTransformForUpdate();
+            const tr = this._camera.getTransformForUpdate();
             if (this._map.getCenterClampedToGround()) {
                 tr.recalculateZoomAndCenter(this._map.terrain);
             }
-            this._map._applyUpdatedTransform(tr);
+            this._camera.applyUpdatedTransform(tr);
         }
         if (allowEndAnimation && finishedMoving) {
             this._updatingCamera = true;

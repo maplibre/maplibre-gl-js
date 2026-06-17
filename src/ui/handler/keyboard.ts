@@ -35,8 +35,8 @@ export class KeyboardHandler implements Handler {
     _rotationDisabled: boolean;
 
     /** @internal */
-    constructor(map: Map) {
-        this._tr = new TransformProvider(map);
+    constructor(map: Map, transformProvider: TransformProvider) {
+        this._tr = transformProvider;
         const stepOptions = defaultOptions;
         this._panStep = stepOptions.panStep;
         this._bearingStep = stepOptions.bearingStep;
