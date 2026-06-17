@@ -70,3 +70,7 @@ In case you were using `#pragma mapbox` in your shared code please replace it wi
 -#pragma mapbox
 +#pragma maplibre
 ```
+
+## Events
+
+All events are now classes, it is advised not to use `instanceof` but instead check the `type` field. Since the change was from types to classes this shouldn't be a problem in most code bases.

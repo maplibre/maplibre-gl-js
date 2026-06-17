@@ -1,4 +1,5 @@
 import {Event} from '../util/evented.ts';
+import {MapMovementEvent} from './events.ts';
 import {DOM} from '../util/dom.ts';
 import {type Map, type CompleteMapOptions} from './map.ts';
 import {HandlerInertia} from './handler_inertia.ts';
@@ -371,8 +372,8 @@ export class HandlerManager {
         return false;
     }
 
-    handleWindowEvent = (e: { type: 'mousemove' | 'mouseup' | 'touchmove'}): void => {
-        this.handleEvent(e, `${e.type}Window`);
+    handleWindowEvent = (e: Event): void => {
+        this.handleEvent(e, `${e.type}Window` as keyof Handler);
     };
 
     _getMapTouches(touches: TouchList): TouchList {
@@ -696,7 +697,7 @@ export class HandlerManager {
                 inertialEase.freezeElevation = true;
                 this._map.easeTo(inertialEase, {originalEvent: originalEndEvent});
             } else {
-                this._map.fire(new Event('moveend', {originalEvent: originalEndEvent}));
+                this._map.fire(new MapMovementEvent('moveend', {originalEvent: originalEndEvent}));
                 if (shouldSnapToNorth(this._map.getBearing())) {
                     this._map.resetNorth();
                 }
@@ -707,7 +708,7 @@ export class HandlerManager {
     }
 
     _fireEvent(type: string, e?: Event): void {
-        this._map.fire(new Event(type, e ? {originalEvent: e} : {}));
+        this._map.fire(new MapMovementEvent(type, e ? {originalEvent: e} : {}));
     }
 
     _requestFrame(): number {

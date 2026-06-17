@@ -1,12 +1,10 @@
 import {create as createSource} from '../source/source.ts';
-
 import {Tile} from './tile.ts';
-import {ErrorEvent, Event, Evented} from '../util/evented.ts';
+import {ErrorEvent, Evented} from '../util/evented.ts';
 import {ensureError} from '../util/util.ts';
 import {TileCache} from './tile_cache.ts';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {EXTENT} from '../data/extent.ts';
-import type Point from '@mapbox/point-geometry';
 import {now} from '../util/time_control.ts';
 import {OverscaledTileID} from './tile_id.ts';
 import {SourceFeatureState} from '../source/source_state.ts';
@@ -18,7 +16,9 @@ import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 import {hasRasterTransition, isRasterType, updateFadingTiles} from './tile_manager_raster.ts';
 import {backfillDEM} from './tile_manager_raster_dem.ts';
 import {InViewTiles} from './tile_manager_in_view_tiles.ts';
+import {MapSourceDataEvent} from '../ui/events.ts';
 
+import type Point from '@mapbox/point-geometry';
 import type {Context} from '../webgl/context.ts';
 import type {Source} from '../source/source.ts';
 import type {Map} from '../ui/map.ts';
@@ -27,7 +27,6 @@ import type {Dispatcher} from '../util/dispatcher.ts';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
 import type {TileState} from './tile.ts';
 import type {FeatureState, ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {LoadTileResult} from '../source/vector_tile_source.ts';
@@ -211,7 +210,7 @@ export class TileManager extends Evented {
         if (this._source.abortTile)
             this._source.abortTile(tile);
 
-        this._source.fire(new Event('dataabort', {tile, coord: tile.tileID, dataType: 'source'}));
+        this._source.fire(new MapSourceDataEvent('dataabort', {tile, coord: tile.tileID}));
     }
 
     serialize(): any {
@@ -319,7 +318,7 @@ export class TileManager extends Evented {
         this._state.initializeTileState(tile, this.map ? this.map.painter : null);
 
         if (!tile.aborted) {
-            this._source.fire(new Event('data', {dataType: 'source', tile, coord: tile.tileID}));
+            this._source.fire(new MapSourceDataEvent('data', {tile, coord: tile.tileID}));
         }
     }
     /**
@@ -538,7 +537,7 @@ export class TileManager extends Evented {
         // if we won't have any tiles to fetch and content is already emitted
         // there will be no more data emissions, so we need to emit the event with isSourceLoaded = true
         if (noPendingDataEmissions) {
-            this.fire(new Event('data', {sourceDataType: 'idle', dataType: 'source', sourceId: this.id}));
+            this.fire(new MapSourceDataEvent('data', {sourceDataType: 'idle', sourceId: this.id}));
         }
 
         // Retain is a list of tiles that we shouldn't delete, even if they are not
@@ -715,7 +714,7 @@ export class TileManager extends Evented {
         tile.uses++;
         this._inViewTiles.setTile(tileID.key, tile);
         if (!cached) {
-            this._source.fire(new Event('dataloading', {tile, coord: tile.tileID, dataType: 'source'}));
+            this._source.fire(new MapSourceDataEvent('dataloading', {tile, coord: tile.tileID}));
         }
 
         return tile;

@@ -1,7 +1,8 @@
 /* eslint-disable key-spacing */
 import potpack from 'potpack';
 
-import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {ErrorEvent, Evented} from '../util/evented.ts';
+import {MapStyleImageMissingEvent} from '../ui/events.ts';
 import {RGBAImage} from '../util/image.ts';
 import {ImagePosition} from './image_atlas.ts';
 import {Texture} from '../webgl/texture.ts';
@@ -224,7 +225,7 @@ export class ImageManager extends Evented {
             let image = this.getImage(id);
 
             if (!image) {
-                this.fire(new Event('styleimagemissing', {id}));
+                this.fire(new MapStyleImageMissingEvent({id}));
                 //Try to acquire image again in case styleimagemissing has populated it
                 image = this.getImage(id);
             }
