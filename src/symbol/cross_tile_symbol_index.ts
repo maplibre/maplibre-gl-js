@@ -118,24 +118,30 @@ class TileLayerIndex {
 
             if (entry.index) {
                 // Return any symbol with the same keys whose coordinates are within 1
-                // grid unit. (with a 4px grid, this covers a 12px by 12px area)
+                // grid unit. (with a 4px grid, this covers a 12px by 12px area).
+                // Claim the lowest-index unclaimed candidate in a single pass rather
+                // than sorting the whole result set on every query: range() can return
+                // many candidates where symbols are coincident (e.g. stacked point
+                // markers), so the per-query sort dominated placement on dense layers.
                 const indexes = entry.index.range(
                     scaledSymbolCoord.x - tolerance,
                     scaledSymbolCoord.y - tolerance,
                     scaledSymbolCoord.x + tolerance,
-                    scaledSymbolCoord.y + tolerance).sort();
+                    scaledSymbolCoord.y + tolerance);
 
-                for (const i of indexes) {
-                    const crossTileID = entry.crossTileIDs[i];
-
-                    if (!zoomCrossTileIDs[crossTileID]) {
-                        // Once we've marked ourselves duplicate against this parent symbol,
-                        // don't let any other symbols at the same zoom level duplicate against
-                        // the same parent (see issue #5993)
-                        zoomCrossTileIDs[crossTileID] = true;
-                        symbolInstance.crossTileID = crossTileID;
-                        break;
+                let bestIndex = -1;
+                for (const candidate of indexes) {
+                    if (!zoomCrossTileIDs[entry.crossTileIDs[candidate]] && (bestIndex === -1 || candidate < bestIndex)) {
+                        bestIndex = candidate;
                     }
+                }
+                if (bestIndex !== -1) {
+                    const crossTileID = entry.crossTileIDs[bestIndex];
+                    // Once we've marked ourselves duplicate against this parent symbol,
+                    // don't let any other symbols at the same zoom level duplicate against
+                    // the same parent (see issue #5993)
+                    zoomCrossTileIDs[crossTileID] = true;
+                    symbolInstance.crossTileID = crossTileID;
                 }
             } else if (entry.positions) {
                 for (let i = 0; i < entry.positions.length; i++) {
