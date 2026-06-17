@@ -10391,15 +10391,6 @@ var Evented = class {
 		_removeEventListener(type, listener, this._oneTimeListeners);
 		return this;
 	}
-	/**
-	* Adds a listener that will be called only once to a specified event type.
-	*
-	* The listener will be called first time the event fires after the listener is registered.
-	*
-	* @param type - The event type to listen for.
-	* @param listener - The function to be called when the event is fired the first time.
-	* @returns `this` or a promise if a listener is not provided
-	*/
 	once(type, listener) {
 		if (!listener) return new Promise((resolve) => this.once(type, resolve));
 		this._oneTimeListeners ||= {};

@@ -14150,15 +14150,6 @@ var Evented = class {
 		_removeEventListener(type, listener, this._oneTimeListeners);
 		return this;
 	}
-	/**
-	* Adds a listener that will be called only once to a specified event type.
-	*
-	* The listener will be called first time the event fires after the listener is registered.
-	*
-	* @param type - The event type to listen for.
-	* @param listener - The function to be called when the event is fired the first time.
-	* @returns `this` or a promise if a listener is not provided
-	*/
 	once(type, listener) {
 		if (!listener) return new Promise((resolve) => this.once(type, resolve));
 		this._oneTimeListeners ||= {};
@@ -14201,6 +14192,345 @@ var Evented = class {
 		this._eventedParent = parent;
 		this._eventedParentData = data;
 		return this;
+	}
+};
+//#endregion
+//#region src/util/dom.ts
+var DOM = class DOM {
+	static {
+		this.docStyle = typeof window !== "undefined" && window.document?.documentElement.style;
+	}
+	static {
+		this.selectProp = !DOM.docStyle || "userSelect" in DOM.docStyle ? "userSelect" : "webkitUserSelect";
+	}
+	static create(tagName, className, container) {
+		const el = window.document.createElement(tagName);
+		if (className !== void 0) el.className = className;
+		if (container) container.appendChild(el);
+		return el;
+	}
+	static createNS(namespaceURI, tagName) {
+		return window.document.createElementNS(namespaceURI, tagName);
+	}
+	static disableDrag() {
+		if (DOM.docStyle && DOM.selectProp) {
+			DOM.userSelect = DOM.docStyle[DOM.selectProp];
+			DOM.docStyle[DOM.selectProp] = "none";
+		}
+	}
+	static enableDrag() {
+		if (DOM.docStyle && DOM.selectProp) DOM.docStyle[DOM.selectProp] = DOM.userSelect;
+	}
+	static suppressClickInternal(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		window.removeEventListener("click", DOM.suppressClickInternal, true);
+	}
+	static suppressClick() {
+		window.addEventListener("click", DOM.suppressClickInternal, true);
+		window.setTimeout(() => {
+			window.removeEventListener("click", DOM.suppressClickInternal, true);
+		}, 0);
+	}
+	static getScale(element) {
+		const rect = element.getBoundingClientRect();
+		return {
+			x: rect.width / element.offsetWidth || 1,
+			y: rect.height / element.offsetHeight || 1,
+			boundingClientRect: rect
+		};
+	}
+	static getPoint(el, scale, e) {
+		const rect = scale.boundingClientRect;
+		return new Point((e.clientX - rect.left) / scale.x - el.clientLeft, (e.clientY - rect.top) / scale.y - el.clientTop);
+	}
+	static mousePos(el, e) {
+		const scale = DOM.getScale(el);
+		return DOM.getPoint(el, scale, e);
+	}
+	static touchPos(el, touches) {
+		const points = [];
+		const scale = DOM.getScale(el);
+		for (const touch of touches) points.push(DOM.getPoint(el, scale, touch));
+		return points;
+	}
+	/**
+	* Sanitize an HTML string - this might not be enough to prevent all XSS attacks
+	* Base on https://javascriptsource.com/sanitize-an-html-string-to-reduce-the-risk-of-xss-attacks/
+	* (c) 2021 Chris Ferdinandi, MIT License, https://gomakethings.com
+	*/
+	static sanitize(str) {
+		const html = new DOMParser().parseFromString(str, "text/html").body || document.createElement("body");
+		const scripts = html.querySelectorAll("script");
+		for (const script of scripts) script.remove();
+		DOM.clean(html);
+		return html.innerHTML;
+	}
+	/**
+	* Check if the attribute is potentially dangerous
+	*/
+	static isPossiblyDangerous(name, value) {
+		const val = value.replace(/\s+/g, "").toLowerCase();
+		if ([
+			"src",
+			"href",
+			"xlink:href"
+		].includes(name)) {
+			if (val.includes("javascript:") || val.includes("data:")) return true;
+		}
+		if (name.startsWith("on")) return true;
+	}
+	/**
+	* Remove dangerous stuff from the HTML document's nodes
+	* @param html - The HTML document
+	*/
+	static clean(html) {
+		const nodes = html.children;
+		for (const node of nodes) {
+			DOM.removeAttributes(node);
+			DOM.clean(node);
+		}
+	}
+	/**
+	* Remove potentially dangerous attributes from an element
+	* @param elem - The element
+	*/
+	static removeAttributes(elem) {
+		for (const { name, value } of elem.attributes) {
+			if (!DOM.isPossiblyDangerous(name, value)) continue;
+			elem.removeAttribute(name);
+		}
+	}
+};
+//#endregion
+//#region src/ui/events.ts
+/**
+* The base event for MapLibre
+*
+* @group Event Related
+*/
+var MapLibreEvent = class extends Event {};
+/**
+* `MapMovementEvent` is the event type for the camera-transition map events:
+* `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `rotatestart`, `rotate`, `rotateend`,
+* `dragstart`, `drag`, `dragend`, `pitchstart`, `pitch`, `pitchend`, `rollstart`, `roll` and `rollend`.
+* These are fired as the map's view changes, as a result of either user interaction or methods such
+* as {@link Map.jumpTo} / {@link Map.flyTo}.
+*
+* @group Event Related
+*/
+var MapMovementEvent = class extends MapLibreEvent {};
+/**
+* The `style.load` event, fired once the map's style has fully loaded or changed.
+*
+* @group Event Related
+*/
+var MapStyleLoadEvent = class extends MapLibreEvent {
+	constructor(data = {}) {
+		super("style.load", data);
+	}
+};
+/**
+* The style data event
+*
+* @group Event Related
+*/
+var MapStyleDataEvent = class extends MapLibreEvent {
+	constructor(type, data = {}) {
+		super(type, data);
+		this.dataType = "style";
+	}
+};
+/**
+* A `MapSourceDataEvent` is emitted with the source-related `data`, `dataloading`, `dataabort`,
+* `sourcedata`, `sourcedataloading` and `sourcedataabort` events. Its `dataType` is always `'source'`.
+*
+* Possible values for `sourceDataType`s are:
+*
+* - `'metadata'`: indicates that any necessary source metadata has been loaded (such as TileJSON) and it is ok to start loading tiles
+* - `'content'`: indicates the source data has changed (such as when source.setData() has been called on GeoJSONSource)
+* - `'visibility'`: send when the source becomes used when at least one of its layers becomes visible in style sense (inside the layer's zoom range and with layout.visibility set to 'visible')
+* - `'idle'`: indicates that no new source data has been fetched (but the source has done loading)
+*
+* @group Event Related
+*
+* @example
+* ```ts
+* // The sourcedata event is an example of a MapSourceDataEvent.
+* // Set up an event listener on the map.
+* map.on('sourcedata', (e) => {
+*    if (e.isSourceLoaded) {
+*        // Do something when the source has finished loading
+*    }
+* });
+* ```
+*/
+var MapSourceDataEvent = class extends MapLibreEvent {
+	constructor(type, data = {}) {
+		super(type, data);
+		this.dataType = "source";
+	}
+};
+/**
+* `MapMouseEvent` is the event type for mouse-related map events.
+*
+* @group Event Related
+*
+* @example
+* ```ts
+* // The `click` event is an example of a `MapMouseEvent`.
+* // Set up an event listener on the map.
+* map.on('click', (e) => {
+*   // The event object (e) contains information like the
+*   // coordinates of the point on the map that was clicked.
+*   console.log('A click event has occurred at ' + e.lngLat);
+* });
+* ```
+*/
+var MapMouseEvent = class extends MapLibreEvent {
+	/**
+	* Prevents subsequent default processing of the event by the map.
+	*
+	* Calling this method will prevent the following default map behaviors:
+	*
+	*   * On `mousedown` events, the behavior of {@link DragPanHandler}
+	*   * On `mousedown` events, the behavior of {@link DragRotateHandler}
+	*   * On `mousedown` events, the behavior of {@link BoxZoomHandler}
+	*   * On `dblclick` events, the behavior of {@link DoubleClickZoomHandler}
+	*
+	*/
+	preventDefault() {
+		this._defaultPrevented = true;
+	}
+	/**
+	* `true` if `preventDefault` has been called.
+	*/
+	get defaultPrevented() {
+		return this._defaultPrevented;
+	}
+	constructor(type, map, originalEvent, data = {}) {
+		originalEvent = originalEvent instanceof MouseEvent ? originalEvent : new MouseEvent(type, originalEvent);
+		const point = DOM.mousePos(map.getCanvas(), originalEvent);
+		const lngLat = map.unproject(point);
+		super(type, extend({
+			point,
+			lngLat,
+			originalEvent
+		}, data));
+		this._defaultPrevented = false;
+		this.target = map;
+	}
+};
+/**
+* `MapTouchEvent` is the event type for touch-related map events.
+*
+* @group Event Related
+*/
+var MapTouchEvent = class extends MapLibreEvent {
+	/**
+	* Prevents subsequent default processing of the event by the map.
+	*
+	* Calling this method will prevent the following default map behaviors:
+	*
+	*   * On `touchstart` events, the behavior of {@link DragPanHandler}
+	*   * On `touchstart` events, the behavior of {@link TwoFingersTouchZoomRotateHandler}
+	*
+	*/
+	preventDefault() {
+		this._defaultPrevented = true;
+	}
+	/**
+	* `true` if `preventDefault` has been called.
+	*/
+	get defaultPrevented() {
+		return this._defaultPrevented;
+	}
+	constructor(type, map, originalEvent) {
+		const touches = type === "touchend" ? originalEvent.changedTouches : originalEvent.touches;
+		const points = DOM.touchPos(map.getCanvasContainer(), touches);
+		const lngLats = points.map((t) => map.unproject(t));
+		const point = points.reduce((prev, curr, i, arr) => {
+			return prev.add(curr.div(arr.length));
+		}, new Point(0, 0));
+		const lngLat = map.unproject(point);
+		super(type, {
+			points,
+			point,
+			lngLats,
+			lngLat,
+			originalEvent
+		});
+		this._defaultPrevented = false;
+	}
+};
+/**
+* `MapWheelEvent` is the event type for the `wheel` map event.
+*
+* @group Event Related
+*/
+var MapWheelEvent = class extends MapLibreEvent {
+	/**
+	* Prevents subsequent default processing of the event by the map.
+	*
+	* Calling this method will prevent the behavior of {@link ScrollZoomHandler}.
+	*/
+	preventDefault() {
+		this._defaultPrevented = true;
+	}
+	/**
+	* `true` if `preventDefault` has been called.
+	*/
+	get defaultPrevented() {
+		return this._defaultPrevented;
+	}
+	/** */
+	constructor(map, originalEvent) {
+		super("wheel", { originalEvent });
+		this._defaultPrevented = false;
+	}
+};
+/**
+* A `MapBoxZoomEvent` is the event type for the boxzoom-related map events emitted by the {@link BoxZoomHandler}.
+*
+* @group Event Related
+*/
+var MapBoxZoomEvent = class extends MapLibreEvent {};
+/**
+* The terrain event
+*
+* @group Event Related
+*/
+var MapTerrainEvent = class extends MapLibreEvent {
+	constructor(data = {}) {
+		super("terrain", data);
+	}
+};
+/**
+* The map projection event
+*
+* @group Event Related
+*/
+var MapProjectionEvent = class extends MapLibreEvent {
+	constructor(data = {}) {
+		super("projectiontransition", data);
+	}
+};
+/**
+* An event related to the web gl context
+*
+* @group Event Related
+*/
+var MapContextEvent = class extends MapLibreEvent {};
+/**
+* The style image missing event
+*
+* @group Event Related
+*
+* @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/generate-and-add-a-missing-icon-to-the-map/)
+*/
+var MapStyleImageMissingEvent = class extends MapLibreEvent {
+	constructor(data = {}) {
+		super("styleimagemissing", data);
 	}
 };
 //#endregion
@@ -23548,7 +23878,7 @@ var ImageManager = class extends Evented {
 		for (const id of ids) {
 			let image = this.getImage(id);
 			if (!image) {
-				this.fire(new Event("styleimagemissing", { id }));
+				this.fire(new MapStyleImageMissingEvent({ id }));
 				image = this.getImage(id);
 			}
 			if (image) response[id] = {
@@ -25409,7 +25739,7 @@ var VectorTileSource = class extends Evented {
 	}
 	async load(sourceDataChanged = false) {
 		this._loaded = false;
-		this.fire(new Event("dataloading", { dataType: "source" }));
+		this.fire(new MapSourceDataEvent("dataloading"));
 		this._tileJSONRequest = new AbortController();
 		try {
 			const tileJSON = await loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest, this.map._ownerWindow);
@@ -25418,12 +25748,8 @@ var VectorTileSource = class extends Evented {
 			if (tileJSON) {
 				extend(this, tileJSON);
 				if (tileJSON.bounds) this.tileBounds = new TileBounds(tileJSON.bounds, this.minzoom, this.maxzoom);
-				this.fire(new Event("data", {
-					dataType: "source",
-					sourceDataType: "metadata"
-				}));
-				this.fire(new Event("data", {
-					dataType: "source",
+				this.fire(new MapSourceDataEvent("data", { sourceDataType: "metadata" }));
+				this.fire(new MapSourceDataEvent("data", {
 					sourceDataType: "content",
 					sourceDataChanged
 				}));
@@ -25639,7 +25965,7 @@ var RasterTileSource = class extends Evented {
 	}
 	async load(sourceDataChanged = false) {
 		this._loaded = false;
-		this.fire(new Event("dataloading", { dataType: "source" }));
+		this.fire(new MapSourceDataEvent("dataloading"));
 		this._tileJSONRequest = new AbortController();
 		try {
 			const tileJSON = await loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest, this.map._ownerWindow);
@@ -25648,12 +25974,8 @@ var RasterTileSource = class extends Evented {
 			if (tileJSON) {
 				extend(this, tileJSON);
 				if (tileJSON.bounds) this.tileBounds = new TileBounds(tileJSON.bounds, this.minzoom, this.maxzoom);
-				this.fire(new Event("data", {
-					dataType: "source",
-					sourceDataType: "metadata"
-				}));
-				this.fire(new Event("data", {
-					dataType: "source",
+				this.fire(new MapSourceDataEvent("data", { sourceDataType: "metadata" }));
+				this.fire(new MapSourceDataEvent("data", {
 					sourceDataType: "content",
 					sourceDataChanged
 				}));
@@ -26440,7 +26762,7 @@ var GeoJSONSource = class extends Evented {
 	*/
 	async _dispatchWorkerUpdate(optionsPromise) {
 		this._isUpdatingWorker = true;
-		this.fire(new Event("dataloading", { dataType: "source" }));
+		this.fire(new MapSourceDataEvent("dataloading"));
 		try {
 			const options = await optionsPromise;
 			const result = await (await this.actorPromise).sendAsync({
@@ -26449,19 +26771,19 @@ var GeoJSONSource = class extends Evented {
 			});
 			this._isUpdatingWorker = false;
 			if (this._removed || result.abandoned) {
-				this.fire(new Event("dataabort", { dataType: "source" }));
+				this.fire(new MapSourceDataEvent("dataabort"));
 				return;
 			}
 			if (result.data) this._data = { geojson: result.data };
 			const affectedGeometries = this._applyDiffToSource(options.dataDiff);
 			const shouldReloadTileOptions = this._getShouldReloadTileOptions(affectedGeometries);
-			const eventData = { dataType: "source" };
+			const eventData = {};
 			this._applyResourceTiming(eventData, result);
-			this.fire(new Event("data", {
+			this.fire(new MapSourceDataEvent("data", {
 				...eventData,
 				sourceDataType: "metadata"
 			}));
-			this.fire(new Event("data", {
+			this.fire(new MapSourceDataEvent("data", {
 				...eventData,
 				sourceDataType: "content",
 				shouldReloadTileOptions
@@ -26469,7 +26791,7 @@ var GeoJSONSource = class extends Evented {
 		} catch (err) {
 			this._isUpdatingWorker = false;
 			if (this._removed) {
-				this.fire(new Event("dataabort", { dataType: "source" }));
+				this.fire(new MapSourceDataEvent("dataabort"));
 				return;
 			}
 			this.fire(new ErrorEvent(ensureError(err)));
@@ -26756,7 +27078,7 @@ var ImageSource = class extends Evented {
 	}
 	async load(newCoordinates) {
 		this._loaded = false;
-		this.fire(new Event("dataloading", { dataType: "source" }));
+		this.fire(new MapSourceDataEvent("dataloading"));
 		this.url = this.options.url;
 		this._request = new AbortController();
 		try {
@@ -26796,10 +27118,7 @@ var ImageSource = class extends Evented {
 	_finishLoading() {
 		if (this.map) {
 			this.setCoordinates(this.coordinates);
-			this.fire(new Event("data", {
-				dataType: "source",
-				sourceDataType: "metadata"
-			}));
+			this.fire(new MapSourceDataEvent("data", { sourceDataType: "metadata" }));
 		}
 	}
 	onAdd(map) {
@@ -26828,10 +27147,7 @@ var ImageSource = class extends Evented {
 		this.minzoom = this.maxzoom = this.tileID.z;
 		this.tileCoords = cornerCoords.map((coord) => this.tileID.getTilePoint(coord)._round());
 		this.flippedWindingOrder = hasWrongWindingOrder(this.tileCoords);
-		this.fire(new Event("data", {
-			dataType: "source",
-			sourceDataType: "content"
-		}));
+		this.fire(new MapSourceDataEvent("data", { sourceDataType: "content" }));
 		return this;
 	}
 	prepare() {
@@ -26851,8 +27167,7 @@ var ImageSource = class extends Evented {
 				newTilesLoaded = true;
 			}
 		}
-		if (newTilesLoaded) this.fire(new Event("data", {
-			dataType: "source",
+		if (newTilesLoaded) this.fire(new MapSourceDataEvent("data", {
 			sourceDataType: "idle",
 			sourceId: this.id
 		}));
@@ -27061,8 +27376,7 @@ var VideoSource = class extends ImageSource {
 				newTilesLoaded = true;
 			}
 		}
-		if (newTilesLoaded) this.fire(new Event("data", {
-			dataType: "source",
+		if (newTilesLoaded) this.fire(new MapSourceDataEvent("data", {
 			sourceDataType: "idle",
 			sourceId: this.id
 		}));
@@ -27190,8 +27504,7 @@ var CanvasSource = class extends ImageSource {
 				newTilesLoaded = true;
 			}
 		}
-		if (newTilesLoaded) this.fire(new Event("data", {
-			dataType: "source",
+		if (newTilesLoaded) this.fire(new MapSourceDataEvent("data", {
 			sourceDataType: "idle",
 			sourceId: this.id
 		}));
@@ -32852,10 +33165,9 @@ var TileManager = class TileManager extends Evented {
 	}
 	_abortTile(tile) {
 		if (this._source.abortTile) this._source.abortTile(tile);
-		this._source.fire(new Event("dataabort", {
+		this._source.fire(new MapSourceDataEvent("dataabort", {
 			tile,
-			coord: tile.tileID,
-			dataType: "source"
+			coord: tile.tileID
 		}));
 	}
 	serialize() {
@@ -32919,8 +33231,7 @@ var TileManager = class TileManager extends Evented {
 		if (this.getSource().type === "raster-dem" && tile.dem) backfillDEM(tile, this._inViewTiles);
 		tile.featureStateRevision = -1;
 		this._state.initializeTileState(tile, this.map ? this.map.painter : null);
-		if (!tile.aborted) this._source.fire(new Event("data", {
-			dataType: "source",
+		if (!tile.aborted) this._source.fire(new MapSourceDataEvent("data", {
 			tile,
 			coord: tile.tileID
 		}));
@@ -33063,9 +33374,8 @@ var TileManager = class TileManager extends Evented {
 		if (this.usedForTerrain) idealTileIDs = this._addTerrainIdealTiles(idealTileIDs);
 		const noPendingDataEmissions = idealTileIDs.length === 0 && !this._updated && this._didEmitContent;
 		this._updated = true;
-		if (noPendingDataEmissions) this.fire(new Event("data", {
+		if (noPendingDataEmissions) this.fire(new MapSourceDataEvent("data", {
 			sourceDataType: "idle",
-			dataType: "source",
 			sourceId: this.id
 		}));
 		const zoom = coveringZoomLevel(transform, this._source);
@@ -33169,10 +33479,9 @@ var TileManager = class TileManager extends Evented {
 		}
 		tile.uses++;
 		this._inViewTiles.setTile(tileID.key, tile);
-		if (!cached) this._source.fire(new Event("dataloading", {
+		if (!cached) this._source.fire(new MapSourceDataEvent("dataloading", {
 			tile,
-			coord: tile.tileID,
-			dataType: "source"
+			coord: tile.tileID
 		}));
 		return tile;
 	}
@@ -41356,7 +41665,7 @@ var Style = class extends Evented {
 		}
 	}
 	async loadURL(url, options = {}, previousStyle) {
-		this.fire(new Event("dataloading", { dataType: "style" }));
+		this.fire(new MapStyleDataEvent("dataloading"));
 		options.validate = typeof options.validate === "boolean" ? options.validate : true;
 		this._loadStyleRequest = new AbortController();
 		const abortController = this._loadStyleRequest;
@@ -41372,7 +41681,7 @@ var Style = class extends Evented {
 		}
 	}
 	loadJSON(json, options = {}, previousStyle) {
-		this.fire(new Event("dataloading", { dataType: "style" }));
+		this.fire(new MapStyleDataEvent("dataloading"));
 		this._frameRequest = new AbortController();
 		browser.frameAsync(this._frameRequest, this.map._ownerWindow).then(() => {
 			this._frameRequest = null;
@@ -41381,7 +41690,7 @@ var Style = class extends Evented {
 		}).catch(() => {});
 	}
 	loadEmpty() {
-		this.fire(new Event("dataloading", { dataType: "style" }));
+		this.fire(new MapStyleDataEvent("dataloading"));
 		this._load(empty, { validate: false });
 	}
 	_load(json, options, previousStyle) {
@@ -41399,8 +41708,8 @@ var Style = class extends Evented {
 		this._setProjectionInternal(this.stylesheet.projection?.type || "mercator");
 		this.sky = new Sky(this.stylesheet.sky);
 		this.map.setTerrain(this.stylesheet.terrain ?? null);
-		this.fire(new Event("data", { dataType: "style" }));
-		this.fire(new Event("style.load"));
+		this.fire(new MapStyleDataEvent("data"));
+		this.fire(new MapStyleLoadEvent());
 	}
 	_createLayers() {
 		const dereferencedLayers = derefLayers(this.stylesheet.layers);
@@ -41450,7 +41759,7 @@ var Style = class extends Evented {
 			this._availableImages = this.imageManager.listImages();
 			if (isUpdate) this._changed = true;
 			this.dispatcher.broadcast("SI", this._availableImages);
-			this.fire(new Event("data", { dataType: "style" }));
+			this.fire(new MapStyleDataEvent("data"));
 			if (completion) completion(err);
 		});
 	}
@@ -41463,7 +41772,7 @@ var Style = class extends Evented {
 		this._availableImages = this.imageManager.listImages();
 		this._changed = true;
 		this.dispatcher.broadcast("SI", this._availableImages);
-		this.fire(new Event("data", { dataType: "style" }));
+		this.fire(new MapStyleDataEvent("data"));
 	}
 	_validateLayer(layer) {
 		const tileManager = this.tileManagers[layer.source];
@@ -41560,9 +41869,8 @@ var Style = class extends Evented {
 		}
 		for (const id in managersUsedBefore) {
 			const tileManager = this.tileManagers[id];
-			if (!!managersUsedBefore[id] !== !!tileManager.used) tileManager.fire(new Event("data", {
+			if (!!managersUsedBefore[id] !== !!tileManager.used) tileManager.fire(new MapSourceDataEvent("data", {
 				sourceDataType: "visibility",
-				dataType: "source",
 				sourceId: id
 			}));
 		}
@@ -41570,7 +41878,7 @@ var Style = class extends Evented {
 		this.sky.recalculate(parameters);
 		this.projection.recalculate(parameters);
 		this.z = parameters.zoom;
-		if (changed) this.fire(new Event("data", { dataType: "style" }));
+		if (changed) this.fire(new MapStyleDataEvent("data"));
 	}
 	_updateTilesForChangedImages() {
 		const changedImages = Object.keys(this._changedImages);
@@ -41623,7 +41931,7 @@ var Style = class extends Evented {
 		for (const styleChangeOperation of operations.operations) styleChangeOperation();
 		this.stylesheet = nextState;
 		this._serializedLayers = null;
-		this.fire(new Event("style.load", { style: this }));
+		this.fire(new MapStyleLoadEvent({ style: this }));
 		return true;
 	}
 	_getOperationsToPerform(diff) {
@@ -41722,7 +42030,7 @@ var Style = class extends Evented {
 		this._changedImages[id] = true;
 		this._changed = true;
 		this.dispatcher.broadcast("SI", this._availableImages);
-		this.fire(new Event("data", { dataType: "style" }));
+		this.fire(new MapStyleDataEvent("data"));
 	}
 	listImages() {
 		this._checkLoaded();
@@ -41762,9 +42070,8 @@ var Style = class extends Evented {
 		const tileManager = this.tileManagers[id];
 		delete this.tileManagers[id];
 		delete this._updatedSources[id];
-		tileManager.fire(new Event("data", {
+		tileManager.fire(new MapSourceDataEvent("data", {
 			sourceDataType: "metadata",
-			dataType: "source",
 			sourceId: id
 		}));
 		tileManager.setEventedParent(null);
@@ -42406,7 +42713,7 @@ var Style = class extends Evented {
 		this._availableImages = this.imageManager.listImages();
 		this._changed = true;
 		this.dispatcher.broadcast("SI", this._availableImages);
-		this.fire(new Event("data", { dataType: "style" }));
+		this.fire(new MapStyleDataEvent("data"));
 	}
 	/**
 	* Get the current sprite value.
@@ -42851,114 +43158,6 @@ var Layout = class extends Benchmark {
 	}
 	async bench() {
 		for (const tile of this.tiles) await this.parser.parseTile(tile);
-	}
-};
-//#endregion
-//#region src/util/dom.ts
-var DOM = class DOM {
-	static {
-		this.docStyle = typeof window !== "undefined" && window.document?.documentElement.style;
-	}
-	static {
-		this.selectProp = !DOM.docStyle || "userSelect" in DOM.docStyle ? "userSelect" : "webkitUserSelect";
-	}
-	static create(tagName, className, container) {
-		const el = window.document.createElement(tagName);
-		if (className !== void 0) el.className = className;
-		if (container) container.appendChild(el);
-		return el;
-	}
-	static createNS(namespaceURI, tagName) {
-		return window.document.createElementNS(namespaceURI, tagName);
-	}
-	static disableDrag() {
-		if (DOM.docStyle && DOM.selectProp) {
-			DOM.userSelect = DOM.docStyle[DOM.selectProp];
-			DOM.docStyle[DOM.selectProp] = "none";
-		}
-	}
-	static enableDrag() {
-		if (DOM.docStyle && DOM.selectProp) DOM.docStyle[DOM.selectProp] = DOM.userSelect;
-	}
-	static suppressClickInternal(e) {
-		e.preventDefault();
-		e.stopPropagation();
-		window.removeEventListener("click", DOM.suppressClickInternal, true);
-	}
-	static suppressClick() {
-		window.addEventListener("click", DOM.suppressClickInternal, true);
-		window.setTimeout(() => {
-			window.removeEventListener("click", DOM.suppressClickInternal, true);
-		}, 0);
-	}
-	static getScale(element) {
-		const rect = element.getBoundingClientRect();
-		return {
-			x: rect.width / element.offsetWidth || 1,
-			y: rect.height / element.offsetHeight || 1,
-			boundingClientRect: rect
-		};
-	}
-	static getPoint(el, scale, e) {
-		const rect = scale.boundingClientRect;
-		return new Point((e.clientX - rect.left) / scale.x - el.clientLeft, (e.clientY - rect.top) / scale.y - el.clientTop);
-	}
-	static mousePos(el, e) {
-		const scale = DOM.getScale(el);
-		return DOM.getPoint(el, scale, e);
-	}
-	static touchPos(el, touches) {
-		const points = [];
-		const scale = DOM.getScale(el);
-		for (const touch of touches) points.push(DOM.getPoint(el, scale, touch));
-		return points;
-	}
-	/**
-	* Sanitize an HTML string - this might not be enough to prevent all XSS attacks
-	* Base on https://javascriptsource.com/sanitize-an-html-string-to-reduce-the-risk-of-xss-attacks/
-	* (c) 2021 Chris Ferdinandi, MIT License, https://gomakethings.com
-	*/
-	static sanitize(str) {
-		const html = new DOMParser().parseFromString(str, "text/html").body || document.createElement("body");
-		const scripts = html.querySelectorAll("script");
-		for (const script of scripts) script.remove();
-		DOM.clean(html);
-		return html.innerHTML;
-	}
-	/**
-	* Check if the attribute is potentially dangerous
-	*/
-	static isPossiblyDangerous(name, value) {
-		const val = value.replace(/\s+/g, "").toLowerCase();
-		if ([
-			"src",
-			"href",
-			"xlink:href"
-		].includes(name)) {
-			if (val.includes("javascript:") || val.includes("data:")) return true;
-		}
-		if (name.startsWith("on")) return true;
-	}
-	/**
-	* Remove dangerous stuff from the HTML document's nodes
-	* @param html - The HTML document
-	*/
-	static clean(html) {
-		const nodes = html.children;
-		for (const node of nodes) {
-			DOM.removeAttributes(node);
-			DOM.clean(node);
-		}
-	}
-	/**
-	* Remove potentially dangerous attributes from an element
-	* @param elem - The element
-	*/
-	static removeAttributes(elem) {
-		for (const { name, value } of elem.attributes) {
-			if (!DOM.isPossiblyDangerous(name, value)) continue;
-			elem.removeAttribute(name);
-		}
 	}
 };
 //#endregion
@@ -47270,126 +47469,6 @@ function calculateEasing(amount, inertiaDuration, inertiaOptions) {
 	};
 }
 //#endregion
-//#region src/ui/events.ts
-/**
-* `MapMouseEvent` is the event type for mouse-related map events.
-*
-* @group Event Related
-*
-* @example
-* ```ts
-* // The `click` event is an example of a `MapMouseEvent`.
-* // Set up an event listener on the map.
-* map.on('click', (e) => {
-*   // The event object (e) contains information like the
-*   // coordinates of the point on the map that was clicked.
-*   console.log('A click event has occurred at ' + e.lngLat);
-* });
-* ```
-*/
-var MapMouseEvent = class extends Event {
-	/**
-	* Prevents subsequent default processing of the event by the map.
-	*
-	* Calling this method will prevent the following default map behaviors:
-	*
-	*   * On `mousedown` events, the behavior of {@link DragPanHandler}
-	*   * On `mousedown` events, the behavior of {@link DragRotateHandler}
-	*   * On `mousedown` events, the behavior of {@link BoxZoomHandler}
-	*   * On `dblclick` events, the behavior of {@link DoubleClickZoomHandler}
-	*
-	*/
-	preventDefault() {
-		this._defaultPrevented = true;
-	}
-	/**
-	* `true` if `preventDefault` has been called.
-	*/
-	get defaultPrevented() {
-		return this._defaultPrevented;
-	}
-	constructor(type, map, originalEvent, data = {}) {
-		originalEvent = originalEvent instanceof MouseEvent ? originalEvent : new MouseEvent(type, originalEvent);
-		const point = DOM.mousePos(map.getCanvas(), originalEvent);
-		const lngLat = map.unproject(point);
-		super(type, extend({
-			point,
-			lngLat,
-			originalEvent
-		}, data));
-		this._defaultPrevented = false;
-		this.target = map;
-	}
-};
-/**
-* `MapTouchEvent` is the event type for touch-related map events.
-*
-* @group Event Related
-*/
-var MapTouchEvent = class extends Event {
-	/**
-	* Prevents subsequent default processing of the event by the map.
-	*
-	* Calling this method will prevent the following default map behaviors:
-	*
-	*   * On `touchstart` events, the behavior of {@link DragPanHandler}
-	*   * On `touchstart` events, the behavior of {@link TwoFingersTouchZoomRotateHandler}
-	*
-	*/
-	preventDefault() {
-		this._defaultPrevented = true;
-	}
-	/**
-	* `true` if `preventDefault` has been called.
-	*/
-	get defaultPrevented() {
-		return this._defaultPrevented;
-	}
-	constructor(type, map, originalEvent) {
-		const touches = type === "touchend" ? originalEvent.changedTouches : originalEvent.touches;
-		const points = DOM.touchPos(map.getCanvasContainer(), touches);
-		const lngLats = points.map((t) => map.unproject(t));
-		const point = points.reduce((prev, curr, i, arr) => {
-			return prev.add(curr.div(arr.length));
-		}, new Point(0, 0));
-		const lngLat = map.unproject(point);
-		super(type, {
-			points,
-			point,
-			lngLats,
-			lngLat,
-			originalEvent
-		});
-		this._defaultPrevented = false;
-	}
-};
-/**
-* `MapWheelEvent` is the event type for the `wheel` map event.
-*
-* @group Event Related
-*/
-var MapWheelEvent = class extends Event {
-	/**
-	* Prevents subsequent default processing of the event by the map.
-	*
-	* Calling this method will prevent the behavior of {@link ScrollZoomHandler}.
-	*/
-	preventDefault() {
-		this._defaultPrevented = true;
-	}
-	/**
-	* `true` if `preventDefault` has been called.
-	*/
-	get defaultPrevented() {
-		return this._defaultPrevented;
-	}
-	/** */
-	constructor(type, map, originalEvent) {
-		super(type, { originalEvent });
-		this._defaultPrevented = false;
-	}
-};
-//#endregion
 //#region src/ui/handler/map_event.ts
 var MapEventHandler = class {
 	constructor(map, options) {
@@ -47400,7 +47479,7 @@ var MapEventHandler = class {
 		delete this._mousedownPos;
 	}
 	wheel(e) {
-		return this._firePreventable(new MapWheelEvent(e.type, this._map, e));
+		return this._firePreventable(new MapWheelEvent(this._map, e));
 	}
 	mousedown(e, point) {
 		this._mousedownPos = point;
@@ -47608,7 +47687,7 @@ var BoxZoomHandler = class {
 		DOM.suppressClick();
 		if (p0.x === p1.x && p0.y === p1.y) this._fireEvent("boxzoomcancel", e);
 		else {
-			this._map.fire(new Event("boxzoomend", { originalEvent: e }));
+			this._map.fire(new MapBoxZoomEvent("boxzoomend", { originalEvent: e }));
 			if (this._boxZoomEnd) {
 				this._boxZoomEnd(this._map, p0, p1, e);
 				return;
@@ -47635,7 +47714,7 @@ var BoxZoomHandler = class {
 		delete this._lastPos;
 	}
 	_fireEvent(type, e) {
-		return this._map.fire(new Event(type, { originalEvent: e }));
+		return this._map.fire(new MapBoxZoomEvent(type, { originalEvent: e }));
 	}
 };
 //#endregion
@@ -49239,7 +49318,7 @@ var CooperativeGesturesHandler = class {
 	}
 	notifyGestureBlocked(gestureType, originalEvent) {
 		if (!this._enabled) return;
-		this._map.fire(new Event("cooperativegestureprevented", {
+		this._map.fire(new MapLibreEvent("cooperativegestureprevented", {
 			gestureType,
 			originalEvent
 		}));
@@ -49666,14 +49745,14 @@ var HandlerManager = class {
 				inertialEase.freezeElevation = true;
 				this._map.easeTo(inertialEase, { originalEvent: originalEndEvent });
 			} else {
-				this._map.fire(new Event("moveend", { originalEvent: originalEndEvent }));
+				this._map.fire(new MapMovementEvent("moveend", { originalEvent: originalEndEvent }));
 				if (shouldSnapToNorth(this._map.getBearing())) this._map.resetNorth();
 			}
 			this._updatingCamera = false;
 		}
 	}
 	_fireEvent(type, e) {
-		this._map.fire(new Event(type, e ? { originalEvent: e } : {}));
+		this._map.fire(new MapMovementEvent(type, e ? { originalEvent: e } : {}));
 	}
 	_requestFrame() {
 		this._map.triggerRepaint();
@@ -49939,7 +50018,7 @@ var Camera = class extends Evented {
 	setVerticalFieldOfView(fov, eventData) {
 		if (fov != this.transform.fov) {
 			this.transform.setFov(fov);
-			this.fire(new Event("movestart", eventData)).fire(new Event("move", eventData)).fire(new Event("moveend", eventData));
+			this.fire(new MapMovementEvent("movestart", eventData)).fire(new MapMovementEvent("move", eventData)).fire(new MapMovementEvent("moveend", eventData));
 		}
 		return this;
 	}
@@ -50287,12 +50366,12 @@ var Camera = class extends Evented {
 		}
 		if (options.padding != null && !tr.isPaddingEqual(options.padding)) tr.setPadding(options.padding);
 		this._applyUpdatedTransform(tr);
-		this.fire(new Event("movestart", eventData)).fire(new Event("move", eventData));
-		if (zoomChanged) this.fire(new Event("zoomstart", eventData)).fire(new Event("zoom", eventData)).fire(new Event("zoomend", eventData));
-		if (bearingChanged) this.fire(new Event("rotatestart", eventData)).fire(new Event("rotate", eventData)).fire(new Event("rotateend", eventData));
-		if (pitchChanged) this.fire(new Event("pitchstart", eventData)).fire(new Event("pitch", eventData)).fire(new Event("pitchend", eventData));
-		if (rollChanged) this.fire(new Event("rollstart", eventData)).fire(new Event("roll", eventData)).fire(new Event("rollend", eventData));
-		return this.fire(new Event("moveend", eventData));
+		this.fire(new MapMovementEvent("movestart", eventData)).fire(new MapMovementEvent("move", eventData));
+		if (zoomChanged) this.fire(new MapMovementEvent("zoomstart", eventData)).fire(new MapMovementEvent("zoom", eventData)).fire(new MapMovementEvent("zoomend", eventData));
+		if (bearingChanged) this.fire(new MapMovementEvent("rotatestart", eventData)).fire(new MapMovementEvent("rotate", eventData)).fire(new MapMovementEvent("rotateend", eventData));
+		if (pitchChanged) this.fire(new MapMovementEvent("pitchstart", eventData)).fire(new MapMovementEvent("pitch", eventData)).fire(new MapMovementEvent("pitchend", eventData));
+		if (rollChanged) this.fire(new MapMovementEvent("rollstart", eventData)).fire(new MapMovementEvent("roll", eventData)).fire(new MapMovementEvent("rollend", eventData));
+		return this.fire(new MapMovementEvent("moveend", eventData));
 	}
 	/**
 	* Given a camera 'from' position and a position to look at (`to`), calculates zoom and camera rotation and returns them as {@link CameraOptions}.
@@ -50441,11 +50520,11 @@ var Camera = class extends Evented {
 	}
 	_prepareEase(eventData, noMoveStart, currently = {}) {
 		this._moving = true;
-		if (!noMoveStart && !currently.moving) this.fire(new Event("movestart", eventData));
-		if (this._zooming && !currently.zooming) this.fire(new Event("zoomstart", eventData));
-		if (this._rotating && !currently.rotating) this.fire(new Event("rotatestart", eventData));
-		if (this._pitching && !currently.pitching) this.fire(new Event("pitchstart", eventData));
-		if (this._rolling && !currently.rolling) this.fire(new Event("rollstart", eventData));
+		if (!noMoveStart && !currently.moving) this.fire(new MapMovementEvent("movestart", eventData));
+		if (this._zooming && !currently.zooming) this.fire(new MapMovementEvent("zoomstart", eventData));
+		if (this._rotating && !currently.rotating) this.fire(new MapMovementEvent("rotatestart", eventData));
+		if (this._pitching && !currently.pitching) this.fire(new MapMovementEvent("pitchstart", eventData));
+		if (this._rolling && !currently.rolling) this.fire(new MapMovementEvent("rollstart", eventData));
 	}
 	_prepareElevation(center) {
 		this._elevationCenter = center;
@@ -50535,11 +50614,11 @@ var Camera = class extends Evented {
 		this.transform.apply(finalTransform, false);
 	}
 	_fireMoveEvents(eventData) {
-		this.fire(new Event("move", eventData));
-		if (this._zooming) this.fire(new Event("zoom", eventData));
-		if (this._rotating) this.fire(new Event("rotate", eventData));
-		if (this._pitching) this.fire(new Event("pitch", eventData));
-		if (this._rolling) this.fire(new Event("roll", eventData));
+		this.fire(new MapMovementEvent("move", eventData));
+		if (this._zooming) this.fire(new MapMovementEvent("zoom", eventData));
+		if (this._rotating) this.fire(new MapMovementEvent("rotate", eventData));
+		if (this._pitching) this.fire(new MapMovementEvent("pitch", eventData));
+		if (this._rolling) this.fire(new MapMovementEvent("roll", eventData));
 	}
 	_afterEase(eventData, easeId) {
 		if (this._easeId && easeId && this._easeId === easeId) return;
@@ -50554,11 +50633,11 @@ var Camera = class extends Evented {
 		this._pitching = false;
 		this._rolling = false;
 		this._padding = false;
-		if (wasZooming) this.fire(new Event("zoomend", eventData));
-		if (wasRotating) this.fire(new Event("rotateend", eventData));
-		if (wasPitching) this.fire(new Event("pitchend", eventData));
-		if (wasRolling) this.fire(new Event("rollend", eventData));
-		this.fire(new Event("moveend", eventData));
+		if (wasZooming) this.fire(new MapMovementEvent("zoomend", eventData));
+		if (wasRotating) this.fire(new MapMovementEvent("rotateend", eventData));
+		if (wasPitching) this.fire(new MapMovementEvent("pitchend", eventData));
+		if (wasRolling) this.fire(new MapMovementEvent("rollend", eventData));
+		this.fire(new MapMovementEvent("moveend", eventData));
 	}
 	/**
 	* Changes any combination of center, zoom, bearing, pitch, and roll, animating the transition along a curve that
@@ -50800,7 +50879,7 @@ var AttributionControl = class {
 			}
 		};
 		this._updateData = (e) => {
-			if (e && (e.sourceDataType === "metadata" || e.sourceDataType === "visibility" || e.dataType === "style" || e.type === "terrain")) this._updateAttributions();
+			if (e && (e.type === "terrain" || e.dataType === "style" || e.dataType === "source" && (e.sourceDataType === "metadata" || e.sourceDataType === "visibility"))) this._updateAttributions();
 		};
 		this._updateCompact = () => {
 			if (this._map.getCanvasContainer().offsetWidth <= 640 || this._compact) {
@@ -51974,7 +52053,7 @@ var Map$1 = class extends Camera {
 			this.painter.destroy();
 			this._lostContextStyle = this._getStyleAndImages();
 			if (!this.style) {
-				this.fire(new Event("webglcontextlost", { originalEvent: event }));
+				this.fire(new MapContextEvent("webglcontextlost", { originalEvent: event }));
 				return;
 			}
 			for (const layer of Object.values(this.style._layers)) {
@@ -51983,7 +52062,7 @@ var Map$1 = class extends Camera {
 			}
 			this.style.destroy();
 			this.style = null;
-			this.fire(new Event("webglcontextlost", { originalEvent: event }));
+			this.fire(new MapContextEvent("webglcontextlost", { originalEvent: event }));
 		};
 		this._contextRestored = (event) => {
 			if (this._lostContextStyle.style) this.setStyle(this._lostContextStyle.style, { diff: false });
@@ -51997,7 +52076,7 @@ var Map$1 = class extends Camera {
 			this.resize();
 			this._update();
 			this._resizeInternal();
-			this.fire(new Event("webglcontextrestored", { originalEvent: event }));
+			this.fire(new MapContextEvent("webglcontextrestored", { originalEvent: event }));
 		};
 		this._onMapScroll = (event) => {
 			if (event.target !== this._container) return;
@@ -52092,13 +52171,13 @@ var Map$1 = class extends Camera {
 		});
 		this.on("data", (event) => {
 			this._update(event.dataType === "style");
-			this.fire(new Event(`${event.dataType}data`, event));
+			this.fire(event.dataType === "style" ? new MapStyleDataEvent("styledata", event) : new MapSourceDataEvent("sourcedata", event));
 		});
 		this.on("dataloading", (event) => {
-			this.fire(new Event(`${event.dataType}dataloading`, event));
+			this.fire(event.dataType === "style" ? new MapStyleDataEvent("styledataloading", event) : new MapSourceDataEvent("sourcedataloading", event));
 		});
 		this.on("dataabort", (event) => {
-			this.fire(new Event("sourcedataabort", event));
+			this.fire(new MapSourceDataEvent("sourcedataabort", event));
 		});
 	}
 	/**
@@ -52241,10 +52320,10 @@ var Map$1 = class extends Camera {
 		const fireMoving = !this._moving;
 		if (fireMoving) {
 			this.stop();
-			this.fire(new Event("movestart", eventData)).fire(new Event("move", eventData));
+			this.fire(new MapMovementEvent("movestart", eventData)).fire(new MapMovementEvent("move", eventData));
 		}
-		this.fire(new Event("resize", eventData));
-		if (fireMoving) this.fire(new Event("moveend", eventData));
+		this.fire(new MapLibreEvent("resize", eventData));
+		if (fireMoving) this.fire(new MapMovementEvent("moveend", eventData));
 		return this;
 	}
 	/**
@@ -52388,7 +52467,7 @@ var Map$1 = class extends Camera {
 			tr.setMinZoom(minZoom);
 			this._applyUpdatedTransform(tr);
 			this._update();
-			if (zoomBefore !== this.transform.zoom) this.fire(new Event("zoomstart")).fire(new Event("zoom")).fire(new Event("zoomend")).fire(new Event("movestart")).fire(new Event("move")).fire(new Event("moveend"));
+			if (zoomBefore !== this.transform.zoom) this.fire(new MapMovementEvent("zoomstart")).fire(new MapMovementEvent("zoom")).fire(new MapMovementEvent("zoomend")).fire(new MapMovementEvent("movestart")).fire(new MapMovementEvent("move")).fire(new MapMovementEvent("moveend"));
 			return this;
 		} else throw new Error(`minZoom must be between ${defaultMinZoom} and the current maxZoom, inclusive`);
 	}
@@ -52427,7 +52506,7 @@ var Map$1 = class extends Camera {
 			tr.setMaxZoom(maxZoom);
 			this._applyUpdatedTransform(tr);
 			this._update();
-			if (zoomBefore !== this.transform.zoom) this.fire(new Event("zoomstart")).fire(new Event("zoom")).fire(new Event("zoomend")).fire(new Event("movestart")).fire(new Event("move")).fire(new Event("moveend"));
+			if (zoomBefore !== this.transform.zoom) this.fire(new MapMovementEvent("zoomstart")).fire(new MapMovementEvent("zoom")).fire(new MapMovementEvent("zoomend")).fire(new MapMovementEvent("movestart")).fire(new MapMovementEvent("move")).fire(new MapMovementEvent("moveend"));
 			return this;
 		} else throw new Error("maxZoom must be greater than the current minZoom");
 	}
@@ -52463,7 +52542,7 @@ var Map$1 = class extends Camera {
 			tr.setMinPitch(minPitch);
 			this._applyUpdatedTransform(tr);
 			this._update();
-			if (pitchBefore !== this.transform.pitch) this.fire(new Event("pitchstart")).fire(new Event("pitch")).fire(new Event("pitchend")).fire(new Event("movestart")).fire(new Event("move")).fire(new Event("moveend"));
+			if (pitchBefore !== this.transform.pitch) this.fire(new MapMovementEvent("pitchstart")).fire(new MapMovementEvent("pitch")).fire(new MapMovementEvent("pitchend")).fire(new MapMovementEvent("movestart")).fire(new MapMovementEvent("move")).fire(new MapMovementEvent("moveend"));
 			return this;
 		} else throw new Error(`minPitch must be between ${defaultMinPitch} and the current maxPitch, inclusive`);
 	}
@@ -52495,7 +52574,7 @@ var Map$1 = class extends Camera {
 			tr.setMaxPitch(maxPitch);
 			this._applyUpdatedTransform(tr);
 			this._update();
-			if (pitchBefore !== this.transform.pitch) this.fire(new Event("pitchstart")).fire(new Event("pitch")).fire(new Event("pitchend")).fire(new Event("movestart")).fire(new Event("move")).fire(new Event("moveend"));
+			if (pitchBefore !== this.transform.pitch) this.fire(new MapMovementEvent("pitchstart")).fire(new MapMovementEvent("pitch")).fire(new MapMovementEvent("pitchend")).fire(new MapMovementEvent("movestart")).fire(new MapMovementEvent("move")).fire(new MapMovementEvent("moveend"));
 			return this;
 		} else throw new Error("maxPitch must be greater than the current minPitch");
 	}
@@ -53207,7 +53286,7 @@ var Map$1 = class extends Camera {
 			};
 			this.style.on("data", this._terrainDataCallback);
 		}
-		this.fire(new Event("terrain", { terrain: options }));
+		this.fire(new MapTerrainEvent({ terrain: options }));
 		return this;
 	}
 	/**
@@ -54181,7 +54260,7 @@ var Map$1 = class extends Camera {
 	migrateProjection(newTransform, newCameraHelper) {
 		super.migrateProjection(newTransform, newCameraHelper);
 		this.painter.transform = newTransform;
-		this.fire(new Event("projectiontransition", { newProjection: this.style.projection.name }));
+		this.fire(new MapProjectionEvent({ newProjection: this.style.projection.name }));
 	}
 	/**
 	* Returns a Boolean indicating whether the map is fully loaded.
@@ -54286,16 +54365,16 @@ var Map$1 = class extends Camera {
 			showPadding: this.showPadding,
 			anisotropicFilterPitch: this.getAnisotropicFilterPitch()
 		});
-		this.fire(new Event("render"));
+		this.fire(new MapLibreEvent("render"));
 		if (this.loaded() && !this._loaded) {
 			this._loaded = true;
-			this.fire(new Event("load"));
+			this.fire(new MapLibreEvent("load"));
 		}
 		if (this.style && (this.style.hasTransitions() || crossFading)) this._styleDirty = true;
 		if (this.style && !this._placementDirty) this.style._releaseSymbolFadeTiles();
 		const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
 		if (somethingDirty || this._repaint) this.triggerRepaint();
-		else if (!this.isMoving() && this.loaded()) this.fire(new Event("idle"));
+		else if (!this.isMoving() && this.loaded()) this.fire(new MapLibreEvent("idle"));
 		if (this._loaded && !this._fullyLoaded && !somethingDirty) this._fullyLoaded = true;
 		return this;
 	}
@@ -54351,7 +54430,7 @@ var Map$1 = class extends Camera {
 		this._container.removeEventListener("scroll", this._onMapScroll, false);
 		this._container.classList.remove("maplibregl-map");
 		this._removed = true;
-		this.fire(new Event("remove"));
+		this.fire(new MapLibreEvent("remove"));
 	}
 	/**
 	* Trigger the rendering of a single frame. Use this method with custom layers to
@@ -57561,6 +57640,18 @@ function applyAnchorClass(element, anchor, prefix) {
 //#endregion
 //#region src/ui/marker.ts
 /**
+* The event class for marker drag events (`dragstart`, `drag` and `dragend`).
+*
+* @group Event Related
+*/
+var MarkerDragEvent = class extends Event {};
+/**
+* The event class for the marker `click` event.
+*
+* @group Event Related
+*/
+var MarkerClickEvent = class extends Event {};
+/**
 * Creates a marker component
 *
 * @group Markers and Controls
@@ -57589,13 +57680,13 @@ function applyAnchorClass(element, anchor, prefix) {
 *
 * ## Events
 *
-* **Event** `dragstart` of type {@link Event} will be fired when dragging starts.
+* **Event** `dragstart` of type {@link MarkerDragEvent} will be fired when dragging starts.
 *
-* **Event** `drag` of type {@link Event} will be fired while dragging.
+* **Event** `drag` of type {@link MarkerDragEvent} will be fired while dragging.
 *
-* **Event** `dragend` of type {@link Event} will be fired when the marker is finished being dragged.
+* **Event** `dragend` of type {@link MarkerDragEvent} will be fired when the marker is finished being dragged.
 *
-* **Event** `click` of type {@link Event} will be fired when the marker is clicked.
+* **Event** `click` of type {@link MarkerClickEvent} will be fired when the marker is clicked.
 *
 * ## CSS Classes
 *
@@ -57618,7 +57709,7 @@ var Marker = class extends Evented {
 	constructor(options) {
 		super();
 		this._onClick = (e) => {
-			this.fire(new Event("click", { originalEvent: e }));
+			this.fire(new MarkerClickEvent("click", { originalEvent: e }));
 		};
 		this._onKeyPress = (e) => {
 			if (e.code === "Space" || e.code === "Enter") this.togglePopup();
@@ -57659,9 +57750,9 @@ var Marker = class extends Evented {
 			this._element.style.pointerEvents = "none";
 			if (this._state === "pending") {
 				this._state = "active";
-				this.fire(new Event("dragstart"));
+				this.fire(new MarkerDragEvent("dragstart"));
 			}
-			this.fire(new Event("drag"));
+			this.fire(new MarkerDragEvent("drag"));
 		};
 		this._onUp = () => {
 			this._element.style.pointerEvents = "auto";
@@ -57670,7 +57761,7 @@ var Marker = class extends Evented {
 			this._isDragging = false;
 			this._map.off("mousemove", this._onMove);
 			this._map.off("touchmove", this._onMove);
-			if (this._state === "active") this.fire(new Event("dragend"));
+			if (this._state === "active") this.fire(new MarkerDragEvent("dragend"));
 			this._state = "inactive";
 		};
 		this._addDragHandler = (e) => {
@@ -58214,6 +58305,27 @@ const defaultOptions$2 = {
 let numberOfWatches = 0;
 let noTimeout = false;
 /**
+* The event class for geolocate control state events
+* (`trackuserlocationstart`, `trackuserlocationend`, `userlocationfocus` and `userlocationlostfocus`).
+*
+* @group Event Related
+*/
+var GeolocateEvent = class extends Event {};
+/**
+* The event class for the geolocate control `geolocate` and `outofmaxbounds` events.
+* Carries the [Position](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationPosition) returned by the Geolocation API.
+*
+* @group Event Related
+*/
+var GeolocatePositionEvent = class extends Event {};
+/**
+* The event class for the geolocate control `error` event.
+* Carries the [PositionError](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationPositionError) returned by the Geolocation API.
+*
+* @group Event Related
+*/
+var GeolocateErrorEvent = class extends Event {};
+/**
 * A `GeolocateControl` control provides a button that uses the browser's geolocation
 * API to locate the user on the map.
 *
@@ -58403,7 +58515,7 @@ var GeolocateControl = class extends Evented {
 			if (!this._map) return;
 			if (this._isOutOfMapMaxBounds(position)) {
 				this._setErrorState();
-				this.fire(new Event("outofmaxbounds", position));
+				this.fire(new GeolocatePositionEvent("outofmaxbounds", position));
 				this._updateMarker();
 				this._finish();
 				return;
@@ -58432,7 +58544,7 @@ var GeolocateControl = class extends Evented {
 			if (this.options.showUserLocation && this._watchState !== "OFF") this._updateMarker(position);
 			if (!this.options.trackUserLocation || this._watchState === "ACTIVE_LOCK") this._updateCamera(position);
 			if (this.options.showUserLocation) this._dotElement.classList.remove("maplibregl-user-location-dot-stale");
-			this.fire(new Event("geolocate", position));
+			this.fire(new GeolocatePositionEvent("geolocate", position));
 			this._finish();
 		};
 		this._updateCamera = (position) => {
@@ -58474,7 +58586,7 @@ var GeolocateControl = class extends Evented {
 			} else if (error.code === 3 && noTimeout) return;
 			else this._setErrorState();
 			if (this._watchState !== "OFF" && this.options.showUserLocation) this._dotElement.classList.add("maplibregl-user-location-dot-stale");
-			this.fire(new Event("error", error));
+			this.fire(new GeolocateErrorEvent("error", error));
 			this._finish();
 		};
 		this._finish = () => {
@@ -58488,8 +58600,8 @@ var GeolocateControl = class extends Evented {
 				this._watchState = "BACKGROUND";
 				this._geolocateButton.classList.add("maplibregl-ctrl-geolocate-background");
 				this._geolocateButton.classList.remove("maplibregl-ctrl-geolocate-active");
-				this.fire(new Event("trackuserlocationend"));
-				this.fire(new Event("userlocationlostfocus"));
+				this.fire(new GeolocateEvent("trackuserlocationend"));
+				this.fire(new GeolocateEvent("userlocationlostfocus"));
 			}
 		};
 		this._setupUI = () => {
@@ -58642,7 +58754,7 @@ var GeolocateControl = class extends Evented {
 			switch (this._watchState) {
 				case "OFF":
 					this._watchState = "WAITING_ACTIVE";
-					this.fire(new Event("trackuserlocationstart"));
+					this.fire(new GeolocateEvent("trackuserlocationstart"));
 					break;
 				case "WAITING_ACTIVE":
 				case "ACTIVE_LOCK":
@@ -58656,14 +58768,14 @@ var GeolocateControl = class extends Evented {
 					this._geolocateButton.classList.remove("maplibregl-ctrl-geolocate-active-error");
 					this._geolocateButton.classList.remove("maplibregl-ctrl-geolocate-background");
 					this._geolocateButton.classList.remove("maplibregl-ctrl-geolocate-background-error");
-					this.fire(new Event("trackuserlocationend"));
+					this.fire(new GeolocateEvent("trackuserlocationend"));
 					break;
 				case "BACKGROUND":
 					this._watchState = "ACTIVE_LOCK";
 					this._geolocateButton.classList.remove("maplibregl-ctrl-geolocate-background");
 					if (this._lastKnownPosition) this._updateCamera(this._lastKnownPosition);
-					this.fire(new Event("trackuserlocationstart"));
-					this.fire(new Event("userlocationfocus"));
+					this.fire(new GeolocateEvent("trackuserlocationstart"));
+					this.fire(new GeolocateEvent("userlocationfocus"));
 					break;
 				default: throw new Error(`Unexpected watchState ${this._watchState}`);
 			}
@@ -58803,6 +58915,12 @@ function getRoundNum(num) {
 //#endregion
 //#region src/ui/control/fullscreen_control.ts
 /**
+* The event class for fullscreen control events (`fullscreenstart` and `fullscreenend`).
+*
+* @group Event Related
+*/
+var FullscreenEvent = class extends Event {};
+/**
 * A `FullscreenControl` control contains a button for toggling the map in and out of fullscreen mode.
 * When [requestFullscreen](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullscreen) is not supported, fullscreen is handled via CSS properties.
 * The map's `cooperativeGestures` option is temporarily disabled while the map
@@ -58819,9 +58937,9 @@ function getRoundNum(num) {
 *
 * ## Events
 *
-* **Event** `fullscreenstart` of type {@link Event} will be fired when fullscreen mode has started.
+* **Event** `fullscreenstart` of type {@link FullscreenEvent} will be fired when fullscreen mode has started.
 *
-* **Event** `fullscreenend` of type {@link Event} will be fired when fullscreen mode has ended.
+* **Event** `fullscreenend` of type {@link FullscreenEvent} will be fired when fullscreen mode has ended.
 */
 var FullscreenControl = class extends Evented {
 	/**
@@ -58886,11 +59004,11 @@ var FullscreenControl = class extends Evented {
 		this._fullscreenButton.classList.toggle("maplibregl-ctrl-fullscreen");
 		this._updateTitle();
 		if (this._fullscreen) {
-			this.fire(new Event("fullscreenstart"));
+			this.fire(new FullscreenEvent("fullscreenstart"));
 			this._prevCooperativeGesturesEnabled = this._map.cooperativeGestures.isEnabled();
 			this._map.cooperativeGestures.disable();
 		} else {
-			this.fire(new Event("fullscreenend"));
+			this.fire(new FullscreenEvent("fullscreenend"));
 			if (this._prevCooperativeGesturesEnabled) this._map.cooperativeGestures.enable();
 		}
 	}
@@ -59053,6 +59171,12 @@ const focusQuerySelector = [
 	"textarea:not([disabled])"
 ].join(", ");
 /**
+* The event class for popup events (`open` and `close`).
+*
+* @group Event Related
+*/
+var PopupEvent = class extends Event {};
+/**
 * A popup component.
 *
 * @group Markers and Controls
@@ -59107,9 +59231,9 @@ const focusQuerySelector = [
 *
 * ## Events
 *
-* **Event** `open` of type {@link Event} will be fired when the popup is opened manually or programmatically.
+* **Event** `open` of type {@link PopupEvent} will be fired when the popup is opened manually or programmatically.
 *
-* **Event** `close` of type {@link Event} will be fired when the popup is closed manually or programmatically.
+* **Event** `close` of type {@link PopupEvent} will be fired when the popup is closed manually or programmatically.
 */
 var Popup = class extends Evented {
 	/**
@@ -59140,7 +59264,7 @@ var Popup = class extends Evented {
 				this._map.off("drag", this._update);
 				this._map._canvasContainer.classList.remove("maplibregl-track-pointer");
 				delete this._map;
-				this.fire(new Event("close"));
+				this.fire(new PopupEvent("close"));
 			}
 			return this;
 		};
@@ -59220,7 +59344,7 @@ var Popup = class extends Evented {
 			if (this._container) this._container.classList.add("maplibregl-popup-track-pointer");
 			this._map._canvasContainer.classList.add("maplibregl-track-pointer");
 		} else this._map.on("move", this._update);
-		this.fire(new Event("open"));
+		this.fire(new PopupEvent("open"));
 		return this;
 	}
 	/**
@@ -60336,7 +60460,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 76248ea";
+const version = "main 8ce074b";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
@@ -60413,6 +60537,6 @@ Promise.resolve().then(() => {
 	getGlobalWorkerPool().acquire(-1);
 });
 //#endregion
-export { AJAXError, AttributionControl, BoxZoomHandler, CanvasSource, CooperativeGesturesHandler, DoubleClickZoomHandler, DragPanHandler, DragRotateHandler, EXTENT, EdgeInsets, Event, Evented, FullscreenControl, GPUInitializationError, GeoJSONSource, GeolocateControl, GlobeControl, Hash, ImageSource, KeyboardHandler, LngLat, LngLatBounds, LogoControl, Map$1 as Map, Map$1 as MapLibreMap, MapMouseEvent, MapTouchEvent, MapWheelEvent, Marker, MercatorCoordinate, NavigationControl, Point, Popup, RasterDEMTileSource, RasterTileSource, ScaleControl, ScrollZoomHandler, Style, TerrainControl, TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler, TwoFingersTouchZoomRotateHandler, VectorTileSource, VideoSource, addProtocol, addSourceType, clearPrewarmedResources, config, createTileMesh, getGlobalDispatcher, getMaxParallelImageRequests, getRTLTextPluginStatus, getVersion, getWorkerCount, getWorkerUrl, importScriptInWorkers, isTimeFrozen, now, prewarm, removeProtocol, restoreNow, setMaxParallelImageRequests, setNow, setRTLTextPlugin, setWorkerCount, setWorkerUrl };
+export { AJAXError, AttributionControl, BoxZoomHandler, CanvasSource, CooperativeGesturesHandler, DoubleClickZoomHandler, DragPanHandler, DragRotateHandler, EXTENT, EdgeInsets, ErrorEvent, Event, Evented, FullscreenControl, FullscreenEvent, GPUInitializationError, GeoJSONSource, GeolocateControl, GeolocateErrorEvent, GeolocateEvent, GeolocatePositionEvent, GlobeControl, Hash, ImageSource, KeyboardHandler, LngLat, LngLatBounds, LogoControl, Map$1 as Map, Map$1 as MapLibreMap, MapBoxZoomEvent, MapContextEvent, MapLibreEvent, MapMouseEvent, MapMovementEvent, MapProjectionEvent, MapSourceDataEvent, MapStyleDataEvent, MapStyleImageMissingEvent, MapStyleLoadEvent, MapTerrainEvent, MapTouchEvent, MapWheelEvent, Marker, MarkerClickEvent, MarkerDragEvent, MercatorCoordinate, NavigationControl, Point, Popup, PopupEvent, RasterDEMTileSource, RasterTileSource, ScaleControl, ScrollZoomHandler, Style, TerrainControl, TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler, TwoFingersTouchZoomRotateHandler, VectorTileSource, VideoSource, addProtocol, addSourceType, clearPrewarmedResources, config, createTileMesh, getGlobalDispatcher, getMaxParallelImageRequests, getRTLTextPluginStatus, getVersion, getWorkerCount, getWorkerUrl, importScriptInWorkers, isTimeFrozen, now, prewarm, removeProtocol, restoreNow, setMaxParallelImageRequests, setNow, setRTLTextPlugin, setWorkerCount, setWorkerUrl };
 
 //# sourceMappingURL=benchmarks_generated.mjs.map
