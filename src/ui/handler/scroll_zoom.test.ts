@@ -525,7 +525,6 @@ describe('ScrollZoomHandler', () => {
         timeControlNow.mockReturnValue(now);
 
         const map = createMap();
-        map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
         map.terrain = createTerrain();
 
@@ -550,7 +549,6 @@ describe('ScrollZoomHandler', () => {
         timeControlNow.mockReturnValue(now);
 
         const map = createMap();
-        map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
         map.terrain = createTerrain();
 
@@ -575,7 +573,6 @@ describe('ScrollZoomHandler', () => {
         timeControlNow.mockReturnValue(now);
 
         let map = createMap();
-        map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
         map.terrain = createTerrain();
         map.setZoom(5);
@@ -599,7 +596,6 @@ describe('ScrollZoomHandler', () => {
 
         // do the same test on the bottom
         map = createMap();
-        map._elevateCameraIfInsideTerrain = (_tr : any) => ({});
         map._renderTaskQueue.run();
         map.terrain = createTerrain();
         map.setZoom(5);

@@ -787,12 +787,12 @@ export class Map extends Evented<MapEventType> {
         });
         this.once('idle', () => this._idleTriggered = true);
 
+        this._camera.handlers = new HandlerManager(this, resolvedOptions);
+
         if (typeof window !== 'undefined') {
             this._ownerWindow.addEventListener('online', this._onWindowOnline, false);
             this._setupResizeObserver();
         }
-
-        this.handlers = new HandlerManager(this, resolvedOptions);
 
         const hashName = (typeof resolvedOptions.hash === 'string' && resolvedOptions.hash) || undefined;
         this._hash = resolvedOptions.hash ? (new Hash(hashName)).addTo(this) : undefined;
@@ -988,12 +988,6 @@ export class Map extends Evented<MapEventType> {
 
     get transform(): ITransform { return this._camera.transform; }
     set transform(value: ITransform) { this._camera.transform = value; }
-
-    get cameraHelper(): ICameraHelper { return this._camera.cameraHelper; }
-    set cameraHelper(value: ICameraHelper) { this._camera.cameraHelper = value; }
-
-    get handlers(): HandlerManager { return this._camera.handlers; }
-    set handlers(value: HandlerManager) { this._camera.handlers = value; }
 
     /**
      * A callback used to defer camera updates or apply arbitrary constraints.
@@ -2036,7 +2030,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     isMoving(): boolean {
-        return this._camera._moving || this.handlers?.isMoving();
+        return this._camera.isMoving();
     }
 
     /**
@@ -2048,7 +2042,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     isZooming(): boolean {
-        return this._camera._zooming || this.handlers?.isZooming();
+        return this._camera.isZooming();
     }
 
     /**
@@ -2060,7 +2054,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     isRotating(): boolean {
-        return this._camera._rotating || this.handlers?.isRotating();
+        return this._camera.isRotating();
     }
 
     _createDelegatedListener(type: keyof MapEventType | string, layerIds: string[], listener: Listener): DelegatedListener {
@@ -4330,8 +4324,7 @@ export class Map extends Evented<MapEventType> {
         this._renderTaskQueue.clear();
         this._diffStyleRequest?.abort();
         this.painter.destroy();
-        this.handlers.destroy();
-        delete this.handlers;
+        this._camera.handlers.destroy();
         this.setStyle(null);
         if (typeof window !== 'undefined') {
             this._ownerWindow.removeEventListener('online', this._onWindowOnline, false);

@@ -16,7 +16,7 @@ let manager: HandlerManager;
 beforeEach(() => {
     beforeMapTest();
     map = createMap();
-    manager = map.handlers;
+    manager = map._camera.handlers;
 });
 
 afterEach(() => {
@@ -28,7 +28,7 @@ describe('HandlerManager terrain scenarios', () => {
     it('_handleMapControls keeps terrain movement disabled when terrain is not enabled', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
-        map.cameraHelper = {
+        map._camera.cameraHelper = {
             handleMapControlsRollPitchBearingZoom: handleZoom,
             handleMapControlsPan: handlePan,
             useGlobeControls: false,
@@ -76,7 +76,7 @@ describe('HandlerManager terrain scenarios', () => {
     it('_handleMapControls enables terrain movement for globe terrain handling', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
-        map.cameraHelper = {
+        map._camera.cameraHelper = {
             handleMapControlsRollPitchBearingZoom: handleZoom,
             handleMapControlsPan: handlePan,
             useGlobeControls: true,
@@ -117,7 +117,7 @@ describe('HandlerManager terrain scenarios', () => {
     it('_handleMapControls keeps terrain movement state when globe terrain is already active', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
-        map.cameraHelper = {
+        map._camera.cameraHelper = {
             handleMapControlsRollPitchBearingZoom: handleZoom,
             handleMapControlsPan: handlePan,
             useGlobeControls: true,
@@ -158,7 +158,7 @@ describe('HandlerManager terrain scenarios', () => {
     it('_handleMapControls activates terrain movement on first drag in mercator terrain', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
-        map.cameraHelper = {
+        map._camera.cameraHelper = {
             handleMapControlsRollPitchBearingZoom: handleZoom,
             handleMapControlsPan: handlePan,
             useGlobeControls: false,
@@ -202,7 +202,7 @@ describe('HandlerManager terrain scenarios', () => {
     it('_handleMapControls drags using transform when already moving in mercator terrain', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
-        map.cameraHelper = {
+        map._camera.cameraHelper = {
             handleMapControlsRollPitchBearingZoom: handleZoom,
             handleMapControlsPan: handlePan,
             useGlobeControls: false,
@@ -248,7 +248,7 @@ describe('HandlerManager terrain scenarios', () => {
     it('_handleMapControls falls back to helper panning when not dragging in mercator terrain', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
-        map.cameraHelper = {
+        map._camera.cameraHelper = {
             handleMapControlsRollPitchBearingZoom: handleZoom,
             handleMapControlsPan: handlePan,
             useGlobeControls: false,
