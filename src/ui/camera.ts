@@ -1177,7 +1177,7 @@ export class Camera extends Evented<MapEventType> {
     }
 
     stop(allowGestures?: boolean): this {
-        return this._stop();
+        return this._stop(allowGestures);
     }
 
     _stop(allowGestures?: boolean, easeId?: string): this {
