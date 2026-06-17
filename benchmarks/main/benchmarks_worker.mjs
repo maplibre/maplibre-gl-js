@@ -2313,7 +2313,7 @@ var v8_default = {
 			"transition": true,
 			"expression": {
 				"interpolated": true,
-				"parameters": ["zoom"]
+				"parameters": ["zoom", "global-state"]
 			},
 			"property-type": "data-constant"
 		},
@@ -2515,7 +2515,7 @@ var v8_default = {
 			"transition": true,
 			"expression": {
 				"interpolated": true,
-				"parameters": ["zoom"]
+				"parameters": ["zoom", "global-state"]
 			},
 			"property-type": "data-constant"
 		},
@@ -8418,20 +8418,123 @@ function isExpressionFilter(filter) {
 		case "has": return filter.length >= 2 && filter[1] !== "$id" && filter[1] !== "$type";
 		case "in": return filter.length >= 3 && (typeof filter[1] !== "string" || Array.isArray(filter[2]));
 		case "!in":
-		case "!has":
-		case "none": return false;
+		case "!has": return false;
 		case "==":
 		case "!=":
 		case ">":
 		case ">=":
 		case "<":
 		case "<=": return filter.length !== 3 || Array.isArray(filter[1]) || Array.isArray(filter[2]);
+		case "none":
+			for (const f of filter.slice(1)) {
+				if (typeof f === "boolean") continue;
+				if (isExpressionFilter(f)) return true;
+			}
+			return false;
 		case "any":
-		case "all":
-			for (const f of filter.slice(1)) if (!isExpressionFilter(f) && typeof f !== "boolean") return false;
-			return true;
+		case "all": {
+			let hasLegacy = false;
+			for (const f of filter.slice(1)) {
+				if (typeof f === "boolean") continue;
+				if (isExpressionFilter(f)) return true;
+				hasLegacy = true;
+			}
+			return !hasLegacy;
+		}
 		default: return true;
 	}
+}
+function getFilterPropertyExpression(property) {
+	if (property === "$id") return ["id"];
+	return ["get", property];
+}
+function getLegacyFilterExpressionSuggestion(filter) {
+	switch (filter[0]) {
+		case "==":
+		case "!=":
+		case "<":
+		case "<=":
+		case ">":
+		case ">=":
+			if (filter.length !== 3 || typeof filter[1] !== "string") return null;
+			if (filter[1] === "$type") return [filter[0], [
+				"in",
+				["geometry-type"],
+				["literal", [filter[2], `Multi${filter[2]}`]]
+			]];
+			return [
+				filter[0],
+				getFilterPropertyExpression(filter[1]),
+				filter[2]
+			];
+		case "in":
+		case "!in": {
+			if (filter.length < 2 || typeof filter[1] !== "string") return null;
+			let expression = [
+				"in",
+				getFilterPropertyExpression(filter[1]),
+				["literal", filter.slice(2)]
+			];
+			if (filter[1] === "$type") expression = [
+				"in",
+				["geometry-type"],
+				["literal", filter.slice(2).map((g) => [g, `Multi${g}`]).flat()]
+			];
+			return filter[0] === "!in" ? ["!", expression] : expression;
+		}
+		case "has":
+		case "!has": {
+			if (filter.length !== 2 || typeof filter[1] !== "string") return null;
+			if (filter[1] === "$type" || filter[1] === "$id") return null;
+			const expression = ["has", filter[1]];
+			return filter[0] === "!has" ? ["!", expression] : expression;
+		}
+		default: return null;
+	}
+}
+function getMixedFilterErrorMessage(filter) {
+	if ((filter[0] === "<" || filter[0] === "<=" || filter[0] === ">" || filter[0] === ">=") && filter[1] === "$type") return `"$type" cannot be use with operator "${filter[0]}"`;
+	const suggestion = getLegacyFilterExpressionSuggestion(filter);
+	if (suggestion) return `Mixing deprecated filter syntax with expression syntax is not supported. Replace ${JSON.stringify(filter)} with ${JSON.stringify(suggestion)}.`;
+	return `Mixing deprecated filter syntax with expression syntax is not supported. Convert ${JSON.stringify(filter)} to expression syntax.`;
+}
+function checkChild(index, path, filter) {
+	const child = filter[index];
+	if (!Array.isArray(child)) return null;
+	if (!isExpressionFilter(child)) return {
+		path: path.concat(index),
+		legacyFilter: child
+	};
+	return findMixedLegacyFilter(child, path.concat(index));
+}
+function findMixedLegacyFilter(filter, path = []) {
+	if (!Array.isArray(filter) || filter.length < 1) return null;
+	switch (filter[0]) {
+		case "all":
+		case "any":
+		case "none":
+			for (let i = 1; i < filter.length; i++) {
+				const diagnostic = checkChild(i, path, filter);
+				if (diagnostic) return diagnostic;
+			}
+			break;
+		case "!": {
+			const diagnostic = checkChild(1, path, filter);
+			if (diagnostic) return diagnostic;
+			break;
+		}
+		case "case":
+			for (let i = 1; i < filter.length - 1; i += 2) {
+				const diagnostic = checkChild(i, path, filter);
+				if (diagnostic) return diagnostic;
+			}
+			break;
+	}
+	return null;
+}
+function validateNoMixedExpressionFilter(filter) {
+	const diagnostic = findMixedLegacyFilter(filter);
+	if (diagnostic) throw new Error(getMixedFilterErrorMessage(diagnostic.legacyFilter));
 }
 const filterSpec = {
 	type: "boolean",
@@ -8459,7 +8562,11 @@ function featureFilter(filter, globalState) {
 		needGeometry: false,
 		getGlobalStateRefs: () => /* @__PURE__ */ new Set()
 	};
-	if (!isExpressionFilter(filter)) filter = convertFilter$1(filter);
+	if (Array.isArray(filter) && filter[0] === "none" && isExpressionFilter(filter)) {
+		validateNoMixedExpressionFilter(filter);
+		filter = convertFilter$1(filter);
+	} else if (!isExpressionFilter(filter)) filter = convertFilter$1(filter);
+	else validateNoMixedExpressionFilter(filter);
 	const compiled = createExpression(filter, filterSpec, globalState);
 	if (compiled.result === "error") throw new Error(compiled.value.map((err) => `${err.key}: ${err.message}`).join(", "));
 	else return {
@@ -8833,12 +8940,20 @@ function validateEnum(options) {
 	} else if (Object.keys(valueSpec.values).indexOf(unbundle(value)) === -1) errors.push(new ValidationError(key, value, `expected one of [${Object.keys(valueSpec.values).join(", ")}], ${JSON.stringify(value)} found`));
 	return errors;
 }
+function getValueAtPath(value, path) {
+	let current = value;
+	for (const index of path) current = current[index];
+	return current;
+}
 function validateFilter$1(options) {
-	if (isExpressionFilter(deepUnbundle(options.value))) return validateExpression(extendBy({}, options, {
+	const value = deepUnbundle(options.value);
+	if (!isExpressionFilter(value)) return validateNonExpressionFilter(options);
+	const mixedLegacyDiagnostic = findMixedLegacyFilter(value);
+	if (mixedLegacyDiagnostic) return [new ValidationError(`${options.key}${mixedLegacyDiagnostic.path.map((index) => `[${index}]`).join("")}`, getValueAtPath(options.value, mixedLegacyDiagnostic.path), getMixedFilterErrorMessage(mixedLegacyDiagnostic.legacyFilter))];
+	return validateExpression(extendBy({}, options, {
 		expressionContext: "filter",
 		valueSpec: { value: "boolean" }
 	}));
-	else return validateNonExpressionFilter(options);
 }
 function validateNonExpressionFilter(options) {
 	const value = options.value;
