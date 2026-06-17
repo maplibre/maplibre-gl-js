@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Avoid a per-query `Array.sort()` in cross-tile symbol matching (`TileLayerIndex.findMatches`), claiming the lowest-index unclaimed candidate in a single pass instead; reduces main-thread symbol-placement cost on dense/coincident symbol layers ([#XXXX](https://github.com/maplibre/maplibre-gl-js/pull/XXXX)) (by [@pholmstr](https://github.com/pholmstr))
+- Avoid a per-query `Array.sort()` in cross-tile symbol matching (`TileLayerIndex.findMatches`), claiming the lowest-index unclaimed candidate in a single pass instead; reduces main-thread symbol-placement cost on dense/coincident symbol layers ([#7797](https://github.com/maplibre/maplibre-gl-js/pull/7797)) (by [@pholmstr](https://github.com/pholmstr))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
