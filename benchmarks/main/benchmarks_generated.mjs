@@ -24535,10 +24535,22 @@ async function fetchAsBlobUrl(url) {
 	const blob = new Blob([code], { type: "text/javascript" });
 	return URL.createObjectURL(blob);
 }
+function importAsBlobUrl(url) {
+	const blob = new Blob([`import ${JSON.stringify(new URL(url, import.meta.url).href)}`], { type: "text/javascript" });
+	return URL.createObjectURL(blob);
+}
 async function workerFactory() {
 	const url = config.WORKER_URL || defaultWorkerUrl();
 	const asModule = url?.endsWith(".cjs") ? false : true;
 	if (!isCrossOrigin(url)) return createWorker(url, asModule);
+	if (asModule) {
+		const blobUrl = importAsBlobUrl(url);
+		try {
+			return createWorker(blobUrl, asModule);
+		} finally {
+			URL.revokeObjectURL(blobUrl);
+		}
+	}
 	const blobUrl = await fetchAsBlobUrl(url);
 	try {
 		return createWorker(blobUrl, asModule);
@@ -60209,7 +60221,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 8a6b900";
+const version = "main f4223ba";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
