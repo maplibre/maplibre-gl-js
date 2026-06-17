@@ -23,8 +23,8 @@ function scrollOutAtLat(map: Map, lat: number, timeControlNow: MockInstance<() =
     for (let i = 0; i < 200; i++) {
         simulate.wheel(map.getCanvas(), {
             deltaY,
-            clientX: map.transform.width / 2,
-            clientY: map.transform.height / 2});
+            clientX: map._camera.transform.width / 2,
+            clientY: map._camera.transform.height / 2});
         timeControlNow.mockReturnValue(timeControl.now() + 10);
         map._renderTaskQueue.run();
     }

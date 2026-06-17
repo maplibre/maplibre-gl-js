@@ -27,7 +27,7 @@ function setupEvents(map: Map) {
 
 function createTapDragZoomMap() {
     const map = createMap();
-    map._camera.handlers._handlersById.tapZoom.disable();
+    map._handlers._handlersById.tapZoom.disable();
 
     return {map, target: map.getCanvas()};
 }

@@ -18,7 +18,6 @@ import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {TaskID} from '../util/task_queue.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
-import type {HandlerManager} from './handler_manager.ts';
 import type {ICameraHelper} from '../geo/projection/camera_helper.ts';
 
 /**
@@ -271,18 +270,30 @@ export type CameraInitOptions = {
     cancelRenderFrame: (_: TaskID) => void;
     getTerrain: () => Terrain;
     transformCameraUpdate: CameraUpdateTransformFunction | null;
+    /**
+     * @internal
+     * Callback invoked by {@link Camera.stop} to halt any in-progress user gestures.
+     * The `Camera` does not own the gesture handlers (the `Map` does), so it is injected
+     * with a way to stop them rather than holding a reference to the `HandlerManager`.
+     */
+    stopHandlers?: () => void;
 };
 
 export class Camera extends Evented<MapEventType> {
     transform: ITransform;
     cameraHelper: ICameraHelper;
-    handlers: HandlerManager;
     /**
      * @internal
      * Accessor to the map's `terrain` (which the `Map` owns). The camera reads terrain for
      * elevation handling but does not own it.
      */
     _getTerrain: () => Terrain;
+    /**
+     * @internal
+     * Stops any in-progress user gestures. Injected by the owner so the camera does not need
+     * a reference to the `HandlerManager`. See {@link CameraInitOptions.stopHandlers}.
+     */
+    _stopHandlers: () => void;
 
     _moving: boolean;
     _zooming: boolean;
@@ -326,7 +337,7 @@ export class Camera extends Evented<MapEventType> {
      * @internal
      * Saves the current state of the elevation freeze - this is used during map movement to prevent "rocky" camera movement.
      */
-    _elevationFreeze: boolean;
+    elevationFreeze: boolean;
     /**
      * @internal
      * Used to track accumulated changes during continuous interaction
@@ -384,6 +395,7 @@ export class Camera extends Evented<MapEventType> {
         this._getTerrain = options.getTerrain ?? (() => undefined);
         this._centerClampedToGround = options.centerClampedToGround ?? true;
         this.transformCameraUpdate = options.transformCameraUpdate ?? null;
+        this._stopHandlers = options.stopHandlers ?? (() => {});
 
         this.on('moveend', () => {
             delete this._requestedCameraState;
@@ -838,7 +850,7 @@ export class Camera extends Evented<MapEventType> {
         this._elevationCenter = center;
         this._elevationStart = this.transform.elevation;
         this._elevationTarget = this._getTerrain().getElevationForLngLatZoom(center, this.transform.tileZoom);
-        this._elevationFreeze = true;
+        this.elevationFreeze = true;
     }
 
     _updateElevation(k: number): void {
@@ -860,7 +872,7 @@ export class Camera extends Evented<MapEventType> {
     }
 
     _finalizeElevation(): void {
-        this._elevationFreeze = false;
+        this.elevationFreeze = false;
         if (this.getCenterClampedToGround()) {
             this.transform.recalculateZoomAndCenter(this._getTerrain());
         }
@@ -1196,7 +1208,7 @@ export class Camera extends Evented<MapEventType> {
             onEaseEnd.call(this, easeId);
         }
         if (!allowGestures) {
-            this.handlers?.stop(false);
+            this._stopHandlers();
         }
         return this;
     }
@@ -1243,14 +1255,14 @@ export class Camera extends Evented<MapEventType> {
     }
 
     isMoving(): boolean {
-        return this._moving || this.handlers?.isMoving() || false;
+        return this._moving;
     }
 
     isZooming(): boolean {
-        return this._zooming || this.handlers?.isZooming() || false;
+        return this._zooming;
     }
 
     isRotating(): boolean {
-        return this._rotating || this.handlers?.isRotating() || false;
+        return this._rotating;
     }
 }

@@ -1,9 +1,9 @@
 import {TapRecognizer} from './tap_recognizer.ts';
+import {evaluateZoomSnap} from '../../util/util.ts';
 import type Point from '@mapbox/point-geometry';
 import type {Map} from '../map.ts';
-import {TransformProvider} from './transform-provider.ts';
-import {type Handler} from '../handler_manager.ts';
-import {evaluateZoomSnap} from '../../util/util.ts';
+import type {TransformProvider} from './transform-provider.ts';
+import type {Handler} from '../handler_manager.ts';
 
 /**
  * A `TapZoomHandler` allows the user to zoom the map at a point by double tapping

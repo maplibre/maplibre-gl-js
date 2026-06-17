@@ -1,8 +1,6 @@
 import {Event} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
 import {DOM} from '../util/dom.ts';
-import {type Map, type CompleteMapOptions} from './map.ts';
-import {type Camera} from './camera.ts';
 import {HandlerInertia} from './handler_inertia.ts';
 import {MapEventHandler, BlockableMapEventHandler} from './handler/map_event.ts';
 import {BoxZoomHandler} from './handler/box_zoom.ts';
@@ -23,7 +21,10 @@ import {TransformProvider} from './handler/transform-provider.ts';
 import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} from '../util/util.ts';
 import {browser} from '../util/browser.ts';
 import Point from '@mapbox/point-geometry';
-import {type MapControlsDeltas} from '../geo/projection/camera_helper.ts';
+
+import type {Map, CompleteMapOptions} from './map.ts';
+import type {Camera} from './camera.ts';
+import type {MapControlsDeltas} from '../geo/projection/camera_helper.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {ITransform} from '../geo/transform_interface.ts';
 import type {Terrain} from '../render/terrain.ts';
@@ -184,9 +185,9 @@ export class HandlerManager {
         return this._el?.ownerDocument?.defaultView || window;
     }
 
-    constructor(map: Map, options: CompleteMapOptions) {
+    constructor(map: Map, camera: Camera, options: CompleteMapOptions) {
         this._map = map;
-        this._camera = map._camera;
+        this._camera = camera;
         this._transformProvider = new TransformProvider(this._camera, () => map.terrain);
         this._el = this._map.getCanvasContainer();
         this._handlers = [];
@@ -547,7 +548,7 @@ export class HandlerManager {
             around = pinchAround;
         }
 
-        around ||= map.transform.centerPoint;
+        around ||= this._camera.transform.centerPoint;
 
         if (terrain && !tr.isPointOnMapSurface(around)) {
             around = tr.centerPoint;
@@ -609,7 +610,7 @@ export class HandlerManager {
         if (cameraHelper.useGlobeControls) {
             if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
                 this._terrainMovement = true;
-                this._camera._elevationFreeze = true;
+                this._camera.elevationFreeze = true;
             }
             cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
@@ -617,7 +618,7 @@ export class HandlerManager {
 
         if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
             this._terrainMovement = true;
-            this._camera._elevationFreeze = true;
+            this._camera.elevationFreeze = true;
             cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
         }
@@ -682,7 +683,7 @@ export class HandlerManager {
         const stillMoving = isMoving(this._eventsInProgress);
         const finishedMoving = (wasMoving || nowMoving) && !stillMoving;
         if (finishedMoving && this._terrainMovement) {
-            this._camera._elevationFreeze = false;
+            this._camera.elevationFreeze = false;
             this._terrainMovement = false;
             const tr = this._camera.getTransformForUpdate();
             if (this._map.getCenterClampedToGround()) {

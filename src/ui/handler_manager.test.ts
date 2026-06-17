@@ -16,7 +16,7 @@ let manager: HandlerManager;
 beforeEach(() => {
     beforeMapTest();
     map = createMap();
-    manager = map._camera.handlers;
+    manager = map._handlers;
 });
 
 afterEach(() => {
@@ -62,13 +62,13 @@ describe('HandlerManager terrain scenarios', () => {
         };
 
         manager._terrainMovement = false;
-        map._camera._elevationFreeze = false;
+        map._camera.elevationFreeze = false;
 
         manager._handleMapControls(options);
 
         expect(handleZoom).toHaveBeenCalledWith(options.deltasForHelper, options.tr);
         expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
-        expect(map._camera._elevationFreeze).toBe(false);
+        expect(map._camera.elevationFreeze).toBe(false);
         expect(manager._terrainMovement).toBe(false);
         expect(setCenterMock).not.toHaveBeenCalled();
     });
@@ -105,12 +105,12 @@ describe('HandlerManager terrain scenarios', () => {
         };
 
         manager._terrainMovement = false;
-        map._camera._elevationFreeze = false;
+        map._camera.elevationFreeze = false;
 
         manager._handleMapControls(options);
 
         expect(manager._terrainMovement).toBe(true);
-        expect(map._camera._elevationFreeze).toBe(true);
+        expect(map._camera.elevationFreeze).toBe(true);
         expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
     });
 
@@ -146,12 +146,12 @@ describe('HandlerManager terrain scenarios', () => {
         };
 
         manager._terrainMovement = true;
-        map._camera._elevationFreeze = true;
+        map._camera.elevationFreeze = true;
 
         manager._handleMapControls(options);
 
         expect(manager._terrainMovement).toBe(true);
-        expect(map._camera._elevationFreeze).toBe(true);
+        expect(map._camera.elevationFreeze).toBe(true);
         expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
     });
 
@@ -189,12 +189,12 @@ describe('HandlerManager terrain scenarios', () => {
         };
 
         manager._terrainMovement = false;
-        map._camera._elevationFreeze = false;
+        map._camera.elevationFreeze = false;
 
         manager._handleMapControls(options);
 
         expect(manager._terrainMovement).toBe(true);
-        expect(map._camera._elevationFreeze).toBe(true);
+        expect(map._camera.elevationFreeze).toBe(true);
         expect(handlePan).toHaveBeenCalledTimes(1);
         expect(setCenterMock).not.toHaveBeenCalled();
     });
@@ -233,7 +233,7 @@ describe('HandlerManager terrain scenarios', () => {
         };
 
         manager._terrainMovement = true;
-        map._camera._elevationFreeze = true;
+        map._camera.elevationFreeze = true;
 
         manager._handleMapControls(options);
 
@@ -277,7 +277,7 @@ describe('HandlerManager terrain scenarios', () => {
         };
 
         manager._terrainMovement = true;
-        map._camera._elevationFreeze = true;
+        map._camera.elevationFreeze = true;
 
         manager._handleMapControls(options);
 

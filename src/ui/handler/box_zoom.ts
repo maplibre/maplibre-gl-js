@@ -1,11 +1,10 @@
 import {DOM} from '../../util/dom.ts';
-
 import {MapBoxZoomEvent} from '../events.ts';
-import {TransformProvider} from './transform-provider.ts';
 
 import type {Map} from '../map.ts';
+import type {Handler} from '../handler_manager.ts';
+import type {TransformProvider} from './transform-provider.ts';
 import type Point from '@mapbox/point-geometry';
-import {type Handler} from '../handler_manager.ts';
 
 /**
  * Callback for customizing what happens when a box zoom gesture ends.
