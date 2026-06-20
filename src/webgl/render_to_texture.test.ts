@@ -126,6 +126,8 @@ describe('render to texture', () => {
     beforeEach(() => {
         tile.rttObjects.length = 0;
         tile.rttFingerprint = {};
+        map._allowTerrainDrapedLayerReordering = false;
+        style._order = ['maine-fill', 'maine-symbol'];
     });
 
     test('should call painter with overlay tiles for terrain tile', () => {
@@ -214,6 +216,30 @@ describe('render to texture', () => {
         expect(rtt.renderLayer(lineLayer, renderOptions)).toBeTruthy();
         expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
         expect(layersDrawn).toBe(3);
+    });
+
+    test('should allow symbols to be rendered after flattened draped layers when enabled', () => {
+        map._allowTerrainDrapedLayerReordering = true;
+        style._order = ['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-line'];
+
+        rtt.prepareForRender(style, 0);
+        layersDrawn = 0;
+        (painter.renderLayer as Mock).mockClear();
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+
+        rtt.renderLayer(backgroundLayer, renderOptions);
+        expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeTruthy();
+        rtt.renderLayer(hillshadeLayer, renderOptions);
+        rtt.renderLayer(lineLayer, renderOptions);
+
+        expect(rtt._stacks).toEqual([['maine-background', 'maine-hillshade', 'maine-line']]);
+        expect(layersDrawn).toBe(1);
+        expect((painter.renderLayer as Mock).mock.calls.map(call => [call[2].id, call[4].isRenderingToTexture])).toEqual([
+            ['maine-background', true],
+            ['maine-hillshade', true],
+            ['maine-line', true],
+            ['maine-symbol', false]
+        ]);
     });
 
     test('should clear tile cache on source state update', () => {
