@@ -5,6 +5,7 @@ import {Style} from '../style/style.ts';
 import {StubMap} from '../util/test/util.ts';
 import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
+import {restoreNow, setNow} from '../util/time_control.ts';
 
 describe('render', () => {
     let painter: Painter;
@@ -45,6 +46,20 @@ describe('render', () => {
 
         expect(terrainDepth).toHaveBeenCalled();
         expect(terrainCoords).not.toHaveBeenCalled();
+    });
+
+    test('stores terrain render time using the controlled clock', () => {
+        vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
+        map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
+
+        try {
+            setNow(1234);
+            painter.render(style, renderOptions);
+
+            expect(painter.terrainFacilitator.renderTime).toBe(1234);
+        } finally {
+            restoreNow();
+        }
     });
 });
 
