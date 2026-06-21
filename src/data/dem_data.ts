@@ -30,6 +30,7 @@ export class DEMData {
     greenFactor: number;
     blueFactor: number;
     baseShift: number;
+    private _byteView?: Uint8Array;
 
     /**
      * Constructs a `DEMData` object
@@ -52,6 +53,7 @@ export class DEMData {
         this.stride = data.height;
         const dim = this.dim = data.height - 2;
         this.data = new Uint32Array(data.data.buffer);
+        this._setByteView(new Uint8Array(this.data.buffer));
         switch (encoding) {
             case 'terrarium':
                 // unpacking formula for mapzen terrarium:
@@ -98,11 +100,13 @@ export class DEMData {
         this.data[this._idx(dim, dim)] = this.data[this._idx(dim - 1, dim - 1)];
 
         // calculate min/max values
+        const pixels = this._getByteView();
         this.min = Number.MAX_SAFE_INTEGER;
         this.max = Number.MIN_SAFE_INTEGER;
-        for (let x = 0; x < dim; x++) {
-            for (let y = 0; y < dim; y++) {
-                const ele = this.get(x, y);
+        for (let y = 0; y < dim; y++) {
+            let index = ((y + 1) * this.stride + 1) * 4;
+            for (let x = 0; x < dim; x++, index += 4) {
+                const ele = this._unpackAtIndex(pixels, index);
                 if (ele > this.max) this.max = ele;
                 if (ele < this.min) this.min = ele;
             }
@@ -110,9 +114,32 @@ export class DEMData {
     }
 
     get(x: number, y: number): number {
-        const pixels = new Uint8Array(this.data.buffer);
+        const pixels = this._getByteView();
         const index = this._idx(x, y) * 4;
-        return this.unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
+        return this._unpackAtIndex(pixels, index);
+    }
+
+    sampleBilinear(x: number, y: number): number {
+        const cx = Math.floor(x);
+        const cy = Math.floor(y);
+        if (cx < -1 || cx >= this.dim || cy < -1 || cy >= this.dim) throw new RangeError(`Out of range source coordinates for DEM data. x: ${x}, y: ${y}, dim: ${this.dim}`);
+
+        const pixels = this._getByteView();
+        const index = ((cy + 1) * this.stride + cx + 1) * 4;
+        const strideByteWidth = this.stride * 4;
+        const tx = x - cx;
+        const ty = y - cy;
+        const z00 = this._unpackAtIndex(pixels, index);
+        const z10 = this._unpackAtIndex(pixels, index + 4);
+        const z01 = this._unpackAtIndex(pixels, index + strideByteWidth);
+        const z11 = this._unpackAtIndex(pixels, index + strideByteWidth + 4);
+
+        return (
+            z00 * (1 - tx) * (1 - ty) +
+            z10 * tx * (1 - ty) +
+            z01 * (1 - tx) * ty +
+            z11 * tx * ty
+        );
     }
 
     getUnpackVector(): number[] {
@@ -133,7 +160,7 @@ export class DEMData {
     }
 
     getPixels(): RGBAImage {
-        return new RGBAImage({width: this.stride, height: this.stride}, new Uint8Array(this.data.buffer));
+        return new RGBAImage({width: this.stride, height: this.stride}, this._getByteView());
     }
 
     backfillBorder(borderTile: DEMData, dx: number, dy: number): void {
@@ -169,6 +196,28 @@ export class DEMData {
                 this.data[this._idx(x, y)] = borderTile.data[this._idx(x + ox, y + oy)];
             }
         }
+    }
+
+    private _getByteView(): Uint8Array {
+        let byteView = this._byteView;
+        if (byteView?.buffer !== this.data.buffer) {
+            byteView = new Uint8Array(this.data.buffer);
+            this._setByteView(byteView);
+        }
+        return byteView;
+    }
+
+    private _setByteView(byteView: Uint8Array): void {
+        Object.defineProperty(this, '_byteView', {
+            configurable: true,
+            enumerable: false,
+            value: byteView,
+            writable: true
+        });
+    }
+
+    private _unpackAtIndex(pixels: Uint8Array, index: number): number {
+        return this.unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
     }
 }
 

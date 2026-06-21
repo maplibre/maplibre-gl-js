@@ -151,6 +151,27 @@ describe('DEMData.backfillBorder with encoding', () => {
     });
 });
 
+describe('DEMData.sampleBilinear', () => {
+    test('interpolates four neighboring pixels', () => {
+        const dem = new DEMData('sample', createMockImage(2, 2), 'custom', 1.0, 1.0, 1.0, 0.0);
+        const z00 = dem.get(0, 0);
+        const z10 = dem.get(1, 0);
+        const z01 = dem.get(0, 1);
+        const z11 = dem.get(1, 1);
+
+        expect(dem.sampleBilinear(0, 0)).toBe(z00);
+        expect(dem.sampleBilinear(0.5, 0.5)).toBe((z00 + z10 + z01 + z11) / 4);
+        expect(dem.sampleBilinear(-0.5, 0.5)).toBe((z00 + z01) / 2);
+        expect(dem.sampleBilinear(1, 1)).toBe(z11);
+    });
+
+    test('throws when the bilinear footprint is outside the padded DEM', () => {
+        const dem = new DEMData('sample', createMockImage(2, 2), 'custom', 1.0, 1.0, 1.0, 0.0);
+
+        expect(() => dem.sampleBilinear(2, 0)).toThrow(RangeError);
+    });
+});
+
 function testSerialization(dem0: DEMData, redFactor: number, greenFactor: number, blueFactor: number, baseShift: number) {
     return () => {
         const serialized = serialize(dem0);
@@ -206,6 +227,16 @@ describe('DEMData is correctly serialized and deserialized', () => {
     test('deserialized - mapbox', testDeserialization(mapboxDEM));
     test('deserialized - terrarium', testDeserialization(terrariumDEM));
     test('deserialized - custom', testDeserialization(customDEM));
+
+    test('byte view cache is not serialized', () => {
+        const dem = new DEMData('0', createMockImage(4, 4), 'custom', 1.0, 2.0, 3.0, 4.0);
+        const serialized = serialize(dem) as any;
+
+        expect(serialized).not.toHaveProperty('_byteView');
+        const deserialized = deserialize(serialized) as DEMData;
+        expect(deserialized.get(0, 0)).toBe(dem.get(0, 0));
+        expect(serialize(deserialized) as any).not.toHaveProperty('_byteView');
+    });
 });
 
 describe('UnpackVector is correctly returned', () => {
