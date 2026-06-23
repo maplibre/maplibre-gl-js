@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Elevate symbols above the terrain</title>
+    <meta property="og:description" content="Use the symbol-elevation property to float icons and text above the ground in 3D." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        zoom: 13,
+        center: [11.39085, 47.27574],
+        pitch: 75,
+        hash: true,
+        style: {
+            version: 8,
+            glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+            sources: {
+                osm: {
+                    type: 'raster',
+                    tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tileSize: 256,
+                    attribution: '&copy; OpenStreetMap Contributors',
+                    maxzoom: 19
+                },
+                terrainSource: {
+                    type: 'raster-dem',
+                    url: 'https://tiles.mapterhorn.com/tilejson.json'
+                },
+                // A few points, each carrying the height (in meters) it should float at.
+                balloons: {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: [
+                            {type: 'Feature', properties: {label: '0 m', height: 0}, geometry: {type: 'Point', coordinates: [11.385, 47.276]}},
+                            {type: 'Feature', properties: {label: '500 m', height: 500}, geometry: {type: 'Point', coordinates: [11.390, 47.276]}},
+                            {type: 'Feature', properties: {label: '1500 m', height: 1500}, geometry: {type: 'Point', coordinates: [11.395, 47.276]}}
+                        ]
+                    }
+                }
+            },
+            layers: [
+                {id: 'osm', type: 'raster', source: 'osm'},
+                {
+                    id: 'balloons',
+                    type: 'symbol',
+                    source: 'balloons',
+                    layout: {
+                        'symbol-placement': 'point',
+                        // Data-driven: float each label at the height stored on the feature.
+                        'symbol-elevation': ['get', 'height'],
+                        'text-field': ['get', 'label'],
+                        'text-size': 16,
+                        'text-allow-overlap': true
+                    },
+                    paint: {
+                        'text-color': '#1b6',
+                        'text-halo-color': '#fff',
+                        'text-halo-width': 2
+                    }
+                }
+            ],
+            terrain: {source: 'terrainSource', exaggeration: 1},
+            sky: {}
+        },
+        maxZoom: 18,
+        maxPitch: 85
+    });
+
+    map.addControl(new maplibregl.NavigationControl({visualizePitch: true}));
+</script>
+</body>
+</html>

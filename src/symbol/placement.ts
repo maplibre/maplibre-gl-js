@@ -468,6 +468,10 @@ export class Placement {
                 return;
             }
 
+            const symbolElevation = symbolInstance.elevation;
+            const getSymbolElevation = (x: number, y: number) => 
+                (getElevation ? getElevation(x, y) + symbolElevation : symbolElevation);
+
             let placeText = false;
             let placeIcon = false;
             let offscreen = true;
@@ -540,7 +544,7 @@ export class Placement {
                             rotateWithMap,
                             translationText,
                             collisionGroup.predicate,
-                            getElevation,
+                            getSymbolElevation,
                             undefined,
                             simpleProjectionMatrix,
                         );
@@ -595,7 +599,7 @@ export class Placement {
                                 const result = this.attemptAnchorPlacement(
                                     textAnchorOffset, collisionTextBox, width, height,
                                     textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, tileID, unwrappedTileID,
-                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation);
+                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getSymbolElevation);
 
                                 if (result) {
                                     placedBox = result.placedGlyphBoxes;
@@ -627,7 +631,7 @@ export class Placement {
                                 rotateWithMap,
                                 translationText,
                                 collisionGroup.predicate,
-                                getElevation,
+                                getSymbolElevation,
                                 undefined,
                                 simpleProjectionMatrix,
                             );
@@ -702,7 +706,7 @@ export class Placement {
                     circlePixelDiameter,
                     textPixelPadding,
                     translationText,
-                    getElevation
+                    getSymbolElevation
                 );
 
                 if (placedGlyphCircles.circles.length && placedGlyphCircles.collisionDetected && !showCollisionBoxes) {
@@ -733,7 +737,7 @@ export class Placement {
                         rotateWithMap,
                         translationIcon,
                         collisionGroup.predicate,
-                        getElevation,
+                        getSymbolElevation,
                         (hasIconTextFit && shift) ? shift : undefined,
                         simpleProjectionMatrix,
                     );

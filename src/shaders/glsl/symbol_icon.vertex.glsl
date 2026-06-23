@@ -3,6 +3,7 @@ layout(location = 1) in vec4 a_data;
 layout(location = 2) in vec4 a_pixeloffset;
 layout(location = 3) in vec3 a_projected_pos;
 layout(location = 4) in float a_fade_opacity;
+layout(location = 5) in float a_elevation;
 
 uniform bool u_is_size_zoom_constant;
 uniform bool u_is_size_feature_constant;
@@ -42,7 +43,7 @@ void main() {
     vec2 a_pxoffset = a_pixeloffset.xy;
     vec2 a_minFontScale = a_pixeloffset.zw / 256.0;
 
-    float ele = get_elevation(a_pos);
+    float ele = get_elevation(a_pos) + a_elevation;
     highp float segment_angle = -a_projected_pos[2];
     float size;
 
