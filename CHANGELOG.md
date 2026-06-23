@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix a memory leak where aborting a worker request (e.g. a GeoJSON tile load cancelled while panning) left its promise pending forever, so the awaiting async frame and everything it captured was never released; `Actor.sendAsync` now rejects with an `AbortError` on abort ([#XXXX](https://github.com/maplibre/maplibre-gl-js/pull/XXXX)) (by [@kamil-sienkiewicz-asi](https://github.com/kamil-sienkiewicz-asi))
 - _...Add new stuff here..._
 
 ## 6.0.0-16
