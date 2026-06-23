@@ -81,6 +81,8 @@ import type {WorkerGlobalScopeInterface} from './util/web_worker.ts';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
+import type {SourceSpecification as StyleSpecSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+type SourceSpecification = StyleSpecSourceSpecification | CanvasSourceSpecification;
 
 /**
  * Sets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text).
@@ -372,6 +374,7 @@ export {
     type CustomLayerProjectionDataParams,
     type UnwrappedTileIDLiteral,
     type CanvasSourceSpecification,
+    type SourceSpecification,
     type PaddingOptions,
     type LngLatLike,
     type PointLike,
