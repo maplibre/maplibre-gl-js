@@ -1925,25 +1925,25 @@ function ensureError(e) {
 * Returns a new 64 bit float vec4 of zeroes.
 */
 function createVec4f64() {
-	return new Float64Array(4);
+	return /* @__PURE__ */ new Float64Array(4);
 }
 /**
 * Returns a new 64 bit float vec3 of zeroes.
 */
 function createVec3f64() {
-	return new Float64Array(3);
+	return /* @__PURE__ */ new Float64Array(3);
 }
 /**
 * Returns a new 64 bit float mat4 of zeroes.
 */
 function createMat4f64() {
-	return new Float64Array(16);
+	return /* @__PURE__ */ new Float64Array(16);
 }
 /**
 * Returns a new 64 bit float mat4 set to identity.
 */
 function createIdentityMat4f64() {
-	const m = new Float64Array(16);
+	const m = /* @__PURE__ */ new Float64Array(16);
 	identity(m);
 	return m;
 }
@@ -1951,7 +1951,7 @@ function createIdentityMat4f64() {
 * Returns a new 32 bit float mat4 set to identity.
 */
 function createIdentityMat4f32() {
-	const m = new Float32Array(16);
+	const m = /* @__PURE__ */ new Float32Array(16);
 	identity(m);
 	return m;
 }
@@ -2599,7 +2599,7 @@ function rollPitchBearingEqual(a, b) {
 * @returns roll, pitch, and bearing angles in degrees
 */
 function getRollPitchBearing(rotation) {
-	const m = new Float64Array(9);
+	const m = /* @__PURE__ */ new Float64Array(9);
 	fromQuat(m, rotation);
 	const xAngle = radiansToDegrees(-Math.asin(clamp$2(m[2], -1, 1)));
 	let roll;
@@ -2631,7 +2631,7 @@ function getAngleDelta(lastPoint, currentPoint, center) {
 * @returns The rotation quaternion
 */
 function rollPitchBearingToQuat(roll, pitch, bearing) {
-	const rotation = new Float64Array(4);
+	const rotation = /* @__PURE__ */ new Float64Array(4);
 	fromEuler(rotation, roll, pitch - 90, bearing);
 	return rotation;
 }
@@ -7538,7 +7538,7 @@ var RuntimeError = class extends Error {
 	}
 };
 /** Set of valid anchor positions, as a set for validation */
-const anchors = new Set([
+const anchors = /* @__PURE__ */ new Set([
 	"center",
 	"left",
 	"right",
@@ -12915,6 +12915,7 @@ function serialize(input, transferables) {
 			if (!input.hasOwnProperty(key)) continue;
 			if (registry[classRegistryKey].omit.includes(key)) continue;
 			const property = input[key];
+			if (property === void 0) continue;
 			properties[key] = registry[classRegistryKey].shallow.includes(key) ? property : serialize(property, transferables);
 		}
 		if (input instanceof Error) properties.message = input.message;
@@ -13514,7 +13515,7 @@ var Benchmark = class {
 		map._render(paintStartTimeStamp);
 		const gl = map.painter.context.gl;
 		gl.finish();
-		gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+		gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, /* @__PURE__ */ new Uint8Array(4));
 	}
 };
 //#endregion
@@ -17180,7 +17181,7 @@ var UniformFloatArray = class extends Uniform {
 		}
 	}
 };
-const emptyMat4 = new Float32Array(16);
+const emptyMat4 = /* @__PURE__ */ new Float32Array(16);
 var UniformMatrix4f = class extends Uniform {
 	constructor(context, location) {
 		super(context, location);
@@ -20472,7 +20473,7 @@ const ARRAY_TYPES = [
 /** @typedef {Int8Array | Uint8Array | Uint8ClampedArray | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array} TypedArray */
 const VERSION = 1;
 const HEADER_SIZE = 8;
-const STACK = new Uint32Array(96);
+const STACK = /* @__PURE__ */ new Uint32Array(96);
 var KDBush = class KDBush {
 	/**
 	* Creates an index from raw `ArrayBuffer` data.
@@ -24041,7 +24042,7 @@ async function loadGlyphRange(fontstack, range, urlTemplate, requestManager) {
 //#endregion
 //#region node_modules/@mapbox/tiny-sdf/index.js
 const INF = 0x56bc75e2d63100000;
-const alphaTable = new Float64Array(256);
+const alphaTable = /* @__PURE__ */ new Float64Array(256);
 for (let i = 0; i < 256; i++) {
 	const d = .5 - Math.pow(i / 255, 1 / 2.2);
 	alphaTable[i] = d * Math.abs(d);
@@ -26319,7 +26320,7 @@ function mergeSourceDiffs(prevDiff, nextDiff, promoteId) {
 	resolveMergeConflicts(prev, next);
 	const merged = {};
 	if (prev.removeAll || next.removeAll) merged.removeAll = true;
-	merged.remove = new Set([...prev.remove, ...next.remove]);
+	merged.remove = /* @__PURE__ */ new Set([...prev.remove, ...next.remove]);
 	merged.add = new Map([...prev.add, ...next.add]);
 	merged.update = new Map([...prev.update, ...next.update]);
 	if (merged.remove.size && merged.add.size) for (const id of merged.add.keys()) merged.remove.delete(id);
@@ -27771,6 +27772,7 @@ var FeatureTable = class {
 		this._idVector = _idVector;
 		this._propertyVectors = _propertyVectors;
 		this._extent = _extent;
+		if (_name.length === 0) throw new Error("Missing layer name");
 	}
 	get name() {
 		return this._name;
@@ -27904,7 +27906,7 @@ var PhysicalLevelTechnique;
 * Bit masks for each bitwidth 0-32.
 * DO NOT MUTATE - this is a shared constant.
 */
-const masks = new Uint32Array(33);
+const masks = /* @__PURE__ */ new Uint32Array(33);
 masks[0] = 0;
 for (let bitWidth = 1; bitWidth <= 32; bitWidth++) masks[bitWidth] = bitWidth === 32 ? 4294967295 : 4294967295 >>> 32 - bitWidth;
 const MASKS = masks;
@@ -30081,7 +30083,10 @@ function decodeSignedConstInt64Stream(data, offset, streamMetadata) {
 }
 function decodeUnsignedConstInt64Stream(data, offset, streamMetadata) {
 	const values = decodeVarintInt64(data, offset, streamMetadata.numValues);
-	if (values.length === 1) return values[0];
+	if (values.length === 1) {
+		if (streamMetadata.logicalLevelTechnique1 === LogicalLevelTechnique.DELTA) return decodeZigZagInt64Value(values[0]);
+		return values[0];
+	}
 	return decodeUnsignedConstRleInt64(values);
 }
 /**
@@ -31645,6 +31650,7 @@ function decodeEmbeddedTileSetMetadata(bytes, offset) {
 	meta.featureTables = [];
 	const table = {};
 	table.name = decodeString(bytes, offset);
+	if (table.name.length === 0) throw new Error("Missing layer name");
 	const extent = decodeVarintInt32(bytes, offset, 1)[0] >>> 0;
 	const columnCount = decodeVarintInt32(bytes, offset, 1)[0] >>> 0;
 	table.columns = new Array(columnCount);
@@ -31718,7 +31724,7 @@ function decodeTile(tile, geometryScaling, idWithinMaxSafeInteger = true) {
 }
 function decodeIdColumn(tile, columnMetadata, offset, columnName, idDataStreamMetadata, sizeOrNullabilityBuffer, idWithinMaxSafeInteger = false) {
 	const scalarTypeMetadata = columnMetadata.scalarType;
-	if (!scalarTypeMetadata || scalarTypeMetadata.type !== "logicalType" || scalarTypeMetadata.logicalType !== LogicalScalarType.ID) throw new Error(`ID column must be a logical ID scalar type: ${columnName}`);
+	if (scalarTypeMetadata?.type !== "logicalType" || scalarTypeMetadata.logicalType !== LogicalScalarType.ID) throw new Error(`ID column must be a logical ID scalar type: ${columnName}`);
 	const idDataType = scalarTypeMetadata.longID ? ScalarType.UINT_64 : ScalarType.UINT_32;
 	const nullabilityBuffer = typeof sizeOrNullabilityBuffer === "number" ? void 0 : sizeOrNullabilityBuffer;
 	const vectorType = getVectorType(idDataStreamMetadata, sizeOrNullabilityBuffer, tile, offset, idDataType === ScalarType.UINT_64 ? "int64" : "int32");
@@ -32622,7 +32628,7 @@ function calculateTileMatrix(unwrappedTileID, worldSize) {
 	const canonical = unwrappedTileID.canonical;
 	const scale = worldSize / zoomScale(canonical.z);
 	const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
-	const worldMatrix = new Float64Array(16);
+	const worldMatrix = /* @__PURE__ */ new Float64Array(16);
 	identity(worldMatrix);
 	translate$1(worldMatrix, worldMatrix, [
 		unwrappedX * scale,
@@ -37540,7 +37546,7 @@ var TransformHelper = class {
 	_calcMatrices() {
 		if (this._width && this._height) {
 			this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
-			let m = identity(new Float64Array(16));
+			let m = identity(/* @__PURE__ */ new Float64Array(16));
 			scale$3(m, m, [
 				this._width / 2,
 				-this._height / 2,
@@ -37552,7 +37558,7 @@ var TransformHelper = class {
 				0
 			]);
 			this._clipSpaceToPixelsMatrix = m;
-			m = identity(new Float64Array(16));
+			m = identity(/* @__PURE__ */ new Float64Array(16));
 			scale$3(m, m, [
 				1,
 				-1,
@@ -38445,9 +38451,9 @@ var MercatorTransform = class MercatorTransform {
 		const cameraToSeaLevelDistance = Math.max(this._helper.cameraToCenterDistance / 2, this._helper.cameraToCenterDistance + this._helper._elevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians));
 		this._calculateNearFarZIfNeeded(cameraToSeaLevelDistance, limitedPitchRadians, offset);
 		let m;
-		m = new Float64Array(16);
+		m = /* @__PURE__ */ new Float64Array(16);
 		perspective(m, this.fovInRadians, this._helper._width / this._helper._height, this._helper._nearZ, this._helper._farZ);
-		this._invProjMatrix = new Float64Array(16);
+		this._invProjMatrix = /* @__PURE__ */ new Float64Array(16);
 		fastInvertProjMat4(this._invProjMatrix, m);
 		m[8] = -offset.x * 2 / this._helper._width;
 		m[9] = offset.y * 2 / this._helper._height;
@@ -38480,7 +38486,7 @@ var MercatorTransform = class MercatorTransform {
 			1,
 			this._helper._pixelPerMeter
 		]);
-		this._pixelMatrix = multiply$1(new Float64Array(16), this.clipSpaceToPixelsMatrix, m);
+		this._pixelMatrix = multiply$1(/* @__PURE__ */ new Float64Array(16), this.clipSpaceToPixelsMatrix, m);
 		translate$1(m, m, [
 			0,
 			0,
@@ -38500,7 +38506,7 @@ var MercatorTransform = class MercatorTransform {
 			cameraPos[1] / cameraPos[3],
 			cameraPos[2] / cameraPos[3]
 		];
-		this._fogMatrix = new Float64Array(16);
+		this._fogMatrix = /* @__PURE__ */ new Float64Array(16);
 		perspective(this._fogMatrix, this.fovInRadians, this.width / this.height, cameraToSeaLevelDistance, this._helper._farZ);
 		this._fogMatrix[8] = -offset.x * 2 / this.width;
 		this._fogMatrix[9] = offset.y * 2 / this.height;
@@ -38532,7 +38538,7 @@ var MercatorTransform = class MercatorTransform {
 			0,
 			-this.elevation
 		]);
-		this._pixelMatrix3D = multiply$1(new Float64Array(16), this.clipSpaceToPixelsMatrix, m);
+		this._pixelMatrix3D = multiply$1(/* @__PURE__ */ new Float64Array(16), this.clipSpaceToPixelsMatrix, m);
 		const xShift = this._helper._width % 2 / 2, yShift = this._helper._height % 2 / 2, angleCos = Math.cos(this.bearingInRadians), angleSin = Math.sin(-this.bearingInRadians), dx = x - Math.round(x) + angleCos * xShift + angleSin * yShift, dy = y - Math.round(y) + angleCos * yShift + angleSin * xShift;
 		const alignedM = new Float64Array(m);
 		translate$1(alignedM, alignedM, [
@@ -38541,7 +38547,7 @@ var MercatorTransform = class MercatorTransform {
 			0
 		]);
 		this._alignedProjMatrix = alignedM;
-		m = invert(new Float64Array(16), this._pixelMatrix);
+		m = invert(/* @__PURE__ */ new Float64Array(16), this._pixelMatrix);
 		if (!m) throw new Error("failed to invert matrix");
 		this._pixelMatrixInverse = m;
 		this._clearMatrixCaches();
@@ -38718,7 +38724,7 @@ function updateRotation(args) {
 	if (args.useSlerp) if (args.k < 1) {
 		const startRotation = rollPitchBearingToQuat(args.startEulerAngles.roll, args.startEulerAngles.pitch, args.startEulerAngles.bearing);
 		const endRotation = rollPitchBearingToQuat(args.endEulerAngles.roll, args.endEulerAngles.pitch, args.endEulerAngles.bearing);
-		const rotation = new Float64Array(4);
+		const rotation = /* @__PURE__ */ new Float64Array(4);
 		slerp(rotation, startRotation, endRotation, args.k);
 		const eulerAngles = getRollPitchBearing(rotation);
 		args.tr.setRoll(eulerAngles.roll);
@@ -39027,7 +39033,7 @@ var ProjectionErrorMeasurement = class ProjectionErrorMeasurement {
 		const indexArray = new TriangleIndexArray();
 		indexArray.emplaceBack(0, 1, 2);
 		this._fullscreenTriangle = new Mesh(context.createVertexBuffer(vertexArray, posAttributes.members), context.createIndexBuffer(indexArray), SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length));
-		this._resultBuffer = new Uint8Array(4);
+		this._resultBuffer = /* @__PURE__ */ new Uint8Array(4);
 		context.activeTexture.set(gl.TEXTURE1);
 		const texture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -39426,7 +39432,7 @@ function mercatorCoordinatesToAngularCoordinatesRadians(mercatorX, mercatorY) {
 */
 function angularCoordinatesRadiansToVector(lngRadians, latRadians) {
 	const len = Math.cos(latRadians);
-	const vec = new Float64Array(3);
+	const vec = /* @__PURE__ */ new Float64Array(3);
 	vec[0] = Math.sin(lngRadians) * len;
 	vec[1] = Math.sin(latRadians);
 	vec[2] = Math.cos(lngRadians) * len;
@@ -39448,7 +39454,7 @@ function projectTileCoordinatesToSphere(inTileX, inTileY, tileIdX, tileIdY, tile
 	const sphericalX = mod(mercatorX * Math.PI * 2 + Math.PI, Math.PI * 2);
 	const sphericalY = 2 * Math.atan(Math.exp(Math.PI - mercatorY * Math.PI * 2)) - Math.PI * .5;
 	const len = Math.cos(sphericalY);
-	const vec = new Float64Array(3);
+	const vec = /* @__PURE__ */ new Float64Array(3);
 	vec[0] = Math.sin(sphericalX) * len;
 	vec[1] = Math.sin(sphericalY);
 	vec[2] = Math.cos(sphericalX) * len;
@@ -45039,7 +45045,7 @@ function createQuadTriangles(quadCount) {
 }
 //#endregion
 //#region src/webgl/draw/draw_symbol.ts
-const identityMat4 = identity(new Float32Array(16));
+const identityMat4 = identity(/* @__PURE__ */ new Float32Array(16));
 function drawSymbols(painter, tileManager, layer, coords, variableOffsets, renderOptions) {
 	if (painter.renderPass !== "translucent") return;
 	const { isRenderingToTexture } = renderOptions;
@@ -46543,7 +46549,7 @@ function getSunPos(light, transform) {
 		-_lp.y,
 		-_lp.z
 	];
-	const lightMat = identity(new Float64Array(16));
+	const lightMat = identity(/* @__PURE__ */ new Float64Array(16));
 	if (light.properties.get("anchor") === "map") {
 		rotateZ$1(lightMat, lightMat, transform.rollInRadians);
 		rotateX$1(lightMat, lightMat, -transform.pitchInRadians);
@@ -46570,7 +46576,7 @@ function drawAtmosphere(painter, sky, light) {
 	if (atmosphereBlend === 0) return;
 	const globeRadius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
 	const invProjMatrix = transform.inverseProjectionMatrix;
-	const vec = new Float64Array(4);
+	const vec = /* @__PURE__ */ new Float64Array(4);
 	vec[3] = 1;
 	transformMat4$1(vec, vec, transform.modelViewProjectionMatrix);
 	vec[0] /= vec[3];
@@ -46629,7 +46635,7 @@ var Painter = class Painter {
 		this.terrainFacilitator = {
 			depthDirty: true,
 			coordsDirty: false,
-			matrix: identity(new Float64Array(16)),
+			matrix: identity(/* @__PURE__ */ new Float64Array(16)),
 			renderTime: 0
 		};
 		this.setup();
@@ -51139,7 +51145,7 @@ var TerrainTileManager = class extends Evented {
 			keys[tileID.key] = true;
 			this._renderableTilesKeys.push(tileID.key);
 			if (!this._tiles[tileID.key]) {
-				tileID.terrainRttPosMatrix32f = new Float32Array(16);
+				tileID.terrainRttPosMatrix32f = /* @__PURE__ */ new Float32Array(16);
 				ortho(tileID.terrainRttPosMatrix32f, 0, EXTENT, EXTENT, 0, 0, 1);
 				this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
 				this._lastTilesetChange = now();
@@ -51483,7 +51489,7 @@ var Terrain = class {
 			const image = new RGBAImage({
 				width: 1,
 				height: 1
-			}, new Uint8Array(4));
+			}, /* @__PURE__ */ new Uint8Array(4));
 			this._emptyDepthTexture = new Texture(context, image, context.gl.RGBA, { premultiply: false });
 			this._emptyDemUnpack = [
 				0,
@@ -51515,7 +51521,7 @@ var Terrain = class {
 			else warnOnce("cannot calculate elevation if elevation maxzoom > source.maxzoom");
 			const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
 			const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
-			const demMatrix = fromScaling(new Float64Array(16), [
+			const demMatrix = fromScaling(/* @__PURE__ */ new Float64Array(16), [
 				1 / (EXTENT << dz),
 				1 / (EXTENT << dz),
 				0
@@ -51618,7 +51624,7 @@ var Terrain = class {
 	pointCoordinate(p) {
 		this.painter.maybeDrawDepth(true);
 		this.painter.maybeDrawCoords();
-		const rgba = new Uint8Array(4);
+		const rgba = /* @__PURE__ */ new Uint8Array(4);
 		const context = this.painter.context, gl = context.gl;
 		const px = Math.round(p.x * this.painter.pixelRatio / devicePixelRatio);
 		const py = Math.round(p.y * this.painter.pixelRatio / devicePixelRatio);
@@ -51641,7 +51647,7 @@ var Terrain = class {
 	* @returns depth value in clip space (between 0 and 1)
 	*/
 	depthAtPoint(p) {
-		const rgba = new Uint8Array(4);
+		const rgba = /* @__PURE__ */ new Uint8Array(4);
 		const context = this.painter.context, gl = context.gl;
 		context.bindFramebuffer.set(this.getFramebuffer("depth").framebuffer);
 		gl.readPixels(p.x, this.painter.height / devicePixelRatio - p.y - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
@@ -60460,7 +60466,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 8ce074b";
+const version = "main 4ce473e";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;

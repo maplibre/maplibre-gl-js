@@ -4993,7 +4993,7 @@ var RuntimeError = class extends Error {
 	}
 };
 /** Set of valid anchor positions, as a set for validation */
-const anchors = new Set([
+const anchors = /* @__PURE__ */ new Set([
 	"center",
 	"left",
 	"right",
@@ -10124,6 +10124,7 @@ function serialize(input, transferables) {
 			if (!input.hasOwnProperty(key)) continue;
 			if (registry[classRegistryKey].omit.includes(key)) continue;
 			const property = input[key];
+			if (property === void 0) continue;
 			properties[key] = registry[classRegistryKey].shallow.includes(key) ? property : serialize(property, transferables);
 		}
 		if (input instanceof Error) properties.message = input.message;
@@ -16526,7 +16527,7 @@ const ARRAY_TYPES = [
 /** @typedef {Int8Array | Uint8Array | Uint8ClampedArray | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array} TypedArray */
 const VERSION = 1;
 const HEADER_SIZE = 8;
-const STACK = new Uint32Array(96);
+const STACK = /* @__PURE__ */ new Uint32Array(96);
 var KDBush = class KDBush {
 	/**
 	* Creates an index from raw `ArrayBuffer` data.
@@ -19799,7 +19800,7 @@ var PbfWriter = class {
 	/**
 	* @param {Uint8Array | ArrayBuffer} [buf]
 	*/
-	constructor(buf = new Uint8Array(16)) {
+	constructor(buf = /* @__PURE__ */ new Uint8Array(16)) {
 		this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf);
 		this.dataView = new DataView(this.buf.buffer);
 		this.pos = 0;
@@ -22119,6 +22120,7 @@ var FeatureTable = class {
 		this._idVector = _idVector;
 		this._propertyVectors = _propertyVectors;
 		this._extent = _extent;
+		if (_name.length === 0) throw new Error("Missing layer name");
 	}
 	get name() {
 		return this._name;
@@ -22252,7 +22254,7 @@ var PhysicalLevelTechnique;
 * Bit masks for each bitwidth 0-32.
 * DO NOT MUTATE - this is a shared constant.
 */
-const masks = new Uint32Array(33);
+const masks = /* @__PURE__ */ new Uint32Array(33);
 masks[0] = 0;
 for (let bitWidth = 1; bitWidth <= 32; bitWidth++) masks[bitWidth] = bitWidth === 32 ? 4294967295 : 4294967295 >>> 32 - bitWidth;
 const MASKS = masks;
@@ -24429,7 +24431,10 @@ function decodeSignedConstInt64Stream(data, offset, streamMetadata) {
 }
 function decodeUnsignedConstInt64Stream(data, offset, streamMetadata) {
 	const values = decodeVarintInt64(data, offset, streamMetadata.numValues);
-	if (values.length === 1) return values[0];
+	if (values.length === 1) {
+		if (streamMetadata.logicalLevelTechnique1 === LogicalLevelTechnique.DELTA) return decodeZigZagInt64Value(values[0]);
+		return values[0];
+	}
 	return decodeUnsignedConstRleInt64(values);
 }
 /**
@@ -25993,6 +25998,7 @@ function decodeEmbeddedTileSetMetadata(bytes, offset) {
 	meta.featureTables = [];
 	const table = {};
 	table.name = decodeString(bytes, offset);
+	if (table.name.length === 0) throw new Error("Missing layer name");
 	const extent = decodeVarintInt32(bytes, offset, 1)[0] >>> 0;
 	const columnCount = decodeVarintInt32(bytes, offset, 1)[0] >>> 0;
 	table.columns = new Array(columnCount);
@@ -26066,7 +26072,7 @@ function decodeTile(tile, geometryScaling, idWithinMaxSafeInteger = true) {
 }
 function decodeIdColumn(tile, columnMetadata, offset, columnName, idDataStreamMetadata, sizeOrNullabilityBuffer, idWithinMaxSafeInteger = false) {
 	const scalarTypeMetadata = columnMetadata.scalarType;
-	if (!scalarTypeMetadata || scalarTypeMetadata.type !== "logicalType" || scalarTypeMetadata.logicalType !== LogicalScalarType.ID) throw new Error(`ID column must be a logical ID scalar type: ${columnName}`);
+	if (scalarTypeMetadata?.type !== "logicalType" || scalarTypeMetadata.logicalType !== LogicalScalarType.ID) throw new Error(`ID column must be a logical ID scalar type: ${columnName}`);
 	const idDataType = scalarTypeMetadata.longID ? ScalarType.UINT_64 : ScalarType.UINT_32;
 	const nullabilityBuffer = typeof sizeOrNullabilityBuffer === "number" ? void 0 : sizeOrNullabilityBuffer;
 	const vectorType = getVectorType(idDataStreamMetadata, sizeOrNullabilityBuffer, tile, offset, idDataType === ScalarType.UINT_64 ? "int64" : "int32");
