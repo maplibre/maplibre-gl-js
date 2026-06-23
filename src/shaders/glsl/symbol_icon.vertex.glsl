@@ -61,7 +61,8 @@ void main() {
     // compute opacity and exit if too transparent:
     vec2 fade_opacity = unpack_opacity(a_fade_opacity);
     float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
-    float visibility = calculate_visibility(projectedPoint);
+    // visibility is tested at the feature's ground position so we need to remove elevation offset
+    float visibility = calculate_visibility(a_elevation != 0.0 ? projectTileWithElevation(translated_a_pos, ele - a_elevation) : projectedPoint);
     v_total_opacity = opacity * max(0.0, min(visibility, fade_opacity[0] + fade_change));
     if (v_total_opacity < 0.1){
         gl_Position = vec4(-2., -2., -2., 1.);

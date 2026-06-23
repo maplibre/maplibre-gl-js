@@ -1,0 +1,82 @@
+{
+  "version": 8,
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "metadata": {
+    "test": {
+      "height": 384,
+      "width": 512,
+      "maxPitch": 85,
+      "operations": [
+        [
+          "wait"
+        ]
+      ]
+    }
+  },
+  "center": [
+    35.38,
+    31.55
+  ],
+  "zoom": 14,
+  "bearing": 0,
+  "pitch": 85,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/zero-elevation-terrain-tile.png"
+      ],
+      "minzoom": 7,
+      "maxzoom": 12,
+      "tileSize": 256
+    },
+    "geometry": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            35.38,
+            31.553
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "bg",
+      "type": "background",
+      "paint": {
+        "background-color": "#eee"
+      }
+    },
+    {
+      "id": "labels",
+      "type": "symbol",
+      "source": "geometry",
+      "layout": {
+        "symbol-placement": "point",
+        "symbol-elevation": 250,
+        "text-field": "250",
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-size": 16,
+        "text-allow-overlap": true
+      },
+      "paint": {
+        "text-color": "#c00",
+        "text-halo-color": "#fff",
+        "text-halo-width": 2
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 1
+  }
+}
