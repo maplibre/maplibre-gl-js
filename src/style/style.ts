@@ -204,7 +204,7 @@ export type StyleSwapOptions = {
  * Specifies a layer to be added to a {@link Style}. In addition to a standard {@link LayerSpecification}
  * or a {@link CustomLayerInterface}, a {@link LayerSpecification} with an embedded {@link SourceSpecification} can also be provided.
  */
-export type AddLayerObject = LayerSpecification | (Omit<LayerSpecification, 'source'> & {source: SourceSpecification}) | CustomLayerInterface;
+export type AddLayerObject = LayerSpecification | (Omit<LayerSpecification, 'source'> & {source: SourceSpecification | CanvasSourceSpecification}) | CustomLayerInterface;
 
 /**
  * The Style base class
