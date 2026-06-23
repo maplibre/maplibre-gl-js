@@ -120,14 +120,14 @@ export class CollisionIndex {
 
         // `getElevation` is the feature's ground (terrain) elevation; the symbol is placed and
         // drawn at the elevated position (ground + the `symbol-elevation` offset).
-        const getElevatedElevation = elevationOffset !== 0 ?
+        const getElevationWithOffset = elevationOffset !== 0 ?
             (px: number, py: number) => (getElevation ? getElevation(px, py) : 0) + elevationOffset :
             getElevation;
         const projectedPoint = this.projectAndGetPerspectiveRatio(
             x,
             y,
             unwrappedTileID,
-            getElevatedElevation,
+            getElevationWithOffset,
             simpleProjectionMatrix
         );
 
@@ -157,7 +157,7 @@ export class CollisionIndex {
                 rotateWithMap,
                 translation,
                 projectedPoint,
-                getElevatedElevation,
+                getElevationWithOffset,
                 shift,
                 simpleProjectionMatrix,
             );
