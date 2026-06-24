@@ -740,6 +740,36 @@ function degreesToRadians(degrees) {
 	return degrees * Math.PI / 180;
 }
 //#endregion
+//#region src/util/abort_error.ts
+/**
+* An error message to use when an operation is aborted
+*/
+const ABORT_ERROR = "AbortError";
+var AbortError = class extends Error {
+	constructor(messageOrError = ABORT_ERROR) {
+		super(messageOrError instanceof Error ? messageOrError.message : messageOrError);
+		this.name = ABORT_ERROR;
+		if (messageOrError instanceof Error && messageOrError.stack) this.stack = messageOrError.stack;
+	}
+};
+/**
+* Check if an error is an abort error
+* @param error - An error object
+* @returns - true if the error is an abort error
+*/
+function isAbortError(error) {
+	return error instanceof Error && error.name === "AbortError";
+}
+/**
+* Throws an AbortError if the provided abort signal has already been aborted.
+*
+* @param signal - The abort signal to check.
+* @throws AbortError If the signal is aborted.
+*/
+function throwIfAborted(signal) {
+	if (signal.aborted) throw new AbortError(signal.reason);
+}
+//#endregion
 //#region src/util/transferable_grid_index.ts
 const NUM_PARAMS = 3;
 var TransferableGridIndex = class TransferableGridIndex {
@@ -9779,36 +9809,6 @@ function createVisibility(visibility, globalState) {
 	return new VisibilityExpressionClass(visibility, globalState);
 }
 //#endregion
-//#region src/util/abort_error.ts
-/**
-* An error message to use when an operation is aborted
-*/
-const ABORT_ERROR = "AbortError";
-var AbortError = class extends Error {
-	constructor(messageOrError = ABORT_ERROR) {
-		super(messageOrError instanceof Error ? messageOrError.message : messageOrError);
-		this.name = ABORT_ERROR;
-		if (messageOrError instanceof Error && messageOrError.stack) this.stack = messageOrError.stack;
-	}
-};
-/**
-* Check if an error is an abort error
-* @param error - An error object
-* @returns - true if the error is an abort error
-*/
-function isAbortError(error) {
-	return error instanceof Error && error.name === "AbortError";
-}
-/**
-* Throws an AbortError if the provided abort signal has already been aborted.
-*
-* @param signal - The abort signal to check.
-* @throws AbortError If the signal is aborted.
-*/
-function throwIfAborted(signal) {
-	if (signal.aborted) throw new AbortError(signal.reason);
-}
-//#endregion
 //#region src/util/config.ts
 const config = {
 	MAX_PARALLEL_IMAGE_REQUESTS: 16,
@@ -10229,6 +10229,7 @@ var Actor = class {
 					sourceMapId: this.mapId
 				};
 				this.target.postMessage(cancelMessage);
+				reject(new AbortError(abortController.signal.reason));
 			}, addEventDefaultOptions) : null;
 			this.resolveRejects[id] = {
 				resolve: (value) => {

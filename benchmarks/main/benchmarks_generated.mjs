@@ -24848,6 +24848,7 @@ var Actor = class {
 					sourceMapId: this.mapId
 				};
 				this.target.postMessage(cancelMessage);
+				reject(new AbortError(abortController.signal.reason));
 			}, addEventDefaultOptions) : null;
 			this.resolveRejects[id] = {
 				resolve: (value) => {
@@ -25852,7 +25853,7 @@ var VectorTileSource = class extends Evented {
 			return result;
 		} catch (err) {
 			delete tile.abortController;
-			if (tile.aborted) return;
+			if (tile.aborted || isAbortError(err)) return;
 			if (err && err.status !== 404) throw err;
 			this._afterTileLoadWorkerResponse(tile, null);
 		}
@@ -26870,13 +26871,19 @@ var GeoJSONSource = class extends Evented {
 			subdivisionGranularity: this.map.style.projection.subdivisionGranularity
 		};
 		tile.abortController = new AbortController();
-		const data = await (await this.actorPromise).sendAsync({
-			type: message,
-			data: params
-		}, tile.abortController);
-		delete tile.abortController;
-		tile.unloadVectorData();
-		if (!tile.aborted) tile.loadVectorData(data, this.map.painter, message === "RT");
+		try {
+			const data = await (await this.actorPromise).sendAsync({
+				type: message,
+				data: params
+			}, tile.abortController);
+			delete tile.abortController;
+			tile.unloadVectorData();
+			if (!tile.aborted) tile.loadVectorData(data, this.map.painter, message === "RT");
+		} catch (err) {
+			delete tile.abortController;
+			if (tile.aborted || isAbortError(err)) return;
+			throw err;
+		}
 	}
 	async abortTile(tile) {
 		if (tile.abortController) {
@@ -60466,7 +60473,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 8857dc8";
+const version = "main 1d3d433";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
