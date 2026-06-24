@@ -234,7 +234,7 @@ class CrossTileSymbolLayerIndex {
 
         for (let i = 0; i < bucket.symbolInstances.length; i++) {
             const symbolInstance = bucket.symbolInstances.get(i);
-            symbolInstance.crossTileID = 0;
+            symbolInstance.crossTileID ??= 0;
         }
 
         this.usedCrossTileIDs[tileID.overscaledZ] ||= {};
