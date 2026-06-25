@@ -6,6 +6,7 @@ import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 import {applySourceDiff, mergeSourceDiffs, toUpdateable} from './geojson_source_diff.ts';
 import {getGeoJSONBounds} from '../util/geojson_bounds.ts';
+import {isAbortError} from '../util/abort_error.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds.ts';
 
@@ -594,12 +595,20 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         };
 
         tile.abortController = new AbortController();
-        const data = await (await this.actorPromise).sendAsync({type: message, data: params}, tile.abortController);
-        delete tile.abortController;
-        tile.unloadVectorData();
+        try {
+            const data = await (await this.actorPromise).sendAsync({type: message, data: params}, tile.abortController);
+            delete tile.abortController;
+            tile.unloadVectorData();
 
-        if (!tile.aborted) {
-            tile.loadVectorData(data, this.map.painter, message ===  MessageType.reloadTile);
+            if (!tile.aborted) {
+                tile.loadVectorData(data, this.map.painter, message ===  MessageType.reloadTile);
+            }
+        } catch (err) {
+            delete tile.abortController;
+            if (tile.aborted || isAbortError(err)) {
+                return;
+            }
+            throw err;
         }
     }
 
