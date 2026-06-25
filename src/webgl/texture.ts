@@ -3,7 +3,7 @@ import type {RGBAImage, AlphaImage} from '../util/image.ts';
 import {premultiplyAlpha} from '../util/image.ts';
 
 export type TextureFormat = WebGLRenderingContextBase['RGBA'] | WebGLRenderingContextBase['ALPHA'];
-export type TextureFilter = WebGLRenderingContextBase['LINEAR'] | WebGLRenderingContextBase['LINEAR_MIPMAP_NEAREST'] | WebGLRenderingContextBase['NEAREST'];
+export type TextureFilter = WebGLRenderingContextBase['LINEAR'] | WebGLRenderingContextBase['LINEAR_MIPMAP_NEAREST'] | WebGLRenderingContextBase['LINEAR_MIPMAP_LINEAR'] | WebGLRenderingContextBase['NEAREST'];
 export type TextureWrap = WebGLRenderingContextBase['REPEAT'] | WebGLRenderingContextBase['CLAMP_TO_EDGE'] | WebGLRenderingContextBase['MIRRORED_REPEAT'];
 
 type EmptyImage = {
@@ -28,8 +28,9 @@ export class Texture {
     size: [number, number];
     texture: WebGLTexture;
     format: TextureFormat;
-    filter: TextureFilter;
-    wrap: TextureWrap;
+    filter: TextureFilter | null;
+    minFilter: TextureFilter | null;
+    wrap: TextureWrap | null;
     useMipmap: boolean;
 
     /** Tracks the original handle to detect corruption after context loss (#2811) */
@@ -43,6 +44,9 @@ export class Texture {
         this.format = format;
         this.texture = context.gl.createTexture();
         this._ownedHandle = this.texture;
+        this.filter = null;
+        this.minFilter = null;
+        this.wrap = null;
         this.update(image, options);
     }
 
@@ -64,6 +68,9 @@ export class Texture {
             gl.deleteTexture(this.texture);
             this.texture = gl.createTexture();
             this._ownedHandle = this.texture;
+            this.filter = null;
+            this.minFilter = null;
+            this.wrap = null;
         }
 
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
@@ -150,14 +157,19 @@ export class Texture {
 
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
-        if (minFilter === gl.LINEAR_MIPMAP_NEAREST && !this.useMipmap) {
+        if ((minFilter === gl.LINEAR_MIPMAP_NEAREST || minFilter === gl.LINEAR_MIPMAP_LINEAR) && !this.useMipmap) {
             minFilter = gl.LINEAR;
         }
+        const effectiveMinFilter = minFilter || filter;
 
         if (filter !== this.filter) {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, minFilter || filter);
             this.filter = filter;
+        }
+
+        if (effectiveMinFilter !== this.minFilter) {
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, effectiveMinFilter);
+            this.minFilter = effectiveMinFilter;
         }
 
         if (wrap !== this.wrap) {
