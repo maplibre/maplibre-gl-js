@@ -20,6 +20,8 @@ export type DEMEncoding = 'mapbox' | 'terrarium' | 'custom';
  * tile's edge without backfilling from neighboring tiles.
  */
 export class DEMData {
+    private static readonly byteViewCache = new WeakMap<DEMData, Uint8Array>();
+
     uid: string | number;
     data: Uint32Array;
     stride: number;
@@ -30,7 +32,6 @@ export class DEMData {
     greenFactor: number;
     blueFactor: number;
     baseShift: number;
-    private _byteView?: Uint8Array;
 
     /**
      * Constructs a `DEMData` object
@@ -53,7 +54,7 @@ export class DEMData {
         this.stride = data.height;
         const dim = this.dim = data.height - 2;
         this.data = new Uint32Array(data.data.buffer);
-        this._setByteView(new Uint8Array(this.data.buffer));
+        DEMData.byteViewCache.set(this, new Uint8Array(this.data.buffer));
         switch (encoding) {
             case 'terrarium':
                 // unpacking formula for mapzen terrarium:
@@ -199,21 +200,12 @@ export class DEMData {
     }
 
     private _getByteView(): Uint8Array {
-        let byteView = this._byteView;
+        let byteView = DEMData.byteViewCache.get(this);
         if (byteView?.buffer !== this.data.buffer) {
             byteView = new Uint8Array(this.data.buffer);
-            this._setByteView(byteView);
+            DEMData.byteViewCache.set(this, byteView);
         }
         return byteView;
-    }
-
-    private _setByteView(byteView: Uint8Array): void {
-        Object.defineProperty(this, '_byteView', {
-            configurable: true,
-            enumerable: false,
-            value: byteView,
-            writable: true
-        });
     }
 
     private _unpackAtIndex(pixels: Uint8Array, index: number): number {
