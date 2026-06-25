@@ -206,18 +206,7 @@ export class Terrain {
 
         const pos = vec2.transformMat4([], [normalized.x / extent * EXTENT, normalized.y / extent * EXTENT], terrain.u_terrain_matrix);
         const coord = [pos[0] * dem.dim, pos[1] * dem.dim];
-
-        // bilinear interpolation
-        const cx = Math.floor(coord[0]),
-            cy = Math.floor(coord[1]),
-            tx = coord[0] - cx,
-            ty = coord[1] - cy;
-        return (
-            dem.get(cx, cy) * (1 - tx) * (1 - ty) +
-            dem.get(cx + 1, cy) * (tx) * (1 - ty) +
-            dem.get(cx, cy + 1) * (1 - tx) * (ty) +
-            dem.get(cx + 1, cy + 1) * (tx) * (ty)
-        );
+        return dem.sampleBilinear(coord[0], coord[1]);
     }
 
     /**
