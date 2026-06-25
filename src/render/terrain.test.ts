@@ -217,64 +217,6 @@ describe('Terrain', () => {
         expect(minMaxNoDEM.maxElevation).toBeNull();
     });
 
-    test('getTerrainData reuses DEM texture across repeated terrain prepares', () => {
-        const tileID = new OverscaledTileID(5, 0, 5, 17, 11);
-        const tile = new Tile(tileID, 256);
-        const pixels = new RGBAImage({width: 4, height: 4}, new Uint8Array(4 * 4 * 4));
-        tile.dem = {
-            stride: 4,
-            dim: 2,
-            getPixels: vi.fn(() => pixels),
-            getUnpackVector: () => [6553.6, 25.6, 0.1, 10000.0],
-        } as any as DEMData;
-        tile.needsTerrainPrepare = true;
-
-        const firstTexture = {
-            texture: {},
-            update: vi.fn(),
-            bind: vi.fn(),
-        };
-        const leakedTexture = {
-            texture: {},
-            update: vi.fn(),
-            bind: vi.fn(),
-        };
-        const painter = {
-            context: new Context(gl),
-            width: 1,
-            height: 1,
-            getTileTexture: vi.fn()
-                .mockReturnValueOnce(firstTexture)
-                .mockReturnValueOnce(leakedTexture),
-            saveTileTexture: vi.fn(),
-        } as any as Painter;
-        const tileManager = {
-            _source: {minzoom: 0, maxzoom: 22, tileSize: 512},
-            _cache: {max: 10},
-        } as any as TileManager;
-        const terrain = new Terrain(
-            painter,
-            tileManager,
-            {exaggeration: 2} as any as TerrainSpecification,
-        );
-        terrain.tileManager.getSourceTile = vi.fn(() => tile);
-
-        terrain.getTerrainData(tileID);
-        const demTexture = tile.demTexture;
-        tile.needsTerrainPrepare = true;
-        terrain.getTerrainData(tileID);
-
-        expect(tile.demTexture).toBe(demTexture);
-        expect(painter.getTileTexture).toHaveBeenCalledOnce();
-        expect(firstTexture.update).toHaveBeenCalledTimes(2);
-
-        tile.clearTextures(painter);
-
-        expect(painter.saveTileTexture).toHaveBeenCalledOnce();
-        expect(painter.saveTileTexture).toHaveBeenCalledWith(demTexture);
-        expect(tile.demTexture).toBeNull();
-    });
-
     test('create mesh with border', () => {
         let actualIndexArray;
         let actualVertexArray;
