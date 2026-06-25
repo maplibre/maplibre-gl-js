@@ -153,16 +153,19 @@ describe('DEMData.backfillBorder with encoding', () => {
 
 describe('DEMData.sampleBilinear', () => {
     test('interpolates four neighboring pixels', () => {
-        const dem = new DEMData('sample', createMockImage(2, 2), 'custom', 1.0, 1.0, 1.0, 0.0);
-        const z00 = dem.get(0, 0);
-        const z10 = dem.get(1, 0);
-        const z01 = dem.get(0, 1);
-        const z11 = dem.get(1, 1);
+        const elevations = [
+            0, 0, 0, 0,
+            0, 10, 20, 0,
+            0, 30, 40, 0,
+            0, 0, 0, 0
+        ];
+        const pixels = new Uint8Array(elevations.flatMap(elevation => [elevation, 0, 0, 0]));
+        const dem = new DEMData('sample', new RGBAImage({height: 4, width: 4}, pixels), 'custom', 1.0, 0.0, 0.0, 0.0);
 
-        expect(dem.sampleBilinear(0, 0)).toBe(z00);
-        expect(dem.sampleBilinear(0.5, 0.5)).toBe((z00 + z10 + z01 + z11) / 4);
-        expect(dem.sampleBilinear(-0.5, 0.5)).toBe((z00 + z01) / 2);
-        expect(dem.sampleBilinear(1, 1)).toBe(z11);
+        expect(dem.sampleBilinear(0, 0)).toBe(10);
+        expect(dem.sampleBilinear(0.5, 0.5)).toBe(25);
+        expect(dem.sampleBilinear(-0.5, 0.5)).toBe(20);
+        expect(dem.sampleBilinear(1, 1)).toBe(40);
     });
 
     test('throws when the bilinear footprint is outside the padded DEM', () => {
