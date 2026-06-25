@@ -18552,7 +18552,10 @@ var Texture = class {
 * surrounding pixel values to compute the slope at that pixel, and we cannot accurately calculate the slope at pixels on a
 * tile's edge without backfilling from neighboring tiles.
 */
-var DEMData = class {
+var DEMData = class DEMData {
+	static {
+		this.byteViewCache = /* @__PURE__ */ new WeakMap();
+	}
 	/**
 	* Constructs a `DEMData` object
 	* @param uid - the tile's unique id
@@ -18578,6 +18581,7 @@ var DEMData = class {
 		this.stride = data.height;
 		const dim = this.dim = data.height - 2;
 		this.data = new Uint32Array(data.data.buffer);
+		DEMData.byteViewCache.set(this, new Uint8Array(this.data.buffer));
 		switch (encoding) {
 			case "terrarium":
 				this.redFactor = 256;
@@ -18608,18 +18612,35 @@ var DEMData = class {
 		this.data[this._idx(dim, -1)] = this.data[this._idx(dim - 1, 0)];
 		this.data[this._idx(-1, dim)] = this.data[this._idx(0, dim - 1)];
 		this.data[this._idx(dim, dim)] = this.data[this._idx(dim - 1, dim - 1)];
+		const pixels = this._getByteView();
 		this.min = Number.MAX_SAFE_INTEGER;
 		this.max = Number.MIN_SAFE_INTEGER;
 		for (let x = 0; x < dim; x++) for (let y = 0; y < dim; y++) {
-			const ele = this.get(x, y);
+			const index = this._idx(x, y) * 4;
+			const ele = this._unpackAtIndex(pixels, index);
 			if (ele > this.max) this.max = ele;
 			if (ele < this.min) this.min = ele;
 		}
 	}
 	get(x, y) {
-		const pixels = new Uint8Array(this.data.buffer);
+		const pixels = this._getByteView();
 		const index = this._idx(x, y) * 4;
-		return this.unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
+		return this._unpackAtIndex(pixels, index);
+	}
+	sampleBilinear(x, y) {
+		const cx = Math.floor(x);
+		const cy = Math.floor(y);
+		if (cx < -1 || cx >= this.dim || cy < -1 || cy >= this.dim) throw new RangeError(`Out of range source coordinates for DEM data. x: ${x}, y: ${y}, dim: ${this.dim}`);
+		const pixels = this._getByteView();
+		const index = ((cy + 1) * this.stride + cx + 1) * 4;
+		const strideByteWidth = this.stride * 4;
+		const tx = x - cx;
+		const ty = y - cy;
+		const z00 = this._unpackAtIndex(pixels, index);
+		const z10 = this._unpackAtIndex(pixels, index + 4);
+		const z01 = this._unpackAtIndex(pixels, index + strideByteWidth);
+		const z11 = this._unpackAtIndex(pixels, index + strideByteWidth + 4);
+		return z00 * (1 - tx) * (1 - ty) + z10 * tx * (1 - ty) + z01 * (1 - tx) * ty + z11 * tx * ty;
 	}
 	getUnpackVector() {
 		return [
@@ -18643,7 +18664,7 @@ var DEMData = class {
 		return new RGBAImage({
 			width: this.stride,
 			height: this.stride
-		}, new Uint8Array(this.data.buffer));
+		}, this._getByteView());
 	}
 	backfillBorder(borderTile, dx, dy) {
 		if (this.dim !== borderTile.dim) throw new Error("dem dimension mismatch");
@@ -18667,6 +18688,17 @@ var DEMData = class {
 		const ox = -dx * this.dim;
 		const oy = -dy * this.dim;
 		for (let y = yMin; y < yMax; y++) for (let x = xMin; x < xMax; x++) this.data[this._idx(x, y)] = borderTile.data[this._idx(x + ox, y + oy)];
+	}
+	_getByteView() {
+		let byteView = DEMData.byteViewCache.get(this);
+		if (byteView?.buffer !== this.data.buffer) {
+			byteView = new Uint8Array(this.data.buffer);
+			DEMData.byteViewCache.set(this, byteView);
+		}
+		return byteView;
+	}
+	_unpackAtIndex(pixels, index) {
+		return this.unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
 	}
 };
 function packDEMData(v, unpackVector) {
@@ -51443,8 +51475,7 @@ var Terrain = class {
 		if (!dem) return 0;
 		const pos = transformMat4([], [normalized.x / extent * EXTENT, normalized.y / extent * EXTENT], terrain.u_terrain_matrix);
 		const coord = [pos[0] * dem.dim, pos[1] * dem.dim];
-		const cx = Math.floor(coord[0]), cy = Math.floor(coord[1]), tx = coord[0] - cx, ty = coord[1] - cy;
-		return dem.get(cx, cy) * (1 - tx) * (1 - ty) + dem.get(cx + 1, cy) * tx * (1 - ty) + dem.get(cx, cy + 1) * (1 - tx) * ty + dem.get(cx + 1, cy + 1) * tx * ty;
+		return dem.sampleBilinear(coord[0], coord[1]);
 	}
 	/**
 	* Get the elevation for given {@link LngLat} in respect of exaggeration.
@@ -60473,7 +60504,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 1d3d433";
+const version = "main 80bee4e";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
