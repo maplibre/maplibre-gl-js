@@ -51545,7 +51545,7 @@ var Terrain = class {
 		const sourceTile = this.tileManager.getSourceTile(tileID, true);
 		if (sourceTile?.dem && (!sourceTile.demTexture || sourceTile.needsTerrainPrepare)) {
 			const context = this.painter.context;
-			sourceTile.demTexture = this.painter.getTileTexture(sourceTile.dem.stride);
+			sourceTile.demTexture ||= this.painter.getTileTexture(sourceTile.dem.stride);
 			if (sourceTile.demTexture) sourceTile.demTexture.update(sourceTile.dem.getPixels(), { premultiply: false });
 			else sourceTile.demTexture = new Texture(context, sourceTile.dem.getPixels(), context.gl.RGBA, { premultiply: false });
 			sourceTile.demTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
@@ -60504,7 +60504,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 80bee4e";
+const version = "main bd68a96";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
