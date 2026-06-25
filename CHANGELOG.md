@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 - Fix camera jump in flyTo when minZoom is set ([#7743](https://github.com/maplibre/maplibre-gl-js/pull/7743)) (by [@YuChunTsao](https://github.com/YuChunTsao))
+- Fix a memory leak where aborting a worker request (e.g. a GeoJSON tile load cancelled while panning) left its promise pending forever, so the awaiting async frame and everything it captured was never released; `Actor.sendAsync` now rejects with an `AbortError` on abort (by [@kamil-sienkiewicz-asi](https://github.com/kamil-sienkiewicz-asi))
 - _...Add new stuff here..._
 
 ## 6.0.0-17

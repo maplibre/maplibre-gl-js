@@ -1,4 +1,5 @@
 import {type Subscription, ensureError, isWorker, subscribe} from './util.ts';
+import {AbortError} from './abort_error.ts';
 import {serialize, deserialize, type Serialized} from './web_worker_transfer.ts';
 import {ThrottledInvoker} from './throttled_invoker.ts';
 
@@ -118,7 +119,9 @@ export class Actor implements IActor {
                     sourceMapId: this.mapId
                 };
                 this.target.postMessage(cancelMessage);
-                // In case of abort the current behavior is to keep the promise pending.
+                // Reject the promise so the awaiting caller unwinds; leaving it pending kept the
+                // suspended async frame (and everything it captured) alive forever.
+                reject(new AbortError(abortController.signal.reason));
             }, addEventDefaultOptions) : null;
 
             this.resolveRejects[id] = {
