@@ -76,7 +76,7 @@ describe('render to texture', () => {
         colorModeForRenderPass: () => ColorMode.alphaBlended,
         getDepthModeFor3D: () => DepthMode.disabled,
         useProgram: () => ({draw: () => { layersDrawn++; }}),
-        _renderTileClippingMasks: vi.fn(),
+        renderTileClippingMasks: vi.fn(),
         renderLayer: vi.fn(),
         acquireRTT: (size: number) => createMockRTTObject(size),
         bindRTT: vi.fn(),

@@ -1,6 +1,6 @@
 import {DOM} from '../../util/dom.ts';
 
-import {Event} from '../../util/evented.ts';
+import {MapBoxZoomEvent} from '../events.ts';
 import {TransformProvider} from './transform-provider.ts';
 
 import type {Map} from '../map.ts';
@@ -154,7 +154,7 @@ export class BoxZoomHandler implements Handler {
         if (p0.x === p1.x && p0.y === p1.y) {
             this._fireEvent('boxzoomcancel', e);
         } else {
-            this._map.fire(new Event('boxzoomend', {originalEvent: e}));
+            this._map.fire(new MapBoxZoomEvent('boxzoomend', {originalEvent: e}));
             if (this._boxZoomEnd) {
                 this._boxZoomEnd(this._map, p0, p1, e);
                 return;
@@ -191,6 +191,6 @@ export class BoxZoomHandler implements Handler {
     }
 
     _fireEvent(type: string, e: MouseEvent | KeyboardEvent): Map {
-        return this._map.fire(new Event(type, {originalEvent: e}));
+        return this._map.fire(new MapBoxZoomEvent(type, {originalEvent: e}));
     }
 }

@@ -4,6 +4,7 @@ import {type Source} from './source.ts';
 import {VectorTileSource} from './vector_tile_source.ts';
 import {type Tile} from '../tile/tile.ts';
 import {AJAXError} from '../util/ajax.ts';
+import {AbortError} from '../util/abort_error.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {Evented} from '../util/evented.ts';
 import {RequestManager} from '../util/request_manager.ts';
@@ -14,6 +15,8 @@ import {type WorkerTileParameters} from './worker_source.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {type ActorMessage, MessageType} from '../util/actor_messages.ts';
 import {type MapSourceDataEvent} from '../ui/events.ts';
+
+class StubbedEvented extends Evented {}
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
@@ -115,7 +118,7 @@ describe('VectorTileSource', () => {
 
     test('fires "dataloading" event', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
-        const evented = new Evented();
+        const evented = new StubbedEvented();
         const dataloadingSpy = vi.fn();
         evented.on('dataloading', dataloadingSpy);
         const source = createSource({url: '/source.json', eventedParent: evented});
@@ -512,6 +515,31 @@ describe('VectorTileSource', () => {
         expect(result).toBeUndefined();
         expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
         expect(tile.etag).toBeUndefined();
+    });
+
+    test('swallows an AbortError from the worker request', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+        await waitForMetadataEvent(source);
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            aborted: false,
+            etag: undefined,
+            loadVectorData: vi.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync() {
+                return Promise.reject(new AbortError());
+            }
+        });
+
+        await expect(source.loadTile(tile)).resolves.toBeUndefined();
+        expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
     });
 
     test('stores worker etag on tile when present', async () => {

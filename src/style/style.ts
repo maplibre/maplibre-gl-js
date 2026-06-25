@@ -1,6 +1,6 @@
 import {throwIfAborted} from '../util/abort_error.ts';
-import {Event, ErrorEvent, Evented} from '../util/evented.ts';
-import {type StyleLayer} from './style_layer.ts';
+import {ErrorEvent, Evented} from '../util/evented.ts';
+import {MapSourceDataEvent, MapStyleDataEvent, MapStyleLoadEvent, type MapEventType} from '../ui/events.ts';
 import {isRasterStyleLayer} from './style_layer/raster_style_layer.ts';
 import {createStyleLayer} from './create_style_layer.ts';
 import {loadSprite} from './load_sprite.ts';
@@ -17,10 +17,8 @@ import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
 import {Dispatcher} from '../util/dispatcher.ts';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style.ts';
-import {type Source} from '../source/source.ts';
 import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features.ts';
 import {TileManager} from '../tile/tile_manager.ts';
-import {type GeoJSONSource} from '../source/geojson_source.ts';
 import {latest as styleSpec, derefLayers, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
@@ -29,6 +27,10 @@ import {PauseablePlacement} from './pauseable_placement.ts';
 import {ZoomHistory} from './zoom_history.ts';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
 import {validateCustomStyleLayer} from './style_layer/custom_style_layer.ts';
+
+import type {Source} from '../source/source.ts';
+import type {GeoJSONSource} from '../source/geojson_source.ts';
+import type {StyleLayer} from './style_layer.ts';
 import type {MapGeoJSONFeature, GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type Point from '@mapbox/point-geometry';
 
@@ -207,7 +209,7 @@ export type AddLayerObject = LayerSpecification | (Omit<LayerSpecification, 'sou
 /**
  * The Style base class
  */
-export class Style extends Evented {
+export class Style extends Evented<MapEventType> {
     map: Map;
     stylesheet: StyleSpecification;
     dispatcher: Dispatcher;
@@ -426,7 +428,7 @@ export class Style extends Evented {
     }
 
     async loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification): Promise<void> {
-        this.fire(new Event('dataloading', {dataType: 'style'}));
+        this.fire(new MapStyleDataEvent('dataloading'));
 
         options.validate = typeof options.validate === 'boolean' ?
             options.validate : true;
@@ -456,7 +458,7 @@ export class Style extends Evented {
     }
 
     loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification): void {
-        this.fire(new Event('dataloading', {dataType: 'style'}));
+        this.fire(new MapStyleDataEvent('dataloading'));
 
         this._frameRequest = new AbortController();
         browser.frameAsync(this._frameRequest, this.map._ownerWindow).then(() => {
@@ -467,7 +469,7 @@ export class Style extends Evented {
     }
 
     loadEmpty(): void {
-        this.fire(new Event('dataloading', {dataType: 'style'}));
+        this.fire(new MapStyleDataEvent('dataloading'));
         this._load(empty, {validate: false});
     }
 
@@ -502,8 +504,8 @@ export class Style extends Evented {
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
 
-        this.fire(new Event('data', {dataType: 'style'}));
-        this.fire(new Event('style.load'));
+        this.fire(new MapStyleDataEvent('data'));
+        this.fire(new MapStyleLoadEvent());
     }
 
     private _createLayers() {
@@ -583,7 +585,7 @@ export class Style extends Evented {
             }
 
             this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
-            this.fire(new Event('data', {dataType: 'style'}));
+            this.fire(new MapStyleDataEvent('data'));
 
             if (completion) {
                 completion(err);
@@ -601,7 +603,7 @@ export class Style extends Evented {
         this._availableImages = this.imageManager.listImages();
         this._changed = true;
         this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
-        this.fire(new Event('data', {dataType: 'style'}));
+        this.fire(new MapStyleDataEvent('data'));
     }
 
     _validateLayer(layer: StyleLayer): void {
@@ -794,10 +796,9 @@ export class Style extends Evented {
             // (undefine !== false) will evaluate to true and fire an useless visibility event
             // need force "falsy" values to boolean to avoid the case above
             if (!!managersUsedBefore[id] !== !!tileManager.used) {
-                tileManager.fire(new Event('data',
+                tileManager.fire(new MapSourceDataEvent('data',
                     {
                         sourceDataType: 'visibility',
-                        dataType: 'source',
                         sourceId: id
                     }));
             }
@@ -809,7 +810,7 @@ export class Style extends Evented {
         this.z = parameters.zoom;
 
         if (changed) {
-            this.fire(new Event('data', {dataType: 'style'}));
+            this.fire(new MapStyleDataEvent('data'));
         }
     }
 
@@ -895,7 +896,7 @@ export class Style extends Evented {
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
 
-        this.fire(new Event('style.load', {style: this}));
+        this.fire(new MapStyleLoadEvent({style: this}));
 
         return true;
     }
@@ -1005,7 +1006,7 @@ export class Style extends Evented {
         this._changedImages[id] = true;
         this._changed = true;
         this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
-        this.fire(new Event('data', {dataType: 'style'}));
+        this.fire(new MapStyleDataEvent('data'));
     }
 
     listImages(): string[] {
@@ -1061,7 +1062,7 @@ export class Style extends Evented {
         const tileManager = this.tileManagers[id];
         delete this.tileManagers[id];
         delete this._updatedSources[id];
-        tileManager.fire(new Event('data', {sourceDataType: 'metadata', dataType: 'source', sourceId: id}));
+        tileManager.fire(new MapSourceDataEvent('data', {sourceDataType: 'metadata', sourceId: id}));
         tileManager.setEventedParent(null);
         tileManager.onRemove(this.map);
         this._changed = true;
@@ -2016,7 +2017,7 @@ export class Style extends Evented {
         this._availableImages = this.imageManager.listImages();
         this._changed = true;
         this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
-        this.fire(new Event('data', {dataType: 'style'}));
+        this.fire(new MapStyleDataEvent('data'));
     }
 
     /**

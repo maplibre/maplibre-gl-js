@@ -64,23 +64,17 @@ describe('setStyle', () => {
         map.on('styledataloading', recordEvent);
         map.on('sourcedata', recordEvent);
         map.on('sourcedataloading', recordEvent);
-        map.on('tiledata', recordEvent);
-        map.on('tiledataloading', recordEvent);
 
         map.style.fire(new EventedEvent('data', {dataType: 'style'}));
         map.style.fire(new EventedEvent('dataloading', {dataType: 'style'}));
         map.style.fire(new EventedEvent('data', {dataType: 'source'}));
         map.style.fire(new EventedEvent('dataloading', {dataType: 'source'}));
-        map.style.fire(new EventedEvent('data', {dataType: 'tile'}));
-        map.style.fire(new EventedEvent('dataloading', {dataType: 'tile'}));
 
         expect(events).toEqual([
             'styledata',
             'styledataloading',
             'sourcedata',
-            'sourcedataloading',
-            'tiledata',
-            'tiledataloading'
+            'sourcedataloading'
         ]);
     });
 

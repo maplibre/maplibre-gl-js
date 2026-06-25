@@ -10,6 +10,8 @@ import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 
+class StubbedEvented extends Evented {}
+
 function createSource(options?: { canvas?: any; eventedParent?: any} & Partial<CanvasSourceSpecification>) {
     const c = options?.canvas || window.document.createElement('canvas');
     c.width = 20;
@@ -74,7 +76,7 @@ describe('CanvasSource', () => {
         const errorSpy = vi.fn();
         let eventedParent: Evented;
         beforeEach(() => {
-            eventedParent = new Evented();
+            eventedParent = new StubbedEvented();
             eventedParent.on('error', errorSpy);
         });
         afterEach(() => {
