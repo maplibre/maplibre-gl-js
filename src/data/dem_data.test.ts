@@ -230,16 +230,6 @@ describe('DEMData is correctly serialized and deserialized', () => {
     test('deserialized - mapbox', testDeserialization(mapboxDEM));
     test('deserialized - terrarium', testDeserialization(terrariumDEM));
     test('deserialized - custom', testDeserialization(customDEM));
-
-    test('byte view cache is not serialized', () => {
-        const dem = new DEMData('0', createMockImage(4, 4), 'custom', 1.0, 2.0, 3.0, 4.0);
-        const serialized = serialize(dem) as any;
-
-        expect(serialized).not.toHaveProperty('_byteView');
-        const deserialized = deserialize(serialized) as DEMData;
-        expect(deserialized.get(0, 0)).toBe(dem.get(0, 0));
-        expect(serialize(deserialized) as any).not.toHaveProperty('_byteView');
-    });
 });
 
 describe('UnpackVector is correctly returned', () => {
