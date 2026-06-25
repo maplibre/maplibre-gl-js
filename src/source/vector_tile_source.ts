@@ -247,7 +247,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         } catch (err) {
             delete tile.abortController;
 
-            if (tile.aborted) {
+            if (tile.aborted || isAbortError(err)) {
                 return;
             }
             if (err && err.status !== 404) {

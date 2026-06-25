@@ -8,6 +8,7 @@ import {extend} from '../util/util.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {getWrapDispatcher, sleep, waitForEvent} from '../util/test/util.ts';
+import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {RequestManager} from '../util/request_manager.ts';
@@ -233,6 +234,69 @@ describe('GeoJSONSource.setData', () => {
         source.setData({} as GeoJSON.GeoJSON);
         await promise;
         expect(source.loaded()).toBeTruthy();
+    });
+});
+
+describe('GeoJSONSource.loadTile', () => {
+    const mapStub = {
+        getPixelRatio() { return 1; },
+        showCollisionBoxes: false,
+        style: {
+            projection: {
+                get subdivisionGranularity() {
+                    return SubdivisionGranularitySetting.noSubdivision;
+                }
+            }
+        }
+    } as any;
+
+    test('swallows an AbortError from the worker request', async () => {
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() {
+                return Promise.reject(new AbortError());
+            }
+        }), undefined);
+        source.map = mapStub;
+
+        const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+        const loadVectorDataSpy = vi.spyOn(tile, 'loadVectorData');
+
+        await expect(source.loadTile(tile)).resolves.toBeUndefined();
+        expect(loadVectorDataSpy).not.toHaveBeenCalled();
+        expect(tile.abortController).toBeUndefined();
+    });
+
+    test('swallows a worker error when the tile was aborted', async () => {
+        const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), 512);
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() {
+                tile.aborted = true;
+                return Promise.reject(new Error('worker error'));
+            }
+        }), undefined);
+        source.map = mapStub;
+
+        const loadVectorDataSpy = vi.spyOn(tile, 'loadVectorData');
+
+        await expect(source.loadTile(tile)).resolves.toBeUndefined();
+        expect(loadVectorDataSpy).not.toHaveBeenCalled();
+        expect(tile.abortController).toBeUndefined();
+    });
+
+    test('rethrows a non-abort error from the worker request', async () => {
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() {
+                return Promise.reject(new Error('worker error'));
+            }
+        }), undefined);
+        source.map = mapStub;
+
+        const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+        const loadVectorDataSpy = vi.spyOn(tile, 'loadVectorData');
+
+        await expect(source.loadTile(tile)).rejects.toThrow('worker error');
+        expect(loadVectorDataSpy).not.toHaveBeenCalled();
+        expect(tile.abortController).toBeUndefined();
     });
 });
 
