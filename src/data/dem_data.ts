@@ -104,8 +104,8 @@ export class DEMData {
         this.min = Number.MAX_SAFE_INTEGER;
         this.max = Number.MIN_SAFE_INTEGER;
         for (let y = 0; y < dim; y++) {
-            let index = ((y + 1) * this.stride + 1) * 4;
-            for (let x = 0; x < dim; x++, index += 4) {
+            for (let x = 0; x < dim; x++) {
+                const index = this._idx(x, y) * 4;
                 const ele = this._unpackAtIndex(pixels, index);
                 if (ele > this.max) this.max = ele;
                 if (ele < this.min) this.min = ele;
