@@ -334,6 +334,7 @@ export class Placement {
         translationIcon: [number, number],
         iconBox?: SingleCollisionBox | null,
         getElevation?: (x: number, y: number) => number,
+        elevationOffset?: number,
         simpleProjectionMatrix?: mat4,
     ): {
         shift: Point;
@@ -357,6 +358,7 @@ export class Placement {
             getElevation,
             shift,
             simpleProjectionMatrix,
+            elevationOffset,
         );
 
         if (iconBox) {
@@ -373,6 +375,7 @@ export class Placement {
                 getElevation,
                 shift,
                 simpleProjectionMatrix,
+                elevationOffset,
             );
             if (!placedIconBoxes.placeable) return;
         }
@@ -468,6 +471,8 @@ export class Placement {
                 return;
             }
 
+            const symbolElevation = symbolInstance.elevation;
+
             let placeText = false;
             let placeIcon = false;
             let offscreen = true;
@@ -543,6 +548,7 @@ export class Placement {
                             getElevation,
                             undefined,
                             simpleProjectionMatrix,
+                            symbolElevation,
                         );
                         if (placedFeature?.placeable) {
                             this.markUsedOrientation(bucket, orientation, symbolInstance);
@@ -595,7 +601,7 @@ export class Placement {
                                 const result = this.attemptAnchorPlacement(
                                     textAnchorOffset, collisionTextBox, width, height,
                                     textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, tileID, unwrappedTileID,
-                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation);
+                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation, symbolElevation);
 
                                 if (result) {
                                     placedBox = result.placedGlyphBoxes;
@@ -630,6 +636,7 @@ export class Placement {
                                 getElevation,
                                 undefined,
                                 simpleProjectionMatrix,
+                                symbolElevation,
                             );
                             placedBox = {
                                 box: placedFakeGlyphBox.box,
@@ -736,6 +743,7 @@ export class Placement {
                         getElevation,
                         (hasIconTextFit && shift) ? shift : undefined,
                         simpleProjectionMatrix,
+                        symbolElevation,
                     );
                 };
 

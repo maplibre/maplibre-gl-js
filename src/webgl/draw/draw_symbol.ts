@@ -219,8 +219,10 @@ function updateVariableAnchorsForBucket(
             hideGlyphs(symbol.numGlyphs, dynamicTextLayoutVertexArray);
         } else  {
             const tileAnchor = new Point(symbol.anchorX, symbol.anchorY);
+            const getSymbolElevation = (x: number, y: number) => 
+                (getElevation ? getElevation(x, y) + symbol.elevation : symbol.elevation);
             const projectionContext: SymbolProjectionContext = {
-                getElevation,
+                getElevation: getSymbolElevation,
                 width: transform.width,
                 height: transform.height,
                 pitchedLabelPlaneMatrix,

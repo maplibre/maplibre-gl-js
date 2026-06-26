@@ -2,6 +2,7 @@ layout(location = 0) in vec4 a_pos_offset;
 layout(location = 1) in vec4 a_data;
 layout(location = 2) in vec3 a_projected_pos;
 layout(location = 3) in float a_fade_opacity;
+layout(location = 4) in float a_elevation;
 
 // contents of a_size vary based on the type of property value
 // used for {text,icon}-size.
@@ -57,7 +58,7 @@ void main() {
     float a_size_min = floor(a_size[0] * 0.5);
     float is_sdf = a_size[0] - 2.0 * a_size_min;
 
-    float ele = get_elevation(a_pos);
+    float ele = get_elevation(a_pos) + a_elevation;
     highp float segment_angle = -a_projected_pos[2];
     float size;
 
@@ -74,7 +75,8 @@ void main() {
 
     // compute total opacity and early exit if too transparent:
     vec2 fade_opacity = unpack_opacity(a_fade_opacity);
-    float visibility = calculate_visibility(projectedPoint);
+    // visibility is tested at the feature's ground position so we need to remove elevation offset
+    float visibility = calculate_visibility(a_elevation != 0.0 ? projectTileWithElevation(translated_a_pos, ele - a_elevation) : projectedPoint);
     float fade_change = fade_opacity[1] > 0.5 ? u_fade_change : -u_fade_change;
     float interpolated_fade_opacity = max(0.0, min(visibility, fade_opacity[0] + fade_change));
     float total_opacity = opacity * interpolated_fade_opacity;

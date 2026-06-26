@@ -1,0 +1,109 @@
+{
+    "version": 8,
+    "sprite": "local://sprites/sprite",
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "metadata": {
+        "test": {
+            "height": 512,
+            "width": 512,
+            "timeout": 60000,
+            "operations": [["wait"]]
+        }
+    },
+    "center": [35.2705, 30.9205],
+    "zoom": 17,
+    "bearing": 0,
+    "pitch": 60,
+    "terrain": {"source": "terrain", "exaggeration": 1},
+    "sources": {
+        "repeat": {
+            "type": "raster",
+            "tiles": ["local://tiles/white-with-x.png"],
+            "tileSize": 256
+        },
+        "terrain": {
+            "type": "raster-dem",
+            "tiles": ["local://tiles/terrain/{z}-{x}-{y}.terrain.png"],
+            "minzoom": 7,
+            "maxzoom": 12,
+            "tileSize": 256
+        },
+        "building": {
+            "type": "geojson",
+            "data": {
+                "type": "Feature",
+                "properties": {},
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [35.27038, 30.92034],
+                            [35.27038, 30.92066],
+                            [35.27062, 30.92066],
+                            [35.27062, 30.92034],
+                            [35.27038, 30.92034]
+                        ]
+                    ]
+                }
+            }
+        },
+        "marker": {
+            "type": "geojson",
+            "data": {
+                "type": "Feature",
+                "properties": {},
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [35.2705, 30.9205]
+                }
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {"background-color": "white"}
+        },
+        {
+            "id": "surface",
+            "type": "raster",
+            "source": "repeat"
+        },
+        {
+            "id": "building",
+            "type": "fill-extrusion",
+            "source": "building",
+            "paint": {
+                "fill-extrusion-color": "#8a98a8",
+                "fill-extrusion-base": 0,
+                "fill-extrusion-height": 60
+            }
+        },
+        {
+            "id": "marker",
+            "type": "symbol",
+            "source": "marker",
+            "layout": {
+                "symbol-placement": "point",
+                "symbol-elevation": 62,
+                "icon-image": "rocket-12",
+                "icon-size": 2,
+                "icon-allow-overlap": true,
+                "icon-ignore-placement": true,
+                "text-field": "roof",
+                "text-font": [
+                    "Open Sans Semibold",
+                    "Arial Unicode MS Bold"
+                ],
+                "text-offset": [0, 1],
+                "text-allow-overlap": true,
+                "text-ignore-placement": true
+            },
+            "paint": {
+                "text-halo-color": "#fff",
+                "text-halo-width": 1.5
+            }
+        }
+    ]
+}

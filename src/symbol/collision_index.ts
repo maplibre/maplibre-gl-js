@@ -113,14 +113,21 @@ export class CollisionIndex {
         getElevation?: (x: number, y: number) => number,
         shift?: Point,
         simpleProjectionMatrix?: mat4,
+        elevationOffset: number = 0,
     ): PlacedBox {
         const x = collisionBox.anchorPointX + translation[0];
         const y = collisionBox.anchorPointY + translation[1];
+
+        // `getElevation` is the feature's ground (terrain) elevation; the symbol is placed and
+        // drawn at the elevated position (ground + the `symbol-elevation` offset).
+        const getElevationWithOffset = elevationOffset !== 0 ?
+            (px: number, py: number) => (getElevation ? getElevation(px, py) : 0) + elevationOffset :
+            getElevation;
         const projectedPoint = this.projectAndGetPerspectiveRatio(
             x,
             y,
             unwrappedTileID,
-            getElevation,
+            getElevationWithOffset,
             simpleProjectionMatrix
         );
 
@@ -150,7 +157,7 @@ export class CollisionIndex {
                 rotateWithMap,
                 translation,
                 projectedPoint,
-                getElevation,
+                getElevationWithOffset,
                 shift,
                 simpleProjectionMatrix,
             );
