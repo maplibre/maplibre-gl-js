@@ -81,6 +81,14 @@ function createCameraGlobeZoomed() {
     });
 }
 
+async function simulateAllAnimationFrames(stub: ReturnType<typeof vi.spyOn>, camera: Camera & { simulateFrame: () => void }, duration: number) {
+    for (let t = 1; t <= duration; t++) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+        stub.mockImplementation(() => t);
+        camera.simulateFrame();
+    }
+}
+
 describe('calculateCameraOptionsFromTo', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
     const camera = createCamera({zoom: 1});
@@ -1957,15 +1965,11 @@ describe('flyTo', () => {
 
         const promise = camera.once('moveend');
 
+        const duration = 10;
         stub.mockImplementation(() => 0);
-        camera.flyTo({center: [1, 0], zoom: 20, minZoom, duration: 10});
+        camera.flyTo({center: [1, 0], zoom: 20, minZoom, duration});
 
-        // sample every frame across the animation so Math.min reflects the true arc bottom
-        for (let t = 1; t <= 10; t++) {
-            await new Promise(resolve => setTimeout(resolve, 0));
-            stub.mockImplementation(() => t);
-            camera.simulateFrame();
-        }
+        await simulateAllAnimationFrames(stub, camera, duration);
 
         await promise;
         expect(zoomSpy).toHaveBeenCalled();
@@ -1984,15 +1988,11 @@ describe('flyTo', () => {
 
         const promise = camera.once('moveend');
 
+        const duration = 10;
         stub.mockImplementation(() => 0);
-        camera.flyTo({center: [1, 0], zoom: 20, duration: 10});
+        camera.flyTo({center: [1, 0], zoom: 20, duration});
 
-        // sample every frame across the animation so Math.min reflects the true arc bottom
-        for (let t = 1; t <= 10; t++) {
-            await new Promise(resolve => setTimeout(resolve, 0));
-            stub.mockImplementation(() => t);
-            camera.simulateFrame();
-        }
+        await simulateAllAnimationFrames(stub, camera, duration);
 
         await promise;
         expect(zoomSpy).toHaveBeenCalled();
@@ -3865,15 +3865,11 @@ describe('flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
+            const duration = 10;
             stub.mockImplementation(() => 0);
-            camera.flyTo({center: [1, 0], zoom: 20, minZoom, duration: 10});
+            camera.flyTo({center: [1, 0], zoom: 20, minZoom, duration});
 
-            // sample every frame across the animation so Math.min reflects the true arc bottom
-            for (let t = 1; t <= 10; t++) {
-                await new Promise(resolve => setTimeout(resolve, 0));
-                stub.mockImplementation(() => t);
-                camera.simulateFrame();
-            }
+            await simulateAllAnimationFrames(stub, camera, duration);
 
             await promise;
             expect(zoomSpy).toHaveBeenCalled();
@@ -3892,15 +3888,11 @@ describe('flyTo globe projection', () => {
 
             const promise = camera.once('moveend');
 
+            const duration = 10;
             stub.mockImplementation(() => 0);
-            camera.flyTo({center: [1, 0], zoom: 20, duration: 10});
+            camera.flyTo({center: [1, 0], zoom: 20, duration});
 
-            // sample every frame across the animation so Math.min reflects the true arc bottom
-            for (let t = 1; t <= 10; t++) {
-                await new Promise(resolve => setTimeout(resolve, 0));
-                stub.mockImplementation(() => t);
-                camera.simulateFrame();
-            }
+            await simulateAllAnimationFrames(stub, camera, duration);
 
             await promise;
             expect(zoomSpy).toHaveBeenCalled();
