@@ -2067,15 +2067,13 @@ describe('flyTo', () => {
         stub.mockImplementation(() => 0);
         camera.flyTo({center: [40, 0], zoom: 10, duration: 10});
 
-        setTimeout(() => {
-            stub.mockImplementation(() => 5);
-            camera.simulateFrame();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        stub.mockImplementation(() => 5);
+        camera.simulateFrame();
 
-            setTimeout(() => {
-                stub.mockImplementation(() => 10);
-                camera.simulateFrame();
-            }, 0);
-        }, 0);
+        await new Promise(resolve => setTimeout(resolve, 0));
+        stub.mockImplementation(() => 10);
+        camera.simulateFrame();
 
         await promise;
 
