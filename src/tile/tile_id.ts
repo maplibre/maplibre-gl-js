@@ -281,8 +281,18 @@ export function calculateTileKey(wrap: number, overscaledZ: number, z: number, x
     return (dim * dim * wrap + dim * y + x).toString(36) + z.toString(36) + overscaledZ.toString(36);
 }
 
-// Inlined from @mapbox/whoots-js (ISC, Copyright (c) 2017 Mapbox), whose upstream
-// repo is archived. Returns the EPSG:3857 bounding box string for a tile.
+// EPSG:3857 uses the WGS84 spherical radius, which differs from the mean
+// earthRadius (6371008.8) that MercatorCoordinate is built on, so the bbox math
+// below can't reuse it without changing the emitted coordinates.
+const epsg3857Radius = 6378137;
+const epsg3857HalfCircumference = Math.PI * epsg3857Radius;
+
+/**
+ * Builds the `{bbox-epsg-3857}` token used in WMS tile URLs: the tile's bounding
+ * box in EPSG:3857 meters as a `minX,minY,maxX,maxY` string.
+ *
+ * Inlined from the archived @mapbox/whoots-js (ISC, Copyright (c) 2017 Mapbox).
+ */
 function getTileBBox(x: number, y: number, z: number): string {
     // for Google/OSM tile scheme we need to alter the y
     y = Math.pow(2, z) - y - 1;
@@ -294,9 +304,9 @@ function getTileBBox(x: number, y: number, z: number): string {
 }
 
 function getMercCoords(x: number, y: number, z: number): [number, number] {
-    const resolution = (2 * Math.PI * 6378137 / 256) / Math.pow(2, z);
-    const mercX = x * resolution - 2 * Math.PI * 6378137 / 2.0;
-    const mercY = y * resolution - 2 * Math.PI * 6378137 / 2.0;
+    const resolution = (2 * epsg3857HalfCircumference / 256) / Math.pow(2, z);
+    const mercX = x * resolution - epsg3857HalfCircumference;
+    const mercY = y * resolution - epsg3857HalfCircumference;
 
     return [mercX, mercY];
 }
