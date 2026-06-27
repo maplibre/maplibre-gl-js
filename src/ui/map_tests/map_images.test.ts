@@ -30,6 +30,8 @@ test('listImages throws an error if called before "load"', () => {
 test('map fires `styleimagemissing` for missing icons', async () => {
     const map = createMap();
 
+    await map.once('load');
+
     const id = 'missing-image';
 
     const sampleImage = {width: 2, height: 1, data: new Uint8Array(8)};
@@ -42,12 +44,104 @@ test('map fires `styleimagemissing` for missing icons', async () => {
 
     expect(map.hasImage(id)).toBeFalsy();
 
+    const generatedImagePromise = map.style.imageManager.getImages([id]);
+    expect(called).toBe(id);
+
+    const generatedImage = await generatedImagePromise;
+    expect(generatedImage[id].data.width).toEqual(sampleImage.width);
+    expect(generatedImage[id].data.height).toEqual(sampleImage.height);
+    expect(generatedImage[id].data.data).toEqual(sampleImage.data);
+    expect(called).toBe(id);
+    expect(map.hasImage(id)).toBeTruthy();
+});
+
+test('map waits for async `styleimagemissing` listeners', async () => {
+    const map = createMap();
+
+    const id = 'missing-image-async';
+    const sampleImage = {width: 2, height: 1, data: new Uint8Array(8)};
+
+    let called: string;
+    map.on('styleimagemissing', async e => {
+        await Promise.resolve();
+        map.addImage(e.id, sampleImage);
+        called = e.id;
+    });
+
+    expect(map.hasImage(id)).toBeFalsy();
+
     const generatedImage = await map.style.imageManager.getImages([id]);
     expect(generatedImage[id].data.width).toEqual(sampleImage.width);
     expect(generatedImage[id].data.height).toEqual(sampleImage.height);
     expect(generatedImage[id].data.data).toEqual(sampleImage.data);
     expect(called).toBe(id);
     expect(map.hasImage(id)).toBeTruthy();
+});
+
+test('map shares in-flight async `styleimagemissing` listeners for the same missing icon', async () => {
+    const map = createMap();
+
+    await map.once('load');
+
+    const id = 'missing-image-async-shared';
+    const sampleImage = {width: 2, height: 1, data: new Uint8Array(8)};
+    const requested = [];
+    let resolveMissingImage: () => void;
+
+    map.on('styleimagemissing', async e => {
+        requested.push(e.id);
+        await new Promise<void>((resolve) => {
+            resolveMissingImage = resolve;
+        });
+        map.addImage(e.id, sampleImage);
+    });
+
+    const firstGeneratedImagesPromise = map.style.imageManager.getImages([id]);
+    const secondGeneratedImagesPromise = map.style.imageManager.getImages([id]);
+
+    expect(requested).toEqual([id]);
+
+    resolveMissingImage();
+
+    const [firstGeneratedImages, secondGeneratedImages] = await Promise.all([
+        firstGeneratedImagesPromise,
+        secondGeneratedImagesPromise
+    ]);
+    expect(firstGeneratedImages[id].data.width).toEqual(sampleImage.width);
+    expect(secondGeneratedImages[id].data.width).toEqual(sampleImage.width);
+    expect(map.hasImage(id)).toBeTruthy();
+});
+
+test('map clears failed async `styleimagemissing` listeners from in-flight requests', async () => {
+    const map = createMap();
+
+    const id = 'missing-image-async-failed';
+    const error = new Error('missing image load failed');
+    const sampleImage = {width: 2, height: 1, data: new Uint8Array(8)};
+    let shouldFail = true;
+
+    map.on('styleimagemissing', async e => {
+        if (shouldFail) {
+            throw error;
+        }
+        map.addImage(e.id, sampleImage);
+    });
+
+    await expect(map.style.imageManager.getImages([id])).rejects.toBe(error);
+
+    shouldFail = false;
+    const generatedImages = await map.style.imageManager.getImages([id]);
+    expect(generatedImages[id].data.width).toEqual(sampleImage.width);
+    expect(map.hasImage(id)).toBeTruthy();
+});
+
+test('image manager clears in-flight missing image requests on destroy', () => {
+    const map = createMap();
+
+    map.style.imageManager.missingImageRequests.set('missing-image', Promise.resolve());
+    map.style.imageManager.destroy();
+
+    expect(map.style.imageManager.missingImageRequests.size).toBe(0);
 });
 
 test('map getImage matches addImage, uintArray', () => {

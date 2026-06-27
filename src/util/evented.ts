@@ -6,6 +6,8 @@ import {extend, type Subscription} from './util.ts';
 export type Listener = (a: any) => any;
 
 type Listeners<EventType extends Record<string, any>> = {[_ in keyof EventType]?: Listener[]};
+const asyncListenerPromises = Symbol('asyncListenerPromises');
+type AsyncEvent = Event & {[asyncListenerPromises]?: Array<PromiseLike<unknown>>};
 
 function _addEventListener<T extends Record<string, any>>(type: keyof T, listener: Listener, listenerList: Listeners<T>) {
     const listenerExists = listenerList[type]?.includes(listener);
@@ -21,6 +23,17 @@ function _removeEventListener<T extends Record<string, any>>(type: keyof T, list
         if (index !== -1) {
             listenerList[type].splice(index, 1);
         }
+    }
+}
+
+function _isPromiseLike(value: unknown): value is PromiseLike<unknown> {
+    return Boolean(value) && typeof (value as PromiseLike<unknown>).then === 'function';
+}
+
+function _trackAsyncListener(event: Event, result: unknown): void {
+    const promises = (event as AsyncEvent)[asyncListenerPromises];
+    if (promises && _isPromiseLike(result)) {
+        promises.push(result);
     }
 }
 
@@ -144,13 +157,13 @@ export abstract class Evented<EventType extends Record<string, any> = Record<str
             // make sure adding or removing listeners inside other listeners won't cause an infinite loop
             const listeners = this._listeners?.[type] ? this._listeners[type].slice() : [];
             for (const listener of listeners) {
-                listener.call(this, event);
+                _trackAsyncListener(event, listener.call(this, event));
             }
 
             const oneTimeListeners = this._oneTimeListeners?.[type] ? this._oneTimeListeners[type].slice() : [];
             for (const listener of oneTimeListeners) {
                 _removeEventListener(type, listener, this._oneTimeListeners);
-                listener.call(this, event);
+                _trackAsyncListener(event, listener.call(this, event));
             }
 
             const parent = this._eventedParent;
@@ -166,6 +179,31 @@ export abstract class Evented<EventType extends Record<string, any> = Record<str
         // console if they have no listeners.
         } else if (event instanceof ErrorEvent) {
             console.error(event.error);
+        }
+
+        return this;
+    }
+
+    protected async fireAsync(event: Event | string, properties?: any): Promise<this> {
+        if (typeof event === 'string') {
+            event = new Event(event, properties || {});
+        }
+
+        const promises: Array<PromiseLike<unknown>> = [];
+        const asyncEvent = event as AsyncEvent;
+        const previousPromises = asyncEvent[asyncListenerPromises];
+        // Store the collector on the event so parent listeners are included as the event bubbles.
+        asyncEvent[asyncListenerPromises] = promises;
+
+        try {
+            this.fire(event);
+            await Promise.all(promises);
+        } finally {
+            if (previousPromises) {
+                asyncEvent[asyncListenerPromises] = previousPromises;
+            } else {
+                delete asyncEvent[asyncListenerPromises];
+            }
         }
 
         return this;

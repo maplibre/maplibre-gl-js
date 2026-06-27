@@ -49,8 +49,9 @@ export class ImageManager extends Evented {
      */
     requestors: Array<{
         ids: string[];
-        promiseResolve: (value: GetImagesResponse) => void;
+        promiseResolve: (value: GetImagesResponse | PromiseLike<GetImagesResponse>) => void;
     }>;
+    missingImageRequests: Map<string, Promise<void>>;
 
     patterns: {[_: string]: Pattern};
     atlasImage: RGBAImage;
@@ -64,6 +65,7 @@ export class ImageManager extends Evented {
         this.callbackDispatchedThisFrame = {};
         this.loaded = false;
         this.requestors = [];
+        this.missingImageRequests = new Map();
 
         this.patterns = {};
         this.atlasImage = new RGBAImage({width: 1, height: 1});
@@ -82,6 +84,7 @@ export class ImageManager extends Evented {
         }
 
         this.patterns = {};
+        this.missingImageRequests.clear();
         this.atlasImage = new RGBAImage({width: 1, height: 1});
         this.dirty = true;
     }
@@ -218,17 +221,15 @@ export class ImageManager extends Evented {
         });
     }
 
-    _getImagesForIds(ids: string[]): GetImagesResponse {
+    async _getImagesForIds(ids: string[]): Promise<GetImagesResponse> {
+        const missingIds = Array.from(new Set(ids.filter((id) => !this.getImage(id))));
+
+        await Promise.all(missingIds.map((id) => this._notifyMissingImage(id)));
+
         const response: GetImagesResponse = {};
 
         for (const id of ids) {
-            let image = this.getImage(id);
-
-            if (!image) {
-                this.fire(new MapStyleImageMissingEvent({id}));
-                //Try to acquire image again in case styleimagemissing has populated it
-                image = this.getImage(id);
-            }
+            const image = this.getImage(id);
 
             if (image) {
                 // Clone the image so that our own copy of its ArrayBuffer doesn't get transferred.
@@ -249,6 +250,24 @@ export class ImageManager extends Evented {
             }
         }
         return response;
+    }
+
+    async _notifyMissingImage(id: string): Promise<void> {
+        if (this.getImage(id)) {
+            return;
+        }
+
+        let request = this.missingImageRequests.get(id);
+        if (!request) {
+            request = this.fireAsync(new MapStyleImageMissingEvent({id}))
+                .then(() => {})
+                .finally(() => {
+                    this.missingImageRequests.delete(id);
+                });
+            this.missingImageRequests.set(id, request);
+        }
+
+        await request;
     }
 
     // Pattern stuff
