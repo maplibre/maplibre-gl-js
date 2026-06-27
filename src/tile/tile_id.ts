@@ -1,4 +1,3 @@
-import {getTileBBox} from '@mapbox/whoots-js';
 import {EXTENT} from '../data/extent.ts';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
@@ -280,6 +279,26 @@ export function calculateTileKey(wrap: number, overscaledZ: number, z: number, x
     if (wrap < 0) wrap = wrap * -1 - 1;
     const dim = 1 << z;
     return (dim * dim * wrap + dim * y + x).toString(36) + z.toString(36) + overscaledZ.toString(36);
+}
+
+// Inlined from @mapbox/whoots-js (ISC, Copyright (c) 2017 Mapbox), whose upstream
+// repo is archived. Returns the EPSG:3857 bounding box string for a tile.
+function getTileBBox(x: number, y: number, z: number): string {
+    // for Google/OSM tile scheme we need to alter the y
+    y = Math.pow(2, z) - y - 1;
+
+    const min = getMercCoords(x * 256, y * 256, z);
+    const max = getMercCoords((x + 1) * 256, (y + 1) * 256, z);
+
+    return `${min[0]},${min[1]},${max[0]},${max[1]}`;
+}
+
+function getMercCoords(x: number, y: number, z: number): [number, number] {
+    const resolution = (2 * Math.PI * 6378137 / 256) / Math.pow(2, z);
+    const mercX = x * resolution - 2 * Math.PI * 6378137 / 2.0;
+    const mercY = y * resolution - 2 * Math.PI * 6378137 / 2.0;
+
+    return [mercX, mercY];
 }
 
 function getQuadkey(z:number, x:number, y:number): string {
