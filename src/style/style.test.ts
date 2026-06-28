@@ -817,6 +817,50 @@ describe('Style.update', () => {
         expect(setImagesIndex).toBeLessThan(updateLayersIndex);
     });
 
+    test('debounces setImages broadcast for removeImage', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+
+        style.addImage('img1', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
+        style.addImage('img2', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
+        style.update({} as EvaluationParameters);
+
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        style.dispatcher.broadcast = spy;
+
+        style.removeImage('img1');
+
+        expect(spy.mock.calls.filter(c => c[0] === MessageType.setImages)).toHaveLength(0);
+
+        style.update({} as EvaluationParameters);
+
+        const setImagesCalls = spy.mock.calls.filter(c => c[0] === MessageType.setImages);
+        expect(setImagesCalls).toHaveLength(1);
+        expect(setImagesCalls[0][1]).not.toContain('img1');
+        expect(setImagesCalls[0][1]).toContain('img2');
+    });
+
+    test('updateImage does not trigger setImages broadcast', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+
+        style.addImage('img1', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
+        style.update({} as EvaluationParameters);
+
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        style.dispatcher.broadcast = spy;
+
+        style.updateImage('img1', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
+        style.update({} as EvaluationParameters);
+
+        const setImagesCalls = spy.mock.calls.filter(c => c[0] === MessageType.setImages);
+        expect(setImagesCalls).toHaveLength(0);
+    });
+
     test('on error', async () => {
         const style = createStyle();
         style.loadJSON({
