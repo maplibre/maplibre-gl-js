@@ -33,7 +33,6 @@
 ### ✨ Features and improvements
 
 - Add `fill-layer-opacity` and `line-layer-opacity` paint properties, which apply opacity to the entire layer output uniformly ([#7570](https://github.com/maplibre/maplibre-gl-js/pull/7570)) (by [@CommanderStorm](https://github.com/CommanderStorm))
->>>>>>> 859ccd2a0677975219743548f336c9d95766b781
 - Build main and worker in same build context to extract shared chunk ([#7745](https://github.com/maplibre/maplibre-gl-js/pull/7745)) (by [@dangkyokhoang](https://github.com/dangkyokhoang))
 
 ### 🐞 Bug fixes
