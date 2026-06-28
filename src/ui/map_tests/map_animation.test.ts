@@ -12,7 +12,7 @@ test('stops camera animation on touchstart when interactive', () => {
     map.flyTo({center: [200, 0], duration: 100});
 
     simulate.touchstart(map.getCanvasContainer(), {touches: [{target: map.getCanvas(), clientX: 0, clientY: 0}]});
-    expect(map.isEasing()).toBe(false);
+    expect(map._camera.isEasing()).toBe(false);
 
     map.remove();
 });
@@ -22,7 +22,7 @@ test('continues camera animation on touchstart when non-interactive', () => {
     map.flyTo({center: [200, 0], duration: 100});
 
     simulate.touchstart(map.getCanvasContainer());
-    expect(map.isEasing()).toBe(true);
+    expect(map._camera.isEasing()).toBe(true);
 
     map.remove();
 });
@@ -46,7 +46,7 @@ test('stops camera animation on mousedown when interactive', () => {
     map.flyTo({center: [200, 0], duration: 100});
 
     simulate.mousedown(map.getCanvasContainer());
-    expect(map.isEasing()).toBe(false);
+    expect(map._camera.isEasing()).toBe(false);
 
     map.remove();
 });
@@ -56,7 +56,7 @@ test('continues camera animation on mousedown when non-interactive', () => {
     map.flyTo({center: [200, 0], duration: 100});
 
     simulate.mousedown(map.getCanvasContainer());
-    expect(map.isEasing()).toBe(true);
+    expect(map._camera.isEasing()).toBe(true);
 
     map.remove();
 });

@@ -981,10 +981,7 @@ export class Map extends Evented<MapEventType> {
         return coveringTiles(this._camera.transform, options);
     }
 
-    /**
-     * @deprecated use the map's public API instead.
-     * @returns the camera's transfrom
-     */
+    // This is not part of the public API and will be removed in future versions
     get transform(): ITransform { return this._camera.transform;}
 
     /**
@@ -1178,18 +1175,6 @@ export class Map extends Evented<MapEventType> {
      */
     getBearing(): number { return this._camera.transform.bearing; }
     /**
-     * Sets the map's zoom snap level.
-     *
-     * @param snap - The zoom snap level to set.
-     */
-    setZoomSnap(snap: number): this { this._camera.setZoomSnap(snap); return this; }
-    /**
-     * Returns the map's current zoom snap level.
-     *
-     * @returns The map's current zoom snap level.
-     */
-    getZoomSnap(): number { return this._camera.getZoomSnap(); }
-    /**
      * Sets the map's bearing (rotation). The bearing is the compass direction that is "up"; for example, a bearing
      * of 90° orients the map so that east is up.
      *
@@ -1206,6 +1191,18 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     setBearing(bearing: number, eventData?: any): this { this._camera.setBearing(bearing, eventData); return this; }
+    /**
+     * Returns the map's current zoom snap level.
+     *
+     * @returns The map's current zoom snap level.
+     */
+    getZoomSnap(): number { return this._camera.getZoomSnap(); }
+    /**
+     * Sets the map's zoom snap level.
+     *
+     * @param snap - The zoom snap level to set.
+     */
+    setZoomSnap(snap: number): this { this._camera.setZoomSnap(snap); return this; }
     /**
      * Returns the current padding applied around the map viewport.
      *
@@ -1462,7 +1459,6 @@ export class Map extends Evented<MapEventType> {
      * @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/fly-to-a-location-based-on-scroll-position/)
      */
     flyTo(options: FlyToOptions, eventData?: any): this { this._camera.flyTo(options, eventData); return this; }
-    isEasing(): boolean { return this._camera.isEasing(); }
     /**
      * Stops any animated transition underway.
      */
