@@ -437,8 +437,8 @@ describe('Style.loadJSON', () => {
         style._layers.background.fire(new Event('error', {mapLibre: true}));
 
         const e = await errorPromise;
-        expect(e.layer).toEqual({id: 'background'});
-        expect(e.mapLibre).toBeTruthy();
+        expect((e as any).layer).toEqual({id: 'background'});
+        expect((e as any).mapLibre).toBeTruthy();
     });
 
     test('sets terrain if defined', async () => {
@@ -1267,9 +1267,9 @@ describe('Style.addSource', () => {
             promisesResolve.error();
         });
         style.on('data', (e) => {
-            if (e.sourceDataType === 'metadata' && e.dataType === 'source') {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                 promisesResolve.metadata();
-            } else if (e.sourceDataType === 'content' && e.dataType === 'source') {
+            } else if (e.dataType === 'source' && e.sourceDataType === 'content') {
                 promisesResolve.content();
             } else {
                 promisesResolve.other();
@@ -2216,8 +2216,8 @@ describe('Style.addLayer', () => {
         style._layers.background.fire(new Event('error', {mapLibre: true}));
 
         const e = await errorPromise;
-        expect(e.layer).toEqual({id: 'background'});
-        expect(e.mapLibre).toBeTruthy();
+        expect((e as any).layer).toEqual({id: 'background'});
+        expect((e as any).mapLibre).toBeTruthy();
     });
 
     test('throws on non-existent vector source layer', async () => {

@@ -95,6 +95,61 @@ export type MarkerOptions = {
 };
 
 /**
+ * The event class for marker drag events (`dragstart`, `drag` and `dragend`).
+ *
+ * @group Event Related
+ */
+export class MarkerDragEvent extends Event {
+    type: 'dragstart' | 'drag' | 'dragend';
+    /**
+     * The `Marker` object that fired the event.
+     */
+    target: Marker;
+}
+
+/**
+ * The event class for the marker `click` event.
+ *
+ * @group Event Related
+ */
+export class MarkerClickEvent extends Event {
+    type: 'click';
+    /**
+     * The `Marker` object that fired the event.
+     */
+    target: Marker;
+    /**
+     * The DOM event which caused the marker click event.
+     */
+    originalEvent: MouseEvent;
+}
+
+/**
+ * `MarkerEventType` - a mapping between the marker event name and the event value.
+ * These events are used with the {@link Marker.on} method.
+ *
+ * @group Event Related
+ */
+export type MarkerEventType = {
+    /**
+     * Fired when dragging starts.
+     */
+    dragstart: MarkerDragEvent;
+    /**
+     * Fired while dragging.
+     */
+    drag: MarkerDragEvent;
+    /**
+     * Fired when the marker is finished being dragged.
+     */
+    dragend: MarkerDragEvent;
+    /**
+     * Fired when the marker is clicked.
+     */
+    click: MarkerClickEvent;
+};
+
+/**
  * Creates a marker component
  *
  * @group Markers and Controls
@@ -123,13 +178,13 @@ export type MarkerOptions = {
  *
  * ## Events
  *
- * **Event** `dragstart` of type {@link Event} will be fired when dragging starts.
+ * **Event** `dragstart` of type {@link MarkerDragEvent} will be fired when dragging starts.
  *
- * **Event** `drag` of type {@link Event} will be fired while dragging.
+ * **Event** `drag` of type {@link MarkerDragEvent} will be fired while dragging.
  *
- * **Event** `dragend` of type {@link Event} will be fired when the marker is finished being dragged.
+ * **Event** `dragend` of type {@link MarkerDragEvent} will be fired when the marker is finished being dragged.
  *
- * **Event** `click` of type {@link Event} will be fired when the marker is clicked.
+ * **Event** `click` of type {@link MarkerClickEvent} will be fired when the marker is clicked.
  *
  * ## CSS Classes
  *
@@ -145,7 +200,7 @@ export type MarkerOptions = {
  * }
  * ```
  */
-export class Marker extends Evented {
+export class Marker extends Evented<MarkerEventType> {
     _map: Map;
     _anchor: PositionAnchor;
     _offset: Point;
@@ -517,7 +572,7 @@ export class Marker extends Evented {
     }
 
     _onClick = (e: MouseEvent): void => {
-        this.fire(new Event('click', {originalEvent: e}));
+        this.fire(new MarkerClickEvent('click', {originalEvent: e}));
     };
 
     _onKeyPress = (e: KeyboardEvent): void => {
@@ -751,9 +806,9 @@ export class Marker extends Evented {
         // imply that a drag is about to happen.
         if (this._state === 'pending') {
             this._state = 'active';
-            this.fire(new Event('dragstart'));
+            this.fire(new MarkerDragEvent('dragstart'));
         }
-        this.fire(new Event('drag'));
+        this.fire(new MarkerDragEvent('drag'));
     };
 
     _onUp = (): void => {
@@ -767,7 +822,7 @@ export class Marker extends Evented {
 
         // only fire dragend if it was preceded by at least one drag event
         if (this._state === 'active') {
-            this.fire(new Event('dragend'));
+            this.fire(new MarkerDragEvent('dragend'));
         }
 
         this._state = 'inactive';

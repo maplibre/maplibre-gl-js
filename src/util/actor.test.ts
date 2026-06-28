@@ -47,7 +47,7 @@ describe('Actor', () => {
         actor.sendAsync({
             type: MessageType.getClusterExpansionZoom,
             data: {type: 'geojson', source: '', clusterId: 1729}
-        }, abortController);
+        }, abortController).catch(() => {});
 
         expect(addSpy).toHaveBeenCalledTimes(1);
 
@@ -98,7 +98,7 @@ describe('Actor', () => {
         await expect(p2).resolves.toBe(4104);
     });
 
-    test('cancel a request does not reject or resolve a promise', async () => {
+    test('aborting a request rejects its promise with an AbortError', async () => {
         const worker = await workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, async (_mapId, params) => {
             await sleep(200);
@@ -107,21 +107,15 @@ describe('Actor', () => {
 
         const m1 = new Actor(worker, '1');
 
-        let received = false;
         const abortController = new AbortController();
-        const p1 = m1.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: 'geojson', source: '', clusterId: 1729}}, abortController)
-            .then(() => received = true)
-            .catch(() => received = true);
+        const p1 = m1.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: 'geojson', source: '', clusterId: 1729}}, abortController);
 
         abortController.abort();
 
-        const p2 = new Promise((resolve) => (setTimeout(resolve, 500)));
-
-        await Promise.any([p1, p2]);
-        expect(received).toBeFalsy();
+        await expect(p1).rejects.toMatchObject({name: ABORT_ERROR});
     });
 
-    test('aborting a request will successfully abort it', async () => {
+    test('aborting a request rejects the caller and aborts the worker handler', async () => {
         const worker = await workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         let gotAbortSignal = false;
         worker.worker.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, (_mapId, _params, handlerAbortController) => {
@@ -136,17 +130,13 @@ describe('Actor', () => {
 
         const m1 = new Actor(worker, '1');
 
-        let received = false;
         const abortController = new AbortController();
-        m1.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: 'geojson', source: '', clusterId: 1729}}, abortController)
-            .then(() => received = true)
-            .catch(() => received = true);
+        const p1 = m1.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: 'geojson', source: '', clusterId: 1729}}, abortController);
 
         abortController.abort();
 
-        await sleep(500);
-
-        expect(received).toBeFalsy();
+        await expect(p1).rejects.toMatchObject({name: ABORT_ERROR});
+        await sleep(300);
         expect(gotAbortSignal).toBeTruthy();
     });
 
@@ -163,18 +153,13 @@ describe('Actor', () => {
             worker.worker.actor.process();
         };
 
-        let received = false;
         const abortController = new AbortController();
-        const p1 = actor.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: 'geojson', source: '', clusterId: 1729}, mustQueue: true}, abortController)
-            .then(() => received = true)
-            .catch(() => received = true);
+        const p1 = actor.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: 'geojson', source: '', clusterId: 1729}, mustQueue: true}, abortController);
 
         abortController.abort();
 
-        const p2 = sleep(500);
-
-        await Promise.any([p1, p2]);
-        expect(received).toBeFalsy();
+        await expect(p1).rejects.toMatchObject({name: ABORT_ERROR});
+        await sleep(500);
         expect(spy).not.toHaveBeenCalled();
     });
 
