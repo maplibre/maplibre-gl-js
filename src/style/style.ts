@@ -737,10 +737,6 @@ export class Style extends Evented<MapEventType> {
 
         const changed = this._changed;
         if (changed) {
-            // Broadcast available images once per frame, debounced from
-            // _afterImageUpdated. This must happen before any other worker
-            // messages (updateLayers, reloadSource, reloadTile) so the worker
-            // has the current list before any tile parsing begins.
             if (this._imagesListDirty) {
                 this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
                 this._imagesListDirty = false;
