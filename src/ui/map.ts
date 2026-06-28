@@ -982,11 +982,16 @@ export class Map extends Evented<MapEventType> {
     }
 
     /**
-     * A callback used to defer camera updates or apply arbitrary constraints.
+     * @deprecated use the map's public API instead.
+     * @returns the camera's transfrom
+     */
+    get transform(): ITransform { return this._camera.transform}
+
+    /**
+     * Sets the callback used to defer camera updates or apply arbitrary constraints.
      * If specified, this Camera instance can be used as a stateless component in React etc.
      */
-    get transformCameraUpdate(): CameraUpdateTransformFunction | null { return this._camera.transformCameraUpdate; }
-    set transformCameraUpdate(value: CameraUpdateTransformFunction | null) { this._camera.transformCameraUpdate = value; }
+    setTransformCameraUpdate(value: CameraUpdateTransformFunction | null): void { this._camera.transformCameraUpdate = value; }
 
     /**
      * Returns the map's geographical centerpoint.
