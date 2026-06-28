@@ -1,12 +1,12 @@
 ## main
 ### ✨ Features and improvements
 - Reduce allocation pressure while constructing DEM data and sampling terrain elevations ([#7814](https://github.com/maplibre/maplibre-gl-js/pull/7814)) (by [@DoFabien](https://github.com/DoFabien))
-- ⚠️ `Map` now composes a `Camera` instead of extending it (`Map` extends `Evented` directly and forwards the camera API). `map instanceof Camera` is no longer true, and the internal `map.transform` accessor has been removed — use `map._camera.transform` instead. `Camera` no longer owns the gesture handlers: the `HandlerManager` is now owned by `Map` (`map.handlers`) and the `Camera` is decoupled from it, receiving only a `stopHandlers` callback in its init options. This breaks the circular dependency between `Camera` and `HandlerManager` (by [@HarelM](https://github.com/HarelM))
+- ⚠️ `Map` now composes a `Camera` instead of extending it (`Map` extends `Evented` directly and forwards the camera API). The internal `map.transform` accessor has been marked as deprecated — use map's public API instead. ([#7800](https://github.com/maplibre/maplibre-gl-js/pull/7800)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 
-- Fix a memory leak where aborting a worker request (e.g. a GeoJSON tile load cancelled while panning) left its promise pending forever, so the awaiting async frame and everything it captured was never released; `Actor.sendAsync` now rejects with an `AbortError` on abort (by [@kamil-sienkiewicz-asi](https://github.com/kamil-sienkiewicz-asi))
+- Fix a memory leak where aborting a worker request (e.g. a GeoJSON tile load cancelled while panning) left its promise pending forever, so the awaiting async frame and everything it captured was never released; `Actor.sendAsync` now rejects with an `AbortError` on abort ([#7826](https://github.com/maplibre/maplibre-gl-js/pull/7826)) (by [@kamil-sienkiewicz-asi](https://github.com/kamil-sienkiewicz-asi))
 
 ## 6.0.0-17
 
