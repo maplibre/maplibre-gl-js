@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Reduce allocation pressure while constructing DEM data and sampling terrain elevations ([#7814](https://github.com/maplibre/maplibre-gl-js/pull/7814)) (by [@DoFabien](https://github.com/DoFabien))
+- Support async `styleimagemissing` handlers for missing image loading ([#7839](https://github.com/maplibre/maplibre-gl-js/pull/7839)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
