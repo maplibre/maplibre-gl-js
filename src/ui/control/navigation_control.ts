@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
 
 import {DOM} from '../../util/dom.ts';
-import {extend, getAngleDelta} from '../../util/util.ts';
+import {degreesToRadians, extend, getAngleDelta} from '../../util/util.ts';
 import {DragHandler, type DragMoveHandler, type DragRotateResult} from '../handler/drag_handler.ts';
 import {MouseOrTouchMoveStateManager} from '../handler/drag_move_state_manager.ts';
 
@@ -98,19 +98,23 @@ export class NavigationControl implements IControl {
     };
 
     _rotateCompassArrow = (): void => {
+        const pitch = this._map.getPitch();
+        const roll = this._map.getRoll();
+        const bearing = this._map.getBearing();
+        const pitchScale = 1 / Math.pow(Math.cos(degreesToRadians(pitch)), 0.5);
         if (this.options.visualizePitch && this.options.visualizeRoll) {
-            this._compassIcon.style.transform = `scale(${1 / Math.pow(Math.cos(this._map.transform.pitchInRadians), 0.5)}) rotateZ(${-this._map.transform.roll}deg) rotateX(${this._map.transform.pitch}deg) rotateZ(${-this._map.transform.bearing}deg)`;
+            this._compassIcon.style.transform = `scale(${pitchScale}) rotateZ(${-roll}deg) rotateX(${pitch}deg) rotateZ(${-bearing}deg)`;
             return;
         }
         if (this.options.visualizePitch) {
-            this._compassIcon.style.transform = `scale(${1 / Math.pow(Math.cos(this._map.transform.pitchInRadians), 0.5)}) rotateX(${this._map.transform.pitch}deg) rotateZ(${-this._map.transform.bearing}deg)`;
+            this._compassIcon.style.transform = `scale(${pitchScale}) rotateX(${pitch}deg) rotateZ(${-bearing}deg)`;
             return;
         }
         if (this.options.visualizeRoll) {
-            this._compassIcon.style.transform = `rotate(${-this._map.transform.bearing - this._map.transform.roll}deg)`;
+            this._compassIcon.style.transform = `rotate(${-bearing - roll}deg)`;
             return;
         }
-        this._compassIcon.style.transform = `rotate(${-this._map.transform.bearing}deg)`;
+        this._compassIcon.style.transform = `rotate(${-bearing}deg)`;
     };
 
     /** {@inheritDoc IControl.onAdd} */

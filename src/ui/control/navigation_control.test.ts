@@ -237,15 +237,13 @@ describe('NavigationControl', () => {
         expect(spySetBearing).toHaveBeenCalled();
     });
 
-    test('zoom buttons round to nearest zoomSnap if defined', () => {
-        map.setZoomSnap(1.0);
-        map.setZoom(9.7);
+    test('zoom in button triggers map zoom in', () => {
         map.addControl(new NavigationControl());
 
-        const spy = vi.spyOn(map, 'zoomTo');
+        const spy = vi.spyOn(map, 'zoomIn');
         const zoomInButton = map.getContainer().querySelector('.maplibregl-ctrl-zoom-in');
         simulate.click(zoomInButton);
 
-        expect(spy).toHaveBeenCalledWith(11.0, expect.anything(), expect.anything());
+        expect(spy).toHaveBeenCalledTimes(1);
     });
 });

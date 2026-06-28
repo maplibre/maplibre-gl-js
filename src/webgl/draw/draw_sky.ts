@@ -1,20 +1,21 @@
+import posAttributes from '../../data/pos_attributes.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g.ts';
-import posAttributes from '../../data/pos_attributes.ts';
 import {SegmentVector} from '../../data/segment.ts';
 import {skyUniformValues} from '../program/sky_program.ts';
 import {atmosphereUniformValues} from '../program/atmosphere_program.ts';
-import {type Sky} from '../../style/sky.ts';
-import {type Light} from '../../style/light.ts';
+import {getGlobeRadiusPixels} from '../../geo/projection/globe_utils.ts';
 import {Mesh} from '../../render/mesh.ts';
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {type IReadonlyTransform} from '../../geo/transform_interface.ts';
 import {ColorMode} from '../color_mode.ts';
+
+import type {Sky} from '../../style/sky.ts';
+import type {Light} from '../../style/light.ts';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {Painter} from '../../render/painter.ts';
-import {type Context} from '../context.ts';
-import {getGlobeRadiusPixels} from '../../geo/projection/globe_utils.ts';
+import type {Context} from '../context.ts';
 
 function getMesh(context: Context, sky: Sky): Mesh {
     // Create the Sky mesh the first time we need it
@@ -43,7 +44,7 @@ export function drawSky(painter: Painter, sky: Sky): void {
     const context = painter.context;
     const gl = context.gl;
 
-    const skyUniforms = skyUniformValues(sky, painter.style.map.transform, painter.pixelRatio);
+    const skyUniforms = skyUniformValues(sky, painter.transform, painter.pixelRatio);
 
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const stencilMode = StencilMode.disabled;
