@@ -985,7 +985,7 @@ export class Map extends Evented<MapEventType> {
      * @deprecated use the map's public API instead.
      * @returns the camera's transfrom
      */
-    get transform(): ITransform { return this._camera.transform}
+    get transform(): ITransform { return this._camera.transform;}
 
     /**
      * Sets the callback used to defer camera updates or apply arbitrary constraints.
