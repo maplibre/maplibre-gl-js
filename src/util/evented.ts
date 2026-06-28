@@ -184,7 +184,7 @@ export abstract class Evented<EventType extends Record<string, any> = Record<str
         return this;
     }
 
-    protected async fireAsync(event: Event): Promise<this> {
+    protected async fireAndWaitForListeners(event: Event): Promise<this> {
         const promises: Array<PromiseLike<unknown>> = [];
         const asyncEvent = event as AsyncEvent;
         // Store the collector on the event so parent listeners are included as the event bubbles.

@@ -259,7 +259,7 @@ export class ImageManager extends Evented {
 
         let request = this.missingImageRequests.get(id);
         if (!request) {
-            request = this.fireAsync(new MapStyleImageMissingEvent({id}))
+            request = this.fireAndWaitForListeners(new MapStyleImageMissingEvent({id}))
                 .then(() => {})
                 .finally(() => {
                     this.missingImageRequests.delete(id);
