@@ -184,14 +184,9 @@ export abstract class Evented<EventType extends Record<string, any> = Record<str
         return this;
     }
 
-    protected async fireAsync(event: Event | string, properties?: any): Promise<this> {
-        if (typeof event === 'string') {
-            event = new Event(event, properties || {});
-        }
-
+    protected async fireAsync(event: Event): Promise<this> {
         const promises: Array<PromiseLike<unknown>> = [];
         const asyncEvent = event as AsyncEvent;
-        const previousPromises = asyncEvent[asyncListenerPromises];
         // Store the collector on the event so parent listeners are included as the event bubbles.
         asyncEvent[asyncListenerPromises] = promises;
 
@@ -199,11 +194,7 @@ export abstract class Evented<EventType extends Record<string, any> = Record<str
             this.fire(event);
             await Promise.all(promises);
         } finally {
-            if (previousPromises) {
-                asyncEvent[asyncListenerPromises] = previousPromises;
-            } else {
-                delete asyncEvent[asyncListenerPromises];
-            }
+            delete asyncEvent[asyncListenerPromises];
         }
 
         return this;

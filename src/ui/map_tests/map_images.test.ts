@@ -78,6 +78,37 @@ test('map waits for async `styleimagemissing` listeners', async () => {
     expect(map.hasImage(id)).toBeTruthy();
 });
 
+test('map does not refire `styleimagemissing` for images added by another missing-image listener', async () => {
+    const map = createMap();
+
+    await map.once('load');
+
+    const firstId = 'missing-image-first';
+    const secondId = 'missing-image-second';
+    const firstImage = {width: 2, height: 1, data: new Uint8Array(8)};
+    const secondImage = {width: 1, height: 2, data: new Uint8Array(8)};
+    const requested = [];
+
+    map.on('styleimagemissing', e => {
+        requested.push(e.id);
+
+        if (!map.hasImage(firstId)) {
+            map.addImage(firstId, firstImage);
+        }
+        if (!map.hasImage(secondId)) {
+            map.addImage(secondId, secondImage);
+        }
+    });
+
+    const generatedImages = await map.style.imageManager.getImages([firstId, secondId]);
+
+    expect(requested).toEqual([firstId]);
+    expect(generatedImages[firstId].data.width).toEqual(firstImage.width);
+    expect(generatedImages[secondId].data.width).toEqual(secondImage.width);
+    expect(map.hasImage(firstId)).toBeTruthy();
+    expect(map.hasImage(secondId)).toBeTruthy();
+});
+
 test('map shares in-flight async `styleimagemissing` listeners for the same missing icon', async () => {
     const map = createMap();
 
