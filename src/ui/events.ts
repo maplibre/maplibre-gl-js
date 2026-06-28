@@ -240,9 +240,9 @@ export type MapEventType = {
     /**
      * Fired when an icon or pattern needed by the style is missing. The missing image can
      * be added with {@link Map.addImage} within this event listener callback to prevent the image from
-     * being skipped. If the listener returns a promise, the image request waits for the promise to
-     * resolve before checking whether the image has been added. If the promise rejects, the image
-     * request rejects. This event can be used to dynamically generate icons and patterns.
+     * being skipped. If one or more listeners return promises, the image request waits for those
+     * promises to resolve before checking whether the image has been added. If a promise rejects,
+     * the image request rejects. This event can be used to dynamically generate icons and patterns.
      * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/generate-and-add-a-missing-icon-to-the-map/)
      */
     styleimagemissing: MapStyleImageMissingEvent;
@@ -862,9 +862,9 @@ export class MapContextEvent extends MapLibreEvent<WebGLContextEvent> {
 };
 
 /**
- * The style image missing event. If a listener returns a promise, the image request waits for
- * the promise to resolve before checking whether the image has been added. If the promise rejects,
- * the image request rejects.
+ * The style image missing event. If one or more listeners return promises, the image request waits
+ * for those promises to resolve before checking whether the image has been added. If a promise
+ * rejects, the image request rejects.
  *
  * @group Event Related
  *
