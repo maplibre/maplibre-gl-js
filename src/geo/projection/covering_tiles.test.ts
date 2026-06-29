@@ -13,26 +13,26 @@ describe('coveringTiles', () => {
             transform.resize(128, 128);
             transform.setCenter(new LngLat(0.0, 0.0));
             transform.setZoom(-1);
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
-    
+
             expect(tiles).toEqual([
                 new OverscaledTileID(0, 0, 0, 0, 0)
             ]);
         });
-    
+
         test('zoomed in', () => {
             const transform = new GlobeTransform();
             transform.resize(128, 128);
             transform.setCenter(new LngLat(-0.02, 0.01));
             transform.setZoom(3);
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
-    
+
             expect(tiles).toEqual([
                 new OverscaledTileID(3, 0, 3, 3, 3),
                 new OverscaledTileID(3, 0, 3, 3, 4),
@@ -40,17 +40,17 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(3, 0, 3, 4, 4),
             ]);
         });
-    
+
         test('zoomed in 512x512', () => {
             const transform = new GlobeTransform();
             transform.resize(512, 512);
             transform.setCenter(new LngLat(-0.02, 0.01));
             transform.setZoom(3);
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
-    
+
             expect(tiles).toEqual([
                 new OverscaledTileID(3, 0, 3, 3, 3),
                 new OverscaledTileID(3, 0, 3, 3, 4),
@@ -62,7 +62,7 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(3, 0, 3, 5, 4)
             ]);
         });
-    
+
         test('pitched', () => {
             const transform = new GlobeTransform();
             transform.resize(128, 128);
@@ -70,11 +70,11 @@ describe('coveringTiles', () => {
             transform.setZoom(8);
             transform.setMaxPitch(80);
             transform.setPitch(80);
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
-    
+
             expect(tiles).toEqual([
                 new OverscaledTileID(6, 0, 6, 32, 31),
                 new OverscaledTileID(6, 0, 6, 31, 31),
@@ -93,11 +93,11 @@ describe('coveringTiles', () => {
             transform.setMaxPitch(80);
             transform.setPitch(80);
             transform.setBearing(45);
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
-    
+
             expect(tiles).toEqual([
                 new OverscaledTileID(7, 0, 7, 64, 64),
                 new OverscaledTileID(7, 0, 7, 64, 63),
@@ -107,17 +107,17 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(10, 0, 10, 511, 513)
             ]);
         });
-    
+
         test('antimeridian1', () => {
             const transform = new GlobeTransform();
             transform.resize(128, 128);
             transform.setCenter(new LngLat(179.99, -0.001));
             transform.setZoom(5);
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
-    
+
             expect(tiles).toEqual([
                 new OverscaledTileID(5, 0, 5, 31, 16),
                 new OverscaledTileID(5, 0, 5, 31, 15),
@@ -125,17 +125,17 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(5, 1, 5, 0, 15),
             ]);
         });
-    
+
         test('antimeridian2', () => {
             const transform = new GlobeTransform();
             transform.resize(128, 128);
             transform.setCenter(new LngLat(-179.99, 0.001));
             transform.setZoom(5);
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
             });
-    
+
             expect(tiles).toEqual([
                 new OverscaledTileID(5, 0, 5, 0, 15),
                 new OverscaledTileID(5, 0, 5, 0, 16),
@@ -143,20 +143,20 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(5, -1, 5, 31, 16),
             ]);
         });
-    
+
         test('zoom < 0', () => {
             const transform = new GlobeTransform();
             transform.resize(128, 128);
             transform.setCenter(new LngLat(0.0, 80.0));
             transform.setZoom(-0.5);
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 0,
                 reparseOverscaled: true
             });
-    
+
             expect(tiles).toEqual([
                 new OverscaledTileID(0, 0, 0, 0, 0)
             ]);
@@ -168,52 +168,52 @@ describe('coveringTiles', () => {
             transform.setZoom(11);
             transform.setPitch(0);
             transform.setCenter(new LngLat(-179.73, -0.087));
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 15,
                 reparseOverscaled: true
             });
-    
+
             expect(tiles).toEqual([
                 new OverscaledTileID(11, 0, 11, 1, 1024)
             ]);
         });
-        
+
         test('zoom = 11, mid lat', () => {
             const transform = new GlobeTransform();
             transform.resize(128, 128);
             transform.setZoom(11);
             transform.setPitch(0);
             transform.setCenter(new LngLat(-179.73, 60.02));
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 15,
                 reparseOverscaled: true
             });
-    
+
             expect(tiles).toEqual([
                 new OverscaledTileID(11, 0, 11, 1, 594)
             ]);
         });
-        
+
         test('zoom = 11, high lat', () => {
             const transform = new GlobeTransform();
             transform.resize(128, 128);
             transform.setZoom(11);
             transform.setPitch(0);
             transform.setCenter(new LngLat(-179.73, 85.028));
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 15,
                 reparseOverscaled: true
             });
-    
+
             expect(tiles).toEqual([
                 new OverscaledTileID(11, 0, 11, 1, 1)
             ]);
@@ -225,33 +225,33 @@ describe('coveringTiles', () => {
             transform.setZoom(11);
             transform.setPitch(0);
             transform.setCenter(new LngLat(-58.97, 60.02));
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 15,
                 reparseOverscaled: true
             });
-    
+
             expect(tiles).toEqual([
                 new OverscaledTileID(11, 0, 11, 688, 594)
             ]);
         });
-        
+
         test('zoom = 11, mid lng', () => {
             const transform = new GlobeTransform();
             transform.resize(128, 128);
             transform.setZoom(11);
             transform.setPitch(0);
             transform.setCenter(new LngLat(-58.97, -0.087));
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 15,
                 reparseOverscaled: true
             });
-    
+
             expect(tiles).toEqual([
                 new OverscaledTileID(11, 0, 11, 688, 1024)
             ]);
@@ -387,46 +387,46 @@ describe('coveringTiles', () => {
             maxzoom: 10,
             tileSize: 512
         };
-    
+
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         transform.resize(200, 200);
-    
+
         test('general', () => {
-    
+
             // make slightly off center so that sort order is not subject to precision issues
             transform.setCenter(new LngLat(-0.01, 0.01));
-    
+
             transform.setZoom(0);
             expect(coveringTiles(transform, options)).toEqual([]);
-    
+
             transform.setZoom(1);
             expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 1, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1),
                 new OverscaledTileID(1, 0, 1, 1, 1)]);
-    
+
             transform.setZoom(2.4);
             expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(2, 0, 2, 1, 1),
                 new OverscaledTileID(2, 0, 2, 2, 1),
                 new OverscaledTileID(2, 0, 2, 1, 2),
                 new OverscaledTileID(2, 0, 2, 2, 2)]);
-    
+
             transform.setZoom(10);
             expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(10, 0, 10, 511, 511),
                 new OverscaledTileID(10, 0, 10, 512, 511),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512)]);
-    
+
             transform.setZoom(11);
             expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(10, 0, 10, 511, 511),
                 new OverscaledTileID(10, 0, 10, 512, 511),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512)]);
-    
+
             transform.resize(2048, 128);
             transform.setZoom(9);
             transform.setPadding({top: 16});
@@ -441,7 +441,7 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(9, 0, 9, 257, 256),
                 new OverscaledTileID(9, 0, 9, 253, 255),
                 new OverscaledTileID(9, 0, 9, 253, 256)]);
-    
+
             transform.setPadding({top: 0});
             transform.setZoom(5.1);
             transform.setPitch(60.0);
@@ -471,7 +471,7 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(5, 0, 5, 24, 9),
                 new OverscaledTileID(5, 0, 5, 22, 7)
             ]);
-    
+
             transform.setZoom(8);
             transform.setPitch(85.0);
             transform.setBearing(0.0);
@@ -485,7 +485,7 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(9, 0, 9, 285, 198),
                 new OverscaledTileID(9, 0, 9, 285, 199)
             ]);
-    
+
             transform.setZoom(8);
             transform.setPitch(60);
             transform.setBearing(45.0);
@@ -496,7 +496,7 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(8, 0, 8, 145, 73),
                 new OverscaledTileID(8, 0, 8, 146, 74)
             ]);
-    
+
             transform.resize(50, 300);
             expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(8, 0, 8, 145, 74),
@@ -504,8 +504,8 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(8, 0, 8, 146, 74),
                 new OverscaledTileID(8, 0, 8, 146, 73)
             ]);
-            
-            const optionsWithCustomTileLoading = { 
+
+            const optionsWithCustomTileLoading = {
                 minzoom: 1,
                 maxzoom: 10,
                 tileSize: 512,
@@ -527,10 +527,10 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(7, 0, 7, 72, 36)
             ]);
         });
-    
+
         test('calculates tile coverage with low number of zoom levels and low tile count', () => {
-        
-            const optionsWithTileLodParams = { 
+
+            const optionsWithTileLodParams = {
                 minzoom: 1,
                 maxzoom: 10,
                 tileSize: 512,
@@ -541,10 +541,10 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(5, 0, 5, 18, 8)
             ]);
         });
-    
+
         test('calculates tile coverage with low tile count', () => {
-        
-            const optionsWithTileLodParams = { 
+
+            const optionsWithTileLodParams = {
                 minzoom: 1,
                 maxzoom: 10,
                 tileSize: 512,
@@ -557,10 +557,10 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(6, 0, 6, 36, 17)
             ]);
         });
-    
+
         test('calculates tile coverage with low number of zoom levels', () => {
-        
-            const optionsWithTileLodParams = { 
+
+            const optionsWithTileLodParams = {
                 minzoom: 1,
                 maxzoom: 10,
                 tileSize: 512,
@@ -576,7 +576,7 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(9, 0, 9, 291, 148)
             ]);
         });
-    
+
         test('calculates tile coverage at w > 0', () => {
             transform.setZoom(2);
             transform.setPitch(0);
@@ -590,7 +590,7 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(2, 2, 2, 0, 2)
             ]);
         });
-    
+
         test('calculates tile coverage at w = -1', () => {
             transform.setCenter(new LngLat(-360.01, 0.01));
             expect(coveringTiles(transform, options)).toEqual([
@@ -600,7 +600,7 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(2, -1, 2, 2, 2)
             ]);
         });
-    
+
         test('calculates tile coverage across meridian', () => {
             transform.setZoom(1);
             transform.setCenter(new LngLat(-180.01, 0.01));
@@ -611,7 +611,7 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(1, -1, 1, 1, 1)
             ]);
         });
-    
+
         test('only includes tiles for a single world, if renderWorldCopies is set to false', () => {
             transform.setZoom(1);
             transform.setCenter(new LngLat(-180.01, 0.01));
@@ -621,7 +621,7 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(1, 0, 1, 0, 1)
             ]);
         });
-    
+
         test('overscaledZ', () => {
             const options = {
                 minzoom: 1,
@@ -629,28 +629,28 @@ describe('coveringTiles', () => {
                 tileSize: 256,
                 reparseOverscaled: true
             };
-        
+
             const transform = new MercatorTransform({minZoom: 0, maxZoom: 10, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
             transform.resize(10, 400);
             // make slightly off center so that sort order is not subject to precision issues
             transform.setCenter(new LngLat(-0.01, 0.01));
             transform.setPitch(85);
             transform.setFov(10);
-        
+
             transform.setZoom(10);
             const tiles = coveringTiles(transform, options);
             for (const tile of tiles) {
                 expect(tile.overscaledZ).toBeGreaterThanOrEqual(tile.canonical.z);
             }
         });
-    
+
         test('maxzoom-0', () => {
             const options = {
                 minzoom: 0,
                 maxzoom: 0,
                 tileSize: 512
             };
-        
+
             const transform = new MercatorTransform({minZoom: 0, maxZoom: 0, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
             transform.resize(200, 200);
             transform.setCenter(new LngLat(0.01, 0.01));
@@ -659,7 +659,7 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(0, 0, 0, 0, 0)
             ]);
         });
-        
+
         test('z11', () => {
             const options = {
                 minzoom: 1,
@@ -667,17 +667,17 @@ describe('coveringTiles', () => {
                 tileSize: 512,
                 reparseOverscaled: true
             };
-        
+
             const transform = new MercatorTransform({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
             transform.resize(128, 128);
             transform.setZoom(11);
             transform.setCenter(new LngLat(-179.73, -0.087));
-        
+
             expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 1, 1024)
             ]);
         });
-        
+
         test('z11, mid lat', () => {
             const options = {
                 minzoom: 1,
@@ -685,17 +685,17 @@ describe('coveringTiles', () => {
                 tileSize: 512,
                 reparseOverscaled: true
             };
-        
+
             const transform = new MercatorTransform({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
             transform.resize(128, 128);
             transform.setZoom(11);
             transform.setCenter(new LngLat(-179.73, 60.02));
-        
+
             expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 1, 594)
             ]);
         });
-        
+
         test('z11, high lat', () => {
             const options = {
                 minzoom: 1,
@@ -703,12 +703,12 @@ describe('coveringTiles', () => {
                 tileSize: 512,
                 reparseOverscaled: true
             };
-        
+
             const transform = new MercatorTransform({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
             transform.resize(128, 128);
             transform.setZoom(11);
             transform.setCenter(new LngLat(-179.73, 85.028));
-        
+
             expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 1, 1)
             ]);
@@ -721,12 +721,12 @@ describe('coveringTiles', () => {
                 tileSize: 512,
                 reparseOverscaled: true
             };
-        
+
             const transform = new MercatorTransform({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
             transform.resize(128, 128);
             transform.setZoom(11);
             transform.setCenter(new LngLat(-58.97, 60.02));
-        
+
             expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 688, 594)
             ]);
@@ -739,12 +739,12 @@ describe('coveringTiles', () => {
                 tileSize: 512,
                 reparseOverscaled: true
             };
-        
+
             const transform = new MercatorTransform({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
             transform.resize(128, 128);
             transform.setZoom(11);
             transform.setCenter(new LngLat(-58.97, -0.087));
-        
+
             expect(coveringTiles(transform, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 688, 1024)
             ]);
@@ -757,7 +757,7 @@ describe('coveringTiles', () => {
                 tileSize: 512,
                 reparseOverscaled: true
             };
-        
+
             const transform = new MercatorTransform({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
             transform.resize(128, 128);
             transform.setZoom(11);
@@ -769,7 +769,7 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(11, 0, 11, 1023, 1023)
             ]);
         });
-    
+
     });
 });
 
