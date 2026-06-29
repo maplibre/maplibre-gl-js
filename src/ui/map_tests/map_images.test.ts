@@ -1,6 +1,8 @@
 import {beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util.ts';
 import {type StyleImageInterface} from '../../style/style_image.ts';
+import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import {MessageType} from '../../util/actor_messages.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -17,7 +19,7 @@ test('listImages', async () => {
 
     const images = map.listImages();
     expect(images).toHaveLength(1);
-    expect(images[0]).toBe('img');  
+    expect(images[0]).toBe('img');
 });
 
 test('listImages throws an error if called before "load"', () => {
@@ -169,4 +171,58 @@ test('map does not fire `styleimagemissing` for empty icon values', async () => 
 
     await map.once('idle');
     expect(spy).not.toHaveBeenCalled();
+});
+
+test('setImages broadcasts even when getImages is called between addImage and update', async () => {
+    const map = createMap();
+
+    await map.once('load');
+
+    const broadcastSpy = vi.fn().mockReturnValue(Promise.resolve({}));
+    map.style.dispatcher.broadcast = broadcastSpy;
+
+    map.addImage('new-image', {width: 1, height: 1, data: new Uint8Array(4)});
+
+    await map.style.getImages('0', {
+        icons: ['some-other-image'],
+        source: 'test-source',
+        tileID: {key: 'test-tile'} as any,
+        type: 'icons',
+    });
+
+    map.style.update(new EvaluationParameters(0));
+
+    const setImagesCalls = broadcastSpy.mock.calls.filter(
+        (c) => c[0] === MessageType.setImages
+    );
+    expect(setImagesCalls.length).toBeGreaterThanOrEqual(1);
+    expect(setImagesCalls.flatMap((c) => c[1])).toContain('new-image');
+});
+
+test('setImages broadcasts after styleimagemissing handler adds an image', async () => {
+    const map = createMap();
+
+    await map.once('load');
+
+    const broadcastSpy = vi.fn().mockReturnValue(Promise.resolve({}));
+    map.style.dispatcher.broadcast = broadcastSpy;
+
+    map.on('styleimagemissing', (e) => {
+        map.addImage(e.id, {width: 1, height: 1, data: new Uint8Array(4)});
+    });
+
+    await map.style.getImages('0', {
+        icons: ['missing-image'],
+        source: 'test-source',
+        tileID: {key: 'test-tile'} as any,
+        type: 'icons',
+    });
+
+    map.style.update(new EvaluationParameters(0));
+
+    const setImagesCalls = broadcastSpy.mock.calls.filter(
+        (c) => c[0] === MessageType.setImages
+    );
+    expect(setImagesCalls.length).toBeGreaterThanOrEqual(1);
+    expect(setImagesCalls.flatMap((c) => c[1])).toContain('missing-image');
 });
