@@ -8,6 +8,7 @@ import {type Terrain} from '../render/terrain.ts';
 import {type Texture} from './texture.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import {ImageSource} from '../source/image_source.ts';
+import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
 
 /**
  * lookup table which layers should rendered to texture
@@ -87,7 +88,7 @@ export class RenderToTexture {
         this._topOpaqueDrapedRasterIndex = -1;
         for (let i = 0; i < this._renderableLayerIds.length; i++) {
             const layer = style._layers[this._renderableLayerIds[i]];
-            if (layer.type === 'raster' && layer.paint.get('raster-opacity') === 1) this._topOpaqueDrapedRasterIndex = i;
+            if (isRasterStyleLayer(layer) && layer.paint.get('raster-opacity') === 1) this._topOpaqueDrapedRasterIndex = i;
         }
 
         this._coordsAscending = {};
