@@ -4,7 +4,7 @@ import {MapSourceDataEvent, MapStyleDataEvent, MapStyleLoadEvent, type MapEventT
 import {isRasterStyleLayer} from './style_layer/raster_style_layer.ts';
 import {createStyleLayer} from './create_style_layer.ts';
 import {loadSprite} from './load_sprite.ts';
-import {ImageManager} from '../render/image_manager.ts';
+import {ImageManager, type MissingImageRequestHandler} from '../render/image_manager.ts';
 import {GlyphManager} from '../render/glyph_manager.ts';
 import {Light} from './light.ts';
 import {Sky} from './sky.ts';
@@ -999,6 +999,10 @@ export class Style extends Evented<MapEventType> {
         return this.imageManager.getImage(id);
     }
 
+    setMissingImageResolver(resolver: MissingImageRequestHandler | null): void {
+        this.imageManager.setMissingImageResolver(resolver);
+    }
+
     removeImage(id: string): void {
         if (!this.getImage(id)) {
             this.fire(new ErrorEvent(new Error(`An image named "${id}" does not exist.`)));
@@ -1922,8 +1926,8 @@ export class Style extends Evented<MapEventType> {
         // is not reloaded unnecessarily. Without this forced update the reload could happen in cases
         // like this one:
         // - icons contains "my-image"
-        // - imageManager.getImages(...) triggers `onstyleimagemissing`
-        // - the user adds "my-image" within the callback
+        // - imageManager.getImages(...) resolves "my-image" with a missing-image resolver or `styleimagemissing`
+        // - "my-image" is added to this._changedImages
         // - addImage adds "my-image" to this._changedImages
         // - the next frame triggers a reload of this tile even though it already has the latest version
         this._updateTilesForChangedImages();

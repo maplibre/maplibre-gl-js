@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <title>Display a remote SVG symbol</title>
-    <meta property="og:description" content="Uses the 'styleimagemissing' event to load a remote image and use it." />
+    <meta property="og:description" content="Uses a missing style image resolver to load a remote image and use it." />
     <meta property="og:created" content="2025-07-10" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -26,13 +26,8 @@
         maplibreLogo: true
     });
     map.on('load', () => {
-        const existingImages = {};
-        map.on('styleimagemissing', async (e) => {
-            if (existingImages[e.id]) {
-                return;
-            }
-            existingImages[e.id] = true;
-            const response = await fetch(e.id);
+        map.setMissingStyleImageResolver(async (id) => {
+            const response = await fetch(id);
             const svgText = await response.text();
             const svg = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
             const image = new Image();
@@ -41,7 +36,7 @@
             });
             image.src = svg;
             await promise; // Wait for the image to load
-            map.addImage(e.id, image);
+            return image;
         });
 
         map.addSource('point', {
@@ -56,7 +51,7 @@
                             'coordinates': [0, 0]
                         },
                     },
-                    
+
                 ]
             }
         });
