@@ -25,20 +25,21 @@
         zoom: 1, // starting zoom
         maplibreLogo: true
     });
-    map.on('load', () => {
-        map.setMissingStyleImageResolver(async (id) => {
-            const response = await fetch(id);
-            const svgText = await response.text();
-            const svg = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
-            const image = new Image();
-            const promise = new Promise((resolve) => {
-                image.onload = resolve;
-            });
-            image.src = svg;
-            await promise; // Wait for the image to load
-            return image;
-        });
 
+    map.setMissingStyleImageResolver(async (id) => {
+        const response = await fetch(id);
+        const svgText = await response.text();
+        const svg = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
+        const image = new Image();
+        const promise = new Promise((resolve) => {
+            image.onload = resolve;
+        });
+        image.src = svg;
+        await promise; // Wait for the image to load
+        return image;
+    });
+
+    map.on('load', () => {
         map.addSource('point', {
             'type': 'geojson',
             'data': {
