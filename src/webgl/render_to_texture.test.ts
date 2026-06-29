@@ -37,6 +37,9 @@ describe('render to texture', () => {
         id: 'maine-raster',
         type: 'raster',
         source: 'maine',
+        paint: {
+            get: (property: string) => property === 'raster-opacity' ? 1 : undefined
+        },
         isHidden: () => false
     } as any as RasterStyleLayer;
     const hillshadeLayer = {
@@ -214,6 +217,28 @@ describe('render to texture', () => {
         expect(rtt.renderLayer(lineLayer, renderOptions)).toBeTruthy();
         expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeFalsy();
         expect(layersDrawn).toBe(3);
+    });
+
+    test('skips symbols below a later opaque draped raster', () => {
+        const symbolLayerAboveRaster = {
+            ...symbolLayer,
+            id: 'maine-symbol-above-raster',
+        } as SymbolStyleLayer;
+        const fillExtrusionLayer = {
+            id: 'maine-building',
+            type: 'fill-extrusion',
+            source: 'maine',
+            isHidden: () => false
+        } as any;
+        style._layers['maine-symbol-above-raster'] = symbolLayerAboveRaster;
+        style._layers['maine-building'] = fillExtrusionLayer;
+        style._order = ['maine-background', 'maine-symbol', 'maine-building', 'maine-raster', 'maine-symbol-above-raster'];
+        rtt.prepareForRender(style, 0);
+
+        const renderOptions = {isRenderingToTexture: false, isRenderingGlobe: false};
+        expect(rtt.renderLayer(symbolLayer, renderOptions)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayerAboveRaster, renderOptions)).toBeFalsy();
+        expect(rtt.renderLayer(fillExtrusionLayer, renderOptions)).toBeFalsy();
     });
 
     test('should clear tile cache on source state update', () => {

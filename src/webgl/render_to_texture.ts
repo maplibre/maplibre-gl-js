@@ -8,6 +8,7 @@ import {type Terrain} from '../render/terrain.ts';
 import {type Texture} from './texture.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import {ImageSource} from '../source/image_source.ts';
+import {isRasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
 
 /**
  * lookup table which layers should rendered to texture
@@ -67,6 +68,7 @@ export class RenderToTexture {
      * a list of all layer-ids which should be rendered
      */
     _renderableLayerIds: string[];
+    _topOpaqueDrapedRasterIndex: number;
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
@@ -83,6 +85,11 @@ export class RenderToTexture {
         this._rttTiles = [];
         this._renderableTiles = this.terrain.tileManager.getRenderableTiles();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
+        this._topOpaqueDrapedRasterIndex = -1;
+        for (let i = 0; i < this._renderableLayerIds.length; i++) {
+            const layer = style._layers[this._renderableLayerIds[i]];
+            if (isRasterStyleLayer(layer) && layer.paint.get('raster-opacity') === 1) this._topOpaqueDrapedRasterIndex = i;
+        }
 
         this._coordsAscending = {};
         for (const id in style.tileManagers) {
@@ -138,6 +145,7 @@ export class RenderToTexture {
      */
     renderLayer(layer: StyleLayer, renderOptions: RenderOptions): boolean {
         if (layer.isHidden(this.painter.transform.zoom)) return false;
+        if (this._isSymbolBelowOpaqueDrapedRaster(layer)) return true;
 
         const options: RenderOptions = {...renderOptions, isRenderingToTexture: true};
         const type = layer.type;
@@ -185,4 +193,9 @@ export class RenderToTexture {
         return false;
     }
 
+    _isSymbolBelowOpaqueDrapedRaster(layer: StyleLayer): boolean {
+        if (layer.type !== 'symbol' || this._topOpaqueDrapedRasterIndex < 0) return false;
+        const layerIndex = this._renderableLayerIds.indexOf(layer.id);
+        return layerIndex >= 0 && layerIndex < this._topOpaqueDrapedRasterIndex;
+    }
 }
