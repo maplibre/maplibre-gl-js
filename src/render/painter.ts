@@ -35,6 +35,7 @@ import type {IndexBuffer} from '../webgl/index_buffer.ts';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../webgl/types.ts';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
+import type {TerrainData} from './terrain.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
@@ -338,7 +339,7 @@ export class Painter {
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const stencilRef = tileStencilRefs[tileID.key];
-            const terrainData = this.style.map.terrain?.getTerrainData(tileID);
+            const terrainData = this.getTerrainDataForTile(tileID, renderToTexture);
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
 
@@ -351,6 +352,11 @@ export class Painter {
                 terrainData, projectionData, '$clipping', mesh.vertexBuffer,
                 mesh.indexBuffer, mesh.segments);
         }
+    }
+
+    getTerrainDataForTile(tileID: OverscaledTileID, isRenderingToTexture: boolean): TerrainData | null {
+        if (isRenderingToTexture && this.style.projection?.name === 'mercator') return null;
+        return this.style.map.terrain?.getTerrainData(tileID) || null;
     }
 
     /**
