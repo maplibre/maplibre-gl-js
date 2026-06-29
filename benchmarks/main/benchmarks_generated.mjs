@@ -41637,6 +41637,7 @@ var Style = class extends Evented {
 		this.tileManagers = {};
 		this.zoomHistory = new ZoomHistory();
 		this._availableImages = [];
+		this._imagesListDirty = false;
 		this._globalState = {};
 		this._serializedLayers = {};
 		this.stylesheet = null;
@@ -41815,8 +41816,8 @@ var Style = class extends Evented {
 		}
 		this._spritesImagesIds = {};
 		this._availableImages = this.imageManager.listImages();
+		this._imagesListDirty = true;
 		this._changed = true;
-		this.dispatcher.broadcast("SI", this._availableImages);
 		this.fire(new MapStyleDataEvent("data"));
 	}
 	_validateLayer(layer) {
@@ -41885,6 +41886,10 @@ var Style = class extends Evented {
 		if (!this._loaded) return;
 		const changed = this._changed;
 		if (changed) {
+			if (this._imagesListDirty) {
+				this.dispatcher.broadcast("SI", this._availableImages);
+				this._imagesListDirty = false;
+			}
 			const updatedIds = Object.keys(this._updatedLayers);
 			const removedIds = Object.keys(this._removedLayers);
 			if (updatedIds.length || removedIds.length) this._updateWorkerLayers(updatedIds, removedIds);
@@ -42073,8 +42078,8 @@ var Style = class extends Evented {
 	_afterImageUpdated(id) {
 		this._availableImages = this.imageManager.listImages();
 		this._changedImages[id] = true;
+		this._imagesListDirty = true;
 		this._changed = true;
-		this.dispatcher.broadcast("SI", this._availableImages);
 		this.fire(new MapStyleDataEvent("data"));
 	}
 	listImages() {
@@ -42756,8 +42761,8 @@ var Style = class extends Evented {
 		this.stylesheet.sprite = internalSpriteRepresentation.length > 0 ? internalSpriteRepresentation : void 0;
 		delete this._spritesImagesIds[id];
 		this._availableImages = this.imageManager.listImages();
+		this._imagesListDirty = true;
 		this._changed = true;
-		this.dispatcher.broadcast("SI", this._availableImages);
 		this.fire(new MapStyleDataEvent("data"));
 	}
 	/**
@@ -60508,7 +60513,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 9ea262f";
+const version = "main feb4eb0";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
