@@ -80,19 +80,22 @@ describe('render', () => {
         expect(painter.getTerrainDataForTile(tileID, true)).toBe(terrainData);
         expect(getTerrainData).toHaveBeenCalledWith(tileID);
     });
-  
-    test('stores terrain render time using the controlled clock', () => {
-        vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
-        map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
+    describe('terrain render time', () => {
+        beforeEach(() => {
+            vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
+            map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
+        });
 
-        try {
+        afterEach(() => {
+            restoreNow();
+        });
+
+        test('stores terrain render time using the controlled clock', () => {
             setNow(1234);
             painter.render(style, renderOptions);
 
             expect(painter.terrainFacilitator.renderTime).toBe(1234);
-        } finally {
-            restoreNow();
-        }
+        });
     });
 });
 
