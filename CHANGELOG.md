@@ -5,16 +5,17 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-- Fix: reuse terrain DEM texture when preparing terrain ([#7813](https://github.com/maplibre/maplibre-gl-js/pull/7813)) (by [@DoFabien](https://github.com/DoFabien))
-- fix: reject sendAsync promise on abort to stop leaking suspended frames ([#7826](https://github.com/maplibre/maplibre-gl-js/pull/7826)) (by [@kamil-sienkiewicz-asi](https://github.com/kamil-sienkiewicz-asi))
 ## 6.0.0-18
+
 ### ✨ Features and improvements
+
 - Improve terrain rendering performance by avoiding unnecessary terrain data lookups during Mercator render-to-texture passes ([#7833](https://github.com/maplibre/maplibre-gl-js/pull/7833)) (by [@DoFabien](https://github.com/DoFabien))
 - Reduce allocation pressure while constructing DEM data and sampling terrain elevations ([#7814](https://github.com/maplibre/maplibre-gl-js/pull/7814)) (by [@DoFabien](https://github.com/DoFabien))
+- Reuse terrain DEM texture when preparing terrain ([#7813](https://github.com/maplibre/maplibre-gl-js/pull/7813)) (by [@DoFabien](https://github.com/DoFabien))
 
 ### 🐞 Bug fixes
 
-- Fix a memory leak where aborting a worker request (e.g. a GeoJSON tile load cancelled while panning) left its promise pending forever, so the awaiting async frame and everything it captured was never released; `Actor.sendAsync` now rejects with an `AbortError` on abort (by [@kamil-sienkiewicz-asi](https://github.com/kamil-sienkiewicz-asi))
+- Fix a memory leak where aborting a worker request (e.g. a GeoJSON tile load cancelled while panning) left its promise pending forever, so the awaiting async frame and everything it captured was never released; `Actor.sendAsync` now rejects with an `AbortError` on abort ([#7826](https://github.com/maplibre/maplibre-gl-js/pull/7826)) (by [@kamil-sienkiewicz-asi](https://github.com/kamil-sienkiewicz-asi))
 
 ## 6.0.0-17
 
