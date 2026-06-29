@@ -239,7 +239,8 @@ export type MapEventType = {
     'style.load': MapStyleLoadEvent;
     /**
      * Fired when an icon or pattern needed by the style is missing and no missing style image resolver
-     * supplies it. Use {@link Map.setMissingStyleImageResolver} to provide missing images.
+     * supplies it. Adding an image from this event does not resolve the current image request; use
+     * {@link Map.setMissingStyleImageResolver} to provide missing images.
      * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/generate-and-add-a-missing-icon-to-the-map/)
      */
     styleimagemissing: MapStyleImageMissingEvent;
@@ -859,8 +860,8 @@ export class MapContextEvent extends MapLibreEvent<WebGLContextEvent> {
 };
 
 /**
- * The style image missing event. To provide missing images, prefer
- * {@link Map.setMissingStyleImageResolver}.
+ * The style image missing event. Adding an image from this event does not resolve the current image
+ * request; use {@link Map.setMissingStyleImageResolver} to provide missing images.
  *
  * @group Event Related
  *

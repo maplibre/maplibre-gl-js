@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <title>Generate and add a missing icon to the map</title>
-    <meta property="og:description" content="Dynamically generate a missing icon at runtime and add it to the map." />
+    <meta property="og:description" content="Dynamically resolve a missing icon at runtime." />
     <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,9 +24,7 @@
         style: 'https://demotiles.maplibre.org/style.json',
     });
 
-    map.on('styleimagemissing', (e) => {
-        const id = e.id; // id of the missing image
-
+    map.setMissingStyleImageResolver((id) => {
         // check if this missing icon is one this function can generate
         const prefix = 'square-rgb-';
         if (id.indexOf(prefix) !== 0) return;
@@ -48,7 +46,7 @@
             }
         }
 
-        map.addImage(id, {width, height: width, data});
+        return {width, height: width, data};
     });
 
     map.on('load', () => {

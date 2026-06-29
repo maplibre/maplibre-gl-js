@@ -54,7 +54,7 @@ export class ImageManager extends Evented {
         promiseResolve: (value: GetImagesResponse | PromiseLike<GetImagesResponse>) => void;
     }>;
     missingImageResolver: MissingImageRequestHandler | null;
-    missingImageRequests: Map<string, Promise<void>>;
+    missingImageRequests: Map<string, Promise<boolean>>;
 
     patterns: {[_: string]: Pattern};
     atlasImage: RGBAImage;
@@ -232,14 +232,23 @@ export class ImageManager extends Evented {
     async _getImagesForIds(ids: string[]): Promise<GetImagesResponse> {
         const missingIds = Array.from(new Set(ids.filter((id) => !this.getImage(id))));
 
-        await Promise.all(missingIds.map((id) => this._notifyMissingImage(id)));
+        const resolvedMissingIds = new Set<string>();
+        await Promise.all(missingIds.map(async (id) => {
+            if (await this._notifyMissingImage(id)) {
+                resolvedMissingIds.add(id);
+            }
+        }));
+        const initiallyMissingIds = new Set(missingIds);
 
         const response: GetImagesResponse = {};
 
         for (const id of ids) {
             const image = this.getImage(id);
 
-            if (image) {
+            // Images added by styleimagemissing listeners are available for future requests,
+            // but do not satisfy the current response.
+            const includeImage = image && (!initiallyMissingIds.has(id) || resolvedMissingIds.has(id));
+            if (includeImage) {
                 // Clone the image so that our own copy of its ArrayBuffer doesn't get transferred.
                 response[id] = {
                     data: image.data.clone(),
@@ -253,16 +262,16 @@ export class ImageManager extends Evented {
                     textFitHeight: image.textFitHeight,
                     hasRenderCallback: Boolean(image.userImage?.render)
                 };
-            } else {
-                warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image with map.addImage(), map.setMissingStyleImageResolver(), or a "sprite" property in your style.`);
+            } else if (!image) {
+                warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a "sprite" property in your style.`);
             }
         }
         return response;
     }
 
-    async _notifyMissingImage(id: string): Promise<void> {
+    async _notifyMissingImage(id: string): Promise<boolean> {
         if (this.getImage(id)) {
-            return;
+            return true;
         }
 
         let request = this.missingImageRequests.get(id);
@@ -274,17 +283,19 @@ export class ImageManager extends Evented {
             this.missingImageRequests.set(id, request);
         }
 
-        await request;
+        return request;
     }
 
-    async _resolveMissingImage(id: string): Promise<void> {
+    async _resolveMissingImage(id: string): Promise<boolean> {
         if (this.missingImageResolver) {
             await this.missingImageResolver(id);
         }
 
-        if (!this.getImage(id)) {
+        const resolved = !!this.getImage(id);
+        if (!resolved) {
             this.fire(new MapStyleImageMissingEvent({id}));
         }
+        return resolved;
     }
 
     // Pattern stuff
