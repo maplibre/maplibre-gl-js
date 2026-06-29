@@ -45723,7 +45723,7 @@ function drawLineTiles(painter, tileManager, layer, coords, renderOptions, useTe
 		const prevProgram = painter.context.program.get();
 		const program = painter.useProgram(programId, programConfiguration);
 		const programChanged = firstTile || program.program !== prevProgram;
-		const terrainData = useTerrain ? painter.style.map.terrain?.getTerrainData(coord) : null;
+		const terrainData = useTerrain ? painter.getTerrainDataForTile(coord, isRenderingToTexture) : null;
 		const constantPattern = patternProperty.constantOr(null);
 		const constantDasharray = dasharrayProperty?.constantOr(null);
 		if (constantPattern && tile.imageAtlas) {
@@ -45861,7 +45861,7 @@ function drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode
 		if (!bucket) continue;
 		const programConfiguration = bucket.programConfigurations.get(layer.id);
 		const program = painter.useProgram(programName, programConfiguration);
-		const terrainData = painter.style.map.terrain?.getTerrainData(coord);
+		const terrainData = painter.getTerrainDataForTile(coord, isRenderingToTexture);
 		if (image) {
 			painter.context.activeTexture.set(gl.TEXTURE0);
 			tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
@@ -45978,7 +45978,7 @@ function renderHillshade(painter, tileManager, layer, coords, stencilModes, dept
 		const fbo = tile.fbo;
 		if (!fbo) continue;
 		const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, "raster");
-		const terrainData = painter.style.map.terrain?.getTerrainData(coord);
+		const terrainData = painter.getTerrainDataForTile(coord, isRenderingToTexture);
 		context.activeTexture.set(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
 		const projectionData = transform.getProjectionData({
@@ -46094,7 +46094,7 @@ function renderColorRelief(painter, tileManager, layer, coords, stencilModes, de
 			tile.demTexture.bind(textureFilter, gl.CLAMP_TO_EDGE);
 		}
 		const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, "raster");
-		const terrainData = painter.style.map.terrain?.getTerrainData(coord);
+		const terrainData = painter.getTerrainDataForTile(coord, isRenderingToTexture);
 		const projectionData = transform.getProjectionData({
 			overscaledTileID: coord,
 			aligned: align,
@@ -46155,7 +46155,7 @@ function drawTiles(painter, tileManager, layer, coords, stencilModes, useBorder,
 			parentTile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
 		} else tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
 		if (tile.texture.useMipmap && context.extTextureFilterAnisotropic && painter.transform.pitch > painter.options.anisotropicFilterPitch) gl.texParameterf(gl.TEXTURE_2D, context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, context.extTextureFilterAnisotropicMax);
-		const terrainData = painter.style.map.terrain?.getTerrainData(coord);
+		const terrainData = painter.getTerrainDataForTile(coord, isRenderingToTexture);
 		const projectionData = transform.getProjectionData({
 			overscaledTileID: coord,
 			aligned: align,
@@ -46277,7 +46277,7 @@ function drawBackground(painter, tileManager, layer, coords, renderOptions) {
 			tileID,
 			tileSize
 		}, crossfade) : backgroundUniformValues(opacity, color);
-		const terrainData = painter.style.map.terrain?.getTerrainData(tileID);
+		const terrainData = painter.getTerrainDataForTile(tileID, isRenderingToTexture);
 		const mesh = projection.getMeshFromTileID(context, tileID.canonical, false, true, "raster");
 		program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
 	}
@@ -46801,7 +46801,7 @@ var Painter = class Painter {
 		const program = this.useProgram("clippingMask");
 		for (const tileID of tileIDs) {
 			const stencilRef = tileStencilRefs[tileID.key];
-			const terrainData = this.style.map.terrain?.getTerrainData(tileID);
+			const terrainData = this.getTerrainDataForTile(tileID, renderToTexture);
 			const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, "stencil");
 			const projectionData = transform.getProjectionData({
 				overscaledTileID: tileID,
@@ -46813,6 +46813,10 @@ var Painter = class Painter {
 				mask: 0
 			}, stencilRef, 255, gl.KEEP, gl.KEEP, gl.REPLACE), ColorMode.disabled, renderToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null, terrainData, projectionData, "$clipping", mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
 		}
+	}
+	getTerrainDataForTile(tileID, isRenderingToTexture) {
+		if (isRenderingToTexture && this.style.projection?.name === "mercator") return null;
+		return this.style.map.terrain?.getTerrainData(tileID) || null;
 	}
 	/**
 	* Fills the depth buffer with the geometry of all supplied tiles.
@@ -60504,7 +60508,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main bd68a96";
+const version = "main ccfba31";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
