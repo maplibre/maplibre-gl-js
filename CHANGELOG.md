@@ -1,7 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Debounce `setImages` broadcast to once per animation frame, fixing O(n²) serialization overhead when adding many images ([#7614](https://github.com/maplibre/maplibre-gl-js/pull/7614)) (by [@bradymadden97](https://github.com/bradymadden97))
-- Add `Map#setMissingStyleImageResolver` for resolving missing style images with sync or async callbacks (by [@birkskyum](https://github.com/birkskyum))
+- Add `Map#setMissingStyleImageResolver` for resolving missing style images with sync or async callbacks ([#7850](https://github.com/maplibre/maplibre-gl-js/pull/7850)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
