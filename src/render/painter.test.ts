@@ -5,6 +5,7 @@ import {Style} from '../style/style.ts';
 import {StubMap} from '../util/test/util.ts';
 import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
+import {restoreNow, setNow} from '../util/time_control.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 
 describe('render', () => {
@@ -78,6 +79,23 @@ describe('render', () => {
 
         expect(painter.getTerrainDataForTile(tileID, true)).toBe(terrainData);
         expect(getTerrainData).toHaveBeenCalledWith(tileID);
+    });
+    describe('terrain render time', () => {
+        beforeEach(() => {
+            vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
+            map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
+        });
+
+        afterEach(() => {
+            restoreNow();
+        });
+
+        test('stores terrain render time using the controlled clock', () => {
+            setNow(1234);
+            painter.render(style, renderOptions);
+
+            expect(painter.terrainFacilitator.renderTime).toBe(1234);
+        });
     });
 });
 
