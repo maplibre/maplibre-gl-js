@@ -89,10 +89,8 @@ test('map applies missing style image resolver options', async () => {
     map.setMissingStyleImageResolver(async () => {
         return {
             image: sampleImage,
-            options: {
-                pixelRatio: 2,
-                sdf: true
-            }
+            pixelRatio: 2,
+            sdf: true
         };
     });
 

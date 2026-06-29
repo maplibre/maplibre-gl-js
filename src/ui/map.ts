@@ -444,13 +444,12 @@ export type StyleImageSource = HTMLImageElement | ImageBitmap | ImageData | {
 } | StyleImageInterface;
 
 /**
- * A missing style image resolver can return image data directly, an image with metadata options,
+ * A missing style image resolver can return image data directly, image data with metadata,
  * or no value when it cannot resolve the requested image.
  */
-export type MissingStyleImageResolverResult = StyleImageSource | {
+export type MissingStyleImageResolverResult = (StyleImageSource & Partial<StyleImageMetadata>) | ({
     image: StyleImageSource;
-    options?: Partial<StyleImageMetadata>;
-} | null | undefined;
+} & Partial<StyleImageMetadata>) | null | undefined;
 
 /**
  * Callback used by {@link Map.setMissingStyleImageResolver} to resolve missing style images.
@@ -2652,7 +2651,7 @@ export class Map extends Camera {
      * map.setMissingStyleImageResolver(async (id) => {
      *     const response = await fetch(`/icons/${id}.png`);
      *     const image = await createImageBitmap(await response.blob());
-     *     return {image, options: {pixelRatio: 2}};
+     *     return {image, pixelRatio: 2};
      * });
      * ```
      */
@@ -2684,7 +2683,8 @@ export class Map extends Camera {
                 return;
             }
 
-            const {image, options} = this._normalizeMissingStyleImageResolverResult(result);
+            const image = typeof result === 'object' && 'image' in result ? result.image : result;
+            const options = result as Partial<StyleImageMetadata>;
             const styleImage = this._createStyleImage(image, options);
             if (!styleImage || style.getImage(id)) {
                 return;
@@ -2695,14 +2695,6 @@ export class Map extends Camera {
                 styleImage.userImage.onAdd(this, id);
             }
         });
-    }
-
-    _normalizeMissingStyleImageResolverResult(result: Exclude<MissingStyleImageResolverResult, null | undefined>): {image: StyleImageSource; options: Partial<StyleImageMetadata>} {
-        if (typeof result === 'object' && 'image' in result) {
-            return {image: result.image, options: result.options || {}};
-        }
-
-        return {image: result, options: {}};
     }
 
     _createStyleImage(image: StyleImageSource, options: Partial<StyleImageMetadata> = {}): StyleImage | null {
