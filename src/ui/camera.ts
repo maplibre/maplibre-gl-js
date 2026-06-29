@@ -136,8 +136,10 @@ export type FlyToOptions = AnimationOptions & CameraOptions & {
      */
     curve?: number;
     /**
-     * The zero-based zoom level at the peak of the flight path. If
-     * `options.curve` is specified, this option is ignored.
+     * The minimum zoom level that the flight arc may reach. The animation will
+     * not zoom out beyond this level. If the natural flight arc stays within
+     * this boundary, the arc is unchanged. This acts as a ceiling on zoom-out
+     * even when `options.curve` is also specified.
      */
     minZoom?: number;
     /**
@@ -1485,12 +1487,12 @@ export abstract class Camera extends Evented<MapEventType> {
         // the world image origin at the initial scale.
         const u1 = flyToHandler.pixelPathLength;
 
-        if (typeof flyToHandler.scaleOfMinZoom === 'number') {
-            // w<sub>m</sub>: Maximum visible span, measured in pixels with respect to the initial
-            // scale.
-            const wMax = w0 / flyToHandler.scaleOfMinZoom;
-            rho = Math.sqrt(wMax / u1 * 2);
-        }
+        // w<sub>m</sub>: Maximum visible span, measured in pixels with respect to the initial
+        // scale.
+        const wMax = w0 / flyToHandler.scaleOfMinZoom;
+        // Only reduce rho (limit zoom-out). If the natural arc stays within the minZoom
+        // boundary, preserve the default rho rather than forcing the arc deeper.
+        rho = Math.min(rho, Math.sqrt(wMax / u1 * 2));
 
         // ρ²
         const rho2 = rho * rho;

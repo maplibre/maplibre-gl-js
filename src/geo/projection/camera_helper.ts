@@ -58,7 +58,7 @@ export type FlyToHandlerOptions = {
 export type FlyToHandlerResult = {
     easeFunc: (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => void;
     scaleOfZoom: number;
-    scaleOfMinZoom?: number;
+    scaleOfMinZoom: number;
     targetCenter: LngLat;
     pixelPathLength: number;
 };
