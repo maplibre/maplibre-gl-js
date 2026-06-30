@@ -1926,8 +1926,8 @@ export class Style extends Evented<MapEventType> {
         // is not reloaded unnecessarily. Without this forced update the reload could happen in cases
         // like this one:
         // - icons contains "my-image"
-        // - imageManager.getImages(...) resolves "my-image" with a missing-image resolver
-        // - "my-image" is added to this._changedImages
+        // - imageManager.getImages(...) resolves "my-image" with a missing-image resolver, or
+        //   through a styleimagemissing listener that calls addImage synchronously
         // - addImage adds "my-image" to this._changedImages
         // - the next frame triggers a reload of this tile even though it already has the latest version
         this._updateTilesForChangedImages();

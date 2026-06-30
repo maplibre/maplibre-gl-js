@@ -2642,8 +2642,8 @@ export class Map extends Camera {
      * Sets a callback that is invoked when an icon or pattern needed by the style is missing.
      *
      * The resolver may return image data directly, or an object containing image data and the same options
-     * accepted by {@link Map.addImage}. If the resolver returns `null` or `undefined`, MapLibre fires the
-     * `styleimagemissing` event.
+     * accepted by {@link Map.addImage}. If the resolver returns `null` or `undefined`, MapLibre falls back
+     * to the `styleimagemissing` event.
      *
      * @param resolver - Callback used to resolve missing images, or `null` to remove the resolver.
      * @example

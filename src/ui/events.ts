@@ -240,8 +240,8 @@ export type MapEventType = {
     /**
      * Fired when an icon or pattern needed by the style is missing and no missing style image resolver
      * supplies it. The missing image can be added synchronously with {@link Map.addImage} within this
-     * event listener callback to prevent the image from being skipped. For async image loading, use
-     * {@link Map.setMissingStyleImageResolver}.
+     * event listener callback to prevent the image from being skipped. This event can be used to
+     * dynamically generate icons and patterns. For async image loading, use {@link Map.setMissingStyleImageResolver}.
      * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/generate-and-add-a-missing-icon-to-the-map/)
      */
     styleimagemissing: MapStyleImageMissingEvent;

@@ -153,7 +153,7 @@ test('map shares in-flight missing style image resolver requests for the same ic
     expect(map.hasImage(id)).toBeTruthy();
 });
 
-test('map clears failed missing style image resolver requests from in-flight requests', async () => {
+test('map retries missing style image resolver requests after failure', async () => {
     const map = createMap();
 
     const id = 'missing-style-image-resolver-failed';
@@ -345,7 +345,7 @@ test('setImages broadcasts even when getImages is called between addImage and up
     expect(setImagesCalls.flatMap((c) => c[1])).toContain('new-image');
 });
 
-test('setImages broadcasts after styleimagemissing listener adds an image', async () => {
+test('setImages broadcasts after styleimagemissing handler adds an image', async () => {
     const map = createMap();
 
     await map.once('load');
