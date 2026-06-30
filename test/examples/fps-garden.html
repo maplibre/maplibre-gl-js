@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>FPS garden</title>
+<meta property="og:description" content="Drive the camera as a level first-person view and water tomato plants, using a fill-extrusion fence, billboard sprites and procedural canvas textures." />
+<meta property="og:created" content="2026-06-14" />
+<meta charset='utf-8'>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#9fd8f0;font-family:system-ui,monospace}
+  #map{position:absolute;inset:0}
+  #cross{position:absolute;left:50%;top:50%;width:12px;height:12px;transform:translate(-50%,-50%);
+         pointer-events:none;z-index:5;opacity:.7}
+  #cross::before,#cross::after{content:"";position:absolute;background:#fff}
+  #cross::before{left:5px;top:0;width:2px;height:12px}#cross::after{top:5px;left:0;height:2px;width:12px}
+  /* garden hose nozzle (DOM, not a map object) */
+  #hose{position:absolute;bottom:0;left:50%;transform:translateX(-50%);z-index:6;pointer-events:none;
+        image-rendering:pixelated;transition:transform .05s}
+  #hose.on{transform:translateX(-50%) translateY(4px)}
+  #spray{position:absolute;bottom:120px;left:50%;transform:translateX(-50%);width:120px;height:120px;
+         z-index:6;pointer-events:none;display:none}
+  #spray.on{display:block}
+  .drop{position:absolute;bottom:0;left:50%;width:6px;height:6px;border-radius:50%;
+         background:#9fd8ff;opacity:.9;animation:spray .5s linear infinite}
+  @keyframes spray{0%{transform:translate(0,0) scale(1);opacity:.9}100%{transform:translate(var(--dx),-90px) scale(.4);opacity:0}}
+  #hud{position:absolute;top:10px;left:0;right:0;z-index:6;pointer-events:none;text-align:center;
+       color:#214;font-size:22px;font-weight:700;text-shadow:1px 1px 0 #fff}
+  #goal{display:inline-block;margin:0 auto 6px;padding:6px 14px;border-radius:999px;
+        background:rgba(255,255,255,.78);color:#1c4012;font-size:14px;font-weight:600;
+        text-shadow:none;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+  #hint{position:absolute;bottom:8px;left:0;right:0;z-index:6;pointer-events:none;text-align:center;
+        color:#fff;font-size:13px;text-shadow:1px 1px 0 #000;opacity:.85}
+  #overlay{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;
+           flex-direction:column;background:rgba(20,40,20,.75);color:#fff;text-align:center;cursor:pointer;padding:20px}
+  #overlay h1{margin:0 0 10px;font-size:26px;color:#bdf0a0}#overlay p{max-width:520px;line-height:1.5;font-size:14px;opacity:.9}
+  #overlay small{margin-top:16px;opacity:.7}.hidden{display:none!important}
+  /* touch */
+  #touch{display:none}body.touch #touch{display:block}body.touch{touch-action:none}
+  #stick{position:absolute;z-index:8;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;
+         background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.4);pointer-events:none;opacity:0;transition:opacity .1s}
+  #stick.on{opacity:1}#knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:rgba(255,255,255,.5)}
+  #water{position:absolute;right:24px;bottom:24px;z-index:8;width:96px;height:96px;border-radius:50%;
+         background:rgba(70,160,220,.45);border:3px solid rgba(255,255,255,.6);color:#fff;font:700 15px system-ui;
+         display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}
+  #water:active,#water.on{background:rgba(70,160,220,.85)}
+</style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="plants" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:4"></div>
+  <div id="cross"></div>
+  <img id="hose"/>
+  <div id="spray"></div>
+  <div id="hud">
+    <div id="goal">🎯 Goal: water all 4 tomato plants 🌱 — walk up to one and hold to spray 💧</div>
+    <div>🍅 <span id="count">0</span> / 4</div>
+  </div>
+  <div id="hint">Hold to water · WASD / ↑↓ move · ←→ or mouse turn</div>
+  <div id="touch"><div id="stick"><div id="knob"></div></div><div id="water">WATER 💧</div></div>
+  <div id="overlay">
+    <h1>🌱 Water the tomato garden</h1>
+    <p>Walk around the garden in first person and water the four tomato plants until they grow ripe.
+       Built on a map engine: the camera is a level horizon, the fence is an extrusion, the plants are billboards.
+       <br><br><b>Desktop:</b> WASD move · mouse turn · hold click to water.
+       <b>Touch:</b> left stick move · right side turn · hold WATER.</p>
+    <small>Tap / click to start</small>
+  </div>
+<script type="module">
+import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+/* ============================================================================
+ * Garden — a first-person mini-game built entirely on MapLibre GL JS.
+ *
+ * The 3D scene IS a map: the ground is a fill layer, the fence is a
+ * fill-extrusion, the sky is a sky layer, and the textures are generated on a
+ * <canvas> and handed to map.addImage(). There's no game engine — every frame
+ * we just drive MapLibre's own camera to fake a first-person eye:
+ *
+ *   CAMERA  (updateCamera) — a true level (90°) horizon. At 90° the eye and the
+ *           look-at centre sit at the same altitude, so we place the centre at
+ *           eye height a fixed distance ahead at a fixed zoom; MapLibre then
+ *           puts the eye on the player, looking dead level.
+ *   PLANTS  (updatePlants) — billboards drawn as plain DOM elements, positioned
+ *           each frame from map.project() so each stays planted on its soil bed.
+ *
+ * Controls — desktop: WASD/arrows move, mouse or ←→ turn, hold click to water.
+ *            touch: left half = move stick, right half = turn, WATER to spray.
+ * ==========================================================================*/
+
+/* ---- tunables ---- */
+const EYE_H = 1.6;          // eye height (metres)
+const PITCH = 90;           // 90° = perfectly level horizon (the rig below makes 90 work)
+const ZOOM  = 20;           // fixed map zoom → stable world scale, independent of pitch
+const S     = 18;           // garden size (metres, square)
+const MOVE  = 3.2;          // walk speed (m/s)
+const TURN  = 2.4;          // keyboard turn rate (rad/s) for ← →
+const WATER_RANGE=7, WATER_CONE=0.38, WATER_RATE=0.45;            // reach / aim cone / grow rate
+const MOUSE_SENS=0.0024, TOUCH_SENS=0.0042, STICK_MAX=55,         // input sensitivities
+      TOUCH_TURN=2.4, TOUCH_MOVE=14, DEAD=10;
+const DEG   = 1/111320;     // degrees of lng/lat per metre near (0,0)
+const EARTH = 40075016.686; // equatorial circumference (m), for the zoom→metres calc
+
+const PLANTS = [{x:5,y:7},{x:13,y:7},{x:5,y:13},{x:13,y:13}].map(p=>({...p,grow:0,stage:0}));
+const player = {x:9, y:2.6, heading:Math.PI/2};   // start at the south edge, facing in (+y)
+let spraying=false, won=false;
+
+const toLngLat=(x,y)=>[x*DEG,y*DEG];
+const wrap=a=>((a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;  // angle → [-π,π]
+const stageOf=g=>Math.min(4,Math.floor(g*4+1e-6));                      // growth 0..1 → stage 0..4
+
+/* ===== procedural tomato-plant sprite — one canvas per growth stage (0..4) ===== */
+function plantCanvas(stage){
+  const w=48,h=64,cv=document.createElement('canvas');cv.width=w;cv.height=h;
+  const x=cv.getContext('2d'),cx=w/2,base=h-5;
+  x.fillStyle='#6b4a2b';x.beginPath();x.ellipse(cx,base,10,4,0,0,7);x.fill();      // soil mound
+  const stem=[3,14,24,30,32][stage], bush=[0,6,10,12,13][stage];
+  x.strokeStyle='#3f8a3a';x.lineWidth=3;x.beginPath();x.moveTo(cx,base);x.lineTo(cx,base-stem);x.stroke();
+  if(stage===0){ // seedling: two little leaves
+    x.fillStyle='#4fb04f';
+    x.beginPath();x.ellipse(cx-4,base-stem,4,2.4,-0.6,0,7);x.fill();
+    x.beginPath();x.ellipse(cx+4,base-stem,4,2.4,0.6,0,7);x.fill();
+    return cv;
+  }
+  x.fillStyle='#3f9a3f';
+  for(const [dx,dy] of [[0,-stem],[-5,-stem+5],[5,-stem+5],[0,-stem+10]]){x.beginPath();x.ellipse(cx+dx,base+dy,bush,bush*0.8,0,0,7);x.fill();}
+  x.fillStyle='#54bd54';x.beginPath();x.ellipse(cx-3,base-stem-2,bush*0.6,bush*0.5,0,0,7);x.fill();
+  if(stage>=3){x.fillStyle='#f4d23a';for(const [dx,dy] of [[-6,-stem+2],[6,-stem-2],[0,-stem-6]]){x.beginPath();x.arc(cx+dx,base+dy,2,0,7);x.fill();}}
+  if(stage>=4){for(const [dx,dy] of [[-5,-stem+6],[6,-stem+2],[-1,-stem-4],[4,-stem+9]]){
+    x.fillStyle='#e23b2e';x.beginPath();x.arc(cx+dx,base+dy,3.4,0,7);x.fill();
+    x.fillStyle='#ff8575';x.beginPath();x.arc(cx+dx-1,base+dy-1,1.1,0,7);x.fill();}}
+  return cv;
+}
+function hoseSprite(){
+  const cv=document.createElement('canvas');cv.width=180;cv.height=140;const c=cv.getContext('2d');
+  c.fillStyle='#2f7d3a';c.fillRect(78,70,28,70);                 // green hose body
+  c.fillStyle='#256631';c.fillRect(78,70,8,70);
+  c.fillStyle='#3a3f44';c.fillRect(72,40,40,34);                 // nozzle
+  c.fillStyle='#5a6068';c.fillRect(82,8,20,40);                  // barrel
+  c.fillStyle='#9fb0bc';c.fillRect(86,4,12,8);                   // tip
+  return cv.toDataURL();
+}
+
+/* ===== plants as DOM billboards (positioned via map.project) =====
+   Each plant is a <div> over the map: its horizontal screen position comes from
+   map.project() of the plant's ground point, and its height = PLANT_H × pixels-
+   per-metre at that distance — so it stays planted on its soil bed and scales
+   with perspective. (A MapLibre symbol layer would drift off the ground point
+   at this level-horizon camera.) */
+const PLANT_H=1.3;                                   // plant height in metres
+const PLANT_URLS=[0,1,2,3,4].map(s=>plantCanvas(s).toDataURL());
+const PLANT_AR=48/64;                                // sprite aspect (w/h)
+const plantLayer=document.getElementById('plants');
+function updatePlants(){
+  const ccy=(map.getCanvas().clientHeight||800)/2;                   // screen centre = eye level
+  for(const p of PLANTS){
+    if(!p._el){const el=document.createElement('div');
+      el.style.cssText='position:absolute;background-repeat:no-repeat;background-size:100% 100%;image-rendering:pixelated;pointer-events:none;';
+      plantLayer.appendChild(el);p._el=el;p._shown=-1;}
+    const el=p._el, dx=p.x-player.x, dy=p.y-player.y, dist=Math.hypot(dx,dy);
+    if(dist<0.001 || Math.abs(wrap(Math.atan2(dy,dx)-player.heading))>Math.PI/2){el.style.display='none';continue;} // behind us
+    const feet=map.project(toLngLat(p.x,p.y));                       // horizontal x only
+    const sx=-dy/dist, sy=dx/dist, side=map.project(toLngLat(p.x+sx,p.y+sy));
+    const pxPerM=Math.hypot(side.x-feet.x,side.y-feet.y);
+    if(!isFinite(pxPerM)||pxPerM<=0){el.style.display='none';continue;}
+    const h=pxPerM*PLANT_H, w=h*PLANT_AR;
+    // Vertical from eye-level math (NOT project().y, which floats at the 90° cam):
+    // base is at ground z=0, EYE_H below the eye → pxPerM·EYE_H below centre.
+    const topY=ccy-pxPerM*(PLANT_H-EYE_H);
+    el.style.display='block';
+    el.style.left=(feet.x-w/2).toFixed(1)+'px'; el.style.top=topY.toFixed(1)+'px';
+    el.style.width=w.toFixed(1)+'px'; el.style.height=h.toFixed(1)+'px';
+    el.style.zIndex=Math.max(0,Math.round(100000-dist*100));         // nearer on top
+    if(p.stage!==p._shown){el.style.backgroundImage="url('"+PLANT_URLS[p.stage]+"')";p._shown=p.stage;}
+  }
+}
+
+/* ===== geometry (GeoJSON, in metres → lng/lat) ===== */
+function soilGeo(){return{type:'FeatureCollection',features:PLANTS.map(p=>{
+  const r=1.3,o=[[p.x-r,p.y-r],[p.x+r,p.y-r],[p.x+r,p.y+r],[p.x-r,p.y+r],[p.x-r,p.y-r]].map(([a,b])=>toLngLat(a,b));
+  return{type:'Feature',geometry:{type:'Polygon',coordinates:[o]}};})};}
+const m=0.4;                                                     // fence = square frame (outer ring + inner hole)
+const fenceGeo={type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[
+  [[-m,-m],[S+m,-m],[S+m,S+m],[-m,S+m],[-m,-m]].map(([a,b])=>toLngLat(a,b)),
+  [[0,0],[0,S],[S,S],[S,0],[0,0]].map(([a,b])=>toLngLat(a,b))]}};
+/* a big grassy field under and around the garden */
+const GR=80;
+const groundGeo={type:'Feature',geometry:{type:'Polygon',coordinates:[
+  [[-GR,-GR],[S+GR,-GR],[S+GR,S+GR],[-GR,S+GR],[-GR,-GR]].map(([a,b])=>toLngLat(a,b))]}};
+
+/* ===== procedural textures (canvas -> addImage) ===== */
+function grassTexture(){
+  const Z=64,cv=document.createElement('canvas');cv.width=cv.height=Z;const g=cv.getContext('2d');
+  g.fillStyle='#5aa641';g.fillRect(0,0,Z,Z);
+  const img=g.getImageData(0,0,Z,Z),d=img.data;                  // colour speckle
+  for(let i=0;i<d.length;i+=4){const n=(Math.random()*36-18)|0;
+    d[i]=Math.max(0,Math.min(255,d[i]+n*0.4));d[i+1]=Math.max(0,Math.min(255,d[i+1]+n));d[i+2]=Math.max(0,Math.min(255,d[i+2]+n*0.3));}
+  g.putImageData(img,0,0);
+  for(let k=0;k<70;k++){const x=Math.random()*Z,y=Math.random()*Z,hh=2+Math.random()*5; // blades
+    g.strokeStyle=Math.random()<0.5?'#4c963a':'#79c75f';g.lineWidth=1;
+    g.beginPath();g.moveTo(x,y);g.lineTo(x+(Math.random()-0.5)*2,y-hh);g.stroke();}
+  return g.getImageData(0,0,Z,Z);
+}
+function woodTexture(){                                           // vertical plank fence
+  const W=48,H=48,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+  const tones=['#b07a42','#a06c38','#bb8350','#9c6633'],pw=W/4;
+  for(let i=0;i<4;i++){
+    g.fillStyle=tones[i];g.fillRect(i*pw,0,pw,H);
+    g.fillStyle='rgba(0,0,0,.22)';g.fillRect(i*pw,0,1.5,H);       // gap between planks
+    g.strokeStyle='rgba(255,255,255,.10)';g.lineWidth=1;          // grain
+    for(let k=0;k<3;k++){const gx=i*pw+2+Math.random()*(pw-4);g.beginPath();g.moveTo(gx,0);g.lineTo(gx+(Math.random()-.5)*3,H);g.stroke();}
+  }
+  g.fillStyle='#8a5a2c';g.fillRect(0,0,W,4);                      // top rail
+  return g.getImageData(0,0,W,H);
+}
+
+/* ===== map (stock MapLibre, we drive the camera) ===== */
+const map=new maplibregl.Map({
+  container:'map',style:{version:8,sources:{},layers:[]},
+  center:toLngLat(player.x,player.y),zoom:20,pitch:0,bearing:0,
+  interactive:false,maxPitch:95,attributionControl:false,fadeDuration:0
+});
+map.on('load',()=>{
+  document.getElementById('hose').src=hoseSprite();
+  map.addImage('grass',grassTexture());
+  map.addImage('wood',woodTexture());
+  map.addSource('ground',{type:'geojson',data:groundGeo});
+  map.addSource('soil',{type:'geojson',data:soilGeo()});
+  map.addSource('fence',{type:'geojson',data:fenceGeo});
+  map.addLayer({id:'sky-bg',type:'background',paint:{'background-color':'#5aa641'}});        // fallback green
+  map.addLayer({id:'ground',type:'fill',source:'ground',paint:{'fill-pattern':'grass'}});   // grassy field
+  map.addLayer({id:'soil',type:'fill',source:'soil',paint:{'fill-color':'#6b4a2b'}});        // tilled beds
+  map.addLayer({id:'fence',type:'fill-extrusion',source:'fence',                            // wooden plank fence
+    paint:{'fill-extrusion-height':1.0,'fill-extrusion-base':0,'fill-extrusion-pattern':'wood','fill-extrusion-vertical-gradient':true}});
+  // plants are DOM billboards now (see updatePlants), not a symbol layer.
+  map.addLayer({id:'sky',type:'sky',paint:{'sky-color':'#9fd8f0','horizon-color':'#cfeaf6','sky-horizon-blend':0.4}});
+  if(map.setCenterClampedToGround) map.setCenterClampedToGround(false);
+  updateCamera();
+  requestAnimationFrame(loop);
+});
+
+/* First-person eye via the stock camera. At a level 90° pitch the eye and the
+   look-at centre are at the SAME altitude, so we just place the centre at eye
+   height (elevation EYE_H) a fixed distance `dWorld` straight ahead, at a fixed
+   ZOOM — and MapLibre puts the eye exactly on the player, looking dead level.
+   dWorld is derived from MapLibre's real focal length (cameraToCenterDistance)
+   so the landing point is exact. setCenterClampedToGround(false) lets the
+   centre sit above the ground; jumpTo's `elevation` then honours EYE_H. */
+function updateCamera(){
+  const H=map.getCanvas().clientHeight||800;
+  const metresPerPixel=EARTH/(512*Math.pow(2,ZOOM));
+  const focalPx=(map.transform&&map.transform.cameraToCenterDistance)||1.5*H;
+  const dWorld=focalPx*metresPerPixel;                 // eye → look-at-centre distance (m)
+  const bearing=Math.atan2(Math.cos(player.heading),Math.sin(player.heading))*180/Math.PI;
+  const cx=player.x+Math.cos(player.heading)*dWorld, cy=player.y+Math.sin(player.heading)*dWorld;
+  map.jumpTo({center:toLngLat(cx,cy),zoom:ZOOM,bearing,pitch:PITCH,elevation:EYE_H});
+}
+
+/* ===== movement: stay inside the fence ===== */
+function tryStep(dx,dy){
+  const lo=0.7, hi=S-0.7;
+  const nx=player.x+dx; if(nx>lo&&nx<hi) player.x=nx;
+  const ny=player.y+dy; if(ny>lo&&ny<hi) player.y=ny;
+}
+
+/* ===== input — desktop ===== */
+const keys={};
+addEventListener('keydown',e=>{keys[e.code]=true; if(e.code.startsWith('Arrow'))e.preventDefault();});
+addEventListener('keyup',e=>keys[e.code]=false);
+const isTouch=matchMedia('(pointer: coarse)').matches||('ontouchstart'in window);
+if(isTouch) document.body.classList.add('touch');
+const overlay=document.getElementById('overlay'); let started=false;
+function start(){started=true;overlay.classList.add('hidden');if(!isTouch)document.body.requestPointerLock();}
+overlay.addEventListener('click',start);
+document.addEventListener('pointerlockchange',()=>{if(isTouch||!started)return;overlay.classList.toggle('hidden',document.pointerLockElement===document.body);});
+/* pointer-locked trackpad/mouse: one finger turns (X) AND walks fwd/back (Y) */
+addEventListener('mousemove',e=>{
+  if(document.pointerLockElement!==document.body) return;
+  player.heading-=e.movementX*MOUSE_SENS;
+  const step=-e.movementY*0.045;
+  if(step){const h=player.heading; tryStep(Math.cos(h)*step,Math.sin(h)*step);}
+});
+/* two-finger pan (wheel): horizontal turns, vertical walks fwd/back */
+addEventListener('wheel',e=>{
+  if(!started) return; e.preventDefault();
+  player.heading-=e.deltaX*0.004;
+  const step=-e.deltaY*0.02;
+  if(step){const h=player.heading; tryStep(Math.cos(h)*step,Math.sin(h)*step);}
+},{passive:false});
+addEventListener('mousedown',e=>{if(document.pointerLockElement===document.body&&e.button===0) spraying=true;});
+addEventListener('mouseup',e=>{if(e.button===0) spraying=false;});
+
+/* ===== input — touch ===== */
+const stickEl=document.getElementById('stick'),knobEl=document.getElementById('knob');
+let mId=null,aX=0,aY=0,cX=0,cY=0,lId=null,lX=0;
+function ts(e){
+  if(!started) start();
+  for(const t of e.changedTouches){
+    if(t.target&&t.target.id==='water'){spraying=true;document.getElementById('water').classList.add('on');continue;}
+    if(t.clientX<innerWidth/2&&mId===null){mId=t.identifier;aX=cX=t.clientX;aY=cY=t.clientY;
+      stickEl.style.left=t.clientX+'px';stickEl.style.top=t.clientY+'px';knobEl.style.transform='translate(0,0)';stickEl.classList.add('on');}
+    else if(lId===null){lId=t.identifier;lX=t.clientX;}
+  }
+  e.preventDefault();
+}
+function tm(e){
+  for(const t of e.changedTouches){
+    if(t.identifier===mId){cX=t.clientX;cY=t.clientY;
+      let dx=cX-aX,dy=cY-aY,len=Math.hypot(dx,dy)||1,cl=Math.min(len,STICK_MAX);
+      knobEl.style.transform=`translate(${dx/len*cl}px,${dy/len*cl}px)`;}
+    else if(t.identifier===lId){player.heading-=(t.clientX-lX)*TOUCH_SENS;lX=t.clientX;}
+  }
+  e.preventDefault();
+}
+function te(e){
+  for(const t of e.changedTouches){
+    if(t.identifier===mId){mId=null;stickEl.classList.remove('on');}
+    else if(t.identifier===lId){lId=null;}
+    if(t.target&&t.target.id==='water'){spraying=false;document.getElementById('water').classList.remove('on');}
+  }
+}
+addEventListener('touchstart',ts,{passive:false});
+addEventListener('touchmove',tm,{passive:false});
+addEventListener('touchend',te);addEventListener('touchcancel',te);
+
+/* ===== watering ===== */
+const sprayEl=document.getElementById('spray');
+for(let i=0;i<7;i++){const d=document.createElement('div');d.className='drop';d.style.setProperty('--dx',(i-3)*14+'px');d.style.animationDelay=(i*0.06)+'s';sprayEl.appendChild(d);}
+
+function water(dt){
+  let best=-1,bd=1e9;
+  for(let i=0;i<PLANTS.length;i++){
+    const p=PLANTS[i]; if(p.grow>=1) continue;
+    const dx=p.x-player.x,dy=p.y-player.y,dist=Math.hypot(dx,dy);
+    if(dist>WATER_RANGE) continue;
+    if(Math.abs(wrap(Math.atan2(dy,dx)-player.heading))>WATER_CONE) continue;
+    if(dist<bd){bd=dist;best=i;}
+  }
+  if(best<0) return;
+  const p=PLANTS[best]; p.grow=Math.min(1,p.grow+WATER_RATE*dt);
+  const st=stageOf(p.grow);
+  p.stage=st;   // updatePlants() reads p.stage each frame and swaps the sprite
+  if(PLANTS.every(q=>q.grow>=1)) winGame();
+}
+function winGame(){
+  if(won) return; won=true; spraying=false;
+  overlay.querySelector('h1').textContent='🍅 Garden complete!';
+  overlay.querySelector('p').textContent='All four tomato plants are ripe. Bravo!';
+  overlay.querySelector('small').textContent='reload to play again';
+  overlay.classList.remove('hidden'); if(document.exitPointerLock) document.exitPointerLock();
+}
+
+/* ===== loop ===== */
+let prev=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-prev)/1000); prev=now;
+  // movement (keyboard + touch joystick), forward = heading
+  const h=player.heading, fx=Math.cos(h),fy=Math.sin(h),rx=Math.sin(h),ry=-Math.cos(h);
+  let fwd=0,str=0;
+  if(keys['KeyW']||keys['ArrowUp'])fwd+=1; if(keys['KeyS']||keys['ArrowDown'])fwd-=1;
+  if(keys['KeyD'])str+=1; if(keys['KeyA'])str-=1;
+  if(keys['ArrowLeft'])player.heading+=TURN*dt; if(keys['ArrowRight'])player.heading-=TURN*dt;
+  if(mId!==null){
+    const ox=cX-aX,oy=cY-aY;
+    if(Math.abs(ox)>DEAD){player.heading-=Math.max(-1,Math.min(1,ox/STICK_MAX))*TOUCH_TURN*dt;}
+    if(Math.abs(oy)>DEAD){fwd+=-Math.max(-1,Math.min(1,oy/STICK_MAX))*TOUCH_MOVE/MOVE;}
+  }
+  let mx=fx*fwd+rx*str, my=fy*fwd+ry*str, ml=Math.hypot(mx,my);
+  if(ml>0){const sp=Math.min(1,ml)*MOVE*dt; tryStep(mx/ml*sp,my/ml*sp);}
+  // watering
+  sprayEl.classList.toggle('on',spraying&&!won);
+  document.getElementById('hose').classList.toggle('on',spraying&&!won);
+  if(spraying&&!won) water(dt);
+  // present
+  updateCamera();
+  updatePlants();
+  document.getElementById('count').textContent=PLANTS.filter(p=>p.grow>=1).length;
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
