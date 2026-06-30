@@ -9,6 +9,7 @@ import type {Frustum} from '../../util/primitives/frustum.ts';
 import {maxMercatorHorizonAngle} from './mercator_utils.ts';
 import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
+import {GlobeTransform} from './globe_transform.ts';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;
@@ -200,7 +201,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
 
     let deltaX = centerCoord.x - cameraCoord.x;
-    if (detailsProvider instanceof GlobeCoveringTilesDetailsProvider) {
+    if (transform instanceof GlobeTransform && transform.isGlobeRendering) {
         // account for wrapping of centerCoord/cameraCoord around the anti-meridian
         // this ensures that the coordinate difference stays in the range [-0.5, 0.5]
         deltaX = deltaX - Math.round(deltaX);
