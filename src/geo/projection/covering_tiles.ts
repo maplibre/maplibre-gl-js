@@ -198,7 +198,8 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
     const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
 
-    // possibly wrap around antimeridian
+    // account for wrapping of centerCoord/cameraCoord around the anti-meridian
+    // this ensures that the coordinate difference stays in the range [-0.5, 0.5]
     let deltaX = centerCoord.x - cameraCoord.x;
     deltaX = deltaX - Math.round(deltaX);
 
