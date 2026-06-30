@@ -33,7 +33,7 @@
     "@mapbox/tiny-sdf": "^2.2.0",
     "@mapbox/unitbezier": "^1.0.0",
     "@mapbox/vector-tile": "^3.0.0",
-    "@maplibre/geojson-vt": "^6.1.0",
+    "@maplibre/geojson-vt": "^6.1.1",
     "@maplibre/maplibre-gl-style-spec": "^25.0.1",
     "@maplibre/mlt": "^1.1.12",
     "@maplibre/vt-pbf": "^4.3.2",
