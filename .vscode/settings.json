@@ -1,19 +1,18 @@
 {
-    "biome.enabled": false,
-    "eslint.format.enable": true,
-    "[css]": {
-        "editor.defaultFormatter": "stylelint.vscode-stylelint"
-    },
-    "[javascript]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-    },
-    "[javascriptreact]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-    },
-    "[typescript]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-    },
-    "[typescriptreact]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-    }
+  "eslint.format.enable": true,
+  "[css]": {
+    "editor.defaultFormatter": "stylelint.vscode-stylelint"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  }
 }
