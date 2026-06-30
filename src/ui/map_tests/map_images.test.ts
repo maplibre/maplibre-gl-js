@@ -202,15 +202,6 @@ test('map keeps missing style image resolver after replacing the style', async (
     expect(map.hasImage(id)).toBeTruthy();
 });
 
-test('image manager clears in-flight missing image requests on destroy', () => {
-    const map = createMap();
-
-    map.style.imageManager.missingImageRequests.set('missing-image', Promise.resolve(false));
-    map.style.imageManager.destroy();
-
-    expect(map.style.imageManager.missingImageRequests.size).toBe(0);
-});
-
 test('map getImage matches addImage, uintArray', () => {
     const map = createMap();
     const id = 'add-get-uint';

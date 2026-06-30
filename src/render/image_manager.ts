@@ -88,7 +88,6 @@ export class ImageManager extends Evented {
         }
 
         this.patterns = {};
-        this.missingImageRequests.clear();
         this.atlasImage = new RGBAImage({width: 1, height: 1});
         this.dirty = true;
     }
