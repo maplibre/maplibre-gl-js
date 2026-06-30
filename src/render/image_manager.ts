@@ -14,6 +14,8 @@ import type {Context} from '../webgl/context.ts';
 import type {PotpackBox} from 'potpack';
 import type {GetImagesResponse} from '../util/actor_messages.ts';
 
+export type MissingImageRequestHandler = (id: string) => void | Promise<void>;
+
 type Pattern = {
     bin: PotpackBox;
     position: ImagePosition;
@@ -49,8 +51,10 @@ export class ImageManager extends Evented {
      */
     requestors: Array<{
         ids: string[];
-        promiseResolve: (value: GetImagesResponse) => void;
+        promiseResolve: (value: GetImagesResponse | PromiseLike<GetImagesResponse>) => void;
     }>;
+    missingImageResolver: MissingImageRequestHandler | null;
+    missingImageRequests: Map<string, Promise<void>>;
 
     patterns: {[_: string]: Pattern};
     atlasImage: RGBAImage;
@@ -64,6 +68,8 @@ export class ImageManager extends Evented {
         this.callbackDispatchedThisFrame = {};
         this.loaded = false;
         this.requestors = [];
+        this.missingImageResolver = null;
+        this.missingImageRequests = new Map();
 
         this.patterns = {};
         this.atlasImage = new RGBAImage({width: 1, height: 1});
@@ -196,6 +202,10 @@ export class ImageManager extends Evented {
         return Object.keys(this.images);
     }
 
+    setMissingImageResolver(resolver: MissingImageRequestHandler | null): void {
+        this.missingImageResolver = resolver;
+    }
+
     getImages(ids: string[]): Promise<GetImagesResponse> {
         return new Promise<GetImagesResponse>((resolve, _reject) => {
             // If the sprite has been loaded, or if all the icon dependencies are already present
@@ -218,17 +228,14 @@ export class ImageManager extends Evented {
         });
     }
 
-    _getImagesForIds(ids: string[]): GetImagesResponse {
+    async _getImagesForIds(ids: string[]): Promise<GetImagesResponse> {
+        const missingIds = new Set(ids.filter((id) => !this.getImage(id)));
+        await this._resolveMissingImageIds(missingIds);
+
         const response: GetImagesResponse = {};
 
         for (const id of ids) {
-            let image = this.getImage(id);
-
-            if (!image) {
-                this.fire(new MapStyleImageMissingEvent({id}));
-                //Try to acquire image again in case styleimagemissing has populated it
-                image = this.getImage(id);
-            }
+            const image = this.getImage(id);
 
             if (image) {
                 // Clone the image so that our own copy of its ArrayBuffer doesn't get transferred.
@@ -244,11 +251,40 @@ export class ImageManager extends Evented {
                     textFitHeight: image.textFitHeight,
                     hasRenderCallback: Boolean(image.userImage?.render)
                 };
-            } else {
-                warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image with map.addImage() or a "sprite" property in your style. You can provide missing images by listening for the "styleimagemissing" map event.`);
+            } else if (!image) {
+                warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a "sprite" property in your style.`);
             }
         }
         return response;
+    }
+
+    async _resolveMissingImageIds(ids: Set<string>): Promise<void> {
+        await Promise.all(Array.from(ids, (id) => this._resolveMissingImageId(id)));
+    }
+
+    async _resolveMissingImageId(id: string): Promise<void> {
+        if (this.getImage(id)) return;
+
+        let request = this.missingImageRequests.get(id);
+        if (!request) {
+            request = this._resolveMissingImageOrFireEvent(id)
+                .finally(() => {
+                    this.missingImageRequests.delete(id);
+                });
+            this.missingImageRequests.set(id, request);
+        }
+
+        await request;
+    }
+
+    async _resolveMissingImageOrFireEvent(id: string): Promise<void> {
+        if (this.missingImageResolver) {
+            await this.missingImageResolver(id);
+        }
+
+        if (!this.getImage(id)) {
+            this.fire(new MapStyleImageMissingEvent({id}));
+        }
     }
 
     // Pattern stuff
