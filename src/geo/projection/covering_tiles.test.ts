@@ -379,6 +379,37 @@ describe('coveringTiles', () => {
                 });
             });
         });
+
+        test('z11, antimeridian wrap (crosses 180/-180 longitude)', () => {
+            const options = {
+                minzoom: 1,
+                maxzoom: 15,
+                tileSize: 512,
+                reparseOverscaled: true
+            };
+
+            const transform = new VerticalPerspectiveTransform({
+                minZoom: 0,
+                maxZoom: 23,
+                minPitch: 0,
+                maxPitch: 85,
+                renderWorldCopies: true
+            });
+
+            transform.resize(128, 128);
+            transform.setZoom(5);
+
+            transform.setPitch(60.0);
+            transform.setBearing(270.0);
+            transform.setCenter(new LngLat(180.0, 0));
+
+            expect(coveringTiles(transform, options)).toEqual([
+                new OverscaledTileID(4, 0, 4, 15, 8),
+                new OverscaledTileID(4, 0, 4, 15, 7),
+                new OverscaledTileID(6, 1, 6, 0, 31),
+                new OverscaledTileID(6, 1, 6, 0, 32)
+            ]);
+        });
     });
 
     describe('mercator', () => {
