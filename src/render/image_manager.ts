@@ -230,15 +230,8 @@ export class ImageManager extends Evented {
     }
 
     async _getImagesForIds(ids: string[]): Promise<GetImagesResponse> {
-        const missingIds = Array.from(new Set(ids.filter((id) => !this.getImage(id))));
-
-        const resolvedMissingIds = new Set<string>();
-        await Promise.all(missingIds.map(async (id) => {
-            if (await this._notifyMissingImage(id)) {
-                resolvedMissingIds.add(id);
-            }
-        }));
-        const initiallyMissingIds = new Set(missingIds);
+        const initiallyMissingIds = new Set(ids.filter((id) => !this.getImage(id)));
+        const resolvedMissingIds = await this._resolveMissingImageIds(initiallyMissingIds);
 
         const response: GetImagesResponse = {};
 
@@ -269,14 +262,24 @@ export class ImageManager extends Evented {
         return response;
     }
 
-    async _notifyMissingImage(id: string): Promise<boolean> {
-        if (this.getImage(id)) {
-            return true;
-        }
+    async _resolveMissingImageIds(ids: Set<string>): Promise<Set<string>> {
+        const resolvedIds = new Set<string>();
+
+        await Promise.all(Array.from(ids, async (id) => {
+            if (await this._resolveMissingImageId(id)) {
+                resolvedIds.add(id);
+            }
+        }));
+
+        return resolvedIds;
+    }
+
+    async _resolveMissingImageId(id: string): Promise<boolean> {
+        if (this.getImage(id)) return true;
 
         let request = this.missingImageRequests.get(id);
         if (!request) {
-            request = this._resolveMissingImage(id)
+            request = this._resolveMissingImageOrFireEvent(id)
                 .finally(() => {
                     this.missingImageRequests.delete(id);
                 });
@@ -286,16 +289,15 @@ export class ImageManager extends Evented {
         return request;
     }
 
-    async _resolveMissingImage(id: string): Promise<boolean> {
+    async _resolveMissingImageOrFireEvent(id: string): Promise<boolean> {
         if (this.missingImageResolver) {
             await this.missingImageResolver(id);
         }
 
-        const resolved = !!this.getImage(id);
-        if (!resolved) {
-            this.fire(new MapStyleImageMissingEvent({id}));
-        }
-        return resolved;
+        if (this.getImage(id)) return true;
+
+        this.fire(new MapStyleImageMissingEvent({id}));
+        return false;
     }
 
     // Pattern stuff
