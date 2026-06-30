@@ -8,7 +8,6 @@ import type {Terrain} from '../../render/terrain.ts';
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import {maxMercatorHorizonAngle} from './mercator_utils.ts';
 import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume.ts';
-import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {GlobeTransform} from './globe_transform.ts';
 
 type CoveringTilesResult = {
