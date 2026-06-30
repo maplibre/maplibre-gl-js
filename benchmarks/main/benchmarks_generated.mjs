@@ -2916,33 +2916,6 @@ var MercatorCoordinate = class MercatorCoordinate {
 	}
 };
 //#endregion
-//#region node_modules/@mapbox/whoots-js/index.mjs
-/**
-* getTileBBox
-*
-* @param    {Number}  x  Tile coordinate x
-* @param    {Number}  y  Tile coordinate y
-* @param    {Number}  z  Tile zoom
-* @returns  {String}  String of the bounding box
-*/
-function getTileBBox(x, y, z) {
-	y = Math.pow(2, z) - y - 1;
-	var min = getMercCoords(x * 256, y * 256, z), max = getMercCoords((x + 1) * 256, (y + 1) * 256, z);
-	return min[0] + "," + min[1] + "," + max[0] + "," + max[1];
-}
-/**
-* getMercCoords
-*
-* @param    {Number}  x  Pixel coordinate x
-* @param    {Number}  y  Pixel coordinate y
-* @param    {Number}  z  Tile zoom
-* @returns  {Array}   [x, y]
-*/
-function getMercCoords(x, y, z) {
-	var resolution = 2 * Math.PI * 6378137 / 256 / Math.pow(2, z);
-	return [x * resolution - 2 * Math.PI * 6378137 / 2, y * resolution - 2 * Math.PI * 6378137 / 2];
-}
-//#endregion
 //#region src/util/transferable_grid_index.ts
 const NUM_PARAMS = 3;
 var TransferableGridIndex = class TransferableGridIndex {
@@ -10010,7 +9983,7 @@ function rgba(ctx, [r, g, b, a]) {
 	return new Color(r / 255, g / 255, b / 255, alpha, false);
 }
 function has(key, obj) {
-	return key in obj;
+	return key in obj && obj[key] !== void 0;
 }
 function get(key, obj) {
 	const v = obj[key];
@@ -10351,7 +10324,11 @@ CompoundExpression.register(expressions, {
 	"filter-has": [
 		BooleanType,
 		[ValueType],
-		(ctx, [k]) => k.value in ctx.properties()
+		(ctx, [k]) => {
+			const key = k.value;
+			const props = ctx.properties();
+			return key in props && props[key] !== void 0;
+		}
 	],
 	"filter-has-id": [
 		BooleanType,
@@ -10990,6 +10967,7 @@ function isExpressionFilter(filter) {
 	}
 }
 function getFilterPropertyExpression(property) {
+	if (property === "$type") return ["geometry-type"];
 	if (property === "$id") return ["id"];
 	return ["get", property];
 }
@@ -11002,11 +10980,6 @@ function getLegacyFilterExpressionSuggestion(filter) {
 		case ">":
 		case ">=":
 			if (filter.length !== 3 || typeof filter[1] !== "string") return null;
-			if (filter[1] === "$type") return [filter[0], [
-				"in",
-				["geometry-type"],
-				["literal", [filter[2], `Multi${filter[2]}`]]
-			]];
 			return [
 				filter[0],
 				getFilterPropertyExpression(filter[1]),
@@ -11015,15 +10988,10 @@ function getLegacyFilterExpressionSuggestion(filter) {
 		case "in":
 		case "!in": {
 			if (filter.length < 2 || typeof filter[1] !== "string") return null;
-			let expression = [
+			const expression = [
 				"in",
 				getFilterPropertyExpression(filter[1]),
 				["literal", filter.slice(2)]
-			];
-			if (filter[1] === "$type") expression = [
-				"in",
-				["geometry-type"],
-				["literal", filter.slice(2).map((g) => [g, `Multi${g}`]).flat()]
 			];
 			return filter[0] === "!in" ? ["!", expression] : expression;
 		}
@@ -13157,6 +13125,24 @@ function calculateTileKey(wrap, overscaledZ, z, x, y) {
 	if (wrap < 0) wrap = wrap * -1 - 1;
 	const dim = 1 << z;
 	return (dim * dim * wrap + dim * y + x).toString(36) + z.toString(36) + overscaledZ.toString(36);
+}
+const EPSG3857_HALF_CIRCUMFERENCE = Math.PI * 6378137;
+/**
+* Builds the `{bbox-epsg-3857}` token used in WMS tile URLs: the tile's bounding
+* box in EPSG:3857 meters as a `minX,minY,maxX,maxY` string.
+*
+* Inlined from the archived \@mapbox/whoots-js (ISC, Copyright (c) 2017 Mapbox).
+*/
+function getTileBBox(x, y, z) {
+	y = Math.pow(2, z) - y - 1;
+	const min = getEpsg3857Coords(x * 256, y * 256, z);
+	const max = getEpsg3857Coords((x + 1) * 256, (y + 1) * 256, z);
+	return `${min[0]},${min[1]},${max[0]},${max[1]}`;
+}
+/** Projects tile pixel coordinates to EPSG:3857 meters. */
+function getEpsg3857Coords(x, y, z) {
+	const resolution = 2 * EPSG3857_HALF_CIRCUMFERENCE / 256 / Math.pow(2, z);
+	return [x * resolution - EPSG3857_HALF_CIRCUMFERENCE, y * resolution - EPSG3857_HALF_CIRCUMFERENCE];
 }
 function getQuadkey(z, x, y) {
 	let quadkey = "";
@@ -60513,7 +60499,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main feb4eb0";
+const version = "main edb7d10";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
