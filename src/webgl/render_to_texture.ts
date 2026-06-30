@@ -67,6 +67,7 @@ export class RenderToTexture {
      * a list of all layer-ids which should be rendered
      */
     _renderableLayerIds: string[];
+    _deferredLayerIds: string[];
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
@@ -81,6 +82,7 @@ export class RenderToTexture {
         this._stacks = [];
         this._prevType = null;
         this._rttTiles = [];
+        this._deferredLayerIds = [];
         this._renderableTiles = this.terrain.tileManager.getRenderableTiles();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
 
@@ -143,6 +145,12 @@ export class RenderToTexture {
         const type = layer.type;
         const painter = this.painter;
         const isLastLayer = this._renderableLayerIds[this._renderableLayerIds.length - 1] === layer.id;
+        const shouldDeferLayer = painter.style.map._allowTerrainDrapedLayerReordering && type === 'symbol' && LAYERS_TO_TEXTURES[this._prevType];
+
+        if (shouldDeferLayer && !isLastLayer) {
+            this._deferredLayerIds.push(layer.id);
+            return true;
+        }
 
         // remember background, fill, line & raster layer to render into a stack
         if (LAYERS_TO_TEXTURES[type]) {
@@ -178,6 +186,15 @@ export class RenderToTexture {
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles, options);
             this._rttTiles = [];
+
+            for (const layerId of this._deferredLayerIds) {
+                const layer = painter.style._layers[layerId];
+                const tileManager = painter.style.tileManagers[layer.source];
+                const coords = tileManager.getVisibleCoordinates(true).reverse();
+                painter.renderTileClippingMasks(layer, tileManager.getVisibleCoordinates(), true);
+                painter.renderLayer(painter, tileManager, layer, coords, renderOptions);
+            }
+            this._deferredLayerIds = [];
 
             return LAYERS_TO_TEXTURES[type];
         }
