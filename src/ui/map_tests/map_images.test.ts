@@ -29,7 +29,7 @@ test('listImages throws an error if called before "load"', () => {
     }).toThrow(Error);
 });
 
-test('map fires `styleimagemissing` without resolving the current image request', async () => {
+test('map fires `styleimagemissing` for missing icons', async () => {
     const map = createMap();
 
     const id = 'missing-image';
@@ -44,14 +44,11 @@ test('map fires `styleimagemissing` without resolving the current image request'
     expect(map.hasImage(id)).toBeFalsy();
 
     const generatedImage = await map.style.imageManager.getImages([id]);
-    expect(generatedImage[id]).toBeUndefined();
+    expect(generatedImage[id].data.width).toEqual(sampleImage.width);
+    expect(generatedImage[id].data.height).toEqual(sampleImage.height);
+    expect(generatedImage[id].data.data).toEqual(sampleImage.data);
     expect(called).toBe(id);
     expect(map.hasImage(id)).toBeTruthy();
-
-    const nextGeneratedImage = await map.style.imageManager.getImages([id]);
-    expect(nextGeneratedImage[id].data.width).toEqual(sampleImage.width);
-    expect(nextGeneratedImage[id].data.height).toEqual(sampleImage.height);
-    expect(nextGeneratedImage[id].data.data).toEqual(sampleImage.data);
 });
 
 test('map resolves missing icons with an async missing style image resolver', async () => {
@@ -99,7 +96,7 @@ test('map applies missing style image resolver options', async () => {
     expect(generatedImage[id].sdf).toBe(true);
 });
 
-test('map fires `styleimagemissing` when missing style image resolver returns no image', async () => {
+test('map falls back to `styleimagemissing` when missing style image resolver returns no image', async () => {
     const map = createMap();
 
     const id = 'missing-style-image-resolver-fallback';
@@ -115,12 +112,11 @@ test('map fires `styleimagemissing` when missing style image resolver returns no
 
     const generatedImage = await map.style.imageManager.getImages([id]);
     expect(resolver).toHaveBeenCalledWith(id);
-    expect(generatedImage[id]).toBeUndefined();
+    expect(generatedImage[id].data.width).toEqual(sampleImage.width);
+    expect(generatedImage[id].data.height).toEqual(sampleImage.height);
+    expect(generatedImage[id].data.data).toEqual(sampleImage.data);
     expect(called).toBe(id);
     expect(map.hasImage(id)).toBeTruthy();
-
-    const nextGeneratedImage = await map.style.imageManager.getImages([id]);
-    expect(nextGeneratedImage[id].data.width).toEqual(sampleImage.width);
 });
 
 test('map shares in-flight missing style image resolver requests for the same icon', async () => {

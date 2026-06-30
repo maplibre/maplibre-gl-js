@@ -54,7 +54,7 @@ export class ImageManager extends Evented {
         promiseResolve: (value: GetImagesResponse | PromiseLike<GetImagesResponse>) => void;
     }>;
     missingImageResolver: MissingImageRequestHandler | null;
-    missingImageRequests: Map<string, Promise<boolean>>;
+    missingImageRequests: Map<string, Promise<void>>;
 
     patterns: {[_: string]: Pattern};
     atlasImage: RGBAImage;
@@ -229,18 +229,15 @@ export class ImageManager extends Evented {
     }
 
     async _getImagesForIds(ids: string[]): Promise<GetImagesResponse> {
-        const initiallyMissingIds = new Set(ids.filter((id) => !this.getImage(id)));
-        const resolvedMissingIds = await this._resolveMissingImageIds(initiallyMissingIds);
+        const missingIds = new Set(ids.filter((id) => !this.getImage(id)));
+        await this._resolveMissingImageIds(missingIds);
 
         const response: GetImagesResponse = {};
 
         for (const id of ids) {
             const image = this.getImage(id);
 
-            // Images added by styleimagemissing listeners are available for future requests,
-            // but do not satisfy the current response.
-            const includeImage = image && (!initiallyMissingIds.has(id) || resolvedMissingIds.has(id));
-            if (includeImage) {
+            if (image) {
                 // Clone the image so that our own copy of its ArrayBuffer doesn't get transferred.
                 response[id] = {
                     data: image.data.clone(),
@@ -261,20 +258,12 @@ export class ImageManager extends Evented {
         return response;
     }
 
-    async _resolveMissingImageIds(ids: Set<string>): Promise<Set<string>> {
-        const resolvedIds = new Set<string>();
-
-        await Promise.all(Array.from(ids, async (id) => {
-            if (await this._resolveMissingImageId(id)) {
-                resolvedIds.add(id);
-            }
-        }));
-
-        return resolvedIds;
+    async _resolveMissingImageIds(ids: Set<string>): Promise<void> {
+        await Promise.all(Array.from(ids, (id) => this._resolveMissingImageId(id)));
     }
 
-    async _resolveMissingImageId(id: string): Promise<boolean> {
-        if (this.getImage(id)) return true;
+    async _resolveMissingImageId(id: string): Promise<void> {
+        if (this.getImage(id)) return;
 
         let request = this.missingImageRequests.get(id);
         if (!request) {
@@ -285,18 +274,17 @@ export class ImageManager extends Evented {
             this.missingImageRequests.set(id, request);
         }
 
-        return request;
+        await request;
     }
 
-    async _resolveMissingImageOrFireEvent(id: string): Promise<boolean> {
+    async _resolveMissingImageOrFireEvent(id: string): Promise<void> {
         if (this.missingImageResolver) {
             await this.missingImageResolver(id);
         }
 
-        if (this.getImage(id)) return true;
-
-        this.fire(new MapStyleImageMissingEvent({id}));
-        return false;
+        if (!this.getImage(id)) {
+            this.fire(new MapStyleImageMissingEvent({id}));
+        }
     }
 
     // Pattern stuff
