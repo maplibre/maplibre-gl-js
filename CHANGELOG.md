@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Reduce allocation pressure while constructing DEM data and sampling terrain elevations ([#7814](https://github.com/maplibre/maplibre-gl-js/pull/7814)) (by [@DoFabien](https://github.com/DoFabien))
+- Drop the archived `@mapbox/whoots-js` dependency by inlining its single `getTileBBox` helper ([#7838](https://github.com/maplibre/maplibre-gl-js/pull/7838)) (by [@qorexdevs](https://github.com/qorexdevs))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
