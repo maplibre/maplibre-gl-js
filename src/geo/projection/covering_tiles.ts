@@ -8,6 +8,7 @@ import type {Terrain} from '../../render/terrain.ts';
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import {maxMercatorHorizonAngle} from './mercator_utils.ts';
 import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume.ts';
+import {GlobeTransform} from './globe_transform.ts';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;
@@ -188,7 +189,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     cameraCoord.z = centerCoord.z + Math.cos(transform.pitchInRadians) * transform.cameraToCenterDistance / transform.worldSize;
     const detailsProvider = transform.getCoveringTilesDetailsProvider();
     const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
-    
+
     const desiredZ = coveringZoomLevel(transform, options);
     const minZoom = options.minzoom || 0;
     const maxZoom = options.maxzoom !== undefined ? options.maxzoom : transform.maxZoom;
@@ -197,7 +198,15 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     const numTiles = Math.pow(2, nominalZ);
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
     const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
-    const distanceToCenter2d = Math.hypot(centerCoord.x - cameraCoord.x, centerCoord.y - cameraCoord.y);
+
+    let deltaX = centerCoord.x - cameraCoord.x;
+    if (transform instanceof GlobeTransform && transform.isGlobeRendering) {
+        // account for wrapping of centerCoord/cameraCoord around the anti-meridian
+        // this ensures that the coordinate difference stays in the range [-0.5, 0.5]
+        deltaX = deltaX - Math.round(deltaX);
+    }
+
+    const distanceToCenter2d = Math.hypot(deltaX, centerCoord.y - cameraCoord.y);
     const distanceZ = Math.abs(centerCoord.z - cameraCoord.z);
     const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
 
