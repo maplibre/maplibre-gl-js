@@ -47040,7 +47040,7 @@ var Painter = class Painter {
 		doUpdate ||= this.style.map.terrain.tileManager.anyTilesAfterTime(this.terrainFacilitator.renderTime);
 		if (!doUpdate) return;
 		copy(prevMatrix, currMatrix);
-		this.terrainFacilitator.renderTime = Date.now();
+		this.terrainFacilitator.renderTime = now();
 		this.terrainFacilitator.depthDirty = false;
 		this.terrainFacilitator.coordsDirty = true;
 		this.drawFunctions.terrainDepth(this, this.style.map.terrain);
@@ -51359,7 +51359,7 @@ var TerrainTileManager = class extends Evented {
 	* @param time - the time
 	* @returns true if any tiles came into view at or after the specified time
 	*/
-	anyTilesAfterTime(time = Date.now()) {
+	anyTilesAfterTime(time = now()) {
 		return this._lastTilesetChange >= time;
 	}
 	/**
@@ -60499,7 +60499,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main edb7d10";
+const version = "main 8dd8214";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
