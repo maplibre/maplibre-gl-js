@@ -258,9 +258,7 @@ describe('Terrain', () => {
                     tile: {
                         dem: {
                             dim: 1,
-                            get(x:number, y:number) {
-                                expect(x % 1).toBe(0);
-                                expect(y % 1).toBe(0);
+                            sampleBilinear(x: number, y: number) {
                                 return 100 * x + 10 * y;
                             }
                         }
