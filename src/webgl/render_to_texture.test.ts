@@ -264,4 +264,38 @@ describe('render to texture', () => {
         expect(acquireSpy).not.toHaveBeenCalled();
         expect(tile.getRTT(0)).toBe(cached);
     });
+
+    test('prepare only queries sources rendered to texture', () => {
+        const tileManager = () => ({
+            getVisibleCoordinates: vi.fn().mockReturnValue([tile.tileID]),
+            getSource: vi.fn().mockReturnValue({}),
+            getState: vi.fn().mockReturnValue({revision: 0})
+        });
+        const maineTileManager = tileManager();
+        const terrainTileManager = tileManager();
+        const symbolTileManager = tileManager();
+        const testStyle = {
+            ...style,
+            terrain: {source: 'terrainSource'},
+            tileManagers: {
+                maine: maineTileManager,
+                terrainSource: terrainTileManager,
+                symbols: symbolTileManager
+            },
+            _order: ['maine-fill', 'symbols'],
+            _layers: {
+                'maine-fill': fillLayer,
+                symbols: {...symbolLayer, id: 'symbols', source: 'symbols'}
+            }
+        } as any as Style;
+
+        (terrain.tileManager.getTerrainCoords as Mock).mockClear();
+        rtt.prepareForRender(testStyle, 0);
+
+        expect(maineTileManager.getVisibleCoordinates).toHaveBeenCalledTimes(1);
+        expect(terrainTileManager.getVisibleCoordinates).not.toHaveBeenCalled();
+        expect(symbolTileManager.getVisibleCoordinates).not.toHaveBeenCalled();
+        expect(terrain.tileManager.getTerrainCoords).toHaveBeenCalledTimes(1);
+        expect(Object.keys(rtt._coordsAscending)).toStrictEqual(['maine']);
+    });
 });
