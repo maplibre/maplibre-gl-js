@@ -14613,13 +14613,42 @@ function addPatternDependencies(type, layers, patternFeature, parameters, option
 }
 //#endregion
 //#region node_modules/earcut/src/earcut.js
+/**
+* A vertex in a circular doubly linked list representing a polygon ring.
+* `prev`/`next` are always linked (set immediately after {@link createNode}), so they're typed
+* non-null; `prevZ`/`nextZ` are the z-order list links and are null at the ends.
+*
+* @typedef {object} Node
+* @property {number} i vertex index in the coordinates array
+* @property {number} x vertex x coordinate
+* @property {number} y vertex y coordinate
+* @property {Node} prev previous vertex node in the polygon ring
+* @property {Node} next next vertex node in the polygon ring
+* @property {number} z z-order curve value; doubles as the owning block index during eliminateHoles
+* @property {Node | null} prevZ previous node in z-order
+* @property {Node | null} nextZ next node in z-order
+*/
+/** @type {Set<Node>} */
+const steiners = /* @__PURE__ */ new Set();
+let filteredOut = false;
+/**
+* Triangulate a polygon given as a flat array of vertex coordinates.
+*
+* @param {ArrayLike<number>} data flat array of vertex coordinates
+* @param {ArrayLike<number> | null} [holeIndices] indices (in vertices, not coordinates) where each hole ring starts
+* @param {number} [dim=2] number of coordinates per vertex in `data`
+* @returns {number[]} triangles as triplets of vertex indices into `data`
+* @example earcut([10,0, 0,50, 60,60, 70,10]); // [1,0,3, 3,2,1]
+*/
 function earcut(data, holeIndices, dim = 2) {
 	const hasHoles = holeIndices && holeIndices.length;
 	const outerLen = hasHoles ? holeIndices[0] * dim : data.length;
+	if (steiners.size) steiners.clear();
 	let outerNode = linkedList(data, 0, outerLen, dim, true);
+	/** @type {number[]} */
 	const triangles = [];
 	if (!outerNode || outerNode.next === outerNode.prev) return triangles;
-	let minX, minY, invSize;
+	let minX = 0, minY = 0, invSize = 0;
 	if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
 	if (data.length > 80 * dim) {
 		minX = data[0];
@@ -14637,11 +14666,13 @@ function earcut(data, holeIndices, dim = 2) {
 		invSize = Math.max(maxX - minX, maxY - minY);
 		invSize = invSize !== 0 ? 32767 / invSize : 0;
 	}
-	earcutLinked(outerNode, triangles, dim, minX, minY, invSize, 0);
+	earcutLinked(outerNode, triangles, minX, minY, invSize);
 	return triangles;
 }
+/** @param {ArrayLike<number>} data @param {number} start @param {number} end @param {number} dim @param {boolean} clockwise @returns {Node | null} */
 function linkedList(data, start, end, dim, clockwise) {
-	let last;
+	/** @type {Node | null} */
+	let last = null;
 	if (clockwise === signedArea$1(data, start, end, dim) > 0) for (let i = start; i < end; i += dim) last = insertNode(i / dim | 0, data[i], data[i + 1], last);
 	else for (let i = end - dim; i >= start; i -= dim) last = insertNode(i / dim | 0, data[i], data[i + 1], last);
 	if (last && equals(last, last.next)) {
@@ -14650,96 +14681,103 @@ function linkedList(data, start, end, dim, clockwise) {
 	}
 	return last;
 }
-function filterPoints(start, end) {
-	if (!start) return start;
-	if (!end) end = start;
+/** @param {Node} start @param {Node} [end] @returns {Node} */
+function filterPoints(start, end = start) {
+	const full = end === start;
 	let p = start, again;
 	do {
 		again = false;
-		if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+		if (p !== p.next && (steiners.size === 0 || !steiners.has(p)) && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+			if (full || p === end) end = p.prev;
+			filteredOut = true;
 			removeNode(p);
-			p = end = p.prev;
-			if (p === p.next) break;
+			p = p.prev;
 			again = true;
-		} else p = p.next;
+		} else if (full || p !== end) {
+			p = p.next;
+			again = !full;
+		}
 	} while (again || p !== end);
 	return end;
 }
-function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
-	if (!ear) return;
-	if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
-	let stop = ear;
+/** @param {Node} ear @param {number[]} triangles @param {number} minX @param {number} minY @param {number} invSize */
+function earcutLinked(ear, triangles, minX, minY, invSize) {
+	if (invSize) indexCurve(ear, minX, minY, invSize);
+	let stop = ear, cured = false;
 	while (ear.prev !== ear.next) {
 		const prev = ear.prev;
+		/** @type {Node} */
 		const next = ear.next;
-		if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
+		if (area(prev, ear, next) < 0 && (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear))) {
 			triangles.push(prev.i, ear.i, next.i);
 			removeNode(ear);
-			ear = next.next;
-			stop = next.next;
+			ear = next;
+			stop = next;
 			continue;
 		}
 		ear = next;
 		if (ear === stop) {
-			if (!pass) earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
-			else if (pass === 1) {
-				ear = cureLocalIntersections(filterPoints(ear), triangles);
-				earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
-			} else if (pass === 2) splitEarcut(ear, triangles, dim, minX, minY, invSize);
+			filteredOut = false;
+			ear = filterPoints(ear);
+			if (filteredOut) {
+				stop = ear;
+				continue;
+			}
+			if (!cured) {
+				ear = cureLocalIntersections(ear, triangles);
+				stop = ear;
+				cured = true;
+				continue;
+			}
+			splitEarcut(ear, triangles, minX, minY, invSize);
 			break;
 		}
 	}
 }
+/** @param {Node} ear @returns {boolean} */
 function isEar(ear) {
-	const a = ear.prev, b = ear, c = ear.next;
-	if (area(a, b, c) >= 0) return false;
-	const ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
-	const x0 = Math.min(ax, bx, cx), y0 = Math.min(ay, by, cy), x1 = Math.max(ax, bx, cx), y1 = Math.max(ay, by, cy);
+	const a = ear.prev, b = ear, c = ear.next, ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y, x0 = Math.min(ax, bx, cx), y0 = Math.min(ay, by, cy), x1 = Math.max(ax, bx, cx), y1 = Math.max(ay, by, cy);
 	let p = c.next;
 	while (p !== a) {
-		if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
+		if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && !(ax === p.x && ay === p.y) && pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
 		p = p.next;
 	}
 	return true;
 }
+/** @param {Node} ear @param {number} minX @param {number} minY @param {number} invSize @returns {boolean} */
 function isEarHashed(ear, minX, minY, invSize) {
-	const a = ear.prev, b = ear, c = ear.next;
-	if (area(a, b, c) >= 0) return false;
-	const ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
-	const x0 = Math.min(ax, bx, cx), y0 = Math.min(ay, by, cy), x1 = Math.max(ax, bx, cx), y1 = Math.max(ay, by, cy);
-	const minZ = zOrder(x0, y0, minX, minY, invSize), maxZ = zOrder(x1, y1, minX, minY, invSize);
-	let p = ear.prevZ, n = ear.nextZ;
-	while (p && p.z >= minZ && n && n.z <= maxZ) {
-		if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
-		p = p.prevZ;
-		if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
-		n = n.nextZ;
-	}
+	const a = ear.prev, b = ear, c = ear.next, ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y, x0 = Math.min(ax, bx, cx), y0 = Math.min(ay, by, cy), x1 = Math.max(ax, bx, cx), y1 = Math.max(ay, by, cy), minZ = zOrder(x0, y0, minX, minY, invSize), maxZ = zOrder(x1, y1, minX, minY, invSize);
+	let p = ear.prevZ;
 	while (p && p.z >= minZ) {
-		if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
+		if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== c && !(ax === p.x && ay === p.y) && pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
 		p = p.prevZ;
 	}
+	let n = ear.nextZ;
 	while (n && n.z <= maxZ) {
-		if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
+		if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== c && !(ax === n.x && ay === n.y) && pointInTriangle(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
 		n = n.nextZ;
 	}
 	return true;
 }
+/** @param {Node} start @param {number[]} triangles @returns {Node} */
 function cureLocalIntersections(start, triangles) {
 	let p = start;
+	let cured = false;
 	do {
 		const a = p.prev, b = p.next.next;
-		if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
+		if (intersects(a, p, p.next, b, false) && locallyInside(a, b) && locallyInside(b, a)) {
 			triangles.push(a.i, p.i, b.i);
 			removeNode(p);
 			removeNode(p.next);
 			p = start = b;
+			cured = true;
 		}
 		p = p.next;
 	} while (p !== start);
-	return filterPoints(p);
+	return cured ? filterPoints(p) : p;
 }
-function splitEarcut(start, triangles, dim, minX, minY, invSize) {
+/** @param {Node} start @param {number[]} triangles @param {number} minX @param {number} minY @param {number} invSize */
+function splitEarcut(start, triangles, minX, minY, invSize) {
 	let a = start;
 	do {
 		let b = a.next.next;
@@ -14748,8 +14786,8 @@ function splitEarcut(start, triangles, dim, minX, minY, invSize) {
 				let c = splitPolygon(a, b);
 				a = filterPoints(a, a.next);
 				c = filterPoints(c, c.next);
-				earcutLinked(a, triangles, dim, minX, minY, invSize, 0);
-				earcutLinked(c, triangles, dim, minX, minY, invSize, 0);
+				earcutLinked(a, triangles, minX, minY, invSize);
+				earcutLinked(c, triangles, minX, minY, invSize);
 				return;
 			}
 			b = b.next;
@@ -14757,125 +14795,226 @@ function splitEarcut(start, triangles, dim, minX, minY, invSize) {
 		a = a.next;
 	} while (a !== start);
 }
+let indexActive = false;
+/** @param {ArrayLike<number>} data @param {ArrayLike<number>} holeIndices @param {Node} outerNode @param {number} dim @returns {Node} */
 function eliminateHoles(data, holeIndices, outerNode, dim) {
 	const queue = [];
 	for (let i = 0, len = holeIndices.length; i < len; i++) {
 		const list = linkedList(data, holeIndices[i] * dim, i < len - 1 ? holeIndices[i + 1] * dim : data.length, dim, false);
-		if (list === list.next) list.steiner = true;
+		if (list === list.next) steiners.add(list);
 		queue.push(getLeftmost(list));
 	}
 	queue.sort(compareXYSlope);
+	buildBlockIndex(data.length / dim, holeIndices.length);
+	indexSegment(outerNode, outerNode);
+	indexActive = true;
 	for (let i = 0; i < queue.length; i++) outerNode = eliminateHole(queue[i], outerNode);
-	return outerNode;
+	indexActive = false;
+	return filterPoints(outerNode);
 }
+/** @param {Node} a @param {Node} b @returns {number} */
 function compareXYSlope(a, b) {
-	let result = a.x - b.x;
-	if (result === 0) {
-		result = a.y - b.y;
-		if (result === 0) result = (a.next.y - a.y) / (a.next.x - a.x) - (b.next.y - b.y) / (b.next.x - b.x);
-	}
-	return result;
+	return a.x - b.x || a.y - b.y || (a.next.y - a.y) / (a.next.x - a.x) - (b.next.y - b.y) / (b.next.x - b.x);
 }
+/** @param {Node} hole @param {Node} outerNode @returns {Node} */
 function eliminateHole(hole, outerNode) {
 	const bridge = findHoleBridge(hole, outerNode);
 	if (!bridge) return outerNode;
 	const bridgeReverse = splitPolygon(bridge, hole);
+	const bridge2 = bridgeReverse.next;
+	indexSegment(bridge, bridge2.next);
 	filterPoints(bridgeReverse, bridgeReverse.next);
 	return filterPoints(bridge, bridge.next);
 }
+const K = 16;
+let blockBBox = /* @__PURE__ */ new Float64Array(0);
+let numBlocks = 0;
+/** @type {Node[]} */
+const blockHead = [];
+/** @type {Node[]} */
+const blockStop = [];
+/** @param {number} maxNodes @param {number} numHoles */
+function buildBlockIndex(maxNodes, numHoles) {
+	const maxBlocks = Math.ceil((maxNodes + 2 * numHoles) / K) + numHoles + 2;
+	if (blockBBox.length < maxBlocks * 4) blockBBox = new Float64Array(maxBlocks * 4);
+	numBlocks = 0;
+}
+/** @param {Node} head @param {Node} stop */
+function indexSegment(head, stop) {
+	let p = head;
+	do {
+		const b = numBlocks++;
+		blockHead[b] = p;
+		let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+		let k = 0;
+		do {
+			const c = p.next;
+			p.z = b;
+			if (p.x < minX) minX = p.x;
+			if (p.x > maxX) maxX = p.x;
+			if (p.y < minY) minY = p.y;
+			if (p.y > maxY) maxY = p.y;
+			if (c.x < minX) minX = c.x;
+			if (c.x > maxX) maxX = c.x;
+			if (c.y < minY) minY = c.y;
+			if (c.y > maxY) maxY = c.y;
+			p = c;
+		} while (++k < K && p !== stop);
+		blockStop[b] = p;
+		const g = b * 4;
+		blockBBox[g] = minX;
+		blockBBox[g + 1] = minY;
+		blockBBox[g + 2] = maxX;
+		blockBBox[g + 3] = maxY;
+	} while (p !== stop);
+}
+/** @param {Node} head @param {Node} tail */
+function growBlock(head, tail) {
+	const g = head.z * 4;
+	if (tail.x < blockBBox[g]) blockBBox[g] = tail.x;
+	if (tail.y < blockBBox[g + 1]) blockBBox[g + 1] = tail.y;
+	if (tail.x > blockBBox[g + 2]) blockBBox[g + 2] = tail.x;
+	if (tail.y > blockBBox[g + 3]) blockBBox[g + 3] = tail.y;
+}
+/** @param {number} b @returns {Node} */
+function liveBlockStop(b) {
+	let stop = blockStop[b];
+	while (stop.prev.next !== stop) stop = stop.next;
+	blockStop[b] = stop;
+	return stop;
+}
+/** @param {number} b @returns {Node} */
+function liveBlockHead(b) {
+	let head = blockHead[b];
+	while (head.prev.next !== head) head = head.next;
+	blockHead[b] = head;
+	return head;
+}
+/** @param {Node} hole @param {Node} outerNode @returns {Node | null} */
 function findHoleBridge(hole, outerNode) {
 	let p = outerNode;
 	const hx = hole.x;
 	const hy = hole.y;
 	let qx = -Infinity;
+	/** @type {Node | undefined} */
 	let m;
 	if (equals(hole, p)) return p;
-	do {
-		if (equals(hole, p.next)) return p.next;
-		else if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
-			const x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
-			if (x <= hx && x > qx) {
-				qx = x;
-				m = p.x < p.next.x ? p : p.next;
-				if (x === hx) return m;
+	for (let b = 0, g = 0; b < numBlocks; b++, g += 4) {
+		if (hy < blockBBox[g + 1] || hy > blockBBox[g + 3] || blockBBox[g] > hx || blockBBox[g + 2] <= qx) continue;
+		const stop = liveBlockStop(b);
+		p = liveBlockHead(b);
+		do {
+			if (p.prev.next === p) {
+				if (equals(hole, p.next)) return p.next;
+				else if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
+					const x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+					if (x <= hx && x > qx) {
+						qx = x;
+						m = p.x < p.next.x ? p : p.next;
+						if (x === hx) return m;
+					}
+				}
 			}
-		}
-		p = p.next;
-	} while (p !== outerNode);
+			p = p.next;
+		} while (p !== stop);
+	}
 	if (!m) return null;
-	const stop = m;
 	const mx = m.x;
 	const my = m.y;
+	const tminY = Math.min(hy, my);
+	const tmaxY = Math.max(hy, my);
 	let tanMin = Infinity;
-	p = m;
-	do {
-		if (hx >= p.x && p.x >= mx && hx !== p.x && pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
-			const tan = Math.abs(hy - p.y) / (hx - p.x);
-			if (locallyInside(p, hole) && (tan < tanMin || tan === tanMin && (p.x > m.x || p.x === m.x && sectorContainsSector(m, p)))) {
-				m = p;
-				tanMin = tan;
+	for (let b = 0, g = 0; b < numBlocks; b++, g += 4) {
+		if (blockBBox[g + 2] < mx || blockBBox[g] > hx || blockBBox[g + 3] < tminY || blockBBox[g + 1] > tmaxY) continue;
+		const stop = liveBlockStop(b);
+		p = liveBlockHead(b);
+		do {
+			if (p.prev.next === p && hx >= p.x && p.x >= mx && hx !== p.x && pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
+				const tan = Math.abs(hy - p.y) / (hx - p.x);
+				if ((locallyInside(p, hole) || p.y === hy && p.next.y === hy && p.next.x > hx) && (tan < tanMin || tan === tanMin && (p.x > m.x || p.x === m.x && sectorContainsSector(m, p)))) {
+					m = p;
+					tanMin = tan;
+				}
 			}
-		}
-		p = p.next;
-	} while (p !== stop);
+			p = p.next;
+		} while (p !== stop);
+	}
 	return m;
 }
+/** @param {Node} m @param {Node} p @returns {boolean} */
 function sectorContainsSector(m, p) {
 	return area(m.prev, m, p.prev) < 0 && area(p.next, m, m.next) < 0;
 }
+/** @type {Node[]} */
+const sortArr = [];
+/** @type {Node[]} */
+let sortBuf = [];
+let zArr = /* @__PURE__ */ new Uint32Array(0);
+let zBuf = /* @__PURE__ */ new Uint32Array(0);
+const counts = /* @__PURE__ */ new Uint32Array(256);
+/** @param {Node} start @param {number} minX @param {number} minY @param {number} invSize */
 function indexCurve(start, minX, minY, invSize) {
 	let p = start;
+	let n = 0;
 	do {
-		if (p.z === 0) p.z = zOrder(p.x, p.y, minX, minY, invSize);
-		p.prevZ = p.prev;
-		p.nextZ = p.next;
+		p.z = zOrder(p.x, p.y, minX, minY, invSize);
+		sortArr[n++] = p;
 		p = p.next;
 	} while (p !== start);
-	p.prevZ.nextZ = null;
-	p.prevZ = null;
-	sortLinked(p);
+	sortNodes(n);
+	/** @type {Node | null} */
+	let prev = null;
+	for (let i = 0; i < n; i++) {
+		const node = sortArr[i];
+		node.prevZ = prev;
+		if (prev) prev.nextZ = node;
+		prev = node;
+	}
+	/** @type {Node} */ prev.nextZ = null;
 }
-function sortLinked(list) {
-	let numMerges;
-	let inSize = 1;
-	do {
-		let p = list;
-		let e;
-		list = null;
-		let tail = null;
-		numMerges = 0;
-		while (p) {
-			numMerges++;
-			let q = p;
-			let pSize = 0;
-			for (let i = 0; i < inSize; i++) {
-				pSize++;
-				q = q.nextZ;
-				if (!q) break;
+/** @param {number} n */
+function sortNodes(n) {
+	if (n <= 32) {
+		for (let i = 1; i < n; i++) {
+			const node = sortArr[i], z = node.z;
+			let j = i - 1;
+			while (j >= 0 && sortArr[j].z > z) {
+				sortArr[j + 1] = sortArr[j];
+				j--;
 			}
-			let qSize = inSize;
-			while (pSize > 0 || qSize > 0 && q) {
-				if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
-					e = p;
-					p = p.nextZ;
-					pSize--;
-				} else {
-					e = q;
-					q = q.nextZ;
-					qSize--;
-				}
-				if (tail) tail.nextZ = e;
-				else list = e;
-				e.prevZ = tail;
-				tail = e;
-			}
-			p = q;
+			sortArr[j + 1] = node;
 		}
-		tail.nextZ = null;
-		inSize *= 2;
-	} while (numMerges > 1);
-	return list;
+		return;
+	}
+	if (zArr.length < n) {
+		zArr = new Uint32Array(n);
+		zBuf = new Uint32Array(n);
+		sortBuf = new Array(n);
+	}
+	for (let i = 0; i < n; i++) zArr[i] = sortArr[i].z;
+	radixPass(n, sortArr, zArr, sortBuf, zBuf, 0);
+	radixPass(n, sortBuf, zBuf, sortArr, zArr, 8);
+	radixPass(n, sortArr, zArr, sortBuf, zBuf, 16);
+	radixPass(n, sortBuf, zBuf, sortArr, zArr, 24);
 }
+/** @param {number} n @param {Node[]} src @param {Uint32Array} srcZ @param {Node[]} dst @param {Uint32Array} dstZ @param {number} shift */
+function radixPass(n, src, srcZ, dst, dstZ, shift) {
+	counts.fill(0);
+	for (let i = 0; i < n; i++) counts[srcZ[i] >>> shift & 255]++;
+	let sum = 0;
+	for (let b = 0; b < 256; b++) {
+		const c = counts[b];
+		counts[b] = sum;
+		sum += c;
+	}
+	for (let i = 0; i < n; i++) {
+		const z = srcZ[i];
+		const pos = counts[z >>> shift & 255]++;
+		dst[pos] = src[i];
+		dstZ[pos] = z;
+	}
+}
+/** @param {number} x @param {number} y @param {number} minX @param {number} minY @param {number} invSize @returns {number} */
 function zOrder(x, y, minX, minY, invSize) {
 	x = (x - minX) * invSize | 0;
 	y = (y - minY) * invSize | 0;
@@ -14889,6 +15028,7 @@ function zOrder(x, y, minX, minY, invSize) {
 	y = (y | y << 1) & 1431655765;
 	return x | y << 1;
 }
+/** @param {Node} start @returns {Node} */
 function getLeftmost(start) {
 	let p = start, leftmost = start;
 	do {
@@ -14897,61 +15037,77 @@ function getLeftmost(start) {
 	} while (p !== start);
 	return leftmost;
 }
+/** @param {number} ax @param {number} ay @param {number} bx @param {number} by @param {number} cx @param {number} cy @param {number} px @param {number} py @returns {boolean} */
 function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
 	return (cx - px) * (ay - py) >= (ax - px) * (cy - py) && (ax - px) * (by - py) >= (bx - px) * (ay - py) && (bx - px) * (cy - py) >= (cx - px) * (by - py);
 }
-function pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, px, py) {
-	return !(ax === px && ay === py) && pointInTriangle(ax, ay, bx, by, cx, cy, px, py);
-}
+/** @param {Node} a @param {Node} b @returns {boolean} true when the diagonal is valid */
 function isValidDiagonal(a, b) {
-	return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && (area(a.prev, a, b.prev) || area(a, b.prev, b)) || equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0);
+	const zeroLength = equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0;
+	return a.next.i !== b.i && (zeroLength || locallyInside(a, b) && locallyInside(b, a) && (area(a.prev, a, b.prev) !== 0 || area(a, b.prev, b) !== 0)) && !intersectsPolygon(a, b) && (zeroLength || middleInside(a, b));
 }
+/** @param {Node} p @param {Node} q @param {Node} r @returns {number} */
 function area(p, q, r) {
 	return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 }
+/** @param {Node} p1 @param {Node} p2 @returns {boolean} */
 function equals(p1, p2) {
 	return p1.x === p2.x && p1.y === p2.y;
 }
-function intersects(p1, q1, p2, q2) {
-	const o1 = sign(area(p1, q1, p2));
-	const o2 = sign(area(p1, q1, q2));
-	const o3 = sign(area(p2, q2, p1));
-	const o4 = sign(area(p2, q2, q1));
-	if (o1 !== o2 && o3 !== o4) return true;
+/** @param {Node} p1 @param {Node} q1 @param {Node} p2 @param {Node} q2 @param {boolean} [includeBoundary] @returns {boolean} */
+function intersects(p1, q1, p2, q2, includeBoundary = true) {
+	const o1 = area(p1, q1, p2);
+	const o2 = area(p1, q1, q2);
+	const o3 = area(p2, q2, p1);
+	const o4 = area(p2, q2, q1);
+	if ((o1 > 0 && o2 < 0 || o1 < 0 && o2 > 0) && (o3 > 0 && o4 < 0 || o3 < 0 && o4 > 0)) return true;
+	if (!includeBoundary) return false;
 	if (o1 === 0 && onSegment(p1, p2, q1)) return true;
 	if (o2 === 0 && onSegment(p1, q2, q1)) return true;
 	if (o3 === 0 && onSegment(p2, p1, q2)) return true;
 	if (o4 === 0 && onSegment(p2, q1, q2)) return true;
 	return false;
 }
+/** @param {Node} p @param {Node} q @param {Node} r @returns {boolean} */
 function onSegment(p, q, r) {
 	return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
 }
-function sign(num) {
-	return num > 0 ? 1 : num < 0 ? -1 : 0;
-}
+/** @param {Node} a @param {Node} b @returns {boolean} */
 function intersectsPolygon(a, b) {
+	const minX = Math.min(a.x, b.x);
+	const maxX = Math.max(a.x, b.x);
+	const minY = Math.min(a.y, b.y);
+	const maxY = Math.max(a.y, b.y);
 	let p = a;
 	do {
-		if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i && intersects(p, p.next, a, b)) return true;
-		p = p.next;
+		const n = p.next;
+		if (p.x > maxX && n.x > maxX || p.x < minX && n.x < minX || p.y > maxY && n.y > maxY || p.y < minY && n.y < minY) {
+			p = n;
+			continue;
+		}
+		if (p.i !== a.i && n.i !== a.i && p.i !== b.i && n.i !== b.i && intersects(p, n, a, b)) return true;
+		p = n;
 	} while (p !== a);
 	return false;
 }
+/** @param {Node} a @param {Node} b @returns {boolean} */
 function locallyInside(a, b) {
 	return area(a.prev, a, a.next) < 0 ? area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 : area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
 }
+/** @param {Node} a @param {Node} b @returns {boolean} */
 function middleInside(a, b) {
 	let p = a;
 	let inside = false;
 	const px = (a.x + b.x) / 2;
 	const py = (a.y + b.y) / 2;
 	do {
-		if (p.y > py !== p.next.y > py && p.next.y !== p.y && px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x) inside = !inside;
-		p = p.next;
+		const n = p.next;
+		if (p.y > py !== n.y > py && px < (n.x - p.x) * (py - p.y) / (n.y - p.y) + p.x) inside = !inside;
+		p = n;
 	} while (p !== a);
 	return inside;
 }
+/** @param {Node} a @param {Node} b @returns {Node} */
 function splitPolygon(a, b) {
 	const a2 = createNode(a.i, a.x, a.y), b2 = createNode(b.i, b.x, b.y), an = a.next, bp = b.prev;
 	a.next = b;
@@ -14964,6 +15120,7 @@ function splitPolygon(a, b) {
 	b2.prev = bp;
 	return b2;
 }
+/** @param {number} i @param {number} x @param {number} y @param {Node | null} last @returns {Node} */
 function insertNode(i, x, y, last) {
 	const p = createNode(i, x, y);
 	if (!last) {
@@ -14977,12 +15134,15 @@ function insertNode(i, x, y, last) {
 	}
 	return p;
 }
+/** @param {Node} p */
 function removeNode(p) {
 	p.next.prev = p.prev;
 	p.prev.next = p.next;
 	if (p.prevZ) p.prevZ.nextZ = p.nextZ;
 	if (p.nextZ) p.nextZ.prevZ = p.prevZ;
+	if (indexActive) growBlock(p.prev, p.next);
 }
+/** @param {number} i @param {number} x @param {number} y @returns {Node} */
 function createNode(i, x, y) {
 	return {
 		i,
@@ -14992,10 +15152,10 @@ function createNode(i, x, y) {
 		next: null,
 		z: 0,
 		prevZ: null,
-		nextZ: null,
-		steiner: false
+		nextZ: null
 	};
 }
+/** @param {ArrayLike<number>} data @param {number} start @param {number} end @param {number} dim @returns {number} */
 function signedArea$1(data, start, end, dim) {
 	let sum = 0;
 	for (let i = start, j = end - dim; i < end; i += dim) {
@@ -16539,7 +16699,707 @@ function projectQueryGeometry(queryGeometry, pixelPosMatrix, z) {
 	return projectedQueryGeometry;
 }
 //#endregion
-//#region node_modules/kdbush/index.js
+//#region node_modules/@maplibre/geojson-vt/dist/geojson-vt.mjs
+/**
+* calculate simplification data using optimized Douglas-Peucker algorithm
+* @param coords - flat array of coordinates
+* @param first - index of the first coordinate in the segment
+* @param last - index of the last coordinate in the segment
+* @param sqTolerance - square tolerance value
+*/
+function simplify(coords, first, last, sqTolerance) {
+	let maxSqDist = sqTolerance;
+	const mid = first + (last - first >> 1);
+	let minPosToMid = last - first;
+	let index;
+	const ax = coords[first];
+	const ay = coords[first + 1];
+	const bx = coords[last];
+	const by = coords[last + 1];
+	for (let i = first + 3; i < last; i += 3) {
+		const d = getSqSegDist(coords[i], coords[i + 1], ax, ay, bx, by);
+		if (d > maxSqDist) {
+			index = i;
+			maxSqDist = d;
+			continue;
+		}
+		if (d === maxSqDist) {
+			const posToMid = Math.abs(i - mid);
+			if (posToMid < minPosToMid) {
+				index = i;
+				minPosToMid = posToMid;
+			}
+		}
+	}
+	if (maxSqDist > sqTolerance) {
+		if (index - first > 3) simplify(coords, first, index, sqTolerance);
+		coords[index + 2] = maxSqDist;
+		if (last - index > 3) simplify(coords, index, last, sqTolerance);
+	}
+}
+/**
+* Claculates the square distance from a point to a segment
+* @param px - x coordinate of the point
+* @param py - y coordinate of the point
+* @param x - x coordinate of the first segment endpoint
+* @param y - y coordinate of the first segment endpoint
+* @param bx - x coordinate of the second segment endpoint
+* @param by - y coordinate of the second segment endpoint
+* @returns square distance from a point to a segment
+*/
+function getSqSegDist(px, py, x, y, bx, by) {
+	let dx = bx - x;
+	let dy = by - y;
+	if (dx !== 0 || dy !== 0) {
+		const t = ((px - x) * dx + (py - y) * dy) / (dx * dx + dy * dy);
+		if (t > 1) {
+			x = bx;
+			y = by;
+		} else if (t > 0) {
+			x += dx * t;
+			y += dy * t;
+		}
+	}
+	dx = px - x;
+	dy = py - y;
+	return dx * dx + dy * dy;
+}
+/**
+* 
+* @param id - the feature's ID
+* @param type - the feature's type
+* @param geom - the feature's geometry
+* @param tags - the feature's properties
+* @returns the created feature
+*/
+function createFeature(id, type, geom, tags) {
+	const data = {
+		type,
+		geom
+	};
+	const feature = {
+		id: id == null ? null : id,
+		type: data.type,
+		geometry: data.geom,
+		tags,
+		minX: Infinity,
+		minY: Infinity,
+		maxX: -Infinity,
+		maxY: -Infinity
+	};
+	switch (data.type) {
+		case "Point":
+		case "MultiPoint":
+			calcLineBBox(feature, data.geom);
+			break;
+		case "LineString":
+			calcLineBBox(feature, data.geom.points);
+			break;
+		case "Polygon":
+			calcLineBBox(feature, data.geom[0].points);
+			break;
+		case "MultiLineString":
+			for (const line of data.geom) calcLineBBox(feature, line.points);
+			break;
+		case "MultiPolygon":
+			for (const polygon of data.geom) calcLineBBox(feature, polygon[0].points);
+			break;
+	}
+	return feature;
+}
+function optimizeLineMemory(line) {
+	const lineImmutable = line;
+	if (line.points.length > 64) lineImmutable.points = new Float64Array(line.points);
+}
+function calcLineBBox(feature, geom) {
+	for (let i = 0; i < geom.length; i += 3) {
+		feature.minX = Math.min(feature.minX, geom[i]);
+		feature.minY = Math.min(feature.minY, geom[i + 1]);
+		feature.maxX = Math.max(feature.maxX, geom[i]);
+		feature.maxY = Math.max(feature.maxY, geom[i + 1]);
+	}
+}
+const MAX_GEOMETRY_COLLECTION_DEPTH = 1024;
+/**
+* converts GeoJSON to internal source features (an intermediate projected JSON vector format with simplification data)
+* @param data
+* @param options
+* @returns
+*/
+function convertToInternal(data, options) {
+	const features = [];
+	switch (data.type) {
+		case "FeatureCollection":
+			for (let i = 0; i < data.features.length; i++) featureToInternal(features, data.features[i], options, i);
+			break;
+		case "Feature":
+			featureToInternal(features, data, options);
+			break;
+		default: featureToInternal(features, {
+			type: "Feature",
+			geometry: data,
+			properties: void 0
+		}, options);
+	}
+	return features;
+}
+function featureToInternal(features, geojson, options, index, depth = 0) {
+	if (!geojson.geometry) return;
+	if (depth > MAX_GEOMETRY_COLLECTION_DEPTH) throw new Error("GeometryCollection nesting exceeds supported depth: 1024");
+	if (geojson.geometry.type === "GeometryCollection") {
+		convertGeometryCollection(features, geojson, geojson.geometry, options, index, depth + 1);
+		return;
+	}
+	if (!geojson.geometry.coordinates?.length) return;
+	const id = getFeatureId(geojson, options, index);
+	const tolerance = Math.pow(options.tolerance / ((1 << options.maxZoom) * options.extent), 2);
+	switch (geojson.geometry.type) {
+		case "Point":
+			convertPointFeature(features, id, geojson.geometry, geojson.properties);
+			return;
+		case "MultiPoint":
+			convertMultiPointFeature(features, id, geojson.geometry, geojson.properties);
+			return;
+		case "LineString":
+			convertLineStringFeature(features, id, geojson.geometry, tolerance, geojson.properties);
+			return;
+		case "MultiLineString":
+			convertMultiLineStringFeature(features, id, geojson.geometry, tolerance, options, geojson.properties);
+			return;
+		case "Polygon":
+			convertPolygonFeature(features, id, geojson.geometry, tolerance, geojson.properties);
+			return;
+		case "MultiPolygon":
+			convertMultiPolygonFeature(features, id, geojson.geometry, tolerance, geojson.properties);
+			return;
+		default: throw new Error("Input data is not a valid GeoJSON object.");
+	}
+}
+function getFeatureId(geojson, options, index) {
+	if (options.promoteId) return geojson.properties?.[options.promoteId];
+	if (options.generateId) return index || 0;
+	return geojson.id;
+}
+function convertGeometryCollection(features, geojson, geometry, options, index, depth = 0) {
+	for (const geom of geometry.geometries) featureToInternal(features, {
+		id: geojson.id,
+		type: "Feature",
+		geometry: geom,
+		properties: geojson.properties
+	}, options, index, depth);
+}
+function convertPointFeature(features, id, geom, properties) {
+	const out = [];
+	out.push(projectX(geom.coordinates[0]), projectY(geom.coordinates[1]), 0);
+	features.push(createFeature(id, "Point", out, properties));
+}
+function convertMultiPointFeature(features, id, geom, properties) {
+	const out = [];
+	for (const coords of geom.coordinates) out.push(projectX(coords[0]), projectY(coords[1]), 0);
+	features.push(createFeature(id, "MultiPoint", out, properties));
+}
+function convertLineStringFeature(features, id, geom, tolerance, properties) {
+	const out = { points: [] };
+	convertLine(geom.coordinates, out, tolerance, false);
+	features.push(createFeature(id, "LineString", out, properties));
+}
+function convertMultiLineStringFeature(features, id, geom, tolerance, options, properties) {
+	if (options.lineMetrics) for (const line of geom.coordinates) {
+		const out = { points: [] };
+		convertLine(line, out, tolerance, false);
+		features.push(createFeature(id, "LineString", out, properties));
+	}
+	else {
+		const out = [];
+		convertLines(geom.coordinates, out, tolerance, false);
+		features.push(createFeature(id, "MultiLineString", out, properties));
+	}
+}
+function convertPolygonFeature(features, id, geom, tolerance, properties) {
+	const out = [];
+	convertLines(geom.coordinates, out, tolerance, true);
+	features.push(createFeature(id, "Polygon", out, properties));
+}
+function convertMultiPolygonFeature(features, id, geom, tolerance, properties) {
+	const out = [];
+	for (const polygon of geom.coordinates) {
+		const polygonOut = [];
+		convertLines(polygon, polygonOut, tolerance, true);
+		out.push(polygonOut);
+	}
+	features.push(createFeature(id, "MultiPolygon", out, properties));
+}
+function convertLine(ring, out, tolerance, isPolygon) {
+	let x0, y0;
+	let size = 0;
+	for (let j = 0; j < ring.length; j++) {
+		const x = projectX(ring[j][0]);
+		const y = projectY(ring[j][1]);
+		out.points.push(x, y, 0);
+		if (j > 0) if (isPolygon) size += (x0 * y - x * y0) / 2;
+		else size += Math.sqrt(Math.pow(x - x0, 2) + Math.pow(y - y0, 2));
+		x0 = x;
+		y0 = y;
+	}
+	const last = out.points.length - 3;
+	out.points[2] = 1;
+	if (tolerance > 0) simplify(out.points, 0, last, tolerance);
+	out.points[last + 2] = 1;
+	optimizeLineMemory(out);
+	out.size = Math.abs(size);
+	out.start = 0;
+	out.end = out.size;
+}
+function convertLines(rings, out, tolerance, isPolygon) {
+	for (let i = 0; i < rings.length; i++) {
+		const geom = { points: [] };
+		convertLine(rings[i], geom, tolerance, isPolygon);
+		out.push(geom);
+	}
+}
+/**
+* Convert longitude to spherical mercator in [0..1] range
+*/
+function projectX(x) {
+	return x / 360 + .5;
+}
+/**
+* Convert latitude to spherical mercator in [0..1] range
+*/
+function projectY(y) {
+	const sin = Math.sin(y * Math.PI / 180);
+	const y2 = .5 - .25 * Math.log((1 + sin) / (1 - sin)) / Math.PI;
+	return y2 < 0 ? 0 : y2 > 1 ? 1 : y2;
+}
+/**
+* Converts internal source features back to GeoJSON format.
+*/
+function convertToGeoJSON(source) {
+	return {
+		type: "FeatureCollection",
+		features: source.map((feature) => featureToGeoJSON(feature))
+	};
+}
+/**
+* Converts a single internal feature to GeoJSON format.
+*/
+function featureToGeoJSON(feature) {
+	const geojsonFeature = {
+		type: "Feature",
+		geometry: geometryToGeoJSON(feature),
+		properties: feature.tags
+	};
+	if (feature.id != null) geojsonFeature.id = feature.id;
+	return geojsonFeature;
+}
+/**
+* Converts a single internal feature geometry to GeoJSON format.
+*/
+function geometryToGeoJSON(feature) {
+	const { type, geometry } = feature;
+	switch (type) {
+		case "Point": return {
+			type,
+			coordinates: unprojectPoint(geometry[0], geometry[1])
+		};
+		case "MultiPoint": return {
+			type,
+			coordinates: unprojectPoints(geometry)
+		};
+		case "LineString": return {
+			type,
+			coordinates: unprojectPoints(geometry.points)
+		};
+		case "MultiLineString":
+		case "Polygon": return {
+			type,
+			coordinates: geometry.map((ring) => unprojectPoints(ring.points))
+		};
+		case "MultiPolygon": return {
+			type,
+			coordinates: geometry.map((polygon) => polygon.map((ring) => unprojectPoints(ring.points)))
+		};
+	}
+}
+function unprojectPoints(coords) {
+	const result = [];
+	for (let i = 0; i < coords.length; i += 3) result.push(unprojectPoint(coords[i], coords[i + 1]));
+	return result;
+}
+function unprojectPoint(x, y) {
+	return [unprojectX(x), unprojectY(y)];
+}
+/**
+* Convert spherical mercator in [0..1] range to longitude
+*/
+function unprojectX(x) {
+	return (x - .5) * 360;
+}
+/**
+* Convert spherical mercator in [0..1] range to latitude
+*/
+function unprojectY(y) {
+	const y2 = (180 - y * 360) * Math.PI / 180;
+	return 360 * Math.atan(Math.exp(y2)) / Math.PI - 90;
+}
+/** 
+* clip features between two vertical or horizontal axis-parallel lines:
+*     |        |
+*  ___|___     |     /
+* /   |   \____|____/
+*     |        |
+*
+* @param features - the features to clip
+* @param scale - the scale to divide start and end inputs
+* @param start - the start of the clip range
+* @param end - the end of the clip range
+* @param axis - which axis to clip against
+* @param minAll - the minimum for all features in the relevant axis
+* @param maxAll - the maximum for all features in the relevant axis
+*/
+function clip(features, scale, start, end, axis, minAll, maxAll, options) {
+	start /= scale;
+	end /= scale;
+	if (minAll >= start && maxAll < end) return features;
+	if (maxAll < start || minAll >= end) return null;
+	const clipped = [];
+	for (const feature of features) {
+		const min = axis === 0 ? feature.minX : feature.minY;
+		const max = axis === 0 ? feature.maxX : feature.maxY;
+		if (min >= start && max < end) {
+			clipped.push(feature);
+			continue;
+		}
+		if (max < start || min >= end) continue;
+		switch (feature.type) {
+			case "Point":
+			case "MultiPoint":
+				clipPointFeature(feature, clipped, start, end, axis);
+				continue;
+			case "LineString":
+				clipLineStringFeature(feature, clipped, start, end, axis, options);
+				continue;
+			case "MultiLineString":
+				clipMultiLineStringFeature(feature, clipped, start, end, axis);
+				continue;
+			case "Polygon":
+				clipPolygonFeature(feature, clipped, start, end, axis);
+				continue;
+			case "MultiPolygon":
+				clipMultiPolygonFeature(feature, clipped, start, end, axis);
+				continue;
+		}
+	}
+	if (!clipped.length) return null;
+	return clipped;
+}
+function clipPointFeature(feature, clipped, start, end, axis) {
+	const geom = [];
+	clipPoints$1(feature.geometry, geom, start, end, axis);
+	if (!geom.length) return;
+	const type = geom.length === 3 ? "Point" : "MultiPoint";
+	clipped.push(createFeature(feature.id, type, geom, feature.tags));
+}
+function clipLineStringFeature(feature, clipped, start, end, axis, options) {
+	const geom = [];
+	clipLine$1(feature.geometry, geom, start, end, axis, false, options.lineMetrics);
+	if (!geom.length) return;
+	if (options.lineMetrics) {
+		for (const line of geom) clipped.push(createFeature(feature.id, "LineString", line, feature.tags));
+		return;
+	}
+	if (geom.length > 1) {
+		clipped.push(createFeature(feature.id, "MultiLineString", geom, feature.tags));
+		return;
+	}
+	clipped.push(createFeature(feature.id, "LineString", geom[0], feature.tags));
+}
+function clipMultiLineStringFeature(feature, clipped, start, end, axis) {
+	const geom = [];
+	clipLines$1(feature.geometry, geom, start, end, axis, false);
+	if (!geom.length) return;
+	if (geom.length === 1) {
+		clipped.push(createFeature(feature.id, "LineString", geom[0], feature.tags));
+		return;
+	}
+	clipped.push(createFeature(feature.id, "MultiLineString", geom, feature.tags));
+}
+function clipPolygonFeature(feature, clipped, start, end, axis) {
+	const geom = [];
+	clipLines$1(feature.geometry, geom, start, end, axis, true);
+	if (!geom.length) return;
+	clipped.push(createFeature(feature.id, "Polygon", geom, feature.tags));
+}
+function clipMultiPolygonFeature(feature, clipped, start, end, axis) {
+	const geom = [];
+	for (const polygon of feature.geometry) {
+		const newPolygon = [];
+		clipLines$1(polygon, newPolygon, start, end, axis, true);
+		if (!newPolygon.length) continue;
+		geom.push(newPolygon);
+	}
+	if (!geom.length) return;
+	clipped.push(createFeature(feature.id, "MultiPolygon", geom, feature.tags));
+}
+function clipPoints$1(geom, newGeom, start, end, axis) {
+	for (let i = 0; i < geom.length; i += 3) {
+		const a = geom[i + axis];
+		if (a >= start && a <= end) addPoint(newGeom, geom[i], geom[i + 1], geom[i + 2]);
+	}
+}
+function clipLine$1(geom, newGeom, start, end, axis, isPolygon, trackMetrics) {
+	let slice = newSlice(geom);
+	const intersect = axis === 0 ? intersectX : intersectY;
+	let len = geom.start;
+	let segLen, t;
+	for (let i = 0; i < geom.points.length - 3; i += 3) {
+		const ax = geom.points[i];
+		const ay = geom.points[i + 1];
+		const az = geom.points[i + 2];
+		const bx = geom.points[i + 3];
+		const by = geom.points[i + 4];
+		const a = axis === 0 ? ax : ay;
+		const b = axis === 0 ? bx : by;
+		let exited = false;
+		if (trackMetrics) segLen = Math.sqrt(Math.pow(ax - bx, 2) + Math.pow(ay - by, 2));
+		if (a < start) {
+			if (b > start) {
+				t = intersect(slice, ax, ay, bx, by, start);
+				if (trackMetrics) slice.start = len + segLen * t;
+			}
+		} else if (a > end) {
+			if (b < end) {
+				t = intersect(slice, ax, ay, bx, by, end);
+				if (trackMetrics) slice.start = len + segLen * t;
+			}
+		} else addPoint(slice.points, ax, ay, az);
+		if (b < start && a >= start) {
+			t = intersect(slice, ax, ay, bx, by, start);
+			exited = true;
+		}
+		if (b > end && a <= end) {
+			t = intersect(slice, ax, ay, bx, by, end);
+			exited = true;
+		}
+		if (!isPolygon && exited) {
+			if (trackMetrics) slice.end = len + segLen * t;
+			newGeom.push(slice);
+			slice = newSlice(geom);
+		}
+		if (trackMetrics) len += segLen;
+	}
+	let last = geom.points.length - 3;
+	const ax = geom.points[last];
+	const ay = geom.points[last + 1];
+	const az = geom.points[last + 2];
+	const a = axis === 0 ? ax : ay;
+	if (a >= start && a <= end) addPoint(slice.points, ax, ay, az);
+	last = slice.points.length - 3;
+	if (isPolygon && last >= 3 && (slice.points[last] !== slice.points[0] || slice.points[last + 1] !== slice.points[1])) addPoint(slice.points, slice.points[0], slice.points[1], slice.points[2]);
+	if (slice.points.length) {
+		optimizeLineMemory(slice);
+		newGeom.push(slice);
+	}
+}
+function newSlice(line) {
+	return {
+		points: [],
+		size: line.size,
+		start: line.start,
+		end: line.end
+	};
+}
+function clipLines$1(geom, newGeom, start, end, axis, isPolygon) {
+	for (const line of geom) clipLine$1(line, newGeom, start, end, axis, isPolygon, false);
+}
+function addPoint(out, x, y, z) {
+	out.push(x, y, z);
+}
+function intersectX(out, ax, ay, bx, by, x) {
+	const t = (x - ax) / (bx - ax);
+	addPoint(out.points, x, ay + (by - ay) * t, 1);
+	return t;
+}
+function intersectY(out, ax, ay, bx, by, y) {
+	const t = (y - ay) / (by - ay);
+	addPoint(out.points, ax + (bx - ax) * t, y, 1);
+	return t;
+}
+function wrap(features, options) {
+	const buffer = options.buffer / options.extent;
+	let merged = features;
+	const left = clip(features, 1, -1 - buffer, buffer, 0, -1, 2, options);
+	const right = clip(features, 1, 1 - buffer, 2 + buffer, 0, -1, 2, options);
+	if (!left && !right) return merged;
+	merged = clip(features, 1, -buffer, 1 + buffer, 0, -1, 2, options) || [];
+	if (left) merged = shiftFeatureCoords(left, 1).concat(merged);
+	if (right) merged = merged.concat(shiftFeatureCoords(right, -1));
+	return merged;
+}
+function shiftFeatureCoords(features, offset) {
+	const newFeatures = [];
+	for (const feature of features) switch (feature.type) {
+		case "Point":
+		case "MultiPoint": {
+			const newGeometry = shiftPointCoords(feature.geometry, offset);
+			newFeatures.push(createFeature(feature.id, feature.type, newGeometry, feature.tags));
+			continue;
+		}
+		case "LineString": {
+			const newGeometry = shiftLineCoords(feature.geometry, offset);
+			newFeatures.push(createFeature(feature.id, feature.type, newGeometry, feature.tags));
+			continue;
+		}
+		case "MultiLineString":
+		case "Polygon": {
+			const newGeometry = [];
+			for (const line of feature.geometry) newGeometry.push(shiftLineCoords(line, offset));
+			newFeatures.push(createFeature(feature.id, feature.type, newGeometry, feature.tags));
+			continue;
+		}
+		case "MultiPolygon": {
+			const newGeometry = [];
+			for (const polygon of feature.geometry) {
+				const newPolygon = [];
+				for (const line of polygon) newPolygon.push(shiftLineCoords(line, offset));
+				newGeometry.push(newPolygon);
+			}
+			newFeatures.push(createFeature(feature.id, feature.type, newGeometry, feature.tags));
+			continue;
+		}
+	}
+	return newFeatures;
+}
+function shiftPointCoords(coords, offset) {
+	const newCoords = [];
+	for (let i = 0; i < coords.length; i += 3) newCoords.push(coords[i] + offset, coords[i + 1], coords[i + 2]);
+	return newCoords;
+}
+function shiftLineCoords(line, offset) {
+	const newLine = {
+		points: [],
+		size: line.size
+	};
+	if (line.start !== void 0) {
+		newLine.start = line.start;
+		newLine.end = line.end;
+	}
+	for (let i = 0; i < line.points.length; i += 3) newLine.points.push(line.points[i] + offset, line.points[i + 1], line.points[i + 2]);
+	optimizeLineMemory(newLine);
+	return newLine;
+}
+/**
+* Applies a GeoJSON Source Diff to an existing set of simplified features
+* @param source 
+* @param dataDiff 
+* @param options 
+* @returns 
+*/
+function applySourceDiff(source, dataDiff, options) {
+	const diff = diffToHashed(dataDiff, options);
+	let affected = [];
+	if (diff.removeAll) {
+		affected = source;
+		source = [];
+	}
+	if (diff.remove.size || diff.add.size) {
+		const removeFeatures = [];
+		for (const feature of source) if (diff.remove.has(feature.id) || diff.add.has(feature.id)) removeFeatures.push(feature);
+		if (removeFeatures.length) {
+			affected = affected.concat(removeFeatures);
+			const removeIds = new Set(removeFeatures.map((f) => f.id));
+			source = source.filter((f) => !removeIds.has(f.id));
+		}
+		if (diff.add.size) {
+			let addFeatures = convertToInternal({
+				type: "FeatureCollection",
+				features: Array.from(diff.add.values())
+			}, options);
+			addFeatures = wrap(addFeatures, options);
+			affected = affected.concat(addFeatures);
+			source = source.concat(addFeatures);
+		}
+	}
+	if (diff.update.size) {
+		const oldFeaturesMap = /* @__PURE__ */ new Map();
+		let keepFeatures = [];
+		for (const feature of source) if (diff.update.has(feature.id)) oldFeaturesMap.set(feature.id, [...oldFeaturesMap.get(feature.id) || [], feature]);
+		else keepFeatures.push(feature);
+		for (const [id, update] of diff.update) {
+			const oldFeatures = oldFeaturesMap.get(id);
+			if (!oldFeatures || oldFeatures.length === 0) continue;
+			const updatedFeatures = getUpdatedFeatures(oldFeatures, update, options);
+			affected = affected.concat(oldFeatures, updatedFeatures);
+			keepFeatures = keepFeatures.concat(updatedFeatures);
+		}
+		source = keepFeatures;
+	}
+	return {
+		affected,
+		source
+	};
+}
+/**
+* Gets updated simplified feature(s) based on a diff update object.
+* @param vtFeatures - the original features
+* @param update - the update object to apply
+* @param options - the options to use for the wrap method
+* @returns Updated features. If geometry is updated, returns new feature(s) converted from geojson and wrapped. If only properties are updated, returns feature(s) with tags updated.
+*/
+function getUpdatedFeatures(vtFeatures, update, options) {
+	const changeGeometry = !!update.newGeometry;
+	const changeProps = update.removeAllProperties || update.removeProperties?.length > 0 || update.addOrUpdateProperties?.length > 0;
+	if (changeGeometry) {
+		const vtFeature = vtFeatures[0];
+		let features = convertToInternal({
+			type: "FeatureCollection",
+			features: [{
+				type: "Feature",
+				id: vtFeature.id,
+				geometry: update.newGeometry,
+				properties: changeProps ? applyPropertyUpdates(vtFeature.tags, update) : vtFeature.tags
+			}]
+		}, options);
+		features = wrap(features, options);
+		return features;
+	}
+	if (changeProps) {
+		const updated = [];
+		for (const vtFeature of vtFeatures) {
+			const feature = { ...vtFeature };
+			feature.tags = applyPropertyUpdates(feature.tags, update);
+			updated.push(feature);
+		}
+		return updated;
+	}
+	return vtFeatures;
+}
+/**
+* helper to apply property updates from a diff update object to a properties object
+*/
+function applyPropertyUpdates(tags, update) {
+	if (update.removeAllProperties) return {};
+	const properties = { ...tags || {} };
+	if (update.removeProperties) for (const key of update.removeProperties) delete properties[key];
+	if (update.addOrUpdateProperties) for (const { key, value } of update.addOrUpdateProperties) properties[key] = value;
+	return properties;
+}
+/**
+* Convert a GeoJSON Source Diff to an idempotent hashed representation using Sets and Maps
+*/
+function diffToHashed(diff, options) {
+	if (!diff) return {
+		remove: /* @__PURE__ */ new Set(),
+		add: /* @__PURE__ */ new Map(),
+		update: /* @__PURE__ */ new Map()
+	};
+	return {
+		removeAll: diff.removeAll,
+		remove: new Set(diff.remove || []),
+		add: new Map(diff.add?.map((feature) => [options.promoteId ? feature.properties[options.promoteId] : feature.id, feature])),
+		update: new Map(diff.update?.map((update) => [update.id, update]))
+	};
+}
 const ARRAY_TYPES = [
 	Int8Array,
 	Uint8Array,
@@ -16823,709 +17683,6 @@ function sqDist(ax, ay, bx, by) {
 	const dy = ay - by;
 	return dx * dx + dy * dy;
 }
-//#endregion
-//#region node_modules/@maplibre/geojson-vt/dist/geojson-vt.mjs
-/**
-* calculate simplification data using optimized Douglas-Peucker algorithm
-* @param coords - flat array of coordinates
-* @param first - index of the first coordinate in the segment
-* @param last - index of the last coordinate in the segment
-* @param sqTolerance - square tolerance value
-*/
-function simplify(coords, first, last, sqTolerance) {
-	let maxSqDist = sqTolerance;
-	const mid = first + (last - first >> 1);
-	let minPosToMid = last - first;
-	let index;
-	const ax = coords[first];
-	const ay = coords[first + 1];
-	const bx = coords[last];
-	const by = coords[last + 1];
-	for (let i = first + 3; i < last; i += 3) {
-		const d = getSqSegDist(coords[i], coords[i + 1], ax, ay, bx, by);
-		if (d > maxSqDist) {
-			index = i;
-			maxSqDist = d;
-			continue;
-		}
-		if (d === maxSqDist) {
-			const posToMid = Math.abs(i - mid);
-			if (posToMid < minPosToMid) {
-				index = i;
-				minPosToMid = posToMid;
-			}
-		}
-	}
-	if (maxSqDist > sqTolerance) {
-		if (index - first > 3) simplify(coords, first, index, sqTolerance);
-		coords[index + 2] = maxSqDist;
-		if (last - index > 3) simplify(coords, index, last, sqTolerance);
-	}
-}
-/**
-* Claculates the square distance from a point to a segment
-* @param px - x coordinate of the point
-* @param py - y coordinate of the point
-* @param x - x coordinate of the first segment endpoint
-* @param y - y coordinate of the first segment endpoint
-* @param bx - x coordinate of the second segment endpoint
-* @param by - y coordinate of the second segment endpoint
-* @returns square distance from a point to a segment
-*/
-function getSqSegDist(px, py, x, y, bx, by) {
-	let dx = bx - x;
-	let dy = by - y;
-	if (dx !== 0 || dy !== 0) {
-		const t = ((px - x) * dx + (py - y) * dy) / (dx * dx + dy * dy);
-		if (t > 1) {
-			x = bx;
-			y = by;
-		} else if (t > 0) {
-			x += dx * t;
-			y += dy * t;
-		}
-	}
-	dx = px - x;
-	dy = py - y;
-	return dx * dx + dy * dy;
-}
-/**
-*
-* @param id - the feature's ID
-* @param type - the feature's type
-* @param geom - the feature's geometry
-* @param tags - the feature's properties
-* @returns the created feature
-*/
-function createFeature(id, type, geom, tags) {
-	const data = {
-		type,
-		geom
-	};
-	const feature = {
-		id: id == null ? null : id,
-		type: data.type,
-		geometry: data.geom,
-		tags,
-		minX: Infinity,
-		minY: Infinity,
-		maxX: -Infinity,
-		maxY: -Infinity
-	};
-	switch (data.type) {
-		case "Point":
-		case "MultiPoint":
-			calcLineBBox(feature, data.geom);
-			break;
-		case "LineString":
-			calcLineBBox(feature, data.geom.points);
-			break;
-		case "Polygon":
-			calcLineBBox(feature, data.geom[0].points);
-			break;
-		case "MultiLineString":
-			for (const line of data.geom) calcLineBBox(feature, line.points);
-			break;
-		case "MultiPolygon":
-			for (const polygon of data.geom) calcLineBBox(feature, polygon[0].points);
-			break;
-	}
-	return feature;
-}
-function optimizeLineMemory(line) {
-	const lineImmutable = line;
-	if (line.points.length > 64) lineImmutable.points = new Float64Array(line.points);
-}
-function calcLineBBox(feature, geom) {
-	for (let i = 0; i < geom.length; i += 3) {
-		feature.minX = Math.min(feature.minX, geom[i]);
-		feature.minY = Math.min(feature.minY, geom[i + 1]);
-		feature.maxX = Math.max(feature.maxX, geom[i]);
-		feature.maxY = Math.max(feature.maxY, geom[i + 1]);
-	}
-}
-/**
-* converts GeoJSON to internal source features (an intermediate projected JSON vector format with simplification data)
-* @param data
-* @param options
-* @returns
-*/
-function convertToInternal(data, options) {
-	const features = [];
-	switch (data.type) {
-		case "FeatureCollection":
-			for (let i = 0; i < data.features.length; i++) featureToInternal(features, data.features[i], options, i);
-			break;
-		case "Feature":
-			featureToInternal(features, data, options);
-			break;
-		default: featureToInternal(features, {
-			geometry: data,
-			properties: void 0
-		}, options);
-	}
-	return features;
-}
-function featureToInternal(features, geojson, options, index) {
-	if (!geojson.geometry) return;
-	if (geojson.geometry.type === "GeometryCollection") {
-		convertGeometryCollection(features, geojson, geojson.geometry, options, index);
-		return;
-	}
-	if (!geojson.geometry.coordinates?.length) return;
-	const id = getFeatureId(geojson, options, index);
-	const tolerance = Math.pow(options.tolerance / ((1 << options.maxZoom) * options.extent), 2);
-	switch (geojson.geometry.type) {
-		case "Point":
-			convertPointFeature(features, id, geojson.geometry, geojson.properties);
-			return;
-		case "MultiPoint":
-			convertMultiPointFeature(features, id, geojson.geometry, geojson.properties);
-			return;
-		case "LineString":
-			convertLineStringFeature(features, id, geojson.geometry, tolerance, geojson.properties);
-			return;
-		case "MultiLineString":
-			convertMultiLineStringFeature(features, id, geojson.geometry, tolerance, options, geojson.properties);
-			return;
-		case "Polygon":
-			convertPolygonFeature(features, id, geojson.geometry, tolerance, geojson.properties);
-			return;
-		case "MultiPolygon":
-			convertMultiPolygonFeature(features, id, geojson.geometry, tolerance, geojson.properties);
-			return;
-		default: throw new Error("Input data is not a valid GeoJSON object.");
-	}
-}
-function getFeatureId(geojson, options, index) {
-	if (options.promoteId) return geojson.properties?.[options.promoteId];
-	if (options.generateId) return index || 0;
-	return geojson.id;
-}
-function convertGeometryCollection(features, geojson, geometry, options, index) {
-	for (const geom of geometry.geometries) featureToInternal(features, {
-		id: geojson.id,
-		geometry: geom,
-		properties: geojson.properties
-	}, options, index);
-}
-function convertPointFeature(features, id, geom, properties) {
-	const out = [];
-	out.push(projectX(geom.coordinates[0]), projectY(geom.coordinates[1]), 0);
-	features.push(createFeature(id, "Point", out, properties));
-}
-function convertMultiPointFeature(features, id, geom, properties) {
-	const out = [];
-	for (const coords of geom.coordinates) out.push(projectX(coords[0]), projectY(coords[1]), 0);
-	features.push(createFeature(id, "MultiPoint", out, properties));
-}
-function convertLineStringFeature(features, id, geom, tolerance, properties) {
-	const out = { points: [] };
-	convertLine(geom.coordinates, out, tolerance, false);
-	features.push(createFeature(id, "LineString", out, properties));
-}
-function convertMultiLineStringFeature(features, id, geom, tolerance, options, properties) {
-	if (options.lineMetrics) for (const line of geom.coordinates) {
-		const out = { points: [] };
-		convertLine(line, out, tolerance, false);
-		features.push(createFeature(id, "LineString", out, properties));
-	}
-	else {
-		const out = [];
-		convertLines(geom.coordinates, out, tolerance, false);
-		features.push(createFeature(id, "MultiLineString", out, properties));
-	}
-}
-function convertPolygonFeature(features, id, geom, tolerance, properties) {
-	const out = [];
-	convertLines(geom.coordinates, out, tolerance, true);
-	features.push(createFeature(id, "Polygon", out, properties));
-}
-function convertMultiPolygonFeature(features, id, geom, tolerance, properties) {
-	const out = [];
-	for (const polygon of geom.coordinates) {
-		const polygonOut = [];
-		convertLines(polygon, polygonOut, tolerance, true);
-		out.push(polygonOut);
-	}
-	features.push(createFeature(id, "MultiPolygon", out, properties));
-}
-function convertLine(ring, out, tolerance, isPolygon) {
-	let x0, y0;
-	let size = 0;
-	for (let j = 0; j < ring.length; j++) {
-		const x = projectX(ring[j][0]);
-		const y = projectY(ring[j][1]);
-		out.points.push(x, y, 0);
-		if (j > 0) if (isPolygon) size += (x0 * y - x * y0) / 2;
-		else size += Math.sqrt(Math.pow(x - x0, 2) + Math.pow(y - y0, 2));
-		x0 = x;
-		y0 = y;
-	}
-	const last = out.points.length - 3;
-	out.points[2] = 1;
-	if (tolerance > 0) simplify(out.points, 0, last, tolerance);
-	out.points[last + 2] = 1;
-	optimizeLineMemory(out);
-	out.size = Math.abs(size);
-	out.start = 0;
-	out.end = out.size;
-}
-function convertLines(rings, out, tolerance, isPolygon) {
-	for (let i = 0; i < rings.length; i++) {
-		const geom = { points: [] };
-		convertLine(rings[i], geom, tolerance, isPolygon);
-		out.push(geom);
-	}
-}
-/**
-* Convert longitude to spherical mercator in [0..1] range
-*/
-function projectX(x) {
-	return x / 360 + .5;
-}
-/**
-* Convert latitude to spherical mercator in [0..1] range
-*/
-function projectY(y) {
-	const sin = Math.sin(y * Math.PI / 180);
-	const y2 = .5 - .25 * Math.log((1 + sin) / (1 - sin)) / Math.PI;
-	return y2 < 0 ? 0 : y2 > 1 ? 1 : y2;
-}
-/**
-* Converts internal source features back to GeoJSON format.
-*/
-function convertToGeoJSON(source) {
-	return {
-		type: "FeatureCollection",
-		features: source.map((feature) => featureToGeoJSON(feature))
-	};
-}
-/**
-* Converts a single internal feature to GeoJSON format.
-*/
-function featureToGeoJSON(feature) {
-	const geojsonFeature = {
-		type: "Feature",
-		geometry: geometryToGeoJSON(feature),
-		properties: feature.tags
-	};
-	if (feature.id != null) geojsonFeature.id = feature.id;
-	return geojsonFeature;
-}
-/**
-* Converts a single internal feature geometry to GeoJSON format.
-*/
-function geometryToGeoJSON(feature) {
-	const { type, geometry } = feature;
-	switch (type) {
-		case "Point": return {
-			type,
-			coordinates: unprojectPoint(geometry[0], geometry[1])
-		};
-		case "MultiPoint": return {
-			type,
-			coordinates: unprojectPoints(geometry)
-		};
-		case "LineString": return {
-			type,
-			coordinates: unprojectPoints(geometry.points)
-		};
-		case "MultiLineString":
-		case "Polygon": return {
-			type,
-			coordinates: geometry.map((ring) => unprojectPoints(ring.points))
-		};
-		case "MultiPolygon": return {
-			type,
-			coordinates: geometry.map((polygon) => polygon.map((ring) => unprojectPoints(ring.points)))
-		};
-	}
-}
-function unprojectPoints(coords) {
-	const result = [];
-	for (let i = 0; i < coords.length; i += 3) result.push(unprojectPoint(coords[i], coords[i + 1]));
-	return result;
-}
-function unprojectPoint(x, y) {
-	return [unprojectX(x), unprojectY(y)];
-}
-/**
-* Convert spherical mercator in [0..1] range to longitude
-*/
-function unprojectX(x) {
-	return (x - .5) * 360;
-}
-/**
-* Convert spherical mercator in [0..1] range to latitude
-*/
-function unprojectY(y) {
-	const y2 = (180 - y * 360) * Math.PI / 180;
-	return 360 * Math.atan(Math.exp(y2)) / Math.PI - 90;
-}
-var AxisType;
-(function(AxisType) {
-	AxisType[AxisType["X"] = 0] = "X";
-	AxisType[AxisType["Y"] = 1] = "Y";
-})(AxisType || (AxisType = {}));
-/**
-* clip features between two vertical or horizontal axis-parallel lines:
-*     |        |
-*  ___|___     |     /
-* /   |   \____|____/
-*     |        |
-*
-* @param features - the features to clip
-* @param scale - the scale to divide start and end inputs
-* @param start - the start of the clip range
-* @param end - the end of the clip range
-* @param axis - which axis to clip against
-* @param minAll - the minimum for all features in the relevant axis
-* @param maxAll - the maximum for all features in the relevant axis
-*/
-function clip(features, scale, start, end, axis, minAll, maxAll, options) {
-	start /= scale;
-	end /= scale;
-	if (minAll >= start && maxAll < end) return features;
-	if (maxAll < start || minAll >= end) return null;
-	const clipped = [];
-	for (const feature of features) {
-		const min = axis === AxisType.X ? feature.minX : feature.minY;
-		const max = axis === AxisType.X ? feature.maxX : feature.maxY;
-		if (min >= start && max < end) {
-			clipped.push(feature);
-			continue;
-		}
-		if (max < start || min >= end) continue;
-		switch (feature.type) {
-			case "Point":
-			case "MultiPoint":
-				clipPointFeature(feature, clipped, start, end, axis);
-				continue;
-			case "LineString":
-				clipLineStringFeature(feature, clipped, start, end, axis, options);
-				continue;
-			case "MultiLineString":
-				clipMultiLineStringFeature(feature, clipped, start, end, axis);
-				continue;
-			case "Polygon":
-				clipPolygonFeature(feature, clipped, start, end, axis);
-				continue;
-			case "MultiPolygon":
-				clipMultiPolygonFeature(feature, clipped, start, end, axis);
-				continue;
-		}
-	}
-	if (!clipped.length) return null;
-	return clipped;
-}
-function clipPointFeature(feature, clipped, start, end, axis) {
-	const geom = [];
-	clipPoints$1(feature.geometry, geom, start, end, axis);
-	if (!geom.length) return;
-	const type = geom.length === 3 ? "Point" : "MultiPoint";
-	clipped.push(createFeature(feature.id, type, geom, feature.tags));
-}
-function clipLineStringFeature(feature, clipped, start, end, axis, options) {
-	const geom = [];
-	clipLine$1(feature.geometry, geom, start, end, axis, false, options.lineMetrics);
-	if (!geom.length) return;
-	if (options.lineMetrics) {
-		for (const line of geom) clipped.push(createFeature(feature.id, "LineString", line, feature.tags));
-		return;
-	}
-	if (geom.length > 1) {
-		clipped.push(createFeature(feature.id, "MultiLineString", geom, feature.tags));
-		return;
-	}
-	clipped.push(createFeature(feature.id, "LineString", geom[0], feature.tags));
-}
-function clipMultiLineStringFeature(feature, clipped, start, end, axis) {
-	const geom = [];
-	clipLines$1(feature.geometry, geom, start, end, axis, false);
-	if (!geom.length) return;
-	if (geom.length === 1) {
-		clipped.push(createFeature(feature.id, "LineString", geom[0], feature.tags));
-		return;
-	}
-	clipped.push(createFeature(feature.id, "MultiLineString", geom, feature.tags));
-}
-function clipPolygonFeature(feature, clipped, start, end, axis) {
-	const geom = [];
-	clipLines$1(feature.geometry, geom, start, end, axis, true);
-	if (!geom.length) return;
-	clipped.push(createFeature(feature.id, "Polygon", geom, feature.tags));
-}
-function clipMultiPolygonFeature(feature, clipped, start, end, axis) {
-	const geom = [];
-	for (const polygon of feature.geometry) {
-		const newPolygon = [];
-		clipLines$1(polygon, newPolygon, start, end, axis, true);
-		if (!newPolygon.length) continue;
-		geom.push(newPolygon);
-	}
-	if (!geom.length) return;
-	clipped.push(createFeature(feature.id, "MultiPolygon", geom, feature.tags));
-}
-function clipPoints$1(geom, newGeom, start, end, axis) {
-	for (let i = 0; i < geom.length; i += 3) {
-		const a = geom[i + axis];
-		if (a >= start && a <= end) addPoint(newGeom, geom[i], geom[i + 1], geom[i + 2]);
-	}
-}
-function clipLine$1(geom, newGeom, start, end, axis, isPolygon, trackMetrics) {
-	let slice = newSlice(geom);
-	const intersect = axis === AxisType.X ? intersectX : intersectY;
-	let len = geom.start;
-	let segLen, t;
-	for (let i = 0; i < geom.points.length - 3; i += 3) {
-		const ax = geom.points[i];
-		const ay = geom.points[i + 1];
-		const az = geom.points[i + 2];
-		const bx = geom.points[i + 3];
-		const by = geom.points[i + 4];
-		const a = axis === AxisType.X ? ax : ay;
-		const b = axis === AxisType.X ? bx : by;
-		let exited = false;
-		if (trackMetrics) segLen = Math.sqrt(Math.pow(ax - bx, 2) + Math.pow(ay - by, 2));
-		if (a < start) {
-			if (b > start) {
-				t = intersect(slice, ax, ay, bx, by, start);
-				if (trackMetrics) slice.start = len + segLen * t;
-			}
-		} else if (a > end) {
-			if (b < end) {
-				t = intersect(slice, ax, ay, bx, by, end);
-				if (trackMetrics) slice.start = len + segLen * t;
-			}
-		} else addPoint(slice.points, ax, ay, az);
-		if (b < start && a >= start) {
-			t = intersect(slice, ax, ay, bx, by, start);
-			exited = true;
-		}
-		if (b > end && a <= end) {
-			t = intersect(slice, ax, ay, bx, by, end);
-			exited = true;
-		}
-		if (!isPolygon && exited) {
-			if (trackMetrics) slice.end = len + segLen * t;
-			newGeom.push(slice);
-			slice = newSlice(geom);
-		}
-		if (trackMetrics) len += segLen;
-	}
-	let last = geom.points.length - 3;
-	const ax = geom.points[last];
-	const ay = geom.points[last + 1];
-	const az = geom.points[last + 2];
-	const a = axis === AxisType.X ? ax : ay;
-	if (a >= start && a <= end) addPoint(slice.points, ax, ay, az);
-	last = slice.points.length - 3;
-	if (isPolygon && last >= 3 && (slice.points[last] !== slice.points[0] || slice.points[last + 1] !== slice.points[1])) addPoint(slice.points, slice.points[0], slice.points[1], slice.points[2]);
-	if (slice.points.length) {
-		optimizeLineMemory(slice);
-		newGeom.push(slice);
-	}
-}
-function newSlice(line) {
-	return {
-		points: [],
-		size: line.size,
-		start: line.start,
-		end: line.end
-	};
-}
-function clipLines$1(geom, newGeom, start, end, axis, isPolygon) {
-	for (const line of geom) clipLine$1(line, newGeom, start, end, axis, isPolygon, false);
-}
-function addPoint(out, x, y, z) {
-	out.push(x, y, z);
-}
-function intersectX(out, ax, ay, bx, by, x) {
-	const t = (x - ax) / (bx - ax);
-	addPoint(out.points, x, ay + (by - ay) * t, 1);
-	return t;
-}
-function intersectY(out, ax, ay, bx, by, y) {
-	const t = (y - ay) / (by - ay);
-	addPoint(out.points, ax + (bx - ax) * t, y, 1);
-	return t;
-}
-function wrap(features, options) {
-	const buffer = options.buffer / options.extent;
-	let merged = features;
-	const left = clip(features, 1, -1 - buffer, buffer, AxisType.X, -1, 2, options);
-	const right = clip(features, 1, 1 - buffer, 2 + buffer, AxisType.X, -1, 2, options);
-	if (!left && !right) return merged;
-	merged = clip(features, 1, -buffer, 1 + buffer, AxisType.X, -1, 2, options) || [];
-	if (left) merged = shiftFeatureCoords(left, 1).concat(merged);
-	if (right) merged = merged.concat(shiftFeatureCoords(right, -1));
-	return merged;
-}
-function shiftFeatureCoords(features, offset) {
-	const newFeatures = [];
-	for (const feature of features) switch (feature.type) {
-		case "Point":
-		case "MultiPoint": {
-			const newGeometry = shiftPointCoords(feature.geometry, offset);
-			newFeatures.push(createFeature(feature.id, feature.type, newGeometry, feature.tags));
-			continue;
-		}
-		case "LineString": {
-			const newGeometry = shiftLineCoords(feature.geometry, offset);
-			newFeatures.push(createFeature(feature.id, feature.type, newGeometry, feature.tags));
-			continue;
-		}
-		case "MultiLineString":
-		case "Polygon": {
-			const newGeometry = [];
-			for (const line of feature.geometry) newGeometry.push(shiftLineCoords(line, offset));
-			newFeatures.push(createFeature(feature.id, feature.type, newGeometry, feature.tags));
-			continue;
-		}
-		case "MultiPolygon": {
-			const newGeometry = [];
-			for (const polygon of feature.geometry) {
-				const newPolygon = [];
-				for (const line of polygon) newPolygon.push(shiftLineCoords(line, offset));
-				newGeometry.push(newPolygon);
-			}
-			newFeatures.push(createFeature(feature.id, feature.type, newGeometry, feature.tags));
-			continue;
-		}
-	}
-	return newFeatures;
-}
-function shiftPointCoords(coords, offset) {
-	const newCoords = [];
-	for (let i = 0; i < coords.length; i += 3) newCoords.push(coords[i] + offset, coords[i + 1], coords[i + 2]);
-	return newCoords;
-}
-function shiftLineCoords(line, offset) {
-	const newLine = {
-		points: [],
-		size: line.size
-	};
-	if (line.start !== void 0) {
-		newLine.start = line.start;
-		newLine.end = line.end;
-	}
-	for (let i = 0; i < line.points.length; i += 3) newLine.points.push(line.points[i] + offset, line.points[i + 1], line.points[i + 2]);
-	optimizeLineMemory(newLine);
-	return newLine;
-}
-/**
-* Applies a GeoJSON Source Diff to an existing set of simplified features
-* @param source
-* @param dataDiff
-* @param options
-* @returns
-*/
-function applySourceDiff(source, dataDiff, options) {
-	const diff = diffToHashed(dataDiff, options);
-	let affected = [];
-	if (diff.removeAll) {
-		affected = source;
-		source = [];
-	}
-	if (diff.remove.size || diff.add.size) {
-		const removeFeatures = [];
-		for (const feature of source) if (diff.remove.has(feature.id) || diff.add.has(feature.id)) removeFeatures.push(feature);
-		if (removeFeatures.length) {
-			affected.push(...removeFeatures);
-			const removeIds = new Set(removeFeatures.map((f) => f.id));
-			source = source.filter((f) => !removeIds.has(f.id));
-		}
-		if (diff.add.size) {
-			let addFeatures = convertToInternal({
-				type: "FeatureCollection",
-				features: Array.from(diff.add.values())
-			}, options);
-			addFeatures = wrap(addFeatures, options);
-			affected.push(...addFeatures);
-			source.push(...addFeatures);
-		}
-	}
-	if (diff.update.size) {
-		const oldFeaturesMap = /* @__PURE__ */ new Map();
-		const keepFeatures = [];
-		for (const feature of source) if (diff.update.has(feature.id)) oldFeaturesMap.set(feature.id, [...oldFeaturesMap.get(feature.id) || [], feature]);
-		else keepFeatures.push(feature);
-		for (const [id, update] of diff.update) {
-			const oldFeatures = oldFeaturesMap.get(id);
-			if (!oldFeatures || oldFeatures.length === 0) continue;
-			const updatedFeatures = getUpdatedFeatures(oldFeatures, update, options);
-			affected.push(...oldFeatures, ...updatedFeatures);
-			keepFeatures.push(...updatedFeatures);
-		}
-		source = keepFeatures;
-	}
-	return {
-		affected,
-		source
-	};
-}
-/**
-* Gets updated simplified feature(s) based on a diff update object.
-* @param vtFeatures - the original features
-* @param update - the update object to apply
-* @param options - the options to use for the wrap method
-* @returns Updated features. If geometry is updated, returns new feature(s) converted from geojson and wrapped. If only properties are updated, returns feature(s) with tags updated.
-*/
-function getUpdatedFeatures(vtFeatures, update, options) {
-	const changeGeometry = !!update.newGeometry;
-	const changeProps = update.removeAllProperties || update.removeProperties?.length > 0 || update.addOrUpdateProperties?.length > 0;
-	if (changeGeometry) {
-		const vtFeature = vtFeatures[0];
-		let features = convertToInternal({
-			type: "FeatureCollection",
-			features: [{
-				type: "Feature",
-				id: vtFeature.id,
-				geometry: update.newGeometry,
-				properties: changeProps ? applyPropertyUpdates(vtFeature.tags, update) : vtFeature.tags
-			}]
-		}, options);
-		features = wrap(features, options);
-		return features;
-	}
-	if (changeProps) {
-		const updated = [];
-		for (const vtFeature of vtFeatures) {
-			const feature = { ...vtFeature };
-			feature.tags = applyPropertyUpdates(feature.tags, update);
-			updated.push(feature);
-		}
-		return updated;
-	}
-	return vtFeatures;
-}
-/**
-* helper to apply property updates from a diff update object to a properties object
-*/
-function applyPropertyUpdates(tags, update) {
-	if (update.removeAllProperties) return {};
-	const properties = { ...tags || {} };
-	if (update.removeProperties) for (const key of update.removeProperties) delete properties[key];
-	if (update.addOrUpdateProperties) for (const { key, value } of update.addOrUpdateProperties) properties[key] = value;
-	return properties;
-}
-/**
-* Convert a GeoJSON Source Diff to an idempotent hashed representation using Sets and Maps
-*/
-function diffToHashed(diff, options) {
-	if (!diff) return {
-		remove: /* @__PURE__ */ new Set(),
-		add: /* @__PURE__ */ new Map(),
-		update: /* @__PURE__ */ new Map()
-	};
-	return {
-		removeAll: diff.removeAll,
-		remove: new Set(diff.remove || []),
-		add: new Map(diff.add?.map((feature) => [options.promoteId ? feature.properties[options.promoteId] : feature.id, feature])),
-		update: new Map(diff.update?.map((update) => [update.id, update]))
-	};
-}
 const defaultClusterOptions = {
 	minZoom: 0,
 	maxZoom: 16,
@@ -17590,7 +17747,7 @@ var ClusterTileIndex = class {
 	/**
 	* @internal
 	* Updates the cluster data by rebuilding.
-	* @param features
+	* @param features 
 	*/
 	updateIndex(features, _affected, options) {
 		this.options = Object.assign(Object.create(defaultClusterOptions), options.clusterOptions);
@@ -18082,7 +18239,6 @@ var TileIndex = class {
 	constructor(options) {
 		this.options = options;
 		this.total = 0;
-		/** @internal */
 		this.stats = {};
 		this.tiles = {};
 		this.tileCoords = [];
@@ -18170,7 +18326,7 @@ var TileIndex = class {
 	* splits features from a parent tile to sub-tiles.
 	* z, x, and y are the coordinates of the parent tile
 	* cz, cx, and cy are the coordinates of the target tile
-	*
+	* 
 	* If no target tile is specified, splitting stops when we reach the maximum
 	* zoom or the number of points is low as specified in the options.
 	* @internal
@@ -18237,15 +18393,15 @@ var TileIndex = class {
 			let bl = null;
 			let tr = null;
 			let br = null;
-			const left = clip(features, z2, x - k1, x + k3, AxisType.X, tile.minX, tile.maxX, options);
-			const right = clip(features, z2, x + k2, x + k4, AxisType.X, tile.minX, tile.maxX, options);
+			const left = clip(features, z2, x - k1, x + k3, 0, tile.minX, tile.maxX, options);
+			const right = clip(features, z2, x + k2, x + k4, 0, tile.minX, tile.maxX, options);
 			if (left) {
-				tl = clip(left, z2, y - k1, y + k3, AxisType.Y, tile.minY, tile.maxY, options);
-				bl = clip(left, z2, y + k2, y + k4, AxisType.Y, tile.minY, tile.maxY, options);
+				tl = clip(left, z2, y - k1, y + k3, 1, tile.minY, tile.maxY, options);
+				bl = clip(left, z2, y + k2, y + k4, 1, tile.minY, tile.maxY, options);
 			}
 			if (right) {
-				tr = clip(right, z2, y - k1, y + k3, AxisType.Y, tile.minY, tile.maxY, options);
-				br = clip(right, z2, y + k2, y + k4, AxisType.Y, tile.minY, tile.maxY, options);
+				tr = clip(right, z2, y - k1, y + k3, 1, tile.minY, tile.maxY, options);
+				br = clip(right, z2, y + k2, y + k4, 1, tile.minY, tile.maxY, options);
 			}
 			if (debug > 1) console.timeEnd("clipping");
 			stack.push(tl || [], z + 1, x * 2, y * 2);
@@ -18257,7 +18413,7 @@ var TileIndex = class {
 	/**
 	* Invalidates (removes) tiles affected by the provided features
 	* @internal
-	* @param features
+	* @param features 
 	*/
 	invalidateTiles(features) {
 		if (!features.length) return;

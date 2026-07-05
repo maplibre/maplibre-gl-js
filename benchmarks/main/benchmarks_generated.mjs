@@ -18833,13 +18833,42 @@ function addPatternDependencies(type, layers, patternFeature, parameters, option
 }
 //#endregion
 //#region node_modules/earcut/src/earcut.js
+/**
+* A vertex in a circular doubly linked list representing a polygon ring.
+* `prev`/`next` are always linked (set immediately after {@link createNode}), so they're typed
+* non-null; `prevZ`/`nextZ` are the z-order list links and are null at the ends.
+*
+* @typedef {object} Node
+* @property {number} i vertex index in the coordinates array
+* @property {number} x vertex x coordinate
+* @property {number} y vertex y coordinate
+* @property {Node} prev previous vertex node in the polygon ring
+* @property {Node} next next vertex node in the polygon ring
+* @property {number} z z-order curve value; doubles as the owning block index during eliminateHoles
+* @property {Node | null} prevZ previous node in z-order
+* @property {Node | null} nextZ next node in z-order
+*/
+/** @type {Set<Node>} */
+const steiners = /* @__PURE__ */ new Set();
+let filteredOut = false;
+/**
+* Triangulate a polygon given as a flat array of vertex coordinates.
+*
+* @param {ArrayLike<number>} data flat array of vertex coordinates
+* @param {ArrayLike<number> | null} [holeIndices] indices (in vertices, not coordinates) where each hole ring starts
+* @param {number} [dim=2] number of coordinates per vertex in `data`
+* @returns {number[]} triangles as triplets of vertex indices into `data`
+* @example earcut([10,0, 0,50, 60,60, 70,10]); // [1,0,3, 3,2,1]
+*/
 function earcut(data, holeIndices, dim = 2) {
 	const hasHoles = holeIndices && holeIndices.length;
 	const outerLen = hasHoles ? holeIndices[0] * dim : data.length;
+	if (steiners.size) steiners.clear();
 	let outerNode = linkedList(data, 0, outerLen, dim, true);
+	/** @type {number[]} */
 	const triangles = [];
 	if (!outerNode || outerNode.next === outerNode.prev) return triangles;
-	let minX, minY, invSize;
+	let minX = 0, minY = 0, invSize = 0;
 	if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
 	if (data.length > 80 * dim) {
 		minX = data[0];
@@ -18857,11 +18886,13 @@ function earcut(data, holeIndices, dim = 2) {
 		invSize = Math.max(maxX - minX, maxY - minY);
 		invSize = invSize !== 0 ? 32767 / invSize : 0;
 	}
-	earcutLinked(outerNode, triangles, dim, minX, minY, invSize, 0);
+	earcutLinked(outerNode, triangles, minX, minY, invSize);
 	return triangles;
 }
+/** @param {ArrayLike<number>} data @param {number} start @param {number} end @param {number} dim @param {boolean} clockwise @returns {Node | null} */
 function linkedList(data, start, end, dim, clockwise) {
-	let last;
+	/** @type {Node | null} */
+	let last = null;
 	if (clockwise === signedArea(data, start, end, dim) > 0) for (let i = start; i < end; i += dim) last = insertNode(i / dim | 0, data[i], data[i + 1], last);
 	else for (let i = end - dim; i >= start; i -= dim) last = insertNode(i / dim | 0, data[i], data[i + 1], last);
 	if (last && equals(last, last.next)) {
@@ -18870,96 +18901,103 @@ function linkedList(data, start, end, dim, clockwise) {
 	}
 	return last;
 }
-function filterPoints(start, end) {
-	if (!start) return start;
-	if (!end) end = start;
+/** @param {Node} start @param {Node} [end] @returns {Node} */
+function filterPoints(start, end = start) {
+	const full = end === start;
 	let p = start, again;
 	do {
 		again = false;
-		if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+		if (p !== p.next && (steiners.size === 0 || !steiners.has(p)) && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+			if (full || p === end) end = p.prev;
+			filteredOut = true;
 			removeNode(p);
-			p = end = p.prev;
-			if (p === p.next) break;
+			p = p.prev;
 			again = true;
-		} else p = p.next;
+		} else if (full || p !== end) {
+			p = p.next;
+			again = !full;
+		}
 	} while (again || p !== end);
 	return end;
 }
-function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
-	if (!ear) return;
-	if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
-	let stop = ear;
+/** @param {Node} ear @param {number[]} triangles @param {number} minX @param {number} minY @param {number} invSize */
+function earcutLinked(ear, triangles, minX, minY, invSize) {
+	if (invSize) indexCurve(ear, minX, minY, invSize);
+	let stop = ear, cured = false;
 	while (ear.prev !== ear.next) {
 		const prev = ear.prev;
+		/** @type {Node} */
 		const next = ear.next;
-		if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
+		if (area(prev, ear, next) < 0 && (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear))) {
 			triangles.push(prev.i, ear.i, next.i);
 			removeNode(ear);
-			ear = next.next;
-			stop = next.next;
+			ear = next;
+			stop = next;
 			continue;
 		}
 		ear = next;
 		if (ear === stop) {
-			if (!pass) earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
-			else if (pass === 1) {
-				ear = cureLocalIntersections(filterPoints(ear), triangles);
-				earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
-			} else if (pass === 2) splitEarcut(ear, triangles, dim, minX, minY, invSize);
+			filteredOut = false;
+			ear = filterPoints(ear);
+			if (filteredOut) {
+				stop = ear;
+				continue;
+			}
+			if (!cured) {
+				ear = cureLocalIntersections(ear, triangles);
+				stop = ear;
+				cured = true;
+				continue;
+			}
+			splitEarcut(ear, triangles, minX, minY, invSize);
 			break;
 		}
 	}
 }
+/** @param {Node} ear @returns {boolean} */
 function isEar(ear) {
-	const a = ear.prev, b = ear, c = ear.next;
-	if (area(a, b, c) >= 0) return false;
-	const ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
-	const x0 = Math.min(ax, bx, cx), y0 = Math.min(ay, by, cy), x1 = Math.max(ax, bx, cx), y1 = Math.max(ay, by, cy);
+	const a = ear.prev, b = ear, c = ear.next, ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y, x0 = Math.min(ax, bx, cx), y0 = Math.min(ay, by, cy), x1 = Math.max(ax, bx, cx), y1 = Math.max(ay, by, cy);
 	let p = c.next;
 	while (p !== a) {
-		if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
+		if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && !(ax === p.x && ay === p.y) && pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
 		p = p.next;
 	}
 	return true;
 }
+/** @param {Node} ear @param {number} minX @param {number} minY @param {number} invSize @returns {boolean} */
 function isEarHashed(ear, minX, minY, invSize) {
-	const a = ear.prev, b = ear, c = ear.next;
-	if (area(a, b, c) >= 0) return false;
-	const ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
-	const x0 = Math.min(ax, bx, cx), y0 = Math.min(ay, by, cy), x1 = Math.max(ax, bx, cx), y1 = Math.max(ay, by, cy);
-	const minZ = zOrder(x0, y0, minX, minY, invSize), maxZ = zOrder(x1, y1, minX, minY, invSize);
-	let p = ear.prevZ, n = ear.nextZ;
-	while (p && p.z >= minZ && n && n.z <= maxZ) {
-		if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
-		p = p.prevZ;
-		if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
-		n = n.nextZ;
-	}
+	const a = ear.prev, b = ear, c = ear.next, ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y, x0 = Math.min(ax, bx, cx), y0 = Math.min(ay, by, cy), x1 = Math.max(ax, bx, cx), y1 = Math.max(ay, by, cy), minZ = zOrder(x0, y0, minX, minY, invSize), maxZ = zOrder(x1, y1, minX, minY, invSize);
+	let p = ear.prevZ;
 	while (p && p.z >= minZ) {
-		if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
+		if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== c && !(ax === p.x && ay === p.y) && pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
 		p = p.prevZ;
 	}
+	let n = ear.nextZ;
 	while (n && n.z <= maxZ) {
-		if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c && pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
+		if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== c && !(ax === n.x && ay === n.y) && pointInTriangle(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
 		n = n.nextZ;
 	}
 	return true;
 }
+/** @param {Node} start @param {number[]} triangles @returns {Node} */
 function cureLocalIntersections(start, triangles) {
 	let p = start;
+	let cured = false;
 	do {
 		const a = p.prev, b = p.next.next;
-		if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
+		if (intersects(a, p, p.next, b, false) && locallyInside(a, b) && locallyInside(b, a)) {
 			triangles.push(a.i, p.i, b.i);
 			removeNode(p);
 			removeNode(p.next);
 			p = start = b;
+			cured = true;
 		}
 		p = p.next;
 	} while (p !== start);
-	return filterPoints(p);
+	return cured ? filterPoints(p) : p;
 }
-function splitEarcut(start, triangles, dim, minX, minY, invSize) {
+/** @param {Node} start @param {number[]} triangles @param {number} minX @param {number} minY @param {number} invSize */
+function splitEarcut(start, triangles, minX, minY, invSize) {
 	let a = start;
 	do {
 		let b = a.next.next;
@@ -18968,8 +19006,8 @@ function splitEarcut(start, triangles, dim, minX, minY, invSize) {
 				let c = splitPolygon(a, b);
 				a = filterPoints(a, a.next);
 				c = filterPoints(c, c.next);
-				earcutLinked(a, triangles, dim, minX, minY, invSize, 0);
-				earcutLinked(c, triangles, dim, minX, minY, invSize, 0);
+				earcutLinked(a, triangles, minX, minY, invSize);
+				earcutLinked(c, triangles, minX, minY, invSize);
 				return;
 			}
 			b = b.next;
@@ -18977,125 +19015,226 @@ function splitEarcut(start, triangles, dim, minX, minY, invSize) {
 		a = a.next;
 	} while (a !== start);
 }
+let indexActive = false;
+/** @param {ArrayLike<number>} data @param {ArrayLike<number>} holeIndices @param {Node} outerNode @param {number} dim @returns {Node} */
 function eliminateHoles(data, holeIndices, outerNode, dim) {
 	const queue = [];
 	for (let i = 0, len = holeIndices.length; i < len; i++) {
 		const list = linkedList(data, holeIndices[i] * dim, i < len - 1 ? holeIndices[i + 1] * dim : data.length, dim, false);
-		if (list === list.next) list.steiner = true;
+		if (list === list.next) steiners.add(list);
 		queue.push(getLeftmost(list));
 	}
 	queue.sort(compareXYSlope);
+	buildBlockIndex(data.length / dim, holeIndices.length);
+	indexSegment(outerNode, outerNode);
+	indexActive = true;
 	for (let i = 0; i < queue.length; i++) outerNode = eliminateHole(queue[i], outerNode);
-	return outerNode;
+	indexActive = false;
+	return filterPoints(outerNode);
 }
+/** @param {Node} a @param {Node} b @returns {number} */
 function compareXYSlope(a, b) {
-	let result = a.x - b.x;
-	if (result === 0) {
-		result = a.y - b.y;
-		if (result === 0) result = (a.next.y - a.y) / (a.next.x - a.x) - (b.next.y - b.y) / (b.next.x - b.x);
-	}
-	return result;
+	return a.x - b.x || a.y - b.y || (a.next.y - a.y) / (a.next.x - a.x) - (b.next.y - b.y) / (b.next.x - b.x);
 }
+/** @param {Node} hole @param {Node} outerNode @returns {Node} */
 function eliminateHole(hole, outerNode) {
 	const bridge = findHoleBridge(hole, outerNode);
 	if (!bridge) return outerNode;
 	const bridgeReverse = splitPolygon(bridge, hole);
+	const bridge2 = bridgeReverse.next;
+	indexSegment(bridge, bridge2.next);
 	filterPoints(bridgeReverse, bridgeReverse.next);
 	return filterPoints(bridge, bridge.next);
 }
+const K = 16;
+let blockBBox = /* @__PURE__ */ new Float64Array(0);
+let numBlocks = 0;
+/** @type {Node[]} */
+const blockHead = [];
+/** @type {Node[]} */
+const blockStop = [];
+/** @param {number} maxNodes @param {number} numHoles */
+function buildBlockIndex(maxNodes, numHoles) {
+	const maxBlocks = Math.ceil((maxNodes + 2 * numHoles) / K) + numHoles + 2;
+	if (blockBBox.length < maxBlocks * 4) blockBBox = new Float64Array(maxBlocks * 4);
+	numBlocks = 0;
+}
+/** @param {Node} head @param {Node} stop */
+function indexSegment(head, stop) {
+	let p = head;
+	do {
+		const b = numBlocks++;
+		blockHead[b] = p;
+		let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+		let k = 0;
+		do {
+			const c = p.next;
+			p.z = b;
+			if (p.x < minX) minX = p.x;
+			if (p.x > maxX) maxX = p.x;
+			if (p.y < minY) minY = p.y;
+			if (p.y > maxY) maxY = p.y;
+			if (c.x < minX) minX = c.x;
+			if (c.x > maxX) maxX = c.x;
+			if (c.y < minY) minY = c.y;
+			if (c.y > maxY) maxY = c.y;
+			p = c;
+		} while (++k < K && p !== stop);
+		blockStop[b] = p;
+		const g = b * 4;
+		blockBBox[g] = minX;
+		blockBBox[g + 1] = minY;
+		blockBBox[g + 2] = maxX;
+		blockBBox[g + 3] = maxY;
+	} while (p !== stop);
+}
+/** @param {Node} head @param {Node} tail */
+function growBlock(head, tail) {
+	const g = head.z * 4;
+	if (tail.x < blockBBox[g]) blockBBox[g] = tail.x;
+	if (tail.y < blockBBox[g + 1]) blockBBox[g + 1] = tail.y;
+	if (tail.x > blockBBox[g + 2]) blockBBox[g + 2] = tail.x;
+	if (tail.y > blockBBox[g + 3]) blockBBox[g + 3] = tail.y;
+}
+/** @param {number} b @returns {Node} */
+function liveBlockStop(b) {
+	let stop = blockStop[b];
+	while (stop.prev.next !== stop) stop = stop.next;
+	blockStop[b] = stop;
+	return stop;
+}
+/** @param {number} b @returns {Node} */
+function liveBlockHead(b) {
+	let head = blockHead[b];
+	while (head.prev.next !== head) head = head.next;
+	blockHead[b] = head;
+	return head;
+}
+/** @param {Node} hole @param {Node} outerNode @returns {Node | null} */
 function findHoleBridge(hole, outerNode) {
 	let p = outerNode;
 	const hx = hole.x;
 	const hy = hole.y;
 	let qx = -Infinity;
+	/** @type {Node | undefined} */
 	let m;
 	if (equals(hole, p)) return p;
-	do {
-		if (equals(hole, p.next)) return p.next;
-		else if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
-			const x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
-			if (x <= hx && x > qx) {
-				qx = x;
-				m = p.x < p.next.x ? p : p.next;
-				if (x === hx) return m;
+	for (let b = 0, g = 0; b < numBlocks; b++, g += 4) {
+		if (hy < blockBBox[g + 1] || hy > blockBBox[g + 3] || blockBBox[g] > hx || blockBBox[g + 2] <= qx) continue;
+		const stop = liveBlockStop(b);
+		p = liveBlockHead(b);
+		do {
+			if (p.prev.next === p) {
+				if (equals(hole, p.next)) return p.next;
+				else if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
+					const x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+					if (x <= hx && x > qx) {
+						qx = x;
+						m = p.x < p.next.x ? p : p.next;
+						if (x === hx) return m;
+					}
+				}
 			}
-		}
-		p = p.next;
-	} while (p !== outerNode);
+			p = p.next;
+		} while (p !== stop);
+	}
 	if (!m) return null;
-	const stop = m;
 	const mx = m.x;
 	const my = m.y;
+	const tminY = Math.min(hy, my);
+	const tmaxY = Math.max(hy, my);
 	let tanMin = Infinity;
-	p = m;
-	do {
-		if (hx >= p.x && p.x >= mx && hx !== p.x && pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
-			const tan = Math.abs(hy - p.y) / (hx - p.x);
-			if (locallyInside(p, hole) && (tan < tanMin || tan === tanMin && (p.x > m.x || p.x === m.x && sectorContainsSector(m, p)))) {
-				m = p;
-				tanMin = tan;
+	for (let b = 0, g = 0; b < numBlocks; b++, g += 4) {
+		if (blockBBox[g + 2] < mx || blockBBox[g] > hx || blockBBox[g + 3] < tminY || blockBBox[g + 1] > tmaxY) continue;
+		const stop = liveBlockStop(b);
+		p = liveBlockHead(b);
+		do {
+			if (p.prev.next === p && hx >= p.x && p.x >= mx && hx !== p.x && pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
+				const tan = Math.abs(hy - p.y) / (hx - p.x);
+				if ((locallyInside(p, hole) || p.y === hy && p.next.y === hy && p.next.x > hx) && (tan < tanMin || tan === tanMin && (p.x > m.x || p.x === m.x && sectorContainsSector(m, p)))) {
+					m = p;
+					tanMin = tan;
+				}
 			}
-		}
-		p = p.next;
-	} while (p !== stop);
+			p = p.next;
+		} while (p !== stop);
+	}
 	return m;
 }
+/** @param {Node} m @param {Node} p @returns {boolean} */
 function sectorContainsSector(m, p) {
 	return area(m.prev, m, p.prev) < 0 && area(p.next, m, m.next) < 0;
 }
+/** @type {Node[]} */
+const sortArr = [];
+/** @type {Node[]} */
+let sortBuf = [];
+let zArr = /* @__PURE__ */ new Uint32Array(0);
+let zBuf = /* @__PURE__ */ new Uint32Array(0);
+const counts = /* @__PURE__ */ new Uint32Array(256);
+/** @param {Node} start @param {number} minX @param {number} minY @param {number} invSize */
 function indexCurve(start, minX, minY, invSize) {
 	let p = start;
+	let n = 0;
 	do {
-		if (p.z === 0) p.z = zOrder(p.x, p.y, minX, minY, invSize);
-		p.prevZ = p.prev;
-		p.nextZ = p.next;
+		p.z = zOrder(p.x, p.y, minX, minY, invSize);
+		sortArr[n++] = p;
 		p = p.next;
 	} while (p !== start);
-	p.prevZ.nextZ = null;
-	p.prevZ = null;
-	sortLinked(p);
+	sortNodes(n);
+	/** @type {Node | null} */
+	let prev = null;
+	for (let i = 0; i < n; i++) {
+		const node = sortArr[i];
+		node.prevZ = prev;
+		if (prev) prev.nextZ = node;
+		prev = node;
+	}
+	/** @type {Node} */ prev.nextZ = null;
 }
-function sortLinked(list) {
-	let numMerges;
-	let inSize = 1;
-	do {
-		let p = list;
-		let e;
-		list = null;
-		let tail = null;
-		numMerges = 0;
-		while (p) {
-			numMerges++;
-			let q = p;
-			let pSize = 0;
-			for (let i = 0; i < inSize; i++) {
-				pSize++;
-				q = q.nextZ;
-				if (!q) break;
+/** @param {number} n */
+function sortNodes(n) {
+	if (n <= 32) {
+		for (let i = 1; i < n; i++) {
+			const node = sortArr[i], z = node.z;
+			let j = i - 1;
+			while (j >= 0 && sortArr[j].z > z) {
+				sortArr[j + 1] = sortArr[j];
+				j--;
 			}
-			let qSize = inSize;
-			while (pSize > 0 || qSize > 0 && q) {
-				if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
-					e = p;
-					p = p.nextZ;
-					pSize--;
-				} else {
-					e = q;
-					q = q.nextZ;
-					qSize--;
-				}
-				if (tail) tail.nextZ = e;
-				else list = e;
-				e.prevZ = tail;
-				tail = e;
-			}
-			p = q;
+			sortArr[j + 1] = node;
 		}
-		tail.nextZ = null;
-		inSize *= 2;
-	} while (numMerges > 1);
-	return list;
+		return;
+	}
+	if (zArr.length < n) {
+		zArr = new Uint32Array(n);
+		zBuf = new Uint32Array(n);
+		sortBuf = new Array(n);
+	}
+	for (let i = 0; i < n; i++) zArr[i] = sortArr[i].z;
+	radixPass(n, sortArr, zArr, sortBuf, zBuf, 0);
+	radixPass(n, sortBuf, zBuf, sortArr, zArr, 8);
+	radixPass(n, sortArr, zArr, sortBuf, zBuf, 16);
+	radixPass(n, sortBuf, zBuf, sortArr, zArr, 24);
 }
+/** @param {number} n @param {Node[]} src @param {Uint32Array} srcZ @param {Node[]} dst @param {Uint32Array} dstZ @param {number} shift */
+function radixPass(n, src, srcZ, dst, dstZ, shift) {
+	counts.fill(0);
+	for (let i = 0; i < n; i++) counts[srcZ[i] >>> shift & 255]++;
+	let sum = 0;
+	for (let b = 0; b < 256; b++) {
+		const c = counts[b];
+		counts[b] = sum;
+		sum += c;
+	}
+	for (let i = 0; i < n; i++) {
+		const z = srcZ[i];
+		const pos = counts[z >>> shift & 255]++;
+		dst[pos] = src[i];
+		dstZ[pos] = z;
+	}
+}
+/** @param {number} x @param {number} y @param {number} minX @param {number} minY @param {number} invSize @returns {number} */
 function zOrder(x, y, minX, minY, invSize) {
 	x = (x - minX) * invSize | 0;
 	y = (y - minY) * invSize | 0;
@@ -19109,6 +19248,7 @@ function zOrder(x, y, minX, minY, invSize) {
 	y = (y | y << 1) & 1431655765;
 	return x | y << 1;
 }
+/** @param {Node} start @returns {Node} */
 function getLeftmost(start) {
 	let p = start, leftmost = start;
 	do {
@@ -19117,61 +19257,77 @@ function getLeftmost(start) {
 	} while (p !== start);
 	return leftmost;
 }
+/** @param {number} ax @param {number} ay @param {number} bx @param {number} by @param {number} cx @param {number} cy @param {number} px @param {number} py @returns {boolean} */
 function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
 	return (cx - px) * (ay - py) >= (ax - px) * (cy - py) && (ax - px) * (by - py) >= (bx - px) * (ay - py) && (bx - px) * (cy - py) >= (cx - px) * (by - py);
 }
-function pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, px, py) {
-	return !(ax === px && ay === py) && pointInTriangle(ax, ay, bx, by, cx, cy, px, py);
-}
+/** @param {Node} a @param {Node} b @returns {boolean} true when the diagonal is valid */
 function isValidDiagonal(a, b) {
-	return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && (area(a.prev, a, b.prev) || area(a, b.prev, b)) || equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0);
+	const zeroLength = equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0;
+	return a.next.i !== b.i && (zeroLength || locallyInside(a, b) && locallyInside(b, a) && (area(a.prev, a, b.prev) !== 0 || area(a, b.prev, b) !== 0)) && !intersectsPolygon(a, b) && (zeroLength || middleInside(a, b));
 }
+/** @param {Node} p @param {Node} q @param {Node} r @returns {number} */
 function area(p, q, r) {
 	return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 }
+/** @param {Node} p1 @param {Node} p2 @returns {boolean} */
 function equals(p1, p2) {
 	return p1.x === p2.x && p1.y === p2.y;
 }
-function intersects(p1, q1, p2, q2) {
-	const o1 = sign(area(p1, q1, p2));
-	const o2 = sign(area(p1, q1, q2));
-	const o3 = sign(area(p2, q2, p1));
-	const o4 = sign(area(p2, q2, q1));
-	if (o1 !== o2 && o3 !== o4) return true;
+/** @param {Node} p1 @param {Node} q1 @param {Node} p2 @param {Node} q2 @param {boolean} [includeBoundary] @returns {boolean} */
+function intersects(p1, q1, p2, q2, includeBoundary = true) {
+	const o1 = area(p1, q1, p2);
+	const o2 = area(p1, q1, q2);
+	const o3 = area(p2, q2, p1);
+	const o4 = area(p2, q2, q1);
+	if ((o1 > 0 && o2 < 0 || o1 < 0 && o2 > 0) && (o3 > 0 && o4 < 0 || o3 < 0 && o4 > 0)) return true;
+	if (!includeBoundary) return false;
 	if (o1 === 0 && onSegment(p1, p2, q1)) return true;
 	if (o2 === 0 && onSegment(p1, q2, q1)) return true;
 	if (o3 === 0 && onSegment(p2, p1, q2)) return true;
 	if (o4 === 0 && onSegment(p2, q1, q2)) return true;
 	return false;
 }
+/** @param {Node} p @param {Node} q @param {Node} r @returns {boolean} */
 function onSegment(p, q, r) {
 	return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
 }
-function sign(num) {
-	return num > 0 ? 1 : num < 0 ? -1 : 0;
-}
+/** @param {Node} a @param {Node} b @returns {boolean} */
 function intersectsPolygon(a, b) {
+	const minX = Math.min(a.x, b.x);
+	const maxX = Math.max(a.x, b.x);
+	const minY = Math.min(a.y, b.y);
+	const maxY = Math.max(a.y, b.y);
 	let p = a;
 	do {
-		if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i && intersects(p, p.next, a, b)) return true;
-		p = p.next;
+		const n = p.next;
+		if (p.x > maxX && n.x > maxX || p.x < minX && n.x < minX || p.y > maxY && n.y > maxY || p.y < minY && n.y < minY) {
+			p = n;
+			continue;
+		}
+		if (p.i !== a.i && n.i !== a.i && p.i !== b.i && n.i !== b.i && intersects(p, n, a, b)) return true;
+		p = n;
 	} while (p !== a);
 	return false;
 }
+/** @param {Node} a @param {Node} b @returns {boolean} */
 function locallyInside(a, b) {
 	return area(a.prev, a, a.next) < 0 ? area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 : area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
 }
+/** @param {Node} a @param {Node} b @returns {boolean} */
 function middleInside(a, b) {
 	let p = a;
 	let inside = false;
 	const px = (a.x + b.x) / 2;
 	const py = (a.y + b.y) / 2;
 	do {
-		if (p.y > py !== p.next.y > py && p.next.y !== p.y && px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x) inside = !inside;
-		p = p.next;
+		const n = p.next;
+		if (p.y > py !== n.y > py && px < (n.x - p.x) * (py - p.y) / (n.y - p.y) + p.x) inside = !inside;
+		p = n;
 	} while (p !== a);
 	return inside;
 }
+/** @param {Node} a @param {Node} b @returns {Node} */
 function splitPolygon(a, b) {
 	const a2 = createNode(a.i, a.x, a.y), b2 = createNode(b.i, b.x, b.y), an = a.next, bp = b.prev;
 	a.next = b;
@@ -19184,6 +19340,7 @@ function splitPolygon(a, b) {
 	b2.prev = bp;
 	return b2;
 }
+/** @param {number} i @param {number} x @param {number} y @param {Node | null} last @returns {Node} */
 function insertNode(i, x, y, last) {
 	const p = createNode(i, x, y);
 	if (!last) {
@@ -19197,12 +19354,15 @@ function insertNode(i, x, y, last) {
 	}
 	return p;
 }
+/** @param {Node} p */
 function removeNode(p) {
 	p.next.prev = p.prev;
 	p.prev.next = p.next;
 	if (p.prevZ) p.prevZ.nextZ = p.nextZ;
 	if (p.nextZ) p.nextZ.prevZ = p.prevZ;
+	if (indexActive) growBlock(p.prev, p.next);
 }
+/** @param {number} i @param {number} x @param {number} y @returns {Node} */
 function createNode(i, x, y) {
 	return {
 		i,
@@ -19212,10 +19372,10 @@ function createNode(i, x, y) {
 		next: null,
 		z: 0,
 		prevZ: null,
-		nextZ: null,
-		steiner: false
+		nextZ: null
 	};
 }
+/** @param {ArrayLike<number>} data @param {number} start @param {number} end @param {number} dim @returns {number} */
 function signedArea(data, start, end, dim) {
 	let sum = 0;
 	for (let i = start, j = end - dim; i < end; i += dim) {
@@ -20475,297 +20635,7 @@ function projectQueryGeometry(queryGeometry, pixelPosMatrix, z) {
 	return projectedQueryGeometry;
 }
 //#endregion
-//#region node_modules/kdbush/index.js
-const ARRAY_TYPES = [
-	Int8Array,
-	Uint8Array,
-	Uint8ClampedArray,
-	Int16Array,
-	Uint16Array,
-	Int32Array,
-	Uint32Array,
-	Float32Array,
-	Float64Array
-];
-/** @typedef {Int8ArrayConstructor | Uint8ArrayConstructor | Uint8ClampedArrayConstructor | Int16ArrayConstructor | Uint16ArrayConstructor | Int32ArrayConstructor | Uint32ArrayConstructor | Float32ArrayConstructor | Float64ArrayConstructor} TypedArrayConstructor */
-/** @typedef {Int8Array | Uint8Array | Uint8ClampedArray | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array} TypedArray */
-const VERSION = 1;
-const HEADER_SIZE = 8;
-const STACK = /* @__PURE__ */ new Uint32Array(96);
-var KDBush = class KDBush {
-	/**
-	* Creates an index from raw `ArrayBuffer` data.
-	* @param {ArrayBufferLike} data
-	*/
-	static from(data) {
-		if (!data || data.byteLength === void 0 || data.buffer) throw new Error("Data must be an instance of ArrayBuffer or SharedArrayBuffer.");
-		const [magic, versionAndType] = new Uint8Array(data, 0, 2);
-		if (magic !== 219) throw new Error("Data does not appear to be in a KDBush format.");
-		const version = versionAndType >> 4;
-		if (version !== VERSION) throw new Error(`Got v${version} data when expected v${VERSION}.`);
-		const ArrayType = ARRAY_TYPES[versionAndType & 15];
-		if (!ArrayType) throw new Error("Unrecognized array type.");
-		const [nodeSize] = new Uint16Array(data, 2, 1);
-		const [numItems] = new Uint32Array(data, 4, 1);
-		return new KDBush(numItems, nodeSize, ArrayType, void 0, data);
-	}
-	/**
-	* Creates an index that will hold a given number of items.
-	* @param {number} numItems
-	* @param {number} [nodeSize=64] Size of the KD-tree node (64 by default).
-	* @param {TypedArrayConstructor} [ArrayType=Float64Array] The array type used for coordinates storage (`Float64Array` by default).
-	* @param {ArrayBufferConstructor | SharedArrayBufferConstructor} [ArrayBufferType=ArrayBuffer] The array buffer type used for storage (`ArrayBuffer` by default).
-	* @param {ArrayBufferLike} [data] (For internal use only)
-	*/
-	constructor(numItems, nodeSize = 64, ArrayType = Float64Array, ArrayBufferType = ArrayBuffer, data) {
-		if (isNaN(numItems) || numItems < 0) throw new Error(`Unexpected numItems value: ${numItems}.`);
-		this.numItems = +numItems;
-		this.nodeSize = Math.min(Math.max(+nodeSize, 2), 65535);
-		this.ArrayType = ArrayType;
-		this.IndexArrayType = numItems < 65536 ? Uint16Array : Uint32Array;
-		const arrayTypeIndex = ARRAY_TYPES.indexOf(this.ArrayType);
-		const coordsByteSize = numItems * 2 * this.ArrayType.BYTES_PER_ELEMENT;
-		const idsByteSize = numItems * this.IndexArrayType.BYTES_PER_ELEMENT;
-		const padCoords = (8 - idsByteSize % 8) % 8;
-		if (arrayTypeIndex < 0) throw new Error(`Unexpected typed array class: ${ArrayType}.`);
-		if (data) {
-			this.data = data;
-			this.ids = new this.IndexArrayType(data, HEADER_SIZE, numItems);
-			this.coords = new ArrayType(data, HEADER_SIZE + idsByteSize + padCoords, numItems * 2);
-			this._pos = numItems * 2;
-			this._finished = true;
-		} else {
-			const data = this.data = new ArrayBufferType(HEADER_SIZE + coordsByteSize + idsByteSize + padCoords);
-			this.ids = new this.IndexArrayType(data, HEADER_SIZE, numItems);
-			this.coords = new ArrayType(data, HEADER_SIZE + idsByteSize + padCoords, numItems * 2);
-			this._pos = 0;
-			this._finished = false;
-			new Uint8Array(data, 0, 2).set([219, (VERSION << 4) + arrayTypeIndex]);
-			new Uint16Array(data, 2, 1)[0] = nodeSize;
-			new Uint32Array(data, 4, 1)[0] = numItems;
-		}
-	}
-	/**
-	* Add a point to the index.
-	* @param {number} x
-	* @param {number} y
-	* @returns {number} An incremental index associated with the added item (starting from `0`).
-	*/
-	add(x, y) {
-		const index = this._pos >> 1;
-		this.ids[index] = index;
-		this.coords[this._pos++] = x;
-		this.coords[this._pos++] = y;
-		return index;
-	}
-	/**
-	* Perform indexing of the added points.
-	*/
-	finish() {
-		const numAdded = this._pos >> 1;
-		if (numAdded !== this.numItems) throw new Error(`Added ${numAdded} items when expected ${this.numItems}.`);
-		sort(this.ids, this.coords, this.nodeSize, 0, this.numItems - 1, 0);
-		this._finished = true;
-		return this;
-	}
-	/**
-	* Search the index for items within a given bounding box.
-	* @param {number} minX
-	* @param {number} minY
-	* @param {number} maxX
-	* @param {number} maxY
-	* @returns {number[]} An array of indices correponding to the found items.
-	*/
-	range(minX, minY, maxX, maxY) {
-		if (!this._finished) throw new Error("Data not yet indexed - call index.finish().");
-		const { ids, coords, nodeSize } = this;
-		STACK[0] = 0;
-		STACK[1] = ids.length - 1;
-		STACK[2] = 0;
-		let sp = 3;
-		const result = [];
-		while (sp > 0) {
-			const axis = STACK[--sp];
-			const right = STACK[--sp];
-			const left = STACK[--sp];
-			if (right - left <= nodeSize) {
-				for (let i = left; i <= right; i++) {
-					const x = coords[2 * i];
-					const y = coords[2 * i + 1];
-					if (x >= minX && x <= maxX && y >= minY && y <= maxY) result.push(ids[i]);
-				}
-				continue;
-			}
-			const m = left + right >> 1;
-			const x = coords[2 * m];
-			const y = coords[2 * m + 1];
-			if (x >= minX && x <= maxX && y >= minY && y <= maxY) result.push(ids[m]);
-			if (axis === 0 ? minX <= x : minY <= y) {
-				STACK[sp++] = left;
-				STACK[sp++] = m - 1;
-				STACK[sp++] = 1 - axis;
-			}
-			if (axis === 0 ? maxX >= x : maxY >= y) {
-				STACK[sp++] = m + 1;
-				STACK[sp++] = right;
-				STACK[sp++] = 1 - axis;
-			}
-		}
-		return result;
-	}
-	/**
-	* Search the index for items within a given radius.
-	* @param {number} qx
-	* @param {number} qy
-	* @param {number} r Query radius.
-	* @returns {number[]} An array of indices correponding to the found items.
-	*/
-	within(qx, qy, r) {
-		const result = [];
-		this.withinInto(qx, qy, r, result);
-		return result;
-	}
-	/**
-	* Search the index for items within a given radius, writing matching ids into `out`
-	* via indexed assignment (`out[i] = id`). Accepts any indexed-writable container —
-	* a typed array sized to the expected upper bound (allocation-free, fast) or a plain
-	* `Array` (which will grow as needed). Returns the number of matches written.
-	* @param {number} qx
-	* @param {number} qy
-	* @param {number} r Query radius.
-	* @param {number[] | TypedArray} out Container to write matching ids into.
-	* @returns {number} The number of matches written to `out`.
-	*/
-	withinInto(qx, qy, r, out) {
-		if (!this._finished) throw new Error("Data not yet indexed - call index.finish().");
-		const { ids, coords, nodeSize } = this;
-		STACK[0] = 0;
-		STACK[1] = ids.length - 1;
-		STACK[2] = 0;
-		let sp = 3;
-		let count = 0;
-		const r2 = r * r;
-		while (sp > 0) {
-			const axis = STACK[--sp];
-			const right = STACK[--sp];
-			const left = STACK[--sp];
-			if (right - left <= nodeSize) {
-				for (let i = left; i <= right; i++) if (sqDist(coords[2 * i], coords[2 * i + 1], qx, qy) <= r2) out[count++] = ids[i];
-				continue;
-			}
-			const m = left + right >> 1;
-			const x = coords[2 * m];
-			const y = coords[2 * m + 1];
-			if (sqDist(x, y, qx, qy) <= r2) out[count++] = ids[m];
-			if (axis === 0 ? qx - r <= x : qy - r <= y) {
-				STACK[sp++] = left;
-				STACK[sp++] = m - 1;
-				STACK[sp++] = 1 - axis;
-			}
-			if (axis === 0 ? qx + r >= x : qy + r >= y) {
-				STACK[sp++] = m + 1;
-				STACK[sp++] = right;
-				STACK[sp++] = 1 - axis;
-			}
-		}
-		return count;
-	}
-};
-/**
-* @param {Uint16Array | Uint32Array} ids
-* @param {TypedArray} coords
-* @param {number} nodeSize
-* @param {number} left
-* @param {number} right
-* @param {number} axis
-*/
-function sort(ids, coords, nodeSize, left, right, axis) {
-	if (right - left <= nodeSize) return;
-	const m = left + right >> 1;
-	select(ids, coords, m, left, right, axis);
-	sort(ids, coords, nodeSize, left, m - 1, 1 - axis);
-	sort(ids, coords, nodeSize, m + 1, right, 1 - axis);
-}
-/**
-* Custom Floyd-Rivest selection algorithm: sort ids and coords so that
-* [left..k-1] items are smaller than k-th item (on either x or y axis)
-* @param {Uint16Array | Uint32Array} ids
-* @param {TypedArray} coords
-* @param {number} k
-* @param {number} left
-* @param {number} right
-* @param {number} axis
-*/
-function select(ids, coords, k, left, right, axis) {
-	while (right > left) {
-		if (right - left > 600) {
-			const n = right - left + 1;
-			const m = k - left + 1;
-			const z = Math.log(n);
-			const s = .5 * Math.exp(2 * z / 3);
-			const sd = .5 * Math.sqrt(z * s * (n - s) / n) * (m - n / 2 < 0 ? -1 : 1);
-			select(ids, coords, k, Math.max(left, Math.floor(k - m * s / n + sd)), Math.min(right, Math.floor(k + (n - m) * s / n + sd)), axis);
-		}
-		const t = coords[2 * k + axis];
-		let i = left;
-		let j = right;
-		swapItem(ids, coords, left, k);
-		if (coords[2 * right + axis] > t) swapItem(ids, coords, left, right);
-		while (i < j) {
-			swapItem(ids, coords, i, j);
-			i++;
-			j--;
-			while (coords[2 * i + axis] < t) i++;
-			while (coords[2 * j + axis] > t) j--;
-		}
-		if (coords[2 * left + axis] === t) swapItem(ids, coords, left, j);
-		else {
-			j++;
-			swapItem(ids, coords, j, right);
-		}
-		if (j <= k) left = j + 1;
-		if (k <= j) right = j - 1;
-	}
-}
-/**
-* @param {Uint16Array | Uint32Array} ids
-* @param {TypedArray} coords
-* @param {number} i
-* @param {number} j
-*/
-function swapItem(ids, coords, i, j) {
-	swap(ids, i, j);
-	swap(coords, 2 * i, 2 * j);
-	swap(coords, 2 * i + 1, 2 * j + 1);
-}
-/**
-* @param {TypedArray} arr
-* @param {number} i
-* @param {number} j
-*/
-function swap(arr, i, j) {
-	const tmp = arr[i];
-	arr[i] = arr[j];
-	arr[j] = tmp;
-}
-/**
-* @param {number} ax
-* @param {number} ay
-* @param {number} bx
-* @param {number} by
-*/
-function sqDist(ax, ay, bx, by) {
-	const dx = ax - bx;
-	const dy = ay - by;
-	return dx * dx + dy * dy;
-}
-//#endregion
 //#region node_modules/@maplibre/geojson-vt/dist/geojson-vt.mjs
-var AxisType;
-(function(AxisType) {
-	AxisType[AxisType["X"] = 0] = "X";
-	AxisType[AxisType["Y"] = 1] = "Y";
-})(AxisType || (AxisType = {}));
 const GEOJSONVT_CLIP_START = "geojsonvt_clip_start";
 const GEOJSONVT_CLIP_END = "geojsonvt_clip_end";
 //#endregion
@@ -36662,6 +36532,291 @@ var PauseablePlacement = class {
 	}
 };
 //#endregion
+//#region node_modules/kdbush/index.js
+const ARRAY_TYPES = [
+	Int8Array,
+	Uint8Array,
+	Uint8ClampedArray,
+	Int16Array,
+	Uint16Array,
+	Int32Array,
+	Uint32Array,
+	Float32Array,
+	Float64Array
+];
+/** @typedef {Int8ArrayConstructor | Uint8ArrayConstructor | Uint8ClampedArrayConstructor | Int16ArrayConstructor | Uint16ArrayConstructor | Int32ArrayConstructor | Uint32ArrayConstructor | Float32ArrayConstructor | Float64ArrayConstructor} TypedArrayConstructor */
+/** @typedef {Int8Array | Uint8Array | Uint8ClampedArray | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array} TypedArray */
+const VERSION = 1;
+const HEADER_SIZE = 8;
+const STACK = /* @__PURE__ */ new Uint32Array(96);
+var KDBush = class KDBush {
+	/**
+	* Creates an index from raw `ArrayBuffer` data.
+	* @param {ArrayBufferLike} data
+	*/
+	static from(data) {
+		if (!data || data.byteLength === void 0 || data.buffer) throw new Error("Data must be an instance of ArrayBuffer or SharedArrayBuffer.");
+		const [magic, versionAndType] = new Uint8Array(data, 0, 2);
+		if (magic !== 219) throw new Error("Data does not appear to be in a KDBush format.");
+		const version = versionAndType >> 4;
+		if (version !== VERSION) throw new Error(`Got v${version} data when expected v${VERSION}.`);
+		const ArrayType = ARRAY_TYPES[versionAndType & 15];
+		if (!ArrayType) throw new Error("Unrecognized array type.");
+		const [nodeSize] = new Uint16Array(data, 2, 1);
+		const [numItems] = new Uint32Array(data, 4, 1);
+		return new KDBush(numItems, nodeSize, ArrayType, void 0, data);
+	}
+	/**
+	* Creates an index that will hold a given number of items.
+	* @param {number} numItems
+	* @param {number} [nodeSize=64] Size of the KD-tree node (64 by default).
+	* @param {TypedArrayConstructor} [ArrayType=Float64Array] The array type used for coordinates storage (`Float64Array` by default).
+	* @param {ArrayBufferConstructor | SharedArrayBufferConstructor} [ArrayBufferType=ArrayBuffer] The array buffer type used for storage (`ArrayBuffer` by default).
+	* @param {ArrayBufferLike} [data] (For internal use only)
+	*/
+	constructor(numItems, nodeSize = 64, ArrayType = Float64Array, ArrayBufferType = ArrayBuffer, data) {
+		if (isNaN(numItems) || numItems < 0) throw new Error(`Unexpected numItems value: ${numItems}.`);
+		this.numItems = +numItems;
+		this.nodeSize = Math.min(Math.max(+nodeSize, 2), 65535);
+		this.ArrayType = ArrayType;
+		this.IndexArrayType = numItems < 65536 ? Uint16Array : Uint32Array;
+		const arrayTypeIndex = ARRAY_TYPES.indexOf(this.ArrayType);
+		const coordsByteSize = numItems * 2 * this.ArrayType.BYTES_PER_ELEMENT;
+		const idsByteSize = numItems * this.IndexArrayType.BYTES_PER_ELEMENT;
+		const padCoords = (8 - idsByteSize % 8) % 8;
+		if (arrayTypeIndex < 0) throw new Error(`Unexpected typed array class: ${ArrayType}.`);
+		if (data) {
+			this.data = data;
+			this.ids = new this.IndexArrayType(data, HEADER_SIZE, numItems);
+			this.coords = new ArrayType(data, HEADER_SIZE + idsByteSize + padCoords, numItems * 2);
+			this._pos = numItems * 2;
+			this._finished = true;
+		} else {
+			const data = this.data = new ArrayBufferType(HEADER_SIZE + coordsByteSize + idsByteSize + padCoords);
+			this.ids = new this.IndexArrayType(data, HEADER_SIZE, numItems);
+			this.coords = new ArrayType(data, HEADER_SIZE + idsByteSize + padCoords, numItems * 2);
+			this._pos = 0;
+			this._finished = false;
+			new Uint8Array(data, 0, 2).set([219, (VERSION << 4) + arrayTypeIndex]);
+			new Uint16Array(data, 2, 1)[0] = nodeSize;
+			new Uint32Array(data, 4, 1)[0] = numItems;
+		}
+	}
+	/**
+	* Add a point to the index.
+	* @param {number} x
+	* @param {number} y
+	* @returns {number} An incremental index associated with the added item (starting from `0`).
+	*/
+	add(x, y) {
+		const index = this._pos >> 1;
+		this.ids[index] = index;
+		this.coords[this._pos++] = x;
+		this.coords[this._pos++] = y;
+		return index;
+	}
+	/**
+	* Perform indexing of the added points.
+	*/
+	finish() {
+		const numAdded = this._pos >> 1;
+		if (numAdded !== this.numItems) throw new Error(`Added ${numAdded} items when expected ${this.numItems}.`);
+		sort(this.ids, this.coords, this.nodeSize, 0, this.numItems - 1, 0);
+		this._finished = true;
+		return this;
+	}
+	/**
+	* Search the index for items within a given bounding box.
+	* @param {number} minX
+	* @param {number} minY
+	* @param {number} maxX
+	* @param {number} maxY
+	* @returns {number[]} An array of indices correponding to the found items.
+	*/
+	range(minX, minY, maxX, maxY) {
+		if (!this._finished) throw new Error("Data not yet indexed - call index.finish().");
+		const { ids, coords, nodeSize } = this;
+		STACK[0] = 0;
+		STACK[1] = ids.length - 1;
+		STACK[2] = 0;
+		let sp = 3;
+		const result = [];
+		while (sp > 0) {
+			const axis = STACK[--sp];
+			const right = STACK[--sp];
+			const left = STACK[--sp];
+			if (right - left <= nodeSize) {
+				for (let i = left; i <= right; i++) {
+					const x = coords[2 * i];
+					const y = coords[2 * i + 1];
+					if (x >= minX && x <= maxX && y >= minY && y <= maxY) result.push(ids[i]);
+				}
+				continue;
+			}
+			const m = left + right >> 1;
+			const x = coords[2 * m];
+			const y = coords[2 * m + 1];
+			if (x >= minX && x <= maxX && y >= minY && y <= maxY) result.push(ids[m]);
+			if (axis === 0 ? minX <= x : minY <= y) {
+				STACK[sp++] = left;
+				STACK[sp++] = m - 1;
+				STACK[sp++] = 1 - axis;
+			}
+			if (axis === 0 ? maxX >= x : maxY >= y) {
+				STACK[sp++] = m + 1;
+				STACK[sp++] = right;
+				STACK[sp++] = 1 - axis;
+			}
+		}
+		return result;
+	}
+	/**
+	* Search the index for items within a given radius.
+	* @param {number} qx
+	* @param {number} qy
+	* @param {number} r Query radius.
+	* @returns {number[]} An array of indices correponding to the found items.
+	*/
+	within(qx, qy, r) {
+		const result = [];
+		this.withinInto(qx, qy, r, result);
+		return result;
+	}
+	/**
+	* Search the index for items within a given radius, writing matching ids into `out`
+	* via indexed assignment (`out[i] = id`). Accepts any indexed-writable container —
+	* a typed array sized to the expected upper bound (allocation-free, fast) or a plain
+	* `Array` (which will grow as needed). Returns the number of matches written.
+	* @param {number} qx
+	* @param {number} qy
+	* @param {number} r Query radius.
+	* @param {number[] | TypedArray} out Container to write matching ids into.
+	* @returns {number} The number of matches written to `out`.
+	*/
+	withinInto(qx, qy, r, out) {
+		if (!this._finished) throw new Error("Data not yet indexed - call index.finish().");
+		const { ids, coords, nodeSize } = this;
+		STACK[0] = 0;
+		STACK[1] = ids.length - 1;
+		STACK[2] = 0;
+		let sp = 3;
+		let count = 0;
+		const r2 = r * r;
+		while (sp > 0) {
+			const axis = STACK[--sp];
+			const right = STACK[--sp];
+			const left = STACK[--sp];
+			if (right - left <= nodeSize) {
+				for (let i = left; i <= right; i++) if (sqDist(coords[2 * i], coords[2 * i + 1], qx, qy) <= r2) out[count++] = ids[i];
+				continue;
+			}
+			const m = left + right >> 1;
+			const x = coords[2 * m];
+			const y = coords[2 * m + 1];
+			if (sqDist(x, y, qx, qy) <= r2) out[count++] = ids[m];
+			if (axis === 0 ? qx - r <= x : qy - r <= y) {
+				STACK[sp++] = left;
+				STACK[sp++] = m - 1;
+				STACK[sp++] = 1 - axis;
+			}
+			if (axis === 0 ? qx + r >= x : qy + r >= y) {
+				STACK[sp++] = m + 1;
+				STACK[sp++] = right;
+				STACK[sp++] = 1 - axis;
+			}
+		}
+		return count;
+	}
+};
+/**
+* @param {Uint16Array | Uint32Array} ids
+* @param {TypedArray} coords
+* @param {number} nodeSize
+* @param {number} left
+* @param {number} right
+* @param {number} axis
+*/
+function sort(ids, coords, nodeSize, left, right, axis) {
+	if (right - left <= nodeSize) return;
+	const m = left + right >> 1;
+	select(ids, coords, m, left, right, axis);
+	sort(ids, coords, nodeSize, left, m - 1, 1 - axis);
+	sort(ids, coords, nodeSize, m + 1, right, 1 - axis);
+}
+/**
+* Custom Floyd-Rivest selection algorithm: sort ids and coords so that
+* [left..k-1] items are smaller than k-th item (on either x or y axis)
+* @param {Uint16Array | Uint32Array} ids
+* @param {TypedArray} coords
+* @param {number} k
+* @param {number} left
+* @param {number} right
+* @param {number} axis
+*/
+function select(ids, coords, k, left, right, axis) {
+	while (right > left) {
+		if (right - left > 600) {
+			const n = right - left + 1;
+			const m = k - left + 1;
+			const z = Math.log(n);
+			const s = .5 * Math.exp(2 * z / 3);
+			const sd = .5 * Math.sqrt(z * s * (n - s) / n) * (m - n / 2 < 0 ? -1 : 1);
+			select(ids, coords, k, Math.max(left, Math.floor(k - m * s / n + sd)), Math.min(right, Math.floor(k + (n - m) * s / n + sd)), axis);
+		}
+		const t = coords[2 * k + axis];
+		let i = left;
+		let j = right;
+		swapItem(ids, coords, left, k);
+		if (coords[2 * right + axis] > t) swapItem(ids, coords, left, right);
+		while (i < j) {
+			swapItem(ids, coords, i, j);
+			i++;
+			j--;
+			while (coords[2 * i + axis] < t) i++;
+			while (coords[2 * j + axis] > t) j--;
+		}
+		if (coords[2 * left + axis] === t) swapItem(ids, coords, left, j);
+		else {
+			j++;
+			swapItem(ids, coords, j, right);
+		}
+		if (j <= k) left = j + 1;
+		if (k <= j) right = j - 1;
+	}
+}
+/**
+* @param {Uint16Array | Uint32Array} ids
+* @param {TypedArray} coords
+* @param {number} i
+* @param {number} j
+*/
+function swapItem(ids, coords, i, j) {
+	swap(ids, i, j);
+	swap(coords, 2 * i, 2 * j);
+	swap(coords, 2 * i + 1, 2 * j + 1);
+}
+/**
+* @param {TypedArray} arr
+* @param {number} i
+* @param {number} j
+*/
+function swap(arr, i, j) {
+	const tmp = arr[i];
+	arr[i] = arr[j];
+	arr[j] = tmp;
+}
+/**
+* @param {number} ax
+* @param {number} ay
+* @param {number} bx
+* @param {number} by
+*/
+function sqDist(ax, ay, bx, by) {
+	const dx = ax - bx;
+	const dy = ay - by;
+	return dx * dx + dy * dy;
+}
+//#endregion
 //#region src/symbol/cross_tile_symbol_index.ts
 const roundingFactor = 512 / EXTENT / 2;
 var TileLayerIndex = class {
@@ -43198,7 +43353,7 @@ var Layout = class extends Benchmark {
 };
 //#endregion
 //#region package.json
-var version$4 = "6.0.0-18";
+var version$4 = "6.0.0-19";
 //#endregion
 //#region src/data/raster_bounds_attributes.ts
 const rasterBoundsAttributes = createLayout([{
@@ -60499,7 +60654,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 8dd8214";
+const version = "main f2fc5e4";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
