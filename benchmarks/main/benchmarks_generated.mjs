@@ -39047,20 +39047,19 @@ var MercatorCameraHelper = class {
 		const targetCenter = constrained.center;
 		const targetZoom = constrained.zoom;
 		normalizeCenter(tr, targetCenter);
-		const from = projectToWorldCoordinates(tr.worldSize, options.locationAtOffset);
-		const delta = projectToWorldCoordinates(tr.worldSize, targetCenter).sub(from);
+		const startWorldSize = tr.worldSize;
+		const from = projectToWorldCoordinates(startWorldSize, options.locationAtOffset);
+		const delta = projectToWorldCoordinates(startWorldSize, targetCenter).sub(from);
 		const pixelPathLength = delta.mag();
 		const scaleOfZoom = zoomScale(targetZoom - startZoom);
-		const optionsMinZoom = typeof options.minZoom !== "undefined";
-		let scaleOfMinZoom;
-		if (optionsMinZoom) {
-			const minZoomPreConstrain = Math.min(+options.minZoom, startZoom, targetZoom);
-			const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
-			scaleOfMinZoom = zoomScale(minZoom - startZoom);
-		}
+		const requestedMinZoom = typeof options.minZoom !== "undefined" ? +options.minZoom : tr.minZoom;
+		const effectiveMinZoom = Math.max(requestedMinZoom, tr.minZoom);
+		const minZoomPreConstrain = Math.min(effectiveMinZoom, startZoom, targetZoom);
+		const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
+		const scaleOfMinZoom = zoomScale(minZoom - startZoom);
 		const easeFunc = (k, scale, centerFactor, pointAtOffset) => {
 			tr.setZoom(k === 1 ? targetZoom : startZoom + scaleZoom(scale));
-			const newCenter = k === 1 ? targetCenter : unprojectFromWorldCoordinates(tr.worldSize, from.add(delta.mult(centerFactor)).mult(scale));
+			const newCenter = k === 1 ? targetCenter : unprojectFromWorldCoordinates(startWorldSize, from.add(delta.mult(centerFactor)));
 			tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
 		};
 		return {
@@ -41555,13 +41554,10 @@ var VerticalPerspectiveCameraHelper = class VerticalPerspectiveCameraHelper {
 		const normalizedStartZoom = startZoom + getZoomAdjustment(startCenter.lat, 0);
 		const normalizedTargetZoom = targetZoom + getZoomAdjustment(targetCenter.lat, 0);
 		const scaleOfZoom = zoomScale(normalizedTargetZoom - normalizedStartZoom);
-		const optionsMinZoom = typeof options.minZoom === "number";
-		let scaleOfMinZoom;
-		if (optionsMinZoom) {
-			const normalizedOptionsMinZoom = +options.minZoom + getZoomAdjustment(targetCenter.lat, 0);
-			const minZoomPreConstrain = Math.min(normalizedOptionsMinZoom, normalizedStartZoom, normalizedTargetZoom) + getZoomAdjustment(0, targetCenter.lat);
-			scaleOfMinZoom = zoomScale(tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom + getZoomAdjustment(targetCenter.lat, 0) - normalizedStartZoom);
-		}
+		const requestedMinZoom = typeof options.minZoom === "number" ? +options.minZoom : tr.minZoom;
+		const normalizedEffectiveMinZoom = Math.max(requestedMinZoom, tr.minZoom) + getZoomAdjustment(targetCenter.lat, 0);
+		const minZoomPreConstrain = Math.min(normalizedEffectiveMinZoom, normalizedStartZoom, normalizedTargetZoom) + getZoomAdjustment(0, targetCenter.lat);
+		const scaleOfMinZoom = zoomScale(tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom + getZoomAdjustment(targetCenter.lat, 0) - normalizedStartZoom);
 		const deltaLng = differenceOfAnglesDegrees(startCenter.lng, targetCenter.lng);
 		const deltaLat = differenceOfAnglesDegrees(startCenter.lat, targetCenter.lat);
 		const easeFunc = (k, scale, centerFactor, _pointAtOffset) => {
@@ -50914,10 +50910,8 @@ var Camera = class extends Evented {
 		const w0 = Math.max(tr.width, tr.height);
 		const w1 = w0 / flyToHandler.scaleOfZoom;
 		const u1 = flyToHandler.pixelPathLength;
-		if (typeof flyToHandler.scaleOfMinZoom === "number") {
-			const wMax = w0 / flyToHandler.scaleOfMinZoom;
-			rho = Math.sqrt(wMax / u1 * 2);
-		}
+		const wMax = w0 / flyToHandler.scaleOfMinZoom;
+		rho = Math.min(rho, Math.sqrt(wMax / u1 * 2));
 		const rho2 = rho * rho;
 		/**
 		* rᵢ: Returns the zoom-out factor at one end of the animation.
@@ -60654,7 +60648,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main f2fc5e4";
+const version = "main 7f6b95c";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
