@@ -45730,6 +45730,7 @@ function drawLayerOpacity(painter, opacity, prepareDrawLayerOpacityResult, layer
 	context.activeTexture.set(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D, painter.layerOpacityFbo.colorAttachment.get());
 	painter.useProgram("layerOpacity").draw(context, gl.TRIANGLES, DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled, layerOpacityUniformValues(opacity, 0), null, null, layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer, painter.viewportSegments, layer.paint, painter.transform.zoom);
+	painter.currentStencilSource = void 0;
 }
 //#endregion
 //#region src/webgl/draw/draw_line.ts
@@ -60779,7 +60780,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main f2bf791";
+const version = "main a725eca";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
