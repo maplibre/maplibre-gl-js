@@ -43309,7 +43309,7 @@ var Layout = class extends Benchmark {
 };
 //#endregion
 //#region package.json
-var version$4 = "6.0.0-19";
+var version$4 = "6.0.0-20";
 //#endregion
 //#region src/data/raster_bounds_attributes.ts
 const rasterBoundsAttributes = createLayout([{
@@ -60780,7 +60780,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main a725eca";
+const version = "main 6d94d74";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
