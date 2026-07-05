@@ -84,16 +84,16 @@ export class RenderToTexture {
         this._renderableTiles = this.terrain.tileManager.getRenderableTiles();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
 
-        const rttSourceIds: {[sourceId: string]: true} = {};
+        const rttSourceIds = new Set<string>();
         for (const layerId of this._renderableLayerIds) {
             const layer = style._layers[layerId];
             const source = layer.source;
-            if (source && LAYERS_TO_TEXTURES[layer.type]) rttSourceIds[source] = true;
+            if (source && LAYERS_TO_TEXTURES[layer.type]) rttSourceIds.add(source);
         }
 
         this._coordsAscending = {};
         this._rttFingerprints = {};
-        for (const sourceId in rttSourceIds) {
+        for (const sourceId of rttSourceIds) {
             const tileManager = style.tileManagers[sourceId];
             if (!tileManager) continue;
 
