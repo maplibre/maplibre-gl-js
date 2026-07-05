@@ -29,13 +29,13 @@ type SkyPropsPossiblyEvaluated = {
 };
 
 const properties: Properties<SkyProps> = new Properties({
-    'sky-color': new DataConstantProperty(styleSpec.sky['sky-color'] as StylePropertySpecification),
-    'horizon-color': new DataConstantProperty(styleSpec.sky['horizon-color'] as StylePropertySpecification),
-    'fog-color': new DataConstantProperty(styleSpec.sky['fog-color'] as StylePropertySpecification),
-    'fog-ground-blend': new DataConstantProperty(styleSpec.sky['fog-ground-blend'] as StylePropertySpecification),
-    'horizon-fog-blend': new DataConstantProperty(styleSpec.sky['horizon-fog-blend'] as StylePropertySpecification),
-    'sky-horizon-blend': new DataConstantProperty(styleSpec.sky['sky-horizon-blend'] as StylePropertySpecification),
-    'atmosphere-blend': new DataConstantProperty(styleSpec.sky['atmosphere-blend'] as StylePropertySpecification)
+    'sky-color': new DataConstantProperty(styleSpec.sky['sky-color'] as StylePropertySpecification, 'sky.sky-color'),
+    'horizon-color': new DataConstantProperty(styleSpec.sky['horizon-color'] as StylePropertySpecification, 'sky.horizon-color'),
+    'fog-color': new DataConstantProperty(styleSpec.sky['fog-color'] as StylePropertySpecification, 'sky.fog-color'),
+    'fog-ground-blend': new DataConstantProperty(styleSpec.sky['fog-ground-blend'] as StylePropertySpecification, 'sky.fog-ground-blend'),
+    'horizon-fog-blend': new DataConstantProperty(styleSpec.sky['horizon-fog-blend'] as StylePropertySpecification, 'sky.horizon-fog-blend'),
+    'sky-horizon-blend': new DataConstantProperty(styleSpec.sky['sky-horizon-blend'] as StylePropertySpecification, 'sky.sky-horizon-blend'),
+    'atmosphere-blend': new DataConstantProperty(styleSpec.sky['atmosphere-blend'] as StylePropertySpecification, 'sky.atmosphere-blend')
 });
 
 export class Sky extends Evented {

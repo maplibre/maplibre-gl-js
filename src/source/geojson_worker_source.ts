@@ -294,7 +294,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
     _getFilterPredicate(filter: FilterSpecification): (feature: GeoJSON.Feature) => boolean {
         if (typeof filter !== 'boolean' && !filter?.length) return undefined;
 
-        const compiled = createExpression(filter, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
+        const compiled = createExpression(filter, 'filter', {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
         if (compiled.result === 'error') {
             throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
         }
@@ -344,9 +344,9 @@ function getSuperclusterOptions({geojsonVtOptions, clusterProperties}: LoadGeoJS
     for (const key of propertyNames) {
         const [operator, mapExpression] = clusterProperties[key];
 
-        const mapExpressionParsed = createExpression(mapExpression);
+        const mapExpressionParsed = createExpression(mapExpression, `clusterProperties.${key}[1]`);
         const reduceExpressionParsed = createExpression(
-            typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator);
+            typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator, `clusterProperties.${key}[0]`);
 
         mapExpressions[key] = mapExpressionParsed.value;
         reduceExpressions[key] = reduceExpressionParsed.value;

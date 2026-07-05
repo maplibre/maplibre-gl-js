@@ -51,7 +51,7 @@ export class LineStyleLayer extends StyleLayer {
         this.gradientVersion = 0;
         if (!lineFloorwidthProperty) {
             lineFloorwidthProperty =
-                new LineFloorwidthProperty(properties.paint.properties['line-width'].specification);
+                new LineFloorwidthProperty(properties.paint.properties['line-width'].specification, 'line-floorwidth');
             lineFloorwidthProperty.useIntegerZoom = true;
         }
     }

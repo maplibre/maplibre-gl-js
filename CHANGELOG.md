@@ -3,6 +3,7 @@
 - GPU performance optimization: Render halo and glyph in a single pass (-40% Time Reduction) ([#7436](https://github.com/maplibre/maplibre-gl-js/pull/7436)) (by [@xavierjs](https://github.com/xavierjs))
 - Optimize matrix inversions and reduce GPU stalls ([#7367](https://github.com/maplibre/maplibre-gl-js/pull/7367)) (by [@xavierjs](https://github.com/xavierjs))
 - Add example showing how to measure map performance using built-in events (`load`, `idle`, `render`) ([#7077](https://github.com/maplibre/maplibre-gl-js/pull/7077)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Improve runtime error warnings to point at the offending style location (e.g. `line-width`, `layers[3].filter`) instead of just logging the bare error message ([#7869](https://github.com/maplibre/maplibre-gl-js/pull/7869)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

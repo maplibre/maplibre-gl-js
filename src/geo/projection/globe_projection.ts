@@ -20,7 +20,7 @@ type ProjectionPossiblyEvaluated = {
 };
 
 const properties: Properties<ProjectionProps> = new Properties({
-    'type': new DataConstantProperty(styleSpec.projection.type as StylePropertySpecification)
+    'type': new DataConstantProperty(styleSpec.projection.type as StylePropertySpecification, 'projection.type')
 });
 
 export class GlobeProjection extends Evented implements Projection {

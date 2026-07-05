@@ -42,6 +42,7 @@ export type CrossFaded<T> = {
  */
 export interface Property<T, R> {
     specification: StylePropertySpecification;
+    name: string;
     possiblyEvaluate(
         value: PropertyValue<T, R>,
         parameters: EvaluationParameters,
@@ -77,7 +78,7 @@ export class PropertyValue<T, R> {
     constructor(property: Property<T, R>, value: PropertyValueSpecification<T> | void, globalState: Record<string, any>) {
         this.property = property;
         this.value = value;
-        this.expression = normalizePropertyExpression(value === undefined ? property.specification.default : value, property.specification, globalState);
+        this.expression = normalizePropertyExpression(value === undefined ? property.specification.default : value, property.name, property.specification, globalState);
     }
 
     isDataDriven(): boolean {
@@ -464,9 +465,11 @@ export class PossiblyEvaluated<Props, PossibleEvaluatedProps> {
  */
 export class DataConstantProperty<T> implements Property<T, T> {
     specification: StylePropertySpecification;
+    name: string;
 
-    constructor(specification: StylePropertySpecification) {
+    constructor(specification: StylePropertySpecification, name: string) {
         this.specification = specification;
+        this.name = name;
     }
 
     possiblyEvaluate(value: PropertyValue<T, T>, parameters: EvaluationParameters): T {
@@ -493,10 +496,12 @@ export class DataConstantProperty<T> implements Property<T, T> {
  */
 export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPropertyValue<T>> {
     specification: StylePropertySpecification;
+    name: string;
     overrides: any;
 
-    constructor(specification: StylePropertySpecification, overrides?: any) {
+    constructor(specification: StylePropertySpecification, name: string, overrides?: any) {
         this.specification = specification;
+        this.name = name;
         this.overrides = overrides;
     }
 
@@ -633,9 +638,11 @@ export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFad
  */
 export class CrossFadedProperty<T> implements Property<T, CrossFaded<T>> {
     specification: StylePropertySpecification;
+    name: string;
 
-    constructor(specification: StylePropertySpecification) {
+    constructor(specification: StylePropertySpecification, name: string) {
         this.specification = specification;
+        this.name = name;
     }
 
     possiblyEvaluate(
@@ -677,9 +684,11 @@ export class CrossFadedProperty<T> implements Property<T, CrossFaded<T>> {
 
 export class ColorRampProperty implements Property<Color, boolean> {
     specification: StylePropertySpecification;
+    name: string;
 
-    constructor(specification: StylePropertySpecification) {
+    constructor(specification: StylePropertySpecification, name: string) {
         this.specification = specification;
+        this.name = name;
     }
 
     possiblyEvaluate(

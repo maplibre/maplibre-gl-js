@@ -124,23 +124,24 @@ function overrides(property) {
 
 function propertyValue(property, type) {
     const propertyAsSpec = `styleSpec["${type}_${property.layerType}"]["${property.name}"] as any as StylePropertySpecification`;
+    const name = JSON.stringify(property.name);
 
     switch (property['property-type']) {
         case 'data-driven':
             if (property.overridable) {
-                return `new DataDrivenProperty(${propertyAsSpec}, ${overrides(property)})`;
+                return `new DataDrivenProperty(${propertyAsSpec}, ${name}, ${overrides(property)})`;
             } else {
-                return `new DataDrivenProperty(${propertyAsSpec})`;
+                return `new DataDrivenProperty(${propertyAsSpec}, ${name})`;
             }
         case 'cross-faded':
-            return `new CrossFadedProperty(${propertyAsSpec})`;
+            return `new CrossFadedProperty(${propertyAsSpec}, ${name})`;
         case 'cross-faded-data-driven':
-            return `new CrossFadedDataDrivenProperty(${propertyAsSpec})`;
+            return `new CrossFadedDataDrivenProperty(${propertyAsSpec}, ${name})`;
         case 'color-ramp':
-            return `new ColorRampProperty(${propertyAsSpec})`;
+            return `new ColorRampProperty(${propertyAsSpec}, ${name})`;
         case 'data-constant':
         case 'constant':
-            return `new DataConstantProperty(${propertyAsSpec})`;
+            return `new DataConstantProperty(${propertyAsSpec}, ${name})`;
         default:
             throw new Error(`unknown property-type "${property['property-type']}" for ${property.name}`);
     }

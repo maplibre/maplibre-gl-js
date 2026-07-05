@@ -131,7 +131,7 @@ export class FeatureIndex {
 
         const params = args.params;
         const pixelsToTileUnits = EXTENT / args.tileSize / args.scale;
-        const filter = featureFilter(params.filter, params.globalState);
+        const filter = featureFilter(params.filter, 'queryRenderedFeatures filter', params.globalState);
 
         const queryGeometry = args.queryGeometry;
         const queryPadding = args.queryPadding * pixelsToTileUnits;
@@ -285,7 +285,7 @@ export class FeatureIndex {
         const result: QueryResults = {};
         this.loadVTLayers();
 
-        const filter = featureFilter(filterParams.filterSpec, filterParams.globalState);
+        const filter = featureFilter(filterParams.filterSpec, 'queryRenderedFeatures symbol filter', filterParams.globalState);
 
         for (const symbolFeatureIndex of symbolFeatureIndexes) {
             this.loadMatchingFeature(

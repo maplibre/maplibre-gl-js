@@ -1,4 +1,4 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi, afterEach} from 'vitest';
 import {Layout, PropertyValue, Transitionable} from './properties';
 import symbolProperties from './style_layer/symbol_style_layer_properties.g';
 import {type EvaluationParameters} from './evaluation_parameters';
@@ -7,6 +7,31 @@ describe('PropertyValue', () => {
     test('set global state', () => {
         const propertyValue = new PropertyValue(symbolProperties.layout.properties['text-size'], ['global-state', 'size'], {size: 17});
         expect(propertyValue.expression.evaluate({} as EvaluationParameters)).toBe(17);
+    });
+
+    describe('runtime error logging', () => {
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        test('warns with the property name when an expression errors at runtime', () => {
+            const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+            const propertyValue = new PropertyValue(
+                symbolProperties.layout.properties['text-size'],
+                ['number', ['get', 'size']],
+                undefined
+            );
+
+            const result = propertyValue.expression.evaluate(
+                {zoom: 0} as EvaluationParameters,
+                {type: 1, properties: {size: 'not-a-number'}} as any
+            );
+
+            expect(warn).toHaveBeenCalledTimes(1);
+            expect(warn.mock.calls[0][0]).toBe('text-size: Expected value to be of type number, but found string instead. Falling back to 16.');
+            expect(result).toBe(symbolProperties.layout.properties['text-size'].specification.default);
+        });
     });
 });
 
