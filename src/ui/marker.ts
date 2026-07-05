@@ -1,13 +1,14 @@
 import {DOM} from '../util/dom.ts';
 import {browser} from '../util/browser.ts';
 import {LngLat} from '../geo/lng_lat.ts';
-import Point from '@mapbox/point-geometry';
 import {smartWrap} from '../util/smart_wrap.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
-import type {PositionAnchor} from './anchor.ts';
 import {Event, Evented} from '../util/evented.ts';
+import Point from '@mapbox/point-geometry';
+
+import type {PositionAnchor} from './anchor.ts';
 import type {Map} from './map.ts';
-import {type Popup, type Offset} from './popup.ts';
+import type {Popup, Offset} from './popup.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {MapMouseEvent, MapTouchEvent} from './events.ts';
 import type {PointLike} from './camera.ts';
@@ -635,7 +636,7 @@ export class Marker extends Evented<MarkerEventType> {
 
     _updateOpacity(force: boolean = false): void {
         const terrain = this._map?.terrain;
-        const occluded = this._map.transform.isLocationOccluded(this._lngLat);
+        const occluded = this._map._camera.transform.isLocationOccluded(this._lngLat);
         if (!terrain || occluded) {
             const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
             if (this._element.style.opacity !== targetOpacity) {
@@ -658,8 +659,8 @@ export class Marker extends Evented<MarkerEventType> {
         // Read depth framebuffer, getting position of terrain in line of sight to marker
         const terrainDistance = map.terrain.depthAtPoint(this._pos);
         // Transform marker position to clip space
-        const elevation = map.terrain.getElevationForLngLat(this._lngLat, map.transform);
-        const markerDistance = map.transform.lngLatToCameraDepth(this._lngLat, elevation);
+        const elevation = map.terrain.getElevationForLngLat(this._lngLat, map._camera.transform);
+        const markerDistance = map._camera.transform.lngLatToCameraDepth(this._lngLat, elevation);
         const forgiveness = .006;
         if (markerDistance - terrainDistance < forgiveness) {
             this._element.style.opacity = this._opacity;
@@ -667,10 +668,10 @@ export class Marker extends Evented<MarkerEventType> {
             return;
         }
         // If the base is obscured, use the offset to check if the marker's center is obscured.
-        const metersToCenter = -this._offset.y / map.transform.pixelsPerMeter;
+        const metersToCenter = -this._offset.y / map._camera.transform.pixelsPerMeter;
         const elevationToCenter = Math.sin(map.getPitch() * Math.PI / 180) * metersToCenter;
         const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
-        const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
+        const markerDistanceCenter = map._camera.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
         // Display at full opacity if center is visible.
         const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
 
@@ -687,12 +688,12 @@ export class Marker extends Evented<MarkerEventType> {
             this._map.once('render', this._update);
         }
 
-        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
+        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform);
 
         this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._map.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
+            this._flatPos = this._map._camera.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
         }
 
         let rotation = '';

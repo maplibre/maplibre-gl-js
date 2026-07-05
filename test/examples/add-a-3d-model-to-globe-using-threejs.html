@@ -84,6 +84,32 @@
             });
         });
 
+        // Model matrix for the mercator projection: place the model at the given lng/lat/altitude
+        // in MapLibre's mercator coordinate space and scale meters into mercator units.
+        function getMercatorModelMatrix(location, altitude) {
+            const merc = maplibregl.MercatorCoordinate.fromLngLat(location, altitude);
+            const scale = merc.meterInMercatorCoordinateUnits();
+            return new THREE.Matrix4()
+                .makeTranslation(merc.x, merc.y, merc.z)
+                .multiply(new THREE.Matrix4().makeRotationZ(Math.PI))
+                .multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2))
+                .multiply(new THREE.Matrix4().makeScale(-scale, scale, scale));
+        }
+
+        // Model matrix for the globe (vertical perspective) projection: rotate the model onto the
+        // sphere at the given lng/lat, lift it by its altitude and scale meters into unit-sphere units.
+        const earthRadius = 6371008.8; // meters, matches MapLibre's internal value
+        function getGlobeModelMatrix(location, altitude) {
+            const [lng, lat] = location;
+            const scale = 1 / earthRadius;
+            return new THREE.Matrix4()
+                .makeRotationY(lng / 180 * Math.PI)
+                .multiply(new THREE.Matrix4().makeRotationX(-lat / 180 * Math.PI))
+                .multiply(new THREE.Matrix4().makeTranslation(0, 0, 1 + altitude / earthRadius))
+                .multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2))
+                .multiply(new THREE.Matrix4().makeScale(scale, scale, scale));
+        }
+
         // configuration of the custom layer for a 3D model per the CustomLayerInterface
         const customLayer = {
             id: '3d-model',
@@ -129,19 +155,17 @@
                 // Make the object ~10s of km tall to make it visible at planetary scale.
                 const scaling = 10_000.0;
 
-                // We can use this API to get the correct model matrix.
-                // It will work regardless of current projection.
-                // See MapLibre source code, file "mercator_transform.ts" or "vertical_perspective_transform.ts".
-                const modelMatrix = map.transform.getMatrixForModel(modelOrigin, modelAltitude);
-                const m = new THREE.Matrix4().fromArray(args.defaultProjectionData.mainMatrix);
-                const l = new THREE.Matrix4().fromArray(modelMatrix).scale(
-                    new THREE.Vector3(
-                        scaling,
-                        scaling,
-                        scaling
-                    )
-                );
+                // Build the model matrix for the currently rendered projection. `projectionData`
+                // exposes `projectionTransition`, which is 0 for mercator and 1 for globe (it also
+                // follows the globe->mercator transition when zooming in), so it tells us which
+                // coordinate space the model matrix needs to be built in.
+                const isGlobe = args.defaultProjectionData.projectionTransition > 0;
+                const l = isGlobe ?
+                    getGlobeModelMatrix(modelOrigin, modelAltitude) :
+                    getMercatorModelMatrix(modelOrigin, modelAltitude);
+                l.scale(new THREE.Vector3(scaling, scaling, scaling));
 
+                const m = new THREE.Matrix4().fromArray(args.defaultProjectionData.mainMatrix);
                 this.camera.projectionMatrix = m.multiply(l);
                 this.renderer.resetState();
                 this.renderer.render(this.scene, this.camera);

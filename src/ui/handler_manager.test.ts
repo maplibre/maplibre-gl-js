@@ -16,7 +16,7 @@ let manager: HandlerManager;
 beforeEach(() => {
     beforeMapTest();
     map = createMap();
-    manager = map.handlers;
+    manager = map._handlers;
 });
 
 afterEach(() => {
@@ -28,7 +28,7 @@ describe('HandlerManager terrain scenarios', () => {
     it('_handleMapControls keeps terrain movement disabled when terrain is not enabled', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
-        map.cameraHelper = {
+        map._camera.cameraHelper = {
             handleMapControlsRollPitchBearingZoom: handleZoom,
             handleMapControlsPan: handlePan,
             useGlobeControls: false,
@@ -62,13 +62,13 @@ describe('HandlerManager terrain scenarios', () => {
         };
 
         manager._terrainMovement = false;
-        map._elevationFreeze = false;
+        map._camera.elevationFreeze = false;
 
         manager._handleMapControls(options);
 
         expect(handleZoom).toHaveBeenCalledWith(options.deltasForHelper, options.tr);
         expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
-        expect(map._elevationFreeze).toBe(false);
+        expect(map._camera.elevationFreeze).toBe(false);
         expect(manager._terrainMovement).toBe(false);
         expect(setCenterMock).not.toHaveBeenCalled();
     });
@@ -76,7 +76,7 @@ describe('HandlerManager terrain scenarios', () => {
     it('_handleMapControls enables terrain movement for globe terrain handling', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
-        map.cameraHelper = {
+        map._camera.cameraHelper = {
             handleMapControlsRollPitchBearingZoom: handleZoom,
             handleMapControlsPan: handlePan,
             useGlobeControls: true,
@@ -105,19 +105,19 @@ describe('HandlerManager terrain scenarios', () => {
         };
 
         manager._terrainMovement = false;
-        map._elevationFreeze = false;
+        map._camera.elevationFreeze = false;
 
         manager._handleMapControls(options);
 
         expect(manager._terrainMovement).toBe(true);
-        expect(map._elevationFreeze).toBe(true);
+        expect(map._camera.elevationFreeze).toBe(true);
         expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
     });
 
     it('_handleMapControls keeps terrain movement state when globe terrain is already active', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
-        map.cameraHelper = {
+        map._camera.cameraHelper = {
             handleMapControlsRollPitchBearingZoom: handleZoom,
             handleMapControlsPan: handlePan,
             useGlobeControls: true,
@@ -146,19 +146,19 @@ describe('HandlerManager terrain scenarios', () => {
         };
 
         manager._terrainMovement = true;
-        map._elevationFreeze = true;
+        map._camera.elevationFreeze = true;
 
         manager._handleMapControls(options);
 
         expect(manager._terrainMovement).toBe(true);
-        expect(map._elevationFreeze).toBe(true);
+        expect(map._camera.elevationFreeze).toBe(true);
         expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
     });
 
     it('_handleMapControls activates terrain movement on first drag in mercator terrain', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
-        map.cameraHelper = {
+        map._camera.cameraHelper = {
             handleMapControlsRollPitchBearingZoom: handleZoom,
             handleMapControlsPan: handlePan,
             useGlobeControls: false,
@@ -189,12 +189,12 @@ describe('HandlerManager terrain scenarios', () => {
         };
 
         manager._terrainMovement = false;
-        map._elevationFreeze = false;
+        map._camera.elevationFreeze = false;
 
         manager._handleMapControls(options);
 
         expect(manager._terrainMovement).toBe(true);
-        expect(map._elevationFreeze).toBe(true);
+        expect(map._camera.elevationFreeze).toBe(true);
         expect(handlePan).toHaveBeenCalledTimes(1);
         expect(setCenterMock).not.toHaveBeenCalled();
     });
@@ -202,7 +202,7 @@ describe('HandlerManager terrain scenarios', () => {
     it('_handleMapControls drags using transform when already moving in mercator terrain', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
-        map.cameraHelper = {
+        map._camera.cameraHelper = {
             handleMapControlsRollPitchBearingZoom: handleZoom,
             handleMapControlsPan: handlePan,
             useGlobeControls: false,
@@ -233,7 +233,7 @@ describe('HandlerManager terrain scenarios', () => {
         };
 
         manager._terrainMovement = true;
-        map._elevationFreeze = true;
+        map._camera.elevationFreeze = true;
 
         manager._handleMapControls(options);
 
@@ -248,7 +248,7 @@ describe('HandlerManager terrain scenarios', () => {
     it('_handleMapControls falls back to helper panning when not dragging in mercator terrain', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
-        map.cameraHelper = {
+        map._camera.cameraHelper = {
             handleMapControlsRollPitchBearingZoom: handleZoom,
             handleMapControlsPan: handlePan,
             useGlobeControls: false,
@@ -277,7 +277,7 @@ describe('HandlerManager terrain scenarios', () => {
         };
 
         manager._terrainMovement = true;
-        map._elevationFreeze = true;
+        map._camera.elevationFreeze = true;
 
         manager._handleMapControls(options);
 
