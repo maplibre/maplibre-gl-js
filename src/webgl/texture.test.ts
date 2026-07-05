@@ -1,7 +1,8 @@
 import {describe, expect, test} from 'vitest';
-import {Context} from './context';
-import {Texture} from './texture';
-import {premultiplyAlpha, RGBAImage} from '../util/image';
+import {Context} from './context.ts';
+import {Texture} from './texture.ts';
+import {premultiplyAlpha, RGBAImage} from '../util/image.ts';
+import {createNullGL} from '../util/test/null_gl.ts';
 
 describe('Texture', () => {
     describe('glPixelStore state is reset after texture creation', () => {
@@ -11,8 +12,7 @@ describe('Texture', () => {
         }, new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]));
 
         function getContext(): Context {
-            const gl = document.createElement('canvas').getContext('webgl') as WebGL2RenderingContext;
-            return new Context(gl);
+            return new Context(createNullGL());
         }
 
         function checkPixelStoreState(context: Context): void {
@@ -39,7 +39,7 @@ describe('Texture', () => {
     });
 
     test('bind restores handle after corruption (#2811)', () => {
-        const gl = document.createElement('canvas').getContext('webgl') as WebGL2RenderingContext;
+        const gl = createNullGL();
         const context = new Context(gl);
         const image = new RGBAImage({width: 2, height: 1}, new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]));
         const texture = new Texture(context, image, gl.RGBA);
@@ -49,6 +49,23 @@ describe('Texture', () => {
 
         texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
         expect(texture.texture).toBe(originalHandle);
+    });
+
+    test('RGBA texture recreates on resize via texStorage2D', () => {
+        const gl = createNullGL();
+        const context = new Context(gl);
+        const image1 = new RGBAImage({width: 2, height: 2}, new Uint8Array(2 * 2 * 4));
+        const texture = new Texture(context, image1, gl.RGBA);
+
+        const firstHandle = texture.texture;
+        expect(texture.size).toEqual([2, 2]);
+
+        const image2 = new RGBAImage({width: 4, height: 4}, new Uint8Array(4 * 4 * 4));
+        texture.update(image2);
+
+        expect(texture.size).toEqual([4, 4]);
+        expect(texture.texture).not.toBe(firstHandle);
+        expect(gl.deleteTexture).toHaveBeenCalled();
     });
 
     test('premultiplyAlpha produces correct output', () => {

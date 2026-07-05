@@ -1,8 +1,8 @@
+import {evaluateZoomSnap} from '../../util/util.ts';
 import type Point from '@mapbox/point-geometry';
-import type {Map} from '../map';
-import {TransformProvider} from './transform-provider';
-import {type Handler} from '../handler_manager';
-import {evaluateZoomSnap} from '../../util/util';
+import type {Map} from '../map.ts';
+import type {TransformProvider} from './transform-provider.ts';
+import type {Handler} from '../handler_manager.ts';
 
 /**
  * The `ClickZoomHandler` allows the user to zoom the map at a point by double clicking
@@ -15,19 +15,19 @@ export class ClickZoomHandler implements Handler {
     _active: boolean;
 
     /** @internal */
-    constructor(map: Map) {
-        this._tr = new TransformProvider(map);
+    constructor(map: Map, transformProvider: TransformProvider) {
+        this._tr = transformProvider;
         this.reset();
     }
 
-    reset() {
+    reset(): void {
         this._active = false;
     }
 
-    dblclick(e: MouseEvent, point: Point) {
+    dblclick(e: MouseEvent, point: Point): {cameraAnimation: (map: Map) => void} {
         e.preventDefault();
         return {
-            cameraAnimation: (map: Map) => {
+            cameraAnimation: (map: Map): void => {
                 map.easeTo({
                     duration: 300,
                     zoom: evaluateZoomSnap(this._tr.zoom + (e.shiftKey ? -1 : 1), map.getZoomSnap()),
@@ -37,20 +37,20 @@ export class ClickZoomHandler implements Handler {
         };
     }
 
-    enable() {
+    enable(): void {
         this._enabled = true;
     }
 
-    disable() {
+    disable(): void {
         this._enabled = false;
         this.reset();
     }
 
-    isEnabled() {
+    isEnabled(): boolean {
         return this._enabled;
     }
 
-    isActive() {
+    isActive(): boolean {
         return this._active;
     }
 }

@@ -1,8 +1,8 @@
-import {Uniform1f, Uniform4f, type UniformLocations, UniformMatrix4f} from '../uniform_binding';
-import {type Context} from '../../webgl/context';
+import {Uniform1f, Uniform4f, type UniformLocations, UniformMatrix4f} from '../uniform_binding.ts';
+import {type Context} from '../../webgl/context.ts';
 // This next import is needed for the "@link" in the documentation to work properly.
 
-import type {ProjectionData} from '../../geo/projection/projection_data';
+import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 
 export type ProjectionPreludeUniformsType = {
     'u_projection_matrix': UniformMatrix4f;

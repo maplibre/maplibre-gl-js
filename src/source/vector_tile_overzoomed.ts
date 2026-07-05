@@ -1,8 +1,7 @@
 import Point from '@mapbox/point-geometry';
-import {type VectorTileFeatureLike, type VectorTileLayerLike, type VectorTileLike, fromVectorTileJs} from '@maplibre/vt-pbf';
-import {clipGeometry} from '../symbol/clip_line';
-import type {LoadVectorTileResult} from './vector_tile_worker_source';
-import type {CanonicalTileID} from '../tile/tile_id';
+import {clipGeometry} from '../symbol/clip_line.ts';
+import type {CanonicalTileID} from '../tile/tile_id.ts';
+import type {VectorTileFeatureLike, VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
 
 class VectorTileFeatureOverzoomed implements VectorTileFeatureLike {
     pointsArray: Point[][];
@@ -25,9 +24,9 @@ class VectorTileFeatureOverzoomed implements VectorTileFeatureLike {
         this.id = id;
     }
 
-    loadGeometry() {
+    loadGeometry(): Point[][] {
         // Clone the geometry and ensure all points are Point instances
-        return this.pointsArray.map(ring => 
+        return this.pointsArray.map(ring =>
             ring.map(point => new Point(point.x, point.y))
         );
     }
@@ -55,26 +54,9 @@ class VectorTileLayerOverzoomed implements VectorTileLayerLike {
 export class VectorTileOverzoomed implements VectorTileLike {
     layers: Record<string, VectorTileLayerLike> = {};
 
-    addLayer(layer: VectorTileLayerOverzoomed) {
+    addLayer(layer: VectorTileLayerOverzoomed): void {
         this.layers[layer.name] = layer;
     }
-}
-
-/**
- * Encodes the virtual tile into binary vector tile form.
- * This is a convenience that allows `FeatureIndex` to operate the same way across `VectorTileSource` and `GeoJSONSource` data.
- * @param virtualVectorTile - a syntetically created vector tile, this tile should have the relevant layer and features already added to it.
- * @returns - the encoded vector tile along with the original virtual tile binary data.
- */
-export function toVirtualVectorTile(virtualVectorTile: VectorTileLike): LoadVectorTileResult {
-    let pbf: Uint8Array = fromVectorTileJs(virtualVectorTile);
-    if (pbf.byteOffset !== 0 || pbf.byteLength !== pbf.buffer.byteLength) {
-        pbf = new Uint8Array(pbf);  // Compatibility with node Buffer (https://github.com/mapbox/pbf/issues/35)
-    }
-    return {
-        vectorTile: virtualVectorTile,
-        rawData: pbf.buffer
-    };
 }
 
 /**

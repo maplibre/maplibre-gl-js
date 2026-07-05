@@ -1,23 +1,23 @@
-import Protobuf from 'pbf';
+import {PbfReader} from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import {type ExpiryData, getArrayBuffer} from '../util/ajax';
-import {WorkerTile} from './worker_tile';
-import {WorkerTileState, type ParsingState} from './worker_tile_state';
-import {BoundedLRUCache} from '../tile/tile_cache';
-import {ensureError, extend} from '../util/util';
-import {RequestPerformance} from '../util/request_performance';
-import {VectorTileOverzoomed, sliceVectorTileLayer, toVirtualVectorTile} from './vector_tile_overzoomed';
-import {MLTVectorTile} from './vector_tile_mlt';
+import {fromVectorTileJs, type VectorTileLayerLike, type VectorTileLike} from '@maplibre/vt-pbf';
+import {type ExpiryData, getArrayBuffer} from '../util/ajax.ts';
+import {WorkerTile} from './worker_tile.ts';
+import {WorkerTileState, type ParsingState} from './worker_tile_state.ts';
+import {BoundedLRUCache} from '../tile/tile_cache.ts';
+import {ensureError, extend} from '../util/util.ts';
+import {RequestPerformance} from '../util/request_performance.ts';
+import {VectorTileOverzoomed, sliceVectorTileLayer} from './vector_tile_overzoomed.ts';
+import {MLTVectorTile} from './vector_tile_mlt.ts';
 import type {
     WorkerSource,
     WorkerTileParameters,
     TileParameters,
     WorkerTileResult
-} from '../source/worker_source';
-import type {IActor} from '../util/actor';
-import type {StyleLayer} from '../style/style_layer';
-import type {StyleLayerIndex} from '../style/style_layer_index';
-import type {VectorTileLayerLike, VectorTileLike} from '@maplibre/vt-pbf';
+} from '../source/worker_source.ts';
+import type {IActor} from '../util/actor.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 
 export type LoadVectorTileResult = {
     vectorTile: VectorTileLike;
@@ -49,7 +49,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     loadVectorTile(params: WorkerTileParameters, rawData: ArrayBuffer): LoadVectorTileResult {
         try {
             const vectorTile = params.encoding !== 'mlt'
-                ? new VectorTile(new Protobuf(rawData))
+                ? new VectorTile(new PbfReader(rawData))
                 : new MLTVectorTile(rawData);
 
             return {vectorTile, rawData};
@@ -112,7 +112,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             try {
                 return await this._parseWorkerTile(workerTile, params, parseState);
             } finally {
-                this.tileState.clearParsing(uid);
+                this.tileState.removeParsing(uid);
             }
         } catch (err) {
             this.tileState.finishLoading(uid);
@@ -133,8 +133,10 @@ export class VectorTileWorkerSource implements WorkerSource {
 
         if (parseState) {
             const {rawData, cacheControl, resourceTiming} = parseState;
+            // Overzoomed tiles are always re-encoded to MVT protobuf by _getOverzoomTile
+            const encoding = params.overzoomParameters ? 'mvt' : params.encoding;
             // Transferring a copy of rawTileData because the worker needs to retain its copy.
-            result = extend({rawTileData: rawData.slice(0), encoding: params.encoding}, result, cacheControl, resourceTiming);
+            result = extend({rawTileData: rawData.slice(0), encoding}, result, cacheControl, resourceTiming);
         }
 
         return result;
@@ -193,7 +195,10 @@ export class VectorTileWorkerSource implements WorkerSource {
                 overzoomedVectorTile.addLayer(slicedTileLayer);
             }
         }
-        const overzoomedVectorTileResult = toVirtualVectorTile(overzoomedVectorTile);
+        const overzoomedVectorTileResult = {
+            vectorTile: overzoomedVectorTile,
+            rawData: fromVectorTileJs(overzoomedVectorTile).buffer
+        };
         this.overzoomedTileResultCache.set(cacheKey, overzoomedVectorTileResult);
 
         return overzoomedVectorTileResult;
@@ -212,8 +217,12 @@ export class VectorTileWorkerSource implements WorkerSource {
 
         if (workerTile.status === 'parsing') {
             // if we are cancelling the original parse, make sure to pass the rawTileData from the original parse
-            const parseState = this.tileState.consumeParsing(uid);
-            return await this._parseWorkerTile(workerTile, params, parseState);
+            const parseState = this.tileState.getParsing(uid);
+            try {
+                return await this._parseWorkerTile(workerTile, params, parseState);
+            } finally {
+                this.tileState.removeParsing(uid);
+            }
         }
 
         // If there was no vector tile data on the initial load, don't try and reparse the tile.

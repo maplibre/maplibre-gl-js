@@ -33,7 +33,7 @@
       "type": "secondary"
     },
     "id": 4612696,
-    "source": "mapbox",
+    "source": "maplibre",
     "sourceLayer": "road",
     "state": {}
   },
@@ -83,7 +83,7 @@
       "type": "residential"
     },
     "id": 4612752,
-    "source": "mapbox",
+    "source": "maplibre",
     "sourceLayer": "road",
     "state": {}
   }

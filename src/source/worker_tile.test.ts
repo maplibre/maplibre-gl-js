@@ -1,16 +1,16 @@
 import {describe, test, expect, vi} from 'vitest';
-import {WorkerTile} from '../source/worker_tile';
+import {WorkerTile} from '../source/worker_tile.ts';
 import {type Feature, GeoJSONWrapper, type VectorTileLike} from '@maplibre/vt-pbf';
-import {OverscaledTileID} from '../tile/tile_id';
-import {StyleLayerIndex} from '../style/style_layer_index';
-import {type WorkerTileParameters, type WorkerTileWithData} from './worker_source';
-import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
-import {type EvaluationParameters} from '../style/evaluation_parameters';
-import {type PossiblyEvaluated} from '../style/properties';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {StyleLayerIndex} from '../style/style_layer_index.ts';
+import {type WorkerTileParameters, type WorkerTileWithData} from './worker_source.ts';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
+import {type EvaluationParameters} from '../style/evaluation_parameters.ts';
+import {type PossiblyEvaluated} from '../style/properties.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from '../style/style_layer/circle_style_layer_properties.g';
-import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
-import {MessageType} from '../util/actor_messages';
+import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from '../style/style_layer/circle_style_layer_properties.g.ts';
+import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
+import {MessageType} from '../util/actor_messages.ts';
 
 function createWorkerTile(params?: {globalState?: Record<string, any>}): WorkerTile {
     return new WorkerTile({

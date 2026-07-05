@@ -1,13 +1,13 @@
 import {describe, test, expect, vi} from 'vitest';
-import {Tile} from '../tile/tile';
-import {OverscaledTileID} from '../tile/tile_id';
-import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
-import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
-import type {CrossFaded} from '../style/properties';
+import {Tile} from '../tile/tile.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program.ts';
+import {FillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
+import type {CrossFaded} from '../style/properties.ts';
 import type {FillLayerSpecification, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import type {ProgramConfiguration} from '../data/program_configuration';
-import type {ImagePosition} from './image_atlas';
-import type {Rect} from './glyph_atlas';
+import type {ProgramConfiguration} from '../data/program_configuration.ts';
+import type {ImagePosition} from './image_atlas.ts';
+import type {Rect} from './glyph_atlas.ts';
 
 interface MockProgramConfiguration extends ProgramConfiguration {
     patternPositions: {

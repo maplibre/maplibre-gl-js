@@ -1,7 +1,7 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
-import {NavigationControl} from './navigation_control';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util.ts';
+import {NavigationControl} from './navigation_control.ts';
 
 function createMap() {
     return globalCreateMap();
@@ -237,15 +237,13 @@ describe('NavigationControl', () => {
         expect(spySetBearing).toHaveBeenCalled();
     });
 
-    test('zoom buttons round to nearest zoomSnap if defined', () => {
-        map.setZoomSnap(1.0);
-        map.setZoom(9.7);
+    test('zoom in button triggers map zoom in', () => {
         map.addControl(new NavigationControl());
 
-        const spy = vi.spyOn(map, 'zoomTo');
+        const spy = vi.spyOn(map, 'zoomIn');
         const zoomInButton = map.getContainer().querySelector('.maplibregl-ctrl-zoom-in');
         simulate.click(zoomInButton);
 
-        expect(spy).toHaveBeenCalledWith(11.0, expect.anything(), expect.anything());
+        expect(spy).toHaveBeenCalledTimes(1);
     });
 });

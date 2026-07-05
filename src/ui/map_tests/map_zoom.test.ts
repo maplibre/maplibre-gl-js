@@ -1,6 +1,6 @@
 import {beforeEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest, createTerrain} from '../../util/test/util';
-import simulate from '../../../test/unit/lib/simulate_interaction';
+import {createMap, beforeMapTest, createTerrain} from '../../util/test/util.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -106,7 +106,7 @@ test('transformCameraUpdate is called after changing min or max zoom', async () 
     expect(map.getMinZoom()).toEqual(5);
     expect(map.getMaxZoom()).toEqual(18);
     const transformCameraUpdate = vi.fn(t => t);
-    map.transformCameraUpdate = transformCameraUpdate;
+    map.setTransformCameraUpdate(transformCameraUpdate);
 
     map.setMaxZoom(16);
     expect(map.getZoom()).toEqual(16);
@@ -126,7 +126,7 @@ test('transformCameraUpdate is called after changing min or max zoom', async () 
     });
 
     map.setMinZoom(6);
-    map.transformCameraUpdate = transformCameraUpdate;
+    map.setTransformCameraUpdate(transformCameraUpdate);
     expect(map.getZoom()).toEqual(6);
     expect(map.getMinZoom()).toEqual(6);
     expect(map.getMaxZoom()).toEqual(16);

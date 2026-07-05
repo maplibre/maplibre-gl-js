@@ -1,10 +1,10 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util';
-import {LngLat} from '../../geo/lng_lat';
-import {type OverscaledTileID} from '../../tile/tile_id';
-import {type CameraOptions} from '../camera';
-import {type Terrain} from '../../render/terrain';
-import {mercatorZfromAltitude} from '../../geo/mercator_coordinate';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import {LngLat} from '../../geo/lng_lat.ts';
+import {type OverscaledTileID} from '../../tile/tile_id.ts';
+import {type CameraOptions} from '../camera.ts';
+import {type Terrain} from '../../render/terrain.ts';
+import {mercatorZfromAltitude} from '../../geo/mercator_coordinate.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -74,7 +74,7 @@ describe('calculateCameraOptionsFromTo', () => {
         terrainStub.getElevationForLngLat = mockedGetElevation;
         map.terrain = terrainStub;
 
-        const expectedZoom = Math.log2(map.transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / map.transform.tileSize);
+        const expectedZoom = Math.log2(map._camera.transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / map._camera.transform.tileSize);
         const cameraOptions = map.calculateCameraOptionsFromTo(new LngLat(0, 0), 0, new LngLat(0, 0));
 
         expect(cameraOptions).toBeDefined();

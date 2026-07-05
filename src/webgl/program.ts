@@ -1,22 +1,21 @@
-import {type PreparedShader, shaders, transpileVertexShaderToWebGL1, transpileFragmentShaderToWebGL1} from '../shaders/shaders';
-import {type ProgramConfiguration} from '../data/program_configuration';
-import {VertexArrayObject} from './vertex_array_object';
-import {type Context} from './context';
-import {isWebGL2} from './webgl2';
+import {type PreparedShader, shaders} from '../shaders/shaders.ts';
+import {type ProgramConfiguration} from '../data/program_configuration.ts';
+import {VertexArrayObject} from './vertex_array_object.ts';
+import {type Context} from './context.ts';
 
-import type {SegmentVector} from '../data/segment';
-import type {VertexBuffer} from './vertex_buffer';
-import type {IndexBuffer} from './index_buffer';
-import type {DepthMode} from './depth_mode';
-import type {StencilMode} from './stencil_mode';
-import type {ColorMode} from './color_mode';
-import type {CullFaceMode} from './cull_face_mode';
-import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding';
-import type {BinderUniform} from '../data/program_configuration';
-import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program';
-import type {TerrainData} from '../render/terrain';
-import {projectionObjectToUniformMap, type ProjectionPreludeUniformsType, projectionUniforms} from './program/projection_program';
-import type {ProjectionData} from '../geo/projection/projection_data';
+import type {SegmentVector} from '../data/segment.ts';
+import type {VertexBuffer} from './vertex_buffer.ts';
+import type {IndexBuffer} from './index_buffer.ts';
+import type {DepthMode} from './depth_mode.ts';
+import type {StencilMode} from './stencil_mode.ts';
+import type {ColorMode} from './color_mode.ts';
+import type {CullFaceMode} from './cull_face_mode.ts';
+import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding.ts';
+import type {BinderUniform} from '../data/program_configuration.ts';
+import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program.ts';
+import type {TerrainData} from '../render/terrain.ts';
+import {projectionObjectToUniformMap, type ProjectionPreludeUniformsType, projectionUniforms} from './program/projection_program.ts';
+import type {ProjectionData} from '../geo/projection/projection_data.ts';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
 
@@ -50,7 +49,7 @@ export class Program<Us extends UniformBindings> {
         configuration: ProgramConfiguration,
         fixedUniforms: (b: Context, a: UniformLocations) => Us,
         showOverdrawInspector: boolean,
-        hasTerrain: boolean,
+        useTerrain: boolean,
         projectionPrelude: PreparedShader,
         projectionDefine: string,
         extraDefines: string[] = []) {
@@ -74,13 +73,11 @@ export class Program<Us extends UniformBindings> {
         }
 
         const defines = configuration ? configuration.defines() : [];
-        if (isWebGL2(gl)) {
-            defines.unshift('#version 300 es');
-        }
+        defines.unshift('#version 300 es');
         if (showOverdrawInspector) {
             defines.push('#define OVERDRAW_INSPECTOR;');
         }
-        if (hasTerrain) {
+        if (useTerrain) {
             defines.push('#define TERRAIN3D;');
         }
         if (projectionDefine) {
@@ -90,13 +87,8 @@ export class Program<Us extends UniformBindings> {
             defines.push(...extraDefines);
         }
 
-        let fragmentSource = defines.concat(shaders.prelude.fragmentSource, projectionPrelude.fragmentSource, source.fragmentSource).join('\n');
-        let vertexSource = defines.concat(shaders.prelude.vertexSource, projectionPrelude.vertexSource, source.vertexSource).join('\n');
-
-        if (!isWebGL2(gl)) {
-            fragmentSource = transpileFragmentShaderToWebGL1(fragmentSource);
-            vertexSource = transpileVertexShaderToWebGL1(vertexSource);
-        }
+        const fragmentSource = defines.concat(shaders.prelude.fragmentSource, projectionPrelude.fragmentSource, source.fragmentSource).join('\n');
+        const vertexSource = defines.concat(shaders.prelude.vertexSource, projectionPrelude.vertexSource, source.vertexSource).join('\n');
 
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
         if (gl.isContextLost()) {
@@ -133,12 +125,18 @@ export class Program<Us extends UniformBindings> {
 
         for (let i = 0; i < this.numAttributes; i++) {
             if (allAttrInfo[i]) {
-                gl.bindAttribLocation(this.program, i, allAttrInfo[i]);
                 this.attributes[allAttrInfo[i]] = i;
             }
         }
 
         gl.linkProgram(this.program);
+
+        for (const name in this.attributes) {
+            const actual = gl.getAttribLocation(this.program, name);
+            if (actual >= 0) {
+                this.attributes[name] = actual;
+            }
+        }
 
         if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
             throw new Error(`Program failed to link: ${gl.getProgramInfoLog(this.program)}`);
@@ -180,7 +178,7 @@ export class Program<Us extends UniformBindings> {
         configuration?: ProgramConfiguration | null,
         dynamicLayoutBuffer?: VertexBuffer | null,
         dynamicLayoutBuffer2?: VertexBuffer | null,
-        dynamicLayoutBuffer3?: VertexBuffer | null) {
+        dynamicLayoutBuffer3?: VertexBuffer | null): void {
 
         const gl = context.gl;
 
@@ -217,7 +215,7 @@ export class Program<Us extends UniformBindings> {
         }
 
         if (configuration) {
-            configuration.setUniforms(context, this.binderUniforms, currentProperties, {zoom: (zoom as any)});
+            configuration.setUniforms(context, this.binderUniforms, currentProperties, {zoom});
         }
 
         let primitiveSize = 0;

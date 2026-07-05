@@ -1,16 +1,16 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import {RequestManager} from '../util/request_manager';
-import {loadSprite, normalizeSpriteURL} from './load_sprite';
+import {RequestManager} from '../util/request_manager.ts';
+import {loadSprite, normalizeSpriteURL} from './load_sprite.ts';
 import {type FakeServer, fakeServer} from 'nise';
-import {bufferToArrayBuffer, sleep} from '../util/test/util';
-import {ABORT_ERROR} from '../util/abort_error';
-import * as util from '../util/util';
-import {ensureError} from '../util/util';
+import {bufferToArrayBuffer, sleep} from '../util/test/util.ts';
+import {ABORT_ERROR} from '../util/abort_error.ts';
+import * as util from '../util/util.ts';
+import {ensureError} from '../util/util.ts';
 
 describe('normalizeSpriteURL', () => {
-    test('concantenates path, ratio, and extension for non-mapbox:// scheme', () => {
+    test('concantenates path, ratio, and extension for scheme', () => {
         expect(
             normalizeSpriteURL('http://www.foo.com/bar', '@2x', '.png')
         ).toBe('http://www.foo.com/bar@2x.png');
@@ -22,7 +22,7 @@ describe('normalizeSpriteURL', () => {
         ).toBe('file:///path/to/bar@2x.png');
     });
 
-    test('normalizes non-mapbox:// scheme when query string exists', () => {
+    test('normalizes scheme when query string exists', () => {
         expect(
             normalizeSpriteURL('http://www.foo.com/bar?fresh=true', '@2x', '.png')
         ).toBe('http://www.foo.com/bar@2x.png?fresh=true');

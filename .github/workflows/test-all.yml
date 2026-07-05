@@ -16,10 +16,10 @@ jobs:
     name: Code Hygiene
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v4
         with:
           node-version-file: '.nvmrc'
       - run: npm ci
@@ -32,11 +32,8 @@ jobs:
       - run: npm run typecheck
         if: '!cancelled()'
       - run: npm run generate-docs
-      - name: Build docs using docker and mkdocs-material
-        run: |
-          rm docs/README.md
-          rm -rf docs/API/_media
-          docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build --strict
+      - name: Build docs
+        run: npm run docs
       - name: Check spelling
         # This need to run after the docs are built
         run: npm run spellcheck
@@ -46,10 +43,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v4
         with:
           node-version-file: '.nvmrc'
       - name: Start display server
@@ -74,10 +71,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v4
         with:
           node-version-file: '.nvmrc'
       - name: Disable AppArmor
@@ -89,7 +86,7 @@ jobs:
         if: '!cancelled()'
         with:
           name: build-dist-${{ matrix.os }}
-          path: dist/maplibre-gl.js
+          path: dist/
       - run: npm run test-integration-ci
       - name: Move files
         if: runner.os == 'Linux'
@@ -119,10 +116,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v4
         with:
           node-version-file: '.nvmrc'
       - name: install CJK fonts for local ideographs render tests
@@ -167,10 +164,10 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v4
         with:
           node-version-file: '.nvmrc'
       - run: npm ci
@@ -182,10 +179,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [unit-tests, integration-tests, render-tests]
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v4
         with:
           node-version-file: '.nvmrc'
 
@@ -208,14 +205,14 @@ jobs:
 
       - name: Code Coverage Annotation
         if: github.event.pull_request.head.repo.full_name == github.repository
-        uses: ggilder/codecoverage@9f2933bb9cc49ffb598575216e12c102b0716219
+        uses: ggilder/codecoverage@f8afbff2fe4b038a8ac77d69a1890a687947f458
         with:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           COVERAGE_FILE_PATH: "./coverage-merged/lcov.info"
           COVERAGE_FORMAT: "lcov"
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           files: ${{ github.workspace }}/coverage-merged/coverage-final.json
           verbose: true

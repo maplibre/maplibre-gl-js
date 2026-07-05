@@ -1,5 +1,5 @@
-import Benchmark from '../lib/benchmark';
-import createMap from '../lib/create_map';
+import Benchmark from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
@@ -66,7 +66,7 @@ export default class ColorReliefLoad extends Benchmark {
         };
     }
 
-    async bench() {
+    async bench(): Promise<void> {
         const map = await createMap({
             width: 1024,
             height: 1024,

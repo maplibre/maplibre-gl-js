@@ -1,17 +1,17 @@
-import {patternUniformValues} from './pattern';
+import {patternUniformValues} from './pattern.ts';
 import {
     Uniform1i,
     Uniform1f,
     Uniform2f,
     Uniform3f,
-} from '../uniform_binding';
-import {extend} from '../../util/util';
+} from '../uniform_binding.ts';
+import {extend} from '../../util/util.ts';
 
-import type {Painter} from '../../render/painter';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {Context} from '../../webgl/context';
-import type {CrossfadeParameters} from '../../style/evaluation_parameters';
-import type {Tile} from '../../tile/tile';
+import type {Painter} from '../../render/painter.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {Context} from '../../webgl/context.ts';
+import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
+import type {Tile} from '../../tile/tile.ts';
 
 export type FillUniformsType = {
     'u_fill_translate': Uniform2f;

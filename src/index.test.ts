@@ -1,9 +1,9 @@
 import {describe, beforeEach, afterAll, test, expect, vi} from 'vitest';
-import {config} from './util/config';
-import {addProtocol, getWorkerCount, removeProtocol, getVersion} from './index';
-import {getJSON, getArrayBuffer} from './util/ajax';
-import {ImageRequest} from './util/image_request';
-import {isAbortError} from './util/abort_error';
+import {config} from './util/config.ts';
+import {addProtocol, getWorkerCount, removeProtocol, getVersion} from './index.ts';
+import {getJSON, getArrayBuffer} from './util/ajax.ts';
+import {ImageRequest} from './util/image_request.ts';
+import {isAbortError} from './util/abort_error.ts';
 
 describe('maplibre', () => {
     beforeEach(() => {

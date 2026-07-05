@@ -9,20 +9,20 @@
 'use strict';
 
 import * as fs from 'fs';
-import * as util from '../src/util/util';
-import {createLayout, viewTypes} from '../src/util/struct_array';
-import type {ViewType, StructArrayLayout} from '../src/util/struct_array';
+import * as util from '../src/util/util.ts';
+import {createLayout, viewTypes} from '../src/util/struct_array.ts';
+import type {ViewType, StructArrayLayout} from '../src/util/struct_array.ts';
 
-import posAttributes from '../src/data/pos_attributes';
-import pos3dAttributes from '../src/data/pos3d_attributes';
-import rasterBoundsAttributes from '../src/data/raster_bounds_attributes';
-import circleAttributes from '../src/data/bucket/circle_attributes';
-import fillAttributes from '../src/data/bucket/fill_attributes';
-import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attributes';
-import {lineLayoutAttributes} from '../src/data/bucket/line_attributes';
-import {lineLayoutAttributesExt} from '../src/data/bucket/line_attributes_ext';
-import {patternAttributes} from '../src/data/bucket/pattern_attributes';
-import {dashAttributes} from '../src/data/bucket/dash_attributes';
+import posAttributes from '../src/data/pos_attributes.ts';
+import pos3dAttributes from '../src/data/pos3d_attributes.ts';
+import rasterBoundsAttributes from '../src/data/raster_bounds_attributes.ts';
+import circleAttributes from '../src/data/bucket/circle_attributes.ts';
+import fillAttributes from '../src/data/bucket/fill_attributes.ts';
+import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attributes.ts';
+import {lineLayoutAttributes} from '../src/data/bucket/line_attributes.ts';
+import {lineLayoutAttributesExt} from '../src/data/bucket/line_attributes_ext.ts';
+import {patternAttributes} from '../src/data/bucket/pattern_attributes.ts';
+import {dashAttributes} from '../src/data/bucket/dash_attributes.ts';
 // symbol layer specific arrays
 import {
     symbolLayoutAttributes,
@@ -38,7 +38,7 @@ import {
     glyphOffset,
     lineVertex,
     textAnchorOffset
-} from '../src/data/bucket/symbol_attributes';
+} from '../src/data/bucket/symbol_attributes.ts';
 
 const typeAbbreviations = {
     'Int8': 'b',
@@ -247,7 +247,7 @@ class ${structArrayLayoutClass} extends StructArray {`);
     }
 
     output.push(`
-    _refreshViews() {`);
+    _refreshViews(): void {`);
 
     for (const type of usedTypes) {
         output.push(
@@ -279,13 +279,13 @@ class ${structArrayLayoutClass} extends StructArray {`);
 
     output.push(
         `
-    public emplaceBack(${argNamesTyped.join(', ')}) {
+    public emplaceBack(${argNamesTyped.join(', ')}): number {
         const i = this.length;
         this.resize(i + 1);
         return this.emplace(i, ${argNames.join(', ')});
     }
 
-    public emplace(i: number, ${argNamesTyped.join(', ')}) {`);
+    public emplace(i: number, ${argNamesTyped.join(', ')}): number {`);
 
     for (const size of usedTypeSizes) {
         output.push(
@@ -361,7 +361,7 @@ class ${structTypeClass} extends Struct {
             const componentAccess = `this._structArray.${member.view}[${index}]`;
 
             output.push(
-                `    get ${name}() { return ${componentAccess}; }`);
+                `    get ${name}(): number { return ${componentAccess}; }`);
 
             // generate setters for properties that are updated during runtime symbol placement; others are read-only
             if (name === 'crossTileID' || name === 'placedOrientation' || name === 'hidden') {
@@ -373,7 +373,7 @@ class ${structTypeClass} extends Struct {
         // Special case used for the CollisionBoxArray type
         if (hasAnchorPoint) {
             output.push(
-                '    get anchorPoint() { return new Point(this.anchorPointX, this.anchorPointY); }');
+                '    get anchorPoint(): Point { return new Point(this.anchorPointX, this.anchorPointY); }');
         }
 
         output.push(
@@ -400,7 +400,7 @@ export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
                 const componentOffset = (member.offset / member.size + c).toFixed(0);
                 const componentStride = size / member.size;
                 output.push(
-                    `    ${name}(index: number) { return this.${member.view}[index * ${componentStride} + ${componentOffset}]; }`);
+                    `    ${name}(index: number): number { return this.${member.view}[index * ${componentStride} + ${componentOffset}]; }`);
             }
         }
     } else if (includeStructAccessors) { // get(i)
@@ -425,8 +425,8 @@ register('${structArrayClass}', ${structArrayClass});
 fs.writeFileSync('src/data/array_types.g.ts',
     `// This file is generated. Edit build/generate-struct-arrays.ts, then run \`npm run codegen\`.
 
-import {Struct, StructArray} from '../util/struct_array';
-import {register} from '../util/web_worker_transfer';
+import {Struct, StructArray} from '../util/struct_array.ts';
+import {register} from '../util/web_worker_transfer.ts';
 import Point from '@mapbox/point-geometry';
 
 ${layouts.map(emitStructArrayLayout).join('\n')}

@@ -1,8 +1,8 @@
-in vec4 a_pos_offset;
-in vec4 a_data;
-in vec4 a_pixeloffset;
-in vec3 a_projected_pos;
-in float a_fade_opacity;
+layout(location = 0) in vec4 a_pos_offset;
+layout(location = 1) in vec4 a_data;
+layout(location = 2) in vec4 a_pixeloffset;
+layout(location = 3) in vec3 a_projected_pos;
+layout(location = 4) in float a_fade_opacity;
 
 uniform bool u_is_size_zoom_constant;
 uniform bool u_is_size_feature_constant;
@@ -22,14 +22,15 @@ uniform bool u_is_along_line;
 uniform bool u_is_variable_anchor;
 uniform vec2 u_translation;
 uniform float u_pitched_scale;
+uniform bool u_is_offset;
 
 out vec2 v_tex;
-out float v_total_opacity;
+flat out float v_total_opacity;
 
-#pragma mapbox: define lowp float opacity
+#pragma maplibre: define lowp float opacity
 
 void main() {
-    #pragma mapbox: initialize lowp float opacity
+    #pragma maplibre: initialize lowp float opacity
 
     vec2 a_pos = a_pos_offset.xy;
     vec2 a_offset = a_pos_offset.zw;
@@ -76,7 +77,9 @@ void main() {
             0.0, // Prevents oversized near-field symbols in pitched/overzoomed tiles
             4.0);
 
-    size *= perspective_ratio;
+    if (!u_is_offset) {
+        size *= perspective_ratio;
+    }
 
     float fontScale = u_is_text ? size / 24.0 : size;
 

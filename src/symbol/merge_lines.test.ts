@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {mergeLines} from './merge_lines';
+import {mergeLines} from './merge_lines.ts';
 import Point from '@mapbox/point-geometry';
 
 function makeFeatures(lines) {

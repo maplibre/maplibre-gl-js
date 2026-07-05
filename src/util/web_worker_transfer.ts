@@ -1,8 +1,8 @@
-import {TransferableGridIndex} from './transferable_grid_index';
+import {TransferableGridIndex} from './transferable_grid_index.ts';
 import {Color, CompoundExpression, expressions, ResolvedImage, StylePropertyFunction,
     StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
-import {AJAXError} from './ajax';
-import {isImageBitmap} from './util';
+import {AJAXError} from './ajax.ts';
+import {isImageBitmap} from './util.ts';
 
 /**
  * A class that is serialized to and json, that can be constructed back to the original class in the worker or in the main thread
@@ -55,7 +55,7 @@ export function register<T extends any>(
         new (...args: any): T;
     },
     options: RegisterOptions<T> = {}
-) {
+): void {
     if (registry[name]) throw new Error(`${name} is already registered.`);
     ((Object.defineProperty as any))(klass, '_classRegistryKey', {
         value: name,
@@ -191,6 +191,7 @@ export function serialize(input: unknown, transferables?: Transferable[] | null)
             if (!input.hasOwnProperty(key)) continue;
             if (registry[classRegistryKey].omit.includes(key)) continue;
             const property = input[key];
+            if (property === undefined) continue;
             properties[key] = registry[classRegistryKey].shallow.includes(key) ?
                 property :
                 serialize(property, transferables);

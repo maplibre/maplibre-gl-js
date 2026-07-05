@@ -1,13 +1,13 @@
 
-import Benchmark from '../lib/benchmark';
-import createMap from '../lib/create_map';
+import Benchmark from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
 
 /**
  * Measures how long it takes a basic map to reach the loaded state,
  * using an empty style with no sources or layers.
  */
 export default class MapLoad extends Benchmark {
-    async bench() {
+    async bench(): Promise<void> {
         try {
             const map = await createMap({
                 style: {

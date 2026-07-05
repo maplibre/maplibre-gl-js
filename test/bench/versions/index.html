@@ -10,26 +10,59 @@
 
 <body>
     <div id="benchmarks"></div>
-    <script src="/test/bench/benchmarks_view_generated.js"></script>
-    <script>
+    <script type="module">
+        import * as Benchmarks from '/test/bench/benchmarks_view_generated.mjs';
+        window.Benchmarks = Benchmarks;
         runComparison();
+
+        function isUmdVersion(version) {
+            const m = /^v?(\d+)/.exec(version);
+            return m ? parseInt(m[1], 10) <= 5 : null;
+        }
+
+        async function loadVersion(v) {
+            const base = `https://maplibre.org/maplibre-gl-js/benchmarks/${v}`;
+            const umd = isUmdVersion(v);
+            if (umd === true) {
+                await loadScript(`${base}/benchmarks_generated.js`);
+                return;
+            }
+            if (umd === false) {
+                await import(`${base}/benchmarks_generated.mjs`);
+                return;
+            }
+            try {
+                await import(`${base}/benchmarks_generated.mjs`);
+            } catch (err) {
+                await loadScript(`${base}/benchmarks_generated.js`);
+            }
+        }
 
         async function runComparison() {
             try {
                 const params = new URL(location).searchParams;
-                window.versionsDisplayName = params.getAll('compare').filter(Boolean);
+                const requestedVersionsDisplayName = params.getAll('compare').filter(Boolean);
                 if (!params.has('compare')) {
-                    const response = await fetch('https://api.github.com/repos/maplibre/maplibre-gl-js/releases/latest');
+                    const response = await fetch('https://registry.npmjs.org/maplibre-gl/latest');
                     const responseJson = await response.json();
-                    window.versionsDisplayName = [responseJson['tag_name'], 'main'];
+                    requestedVersionsDisplayName.push(responseJson['version'], 'main');
                 }
-                console.log(`Comparing versions: ${window.versionsDisplayName}`);
-                const versionsScripts = window.versionsDisplayName.map(v => `https://maplibre.org/maplibre-gl-js/benchmarks/${v}/benchmarks_generated.js`)
-                    .concat('/test/bench/versions/benchmarks_generated.js');
-                for (const script of versionsScripts) {
-                    await loadScript(script);
+                console.log(`Comparing versions: ${requestedVersionsDisplayName}`);
+
+                const versionDisplayNameByVersion = {};
+                for (const v of requestedVersionsDisplayName) {
+                    const beforeVersions = getBenchmarkVersions();
+                    await loadVersion(v);
+                    const afterVersions = getBenchmarkVersions();
+                    const newVersions = afterVersions.filter(version => !beforeVersions.includes(version));
+                    for (const version of newVersions) {
+                        versionDisplayNameByVersion[version] = v;
+                    }
                 }
+                await import('/test/bench/versions/benchmarks_generated.mjs');
+
                 const benchmarks = [];
+                window.versionsDisplayName = [];
                 const benchmarkNameList = Object.keys(window.maplibreglBenchmarks).sort();
                 for (const benchmarkName of benchmarkNameList) {
                     const versions = [];
@@ -41,11 +74,10 @@
 
                     let index = 0;
                     for (const version in window.maplibreglBenchmarks[benchmarkName]) {
-                        if (!window.versionsDisplayName[index]) {
-                            window.versionsDisplayName[index] = version;
-                        }
+                        const displayName = versionDisplayNameByVersion[version] || version;
+                        window.versionsDisplayName[index] = displayName;
                         versions.push({
-                            displayName: window.versionsDisplayName[index],
+                            displayName,
                             name: version,
                             bench: window.maplibreglBenchmarks[benchmarkName][version]
                         });
@@ -55,7 +87,7 @@
                 }
 
                 const results = await window.Benchmarks.run(benchmarks);
-                 
+
                 window.maplibreglBenchmarkResults = {};
                 for (const result of results) {
                     window.maplibreglBenchmarkResults[result.name] = {};
@@ -63,10 +95,30 @@
                         window.maplibreglBenchmarkResults[result.name][version.name] = {name: version.name, summary: version.summary, regression: version.regression};
                     }
                 }
-                 
+
                 window.maplibreglBenchmarkFinished = true;
             } catch (ex) {
                 console.error(ex);
+            }
+        }
+
+        function getBenchmarkVersions() {
+            const versions = new Set();
+            addBenchmarkVersions(window.maplibreglBenchmarks, versions);
+            addBenchmarkVersions(window.mapboxglBenchmarks, versions);
+            return Array.from(versions);
+        }
+
+        function addBenchmarkVersions(benchmarks, versions) {
+            if (!benchmarks) {
+                return;
+            }
+            const benchmarkName = Object.keys(benchmarks)[0];
+            if (!benchmarkName) {
+                return;
+            }
+            for (const version of Object.keys(benchmarks[benchmarkName])) {
+                versions.add(version);
             }
         }
 

@@ -1,6 +1,6 @@
 import {describe, test, expect, vi} from 'vitest';
-import {Dispatcher} from '../util/dispatcher';
-import {type SourceClass, addSourceType, create} from './source';
+import {Dispatcher} from '../util/dispatcher.ts';
+import {type SourceClass, addSourceType, create} from './source.ts';
 
 describe('addSourceType', () => {
     test('adds factory function without a worker url does not dispatch to worker', async () => {

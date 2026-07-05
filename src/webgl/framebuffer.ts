@@ -1,7 +1,6 @@
-import {ColorAttachment, DepthAttachment, DepthStencilAttachment} from './value';
+import {ColorAttachment, DepthAttachment, DepthStencilAttachment} from './value.ts';
 
-import type {Context} from './context';
-import {createFramebufferNotCompleteError} from '../util/framebuffer_error';
+import type {Context} from './context.ts';
 
 /**
  * @internal
@@ -28,12 +27,9 @@ export class Framebuffer {
         } else if (hasStencil) {
             throw new Error('Stencil cannot be set without depth');
         }
-        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-            throw createFramebufferNotCompleteError();
-        }
     }
 
-    destroy() {
+    destroy(): void {
         const gl = this.context.gl;
 
         const texture = this.colorAttachment.get();

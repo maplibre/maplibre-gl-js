@@ -1,5 +1,5 @@
-import type {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler, AroundCenterOptions} from '../two_fingers_touch';
-import type {TapDragZoomHandler} from '../tap_drag_zoom';
+import type {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler, AroundCenterOptions} from '../two_fingers_touch.ts';
+import type {TapDragZoomHandler} from '../tap_drag_zoom.ts';
 
 /**
  * The `TwoFingersTouchZoomRotateHandler` allows the user to zoom and rotate the map by
@@ -40,7 +40,7 @@ export class TwoFingersTouchZoomRotateHandler {
      * map.touchZoomRotate.enable({ around: 'center' });
      * ```
      */
-    enable(options?: AroundCenterOptions | boolean | null) {
+    enable(options?: AroundCenterOptions | boolean | null): void {
         this._touchZoom.enable(options);
         if (!this._rotationDisabled) this._touchRotate.enable(options);
         this._tapDragZoom.enable();
@@ -55,7 +55,7 @@ export class TwoFingersTouchZoomRotateHandler {
      * map.touchZoomRotate.disable();
      * ```
      */
-    disable() {
+    disable(): void {
         this._touchZoom.disable();
         this._touchRotate.disable();
         this._tapDragZoom.disable();
@@ -67,7 +67,7 @@ export class TwoFingersTouchZoomRotateHandler {
      *
      * @returns `true` if the "pinch to rotate and zoom" interaction is enabled.
      */
-    isEnabled() {
+    isEnabled(): boolean {
         return this._touchZoom.isEnabled() &&
             (this._rotationDisabled || this._touchRotate.isEnabled()) &&
             this._tapDragZoom.isEnabled();
@@ -78,7 +78,7 @@ export class TwoFingersTouchZoomRotateHandler {
      *
      * @returns `true` if the handler is active, `false` otherwise
      */
-    isActive() {
+    isActive(): boolean {
         return this._touchZoom.isActive() || this._touchRotate.isActive() || this._tapDragZoom.isActive();
     }
 
@@ -91,7 +91,7 @@ export class TwoFingersTouchZoomRotateHandler {
      * map.touchZoomRotate.setZoomRate(0.5);
      * ```
      */
-    setZoomRate(zoomRate?: number) {
+    setZoomRate(zoomRate?: number): void {
         this._touchZoom.setZoomRate(zoomRate);
         this._tapDragZoom.setZoomRate(zoomRate);
     }
@@ -105,7 +105,7 @@ export class TwoFingersTouchZoomRotateHandler {
      * map.touchZoomRotate.setZoomThreshold(0.3);
      * ```
      */
-    setZoomThreshold(zoomThreshold?: number) {
+    setZoomThreshold(zoomThreshold?: number): void {
         this._touchZoom.setZoomThreshold(zoomThreshold);
     }
 
@@ -118,7 +118,7 @@ export class TwoFingersTouchZoomRotateHandler {
      * map.touchZoomRotate.disableRotation();
      * ```
      */
-    disableRotation() {
+    disableRotation(): void {
         this._rotationDisabled = true;
         this._touchRotate.disable();
     }
@@ -132,7 +132,7 @@ export class TwoFingersTouchZoomRotateHandler {
      * map.touchZoomRotate.enableRotation();
      * ```
      */
-    enableRotation() {
+    enableRotation(): void {
         this._rotationDisabled = false;
         if (this._touchZoom.isEnabled()) this._touchRotate.enable();
     }

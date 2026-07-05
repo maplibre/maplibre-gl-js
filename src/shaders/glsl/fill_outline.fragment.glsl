@@ -3,12 +3,12 @@ in vec2 v_pos;
 in float v_depth;
 #endif
 
-#pragma mapbox: define highp vec4 outline_color
-#pragma mapbox: define lowp float opacity
+#pragma maplibre: define highp vec4 outline_color
+#pragma maplibre: define lowp float opacity
 
 void main() {
-    #pragma mapbox: initialize highp vec4 outline_color
-    #pragma mapbox: initialize lowp float opacity
+    #pragma maplibre: initialize highp vec4 outline_color
+    #pragma maplibre: initialize lowp float opacity
 
     float dist = length(v_pos - gl_FragCoord.xy);
     float alpha = 1.0 - smoothstep(0.0, 1.0, dist);

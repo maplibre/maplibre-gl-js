@@ -1,9 +1,9 @@
-import {UniformColor, Uniform1f, Uniform2f} from '../uniform_binding';
-import type {Context} from '../../webgl/context';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import {type IReadonlyTransform} from '../../geo/transform_interface';
-import {type Sky} from '../../style/sky';
-import {getMercatorHorizon} from '../../geo/projection/mercator_utils';
+import {UniformColor, Uniform1f, Uniform2f} from '../uniform_binding.ts';
+import type {Context} from '../../webgl/context.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import {type IReadonlyTransform} from '../../geo/transform_interface.ts';
+import {type Sky} from '../../style/sky.ts';
+import {getMercatorHorizon} from '../../geo/projection/mercator_utils.ts';
 
 export type SkyUniformsType = {
     'u_sky_color': UniformColor;

@@ -1,6 +1,6 @@
 
-import Benchmark from '../lib/benchmark';
-import createMap from '../lib/create_map';
+import Benchmark from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
 
 /**
  * Measures how long it takes the map to reach the idle state where all content for the view has been loaded and rendered.
@@ -18,7 +18,7 @@ export default class MapIdle extends Benchmark {
     /**
      * Waits for map's idle event before returning.
      */
-    async createMap() {
+    async createMap(): Promise<void> {
         try {
             const map = await createMap({
                 idle: true,

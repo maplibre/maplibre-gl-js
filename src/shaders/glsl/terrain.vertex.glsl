@@ -1,4 +1,4 @@
-in vec3 a_pos3d;
+layout(location = 0) in vec3 a_pos3d;
 
 uniform mat4 u_fog_matrix;
 uniform float u_ele_delta;

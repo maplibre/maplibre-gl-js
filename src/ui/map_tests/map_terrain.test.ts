@@ -1,10 +1,10 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util';
-import {LngLat} from '../../geo/lng_lat';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import {LngLat} from '../../geo/lng_lat.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {type Terrain} from '../../render/terrain';
-import {MercatorTransform} from '../../geo/projection/mercator_transform';
-import {type Map} from '../map';
+import {type Terrain} from '../../render/terrain.ts';
+import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {type Map} from '../map.ts';
 
 let server: FakeServer;
 let map: Map;
@@ -63,7 +63,7 @@ describe('getCameraTargetElevation', () => {
         transform.setZoom(14);
         transform.resize(512, 512);
         transform.setElevation(2000);
-        map.transform = transform;
+        map._camera.transform = transform;
 
         expect(map.getCameraTargetElevation()).toBe(2000);
     });
@@ -77,12 +77,13 @@ describe('Keep camera outside terrain', () => {
             (_lngLat: LngLat, _zoom: number) => terrainElevation
         );
         map.terrain = terrainStub;
+        map._camera.terrain = terrainStub;
 
         // Terrain elevation is 10 everywhere, we are above it at zoom level 15
         // with pitch 45 deg.
         map.jumpTo({center: [0.0, 0.0], bearing: 0, pitch: 45, zoom: 15});
-        const initialLngLat = map.transform.screenPointToLocation(map.transform.getCameraPoint());
-        const initialAltitude = map.transform.getCameraAltitude();
+        const initialLngLat = map._camera.transform.screenPointToLocation(map._camera.transform.getCameraPoint());
+        const initialAltitude = map._camera.transform.getCameraAltitude();
         expect(initialAltitude).toBeCloseTo(516, 0);
 
         // Now we set the elevation to 5000 everywhere and try to jump to the
@@ -93,10 +94,31 @@ describe('Keep camera outside terrain', () => {
         terrainElevation = 5000;
         map.jumpTo({center: [0.0, 0.0], pitch: 45, zoom: 15});
 
-        const lngLat = map.transform.screenPointToLocation(map.transform.getCameraPoint());
+        const lngLat = map._camera.transform.screenPointToLocation(map._camera.transform.getCameraPoint());
         expect(lngLat.lng).toBeCloseTo(initialLngLat.lng);
         expect(lngLat.lat).toBeCloseTo(initialLngLat.lat);
-        expect(map.transform.getCameraAltitude()).toBeGreaterThan(initialAltitude);
-        expect(map.transform.getCameraAltitude()).toBeGreaterThan(terrainElevation);
+        expect(map._camera.transform.getCameraAltitude()).toBeGreaterThan(initialAltitude);
+        expect(map._camera.transform.getCameraAltitude()).toBeGreaterThan(terrainElevation);
+    });
+});
+
+describe('queryTerrainElevation', () => {
+    test('should return null if terrain is not set', () => {
+        map.terrain = null;
+        const result = map.queryTerrainElevation([0, 0]);
+        expect(result).toBeNull();
+    });
+
+    test('Calls getElevationForLngLatZoom with correct arguments', () => {
+        const getElevationForLngLat = vi.fn();
+        map.terrain = {getElevationForLngLat} as any as Terrain;
+        map._camera.transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+
+        map.queryTerrainElevation([1, 2]);
+
+        expect(map.terrain.getElevationForLngLat).toHaveBeenCalledWith(
+            expect.objectContaining({lng: 1, lat: 2,}),
+            map._camera.transform
+        );
     });
 });

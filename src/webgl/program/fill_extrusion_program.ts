@@ -1,20 +1,20 @@
-import {patternUniformValues} from './pattern';
+import {patternUniformValues} from './pattern.ts';
 import {
     Uniform1i,
     Uniform1f,
     Uniform2f,
     Uniform3f
-} from '../uniform_binding';
+} from '../uniform_binding.ts';
 
 import {mat3, vec3} from 'gl-matrix';
-import {extend} from '../../util/util';
+import {extend} from '../../util/util.ts';
 
-import type {Context} from '../../webgl/context';
-import type {Painter} from '../../render/painter';
-import type {OverscaledTileID} from '../../tile/tile_id';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {CrossfadeParameters} from '../../style/evaluation_parameters';
-import type {Tile} from '../../tile/tile';
+import type {Context} from '../../webgl/context.ts';
+import type {Painter} from '../../render/painter.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
+import type {Tile} from '../../tile/tile.ts';
 
 export type FillExtrusionUniformsType = {
     'u_lightpos': Uniform3f;

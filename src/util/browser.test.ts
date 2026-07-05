@@ -1,6 +1,6 @@
 import {describe, test, expect, beforeEach, vi, afterEach, type Mock} from 'vitest';
-import {beforeMapTest, createMap as globalCreateMap} from './test/util';
-import {browser} from './browser';
+import {beforeMapTest, createMap as globalCreateMap} from './test/util.ts';
+import {browser} from './browser.ts';
 
 describe('browser', () => {
     describe('frame',() => {

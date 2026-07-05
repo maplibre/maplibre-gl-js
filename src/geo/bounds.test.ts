@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {Bounds} from './bounds';
+import {Bounds} from './bounds.ts';
 import Point from '@mapbox/point-geometry';
 
 function bounds(minX: number, minY: number, maxX: number, maxY: number): Bounds {

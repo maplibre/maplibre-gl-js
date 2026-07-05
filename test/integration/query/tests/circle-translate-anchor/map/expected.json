@@ -37,7 +37,7 @@
       "type": "residential"
     },
     "id": 4887461,
-    "source": "mapbox",
+    "source": "maplibre",
     "sourceLayer": "road",
     "state": {}
   },
@@ -63,7 +63,7 @@
       "type": "residential"
     },
     "id": 4612753,
-    "source": "mapbox",
+    "source": "maplibre",
     "sourceLayer": "road",
     "state": {}
   }

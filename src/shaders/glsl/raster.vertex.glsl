@@ -4,7 +4,7 @@ uniform float u_buffer_scale;
 uniform vec4 u_coords_top; // xy = left, zw = right
 uniform vec4 u_coords_bottom;
 
-in vec2 a_pos;
+layout(location = 0) in vec2 a_pos;
 
 out vec2 v_pos0;
 out vec2 v_pos1;

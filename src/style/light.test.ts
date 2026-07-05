@@ -1,9 +1,9 @@
 import {describe, test, expect, vi} from 'vitest';
-import {Light} from './light';
+import {Light} from './light.ts';
 import {Color, latest as styleSpec, type LightSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {sphericalToCartesian} from '../util/util';
-import {type EvaluationParameters} from './evaluation_parameters';
-import {type TransitionParameters} from './properties';
+import {sphericalToCartesian} from '../util/util.ts';
+import {type EvaluationParameters} from './evaluation_parameters.ts';
+import {type TransitionParameters} from './properties.ts';
 
 const spec = styleSpec.light;
 
@@ -54,7 +54,7 @@ test('Light.getLight', () => {
 describe('Light.setLight', () => {
     test('sets light', () => {
         const light = new Light({});
-        light.setLight({color: 'red', 'color-transition': {duration: 3000}} as LightSpecification);
+        light.setLight({color: 'red', 'color-transition': {duration: 3000}});
         light.updateTransitions({transition: true} as any as TransitionParameters);
         light.recalculate({zoom: 16, zoomHistory: {}, now: 1500} as EvaluationParameters);
         expect(light.properties.get('color')).toEqual(new Color(1, 0.5, 0.5, 1));

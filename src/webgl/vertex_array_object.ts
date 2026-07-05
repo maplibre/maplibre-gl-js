@@ -1,8 +1,8 @@
 
-import type {Program} from './program';
-import type {VertexBuffer} from './vertex_buffer';
-import type {IndexBuffer} from './index_buffer';
-import type {Context} from './context';
+import type {Program} from './program.ts';
+import type {VertexBuffer} from './vertex_buffer.ts';
+import type {IndexBuffer} from './index_buffer.ts';
+import type {Context} from './context.ts';
 
 /**
  * @internal
@@ -38,7 +38,7 @@ export class VertexArrayObject {
         vertexOffset?: number | null,
         dynamicVertexBuffer?: VertexBuffer | null,
         dynamicVertexBuffer2?: VertexBuffer | null,
-        dynamicVertexBuffer3?: VertexBuffer | null) {
+        dynamicVertexBuffer3?: VertexBuffer | null): void {
 
         this.context = context;
 
@@ -92,7 +92,7 @@ export class VertexArrayObject {
         vertexOffset?: number | null,
         dynamicVertexBuffer?: VertexBuffer | null,
         dynamicVertexBuffer2?: VertexBuffer | null,
-        dynamicVertexBuffer3?: VertexBuffer | null) {
+        dynamicVertexBuffer3?: VertexBuffer | null): void {
 
         const numNextAttributes = program.numAttributes;
 
@@ -154,7 +154,7 @@ export class VertexArrayObject {
         context.currentNumAttributes = numNextAttributes;
     }
 
-    destroy() {
+    destroy(): void {
         if (this.vao) {
             this.context.deleteVertexArray(this.vao);
             this.vao = null;

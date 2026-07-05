@@ -7,7 +7,7 @@
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
-    <script src='../../dist/maplibre-gl-dev.js'></script>
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -25,6 +25,8 @@
 <div id="map"></div>
 
 <script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
@@ -131,13 +133,8 @@
                 .multiply(rotationY)
                 .multiply(rotationZ);
 
-            // Alternatively, you can use this API to get the correct model matrix.
-            // It will work regardless of current projection.
-            // Also see the example "globe-3d-model.html".
-            //
-            // const modelMatrix = args.getMatrixForModel(modelOrigin, modelAltitude);
-            // const m = new THREE.Matrix4().fromArray(matrix);
-            // const l = new THREE.Matrix4().fromArray(modelMatrix);
+            // The model matrix above is built for the mercator projection. For a projection-agnostic
+            // approach that also supports the globe, see the "add-a-3d-model-to-globe-using-threejs" example.
 
             this.camera.projectionMatrix = m.multiply(l);
             this.renderer.resetState();

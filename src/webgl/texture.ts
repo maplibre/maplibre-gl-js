@@ -1,6 +1,6 @@
-import type {Context} from './context';
-import type {RGBAImage, AlphaImage} from '../util/image';
-import {premultiplyAlpha} from '../util/image';
+import type {Context} from './context.ts';
+import type {RGBAImage, AlphaImage} from '../util/image.ts';
+import {premultiplyAlpha} from '../util/image.ts';
 
 export type TextureFormat = WebGLRenderingContextBase['RGBA'] | WebGLRenderingContextBase['ALPHA'];
 export type TextureFilter = WebGLRenderingContextBase['LINEAR'] | WebGLRenderingContextBase['LINEAR_MIPMAP_NEAREST'] | WebGLRenderingContextBase['NEAREST'];
@@ -52,13 +52,20 @@ export class Texture {
     } | null, position?: {
         x: number;
         y: number;
-    }) {
+    }): void {
         const {width, height} = image as {width: number; height: number};
         const resize = (this.size?.[0] !== width || this.size[1] !== height) && !position;
         const {context} = this;
         const {gl} = context;
 
         this.useMipmap = Boolean(options?.useMipmap);
+
+        if (resize && this.size && this.format === gl.RGBA) {
+            gl.deleteTexture(this.texture);
+            this.texture = gl.createTexture();
+            this._ownedHandle = this.texture;
+        }
+
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
         context.pixelStoreUnpackFlipY.set(false);
@@ -68,13 +75,30 @@ export class Texture {
 
         if (resize) {
             this.size = [width, height];
-            if (hasDataProperty(image)) {
-                // #2030: raw data is premultiplied in JS
-                context.pixelStoreUnpackPremultiplyAlpha.set(false);
-                this._uploadRawData(image, wantPremultiply, width, height, gl);
+
+            if (this.format === gl.RGBA && width > 0 && height > 0) {
+                const mipLevels = this.useMipmap ? Math.floor(Math.log2(Math.max(width, height))) + 1 : 1;
+                gl.texStorage2D(gl.TEXTURE_2D, mipLevels, gl.RGBA8, width, height);
+
+                if (hasDataProperty(image)) {
+                    // #2030: raw data is premultiplied in JS
+                    context.pixelStoreUnpackPremultiplyAlpha.set(false);
+                    let {data} = image;
+                    if (wantPremultiply && data) data = premultiplyAlpha(data);
+                    if (data) gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, data);
+                } else {
+                    context.pixelStoreUnpackPremultiplyAlpha.set(wantPremultiply);
+                    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, image);
+                }
             } else {
-                context.pixelStoreUnpackPremultiplyAlpha.set(wantPremultiply);
-                this._uploadDomImage(image, gl);
+                if (hasDataProperty(image)) {
+                    // #2030: raw data is premultiplied in JS
+                    context.pixelStoreUnpackPremultiplyAlpha.set(false);
+                    this._uploadRawData(image, wantPremultiply, width, height, gl);
+                } else {
+                    context.pixelStoreUnpackPremultiplyAlpha.set(wantPremultiply);
+                    this._uploadDomImage(image, gl);
+                }
             }
         } else {
             const {x, y} = position || {x: 0, y: 0};
@@ -87,7 +111,7 @@ export class Texture {
             }
         }
 
-        if (this.useMipmap && this.isSizePowerOfTwo()) {
+        if (this.useMipmap) {
             gl.generateMipmap(gl.TEXTURE_2D);
         }
 
@@ -96,27 +120,27 @@ export class Texture {
         context.pixelStoreUnpackPremultiplyAlpha.setDefault();
     }
 
-    private _uploadDomImage(image: TexImageSource, gl: WebGLRenderingContext | WebGL2RenderingContext) {
+    private _uploadDomImage(image: TexImageSource, gl: WebGL2RenderingContext) {
         gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, gl.UNSIGNED_BYTE, image);
     }
 
-    private _uploadRawData(image: DataTextureImage, wantPremultiply: boolean, width: number, height: number, gl: WebGLRenderingContext | WebGL2RenderingContext) {
+    private _uploadRawData(image: DataTextureImage, wantPremultiply: boolean, width: number, height: number, gl: WebGL2RenderingContext) {
         let {data} = image;
         if (wantPremultiply && data) data = premultiplyAlpha(data);
         gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, gl.UNSIGNED_BYTE, data);
     }
 
-    private _updateDomImage(image: TexImageSource, x: number, y: number, gl: WebGLRenderingContext | WebGL2RenderingContext) {
+    private _updateDomImage(image: TexImageSource, x: number, y: number, gl: WebGL2RenderingContext) {
         gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, gl.RGBA, gl.UNSIGNED_BYTE, image);
     }
 
-    private _updateRawData(image: DataTextureImage, wantPremultiply: boolean, x: number, y: number, width: number, height: number, gl: WebGLRenderingContext | WebGL2RenderingContext) {
+    private _updateRawData(image: DataTextureImage, wantPremultiply: boolean, x: number, y: number, width: number, height: number, gl: WebGL2RenderingContext) {
         let {data} = image;
         if (wantPremultiply && data) data = premultiplyAlpha(data);
         gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, data);
     }
 
-    bind(filter: TextureFilter, wrap: TextureWrap, minFilter?: TextureFilter | null) {
+    bind(filter: TextureFilter, wrap: TextureWrap, minFilter?: TextureFilter | null): void {
         const {context} = this;
         const {gl} = context;
 
@@ -126,7 +150,7 @@ export class Texture {
 
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
-        if (minFilter === gl.LINEAR_MIPMAP_NEAREST && !this.isSizePowerOfTwo()) {
+        if (minFilter === gl.LINEAR_MIPMAP_NEAREST && !this.useMipmap) {
             minFilter = gl.LINEAR;
         }
 
@@ -143,11 +167,7 @@ export class Texture {
         }
     }
 
-    isSizePowerOfTwo() {
-        return this.size[0] === this.size[1] && (Math.log(this.size[0]) / Math.LN2) % 1 === 0;
-    }
-
-    destroy() {
+    destroy(): void {
         const {gl} = this.context;
         gl.deleteTexture(this.texture);
         this.texture = null;

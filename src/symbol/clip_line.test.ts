@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {clipGeometry, clipLine} from './clip_line';
+import {clipGeometry, clipLine} from './clip_line.ts';
 
 describe('clipLines', () => {
 

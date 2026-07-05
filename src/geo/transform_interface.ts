@@ -1,15 +1,15 @@
-import type {LngLat, LngLatLike} from './lng_lat';
-import type {LngLatBounds} from './lng_lat_bounds';
-import type {MercatorCoordinate} from './mercator_coordinate';
+import type {LngLat, LngLatLike} from './lng_lat.ts';
+import type {LngLatBounds} from './lng_lat_bounds.ts';
+import type {MercatorCoordinate} from './mercator_coordinate.ts';
 import type Point from '@mapbox/point-geometry';
 import type {mat4, mat2, vec3, vec4} from 'gl-matrix';
-import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../tile/tile_id';
-import type {PaddingOptions} from './edge_insets';
-import type {Terrain} from '../render/terrain';
-import type {PointProjection} from '../symbol/projection';
-import type {ProjectionData, ProjectionDataParams} from './projection/projection_data';
-import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider';
-import type {Frustum} from '../util/primitives/frustum';
+import type {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../tile/tile_id.ts';
+import type {PaddingOptions} from './edge_insets.ts';
+import type {Terrain} from '../render/terrain.ts';
+import type {PointProjection} from '../symbol/projection.ts';
+import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection/projection_data.ts';
+import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider.ts';
+import type {Frustum} from '../util/primitives/frustum.ts';
 
 /**
  * The callback defining how the transform constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
@@ -446,7 +446,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
      * @param params - Parameters for the projection data generation.
      */
-    getProjectionData(params: ProjectionDataParams): ProjectionData;
+    getProjectionData(params: ProjectionDataParams): RendererProjectionData;
 
     /**
      * @internal
@@ -494,18 +494,9 @@ export interface IReadonlyTransform extends ITransformGetters {
     projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
 
     /**
-     * Returns a matrix that will place, rotate and scale a model to display at the given location and altitude
-     * while also being projected by the custom layer matrix.
-     * This function is intended to be called from custom layers.
-     * @param location - Location of the model.
-     * @param altitude - Altitude of the model. May be undefined.
-     */
-    getMatrixForModel(location: LngLatLike, altitude?: number): mat4;
-
-    /**
      * Return projection data such that coordinates in mercator projection in range 0..1 will get projected to the map correctly.
      */
-    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean): ProjectionData;
+    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean): CustomLayerProjectionData;
 
     /**
      * Returns a tile-specific projection matrix. Used for symbol placement fast-path for mercator transform.

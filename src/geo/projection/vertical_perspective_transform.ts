@@ -1,23 +1,23 @@
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
-import {TransformHelper} from '../transform_helper';
-import {LngLat, type LngLatLike, earthRadius} from '../lng_lat';
-import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce} from '../../util/util';
-import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id';
+import {TransformHelper} from '../transform_helper.ts';
+import {LngLat, type LngLatLike, earthRadius} from '../lng_lat.ts';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce, type Mat4f32} from '../../util/util.ts';
+import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
-import {MercatorCoordinate} from '../mercator_coordinate';
-import {LngLatBounds} from '../lng_lat_bounds';
-import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
-import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils';
-import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider';
-import {Frustum} from '../../util/primitives/frustum';
+import {MercatorCoordinate} from '../mercator_coordinate.ts';
+import {LngLatBounds} from '../lng_lat_bounds.ts';
+import {tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
+import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils.ts';
+import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
+import {Frustum} from '../../util/primitives/frustum.ts';
 
-import type {Terrain} from '../../render/terrain';
-import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface';
-import type {TransformOptions} from '../transform_helper';
-import type {PaddingOptions} from '../edge_insets';
-import type {ProjectionData, ProjectionDataParams} from './projection_data';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import type {Terrain} from '../../render/terrain.ts';
+import type {PointProjection} from '../../symbol/projection.ts';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {TransformOptions} from '../transform_helper.ts';
+import type {PaddingOptions} from '../edge_insets.ts';
+import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
+import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
 /**
  * Describes the intersection of ray and sphere.
@@ -244,7 +244,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     private _cachedClippingPlane: vec4 = createVec4f64();
     private _cachedFrustum: Frustum;
     private _projectionMatrix: mat4 = createIdentityMat4f64();
-    private _globeViewProjMatrix32f: mat4 = createIdentityMat4f32(); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
+    private _globeViewProjMatrix32f: Mat4f32 = createIdentityMat4f32(); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
     private _globeViewProjMatrixNoCorrection: mat4 = createIdentityMat4f64();
     private _globeViewProjMatrixNoCorrectionInverted: mat4 = createIdentityMat4f64();
     private _globeProjMatrixInverted: mat4 = createIdentityMat4f64();
@@ -297,7 +297,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this._helper.cameraToCenterDistance;
     }
 
-    getProjectionData(params: ProjectionDataParams): ProjectionData {
+    getProjectionData(params: ProjectionDataParams): RendererProjectionData {
         const {overscaledTileID, applyGlobeMatrix} = params;
         const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);
         return {
@@ -534,6 +534,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     recalculateZoomAndCenter(terrain?: Terrain): void {
         if (terrain) {
             warnOnce('terrain is not fully supported on vertical perspective projection.');
+            return;
         }
         this._helper.recalculateZoomAndCenter(0);
     }
@@ -977,20 +978,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         return sphereSurfacePointToCoordinates(closestOnHorizon);
     }
 
-    getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
-        const lnglat = LngLat.convert(location);
-        const scale = 1.0 / earthRadius;
-
-        const m = createIdentityMat4f64();
-        mat4.rotateY(m, m, lnglat.lng / 180.0 * Math.PI);
-        mat4.rotateX(m, m, -lnglat.lat / 180.0 * Math.PI);
-        mat4.translate(m, m, [0, 0, 1 + altitude / earthRadius]);
-        mat4.rotateX(m, m, Math.PI * 0.5);
-        mat4.scale(m, m, [scale, scale, scale]);
-        return m;
-    }
-
-    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): ProjectionData {
+    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
         const globeData = this.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
         globeData.tileMercatorCoords = [0, 0, 1, 1];
         return globeData;

@@ -1,12 +1,10 @@
-import {getTileBBox} from '@mapbox/whoots-js';
-import {EXTENT} from '../data/extent';
+import {EXTENT} from '../data/extent.ts';
 import Point from '@mapbox/point-geometry';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
-import {register} from '../util/web_worker_transfer';
-import {type mat4} from 'gl-matrix';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {register} from '../util/web_worker_transfer.ts';
+import {type Mat4f32, MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {type ICanonicalTileID, type IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
-import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util';
-import {isInBoundsForTileZoomXY} from '../util/world_bounds';
+import {isInBoundsForTileZoomXY} from '../util/world_bounds.ts';
 
 /**
  * A canonical way to define a tile ID
@@ -29,14 +27,14 @@ export class CanonicalTileID implements ICanonicalTileID {
         this.key = calculateTileKey(0, z, z, x, y);
     }
 
-    equals(id: ICanonicalTileID) {
+    equals(id: ICanonicalTileID): boolean {
         return this.z === id.z && this.x === id.x && this.y === id.y;
     }
 
     /**
      * given a list of urls, choose a url template and return a tile URL
      */
-    url(urls: string[], pixelRatio: number, scheme?: string | null) {
+    url(urls: string[], pixelRatio: number, scheme?: string | null): string {
         const bbox = getTileBBox(this.x, this.y, this.z);
         const quadkey = getQuadkey(this.z, this.x, this.y);
 
@@ -50,19 +48,19 @@ export class CanonicalTileID implements ICanonicalTileID {
             .replace(/{bbox-epsg-3857}/g, bbox);
     }
 
-    isChildOf(parent: ICanonicalTileID) {
+    isChildOf(parent: ICanonicalTileID): boolean {
         const dz = this.z - parent.z;
         return  dz > 0 && parent.x === (this.x >> dz) && parent.y === (this.y >> dz);
     }
 
-    getTilePoint(coord: IMercatorCoordinate) {
+    getTilePoint(coord: IMercatorCoordinate): Point {
         const tilesAtZoom = Math.pow(2, this.z);
         return new Point(
             (coord.x * tilesAtZoom - this.x) * EXTENT,
             (coord.y * tilesAtZoom - this.y) * EXTENT);
     }
 
-    toString() {
+    toString(): string {
         return `${this.z}/${this.x}/${this.y}`;
     }
 }
@@ -97,7 +95,7 @@ export class OverscaledTileID {
      * and should be used, otherwise this matrix will be null.
      * The matrix should be float32 in order to avoid slow WebGL calls in Chrome.
      */
-    terrainRttPosMatrix32f: mat4 | null = null;
+    terrainRttPosMatrix32f: Mat4f32 | null = null;
 
     constructor(overscaledZ: number, wrap: number, z: number, x: number, y: number) {
         if (overscaledZ < z) throw new Error(`overscaledZ should be >= z; overscaledZ = ${overscaledZ}; z = ${z}`);
@@ -107,11 +105,11 @@ export class OverscaledTileID {
         this.key = calculateTileKey(wrap, overscaledZ, z, x, y);
     }
 
-    clone() {
+    clone(): OverscaledTileID {
         return new OverscaledTileID(this.overscaledZ, this.wrap, this.canonical.z, this.canonical.x, this.canonical.y);
     }
 
-    equals(id: OverscaledTileID) {
+    equals(id: OverscaledTileID): boolean {
         return this.overscaledZ === id.overscaledZ && this.wrap === id.wrap && this.canonical.equals(id.canonical);
     }
 
@@ -123,7 +121,7 @@ export class OverscaledTileID {
      * @returns a new OverscaledTileID representing the tile at the target zoom level
      * @throws if targetZ is greater than this.overscaledZ
      */
-    scaledTo(targetZ: number) {
+    scaledTo(targetZ: number): OverscaledTileID {
         if (targetZ > this.overscaledZ) throw new Error(`targetZ > this.overscaledZ; targetZ = ${targetZ}; overscaledZ = ${this.overscaledZ}`);
         const zDifference = this.canonical.z - targetZ;
         if (targetZ > this.canonical.z) {
@@ -133,7 +131,7 @@ export class OverscaledTileID {
         }
     }
 
-    isOverscaled() {
+    isOverscaled(): boolean {
         return (this.overscaledZ > this.canonical.z);
     }
 
@@ -170,7 +168,7 @@ export class OverscaledTileID {
         );
     }
 
-    children(sourceMaxZoom: number) {
+    children(sourceMaxZoom: number): OverscaledTileID[] {
         if (this.overscaledZ >= sourceMaxZoom) {
             // return a single tile coord representing a an overscaled tile
             return [new OverscaledTileID(this.overscaledZ + 1, this.wrap, this.canonical.z, this.canonical.x, this.canonical.y)];
@@ -187,7 +185,7 @@ export class OverscaledTileID {
         ];
     }
 
-    isLessThan(rhs: OverscaledTileID) {
+    isLessThan(rhs: OverscaledTileID): boolean {
         if (this.wrap < rhs.wrap) return true;
         if (this.wrap > rhs.wrap) return false;
 
@@ -201,27 +199,27 @@ export class OverscaledTileID {
 
     }
 
-    wrapped() {
+    wrapped(): OverscaledTileID {
         return new OverscaledTileID(this.overscaledZ, 0, this.canonical.z, this.canonical.x, this.canonical.y);
     }
 
-    unwrapTo(wrap: number) {
+    unwrapTo(wrap: number): OverscaledTileID {
         return new OverscaledTileID(this.overscaledZ, wrap, this.canonical.z, this.canonical.x, this.canonical.y);
     }
 
-    overscaleFactor() {
+    overscaleFactor(): number {
         return Math.pow(2, this.overscaledZ - this.canonical.z);
     }
 
-    toUnwrapped() {
+    toUnwrapped(): UnwrappedTileID {
         return new UnwrappedTileID(this.wrap, this.canonical);
     }
 
-    toString() {
+    toString(): string {
         return `${this.overscaledZ}/${this.canonical.x}/${this.canonical.y}`;
     }
 
-    getTilePoint(coord: MercatorCoordinate) {
+    getTilePoint(coord: MercatorCoordinate): Point {
         return this.canonical.getTilePoint(new MercatorCoordinate(coord.x - this.wrap, coord.y));
     }
 
@@ -281,6 +279,35 @@ export function calculateTileKey(wrap: number, overscaledZ: number, z: number, x
     if (wrap < 0) wrap = wrap * -1 - 1;
     const dim = 1 << z;
     return (dim * dim * wrap + dim * y + x).toString(36) + z.toString(36) + overscaledZ.toString(36);
+}
+
+/** WGS84 spherical radius used by EPSG:3857, distinct from the mean earth radius MercatorCoordinate is built on. */
+const EPSG3857_RADIUS = 6378137;
+const EPSG3857_HALF_CIRCUMFERENCE = Math.PI * EPSG3857_RADIUS;
+
+/**
+ * Builds the `{bbox-epsg-3857}` token used in WMS tile URLs: the tile's bounding
+ * box in EPSG:3857 meters as a `minX,minY,maxX,maxY` string.
+ *
+ * Inlined from the archived \@mapbox/whoots-js (ISC, Copyright (c) 2017 Mapbox).
+ */
+function getTileBBox(x: number, y: number, z: number): string {
+    // for Google/OSM tile scheme we need to alter the y
+    y = Math.pow(2, z) - y - 1;
+
+    const min = getEpsg3857Coords(x * 256, y * 256, z);
+    const max = getEpsg3857Coords((x + 1) * 256, (y + 1) * 256, z);
+
+    return `${min[0]},${min[1]},${max[0]},${max[1]}`;
+}
+
+/** Projects tile pixel coordinates to EPSG:3857 meters. */
+function getEpsg3857Coords(x: number, y: number, z: number): [number, number] {
+    const resolution = (2 * EPSG3857_HALF_CIRCUMFERENCE / 256) / Math.pow(2, z);
+    const mercX = x * resolution - EPSG3857_HALF_CIRCUMFERENCE;
+    const mercY = y * resolution - EPSG3857_HALF_CIRCUMFERENCE;
+
+    return [mercX, mercY];
 }
 
 function getQuadkey(z:number, x:number, y:number): string {

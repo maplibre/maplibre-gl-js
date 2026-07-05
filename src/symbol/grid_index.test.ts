@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
-import {GridIndex} from './grid_index';
-import type {GridKey} from './grid_index';
+import {GridIndex} from './grid_index.ts';
+import type {GridKey} from './grid_index.ts';
 
 describe('GridIndex', () => {
 

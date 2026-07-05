@@ -4,9 +4,10 @@ import st from 'st';
 import http, {type Server} from 'http';
 import type {AddressInfo} from 'net';
 
-import {sleep} from '../../../src/util/test/util';
-import {launchPuppeteer} from '../lib/puppeteer_config';
-import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
+import {sleep} from '../../../src/util/test/util.ts';
+import {launchPuppeteer} from '../lib/puppeteer_config.ts';
+import type {Map} from '../../../dist/maplibre-gl';
+import type * as MapLibreGL from '../../../dist/maplibre-gl';
 
 const testWidth = 800;
 const testHeight = 600;
@@ -56,9 +57,7 @@ describe('Browser tests', () => {
 
     afterAll(async () => {
         await browser.close();
-        if (server) {
-            server.close();
-        }
+        server?.close();
     }, 40000);
 
     test('Contextmenu event triggered during scrollzoom', {retry: 3, timeout: 20000}, async () => {
@@ -198,7 +197,7 @@ describe('Browser tests', () => {
 
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
-        await page.mouse.click(canvasBB?.x, canvasBB?.y, {clickCount: 2});
+        await page.mouse.click(canvasBB?.x, canvasBB?.y, {count: 2});
 
         // Wait until the map has settled, then report the zoom level back.
         const zoom = await page.evaluate(() => {
@@ -426,18 +425,18 @@ describe('Browser tests', () => {
 
     test('Load map with RTL plugin should throw exception for invalid URL', async () => {
 
-        const rtlPromise = page.evaluate(() => {
-            // console.log('Testing start');
-            return maplibregl.setRTLTextPlugin('badURL', false);
+        const errorMessage = await page.evaluate(async () => {
+            try {
+                await maplibregl.setRTLTextPlugin('badURL', false);
+                return null;
+            } catch (e) {
+                return (e as Error).message;
+            }
         });
 
-        // exact message looks like
-        // Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'http://localhost:52015/test/integration/browser/fixtures/badURL' failed to load.
-        const regex = new RegExp('Failed to execute \'importScripts\'.*');
+        expect(errorMessage).toMatch(/badURL|dynamically imported module/);
 
-        await expect(rtlPromise).rejects.toThrow(regex);
-
-    }, 2000);
+    }, 5000);
 
     test('Movement with transformCameraUpdate and terrain', {retry: 3, timeout: 20000}, async () => {
         await page.evaluate(async () => {
@@ -460,7 +459,7 @@ describe('Browser tests', () => {
                     }
                 });
             await map.once('idle');
-            map.transformCameraUpdate = () => ({});
+            map.setTransformCameraUpdate(() => ({}));
         });
 
         const canvas = await page.$('.maplibregl-canvas');

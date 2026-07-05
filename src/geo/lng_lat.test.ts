@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {LngLat} from '../geo/lng_lat';
+import {LngLat} from '../geo/lng_lat.ts';
 
 describe('LngLat', () => {
     test('constructor', () => {

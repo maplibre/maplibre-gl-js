@@ -1,0 +1,18 @@
+{
+  "name": "maplibre-gl-vite-rolldown-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Vite 8+ (Rolldown) app exercising maplibre-gl's ESM build, package subpaths, and worker auto-detection.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "maplibre-gl": "file:../../../.."
+  },
+  "devDependencies": {
+    "vite": "^8.0.0"
+  }
+}

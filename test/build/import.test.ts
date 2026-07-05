@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {LngLat} from '../../dist/maplibre-gl';
+import {LngLat} from '../../dist/maplibre-gl.mjs';
 
 describe('Importing a class', () => {
     it('should allow import and contruct', () => {

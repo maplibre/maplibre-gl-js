@@ -1,5 +1,5 @@
 import {describe, test, expect, vi} from 'vitest';
-import {TaskQueue} from './task_queue';
+import {TaskQueue} from './task_queue.ts';
 
 describe('TaskQueue', () => {
     test('Calls callbacks, in order', () => {

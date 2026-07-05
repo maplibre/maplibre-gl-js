@@ -1,9 +1,9 @@
-import {AlphaImage} from '../util/image';
-import {register} from '../util/web_worker_transfer';
+import {AlphaImage} from '../util/image.ts';
+import {register} from '../util/web_worker_transfer.ts';
 import potpack from 'potpack';
 
-import type {GlyphMetrics} from '../style/style_glyph';
-import type {GetGlyphsResponse} from '../util/actor_messages';
+import type {GlyphMetrics} from '../style/style_glyph.ts';
+import type {GetGlyphsResponse} from '../util/actor_messages.ts';
 
 const padding = 1;
 

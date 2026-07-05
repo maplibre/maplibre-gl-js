@@ -1,22 +1,22 @@
 import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
-import {TransformHelper} from '../transform_helper';
-import {MercatorTransform} from './mercator_transform';
-import {VerticalPerspectiveTransform} from './vertical_perspective_transform';
-import {type LngLat, type LngLatLike,} from '../lng_lat';
-import {lerp} from '../../util/util';
-import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../tile/tile_id';
+import {TransformHelper} from '../transform_helper.ts';
+import {MercatorTransform} from './mercator_transform.ts';
+import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
+import {type LngLat, type LngLatLike,} from '../lng_lat.ts';
+import {lerp} from '../../util/util.ts';
+import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../tile/tile_id.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {MercatorCoordinate} from '../mercator_coordinate';
-import type {LngLatBounds} from '../lng_lat_bounds';
-import type {Frustum} from '../../util/primitives/frustum';
-import type {Terrain} from '../../render/terrain';
-import type {PointProjection} from '../../symbol/projection';
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface';
-import type {TransformOptions} from '../transform_helper';
-import type {PaddingOptions} from '../edge_insets';
-import type {ProjectionData, ProjectionDataParams} from './projection_data';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider';
+import type {MercatorCoordinate} from '../mercator_coordinate.ts';
+import type {LngLatBounds} from '../lng_lat_bounds.ts';
+import type {Frustum} from '../../util/primitives/frustum.ts';
+import type {Terrain} from '../../render/terrain.ts';
+import type {PointProjection} from '../../symbol/projection.ts';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {TransformOptions} from '../transform_helper.ts';
+import type {PaddingOptions} from '../edge_insets.ts';
+import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
+import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
 /**
  * Globe transform is a transform that moves between vertical perspective and mercator projections.
@@ -285,7 +285,7 @@ export class GlobeTransform implements ITransform {
 
     public get cameraPosition(): vec3 { return this.currentTransform.cameraPosition; }
 
-    getProjectionData(params: ProjectionDataParams): ProjectionData {
+    getProjectionData(params: ProjectionDataParams): RendererProjectionData {
         const mercatorProjectionData = this._mercatorTransform.getProjectionData(params);
         const verticalPerspectiveProjectionData = this._verticalPerspectiveTransform.getProjectionData(params);
 
@@ -365,8 +365,7 @@ export class GlobeTransform implements ITransform {
     }
 
     recalculateZoomAndCenter(terrain?: Terrain): void {
-        this._mercatorTransform.recalculateZoomAndCenter(terrain);
-        this._verticalPerspectiveTransform.recalculateZoomAndCenter(terrain);
+        this.currentTransform.recalculateZoomAndCenter(terrain);
     }
 
     maxPitchScaleFactor(): number {
@@ -449,11 +448,7 @@ export class GlobeTransform implements ITransform {
         return this._verticalPerspectiveTransform.getRayDirectionFromPixel(p);
     }
 
-    getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
-        return this.currentTransform.getMatrixForModel(location, altitude);
-    }
-
-    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): ProjectionData {
+    getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
         const mercatorData = this._mercatorTransform.getProjectionDataForCustomLayer(applyGlobeMatrix);
 
         if (!this.isGlobeRendering) {

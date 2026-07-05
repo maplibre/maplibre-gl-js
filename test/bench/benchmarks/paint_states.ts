@@ -1,7 +1,7 @@
 
 import emptystyle from '../data/empty.json' with {type: 'json'};
-import Benchmark from '../lib/benchmark';
-import createMap from '../lib/create_map';
+import Benchmark from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
 
 function generateLayers(layer) {
     const generated = [];
@@ -18,16 +18,16 @@ const zoom = 4;
 
 export default class PaintStates extends Benchmark {
 
-    center: any;
-    numFeatures: any;
+    center: [number, number];
+    numFeatures: number;
     map: any;
 
-    constructor(center) {
+    constructor(center: [number, number]) {
         super();
         this.center = center;
     }
 
-    async setup() {
+    async setup(): Promise<void> {
         const response = await fetch('/test/bench/data/naturalearth-land.json');
         const data = await response.json();
         this.numFeatures = data.features.length;
@@ -60,7 +60,7 @@ export default class PaintStates extends Benchmark {
         }
     }
 
-    bench() {
+    bench(): void {
         this.map._styleDirty = true;
         this.map._sourcesDirty = true;
         this.map._render();
@@ -70,7 +70,7 @@ export default class PaintStates extends Benchmark {
         Benchmark.renderMap(this.map);
     }
 
-    teardown() {
+    teardown(): void {
         this.map.remove();
     }
 }

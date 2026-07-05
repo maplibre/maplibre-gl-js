@@ -1,15 +1,15 @@
 import {test, expect, describe, beforeAll} from 'vitest';
-import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile';
+import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile.ts';
 import Point from '@mapbox/point-geometry';
-import {SegmentVector} from '../segment';
-import {FillBucket} from './fill_bucket';
-import {FillStyleLayer} from '../../style/style_layer/fill_style_layer';
+import {SegmentVector} from '../segment.ts';
+import {FillBucket} from './fill_bucket.ts';
+import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type EvaluationParameters} from '../../style/evaluation_parameters';
-import {type ZoomHistory} from '../../style/zoom_history';
-import {type BucketFeature, type BucketParameters} from '../bucket';
-import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {CanonicalTileID} from '../../tile/tile_id';
+import {type EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import {type ZoomHistory} from '../../style/zoom_history.ts';
+import {type BucketFeature, type BucketParameters} from '../bucket.ts';
+import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
+import {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 function createPolygon(numPoints) {

@@ -95,28 +95,44 @@ function generateMarkdownForExample(title: string, description: string, file: st
 
 ${description}
 
-<iframe src="../${file}" width="100%" style="border:none; height:400px"></iframe>
+<iframe src="${file}" width="100%" style="border:none; height:400px"></iframe>
 
 ${codeBlock}
 `;
 }
 
-async function generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray: HtmlDoc[]): Promise<string> {
-    let indexMarkdown = '# Overview \n\n';
+/**
+ * This method converts png files to webp files in order to improve performance of docs,
+ * This is considered a build artifact and should not be checked in, but generated as part of the docs generation process.
+ */
+async function packImages(indexArray: HtmlDoc[]) {
     const promises: Array<Promise<any>> = [];
     for (const indexArrayItem of indexArray) {
         const imagePath = `docs/assets/examples/${indexArrayItem.mdFileName.replace('.md', '.png')}`;
         const outputPath = imagePath.replace('.png', '.webp');
         promises.push(sharp(imagePath).webp({quality: 90, lossless: false}).toFile(outputPath));
-        indexMarkdown += `
-## [${indexArrayItem.title}](./${indexArrayItem.mdFileName})
-
-![${indexArrayItem.description}](${outputPath.replace('docs/', '../')}){ loading=lazy }
-
-${indexArrayItem.description}
-`;
     }
     await Promise.all(promises);
+}
+
+function generateMarkdownIndexFileOfAllExamples(indexArray: HtmlDoc[]): string {
+    let indexMarkdown = '# Overview\n\n<div class="examples-grid">\n';
+    for (const indexArrayItem of indexArray) {
+        const cardImg = `../assets/examples/${indexArrayItem.mdFileName.replace('.md', '.webp')}`;
+        const desc = indexArrayItem.description || '';
+        const cardFileName = indexArrayItem.mdFileName.replace(/.md$/, '/');
+        indexMarkdown += `<a class="example-card" href="./${cardFileName}">
+<div class="example-card-image">
+<img src="${cardImg}" loading="lazy" alt="${desc}">
+${indexArrayItem.isNew ? '<span class="example-card-badge">new</span>' : ''}
+</div>
+<div class="example-card-content">
+<h3>${indexArrayItem.title}</h3>
+<p>${desc}</p>
+</div>
+</a>
+`;
+    }
     return indexMarkdown;
 }
 
@@ -152,7 +168,8 @@ async function generateExamplesFolder() {
         const htmlFile = path.join(examplesFolder, file);
         let htmlContent = fs.readFileSync(htmlFile, 'utf-8');
         htmlContent = htmlContent.replace(/\.\.\/\.\.\//g, maplibreUnpkg);
-        htmlContent = htmlContent.replace(/-dev.js/g, '.js');
+        htmlContent = htmlContent.replace(/-dev\.js/g, '.js');
+        htmlContent = htmlContent.replace(/-dev\.mjs/g, '.mjs');
         const htmlContentLines = htmlContent.split('\n');
         const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim();
         const description = htmlContentLines.find(l => l.includes('og:description'))?.replace(/.*content=\"(.*)\".*/, '$1');
@@ -168,8 +185,8 @@ async function generateExamplesFolder() {
         const exampleMarkdown = generateMarkdownForExample(title, description, file, htmlContent, isNew);
         fs.writeFileSync(path.join(examplesDocsFolder, mdFileName), exampleMarkdown);
     }
-
-    const indexMarkdown = await generateMarkdownIndexFileOfAllExamplesAndPackImages(indexArray);
+    await packImages(indexArray);
+    const indexMarkdown = generateMarkdownIndexFileOfAllExamples(indexArray);
     fs.writeFileSync(path.join(examplesDocsFolder, 'index.md'), indexMarkdown);
 }
 
@@ -234,7 +251,7 @@ function updateMapLibreVersionForUNPKG() {
     let indexContent = fs.readFileSync(indexPath, 'utf-8');
 
     // Replace the version number
-    indexContent = indexContent.replace(/unpkg\.com\/maplibre-gl@\^(\d+\.\d+\.\d+)/g, `unpkg.com/maplibre-gl@^${packageJson.version}`);
+    indexContent = indexContent.replace(/unpkg\.com\/maplibre-gl@\^[^/'"]+/g, `unpkg.com/maplibre-gl@^${packageJson.version}`);
 
     // Save index.md
     fs.writeFileSync(indexPath, indexContent);
@@ -249,4 +266,5 @@ generateReadme();
 await generateExamplesFolder();
 await generatePluginsPage();
 updateMapLibreVersionForUNPKG();
+fs.rmSync(path.join(typedocConfig.out, '_media'), {recursive: true, force: true}); // this folder is redundant
 console.log('Docs generation completed, to see it in action run\n npm run start-docs');

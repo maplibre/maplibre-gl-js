@@ -1,5 +1,5 @@
 import {describe, test, expect, afterEach} from 'vitest';
-import {now, setNow, restoreNow, isTimeFrozen} from './time_control';
+import {now, setNow, restoreNow, isTimeFrozen} from './time_control.ts';
 
 /**
  * Helper to wait for real time to advance by at least the specified duration.

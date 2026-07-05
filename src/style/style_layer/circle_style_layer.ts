@@ -1,13 +1,13 @@
 import type Point from '@mapbox/point-geometry';
-import {StyleLayer, type QueryIntersectsFeatureParams} from '../style_layer';
+import {StyleLayer, type QueryIntersectsFeatureParams} from '../style_layer.ts';
 
-import {CircleBucket} from '../../data/bucket/circle_bucket';
-import {circleIntersection, getMaximumPaintValue, projectQueryGeometry, translateDistance, translate} from '../query_utils';
-import properties, {type CircleLayoutPropsPossiblyEvaluated, type CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties.g';
-import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated} from '../properties';
+import {CircleBucket} from '../../data/bucket/circle_bucket.ts';
+import {circleIntersection, getMaximumPaintValue, projectQueryGeometry, translateDistance, translate} from '../query_utils.ts';
+import properties, {type CircleLayoutPropsPossiblyEvaluated, type CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties.g.ts';
+import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated} from '../properties.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Bucket, BucketParameters} from '../../data/bucket';
-import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g';
+import type {Bucket, BucketParameters} from '../../data/bucket.ts';
+import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g.ts';
 
 export const isCircleStyleLayer = (layer: StyleLayer): layer is CircleStyleLayer => layer.type === 'circle';
 
@@ -26,7 +26,7 @@ export class CircleStyleLayer extends StyleLayer {
         super(layer, properties, globalState);
     }
 
-    createBucket(parameters: BucketParameters<any>) {
+    createBucket(parameters: BucketParameters<any>): CircleBucket<any> {
         return new CircleBucket(parameters);
     }
 

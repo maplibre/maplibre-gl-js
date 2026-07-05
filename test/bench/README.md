@@ -6,6 +6,8 @@ Benchmarks help us catch performance regressions and improve performance.
 
 Start the benchmark server with `npm run start-bench`.
 
+Chrome needs to load a worker from a different origin. To avoid a security error, start Chrome with the following CLI arguments: `--disable-web-security --user-data-dir="whateverEmptyTmpPath"`.
+
 To run all benchmarks, open [the benchmark page, `http://localhost:9966/test/bench/versions/index.html`](http://localhost:9966/test/bench/versions/index.html).
 
 To run all benchmarks for the checkout only, that is without comparing to any releases, open [`http://localhost:9966/test/bench/versions/index.html?compare=`](http://localhost:9966/test/bench/versions/index.html?compare=).

@@ -1,9 +1,9 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {Map} from '../map';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import * as timeControl from '../../util/time_control';
-import {beforeMapTest} from '../../util/test/util';
+import {Map} from '../map.ts';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import * as timeControl from '../../util/time_control.ts';
+import {beforeMapTest} from '../../util/test/util.ts';
 
 let map;
 

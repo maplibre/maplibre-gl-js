@@ -1,7 +1,8 @@
 
-import Benchmark from '../lib/benchmark';
-import createMap from '../lib/create_map';
+import Benchmark from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
 import style from '../data/empty.json' with {type: 'json'};
+import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const width = 1024;
 const height = 768;
@@ -21,7 +22,7 @@ export class LayerBenchmark extends Benchmark {
     layerStyle: any;
     map: any;
 
-    async setup() {
+    async setup(): Promise<void> {
         try {
             this.map = await createMap({
                 zoom: 16,
@@ -35,11 +36,11 @@ export class LayerBenchmark extends Benchmark {
         }
     }
 
-    bench() {
+    bench(): void {
         Benchmark.renderMap(this.map);
     }
 
-    teardown() {
+    teardown(): void {
         this.map.remove();
     }
 }
@@ -110,7 +111,7 @@ export class LayerFillExtrusion extends LayerBenchmark {
 }
 
 export class LayerHeatmap extends LayerBenchmark {
-    async setup() {
+    async setup(): Promise<void> {
         const response = await fetch('/test/bench/data/naturalearth-land.json');
         const data = await response.json();
         this.layerStyle = Object.assign({}, style, {
@@ -335,8 +336,8 @@ export class LayerSymbolWithSortKey extends LayerBenchmark {
         });
     }
 
-    generateSortKeyLayers() {
-        const generated = [];
+    generateSortKeyLayers(): SymbolLayerSpecification[] {
+        const generated: SymbolLayerSpecification[] = [];
         for (let i = 0; i < layerCount; i++) {
             generated.push({
                 'id': `symbollayer${i}`,

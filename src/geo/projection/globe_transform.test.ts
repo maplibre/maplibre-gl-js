@@ -1,15 +1,15 @@
 import {describe, expect, test} from 'vitest';
-import {EXTENT} from '../../data/extent';
+import {EXTENT} from '../../data/extent.ts';
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../lng_lat';
-import {GlobeTransform} from './globe_transform';
-import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id';
-import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
-import {expectToBeCloseToArray} from '../../util/test/util';
-import {MercatorCoordinate} from '../mercator_coordinate';
-import {tileCoordinatesToLocation} from './mercator_utils';
-import {MercatorTransform} from './mercator_transform';
-import {globeConstants} from './vertical_perspective_projection';
+import {LngLat} from '../lng_lat.ts';
+import {GlobeTransform} from './globe_transform.ts';
+import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
+import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils.ts';
+import {expectToBeCloseToArray} from '../../util/test/util.ts';
+import {MercatorCoordinate} from '../mercator_coordinate.ts';
+import {tileCoordinatesToLocation} from './mercator_utils.ts';
+import {MercatorTransform} from './mercator_transform.ts';
+import {globeConstants} from './vertical_perspective_projection.ts';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: number[]) {
     const lat = latDegrees / 180.0 * Math.PI;
@@ -602,5 +602,23 @@ describe('GlobeTransform', () => {
 
             expect(mercator.renderWorldCopies).toBeTruthy();
         });
+    });
+
+    test('recalculateZoomAndCenter does not jump center on globe + terrain (#7025)', () => {
+        const globeTransform = createGlobeTransform();
+        globeTransform.setTransitionState(1, 0);
+        globeTransform.setCenter(new LngLat(10, 50));
+        const originalLng = globeTransform.center.lng;
+        const originalLat = globeTransform.center.lat;
+
+        const terrain = {
+            getElevationForLngLatZoom: () => 200,
+            pointCoordinate: () => null
+        } as any;
+
+        globeTransform.recalculateZoomAndCenter(terrain);
+
+        expect(globeTransform.center.lng).toBeCloseTo(originalLng, 10);
+        expect(globeTransform.center.lat).toBeCloseTo(originalLat, 10);
     });
 });

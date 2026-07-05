@@ -1,32 +1,32 @@
-import {CircleLayoutArray} from '../array_types.g';
+import {CircleLayoutArray} from '../array_types.g.ts';
 
-import {members as layoutAttributes} from './circle_attributes';
-import {SegmentVector} from '../segment';
-import {ProgramConfigurationSet} from '../program_configuration';
-import {TriangleIndexArray} from '../index_array_type';
-import {loadGeometry} from '../load_geometry';
-import {toEvaluationFeature} from '../evaluation_feature';
-import {EXTENT} from '../extent';
-import {register} from '../../util/web_worker_transfer';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {members as layoutAttributes} from './circle_attributes.ts';
+import {SegmentVector} from '../segment.ts';
+import {ProgramConfigurationSet} from '../program_configuration.ts';
+import {TriangleIndexArray} from '../index_array_type.ts';
+import {loadGeometry} from '../load_geometry.ts';
+import {toEvaluationFeature} from '../evaluation_feature.ts';
+import {EXTENT} from '../extent.ts';
+import {register} from '../../util/web_worker_transfer.ts';
+import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 
-import type {CanonicalTileID} from '../../tile/tile_id';
+import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
     Bucket,
     BucketParameters,
     BucketFeature,
     IndexedFeature,
     PopulateParameters
-} from '../bucket';
-import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer';
-import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer';
-import type {Context} from '../../webgl/context';
-import type {IndexBuffer} from '../../webgl/index_buffer';
-import type {VertexBuffer} from '../../webgl/vertex_buffer';
+} from '../bucket.ts';
+import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer.ts';
+import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer.ts';
+import type {Context} from '../../webgl/context.ts';
+import type {IndexBuffer} from '../../webgl/index_buffer.ts';
+import type {VertexBuffer} from '../../webgl/vertex_buffer.ts';
 import type Point from '@mapbox/point-geometry';
-import type {FeatureStates} from '../../source/source_state';
-import type {ImagePosition} from '../../render/image_atlas';
-import {type CircleGranularity} from '../../render/subdivision_granularity_settings';
+import type {FeatureStates} from '../../source/source_state.ts';
+import type {ImagePosition} from '../../render/image_atlas.ts';
+import {type CircleGranularity} from '../../render/subdivision_granularity_settings.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const VERTEX_MIN_VALUE = -32768; // -(2^15)
@@ -81,7 +81,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
     }
 
-    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID) {
+    populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void {
         const styleLayer = this.layers[0];
         const bucketFeatures: BucketFeature[] = [];
         let circleSortKey = null;
@@ -140,22 +140,22 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         }
     }
 
-    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}) {
+    update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}): void {
         if (!this.stateDependentLayers.length) return;
         this.programConfigurations.updatePaintArrays(states, vtLayer, this.stateDependentLayers, {
             imagePositions
         });
     }
 
-    isEmpty() {
+    isEmpty(): boolean {
         return this.layoutVertexArray.length === 0;
     }
 
-    uploadPending() {
+    uploadPending(): boolean {
         return !this.uploaded || this.programConfigurations.needsUpload;
     }
 
-    upload(context: Context) {
+    upload(context: Context): void {
         if (!this.uploaded) {
             this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layoutAttributes);
             this.indexBuffer = context.createIndexBuffer(this.indexArray);
@@ -164,7 +164,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         this.uploaded = true;
     }
 
-    destroy() {
+    destroy(): void {
         if (!this.layoutVertexBuffer) return;
         this.layoutVertexBuffer.destroy();
         this.indexBuffer.destroy();
@@ -172,7 +172,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         this.segments.destroy();
     }
 
-    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, granularity: CircleGranularity = 1) {
+    addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, granularity: CircleGranularity = 1): void {
         // Since we store the circle's center in each vertex, we only have 3 bits for actual vertex position in each axis.
         // Thus the valid range of positions is 0..7.
         // This gives us 4 possible granularity settings that are symmetrical.

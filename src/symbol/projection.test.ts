@@ -1,11 +1,11 @@
 import {describe, test, expect} from 'vitest';
-import {type SymbolProjectionContext, type ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewVectors} from './projection';
+import {type SymbolProjectionContext, type ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewVectors} from './projection.ts';
 
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
-import {SymbolLineVertexArray} from '../data/array_types.g';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {expectToBeCloseToArray} from '../util/test/util';
+import {SymbolLineVertexArray} from '../data/array_types.g.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {expectToBeCloseToArray} from '../util/test/util.ts';
 
 describe('Projection', () => {
     test('matrix float precision', () => {

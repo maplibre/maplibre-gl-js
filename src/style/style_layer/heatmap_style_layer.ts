@@ -1,18 +1,18 @@
-import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer';
+import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer.ts';
 
-import {HeatmapBucket} from '../../data/bucket/heatmap_bucket';
-import {type RGBAImage} from '../../util/image';
-import properties, {type HeatmapPaintPropsPossiblyEvaluated} from './heatmap_style_layer_properties.g';
-import {renderColorRamp} from '../../util/color_ramp';
-import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties';
+import {HeatmapBucket} from '../../data/bucket/heatmap_bucket.ts';
+import {type RGBAImage} from '../../util/image.ts';
+import properties, {type HeatmapPaintPropsPossiblyEvaluated} from './heatmap_style_layer_properties.g.ts';
+import {renderColorRamp} from '../../util/color_ramp.ts';
+import {type Transitionable, type Transitioning, type PossiblyEvaluated} from '../properties.ts';
 
-import type {Texture} from '../../webgl/texture';
-import type {Framebuffer} from '../../webgl/framebuffer';
-import type {HeatmapPaintProps} from './heatmap_style_layer_properties.g';
+import type {Texture} from '../../webgl/texture.ts';
+import type {Framebuffer} from '../../webgl/framebuffer.ts';
+import type {HeatmapPaintProps} from './heatmap_style_layer_properties.g.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-import {circleIntersection, getMaximumPaintValue} from '../query_utils';
-import type {Bucket} from '../../data/bucket';
+import {circleIntersection, getMaximumPaintValue} from '../query_utils.ts';
+import type {Bucket} from '../../data/bucket.ts';
 
 export const HEATMAP_FULL_RENDER_FBO_KEY = 'big-fb';
 
@@ -31,7 +31,7 @@ export class HeatmapStyleLayer extends StyleLayer {
     _transitioningPaint: Transitioning<HeatmapPaintProps>;
     paint: PossiblyEvaluated<HeatmapPaintProps, HeatmapPaintPropsPossiblyEvaluated>;
 
-    createBucket(options: any) {
+    createBucket(options: any): HeatmapBucket {
         return new HeatmapBucket(options);
     }
 
@@ -43,13 +43,13 @@ export class HeatmapStyleLayer extends StyleLayer {
         this._updateColorRamp();
     }
 
-    _handleSpecialPaintPropertyUpdate(name: string) {
+    _handleSpecialPaintPropertyUpdate(name: string): void {
         if (name === 'heatmap-color') {
             this._updateColorRamp();
         }
     }
 
-    _updateColorRamp() {
+    _updateColorRamp(): void {
         const expression = this._transitionablePaint._values['heatmap-color'].value.expression;
         this.colorRamp = renderColorRamp({
             expression,
@@ -59,7 +59,7 @@ export class HeatmapStyleLayer extends StyleLayer {
         this.colorRampTexture = null;
     }
 
-    resize() {
+    resize(): void {
         if (this.heatmapFbos.has(HEATMAP_FULL_RENDER_FBO_KEY)) {
             this.heatmapFbos.delete(HEATMAP_FULL_RENDER_FBO_KEY);
         }
@@ -88,7 +88,7 @@ export class HeatmapStyleLayer extends StyleLayer {
         }, geometry);
     }
 
-    hasOffscreenPass() {
+    hasOffscreenPass(): boolean {
         return this.paint.get('heatmap-opacity') !== 0 && !this.isHidden();
     }
 }

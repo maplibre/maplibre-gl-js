@@ -1,14 +1,14 @@
 import {describe, test, expect, vi} from 'vitest';
-import {VideoSource} from './video_source';
-import {extend} from '../util/util';
-import {getMockDispatcher, waitForEvent} from '../util/test/util';
+import {VideoSource} from './video_source.ts';
+import {extend} from '../util/util.ts';
+import {getMockDispatcher, waitForEvent} from '../util/test/util.ts';
 
-import type {Coordinates} from './image_source';
-import {Tile} from '../tile/tile';
-import {OverscaledTileID} from '../tile/tile_id';
-import {Evented} from '../util/evented';
-import {type IReadonlyTransform} from '../geo/transform_interface';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import type {Coordinates} from './image_source.ts';
+import {Tile} from '../tile/tile.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {Evented} from '../util/evented.ts';
+import {type IReadonlyTransform} from '../geo/transform_interface.ts';
+import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 
 class StubMap extends Evented {
     transform: IReadonlyTransform;

@@ -1,7 +1,7 @@
 import {type ReadonlyVec4, vec3} from 'gl-matrix';
-import {clamp, createVec3f64, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util';
-import {LngLat} from '../lng_lat';
-import {EXTENT} from '../../data/extent';
+import {clamp, createVec3f64, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util.ts';
+import {LngLat} from '../lng_lat.ts';
+import {EXTENT} from '../../data/extent.ts';
 import type Point from '@mapbox/point-geometry';
 
 export function getGlobeCircumferencePixels(transform: {worldSize: number; center: {lat: number}}): number {
@@ -79,7 +79,7 @@ export function angularCoordinatesToSurfaceVector(lngLat: LngLat): vec3 {
     return angularCoordinatesRadiansToVector(lngLat.lng * Math.PI / 180, lngLat.lat * Math.PI / 180);
 }
 
-export function getGlobeRadiusPixels(worldSize: number, latitudeDegrees: number) {
+export function getGlobeRadiusPixels(worldSize: number, latitudeDegrees: number): number {
     // We want zoom levels to be consistent between globe and flat views.
     // This means that the pixel size of features at the map center point
     // should be the same for both globe and flat view.
@@ -139,7 +139,7 @@ export function horizonPlaneToCenterAndRadius(horizonPlane: ReadonlyVec4): { cen
  * @param point - Point inside or outside the sphere
  * @returns A 3d vector of the point on the sphere closest to `point`
  */
-export function clampToSphere(center: vec3, radius: number, point: vec3) {
+export function clampToSphere(center: vec3, radius: number, point: vec3): vec3 {
     const relativeToCenter = createVec3f64();
     vec3.sub(relativeToCenter, point, center);
     const clamped = createVec3f64();

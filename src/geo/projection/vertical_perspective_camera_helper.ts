@@ -1,16 +1,16 @@
 import Point from '@mapbox/point-geometry';
-import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, type UpdateRotationArgs, cameraForBoxAndBearing} from './camera_helper';
-import {LngLat, type LngLatLike} from '../lng_lat';
-import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils';
-import {clamp, createVec3f64, differenceOfAnglesDegrees, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util';
+import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, cameraForBoxAndBearing} from './camera_helper.ts';
+import {LngLat, type LngLatLike} from '../lng_lat.ts';
+import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils.ts';
+import {clamp, createVec3f64, differenceOfAnglesDegrees, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
 import {type mat4, vec3} from 'gl-matrix';
-import {normalizeCenter} from '../transform_helper';
+import {normalizeCenter} from '../transform_helper.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
-import type {IReadonlyTransform, ITransform} from '../transform_interface';
-import type {CameraForBoundsOptions} from '../../ui/camera';
-import type {LngLatBounds} from '../lng_lat_bounds';
-import type {PaddingOptions} from '../edge_insets';
+import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';
+import type {CameraForBoundsOptions} from '../../ui/camera.ts';
+import type {LngLatBounds} from '../lng_lat_bounds.ts';
+import type {PaddingOptions} from '../edge_insets.ts';
 
 /**
  * @internal
@@ -286,7 +286,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
                     endEulerAngles,
                     tr,
                     k,
-                    useSlerp: startEulerAngles.roll != endEulerAngles.roll} as UpdateRotationArgs);
+                    useSlerp: startEulerAngles.roll != endEulerAngles.roll});
             }
 
             if (doPadding) {
@@ -361,18 +361,14 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         const normalizedTargetZoom = targetZoom + getZoomAdjustment(targetCenter.lat, 0);
         const scaleOfZoom = zoomScale(normalizedTargetZoom - normalizedStartZoom);
 
-        const optionsMinZoom = typeof options.minZoom === 'number';
-
-        let scaleOfMinZoom: number;
-
-        if (optionsMinZoom) {
-            const normalizedOptionsMinZoom = +options.minZoom + getZoomAdjustment(targetCenter.lat, 0);
-            const normalizedMinZoomPreConstrain = Math.min(normalizedOptionsMinZoom, normalizedStartZoom, normalizedTargetZoom);
-            const minZoomPreConstrain = normalizedMinZoomPreConstrain + getZoomAdjustment(0, targetCenter.lat);
-            const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
-            const normalizedMinZoom = minZoom + getZoomAdjustment(targetCenter.lat, 0);
-            scaleOfMinZoom = zoomScale(normalizedMinZoom - normalizedStartZoom);
-        }
+        const requestedMinZoom = typeof options.minZoom === 'number' ? +options.minZoom : tr.minZoom;
+        const effectiveMinZoom = Math.max(requestedMinZoom, tr.minZoom);
+        const normalizedEffectiveMinZoom = effectiveMinZoom + getZoomAdjustment(targetCenter.lat, 0);
+        const normalizedMinZoomPreConstrain = Math.min(normalizedEffectiveMinZoom, normalizedStartZoom, normalizedTargetZoom);
+        const minZoomPreConstrain = normalizedMinZoomPreConstrain + getZoomAdjustment(0, targetCenter.lat);
+        const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
+        const normalizedMinZoom = minZoom + getZoomAdjustment(targetCenter.lat, 0);
+        const scaleOfMinZoom = zoomScale(normalizedMinZoom - normalizedStartZoom);
 
         const deltaLng = differenceOfAnglesDegrees(startCenter.lng, targetCenter.lng);
         const deltaLat = differenceOfAnglesDegrees(startCenter.lat, targetCenter.lat);

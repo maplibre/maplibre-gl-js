@@ -1,24 +1,24 @@
-import {packUint8ToFloat} from '../shaders/encode_attribute';
+import {packUint8ToFloat} from '../shaders/encode_attribute.ts';
 import {type Color, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
-import {register} from '../util/web_worker_transfer';
-import {PossiblyEvaluatedPropertyValue} from '../style/properties';
-import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray, DashLayoutArray} from './array_types.g';
-import {clamp} from '../util/util';
-import {patternAttributes} from './bucket/pattern_attributes';
-import {dashAttributes} from './bucket/dash_attributes';
-import {EvaluationParameters} from '../style/evaluation_parameters';
-import {FeaturePositionMap} from './feature_position_map';
-import {type Uniform, Uniform1f, UniformColor, Uniform4f} from '../webgl/uniform_binding';
+import {register} from '../util/web_worker_transfer.ts';
+import {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
+import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray, DashLayoutArray} from './array_types.g.ts';
+import {clamp} from '../util/util.ts';
+import {patternAttributes} from './bucket/pattern_attributes.ts';
+import {dashAttributes} from './bucket/dash_attributes.ts';
+import {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import {FeaturePositionMap} from './feature_position_map.ts';
+import {type Uniform, Uniform1f, UniformColor, Uniform4f} from '../webgl/uniform_binding.ts';
 
-import type {UniformLocations} from '../webgl/uniform_binding';
+import type {UniformLocations} from '../webgl/uniform_binding.ts';
 
-import type {CanonicalTileID} from '../tile/tile_id';
-import type {Context} from '../webgl/context';
-import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
-import type {CrossfadeParameters} from '../style/evaluation_parameters';
-import type {StructArray, StructArrayMember} from '../util/struct_array';
-import type {VertexBuffer} from '../webgl/vertex_buffer';
-import type {ImagePosition} from '../render/image_atlas';
+import type {CanonicalTileID} from '../tile/tile_id.ts';
+import type {Context} from '../webgl/context.ts';
+import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer.ts';
+import type {CrossfadeParameters} from '../style/evaluation_parameters.ts';
+import type {StructArray, StructArrayMember} from '../util/struct_array.ts';
+import type {VertexBuffer} from '../webgl/vertex_buffer.ts';
+import type {ImagePosition} from '../render/image_atlas.ts';
 import type {
     Feature,
     FeatureState,
@@ -27,8 +27,8 @@ import type {
     CompositeExpression,
     FormattedSection
 } from '@maplibre/maplibre-gl-style-spec';
-import type {FeatureStates} from '../source/source_state';
-import type {DashEntry} from '../render/line_atlas';
+import type {FeatureStates} from '../source/source_state.ts';
+import type {DashEntry} from '../render/line_atlas.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 export type BinderUniform = {
@@ -387,7 +387,7 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
 
     protected abstract getPositionIds(feature: Feature): {min: string; mid: string; max: string};
     protected abstract getPositions(options: PaintOptions): {[_: string]: T};
-    protected abstract emplace(array: StructArray, index: number, midPos: T, minMaxPos: T): void;
+    protected abstract emplace(array: StructArray, index: number, fromPos: T, toPos: T): void;
 
     protected _setPaintValues(start: number, end: number, positionIds: {min: string; mid: string; max: string}, options: PaintOptions) {
         const positions = this.getPositions(options);
@@ -400,9 +400,14 @@ abstract class CrossFadedBinder<T> implements AttributeBinder {
         // We populate two paint arrays because, for cross-faded properties, we don't know which direction
         // we're cross-fading to at layout time. In order to keep vertex attributes to a minimum and not pass
         // unnecessary vertex data to the shaders, we determine which to upload at draw time.
+        //
+        // The crossfade `from` vertex is the value at the previous integer zoom (min when zooming in,
+        // max when zooming out) and `to` is the value at the current integer zoom (mid). This matches the
+        // convention used by CrossFadedConstantBinder, where `u_dasharray_to` / `u_pattern_to` carry the
+        // current zoom's value and the crossfade `t` blends from the previous value to it.
         for (let i = start; i < end; i++) {
-            this.emplace(this.zoomInPaintVertexArray, i, mid, min);
-            this.emplace(this.zoomOutPaintVertexArray, i, mid, max);
+            this.emplace(this.zoomInPaintVertexArray, i, min, mid);
+            this.emplace(this.zoomOutPaintVertexArray, i, max, mid);
         }
     }
 
@@ -433,12 +438,12 @@ class CrossFadedPatternBinder extends CrossFadedBinder<ImagePosition> {
         return patternAttributes.members;
     }
 
-    protected emplace(array: StructArray, index: number, midPos: ImagePosition, minMaxPos: ImagePosition): void {
+    protected emplace(array: StructArray, index: number, fromPos: ImagePosition, toPos: ImagePosition): void {
         array.emplace(index,
-            midPos.tlbr[0], midPos.tlbr[1], midPos.tlbr[2], midPos.tlbr[3],
-            minMaxPos.tlbr[0], minMaxPos.tlbr[1], minMaxPos.tlbr[2], minMaxPos.tlbr[3],
-            midPos.pixelRatio,
-            minMaxPos.pixelRatio,
+            fromPos.tlbr[0], fromPos.tlbr[1], fromPos.tlbr[2], fromPos.tlbr[3],
+            toPos.tlbr[0], toPos.tlbr[1], toPos.tlbr[2], toPos.tlbr[3],
+            fromPos.pixelRatio,
+            toPos.pixelRatio,
         );
     }
 }
@@ -456,10 +461,10 @@ class CrossFadedDasharrayBinder extends CrossFadedBinder<DashEntry> {
         return dashAttributes.members;
     }
 
-    protected emplace(array: StructArray, index: number, midPos: DashEntry, minMaxPos: DashEntry): void {
+    protected emplace(array: StructArray, index: number, fromPos: DashEntry, toPos: DashEntry): void {
         array.emplace(index,
-            0, midPos.y, midPos.height, midPos.width,
-            0, minMaxPos.y, minMaxPos.height, minMaxPos.width,
+            0, fromPos.y, fromPos.height, fromPos.width,
+            0, toPos.y, toPos.height, toPos.width,
         );
     }
 }
@@ -471,8 +476,8 @@ class CrossFadedDasharrayBinder extends CrossFadedBinder<DashEntry> {
  *
  * Non-data-driven property values are bound to shader uniforms. Data-driven property
  * values are bound to vertex attributes. In order to support a uniform GLSL syntax over
- * both, [Mapbox GL Shaders](https://github.com/mapbox/mapbox-gl-shaders) defines a `#pragma`
- * abstraction, which ProgramConfiguration is responsible for implementing. At runtime,
+ * both, the [shaders](../shaders/README.md) define a `#pragma` abstraction, which
+ * ProgramConfiguration is responsible for implementing. At runtime,
  * it examines the attributes of a particular layer, combines this with fixed knowledge
  * about how layers of the particular type are implemented, and determines which uniforms
  * and vertex attributes will be required. It can then substitute the appropriate text
@@ -538,14 +543,14 @@ export class ProgramConfiguration {
         return binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder ? binder.maxValue : 0;
     }
 
-    populatePaintArrays(newLength: number, feature: Feature, options: PaintOptions) {
+    populatePaintArrays(newLength: number, feature: Feature, options: PaintOptions): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedBinder)
                 binder.populatePaintArray(newLength, feature, options);
         }
     }
-    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition) {
+    setConstantPatternPositions(posTo: ImagePosition, posFrom: ImagePosition): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
@@ -553,7 +558,7 @@ export class ProgramConfiguration {
         }
     }
 
-    setConstantDashPositions(dashTo: DashEntry, dashFrom: DashEntry) {
+    setConstantDashPositions(dashTo: DashEntry, dashFrom: DashEntry): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof CrossFadedConstantBinder)
@@ -569,8 +574,8 @@ export class ProgramConfiguration {
         options: PaintOptions
     ): boolean {
         let dirty: boolean = false;
-        for (const id in featureStates) {
-            const positions = featureMap.getPositions(id);
+        for (const fs of featureStates) {
+            const positions = featureMap.getPositions(fs.id);
 
             for (const pos of positions) {
                 const feature = vtLayer.feature(pos.index);
@@ -582,7 +587,7 @@ export class ProgramConfiguration {
                         //AHM: Remove after https://github.com/mapbox/mapbox-gl-js/issues/6255
                         const value = (layer.paint as any).get(property);
                         binder.expression = value.value;
-                        binder.updatePaintArray(pos.start, pos.end, feature, featureStates[id], options);
+                        binder.updatePaintArray(pos.start, pos.end, feature, fs.state, options);
                         dirty = true;
                     }
                 }
@@ -658,7 +663,7 @@ export class ProgramConfiguration {
         binderUniforms: BinderUniform[],
         properties: any,
         globals: GlobalProperties
-    ) {
+    ): void {
         // Uniform state bindings are owned by the Program, but we set them
         // from within the ProgramConfiguration's binder members.
         for (const {name, property, binding} of binderUniforms) {
@@ -666,7 +671,7 @@ export class ProgramConfiguration {
         }
     }
 
-    updatePaintBuffers(crossfade?: CrossfadeParameters) {
+    updatePaintBuffers(crossfade?: CrossfadeParameters): void {
         this._buffers = [];
 
         for (const property in this.binders) {
@@ -681,7 +686,7 @@ export class ProgramConfiguration {
         }
     }
 
-    upload(context: Context) {
+    upload(context: Context): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedBinder)
@@ -690,7 +695,7 @@ export class ProgramConfiguration {
         this.updatePaintBuffers();
     }
 
-    destroy() {
+    destroy(): void {
         for (const property in this.binders) {
             const binder = this.binders[property];
             if (binder instanceof SourceExpressionBinder || binder instanceof CompositeExpressionBinder || binder instanceof CrossFadedBinder)
@@ -715,7 +720,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this._bufferOffset = 0;
     }
 
-    populatePaintArrays(length: number, feature: Feature, index: number, options: PaintOptions) {
+    populatePaintArrays(length: number, feature: Feature, index: number, options: PaintOptions): void {
         for (const key in this.programConfigurations) {
             this.programConfigurations[key].populatePaintArrays(length, feature, options);
         }
@@ -728,17 +733,17 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this.needsUpload = true;
     }
 
-    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayerLike, layers: readonly TypedStyleLayer[], options: PaintOptions) {
+    updatePaintArrays(featureStates: FeatureStates, vtLayer: VectorTileLayerLike, layers: readonly TypedStyleLayer[], options: PaintOptions): void {
         for (const layer of layers) {
             this.needsUpload = this.programConfigurations[layer.id].updatePaintArrays(featureStates, this._featureMap, vtLayer, layer, options) || this.needsUpload;
         }
     }
 
-    get(layerId: string) {
+    get(layerId: string): ProgramConfiguration {
         return this.programConfigurations[layerId];
     }
 
-    upload(context: Context) {
+    upload(context: Context): void {
         if (!this.needsUpload) return;
         for (const layerId in this.programConfigurations) {
             this.programConfigurations[layerId].upload(context);
@@ -746,7 +751,7 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
         this.needsUpload = false;
     }
 
-    destroy() {
+    destroy(): void {
         for (const layerId in this.programConfigurations) {
             this.programConfigurations[layerId].destroy();
         }

@@ -1,7 +1,7 @@
-import {UniformColor, Uniform1i, Uniform1f} from '../uniform_binding';
+import {UniformColor, Uniform1i, Uniform1f} from '../uniform_binding.ts';
 
-import type {Context} from '../../webgl/context';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
+import type {Context} from '../../webgl/context.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Color} from '@maplibre/maplibre-gl-style-spec';
 
 export type DebugUniformsType = {

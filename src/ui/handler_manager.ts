@@ -1,29 +1,33 @@
-import {Event} from '../util/evented';
-import {DOM} from '../util/dom';
-import {type Map, type CompleteMapOptions} from './map';
-import {HandlerInertia} from './handler_inertia';
-import {MapEventHandler, BlockableMapEventHandler} from './handler/map_event';
-import {BoxZoomHandler} from './handler/box_zoom';
-import {TapZoomHandler} from './handler/tap_zoom';
-import {generateMouseRotationHandler, generateMousePitchHandler, generateMousePanHandler, generateMouseRollHandler} from './handler/mouse';
-import {TouchPanHandler} from './handler/touch_pan';
-import {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
-import {KeyboardHandler} from './handler/keyboard';
-import {ScrollZoomHandler} from './handler/scroll_zoom';
-import {DoubleClickZoomHandler} from './handler/shim/dblclick_zoom';
-import {ClickZoomHandler} from './handler/click_zoom';
-import {TapDragZoomHandler} from './handler/tap_drag_zoom';
-import {DragPanHandler} from './handler/shim/drag_pan';
-import {DragRotateHandler} from './handler/shim/drag_rotate';
-import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
-import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
-import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} from '../util/util';
-import {browser} from '../util/browser';
+import {Event} from '../util/evented.ts';
+import {MapMovementEvent} from './events.ts';
+import {DOM} from '../util/dom.ts';
+import {HandlerInertia} from './handler_inertia.ts';
+import {MapEventHandler, BlockableMapEventHandler} from './handler/map_event.ts';
+import {BoxZoomHandler} from './handler/box_zoom.ts';
+import {TapZoomHandler} from './handler/tap_zoom.ts';
+import {generateMouseRotationHandler, generateMousePitchHandler, generateMousePanHandler, generateMouseRollHandler} from './handler/mouse.ts';
+import {TouchPanHandler} from './handler/touch_pan.ts';
+import {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch.ts';
+import {KeyboardHandler} from './handler/keyboard.ts';
+import {ScrollZoomHandler} from './handler/scroll_zoom.ts';
+import {DoubleClickZoomHandler} from './handler/shim/dblclick_zoom.ts';
+import {ClickZoomHandler} from './handler/click_zoom.ts';
+import {TapDragZoomHandler} from './handler/tap_drag_zoom.ts';
+import {DragPanHandler} from './handler/shim/drag_pan.ts';
+import {DragRotateHandler} from './handler/shim/drag_rotate.ts';
+import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch.ts';
+import {CooperativeGesturesHandler} from './handler/cooperative_gestures.ts';
+import {TransformProvider} from './handler/transform-provider.ts';
+import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} from '../util/util.ts';
+import {browser} from '../util/browser.ts';
 import Point from '@mapbox/point-geometry';
-import {type MapControlsDeltas} from '../geo/projection/camera_helper';
-import type {LngLat} from '../geo/lng_lat';
-import type {ITransform} from '../geo/transform_interface';
-import type {Terrain} from '../render/terrain';
+
+import type {Map, CompleteMapOptions} from './map.ts';
+import type {Camera} from './camera.ts';
+import type {MapControlsDeltas} from '../geo/projection/camera_helper.ts';
+import type {LngLat} from '../geo/lng_lat.ts';
+import type {ITransform} from '../geo/transform_interface.ts';
+import type {Terrain} from '../render/terrain.ts';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.roll || p.pitch || p.rotate;
 
@@ -142,6 +146,8 @@ function hasChange(result: HandlerResult) {
 
 export class HandlerManager {
     _map: Map;
+    _camera: Camera;
+    _transformProvider: TransformProvider;
     _el: HTMLElement;
     _handlers: Array<{
         handlerName: string;
@@ -179,8 +185,10 @@ export class HandlerManager {
         return this._el?.ownerDocument?.defaultView || window;
     }
 
-    constructor(map: Map, options: CompleteMapOptions) {
+    constructor(map: Map, camera: Camera, options: CompleteMapOptions) {
         this._map = map;
+        this._camera = camera;
+        this._transformProvider = new TransformProvider(this._camera);
         this._el = this._map.getCanvasContainer();
         this._handlers = [];
         this._handlersById = {};
@@ -241,18 +249,18 @@ export class HandlerManager {
         }
     }
 
-    destroy() {
+    destroy(): void {
         for (const [target, type, listenerOptions] of this._listeners) {
             target.removeEventListener(type, target === this._ownerDocument ? this.handleWindowEvent : this.handleEvent, listenerOptions);
         }
     }
 
-    _addDefaultHandlers(options: CompleteMapOptions) {
+    _addDefaultHandlers(options: CompleteMapOptions): void {
         const map = this._map;
         const el = map.getCanvasContainer();
         this._add('mapEvent', new MapEventHandler(map, options));
 
-        const boxZoom = map.boxZoom = new BoxZoomHandler(map, options);
+        const boxZoom = map.boxZoom = new BoxZoomHandler(map, options, this._transformProvider);
         this._add('boxZoom', boxZoom);
         if (options.interactive && options.boxZoom) {
             boxZoom.enable();
@@ -264,8 +272,8 @@ export class HandlerManager {
             cooperativeGestures.enable();
         }
 
-        const tapZoom = new TapZoomHandler(map);
-        const clickZoom = new ClickZoomHandler(map);
+        const tapZoom = new TapZoomHandler(map, this._transformProvider);
+        const clickZoom = new ClickZoomHandler(map, this._transformProvider);
         map.doubleClickZoom = new DoubleClickZoomHandler(clickZoom, tapZoom);
         this._add('tapZoom', tapZoom);
         this._add('clickZoom', clickZoom);
@@ -313,25 +321,25 @@ export class HandlerManager {
 
         this._add('blockableMapEvent', new BlockableMapEventHandler(map));
 
-        const scrollZoom = map.scrollZoom = new ScrollZoomHandler(map, () => this._triggerRenderFrame());
+        const scrollZoom = map.scrollZoom = new ScrollZoomHandler(map, () => this._triggerRenderFrame(), this._transformProvider);
         this._add('scrollZoom', scrollZoom, ['mousePan']);
         if (options.interactive && options.scrollZoom) {
             map.scrollZoom.enable(options.scrollZoom);
         }
 
-        const keyboard = map.keyboard = new KeyboardHandler(map);
+        const keyboard = map.keyboard = new KeyboardHandler(map, this._transformProvider);
         this._add('keyboard', keyboard);
         if (options.interactive && options.keyboard) {
             map.keyboard.enable();
         }
     }
 
-    _add(handlerName: string, handler: Handler, allowed?: string[]) {
+    _add(handlerName: string, handler: Handler, allowed?: string[]): void {
         this._handlers.push({handlerName, handler, allowed});
         this._handlersById[handlerName] = handler;
     }
 
-    stop(allowEndAnimation: boolean) {
+    stop(allowEndAnimation: boolean): void {
         // do nothing if this method was triggered by a gesture update
         if (this._updatingCamera) return;
 
@@ -343,25 +351,25 @@ export class HandlerManager {
         this._changes = [];
     }
 
-    isActive() {
+    isActive(): boolean {
         for (const {handler} of this._handlers) {
             if (handler.isActive()) return true;
         }
         return false;
     }
 
-    isZooming() {
+    isZooming(): boolean {
         return !!this._eventsInProgress.zoom || this._map.scrollZoom.isZooming();
     }
-    isRotating() {
+    isRotating(): boolean {
         return !!this._eventsInProgress.rotate;
     }
 
-    isMoving() {
+    isMoving(): boolean {
         return Boolean(isMoving(this._eventsInProgress)) || this.isZooming();
     }
 
-    _blockedByActive(activeHandlers: {[x: string]: Handler}, allowed: string[], myName: string) {
+    _blockedByActive(activeHandlers: {[x: string]: Handler}, allowed: string[], myName: string): boolean {
         for (const name in activeHandlers) {
             if (name === myName) continue;
             if (!allowed?.includes(name)) {
@@ -371,11 +379,11 @@ export class HandlerManager {
         return false;
     }
 
-    handleWindowEvent = (e: { type: 'mousemove' | 'mouseup' | 'touchmove'}) => {
-        this.handleEvent(e, `${e.type}Window`);
+    handleWindowEvent = (e: Event): void => {
+        this.handleEvent(e, `${e.type}Window` as keyof Handler);
     };
 
-    _getMapTouches(touches: TouchList) {
+    _getMapTouches(touches: TouchList): TouchList {
         const mapTouches = [];
         for (const t of touches) {
             const target = (t.target as any as Node);
@@ -386,7 +394,7 @@ export class HandlerManager {
         return mapTouches as any as TouchList;
     }
 
-    handleEvent = (e: Event, eventName?: keyof Handler) => {
+    handleEvent = (e: Event, eventName?: keyof Handler): void => {
 
         if (e.type === 'blur') {
             this.stop(true);
@@ -452,7 +460,7 @@ export class HandlerManager {
         }
 
         if (Object.keys(activeHandlers).length || hasChange(mergedHandlerResult)) {
-            this._map._stop(true);
+            this._camera.stop(true);
         }
 
         this._updatingCamera = false;
@@ -470,7 +478,7 @@ export class HandlerManager {
         eventsInProgress: EventsInProgress,
         handlerResult: HandlerResult,
         name: string,
-        e?: UIEvent) {
+        e?: UIEvent): void {
         if (!handlerResult) return;
 
         extend(mergedHandlerResult, handlerResult);
@@ -496,7 +504,7 @@ export class HandlerManager {
 
     }
 
-    _applyChanges() {
+    _applyChanges(): void {
         const combined: HandlerResult = {};
         const combinedEventsInProgress: EventsInProgress = {};
         const combinedDeactivatedHandlers = {};
@@ -522,9 +530,9 @@ export class HandlerManager {
 
     _updateMapTransform(combinedResult: HandlerResult,
         combinedEventsInProgress: EventsInProgress,
-        deactivatedHandlers: {[handlerName: string]: Event}) {
+        deactivatedHandlers: {[handlerName: string]: Event}): void {
         const map = this._map;
-        const tr = map._getTransformForUpdate();
+        const tr = this._camera.getTransformForUpdate();
         const terrain = map.terrain;
 
         if (!hasChange(combinedResult) && !(terrain && this._terrainMovement)) {
@@ -532,7 +540,7 @@ export class HandlerManager {
         }
 
         // stop any ongoing camera animations (easeTo, flyTo)
-        map._stop(true);
+        this._camera.stop(true);
 
         let {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta, around, pinchAround} = combinedResult;
 
@@ -540,7 +548,7 @@ export class HandlerManager {
             around = pinchAround;
         }
 
-        around ||= map.transform.centerPoint;
+        around ||= this._camera.transform.centerPoint;
 
         if (terrain && !tr.isPointOnMapSurface(around)) {
             around = tr.centerPoint;
@@ -556,7 +564,7 @@ export class HandlerManager {
         };
 
         // Pre-zoom location under the mouse cursor is required for accurate mercator panning and zooming
-        if (this._map.cameraHelper.useGlobeControls && !tr.isPointOnMapSurface(around)) {
+        if (this._camera.cameraHelper.useGlobeControls && !tr.isPointOnMapSurface(around)) {
             around = tr.centerPoint;
         }
         // If we are rotating about the center point, avoid numerical issues near the horizon by using the transform's
@@ -574,7 +582,7 @@ export class HandlerManager {
             panDelta,
         });
 
-        map._applyUpdatedTransform(tr);
+        this._camera.applyUpdatedTransform(tr);
 
         this._map._update();
         if (!combinedResult.noInertia) this._inertia.record(combinedResult);
@@ -588,9 +596,9 @@ export class HandlerManager {
         deltasForHelper,
         preZoomAroundLoc,
         combinedEventsInProgress,
-        panDelta}: MapControlsScenarioOptions) {
+        panDelta}: MapControlsScenarioOptions): void {
 
-        const cameraHelper = this._map.cameraHelper;
+        const cameraHelper = this._camera.cameraHelper;
 
         cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
 
@@ -602,7 +610,7 @@ export class HandlerManager {
         if (cameraHelper.useGlobeControls) {
             if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
                 this._terrainMovement = true;
-                this._map._elevationFreeze = true;
+                this._camera.elevationFreeze = true;
             }
             cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
@@ -610,7 +618,7 @@ export class HandlerManager {
 
         if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
             this._terrainMovement = true;
-            this._map._elevationFreeze = true;
+            this._camera.elevationFreeze = true;
             cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
         }
@@ -623,7 +631,7 @@ export class HandlerManager {
         cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
     }
 
-    _fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {[handlerName: string]: Event}, allowEndAnimation: boolean) {
+    _fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {[handlerName: string]: Event}, allowEndAnimation: boolean): void {
 
         const wasMoving = isMoving(this._eventsInProgress);
         const nowMoving = isMoving(newEventsInProgress);
@@ -675,13 +683,13 @@ export class HandlerManager {
         const stillMoving = isMoving(this._eventsInProgress);
         const finishedMoving = (wasMoving || nowMoving) && !stillMoving;
         if (finishedMoving && this._terrainMovement) {
-            this._map._elevationFreeze = false;
+            this._camera.elevationFreeze = false;
             this._terrainMovement = false;
-            const tr = this._map._getTransformForUpdate();
+            const tr = this._camera.getTransformForUpdate();
             if (this._map.getCenterClampedToGround()) {
                 tr.recalculateZoomAndCenter(this._map.terrain);
             }
-            this._map._applyUpdatedTransform(tr);
+            this._camera.applyUpdatedTransform(tr);
         }
         if (allowEndAnimation && finishedMoving) {
             this._updatingCamera = true;
@@ -696,7 +704,7 @@ export class HandlerManager {
                 inertialEase.freezeElevation = true;
                 this._map.easeTo(inertialEase, {originalEvent: originalEndEvent});
             } else {
-                this._map.fire(new Event('moveend', {originalEvent: originalEndEvent}));
+                this._map.fire(new MapMovementEvent('moveend', {originalEvent: originalEndEvent}));
                 if (shouldSnapToNorth(this._map.getBearing())) {
                     this._map.resetNorth();
                 }
@@ -706,11 +714,11 @@ export class HandlerManager {
 
     }
 
-    _fireEvent(type: string, e?: Event) {
-        this._map.fire(new Event(type, e ? {originalEvent: e} : {}));
+    _fireEvent(type: string, e?: Event): void {
+        this._map.fire(new MapMovementEvent(type, e ? {originalEvent: e} : {}));
     }
 
-    _requestFrame() {
+    _requestFrame(): number {
         this._map.triggerRepaint();
         return this._map._renderTaskQueue.add(timeStamp => {
             delete this._frameId;
@@ -719,7 +727,7 @@ export class HandlerManager {
         });
     }
 
-    _triggerRenderFrame() {
+    _triggerRenderFrame(): void {
         if (this._frameId === undefined) {
             this._frameId = this._requestFrame();
         }

@@ -4,13 +4,12 @@ import tsdoc from 'eslint-plugin-tsdoc';
 import vitest from '@vitest/eslint-plugin';
 import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
-import react from 'eslint-plugin-react';
 import html from 'eslint-plugin-html';
 import preferTypeForDataShapes from './build/eslint-rules/prefer-type-for-data-shapes.js';
 
 export default [
     {
-        ignores: ['build/*.js', 'build/rollup/**', 'staging/**', 'coverage/**', 'node_modules/**', 'docs/**', 'dist/**', '**/*_generated.js']
+        ignores: ['build/*.js', 'build/rolldown/**', 'staging/**', 'coverage/**', 'node_modules/**', 'docs/**', 'dist/**', 'site/**', 'test/integration/bundler/*/**', '**/*_generated.js', '**/*_generated.mjs', 'test/bench/**/benchmarks_worker.mjs']
     },
     {
         ignores: ['test/bench/**'],
@@ -38,7 +37,6 @@ export default [
             sourceType: 'module',
 
             parserOptions: {
-                createDefaultProgram: true,
                 projectService: {
                     allowDefaultProject: [
                         'build/generate-*.ts',
@@ -151,11 +149,7 @@ export default [
     },
     {
         files: ['test/bench/**/*.jsx', 'test/bench/**/*.js', 'test/bench/**/*.ts'],
-        plugins: {
-            react
-        },
         rules: {
-            'react/jsx-uses-vars': [2],
             'no-restricted-properties': 'off'
         },
         languageOptions: {
@@ -167,10 +161,6 @@ export default [
             parser: tsParser,
             ecmaVersion: 5,
             sourceType: 'module',
-
-            parserOptions: {
-                createDefaultProgram: true,
-            },
         },
     },
 ];

@@ -11,7 +11,7 @@
         }
     },
     "sources": {
-        "mapbox": {
+        "maplibre": {
             "type": "geojson",
             "data": {
                 "type": "FeatureCollection",
@@ -35,7 +35,7 @@
         {
             "id": "line",
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "paint": {
                 "line-width": 5
             }
@@ -43,7 +43,7 @@
         {
             "id": "line2",
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "paint": {
                 "line-color": "white",
                 "line-width": 50,

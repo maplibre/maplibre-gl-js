@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {mat4, vec3, quat} from 'gl-matrix';
-import {fastInvertTransformMat4, fastInvertProjMat4, fastInvertSkewMat4} from './fast_maths';
+import {fastInvertTransformMat4, fastInvertProjMat4, fastInvertSkewMat4} from './fast_maths.ts';
 
 function compare_matrix(mat: mat4, matRef: mat4){
     for (let i=0; i<16; ++i){

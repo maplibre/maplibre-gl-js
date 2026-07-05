@@ -1,13 +1,13 @@
-import {loadGlyphRange} from '../style/load_glyph_range';
+import {loadGlyphRange} from '../style/load_glyph_range.ts';
 
 import TinySDF from '@mapbox/tiny-sdf';
-import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g';
-import {AlphaImage} from '../util/image';
-import {ensureError, warnOnce} from '../util/util';
+import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g.ts';
+import {AlphaImage} from '../util/image.ts';
+import {ensureError, warnOnce} from '../util/util.ts';
 
-import type {StyleGlyph} from '../style/style_glyph';
-import type {RequestManager} from '../util/request_manager';
-import type {GetGlyphsResponse} from '../util/actor_messages';
+import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {RequestManager} from '../util/request_manager.ts';
+import type {GetGlyphsResponse} from '../util/actor_messages.ts';
 
 import {v8} from '@maplibre/maplibre-gl-style-spec';
 
@@ -22,8 +22,8 @@ type Entry = {
     ranges: {
         [range: number]: boolean | null;
     };
-    tinySDF?: TinySDF;
-    ideographTinySDF?: TinySDF;
+    tinySDF?: Promise<TinySDF>;
+    ideographTinySDF?: Promise<TinySDF>;
 };
 
 /**
@@ -50,8 +50,8 @@ export class GlyphManager {
     lang?: string;
 
     // exposed as statistics to enable stubbing in unit tests
-    static loadGlyphRange = loadGlyphRange;
-    static TinySDF = TinySDF;
+    static loadGlyphRange: typeof loadGlyphRange = loadGlyphRange;
+    static TinySDF: typeof TinySDF = TinySDF;
 
     constructor(requestManager: RequestManager, localIdeographFontFamily?: string | false, lang?: string) {
         this.requestManager = requestManager;
@@ -60,7 +60,7 @@ export class GlyphManager {
         this.lang = lang;
     }
 
-    setURL(url?: string | null) {
+    setURL(url?: string | null): void {
         this.url = url;
     }
 
@@ -103,7 +103,7 @@ export class GlyphManager {
 
         // If the style hasn’t opted into server-side fonts or this codepoint is CJK, draw the glyph locally and cache it.
         if (!this.url || this._charUsesLocalIdeographFontFamily(id)) {
-            glyph = entry.glyphs[id] = this._drawGlyph(entry, stack, id);
+            glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id);
             return {stack, id, glyph};
         }
 
@@ -131,13 +131,13 @@ export class GlyphManager {
             return {stack, id, glyph: response[id] || null};
         } catch (e) {
             // Fall back to drawing the glyph locally and caching it.
-            const glyph = entry.glyphs[id] = this._drawGlyph(entry, stack, id);
+            const glyph = entry.glyphs[id] = await this._drawGlyph(entry, stack, id);
             this._warnOnMissingGlyphRange(glyph, range, id, ensureError(e));
             return {stack, id, glyph};
         }
     }
 
-    _warnOnMissingGlyphRange(glyph: StyleGlyph, range: number, id: number, err: Error) {
+    _warnOnMissingGlyphRange(glyph: StyleGlyph, range: number, id: number, err: Error): void {
         const begin = range * 256;
         const end = begin + 255;
         const codePoint = id.toString(16).padStart(4, '0').toUpperCase();
@@ -154,14 +154,15 @@ export class GlyphManager {
     /**
      * Draws a glyph offscreen using TinySDF, creating a TinySDF instance lazily.
      */
-    _drawGlyph(entry: Entry, stack: string, id: number): StyleGlyph {
+    async _drawGlyph(entry: Entry, stack: string, id: number): Promise<StyleGlyph> {
         // The CJK fallback font specified by the developer takes precedence over the last resort fontstack in the style specification.
         const usesLocalIdeographFontFamily = stack === defaultStack && this.localIdeographFontFamily !== '' && this._charUsesLocalIdeographFontFamily(id);
 
         // Keep a separate TinySDF instance for when we need to apply the localIdeographFontFamily fallback to keep the font selection from bleeding into non-CJK text.
         const tinySDFKey = usesLocalIdeographFontFamily ? 'ideographTinySDF' : 'tinySDF';
         entry[tinySDFKey] ||= this._createTinySDF(usesLocalIdeographFontFamily ? this.localIdeographFontFamily : stack);
-        const char = entry[tinySDFKey].draw(String.fromCodePoint(id));
+        const tinySDF = await entry[tinySDFKey];
+        const char = tinySDF.draw(String.fromCodePoint(id));
 
         /**
          * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.
@@ -197,7 +198,7 @@ export class GlyphManager {
         };
     }
 
-    _createTinySDF(stack: String | false): TinySDF {
+    async _createTinySDF(stack: String | false): Promise<TinySDF> {
         // Escape and quote the font family list for use in CSS.
         const fontFamilies = stack ? stack.split(',') : [];
         fontFamilies.push(defaultGenericFontFamily);
@@ -205,14 +206,27 @@ export class GlyphManager {
             /[-\w]+/.test(fontName) ? fontName : `'${CSS.escape(fontName)}'`
         ).join(',');
 
+        const fontSize = 24 * textureScale;
+        const fontWeight = this._fontWeight(fontFamilies[0]);
+        const fontStyle = this._fontStyle(fontFamilies[0]);
+
+        // Await web font load so TinySDF doesn't cache a fallback bitmap. See #7307.
+        if (typeof document !== 'undefined' && document.fonts?.load) {
+            try {
+                await document.fonts.load(`${fontStyle} ${fontWeight || 'normal'} ${fontSize}px ${fontFamily}`);
+            } catch (e) {
+                warnOnce(`Failed to load font "${fontFamily}": ${ensureError(e).message}`);
+            }
+        }
+
         return new GlyphManager.TinySDF({
-            fontSize: 24 * textureScale,
+            fontSize,
             buffer: 3 * textureScale,
             radius: 8 * textureScale,
             cutoff: 0.25,
             fontFamily,
-            fontWeight: this._fontWeight(fontFamilies[0]),
-            fontStyle: this._fontStyle(fontFamilies[0]),
+            fontWeight,
+            fontStyle,
             lang: this.lang
         });
     }
@@ -256,7 +270,7 @@ export class GlyphManager {
         return match;
     }
 
-    destroy() {
+    destroy(): void {
         for (const stack in this.entries) {
             const entry = this.entries[stack];
             entry.tinySDF = null;
