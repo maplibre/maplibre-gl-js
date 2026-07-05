@@ -234,6 +234,7 @@ export class Style extends Evented<MapEventType> {
     _updatedLayers: {[_: string]: true};
     _removedLayers: {[_: string]: StyleLayer};
     _changedImages: {[_: string]: true};
+    _imagesListDirty: boolean;
     _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
@@ -306,6 +307,7 @@ export class Style extends Evented<MapEventType> {
         this.tileManagers = {};
         this.zoomHistory = new ZoomHistory();
         this._availableImages = [];
+        this._imagesListDirty = false;
         this._globalState = {};
         this._serializedLayers = {};
         this.stylesheet = null;
@@ -601,8 +603,8 @@ export class Style extends Evented<MapEventType> {
 
         this._spritesImagesIds = {};
         this._availableImages = this.imageManager.listImages();
+        this._imagesListDirty = true;
         this._changed = true;
-        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new MapStyleDataEvent('data'));
     }
 
@@ -735,6 +737,11 @@ export class Style extends Evented<MapEventType> {
 
         const changed = this._changed;
         if (changed) {
+            if (this._imagesListDirty) {
+                this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
+                this._imagesListDirty = false;
+            }
+
             const updatedIds = Object.keys(this._updatedLayers);
             const removedIds = Object.keys(this._removedLayers);
 
@@ -1004,8 +1011,8 @@ export class Style extends Evented<MapEventType> {
     _afterImageUpdated(id: string): void {
         this._availableImages = this.imageManager.listImages();
         this._changedImages[id] = true;
+        this._imagesListDirty = true;
         this._changed = true;
-        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new MapStyleDataEvent('data'));
     }
 
@@ -2015,8 +2022,8 @@ export class Style extends Evented<MapEventType> {
 
         delete this._spritesImagesIds[id];
         this._availableImages = this.imageManager.listImages();
+        this._imagesListDirty = true;
         this._changed = true;
-        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new MapStyleDataEvent('data'));
     }
 
