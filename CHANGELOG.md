@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Improve terrain min/max elevation lookup performance by reading DEM metadata directly from source tiles ([#7871](https://github.com/maplibre/maplibre-gl-js/pull/7871)) (by [@DoFabien](https://github.com/DoFabien))
 - Improve terrain render-to-texture preparation performance by skipping sources that are not rendered to terrain textures ([#7863](https://github.com/maplibre/maplibre-gl-js/pull/7863)) (by [@DoFabien](https://github.com/DoFabien))
 - _...Add new stuff here..._
 
