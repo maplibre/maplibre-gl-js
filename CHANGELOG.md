@@ -1,12 +1,21 @@
 ## main
 ### ✨ Features and improvements
 - Improve terrain render-to-texture preparation performance by skipping sources that are not rendered to terrain textures ([#7863](https://github.com/maplibre/maplibre-gl-js/pull/7863)) (by [@DoFabien](https://github.com/DoFabien))
-- ⚠️ `Map` now composes a `Camera` instead of extending it (`Map` extends `Evented` directly and forwards the camera API). The internal `map.transform` was removed — use map's public API instead or open a PR if you need something that's not exposed. Removed the internal `transform.getMatrixForModel` helper ([#7800](https://github.com/maplibre/maplibre-gl-js/pull/7800)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix camera jump in flyTo when minZoom is set ([#7743](https://github.com/maplibre/maplibre-gl-js/pull/7743)) (by [@YuChunTsao](https://github.com/YuChunTsao))
 - _...Add new stuff here..._
+
+## 6.0.0-20
+
+### ✨ Features and improvements
+
+- ⚠️ `Map` now composes a `Camera` instead of extending it (`Map` extends `Evented` directly and forwards the camera API). The internal `map.transform` was removed — use map's public API instead or open a PR if you need something that's not exposed. Removed the internal `transform.getMatrixForModel` helper ([#7800](https://github.com/maplibre/maplibre-gl-js/pull/7800)) (by [@HarelM](https://github.com/HarelM))
+
+### 🐞 Bug fixes
+
+- Fix `line-layer-opacity`/`fill-layer-opacity` clipping away a subsequent layer that shares the same source ([#7867](https://github.com/maplibre/maplibre-gl-js/pull/7867)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Fix camera jump in flyTo when minZoom is set ([#7743](https://github.com/maplibre/maplibre-gl-js/pull/7743)) (by [@YuChunTsao](https://github.com/YuChunTsao))
 
 ## 6.0.0-19
 
