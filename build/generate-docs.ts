@@ -5,6 +5,7 @@ import typedocConfig from '../typedoc.json' with {type: 'json'};
 import packageJson from '../package.json' with {type: 'json'};
 import {get} from 'https';
 import sharp from 'sharp';
+import EXAMPLE_CATEGORY_GROUPS from '../docs/example-categories.json' with {type: 'json'};
 
 type HtmlDoc = {
     title: string;
@@ -14,15 +15,6 @@ type HtmlDoc = {
     category: string;
     order: number;
 };
-
-const EXAMPLE_CATEGORY_GROUPS = [
-    {title: 'Map Basics', categories: ['Getting Started', 'Camera & Animation', 'Controls & Gestures']},
-    {title: 'Sources', categories: ['Vector & GeoJSON', 'Raster & Imagery', 'Live & Realtime Data']},
-    {title: 'Layers', categories: ['Icons & Symbols', 'Layer Styling', 'Expressions', 'Filtering', 'Heatmaps & Clusters', 'Data Visualization', 'Terrain & Hillshade', '3D Models & Buildings', 'Globe']},
-    {title: 'Annotations & Labels', categories: ['Markers', 'Popups', 'Labels & Fonts', 'Internationalization']},
-    {title: 'Interactivity & Extensions', categories: ['Events & Queries', 'Plugins & Integrations']},
-];
-const EXAMPLE_CATEGORIES = EXAMPLE_CATEGORY_GROUPS.flatMap(group => group.categories);
 
 /**
  * Reads the `content` of the `<meta>` tag with the given `property`, e.g. `og:description`.
@@ -220,14 +212,8 @@ async function generateExamplesFolder() {
         const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim();
         const description = extractMetaContent(htmlContentLines, 'og:description');
         const category = extractMetaContent(htmlContentLines, 'og:category');
-        if (!category || !EXAMPLE_CATEGORIES.includes(category)) {
-            throw new Error(`Example "${file}" has ${category ? `an unknown og:category "${category}"` : 'no og:category meta tag'}. Valid categories are: ${EXAMPLE_CATEGORIES.join(', ')}.`);
-        }
         const orderMeta = extractMetaContent(htmlContentLines, 'og:order');
         const order = orderMeta === undefined ? Number.POSITIVE_INFINITY : Number(orderMeta);
-        if (Number.isNaN(order)) {
-            throw new Error(`Example "${file}" has a non-numeric og:order "${orderMeta}".`);
-        }
         fs.writeFileSync(path.join(examplesDocsFolder, file), htmlContent);
         const mdFileName = file.replace('.html', '.md');
         const isNew = isNewExample(htmlContentLines);
