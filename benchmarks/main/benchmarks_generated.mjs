@@ -51475,29 +51475,32 @@ var RenderToTexture = class {
 		this._rttTiles = [];
 		this._renderableTiles = this.terrain.tileManager.getRenderableTiles();
 		this._renderableLayerIds = style._order.filter((id) => !style._layers[id].isHidden(zoom));
+		const rttSourceIds = /* @__PURE__ */ new Set();
+		for (const layerId of this._renderableLayerIds) {
+			const layer = style._layers[layerId];
+			const source = layer.source;
+			if (source && LAYERS_TO_TEXTURES[layer.type]) rttSourceIds.add(source);
+		}
 		this._coordsAscending = {};
-		for (const id in style.tileManagers) {
-			this._coordsAscending[id] = {};
-			const tileIDs = style.tileManagers[id].getVisibleCoordinates();
-			const source = style.tileManagers[id].getSource();
+		this._rttFingerprints = {};
+		for (const sourceId of rttSourceIds) {
+			const tileManager = style.tileManagers[sourceId];
+			if (!tileManager) continue;
+			this._coordsAscending[sourceId] = {};
+			const coordsAscending = this._coordsAscending[sourceId];
+			const source = tileManager.getSource();
 			const terrainTileRanges = source instanceof ImageSource ? source.terrainTileRanges : null;
-			for (const tileID of tileIDs) {
+			for (const tileID of tileManager.getVisibleCoordinates()) {
 				const keys = this.terrain.tileManager.getTerrainCoords(tileID, terrainTileRanges);
 				for (const key in keys) {
-					this._coordsAscending[id][key] ||= [];
-					this._coordsAscending[id][key].push(keys[key]);
+					coordsAscending[key] ||= [];
+					coordsAscending[key].push(keys[key]);
 				}
 			}
-		}
-		this._rttFingerprints = {};
-		for (const id of style._order) {
-			const layer = style._layers[id];
-			const source = layer.source;
-			if (LAYERS_TO_TEXTURES[layer.type] && !this._rttFingerprints[source]) {
-				this._rttFingerprints[source] = {};
-				const revision = style.tileManagers[source]?.getState().revision ?? 0;
-				for (const key in this._coordsAscending[source]) this._rttFingerprints[source][key] = `${this._coordsAscending[source][key].map((c) => c.key).sort().join()}#${revision}`;
-			}
+			this._rttFingerprints[sourceId] = {};
+			const fingerprints = this._rttFingerprints[sourceId];
+			const revision = tileManager.getState().revision;
+			for (const key in coordsAscending) fingerprints[key] = `${coordsAscending[key].map((c) => c.key).sort().join()}#${revision}`;
 		}
 		for (const tile of this._renderableTiles) for (const source in this._rttFingerprints) {
 			const fingerprint = this._rttFingerprints[source][tile.tileID.key];
@@ -60780,7 +60783,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 6d94d74";
+const version = "main 471d6b0";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
