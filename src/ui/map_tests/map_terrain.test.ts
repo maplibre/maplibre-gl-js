@@ -77,6 +77,7 @@ describe('Keep camera outside terrain', () => {
             (_lngLat: LngLat, _zoom: number) => terrainElevation
         );
         map.terrain = terrainStub;
+        map._camera.terrain = terrainStub;
 
         // Terrain elevation is 10 everywhere, we are above it at zoom level 15
         // with pitch 45 deg.

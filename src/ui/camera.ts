@@ -265,10 +265,10 @@ export type CameraInitOptions = {
     zoomSnap: number;
     renderWorldCopies: boolean;
     centerClampedToGround: boolean;
+    terrain: Terrain;
     transformConstrain: TransformConstrainFunction;
     requestRenderFrame: (a: () => void) => TaskID;
     cancelRenderFrame: (_: TaskID) => void;
-    getTerrain: () => Terrain;
     transformCameraUpdate: CameraUpdateTransformFunction | null;
     /**
      * @internal
@@ -281,13 +281,13 @@ export type CameraInitOptions = {
 
 export class Camera extends Evented<MapEventType> {
     transform: ITransform;
-    cameraHelper: ICameraHelper;
     /**
      * @internal
-     * Accessor to the map's `terrain` (which the `Map` owns). The camera reads terrain for
-     * elevation handling but does not own it.
+     * Copy of the map's `terrain` (which the `Map` owns).
+     * The camera reads terrain for elevation handling but does not own it.
      */
-    _getTerrain: () => Terrain;
+    terrain: Terrain;
+    cameraHelper: ICameraHelper;
     /**
      * @internal
      * Stops any in-progress user gestures. Injected by the owner so the camera does not need
@@ -392,7 +392,7 @@ export class Camera extends Evented<MapEventType> {
         this._zoomSnap = options.zoomSnap;
         this._requestRenderFrame = options.requestRenderFrame;
         this._cancelRenderFrame = options.cancelRenderFrame;
-        this._getTerrain = options.getTerrain ?? (() => undefined);
+        this.terrain = options.terrain;
         this._centerClampedToGround = options.centerClampedToGround ?? true;
         this.transformCameraUpdate = options.transformCameraUpdate ?? null;
         this._stopHandlers = options.stopHandlers ?? (() => {});
@@ -645,8 +645,8 @@ export class Camera extends Evented<MapEventType> {
         let rollChanged = false;
 
         const oldZoom = tr.zoom;
-        if (this._getTerrain()) {
-            tr.setElevation(this._getTerrain().getElevationForLngLatZoom(options.center ? LngLat.convert(options.center) : tr.center, options.zoom || tr.tileZoom));
+        if (this.terrain) {
+            tr.setElevation(this.terrain.getElevationForLngLatZoom(options.center ? LngLat.convert(options.center) : tr.center, options.zoom || tr.tileZoom));
         }
         this.cameraHelper.handleJumpToCenterZoom(tr, options);
 
@@ -807,19 +807,19 @@ export class Camera extends Evented<MapEventType> {
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
 
-        if (this._getTerrain()) {
+        if (this.terrain) {
             this._prepareElevation(easeHandler.elevationCenter);
         }
 
         this._ease((k) => {
             easeHandler.easeFunc(k);
 
-            if (this._getTerrain() && !options.freezeElevation) this._updateElevation(k);
+            if (this.terrain && !options.freezeElevation) this._updateElevation(k);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
 
         }, (interruptingEaseId?: string) => {
-            if (this._getTerrain() && options.freezeElevation) this._finalizeElevation();
+            if (this.terrain && options.freezeElevation) this._finalizeElevation();
             this._afterEase(eventData, interruptingEaseId);
         }, options);
 
@@ -849,7 +849,7 @@ export class Camera extends Evented<MapEventType> {
     _prepareElevation(center: LngLat): void {
         this._elevationCenter = center;
         this._elevationStart = this.transform.elevation;
-        this._elevationTarget = this._getTerrain().getElevationForLngLatZoom(center, this.transform.tileZoom);
+        this._elevationTarget = this.terrain.getElevationForLngLatZoom(center, this.transform.tileZoom);
         this.elevationFreeze = true;
     }
 
@@ -859,8 +859,8 @@ export class Camera extends Evented<MapEventType> {
             this._prepareElevation(this.transform.center);
         }
 
-        this.transform.setMinElevationForCurrentTile(this._getTerrain().getMinTileElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom));
-        const elevation = this._getTerrain().getElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
+        this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom));
+        const elevation = this.terrain.getElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
             const pitch1 = this._elevationTarget - this._elevationStart;
@@ -874,7 +874,7 @@ export class Camera extends Evented<MapEventType> {
     _finalizeElevation(): void {
         this.elevationFreeze = false;
         if (this.getCenterClampedToGround()) {
-            this.transform.recalculateZoomAndCenter(this._getTerrain());
+            this.transform.recalculateZoomAndCenter(this.terrain);
         }
     }
 
@@ -888,7 +888,7 @@ export class Camera extends Evented<MapEventType> {
      * @returns Transform to apply changes to
      */
     getTransformForUpdate(): ITransform {
-        if (!this.transformCameraUpdate && !this._getTerrain()) return this.transform;
+        if (!this.transformCameraUpdate && !this.terrain) return this.transform;
 
         this._requestedCameraState ||= this.transform.clone();
         return this._requestedCameraState;
@@ -906,12 +906,12 @@ export class Camera extends Evented<MapEventType> {
      * @param tr - The transform to check.
      */
     _elevateCameraIfInsideTerrain(tr: ITransform) : { pitch?: number; zoom?: number } {
-        if (!this._getTerrain() && tr.elevation >= 0 && tr.pitch <= 90) {
+        if (!this.terrain && tr.elevation >= 0 && tr.pitch <= 90) {
             return {};
         }
         const cameraLngLat = tr.getCameraLngLat();
         const cameraAltitude = tr.getCameraAltitude();
-        const minAltitude = this._getTerrain() ? this._getTerrain().getElevationForLngLatZoom(cameraLngLat, tr.zoom) : 0;
+        const minAltitude = this.terrain ? this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom) : 0;
         if (cameraAltitude < minAltitude) {
             const newCamera = this.calculateCameraOptionsFromTo(
                 cameraLngLat, minAltitude, tr.center, tr.elevation);
@@ -1148,7 +1148,7 @@ export class Camera extends Evented<MapEventType> {
         this._padding = !tr.isPaddingEqual(padding);
 
         this._prepareEase(eventData, false);
-        if (this._getTerrain()) this._prepareElevation(flyToHandler.targetCenter);
+        if (this.terrain) this._prepareElevation(flyToHandler.targetCenter);
 
         this._ease((k) => {
             // s: The distance traveled along the flight path, measured in ρ-screenfulls.
@@ -1173,11 +1173,11 @@ export class Camera extends Evented<MapEventType> {
 
             flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
 
-            if (this._getTerrain() && !options.freezeElevation) this._updateElevation(k);
+            if (this.terrain && !options.freezeElevation) this._updateElevation(k);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
         }, () => {
-            if (this._getTerrain() && options.freezeElevation) this._finalizeElevation();
+            if (this.terrain && options.freezeElevation) this._finalizeElevation();
             this._afterEase(eventData);
         }, options);
 

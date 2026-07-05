@@ -732,10 +732,10 @@ export class Map extends Evented<MapEventType> {
             zoomSnap: resolvedOptions.zoomSnap,
             renderWorldCopies: resolvedOptions.renderWorldCopies,
             centerClampedToGround: resolvedOptions.centerClampedToGround,
+            terrain: this.terrain,
             transformConstrain: resolvedOptions.transformConstrain,
             requestRenderFrame: (callback) => this._requestRenderFrame(callback),
             cancelRenderFrame: (id) => this._cancelRenderFrame(id),
-            getTerrain: () => this.terrain,
             transformCameraUpdate: resolvedOptions.transformCameraUpdate,
             stopHandlers: () => this._handlers?.stop(false),
         });
@@ -2887,6 +2887,7 @@ export class Map extends Evented<MapEventType> {
             }
             this.terrain = null;
             this.painter.renderToTexture = null;
+            this._camera.terrain = null;
             this._camera.transform.setMinElevationForCurrentTile(0);
             if (this.getCenterClampedToGround()) {
                 this._camera.transform.setElevation(0);
@@ -2909,6 +2910,7 @@ export class Map extends Evented<MapEventType> {
             }
             this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
+            this._camera.terrain = this.terrain;
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             this._terrainDataCallback = e => {

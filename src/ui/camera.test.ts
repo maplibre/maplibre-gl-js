@@ -33,8 +33,8 @@ function createCamera(options?: Partial<CameraInitOptions>, globe?: boolean, jum
         zoomSnap: options.zoomSnap || 0,
         renderWorldCopies: options.renderWorldCopies,
         centerClampedToGround: options.centerClampedToGround || false,
+        terrain: options.terrain || null,
         transformConstrain: options.transformConstrain,
-        getTerrain: options.getTerrain || (() => null),
         requestRenderFrame: (cb) => queue.add(cb),
         cancelRenderFrame: (id) => queue.remove(id),
         transformCameraUpdate: options.transformCameraUpdate
@@ -1275,7 +1275,7 @@ describe('easeTo', () => {
 
     test('terrain set during easeTo', () => {
         let terrain: Terrain = null;
-        const {camera, queue} = createCamera({getTerrain: () => terrain});
+        const {camera, queue} = createCamera({terrain});
         const stubNow = vi.spyOn(timeControl, 'now');
 
         stubNow.mockImplementation(() => 0);
@@ -2039,7 +2039,7 @@ describe('flyTo', () => {
 
     test('check elevation events freezeElevation=false', async () => {
         const terrain = {getElevationForLngLatZoom: () => 0} as any as Terrain; 
-        const {camera, queue} = createCamera({getTerrain: () => terrain});
+        const {camera, queue} = createCamera({terrain});
         const stub = vi.spyOn(timeControl, 'now');
 
         const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
@@ -2063,7 +2063,7 @@ describe('flyTo', () => {
 
     test('check elevation events freezeElevation=true', async() => {
         const terrain = {getElevationForLngLatZoom: () => 0} as any as Terrain;
-        const {camera, queue} = createCamera({getTerrain: () => terrain});
+        const {camera, queue} = createCamera({terrain});
         const stub = vi.spyOn(timeControl, 'now');
 
         const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
@@ -2090,8 +2090,8 @@ describe('flyTo', () => {
             getElevationForLngLatZoom: () => 100,
             getMinTileElevationForLngLatZoom: () => 200
         } as any;
-        const {camera} = createCamera({getTerrain: () => terrain});
-        
+        const {camera} = createCamera({terrain});
+
         camera.transform = {
             elevation: 0,
             recalculateZoomAndCenter: () => true,
