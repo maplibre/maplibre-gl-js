@@ -87,4 +87,8 @@ export function drawLayerOpacity(painter: Painter, opacity: number, prepareDrawL
         layerOpacityUniformValues(opacity, 0), null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
         painter.viewportSegments, layer.paint, painter.transform.zoom);
+
+    // Clipping masks were drawn into the scratch FBO's stencil buffer, not the composite target's.
+    // Reset currentStencilSource so a later layer on the same source redraws its masks into the composite target instead of reusing stale ones.
+    painter.currentStencilSource = undefined;
 }
