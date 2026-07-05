@@ -148,11 +148,11 @@ export abstract class StyleLayer extends Evented {
         }
 
         if (properties.layout) {
-            this._unevaluatedLayout = new Layout(properties.layout, globalState);
+            this._unevaluatedLayout = new Layout(properties.layout, globalState, `layers[${this.id}].layout`);
         }
 
         if (properties.paint) {
-            this._transitionablePaint = new Transitionable(properties.paint, globalState);
+            this._transitionablePaint = new Transitionable(properties.paint, globalState, `layers[${this.id}].paint`);
 
             for (const property in layer.paint) {
                 this.setPaintProperty(property as keyof AllPaintProperties, layer.paint[property as keyof typeof layer.paint], {validate: false});

@@ -29,13 +29,13 @@ type SkyPropsPossiblyEvaluated = {
 };
 
 const properties: Properties<SkyProps> = new Properties({
-    'sky-color': new DataConstantProperty(styleSpec.sky['sky-color'] as StylePropertySpecification, 'sky.sky-color'),
-    'horizon-color': new DataConstantProperty(styleSpec.sky['horizon-color'] as StylePropertySpecification, 'sky.horizon-color'),
-    'fog-color': new DataConstantProperty(styleSpec.sky['fog-color'] as StylePropertySpecification, 'sky.fog-color'),
-    'fog-ground-blend': new DataConstantProperty(styleSpec.sky['fog-ground-blend'] as StylePropertySpecification, 'sky.fog-ground-blend'),
-    'horizon-fog-blend': new DataConstantProperty(styleSpec.sky['horizon-fog-blend'] as StylePropertySpecification, 'sky.horizon-fog-blend'),
-    'sky-horizon-blend': new DataConstantProperty(styleSpec.sky['sky-horizon-blend'] as StylePropertySpecification, 'sky.sky-horizon-blend'),
-    'atmosphere-blend': new DataConstantProperty(styleSpec.sky['atmosphere-blend'] as StylePropertySpecification, 'sky.atmosphere-blend')
+    'sky-color': new DataConstantProperty(styleSpec.sky['sky-color'] as StylePropertySpecification, 'sky-color'),
+    'horizon-color': new DataConstantProperty(styleSpec.sky['horizon-color'] as StylePropertySpecification, 'horizon-color'),
+    'fog-color': new DataConstantProperty(styleSpec.sky['fog-color'] as StylePropertySpecification, 'fog-color'),
+    'fog-ground-blend': new DataConstantProperty(styleSpec.sky['fog-ground-blend'] as StylePropertySpecification, 'fog-ground-blend'),
+    'horizon-fog-blend': new DataConstantProperty(styleSpec.sky['horizon-fog-blend'] as StylePropertySpecification, 'horizon-fog-blend'),
+    'sky-horizon-blend': new DataConstantProperty(styleSpec.sky['sky-horizon-blend'] as StylePropertySpecification, 'sky-horizon-blend'),
+    'atmosphere-blend': new DataConstantProperty(styleSpec.sky['atmosphere-blend'] as StylePropertySpecification, 'atmosphere-blend')
 });
 
 export class Sky extends Evented {
@@ -51,7 +51,7 @@ export class Sky extends Evented {
 
     constructor(sky?: SkySpecification) {
         super();
-        this._transitionable = new Transitionable(properties, undefined);
+        this._transitionable = new Transitionable(properties, undefined, 'sky');
         this.setSky(sky);
         this._transitioning = this._transitionable.untransitioned();
         this.recalculate(new EvaluationParameters(0));
