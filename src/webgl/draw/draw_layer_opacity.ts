@@ -90,5 +90,5 @@ export function drawLayerOpacity(painter: Painter, opacity: number, prepareDrawL
 
     // Clipping masks were drawn into the scratch FBO's stencil buffer, not the composite target's.
     // Reset currentStencilSource so a later layer on the same source redraws its masks into the composite target instead of reusing stale ones.
-    // painter.currentStencilSource = undefined;
+    painter.currentStencilSource = undefined;
 }
