@@ -978,19 +978,6 @@ export class VerticalPerspectiveTransform implements ITransform {
         return sphereSurfacePointToCoordinates(closestOnHorizon);
     }
 
-    getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
-        const lnglat = LngLat.convert(location);
-        const scale = 1.0 / earthRadius;
-
-        const m = createIdentityMat4f64();
-        mat4.rotateY(m, m, lnglat.lng / 180.0 * Math.PI);
-        mat4.rotateX(m, m, -lnglat.lat / 180.0 * Math.PI);
-        mat4.translate(m, m, [0, 0, 1 + altitude / earthRadius]);
-        mat4.rotateX(m, m, Math.PI * 0.5);
-        mat4.scale(m, m, [scale, scale, scale]);
-        return m;
-    }
-
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
         const globeData = this.getProjectionData({overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
         globeData.tileMercatorCoords = [0, 0, 1, 1];
