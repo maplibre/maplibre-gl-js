@@ -981,9 +981,6 @@ export class Map extends Evented<MapEventType> {
         return coveringTiles(this._camera.transform, options);
     }
 
-    // This is not part of the public API and will be removed in future versions
-    get transform(): ITransform { return this._camera.transform;}
-
     /**
      * Sets the callback used to defer camera updates or apply arbitrary constraints.
      * If specified, this Camera instance can be used as a stateless component in React etc.
