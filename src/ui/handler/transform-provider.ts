@@ -14,11 +14,9 @@ import {type LngLat} from '../../geo/lng_lat.ts';
  */
 export class TransformProvider {
     _camera: Camera;
-    _getTerrain: () => Terrain | null;
 
-    constructor(camera: Camera, getTerrain: () => Terrain | null) {
+    constructor(camera: Camera) {
         this._camera = camera;
-        this._getTerrain = getTerrain;
     }
 
     get transform(): IReadonlyTransform {
@@ -42,6 +40,6 @@ export class TransformProvider {
     }
 
     unproject(point: PointLike): LngLat {
-        return this.transform.screenPointToLocation(Point.convert(point), this._getTerrain());
+        return this.transform.screenPointToLocation(Point.convert(point), this._camera.terrain);
     }
 }

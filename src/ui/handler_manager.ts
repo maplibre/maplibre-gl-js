@@ -188,7 +188,7 @@ export class HandlerManager {
     constructor(map: Map, camera: Camera, options: CompleteMapOptions) {
         this._map = map;
         this._camera = camera;
-        this._transformProvider = new TransformProvider(this._camera, () => map.terrain);
+        this._transformProvider = new TransformProvider(this._camera);
         this._el = this._map.getCanvasContainer();
         this._handlers = [];
         this._handlersById = {};
