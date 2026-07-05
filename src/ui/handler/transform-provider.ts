@@ -1,7 +1,6 @@
 import type {Camera} from '../camera.ts';
 import type {PointLike} from '../camera.ts';
 import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
-import type {Terrain} from '../../render/terrain.ts';
 import Point from '@mapbox/point-geometry';
 import {type LngLat} from '../../geo/lng_lat.ts';
 
