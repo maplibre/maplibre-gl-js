@@ -118,7 +118,7 @@
     "rollup-plugin-visualizer": "^7.0.1",
     "rw": "^1.3.3",
     "semver": "^7.8.5",
-    "sharp": "^0.35.2",
+    "sharp": "^0.35.3",
     "shuffle-seed": "^1.1.6",
     "st": "^3.0.3",
     "stylelint": "^17.14.0",
