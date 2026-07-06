@@ -512,6 +512,7 @@ export class Painter {
     render(style: Style, options: PainterOptions): void {
         this.style = style;
         this.options = options;
+        style.map.terrain?.resetElevationCache();
 
         this.lineAtlas = style.lineAtlas;
         this.imageManager = style.imageManager;

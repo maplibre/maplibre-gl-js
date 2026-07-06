@@ -38,6 +38,10 @@ export type TerrainData = {
     tile: Tile;
 };
 
+type TerrainElevationSampler = {
+    getElevation: (x: number, y: number, extent?: number) => number;
+};
+
 /**
  * @internal
  * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
@@ -136,6 +140,7 @@ export class Terrain {
      * matrices to transform from vector-tile coords to raster-dem-tile coords.
      */
     _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
+    _elevationSamplerCache: Map<string, TerrainElevationSampler | null>;
     /**
      * Controls how terrain skirt length is calculated.
      * @see {@link MapOptions.terrainSkirtLength}
@@ -150,6 +155,7 @@ export class Terrain {
         this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = {};
+        this._elevationSamplerCache = new Map();
         this.coordsIndex = [];
         this._coordsTextureSize = 1024;
     }
@@ -247,7 +253,81 @@ export class Terrain {
      * @returns the elevation
      */
     getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
-        return this.getDEMElevation(tileID, x, y, extent) * this.exaggeration;
+        const sampler = this._getElevationSampler(tileID);
+        if (sampler) return sampler.getElevation(x, y, extent);
+
+        if (x >= 0 && x < extent && y >= 0 && y < extent) return 0;
+
+        const normalized = tileID.normalizeCoordinates(x, y, extent);
+        if (!normalized) return 0;
+
+        const normalizedSampler = this._getElevationSampler(normalized.tileID);
+        return normalizedSampler ? normalizedSampler.getElevation(normalized.x, normalized.y, extent) : 0;
+    }
+
+    resetElevationCache(): void {
+        this._elevationSamplerCache.clear();
+    }
+
+    _getElevationSampler(tileID: OverscaledTileID): TerrainElevationSampler | null {
+        const key = tileID.key;
+        if (!this._elevationSamplerCache.has(key)) {
+            this._elevationSamplerCache.set(key, this._createElevationSampler(tileID, this.exaggeration));
+        }
+        return this._elevationSamplerCache.get(key);
+    }
+
+    _createElevationSampler(tileID: OverscaledTileID, exaggeration: number): TerrainElevationSampler | null {
+        if (tileID.overscaledZ - this.tileManager.deltaZoom < this.tileManager.minzoom) return null;
+
+        const sourceTile = this.tileManager.getSourceTile(tileID, true);
+        const dem = sourceTile?.dem;
+        if (!sourceTile || !dem) return null;
+
+        const matrix = this._getDEMTileMatrix(tileID, sourceTile);
+        const scaleX = matrix[0];
+        const scaleY = matrix[5];
+        const offsetX = matrix[12];
+        const offsetY = matrix[13];
+        const sample = (x: number, y: number, extent: number): number => {
+            const extentScale = extent === EXTENT ? 1 : EXTENT / extent;
+            return dem.sampleBilinear(
+                (x * extentScale * scaleX + offsetX) * dem.dim,
+                (y * extentScale * scaleY + offsetY) * dem.dim
+            ) * exaggeration;
+        };
+
+        return {
+            getElevation: (x: number, y: number, extent: number = EXTENT): number => {
+                if (x >= 0 && x < extent && y >= 0 && y < extent) {
+                    return sample(x, y, extent);
+                }
+
+                const normalized = tileID.normalizeCoordinates(x, y, extent);
+                if (!normalized) return 0;
+
+                const sampler = this._getElevationSampler(normalized.tileID);
+                return sampler ? sampler.getElevation(normalized.x, normalized.y, extent) : 0;
+            }
+        };
+    }
+
+    _getDEMTileMatrix(tileID: OverscaledTileID, sourceTile: Tile): mat4 {
+        const matrixKey = sourceTile.toString() + sourceTile.tileID.key + tileID.key;
+        if (!this._demMatrixCache[matrixKey]) {
+            const maxzoom = this.tileManager.getSource().maxzoom;
+            let dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
+            if (tileID.overscaledZ > tileID.canonical.z) {
+                if (tileID.canonical.z >= maxzoom) dz =  tileID.canonical.z - maxzoom;
+                else warnOnce('cannot calculate elevation if elevation maxzoom > source.maxzoom');
+            }
+            const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+            const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
+            const demMatrix = mat4.fromScaling(new Float64Array(16), [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
+            mat4.translate(demMatrix, demMatrix, [dx * EXTENT, dy * EXTENT, 0]);
+            this._demMatrixCache[matrixKey] = {matrix: demMatrix, coord: tileID};
+        }
+        return this._demMatrixCache[matrixKey].matrix;
     }
 
     /**
@@ -277,27 +357,13 @@ export class Terrain {
             sourceTile.demTexture.bind(context.gl.NEAREST, context.gl.CLAMP_TO_EDGE);
             sourceTile.needsTerrainPrepare = false;
         }
-        // create matrix for lookup in dem data
-        const matrixKey = sourceTile && sourceTile.toString() + sourceTile.tileID.key + tileID.key;
-        if (matrixKey && !this._demMatrixCache[matrixKey]) {
-            const maxzoom = this.tileManager.getSource().maxzoom;
-            let dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
-            if (tileID.overscaledZ > tileID.canonical.z) {
-                if (tileID.canonical.z >= maxzoom) dz =  tileID.canonical.z - maxzoom;
-                else warnOnce('cannot calculate elevation if elevation maxzoom > source.maxzoom');
-            }
-            const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
-            const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
-            const demMatrix = mat4.fromScaling(new Float64Array(16), [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
-            mat4.translate(demMatrix, demMatrix, [dx * EXTENT, dy * EXTENT, 0]);
-            this._demMatrixCache[matrixKey] = {matrix: demMatrix, coord: tileID};
-        }
+        const terrainMatrix = sourceTile ? this._getDEMTileMatrix(tileID, sourceTile) : this._emptyDemMatrix;
         // return uniform values & textures
         return {
             'u_depth': 2,
             'u_terrain': 3,
             'u_terrain_dim': sourceTile?.dem?.dim || 1,
-            'u_terrain_matrix': matrixKey ? this._demMatrixCache[matrixKey].matrix : this._emptyDemMatrix,
+            'u_terrain_matrix': terrainMatrix,
             'u_terrain_unpack': sourceTile?.dem?.getUnpackVector() || this._emptyDemUnpack,
             'u_terrain_exaggeration': this.exaggeration,
             texture: (sourceTile?.demTexture || this._emptyDemTexture).texture,
