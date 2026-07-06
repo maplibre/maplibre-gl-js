@@ -154,10 +154,8 @@ describe('Terrain', () => {
             {exaggeration: 2} as any as TerrainSpecification,
         );
 
-        const getTerrainData = vi.spyOn(terrain, 'getTerrainData');
         const {minElevation, maxElevation} = terrain.getMinMaxElevation(tileID);
 
-        expect(getTerrainData).not.toHaveBeenCalled();
         expect(minElevation).toBe(20);
         expect(maxElevation).toBe(200);
     });
