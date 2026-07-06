@@ -41480,7 +41480,8 @@ var VerticalPerspectiveCameraHelper = class VerticalPerspectiveCameraHelper {
 				warnOnce("Easing around a point is not supported under globe projection.");
 				tr.setLocationAtPoint(options.around, options.aroundPoint);
 			} else {
-				const newCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, k * Math.pow(normalizedEndZoom > normalizedStartZoom ? Math.min(2, finalScale) : Math.max(.5, finalScale), 1 - k));
+				const factor = k * Math.pow(normalizedEndZoom > normalizedStartZoom ? Math.min(2, finalScale) : Math.max(.5, finalScale), 1 - k);
+				const newCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, factor);
 				tr.setCenter(newCenter.wrap());
 			}
 			if (isZooming) {
@@ -48476,7 +48477,8 @@ var TwoFingersTouchRotateHandler = class extends TwoFingersTouchHandler {
 	}
 	_isBelowThreshold(vector) {
 		this._minDiameter = Math.min(this._minDiameter, vector.mag());
-		const threshold = ROTATION_THRESHOLD / (Math.PI * this._minDiameter) * 360;
+		const circumference = Math.PI * this._minDiameter;
+		const threshold = ROTATION_THRESHOLD / circumference * 360;
 		const bearingDeltaSinceStart = getBearingDelta(vector, this._startVector);
 		return Math.abs(bearingDeltaSinceStart) < threshold;
 	}
@@ -60783,7 +60785,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 6ff9a77";
+const version = "main 6481043";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
