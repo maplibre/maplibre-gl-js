@@ -38,7 +38,7 @@
     "@maplibre/mlt": "^1.1.12",
     "@maplibre/vt-pbf": "^4.3.2",
     "@types/geojson": "^7946.0.16",
-    "earcut": "^3.1.1",
+    "earcut": "^3.2.3",
     "gl-matrix": "^3.4.4",
     "kdbush": "^4.1.0",
     "murmurhash-js": "^1.0.0",
