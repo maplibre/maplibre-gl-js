@@ -140,7 +140,7 @@ export class Terrain {
      * matrices to transform from vector-tile coords to raster-dem-tile coords.
      */
     _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
-    _elevationSamplerCache: Map<string, TerrainElevationSampler | null>;
+    _elevationSamplerCache: Map<string, TerrainElevationSampler>;
     /**
      * Controls how terrain skirt length is calculated.
      * @see {@link MapOptions.terrainSkirtLength}
@@ -253,10 +253,10 @@ export class Terrain {
      * @returns the elevation
      */
     getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
-        const sampler = this._getElevationSampler(tileID);
-        if (sampler) return sampler.getElevation(x, y, extent);
-
-        if (x >= 0 && x < extent && y >= 0 && y < extent) return 0;
+        if (x >= 0 && x < extent && y >= 0 && y < extent) {
+            const sampler = this._getElevationSampler(tileID);
+            return sampler ? sampler.getElevation(x, y, extent) : 0;
+        }
 
         const normalized = tileID.normalizeCoordinates(x, y, extent);
         if (!normalized) return 0;
@@ -271,10 +271,12 @@ export class Terrain {
 
     _getElevationSampler(tileID: OverscaledTileID): TerrainElevationSampler | null {
         const key = tileID.key;
-        if (!this._elevationSamplerCache.has(key)) {
-            this._elevationSamplerCache.set(key, this._createElevationSampler(tileID, this.exaggeration));
-        }
-        return this._elevationSamplerCache.get(key);
+        const sampler = this._elevationSamplerCache.get(key);
+        if (sampler) return sampler;
+
+        const createdSampler = this._createElevationSampler(tileID, this.exaggeration);
+        if (createdSampler) this._elevationSamplerCache.set(key, createdSampler);
+        return createdSampler;
     }
 
     _createElevationSampler(tileID: OverscaledTileID, exaggeration: number): TerrainElevationSampler | null {

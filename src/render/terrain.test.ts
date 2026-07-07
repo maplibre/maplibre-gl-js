@@ -299,6 +299,28 @@ describe('Terrain', () => {
         expect(terrain.tileManager.getSourceTile).toHaveBeenCalledTimes(2);
     });
 
+    test('getElevation retries sampling setup when DEM data becomes available', () => {
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {exaggeration: 1} as any);
+        const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
+        let tileHasDem = false;
+
+        terrain.tileManager.getSourceTile = vi.fn(() => ({
+            tileID,
+            dem: tileHasDem ? {
+                dim: 1,
+                sampleBilinear: (x: number, y: number) => 100 * x + 10 * y
+            } : undefined,
+            toString: () => 'source-tile'
+        }) as any as Tile);
+        terrain.tileManager.getSource = vi.fn(() => ({minzoom: 0, maxzoom: 22}) as any);
+
+        expect(terrain.getElevation(tileID, EXTENT / 2, EXTENT / 2)).toBe(0);
+
+        tileHasDem = true;
+        expect(terrain.getElevation(tileID, EXTENT / 2, EXTENT / 2)).toBeCloseTo(55);
+        expect(terrain.tileManager.getSourceTile).toHaveBeenCalledTimes(2);
+    });
+
     test('getElevationForLngLat uses covering tiles to get the right zoom', () => {
         const zoom = 10;
         const painter = {
