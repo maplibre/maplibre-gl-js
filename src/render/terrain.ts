@@ -21,7 +21,6 @@ import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Painter} from './painter.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
-import type {DEMData} from '../data/dem_data.ts';
 
 /**
  * @internal
@@ -39,8 +38,17 @@ export type TerrainData = {
     tile: Tile;
 };
 
-type TerrainElevationSampler = {
-    getElevation: (x: number, y: number, extent?: number) => number;
+/**
+ * @internal
+ */
+type TerrainElevationLookup = (x: number, y: number, extent?: number) => number;
+
+/**
+ * @internal
+ */
+type _PreparedTerrainElevationLookup = {
+    getElevation: TerrainElevationLookup;
+    sample: (x: number, y: number, extent: number) => number;
 };
 
 /**
@@ -141,7 +149,7 @@ export class Terrain {
      * matrices to transform from vector-tile coords to raster-dem-tile coords.
      */
     _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
-    _elevationSamplerCache: Map<string, TerrainElevationSampler>;
+    _elevationLookupCache: Map<string, _PreparedTerrainElevationLookup>;
     /**
      * Controls how terrain skirt length is calculated.
      * @see {@link MapOptions.terrainSkirtLength}
@@ -156,7 +164,7 @@ export class Terrain {
         this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = {};
-        this._elevationSamplerCache = new Map();
+        this._elevationLookupCache = new Map();
         this.coordsIndex = [];
         this._coordsTextureSize = 1024;
     }
@@ -257,25 +265,37 @@ export class Terrain {
         const normalized = tileID.normalizeCoordinates(x, y, extent);
         if (!normalized) return 0;
 
-        const sampler = this._getElevationSampler(normalized.tileID);
-        return sampler ? sampler.getElevation(normalized.x, normalized.y, extent) : 0;
+        const lookup = this._getElevationLookup(normalized.tileID);
+        return lookup ? lookup.sample(normalized.x, normalized.y, extent) : 0;
+    }
+
+    /**
+     * @internal
+     * Resolve DEM tile/matrix once for hot loops that sample many points from the same tile.
+     * Use {@link Terrain.getElevation} for one-off lookups and general coordinate normalization.
+     * @param tileID - the tile id
+     * @returns a prepared elevation lookup for this tile, or null while DEM data is unavailable
+     */
+    getElevationLookup(tileID: OverscaledTileID): TerrainElevationLookup | null {
+        const lookup = this._getElevationLookup(tileID);
+        return lookup ? lookup.getElevation : null;
     }
 
     resetElevationCache(): void {
-        this._elevationSamplerCache.clear();
+        this._elevationLookupCache.clear();
     }
 
-    _getElevationSampler(tileID: OverscaledTileID): TerrainElevationSampler | null {
+    _getElevationLookup(tileID: OverscaledTileID): _PreparedTerrainElevationLookup | null {
         const key = tileID.key;
-        const sampler = this._elevationSamplerCache.get(key);
-        if (sampler) return sampler;
+        const lookup = this._elevationLookupCache.get(key);
+        if (lookup) return lookup;
 
-        const createdSampler = this._createElevationSampler(tileID, this.exaggeration);
-        if (createdSampler) this._elevationSamplerCache.set(key, createdSampler);
-        return createdSampler;
+        const createdLookup = this._createElevationLookup(tileID, this.exaggeration);
+        if (createdLookup) this._elevationLookupCache.set(key, createdLookup);
+        return createdLookup;
     }
 
-    _createElevationSampler(tileID: OverscaledTileID, exaggeration: number): TerrainElevationSampler | null {
+    _createElevationLookup(tileID: OverscaledTileID, exaggeration: number): _PreparedTerrainElevationLookup | null {
         if (tileID.overscaledZ - this.tileManager.deltaZoom < this.tileManager.minzoom) return null;
 
         const sourceTile = this.tileManager.getSourceTile(tileID, true);
@@ -283,18 +303,31 @@ export class Terrain {
         if (!sourceTile || !dem) return null;
 
         const matrix = this._getDEMTileMatrix(tileID, sourceTile);
+        // Store the vector-tile to DEM-pixel transform once for the hot sampling loop.
+        const demPixelScaleX = matrix[0] * dem.dim;
+        const demPixelScaleY = matrix[5] * dem.dim;
+        const demPixelOffsetX = matrix[12] * dem.dim;
+        const demPixelOffsetY = matrix[13] * dem.dim;
+        const sample = (x: number, y: number, extent: number): number => {
+            const extentScale = extent === EXTENT ? 1 : EXTENT / extent;
+            return dem.sampleBilinear(
+                x * extentScale * demPixelScaleX + demPixelOffsetX,
+                y * extentScale * demPixelScaleY + demPixelOffsetY
+            ) * exaggeration;
+        };
 
         return {
-            getElevation: (x: number, y: number, extent: number = EXTENT): number => this._sampleElevation(dem, matrix, exaggeration, x, y, extent)
-        };
-    }
+            sample,
+            getElevation: (x: number, y: number, extent: number = EXTENT): number => {
+                if (x >= 0 && x < extent && y >= 0 && y < extent) return sample(x, y, extent);
 
-    _sampleElevation(dem: DEMData, matrix: mat4, exaggeration: number, x: number, y: number, extent: number): number {
-        const extentScale = extent === EXTENT ? 1 : EXTENT / extent;
-        return dem.sampleBilinear(
-            (x * extentScale * matrix[0] + matrix[12]) * dem.dim,
-            (y * extentScale * matrix[5] + matrix[13]) * dem.dim
-        ) * exaggeration;
+                const normalized = tileID.normalizeCoordinates(x, y, extent);
+                if (!normalized) return 0;
+
+                const lookup = this._getElevationLookup(normalized.tileID);
+                return lookup ? lookup.sample(normalized.x, normalized.y, extent) : 0;
+            }
+        };
     }
 
     _getDEMTileMatrix(tileID: OverscaledTileID, sourceTile: Tile): mat4 {

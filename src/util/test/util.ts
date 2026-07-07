@@ -239,6 +239,8 @@ export function expectToBeCloseToArray(actual: number[], expected: number[], pre
 export function createTerrain(): Terrain {
     return {
         pointCoordinate: () => null,
+        getElevation: () => 1000,
+        getElevationLookup: () => () => 1000,
         getElevationForLngLatZoom: () => 1000,
         getElevationForLngLat: () => 1000,
         getMinTileElevationForLngLatZoom: () => 0,

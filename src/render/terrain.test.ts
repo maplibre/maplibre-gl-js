@@ -321,6 +321,63 @@ describe('Terrain', () => {
         expect(terrain.tileManager.getSourceTile).toHaveBeenCalledTimes(2);
     });
 
+    test('getElevationLookup retries sampling setup when DEM data becomes available', () => {
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {exaggeration: 1} as any);
+        const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
+        let tileHasDem = false;
+
+        terrain.tileManager.getSourceTile = vi.fn(() => ({
+            tileID,
+            dem: tileHasDem ? {
+                dim: 1,
+                sampleBilinear: (x: number, y: number) => 100 * x + 10 * y
+            } : undefined,
+            toString: () => 'source-tile'
+        }) as any as Tile);
+        terrain.tileManager.getSource = vi.fn(() => ({minzoom: 0, maxzoom: 22}) as any);
+
+        expect(terrain.getElevationLookup(tileID)).toBeNull();
+
+        tileHasDem = true;
+        const lookup = terrain.getElevationLookup(tileID);
+        if (!lookup) throw new Error('Expected elevation lookup to be available');
+        expect(lookup(EXTENT / 2, EXTENT / 2)).toBeCloseTo(55);
+        expect(terrain.tileManager.getSourceTile).toHaveBeenCalledTimes(2);
+    });
+
+    test('getElevationLookup normalizes coordinates that cross tile boundaries', () => {
+        const terrain = new Terrain(null, {_source: {tileSize: 512}} as any, {exaggeration: 1} as any);
+        const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
+        const neighborID = new OverscaledTileID(1, 0, 1, 1, 0);
+        const sourceTiles = new Map([
+            [tileID.key, {
+                tileID,
+                dem: {
+                    dim: 1,
+                    sampleBilinear: (x: number, y: number) => 100 * x + 10 * y
+                },
+                toString: () => 'source-tile-0'
+            } as any as Tile],
+            [neighborID.key, {
+                tileID: neighborID,
+                dem: {
+                    dim: 1,
+                    sampleBilinear: (x: number, y: number) => 1000 + 100 * x + 10 * y
+                },
+                toString: () => 'source-tile-1'
+            } as any as Tile]
+        ]);
+        terrain.tileManager.getSourceTile = vi.fn((id: OverscaledTileID) => sourceTiles.get(id.key));
+        terrain.tileManager.getSource = vi.fn(() => ({minzoom: 0, maxzoom: 22}) as any);
+
+        const lookup = terrain.getElevationLookup(tileID);
+        if (!lookup) throw new Error('Expected elevation lookup to be available');
+
+        expect(lookup(EXTENT + EXTENT / 2, EXTENT / 2)).toBeCloseTo(1055);
+        expect(terrain.tileManager.getSourceTile).toHaveBeenCalledTimes(2);
+        expect((terrain.tileManager.getSourceTile as any).mock.calls.map(([id]) => id.key)).toEqual([tileID.key, neighborID.key]);
+    });
+
     test('getElevationForLngLat uses covering tiles to get the right zoom', () => {
         const zoom = 10;
         const painter = {
