@@ -2,7 +2,7 @@ import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
 import {Painter} from './painter.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {Style} from '../style/style.ts';
-import {StubMap} from '../util/test/util.ts';
+import {createTerrain, StubMap} from '../util/test/util.ts';
 import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 import {restoreNow, setNow} from '../util/time_control.ts';
@@ -38,7 +38,7 @@ describe('render', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const terrainData = {tile: null};
         const getTerrainData = vi.fn(() => terrainData);
-        map.terrain = {getTerrainData};
+        map.terrain = {...createTerrain(), getTerrainData};
         painter.style = style;
 
         return {tileID, terrainData, getTerrainData};
@@ -51,7 +51,7 @@ describe('render', () => {
     test('calls terrainDepth but not terrainCoords', () => {
         const terrainDepth = vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
         const terrainCoords = vi.spyOn(painter.drawFunctions, 'terrainCoords').mockImplementation(() => {});
-        map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
+        map.terrain = createTerrain();
 
         painter.render(style, renderOptions);
 
@@ -83,7 +83,7 @@ describe('render', () => {
     describe('terrain render time', () => {
         beforeEach(() => {
             vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
-            map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
+            map.terrain = createTerrain();
         });
 
         afterEach(() => {
