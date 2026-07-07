@@ -46,10 +46,7 @@ type TerrainElevationLookup = (x: number, y: number, extent?: number) => number;
 /**
  * @internal
  */
-type _PreparedTerrainElevationLookup = {
-    getElevation: TerrainElevationLookup;
-    sample: (x: number, y: number, extent: number) => number;
-};
+type PreparedTerrainElevationLookup = (x: number, y: number, extent: number) => number;
 
 /**
  * @internal
@@ -149,7 +146,7 @@ export class Terrain {
      * matrices to transform from vector-tile coords to raster-dem-tile coords.
      */
     _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
-    _elevationLookupCache: Map<string, _PreparedTerrainElevationLookup>;
+    _elevationLookupCache: Map<string, PreparedTerrainElevationLookup>;
     /**
      * Controls how terrain skirt length is calculated.
      * @see {@link MapOptions.terrainSkirtLength}
@@ -266,7 +263,7 @@ export class Terrain {
         if (!normalized) return 0;
 
         const lookup = this._getElevationLookup(normalized.tileID);
-        return lookup ? lookup.sample(normalized.x, normalized.y, extent) : 0;
+        return lookup ? lookup(normalized.x, normalized.y, extent) : 0;
     }
 
     /**
@@ -278,14 +275,24 @@ export class Terrain {
      */
     getElevationLookup(tileID: OverscaledTileID): TerrainElevationLookup | null {
         const lookup = this._getElevationLookup(tileID);
-        return lookup ? lookup.getElevation : null;
+        if (!lookup) return null;
+
+        return (x: number, y: number, extent: number = EXTENT): number => {
+            if (x >= 0 && x < extent && y >= 0 && y < extent) return lookup(x, y, extent);
+
+            const normalized = tileID.normalizeCoordinates(x, y, extent);
+            if (!normalized) return 0;
+
+            const normalizedLookup = this._getElevationLookup(normalized.tileID);
+            return normalizedLookup ? normalizedLookup(normalized.x, normalized.y, extent) : 0;
+        };
     }
 
     resetElevationCache(): void {
         this._elevationLookupCache.clear();
     }
 
-    _getElevationLookup(tileID: OverscaledTileID): _PreparedTerrainElevationLookup | null {
+    _getElevationLookup(tileID: OverscaledTileID): PreparedTerrainElevationLookup | null {
         const key = tileID.key;
         const lookup = this._elevationLookupCache.get(key);
         if (lookup) return lookup;
@@ -295,7 +302,7 @@ export class Terrain {
         return createdLookup;
     }
 
-    _createElevationLookup(tileID: OverscaledTileID, exaggeration: number): _PreparedTerrainElevationLookup | null {
+    _createElevationLookup(tileID: OverscaledTileID, exaggeration: number): PreparedTerrainElevationLookup | null {
         if (tileID.overscaledZ - this.tileManager.deltaZoom < this.tileManager.minzoom) return null;
 
         const sourceTile = this.tileManager.getSourceTile(tileID, true);
@@ -308,25 +315,12 @@ export class Terrain {
         const demPixelScaleY = matrix[5] * dem.dim;
         const demPixelOffsetX = matrix[12] * dem.dim;
         const demPixelOffsetY = matrix[13] * dem.dim;
-        const sample = (x: number, y: number, extent: number): number => {
+        return (x: number, y: number, extent: number): number => {
             const extentScale = extent === EXTENT ? 1 : EXTENT / extent;
             return dem.sampleBilinear(
                 x * extentScale * demPixelScaleX + demPixelOffsetX,
                 y * extentScale * demPixelScaleY + demPixelOffsetY
             ) * exaggeration;
-        };
-
-        return {
-            sample,
-            getElevation: (x: number, y: number, extent: number = EXTENT): number => {
-                if (x >= 0 && x < extent && y >= 0 && y < extent) return sample(x, y, extent);
-
-                const normalized = tileID.normalizeCoordinates(x, y, extent);
-                if (!normalized) return 0;
-
-                const lookup = this._getElevationLookup(normalized.tileID);
-                return lookup ? lookup.sample(normalized.x, normalized.y, extent) : 0;
-            }
         };
     }
 
