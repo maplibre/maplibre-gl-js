@@ -21,6 +21,7 @@ import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Painter} from './painter.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {DEMData} from '../data/dem_data.ts';
 
 /**
  * @internal
@@ -253,16 +254,11 @@ export class Terrain {
      * @returns the elevation
      */
     getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
-        if (x >= 0 && x < extent && y >= 0 && y < extent) {
-            const sampler = this._getElevationSampler(tileID);
-            return sampler ? sampler.getElevation(x, y, extent) : 0;
-        }
-
         const normalized = tileID.normalizeCoordinates(x, y, extent);
         if (!normalized) return 0;
 
-        const normalizedSampler = this._getElevationSampler(normalized.tileID);
-        return normalizedSampler ? normalizedSampler.getElevation(normalized.x, normalized.y, extent) : 0;
+        const sampler = this._getElevationSampler(normalized.tileID);
+        return sampler ? sampler.getElevation(normalized.x, normalized.y, extent) : 0;
     }
 
     resetElevationCache(): void {
@@ -287,31 +283,18 @@ export class Terrain {
         if (!sourceTile || !dem) return null;
 
         const matrix = this._getDEMTileMatrix(tileID, sourceTile);
-        const scaleX = matrix[0];
-        const scaleY = matrix[5];
-        const offsetX = matrix[12];
-        const offsetY = matrix[13];
-        const sample = (x: number, y: number, extent: number): number => {
-            const extentScale = extent === EXTENT ? 1 : EXTENT / extent;
-            return dem.sampleBilinear(
-                (x * extentScale * scaleX + offsetX) * dem.dim,
-                (y * extentScale * scaleY + offsetY) * dem.dim
-            ) * exaggeration;
-        };
 
         return {
-            getElevation: (x: number, y: number, extent: number = EXTENT): number => {
-                if (x >= 0 && x < extent && y >= 0 && y < extent) {
-                    return sample(x, y, extent);
-                }
-
-                const normalized = tileID.normalizeCoordinates(x, y, extent);
-                if (!normalized) return 0;
-
-                const sampler = this._getElevationSampler(normalized.tileID);
-                return sampler ? sampler.getElevation(normalized.x, normalized.y, extent) : 0;
-            }
+            getElevation: (x: number, y: number, extent: number = EXTENT): number => this._sampleElevation(dem, matrix, exaggeration, x, y, extent)
         };
+    }
+
+    _sampleElevation(dem: DEMData, matrix: mat4, exaggeration: number, x: number, y: number, extent: number): number {
+        const extentScale = extent === EXTENT ? 1 : EXTENT / extent;
+        return dem.sampleBilinear(
+            (x * extentScale * matrix[0] + matrix[12]) * dem.dim,
+            (y * extentScale * matrix[5] + matrix[13]) * dem.dim
+        ) * exaggeration;
     }
 
     _getDEMTileMatrix(tileID: OverscaledTileID, sourceTile: Tile): mat4 {
