@@ -145,7 +145,7 @@ export class Terrain {
      * as of overzooming of raster-dem tiles in high zoomlevels, this cache contains
      * matrices to transform from vector-tile coords to raster-dem-tile coords.
      */
-    _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
+    _demMatrixCache: {[_: string]: {matrix: mat4}};
     _elevationLookupCache: Map<string, PreparedTerrainElevationLookup>;
     /**
      * Controls how terrain skirt length is calculated.
@@ -326,20 +326,21 @@ export class Terrain {
 
     _getDEMTileMatrix(tileID: OverscaledTileID, sourceTile: Tile): mat4 {
         const matrixKey = sourceTile.toString() + sourceTile.tileID.key + tileID.key;
-        if (!this._demMatrixCache[matrixKey]) {
-            const maxzoom = this.tileManager.getSource().maxzoom;
-            let dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
-            if (tileID.overscaledZ > tileID.canonical.z) {
-                if (tileID.canonical.z >= maxzoom) dz =  tileID.canonical.z - maxzoom;
-                else warnOnce('cannot calculate elevation if elevation maxzoom > source.maxzoom');
-            }
-            const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
-            const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
-            const demMatrix = mat4.fromScaling(new Float64Array(16), [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
-            mat4.translate(demMatrix, demMatrix, [dx * EXTENT, dy * EXTENT, 0]);
-            this._demMatrixCache[matrixKey] = {matrix: demMatrix, coord: tileID};
+        const cachedMatrix = this._demMatrixCache[matrixKey];
+        if (cachedMatrix) return cachedMatrix.matrix;
+
+        const maxzoom = this.tileManager.getSource().maxzoom;
+        let dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
+        if (tileID.overscaledZ > tileID.canonical.z) {
+            if (tileID.canonical.z >= maxzoom) dz =  tileID.canonical.z - maxzoom;
+            else warnOnce('cannot calculate elevation if elevation maxzoom > source.maxzoom');
         }
-        return this._demMatrixCache[matrixKey].matrix;
+        const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+        const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
+        const demMatrix = mat4.fromScaling(new Float64Array(16), [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
+        mat4.translate(demMatrix, demMatrix, [dx * EXTENT, dy * EXTENT, 0]);
+        this._demMatrixCache[matrixKey] = {matrix: demMatrix};
+        return demMatrix;
     }
 
     /**
