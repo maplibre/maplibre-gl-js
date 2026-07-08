@@ -896,6 +896,8 @@ var TransferableGridIndex = class TransferableGridIndex {
 		return new TransferableGridIndex(serialized.buffer);
 	}
 };
+//#endregion
+//#region node_modules/@maplibre/maplibre-gl-style-spec/dist/index.mjs
 var v8_default = {
 	$version: 8,
 	$root: {

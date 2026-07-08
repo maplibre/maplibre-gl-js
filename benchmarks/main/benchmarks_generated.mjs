@@ -3042,6 +3042,8 @@ var TransferableGridIndex = class TransferableGridIndex {
 		return new TransferableGridIndex(serialized.buffer);
 	}
 };
+//#endregion
+//#region node_modules/@maplibre/maplibre-gl-style-spec/dist/index.mjs
 var v8_default = {
 	$version: 8,
 	$root: {
@@ -14509,7 +14511,9 @@ var MapProjectionEvent = class extends MapLibreEvent {
 */
 var MapContextEvent = class extends MapLibreEvent {};
 /**
-* The style image missing event
+* The style image missing event, fired when an image is still missing after the missing style image
+* resolver has been given a chance to supply it. To load or generate images on demand,
+* use {@link Map.setMissingStyleImageResolver}.
 *
 * @group Event Related
 *
@@ -23647,6 +23651,7 @@ var ImageManager = class extends Evented {
 		this.callbackDispatchedThisFrame = {};
 		this.loaded = false;
 		this.requestors = [];
+		this.missingImageResolver = null;
 		this.patterns = {};
 		this.atlasImage = new RGBAImage({
 			width: 1,
@@ -23749,6 +23754,9 @@ var ImageManager = class extends Evented {
 	listImages() {
 		return Object.keys(this.images);
 	}
+	setMissingImageResolver(resolver) {
+		this.missingImageResolver = resolver;
+	}
 	getImages(ids) {
 		return new Promise((resolve, _reject) => {
 			let hasAllDependencies = true;
@@ -23762,14 +23770,12 @@ var ImageManager = class extends Evented {
 			});
 		});
 	}
-	_getImagesForIds(ids) {
+	async _getImagesForIds(ids) {
+		const missingIds = new Set(ids.filter((id) => !this.getImage(id)));
+		await Promise.all(Array.from(missingIds, (id) => this._resolveMissingImageId(id)));
 		const response = {};
 		for (const id of ids) {
-			let image = this.getImage(id);
-			if (!image) {
-				this.fire(new MapStyleImageMissingEvent({ id }));
-				image = this.getImage(id);
-			}
+			const image = this.getImage(id);
 			if (image) response[id] = {
 				data: image.data.clone(),
 				pixelRatio: image.pixelRatio,
@@ -23782,9 +23788,17 @@ var ImageManager = class extends Evented {
 				textFitHeight: image.textFitHeight,
 				hasRenderCallback: Boolean(image.userImage?.render)
 			};
-			else warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image with map.addImage() or a "sprite" property in your style. You can provide missing images by listening for the "styleimagemissing" map event.`);
+			else warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a "sprite" property in your style.`);
 		}
 		return response;
+	}
+	async _resolveMissingImageId(id) {
+		if (this.getImage(id)) return;
+		await this._resolveMissingImageOrFireEvent(id);
+	}
+	async _resolveMissingImageOrFireEvent(id) {
+		if (this.missingImageResolver) await this.missingImageResolver(id);
+		if (!this.getImage(id)) this.fire(new MapStyleImageMissingEvent({ id }));
 	}
 	getPixelSize() {
 		const { width, height } = this.atlasImage;
@@ -41708,6 +41722,7 @@ var Style = class extends Evented {
 		});
 		this.imageManager = new ImageManager();
 		this.imageManager.setEventedParent(this);
+		this.imageManager.setMissingImageResolver(map._missingStyleImageResolver);
 		const glyphLang = map._container?.lang || typeof document !== "undefined" && document.documentElement?.lang || void 0;
 		this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily, glyphLang);
 		this.lineAtlas = new LineAtlas(256, 512);
@@ -42164,6 +42179,9 @@ var Style = class extends Evented {
 	}
 	getImage(id) {
 		return this.imageManager.getImage(id);
+	}
+	setMissingImageResolver(resolver) {
+		this.imageManager.setMissingImageResolver(resolver);
 	}
 	removeImage(id) {
 		if (!this.getImage(id)) {
@@ -51712,6 +51730,7 @@ var Map$1 = class extends Evented {
 		this._renderTaskQueue = new TaskQueue();
 		this._controls = [];
 		this._mapId = uniqueId();
+		this._missingStyleImageResolver = null;
 		this._lostContextStyle = {
 			style: null,
 			images: null
@@ -53751,12 +53770,41 @@ var Map$1 = class extends Evented {
 	* @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-generated-icon-to-the-map/)
 	*/
 	addImage(id, image, options = {}) {
-		const { pixelRatio = 1, sdf = false, stretchX, stretchY, content, textFitWidth, textFitHeight } = options;
 		this._lazyInitEmptyStyle();
+		const styleImage = this._createStyleImage(image, options);
+		if (!styleImage) return this;
+		this.style.addImage(id, styleImage);
+		if (styleImage.userImage?.onAdd) styleImage.userImage.onAdd(this, id);
+		return this;
+	}
+	/**
+	* Sets a callback that is invoked when an icon or pattern needed by the style is missing.
+	*
+	* The resolver typically loads or generates the image and registers it with {@link Map.addImage}.
+	* MapLibre awaits the returned promise before treating the image as missing, so async work is
+	* supported. If the image is still missing afterwards, the `styleimagemissing` event is fired.
+	*
+	* @param resolver - Callback used to resolve missing images, or `null` to remove the resolver.
+	* @example
+	* ```ts
+	* map.setMissingStyleImageResolver(async (id) => {
+	*     const response = await fetch(`/icons/${id}.png`);
+	*     const image = await createImageBitmap(await response.blob());
+	*     map.addImage(id, image, {pixelRatio: 2});
+	* });
+	* ```
+	*/
+	setMissingStyleImageResolver(resolver) {
+		this._missingStyleImageResolver = resolver;
+		this.style?.setMissingImageResolver(resolver);
+		return this;
+	}
+	_createStyleImage(image, options = {}) {
+		const { pixelRatio = 1, sdf = false, stretchX, stretchY, content, textFitWidth, textFitHeight } = options;
 		const version = 0;
 		if (image instanceof HTMLImageElement || isImageBitmap(image)) {
 			const { width, height, data } = browser.getImageData(image);
-			this.style.addImage(id, {
+			return {
 				data: new RGBAImage({
 					width,
 					height
@@ -53769,12 +53817,14 @@ var Map$1 = class extends Evented {
 				textFitHeight,
 				sdf,
 				version
-			});
-		} else if (image.width === void 0 || image.height === void 0) return this.fire(new ErrorEvent(/* @__PURE__ */ new Error("Invalid arguments to map.addImage(). The second argument must be an `HTMLImageElement`, `ImageData`, `ImageBitmap`, or object with `width`, `height`, and `data` properties with the same format as `ImageData`")));
-		else {
+			};
+		} else if (image.width === void 0 || image.height === void 0) {
+			this.fire(new ErrorEvent(/* @__PURE__ */ new Error("Invalid arguments to map.addImage(). The second argument must be an `HTMLImageElement`, `ImageData`, `ImageBitmap`, or object with `width`, `height`, and `data` properties with the same format as `ImageData`")));
+			return null;
+		} else {
 			const { width, height, data } = image;
 			const userImage = image;
-			this.style.addImage(id, {
+			return {
 				data: new RGBAImage({
 					width,
 					height
@@ -53788,9 +53838,7 @@ var Map$1 = class extends Evented {
 				sdf,
 				version,
 				userImage
-			});
-			if (userImage.onAdd) userImage.onAdd(this, id);
-			return this;
+			};
 		}
 	}
 	/**
@@ -60785,7 +60833,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 354aa07";
+const version = "main 3993aef";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
