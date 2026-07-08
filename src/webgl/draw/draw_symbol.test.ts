@@ -46,6 +46,7 @@ function createMockTransform() {
                 clippingPlane: [0, 0, 0, 0],
                 projectionTransition: 0.0,
                 fallbackMatrix: fallback,
+                antimeridianClip: [-1e30, 1e30],
             };
         },
     } as any as IReadonlyTransform;

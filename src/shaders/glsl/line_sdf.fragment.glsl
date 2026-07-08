@@ -22,6 +22,8 @@ in float v_depth;
 #pragma maplibre: define mediump vec4 dasharray_to
 
 void main() {
+    clipAntimeridian();
+
     #pragma maplibre: initialize highp vec4 color
     #pragma maplibre: initialize lowp float blur
     #pragma maplibre: initialize lowp float opacity

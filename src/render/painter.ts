@@ -36,7 +36,7 @@ import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../webgl/types.
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {TerrainData} from './terrain.ts';
-import type {ProjectionData} from '../geo/projection/projection_data.ts';
+import {getTileAntimeridianClip, type ProjectionData} from '../geo/projection/projection_data.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {isSymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
@@ -284,6 +284,7 @@ export class Painter {
             clippingPlane: [0, 0, 0, 0],
             projectionTransition: 0.0,
             fallbackMatrix: matrix,
+            antimeridianClip: getTileAntimeridianClip(null),
         };
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.

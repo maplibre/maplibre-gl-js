@@ -18,7 +18,7 @@ import type {Terrain} from '../../render/terrain.ts';
 import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
-import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
+import {getTileAntimeridianClip, type CustomLayerProjectionData, type ProjectionDataParams, type RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
 export class MercatorTransform implements ITransform {
@@ -748,6 +748,8 @@ export class MercatorTransform implements ITransform {
             clippingPlane: [0, 0, 0, 0],
             projectionTransition: 0.0, // Range 0..1, where 0 is mercator, 1 is another projection, mostly globe.
             fallbackMatrix: mainMatrix,
+            // Mercator rendering never needs fragment clipping at the antimeridian, because the per-tile stencil clipping masks already discard buffer geometry
+            antimeridianClip: getTileAntimeridianClip(null),
         };
     }
 

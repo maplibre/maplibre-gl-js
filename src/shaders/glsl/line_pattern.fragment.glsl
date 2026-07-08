@@ -25,6 +25,8 @@ in float v_depth;
 #pragma maplibre: define lowp float opacity
 
 void main() {
+    clipAntimeridian();
+
     #pragma maplibre: initialize mediump vec4 pattern_from
     #pragma maplibre: initialize mediump vec4 pattern_to
     #pragma maplibre: initialize lowp float pixel_ratio_from

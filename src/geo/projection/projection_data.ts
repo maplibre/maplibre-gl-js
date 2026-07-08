@@ -1,4 +1,5 @@
 import type {mat4} from 'gl-matrix';
+import {EXTENT} from '../../data/extent.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Mat4f32, Mat4f64} from '../../util/util.ts';
 
@@ -60,7 +61,40 @@ export type ProjectionData<MainMatrix extends mat4 = mat4, FallbackMatrix extend
      * Uniform name: `u_projection_fallback_matrix`.
      */
     fallbackMatrix: FallbackMatrix;
+    /**
+     * The range of in-tile X coordinates (0..EXTENT plus buffers) that may be rendered;
+     * fragments outside it are discarded by tile-clipped layers (fill, line) under globe projection.
+     * Set to a finite range only for the zoom 0 tile, see {@link getTileAntimeridianClip}.
+     * Uniform name: `u_projection_antimeridian_clip`.
+     */
+    antimeridianClip: [number, number];
 };
+
+/**
+ * An {@link ProjectionData.antimeridianClip} range that does not discard anything.
+ * Do not mutate.
+ */
+const ANTIMERIDIAN_CLIP_DISABLED: [number, number] = [-1e30, 1e30];
+
+/**
+ * Returns the in-tile X range outside of which the given tile's fragments should be
+ * discarded under globe projection.
+ *
+ * Tile sources duplicate geometry near the antimeridian into the tile buffer, shifted by +-360 degrees.
+ * Under globe projection the projection of in-tile coordinates to the sphere is periodic in X.
+ * So at zoom 0, where a single tile covers the whole world, the tile's own buffer wraps around and lands back on the tile itself,
+ * rendering that geometry twice. The per-tile stencil clipping masks that normally clip buffer geometry cannot help there
+ * (the zoom 0 tile's mask covers the entire sphere), so the zoom 0 tile is instead clipped to its extent in the shader.
+ *
+ * At zoom 1+ the antimeridian is a border between two distinct tiles and the stencil clipping masks already clip the buffers,
+ * so no fragment clipping is needed.
+ */
+export function getTileAntimeridianClip(overscaledTileID: OverscaledTileID | null): [number, number] {
+    if (overscaledTileID?.canonical.z === 0) {
+        return [0, EXTENT];
+    }
+    return ANTIMERIDIAN_CLIP_DISABLED;
+}
 
 /**
  * Parameters object for the transform's `getProjectionData` function.
