@@ -33,6 +33,9 @@ import CoveringTilesMercator from '../benchmarks/covering_tiles_mercator.ts';
 import GeoJSONSourceUpdateData from '../benchmarks/geojson_source_update_data.ts';
 import GeoJSONSourceSetData from '../benchmarks/geojson_source_set_data.ts';
 import {Terrain3DGlobe, Terrain3DMercator, Terrain2DGlobe, Terrain2DMercator} from '../benchmarks/terrain.ts';
+import MLTParse from '../benchmarks/mlt_parse.ts';
+import {OverscaledTileID} from '../../../src/tile/tile_id.ts';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as Array<GeoJSON.Feature<GeoJSON.Point>>).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
@@ -108,6 +111,27 @@ register('Terrain3DGlobe', new Terrain3DGlobe());
 register('Terrain3DMercator', new Terrain3DMercator());
 register('Terrain2DGlobe', new Terrain2DGlobe());
 register('Terrain2DMercator', new Terrain2DMercator());
+const mltFillLayers: LayerSpecification[] = [
+    {id: 'landcover', type: 'fill', source: 'openmaptiles', 'source-layer': 'landcover', paint: {'fill-color': '#008000'}}
+];
+const mltFillExtrusionLayers: LayerSpecification[] = [
+    {id: 'background', type: 'background', paint: {'background-color': '#ffffff'}},
+    {id: 'building', type: 'fill-extrusion', source: 'openmaptiles', 'source-layer': 'building', paint: {'fill-extrusion-color': '#c86432', 'fill-extrusion-height': 20}}
+];
+const mltFillTileID = new OverscaledTileID(5, 0, 5, 22, 12);
+const mltBuildingTileID = new OverscaledTileID(14, 0, 14, 8716, 5685);
+register('MLTFillTessellated', new MLTParse({
+    tilesDir: 'mlt', tileID: mltFillTileID, layers: mltFillLayers
+}));
+register('MLTFillUntessellated', new MLTParse({
+    tilesDir: 'mlt-untessellated', tileID: mltFillTileID, layers: mltFillLayers
+}));
+register('MLTFillExtrusionTessellated', new MLTParse({
+    tilesDir: 'mlt', tileID: mltBuildingTileID, layers: mltFillExtrusionLayers
+}));
+register('MLTFillExtrusionUntessellated', new MLTParse({
+    tilesDir: 'mlt-untessellated', tileID: mltBuildingTileID, layers: mltFillExtrusionLayers
+}));
 
 Promise.resolve().then(() => {
     // Ensure the global worker pool is never drained. Browsers have resource limits
