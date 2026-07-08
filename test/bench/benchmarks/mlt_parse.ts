@@ -5,9 +5,9 @@ import type {LayerSpecification, StyleSpecification} from '@maplibre/maplibre-gl
 
 type MLTParseOptions = {
     /**
-     * Tile directory under `test/integration/assets/tiles`. `mlt` ships a
-     * pre-baked triangle mesh; `mlt-untessellated` does not, forcing MapLibre to
-     * re-tessellate with earcut. Parsing both isolates the tessellation cost.
+     * Tile directory under `test/integration/assets/tiles`.
+     * `mlt` ships a pre-baked triangle mesh
+     * `mlt-untessellated` does not, forcing MapLibre to re-tessellate with earcut.
      */
     tilesDir: 'mlt' | 'mlt-untessellated';
     tileID: OverscaledTileID;
@@ -17,10 +17,7 @@ type MLTParseOptions = {
 
 /**
  * Isolates the worker-side cost of turning an MLT tile into renderable geometry.
- * It drives {@link TileParser} (i.e. `WorkerTile.parse`) — the same entry point
- * the vector-tile worker uses — so it covers decode + `loadGeometry` + bucket
- * population + tessellation, but none of the map init, upload or render overhead
- * that swamps the tessellation delta in an end-to-end map load.
+ * It drives {@link TileParser} so it covers decode + `loadGeometry` + bucket population + tessellation
  */
 export default class MLTParse extends Benchmark {
     parser: TileParser;
@@ -38,7 +35,6 @@ export default class MLTParse extends Benchmark {
             sources: {
                 openmaptiles: {
                     type: 'vector',
-                    // `encoding` selects the MLT decoder in TileParser / the worker source.
                     encoding: 'mlt',
                     maxzoom: 14,
                     tiles: [`/test/integration/assets/tiles/${this.options.tilesDir}/{z}/{x}/{y}.mlt`]
