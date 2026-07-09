@@ -2446,11 +2446,11 @@ function isImageBitmap(image) {
 * @param data - Data to convert
 * @returns - A  promise resolved when the conversion is finished
 */
-const arrayBufferToImageBitmap = async (data) => {
-	if (data.byteLength === 0) return createImageBitmap(new ImageData(1, 1));
+const arrayBufferToImageBitmap = async (data, options) => {
+	if (data.byteLength === 0) return createImageBitmap(new ImageData(1, 1), options);
 	const blob = new Blob([new Uint8Array(data)], { type: "image/png" });
 	try {
-		return createImageBitmap(blob);
+		return createImageBitmap(blob, options);
 	} catch (e) {
 		throw new Error(`Could not load image because of ${ensureError(e).message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`);
 	}
@@ -23362,7 +23362,7 @@ let ImageRequest;
 		for (const key of Object.keys(throttleControlCallbacks)) if (throttleControlCallbacks[key]()) return true;
 		return false;
 	};
-	_ImageRequest.getImage = (requestParameters, abortController, supportImageRefresh = true) => {
+	_ImageRequest.getImage = (requestParameters, abortController, supportImageRefresh = true, imageBitmapOptions) => {
 		return new Promise((resolve, reject) => {
 			requestParameters.headers ||= {};
 			requestParameters.headers.accept = "image/webp,*/*";
@@ -23371,6 +23371,7 @@ let ImageRequest;
 				abortController,
 				requestParameters,
 				supportImageRefresh,
+				imageBitmapOptions,
 				state: "queued",
 				onError: (error) => {
 					reject(error);
@@ -23383,14 +23384,14 @@ let ImageRequest;
 			processQueue();
 		});
 	};
-	const arrayBufferToCanvasImageSource = (data) => {
-		if (typeof createImageBitmap === "function") return arrayBufferToImageBitmap(data);
+	const arrayBufferToCanvasImageSource = (data, imageBitmapOptions) => {
+		if (typeof createImageBitmap === "function") return arrayBufferToImageBitmap(data, imageBitmapOptions);
 		else return arrayBufferToImage(data);
 	};
 	const doImageRequest = async (itemInQueue) => {
 		itemInQueue.state = "running";
-		const { requestParameters, supportImageRefresh, onError, onSuccess, abortController } = itemInQueue;
-		const canUseHTMLImageElement = supportImageRefresh === false && !isWorker(self) && !getProtocol(requestParameters.url) && (!requestParameters.headers || Object.keys(requestParameters.headers).reduce((acc, item) => acc && item === "accept", true));
+		const { requestParameters, supportImageRefresh, imageBitmapOptions, onError, onSuccess, abortController } = itemInQueue;
+		const canUseHTMLImageElement = supportImageRefresh === false && !imageBitmapOptions && !isWorker(self) && !getProtocol(requestParameters.url) && (!requestParameters.headers || Object.keys(requestParameters.headers).reduce((acc, item) => acc && item === "accept", true));
 		currentParallelImageRequests++;
 		const getImagePromise = canUseHTMLImageElement ? getImageUsingHtmlImage(requestParameters, abortController) : makeRequest(requestParameters, abortController);
 		try {
@@ -23399,7 +23400,7 @@ let ImageRequest;
 			itemInQueue.state = "completed";
 			if (response.data instanceof HTMLImageElement || isImageBitmap(response.data)) onSuccess(response);
 			else if (response.data) onSuccess({
-				data: await arrayBufferToCanvasImageSource(response.data),
+				data: await arrayBufferToCanvasImageSource(response.data, imageBitmapOptions),
 				cacheControl: response.cacheControl,
 				expires: response.expires
 			});
@@ -25860,6 +25861,7 @@ var RasterTileSource = class extends Evented {
 		this.scheme = "xyz";
 		this.tileSize = 512;
 		this._loaded = false;
+		this._premultiplyAlpha = true;
 		this._options = extend({ type: "raster" }, options);
 		extend(this, pick(options, [
 			"url",
@@ -25937,14 +25939,33 @@ var RasterTileSource = class extends Evented {
 	serialize() {
 		return extend({}, this._options);
 	}
+	/**
+	* Sets whether alpha premultiplication is applied to raster tile images.
+	* Set to `false` to preserve exact RGBA byte values when alpha carries data instead of opacity.
+	*
+	* @param premultiplyAlpha - If `false`, disables alpha premultiplication for raster tile image decode and texture upload.
+	* @example
+	* ```ts
+	* map.getSource<RasterTileSource>('raster-source').setPremultiplyAlpha(false);
+	* ```
+	*/
+	setPremultiplyAlpha(premultiplyAlpha) {
+		if (this._premultiplyAlpha === premultiplyAlpha) return this;
+		this.setSourceProperty(() => {
+			this._premultiplyAlpha = premultiplyAlpha;
+		});
+		return this;
+	}
 	hasTile(tileID) {
 		return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
 	}
 	async loadTile(tile) {
 		const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+		const premultiply = this._premultiplyAlpha;
+		const imageBitmapOptions = premultiply ? void 0 : { premultiplyAlpha: "none" };
 		tile.abortController = new AbortController();
 		try {
-			const response = await ImageRequest.getImage(await this.map._requestManager.transformRequest(url, "Tile"), tile.abortController, this.map._refreshExpiredTiles);
+			const response = await ImageRequest.getImage(await this.map._requestManager.transformRequest(url, "Tile"), tile.abortController, this.map._refreshExpiredTiles, imageBitmapOptions);
 			delete tile.abortController;
 			if (tile.aborted) {
 				tile.state = "unloaded";
@@ -25959,9 +25980,15 @@ var RasterTileSource = class extends Evented {
 				const gl = context.gl;
 				const img = response.data;
 				tile.texture = this.map.painter.getTileTexture(img.width);
-				if (tile.texture) tile.texture.update(img, { useMipmap: true });
+				if (tile.texture) tile.texture.update(img, {
+					useMipmap: true,
+					premultiply
+				});
 				else {
-					tile.texture = new Texture(context, img, gl.RGBA, { useMipmap: true });
+					tile.texture = new Texture(context, img, gl.RGBA, {
+						useMipmap: true,
+						premultiply
+					});
 					tile.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
 				}
 				tile.state = "loaded";
@@ -60833,7 +60860,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 3993aef";
+const version = "main 3bced3c";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
