@@ -124,7 +124,7 @@
     "stylelint": "^17.14.0",
     "stylelint-config-standard": "^40.0.0",
     "tslib": "^2.8.1",
-    "typedoc": "^0.28.19",
+    "typedoc": "^0.28.20",
     "typedoc-plugin-markdown": "^4.11.0",
     "typescript": "^6.0.3",
     "vite": "^8.1.3",
