@@ -13,6 +13,7 @@ import {loadGeometry} from '../load_geometry.ts';
 import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {subdivideVertexLine} from '../../render/subdivision.ts';
+import {clipGeometry} from '../../symbol/clip_line.ts';
 
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
@@ -262,7 +263,12 @@ export class LineBucket implements Bucket {
         const roundLimit = layout.get('line-round-limit').evaluate(feature, {});
         this.lineClips = this.lineFeatureClips(feature);
 
-        for (const line of geometry) {
+        const lineGranularity = canonical ? subdivisionGranularity.line.getGranularityForZoomLevel(canonical.z) : 1;
+        const lines = (lineGranularity > 1 && canonical?.z === 0)
+            ? clipGeometry(geometry, 2, 0, -Infinity, EXTENT, Infinity)
+            : geometry;
+
+        for (const line of lines) {
             this.addLine(line, feature, join, cap, miterLimit, roundLimit, canonical, subdivisionGranularity);
         }
 

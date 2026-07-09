@@ -9,6 +9,8 @@ const EARCUT_MAX_RINGS = 500;
 import {register} from '../../util/web_worker_transfer.ts';
 import {hasPattern, addPatternDependencies} from './pattern_bucket_features.ts';
 import {loadGeometry} from '../load_geometry.ts';
+import {EXTENT} from '../extent.ts';
+import {clipGeometry} from '../../symbol/clip_line.ts';
 import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 
@@ -173,8 +175,13 @@ export class FillBucket implements Bucket {
     addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {
         [_: string]: ImagePosition;
     }, subdivisionGranularity: SubdivisionGranularitySetting): void {
+        const fillGranularity = subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z);
+        if (fillGranularity > 1 && canonical.z === 0) {
+            // on globe this needs to be clipped to the tile extent, otherwise the fill will be drawn twice on the globe
+            geometry = clipGeometry(geometry, 3, 0, -Infinity, EXTENT, Infinity);
+        }
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
-            const subdivided = subdividePolygon(polygon, canonical, subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z));
+            const subdivided = subdividePolygon(polygon, canonical, fillGranularity);
 
             const vertexArray = this.layoutVertexArray;
 
