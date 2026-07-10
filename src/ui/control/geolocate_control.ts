@@ -630,7 +630,7 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
     _onMoveStart = (event: any): void => {
         if (!this._map) return;
         const fromResize = event?.[0] instanceof ResizeObserverEntry;
-        if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize && !this._map.isZooming()) {
+        if (!event.geolocateSource && this._watchState === 'ACTIVE_LOCK' && !fromResize) {
             this._watchState = 'BACKGROUND';
             this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
             this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
