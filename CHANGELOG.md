@@ -2,6 +2,7 @@
 ### ✨ Features and improvements
 - Improve terrain render-to-texture preparation performance by skipping sources that are not rendered to terrain textures ([#7863](https://github.com/maplibre/maplibre-gl-js/pull/7863)) (by [@DoFabien](https://github.com/DoFabien))
 - Add `Map.setMissingStyleImageResolver` for resolving missing style images with sync or async callbacks ([#7850](https://github.com/maplibre/maplibre-gl-js/pull/7850)) (by [@birkskyum](https://github.com/birkskyum))
+- Release the active `GeolocateControl` camera lock when the user zooms the map (by [@timsluis](https://github.com/timsluis))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
