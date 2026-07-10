@@ -14514,6 +14514,7 @@ var MapContextEvent = class extends MapLibreEvent {};
 * The style image missing event, fired when an image is still missing after the missing style image
 * resolver has been given a chance to supply it. To load or generate images on demand,
 * use {@link Map.setMissingStyleImageResolver}.
+* Event listeners cannot resolve the missing image for the current request.
 *
 * @group Event Related
 *
@@ -23772,34 +23773,33 @@ var ImageManager = class extends Evented {
 		});
 	}
 	async _getImagesForIds(ids) {
-		const missingIds = new Set(ids.filter((id) => !this.getImage(id)));
-		await Promise.all(Array.from(missingIds, (id) => this._resolveMissingImageId(id)));
+		const unresolvedIds = new Set(ids.filter((id) => !this.getImage(id)));
+		const resolver = this.missingImageResolver;
+		if (resolver) await Promise.all(Array.from(unresolvedIds, (id) => resolver(id)));
 		const response = {};
 		for (const id of ids) {
 			const image = this.getImage(id);
-			if (image) response[id] = {
-				data: image.data.clone(),
-				pixelRatio: image.pixelRatio,
-				sdf: image.sdf,
-				version: image.version,
-				stretchX: image.stretchX,
-				stretchY: image.stretchY,
-				content: image.content,
-				textFitWidth: image.textFitWidth,
-				textFitHeight: image.textFitHeight,
-				hasRenderCallback: Boolean(image.userImage?.render)
-			};
-			else warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a "sprite" property in your style.`);
+			if (image) {
+				unresolvedIds.delete(id);
+				response[id] = {
+					data: image.data.clone(),
+					pixelRatio: image.pixelRatio,
+					sdf: image.sdf,
+					version: image.version,
+					stretchX: image.stretchX,
+					stretchY: image.stretchY,
+					content: image.content,
+					textFitWidth: image.textFitWidth,
+					textFitHeight: image.textFitHeight,
+					hasRenderCallback: Boolean(image.userImage?.render)
+				};
+			}
+		}
+		for (const id of unresolvedIds) {
+			this.fire(new MapStyleImageMissingEvent({ id }));
+			warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a "sprite" property in your style.`);
 		}
 		return response;
-	}
-	async _resolveMissingImageId(id) {
-		if (this.getImage(id)) return;
-		await this._resolveMissingImageOrFireEvent(id);
-	}
-	async _resolveMissingImageOrFireEvent(id) {
-		if (this.missingImageResolver) await this.missingImageResolver(id);
-		if (!this.getImage(id)) this.fire(new MapStyleImageMissingEvent({ id }));
 	}
 	getPixelSize() {
 		const { width, height } = this.atlasImage;
@@ -60860,7 +60860,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 3bced3c";
+const version = "main 105debd";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
