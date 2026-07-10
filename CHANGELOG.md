@@ -5,6 +5,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix projective rendering for non-parallelogram image source quads ([#7887](https://github.com/maplibre/maplibre-gl-js/pull/7887)) (by [@i4innovationnet](https://github.com/i4innovationnet))
 - _...Add new stuff here..._
 - Add `RasterTileSource#setPremultiplyAlpha(false)` to preserve raw RGBA tile values when alpha is used for data instead of opacity ([#7235](https://github.com/maplibre/maplibre-gl-js/pull/7235)) (by [@plantain](https://github.com/plantain)).
 
