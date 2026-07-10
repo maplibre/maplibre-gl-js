@@ -1,6 +1,8 @@
 ## main
 ### ✨ Features and improvements
 - Add `map.getStyleUrl()`, which returns the URL the style was loaded from, or `null` when the style was given as an object ([#7109](https://github.com/maplibre/maplibre-gl-js/issues/7109))
+- Release the active `GeolocateControl` camera lock when the user zooms the map (by [@timsluis](https://github.com/timsluis))
+- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix terrain drape textures not being refreshed after zoom changes, causing stale rendering at the new zoom level ([#8251](https://github.com/maplibre/maplibre-gl-js/issues/8251))

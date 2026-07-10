@@ -728,7 +728,7 @@ describe('GeolocateControl with no options', () => {
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
     });
 
-    test('does not switch to BACKGROUND and stays in ACTIVE_LOCK state on zoom', async () => {
+    test('switches to BACKGROUND state on zoom', async () => {
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
         });
@@ -746,7 +746,7 @@ describe('GeolocateControl with no options', () => {
         map.zoomTo(10, {duration: 0});
         await zoomendPromise;
 
-        expect(geolocate._watchState).toBe('ACTIVE_LOCK');
+        expect(geolocate._watchState).toBe('BACKGROUND');
     });
 
     test('switches to BACKGROUND state on map manipulation', async () => {
