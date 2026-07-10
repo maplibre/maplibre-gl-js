@@ -253,7 +253,7 @@ export class TileManager extends Evented {
 
     /**
      * Reload tiles based on the current state of the source.
-     * @param sourceDataChanged - If `true`, reload all tiles using a state of 'expired', otherwise reload only non-errored tiles using state of 'reloading'.
+     * @param sourceDataChanged - If `true`, reload all tiles using a state of 'expired' (errored tiles use 'loading' since they have nothing to show yet), otherwise reload only non-errored tiles using state of 'reloading'.
      * @param shouldReloadTileOptions - Set of options associated with a `MapSourceDataChangedEvent` that can be passed back to the associated `Source` determine whether a tile should be reloaded.
      */
     reload(
@@ -272,7 +272,9 @@ export class TileManager extends Evented {
             if (shouldReloadTileOptions && !this._source.shouldReloadTile(tile, shouldReloadTileOptions)) {
                 continue;
             } else if (sourceDataChanged) {
-                this._reloadTile(id, 'expired');
+                // errored tiles have no data to show, so reload them as 'loading' rather than
+                // 'expired' to keep them non-renderable until the re-fetch settles (see #7775)
+                this._reloadTile(id, tile.state === 'errored' ? 'loading' : 'expired');
             } else if (tile.state !== 'errored') {
                 this._reloadTile(id, 'reloading');
             }

@@ -588,6 +588,32 @@ describe('TileManager / Source lifecycle', () => {
 
     });
 
+    test('reloads errored tiles as loading, not expired, on source data change', () => {
+        const transform = new MercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(1);
+
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            // the four z1 tiles error, the single z0 tile loads
+            tile.state = tile.tileID.canonical.z === 1 ? 'errored' : 'loaded';
+        };
+
+        const reloadTileSpy = vi.spyOn(tileManager, '_reloadTile');
+        tileManager.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                tileManager.update(transform);
+                tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content', sourceDataChanged: true}));
+            }
+        });
+        tileManager.onAdd(undefined);
+        // errored tiles have no texture, so reloading them as 'expired' makes them renderable
+        // and crashes the raster renderer. They must be reloaded as 'loading' instead.
+        const states = reloadTileSpy.mock.calls.map(([, state]) => state).sort();
+        expect(states).toEqual(['expired', 'loading', 'loading', 'loading', 'loading']);
+
+    });
+
 });
 
 describe('TileManager.update', () => {
