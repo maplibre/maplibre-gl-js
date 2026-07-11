@@ -290,11 +290,80 @@ describe('marker', () => {
         expect(markerWithHtmlElement.getElement().getAttribute('aria-label')).toBe('custom aria label');
     });
 
-    test('Marker should have a role attribute to satisfy accessibility requirements for the aria-label', () => {
+    test('default non-interactive Marker uses role=img for the aria-label', () => {
         const map = createMap({locale: {'Marker.Title': 'alt title'}});
         const marker = new Marker().setLngLat([0, 0]).addTo(map);
 
+        expect(marker.getElement().getAttribute('role')).toBe('img');
+        map.remove();
+    });
+
+    test('default Marker uses role=button when interactive via popup', () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .setPopup(new Popup().setText('popup'))
+            .addTo(map);
+
         expect(marker.getElement().getAttribute('role')).toBe('button');
+
+        marker.setPopup();
+        expect(marker.getElement().getAttribute('role')).toBe('img');
+        map.remove();
+    });
+
+    test('default Marker uses role=button when draggable', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true}).setLngLat([0, 0]).addTo(map);
+
+        expect(marker.getElement().getAttribute('role')).toBe('button');
+
+        marker.setDraggable(false);
+        expect(marker.getElement().getAttribute('role')).toBe('img');
+        map.remove();
+    });
+
+    test('default Marker uses role=button when a click listener is registered', () => {
+        const map = createMap();
+        const marker = new Marker().setLngLat([0, 0]).addTo(map);
+        const onClick = () => {};
+
+        expect(marker.getElement().getAttribute('role')).toBe('img');
+
+        marker.on('click', onClick);
+        expect(marker.getElement().getAttribute('role')).toBe('button');
+
+        marker.off('click', onClick);
+        expect(marker.getElement().getAttribute('role')).toBe('img');
+        map.remove();
+    });
+
+    test('default Marker uses role=button when a one-time click listener is registered', () => {
+        const map = createMap();
+        const marker = new Marker().setLngLat([0, 0]).addTo(map);
+
+        marker.once('click', () => {});
+        expect(marker.getElement().getAttribute('role')).toBe('button');
+        map.remove();
+    });
+
+    test('custom Marker element does not get an automatic role', () => {
+        const map = createMap();
+        const element = document.createElement('div');
+        const marker = new Marker({element}).setLngLat([0, 0]).addTo(map);
+
+        expect(marker.getElement().hasAttribute('role')).toBe(false);
+        map.remove();
+    });
+
+    test('explicit role on the default Marker element is preserved', () => {
+        const map = createMap();
+        const marker = new Marker().setLngLat([0, 0]);
+        marker.getElement().setAttribute('role', 'presentation');
+        marker.addTo(map);
+
+        expect(marker.getElement().getAttribute('role')).toBe('presentation');
+        map.remove();
     });
 
     test('Marker anchor defaults to center', () => {
@@ -939,7 +1008,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
         map.terrain = createTerrain();
-        map.transform.lngLatToCameraDepth = () => .95;
+        map._camera.transform.lngLatToCameraDepth = () => .95;
 
         marker.setOffset([10, 10]);
         await sleep(100);
@@ -1083,7 +1152,7 @@ describe('marker', () => {
 
     test('Applies options.opacityWhenCovered when marker is hidden by 3d terrain', async () => {
         const map = createMap();
-        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        map._camera.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
             .setLngLat([0, 0])
             .addTo(map);
@@ -1098,7 +1167,7 @@ describe('marker', () => {
 
     test('Applies new "opacityWhenCovered" provided by setOpacity when marker is hidden by 3d terrain', () => {
         const map = createMap();
-        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        map._camera.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker({opacityWhenCovered: '0.15'})
             .setLngLat([0, 0])
             .addTo(map);
@@ -1152,7 +1221,7 @@ describe('marker', () => {
 
         expect(marker._popup.isOpen()).toBeTruthy();
 
-        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        map._camera.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
 
         map.terrain = createTerrain();
         map.fire('terrain');
@@ -1170,7 +1239,7 @@ describe('marker', () => {
             .addTo(map)
             .setPopup(new Popup());
 
-        map.transform.lngLatToCameraDepth = () => .95;
+        map._camera.transform.lngLatToCameraDepth = () => .95;
 
         map.terrain = createTerrain();
         map.fire('terrain');
@@ -1269,7 +1338,7 @@ describe('marker', () => {
 
     test('Applies new "opacityWhenCovered" provided by setOpacity when provided a number', () => {
         const map = createMap();
-        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        map._camera.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker({opacityWhenCovered: 0.15})
             .setLngLat([0, 0])
             .addTo(map);
