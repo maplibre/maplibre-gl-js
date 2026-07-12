@@ -1,12 +1,20 @@
 ## main
 ### ✨ Features and improvements
-- Improve terrain render-to-texture preparation performance by skipping sources that are not rendered to terrain textures ([#7863](https://github.com/maplibre/maplibre-gl-js/pull/7863)) (by [@DoFabien](https://github.com/DoFabien))
-- Add `Map.setMissingStyleImageResolver` for resolving missing style images with sync or async callbacks ([#7850](https://github.com/maplibre/maplibre-gl-js/pull/7850)) (by [@birkskyum](https://github.com/birkskyum))
-- ⚠️ Stop allowing `styleimagemissing` listeners to resolve the current image request; use `Map.setMissingStyleImageResolver` instead ([#7892](https://github.com/maplibre/maplibre-gl-js/issues/7892)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+
+- Change styleimagemissing from hook to event ([#7902](https://github.com/maplibre/maplibre-gl-js/pull/7902)) (by [@birkskyum](https://github.com/birkskyum))
+- perf: bypass TerrainData for terrain min/max ([#7871](https://github.com/maplibre/maplibre-gl-js/pull/7871)) (by [@DoFabien](https://github.com/DoFabien))
+- docs: add docs categories and ordering ([#7870](https://github.com/maplibre/maplibre-gl-js/pull/7870)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+## 6.0.0-21
+### ✨ Features and improvements
+- Improve terrain render-to-texture preparation performance by skipping sources that are not rendered to terrain textures ([#7863](https://github.com/maplibre/maplibre-gl-js/pull/7863)) (by [@DoFabien](https://github.com/DoFabien))
+- Add `Map.setMissingStyleImageResolver` for resolving missing style images with sync or async callbacks ([#7850](https://github.com/maplibre/maplibre-gl-js/pull/7850)) (by [@birkskyum](https://github.com/birkskyum))
+- ⚠️ Stop allowing `styleimagemissing` listeners to resolve the current image request; use `Map.setMissingStyleImageResolver` instead ([#7892](https://github.com/maplibre/maplibre-gl-js/issues/7892)) (by [@birkskyum](https://github.com/birkskyum))
+
+### 🐞 Bug fixes
 - Add `RasterTileSource#setPremultiplyAlpha(false)` to preserve raw RGBA tile values when alpha is used for data instead of opacity ([#7235](https://github.com/maplibre/maplibre-gl-js/pull/7235)) (by [@plantain](https://github.com/plantain)).
 
 ## 6.0.0-20
