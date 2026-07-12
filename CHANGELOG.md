@@ -7,6 +7,7 @@
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+- Fix an error thrown when a paint property transitions between arrays of different length ([#6606](https://github.com/maplibre/maplibre-gl-js/issues/6606)) (by [@HarelM](https://github.com/HarelM))
 - Add `RasterTileSource#setPremultiplyAlpha(false)` to preserve raw RGBA tile values when alpha is used for data instead of opacity ([#7235](https://github.com/maplibre/maplibre-gl-js/pull/7235)) (by [@plantain](https://github.com/plantain)).
 
 ## 6.0.0-20
