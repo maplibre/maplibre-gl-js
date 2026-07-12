@@ -2,6 +2,9 @@ import {describe, test, expect} from 'vitest';
 import {globSync} from 'glob';
 import {basename} from 'path';
 import fs from 'fs';
+import exampleCategoryGroups from '../../docs/example-categories.json' with {type: 'json'};
+
+const EXAMPLE_CATEGORIES = exampleCategoryGroups.flatMap(group => group.categories);
 
 describe('Example HTML files', () => {
     const exampleFiles = globSync('test/examples/*.html').sort();
@@ -23,6 +26,22 @@ describe('Example HTML files', () => {
                 expect.fail('missing `og:description` meta tag');
             } else if (!descriptionMatch[1].trim()) {
                 expect.fail('`og:description` content is empty');
+            }
+        });
+
+        test(`${exampleFile} has a valid og:category meta tag`, () => {
+            const categoryMatch = content.match(/<meta\s+property=["']og:category["']\s+content=["']([^"']*)["']/);
+            if (!categoryMatch) {
+                expect.fail('missing `og:category` meta tag');
+            } else if (!EXAMPLE_CATEGORIES.includes(categoryMatch[1])) {
+                expect.fail(`unknown \`og:category\` "${categoryMatch[1]}", valid categories are: ${EXAMPLE_CATEGORIES.join(', ')}.`);
+            }
+        });
+
+        test(`${exampleFile} has a numeric og:order meta tag if present`, () => {
+            const orderMatch = content.match(/<meta\s+property=["']og:order["']\s+content=["']([^"']*)["']/);
+            if (orderMatch && Number.isNaN(Number(orderMatch[1]))) {
+                expect.fail(`\`og:order\` has a non-numeric value "${orderMatch[1]}"`);
             }
         });
 

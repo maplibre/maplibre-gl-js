@@ -130,7 +130,7 @@ describe('Terrain', () => {
         const tileID = new OverscaledTileID(5, 0, 5, 17, 11);
         const tile = new Tile(tileID, 256);
         tile.dem = {
-            min: 0,
+            min: 10,
             max: 100,
             getPixels: () => new RGBAImage({width: 1, height: 1}, new Uint8Array(1 * 4)),
             getUnpackVector: () => [6553.6, 25.6, 0.1, 10000.0],
@@ -154,10 +154,9 @@ describe('Terrain', () => {
             {exaggeration: 2} as any as TerrainSpecification,
         );
 
-        terrain.tileManager._tiles[tileID.key] = tile;
         const {minElevation, maxElevation} = terrain.getMinMaxElevation(tileID);
 
-        expect(minElevation).toBe(0);
+        expect(minElevation).toBe(20);
         expect(maxElevation).toBe(200);
     });
 

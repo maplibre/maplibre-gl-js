@@ -1,5 +1,5 @@
 import packageJSON from '../package.json' with {type: 'json'};
-import {Map, type MapOptions, type WebGLContextAttributesWithType} from './ui/map.ts';
+import {Map, type MapOptions, type MissingStyleImageResolver, type StyleImageSource, type WebGLContextAttributesWithType} from './ui/map.ts';
 import {NavigationControl, type NavigationControlOptions} from './ui/control/navigation_control.ts';
 import {GeolocateControl, GeolocateEvent, GeolocatePositionEvent, GeolocateErrorEvent, type GeolocateControlEventType, type GeolocateControlOptions} from './ui/control/geolocate_control.ts';
 import {AttributionControl, type AttributionControlOptions} from './ui/control/attribution_control.ts';
@@ -365,6 +365,8 @@ export {
     type MessageType,
     type StyleGlyph,
     type MapOptions,
+    type MissingStyleImageResolver,
+    type StyleImageSource,
     type GestureOptions,
     type WebGLContextAttributesWithType,
     type IControl,

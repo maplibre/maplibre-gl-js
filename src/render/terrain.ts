@@ -485,8 +485,8 @@ export class Terrain {
      * exaggeration
      */
     getMinMaxElevation(tileID: OverscaledTileID): {minElevation: number | null; maxElevation: number | null} {
-        const tile = this.getTerrainData(tileID).tile;
-        const minMax = {minElevation: null, maxElevation: null};
+        const tile = this.tileManager.getSourceTile(tileID, true);
+        const minMax: {minElevation: number | null; maxElevation: number | null} = {minElevation: null, maxElevation: null};
         if (tile?.dem) {
             minMax.minElevation = tile.dem.min * this.exaggeration;
             minMax.maxElevation = tile.dem.max * this.exaggeration;
