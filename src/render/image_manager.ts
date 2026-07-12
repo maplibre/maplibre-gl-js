@@ -227,8 +227,12 @@ export class ImageManager extends Evented {
     }
 
     async _getImagesForIds(ids: string[]): Promise<GetImagesResponse> {
-        const missingIds = new Set(ids.filter((id) => !this.getImage(id)));
-        await Promise.all(Array.from(missingIds, (id) => this._resolveMissingImageId(id)));
+        const unresolvedIds = new Set(ids.filter((id) => !this.getImage(id)));
+        const resolver = this.missingImageResolver;
+
+        if (resolver) {
+            await Promise.all(Array.from(unresolvedIds, (id) => resolver(id)));
+        }
 
         const response: GetImagesResponse = {};
 
@@ -236,6 +240,7 @@ export class ImageManager extends Evented {
             const image = this.getImage(id);
 
             if (image) {
+                unresolvedIds.delete(id);
                 // Clone the image so that our own copy of its ArrayBuffer doesn't get transferred.
                 response[id] = {
                     data: image.data.clone(),
@@ -249,27 +254,15 @@ export class ImageManager extends Evented {
                     textFitHeight: image.textFitHeight,
                     hasRenderCallback: Boolean(image.userImage?.render)
                 };
-            } else {
-                warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a "sprite" property in your style.`);
             }
         }
-        return response;
-    }
 
-    async _resolveMissingImageId(id: string): Promise<void> {
-        if (this.getImage(id)) return;
-
-        await this._resolveMissingImageOrFireEvent(id);
-    }
-
-    async _resolveMissingImageOrFireEvent(id: string): Promise<void> {
-        if (this.missingImageResolver) {
-            await this.missingImageResolver(id);
-        }
-
-        if (!this.getImage(id)) {
+        for (const id of unresolvedIds) {
             this.fire(new MapStyleImageMissingEvent({id}));
+            warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a "sprite" property in your style.`);
         }
+
+        return response;
     }
 
     // Pattern stuff
