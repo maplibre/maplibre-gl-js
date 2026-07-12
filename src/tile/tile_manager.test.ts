@@ -599,18 +599,20 @@ describe('TileManager / Source lifecycle', () => {
             tile.state = tile.tileID.canonical.z === 1 ? 'errored' : 'loaded';
         };
 
-        const reloadTileSpy = vi.spyOn(tileManager, '_reloadTile');
         tileManager.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                 tileManager.update(transform);
+                // hold the reload in-flight so the state each tile is reloaded into stays observable
+                tileManager._source.loadTile = () => new Promise<void>(() => {});
                 tileManager.getSource().fire(new Event('data', {dataType: 'source', sourceDataType: 'content', sourceDataChanged: true}));
             }
         });
         tileManager.onAdd(undefined);
-        // errored tiles have no texture, so reloading them as 'expired' makes them renderable
-        // and crashes the raster renderer. They must be reloaded as 'loading' instead.
-        const states = reloadTileSpy.mock.calls.map(([, state]) => state).sort();
-        expect(states).toEqual(['expired', 'loading', 'loading', 'loading', 'loading']);
+
+        // errored tiles have no texture; reloaded as 'expired' they'd count as renderable and
+        // crash the raster renderer, so only the z0 tile that had data should be renderable.
+        const renderableZooms = tileManager.getRenderableIds().map((id) => tileManager.getTileByID(id).tileID.canonical.z);
+        expect(renderableZooms).toEqual([0]);
 
     });
 

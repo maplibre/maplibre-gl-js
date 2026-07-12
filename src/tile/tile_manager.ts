@@ -272,8 +272,6 @@ export class TileManager extends Evented {
             if (shouldReloadTileOptions && !this._source.shouldReloadTile(tile, shouldReloadTileOptions)) {
                 continue;
             } else if (sourceDataChanged) {
-                // errored tiles have no data to show, so reload them as 'loading' rather than
-                // 'expired' to keep them non-renderable until the re-fetch settles (see #7775)
                 this._reloadTile(id, tile.state === 'errored' ? 'loading' : 'expired');
             } else if (tile.state !== 'errored') {
                 this._reloadTile(id, 'reloading');
