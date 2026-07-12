@@ -433,6 +433,22 @@ export type AddImageOptions = {
 
 };
 
+/**
+ * Image data accepted by {@link Map.addImage}.
+ */
+export type StyleImageSource = HTMLImageElement | ImageBitmap | ImageData | {
+    width: number;
+    height: number;
+    data: Uint8Array | Uint8ClampedArray;
+} | StyleImageInterface;
+
+/**
+ * Callback used by {@link Map.setMissingStyleImageResolver} to resolve missing style images,
+ * typically by calling {@link Map.addImage}. MapLibre awaits the returned promise before
+ * treating the image as missing.
+ */
+export type MissingStyleImageResolver = (id: string) => void | Promise<void>;
+
 // This type is used inside map since all properties are assigned a default value.
 export type CompleteMapOptions = Complete<MapOptions>;
 
@@ -609,6 +625,7 @@ export class Map extends Evented<MapEventType> {
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
+    _missingStyleImageResolver: MissingStyleImageResolver | null = null;
     /** @internal */
     _zoomLevelsToOverscale: number | undefined;
     _terrainSkirtLength: 'none' | 'auto';
@@ -3102,13 +3119,44 @@ export class Map extends Evented<MapEventType> {
      * @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-icon-to-the-map/)
      * @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-generated-icon-to-the-map/)
      */
-    addImage(id: string,
-        image: HTMLImageElement | ImageBitmap | ImageData | {
-            width: number;
-            height: number;
-            data: Uint8Array | Uint8ClampedArray;
-        } | StyleImageInterface,
-        options: Partial<StyleImageMetadata> = {}): this {
+    addImage(id: string, image: StyleImageSource, options: Partial<StyleImageMetadata> = {}): this {
+        this._lazyInitEmptyStyle();
+        const styleImage = this._createStyleImage(image, options);
+        if (!styleImage) {
+            return this;
+        }
+
+        this.style.addImage(id, styleImage);
+        if (styleImage.userImage?.onAdd) {
+            styleImage.userImage.onAdd(this, id);
+        }
+        return this;
+    }
+
+    /**
+     * Sets a callback that is invoked when an icon or pattern needed by the style is missing.
+     *
+     * The resolver typically loads or generates the image and registers it with {@link Map.addImage}.
+     * MapLibre awaits the returned promise before treating the image as missing, so async work is
+     * supported. If the image is still missing afterwards, the `styleimagemissing` event is fired.
+     *
+     * @param resolver - Callback used to resolve missing images, or `null` to remove the resolver.
+     * @example
+     * ```ts
+     * map.setMissingStyleImageResolver(async (id) => {
+     *     const response = await fetch(`/icons/${id}.png`);
+     *     const image = await createImageBitmap(await response.blob());
+     *     map.addImage(id, image, {pixelRatio: 2});
+     * });
+     * ```
+     */
+    setMissingStyleImageResolver(resolver: MissingStyleImageResolver | null): this {
+        this._missingStyleImageResolver = resolver;
+        this.style?.setMissingImageResolver(resolver);
+        return this;
+    }
+
+    _createStyleImage(image: StyleImageSource, options: Partial<StyleImageMetadata> = {}): StyleImage | null {
         const {
             pixelRatio = 1,
             sdf = false,
@@ -3118,21 +3166,21 @@ export class Map extends Evented<MapEventType> {
             textFitWidth,
             textFitHeight
         } = options;
-        this._lazyInitEmptyStyle();
         const version = 0;
 
         if (image instanceof HTMLImageElement || isImageBitmap(image)) {
             const {width, height, data} = browser.getImageData(image);
-            this.style.addImage(id, {data: new RGBAImage({width, height}, data), pixelRatio, stretchX, stretchY, content, textFitWidth, textFitHeight, sdf, version});
+            return {data: new RGBAImage({width, height}, data), pixelRatio, stretchX, stretchY, content, textFitWidth, textFitHeight, sdf, version};
         } else if (image.width === undefined || image.height === undefined) {
-            return this.fire(new ErrorEvent(new Error(
+            this.fire(new ErrorEvent(new Error(
                 'Invalid arguments to map.addImage(). The second argument must be an `HTMLImageElement`, `ImageData`, `ImageBitmap`, ' +
                 'or object with `width`, `height`, and `data` properties with the same format as `ImageData`')));
+            return null;
         } else {
             const {width, height, data} = image as ImageData;
             const userImage = (image as any as StyleImageInterface);
 
-            this.style.addImage(id, {
+            return {
                 data: new RGBAImage({width, height}, new Uint8Array(data)),
                 pixelRatio,
                 stretchX,
@@ -3143,12 +3191,7 @@ export class Map extends Evented<MapEventType> {
                 sdf,
                 version,
                 userImage
-            });
-
-            if (userImage.onAdd) {
-                userImage.onAdd(this, id);
-            }
-            return this;
+            };
         }
     }
 
@@ -3172,12 +3215,7 @@ export class Map extends Evented<MapEventType> {
      * if (map.hasImage('cat')) map.updateImage('cat', './other-cat-icon.png');
      * ```
      */
-    updateImage(id: string,
-        image: HTMLImageElement | ImageBitmap | ImageData | {
-            width: number;
-            height: number;
-            data: Uint8Array | Uint8ClampedArray;
-        } | StyleImageInterface): this {
+    updateImage(id: string, image: StyleImageSource): this {
 
         const existingImage = this.style.getImage(id);
         if (!existingImage) {

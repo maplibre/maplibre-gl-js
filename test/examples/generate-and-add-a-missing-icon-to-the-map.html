@@ -25,9 +25,7 @@
         style: 'https://demotiles.maplibre.org/style.json',
     });
 
-    map.on('styleimagemissing', (e) => {
-        const id = e.id; // id of the missing image
-
+    map.setMissingStyleImageResolver((id) => {
         // check if this missing icon is one this function can generate
         const prefix = 'square-rgb-';
         if (id.indexOf(prefix) !== 0) return;
