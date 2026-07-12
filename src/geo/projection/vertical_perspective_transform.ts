@@ -484,7 +484,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         mat4.scale(globeMatrixUncorrected, globeMatrixUncorrected, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
         this._globeViewProjMatrixNoCorrection = globeMatrixUncorrected;
 
-        mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0 - this._globeLatitudeErrorCorrectionRadians);
+        mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0);
         mat4.rotateY(globeMatrix, globeMatrix, -this.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrix, globeMatrix, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
         this._globeViewProjMatrix32f = new Float32Array(globeMatrix);
