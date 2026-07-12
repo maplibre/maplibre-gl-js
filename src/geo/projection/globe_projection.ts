@@ -33,7 +33,7 @@ export class GlobeProjection extends Evented implements Projection {
 
     constructor(projection?: ProjectionSpecification) {
         super();
-        this._transitionable = new Transitionable(properties, undefined, 'projection');
+        this._transitionable = new Transitionable(properties, 'projection', undefined);
         this.setProjection(projection);
         this._transitioning = this._transitionable.untransitioned();
         this.recalculate(new EvaluationParameters(0));

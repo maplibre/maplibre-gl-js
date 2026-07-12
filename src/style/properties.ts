@@ -75,7 +75,7 @@ export class PropertyValue<T, R> {
     value: PropertyValueSpecification<T> | void;
     expression: StylePropertyExpression;
 
-    constructor(property: Property<T, R>, value: PropertyValueSpecification<T> | void, globalState: Record<string, any>, rootKey: string) {
+    constructor(property: Property<T, R>, value: PropertyValueSpecification<T> | void, rootKey: string, globalState: Record<string, any>) {
         this.property = property;
         this.value = value;
         this.expression = normalizePropertyExpression(value === undefined ? property.specification.default : value, rootKey, property.specification, globalState);
@@ -119,9 +119,9 @@ class TransitionablePropertyValue<T, R> {
     value: PropertyValue<T, R>;
     transition: TransitionSpecification | void;
 
-    constructor(property: Property<T, R>, globalState: Record<string, any>, rootKey: string) {
+    constructor(property: Property<T, R>, rootKey: string, globalState: Record<string, any>) {
         this.property = property;
-        this.value = new PropertyValue(property, undefined, globalState, rootKey);
+        this.value = new PropertyValue(property, undefined, rootKey, globalState);
     }
 
     transitioned(parameters: TransitionParameters, prior: TransitioningPropertyValue<T, R>): TransitioningPropertyValue<T, R> {
@@ -146,7 +146,7 @@ export class Transitionable<Props> {
     private _globalState: Record<string, any>;
     private _rootKey: string;
 
-    constructor(properties: Properties<Props>, globalState: Record<string, any>, rootKey: string) {
+    constructor(properties: Properties<Props>, rootKey: string, globalState: Record<string, any>) {
         this._properties = properties;
         this._values = (Object.create(properties.defaultTransitionablePropertyValues));
         this._globalState = globalState;
@@ -168,11 +168,11 @@ export class Transitionable<Props> {
 
     setValue<S extends keyof Props, T>(name: S, value: PropertyValueSpecification<T> | void): void {
         if (!Object.hasOwn(this._values, name)) {
-            this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._globalState, this._propertyRootKey(name));
+            this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._propertyRootKey(name), this._globalState);
         }
         // Note that we do not _remove_ an own property in the case where a value is being reset
         // to the default: the transition might still be non-default.
-        this._values[name].value = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value), this._globalState, this._propertyRootKey(name));
+        this._values[name].value = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value), this._propertyRootKey(name), this._globalState);
     }
 
     getTransition<S extends keyof Props>(name: S): TransitionSpecification | void {
@@ -181,7 +181,7 @@ export class Transitionable<Props> {
 
     setTransition<S extends keyof Props>(name: S, value: TransitionSpecification | void): void {
         if (!Object.hasOwn(this._values, name)) {
-            this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._globalState, this._propertyRootKey(name));
+            this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._propertyRootKey(name), this._globalState);
         }
         this._values[name].transition = clone(value) || undefined;
     }
@@ -334,7 +334,7 @@ export class Layout<Props> {
     private _globalState: Record<string, any>; // reference to global state
     private _rootKey: string;
 
-    constructor(properties: Properties<Props>, globalState: Record<string, any>, rootKey: string) {
+    constructor(properties: Properties<Props>, rootKey: string, globalState: Record<string, any>) {
         this._properties = properties;
         this._values = (Object.create(properties.defaultPropertyValues));
         this._globalState = globalState;
@@ -359,7 +359,7 @@ export class Layout<Props> {
     }
 
     setValue<S extends keyof Props>(name: S, value: any): void {
-        this._values[name] = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value), this._globalState, this._propertyRootKey(name)) as any;
+        this._values[name] = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value), this._propertyRootKey(name), this._globalState) as any;
     }
 
     serialize(): any {
@@ -748,12 +748,13 @@ export class Properties<Props> {
             if (prop.specification.overridable) {
                 this.overridableProperties.push(property);
             }
-            // Defaults are shared across layers and hold the valid spec default, so the bare property
-            // name is enough; the real location is supplied when a value is set via Transitionable/Layout.
+            // These defaults are shared across all layers, so we only have the property name as a location
+            // here. The full location (e.g. `layers[3].paint.line-color`) is filled in later when an actual
+            // value is set through Transitionable/Layout.
             const defaultPropertyValue = this.defaultPropertyValues[property] =
-                new PropertyValue(prop, undefined, undefined, prop.name);
+                new PropertyValue(prop, undefined, prop.name, undefined);
             const defaultTransitionablePropertyValue = this.defaultTransitionablePropertyValues[property] =
-                new TransitionablePropertyValue(prop, undefined, prop.name);
+                new TransitionablePropertyValue(prop, prop.name, undefined);
             this.defaultTransitioningPropertyValues[property] =
                 defaultTransitionablePropertyValue.untransitioned();
             this.defaultPossiblyEvaluatedValues[property] =

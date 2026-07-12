@@ -82,7 +82,7 @@ export class Light extends Evented {
             'color': new DataConstantProperty(styleSpec.light.color as StylePropertySpecification, 'color'),
             'intensity': new DataConstantProperty(styleSpec.light.intensity as StylePropertySpecification, 'intensity'),
         });
-        this._transitionable = new Transitionable(lightProperties, undefined, 'light');
+        this._transitionable = new Transitionable(lightProperties, 'light', undefined);
         this.setLight(lightOptions);
         this._transitioning = this._transitionable.untransitioned();
     }

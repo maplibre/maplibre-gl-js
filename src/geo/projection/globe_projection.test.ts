@@ -12,7 +12,7 @@ describe('GlobeProjection runtime error logging', () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const projection = new GlobeProjection();
-        // global-state isn't constant-folded, so the expression fails at evaluation instead of at parse time.
+        // global-state defeats constant-folding, so this fails at evaluation time (not parse time).
         projection.setProjection({type: ['string', ['global-state', 'missing']]} as any);
         projection.updateTransitions({transition: false} as any as TransitionParameters);
         projection.recalculate(new EvaluationParameters(16));

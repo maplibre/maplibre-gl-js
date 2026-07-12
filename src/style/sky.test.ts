@@ -94,7 +94,7 @@ describe('Sky runtime error logging', () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const sky = new Sky({});
-        // global-state isn't constant-folded, so the expression fails at evaluation instead of at parse time.
+        // global-state defeats constant-folding, so this fails at evaluation time (not parse time).
         sky.setSky({'sky-color': ['to-color', ['global-state', 'missing']]} as any, {validate: false});
         sky.updateTransitions({transition: false} as any as TransitionParameters);
         sky.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);
