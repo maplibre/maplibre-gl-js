@@ -134,6 +134,18 @@ export class BlockableMapEventHandler {
             delete this._contextMenuEvent;
         }
     }
+
+    touchstart(): void {
+        // Touch devices have no right click, so a long press is used to open the
+        // context menu. Reuse the mouse flow: arm the delayed contextmenu here and
+        // fire it on touchend once the browser has emitted its native contextmenu.
+        this.mousedown();
+    }
+
+    touchend(): void {
+        this.mouseup();
+    }
+
     contextmenu(e: MouseEvent): void {
         if (this._delayContextMenu) {
             // Mac: contextmenu fired on mousedown; we save it until mouseup for consistency's sake

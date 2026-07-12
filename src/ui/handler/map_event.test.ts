@@ -157,6 +157,23 @@ describe('map events', () => {
         expect(contextmenu).toHaveBeenCalledTimes(0);
     });
 
+    test('MapEvent handler fires contextmenu on touch long press', () => {
+        const map = createMap();
+        const relatedTarget = map.getCanvas();
+        map.dragPan.enable();
+
+        const contextmenu = vi.fn();
+
+        map.on('contextmenu', contextmenu);
+
+        const touches = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
+        simulate.touchstart(map.getCanvas(), {touches, targetTouches: touches});
+        simulate.contextmenu(map.getCanvas(), {relatedTarget}); // browser fires contextmenu during the long press
+        expect(contextmenu).toHaveBeenCalledTimes(0);
+        simulate.touchend(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: touches});
+        expect(contextmenu).toHaveBeenCalledTimes(1);
+    });
+
     test('MapMouseEvent constructor does not throw error with Event instance instead of MouseEvent as originalEvent param', () => {
         const map = createMap();
         const target = map.getCanvasContainer();
