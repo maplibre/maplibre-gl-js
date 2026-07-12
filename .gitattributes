@@ -9,7 +9,6 @@
 *.mlt binary
 *.pbf binary
 *.tif binary
-*.tgz binary
 
 *.gltf text eol=lf
 *.bin binary
