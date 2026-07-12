@@ -1,11 +1,11 @@
 import {filterObject} from '../util/util.ts';
 
-import {createVisibilityExpression, featureFilter, latest as styleSpec, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
+import {createVisibilityExpression, featureFilter, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 import {
-    validateStyle,
     validateLayoutProperty,
     validatePaintProperty,
-    emitValidationErrors
+    validateAndEmit,
+    type Validator
 } from './validate_style.ts';
 import {Evented, ErrorEvent} from '../util/evented.ts';
 import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties.ts';
@@ -381,19 +381,13 @@ export abstract class StyleLayer extends Evented {
         });
     }
 
-    _validate(validate: Function, key: string, name: string, value: unknown, options: StyleSetterOptions = {}): boolean {
-        if (options?.validate === false) {
-            return false;
-        }
-        return emitValidationErrors(this, validate.call(validateStyle, {
+    _validate(validate: Validator, key: string, name: string, value: unknown, options: StyleSetterOptions = {}): boolean {
+        return validateAndEmit(this, validate, {
             key,
             layerType: this.type,
             objectKey: name,
-            value,
-            styleSpec,
-            // Workaround for https://github.com/mapbox/mapbox-gl-js/issues/2407
-            style: {glyphs: true, sprite: true}
-        }));
+            value
+        }, options);
     }
 
     is3D(): boolean {

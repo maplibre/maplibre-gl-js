@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Log style validation warnings instead of treating them as errors, so that a filter mixing deprecated and expression syntax no longer aborts the style load and blanks the map ([#1751](https://github.com/maplibre/maplibre-style-spec/issues/1751))
 - _...Add new stuff here..._
 
 ## 6.0.0-21

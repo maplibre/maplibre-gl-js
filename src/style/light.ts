@@ -3,9 +3,9 @@ import {interpolates, type Color, latest as styleSpec} from '@maplibre/maplibre-
 import {sphericalToCartesian} from '../util/util.ts';
 import {Evented} from '../util/evented.ts';
 import {
-    validateStyle,
     validateLight,
-    emitValidationErrors
+    validateAndEmit,
+    type Validator
 } from './validate_style.ts';
 
 import type {StylePropertySpecification, LightSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -116,18 +116,7 @@ export class Light extends Evented {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
-    _validate(validate: Function, value: unknown, options?: {
-        validate?: boolean;
-    }): boolean {
-        if (options?.validate === false) {
-            return false;
-        }
-
-        return emitValidationErrors(this, validate.call(validateStyle, {
-            value,
-            // Workaround for https://github.com/mapbox/mapbox-gl-js/issues/2407
-            style: {glyphs: true, sprite: true},
-            styleSpec
-        }));
+    _validate(validate: Validator, value: unknown, options?: StyleSetterOptions): boolean {
+        return validateAndEmit(this, validate, {value}, options);
     }
 }

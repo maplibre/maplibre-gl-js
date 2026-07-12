@@ -16,10 +16,10 @@ import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
 import {Dispatcher} from '../util/dispatcher.ts';
-import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style.ts';
+import {validateStyle, emitValidationErrors, validateAndEmit} from './validate_style.ts';
 import {type QueryRenderedFeaturesOptions, type QueryRenderedFeaturesOptionsStrict, type QueryRenderedFeaturesResults, type QueryRenderedFeaturesResultsItem, type QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features.ts';
 import {TileManager} from '../tile/tile_manager.ts';
-import {latest as styleSpec, derefLayers, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
+import {derefLayers, emptyStyle, diff as diffStyles, type DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
@@ -33,15 +33,6 @@ import type {GeoJSONSource} from '../source/geojson_source.ts';
 import type {StyleLayer} from './style_layer.ts';
 import type {MapGeoJSONFeature, GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type Point from '@mapbox/point-geometry';
-
-// We're skipping validation errors with the `source.canvas` identifier in order
-// to continue to allow canvas sources to be added at runtime/updated in
-// smart setStyle (see https://github.com/mapbox/mapbox-gl-js/pull/6424):
-const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
-    message: string;
-    identifier?: string;
-}> | null) =>
-    _emitValidationErrors(evented, errors?.filter(error => error.identifier !== 'source.canvas'));
 
 import type {Map} from '../ui/map.ts';
 import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
@@ -1777,18 +1768,14 @@ export class Style extends Evented<MapEventType> {
         }
     }
 
-    _validate(validate: Validator, key: string, value: any, props: any, options: {
-        validate?: boolean;
-    } = {}): boolean {
-        if (options?.validate === false) {
-            return false;
-        }
-        return emitValidationErrors(this, validate.call(validateStyle, extend({
+    _validate(validate: Validator, key: string, value: any, props: any, options: StyleSetterOptions = {}): boolean {
+        return validateAndEmit(this, validate, {
             key,
+            // Unlike the other validators, we have the whole style at hand, so we validate against it.
             style: this.serialize(),
             value,
-            styleSpec
-        }, props)));
+            ...props
+        }, options);
     }
 
     _remove(mapRemoved: boolean = true): void {

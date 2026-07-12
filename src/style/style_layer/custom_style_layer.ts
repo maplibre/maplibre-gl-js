@@ -1,4 +1,5 @@
 import {StyleLayer} from '../style_layer.ts';
+import type {ValidationError} from '../validate_style.ts';
 import type {Map} from '../../ui/map.ts';
 import {type mat4} from 'gl-matrix';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -292,8 +293,8 @@ export interface CustomLayerInterface {
     onRemove?(map: Map, gl: WebGL2RenderingContext): void;
 }
 
-export function validateCustomStyleLayer(layerObject: CustomLayerInterface): Array<{message: string}> {
-    const errors: Array<{message: string}> = [];
+export function validateCustomStyleLayer(layerObject: CustomLayerInterface): ValidationError[] {
+    const errors: ValidationError[] = [];
     const id = layerObject.id;
 
     if (id === undefined) {

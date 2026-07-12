@@ -1,8 +1,7 @@
 import {DataConstantProperty, type PossiblyEvaluated, Properties, TRANSITION_SUFFIX, Transitionable, type Transitioning, type TransitionParameters} from './properties.ts';
 import {Evented} from '../util/evented.ts';
 import {EvaluationParameters} from './evaluation_parameters.ts';
-import {emitValidationErrors, validateSky, validateStyle} from './validate_style.ts';
-import {extend} from '../util/util.ts';
+import {validateSky, validateAndEmit, type Validator} from './validate_style.ts';
 import {type Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 import {type Mesh} from '../render/mesh.ts';
 import type {StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -94,16 +93,8 @@ export class Sky extends Evented {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
-    _validate(validate: Function, value: unknown, options: StyleSetterOptions = {}): boolean {
-        if (options?.validate === false) {
-            return false;
-        }
-        return emitValidationErrors(this, validate.call(validateStyle, extend({
-            value,
-            // Workaround for https://github.com/mapbox/mapbox-gl-js/issues/2407
-            style: {glyphs: true, sprite: true},
-            styleSpec
-        })));
+    _validate(validate: Validator, value: unknown, options: StyleSetterOptions = {}): boolean {
+        return validateAndEmit(this, validate, {value}, options);
     }
 
     /**
