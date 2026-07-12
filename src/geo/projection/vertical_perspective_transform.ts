@@ -697,14 +697,30 @@ export class VerticalPerspectiveTransform implements ITransform {
             // length of vecToTarget projected to XZ plane.
 
             const vecToTargetXZLengthSquared = vecToTarget[0] * vecToTarget[0] + vecToTarget[2] * vecToTarget[2];
-            const targetXSquared = rotatedPixelVector[0] * rotatedPixelVector[0];
-            if (vecToTargetXZLengthSquared < targetXSquared) {
-                // Zero solutions - setLocationAtPoint is impossible.
+
+            if (vecToTargetXZLengthSquared < 0.05) {
+                // Near the pole, the XZ projection of vecToTarget is degenerate
+                // (longitude is undefined). Fall back to pure longitude rotation
+                // around the Earth's axis — at the pole, lambda ≡ gamma so this
+                // preserves bearing while keeping the globe responsive.
+                const lngDelta = Math.atan2(
+                    vecToPixelCurrent[0] * vecToTarget[2] - vecToPixelCurrent[2] * vecToTarget[0],
+                    vecToPixelCurrent[0] * vecToTarget[0] + vecToPixelCurrent[2] * vecToTarget[2]
+                );
+                const oldLat = this.center.lat;
+                this.setCenter(new LngLat(this.center.lng - lngDelta * 180 / Math.PI, clamp(this.center.lat, -90, 90)));
+                this.setZoom(this.zoom + getZoomAdjustment(oldLat, this.center.lat));
                 return;
             }
 
+            const targetXSquared = rotatedPixelVector[0] * rotatedPixelVector[0];
+
             // The intersection's Z coordinates
-            const intersectionA = Math.sqrt(vecToTargetXZLengthSquared - targetXSquared);
+            // When vecToTargetXZLengthSquared < targetXSquared, an exact solution is
+            // impossible. Clamping to 0 yields the tangent point — the closest center
+            // that preserves bearing — so the drag slides along the constraint boundary
+            // instead of freezing.
+            const intersectionA = Math.sqrt(Math.max(0, vecToTargetXZLengthSquared - targetXSquared));
             const intersectionB = -intersectionA; // the second solution
 
             const lngA = angleToRotateBetweenVectors2D(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionA);
@@ -748,8 +764,11 @@ export class VerticalPerspectiveTransform implements ITransform {
                 validLng = lngB;
                 validLat = latB;
             } else {
-                // No solution.
-                return;
+                // No valid latitude — fall back to pure longitude rotation
+                // around the Earth's axis. This always preserves bearing and
+                // keeps the globe responsive at the poles where lambda ≡ gamma.
+                validLng = lngA;
+                validLat = this.center.lat * Math.PI / 180;
             }
 
             const newLng = validLng / Math.PI * 180;

@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, type PanInertiaData, updateRotation, type UpdateRotationArgs, cameraForBoxAndBearing} from './camera_helper.ts';
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
-import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils.ts';
+import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils.ts';
 import {clamp, createVec3f64, createVec4f64, differenceOfAnglesDegrees, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
 import {type mat4, quat, vec3} from 'gl-matrix';
 import {normalizeCenter} from '../transform_helper.ts';
@@ -139,16 +139,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
             return;
         }
 
-        if (fixedBearing === false) {
-            // Quaternion-based panning: grab the point and move it to the new location
-            tr.setLocationAtPoint(preZoomAroundLoc, deltas.around, false);
-        } else {
-            // Default: heuristic panning that keeps bearing fixed
-            const oldLat = tr.center.lat;
-            const oldZoom = tr.zoom;
-            tr.setCenter(computeGlobePanCenter(deltas.panDelta, tr).wrap());
-            tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
-        }
+        tr.setLocationAtPoint(preZoomAroundLoc, deltas.around, fixedBearing);
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
