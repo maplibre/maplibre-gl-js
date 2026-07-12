@@ -4,15 +4,9 @@ import {LngLat} from '../lng_lat.ts';
 import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringTilesOptions} from './covering_tiles.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {MercatorTransform} from './mercator_transform.ts';
-import {globeConstants} from './vertical_perspective_projection.ts';
 
 describe('coveringTiles', () => {
     describe('globe', () => {
-
-        beforeEach(() => {
-            // Force faster animations so we can use shorter sleeps when testing them
-            globeConstants.errorTransitionTimeSeconds = 0.1;
-        });
 
         test('zoomed out', () => {
             const transform = new GlobeTransform();
