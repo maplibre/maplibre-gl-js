@@ -27,11 +27,11 @@ type LightPosition = {
 
 class LightPositionProperty implements Property<[number, number, number], LightPosition> {
     specification: StylePropertySpecification;
-    key: string;
+    name: string;
 
     constructor() {
         this.specification = styleSpec.light.position as StylePropertySpecification;
-        this.key = 'position';
+        this.name = 'position';
     }
 
     possiblyEvaluate(
