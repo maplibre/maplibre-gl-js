@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, test} from 'vitest';
 import {GlobeTransform} from './globe_transform.ts';
 import {LngLat} from '../lng_lat.ts';
-import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringTilesOptions} from './covering_tiles.ts';
+import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, getElevationForTileCulling, type CoveringTilesOptions} from './covering_tiles.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {globeConstants} from './vertical_perspective_projection.ts';
@@ -86,9 +86,15 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(6, 0, 6, 31, 31),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512),
+                // At pitch 80 (close to the 89.25° horizon cap once fov/2 is
+                // added), getElevationForTileCulling grows the assumed
+                // elevation so tiles whose extruded features could still be
+                // visible near the horizon aren't dropped - see #7633.
+                new OverscaledTileID(10, 0, 10, 511, 513),
+                new OverscaledTileID(10, 0, 10, 512, 513),
             ]);
         });
-    
+
         test('pitched+rotated', () => {
             const transform = new GlobeTransform();
             transform.resize(128, 128);
@@ -774,6 +780,41 @@ describe('coveringTiles', () => {
             ]);
         });
     
+    });
+});
+
+describe('getElevationForTileCulling', () => {
+    // #7633: 3D buildings disappeared when the camera pitched up steeply
+    // while walking around a city. Reproduced across roughly 80-100 degrees
+    // of pitch (default fov), which is why those three angles specifically
+    // are covered here.
+    function transformAtPitch(pitch: number): MercatorTransform {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 20, minPitch: 0, maxPitch: 100});
+        transform.resize(512, 512);
+        transform.setZoom(16);
+        transform.setCenter(new LngLat(0, 0));
+        transform.setPitch(pitch);
+        return transform;
+    }
+
+    test('is unchanged (no buffer) at normal pitch', () => {
+        const transform = transformAtPitch(45);
+        expect(getElevationForTileCulling(transform)).toBe(transform.elevation);
+    });
+
+    test.each([80, 90, 100])('is fully buffered at pitch %d (the reported bug range)', (pitch) => {
+        const transform = transformAtPitch(pitch);
+        // At the default fov, the frustum's bottom edge is already at or past
+        // horizontal by pitch 80, so the buffer should be fully saturated
+        // (not partially ramping) throughout the whole 80-100 range.
+        expect(getElevationForTileCulling(transform)).toBe(transform.elevation + 500);
+    });
+
+    test('ramps smoothly between unaffected and fully-buffered pitch', () => {
+        const transform = transformAtPitch(60);
+        const elevation = getElevationForTileCulling(transform);
+        expect(elevation).toBeGreaterThan(transform.elevation);
+        expect(elevation).toBeLessThan(transform.elevation + 500);
     });
 });
 

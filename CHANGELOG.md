@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix 3D buildings disappearing when the camera pitches up to look near the horizon, by growing tile-culling bounds as the frustum's bottom edge (from pitch and FOV) approaches horizontal ([#7633](https://github.com/maplibre/maplibre-gl-js/issues/7633))
 - _...Add new stuff here..._
 
 ## 6.0.0-21

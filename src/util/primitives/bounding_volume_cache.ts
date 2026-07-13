@@ -34,7 +34,10 @@ export class BoundingVolumeCache<T extends IBoundingVolume> {
      * @param tileID - Tile x, y and z for zoom.
      */
     getTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal): T {
-        const key = `${tileID.z}_${tileID.x}_${tileID.y}_${options?.terrain ? 't' : ''}`;
+        // Rounded so that camera-elevation jitter and continuous per-frame changes
+        // (see getElevationForTileCulling in covering_tiles.ts) don't defeat caching
+        // between frames where the visible elevation range hasn't meaningfully changed.
+        const key = `${tileID.z}_${tileID.x}_${tileID.y}_${options?.terrain ? 't' : ''}_${Math.round(elevation)}`;
         const cached = this._cache.get(key);
         if (cached) {
             return cached;
