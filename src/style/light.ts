@@ -1,6 +1,6 @@
 import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 
-import {sphericalToCartesian} from '../util/util.ts';
+import {sphericalToCartesian, type SphericalCartesianCoordinates} from '../util/util.ts';
 import {Evented} from '../util/evented.ts';
 import {
     validateStyle,
@@ -15,12 +15,6 @@ import type {StyleSetterOptions} from '../style/style.ts';
 import {Transitionable, type Transitioning, type PossiblyEvaluated, TRANSITION_SUFFIX} from './properties.ts';
 
 import type {TransitionParameters} from './properties.ts';
-
-export type LightPosition = {
-    x: number;
-    y: number;
-    z: number;
-};
 
 /*
  * Represents the light used to light extruded features.
@@ -44,7 +38,7 @@ export class Light extends Evented {
     /**
      * Gets the light position in cartesian coordinates.
      */
-    getCartesianPosition(): LightPosition {
+    getCartesianPosition(): SphericalCartesianCoordinates {
         return sphericalToCartesian(this.properties.get('position'));
     }
 
