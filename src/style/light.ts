@@ -1,4 +1,4 @@
-import {interpolates, type Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
+import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 
 import {sphericalToCartesian} from '../util/util.ts';
 import {Evented} from '../util/evented.ts';
@@ -7,62 +7,20 @@ import {
     validateLight,
     emitValidationErrors
 } from './validate_style.ts';
+import {getProperties, type LightProps, type LightPropsPossiblyEvaluated} from './light_properties.g.ts';
 
-import type {StylePropertySpecification, LightSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {LightSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from './evaluation_parameters.ts';
 import type {StyleSetterOptions} from '../style/style.ts';
-import {Properties, Transitionable, type Transitioning, type PossiblyEvaluated, DataConstantProperty, TRANSITION_SUFFIX} from './properties.ts';
+import {Transitionable, type Transitioning, type PossiblyEvaluated, TRANSITION_SUFFIX} from './properties.ts';
 
-import type {
-    Property,
-    PropertyValue,
-    TransitionParameters
-} from './properties.ts';
+import type {TransitionParameters} from './properties.ts';
 
-type LightPosition = {
+export type LightPosition = {
     x: number;
     y: number;
     z: number;
 };
-
-class LightPositionProperty implements Property<[number, number, number], LightPosition> {
-    specification: StylePropertySpecification;
-
-    constructor() {
-        this.specification = styleSpec.light.position as StylePropertySpecification;
-    }
-
-    possiblyEvaluate(
-        value: PropertyValue<[number, number, number], LightPosition>,
-        parameters: EvaluationParameters
-    ): LightPosition {
-        return sphericalToCartesian(value.expression.evaluate(parameters));
-    }
-
-    interpolate(a: LightPosition, b: LightPosition, t: number): LightPosition {
-        return {
-            x: interpolates.number(a.x, b.x, t),
-            y: interpolates.number(a.y, b.y, t),
-            z: interpolates.number(a.z, b.z, t),
-        };
-    }
-}
-
-type LightProps = {
-    'anchor': DataConstantProperty<'map' | 'viewport'>;
-    'position': LightPositionProperty;
-    'color': DataConstantProperty<Color>;
-    'intensity': DataConstantProperty<number>;
-};
-
-type LightPropsPossiblyEvaluated = {
-    'anchor': 'map' | 'viewport';
-    'position': LightPosition;
-    'color': Color;
-    'intensity': number;
-};
-
-let lightProperties: Properties<LightProps>;
 
 /*
  * Represents the light used to light extruded features.
@@ -74,19 +32,20 @@ export class Light extends Evented {
 
     constructor(lightOptions?: LightSpecification) {
         super();
-        lightProperties ||= new Properties({
-            'anchor': new DataConstantProperty(styleSpec.light.anchor as StylePropertySpecification),
-            'position': new LightPositionProperty(),
-            'color': new DataConstantProperty(styleSpec.light.color as StylePropertySpecification),
-            'intensity': new DataConstantProperty(styleSpec.light.intensity as StylePropertySpecification),
-        });
-        this._transitionable = new Transitionable(lightProperties, undefined);
+        this._transitionable = new Transitionable(getProperties(), undefined);
         this.setLight(lightOptions);
         this._transitioning = this._transitionable.untransitioned();
     }
 
     getLight(): LightSpecification {
         return this._transitionable.serialize();
+    }
+
+    /**
+     * Gets the light position in cartesian coordinates.
+     */
+    getCartesianPosition(): LightPosition {
+        return sphericalToCartesian(this.properties.get('position'));
     }
 
     setLight(light?: LightSpecification, options: StyleSetterOptions = {}): void {

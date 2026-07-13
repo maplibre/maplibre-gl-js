@@ -12,7 +12,8 @@ test('Light with defaults', () => {
     light.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters);
 
     expect(light.properties.get('anchor')).toEqual(spec.anchor.default);
-    expect(light.properties.get('position')).toEqual(sphericalToCartesian(spec.position.default as [number, number, number]));
+    expect(light.properties.get('position')).toEqual(spec.position.default);
+    expect(light.getCartesianPosition()).toEqual(sphericalToCartesian(spec.position.default as [number, number, number]));
     expect(light.properties.get('intensity')).toEqual(spec.intensity.default);
     expect(light.properties.get('color')).toEqual(Color.parse(spec.color.default));
 });
@@ -26,7 +27,8 @@ test('Light with options', () => {
     light.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters);
 
     expect(light.properties.get('anchor')).toBe('map');
-    expect(light.properties.get('position')).toEqual(sphericalToCartesian([2, 30, 30]));
+    expect(light.properties.get('position')).toEqual([2, 30, 30]);
+    expect(light.getCartesianPosition()).toEqual(sphericalToCartesian([2, 30, 30]));
     expect(light.properties.get('intensity')).toBe(1);
     expect(light.properties.get('color')).toEqual(Color.parse(spec.color.default));
 });

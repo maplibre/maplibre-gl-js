@@ -59,7 +59,7 @@ export function drawSky(painter: Painter, sky: Sky): void {
 }
 
 function getSunPos(light: Light, transform: IReadonlyTransform): vec3 {
-    const _lp = light.properties.get('position');
+    const _lp = light.getCartesianPosition();
     const lightPos = [-_lp.x, -_lp.y, -_lp.z] as vec3;
 
     const lightMat = mat4.identity(new Float64Array(16));
