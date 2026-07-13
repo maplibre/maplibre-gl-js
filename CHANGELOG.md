@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Use `role=img` for non-interactive default markers and `role=button` when they become interactive ([#7790](https://github.com/maplibre/maplibre-gl-js/issues/7790))
 - _...Add new stuff here..._
 
 ## 6.0.0-22
