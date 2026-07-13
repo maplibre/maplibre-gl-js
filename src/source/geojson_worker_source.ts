@@ -33,7 +33,7 @@ export type GeoJSONWorkerOptions = {
  */
 export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
     type: 'geojson';
-    /** Always set for load operations; used to locate runtime warnings. */
+    /** The geojson source ID. */
     source: string;
     /**
      * Request parameters including a URL to fetch GeoJSON data.
