@@ -42,7 +42,7 @@ export type CrossFaded<T> = {
  */
 export interface Property<T, R> {
     specification: StylePropertySpecification;
-    name: string;
+    key: string;
     possiblyEvaluate(
         value: PropertyValue<T, R>,
         parameters: EvaluationParameters,
@@ -479,11 +479,11 @@ export class PossiblyEvaluated<Props, PossibleEvaluatedProps> {
  */
 export class DataConstantProperty<T> implements Property<T, T> {
     specification: StylePropertySpecification;
-    name: string;
+    key: string;
 
-    constructor(specification: StylePropertySpecification, name: string) {
+    constructor(specification: StylePropertySpecification, key: string) {
         this.specification = specification;
-        this.name = name;
+        this.key = key;
     }
 
     possiblyEvaluate(value: PropertyValue<T, T>, parameters: EvaluationParameters): T {
@@ -510,12 +510,12 @@ export class DataConstantProperty<T> implements Property<T, T> {
  */
 export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPropertyValue<T>> {
     specification: StylePropertySpecification;
-    name: string;
+    key: string;
     overrides: any;
 
-    constructor(specification: StylePropertySpecification, name: string, overrides?: any) {
+    constructor(specification: StylePropertySpecification, key: string, overrides?: any) {
         this.specification = specification;
-        this.name = name;
+        this.key = key;
         this.overrides = overrides;
     }
 
@@ -652,11 +652,11 @@ export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFad
  */
 export class CrossFadedProperty<T> implements Property<T, CrossFaded<T>> {
     specification: StylePropertySpecification;
-    name: string;
+    key: string;
 
-    constructor(specification: StylePropertySpecification, name: string) {
+    constructor(specification: StylePropertySpecification, key: string) {
         this.specification = specification;
-        this.name = name;
+        this.key = key;
     }
 
     possiblyEvaluate(
@@ -698,11 +698,11 @@ export class CrossFadedProperty<T> implements Property<T, CrossFaded<T>> {
 
 export class ColorRampProperty implements Property<Color, boolean> {
     specification: StylePropertySpecification;
-    name: string;
+    key: string;
 
-    constructor(specification: StylePropertySpecification, name: string) {
+    constructor(specification: StylePropertySpecification, key: string) {
         this.specification = specification;
-        this.name = name;
+        this.key = key;
     }
 
     possiblyEvaluate(
@@ -752,9 +752,9 @@ export class Properties<Props> {
             // here. The full location (e.g. `layers[3].paint.line-color`) is filled in later when an actual
             // value is set through Transitionable/Layout.
             const defaultPropertyValue = this.defaultPropertyValues[property] =
-                new PropertyValue(prop, undefined, prop.name, undefined);
+                new PropertyValue(prop, undefined, prop.key, undefined);
             const defaultTransitionablePropertyValue = this.defaultTransitionablePropertyValues[property] =
-                new TransitionablePropertyValue(prop, prop.name, undefined);
+                new TransitionablePropertyValue(prop, prop.key, undefined);
             this.defaultTransitioningPropertyValues[property] =
                 defaultTransitionablePropertyValue.untransitioned();
             this.defaultPossiblyEvaluatedValues[property] =
