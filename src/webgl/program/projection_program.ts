@@ -1,4 +1,4 @@
-import {Uniform1f, Uniform2f, Uniform4f, type UniformLocations, UniformMatrix4f} from '../uniform_binding.ts';
+import {Uniform1f, Uniform4f, type UniformLocations, UniformMatrix4f} from '../uniform_binding.ts';
 import {type Context} from '../../webgl/context.ts';
 // This next import is needed for the "@link" in the documentation to work properly.
 
@@ -10,7 +10,7 @@ export type ProjectionPreludeUniformsType = {
     'u_projection_clipping_plane': Uniform4f;
     'u_projection_transition': Uniform1f;
     'u_projection_fallback_matrix': UniformMatrix4f;
-    'u_projection_antimeridian_clip': Uniform2f;
+    'u_projection_clip_antimeridian': Uniform1f;
 };
 
 export const projectionUniforms = (context: Context, locations: UniformLocations): ProjectionPreludeUniformsType => ({
@@ -19,7 +19,7 @@ export const projectionUniforms = (context: Context, locations: UniformLocations
     'u_projection_clipping_plane': new Uniform4f(context, locations.u_projection_clipping_plane),
     'u_projection_transition': new Uniform1f(context, locations.u_projection_transition),
     'u_projection_fallback_matrix': new UniformMatrix4f(context, locations.u_projection_fallback_matrix),
-    'u_projection_antimeridian_clip': new Uniform2f(context, locations.u_projection_antimeridian_clip),
+    'u_projection_clip_antimeridian': new Uniform1f(context, locations.u_projection_clip_antimeridian),
 });
 
 /**
@@ -31,5 +31,5 @@ export const projectionObjectToUniformMap: {[field in keyof ProjectionData]: key
     clippingPlane: 'u_projection_clipping_plane',
     projectionTransition: 'u_projection_transition',
     fallbackMatrix: 'u_projection_fallback_matrix',
-    antimeridianClip: 'u_projection_antimeridian_clip',
+    clipAntimeridian: 'u_projection_clip_antimeridian',
 };

@@ -68,8 +68,7 @@
       "source": "rect",
       "paint": {
         "fill-color": "black",
-        "fill-opacity": 0.5,
-        "fill-antialias": false
+        "fill-opacity": 0.5
       }
     }
   ]

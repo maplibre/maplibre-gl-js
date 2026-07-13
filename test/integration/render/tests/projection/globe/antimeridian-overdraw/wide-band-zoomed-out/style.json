@@ -176,8 +176,7 @@
       "source": "shapes",
       "paint": {
         "fill-color": "#ff0000",
-        "fill-opacity": 0.5,
-        "fill-antialias": false
+        "fill-opacity": 0.5
       }
     },
     {

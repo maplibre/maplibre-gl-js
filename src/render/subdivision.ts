@@ -612,11 +612,46 @@ class Subdivider {
         // Add pole geometry if needed
         this._handlePoles(subdividedTriangles);
 
+        // On globe the z0 tile's buffer wraps around the planet onto the tile itself, drawing buffered geometry twice.
+        // To avoid this, we drop all geometry beyond the tile's X extent, including the outlines generated above.
+        // Only globe uses subdivision (granularity >= 2), so mercator is never affected.
+        if (this._granularity >= 2 && this._canonical?.z === 0) {
+            subdividedTriangles = this._removeTrianglesOutsideTileX(subdividedTriangles);
+            subdividedLines = subdividedLines.map(lines => this._removeLinesOutsideTileX(lines));
+        }
+
         return {
             verticesFlattened: this._vertexBuffer,
             indicesTriangles: subdividedTriangles,
             indicesLineList: subdividedLines,
         };
+    }
+
+    private _vertexOutsideTileX(index: number): boolean {
+        const x = this._vertexBuffer[index * 2];
+        return x < 0 || x > EXTENT;
+    }
+
+    private _removeTrianglesOutsideTileX(indices: number[]): number[] {
+        const filtered: number[] = [];
+        for (let i = 0; i < indices.length; i += 3) {
+            if (this._vertexOutsideTileX(indices[i]) || this._vertexOutsideTileX(indices[i + 1]) || this._vertexOutsideTileX(indices[i + 2])) {
+                continue;
+            }
+            filtered.push(indices[i], indices[i + 1], indices[i + 2]);
+        }
+        return filtered;
+    }
+
+    private _removeLinesOutsideTileX(indices: number[]): number[] {
+        const filtered: number[] = [];
+        for (let i = 0; i < indices.length; i += 2) {
+            if (this._vertexOutsideTileX(indices[i]) || this._vertexOutsideTileX(indices[i + 1])) {
+                continue;
+            }
+            filtered.push(indices[i], indices[i + 1]);
+        }
+        return filtered;
     }
 
     /**

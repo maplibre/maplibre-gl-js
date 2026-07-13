@@ -16,7 +16,7 @@ import type {PointProjection} from '../../symbol/projection.ts';
 import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
-import {getTileAntimeridianClip, type CustomLayerProjectionData, type ProjectionDataParams, type RendererProjectionData} from './projection_data.ts';
+import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
 /**
@@ -304,7 +304,7 @@ export class VerticalPerspectiveTransform implements ITransform {
             clippingPlane: this._cachedClippingPlane as [number, number, number, number],
             projectionTransition: applyGlobeMatrix ? 1 : 0,
             fallbackMatrix: this._globeViewProjMatrix32f,
-            antimeridianClip: getTileAntimeridianClip(overscaledTileID),
+            clipAntimeridian: overscaledTileID?.canonical.z === 0 ? 1 : 0,
         };
     }
 

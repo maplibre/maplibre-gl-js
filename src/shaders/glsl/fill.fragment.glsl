@@ -2,8 +2,6 @@
 #pragma maplibre: define lowp float opacity
 
 void main() {
-    clipAntimeridian();
-
     #pragma maplibre: initialize highp vec4 color
     #pragma maplibre: initialize lowp float opacity
 
