@@ -1,13 +1,9 @@
 ## main
-
 ### ✨ Features and improvements
-
-- Improve terrain render-to-texture preparation performance by skipping sources that are not rendered to terrain textures ([#7863](https://github.com/maplibre/maplibre-gl-js/pull/7863)) (by [@DoFabien](https://github.com/DoFabien))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-
-- Eagerly set tiles in vector and raster tile source, when not TileJSON, similarly to what is done in setUrl
+- Synchronously set `this.tiles` in vector and raster tile sources to avoid stale data if calling `.loadTiles` in the same frame (by [@nostrorom](https://github.com/nostrorom))
 - _...Add new stuff here..._
 
 ## 6.0.0-22
@@ -4223,11 +4219,11 @@ August 16, 2018
 
     ```js
     style.batch(function (s) {
-        s.addLayer({ id: "first", type: "symbol", source: "streets" });
-        s.addLayer({ id: "second", type: "symbol", source: "streets" });
-        s.addLayer({ id: "third", type: "symbol", source: "terrain" });
-        s.setPaintProperty("first", "text-color", "black");
-        s.setPaintProperty("first", "text-halo-color", "white");
+        s.addLayer({ id: 'first', type: 'symbol', source: 'streets' });
+        s.addLayer({ id: 'second', type: 'symbol', source: 'streets' });
+        s.addLayer({ id: 'third', type: 'symbol', source: 'terrain' });
+        s.setPaintProperty('first', 'text-color', 'black');
+        s.setPaintProperty('first', 'text-halo-color', 'white');
     });
     ```
 
