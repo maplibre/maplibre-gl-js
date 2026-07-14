@@ -37,18 +37,12 @@ export const validatePaintProperty: Validator = validateStyle.paintProperty;
 export const validateLayoutProperty: Validator = validateStyle.layoutProperty;
 
 /**
- * Errors with this identifier are ignored in order to continue to allow canvas sources to be added
- * at runtime/updated in smart setStyle (see https://github.com/mapbox/mapbox-gl-js/pull/6424).
- * Only the source validator ever reports it.
+ * The spec reports a canvas source as an error, because a canvas cannot be described in a stylesheet.
+ * Adding one through {@link Style.addSource} is supported though, and {@link Style.serialize} then
+ * includes it, so re-validating the style on `setStyle` would flag a source the user added correctly.
+ * The severity cannot tell the two apart -- only the identifier can -- so the error is dropped here.
  */
-const IGNORED_IDENTIFIER = 'source.canvas';
-
-/**
- * Validating a value on its own still requires a surrounding style, so it is stubbed out with the
- * only two fields the validators look at (workaround for https://github.com/mapbox/mapbox-gl-js/issues/2407).
- * Callers that do have the full style, such as {@link Style}, pass their own `style` instead.
- */
-const STUB_STYLE = {glyphs: true, sprite: true};
+const CANVAS_SOURCE_IDENTIFIER = 'source.canvas';
 
 /**
  * Emits everything a validator found, and reports whether any of it was severe enough to abort.
@@ -65,7 +59,7 @@ const STUB_STYLE = {glyphs: true, sprite: true};
 export function emitValidationErrors(emitter: Evented, errors: readonly ValidationError[]): boolean {
     let hasErrors = false;
     for (const error of errors) {
-        if (error.identifier === IGNORED_IDENTIFIER) {
+        if (error.identifier === CANVAS_SOURCE_IDENTIFIER) {
             continue;
         }
         if (error.severity === 'warning') {
@@ -84,7 +78,7 @@ export function emitValidationErrors(emitter: Evented, errors: readonly Validati
  * @param emitter - the object to fire {@link ErrorEvent}s on
  * @param validator - the validator to run, e.g. {@link validateFilter}
  * @param params - what to validate: the `value`, plus whatever context the validator needs, such as
- * the `key` locating it in the style. A `style` given here overrides the stubbed-out one.
+ * the `key` locating it in the style, or the surrounding `style` that {@link validateStyle.layer} looks at
  * @param options - setter options; validation is skipped entirely when `validate` is `false`
  * @returns whether validation failed, i.e. whether the caller should give up on the value
  */
@@ -98,7 +92,6 @@ export function validateAndEmit(
         return false;
     }
     return emitValidationErrors(emitter, validator({
-        style: STUB_STYLE,
         styleSpec,
         ...params
     }));
