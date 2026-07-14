@@ -1,41 +1,11 @@
-import {DataConstantProperty, type PossiblyEvaluated, Properties, TRANSITION_SUFFIX, Transitionable, type Transitioning, type TransitionParameters} from './properties.ts';
+import {type PossiblyEvaluated, TRANSITION_SUFFIX, Transitionable, type Transitioning, type TransitionParameters} from './properties.ts';
 import {Evented} from '../util/evented.ts';
 import {EvaluationParameters} from './evaluation_parameters.ts';
-import {validateSky, validateAndEmit, type Validator} from './validate_style.ts';
-import {type Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
-import {type Mesh} from '../render/mesh.ts';
-import type {StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {validateSky, Validator, validateAndEmit} from './validate_style.ts';
+import {getProperties, type SkyProps, type SkyPropsPossiblyEvaluated} from './sky_properties.g.ts';
+import type {Mesh} from '../render/mesh.ts';
+import type {SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {StyleSetterOptions} from './style.ts';
-
-type SkyProps = {
-    'sky-color': DataConstantProperty<Color>;
-    'horizon-color': DataConstantProperty<Color>;
-    'fog-color': DataConstantProperty<Color>;
-    'fog-ground-blend': DataConstantProperty<number>;
-    'horizon-fog-blend': DataConstantProperty<number>;
-    'sky-horizon-blend': DataConstantProperty<number>;
-    'atmosphere-blend': DataConstantProperty<number>;
-};
-
-type SkyPropsPossiblyEvaluated = {
-    'sky-color': Color;
-    'horizon-color': Color;
-    'fog-color': Color;
-    'fog-ground-blend': number;
-    'horizon-fog-blend': number;
-    'sky-horizon-blend': number;
-    'atmosphere-blend': number;
-};
-
-const properties: Properties<SkyProps> = new Properties({
-    'sky-color': new DataConstantProperty(styleSpec.sky['sky-color'] as StylePropertySpecification, 'sky-color'),
-    'horizon-color': new DataConstantProperty(styleSpec.sky['horizon-color'] as StylePropertySpecification, 'horizon-color'),
-    'fog-color': new DataConstantProperty(styleSpec.sky['fog-color'] as StylePropertySpecification, 'fog-color'),
-    'fog-ground-blend': new DataConstantProperty(styleSpec.sky['fog-ground-blend'] as StylePropertySpecification, 'fog-ground-blend'),
-    'horizon-fog-blend': new DataConstantProperty(styleSpec.sky['horizon-fog-blend'] as StylePropertySpecification, 'horizon-fog-blend'),
-    'sky-horizon-blend': new DataConstantProperty(styleSpec.sky['sky-horizon-blend'] as StylePropertySpecification, 'sky-horizon-blend'),
-    'atmosphere-blend': new DataConstantProperty(styleSpec.sky['atmosphere-blend'] as StylePropertySpecification, 'atmosphere-blend')
-});
 
 export class Sky extends Evented {
     properties: PossiblyEvaluated<SkyProps, SkyPropsPossiblyEvaluated>;
@@ -50,7 +20,7 @@ export class Sky extends Evented {
 
     constructor(sky?: SkySpecification) {
         super();
-        this._transitionable = new Transitionable(properties, 'sky', undefined);
+        this._transitionable = new Transitionable(getProperties(), 'sky', undefined);
         this.setSky(sky);
         this._transitioning = this._transitionable.untransitioned();
         this.recalculate(new EvaluationParameters(0));
