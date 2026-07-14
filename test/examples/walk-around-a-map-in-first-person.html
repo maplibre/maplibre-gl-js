@@ -188,8 +188,13 @@ map.on('load', () => {
 });
 
 function updateCamera() {
-    const metresPerPixel = 1 / (metresToMercatorUnits * map.transform.worldSize);
-    const focalLengthPixels = map.transform.cameraToCenterDistance;
+    // worldSize and cameraToCenterDistance aren't exposed on Map directly, so
+    // they're derived here from public getters/state instead of reaching into
+    // Map's private transform internals.
+    const worldSize = 512 * Math.pow(2, ZOOM);
+    const metresPerPixel = 1 / (metresToMercatorUnits * worldSize);
+    const halfFovRadians = map.getVerticalFieldOfView() * Math.PI / 360;
+    const focalLengthPixels = 0.5 / Math.tan(halfFovRadians) * map.getContainer().clientHeight;
     const lookAheadMetres = focalLengthPixels * metresPerPixel;
 
     const centerX = player.x + Math.cos(player.heading) * lookAheadMetres;
