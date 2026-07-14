@@ -50,14 +50,12 @@ export type UpdateImageOptions = {
      * The image URL to load.
      */
     url: string;
-    image?: never;
 } | {
     /**
      * An already-decoded image (`HTMLImageElement`, `HTMLCanvasElement`, `ImageBitmap` or `ImageData`)
      * to display directly, without a network request.
      */
     image: ImageSourceImage;
-    url?: never;
 });
 
 export type CanonicalTileRange = {
