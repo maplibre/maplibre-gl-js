@@ -1,7 +1,7 @@
 import {type PossiblyEvaluated, TRANSITION_SUFFIX, Transitionable, type Transitioning, type TransitionParameters} from './properties.ts';
 import {Evented} from '../util/evented.ts';
 import {EvaluationParameters} from './evaluation_parameters.ts';
-import {validateSky, Validator, validateAndEmit} from './validate_style.ts';
+import {validateSky, validateAndEmit, type Validator} from './validate_style.ts';
 import {getProperties, type SkyProps, type SkyPropsPossiblyEvaluated} from './sky_properties.g.ts';
 import type {Mesh} from '../render/mesh.ts';
 import type {SkySpecification} from '@maplibre/maplibre-gl-style-spec';
