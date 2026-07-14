@@ -37,25 +37,28 @@ export type ImageSourceImage = HTMLImageElement | HTMLCanvasElement | ImageBitma
 /**
  * The options object for the {@link ImageSource.updateImage} method.
  *
- * Provide either a `url` to load over the network, or an already-decoded `image`
- * to display directly. If both are given, `image` takes precedence.
+ * Provide exactly one of `url` (to load an image over the network) or `image`
+ * (an already-decoded image to display directly, without a network request).
  */
 export type UpdateImageOptions = {
-    /**
-     * The image URL to load. Provide this or {@link UpdateImageOptions.image}.
-     */
-    url?: string;
-    /**
-     * An already-decoded image (`HTMLImageElement`, `HTMLCanvasElement`, `ImageBitmap` or `ImageData`)
-     * to display directly, as an alternative to {@link UpdateImageOptions.url}. When provided,
-     * no network request is made and the image is used as-is.
-     */
-    image?: ImageSourceImage;
     /**
      * The image coordinates
      */
     coordinates?: Coordinates;
-};
+} & ({
+    /**
+     * The image URL to load.
+     */
+    url: string;
+    image?: never;
+} | {
+    /**
+     * An already-decoded image (`HTMLImageElement`, `HTMLCanvasElement`, `ImageBitmap` or `ImageData`)
+     * to display directly, without a network request.
+     */
+    image: ImageSourceImage;
+    url?: never;
+});
 
 export type CanonicalTileRange = {
     minTileY: number;
@@ -199,9 +202,9 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
      * Updates the image and, optionally, the coordinates. To avoid having the image flash after changing,
      * set the `raster-fade-duration` paint property on the raster layer to 0.
      *
-     * Provide either `url` to fetch a new image over the network, or `image` to display an
-     * already-decoded image (`HTMLImageElement`, `HTMLCanvasElement`, `ImageBitmap` or `ImageData`)
-     * directly without a network request. If both are given, `image` takes precedence.
+     * Provide exactly one of `url` (to fetch a new image over the network) or `image` (an
+     * already-decoded `HTMLImageElement`, `HTMLCanvasElement`, `ImageBitmap` or `ImageData` to
+     * display directly, without a network request).
      *
      * @param options - The options object.
      */

@@ -349,7 +349,7 @@ describe('ImageSource', () => {
             expect(source.loaded()).toBe(true);
         });
 
-        test('prefers image over url when both are provided', async () => {
+        test('uses image and ignores url if an untyped caller passes both', async () => {
             const source = createSource({url: '/image.png'});
             const map = new StubMap() as any;
             map.on('error', () => {});
@@ -358,7 +358,8 @@ describe('ImageSource', () => {
 
             const spy = vi.spyOn(map._requestManager, 'transformRequest');
             const bitmap = new ImageBitmap();
-            source.updateImage({url: '/image2.png', image: bitmap});
+            // The union type forbids passing both; verify the runtime still prefers image.
+            source.updateImage({url: '/image2.png', image: bitmap} as any);
 
             expect(spy).not.toHaveBeenCalled();
             expect(source.image).toBe(bitmap);
@@ -373,7 +374,8 @@ describe('ImageSource', () => {
             await sleep(0);
 
             const previousImage = source.image;
-            const result = source.updateImage({});
+            // The union type forbids passing neither; verify the runtime guard is a no-op.
+            const result = source.updateImage({} as any);
 
             expect(result).toBe(source);
             expect(source.image).toBe(previousImage);
