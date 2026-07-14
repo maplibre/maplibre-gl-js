@@ -2,20 +2,9 @@ import {latest as styleSpec, validateStyleMin} from '@maplibre/maplibre-gl-style
 import {ErrorEvent} from '../util/evented.ts';
 import {warnOnce} from '../util/util.ts';
 
-import type {ValidationSeverity} from '@maplibre/maplibre-gl-style-spec';
+import type {ValidationError} from '@maplibre/maplibre-gl-style-spec';
 import type {Evented} from '../util/evented.ts';
 import type {StyleSetterOptions} from './style.ts';
-
-/**
- * A problem found while validating a style. This covers both the errors reported by the style spec
- * and the ones we raise ourselves (e.g. for custom layers), which only set a `message`.
- */
-export type ValidationError = {
-    message: string;
-    identifier?: string;
-    line?: number;
-    severity?: ValidationSeverity;
-};
 
 /**
  * Validates a single part of a style, e.g. a source, a filter or a paint property.
@@ -73,9 +62,9 @@ const STUB_STYLE = {glyphs: true, sprite: true};
  * @param errors - what validation turned up, if anything
  * @returns whether validation failed, i.e. whether the caller should give up on the value
  */
-export function emitValidationErrors(emitter: Evented, errors?: readonly ValidationError[] | null): boolean {
+export function emitValidationErrors(emitter: Evented, errors: readonly ValidationError[]): boolean {
     let hasErrors = false;
-    for (const error of errors ?? []) {
+    for (const error of errors) {
         if (error.identifier === IGNORED_IDENTIFIER) {
             continue;
         }

@@ -1,14 +1,14 @@
 import {describe, test, expect, vi, afterEach} from 'vitest';
-import {emitValidationErrors, validateAndEmit, validateFilter} from './validate_style.ts';
+import {validateAndEmit, validateFilter, validateSource} from './validate_style.ts';
 import {Evented} from '../util/evented.ts';
+
+class TestEmitter extends Evented {}
 
 afterEach(() => {
     vi.restoreAllMocks();
 });
 
-class TestEmitter extends Evented {}
-
-/** An emitter that collects the messages of the {@link ErrorEvent}s fired at it, plus a `console.warn` spy. */
+/** An emitter collecting the messages of the {@link ErrorEvent}s fired at it, plus a `console.warn` spy. */
 function setup() {
     const emitter = new TestEmitter();
     const fired: string[] = [];
@@ -16,37 +16,10 @@ function setup() {
     return {emitter, fired, warn: vi.spyOn(console, 'warn').mockImplementation(() => {})};
 }
 
-describe('emitValidationErrors', () => {
-    test('fires and fails on errors, logs warnings, and skips canvas sources', () => {
-        const {emitter, fired, warn} = setup();
-
-        const hasErrors = emitValidationErrors(emitter, [
-            {message: 'a warning', severity: 'warning'},
-            // Canvas sources are added at runtime, so their errors are ignored.
-            {message: 'a canvas error', identifier: 'source.canvas', severity: 'error'},
-            {message: 'an error', severity: 'error'},
-            // Custom layers report errors without a severity; they must still count as errors.
-            {message: 'an error with no severity'}
-        ]);
-
-        expect(hasErrors).toBe(true);
-        expect(fired).toEqual(['an error', 'an error with no severity']);
-        expect(warn).toHaveBeenCalledExactlyOnceWith('a warning');
-    });
-
-    test('reports no failure when there is nothing to emit', () => {
-        const {emitter, fired} = setup();
-
-        expect(emitValidationErrors(emitter, [])).toBe(false);
-        expect(emitValidationErrors(emitter, null)).toBe(false);
-        expect(fired).toEqual([]);
-    });
-});
-
 describe('validateAndEmit', () => {
     const key = 'layers.symbol.filter';
 
-    test('fails on a filter the spec rejects', () => {
+    test('fires an error and reports failure for a filter the spec rejects', () => {
         const {emitter, fired} = setup();
 
         const hasErrors = validateAndEmit(emitter, validateFilter, {
@@ -69,6 +42,33 @@ describe('validateAndEmit', () => {
         expect(hasErrors).toBe(false);
         expect(fired).toEqual([]);
         expect(warn).toHaveBeenCalledWith(expect.stringContaining('Mixing deprecated filter syntax with expression syntax'));
+    });
+
+    test('still fails when an error accompanies a warning, emitting only the error', () => {
+        const {emitter, fired, warn} = setup();
+
+        // `!in` has no expression equivalent, so the spec reports it as an error on top of the
+        // warning about the mixing itself. A warning must not swallow that error.
+        const hasErrors = validateAndEmit(emitter, validateFilter, {
+            key,
+            value: ['all', ['==', ['get', 'class'], 'rail'], ['!in', 'name', 'a']]
+        });
+
+        expect(hasErrors).toBe(true);
+        expect(fired).toEqual([expect.stringContaining('Unknown expression "!in"')]);
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('Mixing deprecated filter syntax with expression syntax'));
+    });
+
+    test('ignores errors about canvas sources, which are added at runtime instead', () => {
+        const {emitter, fired} = setup();
+
+        const hasErrors = validateAndEmit(emitter, validateSource, {
+            key: 'sources.canvas',
+            value: {type: 'canvas'}
+        });
+
+        expect(hasErrors).toBe(false);
+        expect(fired).toEqual([]);
     });
 
     test('skips validation entirely when the validate option is false', () => {

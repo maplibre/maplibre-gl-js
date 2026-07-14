@@ -1,5 +1,5 @@
 import {StyleLayer} from '../style_layer.ts';
-import type {ValidationError} from '../validate_style.ts';
+import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
 import type {Map} from '../../ui/map.ts';
 import type {mat4} from 'gl-matrix';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -298,23 +298,17 @@ export function validateCustomStyleLayer(layerObject: CustomLayerInterface): Val
     const id = layerObject.id;
 
     if (id === undefined) {
-        errors.push({
-            message: `layers.${id}: missing required property "id"`
-        });
+        errors.push(new ValidationError(`layers.${id}`, null, 'missing required property "id"'));
     }
 
     if (layerObject.render === undefined) {
-        errors.push({
-            message: `layers.${id}: missing required method "render"`
-        });
+        errors.push(new ValidationError(`layers.${id}`, null, 'missing required method "render"'));
     }
 
     if (layerObject.renderingMode &&
         layerObject.renderingMode !== '2d' &&
         layerObject.renderingMode !== '3d') {
-        errors.push({
-            message: `layers.${id}: property "renderingMode" must be either "2d" or "3d"`
-        });
+        errors.push(new ValidationError(`layers.${id}`, null, 'property "renderingMode" must be either "2d" or "3d"'));
     }
 
     return errors;
