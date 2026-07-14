@@ -262,6 +262,124 @@ describe('ImageSource', () => {
         expect(errorHandler).not.toHaveBeenCalled();
     });
 
+    describe('updateImage with a decoded image', () => {
+        test('sets the image directly without a network request', async () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            map.on('error', () => {});
+            source.onAdd(map);
+            await sleep(0);
+
+            // transformRequest was called once by the initial load; the image path must not call it again.
+            const spy = vi.spyOn(map._requestManager, 'transformRequest');
+            const bitmap = new ImageBitmap();
+            const result = source.updateImage({image: bitmap});
+
+            expect(result).toBe(source);
+            expect(spy).not.toHaveBeenCalled();
+            expect(source.image).toBe(bitmap);
+            expect(source.loaded()).toBe(true);
+        });
+
+        test('resets the texture so the new image is uploaded on the next prepare', async () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            map.on('error', () => {});
+            source.onAdd(map);
+            await sleep(0);
+
+            source.texture = {} as Texture;
+            source.updateImage({image: new ImageBitmap()});
+
+            expect(source.texture).toBeNull();
+        });
+
+        test('updates coordinates alongside the image', async () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            map.on('error', () => {});
+            source.onAdd(map);
+            await sleep(0);
+
+            source.updateImage({
+                image: new ImageBitmap(),
+                coordinates: [[0, 0], [-1, 0], [-1, -1], [0, -1]]
+            });
+
+            expect(source.serialize().coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
+        });
+
+        test('fires a metadata data event', async () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            map.on('error', () => {});
+            source.onAdd(map);
+            await sleep(0);
+
+            const promise = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'metadata');
+            source.updateImage({image: new ImageBitmap()});
+            await expect(promise).resolves.toBeDefined();
+        });
+
+        test('cancels a pending request', async () => {
+            const map = new StubMap() as any;
+            const source = createSource({url: '/image.png', eventedParent: map});
+            map.on('error', () => {});
+            source.onAdd(map);
+            await sleep(0);
+
+            const spy = vi.spyOn(server.requests[0] as any, 'abort');
+            source.updateImage({image: new ImageBitmap()});
+            expect(spy).toHaveBeenCalled();
+        });
+
+        test('accepts an ImageData instance', async () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            map.on('error', () => {});
+            source.onAdd(map);
+            await sleep(0);
+
+            const spy = vi.spyOn(map._requestManager, 'transformRequest');
+            const imageData = new ImageData(1, 1);
+            source.updateImage({image: imageData});
+
+            expect(spy).not.toHaveBeenCalled();
+            expect(source.image).toBe(imageData);
+            expect(source.loaded()).toBe(true);
+        });
+
+        test('prefers image over url when both are provided', async () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            map.on('error', () => {});
+            source.onAdd(map);
+            await sleep(0);
+
+            const spy = vi.spyOn(map._requestManager, 'transformRequest');
+            const bitmap = new ImageBitmap();
+            source.updateImage({url: '/image2.png', image: bitmap});
+
+            expect(spy).not.toHaveBeenCalled();
+            expect(source.image).toBe(bitmap);
+        });
+
+        test('is a no-op when neither url nor image is provided', async () => {
+            const source = createSource({url: '/image.png'});
+            const map = new StubMap() as any;
+            map.on('error', () => {});
+            source.onAdd(map);
+            server.respond();
+            await sleep(0);
+
+            const previousImage = source.image;
+            const result = source.updateImage({});
+
+            expect(result).toBe(source);
+            expect(source.image).toBe(previousImage);
+        });
+    });
+
     describe('terrainTileRanges', () => {
         test('sets tile ranges for all zoom levels', () => {
             const source = createSource({url: '/image.png'});

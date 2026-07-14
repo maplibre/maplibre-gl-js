@@ -29,13 +29,28 @@ import {isAbortError} from '../util/abort_error.ts';
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
 
 /**
- * The options object for the {@link ImageSource.updateImage} method
+ * An already-decoded image that can be handed to an {@link ImageSource} directly,
+ * without a network request.
+ */
+export type ImageSourceImage = HTMLImageElement | HTMLCanvasElement | ImageBitmap | ImageData;
+
+/**
+ * The options object for the {@link ImageSource.updateImage} method.
+ *
+ * Provide either a `url` to load over the network, or an already-decoded `image`
+ * to display directly. If both are given, `image` takes precedence.
  */
 export type UpdateImageOptions = {
     /**
-     * Required image URL.
+     * The image URL to load. Provide this or {@link UpdateImageOptions.image}.
      */
-    url: string;
+    url?: string;
+    /**
+     * An already-decoded image (`HTMLImageElement`, `HTMLCanvasElement`, `ImageBitmap` or `ImageData`)
+     * to display directly, as an alternative to {@link UpdateImageOptions.url}. When provided,
+     * no network request is made and the image is used as-is.
+     */
+    image?: ImageSourceImage;
     /**
      * The image coordinates
      */
@@ -96,6 +111,10 @@ export type CanonicalTileRange = {
  *    ]
  * })
  *
+ * // update with an already-decoded image (no network request)
+ * const bitmap = await createImageBitmap(myCanvas);
+ * mySource.updateImage({image: bitmap});
+ *
  * map.removeSource('some id');  // remove
  * ```
  */
@@ -118,7 +137,7 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
     dispatcher: Dispatcher;
     map: Map;
     texture: Texture | null;
-    image: HTMLImageElement | ImageBitmap;
+    image: ImageSourceImage;
     tileID: CanonicalTileID;
     tileCoords: Point[];
     flippedWindingOrder: boolean = false;
@@ -177,19 +196,35 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
     }
 
     /**
-     * Updates the image URL and, optionally, the coordinates. To avoid having the image flash after changing,
+     * Updates the image and, optionally, the coordinates. To avoid having the image flash after changing,
      * set the `raster-fade-duration` paint property on the raster layer to 0.
+     *
+     * Provide either `url` to fetch a new image over the network, or `image` to display an
+     * already-decoded image (`HTMLImageElement`, `HTMLCanvasElement`, `ImageBitmap` or `ImageData`)
+     * directly without a network request. If both are given, `image` takes precedence.
      *
      * @param options - The options object.
      */
     updateImage(options: UpdateImageOptions): this {
-        if (!options.url) {
+        if (!options.url && !options.image) {
             return this;
         }
 
         if (this._request) {
             this._request.abort();
             this._request = null;
+        }
+
+        if (options.image) {
+            // Use the already-decoded image directly, skipping the network request.
+            this._loaded = true;
+            this.image = options.image;
+            if (options.coordinates) {
+                this.coordinates = options.coordinates;
+            }
+            this.texture = null;
+            this._finishLoading();
+            return this;
         }
 
         this.options.url = options.url;
