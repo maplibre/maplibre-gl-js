@@ -74,7 +74,7 @@
     "@typescript/native-preview": "beta",
     "@unicode/unicode-17.0.0": "^1.6.17",
     "@vitest/coverage-v8": "4.1.10",
-    "@vitest/eslint-plugin": "^1.6.22",
+    "@vitest/eslint-plugin": "^1.6.23",
     "@vitest/ui": "4.1.10",
     "address": "^2.0.3",
     "autoprefixer": "^10.5.2",
