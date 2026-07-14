@@ -2,12 +2,13 @@
 
 import * as fs from 'fs';
 
-import {latest} from '@maplibre/maplibre-gl-style-spec';
+import {latest, type StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * Which kind of value a property holds, and so which `Property` class implements it.
+ * Taken from the spec so a new kind shows up here as a compile error rather than at runtime.
  */
-type SpecPropertyType = 'data-driven' | 'cross-faded' | 'cross-faded-data-driven' | 'color-ramp' | 'data-constant' | 'constant';
+type SpecPropertyType = StylePropertySpecification['property-type'];
 
 /**
  * The part of a spec entry that describes what a value looks like. Arrays describe their elements
@@ -256,7 +257,7 @@ function propertyValue(property: SpecProperty, type: string): string {
  */
 function specProperties(specKey: string, tag: Pick<SpecProperty, 'layerType'> | Pick<SpecProperty, 'root'>): SpecProperty[] {
     const spec = latest[specKey as keyof typeof latest] as Record<string, Omit<SpecProperty, 'name'>>;
-    return Object.keys(spec).map((name) => ({...spec[name], ...tag, name}) as SpecProperty);
+    return Object.keys(spec).map((name) => ({...spec[name], ...tag, name}));
 }
 
 /** The imports every generated file opens with. */
