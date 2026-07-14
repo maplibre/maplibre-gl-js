@@ -1201,6 +1201,19 @@ function scaleAndAdd(out, a, b, scale) {
 	return out;
 }
 /**
+* Negates the components of a vec3
+*
+* @param {vec3} out the receiving vector
+* @param {ReadonlyVec3} a vector to negate
+* @returns {vec3} out
+*/
+function negate(out, a) {
+	out[0] = -a[0];
+	out[1] = -a[1];
+	out[2] = -a[2];
+	return out;
+}
+/**
 * Normalize a vec3
 *
 * @param {vec3} out the receiving vector
@@ -2378,11 +2391,11 @@ function sphericalToCartesian([r, azimuthal, polar]) {
 	azimuthal += 90;
 	azimuthal *= Math.PI / 180;
 	polar *= Math.PI / 180;
-	return {
-		x: r * Math.cos(azimuthal) * Math.sin(polar),
-		y: r * Math.sin(azimuthal) * Math.sin(polar),
-		z: r * Math.cos(polar)
-	};
+	return [
+		r * Math.cos(azimuthal) * Math.sin(polar),
+		r * Math.sin(azimuthal) * Math.sin(polar),
+		r * Math.cos(polar)
+	];
 }
 /**
 *  Returns true if the when run in the web-worker context.
@@ -24389,39 +24402,31 @@ var GlyphManager = class GlyphManager {
 	}
 };
 //#endregion
+//#region src/style/light_properties.g.ts
+let properties$2;
+const getProperties$2 = () => properties$2 = properties$2 || new Properties({
+	"anchor": new DataConstantProperty(latest["light"]["anchor"], "anchor"),
+	"position": new DataConstantProperty(latest["light"]["position"], "position"),
+	"color": new DataConstantProperty(latest["light"]["color"], "color"),
+	"intensity": new DataConstantProperty(latest["light"]["intensity"], "intensity")
+});
+//#endregion
 //#region src/style/light.ts
-var LightPositionProperty = class {
-	constructor() {
-		this.specification = latest.light.position;
-		this.name = "position";
-	}
-	possiblyEvaluate(value, parameters) {
-		return sphericalToCartesian(value.expression.evaluate(parameters));
-	}
-	interpolate(a, b, t) {
-		return {
-			x: interpolateFactory.number(a.x, b.x, t),
-			y: interpolateFactory.number(a.y, b.y, t),
-			z: interpolateFactory.number(a.z, b.z, t)
-		};
-	}
-};
-let lightProperties;
 var Light = class extends Evented {
 	constructor(lightOptions) {
 		super();
-		lightProperties ||= new Properties({
-			"anchor": new DataConstantProperty(latest.light.anchor, "anchor"),
-			"position": new LightPositionProperty(),
-			"color": new DataConstantProperty(latest.light.color, "color"),
-			"intensity": new DataConstantProperty(latest.light.intensity, "intensity")
-		});
-		this._transitionable = new Transitionable(lightProperties, "light", void 0);
+		this._transitionable = new Transitionable(getProperties$2(), "light", void 0);
 		this.setLight(lightOptions);
 		this._transitioning = this._transitionable.untransitioned();
 	}
 	getLight() {
 		return this._transitionable.serialize();
+	}
+	/**
+	* Gets the light position in cartesian coordinates.
+	*/
+	getCartesianPosition() {
+		return sphericalToCartesian(this.properties.get("position"));
 	}
 	setLight(light, options = {}) {
 		if (this._validate(validateLight, light, options)) return;
@@ -24453,20 +24458,23 @@ var Light = class extends Evented {
 	}
 };
 //#endregion
-//#region src/style/sky.ts
-const properties$1 = new Properties({
-	"sky-color": new DataConstantProperty(latest.sky["sky-color"], "sky-color"),
-	"horizon-color": new DataConstantProperty(latest.sky["horizon-color"], "horizon-color"),
-	"fog-color": new DataConstantProperty(latest.sky["fog-color"], "fog-color"),
-	"fog-ground-blend": new DataConstantProperty(latest.sky["fog-ground-blend"], "fog-ground-blend"),
-	"horizon-fog-blend": new DataConstantProperty(latest.sky["horizon-fog-blend"], "horizon-fog-blend"),
-	"sky-horizon-blend": new DataConstantProperty(latest.sky["sky-horizon-blend"], "sky-horizon-blend"),
-	"atmosphere-blend": new DataConstantProperty(latest.sky["atmosphere-blend"], "atmosphere-blend")
+//#region src/style/sky_properties.g.ts
+let properties$1;
+const getProperties$1 = () => properties$1 = properties$1 || new Properties({
+	"sky-color": new DataConstantProperty(latest["sky"]["sky-color"], "sky-color"),
+	"horizon-color": new DataConstantProperty(latest["sky"]["horizon-color"], "horizon-color"),
+	"fog-color": new DataConstantProperty(latest["sky"]["fog-color"], "fog-color"),
+	"fog-ground-blend": new DataConstantProperty(latest["sky"]["fog-ground-blend"], "fog-ground-blend"),
+	"horizon-fog-blend": new DataConstantProperty(latest["sky"]["horizon-fog-blend"], "horizon-fog-blend"),
+	"sky-horizon-blend": new DataConstantProperty(latest["sky"]["sky-horizon-blend"], "sky-horizon-blend"),
+	"atmosphere-blend": new DataConstantProperty(latest["sky"]["atmosphere-blend"], "atmosphere-blend")
 });
+//#endregion
+//#region src/style/sky.ts
 var Sky = class extends Evented {
 	constructor(sky) {
 		super();
-		this._transitionable = new Transitionable(properties$1, "sky", void 0);
+		this._transitionable = new Transitionable(getProperties$1(), "sky", void 0);
 		this.setSky(sky);
 		this._transitioning = this._transitionable.untransitioned();
 		this.recalculate(new EvaluationParameters(0));
@@ -39214,6 +39222,10 @@ var MercatorCameraHelper = class {
 	}
 };
 //#endregion
+//#region src/style/projection_properties.g.ts
+let properties;
+const getProperties = () => properties = properties || new Properties({ "type": new DataConstantProperty(latest["projection"]["type"], "type") });
+//#endregion
 //#region src/webgl/color_mode.ts
 const ZERO = 0;
 const ONE = 1;
@@ -39646,11 +39658,10 @@ var VerticalPerspectiveProjection = class {
 };
 //#endregion
 //#region src/geo/projection/globe_projection.ts
-const properties = new Properties({ "type": new DataConstantProperty(latest.projection.type, "type") });
 var GlobeProjection = class extends Evented {
 	constructor(projection) {
 		super();
-		this._transitionable = new Transitionable(properties, "projection", void 0);
+		this._transitionable = new Transitionable(getProperties(), "projection", void 0);
 		this.setProjection(projection);
 		this._transitioning = this._transitionable.untransitioned();
 		this.recalculate(new EvaluationParameters(0));
@@ -43818,12 +43829,7 @@ const fillExtrusionPatternUniforms = (context, locations) => ({
 });
 const fillExtrusionUniformValues = (painter, shouldUseVerticalGradient, opacity, translate) => {
 	const light = painter.style.light;
-	const _lp = light.properties.get("position");
-	const lightPos = [
-		_lp.x,
-		_lp.y,
-		_lp.z
-	];
+	const lightPos = light.getCartesianPosition();
 	const lightMat = create$6();
 	if (light.properties.get("anchor") === "viewport") fromRotation(lightMat, painter.transform.bearingInRadians);
 	transformMat3(lightPos, lightPos, lightMat);
@@ -46850,12 +46856,8 @@ function drawSky(painter, sky) {
 	program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled, skyUniforms, null, void 0, "sky", mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
 }
 function getSunPos(light, transform) {
-	const _lp = light.properties.get("position");
-	const lightPos = [
-		-_lp.x,
-		-_lp.y,
-		-_lp.z
-	];
+	const lightPos = light.getCartesianPosition();
+	negate(lightPos, lightPos);
 	const lightMat = identity(/* @__PURE__ */ new Float64Array(16));
 	if (light.properties.get("anchor") === "map") {
 		rotateZ$1(lightMat, lightMat, transform.rollInRadians);
@@ -60979,7 +60981,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 38df01b";
+const version = "main b8ad5b9";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
