@@ -17,15 +17,6 @@ export type Mat4f32 = mat4 & Float32Array;
  */
 export type Mat4f64 = mat4 & Float64Array;
 
-/**
- * XYZ coordinates in 3D space
- */
-export type SphericalCartesianCoordinates = {
-    x: number;
-    y: number;
-    z: number;
-};
-
 export const JSON_PREFIX = '__$json__:';
 
 /**
@@ -676,7 +667,7 @@ export function findLineIntersection(a1: Point, a2: Point, b1: Point, b2: Point)
  * @param spherical - Spherical coordinates, in [radial, azimuthal, polar]
  * @returns cartesian coordinates in [x, y, z]
  */
-export function sphericalToCartesian([r, azimuthal, polar]: [number, number, number]): SphericalCartesianCoordinates {
+export function sphericalToCartesian([r, azimuthal, polar]: [number, number, number]): vec3 {
     // We abstract "north"/"up" (compass-wise) to be 0° when really this is 90° (π/2):
     // correct for that here
     azimuthal += 90;
@@ -685,11 +676,11 @@ export function sphericalToCartesian([r, azimuthal, polar]: [number, number, num
     azimuthal *= Math.PI / 180;
     polar *= Math.PI / 180;
 
-    return {
-        x: r * Math.cos(azimuthal) * Math.sin(polar),
-        y: r * Math.sin(azimuthal) * Math.sin(polar),
-        z: r * Math.cos(polar)
-    };
+    return [
+        r * Math.cos(azimuthal) * Math.sin(polar),
+        r * Math.sin(azimuthal) * Math.sin(polar),
+        r * Math.cos(polar)
+    ];
 }
 
 /**

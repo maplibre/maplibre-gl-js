@@ -1,6 +1,6 @@
 import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 
-import {sphericalToCartesian, type SphericalCartesianCoordinates} from '../util/util.ts';
+import {sphericalToCartesian} from '../util/util.ts';
 import {Evented} from '../util/evented.ts';
 import {
     validateStyle,
@@ -9,6 +9,7 @@ import {
 } from './validate_style.ts';
 import {getProperties, type LightProps, type LightPropsPossiblyEvaluated} from './light_properties.g.ts';
 
+import type {vec3} from 'gl-matrix';
 import type {LightSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from './evaluation_parameters.ts';
 import type {StyleSetterOptions} from '../style/style.ts';
@@ -38,7 +39,7 @@ export class Light extends Evented {
     /**
      * Gets the light position in cartesian coordinates.
      */
-    getCartesianPosition(): SphericalCartesianCoordinates {
+    getCartesianPosition(): vec3 {
         return sphericalToCartesian(this.properties.get('position'));
     }
 
