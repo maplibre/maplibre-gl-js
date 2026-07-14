@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Avoid jitter in a custom layer at high zoom</title>
+<meta property="og:description" content="Render building-scale geometry in a custom layer without float32 precision jitter, using origin-relative rendering." />
+<meta property="og:category" content="3D Models & Buildings" />
+<meta property="og:created" content="2026-07-15" />
+<meta charset='utf-8'>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+<style>
+    body { margin: 0; padding: 0; }
+    html, body, #map { height: 100%; }
+    #toggle {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 1;
+        font: 14px/1.4 system-ui, sans-serif;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<button id="toggle" type="button">Switch to naive projection (jittery)</button>
+
+<script type="module">
+import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+/*
+ * Custom layers receive vertex data in mercator coordinates, which range
+ * over [0, 1] globally. Storing that directly in a float32 vertex buffer
+ * loses precision fast: float32 has ~7 significant decimal digits, so once a
+ * coordinate's magnitude is around 0.5 (as most mercator coordinates are),
+ * only distances of a few metres and up survive being rounded to the
+ * nearest representable float32 value - see
+ * https://github.com/maplibre/maplibre-gl-js/issues/4871. Indoor floor
+ * plans, building interiors, or anything else at room scale sits well
+ * inside that dead zone, and ends up visibly jittering/swimming as the
+ * camera moves, since the rounding error changes slightly every frame.
+ *
+ * MapLibre already hands custom layers a 64-bit float projection matrix for
+ * exactly this reason (see the comment on CustomLayerProjectionData in
+ * projection_data.ts) - the fix is to do the large-magnitude part of the
+ * math in that full precision, and keep only small, well-conditioned
+ * numbers in float32:
+ *
+ *   1. Pick a fixed local origin near the geometry (in mercator units).
+ *   2. Store each vertex as a small (x, y, z) OFFSET from that origin, in
+ *      local metres converted to mercator units - never the raw absolute
+ *      mercator coordinate. These offsets stay tiny in magnitude, so
+ *      float32 has plenty of precision for them.
+ *   3. Each frame, multiply the origin (not the offset) through the
+ *      64-bit matrix on the CPU, in full precision, to get its clip-space
+ *      position - this is the only place the large-magnitude numbers ever
+ *      meet each other, and it happens before anything is cast to float32.
+ *   4. In the vertex shader, add that precomputed origin-in-clip-space to
+ *      `u_matrix * vec4(offset, 0.0)` (the 0 in the w slot drops the
+ *      matrix's translation column, so only its well-conditioned
+ *      rotation/scale part touches the small offset).
+ *
+ * Algebraically this is exact: for a point p = origin + offset,
+ * M*[p,1] = M*[origin,1] + M*[offset,0]. Splitting it this way just
+ * chooses *where* the float32 rounding happens - on well-conditioned
+ * numbers instead of on a large coordinate paired with a small one.
+ */
+
+const FISHER_BUILDING = [-87.629003, 41.877218]; // Chicago Loop
+const FLOOR_HEIGHT_M = 4;
+
+// A small, illustrative floor plan (not the real interior) - 2x2 rooms per
+// floor, split by a 2m corridor, repeated on 3 storeys 4m apart.
+const ROOMS = [
+    {x: [-9, -1], y: [-7, -1], color: [0.85, 0.55, 0.35]},
+    {x: [1, 9], y: [-7, -1], color: [0.35, 0.65, 0.85]},
+    {x: [-9, -1], y: [1, 7], color: [0.55, 0.80, 0.45]},
+    {x: [1, 9], y: [1, 7], color: [0.80, 0.45, 0.75]}
+];
+const FLOOR_TINT = [1, 0.82, 0.64];
+
+const originMercator = maplibregl.MercatorCoordinate.fromLngLat(FISHER_BUILDING, 0);
+const metersToMercatorUnits = originMercator.meterInMercatorCoordinateUnits();
+
+// Build the room geometry once, as small (x, y, z) offsets from the origin
+// in mercator units - never as absolute mercator coordinates.
+function buildOffsetsAndColors() {
+    const offsets = [];
+    const colors = [];
+    for (let floor = 0; floor < 3; floor++) {
+        const dz = floor * FLOOR_HEIGHT_M * metersToMercatorUnits;
+        const tint = Math.pow(0.8, floor);
+        for (const room of ROOMS) {
+            const x0 = room.x[0] * metersToMercatorUnits;
+            const x1 = room.x[1] * metersToMercatorUnits;
+            // Mercator Y increases southward, so flip the sign to keep the
+            // room layout's "north" matching the map's.
+            const y0 = -room.y[0] * metersToMercatorUnits;
+            const y1 = -room.y[1] * metersToMercatorUnits;
+            const color = [
+                room.color[0] * tint + FLOOR_TINT[0] * (1 - tint),
+                room.color[1] * tint + FLOOR_TINT[1] * (1 - tint),
+                room.color[2] * tint + FLOOR_TINT[2] * (1 - tint)
+            ];
+            const corners = [
+                [x0, y0, dz], [x1, y0, dz], [x1, y1, dz],
+                [x1, y1, dz], [x0, y1, dz], [x0, y0, dz]
+            ];
+            for (const c of corners) {
+                offsets.push(c[0], c[1], c[2]);
+                colors.push(color[0], color[1], color[2]);
+            }
+        }
+    }
+    return {offsets: new Float32Array(offsets), colors: new Float32Array(colors)};
+}
+
+// Naive (buggy) path: the origin is cast down to float32 and re-added to the
+// offset *inside* the shader - the exact mistake #4871 reports. Precise path:
+// the origin's clip-space position is precomputed on the CPU in float64 and
+// only added after `u_matrix` has acted on the (small, well-conditioned)
+// offset.
+const preciseVertexSource = `#version 300 es
+uniform mat4 u_matrix;
+uniform vec4 u_originClip;
+in vec3 a_offset;
+in vec3 a_color;
+out vec3 v_color;
+void main() {
+    v_color = a_color;
+    gl_Position = u_originClip + u_matrix * vec4(a_offset, 0.0);
+}`;
+
+const naiveVertexSource = `#version 300 es
+uniform mat4 u_matrix;
+uniform vec3 u_originF32;
+in vec3 a_offset;
+in vec3 a_color;
+out vec3 v_color;
+void main() {
+    v_color = a_color;
+    vec3 worldPos = u_originF32 + a_offset;
+    gl_Position = u_matrix * vec4(worldPos, 1.0);
+}`;
+
+const fragmentSource = `#version 300 es
+precision highp float;
+in vec3 v_color;
+out vec4 fragColor;
+void main() {
+    fragColor = vec4(v_color, 1.0);
+}`;
+
+function compileProgram(gl, vertexSource) {
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vertexShader, vertexSource);
+    gl.compileShader(vertexShader);
+    if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(vertexShader));
+    }
+
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fragmentShader, fragmentSource);
+    gl.compileShader(fragmentShader);
+    if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(fragmentShader));
+    }
+
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(program));
+    }
+    return program;
+}
+
+const buildingLayer = {
+    id: 'building-floors',
+    type: 'custom',
+    renderingMode: '3d',
+    useNaiveProjection: false,
+
+    onAdd(map, gl) {
+        this.preciseProgram = compileProgram(gl, preciseVertexSource);
+        this.naiveProgram = compileProgram(gl, naiveVertexSource);
+
+        const {offsets, colors} = buildOffsetsAndColors();
+        this.vertexCount = offsets.length / 3;
+
+        this.offsetBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.offsetBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, offsets, gl.STATIC_DRAW);
+
+        this.colorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+    },
+
+    render(gl, args) {
+        const program = this.useNaiveProjection ? this.naiveProgram : this.preciseProgram;
+        gl.useProgram(program);
+
+        const matrix = args.defaultProjectionData.mainMatrix;
+
+        if (this.useNaiveProjection) {
+            // The bug: origin gets cast to float32 here, before it's ever
+            // combined with the offset.
+            const originF32 = new Float32Array([originMercator.x, originMercator.y, originMercator.z]);
+            gl.uniform3fv(gl.getUniformLocation(program, 'u_originF32'), originF32);
+        } else {
+            // The fix: multiply the origin through the full 64-bit matrix
+            // first, and only cast the (small, well-conditioned) clip-space
+            // result down to float32.
+            const originClip = transformMat4(
+                [originMercator.x, originMercator.y, originMercator.z, 1],
+                matrix
+            );
+            gl.uniform4fv(gl.getUniformLocation(program, 'u_originClip'), new Float32Array(originClip));
+        }
+
+        gl.uniformMatrix4fv(gl.getUniformLocation(program, 'u_matrix'), false, new Float32Array(matrix));
+
+        const aOffset = gl.getAttribLocation(program, 'a_offset');
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.offsetBuffer);
+        gl.enableVertexAttribArray(aOffset);
+        gl.vertexAttribPointer(aOffset, 3, gl.FLOAT, false, 0, 0);
+
+        const aColor = gl.getAttribLocation(program, 'a_color');
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+        gl.enableVertexAttribArray(aColor);
+        gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, 0, 0);
+
+        gl.enable(gl.DEPTH_TEST);
+        gl.drawArrays(gl.TRIANGLES, 0, this.vertexCount);
+    }
+};
+
+// Plain 4x4 * vec4 multiply done in JS numbers (always float64) - this is
+// the one place the origin's large-magnitude coordinates get combined with
+// the matrix, and it needs to happen at full precision.
+function transformMat4(v, m) {
+    const [x, y, z, w] = v;
+    return [
+        m[0] * x + m[4] * y + m[8] * z + m[12] * w,
+        m[1] * x + m[5] * y + m[9] * z + m[13] * w,
+        m[2] * x + m[6] * y + m[10] * z + m[14] * w,
+        m[3] * x + m[7] * y + m[11] * z + m[15] * w
+    ];
+}
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: {version: 8, sources: {}, layers: [{id: 'sky', type: 'background', paint: {'background-color': '#bfe6f2'}}]},
+    center: FISHER_BUILDING,
+    zoom: 20,
+    pitch: 70,
+    bearing: -30,
+    canvasContextAttributes: {antialias: true}
+});
+
+map.on('load', () => {
+    map.addLayer(buildingLayer);
+});
+
+const toggle = document.getElementById('toggle');
+toggle.addEventListener('click', () => {
+    buildingLayer.useNaiveProjection = !buildingLayer.useNaiveProjection;
+    toggle.textContent = buildingLayer.useNaiveProjection
+        ? 'Switch to origin-relative projection (fixed)'
+        : 'Switch to naive projection (jittery)';
+    map.triggerRepaint();
+});
+</script>
+</body>
+</html>
