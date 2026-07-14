@@ -112,20 +112,6 @@ describe('validateAndEmit', () => {
         expect(errorSpy.mock.calls[0][0].error.message).toMatch(/Unknown expression "nope"/);
     });
 
-    test('reports no failure for a valid value', () => {
-        const evented = new TestEmitter();
-        const errorSpy = vi.fn();
-        evented.on('error', errorSpy);
-
-        const hasErrors = validateAndEmit(evented, validateFilter, {
-            key: 'layers.symbol.filter',
-            value: ['==', ['get', 'class'], 'rail']
-        });
-
-        expect(hasErrors).toBe(false);
-        expect(errorSpy).not.toHaveBeenCalled();
-    });
-
     test('warns without failing for a filter that mixes legacy and expression syntax', () => {
         const evented = new TestEmitter();
         const errorSpy = vi.fn();

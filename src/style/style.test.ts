@@ -249,7 +249,6 @@ describe('Style.loadJSON', () => {
 
         await style.once('style.load');
 
-        // The whole style load used to be aborted by this, leaving a blank map.
         expect(errorSpy).not.toHaveBeenCalled();
         expect(style.getLayer('symbol')).toBeTruthy();
         expect(style.getFilter('symbol')).toEqual(mixedLegacyAndExpressionFilter);
