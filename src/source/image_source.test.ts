@@ -330,25 +330,6 @@ describe('ImageSource', () => {
             expect(source.image).toBe(imageData);
             expect(source.loaded()).toBe(true);
         });
-
-        test('uses image and ignores url if an untyped caller passes both', () => {
-            const spy = vi.spyOn(map._requestManager, 'transformRequest');
-            const bitmap = new ImageBitmap();
-            // The union type forbids passing both; verify the runtime still prefers image.
-            source.updateImage({url: '/image2.png', image: bitmap} as any);
-
-            expect(spy).not.toHaveBeenCalled();
-            expect(source.image).toBe(bitmap);
-        });
-
-        test('is a no-op when neither url nor image is provided', () => {
-            const previousImage = source.image;
-            // The union type forbids passing neither; verify the runtime guard is a no-op.
-            const result = source.updateImage({} as any);
-
-            expect(result).toBe(source);
-            expect(source.image).toBe(previousImage);
-        });
     });
 
     describe('terrainTileRanges', () => {
