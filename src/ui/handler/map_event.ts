@@ -101,11 +101,19 @@ export class MapEventHandler implements Handler {
     disable(): void {}
 }
 
+// A single finger held in place this long fires a long-press contextmenu.
+const LONG_PRESS_DELAY = 500;
+// How far the finger may drift before it counts as a pan, not a long press.
+const LONG_PRESS_MOVE_TOLERANCE = 10;
+
 export class BlockableMapEventHandler {
     _map: Map;
     _delayContextMenu: boolean;
     _ignoreContextMenu: boolean;
     _contextMenuEvent: MouseEvent;
+    _touchActive: boolean;
+    _longPressTimer: ReturnType<typeof setTimeout>;
+    _longPressStart: Point;
 
     constructor(map: Map) {
         this._map = map;
@@ -115,6 +123,8 @@ export class BlockableMapEventHandler {
         this._delayContextMenu = false;
         this._ignoreContextMenu = true;
         delete this._contextMenuEvent;
+        this._clearLongPress();
+        this._touchActive = false;
     }
 
     mousemove(e: MouseEvent): void {
@@ -135,26 +145,57 @@ export class BlockableMapEventHandler {
         }
     }
 
-    touchstart(): void {
-        // Touch devices have no right click, so a long press is used to open the
-        // context menu. Reuse the mouse flow: arm the delayed contextmenu here and
-        // fire it on touchend once the browser has emitted its native contextmenu.
-        this.mousedown();
+    // Touch long press. Touch devices have no right click, so a long press opens
+    // the context menu. We detect it with a timer rather than relying on a native
+    // contextmenu event, because Android Chrome fires one on a long press but iOS
+    // Safari does not. A single finger held past the delay without moving fires a
+    // contextmenu at that point; a pan or a lift cancels it.
+    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): void {
+        this._clearLongPress();
+        this._touchActive = mapTouches.length > 0;
+        if (mapTouches.length !== 1) return; // single finger only, never during a pinch
+        this._longPressStart = points[0];
+        const touch = mapTouches[0];
+        this._longPressTimer = setTimeout(() => {
+            this._longPressTimer = undefined;
+            const originalEvent = new MouseEvent('contextmenu', {clientX: touch.clientX, clientY: touch.clientY, button: 2, bubbles: true, cancelable: true});
+            this._map.fire(new MapMouseEvent('contextmenu', this._map, originalEvent));
+        }, LONG_PRESS_DELAY);
+    }
+
+    touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): void {
+        if (!this._longPressTimer) return;
+        if (mapTouches.length !== 1 || !this._longPressStart || points[0].dist(this._longPressStart) > LONG_PRESS_MOVE_TOLERANCE) {
+            this._clearLongPress();
+        }
     }
 
     touchend(): void {
-        this.mouseup();
+        this._touchActive = false;
+        this._clearLongPress();
     }
 
     touchcancel(): void {
-        // A cancelled touch (for example when the browser takes over a long
-        // press) must not fire a contextmenu, and must not leave the delayed
-        // event armed, or the next tap would fire a stale contextmenu.
-        this._delayContextMenu = false;
-        delete this._contextMenuEvent;
+        this._touchActive = false;
+        this._clearLongPress();
+    }
+
+    _clearLongPress(): void {
+        if (this._longPressTimer) {
+            clearTimeout(this._longPressTimer);
+            this._longPressTimer = undefined;
+        }
+        this._longPressStart = undefined;
     }
 
     contextmenu(e: MouseEvent): void {
+        if (this._touchActive) {
+            // A native contextmenu during a touch (Android's long press, or an iOS
+            // callout) is suppressed: the long-press timer owns touch, so letting
+            // this through would double-fire or pop the browser's own menu.
+            e.preventDefault();
+            return;
+        }
         if (this._delayContextMenu) {
             // Mac: contextmenu fired on mousedown; we save it until mouseup for consistency's sake
             this._contextMenuEvent = e;

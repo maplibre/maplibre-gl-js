@@ -3,6 +3,10 @@
     overflow: hidden;
     position: relative;
     -webkit-tap-highlight-color: rgb(0 0 0 / 0);
+    /* A long press is now a map gesture (contextmenu), so stop iOS Safari from
+       popping its own callout or selection on the map, its controls, or the
+       attribution while holding. */
+    -webkit-touch-callout: none;
 }
 
 .maplibregl-canvas {
