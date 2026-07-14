@@ -41,7 +41,7 @@ export default class Paint extends Benchmark {
             const forceFullPlacement = true;
 
             map.style._updatePlacement(
-                map.transform,
+                map._camera.transform,
                 showCollisionBoxes,
                 fadeDuration,
                 crossSourceCollisions,

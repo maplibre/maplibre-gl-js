@@ -67,7 +67,33 @@ describe('workerFactory', () => {
         );
     });
 
-    test('cross-origin URL is fetched and the worker is constructed from a Blob URL', async () => {
+    test('cross-origin module worker URL is converted to an import script and the worker is constructed from a Blob URL', async () => {
+        const WorkerSpy = vi.fn(function() {
+            return {postMessage: vi.fn(), addEventListener: vi.fn(), removeEventListener: vi.fn(), terminate: vi.fn()};
+        });
+        (globalThis as any).Worker = WorkerSpy;
+
+        const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+            ok: true,
+            text: () => Promise.resolve('// worker code'),
+        } as any);
+        const BlobSpy = vi.spyOn(globalThis, 'Blob');
+        const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:http://localhost/abc');
+        const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+        config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs';
+
+        await workerFactory();
+
+        expect(fetchSpy).toHaveBeenCalledTimes(0);
+        expect(BlobSpy).toHaveBeenCalledWith(['import "https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs"'], {type: 'text/javascript'});
+        expect(createObjectURLSpy).toHaveBeenCalled();
+        expect(WorkerSpy).toHaveBeenCalledTimes(1);
+        expect(WorkerSpy.mock.calls[0]).toEqual(['blob:http://localhost/abc', {type: 'module'}]);
+        expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:http://localhost/abc');
+    });
+
+    test('cross-origin classic worker URL is fetched and the worker is constructed from a Blob URL', async () => {
         const WorkerSpy = vi.fn(function() {
             return {postMessage: vi.fn(), addEventListener: vi.fn(), removeEventListener: vi.fn(), terminate: vi.fn()};
         });
@@ -80,20 +106,20 @@ describe('workerFactory', () => {
         const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:http://localhost/abc');
         const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
-        config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs';
+        config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.cjs';
 
         await workerFactory();
 
-        expect(fetchSpy).toHaveBeenCalledWith('https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs');
+        expect(fetchSpy).toHaveBeenCalledWith('https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.cjs');
         expect(createObjectURLSpy).toHaveBeenCalled();
         expect(WorkerSpy).toHaveBeenCalledTimes(1);
-        expect(WorkerSpy.mock.calls[0]).toEqual(['blob:http://localhost/abc', {type: 'module'}]);
+        expect(WorkerSpy.mock.calls[0]).toEqual(['blob:http://localhost/abc']);
         expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:http://localhost/abc');
     });
 
     test('cross-origin fetch failure rejects the promise', async () => {
         vi.spyOn(globalThis, 'fetch').mockResolvedValue({ok: false, status: 404} as any);
-        config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs';
+        config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.cjs';
 
         await expect(workerFactory()).rejects.toThrow('Failed to fetch worker script (404)');
     });

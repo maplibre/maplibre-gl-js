@@ -11,7 +11,7 @@ import type {Page, Browser, WebWorker} from 'puppeteer';
 import {ensureError} from '../../../src/util/util.ts';
 import {localizeURLs} from '../lib/localize-urls.ts';
 import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config.ts';
-import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification, MapEventType} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
@@ -540,7 +540,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                         } else {
                             if (typeof operation[1] === 'string') {
                                 // Wait for the event to fire
-                                await map.once(operation[1]);
+                                await map.once(operation[1] as keyof MapEventType);
                             } else {
                                 await new Promise<void>((resolve) => {
                                     setTimeout(() => {
@@ -876,9 +876,7 @@ describe('Render tests', () => {
     });
 
     beforeEach((ctx) => {
-        const previousResult = ctx.task.result;
-        const wasFailedOrTimedOut = previousResult?.state === 'fail';
-        if (wasFailedOrTimedOut) {
+        if (ctx.task.result?.retryCount > 0) {
             console.log(`Retry ${ctx.task.name} with console logging enabled`);
             addConsoleLogging(page);
         }

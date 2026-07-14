@@ -1,7 +1,8 @@
 /* eslint-disable key-spacing */
 import potpack from 'potpack';
 
-import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {ErrorEvent, Evented} from '../util/evented.ts';
+import {MapStyleImageMissingEvent} from '../ui/events.ts';
 import {RGBAImage} from '../util/image.ts';
 import {ImagePosition} from './image_atlas.ts';
 import {Texture} from '../webgl/texture.ts';
@@ -12,6 +13,8 @@ import type {StyleImage} from '../style/style_image.ts';
 import type {Context} from '../webgl/context.ts';
 import type {PotpackBox} from 'potpack';
 import type {GetImagesResponse} from '../util/actor_messages.ts';
+
+export type MissingImageRequestHandler = (id: string) => void | Promise<void>;
 
 type Pattern = {
     bin: PotpackBox;
@@ -48,8 +51,9 @@ export class ImageManager extends Evented {
      */
     requestors: Array<{
         ids: string[];
-        promiseResolve: (value: GetImagesResponse) => void;
+        promiseResolve: (value: GetImagesResponse | PromiseLike<GetImagesResponse>) => void;
     }>;
+    missingImageResolver: MissingImageRequestHandler | null;
 
     patterns: {[_: string]: Pattern};
     atlasImage: RGBAImage;
@@ -63,6 +67,7 @@ export class ImageManager extends Evented {
         this.callbackDispatchedThisFrame = {};
         this.loaded = false;
         this.requestors = [];
+        this.missingImageResolver = null;
 
         this.patterns = {};
         this.atlasImage = new RGBAImage({width: 1, height: 1});
@@ -195,6 +200,10 @@ export class ImageManager extends Evented {
         return Object.keys(this.images);
     }
 
+    setMissingImageResolver(resolver: MissingImageRequestHandler | null): void {
+        this.missingImageResolver = resolver;
+    }
+
     getImages(ids: string[]): Promise<GetImagesResponse> {
         return new Promise<GetImagesResponse>((resolve, _reject) => {
             // If the sprite has been loaded, or if all the icon dependencies are already present
@@ -217,19 +226,21 @@ export class ImageManager extends Evented {
         });
     }
 
-    _getImagesForIds(ids: string[]): GetImagesResponse {
+    async _getImagesForIds(ids: string[]): Promise<GetImagesResponse> {
+        const unresolvedIds = new Set(ids.filter((id) => !this.getImage(id)));
+        const resolver = this.missingImageResolver;
+
+        if (resolver) {
+            await Promise.all(Array.from(unresolvedIds, (id) => resolver(id)));
+        }
+
         const response: GetImagesResponse = {};
 
         for (const id of ids) {
-            let image = this.getImage(id);
-
-            if (!image) {
-                this.fire(new Event('styleimagemissing', {id}));
-                //Try to acquire image again in case styleimagemissing has populated it
-                image = this.getImage(id);
-            }
+            const image = this.getImage(id);
 
             if (image) {
+                unresolvedIds.delete(id);
                 // Clone the image so that our own copy of its ArrayBuffer doesn't get transferred.
                 response[id] = {
                     data: image.data.clone(),
@@ -243,10 +254,14 @@ export class ImageManager extends Evented {
                     textFitHeight: image.textFitHeight,
                     hasRenderCallback: Boolean(image.userImage?.render)
                 };
-            } else {
-                warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image with map.addImage() or a "sprite" property in your style. You can provide missing images by listening for the "styleimagemissing" map event.`);
             }
         }
+
+        for (const id of unresolvedIds) {
+            this.fire(new MapStyleImageMissingEvent({id}));
+            warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a "sprite" property in your style.`);
+        }
+
         return response;
     }
 

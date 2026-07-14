@@ -53,12 +53,26 @@ async function fetchAsBlobUrl(url: string): Promise<string> {
     return URL.createObjectURL(blob);
 }
 
+function importAsBlobUrl(url: string): string {
+    const blob = new Blob([`import ${JSON.stringify(new URL(url, import.meta.url).href)}`], {type: 'text/javascript'});
+    return URL.createObjectURL(blob);
+}
+
 export async function workerFactory(): Promise<Worker> {
     const url = config.WORKER_URL || defaultWorkerUrl();
     const asModule = url?.endsWith('.cjs') ? false : true;
 
     if (!isCrossOrigin(url)) {
         return createWorker(url, asModule);
+    }
+
+    if (asModule) {
+        const blobUrl = importAsBlobUrl(url);
+        try {
+            return createWorker(blobUrl, asModule);
+        } finally {
+            URL.revokeObjectURL(blobUrl);
+        }
     }
 
     const blobUrl = await fetchAsBlobUrl(url);

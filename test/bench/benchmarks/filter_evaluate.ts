@@ -27,7 +27,7 @@ export default class FilterEvaluate extends Benchmark {
             const layerFilters = [];
             for (const filter of filters) {
                 if (filter.layer === name) {
-                    layerFilters.push(createFilter(filter.filter as FilterSpecification));
+                    layerFilters.push(createFilter(filter.filter as FilterSpecification, 'filter'));
                 }
             }
 

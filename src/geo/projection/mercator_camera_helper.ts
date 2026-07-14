@@ -153,26 +153,25 @@ export class MercatorCameraHelper implements ICameraHelper {
 
         normalizeCenter(tr, targetCenter);
 
-        const from = projectToWorldCoordinates(tr.worldSize, options.locationAtOffset);
-        const delta = projectToWorldCoordinates(tr.worldSize, targetCenter).sub(from);
+        const startWorldSize = tr.worldSize;
+        const from = projectToWorldCoordinates(startWorldSize, options.locationAtOffset);
+        const delta = projectToWorldCoordinates(startWorldSize, targetCenter).sub(from);
 
         const pixelPathLength = delta.mag();
 
         const scaleOfZoom = zoomScale(targetZoom - startZoom);
 
-        const optionsMinZoom = typeof options.minZoom !== 'undefined';
-
-        let scaleOfMinZoom: number;
-
-        if (optionsMinZoom) {
-            const minZoomPreConstrain = Math.min(+options.minZoom, startZoom, targetZoom);
-            const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
-            scaleOfMinZoom = zoomScale(minZoom - startZoom);
-        }
+        const requestedMinZoom = typeof options.minZoom !== 'undefined' ? +options.minZoom : tr.minZoom;
+        const effectiveMinZoom = Math.max(requestedMinZoom, tr.minZoom);
+        const minZoomPreConstrain = Math.min(effectiveMinZoom, startZoom, targetZoom);
+        const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
+        const scaleOfMinZoom = zoomScale(minZoom - startZoom);
 
         const easeFunc = (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => {
             tr.setZoom(k === 1 ? targetZoom : startZoom + scaleZoom(scale));
-            const newCenter = k === 1 ? targetCenter : unprojectFromWorldCoordinates(tr.worldSize, from.add(delta.mult(centerFactor)).mult(scale));
+            const newCenter = k === 1
+                ? targetCenter
+                : unprojectFromWorldCoordinates(startWorldSize, from.add(delta.mult(centerFactor)));
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
         };
 

@@ -939,7 +939,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
         map.terrain = createTerrain();
-        map.transform.lngLatToCameraDepth = () => .95;
+        map._camera.transform.lngLatToCameraDepth = () => .95;
 
         marker.setOffset([10, 10]);
         await sleep(100);
@@ -1083,7 +1083,7 @@ describe('marker', () => {
 
     test('Applies options.opacityWhenCovered when marker is hidden by 3d terrain', async () => {
         const map = createMap();
-        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        map._camera.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
             .setLngLat([0, 0])
             .addTo(map);
@@ -1098,7 +1098,7 @@ describe('marker', () => {
 
     test('Applies new "opacityWhenCovered" provided by setOpacity when marker is hidden by 3d terrain', () => {
         const map = createMap();
-        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        map._camera.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker({opacityWhenCovered: '0.15'})
             .setLngLat([0, 0])
             .addTo(map);
@@ -1152,7 +1152,7 @@ describe('marker', () => {
 
         expect(marker._popup.isOpen()).toBeTruthy();
 
-        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        map._camera.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
 
         map.terrain = createTerrain();
         map.fire('terrain');
@@ -1170,7 +1170,7 @@ describe('marker', () => {
             .addTo(map)
             .setPopup(new Popup());
 
-        map.transform.lngLatToCameraDepth = () => .95;
+        map._camera.transform.lngLatToCameraDepth = () => .95;
 
         map.terrain = createTerrain();
         map.fire('terrain');
@@ -1269,7 +1269,7 @@ describe('marker', () => {
 
     test('Applies new "opacityWhenCovered" provided by setOpacity when provided a number', () => {
         const map = createMap();
-        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        map._camera.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker({opacityWhenCovered: 0.15})
             .setLngLat([0, 0])
             .addTo(map);

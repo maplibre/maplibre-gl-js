@@ -448,10 +448,6 @@ export class GlobeTransform implements ITransform {
         return this._verticalPerspectiveTransform.getRayDirectionFromPixel(p);
     }
 
-    getMatrixForModel(location: LngLatLike, altitude?: number): mat4 {
-        return this.currentTransform.getMatrixForModel(location, altitude);
-    }
-
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
         const mercatorData = this._mercatorTransform.getProjectionDataForCustomLayer(applyGlobeMatrix);
 

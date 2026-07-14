@@ -437,8 +437,8 @@ describe('Style.loadJSON', () => {
         style._layers.background.fire(new Event('error', {mapLibre: true}));
 
         const e = await errorPromise;
-        expect(e.layer).toEqual({id: 'background'});
-        expect(e.mapLibre).toBeTruthy();
+        expect((e as any).layer).toEqual({id: 'background'});
+        expect((e as any).mapLibre).toBeTruthy();
     });
 
     test('sets terrain if defined', async () => {
@@ -746,6 +746,121 @@ describe('Style._remove', () => {
 });
 
 describe('Style.update', () => {
+    test('debounces setImages broadcast to once per update', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        style.dispatcher.broadcast = spy;
+
+        // Add multiple images — should NOT broadcast setImages immediately
+        style.addImage('img1', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
+        style.addImage('img2', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
+        style.addImage('img3', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
+
+        expect(spy.mock.calls.filter(c => c[0] === MessageType.setImages)).toHaveLength(0);
+
+        // After update(), should broadcast exactly once with all images
+        style.update({} as EvaluationParameters);
+
+        const setImagesCalls = spy.mock.calls.filter(c => c[0] === MessageType.setImages);
+        expect(setImagesCalls).toHaveLength(1);
+        expect(setImagesCalls[0][1]).toContain('img1');
+        expect(setImagesCalls[0][1]).toContain('img2');
+        expect(setImagesCalls[0][1]).toContain('img3');
+    });
+
+    test('does not broadcast setImages when no images changed', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON({
+            layers: [{id: 'bg', type: 'background'}]
+        }));
+
+        await style.once('style.load');
+
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        style.dispatcher.broadcast = spy;
+
+        // Trigger an update that changes layers but not images
+        style.removeLayer('bg');
+        style.update({} as EvaluationParameters);
+
+        const setImagesCalls = spy.mock.calls.filter(c => c[0] === MessageType.setImages);
+        expect(setImagesCalls).toHaveLength(0);
+    });
+
+    test('broadcasts setImages before updateLayers', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON({
+            sources: {source: {type: 'vector'}},
+            layers: [{id: 'fill', source: 'source', 'source-layer': 'layer', type: 'fill'}]
+        }));
+
+        await style.once('style.load');
+
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        style.dispatcher.broadcast = spy;
+
+        // Trigger both image and layer changes in the same frame
+        style.addImage('img1', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
+        style.addLayer({id: 'fill2', source: 'source', type: 'fill', 'source-layer': 'layer'});
+        style.update({} as EvaluationParameters);
+
+        const broadcastTypes = spy.mock.calls.map(c => c[0]);
+        const setImagesIndex = broadcastTypes.indexOf(MessageType.setImages);
+        const updateLayersIndex = broadcastTypes.indexOf(MessageType.updateLayers);
+
+        expect(setImagesIndex).toBeGreaterThanOrEqual(0);
+        expect(updateLayersIndex).toBeGreaterThanOrEqual(0);
+        expect(setImagesIndex).toBeLessThan(updateLayersIndex);
+    });
+
+    test('debounces setImages broadcast for removeImage', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+
+        style.addImage('img1', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
+        style.addImage('img2', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
+        style.update({} as EvaluationParameters);
+
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        style.dispatcher.broadcast = spy;
+
+        style.removeImage('img1');
+
+        expect(spy.mock.calls.filter(c => c[0] === MessageType.setImages)).toHaveLength(0);
+
+        style.update({} as EvaluationParameters);
+
+        const setImagesCalls = spy.mock.calls.filter(c => c[0] === MessageType.setImages);
+        expect(setImagesCalls).toHaveLength(1);
+        expect(setImagesCalls[0][1]).not.toContain('img1');
+        expect(setImagesCalls[0][1]).toContain('img2');
+    });
+
+    test('updateImage does not trigger setImages broadcast', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+
+        style.addImage('img1', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
+        style.update({} as EvaluationParameters);
+
+        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        style.dispatcher.broadcast = spy;
+
+        style.updateImage('img1', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
+        style.update({} as EvaluationParameters);
+
+        const setImagesCalls = spy.mock.calls.filter(c => c[0] === MessageType.setImages);
+        expect(setImagesCalls).toHaveLength(0);
+    });
+
     test('on error', async () => {
         const style = createStyle();
         style.loadJSON({
@@ -1196,9 +1311,9 @@ describe('Style.addSource', () => {
             promisesResolve.error();
         });
         style.on('data', (e) => {
-            if (e.sourceDataType === 'metadata' && e.dataType === 'source') {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
                 promisesResolve.metadata();
-            } else if (e.sourceDataType === 'content' && e.dataType === 'source') {
+            } else if (e.dataType === 'source' && e.sourceDataType === 'content') {
                 promisesResolve.content();
             } else {
                 promisesResolve.other();
@@ -2145,8 +2260,8 @@ describe('Style.addLayer', () => {
         style._layers.background.fire(new Event('error', {mapLibre: true}));
 
         const e = await errorPromise;
-        expect(e.layer).toEqual({id: 'background'});
-        expect(e.mapLibre).toBeTruthy();
+        expect((e as any).layer).toEqual({id: 'background'});
+        expect((e as any).mapLibre).toBeTruthy();
     });
 
     test('throws on non-existent vector source layer', async () => {

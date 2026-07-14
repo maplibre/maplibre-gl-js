@@ -5,13 +5,24 @@ import typedocConfig from '../typedoc.json' with {type: 'json'};
 import packageJson from '../package.json' with {type: 'json'};
 import {get} from 'https';
 import sharp from 'sharp';
+import EXAMPLE_CATEGORY_GROUPS from '../docs/example-categories.json' with {type: 'json'};
 
 type HtmlDoc = {
     title: string;
     description: string;
     mdFileName: string;
     isNew: boolean;
+    category: string;
+    order: number;
 };
+
+/**
+ * Reads the `content` of the `<meta>` tag with the given `property`, e.g. `og:description`.
+ */
+function extractMetaContent(htmlContentLines: string[], property: string): string | undefined {
+    const line = htmlContentLines.find(l => l.includes(property));
+    return line?.match(/content=(["'])(.*?)\1/)?.[2];
+}
 
 function generateAPIIntroMarkdown(lines: string[]): string {
     let intro = `# Intro
@@ -115,23 +126,50 @@ async function packImages(indexArray: HtmlDoc[]) {
     await Promise.all(promises);
 }
 
-function generateMarkdownIndexFileOfAllExamples(indexArray: HtmlDoc[]): string {
-    let indexMarkdown = '# Overview\n\n<div class="examples-grid">\n';
-    for (const indexArrayItem of indexArray) {
-        const cardImg = `../assets/examples/${indexArrayItem.mdFileName.replace('.md', '.webp')}`;
-        const desc = indexArrayItem.description || '';
-        const cardFileName = indexArrayItem.mdFileName.replace(/.md$/, '/');
-        indexMarkdown += `<a class="example-card" href="./${cardFileName}">
+function renderExampleCard(indexArrayItem: HtmlDoc): string {
+    const cardImg = `../assets/examples/${indexArrayItem.mdFileName.replace('.md', '.webp')}`;
+    const desc = indexArrayItem.description || '';
+    const cardFileName = indexArrayItem.mdFileName.replace(/.md$/, '/');
+    const badge = indexArrayItem.isNew ? '\n<span class="example-card-badge">new</span>' : '';
+    return `<a class="example-card" href="./${cardFileName}">
 <div class="example-card-image">
-<img src="${cardImg}" loading="lazy" alt="${desc}">
-${indexArrayItem.isNew ? '<span class="example-card-badge">new</span>' : ''}
+<img src="${cardImg}" loading="lazy" alt="${desc}">${badge}
 </div>
 <div class="example-card-content">
 <h3>${indexArrayItem.title}</h3>
 <p>${desc}</p>
 </div>
-</a>
-`;
+</a>`;
+}
+
+function renderExampleGrid(examples: HtmlDoc[]): string {
+    const cards = examples
+        // Examples with an explicit `og:order` come first (ascending); the rest fall back to alphabetical.
+        .sort((a, b) => (a.order !== b.order ? a.order - b.order : a.title.localeCompare(b.title)))
+        .map(renderExampleCard)
+        .join('\n');
+    return `<div class="examples-grid">\n${cards}\n</div>`;
+}
+
+/**
+ * Builds the examples overview page:
+ * a section per group, with content tabs when a group holds more than one category.
+ */
+function generateMarkdownIndexFileOfAllExamples(indexArray: HtmlDoc[]): string {
+    const byCategory = Map.groupBy(indexArray, item => item.category);
+
+    let indexMarkdown = '# Overview\n\n';
+    for (const group of EXAMPLE_CATEGORY_GROUPS) {
+        const categories = group.categories.filter(category => byCategory.has(category));
+        if (categories.length === 0) continue;
+        indexMarkdown += `## ${group.title}\n\n`;
+        if (categories.length === 1) {
+            indexMarkdown += `${renderExampleGrid(byCategory.get(categories[0]))}\n\n`;
+            continue;
+        }
+        for (const category of categories) {
+            indexMarkdown += `=== "${category}"\n\n${indentBlock(renderExampleGrid(byCategory.get(category)))}\n\n`;
+        }
     }
     return indexMarkdown;
 }
@@ -172,7 +210,10 @@ async function generateExamplesFolder() {
         htmlContent = htmlContent.replace(/-dev\.mjs/g, '.mjs');
         const htmlContentLines = htmlContent.split('\n');
         const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim();
-        const description = htmlContentLines.find(l => l.includes('og:description'))?.replace(/.*content=\"(.*)\".*/, '$1');
+        const description = extractMetaContent(htmlContentLines, 'og:description');
+        const category = extractMetaContent(htmlContentLines, 'og:category');
+        const orderMeta = extractMetaContent(htmlContentLines, 'og:order');
+        const order = orderMeta === undefined ? Number.POSITIVE_INFINITY : Number(orderMeta);
         fs.writeFileSync(path.join(examplesDocsFolder, file), htmlContent);
         const mdFileName = file.replace('.html', '.md');
         const isNew = isNewExample(htmlContentLines);
@@ -180,7 +221,9 @@ async function generateExamplesFolder() {
             title,
             description,
             mdFileName,
-            isNew
+            isNew,
+            category,
+            order
         });
         const exampleMarkdown = generateMarkdownForExample(title, description, file, htmlContent, isNew);
         fs.writeFileSync(path.join(examplesDocsFolder, mdFileName), exampleMarkdown);

@@ -191,6 +191,7 @@ export function serialize(input: unknown, transferables?: Transferable[] | null)
             if (!input.hasOwnProperty(key)) continue;
             if (registry[classRegistryKey].omit.includes(key)) continue;
             const property = input[key];
+            if (property === undefined) continue;
             properties[key] = registry[classRegistryKey].shallow.includes(key) ?
                 property :
                 serialize(property, transferables);

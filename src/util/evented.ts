@@ -5,9 +5,9 @@ import {extend, type Subscription} from './util.ts';
  */
 export type Listener = (a: any) => any;
 
-type Listeners = {[_: string]: Listener[]};
+type Listeners<EventType extends Record<string, any>> = {[_ in keyof EventType]?: Listener[]};
 
-function _addEventListener(type: string, listener: Listener, listenerList: Listeners) {
+function _addEventListener<T extends Record<string, any>>(type: keyof T, listener: Listener, listenerList: Listeners<T>) {
     const listenerExists = listenerList[type]?.includes(listener);
     if (!listenerExists) {
         listenerList[type] ||= [];
@@ -15,7 +15,7 @@ function _addEventListener(type: string, listener: Listener, listenerList: Liste
     }
 }
 
-function _removeEventListener(type: string, listener: Listener, listenerList: Listeners) {
+function _removeEventListener<T extends Record<string, any>>(type: keyof T, listener: Listener, listenerList: Listeners<T>) {
     if (listenerList?.[type]) {
         const index = listenerList[type].indexOf(listener);
         if (index !== -1) {
@@ -29,6 +29,11 @@ function _removeEventListener(type: string, listener: Listener, listenerList: Li
  */
 export class Event {
     readonly type: string;
+    /**
+     * The object that fired the event. Set when the event is fired, and narrowed to a more
+     * specific type (e.g. `Map`, `Marker`) by the event subclasses.
+     */
+    target?: unknown;
 
     constructor(type: string, data: any = {}) {
         extend(this, data);
@@ -56,9 +61,9 @@ export class ErrorEvent extends Event {
  *
  * @group Event Related
  */
-export class Evented {
-    _listeners: Listeners;
-    _oneTimeListeners: Listeners;
+export abstract class Evented<EventType extends Record<string, any> = Record<string, any>> {
+    _listeners: Listeners<EventType>;
+    _oneTimeListeners: Listeners<EventType>;
     _eventedParent: Evented;
     _eventedParentData: any | (() => any);
 
@@ -70,7 +75,7 @@ export class Evented {
      * The listener function is called with the data object passed to `fire`,
      * extended with `target` and `type` properties.
      */
-    on(type: string, listener: Listener): Subscription {
+    on<T extends keyof EventType>(type: T, listener: (event: EventType[T]) => void): Subscription {
         this._listeners ||= {};
         _addEventListener(type, listener, this._listeners);
 
@@ -87,7 +92,7 @@ export class Evented {
      * @param type - The event type to remove listeners for.
      * @param listener - The listener function to remove.
      */
-    off(type: string, listener: Listener): this {
+    off<T extends keyof EventType>(type: T, listener: (event: EventType[T]) => void): this {
         _removeEventListener(type, listener, this._listeners);
         _removeEventListener(type, listener, this._oneTimeListeners);
 
@@ -100,10 +105,20 @@ export class Evented {
      * The listener will be called first time the event fires after the listener is registered.
      *
      * @param type - The event type to listen for.
-     * @param listener - The function to be called when the event is fired the first time.
-     * @returns `this` or a promise if a listener is not provided
+     * @returns a promise that resolves with the event
      */
-    once(type: string, listener?: Listener): this | Promise<any> {
+    once<T extends keyof EventType>(type: T): Promise<EventType[T]>;
+    /**
+     * Adds a listener that will be called only once to a specified event type.
+     *
+     * The listener will be called first time the event fires after the listener is registered.
+     *
+     * @param type - The event type to listen for.
+     * @param listener - The function to be called when the event is fired the first time.
+     * @returns `this` when a listener is provided
+     */
+    once<T extends keyof EventType>(type: T, listener: (event: EventType[T]) => void): this; 
+    once<T extends keyof EventType>(type: T, listener?: (event: EventType[T]) => void): this | Promise<EventType[T]> {
         if (!listener) {
             return new Promise((resolve) => this.once(type, resolve));
         }
@@ -124,7 +139,7 @@ export class Evented {
         const type = event.type;
 
         if (this.listens(type)) {
-            (event as any).target = this;
+            event.target = this;
 
             // make sure adding or removing listeners inside other listeners won't cause an infinite loop
             const listeners = this._listeners?.[type] ? this._listeners[type].slice() : [];
