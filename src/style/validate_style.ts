@@ -28,14 +28,6 @@ type ValidateStyle = {
 
 export const validateStyle = (validateStyleMin as unknown as ValidateStyle);
 
-export const validateSource: Validator = validateStyle.source;
-export const validateLight: Validator = validateStyle.light;
-export const validateSky: Validator = validateStyle.sky;
-export const validateTerrain: Validator = validateStyle.terrain;
-export const validateFilter: Validator = validateStyle.filter;
-export const validatePaintProperty: Validator = validateStyle.paintProperty;
-export const validateLayoutProperty: Validator = validateStyle.layoutProperty;
-
 /**
  * The spec reports a canvas source as an error, because a canvas cannot be described in a stylesheet.
  * Adding one through {@link Style.addSource} is supported though, and {@link Style.serialize} then

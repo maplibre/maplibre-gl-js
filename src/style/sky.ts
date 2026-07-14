@@ -1,7 +1,7 @@
 import {type PossiblyEvaluated, TRANSITION_SUFFIX, Transitionable, type Transitioning, type TransitionParameters} from './properties.ts';
 import {Evented} from '../util/evented.ts';
 import {EvaluationParameters} from './evaluation_parameters.ts';
-import {validateSky, validateAndEmit, type Validator} from './validate_style.ts';
+import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
 import {getProperties, type SkyProps, type SkyPropsPossiblyEvaluated} from './sky_properties.g.ts';
 import type {Mesh} from '../render/mesh.ts';
 import type {SkySpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -27,7 +27,7 @@ export class Sky extends Evented {
     }
 
     setSky(sky?: SkySpecification, options: StyleSetterOptions = {}): void {
-        if (this._validate(validateSky, sky, options)) return;
+        if (this._validate(validateStyle.sky, sky, options)) return;
 
         sky ||= {
             'sky-color': 'transparent',

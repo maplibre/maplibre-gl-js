@@ -2,11 +2,7 @@ import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 
 import {sphericalToCartesian} from '../util/util.ts';
 import {Evented} from '../util/evented.ts';
-import {
-    validateLight,
-    validateAndEmit,
-    type Validator
-} from './validate_style.ts';
+import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
 import {getProperties, type LightProps, type LightPropsPossiblyEvaluated} from './light_properties.g.ts';
 
 import type {vec3} from 'gl-matrix';
@@ -44,7 +40,7 @@ export class Light extends Evented {
     }
 
     setLight(light?: LightSpecification, options: StyleSetterOptions = {}): void {
-        if (this._validate(validateLight, light, options)) {
+        if (this._validate(validateStyle.light, light, options)) {
             return;
         }
 

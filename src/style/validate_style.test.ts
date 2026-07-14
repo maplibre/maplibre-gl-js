@@ -1,5 +1,5 @@
 import {describe, test, expect, vi, afterEach} from 'vitest';
-import {validateAndEmit, validateFilter, validateSource} from './validate_style.ts';
+import {validateAndEmit, validateStyle} from './validate_style.ts';
 import {Evented} from '../util/evented.ts';
 
 class TestEmitter extends Evented {}
@@ -22,7 +22,7 @@ describe('validateAndEmit', () => {
     test('fires an error and reports failure for a filter the spec rejects', () => {
         const {emitter, fired} = setup();
 
-        const hasErrors = validateAndEmit(emitter, validateFilter, {
+        const hasErrors = validateAndEmit(emitter, validateStyle.filter, {
             key,
             value: ['all', ['==', ['get', 'class'], 'rail'], ['nope', 1]]
         });
@@ -34,7 +34,7 @@ describe('validateAndEmit', () => {
     test('only warns for a filter that mixes legacy syntax into an expression, so the style keeps loading', () => {
         const {emitter, fired, warn} = setup();
 
-        const hasErrors = validateAndEmit(emitter, validateFilter, {
+        const hasErrors = validateAndEmit(emitter, validateStyle.filter, {
             key,
             value: ['all', ['==', ['get', 'class'], 'rail'], ['in', 'name', '']]
         });
@@ -49,7 +49,7 @@ describe('validateAndEmit', () => {
 
         // `!in` has no expression equivalent, so the spec reports it as an error on top of the
         // warning about the mixing itself. A warning must not swallow that error.
-        const hasErrors = validateAndEmit(emitter, validateFilter, {
+        const hasErrors = validateAndEmit(emitter, validateStyle.filter, {
             key,
             value: ['all', ['==', ['get', 'class'], 'rail'], ['!in', 'name', 'a']]
         });
@@ -62,7 +62,7 @@ describe('validateAndEmit', () => {
     test('ignores errors about canvas sources, which are added at runtime instead', () => {
         const {emitter, fired} = setup();
 
-        const hasErrors = validateAndEmit(emitter, validateSource, {
+        const hasErrors = validateAndEmit(emitter, validateStyle.source, {
             key: 'sources.canvas',
             value: {type: 'canvas'}
         });
@@ -74,7 +74,7 @@ describe('validateAndEmit', () => {
     test('skips validation entirely when the validate option is false', () => {
         const {emitter, fired} = setup();
 
-        expect(validateAndEmit(emitter, validateFilter, {key, value: 'notafilter'}, {validate: false})).toBe(false);
+        expect(validateAndEmit(emitter, validateStyle.filter, {key, value: 'notafilter'}, {validate: false})).toBe(false);
         expect(fired).toEqual([]);
     });
 });

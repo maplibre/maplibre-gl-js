@@ -1,12 +1,7 @@
 import {filterObject} from '../util/util.ts';
 
 import {createVisibilityExpression, featureFilter, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
-import {
-    validateLayoutProperty,
-    validatePaintProperty,
-    validateAndEmit,
-    type Validator
-} from './validate_style.ts';
+import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
 import {Evented, ErrorEvent} from '../util/evented.ts';
 import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties.ts';
 
@@ -262,7 +257,7 @@ export abstract class StyleLayer extends Evented {
             return;
         }
 
-        if (value !== null && value !== undefined && this._validate(validateLayoutProperty, `layers.${this.id}.layout.${name}`, name, value, options))  return;
+        if (value !== null && value !== undefined && this._validate(validateStyle.layoutProperty, `layers.${this.id}.layout.${name}`, name, value, options))  return;
 
         this._unevaluatedLayout.setValue(name, value);
     }
@@ -290,7 +285,7 @@ export abstract class StyleLayer extends Evented {
             return false;
         }
 
-        if (value !== null && value !== undefined && this._validate(validatePaintProperty, `layers.${this.id}.paint.${name}`, name, value, options)) return false;
+        if (value !== null && value !== undefined && this._validate(validateStyle.paintProperty, `layers.${this.id}.paint.${name}`, name, value, options)) return false;
 
         if (name.endsWith(TRANSITION_SUFFIX)) {
             this._transitionablePaint.setTransition(name.slice(0, -TRANSITION_SUFFIX.length), (value as any) || undefined);
