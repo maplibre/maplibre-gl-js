@@ -4,8 +4,6 @@ import {Evented} from '../util/evented.ts';
 
 class TestEmitter extends Evented {}
 
-// Mixes a legacy sub-filter (`["in", "name", ""]`) into an expression tree, which the style spec
-// reports as a warning. See https://github.com/maplibre/maplibre-style-spec/issues/1751
 const mixedLegacyAndExpressionFilter = ['all', ['==', ['get', 'class'], 'rail'], ['in', 'name', '']];
 
 describe('emitValidationErrors', () => {
