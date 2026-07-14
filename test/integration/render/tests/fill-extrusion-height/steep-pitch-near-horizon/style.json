@@ -1,0 +1,38 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "description": "Regression test for https://github.com/maplibre/maplibre-gl-js/issues/7633: at steep pitch (near the horizon), tile-covering bounds used to ignore building height when deciding which tiles to keep, so 3D buildings on tiles near the frustum edge would disappear even though they'd still poke into view. Reuses the existing building tile fixture (test/integration/assets/tiles/14-8802-5374.mvt) via a single fixed tile URL, same trick as the extent/1024-* tests.",
+            "maxPitch": 90
+        }
+    },
+    "center": [0, 0],
+    "zoom": 14,
+    "pitch": 80,
+    "sources": {
+        "maplibre": {
+            "type": "vector",
+            "maxzoom": 14,
+            "tiles": ["local://tiles/14-8802-5374.mvt"]
+        }
+    },
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "#e8f4f8"
+            }
+        },
+        {
+            "id": "buildings",
+            "type": "fill-extrusion",
+            "source": "maplibre",
+            "source-layer": "building",
+            "paint": {
+                "fill-extrusion-height": 500,
+                "fill-extrusion-color": "#888"
+            }
+        }
+    ]
+}
