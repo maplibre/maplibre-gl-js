@@ -10,21 +10,33 @@ import {latest, type StylePropertySpecification} from '@maplibre/maplibre-gl-sty
  */
 type SpecPropertyType = StylePropertySpecification['property-type'];
 
+/** The allowed values of an `enum`, keyed by name. */
+type SpecEnumValues = {[value: string]: unknown};
+
+/** The types a value can have when it carries nothing beyond the type itself. */
+type SpecScalarType =
+    'boolean' | 'number' | 'string' | 'color' | 'padding' | 'formatted' | 'resolvedImage' |
+    'numberArray' | 'colorArray' | 'projectionDefinition' | 'variableAnchorOffsetCollection';
+
 /**
- * The part of a spec entry that describes what a value looks like. Arrays describe their elements
- * the same way, so this is also the shape passed when recursing into `array`.
+ * The part of a spec entry that describes what a value looks like. `enum` and `array` carry extra
+ * fields; everything else is just its type. Arrays describe their elements the same way, so this is
+ * also the shape passed when recursing into one.
  */
-type SpecValue = {
-    type: string;
-    /** the property this came from, used for error messages */
-    name?: string;
-    /** for `enum`: the allowed values, keyed by name */
-    values?: {[value: string]: unknown};
-    /** for `array`: how many elements, when the spec pins it down */
-    length?: number;
-    /** for `array`: the type of each element */
-    value?: string;
-};
+type SpecValue =
+    /** the `name` on each is the property this came from, used for error messages */
+    | {type: SpecScalarType; name?: string}
+    | {type: 'enum'; values: SpecEnumValues; name?: string}
+    | {
+        type: 'array';
+        /** the type of each element */
+        value: 'number' | 'string' | 'enum';
+        /** how many elements, when the spec pins it down */
+        length?: number;
+        /** for an array of `enum`, the allowed values live here, on the array itself */
+        values?: SpecEnumValues;
+        name?: string;
+    };
 
 /**
  * A property of the style spec, tagged with where it lives so the generated code can reach its spec
@@ -83,20 +95,11 @@ function pascalCase(str: string): string {
     return almostCamelized[0].toUpperCase() + almostCamelized.slice(1);
 }
 
-/** The allowed values of an `enum` property. */
-function enumValues(property: SpecValue): {[value: string]: unknown} {
-    if (!property.values) {
-        throw new Error(`enum "${property.name}" is missing its values`);
-    }
-    return property.values;
-}
-
 /** How each element of an `array` property is specified. */
-function elementOf(property: SpecValue): SpecValue {
-    if (!property.value) {
-        throw new Error(`array "${property.name}" is missing its element type`);
-    }
-    return {type: property.value, values: property.values, name: property.name};
+function elementOf(property: Extract<SpecValue, {type: 'array'}>): SpecValue {
+    return property.value === 'enum' ?
+        {type: 'enum', values: property.values ?? {}, name: property.name} :
+        {type: property.value, name: property.name};
 }
 
 /** The TypeScript type a property evaluates to, e.g. `Color` or `"map" | "viewport"`. */
@@ -109,7 +112,7 @@ function nativeType(property: SpecValue): string {
         case 'string':
             return 'string';
         case 'enum':
-            return Object.keys(enumValues(property)).map(v => JSON.stringify(v)).join(' | ');
+            return Object.keys(property.values).map(v => JSON.stringify(v)).join(' | ');
         case 'color':
             return 'Color';
         case 'padding':
@@ -133,7 +136,11 @@ function nativeType(property: SpecValue): string {
             }
             return inner.includes('|') ? `Array<${inner}>` : `${inner}[]`;
         }
-        default: throw new Error(`unknown type "${property.type}" for "${property.name}"`);
+        // Unreachable per the union above, but the spec is JSON: this still fires if it grows a type.
+        default: {
+            const {type, name} = property as SpecValue;
+            throw new Error(`unknown type "${type}" for "${name}"`);
+        }
     }
 }
 
@@ -250,7 +257,7 @@ function propertyValue(property: SpecProperty, type: string): string {
  * where it came from, which is what {@link specPath} needs to point the generated code back at it.
  */
 function specProperties(specKey: string, tag: Pick<SpecProperty, 'layerType'> | Pick<SpecProperty, 'root'>): SpecProperty[] {
-    const spec = latest[specKey as keyof typeof latest] as Record<string, Omit<SpecProperty, 'name'>>;
+    const spec = latest[specKey as keyof typeof latest] as unknown as Record<string, SpecProperty>;
     return Object.keys(spec).map((name) => ({...spec[name], ...tag, name}));
 }
 
