@@ -18,6 +18,6 @@ describe('GlobeProjection runtime error logging', () => {
         projection.recalculate(new EvaluationParameters(16));
 
         expect(warn).toHaveBeenCalledTimes(1);
-        expect(warn.mock.calls[0][0]).toBe('projection.type: Expected value to be of type string, but found null instead. Falling back to mercator');
+        expect(warn.mock.calls[0][0]).toBe('projection.type: Expected value to be of type string, but found null instead. Falling back to mercator.');
     });
 });
