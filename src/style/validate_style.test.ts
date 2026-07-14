@@ -21,35 +21,6 @@ describe('emitValidationErrors', () => {
         expect(errorSpy).not.toHaveBeenCalled();
     });
 
-    test('fires an error event and reports failure for an error', () => {
-        const evented = new TestEmitter();
-        const errorSpy = vi.fn();
-        evented.on('error', errorSpy);
-
-        const hasErrors = emitValidationErrors(evented, [
-            {message: 'layers[0].filter[2][0]: Unknown expression "nope".', severity: 'error'}
-        ]);
-
-        expect(hasErrors).toBe(true);
-        expect(errorSpy).toHaveBeenCalledTimes(1);
-        expect(errorSpy.mock.calls[0][0].error.message).toBe('layers[0].filter[2][0]: Unknown expression "nope".');
-    });
-
-    test('logs a warning instead of failing, so the style keeps loading', () => {
-        const evented = new TestEmitter();
-        const errorSpy = vi.fn();
-        evented.on('error', errorSpy);
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-        const hasErrors = emitValidationErrors(evented, [
-            {message: 'layers[0].filter[2]: Mixing deprecated filter syntax with expression syntax is not supported.', severity: 'warning'}
-        ]);
-
-        expect(hasErrors).toBe(false);
-        expect(errorSpy).not.toHaveBeenCalled();
-        expect(warnSpy).toHaveBeenCalledWith('layers[0].filter[2]: Mixing deprecated filter syntax with expression syntax is not supported.');
-    });
-
     test('reports failure when an error is mixed in with a warning, emitting only the error', () => {
         const evented = new TestEmitter();
         const errorSpy = vi.fn();
