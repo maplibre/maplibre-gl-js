@@ -1771,7 +1771,6 @@ export class Style extends Evented<MapEventType> {
     _validate(validate: Validator, key: string, value: any, props: any, options: StyleSetterOptions = {}): boolean {
         return validateAndEmit(this, validate, {
             key,
-            // Unlike the other validators, we have the whole style at hand, so we validate against it.
             style: this.serialize(),
             value,
             ...props
