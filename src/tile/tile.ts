@@ -425,7 +425,7 @@ export class Tile {
 
         if (!layer) return;
 
-        const filter = featureFilter(params?.filter, params?.globalState);
+        const filter = featureFilter(params?.filter, `querySourceFeatures[${sourceLayer}].filter`, params?.globalState);
         const {z, x, y} = this.tileID.canonical;
         const coord = {z, x, y};
 

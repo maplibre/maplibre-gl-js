@@ -33,6 +33,8 @@ export type GeoJSONWorkerOptions = {
  */
 export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
     type: 'geojson';
+    /** The geojson source ID. */
+    source: string;
     /**
      * Request parameters including a URL to fetch GeoJSON data.
      */
@@ -263,14 +265,14 @@ export class GeoJSONWorkerSource implements WorkerSource {
         }
 
         if (params.data) {
-            params.data = this._filterGeoJSON(params.data, params.filter);
+            params.data = this._filterGeoJSON(params.data, params.filter, params.source);
             this._geoJSONIndex = this._createGeoJSONIndex(params.data, params);
             return;
         }
 
         if (params.dataDiff) {
             this._geoJSONIndex ??= this._createGeoJSONIndex({type: 'FeatureCollection', features: []}, params);
-            this._geoJSONIndex.updateData(params.dataDiff, this._getFilterPredicate(params.filter));
+            this._geoJSONIndex.updateData(params.dataDiff, this._getFilterPredicate(params.filter, params.source));
             return;
         }
 
@@ -286,10 +288,10 @@ export class GeoJSONWorkerSource implements WorkerSource {
     /**
      * Applies a filter to a GeoJSON object.
      */
-    _filterGeoJSON(data: GeoJSON.GeoJSON, filter: FilterSpecification): GeoJSON.GeoJSON {
+    _filterGeoJSON(data: GeoJSON.GeoJSON, filter: FilterSpecification, source: string): GeoJSON.GeoJSON {
         if (data.type !== 'FeatureCollection') return data;
 
-        const predicate = this._getFilterPredicate(filter);
+        const predicate = this._getFilterPredicate(filter, source);
         if (!predicate) return data;
 
         return {type: 'FeatureCollection', features: data.features.filter(feature => predicate(feature))};
@@ -298,10 +300,10 @@ export class GeoJSONWorkerSource implements WorkerSource {
     /**
      * Gets a predicate function that can be used to filter GeoJSON features.
      */
-    _getFilterPredicate(filter: FilterSpecification): (feature: GeoJSON.Feature) => boolean {
+    _getFilterPredicate(filter: FilterSpecification, source: string): (feature: GeoJSON.Feature) => boolean {
         if (typeof filter !== 'boolean' && !filter?.length) return undefined;
 
-        const compiled = createExpression(filter, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
+        const compiled = createExpression(filter, `sources.${source}.filter`, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
         if (compiled.result === 'error') {
             throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
         }
@@ -339,7 +341,7 @@ export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONPar
     return new GeoJSONVT(data, options);
 }
 
-function getSuperclusterOptions({geojsonVtOptions, clusterProperties}: LoadGeoJSONParameters) {
+function getSuperclusterOptions({geojsonVtOptions, clusterProperties, source}: LoadGeoJSONParameters) {
     if (!clusterProperties || !geojsonVtOptions.clusterOptions) return geojsonVtOptions.clusterOptions;
 
     const mapExpressions = {};
@@ -351,9 +353,9 @@ function getSuperclusterOptions({geojsonVtOptions, clusterProperties}: LoadGeoJS
     for (const key of propertyNames) {
         const [operator, mapExpression] = clusterProperties[key];
 
-        const mapExpressionParsed = createExpression(mapExpression);
+        const mapExpressionParsed = createExpression(mapExpression, `sources.${source}.clusterProperties.${key}[1]`);
         const reduceExpressionParsed = createExpression(
-            typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator);
+            typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator, `sources.${source}.clusterProperties.${key}[0]`);
 
         mapExpressions[key] = mapExpressionParsed.value;
         reduceExpressions[key] = reduceExpressionParsed.value;
