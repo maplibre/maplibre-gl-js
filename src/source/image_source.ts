@@ -207,16 +207,12 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
      * @param options - The options object.
      */
     updateImage(options: UpdateImageOptions): this {
-        if (!options.url && !options.image) {
-            return this;
-        }
-
         if (this._request) {
             this._request.abort();
             this._request = null;
         }
 
-        if (options.image) {
+        if ('image' in options) {
             // Use the already-decoded image directly, skipping the network request.
             this._loaded = true;
             this.image = options.image;
