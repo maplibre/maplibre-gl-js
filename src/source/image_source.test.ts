@@ -1,4 +1,4 @@
-import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, test, expect, vi, type Mock} from 'vitest';
 import {ImageSource} from './image_source.ts';
 import {Evented} from '../util/evented.ts';
 import {type IReadonlyTransform} from '../geo/transform_interface.ts';
@@ -25,13 +25,11 @@ class StubMap extends Evented {
     painter: any;
     _requestManager: RequestManager;
 
-    constructor() {
+    constructor(transformRequest: (url: string, resourceType?: string) => any = (url) => ({url})) {
         super();
         this.transform = new MercatorTransform();
         this._requestManager = {
-            transformRequest: (url) => {
-                return {url};
-            }
+            transformRequest
         } as any as RequestManager;
         this.painter = {
             context: {
@@ -73,25 +71,22 @@ describe('ImageSource', () => {
     });
 
     test('transforms url request', () => {
+        const transformRequest = vi.fn((url: string, _resourceType?: string) => ({url}));
         const source = createSource({url: '/image.png'});
-        const map = new StubMap() as any;
-        const spy = vi.spyOn(map._requestManager, 'transformRequest');
+        const map = new StubMap(transformRequest) as any;
         source.onAdd(map);
         server.respond();
-        expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy.mock.calls[0][0]).toBe('/image.png');
-        expect(spy.mock.calls[0][1]).toBe('Image');
+        expect(transformRequest).toHaveBeenCalledTimes(1);
+        expect(transformRequest.mock.calls[0][0]).toBe('/image.png');
+        expect(transformRequest.mock.calls[0][1]).toBe('Image');
     });
 
     test('can asynchronously transform request', async () => {
         const source = createSource({url: '/image.png'});
-        const map = new StubMap() as any;
-        map._requestManager = {
-            transformRequest: async (url) => ({
-                url,
-                headers: {Authorization: 'Bearer token'}
-            })
-        };
+        const map = new StubMap(async (url) => ({
+            url,
+            headers: {Authorization: 'Bearer token'}
+        })) as any;
         const promise = source.once('data');
         source.onAdd(map);
         await sleep(0);
@@ -102,19 +97,19 @@ describe('ImageSource', () => {
     });
 
     test('updates url from updateImage', () => {
+        const transformRequest = vi.fn((url: string, _resourceType?: string) => ({url}));
         const source = createSource({url: '/image.png'});
-        const map = new StubMap() as any;
-        const spy = vi.spyOn(map._requestManager, 'transformRequest');
+        const map = new StubMap(transformRequest) as any;
         source.onAdd(map);
         server.respond();
-        expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy.mock.calls[0][0]).toBe('/image.png');
-        expect(spy.mock.calls[0][1]).toBe('Image');
+        expect(transformRequest).toHaveBeenCalledTimes(1);
+        expect(transformRequest.mock.calls[0][0]).toBe('/image.png');
+        expect(transformRequest.mock.calls[0][1]).toBe('Image');
         source.updateImage({url: '/image2.png'});
         server.respond();
-        expect(spy).toHaveBeenCalledTimes(2);
-        expect(spy.mock.calls[1][0]).toBe('/image2.png');
-        expect(spy.mock.calls[1][1]).toBe('Image');
+        expect(transformRequest).toHaveBeenCalledTimes(2);
+        expect(transformRequest.mock.calls[1][0]).toBe('/image2.png');
+        expect(transformRequest.mock.calls[1][1]).toBe('Image');
     });
 
     test('sets coordinates', () => {
@@ -265,25 +260,28 @@ describe('ImageSource', () => {
     describe('updateImage with a decoded image', () => {
         let map: any;
         let source: ImageSource;
+        let transformRequest: Mock<(url: string, resourceType?: string) => any>;
 
         beforeEach(() => {
-            map = new StubMap() as any;
+            transformRequest = vi.fn((url: string, _resourceType?: string) => ({url}));
+            map = new StubMap(transformRequest) as any;
             // Suppress errors from aborting the initial (never-responded) request.
             map.on('error', () => {});
             source = createSource({url: '/image.png', eventedParent: map});
             // onAdd starts the initial load synchronously up to its first await, so
-            // this._request is set and transformRequest has already been called once.
+            // this._request is set and transformRequest is called once. Clear that call
+            // so tests can assert the image path issues no further request.
             source.onAdd(map);
+            transformRequest.mockClear();
         });
 
         test('sets the image directly without a network request', () => {
-            // The image path must not trigger a new request, so transformRequest is not called again.
-            const spy = vi.spyOn(map._requestManager, 'transformRequest');
             const bitmap = new ImageBitmap();
             const result = source.updateImage({image: bitmap});
 
             expect(result).toBe(source);
-            expect(spy).not.toHaveBeenCalled();
+            // The image path must not trigger a request.
+            expect(transformRequest).not.toHaveBeenCalled();
             expect(source.image).toBe(bitmap);
             expect(source.loaded()).toBe(true);
         });
@@ -322,11 +320,10 @@ describe('ImageSource', () => {
         });
 
         test('accepts an ImageData instance', () => {
-            const spy = vi.spyOn(map._requestManager, 'transformRequest');
             const imageData = new ImageData(1, 1);
             source.updateImage({image: imageData});
 
-            expect(spy).not.toHaveBeenCalled();
+            expect(transformRequest).not.toHaveBeenCalled();
             expect(source.image).toBe(imageData);
             expect(source.loaded()).toBe(true);
         });
