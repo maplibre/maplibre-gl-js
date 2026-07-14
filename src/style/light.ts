@@ -1,5 +1,3 @@
-import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
-
 import {sphericalToCartesian} from '../util/util.ts';
 import {Evented} from '../util/evented.ts';
 import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';

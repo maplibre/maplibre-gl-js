@@ -1,5 +1,6 @@
 import {describe, test, expect, vi, afterEach} from 'vitest';
-import {validateAndEmit, validateStyle} from './validate_style.ts';
+import {validateAndEmit, validateStyle, validateStyleAndEmit} from './validate_style.ts';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Evented} from '../util/evented.ts';
 
 class TestEmitter extends Evented {}
@@ -59,22 +60,50 @@ describe('validateAndEmit', () => {
         expect(warn).toHaveBeenCalledWith(expect.stringContaining('Mixing deprecated filter syntax with expression syntax'));
     });
 
-    test('ignores errors about canvas sources, which are added at runtime instead', () => {
-        const {emitter, fired} = setup();
-
-        const hasErrors = validateAndEmit(emitter, validateStyle.source, {
-            key: 'sources.canvas',
-            value: {type: 'canvas'}
-        });
-
-        expect(hasErrors).toBe(false);
-        expect(fired).toEqual([]);
-    });
-
     test('skips validation entirely when the validate option is false', () => {
         const {emitter, fired} = setup();
 
         expect(validateAndEmit(emitter, validateStyle.filter, {key, value: 'notafilter'}, {validate: false})).toBe(false);
         expect(fired).toEqual([]);
+    });
+});
+
+describe('validateStyleAndEmit', () => {
+    const coordinates = [[0, 0], [1, 0], [1, 1], [0, 1]];
+    const styleWith = (sources: object, layers: object[] = []) =>
+        ({version: 8, sources, layers}) as any as StyleSpecification;
+
+    test('ignores sources the spec has no schema for, which MapLibre renders anyway', () => {
+        const {emitter, fired} = setup();
+
+        // `canvas` is not in the spec at all, and `addSourceType` can register anything else.
+        const hasErrors = validateStyleAndEmit(emitter, styleWith({
+            canvas: {type: 'canvas', canvas: 'c', coordinates},
+            custom: {type: 'registered-at-runtime', url: 'https://example.com'}
+        }, [{id: 'l', type: 'raster', source: 'canvas'}]));
+
+        expect(hasErrors).toBe(false);
+        expect(fired).toEqual([]);
+    });
+
+    test('still fails on a source the spec does know', () => {
+        const {emitter, fired} = setup();
+
+        const hasErrors = validateStyleAndEmit(emitter, styleWith({v: {type: 'vector', tiles: 'not-an-array'}}));
+
+        expect(hasErrors).toBe(true);
+        expect(fired).toEqual([expect.stringContaining('sources.v.tiles')]);
+    });
+
+    test('still fails elsewhere in a style that also holds an ignored source', () => {
+        const {emitter, fired} = setup();
+
+        const hasErrors = validateStyleAndEmit(emitter, styleWith(
+            {canvas: {type: 'canvas', canvas: 'c', coordinates}},
+            [{id: 'l', type: 'not-a-layer-type', source: 'canvas'}]
+        ));
+
+        expect(hasErrors).toBe(true);
+        expect(fired).toEqual([expect.stringContaining('layers[0]')]);
     });
 });

@@ -2,7 +2,7 @@ import {latest as styleSpec, validateStyleMin} from '@maplibre/maplibre-gl-style
 import {ErrorEvent} from '../util/evented.ts';
 import {warnOnce} from '../util/util.ts';
 
-import type {ValidationError} from '@maplibre/maplibre-gl-style-spec';
+import type {StyleSpecification, ValidationError} from '@maplibre/maplibre-gl-style-spec';
 import type {Evented} from '../util/evented.ts';
 import type {StyleSetterOptions} from './style.ts';
 
@@ -29,12 +29,45 @@ type ValidateStyle = {
 export const validateStyle = (validateStyleMin as unknown as ValidateStyle);
 
 /**
- * The spec reports a canvas source as an error, because a canvas cannot be described in a stylesheet.
- * Adding one through {@link Style.addSource} is supported though, and {@link Style.serialize} then
- * includes it, so re-validating the style on `setStyle` would flag a source the user added correctly.
- * The severity cannot tell the two apart -- only the identifier can -- so the error is dropped here.
+ * The source types the spec has a schema for, and therefore the only ones it can judge. Taken from
+ * the spec itself so the two cannot drift apart.
  */
-const CANVAS_SOURCE_IDENTIFIER = 'source.canvas';
+export const SPEC_SOURCE_TYPES: ReadonlySet<string> = new Set(
+    Object.keys(styleSpec)
+        .filter(key => key.startsWith('source_'))
+        .map(key => key.slice('source_'.length).replaceAll('_', '-'))
+);
+
+/**
+ * The sources whose type the spec has no schema for, so it rejects them outright even though we
+ * render them: `canvas`, and anything registered with {@link addSourceType}. They are the renderer's
+ * business rather than the spec's, so the spec's complaints about them are dropped -- otherwise
+ * `map.setStyle(map.getStyle())` would fail on a source the user added correctly.
+ *
+ * Each such source produces a single error keyed by `sources.<id>`, which is what is matched here.
+ * @param style - the style about to be validated
+ * @returns the `sources.<id>` key prefixes whose errors should be ignored
+ */
+function unjudgeableSourceKeys(style: StyleSpecification): string[] {
+    return Object.entries(style.sources ?? {})
+        .filter(([, source]) => !SPEC_SOURCE_TYPES.has(source.type))
+        .map(([id]) => `sources.${id}`);
+}
+
+/**
+ * Validates a whole style and emits what it finds, ignoring the sources the spec cannot judge.
+ *
+ * @param emitter - the object to fire {@link ErrorEvent}s on
+ * @param style - the style to validate
+ * @returns whether validation failed, i.e. whether the caller should give up on the style
+ */
+export function validateStyleAndEmit(emitter: Evented, style: StyleSpecification): boolean {
+    const ignored = unjudgeableSourceKeys(style);
+    const errors = validateStyle(style).filter(({message}) =>
+        !ignored.some(key => message.startsWith(`${key}:`) || message.startsWith(`${key}.`))
+    );
+    return emitValidationErrors(emitter, errors);
+}
 
 /**
  * Emits everything a validator found, and reports whether any of it was severe enough to abort.
@@ -51,9 +84,6 @@ const CANVAS_SOURCE_IDENTIFIER = 'source.canvas';
 export function emitValidationErrors(emitter: Evented, errors: readonly ValidationError[]): boolean {
     let hasErrors = false;
     for (const error of errors) {
-        if (error.identifier === CANVAS_SOURCE_IDENTIFIER) {
-            continue;
-        }
         if (error.severity === 'warning') {
             warnOnce(error.message);
             continue;
