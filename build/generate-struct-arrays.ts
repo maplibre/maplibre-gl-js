@@ -9,7 +9,7 @@
 'use strict';
 
 import * as fs from 'fs';
-import * as util from '../src/util/util.ts';
+import {extend} from '../src/util/util.ts';
 import {createLayout, viewTypes} from '../src/util/struct_array.ts';
 import type {ViewType, StructArrayLayout} from '../src/util/struct_array.ts';
 
@@ -60,7 +60,7 @@ function normalizeMembers(members, usedTypes) {
             usedTypes.add(member.type);
         }
 
-        return util.extend(member, {
+        return extend(member, {
             size: sizeOf(member.type),
             view: member.type.toLowerCase()
         });
@@ -103,7 +103,7 @@ function createStructArrayLayoutType({members, size, alignment}) {
     if (!alignment || alignment === 1) members = members.reduce((memo, member) => {
         if (memo.length > 0 && memo[memo.length - 1].type === member.type) {
             const last = memo[memo.length - 1];
-            return memo.slice(0, -1).concat(util.extend({}, last, {
+            return memo.slice(0, -1).concat(extend({}, last, {
                 components: last.components + member.components,
             }));
         }

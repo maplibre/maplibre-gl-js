@@ -157,7 +157,7 @@ describe('web worker transfer', () => {
     });
 
     test('"has" filter returns false for undefined or missing properties after serialization', () => {
-        const filter = featureFilter(['has', 'testProperty']);
+        const filter = featureFilter(['has', 'testProperty'], 'layers[0].filter');
         const params = new EvaluationParameters(0);
 
         const makeFeature = (properties: Record<string, unknown>) => ({
