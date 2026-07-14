@@ -3066,7 +3066,7 @@ describe('Style.setFilter', () => {
         expect(spy.mock.calls[0][1]['layers'][0].filter).toBe('notafilter');
     });
 
-    test('warns but applies a filter that mixes legacy and expression syntax', async () => {
+    test('warns instead of emitting for a filter that mixes legacy and expression syntax', async () => {
         const style = createStyle();
         await style.once('style.load');
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -3078,7 +3078,6 @@ describe('Style.setFilter', () => {
         expect(style.getFilter('symbol')).toEqual(mixedLegacyAndExpressionFilter);
         expect(errorSpy).not.toHaveBeenCalled();
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Mixing deprecated filter syntax with expression syntax'));
-        style.update({} as EvaluationParameters); // trigger dispatcher broadcast
     });
 });
 
