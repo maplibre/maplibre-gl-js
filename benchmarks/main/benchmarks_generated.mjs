@@ -3042,9 +3042,7 @@ var TransferableGridIndex = class TransferableGridIndex {
 		return new TransferableGridIndex(serialized.buffer);
 	}
 };
-//#endregion
-//#region node_modules/@maplibre/maplibre-gl-style-spec/dist/index.mjs
-var v8_default = {
+const latest = {
 	$version: 8,
 	$root: {
 		"version": {
@@ -5678,7 +5676,6 @@ var v8_default = {
 		}
 	}
 };
-var latest_default = v8_default;
 const refProperties = [
 	"type",
 	"source",
@@ -6031,16 +6028,13 @@ function diff(before, after) {
 	return commands;
 }
 var ValidationError = class {
-	constructor(key, value, message, identifier) {
+	constructor(key, value, message, identifier, severity = "error") {
 		this.message = (key ? `${key}: ` : "") + message;
 		if (identifier) this.identifier = identifier;
+		this.severity = severity;
 		if (value !== null && value !== void 0 && value.__line__) this.line = value.__line__;
 	}
 };
-function extendBy(output, ...inputs) {
-	for (const input of inputs) for (const k in input) output[k] = input[k];
-	return output;
-}
 var ExpressionParsingError = class extends Error {
 	constructor(key, message) {
 		super(message);
@@ -6165,7 +6159,15 @@ function verifyType(provided, sample) {
 	if (provided.kind === "array" && sample.kind === "array") return provided.itemType.kind === sample.itemType.kind && typeof provided.N === "number";
 	return provided.kind === sample.kind;
 }
-const Xn = .96422, Yn = 1, Zn = .82521, t0 = 4 / 29, t1 = 6 / 29, t2 = 3 * t1 * t1, t3 = t1 * t1 * t1, deg2rad = Math.PI / 180, rad2deg = 180 / Math.PI;
+const Xn = .96422;
+const Yn = 1;
+const Zn = .82521;
+const t0 = 4 / 29;
+const t1 = 6 / 29;
+const t2 = 3 * t1 * t1;
+const t3 = t1 * t1 * t1;
+const deg2rad = Math.PI / 180;
+const rad2deg = 180 / Math.PI;
 function constrainAngle(angle) {
 	angle = angle % 360;
 	if (angle < 0) angle += 360;
@@ -7504,9 +7506,10 @@ var ColorArray = class ColorArray {
 	}
 };
 var RuntimeError = class extends Error {
-	constructor(message) {
+	constructor(message, path) {
 		super(message);
 		this.name = "RuntimeError";
+		this.path = path;
 	}
 	toJSON() {
 		return this.message;
@@ -7547,13 +7550,13 @@ var VariableAnchorOffsetCollection = class VariableAnchorOffsetCollection {
 	toString() {
 		return JSON.stringify(this.values);
 	}
-	static interpolate(from, to, t) {
+	static interpolate(from, to, t, key) {
 		const fromValues = from.values;
 		const toValues = to.values;
-		if (fromValues.length !== toValues.length) throw new RuntimeError(`Cannot interpolate values of different length. from: ${from.toString()}, to: ${to.toString()}`);
+		if (fromValues.length !== toValues.length) throw new RuntimeError(`Cannot interpolate values of different length. from: ${from.toString()}, to: ${to.toString()}`, key);
 		const output = [];
 		for (let i = 0; i < fromValues.length; i += 2) {
-			if (fromValues[i] !== toValues[i]) throw new RuntimeError(`Cannot interpolate values containing mismatched anchors. from[${i}]: ${fromValues[i]}, to[${i}]: ${toValues[i]}`);
+			if (fromValues[i] !== toValues[i]) throw new RuntimeError(`Cannot interpolate values containing mismatched anchors. from[${i}]: ${fromValues[i]}, to[${i}]: ${toValues[i]}`, key);
 			output.push(fromValues[i]);
 			const [fx, fy] = fromValues[i + 1];
 			const [tx, ty] = toValues[i + 1];
@@ -7583,6 +7586,14 @@ var ProjectionDefinition = class ProjectionDefinition {
 		this.from = from;
 		this.to = to;
 		this.transition = transition;
+	}
+	toString() {
+		if (this.from === this.to && this.transition === 1) return this.from;
+		return JSON.stringify([
+			this.from,
+			this.to,
+			this.transition
+		]);
 	}
 	static interpolate(from, to, t) {
 		return new ProjectionDefinition(from, to, t);
@@ -7688,9 +7699,10 @@ const types$1 = {
 	object: ObjectType
 };
 var Assertion = class Assertion {
-	constructor(type, args) {
+	constructor(type, args, key) {
 		this.type = type;
 		this.args = args;
+		this.key = key;
 	}
 	static parse(args, context) {
 		if (args.length < 2) return context.error("Expected at least one argument.");
@@ -7722,13 +7734,13 @@ var Assertion = class Assertion {
 			if (!input) return null;
 			parsed.push(input);
 		}
-		return new Assertion(type, parsed);
+		return new Assertion(type, parsed, context.key);
 	}
 	evaluate(ctx) {
 		for (let i = 0; i < this.args.length; i++) {
 			const value = this.args[i].evaluate(ctx);
 			if (!checkSubtype(this.type, typeOf(value))) return value;
-			else if (i === this.args.length - 1) throw new RuntimeError(`Expected value to be of type ${typeToString(this.type)}, but found ${typeToString(typeOf(value))} instead.`);
+			else if (i === this.args.length - 1) throw new RuntimeError(`Expected value to be of type ${typeToString(this.type)}, but found ${typeToString(typeOf(value))} instead.`, this.key);
 		}
 		throw new Error();
 	}
@@ -7753,9 +7765,10 @@ const types = {
 * @private
 */
 var Coercion = class Coercion {
-	constructor(type, args) {
+	constructor(type, args, key) {
 		this.type = type;
 		this.args = args;
+		this.key = key;
 	}
 	static parse(args, context) {
 		if (args.length < 2) return context.error("Expected at least one argument.");
@@ -7769,7 +7782,7 @@ var Coercion = class Coercion {
 			if (!input) return null;
 			parsed.push(input);
 		}
-		return new Coercion(type, parsed);
+		return new Coercion(type, parsed, context.key);
 	}
 	evaluate(ctx) {
 		switch (this.type.kind) {
@@ -7790,7 +7803,7 @@ var Coercion = class Coercion {
 						if (!error) return new Color(input[0] / 255, input[1] / 255, input[2] / 255, input[3]);
 					}
 				}
-				throw new RuntimeError(error || `Could not parse color from value '${typeof input === "string" ? input : JSON.stringify(input)}'`);
+				throw new RuntimeError(error || `Could not parse color from value '${typeof input === "string" ? input : JSON.stringify(input)}'`, this.key);
 			}
 			case "padding": {
 				let input;
@@ -7799,7 +7812,7 @@ var Coercion = class Coercion {
 					const pad = Padding.parse(input);
 					if (pad) return pad;
 				}
-				throw new RuntimeError(`Could not parse padding from value '${typeof input === "string" ? input : JSON.stringify(input)}'`);
+				throw new RuntimeError(`Could not parse padding from value '${typeof input === "string" ? input : JSON.stringify(input)}'`, this.key);
 			}
 			case "numberArray": {
 				let input;
@@ -7808,7 +7821,7 @@ var Coercion = class Coercion {
 					const val = NumberArray.parse(input);
 					if (val) return val;
 				}
-				throw new RuntimeError(`Could not parse numberArray from value '${typeof input === "string" ? input : JSON.stringify(input)}'`);
+				throw new RuntimeError(`Could not parse numberArray from value '${typeof input === "string" ? input : JSON.stringify(input)}'`, this.key);
 			}
 			case "colorArray": {
 				let input;
@@ -7817,7 +7830,7 @@ var Coercion = class Coercion {
 					const val = ColorArray.parse(input);
 					if (val) return val;
 				}
-				throw new RuntimeError(`Could not parse colorArray from value '${typeof input === "string" ? input : JSON.stringify(input)}'`);
+				throw new RuntimeError(`Could not parse colorArray from value '${typeof input === "string" ? input : JSON.stringify(input)}'`, this.key);
 			}
 			case "variableAnchorOffsetCollection": {
 				let input;
@@ -7826,7 +7839,7 @@ var Coercion = class Coercion {
 					const coll = VariableAnchorOffsetCollection.parse(input);
 					if (coll) return coll;
 				}
-				throw new RuntimeError(`Could not parse variableAnchorOffsetCollection from value '${typeof input === "string" ? input : JSON.stringify(input)}'`);
+				throw new RuntimeError(`Could not parse variableAnchorOffsetCollection from value '${typeof input === "string" ? input : JSON.stringify(input)}'`, this.key);
 			}
 			case "number": {
 				let value = null;
@@ -7837,7 +7850,7 @@ var Coercion = class Coercion {
 					if (isNaN(num)) continue;
 					return num;
 				}
-				throw new RuntimeError(`Could not convert ${JSON.stringify(value)} to number.`);
+				throw new RuntimeError(`Could not convert ${JSON.stringify(value)} to number.`, this.key);
 			}
 			case "formatted": return Formatted.fromString(valueToString(this.args[0].evaluate(ctx)));
 			case "resolvedImage": return ResolvedImage.fromString(valueToString(this.args[0].evaluate(ctx)));
@@ -7919,9 +7932,10 @@ var ParsingContext = class ParsingContext {
 	}
 	_parse(expr, options) {
 		if (expr === null || typeof expr === "string" || typeof expr === "boolean" || typeof expr === "number") expr = ["literal", expr];
+		const key = this.key;
 		function annotate(parsed, type, typeAnnotation) {
-			if (typeAnnotation === "assert") return new Assertion(type, [parsed]);
-			else if (typeAnnotation === "coerce") return new Coercion(type, [parsed]);
+			if (typeAnnotation === "assert") return new Assertion(type, [parsed], key);
+			else if (typeAnnotation === "coerce") return new Coercion(type, [parsed], key);
 			else return parsed;
 		}
 		if (Array.isArray(expr)) {
@@ -8060,10 +8074,11 @@ var Var = class Var {
 	}
 };
 var At = class At {
-	constructor(type, index, input) {
+	constructor(type, index, input, key) {
 		this.type = type;
 		this.index = index;
 		this.input = input;
+		this.key = key;
 	}
 	static parse(args, context) {
 		if (args.length !== 3) return context.error(`Expected 2 arguments, but found ${args.length - 1} instead.`);
@@ -8071,14 +8086,14 @@ var At = class At {
 		const input = context.parse(args[2], 2, array(context.expectedType || ValueType));
 		if (!index || !input) return null;
 		const t = input.type;
-		return new At(t.itemType, index, input);
+		return new At(t.itemType, index, input, context.key);
 	}
 	evaluate(ctx) {
 		const index = this.index.evaluate(ctx);
 		const array = this.input.evaluate(ctx);
-		if (index < 0) throw new RuntimeError(`Array index out of bounds: ${index} < 0.`);
-		if (index >= array.length) throw new RuntimeError(`Array index out of bounds: ${index} > ${array.length - 1}.`);
-		if (index !== Math.floor(index)) throw new RuntimeError(`Array index must be an integer, but found ${index} instead.`);
+		if (index < 0) throw new RuntimeError(`Array index out of bounds: ${index} < 0.`, this.key);
+		if (index >= array.length) throw new RuntimeError(`Array index out of bounds: ${index} > ${array.length - 1}.`, this.key);
+		if (index !== Math.floor(index)) throw new RuntimeError(`Array index must be an integer, but found ${index} instead.`, this.key);
 		return array[index];
 	}
 	eachChild(fn) {
@@ -8090,10 +8105,11 @@ var At = class At {
 	}
 };
 var In = class In {
-	constructor(needle, haystack) {
-		this.type = BooleanType;
+	constructor(needle, haystack, key) {
 		this.needle = needle;
 		this.haystack = haystack;
+		this.key = key;
+		this.type = BooleanType;
 	}
 	static parse(args, context) {
 		if (args.length !== 3) return context.error(`Expected 2 arguments, but found ${args.length - 1} instead.`);
@@ -8107,7 +8123,7 @@ var In = class In {
 			NullType,
 			ValueType
 		])) return context.error(`Expected first argument to be of type boolean, string, number or null, but found ${typeToString(needle.type)} instead`);
-		return new In(needle, haystack);
+		return new In(needle, haystack, context.key);
 	}
 	evaluate(ctx) {
 		const needle = this.needle.evaluate(ctx);
@@ -8118,8 +8134,8 @@ var In = class In {
 			"string",
 			"number",
 			"null"
-		])) throw new RuntimeError(`Expected first argument to be of type boolean, string, number or null, but found ${typeToString(typeOf(needle))} instead.`);
-		if (!isValidNativeType(haystack, ["string", "array"])) throw new RuntimeError(`Expected second argument to be of type array or string, but found ${typeToString(typeOf(haystack))} instead.`);
+		])) throw new RuntimeError(`Expected first argument to be of type boolean, string, number or null, but found ${typeToString(typeOf(needle))} instead.`, this.key);
+		if (!isValidNativeType(haystack, ["string", "array"])) throw new RuntimeError(`Expected second argument to be of type array or string, but found ${typeToString(typeOf(haystack))} instead.`, this.key);
 		return haystack.indexOf(needle) >= 0;
 	}
 	eachChild(fn) {
@@ -8131,11 +8147,12 @@ var In = class In {
 	}
 };
 var IndexOf = class IndexOf {
-	constructor(needle, haystack, fromIndex) {
-		this.type = NumberType;
+	constructor(needle, haystack, key, fromIndex) {
 		this.needle = needle;
 		this.haystack = haystack;
+		this.key = key;
 		this.fromIndex = fromIndex;
+		this.type = NumberType;
 	}
 	static parse(args, context) {
 		if (args.length <= 2 || args.length >= 5) return context.error(`Expected 2 or 3 arguments, but found ${args.length - 1} instead.`);
@@ -8152,8 +8169,8 @@ var IndexOf = class IndexOf {
 		if (args.length === 4) {
 			const fromIndex = context.parse(args[3], 3, NumberType);
 			if (!fromIndex) return null;
-			return new IndexOf(needle, haystack, fromIndex);
-		} else return new IndexOf(needle, haystack);
+			return new IndexOf(needle, haystack, context.key, fromIndex);
+		} else return new IndexOf(needle, haystack, context.key);
 	}
 	evaluate(ctx) {
 		const needle = this.needle.evaluate(ctx);
@@ -8163,7 +8180,7 @@ var IndexOf = class IndexOf {
 			"string",
 			"number",
 			"null"
-		])) throw new RuntimeError(`Expected first argument to be of type boolean, string, number or null, but found ${typeToString(typeOf(needle))} instead.`);
+		])) throw new RuntimeError(`Expected first argument to be of type boolean, string, number or null, but found ${typeToString(typeOf(needle))} instead.`, this.key);
 		let fromIndex;
 		if (this.fromIndex) fromIndex = this.fromIndex.evaluate(ctx);
 		if (isValidNativeType(haystack, ["string"])) {
@@ -8171,7 +8188,7 @@ var IndexOf = class IndexOf {
 			if (rawIndex === -1) return -1;
 			else return [...haystack.slice(0, rawIndex)].length;
 		} else if (isValidNativeType(haystack, ["array"])) return haystack.indexOf(needle, fromIndex);
-		else throw new RuntimeError(`Expected second argument to be of type array or string, but found ${typeToString(typeOf(haystack))} instead.`);
+		else throw new RuntimeError(`Expected second argument to be of type array or string, but found ${typeToString(typeOf(haystack))} instead.`, this.key);
 	}
 	eachChild(fn) {
 		fn(this.needle);
@@ -8280,10 +8297,11 @@ var Case = class Case {
 	}
 };
 var Slice = class Slice {
-	constructor(type, input, beginIndex, endIndex) {
+	constructor(type, input, beginIndex, key, endIndex) {
 		this.type = type;
 		this.input = input;
 		this.beginIndex = beginIndex;
+		this.key = key;
 		this.endIndex = endIndex;
 	}
 	static parse(args, context) {
@@ -8299,8 +8317,8 @@ var Slice = class Slice {
 		if (args.length === 4) {
 			const endIndex = context.parse(args[3], 3, NumberType);
 			if (!endIndex) return null;
-			return new Slice(input.type, input, beginIndex, endIndex);
-		} else return new Slice(input.type, input, beginIndex);
+			return new Slice(input.type, input, beginIndex, context.key, endIndex);
+		} else return new Slice(input.type, input, beginIndex, context.key);
 	}
 	evaluate(ctx) {
 		const input = this.input.evaluate(ctx);
@@ -8309,7 +8327,7 @@ var Slice = class Slice {
 		if (this.endIndex) endIndex = this.endIndex.evaluate(ctx);
 		if (isValidNativeType(input, ["string"])) return [...input].slice(beginIndex, endIndex).join("");
 		else if (isValidNativeType(input, ["array"])) return input.slice(beginIndex, endIndex);
-		else throw new RuntimeError(`Expected first argument to be of type array or string, but found ${typeToString(typeOf(input))} instead.`);
+		else throw new RuntimeError(`Expected first argument to be of type array or string, but found ${typeToString(typeOf(input))} instead.`, this.key);
 	}
 	eachChild(fn) {
 		fn(this.input);
@@ -8324,7 +8342,7 @@ var Slice = class Slice {
 * Returns the index of the last stop <= input, or 0 if it doesn't exist.
 * @private
 */
-function findStopLessThanOrEqualTo(stops, input) {
+function findStopLessThanOrEqualTo(stops, input, key) {
 	const lastIndex = stops.length - 1;
 	let lowerIndex = 0;
 	let upperIndex = lastIndex;
@@ -8338,14 +8356,15 @@ function findStopLessThanOrEqualTo(stops, input) {
 			if (currentIndex === lastIndex || input < nextValue) return currentIndex;
 			lowerIndex = currentIndex + 1;
 		} else if (currentValue > input) upperIndex = currentIndex - 1;
-		else throw new RuntimeError("Input is not a number.");
+		else throw new RuntimeError("Input is not a number.", key);
 	}
 	return 0;
 }
 var Step = class Step {
-	constructor(type, input, stops) {
+	constructor(type, input, stops, key) {
 		this.type = type;
 		this.input = input;
+		this.key = key;
 		this.labels = [];
 		this.outputs = [];
 		for (const [label, expression] of stops) {
@@ -8373,7 +8392,7 @@ var Step = class Step {
 			outputType = outputType || parsed.type;
 			stops.push([label, parsed]);
 		}
-		return new Step(outputType, input, stops);
+		return new Step(outputType, input, stops, context.key);
 	}
 	evaluate(ctx) {
 		const labels = this.labels;
@@ -8383,7 +8402,7 @@ var Step = class Step {
 		if (value <= labels[0]) return outputs[0].evaluate(ctx);
 		const stopCount = labels.length;
 		if (value >= labels[stopCount - 1]) return outputs[stopCount - 1].evaluate(ctx);
-		return outputs[findStopLessThanOrEqualTo(labels, value)].evaluate(ctx);
+		return outputs[findStopLessThanOrEqualTo(labels, value, this.key)].evaluate(ctx);
 	}
 	eachChild(fn) {
 		fn(this.input);
@@ -8425,11 +8444,12 @@ function unitBezier(p1x, p1y, p2x, p2y) {
 	};
 }
 var Interpolate = class Interpolate {
-	constructor(type, operator, interpolation, input, stops) {
+	constructor(type, operator, interpolation, input, stops, key) {
 		this.type = type;
 		this.operator = operator;
 		this.interpolation = interpolation;
 		this.input = input;
+		this.key = key;
 		this.labels = [];
 		this.outputs = [];
 		for (const [label, expression] of stops) {
@@ -8487,7 +8507,7 @@ var Interpolate = class Interpolate {
 			stops.push([label, parsed]);
 		}
 		if (!verifyType(outputType, NumberType) && !verifyType(outputType, ProjectionDefinitionType) && !verifyType(outputType, ColorType) && !verifyType(outputType, PaddingType) && !verifyType(outputType, NumberArrayType) && !verifyType(outputType, ColorArrayType) && !verifyType(outputType, VariableAnchorOffsetCollectionType) && !verifyType(outputType, array(NumberType))) return context.error(`Type ${typeToString(outputType)} is not interpolatable.`);
-		return new Interpolate(outputType, operator, interpolation, input, stops);
+		return new Interpolate(outputType, operator, interpolation, input, stops, context.key);
 	}
 	evaluate(ctx) {
 		const labels = this.labels;
@@ -8497,7 +8517,7 @@ var Interpolate = class Interpolate {
 		if (value <= labels[0]) return outputs[0].evaluate(ctx);
 		const stopCount = labels.length;
 		if (value >= labels[stopCount - 1]) return outputs[stopCount - 1].evaluate(ctx);
-		const index = findStopLessThanOrEqualTo(labels, value);
+		const index = findStopLessThanOrEqualTo(labels, value, this.key);
 		const lower = labels[index];
 		const upper = labels[index + 1];
 		const t = Interpolate.interpolationFactor(this.interpolation, value, lower, upper);
@@ -8510,7 +8530,7 @@ var Interpolate = class Interpolate {
 				case "padding": return Padding.interpolate(outputLower, outputUpper, t);
 				case "colorArray": return ColorArray.interpolate(outputLower, outputUpper, t);
 				case "numberArray": return NumberArray.interpolate(outputLower, outputUpper, t);
-				case "variableAnchorOffsetCollection": return VariableAnchorOffsetCollection.interpolate(outputLower, outputUpper, t);
+				case "variableAnchorOffsetCollection": return VariableAnchorOffsetCollection.interpolate(outputLower, outputUpper, t, this.key);
 				case "array": return interpolateArray(outputLower, outputUpper, t);
 				case "projectionDefinition": return ProjectionDefinition.interpolate(outputLower, outputUpper, t);
 			}
@@ -8686,11 +8706,12 @@ function gteqCollate(ctx, a, b, c) {
 function makeComparison(op, compareBasic, compareWithCollator) {
 	const isOrderComparison = op !== "==" && op !== "!=";
 	return class Comparison {
-		constructor(lhs, rhs, collator) {
-			this.type = BooleanType;
+		constructor(lhs, rhs, key, collator) {
 			this.lhs = lhs;
 			this.rhs = rhs;
+			this.key = key;
 			this.collator = collator;
+			this.type = BooleanType;
 			this.hasUntypedArgument = lhs.type.kind === "value" || rhs.type.kind === "value";
 		}
 		static parse(args, context) {
@@ -8704,8 +8725,8 @@ function makeComparison(op, compareBasic, compareWithCollator) {
 			if (!isComparableType(op, rhs.type)) return context.concat(2).error(`"${op}" comparisons are not supported for type '${typeToString(rhs.type)}'.`);
 			if (lhs.type.kind !== rhs.type.kind && lhs.type.kind !== "value" && rhs.type.kind !== "value") return context.error(`Cannot compare types '${typeToString(lhs.type)}' and '${typeToString(rhs.type)}'.`);
 			if (isOrderComparison) {
-				if (lhs.type.kind === "value" && rhs.type.kind !== "value") lhs = new Assertion(rhs.type, [lhs]);
-				else if (lhs.type.kind !== "value" && rhs.type.kind === "value") rhs = new Assertion(lhs.type, [rhs]);
+				if (lhs.type.kind === "value" && rhs.type.kind !== "value") lhs = new Assertion(rhs.type, [lhs], context.key);
+				else if (lhs.type.kind !== "value" && rhs.type.kind === "value") rhs = new Assertion(lhs.type, [rhs], context.key);
 			}
 			let collator = null;
 			if (args.length === 4) {
@@ -8713,7 +8734,7 @@ function makeComparison(op, compareBasic, compareWithCollator) {
 				collator = context.parse(args[3], 3, CollatorType);
 				if (!collator) return null;
 			}
-			return new Comparison(lhs, rhs, collator);
+			return new Comparison(lhs, rhs, context.key, collator);
 		}
 		evaluate(ctx) {
 			const lhs = this.lhs.evaluate(ctx);
@@ -8721,7 +8742,7 @@ function makeComparison(op, compareBasic, compareWithCollator) {
 			if (isOrderComparison && this.hasUntypedArgument) {
 				const lt = typeOf(lhs);
 				const rt = typeOf(rhs);
-				if (lt.kind !== rt.kind || !(lt.kind === "string" || lt.kind === "number")) throw new RuntimeError(`Expected arguments for "${op}" to be (string, string) or (number, number), but found (${lt.kind}, ${rt.kind}) instead.`);
+				if (lt.kind !== rt.kind || !(lt.kind === "string" || lt.kind === "number")) throw new RuntimeError(`Expected arguments for "${op}" to be (string, string) or (number, number), but found (${lt.kind}, ${rt.kind}) instead.`, this.key);
 			}
 			if (this.collator && !isOrderComparison && this.hasUntypedArgument) {
 				const lt = typeOf(lhs);
@@ -8949,22 +8970,23 @@ var ImageExpression = class ImageExpression {
 	}
 };
 var Length = class Length {
-	constructor(input) {
-		this.type = NumberType;
+	constructor(input, key) {
 		this.input = input;
+		this.key = key;
+		this.type = NumberType;
 	}
 	static parse(args, context) {
 		if (args.length !== 2) return context.error(`Expected 1 argument, but found ${args.length - 1} instead.`);
 		const input = context.parse(args[1], 1);
 		if (!input) return null;
 		if (input.type.kind !== "array" && input.type.kind !== "string" && input.type.kind !== "value") return context.error(`Expected argument of type string or array, but found ${typeToString(input.type)} instead.`);
-		return new Length(input);
+		return new Length(input, context.key);
 	}
 	evaluate(ctx) {
 		const input = this.input.evaluate(ctx);
 		if (typeof input === "string") return [...input].length;
 		else if (Array.isArray(input)) return input.length;
-		else throw new RuntimeError(`Expected value to be of type string or array, but found ${typeToString(typeOf(input))} instead.`);
+		else throw new RuntimeError(`Expected value to be of type string or array, but found ${typeToString(typeOf(input))} instead.`, this.key);
 	}
 	eachChild(fn) {
 		fn(this.input);
@@ -9846,8 +9868,8 @@ var Distance = class Distance {
 };
 var GlobalState = class GlobalState {
 	constructor(key) {
-		this.type = ValueType;
 		this.key = key;
+		this.type = ValueType;
 	}
 	static parse(args, context) {
 		if (args.length !== 2) return context.error(`Expected 1 argument, but found ${args.length - 1} instead.`);
@@ -9906,14 +9928,15 @@ const expressions = {
 	"global-state": GlobalState
 };
 var CompoundExpression = class CompoundExpression {
-	constructor(name, type, evaluate, args) {
+	constructor(name, type, evaluate, args, key) {
 		this.name = name;
 		this.type = type;
 		this._evaluate = evaluate;
 		this.args = args;
+		this.key = key;
 	}
 	evaluate(ctx) {
-		return this._evaluate(ctx, this.args);
+		return this._evaluate(ctx, this.args, this.key);
 	}
 	eachChild(fn) {
 		this.args.forEach(fn);
@@ -9955,7 +9978,7 @@ var CompoundExpression = class CompoundExpression {
 				const arg = parsedArgs[i];
 				signatureContext.concat(i + 1).checkSubtype(expected, arg.type);
 			}
-			if (signatureContext.errors.length === 0) return new CompoundExpression(op, type, evaluate, parsedArgs);
+			if (signatureContext.errors.length === 0) return new CompoundExpression(op, type, evaluate, parsedArgs, context.key);
 		}
 		if (overloads.length === 1) context.errors.push(...signatureContext.errors);
 		else {
@@ -9975,13 +9998,13 @@ var CompoundExpression = class CompoundExpression {
 		for (const name in definitions) registry[name] = CompoundExpression;
 	}
 };
-function rgba(ctx, [r, g, b, a]) {
+function rgba(ctx, [r, g, b, a], key) {
 	r = r.evaluate(ctx);
 	g = g.evaluate(ctx);
 	b = b.evaluate(ctx);
 	const alpha = a ? a.evaluate(ctx) : 1;
 	const error = validateRGBA(r, g, b, alpha);
-	if (error) throw new RuntimeError(error);
+	if (error) throw new RuntimeError(error, key);
 	return new Color(r / 255, g / 255, b / 255, alpha, false);
 }
 function has(key, obj) {
@@ -10007,8 +10030,8 @@ CompoundExpression.register(expressions, {
 	error: [
 		ErrorType,
 		[StringType],
-		(ctx, [v]) => {
-			throw new RuntimeError(v.evaluate(ctx));
+		(ctx, [v], key) => {
+			throw new RuntimeError(v.evaluate(ctx), key);
 		}
 	],
 	typeof: [
@@ -10498,6 +10521,10 @@ function supportsZoomExpression(spec) {
 function supportsInterpolation(spec) {
 	return !!spec.expression && spec.expression.interpolated;
 }
+function extendBy(output, ...inputs) {
+	for (const input of inputs) for (const k in input) output[k] = input[k];
+	return output;
+}
 function getType(val) {
 	if (val instanceof Number) return "number";
 	else if (val instanceof String) return "string";
@@ -10621,7 +10648,7 @@ function evaluateIntervalFunction(parameters, propertySpec, input) {
 	if (n === 1) return parameters.stops[0][1];
 	if (input <= parameters.stops[0][0]) return parameters.stops[0][1];
 	if (input >= parameters.stops[n - 1][0]) return parameters.stops[n - 1][1];
-	const index = findStopLessThanOrEqualTo(parameters.stops.map((stop) => stop[0]), input);
+	const index = findStopLessThanOrEqualTo(parameters.stops.map((stop) => stop[0]), input, "");
 	return parameters.stops[index][1];
 }
 function evaluateExponentialFunction(parameters, propertySpec, input) {
@@ -10631,7 +10658,7 @@ function evaluateExponentialFunction(parameters, propertySpec, input) {
 	if (n === 1) return parameters.stops[0][1];
 	if (input <= parameters.stops[0][0]) return parameters.stops[0][1];
 	if (input >= parameters.stops[n - 1][0]) return parameters.stops[n - 1][1];
-	const index = findStopLessThanOrEqualTo(parameters.stops.map((stop) => stop[0]), input);
+	const index = findStopLessThanOrEqualTo(parameters.stops.map((stop) => stop[0]), input, "");
 	const t = interpolationFactor(input, base, parameters.stops[index][0], parameters.stops[index + 1][0]);
 	const outputLower = parameters.stops[index][1];
 	const outputUpper = parameters.stops[index + 1][1];
@@ -10714,13 +10741,14 @@ function interpolationFactor(input, base, lowerValue, upperValue) {
 	else return (Math.pow(base, progress) - 1) / (Math.pow(base, difference) - 1);
 }
 var StyleExpression = class {
-	constructor(expression, propertySpec, globalState) {
+	constructor(expression, rootKey, propertySpec, globalState) {
 		this.expression = expression;
 		this._warningHistory = {};
 		this._evaluator = new EvaluationContext();
 		this._defaultValue = propertySpec ? getDefaultValue(propertySpec) : null;
 		this._enumValues = propertySpec && propertySpec.type === "enum" ? propertySpec.values : null;
 		this._globalState = globalState;
+		this._rootKey = rootKey;
 	}
 	evaluateWithoutErrorHandling(globals, feature, featureState, canonical, availableImages, formattedSection) {
 		if (this._globalState) globals = addGlobalState(globals, this._globalState);
@@ -10743,17 +10771,42 @@ var StyleExpression = class {
 		try {
 			const val = this.expression.evaluate(this._evaluator);
 			if (val === null || val === void 0 || typeof val === "number" && val !== val) return this._defaultValue;
-			if (this._enumValues && !(val in this._enumValues)) throw new RuntimeError(`Expected value to be one of ${Object.keys(this._enumValues).map((v) => JSON.stringify(v)).join(", ")}, but found ${JSON.stringify(val)} instead.`);
+			if (this._enumValues && !(val in this._enumValues)) throw new RuntimeError(`Expected value to be one of ${Object.keys(this._enumValues).map((v) => JSON.stringify(v)).join(", ")}, but found ${JSON.stringify(val)} instead.`, "");
 			return val;
 		} catch (e) {
-			if (!this._warningHistory[e.message]) {
-				this._warningHistory[e.message] = true;
-				if (typeof console !== "undefined") console.warn(e.message);
+			const path = e instanceof RuntimeError ? e.path : "";
+			const dedupKey = `${path}|${e.message}`;
+			if (!this._warningHistory[dedupKey]) {
+				this._warningHistory[dedupKey] = true;
+				if (typeof console !== "undefined") console.warn(formatRuntimeWarning(this._rootKey, path, e.message, this._defaultValue));
 			}
 			return this._defaultValue;
 		}
 	}
 };
+/**
+* Builds the warning logged when an expression or legacy function fails at
+* evaluation: a `rootKey + index path` location prefix, plus the fallback
+* value being used.
+* @param rootKey Caller-supplied location of the expression in the style JSON
+* @param path Index path of the throwing sub-expression ('' for the root)
+* @param message The error message from the failed evaluation
+* @param defaultValue The value being fallen back to
+* @returns The formatted warning string
+*/
+function formatRuntimeWarning(rootKey, path, message, defaultValue) {
+	return `${rootKey}${path}: ${message}${defaultValue == null ? "" : ` Falling back to ${String(defaultValue)}.`}`;
+}
+/**
+* Rejects a missing or empty root key. The location prefix is what makes
+* runtime warnings actionable, so callers must always supply one; failing
+* here surfaces the programmer error at style load instead of producing
+* unattributable warnings at render time.
+* @param rootKey The root key to check
+*/
+function assertRootKey(rootKey) {
+	if (!rootKey) throw new Error("rootKey must identify the location of the expression in the style JSON, e.g. \"layers[3].paint.line-width\".");
+}
 function isExpression(expression) {
 	return Array.isArray(expression) && expression.length > 0 && typeof expression[0] === "string" && expression[0] in expressions;
 }
@@ -10766,11 +10819,12 @@ function isExpression(expression) {
 *
 * @private
 */
-function createExpression(expression, propertySpec, globalState) {
+function createExpression(expression, rootKey, propertySpec, globalState) {
+	assertRootKey(rootKey);
 	const parser = new ParsingContext(expressions, isExpressionConstant, [], propertySpec ? getExpectedType(propertySpec) : void 0);
 	const parsed = parser.parse(expression, void 0, void 0, void 0, propertySpec && propertySpec.type === "string" ? { typeAnnotation: "coerce" } : void 0);
 	if (!parsed) return error(parser.errors);
-	return success(new StyleExpression(parsed, propertySpec, globalState));
+	return success(new StyleExpression(parsed, rootKey, propertySpec, globalState));
 }
 var ZoomConstantExpression = class {
 	constructor(kind, expression, globalState) {
@@ -10815,8 +10869,8 @@ var ZoomDependentExpression = class {
 function isZoomExpression(expression) {
 	return expression._styleExpression !== void 0;
 }
-function createPropertyExpression(expressionInput, propertySpec, globalState) {
-	const expression = createExpression(expressionInput, propertySpec, globalState);
+function createPropertyExpression(expressionInput, rootKey, propertySpec, globalState) {
+	const expression = createExpression(expressionInput, rootKey, propertySpec, globalState);
 	if (expression.result === "error") return expression;
 	const parsed = expression.value.expression;
 	const isFeatureConstantResult = isFeatureConstant(parsed);
@@ -10832,25 +10886,59 @@ function createPropertyExpression(expressionInput, propertySpec, globalState) {
 	return success(isFeatureConstantResult ? new ZoomDependentExpression("camera", expression.value, zoomCurve.labels, interpolationType, globalState) : new ZoomDependentExpression("composite", expression.value, zoomCurve.labels, interpolationType, globalState));
 }
 var StylePropertyFunction = class StylePropertyFunction {
-	constructor(parameters, specification) {
+	constructor(parameters, rootKey, specification) {
+		this.isStateDependent = false;
+		this.globalStateRefs = /* @__PURE__ */ new Set();
+		this._globalState = null;
+		assertRootKey(rootKey);
 		this._parameters = parameters;
 		this._specification = specification;
-		extendBy(this, createFunction(this._parameters, this._specification));
+		this._rootKey = rootKey;
+		this._defaultValue = getDefaultValue(specification);
+		this._warningHistory = {};
+		const fn = createFunction(this._parameters, this._specification);
+		this.kind = fn.kind;
+		this.interpolationFactor = fn.interpolationFactor;
+		this.zoomStops = fn.zoomStops;
+		this.interpolationType = fn.interpolationType;
+		this._innerEvaluate = fn.evaluate;
+	}
+	/**
+	* Evaluates the legacy function, handling a runtime throw (e.g. interpolating
+	* mismatched value types) by warning with the property location and falling
+	* back to the spec default, mirroring {@link StyleExpression.evaluate}.
+	* @param globals Global evaluation properties (e.g. zoom)
+	* @param feature The feature being evaluated, if any
+	* @returns The function result, or the spec default if evaluation throws
+	*/
+	evaluate(globals, feature) {
+		try {
+			return this._innerEvaluate(globals, feature);
+		} catch (e) {
+			const message = e instanceof Error ? e.message : String(e);
+			const dedupKey = `|${message}`;
+			if (!this._warningHistory[dedupKey]) {
+				this._warningHistory[dedupKey] = true;
+				if (typeof console !== "undefined") console.warn(formatRuntimeWarning(this._rootKey, "", message, this._defaultValue));
+			}
+			return this._defaultValue;
+		}
 	}
 	static deserialize(serialized) {
-		return new StylePropertyFunction(serialized._parameters, serialized._specification);
+		return new StylePropertyFunction(serialized._parameters, serialized._rootKey, serialized._specification);
 	}
 	static serialize(input) {
 		return {
 			_parameters: input._parameters,
-			_specification: input._specification
+			_specification: input._specification,
+			_rootKey: input._rootKey
 		};
 	}
 };
-function normalizePropertyExpression(value, specification, globalState) {
-	if (isFunction(value)) return new StylePropertyFunction(value, specification);
+function normalizePropertyExpression(value, rootKey, specification, globalState) {
+	if (isFunction(value)) return new StylePropertyFunction(value, rootKey, specification);
 	else if (isExpression(value)) {
-		const expression = createPropertyExpression(value, specification, globalState);
+		const expression = createPropertyExpression(value, rootKey, specification, globalState);
 		if (expression.result === "error") throw new Error(expression.value.map((err) => `${err.key}: ${err.message}`).join(", "));
 		return expression.value;
 	} else {
@@ -10935,38 +11023,39 @@ function addGlobalState(globals, globalState) {
 		globalState
 	};
 }
-function isExpressionFilter(filter) {
-	if (filter === true || filter === false) return true;
-	if (!Array.isArray(filter) || filter.length === 0) return false;
+function classifyChildren(children) {
+	let sawLegacy = false;
+	for (const child of children) {
+		const classification = classifyFilter(child);
+		if (classification === "expression") return "expression";
+		if (classification === "legacy") sawLegacy = true;
+	}
+	return sawLegacy ? "legacy" : "neutral";
+}
+function classifyFilter(filter) {
+	if (typeof filter === "boolean") return "neutral";
+	if (!Array.isArray(filter) || filter.length === 0) return "legacy";
 	switch (filter[0]) {
-		case "has": return filter.length >= 2 && filter[1] !== "$id" && filter[1] !== "$type";
-		case "in": return filter.length >= 3 && (typeof filter[1] !== "string" || Array.isArray(filter[2]));
+		case "has":
+			if (filter.length < 2 || filter[1] === "$id" || filter[1] === "$type") return "legacy";
+			return filter.length === 2 ? "neutral" : "expression";
+		case "in": return filter.length >= 3 && (typeof filter[1] !== "string" || Array.isArray(filter[2])) ? "expression" : "legacy";
 		case "!in":
-		case "!has": return false;
+		case "!has": return "legacy";
 		case "==":
 		case "!=":
 		case ">":
 		case ">=":
 		case "<":
-		case "<=": return filter.length !== 3 || Array.isArray(filter[1]) || Array.isArray(filter[2]);
-		case "none":
-			for (const f of filter.slice(1)) {
-				if (typeof f === "boolean") continue;
-				if (isExpressionFilter(f)) return true;
-			}
-			return false;
+		case "<=": return filter.length !== 3 || Array.isArray(filter[1]) || Array.isArray(filter[2]) ? "expression" : "legacy";
+		case "none": return "legacy";
 		case "any":
-		case "all": {
-			let hasLegacy = false;
-			for (const f of filter.slice(1)) {
-				if (typeof f === "boolean") continue;
-				if (isExpressionFilter(f)) return true;
-				hasLegacy = true;
-			}
-			return !hasLegacy;
-		}
-		default: return true;
+		case "all": return classifyChildren(filter.slice(1));
+		default: return "expression";
 	}
+}
+function isExpressionFilter(filter) {
+	return classifyFilter(filter) !== "legacy";
 }
 function getFilterPropertyExpression(property) {
 	if (property === "$type") return ["geometry-type"];
@@ -11007,7 +11096,7 @@ function getLegacyFilterExpressionSuggestion(filter) {
 		default: return null;
 	}
 }
-function getMixedFilterErrorMessage(filter) {
+function getMixedFilterMessage(filter) {
 	if ((filter[0] === "<" || filter[0] === "<=" || filter[0] === ">" || filter[0] === ">=") && filter[1] === "$type") return `"$type" cannot be use with operator "${filter[0]}"`;
 	const suggestion = getLegacyFilterExpressionSuggestion(filter);
 	if (suggestion) return `Mixing deprecated filter syntax with expression syntax is not supported. Replace ${JSON.stringify(filter)} with ${JSON.stringify(suggestion)}.`;
@@ -11047,9 +11136,11 @@ function findMixedLegacyFilter(filter, path = []) {
 	}
 	return null;
 }
-function validateNoMixedExpressionFilter(filter) {
+function warnAboutMixedLegacyFilter(filter, rootKey) {
 	const diagnostic = findMixedLegacyFilter(filter);
-	if (diagnostic) throw new Error(getMixedFilterErrorMessage(diagnostic.legacyFilter));
+	if (!diagnostic || typeof console === "undefined") return;
+	const path = diagnostic.path.map((index) => `[${index}]`).join("");
+	console.warn(`${rootKey}${path}: ${getMixedFilterMessage(diagnostic.legacyFilter)}`);
 }
 const filterSpec = {
 	type: "boolean",
@@ -11068,21 +11159,20 @@ const filterSpec = {
 *
 * @private
 * @param filter MapLibre filter
+* @param rootKey Location of the filter in the style JSON (e.g. `layers[3].filter`),
+* used to prefix runtime warnings
 * @param [globalState] Global state object to be used for evaluating 'global-state' expressions
 * @returns filter-evaluating function
 */
-function featureFilter(filter, globalState) {
+function featureFilter(filter, rootKey, globalState) {
 	if (filter === null || filter === void 0) return {
 		filter: () => true,
 		needGeometry: false,
 		getGlobalStateRefs: () => /* @__PURE__ */ new Set()
 	};
-	if (Array.isArray(filter) && filter[0] === "none" && isExpressionFilter(filter)) {
-		validateNoMixedExpressionFilter(filter);
-		filter = convertFilter$1(filter);
-	} else if (!isExpressionFilter(filter)) filter = convertFilter$1(filter);
-	else validateNoMixedExpressionFilter(filter);
-	const compiled = createExpression(filter, filterSpec, globalState);
+	if (!isExpressionFilter(filter)) filter = convertFilter$1(filter);
+	else warnAboutMixedLegacyFilter(filter, rootKey);
+	const compiled = createExpression(filter, rootKey, filterSpec, globalState);
 	if (compiled.result === "error") throw new Error(compiled.value.map((err) => `${err.key}: ${err.message}`).join(", "));
 	else return {
 		filter: (globalProperties, feature, canonical) => compiled.value.evaluate(globalProperties, feature, {}, canonical),
@@ -11380,9 +11470,9 @@ function groupByLayout(layers, cachedKeys) {
 }
 function emptyStyle() {
 	const style = {};
-	const version = v8_default["$version"];
-	for (const styleKey in v8_default["$root"]) {
-		const specification = v8_default["$root"][styleKey];
+	const version = latest["$version"];
+	for (const styleKey in latest["$root"]) {
+		const specification = latest["$root"][styleKey];
 		if (specification.required) {
 			let value = null;
 			if (styleKey === "version") value = version;
@@ -11618,7 +11708,7 @@ function validateFunction(options) {
 	}
 }
 function validateExpression(options) {
-	const expression = (options.expressionContext === "property" ? createPropertyExpression : createExpression)(deepUnbundle(options.value), options.valueSpec);
+	const expression = (options.expressionContext === "property" ? createPropertyExpression : createExpression)(deepUnbundle(options.value), options.key, options.valueSpec);
 	if (expression.result === "error") return expression.value.map((error) => {
 		return new ValidationError(`${options.key}${error.key}`, options.value, error.message);
 	});
@@ -11662,15 +11752,24 @@ function getValueAtPath(value, path) {
 	for (const index of path) current = current[index];
 	return current;
 }
+/**
+* Reports a filter that mixes deprecated syntax into an expression tree as a *warning*.
+* @param options The validation options, used for the key and the un-unbundled value
+* @param value The unbundled filter to inspect
+* @returns A single warning, or an empty array when nothing is mixed
+*/
+function validateNoMixedLegacyFilter(options, value) {
+	const diagnostic = findMixedLegacyFilter(value);
+	if (!diagnostic) return [];
+	return [new ValidationError(`${options.key}${diagnostic.path.map((index) => `[${index}]`).join("")}`, getValueAtPath(options.value, diagnostic.path), getMixedFilterMessage(diagnostic.legacyFilter), null, "warning")];
+}
 function validateFilter$1(options) {
 	const value = deepUnbundle(options.value);
 	if (!isExpressionFilter(value)) return validateNonExpressionFilter(options);
-	const mixedLegacyDiagnostic = findMixedLegacyFilter(value);
-	if (mixedLegacyDiagnostic) return [new ValidationError(`${options.key}${mixedLegacyDiagnostic.path.map((index) => `[${index}]`).join("")}`, getValueAtPath(options.value, mixedLegacyDiagnostic.path), getMixedFilterErrorMessage(mixedLegacyDiagnostic.legacyFilter))];
-	return validateExpression(extendBy({}, options, {
+	return [...validateNoMixedLegacyFilter(options, value), ...validateExpression(extendBy({}, options, {
 		expressionContext: "filter",
 		valueSpec: { value: "boolean" }
-	}));
+	}))];
 }
 function validateNonExpressionFilter(options) {
 	const value = options.value;
@@ -12392,7 +12491,7 @@ function validateGlyphsUrl(options) {
 *   const validate = require('@maplibre/maplibre-gl-style-spec/').validateStyleMin;
 *   const errors = validate(style);
 */
-function validateStyleMin(style, styleSpec = v8_default) {
+function validateStyleMin(style, styleSpec = latest) {
 	let errors = [];
 	errors = errors.concat(validate({
 		key: "",
@@ -12458,7 +12557,8 @@ const visibilitySpec = {
 	default: "visible"
 };
 var VisibilityExpressionClass = class {
-	constructor(visibility, globalState) {
+	constructor(visibility, rootKey, globalState) {
+		this._rootKey = rootKey;
 		this._globalState = globalState;
 		this.setValue(visibility);
 	}
@@ -12472,7 +12572,7 @@ var VisibilityExpressionClass = class {
 			this._globalStateRefs = /* @__PURE__ */ new Set();
 			return;
 		}
-		const compiled = createExpression(visibility, visibilitySpec, this._globalState);
+		const compiled = createExpression(visibility, this._rootKey, visibilitySpec, this._globalState);
 		if (compiled.result === "error") {
 			this._literalValue = "visible";
 			this._compiledValue = void 0;
@@ -12489,13 +12589,14 @@ var VisibilityExpressionClass = class {
 /**
 * Creates a visibility expression from a visibility specification.
 * @param visibility - the visibility specification, literal or expression
+* @param rootKey - location of the visibility value in the style JSON
+* (e.g. `layers[3].layout.visibility`), used to prefix runtime warnings
 * @param globalState - the global state object
 * @returns visibility expression object
 */
-function createVisibility(visibility, globalState) {
-	return new VisibilityExpressionClass(visibility, globalState);
+function createVisibility(visibility, rootKey, globalState) {
+	return new VisibilityExpressionClass(visibility, rootKey, globalState);
 }
-const v8 = v8_default;
 //#endregion
 //#region src/util/abort_error.ts
 /**
@@ -14859,10 +14960,10 @@ const TRANSITION_SUFFIX = "-transition";
 *  (constant) expressions.
 */
 var PropertyValue = class {
-	constructor(property, value, globalState) {
+	constructor(property, value, rootKey, globalState) {
 		this.property = property;
 		this.value = value;
-		this.expression = normalizePropertyExpression(value === void 0 ? property.specification.default : value, property.specification, globalState);
+		this.expression = normalizePropertyExpression(value === void 0 ? property.specification.default : value, rootKey, property.specification, globalState);
 	}
 	isDataDriven() {
 		return this.expression.kind === "source" || this.expression.kind === "composite";
@@ -14886,9 +14987,9 @@ var PropertyValue = class {
 * `TransitioningPropertyValue`.
 */
 var TransitionablePropertyValue = class {
-	constructor(property, globalState) {
+	constructor(property, rootKey, globalState) {
 		this.property = property;
-		this.value = new PropertyValue(property, void 0, globalState);
+		this.value = new PropertyValue(property, void 0, rootKey, globalState);
 	}
 	transitioned(parameters, prior) {
 		return new TransitioningPropertyValue(this.property, this.value, prior, extend({}, parameters.transition, this.transition), parameters.now);
@@ -14904,10 +15005,15 @@ var TransitionablePropertyValue = class {
 * `Transitioning` instance for the same set of properties.
 */
 var Transitionable = class {
-	constructor(properties, globalState) {
+	constructor(properties, rootKey, globalState) {
 		this._properties = properties;
 		this._values = Object.create(properties.defaultTransitionablePropertyValues);
 		this._globalState = globalState;
+		this._rootKey = rootKey;
+	}
+	/** rootKey of a property, e.g. `layers[3].paint.line-color`. */
+	_propertyRootKey(name) {
+		return `${this._rootKey}.${String(name)}`;
 	}
 	hasProperty(name) {
 		return name in this._properties.defaultTransitionablePropertyValues;
@@ -14916,14 +15022,14 @@ var Transitionable = class {
 		return clone(this._values[name].value.value);
 	}
 	setValue(name, value) {
-		if (!Object.hasOwn(this._values, name)) this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._globalState);
-		this._values[name].value = new PropertyValue(this._values[name].property, value === null ? void 0 : clone(value), this._globalState);
+		if (!Object.hasOwn(this._values, name)) this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._propertyRootKey(name), this._globalState);
+		this._values[name].value = new PropertyValue(this._values[name].property, value === null ? void 0 : clone(value), this._propertyRootKey(name), this._globalState);
 	}
 	getTransition(name) {
 		return clone(this._values[name].transition);
 	}
 	setTransition(name, value) {
-		if (!Object.hasOwn(this._values, name)) this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._globalState);
+		if (!Object.hasOwn(this._values, name)) this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._propertyRootKey(name), this._globalState);
 		this._values[name].transition = clone(value) || void 0;
 	}
 	serialize() {
@@ -15012,10 +15118,15 @@ var Transitioning = class {
 * `PossiblyEvaluated` instance for the same set of properties.
 */
 var Layout$1 = class {
-	constructor(properties, globalState) {
+	constructor(properties, rootKey, globalState) {
 		this._properties = properties;
 		this._values = Object.create(properties.defaultPropertyValues);
 		this._globalState = globalState;
+		this._rootKey = rootKey;
+	}
+	/** rootKey of a property, e.g. `layers[3].layout.line-cap`. */
+	_propertyRootKey(name) {
+		return `${this._rootKey}.${String(name)}`;
 	}
 	hasValue(name) {
 		return this._values[name].value !== void 0;
@@ -15027,7 +15138,7 @@ var Layout$1 = class {
 		return clone(this._values[name].value);
 	}
 	setValue(name, value) {
-		this._values[name] = new PropertyValue(this._values[name].property, value === null ? void 0 : clone(value), this._globalState);
+		this._values[name] = new PropertyValue(this._values[name].property, value === null ? void 0 : clone(value), this._propertyRootKey(name), this._globalState);
 	}
 	serialize() {
 		const result = {};
@@ -15088,8 +15199,9 @@ var PossiblyEvaluated = class {
 * is in fact always the scalar type `T`, and can be used without further evaluating the value on a per-feature basis.
 */
 var DataConstantProperty = class {
-	constructor(specification) {
+	constructor(specification, name) {
 		this.specification = specification;
+		this.name = name;
 	}
 	possiblyEvaluate(value, parameters) {
 		if (value.isDataDriven()) throw new Error("Value should not be data driven");
@@ -15108,8 +15220,9 @@ var DataConstantProperty = class {
 * a scalar value `T` requires further evaluation on a per-feature basis.
 */
 var DataDrivenProperty = class {
-	constructor(specification, overrides) {
+	constructor(specification, name, overrides) {
 		this.specification = specification;
+		this.name = name;
 		this.overrides = overrides;
 	}
 	possiblyEvaluate(value, parameters, canonical, availableImages) {
@@ -15192,8 +15305,9 @@ var CrossFadedDataDrivenProperty = class extends DataDrivenProperty {
 * rather than interpolation.
 */
 var CrossFadedProperty = class {
-	constructor(specification) {
+	constructor(specification, name) {
 		this.specification = specification;
+		this.name = name;
 	}
 	possiblyEvaluate(value, parameters, canonical, availableImages) {
 		if (value.value === void 0) return;
@@ -15222,8 +15336,9 @@ var CrossFadedProperty = class {
 * evaluation happens in StyleLayer classes.
 */
 var ColorRampProperty = class {
-	constructor(specification) {
+	constructor(specification, name) {
 		this.specification = specification;
+		this.name = name;
 	}
 	possiblyEvaluate(value, parameters, canonical, availableImages) {
 		return !!value.expression.evaluate(parameters, null, {}, canonical, availableImages);
@@ -15253,8 +15368,8 @@ var Properties = class {
 		for (const property in properties) {
 			const prop = properties[property];
 			if (prop.specification.overridable) this.overridableProperties.push(property);
-			const defaultPropertyValue = this.defaultPropertyValues[property] = new PropertyValue(prop, void 0, void 0);
-			const defaultTransitionablePropertyValue = this.defaultTransitionablePropertyValues[property] = new TransitionablePropertyValue(prop, void 0);
+			const defaultPropertyValue = this.defaultPropertyValues[property] = new PropertyValue(prop, void 0, prop.name, void 0);
+			const defaultTransitionablePropertyValue = this.defaultTransitionablePropertyValues[property] = new TransitionablePropertyValue(prop, prop.name, void 0);
 			this.defaultTransitioningPropertyValues[property] = defaultTransitionablePropertyValue.untransitioned();
 			this.defaultPossiblyEvaluatedValues[property] = defaultPropertyValue.possiblyEvaluate({});
 		}
@@ -15283,7 +15398,7 @@ var StyleLayer = class extends Evented {
 			needGeometry: false,
 			getGlobalStateRefs: () => /* @__PURE__ */ new Set()
 		};
-		this._visibilityExpression = createVisibility(this.visibility, globalState);
+		this._visibilityExpression = createVisibility(this.visibility, `layers[${this.id}].layout.visibility`, globalState);
 		if (layer.type === "custom") return;
 		this.metadata = layer.metadata;
 		this.minzoom = layer.minzoom;
@@ -15292,11 +15407,11 @@ var StyleLayer = class extends Evented {
 			this.source = layer.source;
 			this.sourceLayer = layer["source-layer"];
 			this.filter = layer.filter;
-			this._featureFilter = featureFilter(layer.filter, globalState);
+			this._featureFilter = featureFilter(layer.filter, `layers[${this.id}].filter`, globalState);
 		}
-		if (properties.layout) this._unevaluatedLayout = new Layout$1(properties.layout, globalState);
+		if (properties.layout) this._unevaluatedLayout = new Layout$1(properties.layout, `layers[${this.id}].layout`, globalState);
 		if (properties.paint) {
-			this._transitionablePaint = new Transitionable(properties.paint, globalState);
+			this._transitionablePaint = new Transitionable(properties.paint, `layers[${this.id}].paint`, globalState);
 			for (const property in layer.paint) this.setPaintProperty(property, layer.paint[property], { validate: false });
 			for (const property in layer.layout) this.setLayoutProperty(property, layer.layout[property], { validate: false });
 			this._transitioningPaint = this._transitionablePaint.untransitioned();
@@ -15305,7 +15420,7 @@ var StyleLayer = class extends Evented {
 	}
 	setFilter(filter) {
 		this.filter = filter;
-		this._featureFilter = featureFilter(filter, this._globalState);
+		this._featureFilter = featureFilter(filter, `layers[${this.id}].filter`, this._globalState);
 	}
 	getCrossfadeParameters() {
 		return this._crossfadeParameters;
@@ -15453,7 +15568,7 @@ var StyleLayer = class extends Evented {
 			layerType: this.type,
 			objectKey: name,
 			value,
-			styleSpec: latest_default,
+			styleSpec: latest,
 			style: {
 				glyphs: true,
 				sprite: true
@@ -15483,15 +15598,15 @@ var StyleLayer = class extends Evented {
 //#region src/style/style_layer/raster_style_layer_properties.g.ts
 let paint$9;
 const getPaint$9 = () => paint$9 = paint$9 || new Properties({
-	"raster-opacity": new DataConstantProperty(latest_default["paint_raster"]["raster-opacity"]),
-	"raster-hue-rotate": new DataConstantProperty(latest_default["paint_raster"]["raster-hue-rotate"]),
-	"raster-brightness-min": new DataConstantProperty(latest_default["paint_raster"]["raster-brightness-min"]),
-	"raster-brightness-max": new DataConstantProperty(latest_default["paint_raster"]["raster-brightness-max"]),
-	"raster-saturation": new DataConstantProperty(latest_default["paint_raster"]["raster-saturation"]),
-	"raster-contrast": new DataConstantProperty(latest_default["paint_raster"]["raster-contrast"]),
-	"resampling": new DataConstantProperty(latest_default["paint_raster"]["resampling"]),
-	"raster-resampling": new DataConstantProperty(latest_default["paint_raster"]["raster-resampling"]),
-	"raster-fade-duration": new DataConstantProperty(latest_default["paint_raster"]["raster-fade-duration"])
+	"raster-opacity": new DataConstantProperty(latest["paint_raster"]["raster-opacity"], "raster-opacity"),
+	"raster-hue-rotate": new DataConstantProperty(latest["paint_raster"]["raster-hue-rotate"], "raster-hue-rotate"),
+	"raster-brightness-min": new DataConstantProperty(latest["paint_raster"]["raster-brightness-min"], "raster-brightness-min"),
+	"raster-brightness-max": new DataConstantProperty(latest["paint_raster"]["raster-brightness-max"], "raster-brightness-max"),
+	"raster-saturation": new DataConstantProperty(latest["paint_raster"]["raster-saturation"], "raster-saturation"),
+	"raster-contrast": new DataConstantProperty(latest["paint_raster"]["raster-contrast"], "raster-contrast"),
+	"resampling": new DataConstantProperty(latest["paint_raster"]["resampling"], "resampling"),
+	"raster-resampling": new DataConstantProperty(latest["paint_raster"]["raster-resampling"], "raster-resampling"),
+	"raster-fade-duration": new DataConstantProperty(latest["paint_raster"]["raster-fade-duration"], "raster-fade-duration")
 });
 var raster_style_layer_properties_g_default = { get paint() {
 	return getPaint$9();
@@ -18085,20 +18200,20 @@ function projectQueryGeometry$1(queryGeometry, transform, unwrappedTileID, getEl
 //#endregion
 //#region src/style/style_layer/circle_style_layer_properties.g.ts
 let layout$5;
-const getLayout$3 = () => layout$5 = layout$5 || new Properties({ "circle-sort-key": new DataDrivenProperty(latest_default["layout_circle"]["circle-sort-key"]) });
+const getLayout$3 = () => layout$5 = layout$5 || new Properties({ "circle-sort-key": new DataDrivenProperty(latest["layout_circle"]["circle-sort-key"], "circle-sort-key") });
 let paint$8;
 const getPaint$8 = () => paint$8 = paint$8 || new Properties({
-	"circle-radius": new DataDrivenProperty(latest_default["paint_circle"]["circle-radius"]),
-	"circle-color": new DataDrivenProperty(latest_default["paint_circle"]["circle-color"]),
-	"circle-blur": new DataDrivenProperty(latest_default["paint_circle"]["circle-blur"]),
-	"circle-opacity": new DataDrivenProperty(latest_default["paint_circle"]["circle-opacity"]),
-	"circle-translate": new DataConstantProperty(latest_default["paint_circle"]["circle-translate"]),
-	"circle-translate-anchor": new DataConstantProperty(latest_default["paint_circle"]["circle-translate-anchor"]),
-	"circle-pitch-scale": new DataConstantProperty(latest_default["paint_circle"]["circle-pitch-scale"]),
-	"circle-pitch-alignment": new DataConstantProperty(latest_default["paint_circle"]["circle-pitch-alignment"]),
-	"circle-stroke-width": new DataDrivenProperty(latest_default["paint_circle"]["circle-stroke-width"]),
-	"circle-stroke-color": new DataDrivenProperty(latest_default["paint_circle"]["circle-stroke-color"]),
-	"circle-stroke-opacity": new DataDrivenProperty(latest_default["paint_circle"]["circle-stroke-opacity"])
+	"circle-radius": new DataDrivenProperty(latest["paint_circle"]["circle-radius"], "circle-radius"),
+	"circle-color": new DataDrivenProperty(latest["paint_circle"]["circle-color"], "circle-color"),
+	"circle-blur": new DataDrivenProperty(latest["paint_circle"]["circle-blur"], "circle-blur"),
+	"circle-opacity": new DataDrivenProperty(latest["paint_circle"]["circle-opacity"], "circle-opacity"),
+	"circle-translate": new DataConstantProperty(latest["paint_circle"]["circle-translate"], "circle-translate"),
+	"circle-translate-anchor": new DataConstantProperty(latest["paint_circle"]["circle-translate-anchor"], "circle-translate-anchor"),
+	"circle-pitch-scale": new DataConstantProperty(latest["paint_circle"]["circle-pitch-scale"], "circle-pitch-scale"),
+	"circle-pitch-alignment": new DataConstantProperty(latest["paint_circle"]["circle-pitch-alignment"], "circle-pitch-alignment"),
+	"circle-stroke-width": new DataDrivenProperty(latest["paint_circle"]["circle-stroke-width"], "circle-stroke-width"),
+	"circle-stroke-color": new DataDrivenProperty(latest["paint_circle"]["circle-stroke-color"], "circle-stroke-color"),
+	"circle-stroke-opacity": new DataDrivenProperty(latest["paint_circle"]["circle-stroke-opacity"], "circle-stroke-opacity")
 });
 var circle_style_layer_properties_g_default = {
 	get paint() {
@@ -18158,11 +18273,11 @@ register$1("HeatmapBucket", HeatmapBucket, { omit: ["layers"] });
 //#region src/style/style_layer/heatmap_style_layer_properties.g.ts
 let paint$7;
 const getPaint$7 = () => paint$7 = paint$7 || new Properties({
-	"heatmap-radius": new DataDrivenProperty(latest_default["paint_heatmap"]["heatmap-radius"]),
-	"heatmap-weight": new DataDrivenProperty(latest_default["paint_heatmap"]["heatmap-weight"]),
-	"heatmap-intensity": new DataConstantProperty(latest_default["paint_heatmap"]["heatmap-intensity"]),
-	"heatmap-color": new ColorRampProperty(latest_default["paint_heatmap"]["heatmap-color"]),
-	"heatmap-opacity": new DataConstantProperty(latest_default["paint_heatmap"]["heatmap-opacity"])
+	"heatmap-radius": new DataDrivenProperty(latest["paint_heatmap"]["heatmap-radius"], "heatmap-radius"),
+	"heatmap-weight": new DataDrivenProperty(latest["paint_heatmap"]["heatmap-weight"], "heatmap-weight"),
+	"heatmap-intensity": new DataConstantProperty(latest["paint_heatmap"]["heatmap-intensity"], "heatmap-intensity"),
+	"heatmap-color": new ColorRampProperty(latest["paint_heatmap"]["heatmap-color"], "heatmap-color"),
+	"heatmap-opacity": new DataConstantProperty(latest["paint_heatmap"]["heatmap-opacity"], "heatmap-opacity")
 });
 var heatmap_style_layer_properties_g_default = { get paint() {
 	return getPaint$7();
@@ -18362,15 +18477,15 @@ var HeatmapStyleLayer = class extends StyleLayer {
 //#region src/style/style_layer/hillshade_style_layer_properties.g.ts
 let paint$6;
 const getPaint$6 = () => paint$6 = paint$6 || new Properties({
-	"hillshade-illumination-direction": new DataConstantProperty(latest_default["paint_hillshade"]["hillshade-illumination-direction"]),
-	"hillshade-illumination-altitude": new DataConstantProperty(latest_default["paint_hillshade"]["hillshade-illumination-altitude"]),
-	"hillshade-illumination-anchor": new DataConstantProperty(latest_default["paint_hillshade"]["hillshade-illumination-anchor"]),
-	"hillshade-exaggeration": new DataConstantProperty(latest_default["paint_hillshade"]["hillshade-exaggeration"]),
-	"hillshade-shadow-color": new DataConstantProperty(latest_default["paint_hillshade"]["hillshade-shadow-color"]),
-	"hillshade-highlight-color": new DataConstantProperty(latest_default["paint_hillshade"]["hillshade-highlight-color"]),
-	"hillshade-accent-color": new DataConstantProperty(latest_default["paint_hillshade"]["hillshade-accent-color"]),
-	"hillshade-method": new DataConstantProperty(latest_default["paint_hillshade"]["hillshade-method"]),
-	"resampling": new DataConstantProperty(latest_default["paint_hillshade"]["resampling"])
+	"hillshade-illumination-direction": new DataConstantProperty(latest["paint_hillshade"]["hillshade-illumination-direction"], "hillshade-illumination-direction"),
+	"hillshade-illumination-altitude": new DataConstantProperty(latest["paint_hillshade"]["hillshade-illumination-altitude"], "hillshade-illumination-altitude"),
+	"hillshade-illumination-anchor": new DataConstantProperty(latest["paint_hillshade"]["hillshade-illumination-anchor"], "hillshade-illumination-anchor"),
+	"hillshade-exaggeration": new DataConstantProperty(latest["paint_hillshade"]["hillshade-exaggeration"], "hillshade-exaggeration"),
+	"hillshade-shadow-color": new DataConstantProperty(latest["paint_hillshade"]["hillshade-shadow-color"], "hillshade-shadow-color"),
+	"hillshade-highlight-color": new DataConstantProperty(latest["paint_hillshade"]["hillshade-highlight-color"], "hillshade-highlight-color"),
+	"hillshade-accent-color": new DataConstantProperty(latest["paint_hillshade"]["hillshade-accent-color"], "hillshade-accent-color"),
+	"hillshade-method": new DataConstantProperty(latest["paint_hillshade"]["hillshade-method"], "hillshade-method"),
+	"resampling": new DataConstantProperty(latest["paint_hillshade"]["resampling"], "resampling")
 });
 var hillshade_style_layer_properties_g_default = { get paint() {
 	return getPaint$6();
@@ -18412,9 +18527,9 @@ var HillshadeStyleLayer = class extends StyleLayer {
 //#region src/style/style_layer/color_relief_style_layer_properties.g.ts
 let paint$5;
 const getPaint$5 = () => paint$5 = paint$5 || new Properties({
-	"color-relief-opacity": new DataConstantProperty(latest_default["paint_color-relief"]["color-relief-opacity"]),
-	"color-relief-color": new ColorRampProperty(latest_default["paint_color-relief"]["color-relief-color"]),
-	"resampling": new DataConstantProperty(latest_default["paint_color-relief"]["resampling"])
+	"color-relief-opacity": new DataConstantProperty(latest["paint_color-relief"]["color-relief-opacity"], "color-relief-opacity"),
+	"color-relief-color": new ColorRampProperty(latest["paint_color-relief"]["color-relief-color"], "color-relief-color"),
+	"resampling": new DataConstantProperty(latest["paint_color-relief"]["resampling"], "resampling")
 });
 var color_relief_style_layer_properties_g_default = { get paint() {
 	return getPaint$5();
@@ -20253,17 +20368,17 @@ register$1("FillBucket", FillBucket, { omit: ["layers", "patternFeatures"] });
 //#endregion
 //#region src/style/style_layer/fill_style_layer_properties.g.ts
 let layout$3;
-const getLayout$2 = () => layout$3 = layout$3 || new Properties({ "fill-sort-key": new DataDrivenProperty(latest_default["layout_fill"]["fill-sort-key"]) });
+const getLayout$2 = () => layout$3 = layout$3 || new Properties({ "fill-sort-key": new DataDrivenProperty(latest["layout_fill"]["fill-sort-key"], "fill-sort-key") });
 let paint$4;
 const getPaint$4 = () => paint$4 = paint$4 || new Properties({
-	"fill-antialias": new DataConstantProperty(latest_default["paint_fill"]["fill-antialias"]),
-	"fill-opacity": new DataDrivenProperty(latest_default["paint_fill"]["fill-opacity"]),
-	"fill-layer-opacity": new DataConstantProperty(latest_default["paint_fill"]["fill-layer-opacity"]),
-	"fill-color": new DataDrivenProperty(latest_default["paint_fill"]["fill-color"]),
-	"fill-outline-color": new DataDrivenProperty(latest_default["paint_fill"]["fill-outline-color"]),
-	"fill-translate": new DataConstantProperty(latest_default["paint_fill"]["fill-translate"]),
-	"fill-translate-anchor": new DataConstantProperty(latest_default["paint_fill"]["fill-translate-anchor"]),
-	"fill-pattern": new CrossFadedDataDrivenProperty(latest_default["paint_fill"]["fill-pattern"])
+	"fill-antialias": new DataConstantProperty(latest["paint_fill"]["fill-antialias"], "fill-antialias"),
+	"fill-opacity": new DataDrivenProperty(latest["paint_fill"]["fill-opacity"], "fill-opacity"),
+	"fill-layer-opacity": new DataConstantProperty(latest["paint_fill"]["fill-layer-opacity"], "fill-layer-opacity"),
+	"fill-color": new DataDrivenProperty(latest["paint_fill"]["fill-color"], "fill-color"),
+	"fill-outline-color": new DataDrivenProperty(latest["paint_fill"]["fill-outline-color"], "fill-outline-color"),
+	"fill-translate": new DataConstantProperty(latest["paint_fill"]["fill-translate"], "fill-translate"),
+	"fill-translate-anchor": new DataConstantProperty(latest["paint_fill"]["fill-translate-anchor"], "fill-translate-anchor"),
+	"fill-pattern": new CrossFadedDataDrivenProperty(latest["paint_fill"]["fill-pattern"], "fill-pattern")
 });
 var fill_style_layer_properties_g_default = {
 	get paint() {
@@ -20486,14 +20601,14 @@ function isEntirelyOutside(ring) {
 //#region src/style/style_layer/fill_extrusion_style_layer_properties.g.ts
 let paint$3;
 const getPaint$3 = () => paint$3 = paint$3 || new Properties({
-	"fill-extrusion-opacity": new DataConstantProperty(latest_default["paint_fill-extrusion"]["fill-extrusion-opacity"]),
-	"fill-extrusion-color": new DataDrivenProperty(latest_default["paint_fill-extrusion"]["fill-extrusion-color"]),
-	"fill-extrusion-translate": new DataConstantProperty(latest_default["paint_fill-extrusion"]["fill-extrusion-translate"]),
-	"fill-extrusion-translate-anchor": new DataConstantProperty(latest_default["paint_fill-extrusion"]["fill-extrusion-translate-anchor"]),
-	"fill-extrusion-pattern": new CrossFadedDataDrivenProperty(latest_default["paint_fill-extrusion"]["fill-extrusion-pattern"]),
-	"fill-extrusion-height": new DataDrivenProperty(latest_default["paint_fill-extrusion"]["fill-extrusion-height"]),
-	"fill-extrusion-base": new DataDrivenProperty(latest_default["paint_fill-extrusion"]["fill-extrusion-base"]),
-	"fill-extrusion-vertical-gradient": new DataConstantProperty(latest_default["paint_fill-extrusion"]["fill-extrusion-vertical-gradient"])
+	"fill-extrusion-opacity": new DataConstantProperty(latest["paint_fill-extrusion"]["fill-extrusion-opacity"], "fill-extrusion-opacity"),
+	"fill-extrusion-color": new DataDrivenProperty(latest["paint_fill-extrusion"]["fill-extrusion-color"], "fill-extrusion-color"),
+	"fill-extrusion-translate": new DataConstantProperty(latest["paint_fill-extrusion"]["fill-extrusion-translate"], "fill-extrusion-translate"),
+	"fill-extrusion-translate-anchor": new DataConstantProperty(latest["paint_fill-extrusion"]["fill-extrusion-translate-anchor"], "fill-extrusion-translate-anchor"),
+	"fill-extrusion-pattern": new CrossFadedDataDrivenProperty(latest["paint_fill-extrusion"]["fill-extrusion-pattern"], "fill-extrusion-pattern"),
+	"fill-extrusion-height": new DataDrivenProperty(latest["paint_fill-extrusion"]["fill-extrusion-height"], "fill-extrusion-height"),
+	"fill-extrusion-base": new DataDrivenProperty(latest["paint_fill-extrusion"]["fill-extrusion-base"], "fill-extrusion-base"),
+	"fill-extrusion-vertical-gradient": new DataConstantProperty(latest["paint_fill-extrusion"]["fill-extrusion-vertical-gradient"], "fill-extrusion-vertical-gradient")
 });
 var fill_extrusion_style_layer_properties_g_default = { get paint() {
 	return getPaint$3();
@@ -21005,26 +21120,26 @@ register$1("LineBucket", LineBucket, { omit: ["layers", "patternFeatures"] });
 //#region src/style/style_layer/line_style_layer_properties.g.ts
 let layout$1;
 const getLayout$1 = () => layout$1 = layout$1 || new Properties({
-	"line-cap": new DataDrivenProperty(latest_default["layout_line"]["line-cap"]),
-	"line-join": new DataDrivenProperty(latest_default["layout_line"]["line-join"]),
-	"line-miter-limit": new DataDrivenProperty(latest_default["layout_line"]["line-miter-limit"]),
-	"line-round-limit": new DataDrivenProperty(latest_default["layout_line"]["line-round-limit"]),
-	"line-sort-key": new DataDrivenProperty(latest_default["layout_line"]["line-sort-key"])
+	"line-cap": new DataDrivenProperty(latest["layout_line"]["line-cap"], "line-cap"),
+	"line-join": new DataDrivenProperty(latest["layout_line"]["line-join"], "line-join"),
+	"line-miter-limit": new DataDrivenProperty(latest["layout_line"]["line-miter-limit"], "line-miter-limit"),
+	"line-round-limit": new DataDrivenProperty(latest["layout_line"]["line-round-limit"], "line-round-limit"),
+	"line-sort-key": new DataDrivenProperty(latest["layout_line"]["line-sort-key"], "line-sort-key")
 });
 let paint$2;
 const getPaint$2 = () => paint$2 = paint$2 || new Properties({
-	"line-opacity": new DataDrivenProperty(latest_default["paint_line"]["line-opacity"]),
-	"line-layer-opacity": new DataConstantProperty(latest_default["paint_line"]["line-layer-opacity"]),
-	"line-color": new DataDrivenProperty(latest_default["paint_line"]["line-color"]),
-	"line-translate": new DataConstantProperty(latest_default["paint_line"]["line-translate"]),
-	"line-translate-anchor": new DataConstantProperty(latest_default["paint_line"]["line-translate-anchor"]),
-	"line-width": new DataDrivenProperty(latest_default["paint_line"]["line-width"]),
-	"line-gap-width": new DataDrivenProperty(latest_default["paint_line"]["line-gap-width"]),
-	"line-offset": new DataDrivenProperty(latest_default["paint_line"]["line-offset"]),
-	"line-blur": new DataDrivenProperty(latest_default["paint_line"]["line-blur"]),
-	"line-dasharray": new CrossFadedDataDrivenProperty(latest_default["paint_line"]["line-dasharray"]),
-	"line-pattern": new CrossFadedDataDrivenProperty(latest_default["paint_line"]["line-pattern"]),
-	"line-gradient": new ColorRampProperty(latest_default["paint_line"]["line-gradient"])
+	"line-opacity": new DataDrivenProperty(latest["paint_line"]["line-opacity"], "line-opacity"),
+	"line-layer-opacity": new DataConstantProperty(latest["paint_line"]["line-layer-opacity"], "line-layer-opacity"),
+	"line-color": new DataDrivenProperty(latest["paint_line"]["line-color"], "line-color"),
+	"line-translate": new DataConstantProperty(latest["paint_line"]["line-translate"], "line-translate"),
+	"line-translate-anchor": new DataConstantProperty(latest["paint_line"]["line-translate-anchor"], "line-translate-anchor"),
+	"line-width": new DataDrivenProperty(latest["paint_line"]["line-width"], "line-width"),
+	"line-gap-width": new DataDrivenProperty(latest["paint_line"]["line-gap-width"], "line-gap-width"),
+	"line-offset": new DataDrivenProperty(latest["paint_line"]["line-offset"], "line-offset"),
+	"line-blur": new DataDrivenProperty(latest["paint_line"]["line-blur"], "line-blur"),
+	"line-dasharray": new CrossFadedDataDrivenProperty(latest["paint_line"]["line-dasharray"], "line-dasharray"),
+	"line-pattern": new CrossFadedDataDrivenProperty(latest["paint_line"]["line-pattern"], "line-pattern"),
+	"line-gradient": new ColorRampProperty(latest["paint_line"]["line-gradient"], "line-gradient")
 });
 var line_style_layer_properties_g_default = {
 	get paint() {
@@ -21058,7 +21173,7 @@ var LineStyleLayer = class extends StyleLayer {
 		super(layer, line_style_layer_properties_g_default, globalState);
 		this.gradientVersion = 0;
 		if (!lineFloorwidthProperty) {
-			lineFloorwidthProperty = new LineFloorwidthProperty(line_style_layer_properties_g_default.paint.properties["line-width"].specification);
+			lineFloorwidthProperty = new LineFloorwidthProperty(line_style_layer_properties_g_default.paint.properties["line-width"].specification, "line-floorwidth");
 			lineFloorwidthProperty.useIntegerZoom = true;
 		}
 	}
@@ -23064,71 +23179,71 @@ function resolveTokens(properties, text) {
 //#region src/style/style_layer/symbol_style_layer_properties.g.ts
 let layout;
 const getLayout = () => layout = layout || new Properties({
-	"symbol-placement": new DataConstantProperty(latest_default["layout_symbol"]["symbol-placement"]),
-	"symbol-spacing": new DataConstantProperty(latest_default["layout_symbol"]["symbol-spacing"]),
-	"symbol-avoid-edges": new DataConstantProperty(latest_default["layout_symbol"]["symbol-avoid-edges"]),
-	"symbol-sort-key": new DataDrivenProperty(latest_default["layout_symbol"]["symbol-sort-key"]),
-	"symbol-z-order": new DataConstantProperty(latest_default["layout_symbol"]["symbol-z-order"]),
-	"icon-allow-overlap": new DataConstantProperty(latest_default["layout_symbol"]["icon-allow-overlap"]),
-	"icon-overlap": new DataConstantProperty(latest_default["layout_symbol"]["icon-overlap"]),
-	"icon-ignore-placement": new DataConstantProperty(latest_default["layout_symbol"]["icon-ignore-placement"]),
-	"icon-optional": new DataConstantProperty(latest_default["layout_symbol"]["icon-optional"]),
-	"icon-rotation-alignment": new DataConstantProperty(latest_default["layout_symbol"]["icon-rotation-alignment"]),
-	"icon-size": new DataDrivenProperty(latest_default["layout_symbol"]["icon-size"]),
-	"icon-text-fit": new DataConstantProperty(latest_default["layout_symbol"]["icon-text-fit"]),
-	"icon-text-fit-padding": new DataConstantProperty(latest_default["layout_symbol"]["icon-text-fit-padding"]),
-	"icon-image": new DataDrivenProperty(latest_default["layout_symbol"]["icon-image"]),
-	"icon-rotate": new DataDrivenProperty(latest_default["layout_symbol"]["icon-rotate"]),
-	"icon-padding": new DataDrivenProperty(latest_default["layout_symbol"]["icon-padding"]),
-	"icon-keep-upright": new DataConstantProperty(latest_default["layout_symbol"]["icon-keep-upright"]),
-	"icon-offset": new DataDrivenProperty(latest_default["layout_symbol"]["icon-offset"]),
-	"icon-anchor": new DataDrivenProperty(latest_default["layout_symbol"]["icon-anchor"]),
-	"icon-pitch-alignment": new DataConstantProperty(latest_default["layout_symbol"]["icon-pitch-alignment"]),
-	"text-pitch-alignment": new DataConstantProperty(latest_default["layout_symbol"]["text-pitch-alignment"]),
-	"text-rotation-alignment": new DataConstantProperty(latest_default["layout_symbol"]["text-rotation-alignment"]),
-	"text-field": new DataDrivenProperty(latest_default["layout_symbol"]["text-field"]),
-	"text-font": new DataDrivenProperty(latest_default["layout_symbol"]["text-font"]),
-	"text-size": new DataDrivenProperty(latest_default["layout_symbol"]["text-size"]),
-	"text-max-width": new DataDrivenProperty(latest_default["layout_symbol"]["text-max-width"]),
-	"text-line-height": new DataConstantProperty(latest_default["layout_symbol"]["text-line-height"]),
-	"text-letter-spacing": new DataDrivenProperty(latest_default["layout_symbol"]["text-letter-spacing"]),
-	"text-justify": new DataDrivenProperty(latest_default["layout_symbol"]["text-justify"]),
-	"text-radial-offset": new DataDrivenProperty(latest_default["layout_symbol"]["text-radial-offset"]),
-	"text-variable-anchor": new DataConstantProperty(latest_default["layout_symbol"]["text-variable-anchor"]),
-	"text-variable-anchor-offset": new DataDrivenProperty(latest_default["layout_symbol"]["text-variable-anchor-offset"]),
-	"text-anchor": new DataDrivenProperty(latest_default["layout_symbol"]["text-anchor"]),
-	"text-max-angle": new DataConstantProperty(latest_default["layout_symbol"]["text-max-angle"]),
-	"text-writing-mode": new DataConstantProperty(latest_default["layout_symbol"]["text-writing-mode"]),
-	"text-rotate": new DataDrivenProperty(latest_default["layout_symbol"]["text-rotate"]),
-	"text-padding": new DataConstantProperty(latest_default["layout_symbol"]["text-padding"]),
-	"text-keep-upright": new DataConstantProperty(latest_default["layout_symbol"]["text-keep-upright"]),
-	"text-transform": new DataDrivenProperty(latest_default["layout_symbol"]["text-transform"]),
-	"text-offset": new DataDrivenProperty(latest_default["layout_symbol"]["text-offset"]),
-	"text-allow-overlap": new DataConstantProperty(latest_default["layout_symbol"]["text-allow-overlap"]),
-	"text-overlap": new DataConstantProperty(latest_default["layout_symbol"]["text-overlap"]),
-	"text-ignore-placement": new DataConstantProperty(latest_default["layout_symbol"]["text-ignore-placement"]),
-	"text-optional": new DataConstantProperty(latest_default["layout_symbol"]["text-optional"])
+	"symbol-placement": new DataConstantProperty(latest["layout_symbol"]["symbol-placement"], "symbol-placement"),
+	"symbol-spacing": new DataConstantProperty(latest["layout_symbol"]["symbol-spacing"], "symbol-spacing"),
+	"symbol-avoid-edges": new DataConstantProperty(latest["layout_symbol"]["symbol-avoid-edges"], "symbol-avoid-edges"),
+	"symbol-sort-key": new DataDrivenProperty(latest["layout_symbol"]["symbol-sort-key"], "symbol-sort-key"),
+	"symbol-z-order": new DataConstantProperty(latest["layout_symbol"]["symbol-z-order"], "symbol-z-order"),
+	"icon-allow-overlap": new DataConstantProperty(latest["layout_symbol"]["icon-allow-overlap"], "icon-allow-overlap"),
+	"icon-overlap": new DataConstantProperty(latest["layout_symbol"]["icon-overlap"], "icon-overlap"),
+	"icon-ignore-placement": new DataConstantProperty(latest["layout_symbol"]["icon-ignore-placement"], "icon-ignore-placement"),
+	"icon-optional": new DataConstantProperty(latest["layout_symbol"]["icon-optional"], "icon-optional"),
+	"icon-rotation-alignment": new DataConstantProperty(latest["layout_symbol"]["icon-rotation-alignment"], "icon-rotation-alignment"),
+	"icon-size": new DataDrivenProperty(latest["layout_symbol"]["icon-size"], "icon-size"),
+	"icon-text-fit": new DataConstantProperty(latest["layout_symbol"]["icon-text-fit"], "icon-text-fit"),
+	"icon-text-fit-padding": new DataConstantProperty(latest["layout_symbol"]["icon-text-fit-padding"], "icon-text-fit-padding"),
+	"icon-image": new DataDrivenProperty(latest["layout_symbol"]["icon-image"], "icon-image"),
+	"icon-rotate": new DataDrivenProperty(latest["layout_symbol"]["icon-rotate"], "icon-rotate"),
+	"icon-padding": new DataDrivenProperty(latest["layout_symbol"]["icon-padding"], "icon-padding"),
+	"icon-keep-upright": new DataConstantProperty(latest["layout_symbol"]["icon-keep-upright"], "icon-keep-upright"),
+	"icon-offset": new DataDrivenProperty(latest["layout_symbol"]["icon-offset"], "icon-offset"),
+	"icon-anchor": new DataDrivenProperty(latest["layout_symbol"]["icon-anchor"], "icon-anchor"),
+	"icon-pitch-alignment": new DataConstantProperty(latest["layout_symbol"]["icon-pitch-alignment"], "icon-pitch-alignment"),
+	"text-pitch-alignment": new DataConstantProperty(latest["layout_symbol"]["text-pitch-alignment"], "text-pitch-alignment"),
+	"text-rotation-alignment": new DataConstantProperty(latest["layout_symbol"]["text-rotation-alignment"], "text-rotation-alignment"),
+	"text-field": new DataDrivenProperty(latest["layout_symbol"]["text-field"], "text-field"),
+	"text-font": new DataDrivenProperty(latest["layout_symbol"]["text-font"], "text-font"),
+	"text-size": new DataDrivenProperty(latest["layout_symbol"]["text-size"], "text-size"),
+	"text-max-width": new DataDrivenProperty(latest["layout_symbol"]["text-max-width"], "text-max-width"),
+	"text-line-height": new DataConstantProperty(latest["layout_symbol"]["text-line-height"], "text-line-height"),
+	"text-letter-spacing": new DataDrivenProperty(latest["layout_symbol"]["text-letter-spacing"], "text-letter-spacing"),
+	"text-justify": new DataDrivenProperty(latest["layout_symbol"]["text-justify"], "text-justify"),
+	"text-radial-offset": new DataDrivenProperty(latest["layout_symbol"]["text-radial-offset"], "text-radial-offset"),
+	"text-variable-anchor": new DataConstantProperty(latest["layout_symbol"]["text-variable-anchor"], "text-variable-anchor"),
+	"text-variable-anchor-offset": new DataDrivenProperty(latest["layout_symbol"]["text-variable-anchor-offset"], "text-variable-anchor-offset"),
+	"text-anchor": new DataDrivenProperty(latest["layout_symbol"]["text-anchor"], "text-anchor"),
+	"text-max-angle": new DataConstantProperty(latest["layout_symbol"]["text-max-angle"], "text-max-angle"),
+	"text-writing-mode": new DataConstantProperty(latest["layout_symbol"]["text-writing-mode"], "text-writing-mode"),
+	"text-rotate": new DataDrivenProperty(latest["layout_symbol"]["text-rotate"], "text-rotate"),
+	"text-padding": new DataConstantProperty(latest["layout_symbol"]["text-padding"], "text-padding"),
+	"text-keep-upright": new DataConstantProperty(latest["layout_symbol"]["text-keep-upright"], "text-keep-upright"),
+	"text-transform": new DataDrivenProperty(latest["layout_symbol"]["text-transform"], "text-transform"),
+	"text-offset": new DataDrivenProperty(latest["layout_symbol"]["text-offset"], "text-offset"),
+	"text-allow-overlap": new DataConstantProperty(latest["layout_symbol"]["text-allow-overlap"], "text-allow-overlap"),
+	"text-overlap": new DataConstantProperty(latest["layout_symbol"]["text-overlap"], "text-overlap"),
+	"text-ignore-placement": new DataConstantProperty(latest["layout_symbol"]["text-ignore-placement"], "text-ignore-placement"),
+	"text-optional": new DataConstantProperty(latest["layout_symbol"]["text-optional"], "text-optional")
 });
 let paint$1;
 const getPaint$1 = () => paint$1 = paint$1 || new Properties({
-	"icon-opacity": new DataDrivenProperty(latest_default["paint_symbol"]["icon-opacity"]),
-	"icon-color": new DataDrivenProperty(latest_default["paint_symbol"]["icon-color"]),
-	"icon-halo-color": new DataDrivenProperty(latest_default["paint_symbol"]["icon-halo-color"]),
-	"icon-halo-width": new DataDrivenProperty(latest_default["paint_symbol"]["icon-halo-width"]),
-	"icon-halo-blur": new DataDrivenProperty(latest_default["paint_symbol"]["icon-halo-blur"]),
-	"icon-translate": new DataConstantProperty(latest_default["paint_symbol"]["icon-translate"]),
-	"icon-translate-anchor": new DataConstantProperty(latest_default["paint_symbol"]["icon-translate-anchor"]),
-	"text-opacity": new DataDrivenProperty(latest_default["paint_symbol"]["text-opacity"]),
-	"text-color": new DataDrivenProperty(latest_default["paint_symbol"]["text-color"], {
+	"icon-opacity": new DataDrivenProperty(latest["paint_symbol"]["icon-opacity"], "icon-opacity"),
+	"icon-color": new DataDrivenProperty(latest["paint_symbol"]["icon-color"], "icon-color"),
+	"icon-halo-color": new DataDrivenProperty(latest["paint_symbol"]["icon-halo-color"], "icon-halo-color"),
+	"icon-halo-width": new DataDrivenProperty(latest["paint_symbol"]["icon-halo-width"], "icon-halo-width"),
+	"icon-halo-blur": new DataDrivenProperty(latest["paint_symbol"]["icon-halo-blur"], "icon-halo-blur"),
+	"icon-translate": new DataConstantProperty(latest["paint_symbol"]["icon-translate"], "icon-translate"),
+	"icon-translate-anchor": new DataConstantProperty(latest["paint_symbol"]["icon-translate-anchor"], "icon-translate-anchor"),
+	"text-opacity": new DataDrivenProperty(latest["paint_symbol"]["text-opacity"], "text-opacity"),
+	"text-color": new DataDrivenProperty(latest["paint_symbol"]["text-color"], "text-color", {
 		runtimeType: ColorType,
 		getOverride: (o) => o.textColor,
 		hasOverride: (o) => !!o.textColor
 	}),
-	"text-halo-color": new DataDrivenProperty(latest_default["paint_symbol"]["text-halo-color"]),
-	"text-halo-width": new DataDrivenProperty(latest_default["paint_symbol"]["text-halo-width"]),
-	"text-halo-blur": new DataDrivenProperty(latest_default["paint_symbol"]["text-halo-blur"]),
-	"text-translate": new DataConstantProperty(latest_default["paint_symbol"]["text-translate"]),
-	"text-translate-anchor": new DataConstantProperty(latest_default["paint_symbol"]["text-translate-anchor"])
+	"text-halo-color": new DataDrivenProperty(latest["paint_symbol"]["text-halo-color"], "text-halo-color"),
+	"text-halo-width": new DataDrivenProperty(latest["paint_symbol"]["text-halo-width"], "text-halo-width"),
+	"text-halo-blur": new DataDrivenProperty(latest["paint_symbol"]["text-halo-blur"], "text-halo-blur"),
+	"text-translate": new DataConstantProperty(latest["paint_symbol"]["text-translate"], "text-translate"),
+	"text-translate-anchor": new DataConstantProperty(latest["paint_symbol"]["text-translate-anchor"], "text-translate-anchor")
 });
 var symbol_style_layer_properties_g_default = {
 	get paint() {
@@ -23212,7 +23327,7 @@ var SymbolStyleLayer = class SymbolStyleLayer extends StyleLayer {
 		for (const overridable of symbol_style_layer_properties_g_default.paint.overridableProperties) {
 			if (!SymbolStyleLayer.hasPaintOverride(this.layout, overridable)) continue;
 			const overridden = this.paint.get(overridable);
-			const styleExpression = new StyleExpression(new FormatSectionOverride(overridden), overridden.property.specification);
+			const styleExpression = new StyleExpression(new FormatSectionOverride(overridden), `layers[${this.id}].paint.${overridden.property.name}`, overridden.property.specification);
 			let expression = null;
 			if (overridden.value.kind === "constant" || overridden.value.kind === "source") expression = new ZoomConstantExpression("source", styleExpression);
 			else expression = new ZoomDependentExpression("composite", styleExpression, overridden.value.zoomStops);
@@ -23262,9 +23377,9 @@ function getIconPadding(layout, feature, canonical, pixelRatio = 1) {
 //#region src/style/style_layer/background_style_layer_properties.g.ts
 let paint;
 const getPaint = () => paint = paint || new Properties({
-	"background-color": new DataConstantProperty(latest_default["paint_background"]["background-color"]),
-	"background-pattern": new CrossFadedProperty(latest_default["paint_background"]["background-pattern"]),
-	"background-opacity": new DataConstantProperty(latest_default["paint_background"]["background-opacity"])
+	"background-color": new DataConstantProperty(latest["paint_background"]["background-color"], "background-color"),
+	"background-pattern": new CrossFadedProperty(latest["paint_background"]["background-pattern"], "background-pattern"),
+	"background-opacity": new DataConstantProperty(latest["paint_background"]["background-opacity"], "background-opacity")
 });
 var background_style_layer_properties_g_default = { get paint() {
 	return getPaint();
@@ -24060,7 +24175,7 @@ function edt1d(grid, offset, stride, length, f, v, z) {
 /**
 * The style specification hard-codes some last resort fonts as a default fontstack.
 */
-const defaultStack = v8.layout_symbol["text-font"].default.join(",");
+const defaultStack = latest.layout_symbol["text-font"].default.join(",");
 /**
 * The CSS generic font family closest to `defaultStack`.
 */
@@ -24277,7 +24392,8 @@ var GlyphManager = class GlyphManager {
 //#region src/style/light.ts
 var LightPositionProperty = class {
 	constructor() {
-		this.specification = latest_default.light.position;
+		this.specification = latest.light.position;
+		this.name = "position";
 	}
 	possiblyEvaluate(value, parameters) {
 		return sphericalToCartesian(value.expression.evaluate(parameters));
@@ -24295,12 +24411,12 @@ var Light = class extends Evented {
 	constructor(lightOptions) {
 		super();
 		lightProperties ||= new Properties({
-			"anchor": new DataConstantProperty(latest_default.light.anchor),
+			"anchor": new DataConstantProperty(latest.light.anchor, "anchor"),
 			"position": new LightPositionProperty(),
-			"color": new DataConstantProperty(latest_default.light.color),
-			"intensity": new DataConstantProperty(latest_default.light.intensity)
+			"color": new DataConstantProperty(latest.light.color, "color"),
+			"intensity": new DataConstantProperty(latest.light.intensity, "intensity")
 		});
-		this._transitionable = new Transitionable(lightProperties, void 0);
+		this._transitionable = new Transitionable(lightProperties, "light", void 0);
 		this.setLight(lightOptions);
 		this._transitioning = this._transitionable.untransitioned();
 	}
@@ -24332,25 +24448,25 @@ var Light = class extends Evented {
 				glyphs: true,
 				sprite: true
 			},
-			styleSpec: latest_default
+			styleSpec: latest
 		}));
 	}
 };
 //#endregion
 //#region src/style/sky.ts
 const properties$1 = new Properties({
-	"sky-color": new DataConstantProperty(latest_default.sky["sky-color"]),
-	"horizon-color": new DataConstantProperty(latest_default.sky["horizon-color"]),
-	"fog-color": new DataConstantProperty(latest_default.sky["fog-color"]),
-	"fog-ground-blend": new DataConstantProperty(latest_default.sky["fog-ground-blend"]),
-	"horizon-fog-blend": new DataConstantProperty(latest_default.sky["horizon-fog-blend"]),
-	"sky-horizon-blend": new DataConstantProperty(latest_default.sky["sky-horizon-blend"]),
-	"atmosphere-blend": new DataConstantProperty(latest_default.sky["atmosphere-blend"])
+	"sky-color": new DataConstantProperty(latest.sky["sky-color"], "sky-color"),
+	"horizon-color": new DataConstantProperty(latest.sky["horizon-color"], "horizon-color"),
+	"fog-color": new DataConstantProperty(latest.sky["fog-color"], "fog-color"),
+	"fog-ground-blend": new DataConstantProperty(latest.sky["fog-ground-blend"], "fog-ground-blend"),
+	"horizon-fog-blend": new DataConstantProperty(latest.sky["horizon-fog-blend"], "horizon-fog-blend"),
+	"sky-horizon-blend": new DataConstantProperty(latest.sky["sky-horizon-blend"], "sky-horizon-blend"),
+	"atmosphere-blend": new DataConstantProperty(latest.sky["atmosphere-blend"], "atmosphere-blend")
 });
 var Sky = class extends Evented {
 	constructor(sky) {
 		super();
-		this._transitionable = new Transitionable(properties$1, void 0);
+		this._transitionable = new Transitionable(properties$1, "sky", void 0);
 		this.setSky(sky);
 		this._transitioning = this._transitionable.untransitioned();
 		this.recalculate(new EvaluationParameters(0));
@@ -24390,7 +24506,7 @@ var Sky = class extends Evented {
 				glyphs: true,
 				sprite: true
 			},
-			styleSpec: latest_default
+			styleSpec: latest
 		})));
 	}
 	/**
@@ -26669,7 +26785,10 @@ var GeoJSONSource = class extends Evented {
 	* Create the parameters object that will be sent to the worker and used to load GeoJSON.
 	*/
 	async _getLoadGeoJSONParameters(data, diff, updateCluster) {
-		const params = extend({ type: this.type }, this.workerOptions);
+		const params = extend({
+			type: this.type,
+			source: this.id
+		}, this.workerOptions);
 		if (typeof data === "string") {
 			params.request = await this.map._requestManager.transformRequest(browser.resolveURL(data), "Source");
 			params.request.collectResourceTiming = this._collectResourceTiming;
@@ -31794,7 +31913,7 @@ var FeatureIndex = class {
 		this.loadVTLayers();
 		const params = args.params;
 		const pixelsToTileUnits = EXTENT / args.tileSize / args.scale;
-		const filter = featureFilter(params.filter, params.globalState);
+		const filter = featureFilter(params.filter, "queryRenderedFeatures filter", params.globalState);
 		const queryGeometry = args.queryGeometry;
 		const queryPadding = args.queryPadding * pixelsToTileUnits;
 		const bounds = Bounds.fromPoints(queryGeometry);
@@ -31865,7 +31984,7 @@ var FeatureIndex = class {
 	lookupSymbolFeatures(symbolFeatureIndexes, serializedLayers, bucketIndex, sourceLayerIndex, filterParams, filterLayerIDs, availableImages, styleLayers) {
 		const result = {};
 		this.loadVTLayers();
-		const filter = featureFilter(filterParams.filterSpec, filterParams.globalState);
+		const filter = featureFilter(filterParams.filterSpec, "queryRenderedFeatures symbol filter", filterParams.globalState);
 		for (const symbolFeatureIndex of symbolFeatureIndexes) this.loadMatchingFeature(result, bucketIndex, sourceLayerIndex, symbolFeatureIndex, filter, filterLayerIDs, availableImages, styleLayers, serializedLayers);
 		return result;
 	}
@@ -32165,7 +32284,7 @@ var Tile = class {
 		const sourceLayer = params?.sourceLayer ? params.sourceLayer : "";
 		const layer = vtLayers["_geojsonTileLayer"] || vtLayers[sourceLayer];
 		if (!layer) return;
-		const filter = featureFilter(params?.filter, params?.globalState);
+		const filter = featureFilter(params?.filter, `querySourceFeatures[${sourceLayer}].filter`, params?.globalState);
 		const { z, x, y } = this.tileID.canonical;
 		const coord = {
 			z,
@@ -39527,11 +39646,11 @@ var VerticalPerspectiveProjection = class {
 };
 //#endregion
 //#region src/geo/projection/globe_projection.ts
-const properties = new Properties({ "type": new DataConstantProperty(latest_default.projection.type) });
+const properties = new Properties({ "type": new DataConstantProperty(latest.projection.type, "type") });
 var GlobeProjection = class extends Evented {
 	constructor(projection) {
 		super();
-		this._transitionable = new Transitionable(properties, void 0);
+		this._transitionable = new Transitionable(properties, "projection", void 0);
 		this.setProjection(projection);
 		this._transitioning = this._transitionable.untransitioned();
 		this.recalculate(new EvaluationParameters(0));
@@ -42755,7 +42874,7 @@ var Style = class extends Evented {
 			key,
 			style: this.serialize(),
 			value,
-			styleSpec: latest_default
+			styleSpec: latest
 		}, props)));
 	}
 	_remove(mapRemoved = true) {
@@ -43215,7 +43334,7 @@ var StyleLayerIndex = class {
 		for (const layerConfig of layerConfigs) {
 			this._layerConfigs[layerConfig.id] = layerConfig;
 			const layer = this._layers[layerConfig.id] = createStyleLayer(layerConfig, globalState);
-			layer._featureFilter = featureFilter(layer.filter, globalState);
+			layer._featureFilter = featureFilter(layer.filter, `layers[${layerConfig.id}].filter`, globalState);
 			if (this.keyCache[layerConfig.id]) delete this.keyCache[layerConfig.id];
 		}
 		for (const id of removedIds) {
@@ -56021,7 +56140,7 @@ var ExpressionBenchmark = class extends Benchmark {
 			const expressionData = (rawValue, propertySpec) => {
 				const rawExpression = convertFunction(rawValue, propertySpec);
 				const compiledFunction = createFunction(rawValue, propertySpec);
-				const compiledExpression = createPropertyExpression(rawExpression, propertySpec);
+				const compiledExpression = createPropertyExpression(rawExpression, "expression", propertySpec);
 				if (compiledExpression.result === "error") throw new Error(compiledExpression.value.map((err) => `${err.key}: ${err.message}`).join(", "));
 				return {
 					propertySpec,
@@ -56031,8 +56150,8 @@ var ExpressionBenchmark = class extends Benchmark {
 					compiledExpression: compiledExpression.value
 				};
 			};
-			for (const key in layer.paint) if (isFunction(layer.paint[key])) this.data.push(expressionData(layer.paint[key], latest_default[`paint_${layer.type}`][key]));
-			for (const key in layer.layout) if (isFunction(layer.layout[key])) this.data.push(expressionData(layer.layout[key], latest_default[`layout_${layer.type}`][key]));
+			for (const key in layer.paint) if (isFunction(layer.paint[key])) this.data.push(expressionData(layer.paint[key], latest[`paint_${layer.type}`][key]));
+			for (const key in layer.layout) if (isFunction(layer.layout[key])) this.data.push(expressionData(layer.layout[key], latest[`layout_${layer.type}`][key]));
 		}
 	}
 };
@@ -56048,7 +56167,7 @@ var FunctionEvaluate = class extends ExpressionBenchmark {
 };
 var ExpressionCreate = class extends ExpressionBenchmark {
 	bench() {
-		for (const { rawExpression, propertySpec } of this.data) createPropertyExpression(rawExpression, propertySpec);
+		for (const { rawExpression, propertySpec } of this.data) createPropertyExpression(rawExpression, "expression", propertySpec);
 	}
 };
 var ExpressionEvaluate = class extends ExpressionBenchmark {
@@ -57581,7 +57700,7 @@ var filters_default = [
 //#region test/bench/benchmarks/filter_create.ts
 var FilterCreate = class extends Benchmark {
 	bench() {
-		for (const filter of filters_default) featureFilter(filter.filter);
+		for (const filter of filters_default) featureFilter(filter.filter, "filter");
 	}
 };
 //#endregion
@@ -57596,7 +57715,7 @@ var FilterEvaluate = class extends Benchmark {
 			const features = [];
 			for (let j = 0; j < layer.length; j++) features.push(layer.feature(j));
 			const layerFilters = [];
-			for (const filter of filters_default) if (filter.layer === name) layerFilters.push(featureFilter(filter.filter));
+			for (const filter of filters_default) if (filter.layer === name) layerFilters.push(featureFilter(filter.filter, "filter"));
 			this.layers.push({
 				features,
 				filters: layerFilters
@@ -60860,7 +60979,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 59320f0";
+const version = "main 3aa7e66";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
