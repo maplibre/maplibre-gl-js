@@ -263,14 +263,21 @@ describe('ImageSource', () => {
     });
 
     describe('updateImage with a decoded image', () => {
-        test('sets the image directly without a network request', async () => {
-            const source = createSource({url: '/image.png'});
-            const map = new StubMap() as any;
-            map.on('error', () => {});
-            source.onAdd(map);
-            await sleep(0);
+        let map: any;
+        let source: ImageSource;
 
-            // transformRequest was called once by the initial load; the image path must not call it again.
+        beforeEach(() => {
+            map = new StubMap() as any;
+            // Suppress errors from aborting the initial (never-responded) request.
+            map.on('error', () => {});
+            source = createSource({url: '/image.png', eventedParent: map});
+            // onAdd starts the initial load synchronously up to its first await, so
+            // this._request is set and transformRequest has already been called once.
+            source.onAdd(map);
+        });
+
+        test('sets the image directly without a network request', () => {
+            // The image path must not trigger a new request, so transformRequest is not called again.
             const spy = vi.spyOn(map._requestManager, 'transformRequest');
             const bitmap = new ImageBitmap();
             const result = source.updateImage({image: bitmap});
@@ -281,26 +288,14 @@ describe('ImageSource', () => {
             expect(source.loaded()).toBe(true);
         });
 
-        test('resets the texture so the new image is uploaded on the next prepare', async () => {
-            const source = createSource({url: '/image.png'});
-            const map = new StubMap() as any;
-            map.on('error', () => {});
-            source.onAdd(map);
-            await sleep(0);
-
+        test('resets the texture so the new image is uploaded on the next prepare', () => {
             source.texture = {} as Texture;
             source.updateImage({image: new ImageBitmap()});
 
             expect(source.texture).toBeNull();
         });
 
-        test('updates coordinates alongside the image', async () => {
-            const source = createSource({url: '/image.png'});
-            const map = new StubMap() as any;
-            map.on('error', () => {});
-            source.onAdd(map);
-            await sleep(0);
-
+        test('updates coordinates alongside the image', () => {
             source.updateImage({
                 image: new ImageBitmap(),
                 coordinates: [[0, 0], [-1, 0], [-1, -1], [0, -1]]
@@ -309,37 +304,24 @@ describe('ImageSource', () => {
             expect(source.serialize().coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
         });
 
-        test('fires a metadata data event', async () => {
-            const source = createSource({url: '/image.png'});
-            const map = new StubMap() as any;
-            map.on('error', () => {});
-            source.onAdd(map);
-            await sleep(0);
-
-            const promise = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'metadata');
+        test('fires a metadata data event', () => {
+            const handler = vi.fn();
+            source.on('data', handler);
             source.updateImage({image: new ImageBitmap()});
-            await expect(promise).resolves.toBeDefined();
+
+            const firedMetadata = handler.mock.calls.some(
+                ([e]) => e.dataType === 'source' && e.sourceDataType === 'metadata'
+            );
+            expect(firedMetadata).toBe(true);
         });
 
-        test('cancels a pending request', async () => {
-            const map = new StubMap() as any;
-            const source = createSource({url: '/image.png', eventedParent: map});
-            map.on('error', () => {});
-            source.onAdd(map);
-            await sleep(0);
-
-            const spy = vi.spyOn(server.requests[0] as any, 'abort');
+        test('cancels a pending request', () => {
+            const spy = vi.spyOn(source._request, 'abort');
             source.updateImage({image: new ImageBitmap()});
             expect(spy).toHaveBeenCalled();
         });
 
-        test('accepts an ImageData instance', async () => {
-            const source = createSource({url: '/image.png'});
-            const map = new StubMap() as any;
-            map.on('error', () => {});
-            source.onAdd(map);
-            await sleep(0);
-
+        test('accepts an ImageData instance', () => {
             const spy = vi.spyOn(map._requestManager, 'transformRequest');
             const imageData = new ImageData(1, 1);
             source.updateImage({image: imageData});
@@ -349,13 +331,7 @@ describe('ImageSource', () => {
             expect(source.loaded()).toBe(true);
         });
 
-        test('uses image and ignores url if an untyped caller passes both', async () => {
-            const source = createSource({url: '/image.png'});
-            const map = new StubMap() as any;
-            map.on('error', () => {});
-            source.onAdd(map);
-            await sleep(0);
-
+        test('uses image and ignores url if an untyped caller passes both', () => {
             const spy = vi.spyOn(map._requestManager, 'transformRequest');
             const bitmap = new ImageBitmap();
             // The union type forbids passing both; verify the runtime still prefers image.
@@ -365,14 +341,7 @@ describe('ImageSource', () => {
             expect(source.image).toBe(bitmap);
         });
 
-        test('is a no-op when neither url nor image is provided', async () => {
-            const source = createSource({url: '/image.png'});
-            const map = new StubMap() as any;
-            map.on('error', () => {});
-            source.onAdd(map);
-            server.respond();
-            await sleep(0);
-
+        test('is a no-op when neither url nor image is provided', () => {
             const previousImage = source.image;
             // The union type forbids passing neither; verify the runtime guard is a no-op.
             const result = source.updateImage({} as any);
