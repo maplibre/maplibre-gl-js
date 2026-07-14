@@ -13627,7 +13627,7 @@ var PbfReader = class {
 	*/
 	constructor(buf) {
 		this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf);
-		this.dataView = new DataView(this.buf.buffer);
+		this.dataView = new DataView(this.buf.buffer, this.buf.byteOffset, this.buf.byteLength);
 		this.pos = 0;
 		this.type = 0;
 		this._valueStart = -1;
@@ -60979,7 +60979,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 3aa7e66";
+const version = "main 38df01b";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;

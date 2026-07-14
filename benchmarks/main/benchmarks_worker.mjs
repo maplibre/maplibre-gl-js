@@ -19921,7 +19921,7 @@ var PbfReader = class {
 	*/
 	constructor(buf) {
 		this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf);
-		this.dataView = new DataView(this.buf.buffer);
+		this.dataView = new DataView(this.buf.buffer, this.buf.byteOffset, this.buf.byteLength);
 		this.pos = 0;
 		this.type = 0;
 		this._valueStart = -1;
@@ -20104,7 +20104,7 @@ var PbfWriter = class {
 	*/
 	constructor(buf = /* @__PURE__ */ new Uint8Array(16)) {
 		this.buf = ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf);
-		this.dataView = new DataView(this.buf.buffer);
+		this.dataView = new DataView(this.buf.buffer, this.buf.byteOffset, this.buf.byteLength);
 		this.pos = 0;
 		this.length = this.buf.length;
 	}
@@ -20500,11 +20500,32 @@ function makeRoomForExtraLength(startPos, len, pbf) {
 	pbf.buf.copyWithin(startPos + extraLen, startPos, pbf.pos);
 }
 /**
+* Packed varints often dominate encode time, so write the bytes inline
+* through a local buffer pointer rather than calling writeVarint per element,
+* falling back to writeVarint only for negatives or near the buffer's end.
 * @param {number[]} arr
 * @param {PbfWriter} pbf
 */
 function writePackedVarint(arr, pbf) {
-	for (let i = 0; i < arr.length; i++) pbf.writeVarint(arr[i]);
+	const n = arr.length;
+	let buf = pbf.buf, pos = pbf.pos, limit = pbf.length;
+	for (let i = 0; i < n; i++) {
+		let val = arr[i];
+		if (val < 0 || pos + 10 > limit) {
+			pbf.pos = pos;
+			pbf.writeVarint(val);
+			buf = pbf.buf;
+			pos = pbf.pos;
+			limit = pbf.length;
+			continue;
+		}
+		while (val > 127) {
+			buf[pos++] = val % 128 | 128;
+			val = Math.floor(val / 128);
+		}
+		buf[pos++] = val;
+	}
+	pbf.pos = pos;
 }
 /**
 * @param {number[]} arr
