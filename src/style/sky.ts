@@ -22,7 +22,7 @@ export class Sky extends Evented {
 
     constructor(sky?: SkySpecification) {
         super();
-        this._transitionable = new Transitionable(getProperties(), undefined);
+        this._transitionable = new Transitionable(getProperties(), 'sky', undefined);
         this.setSky(sky);
         this._transitioning = this._transitionable.untransitioned();
         this.recalculate(new EvaluationParameters(0));

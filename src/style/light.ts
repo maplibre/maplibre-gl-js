@@ -26,7 +26,7 @@ export class Light extends Evented {
 
     constructor(lightOptions?: LightSpecification) {
         super();
-        this._transitionable = new Transitionable(getProperties(), undefined);
+        this._transitionable = new Transitionable(getProperties(), 'light', undefined);
         this.setLight(lightOptions);
         this._transitioning = this._transitionable.untransitioned();
     }

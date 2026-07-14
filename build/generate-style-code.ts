@@ -2,7 +2,7 @@
 
 import * as fs from 'fs';
 
-import {v8} from '@maplibre/maplibre-gl-style-spec';
+import {latest} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * Which kind of value a property holds, and so which `Property` class implements it.
@@ -223,23 +223,24 @@ function specPath(property: SpecProperty, type: string): string {
 /** How the generated code constructs the property, e.g. `new DataConstantProperty(...)`. */
 function propertyValue(property: SpecProperty, type: string): string {
     const propertyAsSpec = `${specPath(property, type)} as any as StylePropertySpecification`;
+    const name = JSON.stringify(property.name);
 
     switch (property['property-type']) {
         case 'data-driven':
             if (property.overridable) {
-                return `new DataDrivenProperty(${propertyAsSpec}, ${overrides(property)})`;
+                return `new DataDrivenProperty(${propertyAsSpec}, ${name}, ${overrides(property)})`;
             } else {
-                return `new DataDrivenProperty(${propertyAsSpec})`;
+                return `new DataDrivenProperty(${propertyAsSpec}, ${name})`;
             }
         case 'cross-faded':
-            return `new CrossFadedProperty(${propertyAsSpec})`;
+            return `new CrossFadedProperty(${propertyAsSpec}, ${name})`;
         case 'cross-faded-data-driven':
-            return `new CrossFadedDataDrivenProperty(${propertyAsSpec})`;
+            return `new CrossFadedDataDrivenProperty(${propertyAsSpec}, ${name})`;
         case 'color-ramp':
-            return `new ColorRampProperty(${propertyAsSpec})`;
+            return `new ColorRampProperty(${propertyAsSpec}, ${name})`;
         case 'data-constant':
         case 'constant':
-            return `new DataConstantProperty(${propertyAsSpec})`;
+            return `new DataConstantProperty(${propertyAsSpec}, ${name})`;
         default:
             throw new Error(`unknown property-type "${property['property-type']}" for ${property.name}`);
     }
@@ -254,7 +255,7 @@ function propertyValue(property: SpecProperty, type: string): string {
  * where it came from, which is what {@link specPath} needs to point the generated code back at it.
  */
 function specProperties(specKey: string, tag: Pick<SpecProperty, 'layerType'> | Pick<SpecProperty, 'root'>): SpecProperty[] {
-    const spec = v8[specKey] as {[name: string]: SpecValue};
+    const spec = latest[specKey as keyof typeof latest] as Record<string, Omit<SpecProperty, 'name'>>;
     return Object.keys(spec).map((name) => ({...spec[name], ...tag, name}) as SpecProperty);
 }
 
@@ -362,7 +363,7 @@ function emitRootProperties({root, properties}: RootProperties): string {
     ].join('\n');
 }
 
-const layers: LayerProperties[] = Object.keys(v8.layer.type.values).map((type: string) => ({
+const layers: LayerProperties[] = Object.keys(latest.layer.type.values).map((type: string) => ({
     type,
     // `visibility` is not a real layout property: it is handled by the layer itself.
     layoutProperties: specProperties(`layout_${type}`, {layerType: type}).filter(({name}) => name !== 'visibility'),
