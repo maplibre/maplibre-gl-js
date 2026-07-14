@@ -2,112 +2,79 @@ import {describe, test, expect, vi, afterEach} from 'vitest';
 import {emitValidationErrors, validateAndEmit, validateFilter} from './validate_style.ts';
 import {Evented} from '../util/evented.ts';
 
+afterEach(() => {
+    vi.restoreAllMocks();
+});
+
 class TestEmitter extends Evented {}
 
-const mixedLegacyAndExpressionFilter = ['all', ['==', ['get', 'class'], 'rail'], ['in', 'name', '']];
+/** An emitter that collects the messages of the {@link ErrorEvent}s fired at it, plus a `console.warn` spy. */
+function setup() {
+    const emitter = new TestEmitter();
+    const fired: string[] = [];
+    emitter.on('error', ({error}) => fired.push(error.message));
+    return {emitter, fired, warn: vi.spyOn(console, 'warn').mockImplementation(() => {})};
+}
 
 describe('emitValidationErrors', () => {
-    afterEach(() => {
-        vi.restoreAllMocks();
-    });
+    test('fires and fails on errors, logs warnings, and skips canvas sources', () => {
+        const {emitter, fired, warn} = setup();
 
-    test('reports no failure when there is nothing to emit', () => {
-        const evented = new TestEmitter();
-        const errorSpy = vi.fn();
-        evented.on('error', errorSpy);
-
-        expect(emitValidationErrors(evented, [])).toBe(false);
-        expect(emitValidationErrors(evented, null)).toBe(false);
-        expect(errorSpy).not.toHaveBeenCalled();
-    });
-
-    test('reports failure when an error is mixed in with a warning, emitting only the error', () => {
-        const evented = new TestEmitter();
-        const errorSpy = vi.fn();
-        evented.on('error', errorSpy);
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-        const hasErrors = emitValidationErrors(evented, [
-            {message: 'a mixed filter warning', severity: 'warning'},
-            {message: 'a genuine error', severity: 'error'}
+        const hasErrors = emitValidationErrors(emitter, [
+            {message: 'a warning', severity: 'warning'},
+            // Canvas sources are added at runtime, so their errors are ignored.
+            {message: 'a canvas error', identifier: 'source.canvas', severity: 'error'},
+            {message: 'an error', severity: 'error'},
+            // Custom layers report errors without a severity; they must still count as errors.
+            {message: 'an error with no severity'}
         ]);
 
         expect(hasErrors).toBe(true);
-        expect(warnSpy).toHaveBeenCalledWith('a mixed filter warning');
-        expect(errorSpy).toHaveBeenCalledTimes(1);
-        expect(errorSpy.mock.calls[0][0].error.message).toBe('a genuine error');
+        expect(fired).toEqual(['an error', 'an error with no severity']);
+        expect(warn).toHaveBeenCalledExactlyOnceWith('a warning');
     });
 
-    test('treats an error without a severity as an error', () => {
-        const evented = new TestEmitter();
-        const errorSpy = vi.fn();
-        evented.on('error', errorSpy);
+    test('reports no failure when there is nothing to emit', () => {
+        const {emitter, fired} = setup();
 
-        expect(emitValidationErrors(evented, [{message: 'no severity given'}])).toBe(true);
-        expect(errorSpy).toHaveBeenCalledTimes(1);
-    });
-
-    test('skips errors about canvas sources, which are added at runtime', () => {
-        const evented = new TestEmitter();
-        const errorSpy = vi.fn();
-        evented.on('error', errorSpy);
-
-        const hasErrors = emitValidationErrors(evented, [
-            {message: 'sources.canvas: unknown source type', identifier: 'source.canvas', severity: 'error'}
-        ]);
-
-        expect(hasErrors).toBe(false);
-        expect(errorSpy).not.toHaveBeenCalled();
+        expect(emitValidationErrors(emitter, [])).toBe(false);
+        expect(emitValidationErrors(emitter, null)).toBe(false);
+        expect(fired).toEqual([]);
     });
 });
 
 describe('validateAndEmit', () => {
-    afterEach(() => {
-        vi.restoreAllMocks();
-    });
+    const key = 'layers.symbol.filter';
 
-    test('reports failure and fires an error event for an invalid value', () => {
-        const evented = new TestEmitter();
-        const errorSpy = vi.fn();
-        evented.on('error', errorSpy);
+    test('fails on a filter the spec rejects', () => {
+        const {emitter, fired} = setup();
 
-        const hasErrors = validateAndEmit(evented, validateFilter, {
-            key: 'layers.symbol.filter',
+        const hasErrors = validateAndEmit(emitter, validateFilter, {
+            key,
             value: ['all', ['==', ['get', 'class'], 'rail'], ['nope', 1]]
         });
 
         expect(hasErrors).toBe(true);
-        expect(errorSpy).toHaveBeenCalledTimes(1);
-        expect(errorSpy.mock.calls[0][0].error.message).toMatch(/Unknown expression "nope"/);
+        expect(fired).toEqual([expect.stringContaining('Unknown expression "nope"')]);
     });
 
-    test('warns without failing for a filter that mixes legacy and expression syntax', () => {
-        const evented = new TestEmitter();
-        const errorSpy = vi.fn();
-        evented.on('error', errorSpy);
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    test('only warns for a filter that mixes legacy syntax into an expression, so the style keeps loading', () => {
+        const {emitter, fired, warn} = setup();
 
-        const hasErrors = validateAndEmit(evented, validateFilter, {
-            key: 'layers.symbol.filter',
-            value: mixedLegacyAndExpressionFilter
+        const hasErrors = validateAndEmit(emitter, validateFilter, {
+            key,
+            value: ['all', ['==', ['get', 'class'], 'rail'], ['in', 'name', '']]
         });
 
         expect(hasErrors).toBe(false);
-        expect(errorSpy).not.toHaveBeenCalled();
-        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Mixing deprecated filter syntax with expression syntax'));
+        expect(fired).toEqual([]);
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('Mixing deprecated filter syntax with expression syntax'));
     });
 
     test('skips validation entirely when the validate option is false', () => {
-        const evented = new TestEmitter();
-        const errorSpy = vi.fn();
-        evented.on('error', errorSpy);
+        const {emitter, fired} = setup();
 
-        const hasErrors = validateAndEmit(evented, validateFilter, {
-            key: 'layers.symbol.filter',
-            value: 'notafilter'
-        }, {validate: false});
-
-        expect(hasErrors).toBe(false);
-        expect(errorSpy).not.toHaveBeenCalled();
+        expect(validateAndEmit(emitter, validateFilter, {key, value: 'notafilter'}, {validate: false})).toBe(false);
+        expect(fired).toEqual([]);
     });
 });
