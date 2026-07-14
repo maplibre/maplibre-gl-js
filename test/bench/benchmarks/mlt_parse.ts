@@ -19,15 +19,11 @@ type MLTParseOptions = {
  * Isolates the worker-side cost of turning an MLT tile into renderable geometry.
  * It drives {@link TileParser} so it covers decode + `loadGeometry` + bucket population + tessellation
  */
-export default class MLTParse extends Benchmark {
+abstract class MLTParse extends Benchmark {
     parser: TileParser;
     tile: {tileID: OverscaledTileID; buffer: ArrayBuffer};
-    options: MLTParseOptions;
 
-    constructor(options: MLTParseOptions) {
-        super();
-        this.options = options;
-    }
+    abstract get options(): MLTParseOptions;
 
     async setup(): Promise<void> {
         const style: StyleSpecification = {
@@ -52,5 +48,39 @@ export default class MLTParse extends Benchmark {
 
     async bench(): Promise<void> {
         await this.parser.parseTile(this.tile);
+    }
+}
+
+const fillLayers: LayerSpecification[] = [
+    {id: 'landcover', type: 'fill', source: 'openmaptiles', 'source-layer': 'landcover', paint: {'fill-color': '#008000'}}
+];
+const fillExtrusionLayers: LayerSpecification[] = [
+    {id: 'background', type: 'background', paint: {'background-color': '#ffffff'}},
+    {id: 'building', type: 'fill-extrusion', source: 'openmaptiles', 'source-layer': 'building', paint: {'fill-extrusion-color': '#c86432', 'fill-extrusion-height': 20}}
+];
+const fillTileID = new OverscaledTileID(5, 0, 5, 22, 12);
+const buildingTileID = new OverscaledTileID(14, 0, 14, 8716, 5685);
+
+export class MLTFillTessellated extends MLTParse {
+    get options(): MLTParseOptions {
+        return {tilesDir: 'mlt', tileID: fillTileID, layers: fillLayers};
+    }
+}
+
+export class MLTFillUntessellated extends MLTParse {
+    get options(): MLTParseOptions {
+        return {tilesDir: 'mlt-untessellated', tileID: fillTileID, layers: fillLayers};
+    }
+}
+
+export class MLTFillExtrusionTessellated extends MLTParse {
+    get options(): MLTParseOptions {
+        return {tilesDir: 'mlt', tileID: buildingTileID, layers: fillExtrusionLayers};
+    }
+}
+
+export class MLTFillExtrusionUntessellated extends MLTParse {
+    get options(): MLTParseOptions {
+        return {tilesDir: 'mlt-untessellated', tileID: buildingTileID, layers: fillExtrusionLayers};
     }
 }
