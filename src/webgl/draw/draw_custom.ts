@@ -5,8 +5,43 @@ import type {Painter, RenderOptions} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {CustomLayerProjectionDataParams, CustomRenderMethodInput, CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
+import {GEOJSON_TILE_LAYER_NAME} from '../../data/feature_index.ts';
 
-export function drawCustom(painter: Painter, tileManager: TileManager, layer: CustomStyleLayer, renderOptions: RenderOptions): void {
+export function getCustomLayerTiles(tileManager: TileManager | undefined, sourceLayer: string): CustomRenderMethodInput['tiles'] {
+    if (!tileManager) return [];
+    const sourceType = tileManager.getSource().type;
+    if (sourceType !== 'vector' && sourceType !== 'geojson') {
+        throw new Error(`Custom layers do not support source type "${sourceType}"`);
+    }
+    if (sourceType === 'vector' && !sourceLayer) {
+        throw new Error('Custom layers using a vector source must specify "source-layer"');
+    }
+
+    return tileManager.getVisibleCoordinates().flatMap((tileID) => {
+        const tile = tileManager.getTile(tileID);
+        if (!tile) return [];
+
+        const featureIndex = tile.latestFeatureIndex;
+        if (!featureIndex?.rawTileData) return [];
+        const layers = featureIndex.loadVTLayers();
+        const features = layers[sourceType === 'geojson' ? GEOJSON_TILE_LAYER_NAME : sourceLayer];
+        if (!features) return [];
+
+        return [{
+            tileID: {
+                wrap: tileID.wrap,
+                canonical: {
+                    z: tileID.canonical.z,
+                    x: tileID.canonical.x,
+                    y: tileID.canonical.y,
+                }
+            },
+            data: {type: 'vector', features}
+        }];
+    });
+}
+
+export function drawCustom(painter: Painter, tileManager: TileManager | undefined, layer: CustomStyleLayer, renderOptions: RenderOptions): void {
 
     const {isRenderingGlobe} = renderOptions;
     const context = painter.context;
@@ -17,6 +52,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
     const projectionData = transform.getProjectionDataForCustomLayer(isRenderingGlobe);
 
     const customLayerArgs: CustomRenderMethodInput = {
+        tiles: getCustomLayerTiles(tileManager, layer.sourceLayer || ''),
         farZ: transform.farZ,
         nearZ: transform.nearZ,
         fov: transform.fov * Math.PI / 180, // fov converted to radians

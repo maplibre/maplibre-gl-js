@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Allow custom layers to access visible vector and GeoJSON source tiles ([#7913](https://github.com/maplibre/maplibre-gl-js/pull/7913)) (by [@Kanahiro](https://github.com/Kanahiro))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

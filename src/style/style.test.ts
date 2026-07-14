@@ -746,6 +746,31 @@ describe('Style._remove', () => {
 });
 
 describe('Style.update', () => {
+    test('uses a source referenced only by a custom layer', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON({sources: {models: createSource()}}));
+        await style.once('style.load');
+        style.addLayer({
+            id: 'models',
+            type: 'custom',
+            source: 'models',
+            'source-layer': 'models',
+            render() {}
+        });
+
+        style.update({zoom: 1} as EvaluationParameters);
+
+        expect(style.tileManagers.models.used).toBe(true);
+
+        style.setLayoutProperty('models', 'visibility', 'none');
+        style.update({zoom: 1} as EvaluationParameters);
+        expect(style.tileManagers.models.used).toBe(false);
+
+        style.removeLayer('models');
+        style.update({zoom: 1} as EvaluationParameters);
+        expect(style.tileManagers.models.used).toBe(false);
+    });
+
     test('debounces setImages broadcast to once per update', async () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON());

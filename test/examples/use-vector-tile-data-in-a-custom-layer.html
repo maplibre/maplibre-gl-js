@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Use vector tile data in a custom layer</title>
+    <meta property="og:description" content="Use visible vector tile features to place instances of a GLTF model." />
+    <meta property="og:category" content="3D Models & Buildings" />
+    <meta property="og:created" content="2026-07-12" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../../dist/maplibre-gl.css" />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+        }
+    }
+</script>
+<div id="map"></div>
+
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+    import * as THREE from 'three';
+    import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [12, 48],
+        zoom: 5,
+        pitch: 55,
+        bearing: -15,
+        canvasContextAttributes: {antialias: true}
+    });
+
+    const maxModels = 500;
+    const modelLayer = {
+        id: 'custom-country-models',
+        type: 'custom',
+        renderingMode: '3d',
+        source: 'maplibre',
+        'source-layer': 'centroids',
+
+        onAdd(map, gl) {
+            this.camera = new THREE.Camera();
+            this.scene = new THREE.Scene();
+            this.scene.add(new THREE.HemisphereLight(0xdff4ff, 0x293241, 2.5));
+
+            new GLTFLoader().load(
+                'https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf',
+                (gltf) => {
+                    gltf.scene.updateMatrixWorld(true);
+                    this.modelMeshes = [];
+                    const rotation = new THREE.Matrix4().makeRotationX(Math.PI / 2);
+                    gltf.scene.traverse((object) => {
+                        if (!object.isMesh) return;
+                        const mesh = new THREE.InstancedMesh(object.geometry, object.material, maxModels);
+                        mesh.frustumCulled = false;
+                        mesh.count = 0;
+                        this.scene.add(mesh);
+                        this.modelMeshes.push({
+                            mesh,
+                            modelMatrix: new THREE.Matrix4().multiplyMatrices(rotation, object.matrixWorld)
+                        });
+                    });
+                    map.triggerRepaint();
+                }
+            );
+
+            this.renderer = new THREE.WebGLRenderer({
+                canvas: map.getCanvas(),
+                context: gl,
+                antialias: true
+            });
+            this.renderer.autoClear = false;
+        },
+
+        render(_gl, {tiles, defaultProjectionData}) {
+            if (!this.modelMeshes) return;
+
+            const matrices = [];
+
+            for (const {tileID, data} of tiles) {
+                const tileCount = 2 ** tileID.canonical.z;
+                for (let index = 0; index < data.features.length; index++) {
+                    const feature = data.features.feature(index);
+                    if (feature.type !== 1) continue;
+
+                    for (const geometry of feature.loadGeometry()) {
+                        const point = geometry[0];
+                        const mercator = new maplibregl.MercatorCoordinate(
+                            (tileID.canonical.x + point.x / feature.extent) / tileCount + (tileID.wrap ?? 0),
+                            (tileID.canonical.y + point.y / feature.extent) / tileCount
+                        );
+                        const scale = mercator.meterInMercatorCoordinateUnits() * 2500;
+                        matrices.push(new THREE.Matrix4()
+                            .makeTranslation(mercator.x, mercator.y, mercator.z)
+                            .scale(new THREE.Vector3(scale, -scale, scale))
+                        );
+                    }
+                }
+            }
+
+            const instanceMatrix = new THREE.Matrix4();
+            for (const {mesh, modelMatrix} of this.modelMeshes) {
+                mesh.count = Math.min(matrices.length, maxModels);
+                for (let index = 0; index < mesh.count; index++) {
+                    mesh.setMatrixAt(index, instanceMatrix.multiplyMatrices(matrices[index], modelMatrix));
+                }
+                mesh.instanceMatrix.needsUpdate = true;
+            }
+
+            this.camera.projectionMatrix.fromArray(defaultProjectionData.mainMatrix);
+            this.renderer.resetState();
+            this.renderer.render(this.scene, this.camera);
+        },
+
+        onRemove() {
+            for (const {mesh} of this.modelMeshes ?? []) {
+                mesh.geometry.dispose();
+                for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+                    material.dispose();
+                }
+            }
+            this.renderer.dispose();
+        }
+    };
+
+    map.on('load', () => {
+        map.addLayer(modelLayer);
+    });
+</script>
+</body>
+</html>

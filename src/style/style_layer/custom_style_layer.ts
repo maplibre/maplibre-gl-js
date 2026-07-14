@@ -3,6 +3,7 @@ import type {Map} from '../../ui/map.ts';
 import {type mat4} from 'gl-matrix';
 import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerProjectionData, RendererProjectionData} from '../../geo/projection/projection_data.ts';
+import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 /**
  * Type for an object literal that specifies a map tile.
@@ -52,6 +53,24 @@ export type CustomLayerProjectionDataParams = {
 * Input arguments exposed by custom render function.
 */
 export type CustomRenderMethodInput = {
+    /**
+     * Renderable tiles from the custom layer's source. This is empty when the layer has no source.
+     */
+    tiles: ReadonlyArray<{
+        /** The tile coordinates. */
+        tileID: UnwrappedTileIDLiteral;
+        /** The source data for this tile. */
+        data: {
+            type: 'vector';
+            /** Features using tile-local coordinates. */
+            features: {
+                /** Number of features. */
+                length: number;
+                /** Returns a feature by index. */
+                feature: (index: number) => VectorTileFeatureLike;
+            };
+        };
+    }>;
     /**
      * This value represents the distance from the camera to the far clipping plane.
      * It is used in the calculation of the projection matrix to determine which objects are visible.
@@ -248,6 +267,14 @@ export interface CustomLayerInterface {
      */
     type: 'custom';
     /**
+     * The ID of a vector or GeoJSON source whose renderable tiles are made available to this layer.
+     */
+    source?: string;
+    /**
+     * The source layer to read from a vector tile source. Required for vector sources and must not be set for GeoJSON sources.
+     */
+    'source-layer'?: string;
+    /**
      * Either `"2d"` or `"3d"`. Defaults to `"2d"`.
      */
     renderingMode?: '2d' | '3d';
@@ -328,6 +355,8 @@ export class CustomStyleLayer extends StyleLayer {
     constructor(implementation: CustomLayerInterface, globalState: Record<string, any>) {
         super(implementation, {}, globalState);
         this.implementation = implementation;
+        this.source = implementation.source;
+        this.sourceLayer = implementation['source-layer'];
     }
 
     is3D(): boolean {
