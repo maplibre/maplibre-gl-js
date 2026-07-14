@@ -1,6 +1,7 @@
 import {describe, test, expect, vi, afterEach} from 'vitest';
 import {emitValidationErrors, validateAndEmit, validateFilter} from './validate_style.ts';
 import {Evented} from '../util/evented.ts';
+import {featureFilter, type FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 class TestEmitter extends Evented {}
 
@@ -139,6 +140,31 @@ describe('validateAndEmit', () => {
 
         expect(hasErrors).toBe(false);
         expect(errorSpy).not.toHaveBeenCalled();
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Mixing deprecated filter syntax with expression syntax'));
+    });
+
+    test('still fails for a mixed filter that cannot compile, rather than letting featureFilter throw', () => {
+        const evented = new TestEmitter();
+        const errorSpy = vi.fn();
+        evented.on('error', errorSpy);
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        // Some legacy operators survive inside an expression tree as valid-but-wrong expressions,
+        // which is why mixing is only a warning. `!in` is not one of them: it does not parse, so
+        // the spec reports an error alongside the warning. That error has to keep failing the
+        // value, because featureFilter() throws outright on a filter it cannot compile — aborting
+        // here is what keeps that throw unreachable.
+        const filter = ['all', ['==', ['get', 'class'], 'rail'], ['!in', 'name', 'a', 'b']];
+        expect(() => featureFilter(filter as FilterSpecification, 'layers.symbol.filter')).toThrow();
+
+        const hasErrors = validateAndEmit(evented, validateFilter, {
+            key: 'layers.symbol.filter',
+            value: filter
+        });
+
+        expect(hasErrors).toBe(true);
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        expect(errorSpy.mock.calls[0][0].error.message).toMatch(/Unknown expression "!in"/);
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Mixing deprecated filter syntax with expression syntax'));
     });
 
