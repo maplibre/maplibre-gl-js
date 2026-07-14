@@ -122,8 +122,6 @@ function nativeType(property: SpecValue): string {
             return 'VariableAnchorOffsetCollection';
         case 'projectionDefinition':
             return 'ProjectionDefinitionSpecification';
-        case 'sprite':
-            return 'Sprite';
         case 'formatted':
             return 'Formatted';
         case 'resolvedImage':
@@ -192,12 +190,8 @@ function runtimeType(property: SpecValue): string {
             return 'PaddingType';
         case 'variableAnchorOffsetCollection':
             return 'VariableAnchorOffsetCollectionType';
-        case 'sprite':
-            return 'SpriteType';
         case 'formatted':
             return 'FormattedType';
-        case 'Image':
-            return 'ImageType';
         case 'array': {
             const inner = runtimeType(elementOf(property));
             return property.length ? `array(${inner}, ${property.length})` : `array(${inner})`;
