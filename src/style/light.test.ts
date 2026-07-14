@@ -1,4 +1,4 @@
-import {describe, test, expect, vi} from 'vitest';
+import {describe, test, expect, vi, afterEach} from 'vitest';
 import {Light} from './light.ts';
 import {Color, latest as styleSpec, type LightSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {sphericalToCartesian} from '../util/util.ts';
@@ -12,7 +12,8 @@ test('Light with defaults', () => {
     light.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters);
 
     expect(light.properties.get('anchor')).toEqual(spec.anchor.default);
-    expect(light.properties.get('position')).toEqual(sphericalToCartesian(spec.position.default as [number, number, number]));
+    expect(light.properties.get('position')).toEqual(spec.position.default);
+    expect(light.getCartesianPosition()).toEqual(sphericalToCartesian(spec.position.default as [number, number, number]));
     expect(light.properties.get('intensity')).toEqual(spec.intensity.default);
     expect(light.properties.get('color')).toEqual(Color.parse(spec.color.default));
 });
@@ -26,7 +27,8 @@ test('Light with options', () => {
     light.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters);
 
     expect(light.properties.get('anchor')).toBe('map');
-    expect(light.properties.get('position')).toEqual(sphericalToCartesian([2, 30, 30]));
+    expect(light.properties.get('position')).toEqual([2, 30, 30]);
+    expect(light.getCartesianPosition()).toEqual(sphericalToCartesian([2, 30, 30]));
     expect(light.properties.get('intensity')).toBe(1);
     expect(light.properties.get('color')).toEqual(Color.parse(spec.color.default));
 });
@@ -83,5 +85,24 @@ describe('Light.setLight', () => {
         expect(lightSpy).toHaveBeenCalledTimes(1);
         expect(lightSpy.mock.calls[0][2]).toEqual({validate: false});
         expect(light.properties.get('color')).toEqual([999]);
+    });
+});
+
+describe('Light runtime error logging', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    test('warns with the light property location when an expression errors at runtime', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        const light = new Light({});
+        // global-state defeats constant-folding, so this fails at evaluation time (not parse time).
+        light.setLight({intensity: ['number', ['global-state', 'missing']]} as any, {validate: false});
+        light.updateTransitions({transition: false} as any as TransitionParameters);
+        light.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);
+
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0][0]).toBe('light.intensity: Expected value to be of type number, but found null instead. Falling back to 0.5.');
     });
 });
