@@ -27,9 +27,11 @@ type LightPosition = {
 
 class LightPositionProperty implements Property<[number, number, number], LightPosition> {
     specification: StylePropertySpecification;
+    name: string;
 
     constructor() {
         this.specification = styleSpec.light.position as StylePropertySpecification;
+        this.name = 'position';
     }
 
     possiblyEvaluate(
@@ -75,12 +77,12 @@ export class Light extends Evented {
     constructor(lightOptions?: LightSpecification) {
         super();
         lightProperties ||= new Properties({
-            'anchor': new DataConstantProperty(styleSpec.light.anchor as StylePropertySpecification),
+            'anchor': new DataConstantProperty(styleSpec.light.anchor as StylePropertySpecification, 'anchor'),
             'position': new LightPositionProperty(),
-            'color': new DataConstantProperty(styleSpec.light.color as StylePropertySpecification),
-            'intensity': new DataConstantProperty(styleSpec.light.intensity as StylePropertySpecification),
+            'color': new DataConstantProperty(styleSpec.light.color as StylePropertySpecification, 'color'),
+            'intensity': new DataConstantProperty(styleSpec.light.intensity as StylePropertySpecification, 'intensity'),
         });
-        this._transitionable = new Transitionable(lightProperties, undefined);
+        this._transitionable = new Transitionable(lightProperties, 'light', undefined);
         this.setLight(lightOptions);
         this._transitioning = this._transitionable.untransitioned();
     }

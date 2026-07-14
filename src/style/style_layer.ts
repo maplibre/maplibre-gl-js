@@ -132,7 +132,7 @@ export abstract class StyleLayer extends Evented {
         this.type = layer.type;
         this._globalState = globalState;
         this._featureFilter = {filter: () => true, needGeometry: false, getGlobalStateRefs: () => new Set<string>()};
-        this._visibilityExpression = createVisibilityExpression(this.visibility, globalState);
+        this._visibilityExpression = createVisibilityExpression(this.visibility, `layers[${this.id}].layout.visibility`, globalState);
 
         if (layer.type === 'custom') return;
 
@@ -144,15 +144,15 @@ export abstract class StyleLayer extends Evented {
             this.source = layer.source;
             this.sourceLayer = layer['source-layer'];
             this.filter = layer.filter;
-            this._featureFilter = featureFilter(layer.filter, globalState);
+            this._featureFilter = featureFilter(layer.filter, `layers[${this.id}].filter`, globalState);
         }
 
         if (properties.layout) {
-            this._unevaluatedLayout = new Layout(properties.layout, globalState);
+            this._unevaluatedLayout = new Layout(properties.layout, `layers[${this.id}].layout`, globalState);
         }
 
         if (properties.paint) {
-            this._transitionablePaint = new Transitionable(properties.paint, globalState);
+            this._transitionablePaint = new Transitionable(properties.paint, `layers[${this.id}].paint`, globalState);
 
             for (const property in layer.paint) {
                 this.setPaintProperty(property as keyof AllPaintProperties, layer.paint[property as keyof typeof layer.paint], {validate: false});
@@ -168,7 +168,7 @@ export abstract class StyleLayer extends Evented {
 
     setFilter(filter: FilterSpecification | void): void {
         this.filter = filter;
-        this._featureFilter = featureFilter(filter, this._globalState);
+        this._featureFilter = featureFilter(filter, `layers[${this.id}].filter`, this._globalState);
     }
 
     getCrossfadeParameters(): CrossfadeParameters {

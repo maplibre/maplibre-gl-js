@@ -36,7 +36,7 @@ class ExpressionBenchmark extends Benchmark {
             const expressionData = (rawValue, propertySpec: StylePropertySpecification): DataT => {
                 const rawExpression = convertFunction(rawValue, propertySpec);
                 const compiledFunction = createFunction(rawValue, propertySpec) as StylePropertyExpression;
-                const compiledExpression = createPropertyExpression(rawExpression, propertySpec);
+                const compiledExpression = createPropertyExpression(rawExpression, 'expression', propertySpec);
                 if (compiledExpression.result === 'error') {
                     throw new Error(compiledExpression.value.map(err => `${err.key}: ${err.message}`).join(', '));
                 }
@@ -83,7 +83,7 @@ export class FunctionEvaluate extends ExpressionBenchmark {
 export class ExpressionCreate extends ExpressionBenchmark {
     bench(): void {
         for (const {rawExpression, propertySpec} of this.data) {
-            createPropertyExpression(rawExpression, propertySpec);
+            createPropertyExpression(rawExpression, 'expression', propertySpec);
         }
     }
 }

@@ -20,7 +20,7 @@ type ProjectionPossiblyEvaluated = {
 };
 
 const properties: Properties<ProjectionProps> = new Properties({
-    'type': new DataConstantProperty(styleSpec.projection.type as StylePropertySpecification)
+    'type': new DataConstantProperty(styleSpec.projection.type as StylePropertySpecification, 'type')
 });
 
 export class GlobeProjection extends Evented implements Projection {
@@ -33,7 +33,7 @@ export class GlobeProjection extends Evented implements Projection {
 
     constructor(projection?: ProjectionSpecification) {
         super();
-        this._transitionable = new Transitionable(properties, undefined);
+        this._transitionable = new Transitionable(properties, 'projection', undefined);
         this.setProjection(projection);
         this._transitioning = this._transitionable.untransitioned();
         this.recalculate(new EvaluationParameters(0));
