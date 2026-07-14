@@ -174,6 +174,27 @@ describe('map events', () => {
         expect(contextmenu).toHaveBeenCalledTimes(1);
     });
 
+    test('MapEvent handler does not fire contextmenu on a cancelled touch long press, and does not leak to the next tap', () => {
+        const map = createMap();
+        const relatedTarget = map.getCanvas();
+        map.dragPan.enable();
+
+        const contextmenu = vi.fn();
+        map.on('contextmenu', contextmenu);
+
+        const touches = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
+        // A long press the browser cancels (touchcancel) instead of ending normally.
+        simulate.touchstart(map.getCanvas(), {touches, targetTouches: touches});
+        simulate.contextmenu(map.getCanvas(), {relatedTarget}); // native contextmenu during the press
+        simulate.touchcancel(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: touches});
+        expect(contextmenu).toHaveBeenCalledTimes(0); // cancelled press never fires
+
+        // A following tap must not fire a stale contextmenu from the cancelled press.
+        simulate.touchstart(map.getCanvas(), {touches, targetTouches: touches});
+        simulate.touchend(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: touches});
+        expect(contextmenu).toHaveBeenCalledTimes(0);
+    });
+
     test('MapMouseEvent constructor does not throw error with Event instance instead of MouseEvent as originalEvent param', () => {
         const map = createMap();
         const target = map.getCanvasContainer();

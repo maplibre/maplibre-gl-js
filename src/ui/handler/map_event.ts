@@ -146,6 +146,14 @@ export class BlockableMapEventHandler {
         this.mouseup();
     }
 
+    touchcancel(): void {
+        // A cancelled touch (for example when the browser takes over a long
+        // press) must not fire a contextmenu, and must not leave the delayed
+        // event armed, or the next tap would fire a stale contextmenu.
+        this._delayContextMenu = false;
+        delete this._contextMenuEvent;
+    }
+
     contextmenu(e: MouseEvent): void {
         if (this._delayContextMenu) {
             // Mac: contextmenu fired on mousedown; we save it until mouseup for consistency's sake
