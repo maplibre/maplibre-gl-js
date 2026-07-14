@@ -51,9 +51,6 @@ function createGeoJSONSource(): GeoJSONSourceSpecification {
     };
 }
 
-// A filter whose root is an expression (`["get", ...]`) but which still contains a legacy
-// sub-filter (`["in", "name", ""]`). The style spec reports this as a *warning*: it renders, just
-// not necessarily as its author intended. See https://github.com/maplibre/maplibre-style-spec/issues/1751
 const mixedLegacyAndExpressionFilter = [
     'all',
     ['==', ['get', 'class'], 'rail'],
