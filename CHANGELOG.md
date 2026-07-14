@@ -5,6 +5,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix a Chromium performance warning caused by the globe projection error measurement reusing a single fenced `STREAM_READ` pixel-pack buffer for every asynchronous readback; each measurement now owns a fresh PBO that is deleted after readback ([#7872](https://github.com/maplibre/maplibre-gl-js/issues/7872)) (by [@mondsichtung](https://github.com/mondsichtung))
 - _...Add new stuff here..._
 
 ## 6.0.0-21

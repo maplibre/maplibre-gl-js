@@ -55,7 +55,6 @@ export class ProjectionErrorMeasurement {
     private _fullscreenTriangle: Mesh;
     private _fbo: Framebuffer;
     private _resultBuffer: Uint8Array;
-    private _pbo: WebGLBuffer;
     private _cachedRenderContext: ProjectionGPUContext;
 
     private _measuredError: number = 0; // Result of last measurement
@@ -70,6 +69,7 @@ export class ProjectionErrorMeasurement {
     private _readbackQueue: {
         frameNumberIssued: number; // Frame number when the data was first computed
         sync: WebGLSync;
+        pbo: WebGLBuffer;
     } = null;
 
     public constructor(renderContext: ProjectionGPUContext) {
@@ -108,21 +108,14 @@ export class ProjectionErrorMeasurement {
 
         this._fbo = context.createFramebuffer(this._texWidth, this._texHeight, false, false);
         this._fbo.colorAttachment.set(texture);
-
-        this._pbo = gl.createBuffer();
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
-        gl.bufferData(gl.PIXEL_PACK_BUFFER, 4, gl.STREAM_READ);
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
     }
 
     public destroy(): void {
-        const gl = this._cachedRenderContext.context.gl;
+        this._releaseReadback();
         this._fullscreenTriangle.destroy();
         this._fbo.destroy();
-        gl.deleteBuffer(this._pbo);
         this._fullscreenTriangle = null;
         this._fbo = null;
-        this._pbo = null;
         this._resultBuffer = null;
     }
 
@@ -172,8 +165,10 @@ export class ProjectionErrorMeasurement {
             '$clipping', this._fullscreenTriangle.vertexBuffer, this._fullscreenTriangle.indexBuffer,
             this._fullscreenTriangle.segments);
 
-        // Read back into PBO
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
+        // Read back into a PBO owned exclusively by this measurement
+        const pbo = gl.createBuffer();
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, pbo);
+        gl.bufferData(gl.PIXEL_PACK_BUFFER, 4, gl.STREAM_READ);
         gl.readBuffer(gl.COLOR_ATTACHMENT0);
         gl.readPixels(0, 0, this._texWidth, this._texHeight, this._texFormat, this._texType, 0);
         gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
@@ -183,6 +178,7 @@ export class ProjectionErrorMeasurement {
         this._readbackQueue = {
             frameNumberIssued: this._updateCount,
             sync,
+            pbo,
         };
     }
 
@@ -197,7 +193,7 @@ export class ProjectionErrorMeasurement {
 
         if (waitResult === gl.WAIT_FAILED) {
             warnOnce('WebGL2 clientWaitSync failed.');
-            this._readbackQueue = null;
+            this._releaseReadback();
             this._lastReadbackFrame = this._updateCount;
             return;
         }
@@ -206,14 +202,24 @@ export class ProjectionErrorMeasurement {
             return; // Wait one more frame
         }
 
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._readbackQueue.pbo);
         gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, this._resultBuffer, 0, 4);
         gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
 
         // If we made it here, _resultBuffer contains the new measurement
-        this._readbackQueue = null;
+        this._releaseReadback();
         this._measuredError = ProjectionErrorMeasurement._parseRGBA8float(this._resultBuffer);
         this._lastReadbackFrame = this._updateCount;
+    }
+
+    private _releaseReadback(): void {
+        if (!this._readbackQueue) {
+            return;
+        }
+        const gl = this._cachedRenderContext.context.gl;
+        gl.deleteBuffer(this._readbackQueue.pbo);
+        gl.deleteSync(this._readbackQueue.sync);
+        this._readbackQueue = null;
     }
 
     private static _parseRGBA8float(buffer: Uint8Array): number {
