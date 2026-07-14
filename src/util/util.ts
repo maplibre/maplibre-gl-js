@@ -194,7 +194,9 @@ export function angleToRotateBetweenVectors2D(vec1x: number, vec1y: number, vec2
     vec1y /= length1;
     vec2x /= length2;
     vec2y /= length2;
-    const dot = vec1x * vec2x + vec1y * vec2y;
+    // Rounding errors can push the dot product of two normalized vectors slightly
+    // outside [-1, 1], which would make acos return NaN.
+    const dot = clamp(vec1x * vec2x + vec1y * vec2y, -1, 1);
     const angle = Math.acos(dot);
     // dot second vector with vector to the right of first (-vec1y, vec1x)
     const isVec2RightOfVec1 = (-vec1y * vec2x + vec1x * vec2y) > 0;

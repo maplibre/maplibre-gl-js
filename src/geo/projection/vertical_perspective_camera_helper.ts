@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
-import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, type PanInertiaData, updateRotation, type UpdateRotationArgs, cameraForBoxAndBearing} from './camera_helper.ts';
+import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, type PanInertiaData, updateRotation, cameraForBoxAndBearing} from './camera_helper.ts';
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
-import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils.ts';
+import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe, lngLatBearingFromOrientation, orientationFromLngLatBearing, versorSetLocationAtPoint} from './globe_utils.ts';
 import {clamp, createVec3f64, createVec4f64, differenceOfAnglesDegrees, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
 import {type mat4, quat, vec3} from 'gl-matrix';
 import {normalizeCenter} from '../transform_helper.ts';
@@ -25,25 +25,68 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         easingBearing?: number;
         panInertia?: PanInertiaData;
     } {
-        const anchorPoint = around || transform.centerPoint;
+        if (fixedBearing !== false) {
+            const panCenter = computeGlobePanCenter(pan, transform);
+            if (Math.abs(panCenter.lng - transform.center.lng) > 180) {
+                // If easeTo target would be over 180° distant, the animation would move
+                // in the opposite direction that what the user intended.
+                // Thus we clamp the movement to 179.5°.
+                panCenter.lng = transform.center.lng + 179.5 * Math.sign(panCenter.lng - transform.center.lng);
+            }
+            return {
+                easingCenter: panCenter,
+                easingOffset: new Point(0, 0),
+            };
+        }
+
+        // Quaternion panning: compute the fling in angular space.
+        // A single setLocationAtPoint over the whole pan distance saturates at the
+        // horizon once the target pixel leaves the globe, hard-stopping the inertia.
+        // Instead, measure the versor rotation for a short probe step at the anchor
+        // and extend its axis-angle by the full pan distance.
+        const panMag = pan.mag();
+        if (panMag === 0) {
+            return {
+                easingCenter: transform.center,
+                easingOffset: new Point(0, 0),
+            };
+        }
+        const anchorPoint = around && transform.isPointOnMapSurface(around) ? around : transform.centerPoint;
         const location = transform.screenPointToLocation(anchorPoint);
-        const finalPoint = anchorPoint.add(pan);
+        const probeDistance = Math.min(panMag, 10);
         const cloneTr = (transform as ITransform).clone();
-        cloneTr.setLocationAtPoint(location, finalPoint, false);
-        const easingCenter = cloneTr.center;
+        versorSetLocationAtPoint(cloneTr, location, anchorPoint.add(pan.mult(probeDistance / panMag)));
+
+        const startQuat = orientationFromLngLatBearing(transform.center, transform.bearing);
+        const probeQuat = orientationFromLngLatBearing(cloneTr.center, cloneTr.bearing);
+        const deltaQuat = quat.multiply(createVec4f64(), quat.invert(createVec4f64(), startQuat), probeQuat);
+        if (deltaQuat[3] < 0) {
+            // Normalize to the representation with a positive scalar part, so that
+            // getAxisAngle returns the short rotation between the two orientations.
+            quat.scale(deltaQuat, deltaQuat, -1);
+        }
+        const axis = createVec3f64();
+        const probeAngle = quat.getAxisAngle(axis, deltaQuat);
+        // Cap the fling well below 180° so the slerp in easeTo cannot flip to the shorter, opposite arc.
+        const totalAngle = Math.min(probeAngle * (panMag / probeDistance), Math.PI * 0.75);
+        const endQuat = quat.multiply(createVec4f64(), startQuat, quat.setAxisAngle(createVec4f64(), axis, totalAngle));
+        const {lng: endLng, lat: endLat, bearing: endBearing} = lngLatBearingFromOrientation(endQuat);
+        const endCenter = new LngLat(endLng, endLat);
+
+        const easingCenter = new LngLat(endCenter.lng, endCenter.lat);
         if (Math.abs(easingCenter.lng - transform.center.lng) > 180) {
             easingCenter.lng = transform.center.lng + 179.5 * Math.sign(easingCenter.lng - transform.center.lng);
         }
         return {
             easingCenter,
             easingOffset: new Point(0, 0),
-            easingBearing: fixedBearing === false ? cloneTr.bearing : undefined,
-            panInertia: fixedBearing === false ? {
+            easingBearing: endBearing,
+            panInertia: {
                 startCenter: new LngLat(transform.center.lng, transform.center.lat),
                 startBearing: transform.bearing,
-                endCenter: new LngLat(cloneTr.center.lng, cloneTr.center.lat),
-                endBearing: cloneTr.bearing,
-            } : undefined,
+                endCenter,
+                endBearing,
+            },
         };
     }
 
@@ -139,7 +182,21 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
             return;
         }
 
-        tr.setLocationAtPoint(preZoomAroundLoc, deltas.around, fixedBearing);
+        if (fixedBearing === false) {
+            // Quaternion-based "grab a place and move it around" panning that also
+            // changes bearing, staying smooth near and across the poles.
+            versorSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around);
+            return;
+        }
+
+        // These are actually very similar to mercator controls, and should converge to them at high zooms.
+        // We avoid using the "grab a place and move it around" approach from mercator here,
+        // since it is not a very pleasant way to pan a globe.
+        const oldLat = tr.center.lat;
+        const oldZoom = tr.zoom;
+        tr.setCenter(computeGlobePanCenter(deltas.panDelta, tr).wrap());
+        // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
+        tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
@@ -287,9 +344,8 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         let panInertiaStartQuat: quat;
         let panInertiaEndQuat: quat;
         if (options.panInertia) {
-            const {startCenter: piStart, startBearing: piStartBearing, endCenter: piEnd, endBearing: piEndBearing} = options.panInertia;
-            panInertiaStartQuat = quat.fromEuler(createVec4f64() as any, -piStart.lng, -piStart.lat, piStartBearing);
-            panInertiaEndQuat = quat.fromEuler(createVec4f64() as any, -piEnd.lng, -piEnd.lat, piEndBearing);
+            panInertiaStartQuat = orientationFromLngLatBearing(options.panInertia.startCenter, options.panInertia.startBearing);
+            panInertiaEndQuat = orientationFromLngLatBearing(options.panInertia.endCenter, options.panInertia.endBearing);
         }
 
         const easeFunc = (k: number) => {
@@ -302,12 +358,9 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
                 // in quaternion space. This avoids screen-space interpolation which breaks
                 // when large pan vectors send the target point off the visible globe,
                 // and naturally couples center and bearing through the same rotation.
-                const interpolated: quat = createVec4f64() as any;
+                const interpolated: quat = createVec4f64();
                 quat.slerp(interpolated, panInertiaStartQuat, panInertiaEndQuat, k);
-                const [b, c, d, a] = interpolated;
-                const newLng = -(Math.atan2(2 * (a * b + c * d), 1 - 2 * (b * b + c * c)) * 180) / Math.PI;
-                const newLat = -(Math.asin(Math.max(-1, Math.min(1, 2 * (a * c - d * b)))) * 180) / Math.PI;
-                const newBearing = (Math.atan2(2 * (a * d + b * c), 1 - 2 * (c * c + d * d)) * 180) / Math.PI;
+                const {lng: newLng, lat: newLat, bearing: newBearing} = lngLatBearingFromOrientation(interpolated);
                 tr.setCenter(new LngLat(newLng, newLat));
                 tr.setBearing(newBearing);
             } else {
@@ -322,7 +375,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
                         endEulerAngles,
                         tr,
                         k,
-                        useSlerp: startEulerAngles.roll != endEulerAngles.roll} as UpdateRotationArgs);
+                        useSlerp: startEulerAngles.roll != endEulerAngles.roll});
                 }
 
                 if (options.around) {
