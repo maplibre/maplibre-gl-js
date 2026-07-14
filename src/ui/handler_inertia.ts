@@ -105,7 +105,7 @@ export class HandlerInertia {
         const easeOptions = {} as any;
 
         if (deltas.pan.mag()) {
-            const fixedBearing = typeof panInertiaOptions === 'object' ? panInertiaOptions?.fixedBearing : undefined;
+            const fixedBearing = this._map.dragPan.fixedBearing;
             const result = calculateEasing(deltas.pan.mag(), duration, extend({}, defaultPanInertiaOptions, panInertiaOptions || {}));
             const finalPan = deltas.pan.mult(result.amount / deltas.pan.mag());
             const computedEaseOptions = this._map._camera.cameraHelper.handlePanInertia(finalPan, this._map._camera.transform, deltas.around, fixedBearing);

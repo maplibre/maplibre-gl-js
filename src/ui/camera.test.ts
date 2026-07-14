@@ -3105,7 +3105,7 @@ describe('easeTo globe projection', () => {
                     bearing: result.easingBearing,
                     duration: 0,
                     _panInertia: result.panInertia,
-                } as any);
+                });
                 expect(isNaN(camera.getCenter().lng)).toBe(false);
                 expect(isNaN(camera.getCenter().lat)).toBe(false);
                 expect(isNaN(camera.getBearing())).toBe(false);
@@ -3125,7 +3125,7 @@ describe('easeTo globe projection', () => {
                     bearing: result.easingBearing,
                     duration: 0,
                     _panInertia: result.panInertia,
-                } as any);
+                });
 
                 // The final center should match the target from handlePanInertia
                 expect(camera.getCenter().lng).toBeCloseTo(result.easingCenter.lng, 4);
@@ -3176,6 +3176,40 @@ describe('easeTo globe projection', () => {
                 expect(isNaN(camera.getCenter().lat)).toBe(false);
                 // Bearing should not change
                 expect(camera.getBearing()).toBeCloseTo(0, 4);
+            });
+
+            test('inertia keeps moving when the fling target leaves the globe', () => {
+                // A vigorous fling puts anchor+pan far outside the globe. The end state
+                // must not saturate at the horizon (which would hard-stop the inertia).
+                const camera = createCameraGlobe({center: [0, 0], zoom: 1});
+                const bigPan = new Point(-450, 0);
+                const result = camera.cameraHelper.handlePanInertia(
+                    bigPan, camera.transform, camera.transform.centerPoint, false
+                );
+                const lngTravel = Math.abs(result.panInertia.endCenter.lng - result.panInertia.startCenter.lng);
+                expect(lngTravel).toBeGreaterThan(30);
+                expect(isNaN(result.panInertia.endCenter.lat)).toBe(false);
+                expect(isNaN(result.panInertia.endBearing)).toBe(false);
+            });
+
+            test('fling travel scales with pan distance', () => {
+                // Angular-space inertia: doubling the pan should move roughly twice as far,
+                // with no cliff when the target crosses the globe edge.
+                const angularTravel = (pan: Point) => {
+                    const camera = createCameraGlobe({center: [0, 20], zoom: 1});
+                    const result = camera.cameraHelper.handlePanInertia(
+                        pan, camera.transform, camera.transform.centerPoint, false
+                    );
+                    const {startCenter, endCenter} = result.panInertia;
+                    const toRad = Math.PI / 180;
+                    return Math.acos(
+                        Math.sin(startCenter.lat * toRad) * Math.sin(endCenter.lat * toRad) +
+                        Math.cos(startCenter.lat * toRad) * Math.cos(endCenter.lat * toRad) * Math.cos((endCenter.lng - startCenter.lng) * toRad));
+                };
+                const small = angularTravel(new Point(60, 0));
+                const large = angularTravel(new Point(240, 0));
+                expect(large).toBeGreaterThan(small * 3.5);
+                expect(large).toBeLessThan(small * 4.5);
             });
         });
 
@@ -3524,7 +3558,11 @@ describe('flyTo globe projection', () => {
         test('noop with offset', () => {
             const {camera} = createCamera(null, true);
             camera.flyTo({offset: [100, 0], animate: false});
-            expect(fixedLngLat(camera.getCenter())).toEqual({lng: 84.49542091, lat: 0});
+            // The offset target computation is degenerate (the offset point misses the
+            // globe), so the flight path collapses and flyTo delegates to easeTo,
+            // matching the easeTo 'noop with offset' result. The previous expectation
+            // (+84.49542091) relied on an unclamped acos returning NaN in the solver.
+            expect(fixedLngLat(camera.getCenter())).toEqual({lng: -84.49542091, lat: 0});
             expect(camera.getZoom()).toBe(0);
             expect(camera.getBearing()).toBeCloseTo(0);
         });

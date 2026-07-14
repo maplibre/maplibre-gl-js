@@ -18,7 +18,7 @@ import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {TaskID} from '../util/task_queue.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
-import type {ICameraHelper} from '../geo/projection/camera_helper.ts';
+import type {ICameraHelper, PanInertiaData} from '../geo/projection/camera_helper.ts';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -179,6 +179,13 @@ export type EaseToOptions = AnimationOptions & CameraOptions & {
     around?: LngLatLike;
     easeId?: string;
     noMoveStart?: boolean;
+    /**
+     * Start and end globe orientations of a pan fling under globe projection, used to
+     * interpolate the globe's rotation in quaternion space during the inertia animation.
+     * Set by the pan inertia handler when `DragPanOptions.fixedBearing` is `false`.
+     * @internal
+     */
+    _panInertia?: PanInertiaData;
 };
 
 /**
@@ -799,7 +806,7 @@ export class Camera extends Evented<MapEventType> {
             offset: options.offset,
             zoom: options.zoom,
             center: options.center,
-            panInertia: (options as any)._panInertia,
+            panInertia: options._panInertia,
         });
 
         this._rotating ||= (startBearing !== bearing);

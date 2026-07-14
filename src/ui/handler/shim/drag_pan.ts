@@ -71,10 +71,19 @@ export class DragPanHandler {
      * ```
      */
     enable(options?: DragPanOptions | boolean): void {
-        this._inertiaOptions = options || {fixedBearing: true};
+        this._inertiaOptions = options || {};
         this._mousePan.enable();
         this._touchPan.enable();
         this._el.classList.add('maplibregl-touch-drag-pan');
+    }
+
+    /**
+     * Returns the current `DragPanOptions.fixedBearing` setting,
+     * or `undefined` when it was not specified (which behaves like `true`).
+     * @internal
+     */
+    get fixedBearing(): boolean | undefined {
+        return typeof this._inertiaOptions === 'object' ? this._inertiaOptions.fixedBearing : undefined;
     }
 
     /**

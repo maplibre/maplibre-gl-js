@@ -574,11 +574,6 @@ export class HandlerManager {
             tr.center :
             tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
 
-        let fixedBearing: boolean;
-        if (typeof this._map.dragPan._inertiaOptions !== 'boolean') {
-            fixedBearing = this._map.dragPan._inertiaOptions.fixedBearing;
-        }
-
         this._handleMapControls({
             terrain,
             tr,
@@ -586,7 +581,7 @@ export class HandlerManager {
             preZoomAroundLoc,
             combinedEventsInProgress,
             panDelta,
-            fixedBearing,
+            fixedBearing: this._map.dragPan.fixedBearing,
         });
 
         this._camera.applyUpdatedTransform(tr);
