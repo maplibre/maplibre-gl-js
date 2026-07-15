@@ -16,7 +16,6 @@ describe('validateCustomStyleLayer', () => {
             'layers.undefined: missing required method "render"',
             'layers.undefined: property "renderingMode" must be either "2d" or "3d"'
         ]);
-        // Not warnings: each of these has to keep {@link Style.addLayer} from adding the layer.
         expect(errors.map(({severity}) => severity)).toEqual(['error', 'error', 'error']);
     });
 });
