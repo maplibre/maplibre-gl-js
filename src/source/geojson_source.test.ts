@@ -1312,3 +1312,29 @@ describe('GeoJSONSource.getClusterLeaves', () => {
         vi.resetAllMocks();
     });
 });
+
+describe('GeoJSONSource.getClusterOptions', () => {
+    test('returns the cluster options configured on the source', () => {
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: {} as GeoJSON.GeoJSON,
+            cluster: true,
+            clusterMaxZoom: 12,
+            clusterRadius: 80
+        }, mockDispatcher, undefined);
+
+        expect(source.getClusterOptions()).toEqual({cluster: true, clusterMaxZoom: 12, clusterRadius: 80});
+    });
+
+    test('reflects options updated via setClusterOptions', async () => {
+        const source = new GeoJSONSource('id', {
+            type: 'geojson',
+            data: {} as GeoJSON.GeoJSON,
+            cluster: false
+        }, mockDispatcher, undefined);
+
+        await source.setClusterOptions({cluster: true, clusterRadius: 40, clusterMaxZoom: 9});
+
+        expect(source.getClusterOptions()).toEqual({cluster: true, clusterMaxZoom: 9, clusterRadius: 40});
+    });
+});

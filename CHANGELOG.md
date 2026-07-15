@@ -2,6 +2,7 @@
 ### ✨ Features and improvements
 - Improve runtime error warnings to point at the offending style location (e.g. `layers[3].paint.line-color`, `layers[3].filter`) instead of just logging the bare error message ([#7869](https://github.com/maplibre/maplibre-gl-js/pull/7869)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - ⚠️ Interpolate the light position in spherical coordinates instead of cartesian ones, so that a transition keeps its radial distance. ([#7919](https://github.com/maplibre/maplibre-gl-js/pull/7919)) (by [@HarelM](https://github.com/HarelM))
+- Add `GeoJSONSource#getClusterOptions` to get a source's current cluster options (`cluster`, `clusterMaxZoom`, `clusterRadius`) ([#7948](https://github.com/maplibre/maplibre-gl-js/pull/7948)) (by [@lazerg](https://github.com/lazerg))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
