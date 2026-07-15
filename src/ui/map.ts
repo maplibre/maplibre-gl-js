@@ -357,6 +357,13 @@ export type MapOptions = {
      */
     rollEnabled?: boolean;
     /**
+     * Scales how fast the map's bearing changes when dragging to rotate. Values greater than `1`
+     * rotate faster than the default for a given drag distance, values between `0` and `1` rotate
+     * slower.
+     * @defaultValue 1
+     */
+    rotateSpeed?: number;
+    /**
      * If `true`, gesture inertia (such as panning) is disabled. If not provided, gesture inertia defaults to the user's device settings.
      * @defaultValue undefined
      */
@@ -531,6 +538,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     localIdeographFontFamily: 'sans-serif',
     pitchWithRotate: true,
     rollEnabled: false,
+    rotateSpeed: 1,
     reduceMotion: undefined,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */

@@ -40,6 +40,16 @@ describe('mouse handler tests', () => {
         expect(mouseRotate.isActive()).toBe(false);
     });
 
+    test('MouseRotateHandler with rotateSpeed', () => {
+        const mouseRotate = generateMouseRotationHandler({clickTolerance: 2, rotateSpeed: 2}, () => new Point(10, 10));
+
+        mouseRotate.enable();
+        mouseRotate.dragStart(new MouseEvent('mousedown', {buttons: 2, button: 2}), new Point(0, 0));
+
+        const overToleranceMove = new MouseEvent('mousemove', {buttons: 2, clientX: 10, clientY: 10});
+        expect((mouseRotate.dragMove(overToleranceMove, new Point(10, 10)) as DragRotateResult).bearingDelta).toBeCloseTo(16);
+    });
+
     test('MousePitchHandler', () => {
         const mousePitch = generateMousePitchHandler({clickTolerance: 2});
 
