@@ -9073,7 +9073,7 @@ function validateNoMixedLegacyFilter(options, value) {
 	if (!diagnostic) return [];
 	return [new ValidationError(`${options.key}${diagnostic.path.map((index) => `[${index}]`).join("")}`, getValueAtPath(options.value, diagnostic.path), getMixedFilterMessage(diagnostic.legacyFilter), null, "warning")];
 }
-function validateFilter$1(options) {
+function validateFilter(options) {
 	const value = deepUnbundle(options.value);
 	if (!isExpressionFilter(value)) return validateNonExpressionFilter(options);
 	return [...validateNoMixedLegacyFilter(options, value), ...validateExpression(extendBy({}, options, {
@@ -9176,10 +9176,10 @@ function validateProperty(options, propertyType) {
 		propertyKey
 	}));
 }
-function validatePaintProperty$1(options) {
+function validatePaintProperty(options) {
 	return validateProperty(options, "paint");
 }
-function validateLayoutProperty$1(options) {
+function validateLayoutProperty(options) {
 	return validateProperty(options, "layout");
 }
 function validateLayer(options) {
@@ -9253,7 +9253,7 @@ function validateLayer(options) {
 					objectKey: "type"
 				});
 			},
-			filter: validateFilter$1,
+			filter: validateFilter,
 			layout(options) {
 				return validateObject({
 					layer,
@@ -9263,7 +9263,7 @@ function validateLayer(options) {
 					styleSpec: options.styleSpec,
 					validateSpec: options.validateSpec,
 					objectElementValidators: { "*"(options) {
-						return validateLayoutProperty$1(extendBy({ layerType: type }, options));
+						return validateLayoutProperty(extendBy({ layerType: type }, options));
 					} }
 				});
 			},
@@ -9276,7 +9276,7 @@ function validateLayer(options) {
 					styleSpec: options.styleSpec,
 					validateSpec: options.validateSpec,
 					objectElementValidators: { "*"(options) {
-						return validatePaintProperty$1(extendBy({ layerType: type }, options));
+						return validatePaintProperty(extendBy({ layerType: type }, options));
 					} }
 				});
 			}
@@ -9325,7 +9325,7 @@ function validateRasterDEMSource(options) {
 	return errors;
 }
 const objectElementValidators = { promoteId: validatePromoteId };
-function validateSource$1(options) {
+function validateSource(options) {
 	const value = options.value;
 	const key = options.key;
 	const styleSpec = options.styleSpec;
@@ -9435,7 +9435,7 @@ function validatePromoteId({ key, value }) {
 		return errors;
 	}
 }
-function validateLight$1(options) {
+function validateLight(options) {
 	const light = options.value;
 	const styleSpec = options.styleSpec;
 	const lightSpec = styleSpec.light;
@@ -9469,7 +9469,7 @@ function validateLight$1(options) {
 	}
 	return errors;
 }
-function validateSky$1(options) {
+function validateSky(options) {
 	const sky = options.value;
 	const styleSpec = options.styleSpec;
 	const skySpec = styleSpec.sky;
@@ -9488,7 +9488,7 @@ function validateSky$1(options) {
 	else errors = errors.concat([new ValidationError(key, sky[key], `unknown property "${key}"`)]);
 	return errors;
 }
-function validateTerrain$1(options) {
+function validateTerrain(options) {
 	const terrain = options.value;
 	const styleSpec = options.styleSpec;
 	const terrainSpec = styleSpec.terrain;
@@ -9733,14 +9733,14 @@ const VALIDATORS = {
 	color: validateColor,
 	constants: validateConstants,
 	enum: validateEnum,
-	filter: validateFilter$1,
+	filter: validateFilter,
 	function: validateFunction,
 	layer: validateLayer,
 	object: validateObject,
-	source: validateSource$1,
-	light: validateLight$1,
-	sky: validateSky$1,
-	terrain: validateTerrain$1,
+	source: validateSource,
+	light: validateLight,
+	sky: validateSky,
+	terrain: validateTerrain,
 	projection: validateProjection,
 	projectionDefinition: validateProjectionDefinition,
 	string: validateString,
@@ -9826,17 +9826,17 @@ function validateStyleMin(style, styleSpec = latest) {
 	}));
 	return sortErrors(errors);
 }
-validateStyleMin.source = wrapCleanErrors(injectValidateSpec(validateSource$1));
+validateStyleMin.source = wrapCleanErrors(injectValidateSpec(validateSource));
 validateStyleMin.sprite = wrapCleanErrors(injectValidateSpec(validateSprite));
 validateStyleMin.glyphs = wrapCleanErrors(injectValidateSpec(validateGlyphsUrl));
-validateStyleMin.light = wrapCleanErrors(injectValidateSpec(validateLight$1));
-validateStyleMin.sky = wrapCleanErrors(injectValidateSpec(validateSky$1));
-validateStyleMin.terrain = wrapCleanErrors(injectValidateSpec(validateTerrain$1));
+validateStyleMin.light = wrapCleanErrors(injectValidateSpec(validateLight));
+validateStyleMin.sky = wrapCleanErrors(injectValidateSpec(validateSky));
+validateStyleMin.terrain = wrapCleanErrors(injectValidateSpec(validateTerrain));
 validateStyleMin.state = wrapCleanErrors(injectValidateSpec(validateState));
 validateStyleMin.layer = wrapCleanErrors(injectValidateSpec(validateLayer));
-validateStyleMin.filter = wrapCleanErrors(injectValidateSpec(validateFilter$1));
-validateStyleMin.paintProperty = wrapCleanErrors(injectValidateSpec(validatePaintProperty$1));
-validateStyleMin.layoutProperty = wrapCleanErrors(injectValidateSpec(validateLayoutProperty$1));
+validateStyleMin.filter = wrapCleanErrors(injectValidateSpec(validateFilter));
+validateStyleMin.paintProperty = wrapCleanErrors(injectValidateSpec(validatePaintProperty));
+validateStyleMin.layoutProperty = wrapCleanErrors(injectValidateSpec(validateLayoutProperty));
 function injectValidateSpec(validator) {
 	return function(options) {
 		return validator(Object.assign({}, options, { validateSpec: validate }));
@@ -10539,20 +10539,47 @@ var Evented = class {
 //#endregion
 //#region src/style/validate_style.ts
 const validateStyle = validateStyleMin;
-validateStyle.source;
-validateStyle.light;
-validateStyle.sky;
-validateStyle.terrain;
-validateStyle.filter;
-const validatePaintProperty = validateStyle.paintProperty;
-const validateLayoutProperty = validateStyle.layoutProperty;
+new Set(Object.keys(latest).filter((key) => key.startsWith("source_")).map((key) => key.slice(7).replaceAll("_", "-")));
+/**
+* Emits everything a validator found, and reports whether any of it was severe enough to abort.
+*
+* Warnings are logged rather than emitted as errors: the style still renders, just not necessarily
+* as its author intended (e.g. a filter mixing deprecated syntax into an expression tree). Treating
+* them as errors would abort the whole style load and leave a blank map.
+* See https://github.com/maplibre/maplibre-style-spec/issues/1751
+*
+* @param emitter - the object to fire {@link ErrorEvent}s on
+* @param errors - what validation turned up, if anything
+* @returns whether validation failed, i.e. whether the caller should give up on the value
+*/
 function emitValidationErrors(emitter, errors) {
 	let hasErrors = false;
-	if (errors?.length) for (const error of errors) {
+	for (const error of errors) {
+		if (error.severity === "warning") {
+			warnOnce(error.message);
+			continue;
+		}
 		emitter.fire(new ErrorEvent(new Error(error.message)));
 		hasErrors = true;
 	}
 	return hasErrors;
+}
+/**
+* Runs a validator over a value and emits whatever it finds.
+*
+* @param emitter - the object to fire {@link ErrorEvent}s on
+* @param validator - the validator to run, e.g. {@link validateFilter}
+* @param params - what to validate: the `value`, plus whatever context the validator needs, such as
+* the `key` locating it in the style, or the surrounding `style` that {@link validateStyle.layer} looks at
+* @param options - setter options; validation is skipped entirely when `validate` is `false`
+* @returns whether validation failed, i.e. whether the caller should give up on the value
+*/
+function validateAndEmit(emitter, validator, params, options) {
+	if (options?.validate === false) return false;
+	return emitValidationErrors(emitter, validator({
+		styleSpec: latest,
+		...params
+	}));
 }
 //#endregion
 //#region src/style/zoom_history.ts
@@ -11387,7 +11414,7 @@ var StyleLayer = class extends Evented {
 			this.fire(new ErrorEvent(/* @__PURE__ */ new Error(name + ERROR_PAINT_NOT_LAYOUT)));
 			return;
 		}
-		if (value !== null && value !== void 0 && this._validate(validateLayoutProperty, `layers.${this.id}.layout.${name}`, name, value, options)) return;
+		if (value !== null && value !== void 0 && this._validate(validateStyle.layoutProperty, `layers.${this.id}.layout.${name}`, name, value, options)) return;
 		this._unevaluatedLayout.setValue(name, value);
 	}
 	getPaintProperty(name) {
@@ -11405,7 +11432,7 @@ var StyleLayer = class extends Evented {
 			this.fire(new ErrorEvent(/* @__PURE__ */ new Error(name + ERROR_LAYOUT_NOT_PAINT)));
 			return false;
 		}
-		if (value !== null && value !== void 0 && this._validate(validatePaintProperty, `layers.${this.id}.paint.${name}`, name, value, options)) return false;
+		if (value !== null && value !== void 0 && this._validate(validateStyle.paintProperty, `layers.${this.id}.paint.${name}`, name, value, options)) return false;
 		if (name.endsWith("-transition")) {
 			this._transitionablePaint.setTransition(name.slice(0, -11), value || void 0);
 			return false;
@@ -11465,18 +11492,12 @@ var StyleLayer = class extends Evented {
 		});
 	}
 	_validate(validate, key, name, value, options = {}) {
-		if (options?.validate === false) return false;
-		return emitValidationErrors(this, validate.call(validateStyle, {
+		return validateAndEmit(this, validate, {
 			key,
 			layerType: this.type,
 			objectKey: name,
-			value,
-			styleSpec: latest,
-			style: {
-				glyphs: true,
-				sprite: true
-			}
-		}));
+			value
+		}, options);
 	}
 	is3D() {
 		return false;
