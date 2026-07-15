@@ -7,6 +7,7 @@ import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {RequestManager, ResourceType} from '../util/request_manager.ts';
 import {Style, type StyleSwapOptions} from '../style/style.ts';
+import {validateStyle, validateAndEmit} from '../style/validate_style.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {Painter} from '../render/painter.ts';
 import {GPUInitializationError} from '../util/gpu_initialization_error.ts';
@@ -2891,8 +2892,12 @@ export class Map extends Evented<MapEventType> {
      * map.setTerrain({ source: 'terrain' });
      * ```
      */
-    setTerrain(options: TerrainSpecification | null): this {
+    setTerrain(options: TerrainSpecification | null, styleOptions: StyleSetterOptions = {}): this {
         this.style._checkLoaded();
+
+        if (options && validateAndEmit(this, validateStyle.terrain, {value: options}, styleOptions)) {
+            return this;
+        }
 
         // clear event handlers
         if (this._terrainDataCallback) this.style.off('data', this._terrainDataCallback);

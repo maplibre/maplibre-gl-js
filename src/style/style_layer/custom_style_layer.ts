@@ -1,7 +1,8 @@
 import {StyleLayer} from '../style_layer.ts';
+import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
 import type {Map} from '../../ui/map.ts';
-import {type mat4} from 'gl-matrix';
-import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {mat4} from 'gl-matrix';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerProjectionData, RendererProjectionData} from '../../geo/projection/projection_data.ts';
 
 /**
@@ -292,28 +293,22 @@ export interface CustomLayerInterface {
     onRemove?(map: Map, gl: WebGL2RenderingContext): void;
 }
 
-export function validateCustomStyleLayer(layerObject: CustomLayerInterface): Array<{message: string}> {
-    const errors: Array<{message: string}> = [];
+export function validateCustomStyleLayer(layerObject: CustomLayerInterface): ValidationError[] {
+    const errors: ValidationError[] = [];
     const id = layerObject.id;
 
     if (id === undefined) {
-        errors.push({
-            message: `layers.${id}: missing required property "id"`
-        });
+        errors.push(new ValidationError(`layers.${id}`, null, 'missing required property "id"'));
     }
 
     if (layerObject.render === undefined) {
-        errors.push({
-            message: `layers.${id}: missing required method "render"`
-        });
+        errors.push(new ValidationError(`layers.${id}`, null, 'missing required method "render"'));
     }
 
     if (layerObject.renderingMode &&
         layerObject.renderingMode !== '2d' &&
         layerObject.renderingMode !== '3d') {
-        errors.push({
-            message: `layers.${id}: property "renderingMode" must be either "2d" or "3d"`
-        });
+        errors.push(new ValidationError(`layers.${id}`, null, 'property "renderingMode" must be either "2d" or "3d"'));
     }
 
     return errors;
