@@ -1,14 +1,22 @@
 ## main
 ### ✨ Features and improvements
-- Validate the terrain passed to `map.setTerrain`, which was previously applied unchecked ([#7941](https://github.com/maplibre/maplibre-gl-js/pull/7941)) (by [@HarelM](https://github.com/HarelM))
-- Improve runtime error warnings to point at the offending style location (e.g. `layers[3].paint.line-color`, `layers[3].filter`) instead of just logging the bare error message ([#7869](https://github.com/maplibre/maplibre-gl-js/pull/7869)) (by [@CommanderStorm](https://github.com/CommanderStorm))
-- ⚠️ Interpolate the light position in spherical coordinates instead of cartesian ones, so that a transition keeps its radial distance. ([#7919](https://github.com/maplibre/maplibre-gl-js/pull/7919)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Log style validation warnings instead of treating them as errors, so that a filter mixing deprecated and expression syntax no longer aborts the style load and blanks the map ([#7941](https://github.com/maplibre/maplibre-style-spec/pull/7941)) (by [@HarelM](https://github.com/HarelM))
-- Validate `raster-dem` sources passed to `map.addSource`, which were previously skipped. Stop a source type the style spec has no schema for, such as one registered with `addSourceType`, from failing the whole style. Previously only `canvas` was let through ([#7941](https://github.com/maplibre/maplibre-gl-js/pull/7941)) (by [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
+
+## 6.0.0-22
+
+### ✨ Features and improvements
+
+- Validate the terrain passed to `map.setTerrain`, which was previously applied unchecked ([#7941](https://github.com/maplibre/maplibre-gl-js/pull/7941)) (by [@HarelM](https://github.com/HarelM))
+- Improve runtime error warnings to point at the offending style location (e.g. `layers[3].paint.line-color`, `layers[3].filter`) instead of just logging the bare error message ([#7869](https://github.com/maplibre/maplibre-gl-js/pull/7869)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- ⚠️ Interpolate the light position in spherical coordinates instead of cartesian ones, so that a transition keeps its radial distance. ([#7919](https://github.com/maplibre/maplibre-gl-js/pull/7919)) (by [@HarelM](https://github.com/HarelM))
+
+### 🐞 Bug fixes
+
+- Log style validation warnings instead of treating them as errors, so that a filter mixing legacy and expression syntax no longer aborts the style load and blanks the map ([#7941](https://github.com/maplibre/maplibre-style-spec/pull/7941)) (by [@HarelM](https://github.com/HarelM))
+- Validate `raster-dem` sources passed to `map.addSource`, which were previously skipped. Stop a source type the style spec has no schema for, such as one registered with `addSourceType`, from failing the whole style. Previously only `canvas` was let through ([#7941](https://github.com/maplibre/maplibre-gl-js/pull/7941)) (by [@HarelM](https://github.com/HarelM))
 
 ## 6.0.0-21
 
