@@ -71,7 +71,7 @@ import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
  * https://github.com/maplibre/maplibre-gl-js/issues/4428).
  *
  * A photosphere has no depth information - you're always exactly at its
- * center - so `panoramaLayer` doesn't need any 3D mesh: it ray-casts each
+ * center - so `panoramaLayer` does not need any 3D mesh: it ray-casts each
  * screen pixel (from the current yaw/pitch/FOV) into equirectangular UV
  * space and samples a texture. The one exception is while *entering*: the
  * eye is still outside the photosphere's center at that point, so it's
