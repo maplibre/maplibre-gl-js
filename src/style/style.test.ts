@@ -2270,6 +2270,20 @@ describe('Style.addLayer', () => {
         expect(() => style.addLayer({id: 'background', type: 'background'})).toThrow(/load/i);
     });
 
+    test('fires an error and does not add a custom layer without a render method', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+        const errorSpy = vi.fn();
+        style.on('error', errorSpy);
+
+        style.addLayer({id: 'custom', type: 'custom'} as any);
+
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        expect(errorSpy.mock.calls[0][0].error.message).toBe('layers.custom: missing required method "render"');
+        expect(style.getLayer('custom')).toBeUndefined();
+    });
+
     test('sets up layer event forwarding', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
