@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add `MapOptions.rotateSpeed` to scale how fast the map's bearing changes when dragging to rotate ([#7949](https://github.com/maplibre/maplibre-gl-js/pull/7949)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
