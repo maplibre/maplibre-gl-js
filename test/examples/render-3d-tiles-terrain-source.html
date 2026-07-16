@@ -268,72 +268,112 @@ function geographicFallbackHeight(lng, lat, coveringMeshes, bounds, fadeDistance
         : (sum / count) * (1 - weight) + fallbackHeight * weight;
 }
 
-// A single real fixture tile bundled as a static asset (no live API
-// dependency - the Cesium ion token used to fetch it was only ever used
-// at dev time, never embedded here), the same tile the POC uses. Note
-// that Mercator and quantized-mesh tile grids do not align, so requested
-// Mercator tiles extend past this one tile's coverage - the fade at the
-// coverage edge is geographicFallbackHeight's taper above, not real
-// terrain. A real deployment with full tileset coverage never shows it.
-//
-// A single fixed height used everywhere outside the bundled dataset's
-// real coverage - see geographicFallbackHeight's comment for why this
-// must be one constant shared by every tile, not computed per-tile.
+// A single fixed height used everywhere outside the dataset's real
+// coverage - see geographicFallbackHeight's comment for why this must
+// be one constant shared by every tile, not computed per-tile.
 const FALLBACK_HEIGHT = 1500;
 
-const AVAILABLE_QM_TILES = [{z: 9, x: 531, y: 386}];
-AVAILABLE_QM_TILES.forEach(t => {
-    t.url = `../../docs/assets/examples/mont-blanc-terrain-tiles/${t.z}-${t.x}-${t.y}.terrain`;
-});
-
-const QM_MAX_ZOOM = Math.max(...AVAILABLE_QM_TILES.map(t => t.z));
-const QM_MIN_ZOOM = Math.min(...AVAILABLE_QM_TILES.map(t => t.z));
-const OVERALL_QM_BOUNDS = AVAILABLE_QM_TILES.reduce((acc, t) => {
-    const b = qmTileBounds(t.z, t.x, t.y);
-    return {
-        west: Math.min(acc.west, b.west), east: Math.max(acc.east, b.east),
-        south: Math.min(acc.south, b.south), north: Math.max(acc.north, b.north)
-    };
-}, {west: Infinity, east: -Infinity, south: Infinity, north: -Infinity});
-
-// Taper distance in degrees, a fixed fraction of the bundled coverage's
-// own extent - a single world constant, not derived from any tile's
-// pixel grid, so every Mercator tile (any zoom, any resolution) fades
-// out identically for the same real-world location.
-const FADE_DISTANCE_DEG = Math.max(
-    OVERALL_QM_BOUNDS.east - OVERALL_QM_BOUNDS.west,
-    OVERALL_QM_BOUNDS.north - OVERALL_QM_BOUNDS.south
-) / 4;
-
-function isQMTileAvailable(z, x, y) {
-    return AVAILABLE_QM_TILES.some(t => t.z === z && t.x === x && t.y === y);
-}
-
-// Finds the deepest QM zoom (<= requested z) with at least one available
-// covering tile, and returns every available tile intersecting the
-// requested Mercator tile's bounds at that zoom. A real dataset's
-// high-zoom availability is typically patchy/regional, so this does not
-// require every overlapping cell to be available, just at least one.
 function boundsOverlap(a, b) {
     return a.west < b.east && a.east > b.west && a.south < b.north && a.north > b.south;
 }
 
-// Checks geographic overlap against every bundled tile directly, at its
-// own native zoom - NOT capped by the requested Mercator tile's zoom.
-// A pitch/zoom change can make MapLibre request Mercator tiles at zooms
-// far from our bundled zoom 9 (e.g. low zoom at pitch 0, or very low
-// zoom for distant terrain near the horizon at high pitch) - capping the
-// search at the requested zoom would miss the data entirely whenever
-// that differs from 9.
-function findCoveringQMTiles(mercatorBounds) {
-    const zoomsDesc = [...new Set(AVAILABLE_QM_TILES.map(t => t.z))].sort((a, b) => b - a);
-    for (const qz of zoomsDesc) {
-        const covering = AVAILABLE_QM_TILES
-            .filter(t => t.z === qz && boundsOverlap(qmTileBounds(t.z, t.x, t.y), mercatorBounds))
-            .map(t => ({...t, bounds: qmTileBounds(t.z, t.x, t.y)}));
-        if (covering.length > 0) return covering;
+// EPSG:4326/TMS tile coordinate range intersecting geographic bounds.
+function qmTileRange(z, bounds) {
+    const tilesX = 2 * (2 ** z);
+    const tilesY = 2 ** z;
+    return {
+        xMin: Math.max(0, Math.floor((bounds.west + 180) / 360 * tilesX)),
+        xMax: Math.min(tilesX - 1, Math.floor((bounds.east + 180) / 360 * tilesX)),
+        yMin: Math.max(0, Math.floor((bounds.south + 90) / 180 * tilesY)),
+        yMax: Math.min(tilesY - 1, Math.floor((bounds.north + 90) / 180 * tilesY))
+    };
+}
+
+// Returns available tiles intersecting the requested Mercator tile's
+// bounds, deepest zoom first, walking layer.json's per-zoom `available`
+// rectangle ranges. Real datasets' availability is patchy/regional, so
+// gaps at one zoom stack on top of lower-zoom parents: meshes are tried
+// in list order, so each point gets the deepest real data available and
+// only points no zoom covers fall back to the synthetic apron. The walk
+// stops at the first zoom that fully covers the request (parents can't
+// contribute anything there). Deliberately NOT capped by the requested
+// Mercator tile's zoom: pitch/zoom changes make MapLibre request
+// Mercator tiles at zooms far from the dataset's own levels.
+function findCoveringQMTiles(available, mercatorBounds) {
+    const covering = [];
+    for (let qz = available.length - 1; qz >= 0; qz--) {
+        const rects = available[qz] || [];
+        if (rects.length === 0) continue;
+        const range = qmTileRange(qz, mercatorBounds);
+        let fullyCovered = true;
+        for (let x = range.xMin; x <= range.xMax; x++) {
+            for (let y = range.yMin; y <= range.yMax; y++) {
+                const bounds = qmTileBounds(qz, x, y);
+                if (!boundsOverlap(bounds, mercatorBounds)) continue;
+                if (rects.some((r) => x >= r.startX && x <= r.endX && y >= r.startY && y <= r.endY)) {
+                    covering.push({z: qz, x, y, bounds});
+                } else {
+                    fullyCovered = false;
+                }
+            }
+        }
+        if (fullyCovered && covering.length > 0) return covering;
     }
-    return [];
+    return covering;
+}
+
+// Union of every available rectangle's geographic bounds, all zooms.
+function availabilityBounds(available) {
+    const acc = {west: Infinity, east: -Infinity, south: Infinity, north: -Infinity};
+    available.forEach((rects, z) => {
+        for (const rect of rects) {
+            const sw = qmTileBounds(z, rect.startX, rect.startY);
+            const ne = qmTileBounds(z, rect.endX, rect.endY);
+            acc.west = Math.min(acc.west, sw.west);
+            acc.south = Math.min(acc.south, sw.south);
+            acc.east = Math.max(acc.east, ne.east);
+            acc.north = Math.max(acc.north, ne.north);
+        }
+    });
+    return acc;
+}
+
+// Loads and validates a quantized-mesh dataset's layer.json - the same
+// self-description real endpoints (Cesium World Terrain, MapTiler
+// quantized-mesh-v2) serve: tile URL template, per-zoom `available`
+// rectangle ranges, attribution. The bundled fixture layer.json
+// describes the single Mont Blanc tile (fetched once at dev time; no
+// API token is embedded here), so the example runs offline - pointing
+// LAYER_JSON_URL at a live endpoint adapts everything downstream.
+async function loadDataset(layerJsonUrl) {
+    const res = await fetch(layerJsonUrl);
+    if (!res.ok) throw new Error(`layer.json request failed: HTTP ${res.status}`);
+    const layer = await res.json();
+    if (layer.format !== 'quantized-mesh-1.0') {
+        throw new Error(`unsupported terrain format: ${layer.format}`);
+    }
+    if (layer.projection && layer.projection !== 'EPSG:4326') {
+        throw new Error(`unsupported projection: ${layer.projection}`);
+    }
+    const available = layer.available || [];
+    const zoomsWithTiles = available.map((rects, z) => rects.length > 0 ? z : -1).filter(z => z >= 0);
+    if (zoomsWithTiles.length === 0) throw new Error('layer.json declares no available tiles');
+    const bounds = availabilityBounds(available);
+    const template = layerJsonUrl.replace(/[^/]*$/, '') + layer.tiles[0];
+    return {
+        available,
+        bounds,
+        minZoom: Math.min(...zoomsWithTiles),
+        maxZoom: Math.max(...zoomsWithTiles),
+        // Taper distance: a fixed fraction of the coverage extent - a
+        // world constant, not derived from any tile's pixel grid, so
+        // every Mercator tile fades identically for the same location.
+        fadeDistanceDeg: Math.max(bounds.east - bounds.west, bounds.north - bounds.south) / 4,
+        attribution: layer.attribution,
+        tileUrl: (z, x, y) => template
+            .replace('{z}', z).replace('{x}', x).replace('{y}', y)
+            .replace('{version}', layer.version || '1.0.0')
+    };
 }
 
 // Resamples the covering mesh(es) onto a size x size terrain-RGB image.
@@ -354,7 +394,7 @@ function mercatorPixelToLngLat(z, x, y, px, py, size) {
     return {lng, lat};
 }
 
-function buildTerrainRgbImageData(coveringMeshes, tileZ, tileX, tileY, size) {
+function buildTerrainRgbImageData(coveringMeshes, tileZ, tileX, tileY, size, dataset) {
     const indexed = coveringMeshes.map(({mesh, bounds}) => ({mesh, bounds, index: buildTriangleIndex(mesh)}));
     const heights = new Float64Array(size * size);
     for (let row = 0; row < size; row++) {
@@ -363,7 +403,7 @@ function buildTerrainRgbImageData(coveringMeshes, tileZ, tileX, tileY, size) {
             const h = multiMeshElevationAt(indexed, lng, lat);
             heights[row * size + col] = h !== null
                 ? h
-                : geographicFallbackHeight(lng, lat, indexed, OVERALL_QM_BOUNDS, FADE_DISTANCE_DEG, FALLBACK_HEIGHT);
+                : geographicFallbackHeight(lng, lat, indexed, dataset.bounds, dataset.fadeDistanceDeg, FALLBACK_HEIGHT);
         }
     }
 
@@ -380,24 +420,30 @@ function buildTerrainRgbImageData(coveringMeshes, tileZ, tileX, tileY, size) {
 // no custom `Source` class, no duck-typed `tile.dem`, and hillshade/
 // color-relief layers (which require `raster-dem`) work directly.
 const TILE_SIZE = 256;
+const LAYER_JSON_URL = new URL('../../docs/assets/examples/mont-blanc-terrain-tiles/layer.json', location.href).href;
+const datasetPromise = loadDataset(LAYER_JSON_URL);
+
 const meshCache = new Map();
-function getMesh(qmTile) {
-    const key = `${qmTile.z}-${qmTile.x}-${qmTile.y}`;
-    if (!meshCache.has(key)) {
-        meshCache.set(key, fetch(qmTile.url).then(res => res.arrayBuffer()).then(decodeQuantizedMesh));
+function getMesh(url) {
+    if (!meshCache.has(url)) {
+        meshCache.set(url, fetch(url).then((res) => {
+            if (!res.ok) throw new Error(`terrain tile request failed: HTTP ${res.status}`);
+            return res.arrayBuffer();
+        }).then(decodeQuantizedMesh));
     }
-    return meshCache.get(key);
+    return meshCache.get(url);
 }
 
 maplibregl.addProtocol('quantized-mesh', async ({url}) => {
+    const dataset = await datasetPromise;
     const [, z, x, y] = url.match(/^quantized-mesh:\/\/(\d+)\/(\d+)\/(\d+)$/).map(Number);
     const mercatorBounds = mercatorTileBounds(z, x, y);
-    const covering = findCoveringQMTiles(mercatorBounds);
+    const covering = findCoveringQMTiles(dataset.available, mercatorBounds);
     const coveringMeshes = await Promise.all(covering.map(async (qmTile) => ({
-        mesh: await getMesh(qmTile),
+        mesh: await getMesh(dataset.tileUrl(qmTile.z, qmTile.x, qmTile.y)),
         bounds: qmTile.bounds
     })));
-    const imageData = buildTerrainRgbImageData(coveringMeshes, z, x, y, TILE_SIZE);
+    const imageData = buildTerrainRgbImageData(coveringMeshes, z, x, y, TILE_SIZE, dataset);
     return {data: await createImageBitmap(imageData)};
 });
 
@@ -427,36 +473,43 @@ const map = new maplibregl.Map({
     // Recommended when terrain floats over a plain background: hides the
     // vertical skirt walls at the edge of the data (see #7523).
     terrainSkirtLength: 'none',
-    canvasContextAttributes: {antialias: true},
-    customAttribution: 'Terrain: Cesium World Terrain via Cesium ion'
+    canvasContextAttributes: {antialias: true}
 });
 map.addControl(new maplibregl.NavigationControl());
 
-map.on('load', () => {
+map.on('load', async () => {
+    const readout = document.getElementById('readout');
+    let dataset;
+    try {
+        dataset = await datasetPromise;
+    } catch (err) {
+        readout.textContent = `Terrain dataset failed to load: ${err.message}`;
+        return;
+    }
     map.addSource('qm-terrain', {
         type: 'raster-dem',
         encoding: 'terrarium',
         tiles: ['quantized-mesh://{z}/{x}/{y}'],
         tileSize: TILE_SIZE,
+        attribution: dataset.attribution,
         // minzoom matters beyond just "don't request below this zoom":
         // TileManager._addTerrainIdealTiles always keeps one extra
         // "low-zoom safety net" tile retained at
         // max(source.minzoom, min(idealZoom, 5)) so terrain has SOMETHING
         // to show while the ideal tile loads. With minzoom 0 that pins to
-        // some zoom <=5, where our tiny real dataset is mostly fallback
-        // fill - resampled at a totally different scale than the ideal
-        // tile, so the two visibly disagree wherever both are rendered.
-        // Raising minzoom to our lowest real zoom makes that safety-net
-        // tile z9 instead - our actual bundled data, not a washed-out
-        // low-zoom approximation of it.
-        minzoom: QM_MIN_ZOOM,
-        maxzoom: QM_MAX_ZOOM,
+        // some zoom <=5, where a small dataset is mostly fallback fill -
+        // resampled at a totally different scale than the ideal tile, so
+        // the two visibly disagree wherever both are rendered. Raising
+        // minzoom to the dataset's lowest available zoom makes that
+        // safety-net tile real data, not a washed-out approximation.
+        minzoom: dataset.minZoom,
+        maxzoom: dataset.maxZoom,
         // Without this, MapLibre requests terrain tiles for the whole
         // viewport, and our protocol handler has no real data to give
         // most of them - creating a sharp cliff at the edge of the
-        // bundled coverage. `bounds` makes the built-in raster-dem
+        // dataset's coverage. `bounds` makes the built-in raster-dem
         // hasTile() skip tiles outside it entirely.
-        bounds: [OVERALL_QM_BOUNDS.west, OVERALL_QM_BOUNDS.south, OVERALL_QM_BOUNDS.east, OVERALL_QM_BOUNDS.north]
+        bounds: [dataset.bounds.west, dataset.bounds.south, dataset.bounds.east, dataset.bounds.north]
     });
     map.setTerrain({source: 'qm-terrain', exaggeration: 1.2});
     // hillshade requires a raster-dem source - exactly what this custom
@@ -479,7 +532,6 @@ map.on('load', () => {
             .addTo(map);
     }
 
-    const readout = document.getElementById('readout');
     function updateReadout() {
         const elevation = map.queryTerrainElevation(MONT_BLANC);
         readout.textContent = elevation === null || elevation === undefined
