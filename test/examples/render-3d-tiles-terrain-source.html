@@ -45,11 +45,19 @@ function decodeZigZag(value) {
 }
 
 // Decodes header, vertex data (delta+zigzag u/v/height), and
-// high-water-mark-encoded triangle indices. See
-// https://github.com/CesiumGS/quantized-mesh for the format reference.
+// high-water-mark-encoded triangle indices, bounds-checking every read
+// so a truncated or corrupt tile fails with a clear error instead of a
+// DataView RangeError deep in the loops (or, worse, silently bogus
+// geometry). See https://github.com/CesiumGS/quantized-mesh for the
+// format reference.
 function decodeQuantizedMesh(buffer) {
     const view = new DataView(buffer);
     let position = 0;
+    function need(bytes, what) {
+        if (position + bytes > buffer.byteLength) {
+            throw new Error(`malformed quantized-mesh tile: truncated ${what}`);
+        }
+    }
 
     const header = {};
     const HEADER_FIELDS = [
@@ -58,13 +66,16 @@ function decodeQuantizedMesh(buffer) {
         ['boundingSphereCenterX', 8], ['boundingSphereCenterY', 8], ['boundingSphereCenterZ', 8], ['boundingSphereRadius', 8],
         ['horizonOcclusionPointX', 8], ['horizonOcclusionPointY', 8], ['horizonOcclusionPointZ', 8]
     ];
+    need(88, 'header');
     for (const [key, bytes] of HEADER_FIELDS) {
         header[key] = bytes === 8 ? view.getFloat64(position, true) : view.getFloat32(position, true);
         position += bytes;
     }
 
+    need(4, 'vertex count');
     const vertexCount = view.getUint32(position, true);
     position += 4;
+    need(vertexCount * 6, 'vertex data');
 
     const u = new Uint16Array(vertexCount);
     const v = new Uint16Array(vertexCount);
@@ -90,10 +101,12 @@ function decodeQuantizedMesh(buffer) {
     if (position % bytesPerIndex !== 0) {
         position += bytesPerIndex - (position % bytesPerIndex);
     }
+    need(4, 'triangle count');
     const triangleCount = view.getUint32(position, true);
     position += 4;
 
     const indexCount = triangleCount * 3;
+    need(indexCount * bytesPerIndex, 'triangle indices');
     const rawIndices = bytesPerIndex === 2
         ? new Uint16Array(buffer, position, indexCount)
         : new Uint32Array(buffer, position, indexCount);
@@ -101,10 +114,18 @@ function decodeQuantizedMesh(buffer) {
     const indices = new Uint32Array(indexCount);
     for (let i = 0; i < indexCount; i++) {
         const code = rawIndices[i];
+        if (code > highest) {
+            throw new Error('malformed quantized-mesh tile: index out of range');
+        }
         indices[i] = highest - code;
         if (code === 0) highest++;
     }
+    if (highest > vertexCount) {
+        throw new Error('malformed quantized-mesh tile: index out of range');
+    }
 
+    // Edge-index lists and extension records (oct-encoded normals, water
+    // mask) may follow - nothing here needs them, deliberately unread.
     return {header, u, v, height, indices, vertexCount, triangleCount};
 }
 
@@ -204,11 +225,11 @@ function multiMeshElevationAt(coveringMeshes, lng, lat) {
     return null;
 }
 
-// Terrarium encoding: height = R*256 + G + B/256 - 32768.
-const TERRARIUM_UNPACK = [256.0, 1.0, 1.0 / 256.0, 32768.0];
-
+// Terrarium encoding: height = R*256 + G + B/256 - 32768. The factors
+// live inside the function (not a shared module constant) so it stays
+// self-contained when stringified into the worker source below.
 function packTerrarium(height) {
-    const [redFactor, greenFactor, blueFactor, baseShift] = TERRARIUM_UNPACK;
+    const [redFactor, greenFactor, blueFactor, baseShift] = [256.0, 1.0, 1.0 / 256.0, 32768.0];
     const minScale = Math.min(redFactor, greenFactor, blueFactor);
     const vScaled = Math.round((height + baseShift) / minScale);
     return [
@@ -394,16 +415,24 @@ function mercatorPixelToLngLat(z, x, y, px, py, size) {
     return {lng, lat};
 }
 
-function buildTerrainRgbImageData(coveringMeshes, tileZ, tileX, tileY, size, dataset) {
-    const indexed = coveringMeshes.map(({mesh, bounds}) => ({mesh, bounds, index: buildTriangleIndex(mesh)}));
+// Async because it yields between row blocks when an isAborted callback
+// is given, so an abort can arrive (worker messages only land between
+// macrotasks) and stop the build promptly - MapLibre aborts tiles that
+// pan/zoom away mid-load, and finishing them would be wasted work.
+async function buildTerrainRgbImageData(coveringMeshes, tileZ, tileX, tileY, size, apron, isAborted) {
+    const indexed = coveringMeshes.map((c) => c.index ? c : {...c, index: buildTriangleIndex(c.mesh)});
     const heights = new Float64Array(size * size);
     for (let row = 0; row < size; row++) {
+        if (isAborted && row % 64 === 0) {
+            await new Promise((resolve) => setTimeout(resolve));
+            if (isAborted()) throw new Error('aborted');
+        }
         for (let col = 0; col < size; col++) {
             const {lng, lat} = mercatorPixelToLngLat(tileZ, tileX, tileY, col, row, size);
             const h = multiMeshElevationAt(indexed, lng, lat);
             heights[row * size + col] = h !== null
                 ? h
-                : geographicFallbackHeight(lng, lat, indexed, dataset.bounds, dataset.fadeDistanceDeg, FALLBACK_HEIGHT);
+                : geographicFallbackHeight(lng, lat, indexed, apron.bounds, apron.fadeDistanceDeg, apron.fallbackHeight);
         }
     }
 
@@ -423,28 +452,104 @@ const TILE_SIZE = 256;
 const LAYER_JSON_URL = new URL('../../docs/assets/examples/mont-blanc-terrain-tiles/layer.json', location.href).href;
 const datasetPromise = loadDataset(LAYER_JSON_URL);
 
-const meshCache = new Map();
-function getMesh(url) {
-    if (!meshCache.has(url)) {
-        meshCache.set(url, fetch(url).then((res) => {
+// addProtocol handlers run on the main thread, and a tile straddling
+// the coverage edge costs ~200 ms of decode + resample - enough to
+// stutter interaction when several tiles arrive together. All CPU work
+// runs in a Worker instead: the pure functions above are stringified
+// into its source (defined once, no duplication), and tiles come back
+// as transferable ImageBitmaps. This is a plain DOM Worker owned by the
+// example - none of MapLibre's own worker machinery is involved.
+function workerMain() {
+    // Decoded meshes - with their triangle index, built once here
+    // rather than per requested Mercator tile - cached per URL with an
+    // LRU cap, since a real dataset would otherwise grow unbounded.
+    const meshCache = new Map();
+    const MESH_CACHE_MAX = 32;
+    const aborted = new Set();
+
+    function getMesh(url) {
+        if (meshCache.has(url)) {
+            const cached = meshCache.get(url);
+            meshCache.delete(url);
+            meshCache.set(url, cached);
+            return cached;
+        }
+        const entry = fetch(url).then(async (res) => {
+            // A tile the availability ranges promise but the server
+            // lacks: treat as no coverage (the fallback apron fills in)
+            // rather than failing every Mercator tile that needs it.
+            if (res.status === 404) return null;
             if (!res.ok) throw new Error(`terrain tile request failed: HTTP ${res.status}`);
-            return res.arrayBuffer();
-        }).then(decodeQuantizedMesh));
+            const mesh = decodeQuantizedMesh(await res.arrayBuffer());
+            return {mesh, index: buildTriangleIndex(mesh)};
+        });
+        meshCache.set(url, entry);
+        if (meshCache.size > MESH_CACHE_MAX) {
+            meshCache.delete(meshCache.keys().next().value);
+        }
+        return entry;
     }
-    return meshCache.get(url);
+
+    globalThis.onmessage = async ({data}) => {
+        if (data.type === 'abort') {
+            aborted.add(data.id);
+            return;
+        }
+        const {id, z, x, y, size, tiles, apron} = data;
+        try {
+            const meshes = (await Promise.all(tiles.map(async (tile) => {
+                const decoded = await getMesh(tile.url);
+                return decoded && {mesh: decoded.mesh, index: decoded.index, bounds: tile.bounds};
+            }))).filter(Boolean);
+            const imageData = await buildTerrainRgbImageData(meshes, z, x, y, size, apron, () => aborted.has(id));
+            const bitmap = await createImageBitmap(imageData);
+            globalThis.postMessage({id, bitmap}, [bitmap]);
+        } catch (err) {
+            globalThis.postMessage({id, error: err.message});
+        } finally {
+            aborted.delete(id);
+        }
+    };
 }
 
-maplibregl.addProtocol('quantized-mesh', async ({url}) => {
+const workerSource = [
+    decodeZigZag, decodeQuantizedMesh, buildTriangleIndex, barycentricHeight,
+    multiMeshElevationAt, packTerrarium, geographicFallbackHeight,
+    mercatorPixelToLngLat, buildTerrainRgbImageData, workerMain
+].map((fn) => fn.toString()).join('\n\n') + '\n\nworkerMain();';
+const worker = new Worker(URL.createObjectURL(new Blob([workerSource], {type: 'text/javascript'})));
+
+let nextRequestId = 0;
+const pendingTiles = new Map();
+worker.onmessage = ({data}) => {
+    const request = pendingTiles.get(data.id);
+    if (!request) return;
+    pendingTiles.delete(data.id);
+    if (data.error) {
+        request.reject(new Error(data.error));
+    } else {
+        request.resolve(data.bitmap);
+    }
+};
+
+maplibregl.addProtocol('quantized-mesh', async ({url}, abortController) => {
     const dataset = await datasetPromise;
     const [, z, x, y] = url.match(/^quantized-mesh:\/\/(\d+)\/(\d+)\/(\d+)$/).map(Number);
-    const mercatorBounds = mercatorTileBounds(z, x, y);
-    const covering = findCoveringQMTiles(dataset.available, mercatorBounds);
-    const coveringMeshes = await Promise.all(covering.map(async (qmTile) => ({
-        mesh: await getMesh(dataset.tileUrl(qmTile.z, qmTile.x, qmTile.y)),
-        bounds: qmTile.bounds
-    })));
-    const imageData = buildTerrainRgbImageData(coveringMeshes, z, x, y, TILE_SIZE, dataset);
-    return {data: await createImageBitmap(imageData)};
+    const covering = findCoveringQMTiles(dataset.available, mercatorTileBounds(z, x, y));
+    const id = nextRequestId++;
+    const data = await new Promise((resolve, reject) => {
+        pendingTiles.set(id, {resolve, reject});
+        abortController.signal.addEventListener('abort', () => {
+            worker.postMessage({type: 'abort', id});
+        }, {once: true});
+        worker.postMessage({
+            id, z, x, y,
+            size: TILE_SIZE,
+            tiles: covering.map((t) => ({url: dataset.tileUrl(t.z, t.x, t.y), bounds: t.bounds})),
+            apron: {bounds: dataset.bounds, fadeDistanceDeg: dataset.fadeDistanceDeg, fallbackHeight: FALLBACK_HEIGHT}
+        });
+    });
+    return {data};
 });
 
 const MONT_BLANC = [6.8652, 45.8326];
