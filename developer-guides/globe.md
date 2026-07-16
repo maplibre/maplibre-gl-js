@@ -111,8 +111,8 @@ but at other latitudes the shift was much smaller. This behavior was also incons
 expect the shift to gradually increase or decrease with distance from equator, but that was not the case.
 
 Eventually, we tracked this down to an issue in the projection shader, specifically the `atan` function
-used to convert mercator Y to a latitude angle (`2*atan(exp(...)) - PI/2`, the inverse Gudermannian
-function). On some GPU vendors, the function is inaccurate in a way that matches the observed
+used to convert mercator Y to a latitude angle (`2*atan(exp(...)) - PI/2`).
+On some GPU vendors, the function is inaccurate in a way that matches the observed
 projection shifts; subtracting `PI/2` from a value close to `PI/2` also destroys most of the float32
 mantissa near the equator regardless of GPU.
 
