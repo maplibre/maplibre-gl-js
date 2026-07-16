@@ -72,7 +72,7 @@ import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
  *
  * A photosphere has no depth information - you're always exactly at its
  * center - so `panoramaLayer` does not need any 3D mesh: it ray-casts each
- * screen pixel (from the current yaw/pitch/FOV) into equirectangular UV
+ * screen pixel (from the current yaw/pitch/FOV) into spherical panorama UV
  * space and samples a texture. The one exception is while *entering*: the
  * eye is still outside the photosphere's center at that point, so it's
  * modeled as a real finite sphere (`panorama-radius`) via ray-sphere
@@ -82,12 +82,12 @@ import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
  * the intersection math back to sampling by view direction alone).
  */
 
-// Pont de Bir-Hakeim, Paris - the real GPS position this equirectangular
+// A bridge over the Seine, Paris - the real GPS position this panorama
 // photo was taken at (48°51'23.85"N, 2°17'12.58"E, converted to decimal
 // degrees).
 const PHOTOSPHERE_LNGLAT = [2.286828, 48.856625];
-// "Paris s'éveille" by Alexandre Duret-Lutz, CC BY-SA 2.0 -
-// https://commons.wikimedia.org/wiki/File:Pont_de_Bir-Hakeim_and_the_Eiffel_Tower,_April_2007.jpg
+// Photo by Alexandre Duret-Lutz, CC BY-SA 2.0 -
+// https://commons.wikimedia.org/w/index.php?curid=36707488
 // (resized/recompressed from the 10000x5000 original for a lighter page load)
 const PANORAMA_TEXTURE_URL = '../../docs/assets/examples/enter-a-360-photosphere-panorama.jpg';
 
