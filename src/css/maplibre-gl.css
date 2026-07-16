@@ -143,6 +143,12 @@
     cursor: pointer;
 }
 
+.maplibregl-ctrl button {
+    /* a long press on a control (for example the compact attribution button)
+       must not start iOS text selection of the button's glyph */
+    user-select: none;
+}
+
 .maplibregl-ctrl-group button + button {
     border-top: 1px solid #ddd;
 }
