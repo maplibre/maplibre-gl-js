@@ -42,6 +42,7 @@
     "dlopen",
     "documentationjs",
     "dtiles",
+    "Dufourspitze",
     "easings",
     "echarts",
     "echartslayer",
@@ -187,6 +188,7 @@
     "stringifiable",
     "Struct",
     "Styl",
+    "swisstopo",
     "tada",
     "Tatra",
     "tcpopup",
@@ -257,6 +259,7 @@
     "zelinsky",
     "zensical",
     "Zfrom",
+    "Zinalrothorn",
     "zoomto",
     "ZULN"
   ],

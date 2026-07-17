@@ -1,0 +1,26 @@
+{
+    "tilejson": "2.1.0",
+    "name": "Zermatt 4000ers excerpt",
+    "description": "Excerpt of the swisstopo quantized-mesh terrain for the render-3d-tiles-terrain-source example",
+    "version": "1.43646.0",
+    "format": "quantized-mesh-1.0",
+    "attribution": "Terrain: &copy; swisstopo",
+    "scheme": "tms",
+    "projection": "EPSG:4326",
+    "bounds": [7.3828125, 45.703125, 8.0859375, 46.40625],
+    "minzoom": 0,
+    "maxzoom": 9,
+    "tiles": ["{z}-{x}-{y}.terrain"],
+    "available": [
+        [{"startX": 1, "startY": 0, "endX": 1, "endY": 0}],
+        [{"startX": 2, "startY": 1, "endX": 2, "endY": 1}],
+        [{"startX": 4, "startY": 3, "endX": 4, "endY": 3}],
+        [{"startX": 8, "startY": 6, "endX": 8, "endY": 6}],
+        [{"startX": 16, "startY": 12, "endX": 16, "endY": 12}],
+        [{"startX": 33, "startY": 24, "endX": 33, "endY": 24}],
+        [{"startX": 66, "startY": 48, "endX": 66, "endY": 48}],
+        [{"startX": 133, "startY": 96, "endX": 133, "endY": 96}],
+        [{"startX": 266, "startY": 193, "endX": 267, "endY": 193}],
+        [{"startX": 533, "startY": 386, "endX": 534, "endY": 387}]
+    ]
+}
