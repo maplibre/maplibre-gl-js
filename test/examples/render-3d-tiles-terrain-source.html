@@ -320,13 +320,13 @@ function qmTileRange(z, bounds) {
 // contribute anything there). Deliberately NOT capped by the requested
 // Mercator tile's zoom: pitch/zoom changes make MapLibre request
 // Mercator tiles at zooms far from the dataset's own levels.
-function collectAvailableTiles(rects, qz, range, mercatorBounds, covering) {
+function collectAvailableTiles(rectangles, qz, range, mercatorBounds, covering) {
     let fullyCovered = true;
     for (let x = range.xMin; x <= range.xMax; x++) {
         for (let y = range.yMin; y <= range.yMax; y++) {
             const bounds = qmTileBounds(qz, x, y);
             if (!boundsOverlap(bounds, mercatorBounds)) continue;
-            if (rects.some((r) => x >= r.startX && x <= r.endX && y >= r.startY && y <= r.endY)) {
+            if (rectangles.some((r) => x >= r.startX && x <= r.endX && y >= r.startY && y <= r.endY)) {
                 covering.push({z: qz, x, y, bounds});
             } else {
                 fullyCovered = false;
@@ -340,8 +340,8 @@ function findCoveringQMTiles(available, mercatorBounds) {
     const covering = [];
     let coarsestWithData = -1;
     for (let qz = available.length - 1; qz >= 0; qz--) {
-        const rects = available[qz] || [];
-        if (rects.length === 0) continue;
+        const rectangles = available[qz] || [];
+        if (rectangles.length === 0) continue;
         coarsestWithData = qz;
         const range = qmTileRange(qz, mercatorBounds);
         // Skip zooms needing more than a handful of source tiles for
@@ -351,7 +351,7 @@ function findCoveringQMTiles(available, mercatorBounds) {
         // fetches. 6 keeps the deepest zoom whose tile grid roughly
         // matches the output tile's own footprint.
         if ((range.xMax - range.xMin + 1) * (range.yMax - range.yMin + 1) > 6) continue;
-        if (collectAvailableTiles(rects, qz, range, mercatorBounds, covering) && covering.length > 0) {
+        if (collectAvailableTiles(rectangles, qz, range, mercatorBounds, covering) && covering.length > 0) {
             return covering;
         }
     }
@@ -370,8 +370,8 @@ function findCoveringQMTiles(available, mercatorBounds) {
 // Union of every available rectangle's geographic bounds, all zooms.
 function availabilityBounds(available) {
     const acc = {west: Infinity, east: -Infinity, south: Infinity, north: -Infinity};
-    available.forEach((rects, z) => {
-        for (const rect of rects) {
+    available.forEach((rectangles, z) => {
+        for (const rect of rectangles) {
             const sw = qmTileBounds(z, rect.startX, rect.startY);
             const ne = qmTileBounds(z, rect.endX, rect.endY);
             acc.west = Math.min(acc.west, sw.west);
@@ -416,7 +416,7 @@ async function loadDataset(layerJsonUrl, options = {}) {
         }
     }
     if (options.maxZoom !== undefined) available = available.slice(0, options.maxZoom + 1);
-    const zoomsWithTiles = available.map((rects, z) => (rects || []).length > 0 ? z : -1).filter(z => z >= 0);
+    const zoomsWithTiles = available.map((rectangles, z) => (rectangles || []).length > 0 ? z : -1).filter(z => z >= 0);
     if (zoomsWithTiles.length === 0) throw new Error('layer.json declares no available tiles');
     // Coverage box, in priority order: explicit override, the dataset's
     // own bounds field, then the union of availability rectangles. The
@@ -730,9 +730,9 @@ const map = new maplibregl.Map({
     pitch: 60,
     bearing: -15,
     maxPitch: 85,
-    // Recommended when terrain floats over a plain background: hides the
-    // vertical skirt walls at the edge of the data (see #7523).
-    terrainSkirtLength: 'none',
+    // Default terrain skirts stay on: they hide the cracks between
+    // neighboring terrain tiles rendered at different detail levels
+    // (visible as bright seam lines otherwise, see #7523).
     canvasContextAttributes: {antialias: true}
 });
 map.addControl(new maplibregl.NavigationControl());
@@ -772,15 +772,39 @@ map.on('load', async () => {
         bounds: [dataset.bounds.west, dataset.bounds.south, dataset.bounds.east, dataset.bounds.north]
     });
     map.setTerrain({source: 'qm-terrain', exaggeration: 1.2});
+
+    // Because this is a real terrain source, ordinary 2D layers drape
+    // over the 3D surface automatically - one of the goals in #4493.
+    // SWISSIMAGE aerial imagery textures the ground and the official
+    // national boundary drapes along the ridge lines (both swisstopo
+    // open data, no key; tiles simply stay blank while offline).
+    map.addSource('swissimage', {
+        type: 'raster',
+        tiles: ['https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg'],
+        tileSize: 256,
+        maxzoom: 19,
+        attribution: 'Imagery: &copy; swisstopo'
+    });
+    map.addLayer({id: 'swissimage', type: 'raster', source: 'swissimage'});
     // hillshade requires a raster-dem source - exactly what this custom
-    // protocol provides, another benefit of the addProtocol approach over
-    // a custom source type.
+    // protocol provides, another benefit of the addProtocol approach
+    // over a custom source type. Kept subtle so the imagery reads.
     map.addLayer({
         id: 'qm-hillshade',
         type: 'hillshade',
         source: 'qm-terrain',
-        paint: {'hillshade-exaggeration': 0.8}
+        paint: {'hillshade-exaggeration': 0.3}
     });
+
+    // The national boundary sits above the hillshade so shading never
+    // washes it out.
+    map.addSource('swiss-border', {
+        type: 'raster',
+        tiles: ['https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissboundaries3d-land-flaeche.fill/default/current/3857/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        maxzoom: 18
+    });
+    map.addLayer({id: 'swiss-border', type: 'raster', source: 'swiss-border', paint: {'raster-opacity': 0.8}});
 
     // Because this is a real terrain source, plain Markers sit on the
     // terrain surface automatically - no custom rendering needed, unlike
