@@ -1,7 +1,7 @@
 {
     "tilejson": "2.1.0",
     "name": "Mont Blanc massif excerpt",
-    "description": "Single-tile excerpt of Cesium World Terrain for the render-3d-tiles-terrain-source example",
+    "description": "Excerpt of Cesium World Terrain for the render-3d-tiles-terrain-source example",
     "version": "1.2.0",
     "format": "quantized-mesh-1.0",
     "attribution": "Terrain: Cesium World Terrain via Cesium ion",
@@ -9,10 +9,11 @@
     "projection": "EPSG:4326",
     "bounds": [6.6796875, 45.703125, 7.03125, 46.0546875],
     "minzoom": 9,
-    "maxzoom": 9,
+    "maxzoom": 10,
     "tiles": ["{z}-{x}-{y}.terrain"],
     "available": [
         [], [], [], [], [], [], [], [], [],
-        [{"startX": 531, "startY": 386, "endX": 531, "endY": 386}]
+        [{"startX": 531, "startY": 386, "endX": 531, "endY": 386}],
+        [{"startX": 1062, "startY": 772, "endX": 1063, "endY": 773}]
     ]
 }
