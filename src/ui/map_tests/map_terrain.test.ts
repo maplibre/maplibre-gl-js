@@ -42,6 +42,31 @@ describe('setTerrain', () => {
         expect(console.warn).toHaveBeenCalledTimes(1);
         console.warn = originalWarn;
     });
+
+    test('fires an error and does not apply terrain the spec rejects', async () => {
+        await map.once('style.load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256});
+        const errorSpy = vi.fn();
+        map.on('error', errorSpy);
+
+        map.setTerrain({source: 'dem', nonsense: 1} as any);
+
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        expect(errorSpy.mock.calls[0][0].error.message).toContain('unknown property "nonsense"');
+        expect(map.getTerrain()).toBeNull();
+    });
+
+    test('applies terrain the spec accepts', async () => {
+        await map.once('style.load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256});
+        const errorSpy = vi.fn();
+        map.on('error', errorSpy);
+
+        map.setTerrain({source: 'dem', exaggeration: 2});
+
+        expect(errorSpy).not.toHaveBeenCalled();
+        expect(map.getTerrain()).toEqual({source: 'dem', exaggeration: 2});
+    });
 });
 
 describe('getTerrain', () => {

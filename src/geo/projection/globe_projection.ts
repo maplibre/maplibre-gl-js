@@ -1,5 +1,6 @@
-import {ProjectionDefinition, type ProjectionDefinitionSpecification, type ProjectionSpecification, type StylePropertySpecification, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
-import {DataConstantProperty, type PossiblyEvaluated, Properties, Transitionable, type Transitioning, type TransitionParameters} from '../../style/properties.ts';
+import {ProjectionDefinition, type ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {type PossiblyEvaluated, Transitionable, type Transitioning, type TransitionParameters} from '../../style/properties.ts';
+import {getProperties, type ProjectionProps, type ProjectionPropsPossiblyEvaluated} from '../../style/projection_properties.g.ts';
 import {Evented} from '../../util/evented.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {MercatorProjection} from './mercator_projection.ts';
@@ -11,20 +12,8 @@ import {type Context} from '../../webgl/context.ts';
 import {type CanonicalTileID} from '../../tile/tile_id.ts';
 import {type Mesh} from '../../render/mesh.ts';
 
-type ProjectionProps = {
-    type: DataConstantProperty<ProjectionDefinitionSpecification>;
-};
-
-type ProjectionPossiblyEvaluated = {
-    type: ProjectionDefinitionSpecification;
-};
-
-const properties: Properties<ProjectionProps> = new Properties({
-    'type': new DataConstantProperty(styleSpec.projection.type as StylePropertySpecification, 'type')
-});
-
 export class GlobeProjection extends Evented implements Projection {
-    properties: PossiblyEvaluated<ProjectionProps, ProjectionPossiblyEvaluated>;
+    properties: PossiblyEvaluated<ProjectionProps, ProjectionPropsPossiblyEvaluated>;
 
     _transitionable: Transitionable<ProjectionProps>;
     _transitioning: Transitioning<ProjectionProps>;
@@ -33,7 +22,7 @@ export class GlobeProjection extends Evented implements Projection {
 
     constructor(projection?: ProjectionSpecification) {
         super();
-        this._transitionable = new Transitionable(properties, 'projection', undefined);
+        this._transitionable = new Transitionable(getProperties(), 'projection', undefined);
         this.setProjection(projection);
         this._transitioning = this._transitionable.untransitioned();
         this.recalculate(new EvaluationParameters(0));
