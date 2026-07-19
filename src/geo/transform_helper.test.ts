@@ -12,6 +12,12 @@ const emptyCallbacks = {
 };
 
 describe('TransformHelper', () => {
+    test('coveringZoom equals zoom', () => {
+        const helper = new TransformHelper(emptyCallbacks);
+        helper.setZoom(4.2);
+        expect(helper.coveringZoom).toBe(helper.zoom);
+    });
+
     test('apply', () => {
         const original = new TransformHelper(emptyCallbacks);
         original.setConstrainOverride((lngLat, zoom) => {

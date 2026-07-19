@@ -156,8 +156,6 @@ export class GlobeTransform implements ITransform {
         return this._helper.zoom;
     }
     get coveringZoom(): number {
-        // Delegate to the currently active transform so tile LOD is consistent
-        // across the globe -> mercator handoff at high zoom (#7962).
         return this.currentTransform.coveringZoom;
     }
     get center(): LngLat {
