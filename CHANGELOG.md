@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix globe tile detail (LOD) changing when only panning to higher latitudes at constant altitude; tile selection now uses a latitude-neutral zoom ([#7962](https://github.com/maplibre/maplibre-gl-js/issues/7962))
 - _...Add new stuff here..._
 
 ## 6.0.0-22

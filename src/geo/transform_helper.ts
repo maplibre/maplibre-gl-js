@@ -373,6 +373,10 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get zoom(): number { return this._zoom; }
+    // The helper is projection-agnostic and has no latitude semantics, so the
+    // covering (LOD) zoom mirrors the display zoom here. Projection transforms
+    // (e.g. globe) override coveringZoom with latitude-neutral behavior (#7962).
+    get coveringZoom(): number { return this._zoom; }
     setZoom(zoom: number): void {
         const constrainedZoom = this.applyConstrain(this._center, zoom).zoom;
         if (this._zoom === constrainedZoom) return;

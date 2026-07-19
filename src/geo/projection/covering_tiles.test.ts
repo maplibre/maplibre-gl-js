@@ -5,6 +5,7 @@ import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type 
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {globeConstants} from './vertical_perspective_projection.ts';
+import {getZoomAdjustment} from './globe_utils.ts';
 
 describe('coveringTiles', () => {
     describe('globe', () => {
@@ -191,35 +192,45 @@ describe('coveringTiles', () => {
             transform.setZoom(11);
             transform.setPitch(0);
             transform.setCenter(new LngLat(-179.73, 60.02));
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 15,
                 reparseOverscaled: true
             });
-    
+
+            // One level deeper than the display zoom: at lat 60 the tile
+            // selection zoom is latitude-neutral (#7962), which is zoom+1 here.
             expect(tiles).toEqual([
-                new OverscaledTileID(11, 0, 11, 1, 594)
+                new OverscaledTileID(12, 0, 12, 3, 1189),
+                new OverscaledTileID(12, 0, 12, 3, 1188),
+                new OverscaledTileID(12, 0, 12, 2, 1189),
+                new OverscaledTileID(12, 0, 12, 2, 1188)
             ]);
         });
-        
+
         test('zoom = 11, high lat', () => {
             const transform = new GlobeTransform();
             transform.resize(128, 128);
             transform.setZoom(11);
             transform.setPitch(0);
             transform.setCenter(new LngLat(-179.73, 85.028));
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 15,
                 reparseOverscaled: true
             });
-    
+
+            // Also exactly one level deeper: the latitude-neutral zoom (#7962)
+            // clamps latitude at 60, so 85 does not go deeper than 60 does.
             expect(tiles).toEqual([
-                new OverscaledTileID(11, 0, 11, 1, 1)
+                new OverscaledTileID(12, 0, 12, 3, 3),
+                new OverscaledTileID(12, 0, 12, 3, 2),
+                new OverscaledTileID(12, 0, 12, 2, 3),
+                new OverscaledTileID(12, 0, 12, 2, 2)
             ]);
         });
 
@@ -229,16 +240,20 @@ describe('coveringTiles', () => {
             transform.setZoom(11);
             transform.setPitch(0);
             transform.setCenter(new LngLat(-58.97, 60.02));
-    
+
             const tiles = coveringTiles(transform, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 15,
                 reparseOverscaled: true
             });
-    
+
+            // One level deeper than the display zoom - see 'zoom = 11, mid lat'.
             expect(tiles).toEqual([
-                new OverscaledTileID(11, 0, 11, 688, 594)
+                new OverscaledTileID(12, 0, 12, 1377, 1189),
+                new OverscaledTileID(12, 0, 12, 1377, 1188),
+                new OverscaledTileID(12, 0, 12, 1376, 1189),
+                new OverscaledTileID(12, 0, 12, 1376, 1188)
             ]);
         });
         
@@ -833,5 +848,61 @@ describe('coveringZoomLevel', () => {
         options.roundZoom = true;
         transform.setZoom(11.5);
         expect(coveringZoomLevel(transform, options)).toBe(13);
+    });
+});
+
+describe('coveringZoomLevel globe latitude stability (#7962)', () => {
+    // On globe, panning to a higher latitude lowers transform.zoom via the
+    // cos(latitude) adjustment that keeps the planet size visually constant.
+    // Tile LOD selection must use the latitude-neutral (equator-equivalent) zoom
+    // so that detail does not change when only panning at constant altitude.
+    // This replicates exactly what VerticalPerspectiveCameraHelper does on pan:
+    //   setZoom(oldZoom + getZoomAdjustment(oldLat, newLat))
+    const options: CoveringTilesOptions = {tileSize: 512, roundZoom: false};
+
+    function panToLatitude(transform: GlobeTransform, newLat: number) {
+        const oldLat = transform.center.lat;
+        const oldZoom = transform.zoom;
+        transform.setCenter(new LngLat(transform.center.lng, newLat));
+        transform.setZoom(oldZoom + getZoomAdjustment(oldLat, newLat));
+    }
+
+    test('LOD does not change when panning across an integer zoom boundary at fixed altitude', () => {
+        const transform = new GlobeTransform();
+        transform.resize(512, 512);
+        transform.setCenter(new LngLat(10.0, 0.0));
+        transform.setZoom(4);
+
+        const zoomAtEquator = coveringZoomLevel(transform, options);
+
+        // Pan north to ~60 deg. This drives the display zoom below 4.0
+        // (getZoom() crosses 4.00 -> 3.99...), which previously dropped the tile z.
+        panToLatitude(transform, 60.0);
+
+        expect(transform.zoom).toBeLessThan(4); // sanity: display zoom really did drop
+        expect(coveringZoomLevel(transform, options)).toBe(zoomAtEquator);
+    });
+
+    test('coveringZoom equals display zoom on the equator but is latitude-neutral off it', () => {
+        const transform = new GlobeTransform();
+        transform.resize(512, 512);
+        transform.setCenter(new LngLat(0.0, 0.0));
+        transform.setZoom(4);
+
+        // On the equator the adjustment is zero, so both are equal.
+        expect(transform.coveringZoom).toBeCloseTo(transform.zoom, 6);
+
+        panToLatitude(transform, 60.0);
+
+        // Off the equator, display zoom drops but coveringZoom stays ~4 (equator-equivalent).
+        expect(transform.zoom).toBeLessThan(4);
+        expect(transform.coveringZoom).toBeCloseTo(4, 3);
+    });
+
+    test('mercator coveringZoom is unaffected (no latitude adjustment)', () => {
+        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.setCenter(new LngLat(0.0, 60.0));
+        transform.setZoom(4);
+        expect(transform.coveringZoom).toBe(transform.zoom);
     });
 });

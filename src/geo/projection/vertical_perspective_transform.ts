@@ -174,6 +174,18 @@ export class VerticalPerspectiveTransform implements ITransform {
     get zoom(): number {
         return this._helper.zoom;
     }
+    get coveringZoom(): number {
+        // Globe automatically adjusts the stored zoom with latitude to keep the
+        // planet size visually constant (see getZoomAdjustment). Using that
+        // latitude-dependent zoom directly for tile selection makes tile detail
+        // change when only panning north/south at constant altitude (#7962).
+        // Normalize to the equivalent zoom at latitude 0 so LOD stays stable.
+        // Latitude is clamped to 60° for the same reason computeGlobePanCenter
+        // clamps it: the adjustment diverges toward the poles, and an
+        // unclamped value would request ever-deeper tile levels there.
+        const clampedLat = Math.min(Math.abs(this.center.lat), 60);
+        return this._helper.zoom + getZoomAdjustment(clampedLat, 0);
+    }
     get center(): LngLat {
         return this._helper.center;
     }

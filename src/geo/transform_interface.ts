@@ -55,6 +55,14 @@ export interface ITransformGetters {
     get minZoom(): number;
     get maxZoom(): number;
     get zoom(): number;
+    /**
+     * The zoom level used for tile (LOD) selection. For most projections this is
+     * identical to {@link zoom}. For globe it is the latitude-neutral zoom (the
+     * zoom the transform would have if its center were moved to the equator), so
+     * that tile detail does not change when only panning at constant altitude.
+     * See https://github.com/maplibre/maplibre-gl-js/issues/7962
+     */
+    get coveringZoom(): number;
     get center(): LngLat;
 
     get minPitch(): number;
