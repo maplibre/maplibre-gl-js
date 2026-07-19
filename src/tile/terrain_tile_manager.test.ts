@@ -55,7 +55,7 @@ describe('TerrainTileManager', () => {
         await loadPromise;
         const source = createSource({url: '/source.json'});
         server.respond();
-        style.addSource('terrain', source as any);
+        style.addSource('terrain', source.serialize());
         tsc = new TerrainTileManager(style.tileManagers.terrain);
     });
 
