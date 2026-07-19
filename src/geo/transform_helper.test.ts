@@ -12,10 +12,11 @@ const emptyCallbacks = {
 };
 
 describe('TransformHelper', () => {
-    test('coveringZoom equals zoom', () => {
+    test('tileLodZoom equals zoom', () => {
         const helper = new TransformHelper(emptyCallbacks);
         helper.setZoom(4.2);
-        expect(helper.coveringZoom).toBe(helper.zoom);
+        expect(helper.zoom).toBe(4.2);
+        expect(helper.tileLodZoom).toBe(4.2);
     });
 
     test('apply', () => {

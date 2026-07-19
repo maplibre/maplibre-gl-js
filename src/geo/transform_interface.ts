@@ -56,11 +56,12 @@ export interface ITransformGetters {
     get maxZoom(): number;
     get zoom(): number;
     /**
-     * The zoom level used for tile selection. Equal to {@link zoom} except on
-     * globe, where it is latitude-neutral so that tile detail does not change
-     * when panning at constant altitude (#7962).
+     * The zoom level used to select the tile level of detail. Equal to
+     * {@link zoom} except for projections that offset the displayed zoom as
+     * the map moves; these return a value independent of that offset, so tile
+     * detail stays tied to the camera's distance from the ground.
      */
-    get coveringZoom(): number;
+    get tileLodZoom(): number;
     get center(): LngLat;
 
     get minPitch(): number;

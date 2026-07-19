@@ -155,8 +155,8 @@ export class GlobeTransform implements ITransform {
     get zoom(): number {
         return this._helper.zoom;
     }
-    get coveringZoom(): number {
-        return this.currentTransform.coveringZoom;
+    get tileLodZoom(): number {
+        return this.currentTransform.tileLodZoom;
     }
     get center(): LngLat {
         return this._helper.center;

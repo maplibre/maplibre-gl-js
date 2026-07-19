@@ -40,6 +40,13 @@ type RaySphereIntersection = {
     tMax: number;
 } | null;
 
+/**
+ * Latitudes above this use its adjustment: log2(1/cos(60°)) = 1, so tile
+ * selection never goes more than one zoom level deeper than the displayed
+ * zoom, keeping tile counts bounded toward the poles.
+ */
+const MAX_TILE_LOD_ADJUSTMENT_LATITUDE = 60;
+
 export class VerticalPerspectiveTransform implements ITransform {
     private _helper: TransformHelper;
 
@@ -174,11 +181,10 @@ export class VerticalPerspectiveTransform implements ITransform {
     get zoom(): number {
         return this._helper.zoom;
     }
-    get coveringZoom(): number {
-        // Latitude-neutral zoom, so tile detail is not affected by the
-        // latitude-dependent zoom offset (#7962). Clamped at 60° to keep
-        // tile depth bounded toward the poles.
-        const clampedLat = Math.min(Math.abs(this.center.lat), 60);
+    get tileLodZoom(): number {
+        // Cancels the latitude-dependent zoom offset (see getZoomAdjustment)
+        // so tile detail does not change when panning at constant altitude.
+        const clampedLat = Math.min(Math.abs(this.center.lat), MAX_TILE_LOD_ADJUSTMENT_LATITUDE);
         return this._helper.zoom + getZoomAdjustment(clampedLat, 0);
     }
     get center(): LngLat {

@@ -155,7 +155,7 @@ export class MercatorTransform implements ITransform {
     get zoom(): number {
         return this._helper.zoom;
     }
-    get coveringZoom(): number {
+    get tileLodZoom(): number {
         return this._helper.zoom;
     }
     get center(): LngLat {

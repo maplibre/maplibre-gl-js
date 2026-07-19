@@ -869,23 +869,23 @@ describe('coveringZoomLevel globe latitude stability (#7962)', () => {
         expect(coveringZoomLevel(transform, options)).toBe(zoomAtEquator);
     });
 
-    test('globe coveringZoom equals the display zoom at the equator and keeps its equator-equivalent value after panning to lat 60', () => {
+    test('globe tileLodZoom equals the display zoom at the equator and keeps its equator-equivalent value after panning to lat 60', () => {
         const transform = new GlobeTransform();
         transform.resize(512, 512);
         transform.setCenter(new LngLat(0.0, 0.0));
         transform.setZoom(4);
-        expect(transform.coveringZoom).toBeCloseTo(transform.zoom, 6);
+        expect(transform.tileLodZoom).toBeCloseTo(transform.zoom, 6);
 
         panToLatitudeAtConstantAltitude(transform, 60.0);
 
         expect(transform.zoom).toBeLessThan(4);
-        expect(transform.coveringZoom).toBeCloseTo(4, 3);
+        expect(transform.tileLodZoom).toBeCloseTo(4, 3);
     });
 
-    test('mercator coveringZoom always equals the display zoom', () => {
+    test('mercator tileLodZoom always equals the display zoom', () => {
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setCenter(new LngLat(0.0, 60.0));
         transform.setZoom(4);
-        expect(transform.coveringZoom).toBe(transform.zoom);
+        expect(transform.tileLodZoom).toBe(transform.zoom);
     });
 });

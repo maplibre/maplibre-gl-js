@@ -162,7 +162,7 @@ const defaultCalculateTileZoom = createCalculateTileZoomFunction(defaultMaxZoomL
  */
 export function coveringZoomLevel(transform: IReadonlyTransform, options: CoveringTilesOptions): number {
     const z = (options.roundZoom ? Math.round : Math.floor)(
-        transform.coveringZoom + scaleZoom(transform.tileSize / options.tileSize)
+        transform.tileLodZoom + scaleZoom(transform.tileSize / options.tileSize)
     );
     // At negative zoom levels load tiles from z0 because negative tile zoom levels don't exist.
     return Math.max(0, z);
@@ -248,7 +248,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
         let thisTileDesiredZ = desiredZ;
         if (allowVariableZoom) {
             const tileZoomFunc = options.calculateTileZoom || defaultCalculateTileZoom;
-            thisTileDesiredZ = tileZoomFunc(transform.coveringZoom + scaleZoom(transform.tileSize / options.tileSize),
+            thisTileDesiredZ = tileZoomFunc(transform.tileLodZoom + scaleZoom(transform.tileSize / options.tileSize),
                 distToTile2d,
                 distanceZ,
                 distanceToCenter3d,

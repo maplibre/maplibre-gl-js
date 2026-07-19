@@ -373,7 +373,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get zoom(): number { return this._zoom; }
-    get coveringZoom(): number { return this._zoom; }
+    get tileLodZoom(): number { return this._zoom; }
     setZoom(zoom: number): void {
         const constrainedZoom = this.applyConstrain(this._center, zoom).zoom;
         if (this._zoom === constrainedZoom) return;
