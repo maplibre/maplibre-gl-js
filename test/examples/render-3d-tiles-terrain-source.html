@@ -9,296 +9,153 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
 <link rel='icon' href='data:,' />
-
 <style>
     body { margin: 0; padding: 0; }
     html, body, #map { height: 100%; }
-    #readout {
-        position: absolute;
-        top: 8px;
-        left: 8px;
-        z-index: 1;
-        font: 12px/1.4 sans-serif;
-        background: rgba(255, 255, 255, 0.85);
-        padding: 6px 10px;
-        border-radius: 4px;
-    }
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div id="readout">Loading terrain…</div>
 
 <script type="module">
 import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+import decode from 'https://unpkg.com/@here/quantized-mesh-decoder@1.2.8/src/index.js';
 
-// "First valuable feature" phase for #4493 (3D Tiles terrain), following
-// the POC in render-a-3d-tiles-quantized-mesh-terrain-poc.html.
-//
-// Converts quantized-mesh tiles to terrain-RGB via addProtocol (same
-// pattern as the geotiff plugin), so the terrain source below is a normal
-// `raster-dem` source - elevation queries, draping, hillshade, and
-// color-relief all work with zero core changes.
+// Streams a quantized-mesh terrain dataset (issue #4493) as a normal
+// `raster-dem` source: a custom protocol resamples each requested tile
+// to terrain-RGB, so map.setTerrain(), queryTerrainElevation(), draping,
+// and hillshade all work with zero core changes. The dataset is
+// described by its layer.json (tile URL template, per-zoom availability),
+// the same self-description real endpoints serve. Defaults to the live
+// swisstopo terrain (open data, no key) and falls back to a bundled
+// Zermatt-area excerpt when offline.
 
-function decodeZigZag(value) {
-    return (value >> 1) ^ (-(value & 1));
-}
-
-// Decodes header, vertex data (delta+zigzag u/v/height), and
-// high-water-mark-encoded triangle indices, bounds-checking every read
-// so a truncated or corrupt tile fails with a clear error instead of a
-// DataView RangeError deep in the loops (or, worse, silently bogus
-// geometry). See https://github.com/CesiumGS/quantized-mesh for the
-// format reference.
-function decodeQuantizedMesh(buffer) {
-    const view = new DataView(buffer);
-    let position = 0;
-    function need(bytes, what) {
-        if (position + bytes > buffer.byteLength) {
-            throw new Error(`malformed quantized-mesh tile: truncated ${what}`);
-        }
-    }
-
-    const header = {};
-    const HEADER_FIELDS = [
-        ['centerX', 8], ['centerY', 8], ['centerZ', 8],
-        ['minHeight', 4], ['maxHeight', 4],
-        ['boundingSphereCenterX', 8], ['boundingSphereCenterY', 8], ['boundingSphereCenterZ', 8], ['boundingSphereRadius', 8],
-        ['horizonOcclusionPointX', 8], ['horizonOcclusionPointY', 8], ['horizonOcclusionPointZ', 8]
-    ];
-    need(88, 'header');
-    for (const [key, bytes] of HEADER_FIELDS) {
-        header[key] = bytes === 8 ? view.getFloat64(position, true) : view.getFloat32(position, true);
-        position += bytes;
-    }
-
-    need(4, 'vertex count');
-    const vertexCount = view.getUint32(position, true);
-    position += 4;
-    need(vertexCount * 6, 'vertex data');
-
-    const u = new Uint16Array(vertexCount);
-    const v = new Uint16Array(vertexCount);
-    const height = new Uint16Array(vertexCount);
-    let uAcc = 0, vAcc = 0, heightAcc = 0;
-    for (let i = 0; i < vertexCount; i++) {
-        uAcc += decodeZigZag(view.getUint16(position + i * 2, true));
-        u[i] = uAcc;
-    }
-    position += vertexCount * 2;
-    for (let i = 0; i < vertexCount; i++) {
-        vAcc += decodeZigZag(view.getUint16(position + i * 2, true));
-        v[i] = vAcc;
-    }
-    position += vertexCount * 2;
-    for (let i = 0; i < vertexCount; i++) {
-        heightAcc += decodeZigZag(view.getUint16(position + i * 2, true));
-        height[i] = heightAcc;
-    }
-    position += vertexCount * 2;
-
-    const bytesPerIndex = vertexCount > 65536 ? 4 : 2;
-    if (position % bytesPerIndex !== 0) {
-        position += bytesPerIndex - (position % bytesPerIndex);
-    }
-    need(4, 'triangle count');
-    const triangleCount = view.getUint32(position, true);
-    position += 4;
-
-    const indexCount = triangleCount * 3;
-    need(indexCount * bytesPerIndex, 'triangle indices');
-    const rawIndices = bytesPerIndex === 2
-        ? new Uint16Array(buffer, position, indexCount)
-        : new Uint32Array(buffer, position, indexCount);
-    let highest = 0;
-    const indices = new Uint32Array(indexCount);
-    for (let i = 0; i < indexCount; i++) {
-        const code = rawIndices[i];
-        if (code > highest) {
-            throw new Error('malformed quantized-mesh tile: index out of range');
-        }
-        indices[i] = highest - code;
-        if (code === 0) highest++;
-    }
-    if (highest > vertexCount) {
-        throw new Error('malformed quantized-mesh tile: index out of range');
-    }
-
-    // Edge-index lists and extension records (oct-encoded normals, water
-    // mask) may follow - nothing here needs them, deliberately unread.
-    return {header, u, v, height, indices, vertexCount, triangleCount};
-}
-
-// EPSG:4326/TMS tiling scheme (2 tiles wide at zoom 0) used by Cesium
-// World Terrain - not the same grid as Web Mercator (below).
+// The quantized-mesh grid is EPSG:4326 TMS (2 tiles wide at zoom 0,
+// y growing northward), not the Web Mercator grid MapLibre requests.
 function qmTileBounds(z, x, y) {
-    const tilesX = 2 * (2 ** z);
-    const tilesY = 2 ** z;
-    const lonWidth = 360 / tilesX;
-    const latHeight = 180 / tilesY;
+    const lonWidth = 360 / (2 * (2 ** z));
+    const latHeight = 180 / (2 ** z);
     const west = -180 + x * lonWidth;
     const south = -90 + y * latHeight;
     return {west, south, east: west + lonWidth, north: south + latHeight};
 }
 
-// Standard Web Mercator slippy-map tile bounds.
 function mercatorTileBounds(z, x, y) {
     const n = 2 ** z;
-    function lat(yTile) {
-        const merc = Math.PI * (1 - 2 * yTile / n);
-        return (180 / Math.PI) * Math.atan(Math.sinh(merc));
-    }
-    return {
-        west: x / n * 360 - 180,
-        east: (x + 1) / n * 360 - 180,
-        north: lat(y),
-        south: lat(y + 1)
-    };
+    const lat = (yTile) => (180 / Math.PI) * Math.atan(Math.sinh(Math.PI * (1 - 2 * yTile / n)));
+    return {west: x / n * 360 - 180, east: (x + 1) / n * 360 - 180, north: lat(y), south: lat(y + 1)};
 }
 
-// Barycentric TIN resampling: locates the triangle containing a query
-// point and interpolates height from its 3 vertices (a bucket index over
-// the mesh's triangles avoids testing all of them per query).
-function buildTriangleIndex(mesh, bucketsPerAxis = 16) {
-    const {u, v, indices, triangleCount} = mesh;
+function boundsOverlap(a, b) {
+    return a.west < b.east && a.east > b.west && a.south < b.north && a.north > b.south;
+}
+
+// Barycentric interpolation over the decoded TIN, with a coarse bucket
+// index so each query only tests a handful of triangles. The decoder
+// returns planar vertex data: u values, then v, then height.
+function buildTriangleIndex(decoded, bucketsPerAxis = 16) {
+    const {vertexData, triangleIndices} = decoded;
+    const vertexCount = vertexData.length / 3;
     const buckets = new Map();
     const cellSize = 32768 / bucketsPerAxis;
-
-    function addToBucket(bx, by, triIdx) {
-        bx = Math.max(0, Math.min(bucketsPerAxis - 1, bx));
-        by = Math.max(0, Math.min(bucketsPerAxis - 1, by));
-        const key = by * bucketsPerAxis + bx;
-        if (!buckets.has(key)) buckets.set(key, []);
-        buckets.get(key).push(triIdx);
-    }
-
-    for (let t = 0; t < triangleCount; t++) {
-        const i0 = indices[t * 3], i1 = indices[t * 3 + 1], i2 = indices[t * 3 + 2];
-        const uMin = Math.min(u[i0], u[i1], u[i2]), uMax = Math.max(u[i0], u[i1], u[i2]);
-        const vMin = Math.min(v[i0], v[i1], v[i2]), vMax = Math.max(v[i0], v[i1], v[i2]);
-        const bxMin = Math.floor(uMin / cellSize), bxMax = Math.floor(uMax / cellSize);
-        const byMin = Math.floor(vMin / cellSize), byMax = Math.floor(vMax / cellSize);
+    const clampBucket = (b) => Math.max(0, Math.min(bucketsPerAxis - 1, b));
+    for (let t = 0; t < triangleIndices.length / 3; t++) {
+        const i0 = triangleIndices[t * 3], i1 = triangleIndices[t * 3 + 1], i2 = triangleIndices[t * 3 + 2];
+        const bxMin = clampBucket(Math.floor(Math.min(vertexData[i0], vertexData[i1], vertexData[i2]) / cellSize));
+        const bxMax = clampBucket(Math.floor(Math.max(vertexData[i0], vertexData[i1], vertexData[i2]) / cellSize));
+        const byMin = clampBucket(Math.floor(Math.min(vertexData[i0 + vertexCount], vertexData[i1 + vertexCount], vertexData[i2 + vertexCount]) / cellSize));
+        const byMax = clampBucket(Math.floor(Math.max(vertexData[i0 + vertexCount], vertexData[i1 + vertexCount], vertexData[i2 + vertexCount]) / cellSize));
         for (let bx = bxMin; bx <= bxMax; bx++) {
             for (let by = byMin; by <= byMax; by++) {
-                addToBucket(bx, by, t);
+                const key = by * bucketsPerAxis + bx;
+                if (!buckets.has(key)) buckets.set(key, []);
+                buckets.get(key).push(t);
             }
         }
     }
-    return {buckets, bucketsPerAxis, cellSize};
+    return {buckets, bucketsPerAxis, cellSize, vertexCount};
 }
 
-function barycentricHeight(mesh, index, queryU, queryV) {
-    const {u, v, height, indices} = mesh;
-    const {buckets, bucketsPerAxis, cellSize} = index;
-    let bx = Math.max(0, Math.min(bucketsPerAxis - 1, Math.floor(queryU / cellSize)));
-    let by = Math.max(0, Math.min(bucketsPerAxis - 1, Math.floor(queryV / cellSize)));
-    const candidates = buckets.get(by * bucketsPerAxis + bx) || [];
-
-    for (const t of candidates) {
-        const i0 = indices[t * 3], i1 = indices[t * 3 + 1], i2 = indices[t * 3 + 2];
-        const x0 = u[i0], y0 = v[i0], x1 = u[i1], y1 = v[i1], x2 = u[i2], y2 = v[i2];
+function barycentricHeight(decoded, index, queryU, queryV) {
+    const {vertexData, triangleIndices} = decoded;
+    const {buckets, bucketsPerAxis, cellSize, vertexCount} = index;
+    const bx = Math.max(0, Math.min(bucketsPerAxis - 1, Math.floor(queryU / cellSize)));
+    const by = Math.max(0, Math.min(bucketsPerAxis - 1, Math.floor(queryV / cellSize)));
+    for (const t of buckets.get(by * bucketsPerAxis + bx) || []) {
+        const i0 = triangleIndices[t * 3], i1 = triangleIndices[t * 3 + 1], i2 = triangleIndices[t * 3 + 2];
+        const x0 = vertexData[i0], y0 = vertexData[i0 + vertexCount];
+        const x1 = vertexData[i1], y1 = vertexData[i1 + vertexCount];
+        const x2 = vertexData[i2], y2 = vertexData[i2 + vertexCount];
         const denom = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2);
         if (denom === 0) continue;
         const w0 = ((y1 - y2) * (queryU - x2) + (x2 - x1) * (queryV - y2)) / denom;
         const w1 = ((y2 - y0) * (queryU - x2) + (x0 - x2) * (queryV - y2)) / denom;
         const w2 = 1 - w0 - w1;
-        const eps = -1e-6;
-        if (w0 >= eps && w1 >= eps && w2 >= eps) {
-            return w0 * height[i0] + w1 * height[i1] + w2 * height[i2];
+        if (w0 >= -1e-6 && w1 >= -1e-6 && w2 >= -1e-6) {
+            return w0 * vertexData[i0 + vertexCount * 2] + w1 * vertexData[i1 + vertexCount * 2] + w2 * vertexData[i2 + vertexCount * 2];
         }
     }
     return null;
 }
 
-// Tries each covering mesh whose own bounds contain (lng, lat) - a
-// requested tile can straddle more than one QM tile's bounds.
+// Tries covering meshes in order (deepest zoom first), so each point
+// gets the highest-resolution data available there.
 function multiMeshElevationAt(coveringMeshes, lng, lat) {
-    for (const {mesh, bounds, index} of coveringMeshes) {
+    for (const {decoded, bounds, index} of coveringMeshes) {
         if (lng < bounds.west || lng > bounds.east || lat < bounds.south || lat > bounds.north) continue;
         const qu = Math.max(0, Math.min(32767, ((lng - bounds.west) / (bounds.east - bounds.west)) * 32767));
         const qv = Math.max(0, Math.min(32767, ((lat - bounds.south) / (bounds.north - bounds.south)) * 32767));
-        const quantHeight = barycentricHeight(mesh, index, qu, qv);
+        const quantHeight = barycentricHeight(decoded, index, qu, qv);
         if (quantHeight === null) continue;
-        const heightRange = mesh.header.maxHeight - mesh.header.minHeight || 1;
-        return mesh.header.minHeight + (quantHeight / 32767) * heightRange;
+        const range = decoded.header.maxHeight - decoded.header.minHeight || 1;
+        return decoded.header.minHeight + (quantHeight / 32767) * range;
     }
     return null;
 }
 
-// Terrarium encoding: height = R*256 + G + B/256 - 32768. The factors
-// live inside the function (not a shared module constant) so it stays
-// self-contained when stringified into the worker source below.
+// Terrarium encoding: height = R*256 + G + B/256 - 32768.
 function packTerrarium(height) {
-    const [redFactor, greenFactor, blueFactor, baseShift] = [256.0, 1.0, 1.0 / 256.0, 32768.0];
-    const minScale = Math.min(redFactor, greenFactor, blueFactor);
-    const vScaled = Math.round((height + baseShift) / minScale);
-    return [
-        Math.floor(vScaled * minScale / redFactor) % 256,
-        Math.floor(vScaled * minScale / greenFactor) % 256,
-        Math.floor(vScaled * minScale / blueFactor) % 256
-    ];
+    const value = Math.round((height + 32768) * 256);
+    return [Math.floor(value / 65536) % 256, Math.floor(value / 256) % 256, value % 256];
 }
 
-// Fades a cell outside every covering mesh's bounds toward the shared
-// fallback height. Two properties matter, both learned the hard way:
-//
-// 1. Everything is a pure function of (lng, lat) and world constants -
-//    never of any tile's own grid - so adjacent Mercator tiles compute
-//    bit-identical heights for shared points (no seam streaks).
-// 2. The boundary height is averaged over a window that widens with
-//    distance from coverage. Sampling only the single nearest boundary
-//    point smears each ridge/valley on the coverage edge into a long
-//    straight stripe across the whole fade apron; averaging keeps the
-//    apron continuous at the edge (window shrinks to a point) while
-//    washing out individual edge features further away.
-function geographicFallbackHeight(lng, lat, coveringMeshes, bounds, fadeDistanceDeg, fallbackHeight) {
+// Fades points outside the dataset's coverage toward one fixed height.
+// A pure function of (lng, lat) and world constants, so adjacent
+// Mercator tiles compute identical heights at shared points (no seams).
+// The boundary height is averaged over a window that widens with
+// distance, so single edge ridges do not smear into long stripes.
+const FALLBACK_HEIGHT = 1500;
+function geographicFallbackHeight(lng, lat, coveringMeshes, bounds, fadeDistanceDeg) {
     const clampLng = (v) => Math.max(bounds.west, Math.min(bounds.east, v));
     const clampLat = (v) => Math.max(bounds.south, Math.min(bounds.north, v));
     const dLng = lng - clampLng(lng);
     const dLat = lat - clampLat(lat);
     const dist = Math.sqrt(dLng * dLng + dLat * dLat);
     const t = Math.min(1, dist / fadeDistanceDeg);
-    // Smoothstep: zero slope at both ends, so neither the coverage edge
-    // nor the far end of the fade shows a crease under hillshade.
+    if (t >= 1) return FALLBACK_HEIGHT;
     const weight = t * t * (3 - 2 * t);
-    if (t >= 1) return fallbackHeight;
     let sum = 0;
     let count = 0;
-    // Window radius grows at SPREAD x the distance from coverage: edge
-    // features wash out of the apron that much faster, while the window
-    // still shrinks to a point at the boundary (continuity with the data).
-    const RINGS = 4;
-    const SPREAD = 5;
-    for (let ring = 0; ring <= RINGS; ring++) {
-        const radius = SPREAD * dist * ring / RINGS;
+    for (let ring = 0; ring <= 4; ring++) {
+        const radius = 5 * dist * ring / 4;
         const steps = ring === 0 ? 1 : 8 * ring;
         for (let s = 0; s < steps; s++) {
             const angle = 2 * Math.PI * s / steps;
-            const h = multiMeshElevationAt(
-                coveringMeshes,
-                clampLng(lng + radius * Math.cos(angle)),
-                clampLat(lat + radius * Math.sin(angle)));
+            const h = multiMeshElevationAt(coveringMeshes, clampLng(lng + radius * Math.cos(angle)), clampLat(lat + radius * Math.sin(angle)));
             if (h !== null) {
                 sum += h;
                 count++;
             }
         }
     }
-    return count === 0
-        ? fallbackHeight
-        : (sum / count) * (1 - weight) + fallbackHeight * weight;
+    return count === 0 ? FALLBACK_HEIGHT : (sum / count) * (1 - weight) + FALLBACK_HEIGHT * weight;
 }
 
-// A single fixed height used everywhere outside the dataset's real
-// coverage - see geographicFallbackHeight's comment for why this must
-// be one constant shared by every tile, not computed per-tile.
-const FALLBACK_HEIGHT = 1500;
-
-function boundsOverlap(a, b) {
-    return a.west < b.east && a.east > b.west && a.south < b.north && a.north > b.south;
-}
-
-// EPSG:4326/TMS tile coordinate range intersecting geographic bounds.
+// Available tiles intersecting the requested bounds, deepest zoom first,
+// from layer.json's per-zoom `available` rectangles. Gaps at one zoom
+// stack over lower-zoom parents. Zooms needing more than 6 source tiles
+// for one 256px output tile are skipped: the output cannot express their
+// resolution, and a full pyramid would fan out into hundreds of fetches.
 function qmTileRange(z, bounds) {
     const tilesX = 2 * (2 ** z);
     const tilesY = 2 ** z;
@@ -310,16 +167,6 @@ function qmTileRange(z, bounds) {
     };
 }
 
-// Returns available tiles intersecting the requested Mercator tile's
-// bounds, deepest zoom first, walking layer.json's per-zoom `available`
-// rectangle ranges. Real datasets' availability is patchy/regional, so
-// gaps at one zoom stack on top of lower-zoom parents: meshes are tried
-// in list order, so each point gets the deepest real data available and
-// only points no zoom covers fall back to the synthetic apron. The walk
-// stops at the first zoom that fully covers the request (parents can't
-// contribute anything there). Deliberately NOT capped by the requested
-// Mercator tile's zoom: pitch/zoom changes make MapLibre request
-// Mercator tiles at zooms far from the dataset's own levels.
 function collectAvailableTiles(rectangles, qz, range, mercatorBounds, covering) {
     let fullyCovered = true;
     for (let x = range.xMin; x <= range.xMax; x++) {
@@ -344,22 +191,13 @@ function findCoveringQMTiles(available, mercatorBounds) {
         if (rectangles.length === 0) continue;
         coarsestWithData = qz;
         const range = qmTileRange(qz, mercatorBounds);
-        // Skip zooms needing more than a handful of source tiles for
-        // one 256px output tile: the output cannot express their extra
-        // resolution anyway, and with a full pyramid available (a live
-        // dataset) a request would otherwise fan out into hundreds of
-        // fetches. 6 keeps the deepest zoom whose tile grid roughly
-        // matches the output tile's own footprint.
         if ((range.xMax - range.xMin + 1) * (range.yMax - range.yMin + 1) > 6) continue;
         if (collectAvailableTiles(rectangles, qz, range, mercatorBounds, covering) && covering.length > 0) {
             return covering;
         }
     }
-    // Every zoom with data was finer than the guard allows - a small
-    // fixture dataset seen from far away. Take the coarsest zoom with
-    // data anyway (its tile count is bounded by the dataset's own size);
-    // returning nothing here would render a flat fallback plateau where
-    // real data exists.
+    // Every zoom with data was finer than the guard allows (a small
+    // dataset seen from far away): take the coarsest zoom with data.
     if (covering.length === 0 && coarsestWithData >= 0) {
         const range = qmTileRange(coarsestWithData, mercatorBounds);
         collectAvailableTiles(available[coarsestWithData], coarsestWithData, range, mercatorBounds, covering);
@@ -367,76 +205,32 @@ function findCoveringQMTiles(available, mercatorBounds) {
     return covering;
 }
 
-// Union of every available rectangle's geographic bounds, all zooms.
-function availabilityBounds(available) {
-    const acc = {west: Infinity, east: -Infinity, south: Infinity, north: -Infinity};
-    available.forEach((rectangles, z) => {
-        for (const rect of rectangles) {
-            const sw = qmTileBounds(z, rect.startX, rect.startY);
-            const ne = qmTileBounds(z, rect.endX, rect.endY);
-            acc.west = Math.min(acc.west, sw.west);
-            acc.south = Math.min(acc.south, sw.south);
-            acc.east = Math.max(acc.east, ne.east);
-            acc.north = Math.max(acc.north, ne.north);
-        }
-    });
-    return acc;
-}
-
-// Loads and validates a quantized-mesh dataset's layer.json - the same
-// self-description real endpoints (Cesium World Terrain, swisstopo,
-// MapTiler quantized-mesh-v2) serve: tile URL template, per-zoom
-// `available` rectangle ranges, attribution. Options:
-// - headers: sent with layer.json and every tile request (e.g. a
-//   Cesium ion Bearer token and the quantized-mesh Accept header);
-// - boundsOverride + maxZoom: for endpoints that omit `available`
-//   (declaring `metadataAvailability` instead, like swisstopo, whose
-//   deep-zoom availability lives in tile-metadata extension records
-//   this example does not parse) - availability is synthesized as
-//   "everything inside these bounds up to this zoom", and requests for
-//   tiles the server turns out to lack degrade to the fallback apron;
-// - label/attribution: display fallbacks.
+// Loads a dataset's layer.json: tile URL template, per-zoom `available`
+// rectangles, attribution. `boundsOverride` + `maxZoom` synthesize
+// availability for endpoints that omit `available` (like swisstopo);
+// tiles the server turns out to lack degrade to the fallback apron.
 async function loadDataset(layerJsonUrl, options = {}) {
-    const headers = options.headers || {};
-    const res = await fetch(layerJsonUrl, {headers});
+    const res = await fetch(layerJsonUrl);
     if (!res.ok) throw new Error(`layer.json request failed: HTTP ${res.status}`);
     const layer = await res.json();
-    if (layer.format !== 'quantized-mesh-1.0') {
-        throw new Error(`unsupported terrain format: ${layer.format}`);
-    }
-    if (layer.projection && layer.projection !== 'EPSG:4326') {
-        throw new Error(`unsupported projection: ${layer.projection}`);
-    }
+    if (layer.format !== 'quantized-mesh-1.0') throw new Error(`unsupported terrain format: ${layer.format}`);
     let available = layer.available || [];
     if (available.length === 0 && options.boundsOverride) {
-        available = [];
-        for (let z = layer.minzoom || 0; z <= Math.min(layer.maxzoom, options.maxZoom ?? layer.maxzoom); z++) {
+        for (let z = layer.minzoom || 0; z <= Math.min(layer.maxzoom, options.maxZoom); z++) {
             const range = qmTileRange(z, options.boundsOverride);
             available[z] = [{startX: range.xMin, startY: range.yMin, endX: range.xMax, endY: range.yMax}];
         }
     }
-    if (options.maxZoom !== undefined) available = available.slice(0, options.maxZoom + 1);
-    const zoomsWithTiles = available.map((rectangles, z) => (rectangles || []).length > 0 ? z : -1).filter(z => z >= 0);
+    const zoomsWithTiles = available.map((rectangles, z) => (rectangles || []).length > 0 ? z : -1).filter((z) => z >= 0);
     if (zoomsWithTiles.length === 0) throw new Error('layer.json declares no available tiles');
-    // Coverage box, in priority order: explicit override, the dataset's
-    // own bounds field, then the union of availability rectangles. The
-    // union alone would balloon to near-global for any dataset bundling
-    // coarse low-zoom ancestor tiles (like our fixture's z0-z8 shells).
     const bounds = options.boundsOverride ||
-        (layer.bounds && {west: layer.bounds[0], south: layer.bounds[1], east: layer.bounds[2], north: layer.bounds[3]}) ||
-        availabilityBounds(available);
+        {west: layer.bounds[0], south: layer.bounds[1], east: layer.bounds[2], north: layer.bounds[3]};
     const template = layerJsonUrl.replace(/[^/]*$/, '') + layer.tiles[0];
     return {
         available,
-        headers,
         bounds,
-        label: options.label,
-        rateLimit: options.rateLimit || {},
         minZoom: Math.min(...zoomsWithTiles),
         maxZoom: Math.max(...zoomsWithTiles),
-        // Taper distance: a fixed fraction of the coverage extent - a
-        // world constant, not derived from any tile's pixel grid, so
-        // every Mercator tile fades identically for the same location.
         fadeDistanceDeg: Math.max(bounds.east - bounds.west, bounds.north - bounds.south) / 4,
         attribution: layer.attribution || options.attribution,
         tileUrl: (z, x, y) => template
@@ -445,51 +239,43 @@ async function loadDataset(layerJsonUrl, options = {}) {
     };
 }
 
-// Resamples the covering mesh(es) onto a size x size terrain-RGB image.
-// Computes lng/lat directly from global (z, x, y, px, py) - not from a
-// per-tile bounds object - so two adjacent tiles' shared-edge pixels
-// (tile x's column `size-1` and tile x+1's column `0`) evaluate the exact
-// same `globalX/n` expression and are bit-identical, instead of each tile
-// independently deriving its own bounds object first (which can disagree
-// by a floating-point ULP or two, just enough to pick a different
-// triangle right at the seam).
+// Live swisstopo terrain by default (its layer.json uses the
+// tile-metadata extension instead of `available`, so availability is
+// synthesized over its extent, capped at z14 for the demo); bundled
+// Zermatt-area excerpt when the live endpoint is unreachable.
+const datasetPromise = loadDataset('https://3d.geo.admin.ch/ch.swisstopo.terrain.3d/v1/layer.json', {
+    attribution: 'Terrain: &copy; swisstopo',
+    boundsOverride: {west: 5.6, south: 45.5, east: 11.0, north: 48.2},
+    maxZoom: 14
+}).catch((err) => {
+    console.warn(`live terrain unavailable (${err.message}); using the bundled fixture`);
+    return loadDataset(new URL('../../docs/assets/examples/zermatt-terrain-tiles/layer.json', location.href).href);
+});
+
+// Resamples covering meshes onto a terrain-RGB tile. lng/lat come from
+// global (z, x, y, pixel) coordinates so adjacent tiles' shared-edge
+// pixels evaluate identically (no floating-point seams).
 function mercatorPixelToLngLat(z, x, y, px, py, size) {
     const n = 2 ** z;
-    const globalX = x + px / (size - 1);
-    const globalY = y + py / (size - 1);
-    const lng = globalX / n * 360 - 180;
-    const merc = Math.PI * (1 - 2 * globalY / n);
-    const lat = (180 / Math.PI) * Math.atan(Math.sinh(merc));
+    const lng = (x + px / (size - 1)) / n * 360 - 180;
+    const lat = (180 / Math.PI) * Math.atan(Math.sinh(Math.PI * (1 - 2 * (y + py / (size - 1)) / n)));
     return {lng, lat};
 }
 
-// Async because it yields between row blocks when an isAborted callback
-// is given, so an abort can arrive (worker messages only land between
-// macrotasks) and stop the build promptly - MapLibre aborts tiles that
-// pan/zoom away mid-load, and finishing them would be wasted work.
-async function buildTerrainRgbImageData(coveringMeshes, tileZ, tileX, tileY, size, apron, isAborted) {
-    const indexed = coveringMeshes.map((c) => c.index ? c : {...c, index: buildTriangleIndex(c.mesh)});
+function buildTerrainRgbImageData(coveringMeshes, dataset, tileZ, tileX, tileY, size, signal) {
     const heights = new Float64Array(size * size);
     for (let row = 0; row < size; row++) {
-        if (isAborted && row % 64 === 0) {
-            await new Promise((resolve) => setTimeout(resolve));
-            if (isAborted()) throw new Error('aborted');
-        }
+        if (signal?.aborted) throw new DOMException('Tile request aborted', 'AbortError');
         for (let col = 0; col < size; col++) {
             const {lng, lat} = mercatorPixelToLngLat(tileZ, tileX, tileY, col, row, size);
-            // The coverage box is authoritative: outside it, always
-            // fade, even where a coarse low-zoom mesh technically has
-            // data - otherwise the terrain runs on to whatever tile
-            // boundary happens to cut it, ending in an abrupt wall.
-            const inBox = lng >= apron.bounds.west && lng <= apron.bounds.east &&
-                lat >= apron.bounds.south && lat <= apron.bounds.north;
-            const h = inBox ? multiMeshElevationAt(indexed, lng, lat) : null;
+            const inBounds = lng >= dataset.bounds.west && lng <= dataset.bounds.east &&
+                lat >= dataset.bounds.south && lat <= dataset.bounds.north;
+            const h = inBounds ? multiMeshElevationAt(coveringMeshes, lng, lat) : null;
             heights[row * size + col] = h !== null
                 ? h
-                : geographicFallbackHeight(lng, lat, indexed, apron.bounds, apron.fadeDistanceDeg, apron.fallbackHeight);
+                : geographicFallbackHeight(lng, lat, coveringMeshes, dataset.bounds, dataset.fadeDistanceDeg);
         }
     }
-
     const rgba = new Uint8ClampedArray(size * size * 4);
     for (let i = 0; i < size * size; i++) {
         const [r, g, b] = packTerrarium(heights[i]);
@@ -498,331 +284,71 @@ async function buildTerrainRgbImageData(coveringMeshes, tileZ, tileX, tileY, siz
     return new ImageData(rgba, size, size);
 }
 
-// Converts quantized-mesh tiles to terrain-RGB on the fly via a custom
-// protocol, so the terrain source can be a normal `raster-dem` source -
-// no custom `Source` class, no duck-typed `tile.dem`, and hillshade/
-// color-relief layers (which require `raster-dem`) work directly.
 const TILE_SIZE = 256;
-
-// Three dataset modes, chosen by the `terrain` URL query parameter:
-// - (default)          live swisstopo terrain (open data, no key),
-//                      streaming all of Switzerland dynamically
-// - ?terrain=fixture   bundled Zermatt-area excerpt - offline, no key
-// - ?terrain=ion&ion-token=YOUR_TOKEN
-//                      live Cesium World Terrain via Cesium ion
-// A live mode that fails for any reason (offline, bad token) falls
-// back to the bundled fixture automatically.
-const QUERY_PARAMS = new URLSearchParams(location.search);
-const TERRAIN_MODE = QUERY_PARAMS.get('terrain') || 'swisstopo';
-
-const DATASET_LOADERS = {
-    // Fetched once at dev time from the swisstopo endpoint below (open
-    // data), so the example runs offline with no key at all.
-    fixture: () => loadDataset(
-        new URL('../../docs/assets/examples/zermatt-terrain-tiles/layer.json', location.href).href,
-        {label: 'bundled fixture'}),
-    swisstopo: () => loadDataset('https://3d.geo.admin.ch/ch.swisstopo.terrain.3d/v1/layer.json', {
-        label: 'live swisstopo',
-        attribution: 'Terrain: &copy; swisstopo',
-        // swisstopo's layer.json declares no `available` ranges (it
-        // uses the tile-metadata extension instead), so availability is
-        // synthesized over the dataset's real extent. z14 is a demo
-        // cap: coverage inside Switzerland reaches z18, the border
-        // buffer somewhat less.
-        boundsOverride: {west: 5.6, south: 45.5, east: 11.0, north: 48.2},
-        maxZoom: 14,
-        // Be polite to the free endpoint (parameterizable per dataset:
-        // max parallel requests and minimum ms between request starts).
-        rateLimit: {maxConcurrent: 4, minIntervalMs: 50}
-    }),
-    ion: async () => {
-        const token = QUERY_PARAMS.get('ion-token');
-        if (!token) throw new Error('ion mode needs &ion-token=YOUR_TOKEN (free at ion.cesium.com)');
-        const res = await fetch(`https://api.cesium.com/v1/assets/1/endpoint?access_token=${token}`);
-        if (!res.ok) throw new Error(`ion endpoint request failed: HTTP ${res.status}`);
-        const endpoint = await res.json();
-        return loadDataset(`${endpoint.url}layer.json`, {
-            label: 'live Cesium World Terrain',
-            attribution: 'Terrain: Cesium World Terrain via Cesium ion',
-            headers: {
-                'Authorization': `Bearer ${endpoint.accessToken}`,
-                'Accept': 'application/vnd.quantized-mesh,application/octet-stream;q=0.9'
-            },
-            rateLimit: {maxConcurrent: 6}
-        });
-    }
-};
-
-const datasetPromise = (async () => {
-    try {
-        if (!(TERRAIN_MODE in DATASET_LOADERS)) {
-            throw new Error(`unknown terrain mode: ${TERRAIN_MODE}`);
-        }
-        return await DATASET_LOADERS[TERRAIN_MODE]();
-    } catch (err) {
-        if (TERRAIN_MODE === 'fixture') throw err;
-        console.warn(`'${TERRAIN_MODE}' terrain unavailable (${err.message}); falling back to the bundled fixture`);
-        const fallback = await DATASET_LOADERS.fixture();
-        fallback.label += ` (${TERRAIN_MODE} fallback)`;
-        return fallback;
-    }
-})();
-
-// addProtocol handlers run on the main thread, and a tile straddling
-// the coverage edge costs ~200 ms of decode + resample - enough to
-// stutter interaction when several tiles arrive together. All CPU work
-// runs in a Worker instead: the pure functions above are stringified
-// into its source (defined once, no duplication), and tiles come back
-// as transferable ImageBitmaps. This is a plain DOM Worker owned by the
-// example - none of MapLibre's own worker machinery is involved.
-function workerMain() {
-    // Decoded meshes - with their triangle index, built once here
-    // rather than per requested Mercator tile - cached per URL with an
-    // LRU cap, since a real dataset would otherwise grow unbounded.
-    const meshCache = new Map();
-    const MESH_CACHE_MAX = 64;
-    const aborted = new Set();
-
-    // Parameterizable tile-fetch throttle (per-dataset `rateLimit`
-    // setting, passed with each request): live endpoints may enforce
-    // request-per-second limits; only real network fetches queue here,
-    // cache hits bypass it.
-    let activeFetches = 0;
-    let lastFetchStart = 0;
-    const fetchQueue = [];
-    function pumpFetchQueue() {
-        if (fetchQueue.length === 0) return;
-        const {limits} = fetchQueue[0];
-        if (activeFetches >= (limits.maxConcurrent || Infinity)) return;
-        const wait = lastFetchStart + (limits.minIntervalMs || 0) - Date.now();
-        if (wait > 0) {
-            setTimeout(pumpFetchQueue, wait);
-            return;
-        }
-        const job = fetchQueue.shift();
-        lastFetchStart = Date.now();
-        activeFetches++;
-        fetch(job.url, {headers: job.headers})
-            .then(job.resolve, job.reject)
-            .finally(() => {
-                activeFetches--;
-                pumpFetchQueue();
-            });
-    }
-    function throttledFetch(url, headers, limits) {
-        return new Promise((resolve, reject) => {
-            fetchQueue.push({url, headers, limits: limits || {}, resolve, reject});
-            pumpFetchQueue();
-        });
-    }
-
-    function getMesh(url, headers, rateLimit) {
-        if (meshCache.has(url)) {
-            const cached = meshCache.get(url);
-            meshCache.delete(url);
-            meshCache.set(url, cached);
-            return cached;
-        }
-        const entry = throttledFetch(url, headers, rateLimit).then(async (res) => {
-            // A tile the availability ranges promise but the server
-            // lacks: treat as no coverage (the fallback apron fills in)
-            // rather than failing every Mercator tile that needs it.
-            // 404 is the usual signal; swisstopo answers 403 outside
-            // its coverage.
+const meshCache = new Map();
+function getMesh(url, signal) {
+    if (!meshCache.has(url)) {
+        const promise = fetch(url, {signal}).then(async (res) => {
+            // Tiles the availability ranges promise but the server lacks:
+            // treat as no coverage (404 is usual; swisstopo answers 403).
             if (res.status === 404 || res.status === 403) return null;
             if (!res.ok) throw new Error(`terrain tile request failed: HTTP ${res.status}`);
-            const mesh = decodeQuantizedMesh(await res.arrayBuffer());
-            return {mesh, index: buildTriangleIndex(mesh)};
+            const decoded = decode(await res.arrayBuffer());
+            return {decoded, index: buildTriangleIndex(decoded)};
         });
-        meshCache.set(url, entry);
-        if (meshCache.size > MESH_CACHE_MAX) {
-            meshCache.delete(meshCache.keys().next().value);
-        }
-        return entry;
+        promise.catch(() => meshCache.delete(url));
+        meshCache.set(url, promise);
     }
-
-    globalThis.onmessage = async ({data}) => {
-        if (data.type === 'abort') {
-            aborted.add(data.id);
-            return;
-        }
-        const {id, z, x, y, size, tiles, apron, headers, rateLimit} = data;
-        try {
-            const meshes = (await Promise.all(tiles.map(async (tile) => {
-                const decoded = await getMesh(tile.url, headers, rateLimit);
-                return decoded && {mesh: decoded.mesh, index: decoded.index, bounds: tile.bounds};
-            }))).filter(Boolean);
-            const imageData = await buildTerrainRgbImageData(meshes, z, x, y, size, apron, () => aborted.has(id));
-            const bitmap = await createImageBitmap(imageData);
-            globalThis.postMessage({id, bitmap}, [bitmap]);
-        } catch (err) {
-            globalThis.postMessage({id, error: err.message});
-        } finally {
-            aborted.delete(id);
-        }
-    };
+    return meshCache.get(url);
 }
 
-const workerSource = [
-    decodeZigZag, decodeQuantizedMesh, buildTriangleIndex, barycentricHeight,
-    multiMeshElevationAt, packTerrarium, geographicFallbackHeight,
-    mercatorPixelToLngLat, buildTerrainRgbImageData, workerMain
-].map((fn) => fn.toString()).join('\n\n') + '\n\nworkerMain();';
-const worker = new Worker(URL.createObjectURL(new Blob([workerSource], {type: 'text/javascript'})));
-
-let nextRequestId = 0;
-const pendingTiles = new Map();
-worker.onmessage = ({data}) => {
-    const request = pendingTiles.get(data.id);
-    if (!request) return;
-    pendingTiles.delete(data.id);
-    if (data.error) {
-        request.reject(new Error(data.error));
-    } else {
-        request.resolve(data.bitmap);
-    }
-};
-
 maplibregl.addProtocol('quantized-mesh', async ({url}, abortController) => {
+    const signal = abortController?.signal;
     const dataset = await datasetPromise;
     const [, z, x, y] = url.match(/^quantized-mesh:\/\/(\d+)\/(\d+)\/(\d+)$/).map(Number);
     const covering = findCoveringQMTiles(dataset.available, mercatorTileBounds(z, x, y));
-    const id = nextRequestId++;
-    const data = await new Promise((resolve, reject) => {
-        pendingTiles.set(id, {resolve, reject});
-        abortController.signal.addEventListener('abort', () => {
-            worker.postMessage({type: 'abort', id});
-        }, {once: true});
-        worker.postMessage({
-            id, z, x, y,
-            size: TILE_SIZE,
-            tiles: covering.map((t) => ({url: dataset.tileUrl(t.z, t.x, t.y), bounds: t.bounds})),
-            headers: dataset.headers,
-            rateLimit: dataset.rateLimit,
-            apron: {bounds: dataset.bounds, fadeDistanceDeg: dataset.fadeDistanceDeg, fallbackHeight: FALLBACK_HEIGHT}
-        });
-    });
-    return {data};
+    const meshes = (await Promise.all(covering.map(async (tile) => {
+        const entry = await getMesh(dataset.tileUrl(tile.z, tile.x, tile.y), signal);
+        return entry && {decoded: entry.decoded, index: entry.index, bounds: tile.bounds};
+    }))).filter(Boolean);
+    const imageData = buildTerrainRgbImageData(meshes, dataset, z, x, y, TILE_SIZE, signal);
+    return {data: await createImageBitmap(imageData)};
 });
-
-const MATTERHORN = [7.6586, 45.9763];
-
-// Five famous Valais 4000ers - real peaks double as a sanity check
-// that the tile data lines up with the real world, and they spread
-// across all four bundled z9 tiles, so multi-tile coverage is really
-// exercised.
-const SUMMITS = [
-    {name: 'Matterhorn', lngLat: [7.6586, 45.9763], elevation: 4478, color: '#e52938'},
-    {name: 'Dufourspitze', lngLat: [7.8672, 45.9369], elevation: 4634, color: '#1c3657'},
-    {name: 'Dom', lngLat: [7.8586, 46.0937], elevation: 4545, color: '#f5a361'},
-    {name: 'Weisshorn', lngLat: [7.7158, 46.1013], elevation: 4506, color: '#299e8f'},
-    {name: 'Zinalrothorn', lngLat: [7.6901, 46.0645], elevation: 4221, color: '#8238ed'}
-];
 
 const map = new maplibregl.Map({
     container: 'map',
-    // Syncs center/zoom/pitch/bearing into the URL hash, so a specific
-    // camera position can be shared/reproduced just by pasting the URL.
-    hash: true,
     style: {version: 8, sources: {}, layers: [{id: 'sky', type: 'background', paint: {'background-color': '#bfe0f5'}}]},
     center: [7.74, 45.96],
     zoom: 10.6,
     pitch: 60,
     bearing: -15,
     maxPitch: 85,
-    // Default terrain skirts stay on: they hide the cracks between
-    // neighboring terrain tiles rendered at different detail levels
-    // (visible as bright seam lines otherwise, see #7523).
     canvasContextAttributes: {antialias: true}
 });
-map.addControl(new maplibregl.NavigationControl());
 
 map.on('load', async () => {
-    const readout = document.getElementById('readout');
-    let dataset;
-    try {
-        dataset = await datasetPromise;
-    } catch (err) {
-        readout.textContent = `Terrain dataset failed to load: ${err.message}`;
-        return;
-    }
+    const dataset = await datasetPromise;
     map.addSource('qm-terrain', {
         type: 'raster-dem',
         encoding: 'terrarium',
         tiles: ['quantized-mesh://{z}/{x}/{y}'],
         tileSize: TILE_SIZE,
         attribution: dataset.attribution,
-        // minzoom matters beyond just "don't request below this zoom":
-        // TileManager._addTerrainIdealTiles always keeps one extra
-        // "low-zoom safety net" tile retained at
-        // max(source.minzoom, min(idealZoom, 5)) so terrain has SOMETHING
-        // to show while the ideal tile loads. With minzoom 0 that pins to
-        // some zoom <=5, where a small dataset is mostly fallback fill -
-        // resampled at a totally different scale than the ideal tile, so
-        // the two visibly disagree wherever both are rendered. Raising
-        // minzoom to the dataset's lowest available zoom makes that
-        // safety-net tile real data, not a washed-out approximation.
+        // minzoom also pins TileManager's low-zoom safety-net tile to a
+        // zoom the dataset really covers; maxzoom lets MapLibre overscale
+        // deeper zooms; bounds stops requests outside the coverage (the
+        // built-in raster-dem hasTile() check).
         minzoom: dataset.minZoom,
         maxzoom: dataset.maxZoom,
-        // Without this, MapLibre requests terrain tiles for the whole
-        // viewport, and our protocol handler has no real data to give
-        // most of them - creating a sharp cliff at the edge of the
-        // dataset's coverage. `bounds` makes the built-in raster-dem
-        // hasTile() skip tiles outside it entirely.
         bounds: [dataset.bounds.west, dataset.bounds.south, dataset.bounds.east, dataset.bounds.north]
     });
     map.setTerrain({source: 'qm-terrain', exaggeration: 1.2});
-
-    // Because this is a real terrain source, ordinary 2D layers drape
-    // over the 3D surface automatically - one of the goals in #4493.
-    // SWISSIMAGE aerial imagery textures the ground and the official
-    // national boundary drapes along the ridge lines (both swisstopo
-    // open data, no key; tiles simply stay blank while offline).
-    map.addSource('swissimage', {
-        type: 'raster',
-        tiles: ['https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg'],
-        tileSize: 256,
-        maxzoom: 19,
-        attribution: 'Imagery: &copy; swisstopo'
-    });
-    map.addLayer({id: 'swissimage', type: 'raster', source: 'swissimage'});
-    // hillshade requires a raster-dem source - exactly what this custom
-    // protocol provides, another benefit of the addProtocol approach
-    // over a custom source type. Kept subtle so the imagery reads.
     map.addLayer({
         id: 'qm-hillshade',
         type: 'hillshade',
         source: 'qm-terrain',
-        paint: {'hillshade-exaggeration': 0.3}
+        paint: {'hillshade-exaggeration': 0.8}
     });
-
-    // The national boundary sits above the hillshade so shading never
-    // washes it out.
-    map.addSource('swiss-border', {
-        type: 'raster',
-        tiles: ['https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissboundaries3d-land-flaeche.fill/default/current/3857/{z}/{x}/{y}.png'],
-        tileSize: 256,
-        maxzoom: 18
-    });
-    map.addLayer({id: 'swiss-border', type: 'raster', source: 'swiss-border', paint: {'raster-opacity': 0.8}});
-
-    // Because this is a real terrain source, plain Markers sit on the
-    // terrain surface automatically - no custom rendering needed, unlike
-    // the POC's hand-rendered WebGL pins.
-    for (const summit of SUMMITS) {
-        new maplibregl.Marker({color: summit.color})
-            .setLngLat(summit.lngLat)
-            .setPopup(new maplibregl.Popup({offset: 25}).setText(`${summit.name} (${summit.elevation} m)`))
-            .addTo(map);
-    }
-
-    function updateReadout() {
-        const elevation = map.queryTerrainElevation(MATTERHORN);
-        readout.textContent = elevation === null || elevation === undefined
-            ? `queryTerrainElevation: no data — ${dataset.label}`
-            : `Matterhorn queryTerrainElevation(): ${elevation.toFixed(1)} m (real: 4478 m) — ${dataset.label}`;
-    }
-    map.on('render', updateReadout);
 });
 </script>
 </body>
