@@ -784,10 +784,6 @@ describe('coveringTiles', () => {
 });
 
 describe('getElevationForTileCulling', () => {
-    // #7633: 3D buildings disappeared when the camera pitched up steeply
-    // while walking around a city. Reproduced across roughly 80-100 degrees
-    // of pitch (default fov), which is why those three angles specifically
-    // are covered here.
     function transformAtPitch(pitch: number): MercatorTransform {
         const transform = new MercatorTransform({minZoom: 0, maxZoom: 20, minPitch: 0, maxPitch: 100});
         transform.resize(512, 512);
@@ -797,20 +793,17 @@ describe('getElevationForTileCulling', () => {
         return transform;
     }
 
-    test('is unchanged (no buffer) at normal pitch', () => {
+    test('equals the transform elevation at pitch 45', () => {
         const transform = transformAtPitch(45);
         expect(getElevationForTileCulling(transform)).toBe(transform.elevation);
     });
 
-    test.each([80, 90, 100])('is fully buffered at pitch %d (the reported bug range)', (pitch) => {
+    test.each([80, 90, 100])('adds the full assumed feature height at pitch %d', (pitch) => {
         const transform = transformAtPitch(pitch);
-        // At the default fov, the frustum's bottom edge is already at or past
-        // horizontal by pitch 80, so the buffer should be fully saturated
-        // (not partially ramping) throughout the whole 80-100 range.
         expect(getElevationForTileCulling(transform)).toBe(transform.elevation + 500);
     });
 
-    test('ramps smoothly between unaffected and fully-buffered pitch', () => {
+    test('adds part of the assumed feature height at pitch 60', () => {
         const transform = transformAtPitch(60);
         const elevation = getElevationForTileCulling(transform);
         expect(elevation).toBeGreaterThan(transform.elevation);

@@ -183,19 +183,16 @@ export function coveringZoomLevel(transform: IReadonlyTransform, options: Coveri
 const ASSUMED_MAX_FEATURE_HEIGHT_METERS = 500;
 
 /**
- * The elevation used for tile culling normally: how far the frustum's bottom edge
- * (in degrees above horizontal) still is from `maxMercatorHorizonAngle` before
- * `ASSUMED_MAX_FEATURE_HEIGHT_METERS` is fully applied.
+ * Angle between the frustum's bottom edge and the mercator horizon below which
+ * the culling elevation starts to grow.
  */
 const TILE_CULLING_HORIZON_ONSET_DEGREES = 15;
 
 /**
- * Returns the elevation to use when computing tile bounding volumes for culling.
- * Normally this is just `transform.elevation`, but it grows toward
- * `transform.elevation + ASSUMED_MAX_FEATURE_HEIGHT_METERS` as the view frustum's
- * bottom edge - `maxMercatorHorizonAngle - pitch - fov / 2` degrees above horizontal -
- * approaches zero, since that's exactly when a flat, ground-level tile bounding box
- * stops representing what extruded features on it could still make visible.
+ * Returns the elevation to use when computing tile bounding volumes for culling:
+ * `transform.elevation`, growing by up to `ASSUMED_MAX_FEATURE_HEIGHT_METERS` as
+ * the frustum's bottom edge approaches the horizon, where a ground-level bounding
+ * box would cull tiles whose extruded features are still visible.
  */
 export function getElevationForTileCulling(transform: IReadonlyTransform): number {
     const bottomEdgeDegreesAboveHorizontal = maxMercatorHorizonAngle - transform.pitch - transform.fov / 2;
