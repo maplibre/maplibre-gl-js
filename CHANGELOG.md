@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Support `global-state` expressions in `light.*` properties ([#7966](https://github.com/maplibre/maplibre-gl-js/pull/7966)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
