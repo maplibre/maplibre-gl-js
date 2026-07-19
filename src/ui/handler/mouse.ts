@@ -51,16 +51,14 @@ export function generateMousePanHandler({enable, clickTolerance}: {
     });
 };
 
-const defaultRotateDegreesPerPixelMoved = 0.8;
-
-export function generateMouseRotationHandler({enable, clickTolerance, aroundCenter = true, minPixelCenterThreshold = 100, rotateSpeed = 1}: {
+export function generateMouseRotationHandler({enable, clickTolerance, aroundCenter = true, minPixelCenterThreshold = 100, rotateSpeed = 0.8}: {
     clickTolerance: number;
     enable?: boolean;
     aroundCenter?: boolean;
     minPixelCenterThreshold?: number;
     /**
-     * Scales how many degrees the bearing changes per pixel moved while dragging to rotate.
-     * @defaultValue 1
+     * Degrees the bearing changes per pixel of horizontal drag.
+     * @defaultValue 0.8
      */
     rotateSpeed?: number;
 }, getCenter: () => Point): MouseRotateHandler {
@@ -69,16 +67,15 @@ export function generateMouseRotationHandler({enable, clickTolerance, aroundCent
             (e.button === LEFT_BUTTON && e.ctrlKey) ||
             (e.button === RIGHT_BUTTON && !e.ctrlKey),
     });
-    const rotateDegreesPerPixelMoved = defaultRotateDegreesPerPixelMoved * rotateSpeed;
     return new DragHandler<DragRotateResult, MouseEvent>({
         clickTolerance,
         move: (lastPoint: Point, currentPoint: Point) => {
             const center = getCenter();
             if (aroundCenter && Math.abs(center.y - lastPoint.y) > minPixelCenterThreshold) {
                 // Avoid rotation related to y axis since it is "saved" for pitch
-                return {bearingDelta: getAngleDelta(new Point(lastPoint.x, currentPoint.y), currentPoint, center) * rotateSpeed};
+                return {bearingDelta: getAngleDelta(new Point(lastPoint.x, currentPoint.y), currentPoint, center)};
             }
-            let bearingDelta = (currentPoint.x - lastPoint.x) * rotateDegreesPerPixelMoved;
+            let bearingDelta = (currentPoint.x - lastPoint.x) * rotateSpeed;
             if (aroundCenter && currentPoint.y < center.y) {
                 bearingDelta = -bearingDelta;
             }
@@ -92,9 +89,13 @@ export function generateMouseRotationHandler({enable, clickTolerance, aroundCent
     });
 };
 
-export function generateMousePitchHandler({enable, clickTolerance, pitchDegreesPerPixelMoved = -0.5}: {
+export function generateMousePitchHandler({enable, clickTolerance, pitchSpeed = -0.5}: {
     clickTolerance: number;
-    pitchDegreesPerPixelMoved?: number;
+    /**
+     * Degrees the pitch changes per pixel of vertical drag.
+     * @defaultValue -0.5
+     */
+    pitchSpeed?: number;
     enable?: boolean;
 }): MousePitchHandler {
     const mouseMoveStateManager = new MouseMoveStateManager({
@@ -104,8 +105,8 @@ export function generateMousePitchHandler({enable, clickTolerance, pitchDegreesP
     });
     return new DragHandler<DragPitchResult, MouseEvent>({
         clickTolerance,
-        move: (lastPoint: Point, point: Point) => 
-            ({pitchDelta: (point.y - lastPoint.y) * pitchDegreesPerPixelMoved}),
+        move: (lastPoint: Point, point: Point) =>
+            ({pitchDelta: (point.y - lastPoint.y) * pitchSpeed}),
         // prevent browser context menu when necessary; we don't allow it with rotation
         // because we can't discern rotation gesture start from contextmenu on Mac
         moveStateManager: mouseMoveStateManager,
