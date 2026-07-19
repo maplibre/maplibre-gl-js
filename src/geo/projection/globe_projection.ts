@@ -20,9 +20,9 @@ export class GlobeProjection extends Evented implements Projection {
     _mercatorProjection: MercatorProjection;
     _verticalPerspectiveProjection: VerticalPerspectiveProjection;
 
-    constructor(projection?: ProjectionSpecification) {
+    constructor(projection: ProjectionSpecification | undefined, globalState: Record<string, any>) {
         super();
-        this._transitionable = new Transitionable(getProperties(), 'projection', undefined);
+        this._transitionable = new Transitionable(getProperties(), 'projection', globalState);
         this.setProjection(projection);
         this._transitioning = this._transitionable.untransitioned();
         this.recalculate(new EvaluationParameters(0));
@@ -39,6 +39,9 @@ export class GlobeProjection extends Evented implements Projection {
             return 1;
         }
         if (currentProjectionSpecValue instanceof ProjectionDefinition) {
+            if (currentProjectionSpecValue.from === currentProjectionSpecValue.to) {
+                return 1;
+            }
             if (currentProjectionSpecValue.from === 'vertical-perspective' && currentProjectionSpecValue.to === 'mercator') {
                 return 1 - currentProjectionSpecValue.transition;
             }
