@@ -21,30 +21,14 @@
 import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
 import decode from 'https://unpkg.com/@here/quantized-mesh-decoder@1.2.8/src/index.js';
 
-// Proof of concept for https://github.com/maplibre/maplibre-gl-js/issues/4493:
-// decode one real Cesium World Terrain quantized-mesh tile (Mont Blanc massif,
-// bundled as a static asset) and render it through the custom-layer API.
-// Decoding is done by the open-source @here/quantized-mesh-decoder package.
-const TILE = {z: 9, x: 531, y: 386};
-const TILE_URL = `../../docs/assets/examples/mont-blanc-terrain-tiles/${TILE.z}-${TILE.x}-${TILE.y}.terrain`;
+const TILE_URL = '../../docs/assets/examples/mont-blanc-terrain-tiles/9-531-386.terrain';
+// Geographic bounds of that tile (EPSG:4326 TMS tile 9/531/386).
+const bounds = {west: 6.6796875, south: 45.703125, east: 7.03125, north: 46.0546875};
+const center = [6.85546875, 45.87890625];
 const HEIGHT_EXAGGERATION = 1.2;
 
-// The tileset uses the EPSG:4326 TMS scheme: 2 tiles wide at zoom 0,
-// y growing northward.
-function tileBounds(z, x, y) {
-    const lonWidth = 360 / (2 * (2 ** z));
-    const latHeight = 180 / (2 ** z);
-    const west = -180 + x * lonWidth;
-    const south = -90 + y * latHeight;
-    return {west, south, east: west + lonWidth, north: south + latHeight};
-}
-
-const bounds = tileBounds(TILE.z, TILE.x, TILE.y);
-const center = [(bounds.west + bounds.east) / 2, (bounds.south + bounds.north) / 2];
-
-// Vertices are stored as small float32 offsets from a full-precision origin
-// computed on the CPU, to avoid float32 precision loss at terrain scale
-// (same technique as the "avoid jitter in a custom layer" example, #4871).
+// Vertices are stored as float32 offsets from a full-precision origin to
+// avoid precision loss at terrain scale (see the #4871 example).
 const originMercator = maplibregl.MercatorCoordinate.fromLngLat(center, 0);
 
 function buildGeometry(decoded) {
@@ -108,16 +92,6 @@ function createProgram(gl, vertexShaderSource, fragmentShaderSource) {
     return program;
 }
 
-function transformMat4(vec, m) {
-    const [x, y, z, w] = vec;
-    return [
-        m[0] * x + m[4] * y + m[8] * z + m[12] * w,
-        m[1] * x + m[5] * y + m[9] * z + m[13] * w,
-        m[2] * x + m[6] * y + m[10] * z + m[14] * w,
-        m[3] * x + m[7] * y + m[11] * z + m[15] * w
-    ];
-}
-
 const terrainTileLayer = {
     id: 'quantized-mesh-tile',
     type: 'custom',
@@ -152,7 +126,13 @@ const terrainTileLayer = {
         gl.useProgram(this.program);
 
         const matrix = args.defaultProjectionData.mainMatrix;
-        const originClip = transformMat4([originMercator.x, originMercator.y, originMercator.z, 1], matrix);
+        const {x, y, z} = originMercator;
+        const originClip = [
+            matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12],
+            matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13],
+            matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14],
+            matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15]
+        ];
         gl.uniform4fv(gl.getUniformLocation(this.program, 'u_originClip'), new Float32Array(originClip));
         gl.uniformMatrix4fv(gl.getUniformLocation(this.program, 'u_matrix'), false, new Float32Array(matrix));
 
