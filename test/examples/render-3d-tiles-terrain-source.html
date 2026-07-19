@@ -318,22 +318,18 @@ function boundsOverlap(a, b) {
     return a.west < b.east && a.east > b.west && a.south < b.north && a.north > b.south;
 }
 
-// Checks geographic overlap against every bundled tile directly, at its
-// own native zoom - NOT capped by the requested Mercator tile's zoom.
-// A pitch/zoom change can make MapLibre request Mercator tiles at zooms
-// far from our bundled zoom 9 (e.g. low zoom at pitch 0, or very low
-// zoom for distant terrain near the horizon at high pitch) - capping the
-// search at the requested zoom would miss the data entirely whenever
-// that differs from 9.
+// Returns intersecting tiles from every zoom, deepest first, so
+// multiMeshElevationAt picks the highest-resolution mesh available at each
+// point and lower-zoom parents fill areas a patchy child does not cover.
+// Not capped by the requested Mercator tile's zoom: pitch/zoom changes make
+// MapLibre request Mercator zooms far from the bundled zoom.
 function findCoveringQMTiles(mercatorBounds) {
     const zoomsDesc = [...new Set(AVAILABLE_QM_TILES.map(t => t.z))].sort((a, b) => b - a);
-    for (const qz of zoomsDesc) {
-        const covering = AVAILABLE_QM_TILES
+    return zoomsDesc.flatMap(qz =>
+        AVAILABLE_QM_TILES
             .filter(t => t.z === qz && boundsOverlap(qmTileBounds(t.z, t.x, t.y), mercatorBounds))
-            .map(t => ({...t, bounds: qmTileBounds(t.z, t.x, t.y)}));
-        if (covering.length > 0) return covering;
-    }
-    return [];
+            .map(t => ({...t, bounds: qmTileBounds(t.z, t.x, t.y)}))
+    );
 }
 
 // Resamples the covering mesh(es) onto a size x size terrain-RGB image.
@@ -354,10 +350,11 @@ function mercatorPixelToLngLat(z, x, y, px, py, size) {
     return {lng, lat};
 }
 
-function buildTerrainRgbImageData(coveringMeshes, tileZ, tileX, tileY, size) {
+function buildTerrainRgbImageData(coveringMeshes, tileZ, tileX, tileY, size, signal) {
     const indexed = coveringMeshes.map(({mesh, bounds}) => ({mesh, bounds, index: buildTriangleIndex(mesh)}));
     const heights = new Float64Array(size * size);
     for (let row = 0; row < size; row++) {
+        if (signal?.aborted) throw new DOMException('Tile request aborted', 'AbortError');
         for (let col = 0; col < size; col++) {
             const {lng, lat} = mercatorPixelToLngLat(tileZ, tileX, tileY, col, row, size);
             const h = multiMeshElevationAt(indexed, lng, lat);
@@ -381,23 +378,27 @@ function buildTerrainRgbImageData(coveringMeshes, tileZ, tileX, tileY, size) {
 // color-relief layers (which require `raster-dem`) work directly.
 const TILE_SIZE = 256;
 const meshCache = new Map();
-function getMesh(qmTile) {
+function getMesh(qmTile, signal) {
     const key = `${qmTile.z}-${qmTile.x}-${qmTile.y}`;
     if (!meshCache.has(key)) {
-        meshCache.set(key, fetch(qmTile.url).then(res => res.arrayBuffer()).then(decodeQuantizedMesh));
+        // Drop failed entries (including aborts) so later requests retry.
+        const promise = fetch(qmTile.url, {signal}).then(res => res.arrayBuffer()).then(decodeQuantizedMesh);
+        promise.catch(() => meshCache.delete(key));
+        meshCache.set(key, promise);
     }
     return meshCache.get(key);
 }
 
-maplibregl.addProtocol('quantized-mesh', async ({url}) => {
+maplibregl.addProtocol('quantized-mesh', async ({url}, abortController) => {
+    const signal = abortController?.signal;
     const [, z, x, y] = url.match(/^quantized-mesh:\/\/(\d+)\/(\d+)\/(\d+)$/).map(Number);
     const mercatorBounds = mercatorTileBounds(z, x, y);
     const covering = findCoveringQMTiles(mercatorBounds);
     const coveringMeshes = await Promise.all(covering.map(async (qmTile) => ({
-        mesh: await getMesh(qmTile),
+        mesh: await getMesh(qmTile, signal),
         bounds: qmTile.bounds
     })));
-    const imageData = buildTerrainRgbImageData(coveringMeshes, z, x, y, TILE_SIZE);
+    const imageData = buildTerrainRgbImageData(coveringMeshes, z, x, y, TILE_SIZE, signal);
     return {data: await createImageBitmap(imageData)};
 });
 
