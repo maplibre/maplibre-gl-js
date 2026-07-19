@@ -57,30 +57,13 @@
 <script type="module">
 import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
 
-/*
- * The interesting part of this example isn't really the enter/exit
- * interaction - it's that `panoramaLayer` below is deliberately shaped like
- * a real style-spec layer (https://maplibre.org/maplibre-style-spec/layers/):
- * a `type` ("panorama") and a `paint` object of hyphenated properties
- * (`panorama-opacity`, `panorama-radius`), the same shape as a `raster` or
- * `sky` layer's paint properties. It's implemented today as a
- * CustomLayerInterface - the only way to add novel rendering without
- * changes to maplibre-gl-js itself - but the paint-property shape is
- * intentionally what a *native* `"type": "panorama"` style layer could look
- * like, were this ever adopted into the style spec directly (see
- * https://github.com/maplibre/maplibre-gl-js/issues/4428).
- *
- * A photosphere has no depth information - you're always exactly at its
- * center - so `panoramaLayer` does not need any 3D mesh: it ray-casts each
- * screen pixel (from the current yaw/pitch/FOV) into spherical panorama UV
- * space and samples a texture. The one exception is while *entering*: the
- * eye is still outside the photosphere's center at that point, so it's
- * modeled as a real finite sphere (`panorama-radius`) via ray-sphere
- * intersection, giving it genuine parallax as the eye approaches - reducing
- * to the exact same simple direction-based sampling once the eye reaches
- * the center (verified algebraically: a zero offset from center collapses
- * the intersection math back to sampling by view direction alone).
- */
+// `panoramaLayer` below is shaped like a style-spec layer (a `type` and a
+// `paint` object of hyphenated properties), the form a native "panorama"
+// layer could take if adopted into the style spec (#4428). It is implemented
+// as a CustomLayerInterface: each screen pixel is ray-cast into the panorama
+// texture; while entering, the sphere is finite (`panorama-radius`) so the
+// approach has real parallax, collapsing to plain direction sampling at the
+// center.
 
 // A bridge over the Seine, Paris - the real GPS position this panorama
 // photo was taken at (48°51'23.85"N, 2°17'12.58"E, converted to decimal
@@ -94,9 +77,6 @@ const PANORAMA_TEXTURE_URL = '../../docs/assets/examples/enter-a-360-photosphere
 const EYE_HEIGHT = 1.6; // metres - fixed human eye height
 const ZOOM = 18;
 const OUTSIDE_VIEW = {center: PHOTOSPHERE_LNGLAT, zoom: 17, pitch: 60, bearing: -30};
-const FOV_STEP_DEG = 5;
-const MIN_FOV_DEG = 20;
-const MAX_FOV_DEG = 120;
 const MIN_PITCH_DEG = -85;
 const MAX_PITCH_DEG = 85;
 const DRAG_SENSITIVITY_DEG_PER_PX = 0.15;
@@ -104,13 +84,28 @@ const ENTER_EXIT_DURATION_MS = 1500;
 
 const map = new maplibregl.Map({
     container: 'map',
-    style: 'https://tiles.openfreemap.org/styles/liberty',
+    style: {
+        version: 8,
+        sources: {
+            osm: {
+                type: 'raster',
+                tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                tileSize: 256,
+                maxzoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }
+        },
+        layers: [{id: 'osm', type: 'raster', source: 'osm'}]
+    },
     center: OUTSIDE_VIEW.center,
     zoom: OUTSIDE_VIEW.zoom,
     pitch: OUTSIDE_VIEW.pitch,
     bearing: OUTSIDE_VIEW.bearing,
     minPitch: 90 + MIN_PITCH_DEG,
-    maxPitch: 90 + MAX_PITCH_DEG
+    maxPitch: 90 + MAX_PITCH_DEG,
+    // Keeps the elevation passed to jumpTo() from being re-clamped to the
+    // ground, so the eye really sits at EYE_HEIGHT while inside.
+    centerClampedToGround: false
 });
 
 const state = {mode: 'outside', yawDeg: 0, pitchDeg: 0, fovDeg: 75};
@@ -358,19 +353,32 @@ function enterPhotosphere() {
     state.pitchDeg = 0;
     recalibrateLookTargetDistance();
 
+    animateTransition({center: PHOTOSPHERE_LNGLAT, zoom: ZOOM, pitch: 90, bearing: 0}, EYE_HEIGHT, 1, () => {
+        state.mode = 'inside';
+        exitButton.style.display = '';
+        mapContainer.classList.add('looking-around');
+        updateCameraWhileInside();
+    });
+}
+
+// One camera tween used for both entering and exiting. Also feeds the
+// shader the eye-to-sphere-center offset each frame, so the photosphere
+// parallaxes while the eye approaches or leaves its center.
+function animateTransition(targetView, targetElevation, targetOpacity, onDone) {
     const startTime = performance.now();
-    const startCenter = map.getCenter();
-    const startZoom = map.getZoom();
-    const startPitch = map.getPitch();
-    const startBearing = map.getBearing();
-    const startElevation = map.getCenterElevation();
+    const start = {
+        center: map.getCenter(),
+        zoom: map.getZoom(),
+        pitch: map.getPitch(),
+        bearing: map.getBearing(),
+        elevation: map.getCenterElevation(),
+        opacity: panoramaLayer.paint['panorama-opacity']
+    };
 
     function step(now) {
         const t = Math.min(1, (now - startTime) / ENTER_EXIT_DURATION_MS);
         const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
-        // The sphere is centered on the photosphere point; the eye starts at
-        // the outside view's position and approaches it as `eased` -> 1.
         const eyeMercator = maplibregl.MercatorCoordinate.fromLngLat(map.getCenter());
         const sphereMercator = maplibregl.MercatorCoordinate.fromLngLat(PHOTOSPHERE_LNGLAT);
         const metresToMercatorUnits = sphereMercator.meterInMercatorCoordinateUnits();
@@ -379,27 +387,24 @@ function enterPhotosphere() {
             -(sphereMercator.y - eyeMercator.y) / metresToMercatorUnits,
             0
         ];
-        panoramaLayer.paint['panorama-opacity'] = eased;
+        panoramaLayer.paint['panorama-opacity'] = start.opacity + (targetOpacity - start.opacity) * eased;
 
         map.jumpTo({
             center: [
-                startCenter.lng + (PHOTOSPHERE_LNGLAT[0] - startCenter.lng) * eased,
-                startCenter.lat + (PHOTOSPHERE_LNGLAT[1] - startCenter.lat) * eased
+                start.center.lng + (targetView.center[0] - start.center.lng) * eased,
+                start.center.lat + (targetView.center[1] - start.center.lat) * eased
             ],
-            zoom: startZoom + (ZOOM - startZoom) * eased,
-            pitch: startPitch + (90 - startPitch) * eased,
-            bearing: startBearing + (0 - startBearing) * eased,
-            elevation: startElevation + (EYE_HEIGHT - startElevation) * eased
+            zoom: start.zoom + (targetView.zoom - start.zoom) * eased,
+            pitch: start.pitch + (targetView.pitch - start.pitch) * eased,
+            bearing: start.bearing + (targetView.bearing - start.bearing) * eased,
+            elevation: start.elevation + (targetElevation - start.elevation) * eased
         });
         map.triggerRepaint();
 
         if (t < 1) {
             requestAnimationFrame(step);
         } else {
-            state.mode = 'inside';
-            exitButton.style.display = '';
-            mapContainer.classList.add('looking-around');
-            updateCameraWhileInside();
+            onDone();
         }
     }
     requestAnimationFrame(step);
@@ -413,54 +418,17 @@ function exitPhotosphere() {
     exitButton.style.display = 'none';
     mapContainer.classList.remove('looking-around');
 
-    const startTime = performance.now();
-    const startCenter = map.getCenter();
-    const startZoom = map.getZoom();
-    const startPitch = map.getPitch();
-    const startBearing = map.getBearing();
-    const startElevation = map.getCenterElevation();
-
-    function step(now) {
-        const t = Math.min(1, (now - startTime) / ENTER_EXIT_DURATION_MS);
-        const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-
-        const eyeMercator = maplibregl.MercatorCoordinate.fromLngLat(map.getCenter());
-        const sphereMercator = maplibregl.MercatorCoordinate.fromLngLat(PHOTOSPHERE_LNGLAT);
-        const metresToMercatorUnits = sphereMercator.meterInMercatorCoordinateUnits();
-        panoramaLayer.sphereCenterOffset = [
-            (sphereMercator.x - eyeMercator.x) / metresToMercatorUnits,
-            -(sphereMercator.y - eyeMercator.y) / metresToMercatorUnits,
-            0
-        ];
-        panoramaLayer.paint['panorama-opacity'] = 1 - eased;
-
-        map.jumpTo({
-            center: [
-                startCenter.lng + (OUTSIDE_VIEW.center[0] - startCenter.lng) * eased,
-                startCenter.lat + (OUTSIDE_VIEW.center[1] - startCenter.lat) * eased
-            ],
-            zoom: startZoom + (OUTSIDE_VIEW.zoom - startZoom) * eased,
-            pitch: startPitch + (OUTSIDE_VIEW.pitch - startPitch) * eased,
-            bearing: startBearing + (OUTSIDE_VIEW.bearing - startBearing) * eased,
-            elevation: startElevation + (0 - startElevation) * eased
-        });
-        map.triggerRepaint();
-
-        if (t < 1) {
-            requestAnimationFrame(step);
-        } else {
-            state.mode = 'outside';
-            hint.textContent = 'Click the blue marker to step inside the photosphere.';
-            marker.getElement().style.display = '';
-            map.dragPan.enable();
-            map.dragRotate.enable();
-            map.scrollZoom.enable();
-            map.doubleClickZoom.enable();
-            map.touchZoomRotate.enable();
-            map.keyboard.enable();
-        }
-    }
-    requestAnimationFrame(step);
+    animateTransition(OUTSIDE_VIEW, 0, 0, () => {
+        state.mode = 'outside';
+        hint.textContent = 'Click the blue marker to step inside the photosphere.';
+        marker.getElement().style.display = '';
+        map.dragPan.enable();
+        map.dragRotate.enable();
+        map.scrollZoom.enable();
+        map.doubleClickZoom.enable();
+        map.touchZoomRotate.enable();
+        map.keyboard.enable();
+    });
 }
 
 exitButton.addEventListener('click', exitPhotosphere);
@@ -496,24 +464,6 @@ addEventListener('mousemove', (event) => {
 addEventListener('mouseup', () => {
     dragging = false;
     mapContainer.classList.remove('dragging');
-});
-
-addEventListener('keydown', (event) => {
-    if (state.mode !== 'inside') {
-        return;
-    }
-    if (event.code === 'BracketLeft') {
-        state.fovDeg = Math.max(MIN_FOV_DEG, state.fovDeg - FOV_STEP_DEG);
-    } else if (event.code === 'BracketRight') {
-        state.fovDeg = Math.min(MAX_FOV_DEG, state.fovDeg + FOV_STEP_DEG);
-    } else if (event.code === 'Escape') {
-        exitPhotosphere();
-        return;
-    } else {
-        return;
-    }
-    event.preventDefault();
-    map.triggerRepaint();
 });
 </script>
 </body>
