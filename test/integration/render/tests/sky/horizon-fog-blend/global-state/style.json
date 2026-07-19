@@ -1,0 +1,69 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "timeout": 60000,
+      "height": 256,
+      "width": 128,
+      "maxPitch": 85,
+      "operations": [
+        [
+          "wait"
+        ],
+        [
+          "setGlobalStateProperty",
+          "horizonFogBlend",
+          0
+        ],
+        [
+          "wait"
+        ]
+      ]
+    }
+  },
+  "center": [
+    35.38,
+    31.55
+  ],
+  "zoom": 15,
+  "pitch": 85,
+  "state": {
+    "horizonFogBlend": {
+      "default": 0.8
+    }
+  },
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain/{z}-{x}-{y}.terrain.png"
+      ],
+      "minzoom": 7,
+      "maxzoom": 12,
+      "tileSize": 256
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ccaa83"
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 1
+  },
+  "sky": {
+    "sky-color": "#199EF3",
+    "sky-horizon-blend": 0,
+    "fog-color": "#ff00ff",
+    "fog-ground-blend": 0,
+    "horizon-fog-blend": [
+      "global-state",
+      "horizonFogBlend"
+    ]
+  }
+}

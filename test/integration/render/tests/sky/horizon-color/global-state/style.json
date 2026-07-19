@@ -1,0 +1,52 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "timeout": 60000,
+      "height": 256,
+      "width": 128,
+      "maxPitch": 85,
+      "operations": [
+        [
+          "wait"
+        ],
+        [
+          "setGlobalStateProperty",
+          "horizonColor",
+          "#00ff00"
+        ],
+        [
+          "wait"
+        ]
+      ]
+    }
+  },
+  "center": [
+    35.38,
+    31.55
+  ],
+  "zoom": 15,
+  "pitch": 85,
+  "state": {
+    "horizonColor": {
+      "default": "#ffffff"
+    }
+  },
+  "sources": {},
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ccaa83"
+      }
+    }
+  ],
+  "sky": {
+    "sky-color": "#88C6FC",
+    "horizon-color": [
+      "global-state",
+      "horizonColor"
+    ]
+  }
+}
