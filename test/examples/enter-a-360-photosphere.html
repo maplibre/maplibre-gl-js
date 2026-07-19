@@ -8,11 +8,10 @@
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <link rel='icon' href='data:,' />
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
-        #map.looking-around { cursor: grab; }
-        #map.looking-around.dragging { cursor: grabbing; }
         #hint {
             position: absolute;
             top: 10px;
@@ -37,6 +36,7 @@
             background: rgba(0, 0, 0, .7);
             color: #fff;
             cursor: pointer;
+            display: none;
         }
         .photosphere-marker {
             width: 22px;
@@ -48,423 +48,88 @@
             cursor: pointer;
         }
     </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "maplibre-gl": "../../dist/maplibre-gl-dev.mjs",
+                "maplibre-gl-photosphere": "https://unpkg.com/maplibre-gl-photosphere@0.1.0/src/index.js"
+            }
+        }
+    </script>
 </head>
 <body>
 <div id="map"></div>
 <div id="hint">Click the blue marker to step inside the photosphere.</div>
-<button id="exit-button" type="button" style="display: none;">Exit photosphere</button>
+<button id="exit-button" type="button">Exit photosphere</button>
 
 <script type="module">
-import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+    import * as maplibregl from 'maplibre-gl';
+    import {Photosphere} from 'maplibre-gl-photosphere';
 
-// `panoramaLayer` below is shaped like a style-spec layer (a `type` and a
-// `paint` object of hyphenated properties), the form a native "panorama"
-// layer could take if adopted into the style spec (#4428). It is implemented
-// as a CustomLayerInterface: each screen pixel is ray-cast into the panorama
-// texture; while entering, the sphere is finite (`panorama-radius`) so the
-// approach has real parallax, collapsing to plain direction sampling at the
-// center.
+    // A bridge over the Seine, Paris - the real position this panorama was
+    // taken at. Photo by Alexandre Duret-Lutz, CC BY-SA 2.0,
+    // https://commons.wikimedia.org/w/index.php?curid=36707488
+    const PHOTOSPHERE_LNGLAT = [2.286828, 48.856625];
+    const OUTSIDE_VIEW = {center: PHOTOSPHERE_LNGLAT, zoom: 17, pitch: 60, bearing: -30};
 
-// A bridge over the Seine, Paris - the real GPS position this panorama
-// photo was taken at (48°51'23.85"N, 2°17'12.58"E, converted to decimal
-// degrees).
-const PHOTOSPHERE_LNGLAT = [2.286828, 48.856625];
-// Photo by Alexandre Duret-Lutz, CC BY-SA 2.0 -
-// https://commons.wikimedia.org/w/index.php?curid=36707488
-// (resized/recompressed from the 10000x5000 original for a lighter page load)
-const PANORAMA_TEXTURE_URL = '../../docs/assets/examples/enter-a-360-photosphere-panorama.jpg';
-
-const EYE_HEIGHT = 1.6; // metres - fixed human eye height
-const ZOOM = 18;
-const OUTSIDE_VIEW = {center: PHOTOSPHERE_LNGLAT, zoom: 17, pitch: 60, bearing: -30};
-const MIN_PITCH_DEG = -85;
-const MAX_PITCH_DEG = 85;
-const DRAG_SENSITIVITY_DEG_PER_PX = 0.15;
-const ENTER_EXIT_DURATION_MS = 1500;
-
-const map = new maplibregl.Map({
-    container: 'map',
-    style: {
-        version: 8,
-        sources: {
-            osm: {
-                type: 'raster',
-                tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                tileSize: 256,
-                maxzoom: 19,
-                attribution: '&copy; OpenStreetMap contributors'
-            }
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: {
+            version: 8,
+            sources: {
+                osm: {
+                    type: 'raster',
+                    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tileSize: 256,
+                    maxzoom: 19,
+                    attribution: '&copy; OpenStreetMap contributors'
+                }
+            },
+            layers: [{id: 'osm', type: 'raster', source: 'osm'}]
         },
-        layers: [{id: 'osm', type: 'raster', source: 'osm'}]
-    },
-    center: OUTSIDE_VIEW.center,
-    zoom: OUTSIDE_VIEW.zoom,
-    pitch: OUTSIDE_VIEW.pitch,
-    bearing: OUTSIDE_VIEW.bearing,
-    minPitch: 90 + MIN_PITCH_DEG,
-    maxPitch: 90 + MAX_PITCH_DEG,
-    // Keeps the elevation passed to jumpTo() from being re-clamped to the
-    // ground, so the eye really sits at EYE_HEIGHT while inside.
-    centerClampedToGround: false
-});
-
-const state = {mode: 'outside', yawDeg: 0, pitchDeg: 0, fovDeg: 75};
-
-const VERTEX_SHADER_SOURCE = `
-    attribute vec2 aPosition;
-    varying vec2 vNdc;
-    void main() {
-        vNdc = aPosition;
-        gl_Position = vec4(aPosition, 0.0, 1.0);
-    }
-`;
-
-// Ray-casts each screen pixel into a direction (yaw/pitch from the current
-// look state and this pixel's offset within the field of view), then
-// intersects it with the photosphere modeled as a real finite sphere
-// (uSphereRadius, centered on the eye's own position - see uSphereCenterOffset)
-// rather than sampled directly by view direction. Using the direction from
-// the sphere's *center* to the intersection point (rather than the view
-// direction itself) gives it parallax as the eye approaches, while still
-// reducing to plain direction-based sampling once centered (offset = 0).
-const FRAGMENT_SHADER_SOURCE = `
-    precision highp float;
-    varying vec2 vNdc;
-    uniform float uYaw;
-    uniform float uPitch;
-    uniform float uFovY;
-    uniform float uAspect;
-    uniform float uAlpha;
-    uniform vec3 uSphereCenterOffset;
-    uniform float uSphereRadius;
-    uniform sampler2D uPanorama;
-    void main() {
-        float tanHalfFovY = tan(uFovY * 0.5);
-        float tanHalfFovX = tanHalfFovY * uAspect;
-
-        vec3 forward = vec3(cos(uPitch) * sin(uYaw), cos(uPitch) * cos(uYaw), sin(uPitch));
-        vec3 worldUp = vec3(0.0, 0.0, 1.0);
-        vec3 right = normalize(cross(forward, worldUp));
-        vec3 up = cross(right, forward);
-
-        vec3 viewDir = normalize(forward + right * (vNdc.x * tanHalfFovX) + up * (vNdc.y * tanHalfFovY));
-
-        vec3 originToCenter = -uSphereCenterOffset;
-        float b = dot(originToCenter, viewDir);
-        float c = dot(originToCenter, originToCenter) - uSphereRadius * uSphereRadius;
-        float discriminant = b * b - c;
-        if (discriminant < 0.0) {
-            discard; // ray misses the sphere entirely
-        }
-        float sqrtDiscriminant = sqrt(discriminant);
-        float tNear = -b - sqrtDiscriminant;
-        float tFar = -b + sqrtDiscriminant;
-        float t = tNear > 0.0 ? tNear : tFar;
-        if (t < 0.0) {
-            discard; // sphere is entirely behind the eye
-        }
-
-        vec3 intersection = viewDir * t;
-        vec3 normal = normalize(intersection - uSphereCenterOffset);
-
-        float theta = atan(normal.x, normal.y);
-        float phi = asin(clamp(normal.z, -1.0, 1.0));
-
-        float u = 0.5 + theta / (2.0 * 3.14159265359);
-        float v = 0.5 - phi / 3.14159265359;
-
-        vec4 color = texture2D(uPanorama, vec2(u, v));
-        gl_FragColor = vec4(color.rgb, color.a * uAlpha);
-    }
-`;
-
-function compileShader(gl, type, source) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        throw new Error(gl.getShaderInfoLog(shader));
-    }
-    return shader;
-}
-
-// A sketch of a native "panorama" style layer: `type` + a `paint` object of
-// hyphenated properties, matching the shape of every other style-spec layer
-// type (see the file comment above). Implemented as a CustomLayerInterface
-// since that's the only way to add this rendering without core changes.
-const panoramaLayer = {
-    id: 'panorama',
-    type: 'custom',
-    renderingMode: '2d',
-    paint: {
-        'panorama-opacity': 0,
-        'panorama-radius': 6 // metres
-    },
-
-    onAdd(_map, gl) {
-        const vertexShader = compileShader(gl, gl.VERTEX_SHADER, VERTEX_SHADER_SOURCE);
-        const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE);
-        this.program = gl.createProgram();
-        gl.attachShader(this.program, vertexShader);
-        gl.attachShader(this.program, fragmentShader);
-        gl.linkProgram(this.program);
-        if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-            throw new Error(gl.getProgramInfoLog(this.program));
-        }
-
-        this.aPosition = gl.getAttribLocation(this.program, 'aPosition');
-        this.uYaw = gl.getUniformLocation(this.program, 'uYaw');
-        this.uPitch = gl.getUniformLocation(this.program, 'uPitch');
-        this.uFovY = gl.getUniformLocation(this.program, 'uFovY');
-        this.uAspect = gl.getUniformLocation(this.program, 'uAspect');
-        this.uAlpha = gl.getUniformLocation(this.program, 'uAlpha');
-        this.uSphereCenterOffset = gl.getUniformLocation(this.program, 'uSphereCenterOffset');
-        this.uSphereRadius = gl.getUniformLocation(this.program, 'uSphereRadius');
-        this.uPanorama = gl.getUniformLocation(this.program, 'uPanorama');
-
-        // A single triangle that covers the whole viewport, cheaper than a quad.
-        this.vertexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-
-        this.gl = gl;
-        this.textureReady = false;
-        this.texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, this.texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-        const image = new Image();
-        image.onload = () => {
-            gl.bindTexture(gl.TEXTURE_2D, this.texture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-            this.textureReady = true;
-            map.triggerRepaint();
-        };
-        image.src = PANORAMA_TEXTURE_URL;
-    },
-
-    // Where the photosphere's sphere center currently sits, relative to the
-    // eye (metres, east/north/up) - zero once fully entered, nonzero while
-    // approaching it during the enter transition (see enterPhotosphere()).
-    sphereCenterOffset: [0, 0, 0],
-
-    render(gl, _matrix) {
-        if (!this.textureReady) {
-            return;
-        }
-
-        gl.disable(gl.DEPTH_TEST);
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-        gl.useProgram(this.program);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-        gl.enableVertexAttribArray(this.aPosition);
-        gl.vertexAttribPointer(this.aPosition, 2, gl.FLOAT, false, 0, 0);
-
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, this.texture);
-        gl.uniform1i(this.uPanorama, 0);
-
-        gl.uniform1f(this.uYaw, state.yawDeg * Math.PI / 180);
-        gl.uniform1f(this.uPitch, state.pitchDeg * Math.PI / 180);
-        gl.uniform1f(this.uFovY, state.fovDeg * Math.PI / 180);
-        gl.uniform1f(this.uAspect, gl.drawingBufferWidth / gl.drawingBufferHeight);
-        gl.uniform1f(this.uAlpha, this.paint['panorama-opacity']);
-        gl.uniform3f(this.uSphereCenterOffset, ...this.sphereCenterOffset);
-        gl.uniform1f(this.uSphereRadius, this.paint['panorama-radius']);
-
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-        gl.disable(gl.BLEND);
-    }
-};
-
-map.on('load', () => map.addLayer(panoramaLayer));
-
-const mapContainer = document.getElementById('map');
-const hint = document.getElementById('hint');
-const exitButton = document.getElementById('exit-button');
-
-const marker = new maplibregl.Marker({
-    element: Object.assign(document.createElement('div'), {className: 'photosphere-marker'})
-})
-    .setLngLat(PHOTOSPHERE_LNGLAT)
-    .addTo(map);
-marker.getElement().addEventListener('click', enterPhotosphere);
-
-let lookTargetDistanceMetres = 1;
-function recalibrateLookTargetDistance() {
-    const eyeMercator = maplibregl.MercatorCoordinate.fromLngLat(PHOTOSPHERE_LNGLAT);
-    const probeTarget = new maplibregl.MercatorCoordinate(
-        eyeMercator.x, eyeMercator.y - eyeMercator.meterInMercatorCoordinateUnits()).toLngLat();
-    const probeOptions = map.calculateCameraOptionsFromTo(PHOTOSPHERE_LNGLAT, EYE_HEIGHT, probeTarget, EYE_HEIGHT);
-    lookTargetDistanceMetres = Math.pow(2, probeOptions.zoom - ZOOM);
-}
-
-// Keeps the eye fixed at exactly (photosphere GPS, EYE_HEIGHT) while inside,
-// only rotating the look direction - unlike driving bearing/pitch directly,
-// which orbits the camera around the map's center target and drifts the eye
-// height away from EYE_HEIGHT as pitch moves away from 90.
-// map.calculateCameraOptionsFromTo() computes bearing/pitch/zoom from two
-// explicit 3D points (eye and a look-target point ahead) using plain vector
-// geometry, with no ground-intersection division to destabilize near pitch 90.
-function updateCameraWhileInside() {
-    const eyeMercator = maplibregl.MercatorCoordinate.fromLngLat(PHOTOSPHERE_LNGLAT);
-    const metresToMercatorUnits = eyeMercator.meterInMercatorCoordinateUnits();
-
-    const yawRad = state.yawDeg * Math.PI / 180;
-    const pitchRad = state.pitchDeg * Math.PI / 180;
-    const horizontalDistance = lookTargetDistanceMetres * Math.cos(pitchRad);
-    const eastOffset = horizontalDistance * Math.sin(yawRad);
-    const northOffset = horizontalDistance * Math.cos(yawRad);
-    const altitudeOffset = lookTargetDistanceMetres * Math.sin(pitchRad);
-
-    const targetLngLat = new maplibregl.MercatorCoordinate(
-        eyeMercator.x + eastOffset * metresToMercatorUnits,
-        eyeMercator.y - northOffset * metresToMercatorUnits
-    ).toLngLat();
-
-    const cameraOptions = map.calculateCameraOptionsFromTo(
-        PHOTOSPHERE_LNGLAT, EYE_HEIGHT, targetLngLat, EYE_HEIGHT + altitudeOffset);
-    map.jumpTo(cameraOptions);
-}
-
-function enterPhotosphere() {
-    if (state.mode !== 'outside') {
-        return;
-    }
-    state.mode = 'entering';
-    marker.getElement().style.display = 'none';
-    hint.textContent = 'Drag to look around.';
-
-    map.dragPan.disable();
-    map.dragRotate.disable();
-    map.scrollZoom.disable();
-    map.doubleClickZoom.disable();
-    map.touchZoomRotate.disable();
-    map.keyboard.disable();
-
-    state.yawDeg = 0;
-    state.pitchDeg = 0;
-    recalibrateLookTargetDistance();
-
-    animateTransition({center: PHOTOSPHERE_LNGLAT, zoom: ZOOM, pitch: 90, bearing: 0}, EYE_HEIGHT, 1, () => {
-        state.mode = 'inside';
-        exitButton.style.display = '';
-        mapContainer.classList.add('looking-around');
-        updateCameraWhileInside();
+        center: OUTSIDE_VIEW.center,
+        zoom: OUTSIDE_VIEW.zoom,
+        pitch: OUTSIDE_VIEW.pitch,
+        bearing: OUTSIDE_VIEW.bearing,
+        minPitch: 5,
+        maxPitch: 175,
+        // Lets the plugin place the eye at its eye height instead of
+        // re-clamping the elevation to the ground.
+        centerClampedToGround: false
     });
-}
 
-// One camera tween used for both entering and exiting. Also feeds the
-// shader the eye-to-sphere-center offset each frame, so the photosphere
-// parallaxes while the eye approaches or leaves its center.
-function animateTransition(targetView, targetElevation, targetOpacity, onDone) {
-    const startTime = performance.now();
-    const start = {
-        center: map.getCenter(),
-        zoom: map.getZoom(),
-        pitch: map.getPitch(),
-        bearing: map.getBearing(),
-        elevation: map.getCenterElevation(),
-        opacity: panoramaLayer.paint['panorama-opacity']
-    };
+    const hint = document.getElementById('hint');
+    const exitButton = document.getElementById('exit-button');
 
-    function step(now) {
-        const t = Math.min(1, (now - startTime) / ENTER_EXIT_DURATION_MS);
-        const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-
-        const eyeMercator = maplibregl.MercatorCoordinate.fromLngLat(map.getCenter());
-        const sphereMercator = maplibregl.MercatorCoordinate.fromLngLat(PHOTOSPHERE_LNGLAT);
-        const metresToMercatorUnits = sphereMercator.meterInMercatorCoordinateUnits();
-        panoramaLayer.sphereCenterOffset = [
-            (sphereMercator.x - eyeMercator.x) / metresToMercatorUnits,
-            -(sphereMercator.y - eyeMercator.y) / metresToMercatorUnits,
-            0
-        ];
-        panoramaLayer.paint['panorama-opacity'] = start.opacity + (targetOpacity - start.opacity) * eased;
-
-        map.jumpTo({
-            center: [
-                start.center.lng + (targetView.center[0] - start.center.lng) * eased,
-                start.center.lat + (targetView.center[1] - start.center.lat) * eased
-            ],
-            zoom: start.zoom + (targetView.zoom - start.zoom) * eased,
-            pitch: start.pitch + (targetView.pitch - start.pitch) * eased,
-            bearing: start.bearing + (targetView.bearing - start.bearing) * eased,
-            elevation: start.elevation + (targetElevation - start.elevation) * eased
-        });
-        map.triggerRepaint();
-
-        if (t < 1) {
-            requestAnimationFrame(step);
-        } else {
-            onDone();
+    const photosphere = new Photosphere(map, {
+        lngLat: PHOTOSPHERE_LNGLAT,
+        imageUrl: '../../docs/assets/examples/enter-a-360-photosphere-panorama.jpg',
+        exitView: OUTSIDE_VIEW,
+        onEnter: () => {
+            hint.textContent = 'Drag to look around.';
+            exitButton.style.display = 'block';
+        },
+        onExit: () => {
+            hint.textContent = 'Click the blue marker to step inside the photosphere.';
+            marker.getElement().style.display = '';
         }
-    }
-    requestAnimationFrame(step);
-}
-
-function exitPhotosphere() {
-    if (state.mode !== 'inside') {
-        return;
-    }
-    state.mode = 'exiting';
-    exitButton.style.display = 'none';
-    mapContainer.classList.remove('looking-around');
-
-    animateTransition(OUTSIDE_VIEW, 0, 0, () => {
-        state.mode = 'outside';
-        hint.textContent = 'Click the blue marker to step inside the photosphere.';
-        marker.getElement().style.display = '';
-        map.dragPan.enable();
-        map.dragRotate.enable();
-        map.scrollZoom.enable();
-        map.doubleClickZoom.enable();
-        map.touchZoomRotate.enable();
-        map.keyboard.enable();
     });
-}
 
-exitButton.addEventListener('click', exitPhotosphere);
+    const marker = new maplibregl.Marker({
+        element: Object.assign(document.createElement('div'), {className: 'photosphere-marker'})
+    })
+        .setLngLat(PHOTOSPHERE_LNGLAT)
+        .addTo(map);
 
-let dragging = false;
-let lastX = 0;
-let lastY = 0;
-mapContainer.addEventListener('mousedown', (event) => {
-    if (state.mode !== 'inside') {
-        return;
-    }
-    dragging = true;
-    lastX = event.clientX;
-    lastY = event.clientY;
-    mapContainer.classList.add('dragging');
-});
-addEventListener('mousemove', (event) => {
-    if (!dragging) {
-        return;
-    }
-    const deltaX = event.clientX - lastX;
-    const deltaY = event.clientY - lastY;
-    lastX = event.clientX;
-    lastY = event.clientY;
+    marker.getElement().addEventListener('click', () => {
+        marker.getElement().style.display = 'none';
+        photosphere.enter();
+    });
 
-    state.yawDeg = (state.yawDeg - deltaX * DRAG_SENSITIVITY_DEG_PER_PX + 360) % 360;
-    state.pitchDeg = Math.max(MIN_PITCH_DEG, Math.min(MAX_PITCH_DEG,
-        state.pitchDeg + deltaY * DRAG_SENSITIVITY_DEG_PER_PX));
-
-    updateCameraWhileInside();
-    map.triggerRepaint();
-});
-addEventListener('mouseup', () => {
-    dragging = false;
-    mapContainer.classList.remove('dragging');
-});
+    exitButton.addEventListener('click', () => {
+        exitButton.style.display = 'none';
+        photosphere.exit();
+    });
 </script>
 </body>
 </html>
