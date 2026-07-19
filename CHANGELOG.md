@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Support `global-state` expressions in `sky.*` properties ([#7967](https://github.com/maplibre/maplibre-gl-js/pull/7967)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
