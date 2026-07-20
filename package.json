@@ -112,7 +112,7 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.6",
     "regenerate": "^1.4.2",
-    "rolldown": "^1.1.5",
+    "rolldown": "^1.2.0",
     "rolldown-plugin-dts": "^0.27.8",
     "rollup": "^4.62.2",
     "rollup-plugin-visualizer": "^7.0.1",
