@@ -1,13 +1,13 @@
 services:
   docs:
-    image: zensical/zensical:0.0.50
+    image: zensical/zensical:0.0.51
     volumes:
       - .:/docs
     working_dir: /docs
     command: build --strict
 
   docs-serve:
-    image: zensical/zensical:0.0.50
+    image: zensical/zensical:0.0.51
     volumes:
       - .:/docs
     working_dir: /docs
