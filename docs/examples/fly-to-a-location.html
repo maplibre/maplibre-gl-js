@@ -3,11 +3,13 @@
 <head>
     <title>Fly to a location</title>
     <meta property="og:description" content="Use flyTo to smoothly interpolate between locations." />
+    <meta property="og:category" content="Camera & Animation" />
+    <meta property="og:order" content="1" />
     <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.0.0/dist/maplibre-gl.css' />
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -35,7 +37,9 @@
 <div id="map"></div>
 <br />
 <button id="fly">Fly</button>
-<script>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.0.0/dist/maplibre-gl.mjs';
+
     const map = new maplibregl.Map({
         container: 'map',
         style: 'https://tiles.openfreemap.org/styles/bright',

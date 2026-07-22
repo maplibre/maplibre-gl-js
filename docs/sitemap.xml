@@ -4,9 +4,6 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/</loc>
       </url>
       <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/</loc>
-      </url>
-      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/plugins/</loc>
       </url>
       <url>
@@ -14,9 +11,6 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/</loc>
-      </url>
-      <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/_media/CONTRIBUTING/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/AJAXError/</loc>
@@ -46,6 +40,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/EdgeInsets/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/Event/</loc>
       </url>
       <url>
@@ -55,10 +52,25 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/FullscreenControl/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/FullscreenEvent/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/GPUInitializationError/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/GeoJSONSource/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/GeolocateControl/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/GeolocateErrorEvent/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/GeolocateEvent/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/GeolocatePositionEvent/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/GlobeControl/</loc>
@@ -85,7 +97,37 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/Map/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MapBoxZoomEvent/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MapContextEvent/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MapLibreEvent/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MapMouseEvent/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MapMovementEvent/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MapProjectionEvent/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MapSourceDataEvent/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleDataEvent/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleImageMissingEvent/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleLoadEvent/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MapTerrainEvent/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MapTouchEvent/</loc>
@@ -97,6 +139,12 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/Marker/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MarkerClickEvent/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MarkerDragEvent/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/MercatorCoordinate/</loc>
       </url>
       <url>
@@ -104,6 +152,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/Popup/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/PopupEvent/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/RasterDEMTileSource/</loc>
@@ -226,9 +277,6 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/Dispatcher/</loc>
       </url>
       <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/ErrorEvent/</loc>
-      </url>
-      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/FeatureIndex/</loc>
       </url>
       <url>
@@ -322,6 +370,12 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/CreateTileMeshOptions/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomLayerProjectionData/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomLayerProjectionDataParams/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomRenderMethod/</loc>
       </url>
       <url>
@@ -355,6 +409,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/FlyToOptions/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/FullscreenControlEventType/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/FullscreenControlOptions/</loc>
       </url>
       <url>
@@ -365,6 +422,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeoJSONSourceDiff/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeolocateControlEventType/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeolocateControlOptions/</loc>
@@ -403,12 +463,6 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/LogoControlOptions/</loc>
       </url>
       <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapContextEvent/</loc>
-      </url>
-      <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapDataEvent/</loc>
-      </url>
-      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/</loc>
       </url>
       <url>
@@ -424,34 +478,25 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerTouchEvent/</loc>
       </url>
       <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLibreEvent/</loc>
-      </url>
-      <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLibreZoomEvent/</loc>
-      </url>
-      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapOptions/</loc>
-      </url>
-      <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapProjectionEvent/</loc>
-      </url>
-      <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapSourceDataEvent/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapSourceDataType/</loc>
       </url>
       <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapStyleDataEvent/</loc>
-      </url>
-      <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapStyleImageMissingEvent/</loc>
-      </url>
-      <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapTerrainEvent/</loc>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MarkerEventType/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MarkerOptions/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/Mat4f32/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/Mat4f64/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MissingStyleImageResolver/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/NavigationControlOptions/</loc>
@@ -466,6 +511,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/PointLike/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/PopupEventType/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/PopupOptions/</loc>
       </url>
       <url>
@@ -475,10 +523,16 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/ProjectionData/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/ProjectionDataParams/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/QueryRenderedFeaturesOptions/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/QuerySourceFeatureOptions/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/RendererProjectionData/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/RequestParameters/</loc>
@@ -502,6 +556,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceClass/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleGlyph/</loc>
       </url>
       <url>
@@ -512,6 +569,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleImageMetadata/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleImageSource/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleOptions/</loc>
@@ -533,6 +593,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/Unit/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/UnwrappedTileIDLiteral/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/UpdateImageOptions/</loc>
@@ -871,7 +934,7 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/restrict-map-panning-to-an-area/</loc>
       </url>
       <url>
-        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/select-features-with-box-zoom-end-callback/</loc>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/select-features-with-boxzoomend-callback/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/set-center-point-above-ground/</loc>
@@ -956,5 +1019,8 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/guides/openlayers-migration-guide/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/guides/v5-to-v6-migration-guide/</loc>
       </url>
 </urlset>

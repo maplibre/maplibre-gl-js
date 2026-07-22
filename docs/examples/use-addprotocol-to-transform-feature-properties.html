@@ -3,11 +3,12 @@
 <head>
     <title>Use addProtocol to Transform Feature Properties</title>
     <meta property="og:description" content="Reverse country names with addProtocol in plain JavaScript." />
+    <meta property="og:category" content="Plugins & Integrations" />
     <meta property="og:created" content="2025-06-25" />
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" />
-    <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.0.0/dist/maplibre-gl.css" />
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -16,6 +17,8 @@
 <body>
     <div id="map"></div>
     <script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.0.0/dist/maplibre-gl.mjs';
+
         import Protobuf from 'https://unpkg.com/pbf@4.0.1/index.js';
         import {VectorTile} from 'https://esm.run/@mapbox/vector-tile@2.0.3/index.js';
         import tileToProtobuf from 'https://esm.run/vt-pbf@3.1.3/index.js';

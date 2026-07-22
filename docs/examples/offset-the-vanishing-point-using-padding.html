@@ -3,11 +3,12 @@
 <head>
     <title>Offset the vanishing point using padding</title>
     <meta property="og:description" content="Offset the center or vanishing point of the map to reduce distortion when floating elements are displayed over the map." />
+    <meta property="og:category" content="Camera & Animation" />
     <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.0.0/dist/maplibre-gl.css' />
+
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -113,7 +114,9 @@
     </div>
 </div>
 
-<script>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.0.0/dist/maplibre-gl.mjs';
+
     const center = [-77.01866, 38.888];
     const map = new maplibregl.Map({
         container: 'map',
