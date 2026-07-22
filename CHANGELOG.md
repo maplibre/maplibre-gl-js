@@ -8,7 +8,7 @@
 ## 6.0.0
 
 The following incorporates all the pre-releases for version 6 changes.
-Check-out our migration guide from v5 to v6 for more information.
+Check-out our [migration guide from v5 to v6](./docs/guides/v5-to-v6-migration-guide.md) for more information.
 
 ### ✨ Features and improvements
 
