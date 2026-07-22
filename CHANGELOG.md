@@ -5,6 +5,13 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+- docs: Vite worker snippet needs `?worker&url`, not `?url` ([#7981](https://github.com/maplibre/maplibre-gl-js/pull/7981)) (by [@garyo](https://github.com/garyo))
+- chore: add missing tests for #7941 ([#7951](https://github.com/maplibre/maplibre-gl-js/pull/7951)) (by [@HarelM](https://github.com/HarelM))
+## 6.0.0
+### ✨ Features and improvements
+
+### 🐞 Bug fixes
+
 ## 6.0.0-22
 
 ### ✨ Features and improvements
