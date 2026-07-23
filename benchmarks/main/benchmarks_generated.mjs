@@ -26685,6 +26685,9 @@ var GeoJSONSource = class extends Evented {
 	_pixelsToTileUnits(pixelValue) {
 		return pixelValue * (EXTENT / this.tileSize);
 	}
+	_tileUnitsToPixels(tileUnitValue) {
+		return tileUnitValue / (EXTENT / this.tileSize);
+	}
 	_getClusterMaxZoom(clusterMaxZoom) {
 		const effectiveClusterMaxZoom = clusterMaxZoom ? Math.round(clusterMaxZoom) : this.maxzoom - 1;
 		if (!(Number.isInteger(clusterMaxZoom) || clusterMaxZoom === void 0)) warnOnce(`Integer expected for option 'clusterMaxZoom': provided value "${clusterMaxZoom}" rounded to "${effectiveClusterMaxZoom}"`);
@@ -26761,6 +26764,24 @@ var GeoJSONSource = class extends Evented {
 		if (options.clusterMaxZoom !== void 0) this.workerOptions.geojsonVtOptions.clusterOptions.maxZoom = this._getClusterMaxZoom(options.clusterMaxZoom);
 		this._pendingWorkerUpdate.updateCluster = true;
 		return this._updateWorkerData();
+	}
+	/**
+	* Gets the cluster options currently configured on the source.
+	* The returned values mirror the options accepted by `setClusterOptions`.
+	*
+	* @returns the source's current cluster options
+	* @example
+	* ```ts
+	* const {cluster, clusterMaxZoom, clusterRadius} = map.getSource('some id').getClusterOptions();
+	* ```
+	*/
+	getClusterOptions() {
+		const { cluster, clusterOptions } = this.workerOptions.geojsonVtOptions;
+		return {
+			cluster,
+			clusterMaxZoom: clusterOptions.maxZoom,
+			clusterRadius: this._tileUnitsToPixels(clusterOptions.radius)
+		};
 	}
 	/**
 	* For clustered sources, fetches the zoom at which the given cluster expands.
@@ -60810,7 +60831,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 02e7b0f";
+const version = "main 7dfd543";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
