@@ -357,6 +357,17 @@ export type MapOptions = {
      */
     rollEnabled?: boolean;
     /**
+     * Degrees the map's bearing changes per pixel of horizontal drag when rotating.
+     * @defaultValue 0.8
+     */
+    rotateSpeed?: number;
+    /**
+     * Degrees the map's pitch changes per pixel of vertical drag. Negative, so that
+     * dragging up pitches the map toward the horizon.
+     * @defaultValue -0.5
+     */
+    pitchSpeed?: number;
+    /**
      * If `true`, gesture inertia (such as panning) is disabled. If not provided, gesture inertia defaults to the user's device settings.
      * @defaultValue undefined
      */
@@ -531,6 +542,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     localIdeographFontFamily: 'sans-serif',
     pitchWithRotate: true,
     rollEnabled: false,
+    rotateSpeed: 0.8,
+    pitchSpeed: -0.5,
     reduceMotion: undefined,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
