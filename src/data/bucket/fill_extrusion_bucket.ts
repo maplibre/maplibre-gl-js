@@ -179,7 +179,7 @@ export class FillExtrusionBucket implements Bucket {
 
     addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting): void {
         const layer = this.layers[0];
-        const roundedCornerDistance = layer.layout ? layer.layout.get('fill-extrusion-rounded-corner-distance').evaluate(feature, {}, canonical) : 0;
+        const roundedCornerDistance = layer.layout ? layer.layout.get('fill-extrusion-rounded-corner-distance') : 0;
         const processedGeometry = roundedCornerDistance > 0 ? roundPolygonCorners(geometry, roundedCornerDistance, canonical) : geometry;
 
         for (const polygon of classifyRings(processedGeometry, EARCUT_MAX_RINGS)) {

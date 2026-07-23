@@ -53,7 +53,7 @@
       "type": "fill-extrusion",
       "source": "geojson",
       "layout": {
-        "fill-extrusion-rounded-corner-distance": ["get", "corner_radius"]
+        "fill-extrusion-rounded-corner-distance": 15
       },
       "paint": {
         "fill-extrusion-color": "blue",
