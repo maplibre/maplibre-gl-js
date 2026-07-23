@@ -1,4 +1,4 @@
-import {describe, test, expect, vi, afterEach} from 'vitest';
+import {describe, test, expect, vi, afterEach, beforeEach} from 'vitest';
 import {ColorArray} from '@maplibre/maplibre-gl-style-spec';
 import {DataDrivenProperty, Layout, PossiblyEvaluatedPropertyValue, PropertyValue, Transitionable} from './properties.ts';
 import symbolProperties from './style_layer/symbol_style_layer_properties.g.ts';
@@ -105,6 +105,14 @@ describe('Transitionable', () => {
 
 describe('paint property transitions between arrays of different length, issue #6606', () => {
     const transition = {duration: 300, delay: 0};
+
+    beforeEach(() => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
 
     function evaluateMidTransition(from: string[], to: string[]) {
         const transitionable = new Transitionable(hillshadeProperties.paint, '', {});

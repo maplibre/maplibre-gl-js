@@ -1,4 +1,4 @@
-import {clone, extend, easeCubicInOut} from '../util/util.ts';
+import {clone, extend, easeCubicInOut, warnOnce} from '../util/util.ts';
 import {interpolates, type Color, type StylePropertySpecification, normalizePropertyExpression,
     type Feature,
     type FeatureState,
@@ -513,6 +513,7 @@ export class DataConstantProperty<T> implements Property<T, T> {
 
     interpolate(a: T, b: T, t: number): T {
         if (isNonInterpolableArrayChange(a, b)) {
+            warnOnce(`Property "${this.name}" is trying to interpolate arrays of different lengths. Rendering may 'jump'.`);
             return b;
         }
         const interpolationType = this.specification.type as keyof typeof interpolates;
@@ -577,6 +578,7 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
         }
 
         if (isNonInterpolableArrayChange(a.value.value, b.value.value)) {
+            warnOnce(`Property "${this.name}" is trying to interpolate arrays of different lengths. Rendering may 'jump'.`);
             return b;
         }
 
