@@ -3,10 +3,14 @@ import Point from '@mapbox/point-geometry';
 import {roundPolygonCorners} from './round_polygon_corners.ts';
 import {CanonicalTileID} from '../../tile/tile_id.ts';
 
+function round(p: Point) {
+    return {x: Math.round(p.x * 100) / 100, y: Math.round(p.y * 100) / 100}
+}
+
 describe('roundPolygonCorners', () => {
     const canonical = new CanonicalTileID(10, 500, 300);
 
-    test('returns original polygon reference when distance is zero', () => {
+    test.each([-5, 0, 0.1])('returns original polygon reference when distance is %d', (distance) => {
         const input = [[
             new Point(0, 0),
             new Point(100, 0),
@@ -15,33 +19,7 @@ describe('roundPolygonCorners', () => {
             new Point(0, 0)
         ]];
 
-        const output = roundPolygonCorners(input, 0, canonical);
-        expect(output).toBe(input);
-    });
-
-    test('returns original polygon reference when distance is negative', () => {
-        const input = [[
-            new Point(0, 0),
-            new Point(100, 0),
-            new Point(100, 100),
-            new Point(0, 100),
-            new Point(0, 0)
-        ]];
-
-        const output = roundPolygonCorners(input, -5, canonical);
-        expect(output).toBe(input);
-    });
-
-    test('returns original polygon reference when distance is small', () => {
-        const input = [[
-            new Point(0, 0),
-            new Point(100, 0),
-            new Point(100, 100),
-            new Point(0, 100),
-            new Point(0, 0)
-        ]];
-
-        const output = roundPolygonCorners(input, 0.01, canonical);
+        const output = roundPolygonCorners(input, distance, canonical);
         expect(output).toBe(input);
     });
 
@@ -66,7 +44,7 @@ describe('roundPolygonCorners', () => {
         ]];
 
         const output = roundPolygonCorners(input, 10, canonical);
-        const points = output[0].map(p => ({x: Math.round(p.x * 100) / 100, y: Math.round(p.y * 100) / 100}));
+        const points = output[0].map(round);
 
         expect(points.length).toBe(19);
         expect(points).toEqual(
@@ -161,7 +139,7 @@ describe('roundPolygonCorners', () => {
         ]];
 
         const output = roundPolygonCorners(input, 1000, canonical);
-        const points = output[0].map(p => ({x: Math.round(p.x * 100) / 100, y: Math.round(p.y * 100) / 100}));
+        const points = output[0].map(round);
 
         expect(points.length).toBe(19);
         expect(points).toEqual(
@@ -257,7 +235,7 @@ describe('roundPolygonCorners', () => {
         ]];
 
         const output = roundPolygonCorners(input, 5, canonical);
-        const points = output[0].map(p => ({x: Math.round(p.x * 100) / 100, y: Math.round(p.y * 100) / 100}));
+        const points = output[0].map(round);
 
         expect(points.length).toBe(20);
         expect(points).toEqual(
