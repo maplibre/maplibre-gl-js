@@ -1,7 +1,7 @@
 {
   "name": "maplibre-gl",
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
-  "version": "6.0.0-22",
+  "version": "6.0.0",
   "module": "dist/maplibre-gl.mjs",
   "style": "dist/maplibre-gl.css",
   "license": "BSD-3-Clause",
@@ -77,7 +77,7 @@
     "@vitest/eslint-plugin": "^1.6.23",
     "@vitest/ui": "4.1.10",
     "address": "^2.0.3",
-    "autoprefixer": "^10.5.2",
+    "autoprefixer": "^10.5.4",
     "benchmark": "^2.1.4",
     "canvas": "^3.2.3",
     "cross-env": "^10.1.0",
