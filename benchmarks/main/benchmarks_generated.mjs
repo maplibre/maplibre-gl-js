@@ -33306,7 +33306,7 @@ var TileManager = class TileManager extends Evented {
 	}
 	/**
 	* Reload tiles based on the current state of the source.
-	* @param sourceDataChanged - If `true`, reload all tiles using a state of 'expired', otherwise reload only non-errored tiles using state of 'reloading'.
+	* @param sourceDataChanged - If `true`, reload all tiles using a state of 'expired' (errored tiles use 'loading' since they have nothing to show yet), otherwise reload only non-errored tiles using state of 'reloading'.
 	* @param shouldReloadTileOptions - Set of options associated with a `MapSourceDataChangedEvent` that can be passed back to the associated `Source` determine whether a tile should be reloaded.
 	*/
 	reload(sourceDataChanged, shouldReloadTileOptions = void 0) {
@@ -33318,7 +33318,7 @@ var TileManager = class TileManager extends Evented {
 		for (const id of this._inViewTiles.getAllIds()) {
 			const tile = this._inViewTiles.getTileById(id);
 			if (shouldReloadTileOptions && !this._source.shouldReloadTile(tile, shouldReloadTileOptions)) continue;
-			else if (sourceDataChanged) this._reloadTile(id, "expired");
+			else if (sourceDataChanged) this._reloadTile(id, tile.state === "errored" ? "loading" : "expired");
 			else if (tile.state !== "errored") this._reloadTile(id, "reloading");
 		}
 	}
@@ -60784,7 +60784,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main da9ee79";
+const version = "main e59a90c";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
