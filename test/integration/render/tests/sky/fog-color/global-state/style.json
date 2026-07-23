@@ -9,14 +9,6 @@
       "operations": [
         [
           "wait"
-        ],
-        [
-          "setGlobalStateProperty",
-          "fogColor",
-          "#ff00ff"
-        ],
-        [
-          "wait"
         ]
       ]
     }
@@ -29,7 +21,7 @@
   "pitch": 85,
   "state": {
     "fogColor": {
-      "default": "#daeff0"
+      "default": "#ff00ff"
     }
   },
   "sources": {

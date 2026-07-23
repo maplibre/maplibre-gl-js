@@ -7,14 +7,6 @@
       "operations": [
         [
           "wait"
-        ],
-        [
-          "setGlobalStateProperty",
-          "atmosphereBlend",
-          0
-        ],
-        [
-          "wait"
         ]
       ]
     }
@@ -24,7 +16,7 @@
   },
   "state": {
     "atmosphereBlend": {
-      "default": 0.8
+      "default": 0
     }
   },
   "light": {
