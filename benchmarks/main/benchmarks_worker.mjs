@@ -13679,10 +13679,11 @@ var CircleBucket = class {
 			subdivide ||= circleStyle.paint.get("circle-pitch-alignment") === "map";
 		}
 		const granularity = subdivide ? options.subdivisionGranularity.circle : 1;
+		const globalProperties = new EvaluationParameters(this.zoom);
+		const needGeometry = this.layers[0]._featureFilter.needGeometry;
 		for (const { feature, id, index, sourceLayerIndex } of features) {
-			const needGeometry = this.layers[0]._featureFilter.needGeometry;
 			const evaluationFeature = toEvaluationFeature(feature, needGeometry);
-			if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
+			if (!this.layers[0]._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
 			const sortKey = sortFeaturesByKey ? circleSortKey.evaluate(evaluationFeature, {}, canonical) : void 0;
 			const bucketFeature = {
 				id,
@@ -16090,10 +16091,11 @@ var FillBucket = class {
 		const fillSortKey = this.layers[0].layout.get("fill-sort-key");
 		const sortFeaturesByKey = !fillSortKey.isConstant();
 		const bucketFeatures = [];
+		const globalProperties = new EvaluationParameters(this.zoom);
+		const needGeometry = this.layers[0]._featureFilter.needGeometry;
 		for (const { feature, id, index, sourceLayerIndex } of features) {
-			const needGeometry = this.layers[0]._featureFilter.needGeometry;
 			const evaluationFeature = toEvaluationFeature(feature, needGeometry);
-			if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
+			if (!this.layers[0]._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
 			const sortKey = sortFeaturesByKey ? fillSortKey.evaluate(evaluationFeature, {}, canonical, options.availableImages) : void 0;
 			const bucketFeature = {
 				id,
@@ -16541,10 +16543,11 @@ var FillExtrusionBucket = class {
 	populate(features, options, canonical) {
 		this.features = [];
 		this.hasDependencies = hasPattern("fill-extrusion", this.layers, options);
+		const globalProperties = new EvaluationParameters(this.zoom);
+		const needGeometry = this.layers[0]._featureFilter.needGeometry;
 		for (const { feature, id, index, sourceLayerIndex } of features) {
-			const needGeometry = this.layers[0]._featureFilter.needGeometry;
 			const evaluationFeature = toEvaluationFeature(feature, needGeometry);
-			if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
+			if (!this.layers[0]._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
 			const bucketFeature = {
 				id,
 				sourceLayerIndex,
@@ -18798,10 +18801,11 @@ var LineBucket = class {
 		const lineSortKey = this.layers[0].layout.get("line-sort-key");
 		const sortFeaturesByKey = !lineSortKey.isConstant();
 		const bucketFeatures = [];
+		const globalProperties = new EvaluationParameters(this.zoom);
+		const needGeometry = this.layers[0]._featureFilter.needGeometry;
 		for (const { feature, id, index, sourceLayerIndex } of features) {
-			const needGeometry = this.layers[0]._featureFilter.needGeometry;
 			const evaluationFeature = toEvaluationFeature(feature, needGeometry);
-			if (!this.layers[0]._featureFilter.filter(new EvaluationParameters(this.zoom), evaluationFeature, canonical)) continue;
+			if (!this.layers[0]._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
 			const sortKey = sortFeaturesByKey ? lineSortKey.evaluate(evaluationFeature, {}, canonical) : void 0;
 			const bucketFeature = {
 				id,
