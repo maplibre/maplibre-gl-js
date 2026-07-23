@@ -9,10 +9,10 @@ It is part of the MapLibre ecosystem, with a counterpart for Android, iOS and ot
 <iframe src="./examples/display-a-globe-with-a-vector-map.html" width="100%" height="400px" style="border:none"></iframe>
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0-20/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0-21/dist/maplibre-gl.css" />
 <div id="map" style="height: 400px"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0-20/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0-21/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map', // container id
@@ -82,19 +82,24 @@ Pick your setup:
 
 === "Vite"
 
-    Use Vite's `?url` query to get the worker file's bundled URL:
+    Use Vite's `?worker&url` query to get a bundled, self-contained worker URL:
 
     ```ts
     import {Map, setWorkerUrl} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
-    import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+    import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 
     setWorkerUrl(workerUrl);
 
     const map = new Map({/* … */});
     ```
 
-    Works in modern Vite, dev and production.
+    Use `?worker&url` rather than plain `?url`: the dist worker imports its
+    sibling `maplibre-gl-shared.mjs`, and `?url` emits the worker file verbatim
+    in production builds without that sibling — the worker then fails on its
+    first import and no vector tiles load. `?worker&url` routes the file
+    through Vite's worker pipeline, emitting a self-contained chunk. Dev mode
+    works with either.
 
     If your build uses SSR (TanStack Start, Astro, etc.) and Vite resolves the CommonJS entry on the server, also add:
 
@@ -181,10 +186,10 @@ Pick your setup:
     Load MapLibre directly from UNPKG as an ES module via a `<script type="module">` tag. See [unpkg.com](https://unpkg.com) for instructions on selecting specific versions and semver ranges.
 
     ```html
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0-20/dist/maplibre-gl.css" />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.0.0-21/dist/maplibre-gl.css" />
     <div id="map" style="height: 400px"></div>
     <script type="module">
-        import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0-20/dist/maplibre-gl.mjs';
+        import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.0.0-21/dist/maplibre-gl.mjs';
 
         const map = new maplibregl.Map({
             container: 'map',

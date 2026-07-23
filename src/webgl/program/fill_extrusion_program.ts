@@ -79,8 +79,7 @@ const fillExtrusionUniformValues = (
     translate: [number, number],
 ): UniformValues<FillExtrusionUniformsType> => {
     const light = painter.style.light;
-    const _lp = light.properties.get('position');
-    const lightPos = [_lp.x, _lp.y, _lp.z] as vec3;
+    const lightPos = light.getCartesianPosition();
     const lightMat = mat3.create();
     if (light.properties.get('anchor') === 'viewport') {
         mat3.fromRotation(lightMat, painter.transform.bearingInRadians);

@@ -409,7 +409,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      * Create the parameters object that will be sent to the worker and used to load GeoJSON.
      */
     private async _getLoadGeoJSONParameters(data: string | GeoJSON.GeoJSON<GeoJSON.Geometry>, diff: GeoJSONSourceDiff, updateCluster: boolean): Promise<LoadGeoJSONParameters | undefined> {
-        const params: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
+        const params: LoadGeoJSONParameters = extend({type: this.type, source: this.id}, this.workerOptions);
 
         // Data comes from a remote url
         if (typeof data === 'string') {
