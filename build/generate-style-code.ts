@@ -317,24 +317,6 @@ function emitLayerProperties({type, layoutProperties, paintProperties}: LayerPro
     const layerType = pascalCase(type);
     const output: string[] = [emitHeader('../properties.ts')];
 
-    if (type === 'fill-extrusion') {
-        output.push(`if (styleSpec["layout_fill-extrusion"] && !styleSpec["layout_fill-extrusion"]["fill-extrusion-rounded-corner-distance"]) {
-    (styleSpec["layout_fill-extrusion"] as any)["fill-extrusion-rounded-corner-distance"] = {
-        type: 'number',
-        default: 0,
-        minimum: 0,
-        units: 'meters',
-        doc: 'Distance in meters to round polygon corners for 3D extruded buildings.',
-        expression: {
-            interpolated: true,
-            parameters: ['zoom', 'feature', 'feature-state']
-        },
-        'property-type': 'data-driven'
-    };
-}
-`);
-    }
-
     const overridables = paintProperties.filter(p => p.overridable);
     if (overridables.length) {
         output.push(`import {
@@ -383,30 +365,11 @@ function emitRootProperties({root, properties}: RootProperties): string {
     ].join('\n');
 }
 
-(latest as any)['layout_fill-extrusion']['fill-extrusion-rounded-corner-distance'] = {
-    type: 'number',
-    default: 0,
-    minimum: 0,
-    units: 'meters',
-    doc: 'Distance in meters to round polygon corners for 3D extruded buildings.',
-    'sdk-support': {
-        'basic functionality': {
-            js: '6.0.0',
-            native: '4.3.0'
-        }
-    },
-    expression: {
-        interpolated: true,
-        parameters: ['zoom', 'feature', 'feature-state']
-    },
-    'property-type': 'data-driven'
-};
-
 const layers: LayerProperties[] = Object.keys(latest.layer.type.values).map((type: string) => ({
     type,
     // `visibility` is not a real layout property: it is handled by the layer itself.
     layoutProperties: specProperties(`layout_${type}`, {layerType: type}).filter(({name}) => name !== 'visibility'),
-    paintProperties: specProperties(`paint_${type}`, {layerType: type}).filter(({name}) => name !== 'fill-extrusion-rounded-corner-distance')
+    paintProperties: specProperties(`paint_${type}`, {layerType: type})
 }));
 
 for (const layer of layers) {
