@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Optimize CrossTileSymbolIndex performance for sources with `promoteId` by pre-assigning stable cross-tile IDs during symbol layout ([#7665](https://github.com/maplibre/maplibre-gl-js/pull/7665)) (by [@bradymadden97](https://github.com/bradymadden97))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

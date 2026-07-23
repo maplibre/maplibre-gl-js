@@ -114,9 +114,13 @@ describe('CrossTileSymbolIndex.addLayer', () => {
         index.addLayer(styleLayer, [childTile], 0);
         expect(childInstances[0].crossTileID).toBe(2);
 
-        // overwrites the old id to match the already-added tile
-        index.addLayer(styleLayer, [mainTile, childTile], 0);
-        expect(mainInstances[0].crossTileID).toBe(2);
+        // Re-create the main tile with fresh instances, as the worker would
+        const mainInstances2 = [makeSymbolInstance(1000, 1000, 'Detroit')];
+        const mainTile2 = makeTile(mainID, mainInstances2);
+
+        // matches the already-added child tile
+        index.addLayer(styleLayer, [mainTile2, childTile], 0);
+        expect(mainInstances2[0].crossTileID).toBe(2);
         expect(childInstances[0].crossTileID).toBe(2);
 
     });
