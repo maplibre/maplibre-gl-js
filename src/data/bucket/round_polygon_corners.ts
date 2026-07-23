@@ -20,7 +20,7 @@ export function roundPolygonCorners(
     }
 
     const distanceInTileUnits = getTileUnitsForMeters(distanceInMeters, canonical);
-    if (distanceInTileUnits <= 0) {
+    if (distanceInTileUnits < 0.5) {
         return polygon;
     }
 

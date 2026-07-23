@@ -32,6 +32,19 @@ describe('roundPolygonCorners', () => {
         expect(output).toBe(input);
     });
 
+    test('returns original polygon reference when distance is small', () => {
+        const input = [[
+            new Point(0, 0),
+            new Point(100, 0),
+            new Point(100, 100),
+            new Point(0, 100),
+            new Point(0, 0)
+        ]];
+
+        const output = roundPolygonCorners(input, 0.01, canonical);
+        expect(output).toBe(input);
+    });
+
     test('returns unchanged ring for degenerate line rings', () => {
         const input = [[
             new Point(0, 0),
