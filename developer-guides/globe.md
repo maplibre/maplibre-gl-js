@@ -102,7 +102,7 @@ they are already very close.
 The transition animation is implemented in the shader's projection function,
 and is controlled by a "globeness" parameter passed from the transform.
 
-## GPU "atan" error correction
+## GPU latitude precision
 
 When implementing globe, we noticed that globe projection did not match mercator projection
 after the automatic transition described in previous section.
@@ -110,17 +110,32 @@ This mismatch was very visible at certain latitudes, the globe map was shifted n
 but at other latitudes the shift was much smaller. This behavior was also inconsistent - one would
 expect the shift to gradually increase or decrease with distance from equator, but that was not the case.
 
-Eventually, we tracked this down to an issue in the projection shader, specifically the `atan` function.
-On some GPU vendors, the function is inaccurate in a way that matches the observed projection shifts.
+Eventually, we tracked this down to an issue in the projection shader, specifically the `atan` function
+used to convert mercator Y to a latitude angle (`2*atan(exp(...)) - PI/2`).
+On some GPU vendors, the function is inaccurate in a way that matches the observed
+projection shifts; subtracting `PI/2` from a value close to `PI/2` also destroys most of the float32
+mantissa near the equator regardless of GPU.
 
-To combat this, every second we draw a 1x1 pixel framebuffer and store the `atan` value
-for the current latitude, asynchronously download the pixel's value, compare it with `Math.atan`
-reference, and shift the globe projection matrix to compensate.
-This approach works, because the error is continuous and doesn't change too quickly with latitude.
+The original fix measured this `atan` error at runtime (rendering a 1x1 pixel framebuffer once a
+second, comparing it against a CPU-computed reference) and shifted the globe projection matrix to
+compensate. This worked, but only corrected for `atan` error specifically, and only as a single
+value assumed constant across the whole visible map area.
 
-This approach also has the advantage that it works regardless of the actual error of the `atan`,
-so MapLibre should work fine even if it runs on some new GPU in the future with different
-`atan` inaccuracies.
+Investigating a related report on Mali GPUs ([#7419](https://github.com/maplibre/maplibre-gl-js/issues/7419))
+showed that `sin`/`cos` could be similarly imprecise (and even non-monotonic) on some hardware,
+which the `atan`-only correction never accounted for. Since the underlying quantities the shader
+actually needs are `sin(spherical_y)` and `cos(spherical_y)`, not the angle itself, the tangent
+half-angle (Weierstrass) identities let the shader compute them directly from
+`t = exp(PI - mercator_y*2*PI)`:
+
+```glsl
+sin_sy = (t*t - 1.0) / (t*t + 1.0);
+cos_sy = (2.0 * t)    / (t*t + 1.0);
+```
+
+This uses only `exp()` and rational arithmetic - no `atan`, `sin` or `cos` call for latitude at all -
+which is both more accurate and removes the class of error the old runtime correction targeted, so
+that mechanism was removed rather than adapted.
 
 ## Clipping
 
