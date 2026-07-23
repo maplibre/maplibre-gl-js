@@ -37237,7 +37237,7 @@ var clipping_mask_fragment_glsl_g_default = "void main() {fragColor=vec4(1.0);}"
 const shaders = {
 	prelude: prepare(_prelude_fragment_glsl_g_default, _prelude_vertex_glsl_g_default),
 	projectionMercator: prepare("", "float projectLineThickness(float tileY) {return 1.0;}float projectCircleRadius(float tileY) {return 1.0;}vec4 projectTile(vec2 p) {vec4 result=u_projection_matrix*vec4(p,0.0,1.0);return result;}vec4 projectTile(vec2 p,vec2 rawPos) {vec4 result=u_projection_matrix*vec4(p,0.0,1.0);if (rawPos.y <-32767.5 || rawPos.y > 32766.5) {result.z=-10000000.0;}return result;}vec4 projectTileWithElevation(vec2 posInTile,float elevation) {return u_projection_matrix*vec4(posInTile,elevation,1.0);}vec4 projectTileFor3D(vec2 posInTile,float elevation) {return projectTileWithElevation(posInTile,elevation);}"),
-	projectionGlobe: prepare("", "#define GLOBE_RADIUS 6371008.8\nuniform highp vec4 u_projection_tile_mercator_coords;uniform highp vec4 u_projection_clipping_plane;uniform highp float u_projection_transition;uniform mat4 u_projection_fallback_matrix;vec3 globeRotateVector(vec3 vec,vec2 angles) {vec3 axisRight=vec3(vec.z,0.0,-vec.x);vec3 axisUp=cross(axisRight,vec);axisRight=normalize(axisRight);axisUp=normalize(axisUp);vec2 t=tan(angles);return normalize(vec+axisRight*t.x+axisUp*t.y);}mat3 globeGetRotationMatrix(vec3 spherePos) {vec3 axisRight=vec3(spherePos.z,0.0,-spherePos.x);vec3 axisDown=cross(axisRight,spherePos);axisRight=normalize(axisRight);axisDown=normalize(axisDown);return mat3(axisRight,axisDown,spherePos\n);}float circumferenceRatioAtTileY(float tileY) {float mercator_pos_y=u_projection_tile_mercator_coords.y+u_projection_tile_mercator_coords.w*tileY;float spherical_y=2.0*atan(exp(PI-(mercator_pos_y*PI*2.0)))-PI*0.5;return cos(spherical_y);}float projectLineThickness(float tileY) {float thickness=1.0/circumferenceRatioAtTileY(tileY); \nif (u_projection_transition < 0.999) {return mix(1.0,thickness,u_projection_transition);} else {return thickness;}}vec3 projectToSphere(vec2 translatedPos,vec2 rawPos) {vec2 mercator_pos=u_projection_tile_mercator_coords.xy+u_projection_tile_mercator_coords.zw*translatedPos;vec2 spherical;spherical.x=mercator_pos.x*PI*2.0+PI;spherical.y=2.0*atan(exp(PI-(mercator_pos.y*PI*2.0)))-PI*0.5;float len=cos(spherical.y);vec3 pos=vec3(sin(spherical.x)*len,sin(spherical.y),cos(spherical.x)*len\n);if (rawPos.y <-32767.5) {pos=vec3(0.0,1.0,0.0);}if (rawPos.y > 32766.5) {pos=vec3(0.0,-1.0,0.0);}return pos;}vec3 projectToSphere(vec2 posInTile) {return projectToSphere(posInTile,vec2(0.0,0.0));}float globeComputeClippingZ(vec3 spherePos) {return (1.0-(dot(spherePos,u_projection_clipping_plane.xyz)+u_projection_clipping_plane.w));}vec4 interpolateProjection(vec2 posInTile,vec3 spherePos,float elevation) {vec3 elevatedPos=spherePos*(1.0+elevation/GLOBE_RADIUS);vec4 globePosition=u_projection_matrix*vec4(elevatedPos,1.0);globePosition.z=globeComputeClippingZ(elevatedPos)*globePosition.w;if (u_projection_transition > 0.999) {return globePosition;}vec4 flatPosition=u_projection_fallback_matrix*vec4(posInTile,elevation,1.0);const float z_globeness_threshold=0.2;vec4 result=globePosition;result.z=mix(0.0,globePosition.z,clamp((u_projection_transition-z_globeness_threshold)/(1.0-z_globeness_threshold),0.0,1.0));result.xyw=mix(flatPosition.xyw,globePosition.xyw,u_projection_transition);if ((posInTile.y <-32767.5) || (posInTile.y > 32766.5)) {result=globePosition;const float poles_hidden_anim_percentage=0.02;result.z=mix(globePosition.z,100.0,pow(max((1.0-u_projection_transition)/poles_hidden_anim_percentage,0.0),8.0));}return result;}vec4 interpolateProjectionFor3D(vec2 posInTile,vec3 spherePos,float elevation) {vec3 elevatedPos=spherePos*(1.0+elevation/GLOBE_RADIUS);vec4 globePosition=u_projection_matrix*vec4(elevatedPos,1.0);if (u_projection_transition > 0.999) {return globePosition;}vec4 fallbackPosition=u_projection_fallback_matrix*vec4(posInTile,elevation,1.0);return mix(fallbackPosition,globePosition,u_projection_transition);}vec4 projectTile(vec2 posInTile) {return interpolateProjection(posInTile,projectToSphere(posInTile),0.0);}vec4 projectTile(vec2 posInTile,vec2 rawPos) {return interpolateProjection(posInTile,projectToSphere(posInTile,rawPos),0.0);}vec4 projectTileWithElevation(vec2 posInTile,float elevation) {return interpolateProjection(posInTile,projectToSphere(posInTile),elevation);}vec4 projectTileFor3D(vec2 posInTile,float elevation) {vec3 spherePos=projectToSphere(posInTile,posInTile);return interpolateProjectionFor3D(posInTile,spherePos,elevation);}"),
+	projectionGlobe: prepare("", "#define GLOBE_RADIUS 6371008.8\nuniform highp vec4 u_projection_tile_mercator_coords;uniform highp vec4 u_projection_clipping_plane;uniform highp float u_projection_transition;uniform mat4 u_projection_fallback_matrix;vec3 globeRotateVector(vec3 vec,vec2 angles) {vec3 axisRight=vec3(vec.z,0.0,-vec.x);vec3 axisUp=cross(axisRight,vec);axisRight=normalize(axisRight);axisUp=normalize(axisUp);vec2 t=tan(angles);return normalize(vec+axisRight*t.x+axisUp*t.y);}mat3 globeGetRotationMatrix(vec3 spherePos) {vec3 axisRight=vec3(spherePos.z,0.0,-spherePos.x);vec3 axisDown=cross(axisRight,spherePos);axisRight=normalize(axisRight);axisDown=normalize(axisDown);return mat3(axisRight,axisDown,spherePos\n);}float circumferenceRatioAtTileY(float tileY) {float mercator_pos_y=u_projection_tile_mercator_coords.y+u_projection_tile_mercator_coords.w*tileY;float t=exp(PI-(mercator_pos_y*PI*2.0));return (2.0*t)/(t*t+1.0);}float projectLineThickness(float tileY) {float thickness=1.0/circumferenceRatioAtTileY(tileY); \nif (u_projection_transition < 0.999) {return mix(1.0,thickness,u_projection_transition);} else {return thickness;}}vec3 projectToSphere(vec2 translatedPos,vec2 rawPos) {vec2 mercator_pos=u_projection_tile_mercator_coords.xy+u_projection_tile_mercator_coords.zw*translatedPos;float spherical_x=mercator_pos.x*PI*2.0+PI;float t=exp(PI-(mercator_pos.y*PI*2.0));float t2=t*t;float denom=t2+1.0;float sin_sy=(t2-1.0)/denom;float cos_sy=(2.0*t)/denom;vec3 pos=vec3(sin(spherical_x)*cos_sy,sin_sy,cos(spherical_x)*cos_sy\n);if (rawPos.y <-32767.5) {pos=vec3(0.0,1.0,0.0);}if (rawPos.y > 32766.5) {pos=vec3(0.0,-1.0,0.0);}return pos;}vec3 projectToSphere(vec2 posInTile) {return projectToSphere(posInTile,vec2(0.0,0.0));}float globeComputeClippingZ(vec3 spherePos) {return (1.0-(dot(spherePos,u_projection_clipping_plane.xyz)+u_projection_clipping_plane.w));}vec4 interpolateProjection(vec2 posInTile,vec3 spherePos,float elevation) {vec3 elevatedPos=spherePos*(1.0+elevation/GLOBE_RADIUS);vec4 globePosition=u_projection_matrix*vec4(elevatedPos,1.0);globePosition.z=globeComputeClippingZ(elevatedPos)*globePosition.w;if (u_projection_transition > 0.999) {return globePosition;}vec4 flatPosition=u_projection_fallback_matrix*vec4(posInTile,elevation,1.0);const float z_globeness_threshold=0.2;vec4 result=globePosition;result.z=mix(0.0,globePosition.z,clamp((u_projection_transition-z_globeness_threshold)/(1.0-z_globeness_threshold),0.0,1.0));result.xyw=mix(flatPosition.xyw,globePosition.xyw,u_projection_transition);if ((posInTile.y <-32767.5) || (posInTile.y > 32766.5)) {result=globePosition;const float poles_hidden_anim_percentage=0.02;result.z=mix(globePosition.z,100.0,pow(max((1.0-u_projection_transition)/poles_hidden_anim_percentage,0.0),8.0));}return result;}vec4 interpolateProjectionFor3D(vec2 posInTile,vec3 spherePos,float elevation) {vec3 elevatedPos=spherePos*(1.0+elevation/GLOBE_RADIUS);vec4 globePosition=u_projection_matrix*vec4(elevatedPos,1.0);if (u_projection_transition > 0.999) {return globePosition;}vec4 fallbackPosition=u_projection_fallback_matrix*vec4(posInTile,elevation,1.0);return mix(fallbackPosition,globePosition,u_projection_transition);}vec4 projectTile(vec2 posInTile) {return interpolateProjection(posInTile,projectToSphere(posInTile),0.0);}vec4 projectTile(vec2 posInTile,vec2 rawPos) {return interpolateProjection(posInTile,projectToSphere(posInTile,rawPos),0.0);}vec4 projectTileWithElevation(vec2 posInTile,float elevation) {return interpolateProjection(posInTile,projectToSphere(posInTile),elevation);}vec4 projectTileFor3D(vec2 posInTile,float elevation) {vec3 spherePos=projectToSphere(posInTile,posInTile);return interpolateProjectionFor3D(posInTile,spherePos,elevation);}"),
 	background: prepare(background_fragment_glsl_g_default, background_vertex_glsl_g_default),
 	backgroundPattern: prepare(background_pattern_fragment_glsl_g_default, background_pattern_vertex_glsl_g_default),
 	circle: prepare(circle_fragment_glsl_g_default, circle_vertex_glsl_g_default),
@@ -37270,7 +37270,6 @@ const shaders = {
 	terrain: prepare("uniform sampler2D u_texture;uniform vec4 u_fog_color;uniform vec4 u_horizon_color;uniform float u_fog_ground_blend;uniform float u_fog_ground_blend_opacity;uniform float u_horizon_fog_blend;uniform bool u_is_globe_mode;in vec2 v_texture_pos;in float v_fog_depth;const float gamma=2.2;vec4 gammaToLinear(vec4 color) {return pow(color,vec4(gamma));}vec4 linearToGamma(vec4 color) {return pow(color,vec4(1.0/gamma));}void main() {vec4 surface_color=texture(u_texture,vec2(v_texture_pos.x,1.0-v_texture_pos.y));if (!u_is_globe_mode && u_fog_ground_blend_opacity > 0.0 && v_fog_depth > u_fog_ground_blend) {vec4 surface_color_linear=gammaToLinear(surface_color);float blend_color=smoothstep(0.0,1.0,max((v_fog_depth-u_horizon_fog_blend)/(1.0-u_horizon_fog_blend),0.0));vec4 fog_horizon_color_linear=mix(gammaToLinear(u_fog_color),gammaToLinear(u_horizon_color),blend_color);float factor_fog=max(v_fog_depth-u_fog_ground_blend,0.0)/(1.0-u_fog_ground_blend);fragColor=linearToGamma(mix(surface_color_linear,fog_horizon_color_linear,pow(factor_fog,2.0)*u_fog_ground_blend_opacity));} else {fragColor=surface_color;}}", "layout(location=0) in vec3 a_pos3d;uniform mat4 u_fog_matrix;uniform float u_ele_delta;out vec2 v_texture_pos;out float v_fog_depth;void main() {float ele=get_elevation(a_pos3d.xy);float ele_delta=a_pos3d.z==1.0 ? u_ele_delta : 0.0;v_texture_pos=a_pos3d.xy/8192.0;gl_Position=projectTileFor3D(a_pos3d.xy,ele-ele_delta);vec4 pos=u_fog_matrix*vec4(a_pos3d.xy,ele,1.0);v_fog_depth=pos.z/pos.w*0.5+0.5;}"),
 	terrainDepth: prepare("in float v_depth;const highp vec4 bitSh=vec4(256.*256.*256.,256.*256.,256.,1.);const highp vec4 bitMsk=vec4(0.,vec3(1./256.0));highp vec4 pack(highp float value) {highp vec4 comp=fract(value*bitSh);comp-=comp.xxyz*bitMsk;return comp;}void main() {fragColor=pack(v_depth);}", "layout(location=0) in vec3 a_pos3d;uniform float u_ele_delta;out float v_depth;void main() {float ele=get_elevation(a_pos3d.xy);float ele_delta=a_pos3d.z==1.0 ? u_ele_delta : 0.0;gl_Position=projectTileFor3D(a_pos3d.xy,ele-ele_delta);v_depth=gl_Position.z/gl_Position.w;}"),
 	terrainCoords: prepare("precision mediump float;uniform sampler2D u_texture;uniform float u_terrain_coords_id;in vec2 v_texture_pos;void main() {vec4 rgba=texture(u_texture,v_texture_pos);fragColor=vec4(rgba.r,rgba.g,rgba.b,u_terrain_coords_id);}", "layout(location=0) in vec3 a_pos3d;uniform float u_ele_delta;out vec2 v_texture_pos;void main() {float ele=get_elevation(a_pos3d.xy);float ele_delta=a_pos3d.z==1.0 ? u_ele_delta : 0.0;v_texture_pos=a_pos3d.xy/8192.0;gl_Position=projectTileFor3D(a_pos3d.xy,ele-ele_delta);}"),
-	projectionErrorMeasurement: prepare("flat in vec4 v_output_error_encoded;void main() {fragColor=v_output_error_encoded;}", "layout(location=0) in vec2 a_pos;uniform highp float u_input;uniform highp float u_output_expected;flat out vec4 v_output_error_encoded;void main() {float real_output=2.0*atan(exp(PI-(u_input*PI*2.0)))-PI*0.5;float error=real_output-u_output_expected;float abs_error=abs(error)*128.0;v_output_error_encoded.x=min(floor(abs_error*256.0),255.0)/255.0;abs_error-=v_output_error_encoded.x;v_output_error_encoded.y=min(floor(abs_error*65536.0),255.0)/255.0;abs_error-=v_output_error_encoded.x/255.0;v_output_error_encoded.z=min(floor(abs_error*16777216.0),255.0)/255.0;v_output_error_encoded.w=error >=0.0 ? 1.0 : 0.0;gl_Position=vec4(a_pos,0.0,1.0);}"),
 	atmosphere: prepare("#ifdef GL_ES\nprecision highp float;\n#endif\nin vec3 view_direction;uniform vec3 u_sun_pos;uniform vec3 u_globe_position;uniform float u_globe_radius;uniform float u_atmosphere_blend;/**Shader use from https:*Made some change to adapt to MapLibre Globe geometry*/const float PI=3.141592653589793;const int iSteps=5;const int jSteps=3;/*radius of the planet*/const float EARTH_RADIUS=6371e3;/*radius of the atmosphere*/const float ATMOS_RADIUS=6471e3;vec2 rsi(vec3 r0,vec3 rd,float sr) {float a=dot(rd,rd);float b=2.0*dot(rd,r0);float c=dot(r0,r0)-(sr*sr);float d=(b*b)-4.0*a*c;if (d < 0.0) return vec2(1e5,-1e5);return vec2((-b-sqrt(d))/(2.0*a),(-b+sqrt(d))/(2.0*a));}vec4 atmosphere(vec3 r,vec3 r0,vec3 pSun,float iSun,float rPlanet,float rAtmos,vec3 kRlh,float kMie,float shRlh,float shMie,float g) {pSun=normalize(pSun);r=normalize(r);vec2 p=rsi(r0,r,rAtmos);if (p.x > p.y) {return vec4(0.0,0.0,0.0,1.0);}if (p.x < 0.0) {p.x=0.0;}vec3 pos=r0+r*p.x;vec2 p2=rsi(r0,r,rPlanet);if (p2.x <=p2.y && p2.x > 0.0) {p.y=min(p.y,p2.x);}float iStepSize=(p.y-p.x)/float(iSteps);float iTime=p.x+iStepSize*0.5;vec3 totalRlh=vec3(0,0,0);vec3 totalMie=vec3(0,0,0);float iOdRlh=0.0;float iOdMie=0.0;float mu=dot(r,pSun);float mumu=mu*mu;float gg=g*g;float pRlh=3.0/(16.0*PI)*(1.0+mumu);float pMie=3.0/(8.0*PI)*((1.0-gg)*(mumu+1.0))/(pow(1.0+gg-2.0*mu*g,1.5)*(2.0+gg));for (int i=0; i < iSteps; i++) {vec3 iPos=r0+r*iTime;float iHeight=length(iPos)-rPlanet;float odStepRlh=exp(-iHeight/shRlh)*iStepSize;float odStepMie=exp(-iHeight/shMie)*iStepSize;iOdRlh+=odStepRlh;iOdMie+=odStepMie;float jStepSize=rsi(iPos,pSun,rAtmos).y/float(jSteps);float jTime=jStepSize*0.5;float jOdRlh=0.0;float jOdMie=0.0;for (int j=0; j < jSteps; j++) {vec3 jPos=iPos+pSun*jTime;float jHeight=length(jPos)-rPlanet;jOdRlh+=exp(-jHeight/shRlh)*jStepSize;jOdMie+=exp(-jHeight/shMie)*jStepSize;jTime+=jStepSize;}vec3 attn=exp(-(kMie*(iOdMie+jOdMie)+kRlh*(iOdRlh+jOdRlh)));totalRlh+=odStepRlh*attn;totalMie+=odStepMie*attn;iTime+=iStepSize;}float opacity=exp(-(length(kRlh)*length(totalRlh)+kMie*length(totalMie)));vec3 color=iSun*(pRlh*kRlh*totalRlh+pMie*kMie*totalMie);return vec4(color,opacity);}void main() {vec3 scale_camera_pos=-u_globe_position*EARTH_RADIUS/u_globe_radius;vec4 color=atmosphere(normalize(view_direction),scale_camera_pos,u_sun_pos,22.0,EARTH_RADIUS,ATMOS_RADIUS,vec3(5.5e-6,13.0e-6,22.4e-6),21e-6,8e3,1.2e3,0.758\n);color.rgb=1.0-exp(-1.0*color.rgb);color=pow(color,vec4(1.0/2.2));fragColor=vec4(color.rgb,1.0-color.a)*u_atmosphere_blend;}", "layout(location=0) in vec2 a_pos;uniform mat4 u_inv_proj_matrix;out vec3 view_direction;void main() {view_direction=(u_inv_proj_matrix*vec4(a_pos,0.0,1.0)).xyz;gl_Position=vec4(a_pos,0.0,1.0);}"),
 	sky: prepare("uniform vec4 u_sky_color;uniform vec4 u_horizon_color;uniform vec2 u_horizon;uniform vec2 u_horizon_normal;uniform float u_sky_horizon_blend;uniform float u_sky_blend;void main() {float x=gl_FragCoord.x;float y=gl_FragCoord.y;float blend=(y-u_horizon.y)*u_horizon_normal.y+(x-u_horizon.x)*u_horizon_normal.x;if (blend > 0.0) {if (blend < u_sky_horizon_blend) {fragColor=mix(u_sky_color,u_horizon_color,pow(1.0-blend/u_sky_horizon_blend,2.0));} else {fragColor=u_sky_color;}}fragColor=mix(fragColor,vec4(vec3(0.0),0.0),u_sky_blend);}", "layout(location=0) in vec2 a_pos;void main() {gl_Position=vec4(a_pos,1.0,1.0);}")
 };
@@ -37413,11 +37412,7 @@ var MercatorProjection = class {
 	get transitionState() {
 		return 0;
 	}
-	get latitudeErrorCorrectionRadians() {
-		return 0;
-	}
 	destroy() {}
-	updateGPUdependent(_) {}
 	getMeshFromTileID(context, _tileID, _hasBorder, _allowPoles, _usage) {
 		if (this._cachedMesh) return this._cachedMesh;
 		const tileExtentArray = new PosArray();
@@ -37438,7 +37433,6 @@ var MercatorProjection = class {
 	hasTransition() {
 		return false;
 	}
-	setErrorQueryLatitudeDegrees(_value) {}
 };
 //#endregion
 //#region src/geo/edge_insets.ts
@@ -38581,7 +38575,7 @@ var MercatorTransform = class MercatorTransform {
 	get autoCalculateNearFarZ() {
 		return this._helper.autoCalculateNearFarZ;
 	}
-	setTransitionState(_value, _error) {}
+	setTransitionState(_value) {}
 	constructor(options) {
 		this._posMatrixCache = /* @__PURE__ */ new Map();
 		this._alignedPosMatrixCache = /* @__PURE__ */ new Map();
@@ -39258,238 +39252,6 @@ var MercatorCameraHelper = class {
 //#region src/style/projection_properties.g.ts
 let properties;
 const getProperties = () => properties = properties || new Properties({ "type": new DataConstantProperty(latest["projection"]["type"], "type") });
-//#endregion
-//#region src/webgl/color_mode.ts
-const ZERO = 0;
-const ONE = 1;
-const ONE_MINUS_SRC_ALPHA = 771;
-var ColorMode = class {
-	constructor(blendFunction, blendColor, mask) {
-		this.blendFunction = blendFunction;
-		this.blendColor = blendColor;
-		this.mask = mask;
-	}
-};
-ColorMode.Replace = [ONE, ZERO];
-ColorMode.disabled = new ColorMode(ColorMode.Replace, Color.transparent, [
-	false,
-	false,
-	false,
-	false
-]);
-ColorMode.unblended = new ColorMode(ColorMode.Replace, Color.transparent, [
-	true,
-	true,
-	true,
-	true
-]);
-ColorMode.alphaBlended = new ColorMode([ONE, ONE_MINUS_SRC_ALPHA], Color.transparent, [
-	true,
-	true,
-	true,
-	true
-]);
-//#endregion
-//#region src/webgl/cull_face_mode.ts
-const FRONT = 1028;
-const BACK = 1029;
-const CCW = 2305;
-var CullFaceMode = class {
-	constructor(enable, mode, frontFace) {
-		this.enable = enable;
-		this.mode = mode;
-		this.frontFace = frontFace;
-	}
-};
-CullFaceMode.disabled = new CullFaceMode(false, BACK, CCW);
-CullFaceMode.backCCW = new CullFaceMode(true, BACK, CCW);
-CullFaceMode.frontCCW = new CullFaceMode(true, FRONT, CCW);
-//#endregion
-//#region src/webgl/depth_mode.ts
-const ALWAYS$1 = 519;
-var DepthMode = class {
-	constructor(depthFunc, depthMask, depthRange) {
-		this.func = depthFunc;
-		this.mask = depthMask;
-		this.range = depthRange;
-	}
-};
-DepthMode.ReadOnly = false;
-DepthMode.ReadWrite = true;
-DepthMode.disabled = new DepthMode(ALWAYS$1, DepthMode.ReadOnly, [0, 1]);
-//#endregion
-//#region src/webgl/stencil_mode.ts
-const ALWAYS = 519;
-const KEEP = 7680;
-var StencilMode = class {
-	constructor(test, ref, mask, fail, depthFail, pass) {
-		this.test = test;
-		this.ref = ref;
-		this.mask = mask;
-		this.fail = fail;
-		this.depthFail = depthFail;
-		this.pass = pass;
-	}
-};
-StencilMode.disabled = new StencilMode({
-	func: ALWAYS,
-	mask: 0
-}, 0, 0, KEEP, KEEP, KEEP);
-//#endregion
-//#region src/webgl/program/projection_error_measurement_program.ts
-const projectionErrorMeasurementUniforms = (context, locations) => ({
-	"u_input": new Uniform1f(context, locations.u_input),
-	"u_output_expected": new Uniform1f(context, locations.u_output_expected)
-});
-const projectionErrorMeasurementUniformValues = (input, outputExpected) => ({
-	"u_input": input,
-	"u_output_expected": outputExpected
-});
-//#endregion
-//#region src/geo/projection/globe_projection_error_measurement.ts
-/**
-* For vector globe the vertex shader projects mercator coordinates to angular coordinates on a sphere.
-* This projection requires some inverse trigonometry `atan(exp(...))`, which is inaccurate on some GPUs (mainly on AMD and Nvidia).
-* The inaccuracy is severe enough to require a workaround. The uncorrected map is shifted north-south by up to several hundred meters in some latitudes.
-* Since the inaccuracy is hardware-dependant and may change in the future, we need to measure the error at runtime.
-*
-* Our approach relies on several assumptions:
-*
-* - the error is only present in the "latitude" component (longitude doesn't need any inverse trigonometry)
-* - the error is continuous and changes slowly with latitude
-* - at zoom levels where the error is noticeable, the error is more-or-less the same across the entire visible map area (and thus can be described with a single number)
-*
-* Solution:
-*
-* Every few frames, launch a GPU shader that measures the error for the current map center latitude, and writes it to a 1x1 texture.
-* Read back that texture, and offset the globe projection matrix according to the error (interpolating smoothly from old error to new error if needed).
-* The texture readback is done asynchronously using Pixel Pack Buffers (WebGL2) when possible, and has a few frames of latency, but that should not be a problem.
-*
-* General operation of this class each frame is:
-*
-* - render the error shader into a fbo, read that pixel into a PBO, place a fence
-* - wait a few frames to allow the GPU (and driver) to actually execute the shader
-* - wait for the fence to be signalled (guaranteeing the shader to actually be executed)
-* - read back the PBO's contents
-* - wait a few more frames
-* - repeat
-*/
-var ProjectionErrorMeasurement = class ProjectionErrorMeasurement {
-	get awaitingQuery() {
-		return !!this._readbackQueue;
-	}
-	constructor(renderContext) {
-		this._readbackWaitFrames = 4;
-		this._measureWaitFrames = 6;
-		this._texWidth = 1;
-		this._texHeight = 1;
-		this._measuredError = 0;
-		this._updateCount = 0;
-		this._lastReadbackFrame = -1e3;
-		this._readbackQueue = null;
-		this._cachedRenderContext = renderContext;
-		const context = renderContext.context;
-		const gl = context.gl;
-		this._texFormat = gl.RGBA;
-		this._texType = gl.UNSIGNED_BYTE;
-		const vertexArray = new PosArray();
-		vertexArray.emplaceBack(-1, -1);
-		vertexArray.emplaceBack(2, -1);
-		vertexArray.emplaceBack(-1, 2);
-		const indexArray = new TriangleIndexArray();
-		indexArray.emplaceBack(0, 1, 2);
-		this._fullscreenTriangle = new Mesh(context.createVertexBuffer(vertexArray, posAttributes.members), context.createIndexBuffer(indexArray), SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length));
-		this._resultBuffer = /* @__PURE__ */ new Uint8Array(4);
-		context.activeTexture.set(gl.TEXTURE1);
-		const texture = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, texture);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-		gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, this._texWidth, this._texHeight);
-		this._fbo = context.createFramebuffer(this._texWidth, this._texHeight, false, false);
-		this._fbo.colorAttachment.set(texture);
-		this._pbo = gl.createBuffer();
-		gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
-		gl.bufferData(gl.PIXEL_PACK_BUFFER, 4, gl.STREAM_READ);
-		gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-	}
-	destroy() {
-		const gl = this._cachedRenderContext.context.gl;
-		this._fullscreenTriangle.destroy();
-		this._fbo.destroy();
-		gl.deleteBuffer(this._pbo);
-		this._fullscreenTriangle = null;
-		this._fbo = null;
-		this._pbo = null;
-		this._resultBuffer = null;
-	}
-	updateErrorLoop(normalizedMercatorY, expectedAngleY) {
-		const currentFrame = this._updateCount;
-		if (this._readbackQueue) {
-			if (currentFrame >= this._readbackQueue.frameNumberIssued + this._readbackWaitFrames) this._tryReadback();
-		} else if (currentFrame >= this._lastReadbackFrame + this._measureWaitFrames) this._renderErrorTexture(normalizedMercatorY, expectedAngleY);
-		this._updateCount++;
-		return this._measuredError;
-	}
-	_bindFramebuffer() {
-		const context = this._cachedRenderContext.context;
-		const gl = context.gl;
-		context.activeTexture.set(gl.TEXTURE1);
-		gl.bindTexture(gl.TEXTURE_2D, this._fbo.colorAttachment.get());
-		context.bindFramebuffer.set(this._fbo.framebuffer);
-	}
-	_renderErrorTexture(input, outputExpected) {
-		const context = this._cachedRenderContext.context;
-		const gl = context.gl;
-		this._bindFramebuffer();
-		context.viewport.set([
-			0,
-			0,
-			this._texWidth,
-			this._texHeight
-		]);
-		context.clear({ color: Color.transparent });
-		this._cachedRenderContext.useProgram("projectionErrorMeasurement").draw(context, gl.TRIANGLES, DepthMode.disabled, StencilMode.disabled, ColorMode.unblended, CullFaceMode.disabled, projectionErrorMeasurementUniformValues(input, outputExpected), null, null, "$clipping", this._fullscreenTriangle.vertexBuffer, this._fullscreenTriangle.indexBuffer, this._fullscreenTriangle.segments);
-		gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
-		gl.readBuffer(gl.COLOR_ATTACHMENT0);
-		gl.readPixels(0, 0, this._texWidth, this._texHeight, this._texFormat, this._texType, 0);
-		gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-		const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
-		gl.flush();
-		this._readbackQueue = {
-			frameNumberIssued: this._updateCount,
-			sync
-		};
-	}
-	_tryReadback() {
-		const gl = this._cachedRenderContext.context.gl;
-		if (!this._readbackQueue) return;
-		const waitResult = gl.clientWaitSync(this._readbackQueue.sync, 0, 0);
-		if (waitResult === gl.WAIT_FAILED) {
-			warnOnce("WebGL2 clientWaitSync failed.");
-			this._readbackQueue = null;
-			this._lastReadbackFrame = this._updateCount;
-			return;
-		}
-		if (waitResult === gl.TIMEOUT_EXPIRED) return;
-		gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
-		gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, this._resultBuffer, 0, 4);
-		gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-		this._readbackQueue = null;
-		this._measuredError = ProjectionErrorMeasurement._parseRGBA8float(this._resultBuffer);
-		this._lastReadbackFrame = this._updateCount;
-	}
-	static _parseRGBA8float(buffer) {
-		let result = 0;
-		result += buffer[0] / 256;
-		result += buffer[1] / 65536;
-		result += buffer[2] / 16777216;
-		if (buffer[3] < 127) result = -result;
-		return result / 128;
-	}
-};
 /**
 * @internal
 * Creates a mesh of a quad that covers the entire tile (covering positions in range 0..EXTENT),
@@ -39584,7 +39346,6 @@ function createTileMesh(options, forceIndicesSize) {
 //#region src/geo/projection/vertical_perspective_projection.ts
 const VerticalPerspectiveShaderDefine = "#define GLOBE";
 const VerticalPerspectiveShaderVariantKey = "globe";
-const globeConstants = { errorTransitionTimeSeconds: .5 };
 const granularitySettingsGlobe = new SubdivisionGranularitySetting({
 	fill: new SubdivisionGranularityExpression(128, 2),
 	line: new SubdivisionGranularityExpression(512, 0),
@@ -39595,10 +39356,6 @@ const granularitySettingsGlobe = new SubdivisionGranularitySetting({
 var VerticalPerspectiveProjection = class {
 	constructor() {
 		this._tileMeshCache = {};
-		this._errorCorrectionUsable = 0;
-		this._errorMeasurementLastValue = 0;
-		this._errorCorrectionPreviousValue = 0;
-		this._errorMeasurementLastChangeTime = -1e3;
 	}
 	get name() {
 		return "vertical-perspective";
@@ -39627,35 +39384,7 @@ var VerticalPerspectiveProjection = class {
 	get useGlobeControls() {
 		return true;
 	}
-	/**
-	* @internal
-	* Globe projection periodically measures the error of the GPU's
-	* projection from mercator to globe and computes how much to correct
-	* the globe's latitude alignment.
-	* This stores the correction that should be applied to the projection matrix.
-	*/
-	get latitudeErrorCorrectionRadians() {
-		return this._errorCorrectionUsable;
-	}
-	destroy() {
-		if (this._errorMeasurement) this._errorMeasurement.destroy();
-	}
-	updateGPUdependent(renderContext) {
-		this._errorMeasurement ||= new ProjectionErrorMeasurement(renderContext);
-		const mercatorY = mercatorYfromLat$1(this._errorQueryLatitudeDegrees);
-		const expectedResult = 2 * Math.atan(Math.exp(Math.PI - mercatorY * Math.PI * 2)) - Math.PI * .5;
-		const newValue = this._errorMeasurement.updateErrorLoop(mercatorY, expectedResult);
-		const currentTime = now();
-		if (newValue !== this._errorMeasurementLastValue) {
-			this._errorCorrectionPreviousValue = this._errorCorrectionUsable;
-			this._errorMeasurementLastValue = newValue;
-			this._errorMeasurementLastChangeTime = currentTime;
-		}
-		const sinceUpdateSeconds = (currentTime - this._errorMeasurementLastChangeTime) / 1e3;
-		const mix = Math.min(Math.max(sinceUpdateSeconds / globeConstants.errorTransitionTimeSeconds, 0), 1);
-		const newCorrection = -this._errorMeasurementLastValue;
-		this._errorCorrectionUsable = lerp(this._errorCorrectionPreviousValue, newCorrection, easeCubicInOut(mix));
-	}
+	destroy() {}
 	_getMeshKey(options) {
 		return `${options.granularity.toString(36)}_${options.generateBorders ? "b" : ""}${options.extendToNorthPole ? "n" : ""}${options.extendToSouthPole ? "s" : ""}`;
 	}
@@ -39679,14 +39408,7 @@ var VerticalPerspectiveProjection = class {
 	}
 	recalculate(_params) {}
 	hasTransition() {
-		const currentTime = now();
-		let dirty = false;
-		dirty ||= (currentTime - this._errorMeasurementLastChangeTime) / 1e3 < globeConstants.errorTransitionTimeSeconds + .2;
-		dirty ||= this._errorMeasurement?.awaitingQuery;
-		return dirty;
-	}
-	setErrorQueryLatitudeDegrees(value) {
-		this._errorQueryLatitudeDegrees = value;
+		return false;
 	}
 };
 //#endregion
@@ -39713,9 +39435,6 @@ var GlobeProjection = class extends Evented {
 	}
 	get useGlobeRendering() {
 		return this.transitionState > 0;
-	}
-	get latitudeErrorCorrectionRadians() {
-		return this._verticalPerspectiveProjection.latitudeErrorCorrectionRadians;
 	}
 	get currentProjection() {
 		return this.useGlobeRendering ? this._verticalPerspectiveProjection : this._mercatorProjection;
@@ -39748,10 +39467,6 @@ var GlobeProjection = class extends Evented {
 		this._mercatorProjection.destroy();
 		this._verticalPerspectiveProjection.destroy();
 	}
-	updateGPUdependent(context) {
-		this._mercatorProjection.updateGPUdependent(context);
-		this._verticalPerspectiveProjection.updateGPUdependent(context);
-	}
 	getMeshFromTileID(context, _tileID, _hasBorder, _allowPoles, _usage) {
 		return this.currentProjection.getMeshFromTileID(context, _tileID, _hasBorder, _allowPoles, _usage);
 	}
@@ -39766,10 +39481,6 @@ var GlobeProjection = class extends Evented {
 	}
 	recalculate(parameters) {
 		this.properties = this._transitioning.possiblyEvaluate(parameters);
-	}
-	setErrorQueryLatitudeDegrees(value) {
-		this._verticalPerspectiveProjection.setErrorQueryLatitudeDegrees(value);
-		this._mercatorProjection.setErrorQueryLatitudeDegrees(value);
 	}
 };
 //#endregion
@@ -40570,11 +40281,10 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		this._cachedClippingPlane = createVec4f64();
 		this._projectionMatrix = createIdentityMat4f64();
 		this._globeViewProjMatrix32f = createIdentityMat4f32();
-		this._globeViewProjMatrixNoCorrection = createIdentityMat4f64();
-		this._globeViewProjMatrixNoCorrectionInverted = createIdentityMat4f64();
+		this._globeViewProjMatrixF64 = createIdentityMat4f64();
+		this._globeViewProjMatrixF64Inverted = createIdentityMat4f64();
 		this._globeProjMatrixInverted = createIdentityMat4f64();
 		this._cameraPosition = createVec3f64();
-		this._globeLatitudeErrorCorrectionRadians = 0;
 		this.defaultConstrain = (lngLat, zoom) => {
 			const constrainedLat = clamp$2(lngLat.lat, -85.051129, MAX_VALID_LATITUDE);
 			const constrainedZoom = clamp$2(+zoom, this.minZoom + getZoomAdjustment(0, constrainedLat), this.maxZoom);
@@ -40599,15 +40309,14 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		clone.apply(this, false);
 		return clone;
 	}
-	apply(that, constrain, globeLatitudeErrorCorrectionRadians) {
-		this._globeLatitudeErrorCorrectionRadians = globeLatitudeErrorCorrectionRadians || 0;
+	apply(that, constrain) {
 		this._helper.apply(that, constrain);
 	}
 	get projectionMatrix() {
 		return this._projectionMatrix;
 	}
 	get modelViewProjectionMatrix() {
-		return this._globeViewProjMatrixNoCorrection;
+		return this._globeViewProjMatrixF64;
 	}
 	get inverseProjectionMatrix() {
 		return this._globeProjMatrixInverted;
@@ -40728,7 +40437,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 			spherePos[2] * vectorMultiplier,
 			1
 		];
-		transformMat4$1(pos, pos, this._globeViewProjMatrixNoCorrection);
+		transformMat4$1(pos, pos, this._globeViewProjMatrixF64);
 		const plane = this._cachedClippingPlane;
 		const isOccluded = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3] < 0;
 		return {
@@ -40741,7 +40450,6 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		if (!this._helper._width || !this._helper._height) return;
 		const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
 		const globeMatrix = createMat4f64();
-		const globeMatrixUncorrected = createMat4f64();
 		if (this._helper.autoCalculateNearFarZ) {
 			this._helper._nearZ = .5;
 			this._helper._farZ = this.cameraToCenterDistance + globeRadiusPixels * 2;
@@ -40770,16 +40478,13 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		scaleVec[0] = globeRadiusPixels;
 		scaleVec[1] = globeRadiusPixels;
 		scaleVec[2] = globeRadiusPixels;
-		rotateX$1(globeMatrixUncorrected, globeMatrix, this.center.lat * Math.PI / 180);
-		rotateY$1(globeMatrixUncorrected, globeMatrixUncorrected, -this.center.lng * Math.PI / 180);
-		scale$3(globeMatrixUncorrected, globeMatrixUncorrected, scaleVec);
-		this._globeViewProjMatrixNoCorrection = globeMatrixUncorrected;
-		rotateX$1(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180 - this._globeLatitudeErrorCorrectionRadians);
+		rotateX$1(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180);
 		rotateY$1(globeMatrix, globeMatrix, -this.center.lng * Math.PI / 180);
 		scale$3(globeMatrix, globeMatrix, scaleVec);
+		this._globeViewProjMatrixF64 = globeMatrix;
 		this._globeViewProjMatrix32f = new Float32Array(globeMatrix);
-		this._globeViewProjMatrixNoCorrectionInverted = createMat4f64();
-		invert(this._globeViewProjMatrixNoCorrectionInverted, globeMatrixUncorrected);
+		this._globeViewProjMatrixF64Inverted = createMat4f64();
+		invert(this._globeViewProjMatrixF64Inverted, globeMatrix);
 		const zero = createVec3f64();
 		this._cameraPosition = createVec3f64();
 		this._cameraPosition[2] = this.cameraToCenterDistance / globeRadiusPixels;
@@ -40794,7 +40499,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		rotateX(this._cameraPosition, this._cameraPosition, zero, -this.center.lat * Math.PI / 180);
 		rotateY(this._cameraPosition, this._cameraPosition, zero, this.center.lng * Math.PI / 180);
 		this._cachedClippingPlane = this._computeClippingPlane(globeRadiusPixels);
-		const matrix = clone$2(this._globeViewProjMatrixNoCorrectionInverted);
+		const matrix = clone$2(this._globeViewProjMatrixF64Inverted);
 		scale$3(matrix, matrix, [
 			1,
 			1,
@@ -40840,7 +40545,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		return this._helper.getCameraLngLat();
 	}
 	lngLatToCameraDepth(lngLat, elevation) {
-		if (!this._globeViewProjMatrixNoCorrection) return 1;
+		if (!this._globeViewProjMatrixF64) return 1;
 		const vec = angularCoordinatesToSurfaceVector(lngLat);
 		scale$2(vec, vec, 1 + elevation / earthRadius);
 		const result = createVec4f64();
@@ -40849,7 +40554,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 			vec[1],
 			vec[2],
 			1
-		], this._globeViewProjMatrixNoCorrection);
+		], this._globeViewProjMatrixF64);
 		return result[2] / result[3];
 	}
 	populateCache(_coords) {}
@@ -40975,7 +40680,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 	*/
 	_projectSurfacePointToScreen(pos) {
 		const projected = createVec4f64();
-		transformMat4$1(projected, [...pos, 1], this._globeViewProjMatrixNoCorrection);
+		transformMat4$1(projected, [...pos, 1], this._globeViewProjMatrixF64);
 		projected[0] /= projected[3];
 		projected[1] /= projected[3];
 		return new Point((projected[0] * .5 + .5) * this.width, (-projected[1] * .5 + .5) * this.height);
@@ -41004,7 +40709,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 		pos[1] = (p.y / this.height * 2 - 1) * -1;
 		pos[2] = 1;
 		pos[3] = 1;
-		transformMat4$1(pos, pos, this._globeViewProjMatrixNoCorrectionInverted);
+		transformMat4$1(pos, pos, this._globeViewProjMatrixF64Inverted);
 		pos[0] /= pos[3];
 		pos[1] /= pos[3];
 		pos[2] /= pos[3];
@@ -41031,7 +40736,7 @@ var VerticalPerspectiveTransform = class VerticalPerspectiveTransform {
 	isSurfacePointOnScreen(vec) {
 		if (!this.isSurfacePointVisible(vec)) return false;
 		const projected = createVec4f64();
-		transformMat4$1(projected, [...vec, 1], this._globeViewProjMatrixNoCorrection);
+		transformMat4$1(projected, [...vec, 1], this._globeViewProjMatrixF64);
 		projected[0] /= projected[3];
 		projected[1] /= projected[3];
 		projected[2] /= projected[3];
@@ -41332,9 +41037,8 @@ var GlobeTransform = class GlobeTransform {
 	get isGlobeRendering() {
 		return this._globeness > 0;
 	}
-	setTransitionState(globeness, errorCorrectionValue) {
+	setTransitionState(globeness) {
 		this._globeness = globeness;
-		this._globeLatitudeErrorCorrectionRadians = errorCorrectionValue;
 		this._calcMatrices();
 		this._verticalPerspectiveTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
 		this._mercatorTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
@@ -41343,7 +41047,6 @@ var GlobeTransform = class GlobeTransform {
 		return this.isGlobeRendering ? this._verticalPerspectiveTransform : this._mercatorTransform;
 	}
 	constructor(options) {
-		this._globeLatitudeErrorCorrectionRadians = 0;
 		this._globeness = 1;
 		this.defaultConstrain = (lngLat, zoom) => {
 			return this.currentTransform.defaultConstrain(lngLat, zoom);
@@ -41364,14 +41067,13 @@ var GlobeTransform = class GlobeTransform {
 	clone() {
 		const clone = new GlobeTransform();
 		clone._globeness = this._globeness;
-		clone._globeLatitudeErrorCorrectionRadians = this._globeLatitudeErrorCorrectionRadians;
 		clone.apply(this, false);
 		return clone;
 	}
 	apply(that, constrain) {
 		this._helper.apply(that, constrain);
 		this._mercatorTransform.apply(this, false);
-		this._verticalPerspectiveTransform.apply(this, false, this._globeLatitudeErrorCorrectionRadians);
+		this._verticalPerspectiveTransform.apply(this, false);
 	}
 	get projectionMatrix() {
 		return this.currentTransform.projectionMatrix;
@@ -41416,7 +41118,7 @@ var GlobeTransform = class GlobeTransform {
 	}
 	_calcMatrices() {
 		if (!this._helper._width || !this._helper._height) return;
-		this._verticalPerspectiveTransform.apply(this, false, this._globeLatitudeErrorCorrectionRadians);
+		this._verticalPerspectiveTransform.apply(this, false);
 		this._helper._nearZ = this._verticalPerspectiveTransform.nearZ;
 		this._helper._farZ = this._verticalPerspectiveTransform.farZ;
 		this._mercatorTransform.apply(this, true, this.isGlobeRendering);
@@ -44514,7 +44216,6 @@ const programUniforms = {
 	terrain: terrainUniforms,
 	terrainDepth: terrainDepthUniforms,
 	terrainCoords: terrainCoordsUniforms,
-	projectionErrorMeasurement: projectionErrorMeasurementUniforms,
 	atmosphere: atmosphereUniforms,
 	sky: skyUniforms
 };
@@ -45103,6 +44804,37 @@ var Framebuffer = class {
 	}
 };
 //#endregion
+//#region src/webgl/color_mode.ts
+const ZERO = 0;
+const ONE = 1;
+const ONE_MINUS_SRC_ALPHA = 771;
+var ColorMode = class {
+	constructor(blendFunction, blendColor, mask) {
+		this.blendFunction = blendFunction;
+		this.blendColor = blendColor;
+		this.mask = mask;
+	}
+};
+ColorMode.Replace = [ONE, ZERO];
+ColorMode.disabled = new ColorMode(ColorMode.Replace, Color.transparent, [
+	false,
+	false,
+	false,
+	false
+]);
+ColorMode.unblended = new ColorMode(ColorMode.Replace, Color.transparent, [
+	true,
+	true,
+	true,
+	true
+]);
+ColorMode.alphaBlended = new ColorMode([ONE, ONE_MINUS_SRC_ALPHA], Color.transparent, [
+	true,
+	true,
+	true,
+	true
+]);
+//#endregion
 //#region src/webgl/context.ts
 /**
 * @internal
@@ -45305,6 +45037,52 @@ var Context = class {
 		this.bindVertexArray.set(null);
 	}
 };
+//#endregion
+//#region src/webgl/depth_mode.ts
+const ALWAYS$1 = 519;
+var DepthMode = class {
+	constructor(depthFunc, depthMask, depthRange) {
+		this.func = depthFunc;
+		this.mask = depthMask;
+		this.range = depthRange;
+	}
+};
+DepthMode.ReadOnly = false;
+DepthMode.ReadWrite = true;
+DepthMode.disabled = new DepthMode(ALWAYS$1, DepthMode.ReadOnly, [0, 1]);
+//#endregion
+//#region src/webgl/stencil_mode.ts
+const ALWAYS = 519;
+const KEEP = 7680;
+var StencilMode = class {
+	constructor(test, ref, mask, fail, depthFail, pass) {
+		this.test = test;
+		this.ref = ref;
+		this.mask = mask;
+		this.fail = fail;
+		this.depthFail = depthFail;
+		this.pass = pass;
+	}
+};
+StencilMode.disabled = new StencilMode({
+	func: ALWAYS,
+	mask: 0
+}, 0, 0, KEEP, KEEP, KEEP);
+//#endregion
+//#region src/webgl/cull_face_mode.ts
+const FRONT = 1028;
+const BACK = 1029;
+const CCW = 2305;
+var CullFaceMode = class {
+	constructor(enable, mode, frontFace) {
+		this.enable = enable;
+		this.mode = mode;
+		this.frontFace = frontFace;
+	}
+};
+CullFaceMode.disabled = new CullFaceMode(false, BACK, CCW);
+CullFaceMode.backCCW = new CullFaceMode(true, BACK, CCW);
+CullFaceMode.frontCCW = new CullFaceMode(true, FRONT, CCW);
 //#endregion
 //#region src/webgl/draw/draw_collision_debug.ts
 let quadTriangles;
@@ -47280,10 +47058,6 @@ var Painter = class Painter {
 			if (layer.type !== "custom" && !coords.length) continue;
 			this.renderLayer(this, tileManagers[layer.source], layer, coords, renderOptions);
 		}
-		this.style.projection?.updateGPUdependent({
-			context: this.context,
-			useProgram: (name) => this.useProgram(name)
-		});
 		this.context.viewport.set([
 			0,
 			0,
@@ -54884,8 +54658,7 @@ var Map$1 = class extends Evented {
 			this.style.update(parameters);
 		}
 		const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
-		this.style.projection?.setErrorQueryLatitudeDegrees(this._camera.transform.center.lat);
-		this._camera.transform.setTransitionState(this.style.projection?.transitionState, this.style.projection?.latitudeErrorCorrectionRadians);
+		this._camera.transform.setTransitionState(this.style.projection?.transitionState);
 		if (this.style && (this._sourcesDirty || globeRenderingChanged)) {
 			this._sourcesDirty = false;
 			this.style._updateSources(this._camera.transform);
@@ -61007,7 +60780,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 14dfbcf";
+const version = "main 0d0cd8b";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
