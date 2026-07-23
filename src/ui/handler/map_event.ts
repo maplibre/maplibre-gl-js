@@ -101,13 +101,14 @@ export class MapEventHandler implements Handler {
     disable(): void {}
 }
 
-// A single finger held in place this long fires a long-press contextmenu.
+/**
+ * A single finger held in place this long fires a long-press contextmenu.
+ */
 const LONG_PRESS_DELAY = 500;
-// How far the finger may drift before it counts as a pan, not a long press.
-const LONG_PRESS_MOVE_TOLERANCE = 10;
 
 export class BlockableMapEventHandler {
     _map: Map;
+    _clickTolerance: number;
     _delayContextMenu: boolean;
     _ignoreContextMenu: boolean;
     _contextMenuEvent: MouseEvent;
@@ -115,8 +116,11 @@ export class BlockableMapEventHandler {
     _longPressTimer: ReturnType<typeof setTimeout>;
     _longPressStart: Point;
 
-    constructor(map: Map) {
+    constructor(map: Map, options: {
+        clickTolerance: number;
+    }) {
         this._map = map;
+        this._clickTolerance = options.clickTolerance || 1;
     }
 
     reset(): void {
@@ -145,11 +149,16 @@ export class BlockableMapEventHandler {
         }
     }
 
-    // Touch long press. Touch devices have no right click, so a long press opens
-    // the context menu. We detect it with a timer rather than relying on a native
-    // contextmenu event, because Android Chrome fires one on a long press but iOS
-    // Safari does not. A single finger held past the delay without moving fires a
-    // contextmenu at that point; a pan or a lift cancels it.
+    /**
+     * Starts the touch long press. Touch devices have no right click, so a long press opens
+     * the context menu. It is detected with a timer rather than by relying on a native
+     * contextmenu event, because Android Chrome fires one on a long press but iOS
+     * Safari does not. A single finger held past the delay without moving fires a
+     * contextmenu at that point; a pan or a lift cancels it.
+     * @param e - the touch event
+     * @param points - the touch points, in map coordinates
+     * @param mapTouches - the touches that are on the map
+     */
     touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): void {
         this._clearLongPress();
         this._touchActive = mapTouches.length > 0;
@@ -163,9 +172,16 @@ export class BlockableMapEventHandler {
         }, LONG_PRESS_DELAY);
     }
 
+    /**
+     * Cancels a pending long press once the finger has moved further than the map's
+     * click tolerance, or once a second finger lands.
+     * @param e - the touch event
+     * @param points - the touch points, in map coordinates
+     * @param mapTouches - the touches that are on the map
+     */
     touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): void {
         if (!this._longPressTimer) return;
-        if (mapTouches.length !== 1 || !this._longPressStart || points[0].dist(this._longPressStart) > LONG_PRESS_MOVE_TOLERANCE) {
+        if (mapTouches.length !== 1 || !this._longPressStart || points[0].dist(this._longPressStart) > this._clickTolerance) {
             this._clearLongPress();
         }
     }

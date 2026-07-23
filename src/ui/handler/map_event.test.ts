@@ -1,4 +1,4 @@
-import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {Map} from '../map.ts';
 import {DOM} from '../../util/dom.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
@@ -157,31 +157,35 @@ describe('map events', () => {
         expect(contextmenu).toHaveBeenCalledTimes(0);
     });
 
-    test('MapEvent handler fires a contextmenu after a single finger is held in place (touch long press)', () => {
-        const map = createMap();
-        const contextmenu = vi.fn();
-        map.on('contextmenu', contextmenu);
-        const touches = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
-        vi.useFakeTimers();
-        try {
+    describe('touch long press', () => {
+        beforeEach(() => {
+            vi.useFakeTimers();
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        test('MapEvent handler fires a contextmenu after a single finger is held in place', () => {
+            const map = createMap();
+            const contextmenu = vi.fn();
+            map.on('contextmenu', contextmenu);
+            const touches = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
+
             simulate.touchstart(map.getCanvas(), {touches, targetTouches: touches});
             expect(contextmenu).toHaveBeenCalledTimes(0); // still holding
             vi.advanceTimersByTime(500);
             expect(contextmenu).toHaveBeenCalledTimes(1); // long press elapsed
             expect(contextmenu.mock.calls[0][0].point).toBeTruthy();
-        } finally {
-            vi.useRealTimers();
-        }
-    });
+        });
 
-    test('MapEvent handler suppresses a native contextmenu during a touch so the long press does not double-fire', () => {
-        const map = createMap();
-        const relatedTarget = map.getCanvas();
-        const contextmenu = vi.fn();
-        map.on('contextmenu', contextmenu);
-        const touches = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
-        vi.useFakeTimers();
-        try {
+        test('MapEvent handler suppresses a native contextmenu during a touch so the long press does not double-fire', () => {
+            const map = createMap();
+            const relatedTarget = map.getCanvas();
+            const contextmenu = vi.fn();
+            map.on('contextmenu', contextmenu);
+            const touches = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
+
             simulate.touchstart(map.getCanvas(), {touches, targetTouches: touches});
             // Android fires a native contextmenu mid-press; it must be suppressed so
             // only the timer fires the map event.
@@ -189,51 +193,69 @@ describe('map events', () => {
             vi.advanceTimersByTime(500);
             simulate.touchend(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: touches});
             expect(contextmenu).toHaveBeenCalledTimes(1); // exactly once, from the timer
-        } finally {
-            vi.useRealTimers();
-        }
-    });
+        });
 
-    test('MapEvent handler does not fire a contextmenu on a short tap', () => {
-        const map = createMap();
-        const contextmenu = vi.fn();
-        map.on('contextmenu', contextmenu);
-        const touches = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
-        vi.useFakeTimers();
-        try {
+        test('MapEvent handler does not fire a contextmenu on a short tap', () => {
+            const map = createMap();
+            const contextmenu = vi.fn();
+            map.on('contextmenu', contextmenu);
+            const touches = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
+
             simulate.touchstart(map.getCanvas(), {touches, targetTouches: touches});
             simulate.touchend(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: touches}); // lifts before the delay
             vi.advanceTimersByTime(500);
             expect(contextmenu).toHaveBeenCalledTimes(0);
-        } finally {
-            vi.useRealTimers();
-        }
-    });
+        });
 
-    test('MapEvent handler cancels the long press when the finger moves (a pan)', () => {
-        const map = createMap();
-        const contextmenu = vi.fn();
-        map.on('contextmenu', contextmenu);
-        const start = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
-        const moved = [{target: map.getCanvas(), clientX: 40, clientY: 40}];
-        vi.useFakeTimers();
-        try {
+        test('MapEvent handler cancels the long press when the finger moves further than the click tolerance (a pan)', () => {
+            const map = createMap();
+            const contextmenu = vi.fn();
+            map.on('contextmenu', contextmenu);
+            const start = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
+            const moved = [{target: map.getCanvas(), clientX: 40, clientY: 40}];
+
             simulate.touchstart(map.getCanvas(), {touches: start, targetTouches: start});
             simulate.touchmove(map.getCanvas(), {touches: moved, targetTouches: moved});
             vi.advanceTimersByTime(500);
             expect(contextmenu).toHaveBeenCalledTimes(0);
-        } finally {
-            vi.useRealTimers();
-        }
-    });
+        });
 
-    test('MapEvent handler cancels the long press on touchcancel, and does not leak to the next tap', () => {
-        const map = createMap();
-        const contextmenu = vi.fn();
-        map.on('contextmenu', contextmenu);
-        const touches = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
-        vi.useFakeTimers();
-        try {
+        test('MapEvent handler keeps the long press alive when the finger drifts within the click tolerance', () => {
+            const map = createMap();
+            const contextmenu = vi.fn();
+            map.on('contextmenu', contextmenu);
+            const start = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
+            const drifted = [{target: map.getCanvas(), clientX: 11, clientY: 11}]; // ~1.4px, under the default tolerance of 3
+
+            simulate.touchstart(map.getCanvas(), {touches: start, targetTouches: start});
+            simulate.touchmove(map.getCanvas(), {touches: drifted, targetTouches: drifted});
+            vi.advanceTimersByTime(500);
+            expect(contextmenu).toHaveBeenCalledTimes(1);
+        });
+
+        test('MapEvent handler fires the contextmenu once when the press is held past the delay and then dragged', () => {
+            const map = createMap();
+            const contextmenu = vi.fn();
+            map.on('contextmenu', contextmenu);
+            const start = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
+            const moved = [{target: map.getCanvas(), clientX: 40, clientY: 40}];
+
+            simulate.touchstart(map.getCanvas(), {touches: start, targetTouches: start});
+            vi.advanceTimersByTime(500);
+            expect(contextmenu).toHaveBeenCalledTimes(1); // fired at the delay, before the drag
+            // the drag afterwards pans as usual and must not fire a second contextmenu
+            simulate.touchmove(map.getCanvas(), {touches: moved, targetTouches: moved});
+            simulate.touchend(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: moved});
+            vi.advanceTimersByTime(500);
+            expect(contextmenu).toHaveBeenCalledTimes(1);
+        });
+
+        test('MapEvent handler cancels the long press on touchcancel, and does not leak to the next tap', () => {
+            const map = createMap();
+            const contextmenu = vi.fn();
+            map.on('contextmenu', contextmenu);
+            const touches = [{target: map.getCanvas(), clientX: 10, clientY: 10}];
+
             simulate.touchstart(map.getCanvas(), {touches, targetTouches: touches});
             simulate.touchcancel(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: touches});
             vi.advanceTimersByTime(500);
@@ -243,24 +265,18 @@ describe('map events', () => {
             simulate.touchend(map.getCanvas(), {touches: [], targetTouches: [], changedTouches: touches});
             vi.advanceTimersByTime(500);
             expect(contextmenu).toHaveBeenCalledTimes(0);
-        } finally {
-            vi.useRealTimers();
-        }
-    });
+        });
 
-    test('MapEvent handler does not start a long press for a two-finger touch (pinch)', () => {
-        const map = createMap();
-        const contextmenu = vi.fn();
-        map.on('contextmenu', contextmenu);
-        const two = [{target: map.getCanvas(), clientX: 10, clientY: 10}, {target: map.getCanvas(), clientX: 60, clientY: 60}];
-        vi.useFakeTimers();
-        try {
+        test('MapEvent handler does not start a long press for a two-finger touch (pinch)', () => {
+            const map = createMap();
+            const contextmenu = vi.fn();
+            map.on('contextmenu', contextmenu);
+            const two = [{target: map.getCanvas(), clientX: 10, clientY: 10}, {target: map.getCanvas(), clientX: 60, clientY: 60}];
+
             simulate.touchstart(map.getCanvas(), {touches: two, targetTouches: two});
             vi.advanceTimersByTime(500);
             expect(contextmenu).toHaveBeenCalledTimes(0);
-        } finally {
-            vi.useRealTimers();
-        }
+        });
     });
 
     test('MapMouseEvent constructor does not throw error with Event instance instead of MouseEvent as originalEvent param', () => {
