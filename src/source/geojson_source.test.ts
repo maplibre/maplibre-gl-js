@@ -1333,8 +1333,9 @@ describe('GeoJSONSource.getClusterOptions', () => {
             cluster: false
         }, mockDispatcher, undefined);
 
-        await source.setClusterOptions({cluster: true, clusterRadius: 40, clusterMaxZoom: 9});
+        const options = {cluster: true, clusterMaxZoom: 9, clusterRadius: 40};
+        await source.setClusterOptions(options);
 
-        expect(source.getClusterOptions()).toEqual({cluster: true, clusterMaxZoom: 9, clusterRadius: 40});
+        expect(source.getClusterOptions()).toEqual(options);
     });
 });
