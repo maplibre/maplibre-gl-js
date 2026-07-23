@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Support `global-state` expressions in `light.*` properties ([#7966](https://github.com/maplibre/maplibre-gl-js/pull/7966)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Add `MapOptions.rotateSpeed` and `MapOptions.pitchSpeed`, the degrees the bearing/pitch change per pixel dragged ([#7949](https://github.com/maplibre/maplibre-gl-js/pull/7949)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
