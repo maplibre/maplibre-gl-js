@@ -3,25 +3,12 @@
   "metadata": {
     "test": {
       "width": 64,
-      "height": 64,
-      "operations": [
-        [
-          "wait"
-        ],
-        [
-          "setGlobalStateProperty",
-          "lightIntensity",
-          1
-        ],
-        [
-          "wait"
-        ]
-      ]
+      "height": 64
     }
   },
   "state": {
     "lightIntensity": {
-      "default": 0.2
+      "default": 1
     }
   },
   "light": {

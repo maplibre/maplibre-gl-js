@@ -3,25 +3,12 @@
   "metadata": {
     "test": {
       "height": 64,
-      "width": 64,
-      "operations": [
-        [
-          "wait"
-        ],
-        [
-          "setGlobalStateProperty",
-          "lightAnchor",
-          "map"
-        ],
-        [
-          "wait"
-        ]
-      ]
+      "width": 64
     }
   },
   "state": {
     "lightAnchor": {
-      "default": "viewport"
+      "default": "map"
     }
   },
   "light": {

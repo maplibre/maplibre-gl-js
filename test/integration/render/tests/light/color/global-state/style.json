@@ -3,25 +3,12 @@
   "metadata": {
     "test": {
       "height": 64,
-      "width": 64,
-      "operations": [
-        [
-          "wait"
-        ],
-        [
-          "setGlobalStateProperty",
-          "lightColor",
-          "red"
-        ],
-        [
-          "wait"
-        ]
-      ]
+      "width": 64
     }
   },
   "state": {
     "lightColor": {
-      "default": "blue"
+      "default": "red"
     }
   },
   "light": {
