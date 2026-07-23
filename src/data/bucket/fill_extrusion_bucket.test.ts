@@ -43,4 +43,26 @@ describe('FillExtrusionBucket', () => {
             test: {min: 'test-pattern', mid: 'test-pattern', max: 'test-pattern'}
         });
     });
+
+    test('FillExtrusionBucket populates vertices with fill-extrusion-rounded-corner-distance layout property', () => {
+        const bucketWithoutRounding = createFillExtrusionBucket({
+            id: 'test-no-rounding',
+            layout: {'fill-extrusion-rounded-corner-distance': 0},
+            paint: {'fill-extrusion-height': 10}
+        });
+        const bucketWithRounding = createFillExtrusionBucket({
+            id: 'test-rounding',
+            layout: {'fill-extrusion-rounded-corner-distance': 5},
+            paint: {'fill-extrusion-height': 10}
+        });
+
+        const features = getFeaturesFromLayer(sourceLayer);
+        const populateOptions = createPopulateOptions([]);
+
+        bucketWithoutRounding.populate(features, populateOptions, {x: 0, y: 0, z: 14} as any);
+        bucketWithRounding.populate(features, populateOptions, {x: 0, y: 0, z: 14} as any);
+
+        expect(bucketWithoutRounding.layoutVertexArray.length).toBeGreaterThan(0);
+        expect(bucketWithRounding.layoutVertexArray.length).toBeGreaterThan(bucketWithoutRounding.layoutVertexArray.length);
+    });
 });
