@@ -24541,9 +24541,9 @@ const getProperties$1 = () => properties$1 = properties$1 || new Properties({
 //#endregion
 //#region src/style/sky.ts
 var Sky = class extends Evented {
-	constructor(sky) {
+	constructor(sky, globalState) {
 		super();
-		this._transitionable = new Transitionable(getProperties$1(), "sky", void 0);
+		this._transitionable = new Transitionable(getProperties$1(), "sky", globalState);
 		this.setSky(sky);
 		this._transitioning = this._transitionable.untransitioned();
 		this.recalculate(new EvaluationParameters(0));
@@ -41805,7 +41805,7 @@ var Style = class extends Evented {
 		this._createLayers();
 		this.light = new Light(this.stylesheet.light ?? {}, this._globalState);
 		this._setProjectionInternal(this.stylesheet.projection?.type || "mercator");
-		this.sky = new Sky(this.stylesheet.sky);
+		this.sky = new Sky(this.stylesheet.sky, this._globalState);
 		this.map.setTerrain(this.stylesheet.terrain ?? null, { validate: false });
 		this.fire(new MapStyleDataEvent("data"));
 		this.fire(new MapStyleLoadEvent());
@@ -60831,7 +60831,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 7dfd543";
+const version = "main ad2fcdb";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
