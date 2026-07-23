@@ -46,9 +46,6 @@ function generateBuildingData(): GeoJSON.FeatureCollection {
     };
 }
 
-/**
- * Public API Benchmark for fill-extrusion rounded corner processing using GeoJSONSource and Map.
- */
 export default class RoundPolygonCorners extends Benchmark {
     map: Map;
     sampleData: GeoJSON.FeatureCollection;
@@ -67,7 +64,10 @@ export default class RoundPolygonCorners extends Benchmark {
                 sources: {
                     buildings: {
                         type: 'geojson',
-                        data: this.sampleData
+                        data: {
+                            type: 'FeatureCollection',
+                            features: []
+                        }
                     }
                 },
                 layers: [
@@ -80,7 +80,7 @@ export default class RoundPolygonCorners extends Benchmark {
                         },
                         paint: {
                             'fill-extrusion-color': '#007cbf',
-                            'fill-extrusion-height': ['get', 'height']
+                            'fill-extrusion-height': 15
                         }
                     }
                 ]
