@@ -48177,13 +48177,13 @@ function generateMousePanHandler({ enable, clickTolerance }) {
 		assignEvents
 	});
 }
-function generateMouseRotationHandler({ enable, clickTolerance, aroundCenter = true, minPixelCenterThreshold = 100, rotateDegreesPerPixelMoved = .8 }, getCenter) {
+function generateMouseRotationHandler({ enable, clickTolerance, aroundCenter = true, minPixelCenterThreshold = 100, rotateSpeed = .8 }, getCenter) {
 	return new DragHandler({
 		clickTolerance,
 		move: (lastPoint, currentPoint) => {
 			const center = getCenter();
 			if (aroundCenter && Math.abs(center.y - lastPoint.y) > minPixelCenterThreshold) return { bearingDelta: getAngleDelta(new Point(lastPoint.x, currentPoint.y), currentPoint, center) };
-			let bearingDelta = (currentPoint.x - lastPoint.x) * rotateDegreesPerPixelMoved;
+			let bearingDelta = (currentPoint.x - lastPoint.x) * rotateSpeed;
 			if (aroundCenter && currentPoint.y < center.y) bearingDelta = -bearingDelta;
 			return { bearingDelta };
 		},
@@ -48192,10 +48192,10 @@ function generateMouseRotationHandler({ enable, clickTolerance, aroundCenter = t
 		assignEvents
 	});
 }
-function generateMousePitchHandler({ enable, clickTolerance, pitchDegreesPerPixelMoved = -.5 }) {
+function generateMousePitchHandler({ enable, clickTolerance, pitchSpeed = -.5 }) {
 	return new DragHandler({
 		clickTolerance,
-		move: (lastPoint, point) => ({ pitchDelta: (point.y - lastPoint.y) * pitchDegreesPerPixelMoved }),
+		move: (lastPoint, point) => ({ pitchDelta: (point.y - lastPoint.y) * pitchSpeed }),
 		moveStateManager: new MouseMoveStateManager({ checkCorrectEvent: (e) => e.button === LEFT_BUTTON && e.ctrlKey || e.button === RIGHT_BUTTON }),
 		enable,
 		assignEvents
@@ -51648,6 +51648,8 @@ const defaultOptions$4 = {
 	localIdeographFontFamily: "sans-serif",
 	pitchWithRotate: true,
 	rollEnabled: false,
+	rotateSpeed: .8,
+	pitchSpeed: -.5,
 	reduceMotion: void 0,
 	validateStyle: true,
 	/**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
@@ -60808,7 +60810,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 8d3526e";
+const version = "main 189dcd6";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
