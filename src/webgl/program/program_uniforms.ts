@@ -12,7 +12,6 @@ import {rasterUniforms, type RasterUniformsType} from './raster_program.ts';
 import {symbolIconUniforms, symbolSDFUniforms, symbolTextAndIconUniforms, type SymbolIconUniformsType, type SymbolSDFUniformsType, type symbolTextAndIconUniformsType} from './symbol_program.ts';
 import {backgroundUniforms, backgroundPatternUniforms, type BackgroundUniformsType, type BackgroundPatternUniformsType} from './background_program.ts';
 import {terrainUniforms, terrainDepthUniforms, terrainCoordsUniforms, type TerrainUniformsType, type TerrainDepthUniformsType, type TerrainCoordsUniformsType} from './terrain_program.ts';
-import {projectionErrorMeasurementUniforms, type ProjectionErrorMeasurementUniformsType} from './projection_error_measurement_program.ts';
 import {atmosphereUniforms, type atmosphereUniformsType} from './atmosphere_program.ts';
 import {skyUniforms, type SkyUniformsType} from './sky_program.ts';
 import type {Context} from '../context.ts';
@@ -53,7 +52,6 @@ export const programUniforms: {
     terrain: (context: Context, locations: UniformLocations) => TerrainUniformsType;
     terrainDepth: (context: Context, locations: UniformLocations) => TerrainDepthUniformsType;
     terrainCoords: (context: Context, locations: UniformLocations) => TerrainCoordsUniformsType;
-    projectionErrorMeasurement: (context: Context, locations: UniformLocations) => ProjectionErrorMeasurementUniformsType;
     atmosphere: (context: Context, locations: UniformLocations) => atmosphereUniformsType;
     sky: (context: Context, locations: UniformLocations) => SkyUniformsType;
 } = {
@@ -89,7 +87,6 @@ export const programUniforms: {
     terrain: terrainUniforms,
     terrainDepth: terrainDepthUniforms,
     terrainCoords: terrainCoordsUniforms,
-    projectionErrorMeasurement: projectionErrorMeasurementUniforms,
     atmosphere: atmosphereUniforms,
     sky: skyUniforms
 };

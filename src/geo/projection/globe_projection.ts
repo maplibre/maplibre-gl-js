@@ -5,7 +5,7 @@ import {Evented} from '../../util/evented.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {MercatorProjection} from './mercator_projection.ts';
 import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
-import {type Projection, type ProjectionGPUContext, type TileMeshUsage} from './projection.ts';
+import {type Projection, type TileMeshUsage} from './projection.ts';
 import {type PreparedShader} from '../../shaders/shaders.ts';
 import {type SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {type Context} from '../../webgl/context.ts';
@@ -53,8 +53,6 @@ export class GlobeProjection extends Evented implements Projection {
         return this.transitionState > 0;
     }
 
-    get latitudeErrorCorrectionRadians(): number { return this._verticalPerspectiveProjection.latitudeErrorCorrectionRadians; }
-
     private get currentProjection(): Projection {
         return this.useGlobeRendering ? this._verticalPerspectiveProjection : this._mercatorProjection;
     }
@@ -96,11 +94,6 @@ export class GlobeProjection extends Evented implements Projection {
         this._verticalPerspectiveProjection.destroy();
     }
 
-    public updateGPUdependent(context: ProjectionGPUContext): void {
-        this._mercatorProjection.updateGPUdependent(context);
-        this._verticalPerspectiveProjection.updateGPUdependent(context);
-    }
-
     public getMeshFromTileID(context: Context, _tileID: CanonicalTileID, _hasBorder: boolean, _allowPoles: boolean, _usage: TileMeshUsage): Mesh {
         return this.currentProjection.getMeshFromTileID(context, _tileID, _hasBorder, _allowPoles, _usage);
     }
@@ -119,10 +112,5 @@ export class GlobeProjection extends Evented implements Projection {
 
     recalculate(parameters: EvaluationParameters): void {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
-    }
-
-    setErrorQueryLatitudeDegrees(value: number): void {
-        this._verticalPerspectiveProjection.setErrorQueryLatitudeDegrees(value);
-        this._mercatorProjection.setErrorQueryLatitudeDegrees(value);
     }
 }
