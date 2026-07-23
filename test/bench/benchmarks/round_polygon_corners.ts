@@ -1,68 +1,111 @@
-import {CanonicalTileID} from '../../../src/tile/tile_id.ts';
 import Benchmark from '../lib/benchmark.ts';
-import {EXTENT} from '../../../src/data/extent.ts';
-import {roundPolygonCorners} from '../../../src/data/bucket/round_polygon_corners.ts';
-import Point from '@mapbox/point-geometry';
+import createMap from '../lib/create_map.ts';
+import type {Map} from '../../../src/ui/map.ts';
+import type {GeoJSONSource} from '../../../src/source/geojson_source.ts';
 
-/**
- * Benchmark for corner rounding performance on polygon geometries (building extrusions).
- */
-export default class RoundPolygonCorners extends Benchmark {
-    tileID: CanonicalTileID;
-    polygons: Point[][][];
-    distanceInMeters: number;
+// Sample GeoJSON building dataset with 3D polygon footprints and inner holes
+function generateBuildingData(count = 500): GeoJSON.FeatureCollection {
+    const features: GeoJSON.Feature[] = [];
 
-    async setup(): Promise<void> {
-        await super.setup();
+    for (let i = 0; i < count; i++) {
+        const cx = -74.006 + (i % 25) * 0.002;
+        const cy = 40.7128 + Math.floor(i / 25) * 0.002;
+        const size = 0.0008;
 
-        this.tileID = new CanonicalTileID(15, 10000, 10000);
-        this.distanceInMeters = 15;
+        const outerRing = [
+            [cx - size, cy - size],
+            [cx + size, cy - size],
+            [cx + size, cy + size],
+            [cx - size, cy + size],
+            [cx - size, cy - size]
+        ];
 
-        // Generate multiple representative building footprints with outer rings and inner holes
-        this.polygons = [];
+        const holeRing = [
+            [cx - size * 0.4, cy - size * 0.4],
+            [cx + size * 0.4, cy - size * 0.4],
+            [cx + size * 0.4, cy + size * 0.4],
+            [cx - size * 0.4, cy + size * 0.4],
+            [cx - size * 0.4, cy - size * 0.4]
+        ];
 
-        for (let b = 0; b < 20; b++) {
-            const polygon: Point[][] = [];
-            const vertexCount = 40;
-            const outerRing: Point[] = [];
-
-            const cx = (EXTENT / 5) * (b % 5 + 0.5);
-            const cy = (EXTENT / 4) * (Math.floor(b / 5) + 0.5);
-            const radius = EXTENT / 16;
-
-            for (let i = 0; i < vertexCount; i++) {
-                const angle = (i / vertexCount) * 2 * Math.PI;
-                const r = i % 2 === 0 ? radius : radius * 0.75;
-                outerRing.push(new Point(
-                    Math.round(cx + Math.cos(angle) * r),
-                    Math.round(cy + Math.sin(angle) * r)
-                ));
+        features.push({
+            type: 'Feature',
+            properties: {
+                height: 30 + (i % 50),
+                corner_radius: 10 + (i % 15)
+            },
+            geometry: {
+                type: 'Polygon',
+                coordinates: i % 2 === 0 ? [outerRing, holeRing] : [outerRing]
             }
-            outerRing.push(new Point(outerRing[0].x, outerRing[0].y));
-            polygon.push(outerRing);
-
-            // Add hole ring for half of the buildings
-            if (b % 2 === 0) {
-                const holeRing: Point[] = [];
-                const holeRadius = radius / 3;
-                for (let i = 0; i < 16; i++) {
-                    const angle = (i / 16) * 2 * Math.PI;
-                    holeRing.push(new Point(
-                        Math.round(cx + Math.cos(angle) * holeRadius),
-                        Math.round(cy + Math.sin(angle) * holeRadius)
-                    ));
-                }
-                holeRing.push(new Point(holeRing[0].x, holeRing[0].y));
-                polygon.push(holeRing);
-            }
-
-            this.polygons.push(polygon);
-        }
+        });
     }
 
-    bench(): void {
-        for (let i = 0; i < this.polygons.length; i++) {
-            roundPolygonCorners(this.polygons[i], this.distanceInMeters, this.tileID);
-        }
+    return {
+        type: 'FeatureCollection',
+        features
+    };
+}
+
+const sampleData = generateBuildingData(500);
+
+/**
+ * Public API Benchmark for fill-extrusion rounded corner processing using GeoJSONSource and Map.
+ */
+export default class RoundPolygonCorners extends Benchmark {
+    map: Map;
+
+    async setup(): Promise<void> {
+        this.map = await createMap({
+            width: 512,
+            height: 512,
+            center: [-74.006, 40.7128],
+            zoom: 15,
+            fadeDuration: 0,
+            style: {
+                version: 8,
+                sources: {
+                    buildings: {
+                        type: 'geojson',
+                        data: sampleData
+                    }
+                },
+                layers: [
+                    {
+                        id: 'building-extrusion',
+                        type: 'fill-extrusion',
+                        source: 'buildings',
+                        layout: {
+                            'fill-extrusion-rounded-corner-distance': 15
+                        },
+                        paint: {
+                            'fill-extrusion-color': '#007cbf',
+                            'fill-extrusion-height': ['get', 'height']
+                        }
+                    }
+                ]
+            }
+        });
+
+        await new Promise(resolve => {
+            if (this.map.loaded()) {
+                resolve(null);
+            } else {
+                this.map.once('idle', resolve);
+            }
+        });
+    }
+
+    async bench(): Promise<void> {
+        const source = this.map.getSource<GeoJSONSource>('buildings');
+        source.setData(sampleData);
+
+        await new Promise(resolve => {
+            this.map.once('idle', resolve);
+        });
+    }
+
+    teardown(): void {
+        this.map.remove();
     }
 }
