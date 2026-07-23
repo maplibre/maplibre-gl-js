@@ -29,10 +29,7 @@ function generateBuildingData(): GeoJSON.FeatureCollection {
 
         features.push({
             type: 'Feature',
-            properties: {
-                height: 30 + (i % 50),
-                corner_radius: 10 + (i % 15)
-            },
+            properties: {},
             geometry: {
                 type: 'Polygon',
                 coordinates: i % 2 === 0 ? [outerRing, holeRing] : [outerRing]
