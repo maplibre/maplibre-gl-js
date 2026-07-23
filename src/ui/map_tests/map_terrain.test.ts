@@ -67,6 +67,24 @@ describe('setTerrain', () => {
         expect(errorSpy).not.toHaveBeenCalled();
         expect(map.getTerrain()).toEqual({source: 'dem', exaggeration: 2});
     });
+
+    test('destroys the previous terrain and releases the old source when switching to a new source', async () => {
+        await map.once('style.load');
+        map.addSource('dem-a', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256});
+        map.addSource('dem-b', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256});
+
+        map.setTerrain({source: 'dem-a'});
+        const previousTerrain = map.terrain;
+        const previousTileManager = map.style.tileManagers['dem-a'];
+        const destroySpy = vi.spyOn(previousTerrain, 'destroy');
+
+        map.setTerrain({source: 'dem-b'});
+
+        expect(destroySpy).toHaveBeenCalledTimes(1);
+        expect(previousTileManager.usedForTerrain).toBe(false);
+        expect(previousTileManager.tileSize).toBeNull();
+        expect(map.getTerrain()).toEqual({source: 'dem-b'});
+    });
 });
 
 describe('getTerrain', () => {
