@@ -4,14 +4,6 @@ import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from '../../geo/projection/mercator_utils.ts';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 
-function getTileUnitsForMeters(distanceInMeters: number, canonical: CanonicalTileID): number {
-    const centerLocation = tileCoordinatesToLocation(EXTENT / 2, EXTENT / 2, canonical);
-    const mercatorCoord = MercatorCoordinate.fromLngLat(centerLocation);
-    const meterInMercator = mercatorCoord.meterInMercatorCoordinateUnits();
-    const tileUnitsPerMercator = (1 << canonical.z) * EXTENT;
-    return distanceInMeters * meterInMercator * tileUnitsPerMercator;
-}
-
 /**
  * Rounds polygon corners by calculating arc points at each corner vertex.
  * @param polygon - Collection of polygon rings (outer ring and hole rings)
@@ -33,6 +25,14 @@ export function roundPolygonCorners(
     }
 
     return polygon.map(ring => roundRing(ring, distanceInTileUnits));
+}
+
+function getTileUnitsForMeters(distanceInMeters: number, canonical: CanonicalTileID): number {
+    const centerLocation = tileCoordinatesToLocation(EXTENT / 2, EXTENT / 2, canonical);
+    const mercatorCoord = MercatorCoordinate.fromLngLat(centerLocation);
+    const meterInMercator = mercatorCoord.meterInMercatorCoordinateUnits();
+    const tileUnitsPerMercator = (1 << canonical.z) * EXTENT;
+    return distanceInMeters * meterInMercator * tileUnitsPerMercator;
 }
 
 function roundRing(ring: Point[], distanceInTileUnits: number): Point[] {
