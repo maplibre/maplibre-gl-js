@@ -35,6 +35,7 @@ describe('evaluate', () => {
         const overriddenColor = {'r': 0, 'g': 0, 'b': 1, 'a': 1};
         const styleExpr = createExpression(
             ['get', 'color'],
+            'text-color',
             properties.paint.properties['text-color'].specification);
 
         const sourceExpr = new ZoomConstantExpression('source', styleExpr.value as StyleExpression);

@@ -1,4 +1,4 @@
-import {describe, expect, test, vi} from 'vitest';
+import {describe, expect, test, vi, afterEach} from 'vitest';
 import {Sky} from './sky.ts';
 import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 import {type EvaluationParameters} from './evaluation_parameters.ts';
@@ -82,5 +82,24 @@ describe('Sky.setSky', () => {
         expect(skySpy).toHaveBeenCalledTimes(1);
         expect(skySpy.mock.calls[0][2]).toEqual({validate: false});
         expect(sky.properties.get('atmosphere-blend')).toBe(-1);
+    });
+});
+
+describe('Sky runtime error logging', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    test('warns with the sky property location when an expression errors at runtime', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        const sky = new Sky({});
+        // global-state defeats constant-folding, so this fails at evaluation time (not parse time).
+        sky.setSky({'sky-color': ['to-color', ['global-state', 'missing']]} as any, {validate: false});
+        sky.updateTransitions({transition: false} as any as TransitionParameters);
+        sky.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);
+
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0][0]).toBe('sky.sky-color: Could not parse color from value \'null\' Falling back to rgba(136,198,252,1).');
     });
 });

@@ -118,7 +118,7 @@ export class SymbolStyleLayer extends StyleLayer {
             }
             const overridden = this.paint.get(overridable as keyof SymbolPaintPropsPossiblyEvaluated) as PossiblyEvaluatedPropertyValue<number>;
             const override = new FormatSectionOverride(overridden);
-            const styleExpression = new StyleExpression(override, overridden.property.specification);
+            const styleExpression = new StyleExpression(override, `layers[${this.id}].paint.${overridden.property.name}`, overridden.property.specification);
             let expression = null;
             if (overridden.value.kind === 'constant' || overridden.value.kind === 'source') {
                 expression = new ZoomConstantExpression('source', styleExpression) as SourceExpression;
