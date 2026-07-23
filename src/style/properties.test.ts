@@ -103,12 +103,11 @@ describe('Transitionable', () => {
     });
 });
 
-// Adding or removing a hillshade light changes the colorArray length, which cannot be interpolated (#6606).
-describe('paint property transitions between arrays of different length', () => {
+describe('paint property transitions between arrays of different length, issue #6606', () => {
     const transition = {duration: 300, delay: 0};
 
     function evaluateMidTransition(from: string[], to: string[]) {
-        const transitionable = new Transitionable(hillshadeProperties.paint, {});
+        const transitionable = new Transitionable(hillshadeProperties.paint, '', {});
 
         transitionable.setValue('hillshade-highlight-color', from);
         let transitioning = transitionable.transitioned(
