@@ -95,7 +95,13 @@ describe('ImageSource', () => {
             }
         };
         const image = {width: 1, height: 1} as ImageBitmap;
-        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: image});
+        let requestController: AbortController;
+        let sourceControllerAtRequestTime: AbortController;
+        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockImplementation(async (_request, abortController) => {
+            requestController = abortController;
+            sourceControllerAtRequestTime = source._request;
+            return {data: image};
+        });
 
         source.onAdd(map);
         await transformCalled; // load() is suspended in the transform
@@ -105,7 +111,10 @@ describe('ImageSource', () => {
         await loaded;
 
         expect(getImageSpy).toHaveBeenCalledTimes(1);
-        expect(getImageSpy.mock.calls[0][1]).toBeInstanceOf(AbortController);
+        // The request must carry the source's own live controller, so an abort
+        // arriving while it is in flight reaches exactly this request.
+        expect(requestController).toBeInstanceOf(AbortController);
+        expect(requestController).toBe(sourceControllerAtRequestTime);
     });
 
     test('transforms url request', () => {

@@ -457,7 +457,13 @@ describe('RasterTileSource', () => {
         source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
 
         const image = {width: 256, height: 256} as ImageBitmap;
-        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: image});
+        let requestController: AbortController;
+        let tileControllerAtRequestTime: AbortController;
+        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockImplementation(async (_request, abortController) => {
+            requestController = abortController;
+            tileControllerAtRequestTime = tile.abortController;
+            return {data: image};
+        });
         source.map.painter = {
             context: {gl: {}},
             getTileTexture: () => ({update: vi.fn()})
@@ -476,7 +482,10 @@ describe('RasterTileSource', () => {
         await expect(loadPromise).resolves.toBeUndefined();
 
         expect(getImageSpy).toHaveBeenCalledTimes(1);
-        expect(getImageSpy.mock.calls[0][1]).toBeInstanceOf(AbortController);
+        // The request must carry the tile's own live controller, so an abort
+        // arriving while it is in flight reaches exactly this request.
+        expect(requestController).toBeInstanceOf(AbortController);
+        expect(requestController).toBe(tileControllerAtRequestTime);
     });
 
     test('does not throw when tile is aborted', async () => {
