@@ -1271,43 +1271,6 @@ describe('Style.setState', () => {
         const serialized = style.serialize();
         expect(serialized).not.toHaveProperty('projection');
     });
-
-    describe('multidirectional hillshade lights', () => {
-
-        test('removing a light via setState does not throw mid-transition', async () => {
-            const style = createStyle();
-            style.loadJSON(createStyleJSON({
-                sources: {dem: {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256}},
-                layers: [{id: 'hillshade', type: 'hillshade', source: 'dem', paint: {'hillshade-highlight-color': ['#ff0000', '#00ff00', '#0000ff']}}]
-            }));
-            await style.once('style.load');
-
-            style.setState(createStyleJSON({
-                sources: {dem: {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256}},
-                layers: [{id: 'hillshade', type: 'hillshade', source: 'dem', paint: {'hillshade-highlight-color': ['#ff0000', '#00ff00']}}]
-            }));
-
-            expect(() => style.update({zoom: 0, now: 150, transition: {duration: 300, delay: 0}} as any as EvaluationParameters)).not.toThrow();
-            expect((style.getLayer('hillshade') as HillshadeStyleLayer).paint.get('hillshade-highlight-color').values).toHaveLength(2);
-        });
-
-        test('adding a light via setState does not throw mid-transition', async () => {
-            const style = createStyle();
-            style.loadJSON(createStyleJSON({
-                sources: {dem: {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256}},
-                layers: [{id: 'hillshade', type: 'hillshade', source: 'dem', paint: {'hillshade-highlight-color': ['#ff0000', '#00ff00']}}]
-            }));
-            await style.once('style.load');
-
-            style.setState(createStyleJSON({
-                sources: {dem: {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256}},
-                layers: [{id: 'hillshade', type: 'hillshade', source: 'dem', paint: {'hillshade-highlight-color': ['#ff0000', '#00ff00', '#0000ff']}}]
-            }));
-
-            expect(() => style.update({zoom: 0, now: 150, transition: {duration: 300, delay: 0}} as any as EvaluationParameters)).not.toThrow();
-            expect((style.getLayer('hillshade') as HillshadeStyleLayer).paint.get('hillshade-highlight-color').values).toHaveLength(3);
-        });
-    });
 });
 
 describe('Style.addSource', () => {

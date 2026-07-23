@@ -149,7 +149,6 @@ describe('paint property transitions between arrays of different length, issue #
             ['#ffffff', '#ffffff']
         );
 
-        // Halfway through an eased transition the colors are strictly between black and white.
         expect(result.values).toHaveLength(2);
         for (const color of result.values) {
             expect(color.r).toBeGreaterThan(0);
