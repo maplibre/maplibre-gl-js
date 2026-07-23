@@ -1,4 +1,4 @@
-import {clone, extend, easeCubicInOut} from '../util/util.ts';
+import {clone, extend, easeCubicInOut, warnOnce} from '../util/util.ts';
 import {interpolates, type Color, type StylePropertySpecification, normalizePropertyExpression,
     type Feature,
     type FeatureState,
@@ -472,6 +472,26 @@ export class PossiblyEvaluated<Props, PossibleEvaluatedProps> {
 }
 
 /**
+ * Returns the length of the array value, or undefined if the value is not an array or a style spec array wrapper.
+ */
+function getArrayValueLength(value: unknown): number | undefined {
+    if (Array.isArray(value)) {
+        return value.length;
+    }
+    const values = (value as {values?: unknown})?.values;
+    return Array.isArray(values) ? values.length : undefined;
+}
+
+/**
+ * Returns true if the two values are arrays of different length, either bare arrays or style spec array wrappers.
+ */
+function isNonInterpolableArrayChange(a: unknown, b: unknown): boolean {
+    const lengthA = getArrayValueLength(a);
+    const lengthB = getArrayValueLength(b);
+    return lengthA !== undefined && lengthB !== undefined && lengthA !== lengthB;
+}
+
+/**
  * @internal
  * An implementation of `Property` for properties that do not permit data-driven (source or composite) expressions.
  * This restriction allows us to declare statically that the result of possibly evaluating this kind of property
@@ -492,6 +512,10 @@ export class DataConstantProperty<T> implements Property<T, T> {
     }
 
     interpolate(a: T, b: T, t: number): T {
+        if (isNonInterpolableArrayChange(a, b)) {
+            warnOnce(`Property "${this.name}" is trying to interpolate arrays of different lengths. Rendering may 'jump'.`);
+            return b;
+        }
         const interpolationType = this.specification.type as keyof typeof interpolates;
         const interpolationFn = interpolates[interpolationType] as ((from: T, to: T, t: number) => T) | undefined;
         if (interpolationFn) {
@@ -551,6 +575,11 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
         // `PossiblyEvaluated._values`.
         if (a.value.value === undefined || b.value.value === undefined) {
             return new PossiblyEvaluatedPropertyValue(this, {kind: 'constant', value: undefined}, a.parameters);
+        }
+
+        if (isNonInterpolableArrayChange(a.value.value, b.value.value)) {
+            warnOnce(`Property "${this.name}" is trying to interpolate arrays of different lengths. Rendering may 'jump'.`);
+            return b;
         }
 
         const interpolationType = this.specification.type as keyof typeof interpolates;
