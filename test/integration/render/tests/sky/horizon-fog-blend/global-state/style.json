@@ -5,20 +5,7 @@
       "timeout": 60000,
       "height": 256,
       "width": 128,
-      "maxPitch": 85,
-      "operations": [
-        [
-          "wait"
-        ],
-        [
-          "setGlobalStateProperty",
-          "horizonFogBlend",
-          0
-        ],
-        [
-          "wait"
-        ]
-      ]
+      "maxPitch": 85
     }
   },
   "center": [
@@ -29,7 +16,7 @@
   "pitch": 85,
   "state": {
     "horizonFogBlend": {
-      "default": 0.8
+      "default": 0
     }
   },
   "sources": {

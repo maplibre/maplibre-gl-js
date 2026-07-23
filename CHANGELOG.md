@@ -1,10 +1,102 @@
 ## main
 ### ✨ Features and improvements
 - Support `global-state` expressions in `sky.*` properties ([#7967](https://github.com/maplibre/maplibre-gl-js/pull/7967)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Support `global-state` expressions in `light.*` properties ([#7966](https://github.com/maplibre/maplibre-gl-js/pull/7966)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Add `MapOptions.rotateSpeed` and `MapOptions.pitchSpeed`, the degrees the bearing/pitch change per pixel dragged ([#7949](https://github.com/maplibre/maplibre-gl-js/pull/7949)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix an error thrown when a paint property transitions between arrays of different length ([#6606](https://github.com/maplibre/maplibre-gl-js/issues/6606)) (by [@HarelM](https://github.com/HarelM))
+- Fix renderer crash when `RasterTileSource#setTiles`/`setUrl` is called while the source contains errored tiles ([#7911](https://github.com/maplibre/maplibre-gl-js/pull/7911)) (by [@lazerg](https://github.com/lazerg))
+- Fix globe latitude precision on some GPUs (e.g. Mali) by reformulating the mercator-to-sphere Y coordinate algebraically (`exp` + rational arithmetic instead of `atan`/`sin`/`cos`), avoiding float32 cancellation and imprecise hardware transcendentals near the equator; the runtime GPU `atan`-error measurement/correction this superseded has also been removed ([#7419](https://github.com/maplibre/maplibre-gl-js/issues/7419)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
+
+## 6.0.0
+
+The following incorporates all the pre-releases for version 6 changes.
+Check-out our [migration guide from v5 to v6](./docs/guides/v5-to-v6-migration-guide.md) for more information.
+
+### ✨ Features and improvements
+
+- ⚠️ Switch to an ESM-only distribution (`maplibre-gl.mjs`). The UMD bundles (`maplibre-gl.js`, `maplibre-gl-csp.js`) are no longer published. The CSP-specific bundle is also dropped: the ESM build loads its worker as a real URL, so `worker-src blob:` is no longer required. Consumers using `<script src=".../maplibre-gl.js">` must switch to `<script type="module">`, and consumers using `import maplibregl from 'maplibre-gl'` must switch to `import * as maplibregl from 'maplibre-gl'` or named imports. See the docs ESM section or our [migration guide](./docs/guides/v5-to-v6-migration-guide.md) for migration steps. ([#6254](https://github.com/maplibre/maplibre-gl-js/pull/6254)) (by [@birkskyum](https://github.com/birkskyum))
+- ⚠️ Interpolate the light position in spherical coordinates instead of cartesian ones, so that a transition keeps its radial distance. ([#7919](https://github.com/maplibre/maplibre-gl-js/pull/7919)) (by [@HarelM](https://github.com/HarelM))
+- ⚠️ `styleimagemissing` is now a notify-only event instead of the previous callback that allowed to provide an image. This aligns the event with standard event semantics (notify, not resolve). Use `Map.setMissingStyleImageResolver` to on-demand supply images instead via an function that can now also be async. ([#7892](https://github.com/maplibre/maplibre-gl-js/issues/7892)) (by [@birkskyum](https://github.com/birkskyum))
+- ⚠️ `Map` now composes a `Camera` instead of extending it (`Map` extends `Evented` directly and forwards the camera API). The internal `map.transform` was removed — use map's public API instead or open a PR if you need something that's not exposed. Removed the internal `transform.getMatrixForModel` helper ([#7800](https://github.com/maplibre/maplibre-gl-js/pull/7800)) (by [@HarelM](https://github.com/HarelM))
+- ⚠️ All map events are now real classes that are instantiated when they are fired. Renamed the `Map`s' `BoxZoom` handler from `MapLibreZoomEvent` to `MapBoxZoomEvent`, added the `rollstart`/`roll`/`rollend` and `style.load` (as `MapStyleLoadEvent`) events to `MapEventType`, and added event classes and type-map for `Marker`, `Popup`, `GeolocateControl` and `FullscreenControl`. Removed `MapDataEvent`: the `data`/`dataloading`/`dataabort` events are now `MapSourceDataEvent | MapStyleDataEvent`, so source data events carry the full source info (`sourceId`, `tile`, `sourceDataType`, …). Added `MapMovementEvent` as the type for all camera-transition events (`move`/`zoom`/`rotate`/`pitch`/`roll`/`drag` and their `start`/`end` variants). `Evented` is now generic over an event-type map (`Evented<EventType>`) and is `abstract`, so subclasses get strongly-typed `on`/`once`/`off` automatically without re-declaring overloads — this also types the events on `Camera`/`Style` (via `MapEventType`) and on the sources (via the new `SourceEventType`) ([#7789](https://github.com/maplibre/maplibre-gl-js/pull/7789)) (by [@HarelM](https://github.com/HarelM))
+- ⚠️ Update maplibre-gl-style-spec to version 25, which now throws an error with warning severity instead of silently failing on encoutering legacy expressions ([#7792](https://github.com/maplibre/maplibre-gl-js/issues/7792)) (by [@HarelM](https://github.com/HarelM))
+- ⚠️ Removed the remaining mapbox references in the code and in the tests. This changes the `#pragma mapbox` to `#pragma maplibre` in case you have shader code that relied on it. ([#7761](https://github.com/maplibre/maplibre-gl-js/issues/7761)) (by [@HarelM](https://github.com/HarelM))
+- ⚠️ `zoomLevelsToOverscale` default value was changed to 4 to support better handling of high level zoom with dense labels. This might have a side effect of changing a bit the results of `queryRenderedFeatures` and some rendering of polygon center label. To revert this change, set the value to `undefined` ([#7537](https://github.com/maplibre/maplibre-gl-js/issues/7537)) (by [@HarelM](https://github.com/HarelM))
+- ⚠️ Remove the second parameter from `GeoJSONSource.setData` (`waitForCompletion`) and remove the return value of `this` to allow future changes to the API ([#7538](https://github.com/maplibre/maplibre-gl-js/issues/7538)) (by [@HarelM](https://github.com/HarelM))
+- ⚠️ The TypeScript target has been updated to ES2022.
+  This results in smaller bundles and improved runtime performance by relying on modern JavaScript features and reducing transpilation. Consumers targeting browsers or using some tooling released before 2022 may need to transpile MapLibre or update. This change also aligns all internal build configurations to a single target instead of ES2016 + ES2019, avoiding inconsistencies in emitted code. ([#7404](https://github.com/maplibre/maplibre-gl-js/pull/7404)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- ⚠️ WebGL (v1) support has been removed; WebGL2 is now required.
+  In practical terms, this will not change how you interact with the map.
+  This enables performance improvements (e.g. line opacity), Terrain3D enhancements, and several bug fixes.
+  WebGL2 support has been widely available for years, and usage of the legacy path had plateaued, so maintaining it no longer justified the added complexity.
+  To ease this breaking change, we have also refactored how we handle the case that no webgl is avaliable (e.g. due to browser restrictions).
+  You can now listen to the webgl error via `.on("error")`.
+  See [caniuse.com/webgl2](https://caniuse.com/webgl2) for ecosystem support and [our RFC for details](https://github.com/maplibre/maplibre-gl-js/discussions/6017). ([#7453](https://github.com/maplibre/maplibre-gl-js/pull/7453)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- ⚠️ Support geojson nested objects, this is a breaking change as it encodes `__$json__` before properties that used to be an object. It also parses them back, but this is still a breaking change if you assumed this bug existed. ([#6992](https://github.com/maplibre/maplibre-gl-js/pull/6992)) (by [HarelM](https://github.com/HarelM))
+- ⚠️ Improve types for `{get,set}LayoutProperty`, `{get,set}PaintProperty` to be the actual type instead of `string`/`any` ([#7481](https://github.com/maplibre/maplibre-gl-js/pull/7481)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- ⚠️ Refactored the `Hash`-based location control (the option that syncs map state to the URL like `#map=5/1/2`) to use `URLSearchParams` internally. This improves extensibility for custom use cases, but may break existing code that relies on the previous implementation. It also changes how certain edge cases are parsed—for example, strings like `#10%2F3.00%2F-1.00` are now accepted, and hashes like `#foo` are normalized to `#foo=`. ([#7073](https://github.com/maplibre/maplibre-gl-js/pull/7073)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Validate the terrain passed to `map.setTerrain`, which was previously applied unchecked ([#7941](https://github.com/maplibre/maplibre-gl-js/pull/7941)) (by [@HarelM](https://github.com/HarelM))
+- Improve runtime error warnings to point at the offending style location (e.g. `layers[3].paint.line-color`, `layers[3].filter`) instead of just logging the bare error message ([#7869](https://github.com/maplibre/maplibre-gl-js/pull/7869)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Improve terrain render-to-texture preparation performance by skipping sources that are not rendered to terrain textures ([#7863](https://github.com/maplibre/maplibre-gl-js/pull/7863)) (by [@DoFabien](https://github.com/DoFabien))
+- Add `Map.setMissingStyleImageResolver` for resolving missing style images with sync or async callbacks ([#7850](https://github.com/maplibre/maplibre-gl-js/pull/7850)) (by [@birkskyum](https://github.com/birkskyum))
+- Add `RasterTileSource#setPremultiplyAlpha(false)` to preserve raw RGBA tile values when alpha is used for data instead of opacity ([#7235](https://github.com/maplibre/maplibre-gl-js/pull/7235)) (by [@plantain](https://github.com/plantain)).
+- Drop the archived `@mapbox/whoots-js` dependency by inlining its single `getTileBBox` helper ([#7838](https://github.com/maplibre/maplibre-gl-js/pull/7838)) (by [@qorexdevs](https://github.com/qorexdevs))
+- Debounce `setImages` broadcast to once per animation frame, fixing O(n²) serialization overhead when adding many images ([#7614](https://github.com/maplibre/maplibre-gl-js/pull/7614)) (by [@bradymadden97](https://github.com/bradymadden97))
+- Improve terrain rendering performance by avoiding unnecessary terrain data lookups during Mercator render-to-texture passes ([#7833](https://github.com/maplibre/maplibre-gl-js/pull/7833)) (by [@DoFabien](https://github.com/DoFabien))
+- Reduce allocation pressure while constructing DEM data and sampling terrain elevations ([#7814](https://github.com/maplibre/maplibre-gl-js/pull/7814)) (by [@DoFabien](https://github.com/DoFabien))
+- Reuse terrain DEM texture when preparing terrain ([#7813](https://github.com/maplibre/maplibre-gl-js/pull/7813)) (by [@DoFabien](https://github.com/DoFabien))
+- Add `fill-layer-opacity` and `line-layer-opacity` paint properties, which apply opacity to the entire layer output uniformly ([#7570](https://github.com/maplibre/maplibre-gl-js/pull/7570)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Build main and worker in same build context to extract shared chunk ([#7745](https://github.com/maplibre/maplibre-gl-js/pull/7745)) (by [@dangkyokhoang](https://github.com/dangkyokhoang))
+- Revert the `line-opacity`-driven offscreen rendering introduced in [#7490](https://github.com/maplibre/maplibre-gl-js/pull/7490) ([#7764](https://github.com/maplibre/maplibre-gl-js/pull/7764)) (by [@CommanderStorm](https://github.com/CommanderStorm)). The overlap-artefact fix is now driven by `line-layer-opacity` instead.
+- Improve `ProjectionData` matrix backing types for renderer and custom layer projection matrices ([#6316](https://github.com/maplibre/maplibre-gl-js/issues/6316)) (by [@cat0825](https://github.com/cat0825))
+- Optimization: vertex shader opacity culling for lines and fills [#7711](https://github.com/maplibre/maplibre-gl-js/pull/7711) (by [@xavierjs](https://github.com/xavierjs))
+- Use a shared FBO for the terrain cache render to texture [#7637](https://github.com/maplibre/maplibre-gl-js/pull/7637) (by [@xavierjs](https://github.com/xavierjs))
+- Use `flat` to opt out of interpolation for constant shader varyings ([#7661](https://github.com/maplibre/maplibre-gl-js/pull/7661)) (by [@birkskyum](https://github.com/birkskyum))
+- Replace texImage2D with texStorage2D for immutable textures ([#7643](https://github.com/maplibre/maplibre-gl-js/pull/7643)) (by [@birkskyum](https://github.com/birkskyum))
+- Enable mipmaps for non-power-of-two raster tiles, reducing aliasing at high pitch ([#7641](https://github.com/maplibre/maplibre-gl-js/pull/7641)) (by [@birkskyum](https://github.com/birkskyum))
+- Use GLSL ES 3.00 layout qualifiers for vertex attribute locations, replacing runtime `bindAttribLocation` calls ([#7644](https://github.com/maplibre/maplibre-gl-js/pull/7644)) (by [@birkskyum](https://github.com/birkskyum))
+- Adopt isolatedDeclarations and switch dts emitter from tsgo to oxc ([#7566](https://github.com/maplibre/maplibre-gl-js/pull/7566)) (by [@birkskyum](https://github.com/birkskyum))
+- Improve 3D terrain performance ([#7549](https://github.com/maplibre/maplibre-gl-js/pull/7549)) (by [@lucaswoj](https://github.com/lucaswoj))
+- Replace dts-bundle-generator with rolldown-plugin-dts for 78.2x faster .d.ts generation. ([#7564](https://github.com/maplibre/maplibre-gl-js/pull/7564)) (by [@birkskyum](https://github.com/birkskyum))
+- Replace ts-node with Node 24's native TypeScript support for build scripts. ([#7565](https://github.com/maplibre/maplibre-gl-js/pull/7565)) (by [@birkskyum](https://github.com/birkskyum))
+- Bump typescript to v7 beta - 3.5x faster typecheck ([#7556](https://github.com/maplibre/maplibre-gl-js/pull/7556)) (by [@birkskyum](https://github.com/birkskyum))
+- Add a new map creation option, `terrainSkirtLength`, which allows the removal of visually unappealing vertical artifacts when using a terrain along with a transparent background ([#7523](https://github.com/maplibre/maplibre-gl-js/pull/7523)) (by [@safwat-halaby](https://github.com/safwat-halaby))
+- Bundle with Rolldown instead of Rollup ([#7555](https://github.com/maplibre/maplibre-gl-js/pull/7555)) (by [@birkskyum](https://github.com/birkskyum))
+- Optimization for Feature State: Replace String-Indexed Object with Array (up to 3.4X speedup) ([#7550](https://github.com/maplibre/maplibre-gl-js/pull/7550)) (by [@xavierjs](https://github.com/xavierjs))
+- Expose `getProjectionData` function in custom layer args objects ([#7471](https://github.com/maplibre/maplibre-gl-js/pull/7471)) (by [@kubapelc](https://github.com/kubapelc))
+- Marked package `sideEffects` as CSS-only in package metadata, which may improve tree-shaking and reduce bundle size in some bundlers ([#7258](https://github.com/maplibre/maplibre-gl-js/pull/7258)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+
+### 🐞 Bug fixes
+
+- ⚠️ Fix transparent, overlapping lines creating artefacts. This is fixed for `line-opacity`, but purposefully not for transparent `line-color` properties, thus still allowing transparent colors to stack their effect. ([#7490](https://github.com/maplibre/maplibre-gl-js/pull/7490)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- ⚠️ Disable icon scaling with offset, this is a render breaking change which we have decided to incorporate in both maplibre-gl-js and maplibre-native ([#7742](https://github.com/maplibre/maplibre-gl-js/issues/7742)) (by [@springmeyer](https://github.com/springmeyer) and [@HarelM](https://github.com/HarelM))
+- Log style validation warnings instead of treating them as errors, so that a filter mixing legacy and expression syntax no longer aborts the style load and blanks the map ([#7941](https://github.com/maplibre/maplibre-style-spec/pull/7941)) (by [@HarelM](https://github.com/HarelM))
+- Validate `raster-dem` sources passed to `map.addSource`, which were previously skipped. Stop a source type the style spec has no schema for, such as one registered with `addSourceType`, from failing the whole style. Previously only `canvas` was let through ([#7941](https://github.com/maplibre/maplibre-gl-js/pull/7941)) (by [@HarelM](https://github.com/HarelM))
+- Fix `line-layer-opacity`/`fill-layer-opacity` clipping away a subsequent layer that shares the same source ([#7867](https://github.com/maplibre/maplibre-gl-js/pull/7867)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Fix camera jump in flyTo when minZoom is set ([#7743](https://github.com/maplibre/maplibre-gl-js/pull/7743)) (by [@YuChunTsao](https://github.com/YuChunTsao))
+- Fix stale terrain depth and coordinate framebuffers when terrain tiles change without camera movement ([#7812](https://github.com/maplibre/maplibre-gl-js/pull/7812)) (by [@DoFabien](https://github.com/DoFabien))
+- Fix a memory leak where aborting a worker request (e.g. a GeoJSON tile load cancelled while panning) left its promise pending forever, so the awaiting async frame and everything it captured was never released; `Actor.sendAsync` now rejects with an `AbortError` on abort ([#7826](https://github.com/maplibre/maplibre-gl-js/pull/7826)) (by [@kamil-sienkiewicz-asi](https://github.com/kamil-sienkiewicz-asi))
+- Skip `undefined` properties during worker serialization ([#7801](https://github.com/maplibre/maplibre-gl-js/pull/7801)) (by [@xavierjs](https://github.com/xavierjs))
+- Fix cross-origin module worker loading to preserve ESM semantics ([#7796](https://github.com/maplibre/maplibre-gl-js/pull/7796)) (by [@dangkyokhoang](https://github.com/dangkyokhoang))
+- Fix conflicting reloads of tiles causing an error in `queryRenderedFeatures` ([#7765](https://github.com/maplibre/maplibre-gl-js/pull/7765)) (by [@ckolin](https://github.com/ckolin))
+- Fix a race condition in geojson source after init and fast update data ([#7734](https://github.com/maplibre/maplibre-gl-js/issues/7734)) (by [@HarelM](https://github.com/HarelM))
+- Fix camera jump on dragend with globe + terrain at low pitch ([#7736](https://github.com/maplibre/maplibre-gl-js/pull/7736)) (by [@kodeezabdullah](https://github.com/kodeezabdullah))
+- Fix web font rendering by awaiting document.fonts.load() before TinySDF instantiation ([#7735](https://github.com/maplibre/maplibre-gl-js/pull/7735)) (by [@kodeezabdullah](https://github.com/kodeezabdullah))
+- Remove the framebuffer completeness check that threw an unhandled `Framebuffer is not complete` error on transient GPU resource loss (e.g. when a tab wakes from sleep); incomplete framebuffers now self-heal on the next frame instead ([#7303](https://github.com/maplibre/maplibre-gl-js/pull/7303)) (by [@johanrd](https://github.com/johanrd))
+- Fix handling cross-origin blob URL in Ajax utils ([#7675](https://github.com/maplibre/maplibre-gl-js/pull/7675)) (by [@katemihalikova](https://github.com/katemihalikova))
+- Avoid TypeErrors from style methods while the WebGL context is lost ([#7710](https://github.com/maplibre/maplibre-gl-js/issues/7710)) (by [@cyphercodes](https://github.com/cyphercodes))
+- querySourceFeatures() throws 'Block overruns tile' on overzoomed MLT tiles because the reported encoding doesn't match the re-encoded MVT data ([#7707](https://github.com/maplibre/maplibre-gl-js/pull/7707)) (by [@ted-piotrowski](https://github.com/ted-piotrowski))
+- Fix geometry length check for polygons and lines in LineBucket after duplicate vertex trimming([#7638](https://github.com/maplibre/maplibre-gl-js/pull/7638)) (by [@widefire](https://github.com/widefire))
+- `line-dasharray` step transition lags one zoom level when the step's branches are data-driven ([#7705](https://github.com/maplibre/maplibre-gl-js/pull/7705)) (by [@lucaswoj](https://github.com/lucaswoj))
+- Fix feature state bulk remove + feature set per-id set does not remove state of first feature ([#7554](https://github.com/maplibre/maplibre-gl-js/pull/7554)) (by [@xavierjs](https://github.com/xavierjs))
+- Remove error when actor doesn't have a registered message type for better usability of custom messages in workers ([#7589](https://github.com/maplibre/maplibre-gl-js/issues/7589)) (by [@HarelM](https://github.com/HarelM))
+- Auto-load worker module for CDN usage ([#7595](https://github.com/maplibre/maplibre-gl-js/pull/7595)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix Large number of feature state keys leads to zoom lag when loading cached tiles ([#7590](https://github.com/maplibre/maplibre-gl-js/pull/7590)) (by [@xavierjs](https://github.com/xavierjs))
+- Fix issue when map's max zoom and source max zoom are close to eachother ([#7567](https://github.com/maplibre/maplibre-gl-js/issues/7567)) (by [@HarelM](https://github.com/HarelM))
 
 ## 6.0.0-22
 
@@ -112,7 +204,7 @@
 
 ### 🐞 Bug fixes
 
-- Fix camera jump on dragend with globe + terrain at low pitch ([#7736](https://github.com/maplibre/maplibre-gl-js/pull/7736)) (by @kodeezabdullah)
+- Fix camera jump on dragend with globe + terrain at low pitch ([#7736](https://github.com/maplibre/maplibre-gl-js/pull/7736)) (by [@kodeezabdullah](https://github.com/kodeezabdullah))
 - Fix web font rendering by awaiting document.fonts.load() before TinySDF instantiation ([#7735](https://github.com/maplibre/maplibre-gl-js/pull/7735)) (by [@kodeezabdullah](https://github.com/kodeezabdullah))
 - Remove the framebuffer completeness check that threw an unhandled `Framebuffer is not complete` error on transient GPU resource loss (e.g. when a tab wakes from sleep); incomplete framebuffers now self-heal on the next frame instead ([#7303](https://github.com/maplibre/maplibre-gl-js/pull/7303)) (by [@johanrd](https://github.com/johanrd))
 - ⚠️ Disable icon scaling with offset, this is a render breaking change which we have decided to incorporate in both maplibre-gl-js and maplibre-native ([#7742](https://github.com/maplibre/maplibre-gl-js/issues/7742)) (by [@springmeyer](https://github.com/springmeyer) and [@HarelM](https://github.com/HarelM))
@@ -214,8 +306,8 @@
   In practical terms, this will not change how you interact with the map.
   This enables performance improvements (e.g. line opacity), Terrain3D enhancements, and several bug fixes.
   WebGL2 support has been widely available for years, and usage of the legacy path had plateaued, so maintaining it no longer justified the added complexity.
-  To ease this breaking change, we have also refactored how we handle the case that no webgl is avaliableWebGL (e.g. due to browser restrictions).
-  You can now listen to the webgl error via `.on("error")`, or by overriding `Map._showWebGL2Error`.
+  To ease this breaking change, we have also refactored how we handle the case that no webgl is avaliable (e.g. due to browser restrictions).
+  You can now listen to the webgl error via `.on("error")`.
   See [caniuse.com/webgl2](https://caniuse.com/webgl2) for ecosystem support and [our RFC for details](https://github.com/maplibre/maplibre-gl-js/discussions/6017). ([#7453](https://github.com/maplibre/maplibre-gl-js/pull/7453)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ## 6.0.0-1

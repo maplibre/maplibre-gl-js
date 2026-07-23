@@ -5,12 +5,7 @@
       "timeout": 60000,
       "height": 256,
       "width": 128,
-      "maxPitch": 85,
-      "operations": [
-        [
-          "wait"
-        ]
-      ]
+      "maxPitch": 85
     }
   },
   "center": [
