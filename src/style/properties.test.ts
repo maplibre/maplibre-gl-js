@@ -1,6 +1,6 @@
 import {describe, test, expect, vi, afterEach} from 'vitest';
 import {ColorArray} from '@maplibre/maplibre-gl-style-spec';
-import {Layout, PropertyValue, Transitionable} from './properties.ts';
+import {DataDrivenProperty, Layout, PossiblyEvaluatedPropertyValue, PropertyValue, Transitionable} from './properties.ts';
 import symbolProperties from './style_layer/symbol_style_layer_properties.g.ts';
 import hillshadeProperties from './style_layer/hillshade_style_layer_properties.g.ts';
 import {type EvaluationParameters} from './evaluation_parameters.ts';
@@ -154,5 +154,32 @@ describe('paint property transitions between arrays of different length, issue #
             expect(color.r).toBeGreaterThan(0);
             expect(color.r).toBeLessThan(1);
         }
+    });
+});
+
+describe('DataDrivenProperty.interpolate between arrays of different length, issue #6606', () => {
+    const property = new DataDrivenProperty<ColorArray>({type: 'colorArray'} as any, 'color-array');
+
+    function constant(value: ColorArray) {
+        return new PossiblyEvaluatedPropertyValue<ColorArray>(
+            property, {kind: 'constant', value}, {} as EvaluationParameters);
+    }
+
+    test('a length change snaps to the target value instead of throwing', () => {
+        const from = constant(ColorArray.parse(['#ffffff', '#ff0000', '#00ff00', '#0000ff']));
+        const to = constant(ColorArray.parse(['#ffffff', '#ff0000', '#00ff00']));
+
+        const result = property.interpolate(from, to, 0.5);
+
+        expect(result.value).toEqual({kind: 'constant', value: ColorArray.parse(['#ffffff', '#ff0000', '#00ff00'])});
+    });
+
+    test('a same-length change still interpolates normally', () => {
+        const a = ColorArray.parse(['#000000', '#000000']);
+        const b = ColorArray.parse(['#ffffff', '#ffffff']);
+
+        const result = property.interpolate(constant(a), constant(b), 0.5);
+
+        expect(result.value).toEqual({kind: 'constant', value: ColorArray.interpolate(a, b, 0.5)});
     });
 });
