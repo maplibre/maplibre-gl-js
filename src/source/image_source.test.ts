@@ -142,6 +142,27 @@ describe('ImageSource', () => {
         expect(source.perspectiveTransform.every(Number.isFinite)).toBe(true);
     });
 
+    test('sets perspective transform when initial coordinates are loaded', async () => {
+        const source = createSource({
+            url: '/image.png',
+            coordinates: [
+                [-122.52, 37.815],
+                [-122.355, 37.8],
+                [-122.325, 37.7],
+                [-122.545, 37.735]
+            ]
+        });
+        const promise = waitForEvent(source, 'data', (e) => e.sourceDataType === 'content');
+
+        source.onAdd(new StubMap() as any);
+        await sleep(0);
+        server.respond();
+        await promise;
+
+        expect(source.perspectiveTransform).not.toEqual([0, 0, 1]);
+        expect(source.perspectiveTransform.every(Number.isFinite)).toBe(true);
+    });
+
     test('keeps projective transform when its constant coefficient is zero', () => {
         const source = createSource({url: '/image.png'});
         source.setCoordinates([
@@ -185,6 +206,18 @@ describe('ImageSource', () => {
             [-122.431640625, 37.840156836],
             [-122.431640625, 37.822802434],
             [-122.409667969, 37.857507156]
+        ]);
+
+        expect(source.perspectiveTransform).toEqual([0, 0, 1]);
+    });
+
+    test('sets identity perspective transform for a cancellation-degenerate quad', () => {
+        const source = createSource({url: '/image.png'});
+        source.setCoordinates([
+            [96.85546875, 79.36770077764092],
+            [-127.265625, 79.36770077764092],
+            [88.06640625, 79.36770077764092],
+            [-17.40234375, 59.534318001095585]
         ]);
 
         expect(source.perspectiveTransform).toEqual([0, 0, 1]);

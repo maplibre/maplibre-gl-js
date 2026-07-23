@@ -5,7 +5,12 @@ import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
 import type Point from '@mapbox/point-geometry';
 
-type RasterPerspectiveTransform = [number, number, number];
+export type RasterPerspectiveTransform = [number, number, number];
+
+/**
+ * Affine texture coordinates represented as a homogeneous transform.
+ */
+export const identityPerspectiveTransform: RasterPerspectiveTransform = [0, 0, 1];
 
 export type RasterUniformsType = {
     'u_tl_parent': Uniform2f;

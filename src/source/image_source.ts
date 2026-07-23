@@ -19,6 +19,11 @@ import type Point from '@mapbox/point-geometry';
 import {ensureError, MAX_TILE_ZOOM} from '../util/util.ts';
 import {Bounds} from '../geo/bounds.ts';
 import {isAbortError} from '../util/abort_error.ts';
+import {
+    identityPerspectiveTransform,
+    type RasterPerspectiveTransform
+} from '../webgl/program/raster_program.ts';
+import {mat2, vec3} from 'gl-matrix';
 
 /**
  * Four geographical coordinates,
@@ -27,11 +32,6 @@ import {isAbortError} from '../util/abort_error.ts';
  * They do not have to represent a rectangle.
  */
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
-
-/**
- * Coefficients for the inverse-homography denominator used by raster texture sampling.
- */
-type RasterPerspectiveTransform = [number, number, number];
 
 /**
  * The options object for the {@link ImageSource.updateImage} method
@@ -389,8 +389,9 @@ function hasWrongWindingOrder(coords: Point[]) {
     return crossProduct < 0;
 }
 
-const identityPerspectiveTransform: RasterPerspectiveTransform = [0, 0, 1];
 const perspectiveEpsilon = Number.EPSILON;
+// Allows for accumulated rounding error in the three-term homogeneous dot products.
+const perspectiveErrorFactor = 8;
 
 /**
  * Calculates the inverse-homography denominator used to sample non-affine
@@ -416,7 +417,8 @@ function calculateRasterPerspectiveTransform(cornerCoords: Point[]): RasterPersp
     const dy1 = topRight.y - bottomRight.y;
     const dx2 = bottomLeft.x - bottomRight.x;
     const dy2 = bottomLeft.y - bottomRight.y;
-    const determinant = dx1 * dy2 - dx2 * dy1;
+    const basis: mat2 = [dx1, dy1, dx2, dy2];
+    const determinant = mat2.determinant(basis);
 
     if (Math.abs(determinant) < perspectiveEpsilon) {
         return identityPerspectiveTransform;
@@ -424,25 +426,40 @@ function calculateRasterPerspectiveTransform(cornerCoords: Point[]): RasterPersp
 
     const perspectiveX = (sx * dy2 - dx2 * sy) / determinant;
     const perspectiveY = (dx1 * sy - sx * dy1) / determinant;
+
+    // A finite image of the unit square has positive homogeneous denominators
+    // at all four corners after normalizing the top-left denominator to one.
+    const forwardDenominators = [1, 1 + perspectiveX, 1 + perspectiveX + perspectiveY, 1 + perspectiveY];
+    const forwardDenominatorScale = Math.max(...forwardDenominators.map(value => Math.abs(value)));
+    const hasInvalidForwardDenominator = forwardDenominators.some(value =>
+        !Number.isFinite(value) || value <= perspectiveErrorFactor * perspectiveEpsilon * forwardDenominatorScale);
+    if (!Number.isFinite(forwardDenominatorScale) || forwardDenominatorScale === 0 || hasInvalidForwardDenominator) {
+        return identityPerspectiveTransform;
+    }
+
     const a = topRight.x - topLeft.x + perspectiveX * topRight.x;
     const b = bottomLeft.x - topLeft.x + perspectiveY * bottomLeft.x;
     const d = topRight.y - topLeft.y + perspectiveX * topRight.y;
     const e = bottomLeft.y - topLeft.y + perspectiveY * bottomLeft.y;
-    const inverseDenominator: RasterPerspectiveTransform = [
-        d * perspectiveY - e * perspectiveX,
-        b * perspectiveX - a * perspectiveY,
-        a * e - b * d
-    ];
+    const inverseDenominator: RasterPerspectiveTransform = [0, 0, 0];
+    vec3.cross(inverseDenominator, [a, d, perspectiveX], [b, e, perspectiveY]);
     const normalizationScale = Math.max(...inverseDenominator.map(value => Math.abs(value)));
     const cornerDenominators = cornerCoords.map(({x, y}) =>
-        inverseDenominator[0] * x + inverseDenominator[1] * y + inverseDenominator[2]);
+        vec3.dot(inverseDenominator, [x, y, 1]));
+    const cornerDenominatorErrors = cornerCoords.map(({x, y}) =>
+        perspectiveErrorFactor * perspectiveEpsilon * (
+            Math.abs(inverseDenominator[0] * x) +
+            Math.abs(inverseDenominator[1] * y) +
+            Math.abs(inverseDenominator[2])));
     const denominatorScale = Math.max(...cornerDenominators.map(value => Math.abs(value)));
     const denominatorSign = Math.sign(cornerDenominators[0]);
 
     // The denominator is affine within each rendered triangle. Reject a
     // transform that reaches or crosses zero anywhere inside the quad.
-    const hasInvalidDenominator = cornerDenominators.some(value =>
-        !Number.isFinite(value) || Math.abs(value) <= perspectiveEpsilon * denominatorScale || Math.sign(value) !== denominatorSign);
+    const hasInvalidDenominator = cornerDenominators.some((value, index) =>
+        !Number.isFinite(value) ||
+        Math.abs(value) <= Math.max(perspectiveEpsilon * denominatorScale, cornerDenominatorErrors[index]) ||
+        Math.sign(value) !== denominatorSign);
     if (!Number.isFinite(normalizationScale) || normalizationScale === 0 || !Number.isFinite(denominatorScale) ||
         denominatorScale === 0 || hasInvalidDenominator) {
         return identityPerspectiveTransform;

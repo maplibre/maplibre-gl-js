@@ -29,7 +29,7 @@ test('listImages throws an error if called before "load"', () => {
     }).toThrow(Error);
 });
 
-test('map fires `styleimagemissing` for missing icons', async () => {
+test('map fires `styleimagemissing` for missing icons without resolving the current request', async () => {
     const map = createMap();
 
     const id = 'missing-image';
@@ -45,9 +45,7 @@ test('map fires `styleimagemissing` for missing icons', async () => {
     expect(map.hasImage(id)).toBeFalsy();
 
     const generatedImage = await map.style.imageManager.getImages([id]);
-    expect(generatedImage[id].data.width).toEqual(sampleImage.width);
-    expect(generatedImage[id].data.height).toEqual(sampleImage.height);
-    expect(generatedImage[id].data.data).toEqual(sampleImage.data);
+    expect(generatedImage[id]).toBeUndefined();
     expect(called).toBe(id);
     expect(map.hasImage(id)).toBeTruthy();
 });
@@ -78,27 +76,22 @@ test('map resolves missing icons with an async missing style image resolver', as
     expect(missingImageEventSpy).not.toHaveBeenCalled();
 });
 
-test('map falls back to `styleimagemissing` when missing style image resolver returns no image', async () => {
+test('map fires `styleimagemissing` when missing style image resolver returns no image', async () => {
     const map = createMap();
 
     const id = 'missing-style-image-resolver-fallback';
-    const sampleImage = {width: 2, height: 1, data: new Uint8Array(8)};
     const resolver = vi.fn(async () => undefined);
-    let called: string;
+    const missingImageEventSpy = vi.fn();
 
     map.setMissingStyleImageResolver(resolver);
-    map.on('styleimagemissing', e => {
-        map.addImage(e.id, sampleImage);
-        called = e.id;
-    });
+    map.on('styleimagemissing', missingImageEventSpy);
 
     const generatedImage = await map.style.imageManager.getImages([id]);
     expect(resolver).toHaveBeenCalledWith(id);
-    expect(generatedImage[id].data.width).toEqual(sampleImage.width);
-    expect(generatedImage[id].data.height).toEqual(sampleImage.height);
-    expect(generatedImage[id].data.data).toEqual(sampleImage.data);
-    expect(called).toBe(id);
-    expect(map.hasImage(id)).toBeTruthy();
+    expect(generatedImage[id]).toBeUndefined();
+    expect(missingImageEventSpy).toHaveBeenCalledOnce();
+    expect(missingImageEventSpy.mock.calls[0][0].id).toBe(id);
+    expect(map.hasImage(id)).toBeFalsy();
 });
 
 test('map keeps missing style image resolver after replacing the style', async () => {
@@ -272,7 +265,7 @@ test('setImages broadcasts even when getImages is called between addImage and up
     expect(setImagesCalls.flatMap((c) => c[1])).toContain('new-image');
 });
 
-test('setImages broadcasts after styleimagemissing handler adds an image', async () => {
+test('setImages broadcasts after missing style image resolver adds an image', async () => {
     const map = createMap();
 
     await map.once('load');
@@ -280,8 +273,8 @@ test('setImages broadcasts after styleimagemissing handler adds an image', async
     const broadcastSpy = vi.fn().mockReturnValue(Promise.resolve({}));
     map.style.dispatcher.broadcast = broadcastSpy;
 
-    map.on('styleimagemissing', (e) => {
-        map.addImage(e.id, {width: 1, height: 1, data: new Uint8Array(4)});
+    map.setMissingStyleImageResolver((id) => {
+        map.addImage(id, {width: 1, height: 1, data: new Uint8Array(4)});
     });
 
     await map.style.getImages('0', {
