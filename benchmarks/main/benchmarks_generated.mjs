@@ -15261,6 +15261,22 @@ var PossiblyEvaluated = class {
 	}
 };
 /**
+* Returns the length of the array value, or undefined if the value is not an array or a style spec array wrapper.
+*/
+function getArrayValueLength(value) {
+	if (Array.isArray(value)) return value.length;
+	const values = value?.values;
+	return Array.isArray(values) ? values.length : void 0;
+}
+/**
+* Returns true if the two values are arrays of different length, either bare arrays or style spec array wrappers.
+*/
+function isNonInterpolableArrayChange(a, b) {
+	const lengthA = getArrayValueLength(a);
+	const lengthB = getArrayValueLength(b);
+	return lengthA !== void 0 && lengthB !== void 0 && lengthA !== lengthB;
+}
+/**
 * @internal
 * An implementation of `Property` for properties that do not permit data-driven (source or composite) expressions.
 * This restriction allows us to declare statically that the result of possibly evaluating this kind of property
@@ -15276,6 +15292,10 @@ var DataConstantProperty = class {
 		return value.expression.evaluate(parameters);
 	}
 	interpolate(a, b, t) {
+		if (isNonInterpolableArrayChange(a, b)) {
+			warnOnce(`Property "${this.name}" is trying to interpolate arrays of different lengths. Rendering may 'jump'.`);
+			return b;
+		}
 		const interpolationFn = interpolateFactory[this.specification.type];
 		if (interpolationFn) return interpolationFn(a, b, t);
 		else return a;
@@ -15306,6 +15326,10 @@ var DataDrivenProperty = class {
 			kind: "constant",
 			value: void 0
 		}, a.parameters);
+		if (isNonInterpolableArrayChange(a.value.value, b.value.value)) {
+			warnOnce(`Property "${this.name}" is trying to interpolate arrays of different lengths. Rendering may 'jump'.`);
+			return b;
+		}
 		const interpolationFn = interpolateFactory[this.specification.type];
 		if (interpolationFn) {
 			const interpolatedValue = interpolationFn(a.value.value, b.value.value, t);
@@ -60784,7 +60808,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main e59a90c";
+const version = "main 8d3526e";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
