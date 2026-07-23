@@ -2,7 +2,7 @@
     "version": 8,
     "metadata": {
         "test": {
-            "description": "At steep pitch (near the horizon), tile-covering bounds used to ignore building height when deciding which tiles to keep, so 3D buildings on tiles near the frustum edge would disappear even though they'd still poke into view.",
+            "description": "Make sure buildings are shown at high pitch near the camera",
             "maxPitch": 90
         }
     },
