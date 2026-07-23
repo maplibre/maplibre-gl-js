@@ -24490,9 +24490,9 @@ const getProperties$2 = () => properties$2 = properties$2 || new Properties({
 //#endregion
 //#region src/style/light.ts
 var Light = class extends Evented {
-	constructor(lightOptions) {
+	constructor(lightOptions, globalState) {
 		super();
-		this._transitionable = new Transitionable(getProperties$2(), "light", void 0);
+		this._transitionable = new Transitionable(getProperties$2(), "light", globalState);
 		this.setLight(lightOptions);
 		this._transitioning = this._transitionable.untransitioned();
 	}
@@ -41782,7 +41782,7 @@ var Style = class extends Evented {
 		else this.imageManager.setLoaded(true);
 		this.glyphManager.setURL(nextState.glyphs);
 		this._createLayers();
-		this.light = new Light(this.stylesheet.light);
+		this.light = new Light(this.stylesheet.light ?? {}, this._globalState);
 		this._setProjectionInternal(this.stylesheet.projection?.type || "mercator");
 		this.sky = new Sky(this.stylesheet.sky);
 		this.map.setTerrain(this.stylesheet.terrain ?? null, { validate: false });
@@ -60810,7 +60810,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 189dcd6";
+const version = "main 6b837db";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
