@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix renderer crash when `RasterTileSource#setTiles`/`setUrl` is called while the source contains errored tiles ([#7911](https://github.com/maplibre/maplibre-gl-js/pull/7911)) (by [@lazerg](https://github.com/lazerg))
 - Fix globe latitude precision on some GPUs (e.g. Mali) by reformulating the mercator-to-sphere Y coordinate algebraically (`exp` + rational arithmetic instead of `atan`/`sin`/`cos`), avoiding float32 cancellation and imprecise hardware transcendentals near the equator; the runtime GPU `atan`-error measurement/correction this superseded has also been removed ([#7419](https://github.com/maplibre/maplibre-gl-js/issues/7419)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
