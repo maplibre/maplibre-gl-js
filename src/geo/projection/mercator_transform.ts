@@ -218,7 +218,7 @@ export class MercatorTransform implements ITransform {
     public get autoCalculateNearFarZ(): boolean {
         return this._helper.autoCalculateNearFarZ;
     }
-    setTransitionState(_value: number, _error: number): void {
+    setTransitionState(_value: number): void {
         // Do nothing
     }
     //
