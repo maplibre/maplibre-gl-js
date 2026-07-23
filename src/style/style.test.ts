@@ -22,7 +22,6 @@ import type Point from '@mapbox/point-geometry';
 import {type PossiblyEvaluated} from './properties.ts';
 import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g.ts';
 import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g.ts';
-import {type HillshadeStyleLayer} from './style_layer/hillshade_style_layer.ts';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
