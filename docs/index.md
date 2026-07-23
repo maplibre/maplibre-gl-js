@@ -82,19 +82,24 @@ Pick your setup:
 
 === "Vite"
 
-    Use Vite's `?url` query to get the worker file's bundled URL:
+    Use Vite's `?worker&url` query to get a bundled, self-contained worker URL:
 
     ```ts
     import {Map, setWorkerUrl} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
-    import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+    import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 
     setWorkerUrl(workerUrl);
 
     const map = new Map({/* … */});
     ```
 
-    Works in modern Vite, dev and production.
+    Use `?worker&url` rather than plain `?url`: the dist worker imports its
+    sibling `maplibre-gl-shared.mjs`, and `?url` emits the worker file verbatim
+    in production builds without that sibling — the worker then fails on its
+    first import and no vector tiles load. `?worker&url` routes the file
+    through Vite's worker pipeline, emitting a self-contained chunk. Dev mode
+    works with either.
 
     If your build uses SSR (TanStack Start, Astro, etc.) and Vite resolves the CommonJS entry on the server, also add:
 
