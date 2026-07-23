@@ -3,8 +3,8 @@
   "metadata": {
     "test": {
       "timeout": 60000,
-      "height": 256,
-      "width": 128,
+      "height": 128,
+      "width": 256,
       "maxPitch": 85
     }
   },
