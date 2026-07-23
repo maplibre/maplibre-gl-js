@@ -104,17 +104,23 @@ export class FillExtrusionBucket implements Bucket {
         this.hasDependencies = hasPattern('fill-extrusion', this.layers, options);
 
         const globalProperties = new EvaluationParameters(this.zoom);
-        const needGeometry = this.layers[0]._featureFilter.needGeometry;
+        const layer = this.layers[0];
+        const roundedCornerDistance = layer.layout ? layer.layout.get('fill-extrusion-rounded-corner-distance') : 0;
+        const needGeometry = layer._featureFilter.needGeometry;
+
         for (const {feature, id, index, sourceLayerIndex} of features) {
             const evaluationFeature = toEvaluationFeature(feature, needGeometry);
 
-            if (!this.layers[0]._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
+            if (!layer._featureFilter.filter(globalProperties, evaluationFeature, canonical)) continue;
+
+            const rawGeometry = needGeometry ? evaluationFeature.geometry : loadGeometry(feature);
+            const geometry = roundedCornerDistance > 0 ? roundPolygonCorners(rawGeometry, roundedCornerDistance, canonical) : rawGeometry;
 
             const bucketFeature: BucketFeature = {
                 id,
                 sourceLayerIndex,
                 index,
-                geometry: needGeometry ? evaluationFeature.geometry : loadGeometry(feature),
+                geometry,
                 properties: feature.properties,
                 type: feature.type,
                 patterns: {}
