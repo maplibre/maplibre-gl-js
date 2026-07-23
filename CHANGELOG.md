@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add `MapOptions.rotateSpeed` and `MapOptions.pitchSpeed`, the degrees the bearing/pitch change per pixel dragged ([#7949](https://github.com/maplibre/maplibre-gl-js/pull/7949)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
