@@ -1,4 +1,4 @@
-import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {ImageSource} from './image_source.ts';
 import {Evented} from '../util/evented.ts';
 import {type IReadonlyTransform} from '../geo/transform_interface.ts';
@@ -12,6 +12,7 @@ import {type Texture} from '../webgl/texture.ts';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {ImageRequest} from '../util/image_request.ts';
+import {type MapSourceDataEvent} from '../ui/events.ts';
 
 function createSource(options) {
     options = extend({
@@ -53,6 +54,10 @@ describe('ImageSource', () => {
         server.respondWith('/missing-image.png', [404, {}, '']);
     });
 
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     test('constructor', () => {
         const source = createSource({url: '/image.png'});
 
@@ -73,33 +78,34 @@ describe('ImageSource', () => {
         expect(source.image).toBeTruthy();
     });
 
-    test('does not pass a null AbortController to ImageRequest when aborted during an async transformRequest', async () => {
-        // https://github.com/maplibre/maplibre-gl-js/issues/8004 — same ordering
-        // race as RasterTileSource.loadTile: an abort arriving during the awaited
-        // transformRequest nulled this._request, and the resumed load() handed
-        // null to ImageRequest.
+    test('passes a live AbortController to ImageRequest when the source is aborted during an async transformRequest', async () => {
         const source = createSource({url: '/image.png'});
         const map = new StubMap() as any;
+        let transformStarted: () => void;
+        const transformCalled = new Promise<void>((resolve) => {
+            transformStarted = resolve;
+        });
         let releaseTransform: (params: {url: string}) => void;
         map._requestManager = {
-            transformRequest: () => new Promise<{url: string}>((resolve) => {
-                releaseTransform = resolve;
-            })
+            transformRequest: () => {
+                transformStarted();
+                return new Promise<{url: string}>((resolve) => {
+                    releaseTransform = resolve;
+                });
+            }
         };
         const image = {width: 1, height: 1} as ImageBitmap;
         const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: image});
-        try {
-            source.onAdd(map); // kicks off load(), now suspended in the transform
-            await sleep(0);
-            source.onRemove(); // the abort lands during that suspension
-            releaseTransform({url: '/image.png'});
-            await sleep(0);
 
-            expect(getImageSpy).toHaveBeenCalledTimes(1);
-            expect(getImageSpy.mock.calls[0][1]).toBeInstanceOf(AbortController);
-        } finally {
-            getImageSpy.mockRestore();
-        }
+        source.onAdd(map);
+        await transformCalled; // load() is suspended in the transform
+        source.onRemove(); // the abort lands during that suspension
+        const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        releaseTransform({url: '/image.png'});
+        await loaded;
+
+        expect(getImageSpy).toHaveBeenCalledTimes(1);
+        expect(getImageSpy.mock.calls[0][1]).toBeInstanceOf(AbortController);
     });
 
     test('transforms url request', () => {

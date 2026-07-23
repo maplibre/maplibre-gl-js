@@ -439,20 +439,21 @@ describe('RasterTileSource', () => {
         expect(expiryDataSpy).toHaveBeenCalledTimes(1);
     });
 
-    test('does not pass an undefined AbortController to ImageRequest when aborted during an async transformRequest', async () => {
-        // https://github.com/maplibre/maplibre-gl-js/issues/8004: loadTile used
-        // to create tile.abortController BEFORE awaiting transformRequest inside
-        // the getImage argument list; an abortTile() arriving during that
-        // suspension deleted the controller, and the resumed call handed
-        // `undefined` to ImageRequest — whose queue then crashed reading
-        // `.signal` of undefined.
-        let releaseTransform: (params: {url: string}) => void;
-        const transformPromise = new Promise<{url: string}>((resolve) => {
-            releaseTransform = resolve;
+    test('passes a live AbortController to ImageRequest when the tile is aborted during an async transformRequest', async () => {
+        let transformStarted: () => void;
+        const transformCalled = new Promise<void>((resolve) => {
+            transformStarted = resolve;
         });
+        let releaseTransform: (params: {url: string}) => void;
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
-        }, (url, type) => type === 'Tile' ? transformPromise : {url});
+        }, (url, type) => {
+            if (type !== 'Tile') return {url};
+            transformStarted();
+            return new Promise<{url: string}>((resolve) => {
+                releaseTransform = resolve;
+            });
+        });
         source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
 
         const image = {width: 256, height: 256} as ImageBitmap;
@@ -469,7 +470,7 @@ describe('RasterTileSource', () => {
         } as any as Tile;
 
         const loadPromise = source.loadTile(tile);
-        await sleep(0); // loadTile is now suspended awaiting the transform
+        await transformCalled; // loadTile is suspended in the transform
         await source.abortTile(tile); // the abort lands during that suspension
         releaseTransform({url: 'http://example.com/10/5/5.png'});
         await expect(loadPromise).resolves.toBeUndefined();
