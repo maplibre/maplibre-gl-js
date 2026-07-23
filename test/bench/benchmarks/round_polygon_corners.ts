@@ -3,6 +3,49 @@ import createMap from '../lib/create_map.ts';
 import type {Map} from '../../../src/ui/map.ts';
 import type {GeoJSONSource} from '../../../src/source/geojson_source.ts';
 
+function generateBuildingData(): GeoJSON.FeatureCollection {
+    const features: GeoJSON.Feature[] = [];
+
+    for (let i = 0; i < 500; i++) {
+        const cx = -74.006 + (i % 25) * 0.002;
+        const cy = 40.7128 + Math.floor(i / 25) * 0.002;
+        const size = 0.0008;
+
+        const outerRing = [
+            [cx - size, cy - size],
+            [cx + size, cy - size],
+            [cx + size, cy + size],
+            [cx - size, cy + size],
+            [cx - size, cy - size]
+        ];
+
+        const holeRing = [
+            [cx - size * 0.4, cy - size * 0.4],
+            [cx + size * 0.4, cy - size * 0.4],
+            [cx + size * 0.4, cy + size * 0.4],
+            [cx - size * 0.4, cy + size * 0.4],
+            [cx - size * 0.4, cy - size * 0.4]
+        ];
+
+        features.push({
+            type: 'Feature',
+            properties: {
+                height: 30 + (i % 50),
+                corner_radius: 10 + (i % 15)
+            },
+            geometry: {
+                type: 'Polygon',
+                coordinates: i % 2 === 0 ? [outerRing, holeRing] : [outerRing]
+            }
+        });
+    }
+
+    return {
+        type: 'FeatureCollection',
+        features
+    };
+}
+
 /**
  * Public API Benchmark for fill-extrusion rounded corner processing using GeoJSONSource and Map.
  */
@@ -11,46 +54,7 @@ export default class RoundPolygonCorners extends Benchmark {
     sampleData: GeoJSON.FeatureCollection;
 
     async setup(): Promise<void> {
-        const features: GeoJSON.Feature[] = [];
-
-        for (let i = 0; i < 500; i++) {
-            const cx = -74.006 + (i % 25) * 0.002;
-            const cy = 40.7128 + Math.floor(i / 25) * 0.002;
-            const size = 0.0008;
-
-            const outerRing = [
-                [cx - size, cy - size],
-                [cx + size, cy - size],
-                [cx + size, cy + size],
-                [cx - size, cy + size],
-                [cx - size, cy - size]
-            ];
-
-            const holeRing = [
-                [cx - size * 0.4, cy - size * 0.4],
-                [cx + size * 0.4, cy - size * 0.4],
-                [cx + size * 0.4, cy + size * 0.4],
-                [cx - size * 0.4, cy + size * 0.4],
-                [cx - size * 0.4, cy - size * 0.4]
-            ];
-
-            features.push({
-                type: 'Feature',
-                properties: {
-                    height: 30 + (i % 50),
-                    corner_radius: 10 + (i % 15)
-                },
-                geometry: {
-                    type: 'Polygon',
-                    coordinates: i % 2 === 0 ? [outerRing, holeRing] : [outerRing]
-                }
-            });
-        }
-
-        this.sampleData = {
-            type: 'FeatureCollection',
-            features
-        };
+        this.sampleData = generateBuildingData();
 
         this.map = await createMap({
             width: 512,
