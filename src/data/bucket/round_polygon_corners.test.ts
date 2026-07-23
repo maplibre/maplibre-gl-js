@@ -4,7 +4,7 @@ import {roundPolygonCorners} from './round_polygon_corners.ts';
 import {CanonicalTileID} from '../../tile/tile_id.ts';
 
 function round(p: Point) {
-    return {x: Math.round(p.x * 100) / 100, y: Math.round(p.y * 100) / 100}
+    return {x: Math.round(p.x * 100) / 100, y: Math.round(p.y * 100) / 100};
 }
 
 describe('roundPolygonCorners', () => {
