@@ -1,12 +1,13 @@
 ## main
 ### ✨ Features and improvements
+- Add `GeoJSONSource.getClusterOptions` to get a source's current cluster options (`cluster`, `clusterMaxZoom`, `clusterRadius`) ([#7948](https://github.com/maplibre/maplibre-gl-js/pull/7948)) (by [@lazerg](https://github.com/lazerg))
 - Support `global-state` expressions in `light.*` properties ([#7966](https://github.com/maplibre/maplibre-gl-js/pull/7966)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Add `MapOptions.rotateSpeed` and `MapOptions.pitchSpeed`, the degrees the bearing/pitch change per pixel dragged ([#7949](https://github.com/maplibre/maplibre-gl-js/pull/7949)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix an error thrown when a paint property transitions between arrays of different length ([#6606](https://github.com/maplibre/maplibre-gl-js/issues/6606)) (by [@HarelM](https://github.com/HarelM))
-- Fix renderer crash when `RasterTileSource#setTiles`/`setUrl` is called while the source contains errored tiles ([#7911](https://github.com/maplibre/maplibre-gl-js/pull/7911)) (by [@lazerg](https://github.com/lazerg))
+- Fix renderer crash when `RasterTileSource.setTiles`/`setUrl` is called while the source contains errored tiles ([#7911](https://github.com/maplibre/maplibre-gl-js/pull/7911)) (by [@lazerg](https://github.com/lazerg))
 - Fix globe latitude precision on some GPUs (e.g. Mali) by reformulating the mercator-to-sphere Y coordinate algebraically (`exp` + rational arithmetic instead of `atan`/`sin`/`cos`), avoiding float32 cancellation and imprecise hardware transcendentals near the equator; the runtime GPU `atan`-error measurement/correction this superseded has also been removed ([#7419](https://github.com/maplibre/maplibre-gl-js/issues/7419)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
