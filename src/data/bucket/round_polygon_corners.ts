@@ -99,10 +99,6 @@ function appendRoundCorner(
 
     // Corner distance clamped to at most half the adjacent edge lengths
     const r = Math.min(distanceInTileUnits, lenA / 2, lenB / 2);
-    if (r <= 0) {
-        pushPoint(newRing, currentPoint.x, currentPoint.y);
-        return;
-    }
 
     // Tangent points on edges to prevPoint and nextPoint
     const tangentAx = currentPoint.x + uax * r;
@@ -114,21 +110,11 @@ function appendRoundCorner(
     let bisectorX = uax + ubx;
     let bisectorY = uay + uby;
     const bisectorLen = Math.sqrt(bisectorX * bisectorX + bisectorY * bisectorY);
-
-    if (bisectorLen < 1e-6) {
-        pushPoint(newRing, currentPoint.x, currentPoint.y);
-        return;
-    }
-
     bisectorX /= bisectorLen;
     bisectorY /= bisectorLen;
 
     // Fast half-angle trigonometry identities without acos/cos/tan
     const cosHalfTheta = Math.sqrt((1 + dot) / 2);
-    if (cosHalfTheta < 1e-6) {
-        pushPoint(newRing, currentPoint.x, currentPoint.y);
-        return;
-    }
     const tanHalfTheta = Math.sqrt((1 - dot) / (1 + dot));
 
     // Center of the rounding arc

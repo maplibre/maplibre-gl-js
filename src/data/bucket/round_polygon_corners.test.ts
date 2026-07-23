@@ -224,18 +224,65 @@ describe('roundPolygonCorners', () => {
         );
     });
 
-    test('handles a near-180-degree u-turn vertex by preserving the corner point', () => {
+    test('preserves near-zero-degree spike vertex without adding arc points', () => {
         const input = [[
             new Point(0, 0),
             new Point(100, 0),
-            new Point(0, 1),
+            new Point(0, 0.4),
             new Point(0, 0)
         ]];
 
         const output = roundPolygonCorners(input, 5, canonical);
         const points = output[0].map(round);
 
-        expect(points.some(p => p.x === 100 && p.y === 0)).toBe(true);
+        expect(points.length).toBe(11);
+        expect(points).toEqual( [
+            {
+                'x': 0,
+                'y': 0.2,
+            },
+            {
+                'x': 0.03,
+                'y': 0.1,
+            },
+            {
+                'x': 0.1,
+                'y': 0.03,
+            },
+            {
+                'x': 0.2,
+                'y': 0,
+            },
+            {
+                'x': 100,
+                'y': 0,
+            },
+            {
+                'x': 0.2,
+                'y': 0.4,
+            },
+            {
+                'x': 0.12,
+                'y': 0.38,
+            },
+            {
+                'x': 0.06,
+                'y': 0.34,
+            },
+            {
+                'x': 0.02,
+                'y': 0.28,
+            },
+            {
+                'x': 0,
+                'y': 0.2,
+            },
+            {
+                'x': 0,
+                'y': 0.2,
+            },
+        ]
+        );
     });
 
     test('preserves collinear 180-degree vertices without adding arc points', () => {
