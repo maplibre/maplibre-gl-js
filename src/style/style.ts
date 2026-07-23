@@ -491,7 +491,7 @@ export class Style extends Evented<MapEventType> {
         this.glyphManager.setURL(nextState.glyphs);
         this._createLayers();
 
-        this.light = new Light(this.stylesheet.light);
+        this.light = new Light(this.stylesheet.light ?? {}, this._globalState);
         this._setProjectionInternal(this.stylesheet.projection?.type || 'mercator');
 
         this.sky = new Sky(this.stylesheet.sky);
