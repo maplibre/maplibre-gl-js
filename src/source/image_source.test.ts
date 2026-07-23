@@ -11,6 +11,7 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {type Texture} from '../webgl/texture.ts';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {ImageRequest} from '../util/image_request.ts';
 
 function createSource(options) {
     options = extend({
@@ -70,6 +71,35 @@ describe('ImageSource', () => {
         server.respond();
         await sleep(0);
         expect(source.image).toBeTruthy();
+    });
+
+    test('does not pass a null AbortController to ImageRequest when aborted during an async transformRequest', async () => {
+        // https://github.com/maplibre/maplibre-gl-js/issues/8004 — same ordering
+        // race as RasterTileSource.loadTile: an abort arriving during the awaited
+        // transformRequest nulled this._request, and the resumed load() handed
+        // null to ImageRequest.
+        const source = createSource({url: '/image.png'});
+        const map = new StubMap() as any;
+        let releaseTransform: (params: {url: string}) => void;
+        map._requestManager = {
+            transformRequest: () => new Promise<{url: string}>((resolve) => {
+                releaseTransform = resolve;
+            })
+        };
+        const image = {width: 1, height: 1} as ImageBitmap;
+        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: image});
+        try {
+            source.onAdd(map); // kicks off load(), now suspended in the transform
+            await sleep(0);
+            source.onRemove(); // the abort lands during that suspension
+            releaseTransform({url: '/image.png'});
+            await sleep(0);
+
+            expect(getImageSpy).toHaveBeenCalledTimes(1);
+            expect(getImageSpy.mock.calls[0][1]).toBeInstanceOf(AbortController);
+        } finally {
+            getImageSpy.mockRestore();
+        }
     });
 
     test('transforms url request', () => {

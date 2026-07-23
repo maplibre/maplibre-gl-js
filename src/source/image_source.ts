@@ -150,9 +150,13 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
 
         this.url = this.options.url;
 
+        // Same ordering constraint as RasterTileSource.loadTile (#8004): the
+        // transform is awaited before the AbortController exists, so an abort
+        // arriving mid-transform can never turn the second argument into null.
+        const request = await this.map._requestManager.transformRequest(this.url, ResourceType.Image);
         this._request = new AbortController();
         try {
-            const image = await ImageRequest.getImage(await this.map._requestManager.transformRequest(this.url, ResourceType.Image), this._request);
+            const image = await ImageRequest.getImage(request, this._request);
             this._request = null;
             this._loaded = true;
 

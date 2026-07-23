@@ -439,6 +439,45 @@ describe('RasterTileSource', () => {
         expect(expiryDataSpy).toHaveBeenCalledTimes(1);
     });
 
+    test('does not pass an undefined AbortController to ImageRequest when aborted during an async transformRequest', async () => {
+        // https://github.com/maplibre/maplibre-gl-js/issues/8004: loadTile used
+        // to create tile.abortController BEFORE awaiting transformRequest inside
+        // the getImage argument list; an abortTile() arriving during that
+        // suspension deleted the controller, and the resumed call handed
+        // `undefined` to ImageRequest — whose queue then crashed reading
+        // `.signal` of undefined.
+        let releaseTransform: (params: {url: string}) => void;
+        const transformPromise = new Promise<{url: string}>((resolve) => {
+            releaseTransform = resolve;
+        });
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }, (url, type) => type === 'Tile' ? transformPromise : {url});
+        source.tiles = ['http://example.com/{z}/{x}/{y}.png'];
+
+        const image = {width: 256, height: 256} as ImageBitmap;
+        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: image});
+        source.map.painter = {
+            context: {gl: {}},
+            getTileTexture: () => ({update: vi.fn()})
+        } as any;
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            setExpiryData() {}
+        } as any as Tile;
+
+        const loadPromise = source.loadTile(tile);
+        await sleep(0); // loadTile is now suspended awaiting the transform
+        await source.abortTile(tile); // the abort lands during that suspension
+        releaseTransform({url: 'http://example.com/10/5/5.png'});
+        await expect(loadPromise).resolves.toBeUndefined();
+
+        expect(getImageSpy).toHaveBeenCalledTimes(1);
+        expect(getImageSpy.mock.calls[0][1]).toBeInstanceOf(AbortController);
+    });
+
     test('does not throw when tile is aborted', async () => {
         const source = createSource({
             minzoom: 0,

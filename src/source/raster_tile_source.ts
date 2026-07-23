@@ -206,10 +206,15 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const premultiply = this._premultiplyAlpha;
         const imageBitmapOptions = premultiply ? undefined : {premultiplyAlpha: 'none'} as const;
+        // The transform must be awaited BEFORE the AbortController is created and
+        // read: with the await inside the argument list, an abortTile() arriving
+        // during the suspension deletes tile.abortController and the resumed call
+        // would hand undefined to ImageRequest, crashing its queue (#8004).
+        const request = await this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.abortController = new AbortController();
         try {
             const response = await ImageRequest.getImage(
-                await this.map._requestManager.transformRequest(url, ResourceType.Tile),
+                request,
                 tile.abortController,
                 this.map._refreshExpiredTiles,
                 imageBitmapOptions
