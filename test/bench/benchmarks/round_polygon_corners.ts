@@ -87,22 +87,15 @@ export default class RoundPolygonCorners extends Benchmark {
             }
         });
 
-        await new Promise(resolve => {
-            if (this.map.loaded()) {
-                resolve(null);
-            } else {
-                this.map.once('idle', resolve);
-            }
-        });
+        if (!this.map.loaded()) {
+            await this.map.once('idle');
+        }
     }
 
     async bench(): Promise<void> {
         const source = this.map.getSource<GeoJSONSource>('buildings');
         source.setData(this.sampleData);
-
-        await new Promise(resolve => {
-            this.map.once('idle', resolve);
-        });
+        await this.map.once('idle');
     }
 
     teardown(): void {
