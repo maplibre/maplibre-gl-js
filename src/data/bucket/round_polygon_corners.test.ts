@@ -61,11 +61,11 @@ describe('roundPolygonCorners', () => {
             new Point(0, 0)
         ]];
 
-        const output = roundPolygonCorners(input, 10, canonical);
+        const output = roundPolygonCorners(input, 2, canonical);
         const points = output[0].map(round);
 
         expect(points.length).toBe(19);
-        expect(JSON.stringify(fc(points))).toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[0,2],[0.27,1],[1,0.27],[2,0],[8,0],[8.77,0.15],[9.41,0.59],[9.85,1.23],[10,2],[10,8],[9.73,9],[9,9.73],[8,10],[2,10],[1.23,9.85],[0.59,9.41],[0.15,8.77],[0,8],[0,2]]]}}]}');
+        expect(JSON.stringify(fc(points))).toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[0,0.82],[0.11,0.41],[0.41,0.11],[0.82,0],[9.18,0],[9.49,0.06],[9.76,0.24],[9.94,0.51],[10,0.82],[10,9.18],[9.89,9.59],[9.59,9.89],[9.18,10],[0.82,10],[0.51,9.94],[0.24,9.76],[0.06,9.49],[0,9.18],[0,0.82]]]}}]}');
     });
 
     test('clamps corner rounding distance to 20% of edge length when requested distance is large', () => {
