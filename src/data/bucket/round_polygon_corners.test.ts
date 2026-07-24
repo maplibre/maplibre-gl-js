@@ -28,7 +28,7 @@ function fc(coordinates: GeoJSON.Position[]): GeoJSON.FeatureCollection {
 describe('roundPolygonCorners', () => {
     const canonical = new CanonicalTileID(10, 500, 300);
 
-    test.each([-5, 0, 0.1])('returns original polygon reference when distance is %d', (distance) => {
+    test.each([-5, 0])('returns original polygon reference when distance is %d', (distance) => {
         const input = [[
             new Point(0, 0),
             new Point(100, 0),
@@ -51,7 +51,23 @@ describe('roundPolygonCorners', () => {
         const output = roundPolygonCorners(input, 10, canonical);
         expect(output).toStrictEqual(input);
     });
-
+    
+    test('still rounds very small rounding', () => {
+        const input = [[
+            new Point(0, 0),
+            new Point(10, 0),
+            new Point(10, 10),
+            new Point(0, 10),
+            new Point(0, 0)
+        ]];
+    
+        const output = roundPolygonCorners(input, 0.1, canonical);
+        const points = output[0].map(round);
+    
+        expect(points.length).toBe(18);
+        expect(JSON.stringify(fc(points))).toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[0,0.04],[0.01,0.02],[0.02,0.01],[0.04,0],[9.96,0],[9.97,0],[9.99,0.01],[10,0.03],[10,0.04],[10,9.96],[9.99,9.98],[9.98,9.99],[9.96,10],[0.04,10],[0.02,9.99],[0.01,9.98],[0,9.96],[0,0.04]]]}}]}');
+    });
+        
     test('rounds corners of a square polygon into arc vertices', () => {
         const input = [[
             new Point(0, 0),
@@ -60,10 +76,10 @@ describe('roundPolygonCorners', () => {
             new Point(0, 10),
             new Point(0, 0)
         ]];
-
+        
         const output = roundPolygonCorners(input, 2, canonical);
         const points = output[0].map(round);
-
+        
         expect(points.length).toBe(19);
         expect(JSON.stringify(fc(points))).toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[0,0.82],[0.11,0.41],[0.41,0.11],[0.82,0],[9.18,0],[9.49,0.06],[9.76,0.24],[9.94,0.51],[10,0.82],[10,9.18],[9.89,9.59],[9.59,9.89],[9.18,10],[0.82,10],[0.51,9.94],[0.24,9.76],[0.06,9.49],[0,9.18],[0,0.82]]]}}]}');
     });

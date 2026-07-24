@@ -20,10 +20,6 @@ export function roundPolygonCorners(
     }
 
     const distanceInTileUnits = getTileUnitsForMeters(distanceInMeters, canonical);
-    if (distanceInTileUnits < 0.5) {
-        return polygon;
-    }
-
     return polygon.map(ring => roundRing(ring, distanceInTileUnits));
 }
 
