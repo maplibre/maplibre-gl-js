@@ -1,16 +1,13 @@
-import {describe, beforeEach, test, expect, vi, type Mock} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi, type Mock} from 'vitest';
 import {ImageSource} from './image_source.ts';
-import {Evented} from '../util/evented.ts';
-import {type IReadonlyTransform} from '../geo/transform_interface.ts';
 import {extend, MAX_TILE_ZOOM} from '../util/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
-import {type RequestManager} from '../util/request_manager.ts';
-import {sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
+import {beforeMapTest, createMap, sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {type Texture} from '../webgl/texture.ts';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {type Map} from '../ui/map.ts';
 
 function createSource(options) {
     options = extend({
@@ -20,34 +17,22 @@ function createSource(options) {
     return new ImageSource('id', options, {} as any, options.eventedParent);
 }
 
-class StubMap extends Evented {
-    transform: IReadonlyTransform;
-    painter: any;
-    _requestManager: RequestManager;
-
-    constructor(transformRequest: (url: string, resourceType?: string) => any = (url) => ({url})) {
-        super();
-        this.transform = new MercatorTransform();
-        this._requestManager = {
-            transformRequest
-        } as any as RequestManager;
-        this.painter = {
-            context: {
-                gl: {}
-            }
-        };
-    }
-}
-
 describe('ImageSource', () => {
     stubAjaxGetImage(undefined);
     let server: FakeServer;
+    let map: Map;
 
     beforeEach(() => {
+        beforeMapTest();
         global.fetch = null;
         server = fakeServer.create();
         server.respondWith(new ArrayBuffer(1));
         server.respondWith('/missing-image.png', [404, {}, '']);
+        map = createMap({style: null});
+    });
+
+    afterEach(() => {
+        map.remove();
     });
 
     test('constructor', () => {
@@ -63,7 +48,7 @@ describe('ImageSource', () => {
         source.on('dataloading', (e) => {
             expect(e.dataType).toBe('source');
         });
-        source.onAdd(new StubMap() as any);
+        source.onAdd(map);
         await sleep(0);
         server.respond();
         await sleep(0);
@@ -73,7 +58,7 @@ describe('ImageSource', () => {
     test('transforms url request', () => {
         const transformRequest = vi.fn((url: string, _resourceType?: string) => ({url}));
         const source = createSource({url: '/image.png'});
-        const map = new StubMap(transformRequest) as any;
+        map.setTransformRequest(transformRequest);
         source.onAdd(map);
         server.respond();
         expect(transformRequest).toHaveBeenCalledTimes(1);
@@ -83,10 +68,10 @@ describe('ImageSource', () => {
 
     test('can asynchronously transform request', async () => {
         const source = createSource({url: '/image.png'});
-        const map = new StubMap(async (url) => ({
+        map.setTransformRequest(async (url) => ({
             url,
             headers: {Authorization: 'Bearer token'}
-        })) as any;
+        }));
         const promise = source.once('data');
         source.onAdd(map);
         await sleep(0);
@@ -99,7 +84,7 @@ describe('ImageSource', () => {
     test('updates url from updateImage', () => {
         const transformRequest = vi.fn((url: string, _resourceType?: string) => ({url}));
         const source = createSource({url: '/image.png'});
-        const map = new StubMap(transformRequest) as any;
+        map.setTransformRequest(transformRequest);
         source.onAdd(map);
         server.respond();
         expect(transformRequest).toHaveBeenCalledTimes(1);
@@ -114,7 +99,6 @@ describe('ImageSource', () => {
 
     test('sets coordinates', () => {
         const source = createSource({url: '/image.png'});
-        const map = new StubMap() as any;
         source.onAdd(map);
         server.respond();
         const beforeSerialized = source.serialize();
@@ -126,7 +110,6 @@ describe('ImageSource', () => {
 
     test('sets coordinates via updateImage', async () => {
         const source = createSource({url: '/image.png'});
-        const map = new StubMap() as any;
         source.onAdd(map);
         server.respond();
         const beforeSerialized = source.serialize();
@@ -145,7 +128,7 @@ describe('ImageSource', () => {
     test('fires data event when content is loaded', async () => {
         const source = createSource({url: '/image.png'});
         const promise = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'content');
-        source.onAdd(new StubMap() as any);
+        source.onAdd(map);
         await sleep(0);
         server.respond();
         await promise;
@@ -155,7 +138,7 @@ describe('ImageSource', () => {
     test('fires data event when metadata is loaded', async () => {
         const source = createSource({url: '/image.png'});
         const promise = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'metadata');
-        source.onAdd(new StubMap() as any);
+        source.onAdd(map);
         await sleep(0);
         server.respond();
         await expect(promise).resolves.toBeDefined();
@@ -165,7 +148,7 @@ describe('ImageSource', () => {
         const source = createSource({url: '/image.png'});
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
         const promise = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'idle');
-        source.onAdd(new StubMap() as any);
+        source.onAdd(map);
         server.respond();
 
         source.tiles[String(tile.tileID.wrap)] = tile;
@@ -187,7 +170,6 @@ describe('ImageSource', () => {
     });
 
     test('allows using updateImage before initial image is loaded', async () => {
-        const map = new StubMap() as any;
         const source = createSource({url: '/image.png', eventedParent: map});
 
         // Suppress errors because we're aborting when updating.
@@ -203,7 +185,6 @@ describe('ImageSource', () => {
     });
 
     test('cancels request if updateImage is used', async () => {
-        const map = new StubMap() as any;
         const source = createSource({url: '/image.png', eventedParent: map});
 
         // Suppress errors because we're aborting.
@@ -218,7 +199,6 @@ describe('ImageSource', () => {
     });
 
     test('marks the source as loaded when the request has received a response', async () => {
-        const map = new StubMap() as any;
         const source = createSource({url: '/image.png', eventedParent: map});
 
         expect(source.loaded()).toBe(false);
@@ -243,7 +223,6 @@ describe('ImageSource', () => {
     });
 
     test('does not throw when updateImage is called while a request is pending', async () => {
-        const map = new StubMap() as any;
         const source = createSource({url: '/image.png', eventedParent: map});
 
         const errorHandler = vi.fn();
@@ -258,13 +237,12 @@ describe('ImageSource', () => {
     });
 
     describe('updateImage with a decoded image', () => {
-        let map: any;
         let source: ImageSource;
         let transformRequest: Mock<(url: string, resourceType?: string) => any>;
 
         beforeEach(() => {
             transformRequest = vi.fn((url: string, _resourceType?: string) => ({url}));
-            map = new StubMap(transformRequest) as any;
+            map.setTransformRequest(transformRequest);
             // Suppress errors from aborting the initial (never-responded) request.
             map.on('error', () => {});
             source = createSource({url: '/image.png', eventedParent: map});
@@ -332,7 +310,6 @@ describe('ImageSource', () => {
     describe('terrainTileRanges', () => {
         test('sets tile ranges for all zoom levels', () => {
             const source = createSource({url: '/image.png'});
-            const map = new StubMap() as any;
             source.onAdd(map);
             server.respond();
             source.setCoordinates([[-10, 10], [10, 10], [10, -10], [-10, -10]]);
@@ -344,7 +321,6 @@ describe('ImageSource', () => {
 
         test('calculates tile ranges properly', () => {
             const source = createSource({url: '/image.png'});
-            const map = new StubMap() as any;
             source.onAdd(map);
             server.respond();
             source.setCoordinates([[11.39585,47.30074],[11.46585,47.30074],[11.46585,47.25074],[11.39585,47.25074]]);
@@ -384,7 +360,6 @@ describe('ImageSource', () => {
 
         test('calculates tile ranges for an image exceeds the world bounds - east', () => {
             const source = createSource({url: '/image.png'});
-            const map = new StubMap() as any;
             source.onAdd(map);
             server.respond();
             source.setCoordinates([[-180, 60], [270, 60], [270, -60], [-180, -60]]);
@@ -408,7 +383,6 @@ describe('ImageSource', () => {
 
         test('calculates tile ranges for an image exceeds the world bounds - west', () => {
             const source = createSource({url: '/image.png'});
-            const map = new StubMap() as any;
             source.onAdd(map);
             server.respond();
             source.setCoordinates([[120, 60], [-270, 60], [-270, -60], [120, -60]]);
