@@ -89,14 +89,14 @@ function appendRoundCorner(
     const ubx = bx / lenB;
     const uby = by / lenB;
 
-    // Straight lines (colinear ~180 deg) or zero-degree turns
+    // Straight lines or zero-degree turns
     const dot = uax * ubx + uay * uby;
-    if (dot < -0.99999 || dot > 0.99999) {
+    if (Math.abs(dot) > Math.cos(5 * Math.PI / 180)) {
         pushPoint(newRing, currentPoint.x, currentPoint.y);
         return;
     }
 
-    // If we don't clamp, we get a circle which looks bad
+    // clamping to resonable max for the geometry
     const maxEdgeLenPercent = 0.2;
     const r = Math.min(distanceInTileUnits, lenA * maxEdgeLenPercent, lenB * maxEdgeLenPercent);
 
@@ -113,7 +113,7 @@ function appendRoundCorner(
     bisectorX /= bisectorLen;
     bisectorY /= bisectorLen;
 
-    // Fast half-angle trigonometry identities without acos/cos/tan
+    // Fast half-angle trigonometry identities
     const cosHalfTheta = Math.sqrt((1 + dot) / 2);
     const tanHalfTheta = Math.sqrt((1 - dot) / (1 + dot));
 
@@ -127,7 +127,7 @@ function appendRoundCorner(
     const angleA = Math.atan2(tangentAy - centerY, tangentAx - centerX);
     const angleB = Math.atan2(tangentBy - centerY, tangentBx - centerX);
 
-    // Always take the shortest arc (minor arc <= PI) connecting A and B around center
+    // Always take the shortest arc connecting A and B around center
     let diff = angleB - angleA;
     while (diff <= -Math.PI) diff += 2 * Math.PI;
     while (diff > Math.PI) diff -= 2 * Math.PI;
