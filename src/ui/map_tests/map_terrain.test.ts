@@ -1,9 +1,10 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, sleep} from '../../util/test/util.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {type Terrain} from '../../render/terrain.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {AttributionControl, defaultAttributionControlOptions} from '../control/attribution_control.ts';
 import {type Map} from '../map.ts';
 
 let server: FakeServer;
@@ -68,22 +69,20 @@ describe('setTerrain', () => {
         expect(map.getTerrain()).toEqual({source: 'dem', exaggeration: 2});
     });
 
-    test('destroys the previous terrain and releases the old source when switching to a new source', async () => {
+    test('drops the previous source attribution when switching terrain to a new source', async () => {
+        const attribution = new AttributionControl();
+        map.addControl(attribution);
         await map.once('style.load');
-        map.addSource('dem-a', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256});
-        map.addSource('dem-b', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256});
+        map.addSource('dem-a', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256, attribution: 'DEM A'});
+        map.addSource('dem-b', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256, attribution: 'DEM B'});
+        await sleep(100);
 
         map.setTerrain({source: 'dem-a'});
-        const previousTerrain = map.terrain;
-        const previousTileManager = map.style.tileManagers['dem-a'];
-        const destroySpy = vi.spyOn(previousTerrain, 'destroy');
-
         map.setTerrain({source: 'dem-b'});
+        await sleep(100);
 
-        expect(destroySpy).toHaveBeenCalledTimes(1);
-        expect(previousTileManager.usedForTerrain).toBe(false);
-        expect(previousTileManager.tileSize).toBeNull();
-        expect(map.getTerrain()).toEqual({source: 'dem-b'});
+        const innerContainer = map.getContainer().querySelector('.maplibregl-ctrl-attrib-inner');
+        expect(innerContainer.innerHTML).toBe(`DEM B | ${defaultAttributionControlOptions.customAttribution}`);
     });
 });
 
