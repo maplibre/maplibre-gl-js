@@ -89,16 +89,16 @@ function appendRoundCorner(
     const ubx = bx / lenB;
     const uby = by / lenB;
 
-    const dot = uax * ubx + uay * uby;
-
     // Straight lines (colinear ~180 deg) or zero-degree turns
+    const dot = uax * ubx + uay * uby;
     if (dot < -0.99999 || dot > 0.99999) {
         pushPoint(newRing, currentPoint.x, currentPoint.y);
         return;
     }
 
-    // Corner distance clamped to at most half the adjacent edge lengths
-    const r = Math.min(distanceInTileUnits, lenA / 2, lenB / 2);
+    // If we don't clamp, we get a circle which looks bad
+    const maxEdgeLenPercent = 0.2;
+    const r = Math.min(distanceInTileUnits, lenA * maxEdgeLenPercent, lenB * maxEdgeLenPercent);
 
     // Tangent points on edges to prevPoint and nextPoint
     const tangentAx = currentPoint.x + uax * r;
