@@ -80,7 +80,7 @@ function appendRoundCorner(
     const lenB = Math.sqrt(bx * bx + by * by);
 
     if (lenA < 1e-6 || lenB < 1e-6) {
-        pushPoint(newRing, currentPoint.x, currentPoint.y);
+        newRing.push(new Point(currentPoint.x, currentPoint.y));
         return;
     }
 
@@ -92,7 +92,7 @@ function appendRoundCorner(
     // Straight lines or zero-degree turns
     const dot = uax * ubx + uay * uby;
     if (Math.abs(dot) > Math.cos(5 * Math.PI / 180)) {
-        pushPoint(newRing, currentPoint.x, currentPoint.y);
+        newRing.push(new Point(currentPoint.x, currentPoint.y));
         return;
     }
 
@@ -140,12 +140,6 @@ function appendRoundCorner(
         const angle = angleA + t * diff;
         const px = centerX + radius * Math.cos(angle);
         const py = centerY + radius * Math.sin(angle);
-        pushPoint(newRing, px, py);
+        newRing.push(new Point(px, py));
     }
-}
-
-function pushPoint(ring: Point[], x: number, y: number): void {
-    const normX = Math.abs(x) < 1e-12 ? 0 : x;
-    const normY = Math.abs(y) < 1e-12 ? 0 : y;
-    ring.push(new Point(normX, normY));
 }
