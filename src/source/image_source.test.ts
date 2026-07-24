@@ -253,7 +253,9 @@ describe('ImageSource', () => {
             transformRequest.mockClear();
         });
 
-        test('sets the image directly without a network request', () => {
+        test('sets the image directly without a network request and fires metadata', () => {
+            const handler = vi.fn();
+            source.on('data', handler);
             const bitmap = new ImageBitmap();
             const result = source.updateImage({image: bitmap});
 
@@ -262,6 +264,10 @@ describe('ImageSource', () => {
             expect(transformRequest).not.toHaveBeenCalled();
             expect(source.image).toBe(bitmap);
             expect(source.loaded()).toBe(true);
+            const firedMetadata = handler.mock.calls.some(
+                ([e]) => e.dataType === 'source' && e.sourceDataType === 'metadata'
+            );
+            expect(firedMetadata).toBe(true);
         });
 
         test('resets the texture so the new image is uploaded on the next prepare', () => {
@@ -278,17 +284,6 @@ describe('ImageSource', () => {
             });
 
             expect(source.serialize().coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
-        });
-
-        test('fires a metadata data event', () => {
-            const handler = vi.fn();
-            source.on('data', handler);
-            source.updateImage({image: new ImageBitmap()});
-
-            const firedMetadata = handler.mock.calls.some(
-                ([e]) => e.dataType === 'source' && e.sourceDataType === 'metadata'
-            );
-            expect(firedMetadata).toBe(true);
         });
 
         test('cancels a pending request', () => {
