@@ -105,7 +105,7 @@ export class FillExtrusionBucket implements Bucket {
 
         const globalProperties = new EvaluationParameters(this.zoom);
         const layer = this.layers[0];
-        const roundedCornerDistance = layer.layout ? layer.layout.get('fill-extrusion-rounded-corner-distance') : 0;
+        const roundedCornerDistance = layer.layout.get('fill-extrusion-rounded-corner-distance');
         const needGeometry = layer._featureFilter.needGeometry;
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
