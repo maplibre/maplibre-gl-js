@@ -399,9 +399,6 @@ export class Marker extends Evented<MarkerEventType> {
             this._element.setAttribute('aria-label', map._getUIString('Marker.Title'));
         }
 
-        // Default markers need a role because aria-label is set above.
-        // Non-interactive markers use role=img; interactive ones use role=button.
-        // Custom elements manage their own accessibility attributes.
         this._updateAccessibilityRole();
 
         map.getCanvasContainer().appendChild(this._element);
@@ -885,15 +882,10 @@ export class Marker extends Evented<MarkerEventType> {
     }
 
     /**
-     * Default markers are interactive when they can be dragged or open a popup.
-     * Click listeners are application-owned and do not automatically change the role.
-     */
-    _isInteractive(): boolean {
-        return this._draggable || !!this._popup;
-    }
-
-    /**
      * Keep the default marker role aligned with interactivity.
+     * Default markers need a role because `aria-label` is set in {@link Marker.addTo}.
+     * Non-interactive markers use `role=img`; interactive ones (draggable or with a popup) use `role=button`.
+     * Click listeners are application-owned and do not automatically change the role.
      * Custom marker elements are left alone so applications own their a11y tree.
      * Explicit roles set by the application are preserved.
      */
@@ -907,7 +899,7 @@ export class Marker extends Evented<MarkerEventType> {
             return;
         }
 
-        const role = this._isInteractive() ? 'button' : 'img';
+        const role = (this._draggable || !!this._popup) ? 'button' : 'img';
         this._element.setAttribute('role', role);
         this._roleManaged = true;
     }
