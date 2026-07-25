@@ -14,14 +14,14 @@ import type {Projection} from './projection.ts';
 import type {ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {ICameraHelper} from './camera_helper.ts';
 
-export function createProjectionFromName(name: ProjectionSpecification['type'], transformConstrain?: TransformConstrainFunction): {
+export function createProjectionFromName(name: ProjectionSpecification['type'], transformConstrain: TransformConstrainFunction | undefined, globalState: Record<string, any>): {
     projection: Projection;
     transform: ITransform;
     cameraHelper: ICameraHelper;
 } {
     const transformOptions = {constrainOverride: transformConstrain};
     if (Array.isArray(name)) {
-        const globeProjection = new GlobeProjection({type: name});
+        const globeProjection = new GlobeProjection({type: name}, globalState);
         return {
             projection: globeProjection,
             transform: new GlobeTransform(transformOptions),
@@ -47,7 +47,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
                 'vertical-perspective',
                 12,
                 'mercator'
-            ]});
+            ]}, {});
             return {
                 projection: globeProjection,
                 transform: new GlobeTransform(transformOptions),
