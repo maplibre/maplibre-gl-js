@@ -4668,6 +4668,13 @@ const latest = {
 			},
 			"property-type": "data-driven"
 		},
+		"fill-extrusion-rounded-corner-distance": {
+			"type": "number",
+			"default": 0,
+			"minimum": 0,
+			"units": "meters",
+			"property-type": "constant"
+		},
 		"fill-extrusion-vertical-gradient": {
 			"type": "boolean",
 			"default": true,
@@ -7867,7 +7874,11 @@ var Coercion = class Coercion {
 			}
 			case "formatted": return Formatted.fromString(valueToString(this.args[0].evaluate(ctx)));
 			case "resolvedImage": return ResolvedImage.fromString(valueToString(this.args[0].evaluate(ctx)));
-			case "projectionDefinition": return this.args[0].evaluate(ctx);
+			case "projectionDefinition": {
+				const input = this.args[0].evaluate(ctx);
+				if (ProjectionDefinition.parse(input)) return input;
+				throw new RuntimeError(`Could not parse projectionDefinition from value '${typeof input === "string" ? input : JSON.stringify(input)}'`, this.key);
+			}
 			default: return valueToString(this.args[0].evaluate(ctx));
 		}
 	}
@@ -7966,7 +7977,11 @@ var ParsingContext = class ParsingContext {
 					const expected = this.expectedType;
 					const actual = parsed.type;
 					if ((expected.kind === "string" || expected.kind === "number" || expected.kind === "boolean" || expected.kind === "object" || expected.kind === "array") && actual.kind === "value") parsed = annotate(parsed, expected, options.typeAnnotation || "assert");
-					else if ("projectionDefinition" === expected.kind && ["string", "array"].includes(actual.kind) || [
+					else if ("projectionDefinition" === expected.kind && [
+						"string",
+						"array",
+						"value"
+					].includes(actual.kind) || [
 						"color",
 						"formatted",
 						"resolvedImage"
@@ -20697,6 +20712,7 @@ const getPaint$3 = () => paint$3 = paint$3 || new Properties({
 	"fill-extrusion-pattern": new CrossFadedDataDrivenProperty(latest["paint_fill-extrusion"]["fill-extrusion-pattern"], "fill-extrusion-pattern"),
 	"fill-extrusion-height": new DataDrivenProperty(latest["paint_fill-extrusion"]["fill-extrusion-height"], "fill-extrusion-height"),
 	"fill-extrusion-base": new DataDrivenProperty(latest["paint_fill-extrusion"]["fill-extrusion-base"], "fill-extrusion-base"),
+	"fill-extrusion-rounded-corner-distance": new DataConstantProperty(latest["paint_fill-extrusion"]["fill-extrusion-rounded-corner-distance"], "fill-extrusion-rounded-corner-distance"),
 	"fill-extrusion-vertical-gradient": new DataConstantProperty(latest["paint_fill-extrusion"]["fill-extrusion-vertical-gradient"], "fill-extrusion-vertical-gradient")
 });
 var fill_extrusion_style_layer_properties_g_default = { get paint() {
@@ -39463,9 +39479,9 @@ var VerticalPerspectiveProjection = class {
 //#endregion
 //#region src/geo/projection/globe_projection.ts
 var GlobeProjection = class extends Evented {
-	constructor(projection) {
+	constructor(projection, globalState) {
 		super();
-		this._transitionable = new Transitionable(getProperties(), "projection", void 0);
+		this._transitionable = new Transitionable(getProperties(), "projection", globalState);
 		this.setProjection(projection);
 		this._transitioning = this._transitionable.untransitioned();
 		this.recalculate(new EvaluationParameters(0));
@@ -39477,6 +39493,7 @@ var GlobeProjection = class extends Evented {
 		if (typeof currentProjectionSpecValue === "string" && currentProjectionSpecValue === "mercator") return 0;
 		if (typeof currentProjectionSpecValue === "string" && currentProjectionSpecValue === "vertical-perspective") return 1;
 		if (currentProjectionSpecValue instanceof ProjectionDefinition) {
+			if (currentProjectionSpecValue.from === currentProjectionSpecValue.to) return currentProjectionSpecValue.from === "mercator" ? 0 : 1;
 			if (currentProjectionSpecValue.from === "vertical-perspective" && currentProjectionSpecValue.to === "mercator") return 1 - currentProjectionSpecValue.transition;
 			if (currentProjectionSpecValue.from === "mercator" && currentProjectionSpecValue.to === "vertical-perspective") return currentProjectionSpecValue.transition;
 		}
@@ -41588,10 +41605,10 @@ var GlobeCameraHelper = class {
 };
 //#endregion
 //#region src/geo/projection/projection_factory.ts
-function createProjectionFromName(name, transformConstrain) {
+function createProjectionFromName(name, transformConstrain, globalState) {
 	const transformOptions = { constrainOverride: transformConstrain };
 	if (Array.isArray(name)) {
-		const globeProjection = new GlobeProjection({ type: name });
+		const globeProjection = new GlobeProjection({ type: name }, globalState);
 		return {
 			projection: globeProjection,
 			transform: new GlobeTransform(transformOptions),
@@ -41613,7 +41630,7 @@ function createProjectionFromName(name, transformConstrain) {
 				"vertical-perspective",
 				12,
 				"mercator"
-			] });
+			] }, {});
 			return {
 				projection: globeProjection,
 				transform: new GlobeTransform(transformOptions),
@@ -42651,7 +42668,7 @@ var Style = class extends Evented {
 		this.sky.updateTransitions(parameters);
 	}
 	_setProjectionInternal(name) {
-		const projectionObjects = createProjectionFromName(name, this.map._camera?.transform.constrainOverride);
+		const projectionObjects = createProjectionFromName(name, this.map._camera?.transform.constrainOverride, this._globalState);
 		this.projection = projectionObjects.projection;
 		this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
 		for (const key in this.tileManagers) this.tileManagers[key].reload();
@@ -60831,7 +60848,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main ad2fcdb";
+const version = "main ac933fd";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;

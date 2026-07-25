@@ -2509,6 +2509,13 @@ const latest = {
 			},
 			"property-type": "data-driven"
 		},
+		"fill-extrusion-rounded-corner-distance": {
+			"type": "number",
+			"default": 0,
+			"minimum": 0,
+			"units": "meters",
+			"property-type": "constant"
+		},
 		"fill-extrusion-vertical-gradient": {
 			"type": "boolean",
 			"default": true,
@@ -5366,7 +5373,11 @@ var Coercion = class Coercion {
 			}
 			case "formatted": return Formatted.fromString(valueToString(this.args[0].evaluate(ctx)));
 			case "resolvedImage": return ResolvedImage.fromString(valueToString(this.args[0].evaluate(ctx)));
-			case "projectionDefinition": return this.args[0].evaluate(ctx);
+			case "projectionDefinition": {
+				const input = this.args[0].evaluate(ctx);
+				if (ProjectionDefinition.parse(input)) return input;
+				throw new RuntimeError(`Could not parse projectionDefinition from value '${typeof input === "string" ? input : JSON.stringify(input)}'`, this.key);
+			}
 			default: return valueToString(this.args[0].evaluate(ctx));
 		}
 	}
@@ -5465,7 +5476,11 @@ var ParsingContext = class ParsingContext {
 					const expected = this.expectedType;
 					const actual = parsed.type;
 					if ((expected.kind === "string" || expected.kind === "number" || expected.kind === "boolean" || expected.kind === "object" || expected.kind === "array") && actual.kind === "value") parsed = annotate(parsed, expected, options.typeAnnotation || "assert");
-					else if ("projectionDefinition" === expected.kind && ["string", "array"].includes(actual.kind) || [
+					else if ("projectionDefinition" === expected.kind && [
+						"string",
+						"array",
+						"value"
+					].includes(actual.kind) || [
 						"color",
 						"formatted",
 						"resolvedImage"
@@ -16719,6 +16734,7 @@ const getPaint$4 = () => paint$4 = paint$4 || new Properties({
 	"fill-extrusion-pattern": new CrossFadedDataDrivenProperty(latest["paint_fill-extrusion"]["fill-extrusion-pattern"], "fill-extrusion-pattern"),
 	"fill-extrusion-height": new DataDrivenProperty(latest["paint_fill-extrusion"]["fill-extrusion-height"], "fill-extrusion-height"),
 	"fill-extrusion-base": new DataDrivenProperty(latest["paint_fill-extrusion"]["fill-extrusion-base"], "fill-extrusion-base"),
+	"fill-extrusion-rounded-corner-distance": new DataConstantProperty(latest["paint_fill-extrusion"]["fill-extrusion-rounded-corner-distance"], "fill-extrusion-rounded-corner-distance"),
 	"fill-extrusion-vertical-gradient": new DataConstantProperty(latest["paint_fill-extrusion"]["fill-extrusion-vertical-gradient"], "fill-extrusion-vertical-gradient")
 });
 var fill_extrusion_style_layer_properties_g_default = { get paint() {
