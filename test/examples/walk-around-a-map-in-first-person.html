@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <title>Walk around a map in first person</title>
-<meta property="og:description" content="Drive the camera as a level, eye-height first-person view using only jumpTo, a 90° pitch and elevation - walking a real Chicago street between real buildings." />
+<meta property="og:description" content="Drive an eye-height, level first-person camera over 3D buildings with WASD, using calculateCameraOptionsFromTo." />
 <meta property="og:category" content="Camera & Animation" />
-<meta property="og:created" content="2026-06-14" />
+<meta property="og:created" content="2026-07-25" />
 <meta charset='utf-8'>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
@@ -31,178 +31,41 @@
 <script type="module">
 import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
 
-/*
- * A first-person camera, built only on MapLibre's public jumpTo API - no
- * custom layer or extra rendering involved. It walks South Dearborn Street
- * in Chicago's Loop, between real building footprints (including the
- * landmark Monadnock and Fisher buildings), sourced from OpenStreetMap.
- *
- * The buildings are a small fixed set baked into this file, so the example is
- * self-contained: no external vector-tile source, API key or network beyond
- * the base library, and a deterministic scene for the gallery thumbnail.
- *
- * Naively setting `pitch: 90` collapses the camera onto the ground, because
- * `center` is normally a point ON the ground that the camera looks down at
- * from above. But at exactly 90° pitch the camera is looking sideways, not
- * down, so the camera and `center` end up at the SAME altitude. That means a
- * level, eye-height view just needs:
- *
- *   1. `elevation` set to the player's eye height, so `center` floats above
- *      the ground instead of sitting on it (this needs
- *      `centerClampedToGround: false`, otherwise MapLibre snaps `center`
- *      back down to ground height every frame)
- *   2. `center` placed a fixed distance directly ahead of the player
- *   3. `bearing` set to the player's heading
- *
- * MapLibre then puts the camera exactly on the player, looking dead level in
- * whichever direction they're facing.
- */
+const EYE_HEIGHT = 1.6;
+const WALK_SPEED = 4;
+const TURN_SPEED = 2;
+const LOOK_AHEAD = 20;
+const ORIGIN = [-87.629252, 41.876706];
 
-const EYE_HEIGHT = 1.6; // metres
-const ZOOM = 20; // fixed zoom keeps the world scale constant while walking
-const WALK_SPEED = 4; // metres / second
-const TURN_SPEED = 2; // radians / second
-
-// A point on South Dearborn Street in the Loop, taken from its OpenStreetMap
-// way geometry (so it's on the road, not inside a building) - the street
-// runs at a true bearing of 358.9°, close enough to due north that facing
-// north (below) walks straight down it.
-const ORIGIN = {lng: -87.629252, lat: 41.876706};
 const originMercator = maplibregl.MercatorCoordinate.fromLngLat(ORIGIN);
 const metresToMercatorUnits = originMercator.meterInMercatorCoordinateUnits();
+const player = {x: 0, y: 0, heading: Math.PI / 2};
 
-const player = {x: 0, y: 0, heading: Math.PI / 2}; // facing north
-
-// Converts local (x, y) metres, relative to ORIGIN, to [lng, lat]. Mercator Y
-// increases southward, so moving north (+y here) subtracts from it.
 function toLngLat(x, y) {
-    const mercatorCoord = new maplibregl.MercatorCoordinate(
+    return new maplibregl.MercatorCoordinate(
         originMercator.x + x * metresToMercatorUnits,
         originMercator.y - y * metresToMercatorUnits
-    );
-    const lngLat = mercatorCoord.toLngLat();
-    return [lngLat.lng, lngLat.lat];
+    ).toLngLat();
 }
-
-// Real building footprints, heights and names along this stretch of South
-// Dearborn Street, from OpenStreetMap (https://www.openstreetmap.org/copyright).
-// Includes the landmark Old Colony, Monadnock and Fisher buildings.
-const BUILDINGS = [
-    {name: "Old Colony Building", height: 66, coords: [[-87.62887, 41.876821], [-87.628862, 41.876811], [-87.628861, 41.876794], [-87.628871, 41.876777], [-87.62887, 41.876744], [-87.628869, 41.876676], [-87.628868, 41.876617], [-87.628867, 41.876549], [-87.628867, 41.876497], [-87.628866, 41.876463], [-87.628854, 41.876447], [-87.628851, 41.876432], [-87.628856, 41.876417], [-87.628864, 41.876407], [-87.629112, 41.876405], [-87.62913, 41.876418], [-87.629135, 41.876433], [-87.62913, 41.876448], [-87.629116, 41.876461], [-87.629117, 41.876496], [-87.629119, 41.876545], [-87.629121, 41.876614], [-87.629122, 41.876672], [-87.629124, 41.876738], [-87.629125, 41.876774], [-87.629139, 41.876788], [-87.629139, 41.876804], [-87.629127, 41.876818], [-87.629109, 41.876826], [-87.629083, 41.876826], [-87.629067, 41.876817], [-87.629061, 41.876817], [-87.628998, 41.876818], [-87.628935, 41.876819], [-87.628926, 41.876819], [-87.62891, 41.876827], [-87.628889, 41.876828], [-87.62887, 41.876821]]},
-    {name: "Monadnock Building", height: 60, coords: [[-87.629448, 41.878088], [-87.629687, 41.878086], [-87.629661, 41.87699], [-87.629413, 41.876992], [-87.629448, 41.878088]]},
-    {name: "Fisher Building", height: 84, coords: [[-87.628863, 41.877], [-87.628872, 41.877248], [-87.628878, 41.877412], [-87.629144, 41.877408], [-87.629137, 41.877244], [-87.629126, 41.877], [-87.628863, 41.877]]},
-    {name: "The Standard Club", height: 38, coords: [[-87.628892, 41.877953], [-87.628886, 41.877716], [-87.628885, 41.877695], [-87.628885, 41.877673], [-87.628878, 41.877412], [-87.629144, 41.877408], [-87.629151, 41.877694], [-87.629158, 41.877949], [-87.628892, 41.877953]]},
-    {name: "", height: 18, coords: [[-87.629161, 41.878092], [-87.629158, 41.877949], [-87.628892, 41.877953], [-87.628896, 41.878097], [-87.628919, 41.878096], [-87.629043, 41.878094], [-87.629143, 41.878092], [-87.629161, 41.878092]]},
-    {name: "400 Dearborn", height: 15, coords: [[-87.62966, 41.876807], [-87.629657, 41.876807], [-87.629639, 41.876807], [-87.629622, 41.876808], [-87.629419, 41.87681], [-87.629414, 41.876609], [-87.629413, 41.87658], [-87.629412, 41.876552], [-87.629412, 41.876541], [-87.629592, 41.876539], [-87.629653, 41.876537], [-87.629654, 41.876578], [-87.62966, 41.876793], [-87.62966, 41.876807]]},
-    {name: "", height: 10, coords: [[-87.629622, 41.876975], [-87.62962, 41.876911], [-87.629779, 41.87691], [-87.62978, 41.876973], [-87.629696, 41.876974], [-87.629656, 41.876975], [-87.629622, 41.876975]]},
-    {name: "", height: 10, coords: [[-87.629618, 41.876887], [-87.629617, 41.876842], [-87.62969, 41.876841], [-87.629702, 41.876841], [-87.629702, 41.87683], [-87.629702, 41.876823], [-87.629777, 41.876822], [-87.629777, 41.87684], [-87.629779, 41.876885], [-87.629618, 41.876887]]},
-    {name: "", height: 15, coords: [[-87.629203, 41.877431], [-87.629191, 41.877431], [-87.629176, 41.877432], [-87.629174, 41.877333], [-87.629188, 41.877332], [-87.629201, 41.877332], [-87.629203, 41.877431]]},
-    {name: "", height: 15, coords: [[-87.629193, 41.877998], [-87.629193, 41.877966], [-87.629208, 41.877966], [-87.629208, 41.877998], [-87.629193, 41.877998]]},
-    {name: "", height: 15, coords: [[-87.628886, 41.877716], [-87.628843, 41.877717], [-87.628841, 41.877674], [-87.628885, 41.877673], [-87.628885, 41.877695], [-87.628886, 41.877716]]},
-    {name: "", height: 15, coords: [[-87.629414, 41.876609], [-87.629362, 41.876609], [-87.629359, 41.876552], [-87.629412, 41.876552], [-87.629413, 41.87658], [-87.629414, 41.876609]]},
-    {name: "", height: 15, coords: [[-87.629622, 41.876808], [-87.629623, 41.876835], [-87.629658, 41.876835], [-87.629657, 41.876807], [-87.629639, 41.876807], [-87.629622, 41.876808]]}
-];
 
 const map = new maplibregl.Map({
     container: 'map',
-    style: {version: 8, sources: {}, layers: [{id: 'sky', type: 'background', paint: {'background-color': '#bfe6f2'}}]},
+    style: 'https://tiles.openfreemap.org/styles/liberty',
     center: ORIGIN,
-    zoom: ZOOM,
+    zoom: 18,
     pitch: 90,
     maxPitch: 95,
     centerClampedToGround: false,
     interactive: false
 });
 
-map.on('load', () => {
-    // Ground (sidewalks/lots) and a darker street strip down the middle of
-    // Dearborn, so there's an actual surface underfoot instead of buildings
-    // floating over open sky-blue.
-    map.addSource('ground', {
-        type: 'geojson',
-        data: {
-            type: 'Feature',
-            geometry: {type: 'Polygon', coordinates: [[
-                [-87.629976, 41.876347], [-87.628528, 41.876347],
-                [-87.628528, 41.878503], [-87.629976, 41.878503], [-87.629976, 41.876347]
-            ]]}
-        }
-    });
-    map.addLayer({id: 'ground', type: 'fill', source: 'ground', paint: {'fill-color': '#d8d4c8'}});
-
-    map.addSource('street', {
-        type: 'geojson',
-        data: {
-            type: 'Feature',
-            geometry: {type: 'Polygon', coordinates: [[
-                [-87.629361, 41.876437], [-87.629143, 41.876437],
-                [-87.629143, 41.878413], [-87.629361, 41.878413], [-87.629361, 41.876437]
-            ]]}
-        }
-    });
-    map.addLayer({id: 'street', type: 'fill', source: 'street', paint: {'fill-color': '#4a4a4a'}});
-
-    map.addSource('buildings', {
-        type: 'geojson',
-        data: {
-            type: 'FeatureCollection',
-            features: BUILDINGS.map((building) => ({
-                type: 'Feature',
-                properties: {name: building.name, height: building.height},
-                geometry: {type: 'Polygon', coordinates: [building.coords]}
-            }))
-        }
-    });
-    map.addLayer({
-        id: 'buildings',
-        type: 'fill-extrusion',
-        source: 'buildings',
-        paint: {
-            'fill-extrusion-color': '#c9c2b6',
-            'fill-extrusion-height': ['get', 'height']
-        }
-    });
-
-    // POI labels for the named landmark buildings.
-    map.addLayer({
-        id: 'building-labels',
-        type: 'symbol',
-        source: 'buildings',
-        filter: ['!=', ['get', 'name'], ''],
-        layout: {
-            'symbol-placement': 'point',
-            'text-field': ['get', 'name'],
-            'text-size': 14,
-            'text-anchor': 'bottom'
-        },
-        paint: {
-            'text-color': '#fff',
-            'text-halo-color': '#000',
-            'text-halo-width': 1.5
-        }
-    });
-});
-
 function updateCamera() {
-    // worldSize and cameraToCenterDistance are not exposed on Map directly, so
-    // they're derived here from public getters/state instead of reaching into
-    // Map's private transform internals.
-    const worldSize = 512 * Math.pow(2, ZOOM);
-    const metresPerPixel = 1 / (metresToMercatorUnits * worldSize);
-    const halfFovRadians = map.getVerticalFieldOfView() * Math.PI / 360;
-    const focalLengthPixels = 0.5 / Math.tan(halfFovRadians) * map.getContainer().clientHeight;
-    const lookAheadMetres = focalLengthPixels * metresPerPixel;
-
-    const centerX = player.x + Math.cos(player.heading) * lookAheadMetres;
-    const centerY = player.y + Math.sin(player.heading) * lookAheadMetres;
-
-    map.jumpTo({
-        center: toLngLat(centerX, centerY),
-        elevation: EYE_HEIGHT,
-        bearing: 90 - player.heading * 180 / Math.PI,
-        pitch: 90,
-        zoom: ZOOM
-    });
+    const eye = toLngLat(player.x, player.y);
+    const ahead = toLngLat(
+        player.x + Math.cos(player.heading) * LOOK_AHEAD,
+        player.y + Math.sin(player.heading) * LOOK_AHEAD
+    );
+    map.jumpTo(map.calculateCameraOptionsFromTo(eye, EYE_HEIGHT, ahead, EYE_HEIGHT));
 }
 
 const keysDown = new Set();
@@ -211,27 +74,18 @@ addEventListener('keyup', (event) => keysDown.delete(event.code));
 
 let lastFrameTime = performance.now();
 function loop(now) {
-    // A single bad frame must never permanently stop the loop - always
-    // reschedule, even if something above throws.
-    try {
-        const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
-        lastFrameTime = now;
+    const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
+    lastFrameTime = now;
 
-        // heading follows the standard math convention (angle from +x,
-        // counter-clockwise), so turning right (D, clockwise) DEcreases it.
-        if (keysDown.has('KeyA')) player.heading += TURN_SPEED * dt;
-        if (keysDown.has('KeyD')) player.heading -= TURN_SPEED * dt;
+    if (keysDown.has('KeyA')) player.heading += TURN_SPEED * dt;
+    if (keysDown.has('KeyD')) player.heading -= TURN_SPEED * dt;
+    let step = 0;
+    if (keysDown.has('KeyW')) step += WALK_SPEED * dt;
+    if (keysDown.has('KeyS')) step -= WALK_SPEED * dt;
+    player.x += Math.cos(player.heading) * step;
+    player.y += Math.sin(player.heading) * step;
 
-        let step = 0;
-        if (keysDown.has('KeyW')) step += WALK_SPEED * dt;
-        if (keysDown.has('KeyS')) step -= WALK_SPEED * dt;
-        player.x += Math.cos(player.heading) * step;
-        player.y += Math.sin(player.heading) * step;
-
-        updateCamera();
-    } catch (error) {
-        console.error(error);
-    }
+    updateCamera();
     requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
