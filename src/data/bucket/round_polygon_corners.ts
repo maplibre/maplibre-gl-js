@@ -1,4 +1,5 @@
 import Point from '@mapbox/point-geometry';
+import {vec2} from 'gl-matrix';
 import {EXTENT} from '../extent.ts';
 import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from '../../geo/projection/mercator_utils.ts';
@@ -43,99 +44,78 @@ function roundRing(ring: Point[], distanceInTileUnits: number): Point[] {
         return ring;
     }
 
-    const newRing: Point[] = [];
+    const vertices: vec2[] = ring.map(p => vec2.fromValues(p.x,p.y));
+    const newRing: vec2[] = [];
 
     for (let i = 0; i < vertexCount; i++) {
-        const prevPoint = ring[(i - 1 + vertexCount) % vertexCount];
-        const currentPoint = ring[i];
-        const nextPoint = ring[(i + 1) % vertexCount];
+        const prev = vertices[(i - 1 + vertexCount) % vertexCount];
+        const current = vertices[i];
+        const next = vertices[(i + 1) % vertexCount];
 
-        appendRoundCorner(newRing, prevPoint, currentPoint, nextPoint, distanceInTileUnits);
+        appendRoundCorner(newRing, prev, current, next, distanceInTileUnits);
     }
 
     if (isClosed && newRing.length > 0) {
-        newRing.push(new Point(newRing[0].x, newRing[0].y));
+        newRing.push(vec2.clone(newRing[0]));
     }
 
-    return newRing;
+    return newRing.map(p => new Point(p[0], p[1]));
 }
 
 function appendRoundCorner(
-    newRing: Point[],
-    prevPoint: Point,
-    currentPoint: Point,
-    nextPoint: Point,
+    newRing: vec2[],
+    prev: vec2,
+    current: vec2,
+    next: vec2,
     distanceInTileUnits: number
 ): void {
-    const ax = prevPoint.x - currentPoint.x;
-    const ay = prevPoint.y - currentPoint.y;
-    const bx = nextPoint.x - currentPoint.x;
-    const by = nextPoint.y - currentPoint.y;
-
-    const lenA = Math.sqrt(ax * ax + ay * ay);
-    const lenB = Math.sqrt(bx * bx + by * by);
+    // Unit edge vectors from the current vertex towards its neighbours
+    const ua = vec2.sub(vec2.create(), prev, current);
+    const ub = vec2.sub(vec2.create(), next, current);
+    const lenA = vec2.length(ua);
+    const lenB = vec2.length(ub);
 
     if (lenA < 1e-6 || lenB < 1e-6) {
-        newRing.push(new Point(currentPoint.x, currentPoint.y));
+        newRing.push(vec2.clone(current));
         return;
     }
 
-    const uax = ax / lenA;
-    const uay = ay / lenA;
-    const ubx = bx / lenB;
-    const uby = by / lenB;
+    vec2.scale(ua, ua, 1 / lenA);
+    vec2.scale(ub, ub, 1 / lenB);
 
     // Straight lines or zero-degree turns
-    const dot = uax * ubx + uay * uby;
+    const dot = vec2.dot(ua, ub);
     if (Math.abs(dot) > Math.cos(5 * Math.PI / 180)) {
-        newRing.push(new Point(currentPoint.x, currentPoint.y));
+        newRing.push(vec2.clone(current));
         return;
     }
 
-    // clamping to resonable max for the geometry
+    // we clamp to not have circles in the extremes
     const maxEdgeLenPercent = 0.2;
     const r = Math.min(distanceInTileUnits, lenA * maxEdgeLenPercent, lenB * maxEdgeLenPercent);
 
     // Tangent points on edges to prevPoint and nextPoint
-    const tangentAx = currentPoint.x + uax * r;
-    const tangentAy = currentPoint.y + uay * r;
-    const tangentBx = currentPoint.x + ubx * r;
-    const tangentBy = currentPoint.y + uby * r;
+    const tangentA = vec2.scaleAndAdd(vec2.create(), current, ua, r);
+    const tangentB = vec2.scaleAndAdd(vec2.create(), current, ub, r);
 
-    // Bisector vector
-    let bisectorX = uax + ubx;
-    let bisectorY = uay + uby;
-    const bisectorLen = Math.sqrt(bisectorX * bisectorX + bisectorY * bisectorY);
-    bisectorX /= bisectorLen;
-    bisectorY /= bisectorLen;
+    const bisector = vec2.add(vec2.create(), ua, ub);
+    vec2.normalize(bisector, bisector);
 
-    // Fast half-angle trigonometry identities
+    // Center of the rounding arc, at r / cos(theta/2) along the bisector
     const cosHalfTheta = Math.sqrt((1 + dot) / 2);
-    const tanHalfTheta = Math.sqrt((1 - dot) / (1 + dot));
+    const center = vec2.scaleAndAdd(vec2.create(), current, bisector, r / cosHalfTheta);
 
-    // Center of the rounding arc
-    const centerDist = r / cosHalfTheta;
-    const centerX = currentPoint.x + bisectorX * centerDist;
-    const centerY = currentPoint.y + bisectorY * centerDist;
-    const radius = r * tanHalfTheta;
+    // Both tangent points lie on the arc circle.
+    // Rotating tangent A around the center traces the fillet onto tangent B along the shortest arc.
+    const radiusA = vec2.sub(vec2.create(), tangentA, center);
+    const radiusB = vec2.sub(vec2.create(), tangentB, center);
+    const sweepAngle = vec2.angle(radiusA, radiusB);
+    const direction = Math.sign(radiusA[0] * radiusB[1] - radiusA[1] * radiusB[0]); // 2D cross product -> winding direction
 
-    // Angles from center to tangent points A and B
-    const angleA = Math.atan2(tangentAy - centerY, tangentAx - centerX);
-    const angleB = Math.atan2(tangentBy - centerY, tangentBx - centerX);
-
-    // Always take the shortest arc connecting A and B around center
-    let diff = angleB - angleA;
-    while (diff <= -Math.PI) diff += 2 * Math.PI;
-    while (diff > Math.PI) diff -= 2 * Math.PI;
-
-    const sweepAngle = Math.abs(diff);
-    const numSegments = Math.max(2, Math.min(8, Math.ceil(sweepAngle / (Math.PI / 6))));
-
+    // ~30 deg per segment; epsilon keeps fp noise from adding one at exact multiples.
+    const numSegments = Math.max(2, Math.ceil(sweepAngle / (Math.PI / 6) - 1e-6));
     for (let s = 0; s <= numSegments; s++) {
-        const t = s / numSegments;
-        const angle = angleA + t * diff;
-        const px = centerX + radius * Math.cos(angle);
-        const py = centerY + radius * Math.sin(angle);
-        newRing.push(new Point(px, py));
+        const angle = direction * sweepAngle * (s / numSegments);
+        newRing.push(vec2.rotate(vec2.create(), tangentA, center, angle));
     }
 }

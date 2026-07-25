@@ -63,9 +63,9 @@ describe('roundPolygonCorners', () => {
     
         const output = roundPolygonCorners(input, 0.1, canonical);
         const points = output[0].map(round);
-    
-        expect(points.length).toBe(18);
-        expect(JSON.stringify(fc(points))).toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[0,0.04],[0.01,0.02],[0.02,0.01],[0.04,0],[9.96,0],[9.97,0],[9.99,0.01],[10,0.03],[10,0.04],[10,9.96],[9.99,9.98],[9.98,9.99],[9.96,10],[0.04,10],[0.02,9.99],[0.01,9.98],[0,9.96],[0,0.04]]]}}]}');
+
+        expect(points.length).toBe(17);
+        expect(JSON.stringify(fc(points))).toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[0,0.04],[0.01,0.02],[0.02,0.01],[0.04,0],[9.96,0],[9.98,0.01],[9.99,0.02],[10,0.04],[10,9.96],[9.99,9.98],[9.98,9.99],[9.96,10],[0.04,10],[0.02,9.99],[0.01,9.98],[0,9.96],[0,0.04]]]}}]}');
     });
         
     test('rounds corners of a square polygon into arc vertices', () => {
@@ -79,9 +79,9 @@ describe('roundPolygonCorners', () => {
         
         const output = roundPolygonCorners(input, 2, canonical);
         const points = output[0].map(round);
-        
-        expect(points.length).toBe(19);
-        expect(JSON.stringify(fc(points))).toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[0,0.82],[0.11,0.41],[0.41,0.11],[0.82,0],[9.18,0],[9.49,0.06],[9.76,0.24],[9.94,0.51],[10,0.82],[10,9.18],[9.89,9.59],[9.59,9.89],[9.18,10],[0.82,10],[0.51,9.94],[0.24,9.76],[0.06,9.49],[0,9.18],[0,0.82]]]}}]}');
+
+        expect(points.length).toBe(17);
+        expect(JSON.stringify(fc(points))).toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[0,0.82],[0.11,0.41],[0.41,0.11],[0.82,0],[9.18,0],[9.59,0.11],[9.89,0.41],[10,0.82],[10,9.18],[9.89,9.59],[9.59,9.89],[9.18,10],[0.82,10],[0.41,9.89],[0.11,9.59],[0,9.18],[0,0.82]]]}}]}');
     });
 
     test('clamps corner rounding distance to 20% of edge length when requested distance is large', () => {
@@ -96,8 +96,8 @@ describe('roundPolygonCorners', () => {
         const output = roundPolygonCorners(input, 1000, canonical);
         const points = output[0].map(round);
 
-        expect(points.length).toBe(19);
-        expect(JSON.stringify(fc(points))).toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[0,2],[0.27,1],[1,0.27],[2,0],[8,0],[8.77,0.15],[9.41,0.59],[9.85,1.23],[10,2],[10,8],[9.73,9],[9,9.73],[8,10],[2,10],[1.23,9.85],[0.59,9.41],[0.15,8.77],[0,8],[0,2]]]}}]}');
+        expect(points.length).toBe(17);
+        expect(JSON.stringify(fc(points))).toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[0,2],[0.27,1],[1,0.27],[2,0],[8,0],[9,0.27],[9.73,1],[10,2],[10,8],[9.73,9],[9,9.73],[8,10],[2,10],[1,9.73],[0.27,9],[0,8],[0,2]]]}}]}');
     });
 
     test('preserves near-zero-degree spike vertex without adding arc points', () => {
@@ -128,7 +128,22 @@ describe('roundPolygonCorners', () => {
         const output = roundPolygonCorners(input, 5, canonical);
         const points = output[0].map(round);
 
-        expect(points.length).toBe(20);
-        expect(JSON.stringify(fc(points))).toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[0,1],[0.13,0.5],[0.5,0.13],[1,0],[5,0],[9,0],[9.38,0.08],[9.71,0.29],[9.92,0.62],[10,1],[10,8],[9.73,9],[9,9.73],[8,10],[2,10],[1.23,9.85],[0.59,9.41],[0.15,8.77],[0,8],[0,1]]]}}]}');
+        expect(points.length).toBe(18);
+        expect(JSON.stringify(fc(points))).toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[0,1],[0.13,0.5],[0.5,0.13],[1,0],[5,0],[9,0],[9.5,0.13],[9.87,0.5],[10,1],[10,8],[9.73,9],[9,9.73],[8,10],[2,10],[1,9.73],[0.27,9],[0,8],[0,1]]]}}]}');
+    });
+
+    test('scales arc points with corner sharpness up to the segment maximum', () => {
+        const input = [[
+            new Point(0, 0),
+            new Point(100, 0),
+            new Point(50, 20),
+            new Point(0, 0)
+        ]];
+
+        const output = roundPolygonCorners(input, 5, canonical);
+        const points = output[0].map(round);
+
+        expect(points.length).toBe(18);
+        expect(JSON.stringify(fc(points))).toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[1.91,0.77],[1.77,0.66],[1.68,0.5],[1.67,0.32],[1.75,0.16],[1.88,0.04],[2.06,0],[97.94,0],[98.12,0.04],[98.25,0.16],[98.33,0.32],[98.32,0.5],[98.23,0.66],[98.09,0.77],[51.91,19.23],[50,19.6],[48.09,19.23],[1.91,0.77]]]}}]}');
     });
 });
