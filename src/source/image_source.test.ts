@@ -5,7 +5,6 @@ import {type FakeServer, fakeServer} from 'nise';
 import {beforeMapTest, createMap, sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import type {Texture} from '../webgl/texture.ts';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -64,7 +63,6 @@ describe('ImageSource', () => {
 
     test('passes a live AbortController to ImageRequest when the source is aborted during an async transformRequest', async () => {
         const source = createSource({url: '/image.png'});
-        const map = new StubMap() as any;
         let transformStarted: () => void;
         const transformCalled = new Promise<void>((resolve) => {
             transformStarted = resolve;
