@@ -51,7 +51,7 @@ describe('roundPolygonCorners', () => {
         const output = roundPolygonCorners(input, 10, canonical);
         expect(output).toStrictEqual(input);
     });
-    
+
     test('still rounds very small rounding', () => {
         const input = [[
             new Point(0, 0),
@@ -60,14 +60,14 @@ describe('roundPolygonCorners', () => {
             new Point(0, 10),
             new Point(0, 0)
         ]];
-    
+
         const output = roundPolygonCorners(input, 0.1, canonical);
         const points = output[0].map(round);
 
         expect(points.length).toBe(17);
         expect(JSON.stringify(fc(points))).toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[0,0.04],[0.01,0.02],[0.02,0.01],[0.04,0],[9.96,0],[9.98,0.01],[9.99,0.02],[10,0.04],[10,9.96],[9.99,9.98],[9.98,9.99],[9.96,10],[0.04,10],[0.02,9.99],[0.01,9.98],[0,9.96],[0,0.04]]]}}]}');
     });
-        
+
     test('rounds corners of a square polygon into arc vertices', () => {
         const input = [[
             new Point(0, 0),
@@ -76,7 +76,7 @@ describe('roundPolygonCorners', () => {
             new Point(0, 10),
             new Point(0, 0)
         ]];
-        
+
         const output = roundPolygonCorners(input, 2, canonical);
         const points = output[0].map(round);
 
