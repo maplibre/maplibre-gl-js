@@ -22,7 +22,7 @@ import {now, setNow, restoreNow, isTimeFrozen} from './util/time_control.ts';
 import {WorkerPool} from './util/worker_pool.ts';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool.ts';
 import {AJAXError, type ExpiryData, type GetResourceResponse, type RequestParameters} from './util/ajax.ts';
-import {GeoJSONSource, type SetClusterOptions} from './source/geojson_source.ts';
+import {GeoJSONSource, type GetClusterOptions, type SetClusterOptions} from './source/geojson_source.ts';
 import {CanvasSource, type CanvasSourceSpecification} from './source/canvas_source.ts';
 import {type CanonicalTileRange, type Coordinates, type ImageSourceImage, ImageSource, type UpdateImageOptions} from './source/image_source.ts';
 import {RasterDEMTileSource} from './source/raster_dem_tile_source.ts';
@@ -302,6 +302,7 @@ export {
     type UpdateImageOptions,
     type DragPanOptions,
     type FullscreenControlOptions,
+    type GetClusterOptions,
     type SetClusterOptions,
     type GeoJSONSourceDiff,
     type GeolocateControlOptions,
