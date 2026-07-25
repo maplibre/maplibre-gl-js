@@ -26172,9 +26172,10 @@ var RasterTileSource = class extends Evented {
 		const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
 		const premultiply = this._premultiplyAlpha;
 		const imageBitmapOptions = premultiply ? void 0 : { premultiplyAlpha: "none" };
+		const request = await this.map._requestManager.transformRequest(url, "Tile");
 		tile.abortController = new AbortController();
 		try {
-			const response = await ImageRequest.getImage(await this.map._requestManager.transformRequest(url, "Tile"), tile.abortController, this.map._refreshExpiredTiles, imageBitmapOptions);
+			const response = await ImageRequest.getImage(request, tile.abortController, this.map._refreshExpiredTiles, imageBitmapOptions);
 			delete tile.abortController;
 			if (tile.aborted) {
 				tile.state = "unloaded";
@@ -27254,9 +27255,10 @@ var ImageSource = class extends Evented {
 		this._loaded = false;
 		this.fire(new MapSourceDataEvent("dataloading"));
 		this.url = this.options.url;
+		const request = await this.map._requestManager.transformRequest(this.url, "Image");
 		this._request = new AbortController();
 		try {
-			const image = await ImageRequest.getImage(await this.map._requestManager.transformRequest(this.url, "Image"), this._request);
+			const image = await ImageRequest.getImage(request, this._request);
 			this._request = null;
 			this._loaded = true;
 			if (image?.data) {
@@ -60921,7 +60923,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 4dfddcd";
+const version = "main 22eeb7e";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
