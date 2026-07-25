@@ -58195,6 +58195,7 @@ var Marker = class extends Evented {
 		this._clickTolerance = options?.clickTolerance || 0;
 		this._subpixelPositioning = options?.subpixelPositioning || false;
 		this._isDragging = false;
+		this._roleManaged = false;
 		this._state = "inactive";
 		this._rotation = options?.rotation || 0;
 		this._rotationAlignment = options?.rotationAlignment || "auto";
@@ -58329,8 +58330,8 @@ var Marker = class extends Evented {
 	addTo(map) {
 		this.remove();
 		this._map = map;
-		if (!this._element.hasAttribute("aria-label")) this._element.setAttribute("aria-label", map._getUIString("Marker.Title"));
-		if (!this._element.hasAttribute("role")) this._element.setAttribute("role", "button");
+		if (this._defaultMarker && !this._element.hasAttribute("aria-label")) this._element.setAttribute("aria-label", map._getUIString("Marker.Title"));
+		this._updateAccessibilityRole();
 		map.getCanvasContainer().appendChild(this._element);
 		map.on("move", this._update);
 		map.on("moveend", this._update);
@@ -58462,6 +58463,7 @@ var Marker = class extends Evented {
 			if (!this._originalTabIndex) this._element.setAttribute("tabindex", "0");
 			this._element.addEventListener("keypress", this._onKeyPress);
 		}
+		this._updateAccessibilityRole();
 		return this;
 	}
 	/**
@@ -58627,6 +58629,7 @@ var Marker = class extends Evented {
 			this._map.off("mousedown", this._addDragHandler);
 			this._map.off("touchstart", this._addDragHandler);
 		}
+		this._updateAccessibilityRole();
 		return this;
 	}
 	/**
@@ -58635,6 +58638,21 @@ var Marker = class extends Evented {
 	*/
 	isDraggable() {
 		return this._draggable;
+	}
+	/**
+	* Keep the default marker role aligned with interactivity.
+	* Default markers need a role because `aria-label` is set in {@link Marker.addTo}.
+	* Non-interactive markers use `role=img`; interactive ones (draggable or with a popup) use `role=button`.
+	* Click listeners are application-owned and do not automatically change the role.
+	* Custom marker elements are left alone so applications own their a11y tree.
+	* Explicit roles set by the application are preserved.
+	*/
+	_updateAccessibilityRole() {
+		if (!this._defaultMarker) return;
+		if (this._element.hasAttribute("role") && !this._roleManaged) return;
+		const role = this._draggable || !!this._popup ? "button" : "img";
+		this._element.setAttribute("role", role);
+		this._roleManaged = true;
 	}
 	/**
 	* Sets the `rotation` property of the marker.
@@ -60872,7 +60890,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main eef854f";
+const version = "main 653ae90";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
