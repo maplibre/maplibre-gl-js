@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <title>Render 3D Tiles terrain source</title>
-<meta property="og:description" content="Convert 3D Tiles quantized-mesh terrain tiles to terrain-RGB via addProtocol, then use a normal raster-dem source with map.setTerrain()." />
+<meta property="og:description" content="Convert 3D Tiles quantized-mesh terrain to terrain-RGB via addProtocol, then drape an OpenStreetMap basemap and hillshade over it with map.setTerrain()." />
 <meta property="og:category" content="Terrain & Hillshade" />
 <meta property="og:created" content="2026-07-15" />
 <meta charset='utf-8'>
@@ -317,7 +317,25 @@ maplibregl.addProtocol('quantized-mesh', async ({url}, abortController) => {
 
 const map = new maplibregl.Map({
     container: 'map',
-    style: {version: 8, sources: {}, layers: [{id: 'sky', type: 'background', paint: {'background-color': '#bfe0f5'}}]},
+    // A plain OpenStreetMap raster basemap, to show that ordinary 2D layers
+    // (raster here, but vector tiles or fill-extrusion buildings drape the
+    // same way) sit on the quantized-mesh terrain like any raster-dem terrain.
+    style: {
+        version: 8,
+        sources: {
+            osm: {
+                type: 'raster',
+                tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                tileSize: 256,
+                maxzoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }
+        },
+        layers: [
+            {id: 'sky', type: 'background', paint: {'background-color': '#bfe0f5'}},
+            {id: 'osm', type: 'raster', source: 'osm'}
+        ]
+    },
     center: [7.74, 45.96],
     zoom: 10.6,
     pitch: 60,
@@ -347,7 +365,7 @@ map.on('load', async () => {
         id: 'qm-hillshade',
         type: 'hillshade',
         source: 'qm-terrain',
-        paint: {'hillshade-exaggeration': 0.8}
+        paint: {'hillshade-exaggeration': 0.4}
     });
 });
 </script>
