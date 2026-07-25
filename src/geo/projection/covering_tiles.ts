@@ -194,7 +194,7 @@ const TILE_CULLING_HORIZON_ONSET_DEGREES = 15;
  * the frustum's bottom edge approaches the horizon, where a ground-level bounding
  * box would cull tiles whose extruded features are still visible.
  */
-export function getElevationForTileCulling(transform: IReadonlyTransform): number {
+function getElevationForTileCulling(transform: IReadonlyTransform): number {
     const bottomEdgeDegreesAboveHorizontal = maxMercatorHorizonAngle - transform.pitch - transform.fov / 2;
     const proximityToHorizon = clamp(
         (TILE_CULLING_HORIZON_ONSET_DEGREES - bottomEdgeDegreesAboveHorizontal) / TILE_CULLING_HORIZON_ONSET_DEGREES,
