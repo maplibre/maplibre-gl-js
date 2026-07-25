@@ -19,9 +19,9 @@ export class Light extends Evented {
     _transitioning: Transitioning<LightProps>;
     properties: PossiblyEvaluated<LightProps, LightPropsPossiblyEvaluated>;
 
-    constructor(lightOptions?: LightSpecification) {
+    constructor(lightOptions: LightSpecification, globalState: Record<string, any>) {
         super();
-        this._transitionable = new Transitionable(getProperties(), 'light', undefined);
+        this._transitionable = new Transitionable(getProperties(), 'light', globalState);
         this.setLight(lightOptions);
         this._transitioning = this._transitionable.untransitioned();
     }
@@ -37,7 +37,7 @@ export class Light extends Evented {
         return sphericalToCartesian(this.properties.get('position'));
     }
 
-    setLight(light?: LightSpecification, options: StyleSetterOptions = {}): void {
+    setLight(light: LightSpecification, options: StyleSetterOptions = {}): void {
         if (this._validate(validateStyle.light, light, options)) {
             return;
         }
