@@ -27218,6 +27218,10 @@ var Bounds = class Bounds {
 *    ]
 * })
 *
+* // update with an already-decoded image (no network request)
+* const bitmap = await createImageBitmap(myCanvas);
+* mySource.updateImage({image: bitmap});
+*
 * map.removeSource('some id');  // remove
 * ```
 */
@@ -27262,17 +27266,29 @@ var ImageSource = class extends Evented {
 		return this._loaded;
 	}
 	/**
-	* Updates the image URL and, optionally, the coordinates. To avoid having the image flash after changing,
+	* Updates the image and, optionally, the coordinates. To avoid having the image flash after changing,
 	* set the `raster-fade-duration` paint property on the raster layer to 0.
+	*
+	* Provide exactly one of `url` (to fetch a new image over the network) or `image` (an
+	* already-decoded `HTMLImageElement`, `HTMLCanvasElement`, `ImageBitmap` or `ImageData` to
+	* display directly, without a network request).
 	*
 	* @param options - The options object.
 	*/
 	updateImage(options) {
-		if (!options.url) return this;
 		if (this._request) {
 			this._request.abort();
 			this._request = null;
 		}
+		if ("image" in options) {
+			this._loaded = true;
+			this.image = options.image;
+			if (options.coordinates) this.coordinates = options.coordinates;
+			this.texture = null;
+			this._finishLoading();
+			return this;
+		}
+		if (!options.url) return this;
 		this.options.url = options.url;
 		this.load(options.coordinates).finally(() => this.texture = null);
 		return this;
@@ -60848,7 +60864,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main ac933fd";
+const version = "main 584e964";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
