@@ -37,13 +37,9 @@ import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
  * in Chicago's Loop, between real building footprints (including the
  * landmark Monadnock and Fisher buildings), sourced from OpenStreetMap.
  *
- * This is a small, fixed set of buildings baked into this file - not a live
- * vector-tile source. A full real-world *tiled* city isn't safe to drive at
- * pitch 90: MapLibre's tile-covering logic caps its horizon handling at
- * 89.25° (see `maxMercatorHorizonAngle` in mercator_utils.ts), and a true
- * 90° pitch against an unbounded tiled world can make it try to load an
- * ever-growing set of tiles toward the mathematical horizon. A bounded,
- * static dataset like this one has no horizon for that to happen to.
+ * The buildings are a small fixed set baked into this file, so the example is
+ * self-contained: no external vector-tile source, API key or network beyond
+ * the base library, and a deterministic scene for the gallery thumbnail.
  *
  * Naively setting `pitch: 90` collapses the camera onto the ground, because
  * `center` is normally a point ON the ground that the camera looks down at
