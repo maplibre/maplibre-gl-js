@@ -1344,19 +1344,28 @@ const latest = {
 		},
 		"property-type": "data-constant"
 	} },
-	"layout_fill-extrusion": { "visibility": {
-		"type": "enum",
-		"values": {
-			"visible": {},
-			"none": {}
+	"layout_fill-extrusion": {
+		"visibility": {
+			"type": "enum",
+			"values": {
+				"visible": {},
+				"none": {}
+			},
+			"default": "visible",
+			"expression": {
+				"interpolated": false,
+				"parameters": ["global-state"]
+			},
+			"property-type": "data-constant"
 		},
-		"default": "visible",
-		"expression": {
-			"interpolated": false,
-			"parameters": ["global-state"]
-		},
-		"property-type": "data-constant"
-	} },
+		"fill-extrusion-rounded-corner-distance": {
+			"type": "number",
+			"default": 0,
+			"minimum": 0,
+			"units": "meters",
+			"property-type": "constant"
+		}
+	},
 	layout_line: {
 		"line-cap": {
 			"type": "enum",
@@ -2508,13 +2517,6 @@ const latest = {
 				]
 			},
 			"property-type": "data-driven"
-		},
-		"fill-extrusion-rounded-corner-distance": {
-			"type": "number",
-			"default": 0,
-			"minimum": 0,
-			"units": "meters",
-			"property-type": "constant"
 		},
 		"fill-extrusion-vertical-gradient": {
 			"type": "boolean",
@@ -12779,14 +12781,14 @@ var TriangleIndexArray = class extends StructArrayLayout3ui6 {};
 var LineIndexArray = class extends StructArrayLayout2ui4 {};
 //#endregion
 //#region src/data/bucket/circle_attributes.ts
-const layout$6 = createLayout([{
+const layout$7 = createLayout([{
 	name: "a_pos",
 	components: 2,
 	type: "Int16"
 }], 4);
-const members$4 = layout$6.members;
-layout$6.size;
-layout$6.alignment;
+const members$4 = layout$7.members;
+layout$7.size;
+layout$7.alignment;
 //#endregion
 //#region src/data/segment.ts
 /**
@@ -14042,8 +14044,8 @@ function projectQueryGeometry$1(queryGeometry, transform, unwrappedTileID, getEl
 }
 //#endregion
 //#region src/style/style_layer/circle_style_layer_properties.g.ts
-let layout$5;
-const getLayout$3 = () => layout$5 = layout$5 || new Properties({ "circle-sort-key": new DataDrivenProperty(latest["layout_circle"]["circle-sort-key"], "circle-sort-key") });
+let layout$6;
+const getLayout$4 = () => layout$6 = layout$6 || new Properties({ "circle-sort-key": new DataDrivenProperty(latest["layout_circle"]["circle-sort-key"], "circle-sort-key") });
 let paint$9;
 const getPaint$9 = () => paint$9 = paint$9 || new Properties({
 	"circle-radius": new DataDrivenProperty(latest["paint_circle"]["circle-radius"], "circle-radius"),
@@ -14063,7 +14065,7 @@ var circle_style_layer_properties_g_default = {
 		return getPaint$9();
 	},
 	get layout() {
-		return getLayout$3();
+		return getLayout$4();
 	}
 };
 //#endregion
@@ -14741,14 +14743,14 @@ var ColorReliefStyleLayer = class extends StyleLayer {
 };
 //#endregion
 //#region src/data/bucket/fill_attributes.ts
-const layout$4 = createLayout([{
+const layout$5 = createLayout([{
 	name: "a_pos",
 	components: 2,
 	type: "Int16"
 }], 4);
-const members$3 = layout$4.members;
-layout$4.size;
-layout$4.alignment;
+const members$3 = layout$5.members;
+layout$5.size;
+layout$5.alignment;
 //#endregion
 //#region src/data/bucket/pattern_bucket_features.ts
 function hasPattern(type, layers, options) {
@@ -16207,8 +16209,8 @@ var FillBucket = class {
 register("FillBucket", FillBucket, { omit: ["layers", "patternFeatures"] });
 //#endregion
 //#region src/style/style_layer/fill_style_layer_properties.g.ts
-let layout$3;
-const getLayout$2 = () => layout$3 = layout$3 || new Properties({ "fill-sort-key": new DataDrivenProperty(latest["layout_fill"]["fill-sort-key"], "fill-sort-key") });
+let layout$4;
+const getLayout$3 = () => layout$4 = layout$4 || new Properties({ "fill-sort-key": new DataDrivenProperty(latest["layout_fill"]["fill-sort-key"], "fill-sort-key") });
 let paint$5;
 const getPaint$5 = () => paint$5 = paint$5 || new Properties({
 	"fill-antialias": new DataConstantProperty(latest["paint_fill"]["fill-antialias"], "fill-antialias"),
@@ -16225,7 +16227,7 @@ var fill_style_layer_properties_g_default = {
 		return getPaint$5();
 	},
 	get layout() {
-		return getLayout$2();
+		return getLayout$3();
 	}
 };
 //#endregion
@@ -16254,7 +16256,7 @@ var FillStyleLayer = class extends StyleLayer {
 };
 //#endregion
 //#region src/data/bucket/fill_extrusion_attributes.ts
-const layout$2 = createLayout([{
+const layout$3 = createLayout([{
 	name: "a_pos",
 	components: 2,
 	type: "Int16"
@@ -16268,9 +16270,9 @@ const centroidAttributes = createLayout([{
 	components: 2,
 	type: "Int16"
 }], 4);
-const members$2 = layout$2.members;
-layout$2.size;
-layout$2.alignment;
+const members$2 = layout$3.members;
+layout$3.size;
+layout$3.alignment;
 //#endregion
 //#region node_modules/@mapbox/vector-tile/index.js
 /** @import {PbfReader} from 'pbf' */
@@ -16725,6 +16727,8 @@ function isEntirelyOutside(ring) {
 }
 //#endregion
 //#region src/style/style_layer/fill_extrusion_style_layer_properties.g.ts
+let layout$2;
+const getLayout$2 = () => layout$2 = layout$2 || new Properties({ "fill-extrusion-rounded-corner-distance": new DataConstantProperty(latest["layout_fill-extrusion"]["fill-extrusion-rounded-corner-distance"], "fill-extrusion-rounded-corner-distance") });
 let paint$4;
 const getPaint$4 = () => paint$4 = paint$4 || new Properties({
 	"fill-extrusion-opacity": new DataConstantProperty(latest["paint_fill-extrusion"]["fill-extrusion-opacity"], "fill-extrusion-opacity"),
@@ -16734,12 +16738,16 @@ const getPaint$4 = () => paint$4 = paint$4 || new Properties({
 	"fill-extrusion-pattern": new CrossFadedDataDrivenProperty(latest["paint_fill-extrusion"]["fill-extrusion-pattern"], "fill-extrusion-pattern"),
 	"fill-extrusion-height": new DataDrivenProperty(latest["paint_fill-extrusion"]["fill-extrusion-height"], "fill-extrusion-height"),
 	"fill-extrusion-base": new DataDrivenProperty(latest["paint_fill-extrusion"]["fill-extrusion-base"], "fill-extrusion-base"),
-	"fill-extrusion-rounded-corner-distance": new DataConstantProperty(latest["paint_fill-extrusion"]["fill-extrusion-rounded-corner-distance"], "fill-extrusion-rounded-corner-distance"),
 	"fill-extrusion-vertical-gradient": new DataConstantProperty(latest["paint_fill-extrusion"]["fill-extrusion-vertical-gradient"], "fill-extrusion-vertical-gradient")
 });
-var fill_extrusion_style_layer_properties_g_default = { get paint() {
-	return getPaint$4();
-} };
+var fill_extrusion_style_layer_properties_g_default = {
+	get paint() {
+		return getPaint$4();
+	},
+	get layout() {
+		return getLayout$2();
+	}
+};
 //#endregion
 //#region src/style/style_layer/fill_extrusion_style_layer.ts
 var FillExtrusionStyleLayer = class extends StyleLayer {
