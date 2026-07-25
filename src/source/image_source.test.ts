@@ -68,14 +68,12 @@ describe('ImageSource', () => {
             transformStarted = resolve;
         });
         let releaseTransform: (params: {url: string}) => void;
-        map._requestManager = {
-            transformRequest: () => {
-                transformStarted();
-                return new Promise<{url: string}>((resolve) => {
-                    releaseTransform = resolve;
-                });
-            }
-        };
+        map.setTransformRequest(() => {
+            transformStarted();
+            return new Promise<{url: string}>((resolve) => {
+                releaseTransform = resolve;
+            });
+        });
         const image = {width: 1, height: 1} as ImageBitmap;
         let requestController: AbortController;
         let sourceControllerAtRequestTime: AbortController;
