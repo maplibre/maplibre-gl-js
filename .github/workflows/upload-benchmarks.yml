@@ -17,6 +17,10 @@ on:
         required: false
         type: string
 
+concurrency:
+  group: upload-benchmarks-gh-pages
+  cancel-in-progress: false
+
 jobs:
   upload_benchmarks:
     runs-on: ubuntu-latest
