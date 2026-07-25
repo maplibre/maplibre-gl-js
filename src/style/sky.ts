@@ -18,9 +18,9 @@ export class Sky extends Evented {
     _transitionable: Transitionable<SkyProps>;
     _transitioning: Transitioning<SkyProps>;
 
-    constructor(sky?: SkySpecification) {
+    constructor(sky: SkySpecification | undefined, globalState: Record<string, any>) {
         super();
-        this._transitionable = new Transitionable(getProperties(), 'sky', undefined);
+        this._transitionable = new Transitionable(getProperties(), 'sky', globalState);
         this.setSky(sky);
         this._transitioning = this._transitionable.untransitioned();
         this.recalculate(new EvaluationParameters(0));

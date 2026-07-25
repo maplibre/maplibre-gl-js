@@ -222,8 +222,6 @@ export class GlobeTransform implements ITransform {
     // Implementation of globe transform
     //
 
-    private _globeLatitudeErrorCorrectionRadians: number = 0;
-
     /**
      * True when globe render path should be used instead of the old but simpler mercator rendering.
      * Globe automatically transitions to mercator at high zoom levels, which causes a switch from
@@ -233,9 +231,8 @@ export class GlobeTransform implements ITransform {
         return this._globeness > 0;
     }
 
-    setTransitionState(globeness: number, errorCorrectionValue: number): void {
+    setTransitionState(globeness: number): void {
         this._globeness = globeness;
-        this._globeLatitudeErrorCorrectionRadians = errorCorrectionValue;
         this._calcMatrices();
         this._verticalPerspectiveTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
         this._mercatorTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
@@ -266,7 +263,6 @@ export class GlobeTransform implements ITransform {
     clone(): ITransform {
         const clone = new GlobeTransform();
         clone._globeness = this._globeness;
-        clone._globeLatitudeErrorCorrectionRadians = this._globeLatitudeErrorCorrectionRadians;
         clone.apply(this, false);
         return clone;
     }
@@ -274,7 +270,7 @@ export class GlobeTransform implements ITransform {
     public apply(that: IReadonlyTransform, constrain: boolean): void {
         this._helper.apply(that, constrain);
         this._mercatorTransform.apply(this, false);
-        this._verticalPerspectiveTransform.apply(this, false, this._globeLatitudeErrorCorrectionRadians);
+        this._verticalPerspectiveTransform.apply(this, false);
     }
 
     public get projectionMatrix(): mat4 { return this.currentTransform.projectionMatrix; }
@@ -332,7 +328,7 @@ export class GlobeTransform implements ITransform {
         // - if autoCalculateNearFarZ is true then it computes globe Z values
         // - if autoCalculateNearFarZ is false then it inherits our Z values
         // In either case, its Z values are consistent with out settings and we want to copy its Z values to our helper.
-        this._verticalPerspectiveTransform.apply(this, false, this._globeLatitudeErrorCorrectionRadians);
+        this._verticalPerspectiveTransform.apply(this, false);
         this._helper._nearZ = this._verticalPerspectiveTransform.nearZ;
         this._helper._farZ = this._verticalPerspectiveTransform.farZ;
 

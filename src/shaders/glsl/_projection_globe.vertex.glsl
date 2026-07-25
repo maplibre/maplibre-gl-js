@@ -30,8 +30,9 @@ mat3 globeGetRotationMatrix(vec3 spherePos) {
 // Use `projectLineThickness` or `projectCircleRadius` instead.
 float circumferenceRatioAtTileY(float tileY) {
     float mercator_pos_y = u_projection_tile_mercator_coords.y + u_projection_tile_mercator_coords.w * tileY;
-    float spherical_y = 2.0 * atan(exp(PI - (mercator_pos_y * PI * 2.0))) - PI * 0.5;
-    return cos(spherical_y);
+    // cos(spherical_y) derived algebraically from exp(), see projectToSphere below.
+    float t = exp(PI - (mercator_pos_y * PI * 2.0));
+    return (2.0 * t) / (t * t + 1.0);
 }
 
 float projectLineThickness(float tileY) {
@@ -52,15 +53,28 @@ vec3 projectToSphere(vec2 translatedPos, vec2 rawPos) {
     vec2 mercator_pos = u_projection_tile_mercator_coords.xy + u_projection_tile_mercator_coords.zw * translatedPos;
 
     // Now compute angular coordinates on the surface of a perfect sphere
-    vec2 spherical;
-    spherical.x = mercator_pos.x * PI * 2.0 + PI;
-    spherical.y = 2.0 * atan(exp(PI - (mercator_pos.y * PI * 2.0))) - PI * 0.5;
+    float spherical_x = mercator_pos.x * PI * 2.0 + PI;
 
-    float len = cos(spherical.y);
+    // sin_sy/cos_sy are sin(spherical_y)/cos(spherical_y), where
+    // spherical_y = 2*atan(exp(PI - mercator_pos.y*2*PI)) - PI/2 (the Gudermannian
+    // function, converting mercator Y to latitude). The direct formula subtracts
+    // PI/2 from a value near PI/2, destroying most float32 mantissa bits near the
+    // equator, and some GPUs (e.g. Mali) have imprecise atan/sin/cos besides.
+    // Substituting t = exp(PI - mercator_pos.y*2*PI) and expanding via the
+    // tangent half-angle (Weierstrass) identities eliminates atan, sin and cos
+    // entirely, leaving only exp() and rational arithmetic:
+    //   sin(2*atan(t) - PI/2) = (t^2 - 1) / (t^2 + 1)
+    //   cos(2*atan(t) - PI/2) =    2*t    / (t^2 + 1)
+    float t = exp(PI - (mercator_pos.y * PI * 2.0));
+    float t2 = t * t;
+    float denom = t2 + 1.0;
+    float sin_sy = (t2 - 1.0) / denom;
+    float cos_sy = (2.0 * t) / denom;
+
     vec3 pos = vec3(
-        sin(spherical.x) * len,
-        sin(spherical.y),
-        cos(spherical.x) * len
+        sin(spherical_x) * cos_sy,
+        sin_sy,
+        cos(spherical_x) * cos_sy
     );
 
     // North pole

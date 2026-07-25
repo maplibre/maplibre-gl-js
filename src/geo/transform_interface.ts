@@ -232,9 +232,8 @@ interface ITransformMutators {
      * @internal
      * Sets the transform's transition state from one projection to another.
      * @param value - The transition state value.
-     * @param error - The error value.
      */
-    setTransitionState(value: number, error: number): void;
+    setTransitionState(value: number): void;
 }
 
 /**
