@@ -53673,6 +53673,7 @@ var Map$1 = class extends Evented {
 				if (thisLayer.type === "hillshade" && thisLayer.source === options.source) warnOnce("You are using the same source for a hillshade layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.");
 				if (thisLayer.type === "color-relief" && thisLayer.source === options.source) warnOnce("You are using the same source for a color-relief layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.");
 			}
+			if (this.terrain) this.terrain.destroy();
 			this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength);
 			this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
 			this._camera.terrain = this.terrain;
@@ -60920,7 +60921,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 646d174";
+const version = "main 4dfddcd";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
