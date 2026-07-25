@@ -39,6 +39,9 @@ export class GlobeProjection extends Evented implements Projection {
             return 1;
         }
         if (currentProjectionSpecValue instanceof ProjectionDefinition) {
+            if (currentProjectionSpecValue.from === currentProjectionSpecValue.to) {
+                return currentProjectionSpecValue.from === 'mercator' ? 0 : 1;
+            }
             if (currentProjectionSpecValue.from === 'vertical-perspective' && currentProjectionSpecValue.to === 'mercator') {
                 return 1 - currentProjectionSpecValue.transition;
             }
