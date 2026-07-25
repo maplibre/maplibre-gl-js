@@ -1,8 +1,9 @@
-import {type ReadonlyVec4, vec3} from 'gl-matrix';
-import {clamp, createVec3f64, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util.ts';
+import {quat, type ReadonlyVec4, vec3} from 'gl-matrix';
+import {clamp, createVec3f64, createVec4f64, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util.ts';
 import {LngLat} from '../lng_lat.ts';
 import {EXTENT} from '../../data/extent.ts';
 import type Point from '@mapbox/point-geometry';
+import type {ITransform} from '../transform_interface.ts';
 
 export function getGlobeCircumferencePixels(transform: {worldSize: number; center: {lat: number}}): number {
     const radius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
@@ -105,6 +106,76 @@ export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
     } else {
         return new LngLat(0.0, latDegrees);
     }
+}
+
+/**
+ * Returns the globe orientation quaternion for the given map center and bearing.
+ * The inverse of {@link lngLatBearingFromOrientation}.
+ */
+export function orientationFromLngLatBearing(lngLat: LngLat, bearing: number): quat {
+    return quat.fromEuler(createVec4f64(), -lngLat.lng, -lngLat.lat, bearing);
+}
+
+/**
+ * Given a globe orientation quaternion, returns the corresponding map center and bearing.
+ * The inverse of {@link orientationFromLngLatBearing}.
+ * Returns plain numbers so that callers can check for NaN before constructing a {@link LngLat},
+ * whose constructor throws on NaN.
+ */
+export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: number; bearing: number } {
+    const x = q[0], y = q[1], z = q[2], w = q[3];
+    const lng = -Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y)) * 180 / Math.PI;
+    const lat = -Math.asin(clamp(2 * (w * y - z * x), -1, 1)) * 180 / Math.PI;
+    const bearing = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)) * 180 / Math.PI;
+    return {lng, lat, bearing};
+}
+
+/**
+ * Rotates the globe so that the given location appears at the given screen point, using a
+ * quaternion (versor) rotation that couples center and bearing. Unlike the bearing-preserving
+ * {@link ITransform.setLocationAtPoint}, this stays smooth when dragging near and across the
+ * poles, at the cost of letting the bearing change.
+ * Note: automatically adjusts zoom to keep planet size consistent
+ * (same size before and after a call), like `setLocationAtPoint` does.
+ */
+export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point): void {
+    // Pixels that miss the globe unproject to a fake location snapped to the
+    // visible horizon. Rotating towards such a point mostly twists the globe
+    // around the view axis, and these twists compound frame-to-frame into a
+    // rapid bearing spin. Ignore the drag until the pointer is back on the globe.
+    if (!tr.isPointOnMapSurface(point)) {
+        return;
+    }
+
+    const pointLngLat = tr.screenPointToLocation(point);
+    const vecToPixelCurrent = angularCoordinatesToSurfaceVector(pointLngLat);
+    const vecToTarget = angularCoordinatesToSurfaceVector(lnglat);
+
+    const centerQuat = orientationFromLngLatBearing(tr.center, tr.bearing);
+
+    // Calculate the quaternion rotation that brings the source point to the target point.
+    const w = vec3.cross(createVec3f64(), vecToTarget, vecToPixelCurrent);
+    const l = Math.sqrt(vec3.dot(w, w));
+    const t = Math.acos(clamp(vec3.dot(vecToTarget, vecToPixelCurrent), -1, 1)) / 2;
+    const s = Math.sin(t);
+
+    // The rotation axis `w` lives in the surface-vector frame of
+    // {@link angularCoordinatesToSurfaceVector} (x = sin(lng)·cos(lat), y = sin(lat),
+    // z = cos(lng)·cos(lat)), while `centerQuat` lives in the Euler frame of
+    // {@link orientationFromLngLatBearing} — hence the component swizzle and sign flip.
+    const delta = l ? quat.fromValues((w[1] / l) * s, (-w[0] / l) * s, (w[2] / l) * s, Math.cos(t)) : quat.fromValues(0, 0, 0, 1);
+
+    const newCenterQuat = quat.multiply(createVec4f64(), centerQuat, delta);
+    const {lng: newCenterLng, lat: newCenterLat, bearing: newBearing} = lngLatBearingFromOrientation(newCenterQuat);
+
+    if (isNaN(newCenterLng) || isNaN(newCenterLat) || isNaN(newBearing)) {
+        return;
+    }
+
+    const oldLat = tr.center.lat;
+    tr.setCenter(new LngLat(newCenterLng, clamp(newCenterLat, -90, 90)));
+    tr.setBearing(newBearing);
+    tr.setZoom(tr.zoom + getZoomAdjustment(oldLat, tr.center.lat));
 }
 
 /**

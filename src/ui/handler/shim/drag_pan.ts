@@ -26,6 +26,13 @@ export type DragPanOptions = {
      * @defaultValue 2500
      */
     maxSpeed?: number;
+    /**
+     * In globe mode, keep the bearing fixed during the drag.
+     * When set to `false`, quaternion-based panning is used which allows
+     * smooth panning near the poles at the cost of bearing changes.
+     * @defaultValue true
+     */
+    fixedBearing?: boolean;
 };
 
 /**
@@ -68,6 +75,15 @@ export class DragPanHandler {
         this._mousePan.enable();
         this._touchPan.enable();
         this._el.classList.add('maplibregl-touch-drag-pan');
+    }
+
+    /**
+     * Returns the current `DragPanOptions.fixedBearing` setting,
+     * or `undefined` when it was not specified (which behaves like `true`).
+     * @internal
+     */
+    get fixedBearing(): boolean | undefined {
+        return typeof this._inertiaOptions === 'object' ? this._inertiaOptions.fixedBearing : undefined;
     }
 
     /**
