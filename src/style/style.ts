@@ -1760,7 +1760,7 @@ export class Style extends Evented<MapEventType> {
     }
 
     _setProjectionInternal(name: ProjectionSpecification['type']): void {
-        const projectionObjects = createProjectionFromName(name, this.map._camera?.transform.constrainOverride);
+        const projectionObjects = createProjectionFromName(name, this.map._camera?.transform.constrainOverride, this._globalState);
         this.projection = projectionObjects.projection;
         this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
         for (const key in this.tileManagers) {

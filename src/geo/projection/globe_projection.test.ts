@@ -11,7 +11,7 @@ describe('GlobeProjection runtime error logging', () => {
     test('warns with the projection property location when an expression errors at runtime', () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-        const projection = new GlobeProjection();
+        const projection = new GlobeProjection(undefined, {});
         // global-state defeats constant-folding, so this fails at evaluation time (not parse time).
         projection.setProjection({type: ['string', ['global-state', 'missing']]} as any);
         projection.updateTransitions({transition: false} as any as TransitionParameters);
