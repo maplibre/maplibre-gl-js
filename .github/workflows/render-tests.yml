@@ -1,0 +1,63 @@
+name: Render tests (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      split:
+        required: true
+        type: number
+      split_count:
+        required: false
+        type: number
+        default: 10
+
+jobs:
+  render-tests:
+    name: Render tests (${{ inputs.os }}, ${{ inputs.split }})
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v4
+        with:
+          node-version-file: '.nvmrc'
+      - name: install CJK fonts for local ideographs render tests
+        if: runner.os == 'Linux'
+        run: sudo apt install fonts-noto-cjk
+      - name: Disable AppArmor
+        if: runner.os == 'Linux'
+        run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
+      - run: npm ci
+      - name: Start display server
+        if: runner.os == 'Linux'
+        run: nohup Xvfb &
+          echo "DISPLAY=:0" >> $GITHUB_ENV
+      - run: npm run build-dist
+      - name: Run Render tests
+        run: npm run test-render
+        env:
+          SPLIT_COUNT: ${{ inputs.split_count }}
+          CURRENT_SPLIT_INDEX: ${{ inputs.split }}
+      - name: Move files
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p ${{ github.workspace }}/upload
+          mv ${{ github.workspace }}/coverage/render/coverage-final.json ${{ github.workspace }}/upload/coverage-final-render-${{ inputs.split }}.json
+      - name: Upload coverage artifact
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-reports-render-tests-${{ inputs.split }}
+          path: ${{ github.workspace }}/upload/coverage-final-render-${{ inputs.split }}.json
+          retention-days: 1
+      - name: Upload render test failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: render-test-report-${{ inputs.os }}-${{ inputs.split }}
+          path: ${{ github.workspace }}/test/integration/render/results.html
