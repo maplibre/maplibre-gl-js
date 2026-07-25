@@ -2943,6 +2943,9 @@ export class Map extends Evented<MapEventType> {
                     warnOnce('You are using the same source for a color-relief layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
                 }
             }
+            if (this.terrain) {
+                this.terrain.destroy();
+            }
             this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this._camera.terrain = this.terrain;
