@@ -8,7 +8,7 @@ import {type TransitionParameters} from './properties.ts';
 const spec = styleSpec.light;
 
 test('Light with defaults', () => {
-    const light = new Light({});
+    const light = new Light({}, {});
     light.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters);
 
     expect(light.properties.get('anchor')).toEqual(spec.anchor.default);
@@ -23,7 +23,7 @@ test('Light with options', () => {
         anchor: 'map',
         position: [2, 30, 30],
         intensity: 1
-    });
+    }, {});
     light.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters);
 
     expect(light.properties.get('anchor')).toBe('map');
@@ -38,7 +38,7 @@ test('Light with stops function', () => {
         intensity: {
             stops: [[16, 0.2], [17, 0.8]]
         }
-    } as LightSpecification);
+    } as LightSpecification, {});
     light.recalculate({zoom: 16.5, zoomHistory: {}} as EvaluationParameters);
 
     expect(light.properties.get('intensity')).toBe(0.5);
@@ -50,12 +50,12 @@ test('Light.getLight', () => {
         defaults[key] = spec[key].default;
     }
 
-    expect(new Light(defaults).getLight()).toEqual(defaults);
+    expect(new Light(defaults, {}).getLight()).toEqual(defaults);
 });
 
 describe('Light.setLight', () => {
     test('sets light', () => {
-        const light = new Light({});
+        const light = new Light({}, {});
         light.setLight({color: 'red', 'color-transition': {duration: 3000}});
         light.updateTransitions({transition: true} as any as TransitionParameters);
         light.recalculate({zoom: 16, zoomHistory: {}, now: 1500} as EvaluationParameters);
@@ -63,7 +63,7 @@ describe('Light.setLight', () => {
     });
 
     test('validates by default', () => {
-        const light = new Light({});
+        const light = new Light({}, {});
         const lightSpy = vi.spyOn(light, '_validate');
         vi.spyOn(console, 'error').mockImplementation(() => { });
         light.setLight({color: 'notacolor'});
@@ -75,7 +75,7 @@ describe('Light.setLight', () => {
     });
 
     test('respects validation option', () => {
-        const light = new Light({});
+        const light = new Light({}, {});
 
         const lightSpy = vi.spyOn(light, '_validate');
         light.setLight({color: [999]} as any, {validate: false});
@@ -96,7 +96,7 @@ describe('Light runtime error logging', () => {
     test('warns with the light property location when an expression errors at runtime', () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-        const light = new Light({});
+        const light = new Light({}, {});
         // global-state defeats constant-folding, so this fails at evaluation time (not parse time).
         light.setLight({intensity: ['number', ['global-state', 'missing']]} as any, {validate: false});
         light.updateTransitions({transition: false} as any as TransitionParameters);
