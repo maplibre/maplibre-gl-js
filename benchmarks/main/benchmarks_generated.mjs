@@ -32913,6 +32913,35 @@ function coveringZoomLevel(transform, options) {
 	return Math.max(0, z);
 }
 /**
+* Without terrain, `getTileBoundingVolume` has no knowledge of extruded features
+* (eg. 3D buildings): every tile's bounding box is flat at the camera's `elevation`.
+* That's a fine approximation of what's visible for most views, but it breaks down
+* as the frustum's bottom edge approaches horizontal (which depends on both `pitch`
+* and `fov`, not pitch alone) - a tall building can still be poking up into view
+* long after its tile's ground point has dropped out of the frustum.
+*
+* This is an assumed upper bound on real-world feature height (in metres), used to
+* grow the elevation used for tile culling as that bottom edge nears horizontal, so
+* such tiles are not dropped too early. It has no effect away from that edge case.
+*/
+const ASSUMED_MAX_FEATURE_HEIGHT_METERS = 500;
+/**
+* Angle between the frustum's bottom edge and the mercator horizon below which
+* the culling elevation starts to grow.
+*/
+const TILE_CULLING_HORIZON_ONSET_DEGREES = 15;
+/**
+* Returns the elevation to use when computing tile bounding volumes for culling:
+* `transform.elevation`, growing by up to `ASSUMED_MAX_FEATURE_HEIGHT_METERS` as
+* the frustum's bottom edge approaches the horizon, where a ground-level bounding
+* box would cull tiles whose extruded features are still visible.
+*/
+function getElevationForTileCulling(transform) {
+	const bottomEdgeDegreesAboveHorizontal = maxMercatorHorizonAngle - transform.pitch - transform.fov / 2;
+	const proximityToHorizon = clamp$2((TILE_CULLING_HORIZON_ONSET_DEGREES - bottomEdgeDegreesAboveHorizontal) / TILE_CULLING_HORIZON_ONSET_DEGREES, 0, 1);
+	return transform.elevation + proximityToHorizon * ASSUMED_MAX_FEATURE_HEIGHT_METERS;
+}
+/**
 * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
 * Correctly handles LOD when moving over the antimeridian.
 * @param transform - The transform instance.
@@ -32930,6 +32959,7 @@ function coveringTiles(transform, options) {
 	const cameraCoord = transform.screenPointToMercatorCoordinate(transform.getCameraPoint());
 	const centerCoord = MercatorCoordinate.fromLngLat(transform.center, transform.elevation);
 	cameraCoord.z = centerCoord.z + Math.cos(transform.pitchInRadians) * transform.cameraToCenterDistance / transform.worldSize;
+	const elevationForTileCulling = getElevationForTileCulling(transform);
 	const detailsProvider = transform.getCoveringTilesDetailsProvider();
 	const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
 	const desiredZ = coveringZoomLevel(transform, options);
@@ -32976,7 +33006,7 @@ function coveringTiles(transform, options) {
 			y,
 			z: it.zoom
 		};
-		const boundingVolume = detailsProvider.getTileBoundingVolume(tileID, it.wrap, transform.elevation, options);
+		const boundingVolume = detailsProvider.getTileBoundingVolume(tileID, it.wrap, elevationForTileCulling, options);
 		if (!fullyVisible) {
 			const intersectResult = isTileVisible(frustum, boundingVolume, plane);
 			if (intersectResult === 0) continue;
@@ -38216,13 +38246,13 @@ var MercatorCoveringTilesDetailsProvider = class {
 	* @param tileID - Tile x, y and z for zoom.
 	*/
 	getTileBoundingVolume(tileID, wrap, elevation, options) {
-		let minElevation = 0;
-		let maxElevation = 0;
+		let minElevation = Math.min(0, elevation);
+		let maxElevation = Math.max(0, elevation);
 		if (options?.terrain) {
 			const overscaledTileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
 			const minMax = options.terrain.getMinMaxElevation(overscaledTileID);
-			minElevation = minMax.minElevation ?? Math.min(0, elevation);
-			maxElevation = minMax.maxElevation ?? Math.max(0, elevation);
+			minElevation = minMax.minElevation ?? minElevation;
+			maxElevation = minMax.maxElevation ?? maxElevation;
 		}
 		const numTiles = 1 << tileID.z;
 		return new Aabb([
@@ -39769,7 +39799,7 @@ var BoundingVolumeCache = class {
 	* @param tileID - Tile x, y and z for zoom.
 	*/
 	getTileBoundingVolume(tileID, wrap, elevation, options) {
-		const key = `${tileID.z}_${tileID.x}_${tileID.y}_${options?.terrain ? "t" : ""}`;
+		const key = `${tileID.z}_${tileID.x}_${tileID.y}_${options?.terrain ? "t" : ""}_${Math.round(elevation)}`;
 		const cached = this._cache.get(key);
 		if (cached) return cached;
 		const cachedPrevious = this._cachePrevious.get(key);
@@ -40040,13 +40070,13 @@ var GlobeCoveringTilesDetailsProvider = class {
 		return this._boundingVolumeCache.getTileBoundingVolume(tileID, wrap, elevation, options);
 	}
 	_computeTileBoundingVolume(tileID, wrap, elevation, options) {
-		let minElevation = 0;
-		let maxElevation = 0;
+		let minElevation = Math.min(0, elevation);
+		let maxElevation = Math.max(0, elevation);
 		if (options?.terrain) {
 			const overscaledTileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
 			const minMax = options.terrain.getMinMaxElevation(overscaledTileID);
-			minElevation = minMax.minElevation ?? Math.min(0, elevation);
-			maxElevation = minMax.maxElevation ?? Math.max(0, elevation);
+			minElevation = minMax.minElevation ?? minElevation;
+			maxElevation = minMax.maxElevation ?? maxElevation;
 		}
 		minElevation /= earthRadius;
 		maxElevation /= earthRadius;
@@ -60890,7 +60920,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = "main 653ae90";
+const version = "main 646d174";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
