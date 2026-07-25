@@ -42,7 +42,7 @@ function createCamera(options?: Partial<CameraInitOptions>, globe?: boolean, jum
     camera.transform.resize(512, 512, true);
 
     if (globe) {
-        const projectionObjects = createProjectionFromName('globe', options.transformConstrain);
+        const projectionObjects = createProjectionFromName('globe', options.transformConstrain, {});
         camera.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
     }
 

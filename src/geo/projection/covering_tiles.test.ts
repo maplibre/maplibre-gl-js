@@ -80,9 +80,11 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(6, 0, 6, 31, 31),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512),
+                new OverscaledTileID(10, 0, 10, 511, 513),
+                new OverscaledTileID(10, 0, 10, 512, 513),
             ]);
         });
-    
+
         test('pitched+rotated', () => {
             const transform = new GlobeTransform();
             transform.resize(128, 128);
