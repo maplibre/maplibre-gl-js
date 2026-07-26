@@ -222,12 +222,12 @@ export class Marker extends Evented<MarkerEventType> {
     _rotation: number;
     _pitchAlignment: Alignment;
     _rotationAlignment: Alignment;
-    _originalTabIndex: string; // original tabindex of _element
     _opacity: string;
     _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
     _subpixelPositioning: boolean;
     _roleManaged: boolean;
+    _tabIndexManaged: boolean;
 
     /**
      * @param options - the options
@@ -243,6 +243,7 @@ export class Marker extends Evented<MarkerEventType> {
         this._subpixelPositioning = options?.subpixelPositioning || false;
         this._isDragging = false;
         this._roleManaged = false;
+        this._tabIndexManaged = false;
         this._state = 'inactive';
         this._rotation = options?.rotation || 0;
         this._rotationAlignment = options?.rotationAlignment || 'auto';
@@ -447,6 +448,7 @@ export class Marker extends Evented<MarkerEventType> {
             delete this._map;
         }
         this._element.removeEventListener('click', this._onClick);
+        this._element.removeEventListener('keydown', this._onKeyDown);
         this._element.remove();
         if (this._popup) this._popup.remove();
         return this;
@@ -520,10 +522,6 @@ export class Marker extends Evented<MarkerEventType> {
             this._popup.remove();
             this._popup = null;
             this._element.removeEventListener('keypress', this._onKeyPress);
-
-            if (!this._originalTabIndex) {
-                this._element.removeAttribute('tabindex');
-            }
         }
 
         if (popup) {
@@ -544,13 +542,10 @@ export class Marker extends Evented<MarkerEventType> {
             }
             this._popup = popup;
 
-            this._originalTabIndex = this._element.getAttribute('tabindex');
-            if (!this._originalTabIndex) {
-                this._element.setAttribute('tabindex', '0');
-            }
             this._element.addEventListener('keypress', this._onKeyPress);
         }
 
+        this._updateTabIndex();
         this._updateAccessibilityRole();
         return this;
     }
@@ -850,6 +845,39 @@ export class Marker extends Evented<MarkerEventType> {
         }
     };
 
+    _onKeyDown = (e: KeyboardEvent): void => {
+        if (!this._map || !this._draggable || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+            return;
+        }
+
+        let movement: Point;
+        switch (e.key) {
+            case 'ArrowLeft':
+                movement = new Point(-1, 0);
+                break;
+            case 'ArrowRight':
+                movement = new Point(1, 0);
+                break;
+            case 'ArrowUp':
+                movement = new Point(0, -1);
+                break;
+            case 'ArrowDown':
+                movement = new Point(0, 1);
+                break;
+            default:
+                return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const position = this._map.project(this._lngLat).add(movement);
+        this.setLngLat(this._map.unproject(position));
+        this.fire(new MarkerDragEvent('dragstart'));
+        this.fire(new MarkerDragEvent('drag'));
+        this.fire(new MarkerDragEvent('dragend'));
+    };
+
     /**
      * Sets the `draggable` property and functionality of the marker
      * @param shouldBeDraggable - Turns drag functionality on/off
@@ -869,6 +897,13 @@ export class Marker extends Evented<MarkerEventType> {
             }
         }
 
+        if (shouldBeDraggable) {
+            this._element.addEventListener('keydown', this._onKeyDown);
+        } else {
+            this._element.removeEventListener('keydown', this._onKeyDown);
+        }
+
+        this._updateTabIndex();
         this._updateAccessibilityRole();
         return this;
     }
@@ -879,6 +914,25 @@ export class Marker extends Evented<MarkerEventType> {
      */
     isDraggable(): boolean {
         return this._draggable;
+    }
+
+    /**
+     * Keep the marker focusable while it has built-in keyboard interactions.
+     * Popups are interactive for every marker element. Dragging only manages
+     * focusability for default markers so custom marker accessibility remains
+     * application-owned.
+     */
+    _updateTabIndex(): void {
+        const shouldBeFocusable = !!this._popup || (this._defaultMarker && this._draggable);
+        if (shouldBeFocusable && !this._element.hasAttribute('tabindex')) {
+            this._element.setAttribute('tabindex', '0');
+            this._tabIndexManaged = true;
+        } else if (!shouldBeFocusable && this._tabIndexManaged) {
+            if (this._element.getAttribute('tabindex') === '0') {
+                this._element.removeAttribute('tabindex');
+            }
+            this._tabIndexManaged = false;
+        }
     }
 
     /**
