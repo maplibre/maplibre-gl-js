@@ -2954,18 +2954,23 @@ export class Map extends Evented<MapEventType> {
             this._terrainDataCallback = e => {
                 if (e.dataType === 'style') {
                     this.terrain.tileManager.releaseAllRTT();
-                } else if (e.dataType === 'source' && e.tile) {
-                    if (e.sourceId === options.source && !this._camera.elevationFreeze) {
-                        this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-                        if (this.getCenterClampedToGround()) {
-                            this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+                } else if (e.dataType === 'source') {
+                    if (e.sourceId === options.source) {
+                        this.terrain.resetElevationCache();
+                        if (e.tile && !this._camera.elevationFreeze) {
+                            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+                            if (this.getCenterClampedToGround()) {
+                                this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+                            }
                         }
                     }
 
-                    if (e.source?.type === 'image') {
-                        this.terrain.tileManager.releaseAllRTT();
-                    } else {
-                        this.terrain.tileManager.releaseRTT(e.tile.tileID);
+                    if (e.tile) {
+                        if (e.source?.type === 'image') {
+                            this.terrain.tileManager.releaseAllRTT();
+                        } else {
+                            this.terrain.tileManager.releaseRTT(e.tile.tileID);
+                        }
                     }
                 }
             };
@@ -4271,6 +4276,8 @@ export class Map extends Evented<MapEventType> {
         // update terrain stuff
         if (this.terrain) {
             this.terrain.tileManager.update(this._camera.transform, this.terrain);
+            // Tile selection can change with the transform or cache state without a data event.
+            this.terrain.resetElevationCache();
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             if (!this._camera.elevationFreeze && this.getCenterClampedToGround()) {
                 this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
