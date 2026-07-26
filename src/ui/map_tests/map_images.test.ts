@@ -7,6 +7,7 @@ import {MessageType} from '../../util/actor_messages.ts';
 beforeEach(() => {
     beforeMapTest();
     global.fetch = null;
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
 test('listImages', async () => {

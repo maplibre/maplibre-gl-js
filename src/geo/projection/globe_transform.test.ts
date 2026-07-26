@@ -1,4 +1,4 @@
-import {describe, expect, test} from 'vitest';
+import {describe, expect, test, vi} from 'vitest';
 import {EXTENT} from '../../data/extent.ts';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
@@ -601,6 +601,7 @@ describe('GlobeTransform', () => {
     });
 
     test('recalculateZoomAndCenter does not jump center on globe + terrain (#7025)', () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const globeTransform = createGlobeTransform();
         globeTransform.setTransitionState(1);
         globeTransform.setCenter(new LngLat(10, 50));

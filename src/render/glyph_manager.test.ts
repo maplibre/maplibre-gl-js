@@ -257,6 +257,7 @@ describe('GlyphManager', () => {
     });
 
     test('still instantiates TinySDF when document.fonts.load rejects', async () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const loadSpy = vi.fn(() => Promise.reject(new Error('font not found')));
         Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
         const tinySdfSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(function () {
