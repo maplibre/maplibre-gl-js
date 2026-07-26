@@ -1,5 +1,5 @@
 import {beforeEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, mockConsole} from '../../util/test/util.ts';
 import {type IControl} from '../control/control.ts';
 
 beforeEach(() => {
@@ -22,7 +22,7 @@ test('addControl', () => {
 test('removeControl errors on invalid arguments', () => {
     const map = createMap();
     const control = {} as any as IControl;
-    const stub = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const stub = mockConsole('error');
 
     map.addControl(control);
     map.removeControl(control);

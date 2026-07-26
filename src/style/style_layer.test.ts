@@ -2,6 +2,7 @@ import {describe, test, expect} from 'vitest';
 import {createStyleLayer} from './create_style_layer.ts';
 import {FillStyleLayer} from './style_layer/fill_style_layer.ts';
 import {extend} from '../util/util.ts';
+import {mockConsole} from '../util/test/util.ts';
 import {Color, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type EvaluationParameters} from './evaluation_parameters.ts';
 import {type TransitionParameters} from './properties.ts';
@@ -379,6 +380,7 @@ describe('StyleLayer.getLayoutAffectingGlobalStateRefs', () => {
     });
 
     test('returns global-state references from visibility', () => {
+        mockConsole('warn');
         const layer = createStyleLayer({
             id: 'background',
             type: 'background',

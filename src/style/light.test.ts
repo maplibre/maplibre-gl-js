@@ -1,5 +1,6 @@
 import {describe, test, expect, vi, afterEach} from 'vitest';
 import {Light} from './light.ts';
+import {mockConsole} from '../util/test/util.ts';
 import {Color, latest as styleSpec, type LightSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {sphericalToCartesian} from '../util/util.ts';
 import {type EvaluationParameters} from './evaluation_parameters.ts';
@@ -65,7 +66,7 @@ describe('Light.setLight', () => {
     test('validates by default', () => {
         const light = new Light({}, {});
         const lightSpy = vi.spyOn(light, '_validate');
-        vi.spyOn(console, 'error').mockImplementation(() => { });
+        mockConsole('error');
         light.setLight({color: 'notacolor'});
         light.updateTransitions({transition: false} as any as TransitionParameters);
         light.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);
@@ -94,7 +95,7 @@ describe('Light runtime error logging', () => {
     });
 
     test('warns with the light property location when an expression errors at runtime', () => {
-        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const warn = mockConsole('warn');
 
         const light = new Light({}, {});
         // global-state defeats constant-folding, so this fails at evaluation time (not parse time).

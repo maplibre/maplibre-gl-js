@@ -2,6 +2,7 @@ import {describe, test, expect, vi} from 'vitest';
 import {DEMData} from './dem_data.ts';
 import {RGBAImage} from '../util/image.ts';
 import {serialize, deserialize} from '../util/web_worker_transfer.ts';
+import {mockConsole} from '../util/test/util.ts';
 
 function createMockImage(height, width) {
     // RGBAImage passed to constructor has uniform 1px padding on all sides.
@@ -42,7 +43,7 @@ describe('DEMData', () => {
         });
 
         test('otherEncoding', () => {
-            const spyOnWarnConsole = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            const spyOnWarnConsole = mockConsole('warn');
 
             const imageData0 = createMockImage(4, 4);
             new DEMData('0', imageData0, 'otherEncoding' as any);

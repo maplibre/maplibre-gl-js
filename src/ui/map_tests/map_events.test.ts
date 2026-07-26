@@ -1,7 +1,7 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {type StyleLayer} from '../../style/style_layer.ts';
-import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, createStyle, sleep, createTerrain, mockConsole} from '../../util/test/util.ts';
 import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
 import {type MapLibreEvent} from '../events.ts';
 import {Map} from '../map.ts';
@@ -1027,10 +1027,10 @@ describe('map events', () => {
     describe('error event', () => {
         test('logs errors to console when it has NO listeners', () => {
             // to avoid seeing error in the console in Jest
-            let stub = vi.spyOn(console, 'error').mockImplementation(() => {});
+            let stub = mockConsole('error');
             const map = createMap();
             stub.mockReset();
-            stub = vi.spyOn(console, 'error').mockImplementation(() => {});
+            stub = mockConsole('error');
             const error = new Error('test');
             map.fire(new ErrorEvent(error));
             expect(stub).toHaveBeenCalledTimes(1);

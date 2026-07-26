@@ -1,7 +1,7 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
 import geolocation from 'mock-geolocation';
 import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
-import {createMap, beforeMapTest, sleep} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, sleep, mockConsole} from '../../util/test/util.ts';
 import {GeolocateControl} from './geolocate_control.ts';
 vi.mock('../../util/geolocation_support', () => (
     {
@@ -72,7 +72,7 @@ describe('GeolocateControl with no options', () => {
     test('is disabled when there is no support', async () => {
         (checkGeolocationSupport as unknown as MockInstance).mockReset().mockImplementationOnce(() => Promise.resolve(false));
         const geolocate = new GeolocateControl(undefined);
-        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const spy = mockConsole('warn');
         map.addControl(geolocate);
         await sleep(0);
         expect(geolocate._geolocateButton.disabled).toBeTruthy();
@@ -422,7 +422,7 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('trigger before added to map', () => {
-        vi.spyOn(console, 'warn').mockImplementation(() => { });
+        mockConsole('warn');
 
         const geolocate = new GeolocateControl(undefined);
 

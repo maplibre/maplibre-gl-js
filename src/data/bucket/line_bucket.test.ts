@@ -3,12 +3,13 @@ import Point from '@mapbox/point-geometry';
 import {SegmentVector} from '../segment.ts';
 import {LineBucket} from './line_bucket.ts';
 import {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
-import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type EvaluationParameters} from '../../style/evaluation_parameters.ts';
-import {type ZoomHistory} from '../../../src/style/zoom_history.ts';
-import {type BucketFeature, type BucketParameters} from '../bucket.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
+import {mockConsole} from '../../util/test/util.ts';
 import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile.ts';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import type {ZoomHistory} from '../../../src/style/zoom_history.ts';
+import type {BucketFeature, BucketParameters} from '../bucket.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const {noSubdivision} = SubdivisionGranularitySetting;
@@ -118,7 +119,7 @@ describe('LineBucket', () => {
     });
 
     test('LineBucket segmentation', () => {
-        vi.spyOn(console, 'warn').mockImplementation(() => { });
+        mockConsole('warn');
 
         // Stub MAX_VERTEX_ARRAY_LENGTH so we can test features
         // breaking across array groups without tests taking a _long_ time.

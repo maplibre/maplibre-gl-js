@@ -1,4 +1,4 @@
-import {vi, expect, onTestFinished} from 'vitest';
+import {vi, expect, onTestFinished, type MockInstance} from 'vitest';
 import {Map, type MapOptions} from '../../ui/map.ts';
 import {NullWebGL2RenderingContext} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
@@ -14,6 +14,20 @@ import {type Terrain} from '../../render/terrain.ts';
 import type {Framebuffer} from '../../webgl/framebuffer.ts';
 import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
+
+/**
+ * Silences a console method for a test by replacing it with a no-op spy, so
+ * warnings/errors that the code under test is expected to emit don't pollute the
+ * unit-test output. Returns the spy so the call can still be asserted on.
+ *
+ * @example
+ * const warn = mockConsole('warn');
+ * // ...exercise code that warns...
+ * expect(warn).toHaveBeenCalled();
+ */
+export function mockConsole(method: 'log' | 'info' | 'warn' | 'error' | 'debug' = 'warn'): MockInstance {
+    return vi.spyOn(console, method).mockImplementation(() => {});
+}
 
 export class StubMap extends Evented {
     style: Style;

@@ -7,7 +7,7 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {extend} from '../util/util.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {getWrapDispatcher, sleep, waitForEvent} from '../util/test/util.ts';
+import {getWrapDispatcher, mockConsole, sleep, waitForEvent} from '../util/test/util.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
@@ -62,7 +62,7 @@ describe('GeoJSONSource.constructor', () => {
         }
     } as any;
     test('warn if maxzoom <= clusterMaxZoom', () => {
-        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const warn = mockConsole('warn');
 
         const source = new GeoJSONSource('id', {data: hawkHill, maxzoom: 4, clusterMaxZoom: 4} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = mapStub;
@@ -73,7 +73,7 @@ describe('GeoJSONSource.constructor', () => {
         warn.mockRestore();
     });
     test('warn if clusterMaxZoom non-integer', () => {
-        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const warn = mockConsole('warn');
 
         const source = new GeoJSONSource('id', {data: hawkHill, maxzoom: 4, clusterMaxZoom: 3.5} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = mapStub;
@@ -551,7 +551,7 @@ describe('GeoJSONSource.update', () => {
 
     test('forwards Supercluster options with worker request, ignore max zoom of source', async () => {
         const spy = vi.fn();
-        vi.spyOn(console, 'warn').mockImplementation(() => {});
+        mockConsole('warn');
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
                 spy(message);
@@ -1070,7 +1070,7 @@ describe('GeoJSONSource.serialize', () => {
 
 describe('GeoJSONSource.load', () => {
     test('is noop when all data is already loaded', async () => {
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const warnSpy = mockConsole('warn');
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
