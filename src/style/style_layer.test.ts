@@ -1,4 +1,4 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {createStyleLayer} from './create_style_layer.ts';
 import {FillStyleLayer} from './style_layer/fill_style_layer.ts';
 import {extend} from '../util/util.ts';
@@ -379,6 +379,7 @@ describe('StyleLayer.getLayoutAffectingGlobalStateRefs', () => {
     });
 
     test('returns global-state references from visibility', () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const layer = createStyleLayer({
             id: 'background',
             type: 'background',

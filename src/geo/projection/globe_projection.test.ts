@@ -1,7 +1,7 @@
 import {describe, test, expect, vi, afterEach} from 'vitest';
 import {GlobeProjection} from './globe_projection.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
-import {type TransitionParameters} from '../../style/properties.ts';
+import type {TransitionParameters} from '../../style/properties.ts';
 
 describe('GlobeProjection runtime error logging', () => {
     afterEach(() => {

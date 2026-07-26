@@ -349,7 +349,6 @@ describe('Fill subdivision', () => {
         //  7:
         //
         //  8:  2
-        console.log(result.indicesTriangles);
         expect(result.indicesTriangles).toEqual([
             3, 0, 6,
             7, 0, 3,
