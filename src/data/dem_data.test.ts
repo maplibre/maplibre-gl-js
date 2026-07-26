@@ -1,4 +1,4 @@
-import {describe, test, expect, vi} from 'vitest';
+import {describe, test, expect} from 'vitest';
 import {DEMData} from './dem_data.ts';
 import {RGBAImage} from '../util/image.ts';
 import {serialize, deserialize} from '../util/web_worker_transfer.ts';

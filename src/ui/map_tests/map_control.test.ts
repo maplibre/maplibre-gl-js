@@ -1,4 +1,4 @@
-import {beforeEach, test, expect, vi} from 'vitest';
+import {beforeEach, test, expect} from 'vitest';
 import {createMap, beforeMapTest, mockConsole} from '../../util/test/util.ts';
 import {type IControl} from '../control/control.ts';
 

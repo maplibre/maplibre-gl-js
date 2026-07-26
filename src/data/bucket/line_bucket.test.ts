@@ -1,4 +1,4 @@
-import {beforeAll, describe, test, expect, vi} from 'vitest';
+import {beforeAll, describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {SegmentVector} from '../segment.ts';
 import {LineBucket} from './line_bucket.ts';
