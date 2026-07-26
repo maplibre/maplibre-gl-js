@@ -1,7 +1,6 @@
 import {describe, test, expect, vi, afterEach} from 'vitest';
 import {validateAndEmit, validateStyle, validateStyleAndEmit} from './validate_style.ts';
 import {Evented} from '../util/evented.ts';
-import {mockConsole} from '../util/test/util.ts';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 class TestEmitter extends Evented {}
@@ -15,7 +14,7 @@ function setup() {
     const emitter = new TestEmitter();
     const fired: string[] = [];
     emitter.on('error', ({error}) => fired.push(error.message));
-    return {emitter, fired, warn: mockConsole('warn')};
+    return {emitter, fired, warn: vi.spyOn(console, 'warn').mockImplementation(() => {})};
 }
 
 describe('validateAndEmit', () => {

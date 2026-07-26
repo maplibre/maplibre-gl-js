@@ -1,5 +1,5 @@
 import {beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest, mockConsole} from '../../util/test/util.ts';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
 import {GPUInitializationError} from '../../util/gpu_initialization_error.ts';
 
 let originalGetContext: typeof HTMLCanvasElement.prototype.getContext;
@@ -102,7 +102,7 @@ test('WebGL2 context creation error fires ErrorEvent with structured GPUInitiali
             return null;
         }
     };
-    const consoleErrorSpy = mockConsole('error');
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     createMap({canvasContextAttributes: {antialias: true}});
     const err = consoleErrorSpy.mock.calls[0][0];
     expect(err.constructor).toBe(GPUInitializationError);
@@ -116,7 +116,7 @@ test('GPUInitializationError has null statusMessage when no webglcontextcreation
     HTMLCanvasElement.prototype.getContext = function (_type: string) {
         return null;
     };
-    const consoleErrorSpy = mockConsole('error');
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     createMap();
     const err = consoleErrorSpy.mock.calls[0][0];
     expect(err.constructor).toBe(GPUInitializationError);

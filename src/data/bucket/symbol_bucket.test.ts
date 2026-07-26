@@ -13,7 +13,6 @@ import {ImagePosition} from '../../render/image_atlas.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {createPopulateOptions, loadVectorTile} from '../../../test/unit/lib/tile.ts';
-import {mockConsole} from '../../util/test/util.ts';
 import type {IndexedFeature, PopulateParameters} from '../bucket.ts';
 import type {StyleImage} from '../../style/style_image.ts';
 import type {StyleGlyph} from '../../style/style_glyph.ts';
@@ -111,7 +110,7 @@ describe('SymbolBucket', () => {
     });
 
     test('SymbolBucket integer overflow', () => {
-        const spy = mockConsole('warn');
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         SymbolBucket.MAX_GLYPHS = 5;
 
         const bucket = bucketSetup();
@@ -131,7 +130,7 @@ describe('SymbolBucket', () => {
     });
 
     test('SymbolBucket image undefined sdf', () => {
-        const spy = mockConsole('warn');
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         spy.mockReset();
 
         const imageMap = {

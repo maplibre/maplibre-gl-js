@@ -1,6 +1,5 @@
 import {describe, expect, test, vi, afterEach} from 'vitest';
 import {Sky} from './sky.ts';
-import {mockConsole} from '../util/test/util.ts';
 import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 import {type EvaluationParameters} from './evaluation_parameters.ts';
 import {type TransitionParameters} from './properties.ts';
@@ -63,7 +62,7 @@ describe('Sky.setSky', () => {
     test('validates by default', () => {
         const sky = new Sky({}, {});
         const skySpy = vi.spyOn(sky, '_validate');
-        mockConsole('error');
+        vi.spyOn(console, 'error').mockImplementation(() => {});
         sky.setSky({'atmosphere-blend': -1});
         sky.updateTransitions({transition: false} as any as TransitionParameters);
         sky.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);
@@ -92,7 +91,7 @@ describe('Sky runtime error logging', () => {
     });
 
     test('warns with the sky property location when an expression errors at runtime', () => {
-        const warn = mockConsole('warn');
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const sky = new Sky({}, {});
         // global-state defeats constant-folding, so this fails at evaluation time (not parse time).

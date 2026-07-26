@@ -1,7 +1,6 @@
 import {describe, test, expect, vi, afterEach, beforeEach} from 'vitest';
 import {ColorArray} from '@maplibre/maplibre-gl-style-spec';
 import {DataDrivenProperty, Layout, PossiblyEvaluatedPropertyValue, PropertyValue, Transitionable} from './properties.ts';
-import {mockConsole} from '../util/test/util.ts';
 import symbolProperties from './style_layer/symbol_style_layer_properties.g.ts';
 import hillshadeProperties from './style_layer/hillshade_style_layer_properties.g.ts';
 import {type EvaluationParameters} from './evaluation_parameters.ts';
@@ -18,7 +17,7 @@ describe('PropertyValue', () => {
         });
 
         test('warns with the supplied rootKey when an expression errors at runtime', () => {
-            const warn = mockConsole('warn');
+            const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
             const propertyValue = new PropertyValue(
                 symbolProperties.layout.properties['text-size'],
@@ -65,7 +64,7 @@ describe('Layout', () => {
     });
 
     test('prefixes the layer location onto the runtime warning', () => {
-        const warn = mockConsole('warn');
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const layout = new Layout(symbolProperties.layout, 'layers[0].layout', {});
         layout.setValue('text-size', ['number', ['get', 'size']]);
@@ -93,7 +92,7 @@ describe('Transitionable', () => {
     });
 
     test('prefixes the layer location onto the runtime warning', () => {
-        const warn = mockConsole('warn');
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const transitionable = new Transitionable(symbolProperties.paint, 'layers[0].paint', {});
         transitionable.setValue('text-color', ['to-color', ['get', 'col']]);
@@ -108,7 +107,7 @@ describe('paint property transitions between arrays of different length, issue #
     const transition = {duration: 300, delay: 0};
 
     beforeEach(() => {
-        mockConsole('warn');
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
     });
 
     afterEach(() => {
@@ -175,7 +174,7 @@ describe('DataDrivenProperty.interpolate between arrays of different length, iss
     }
 
     test('a length change snaps to the target value instead of throwing', () => {
-        mockConsole('warn');
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const from = constant(ColorArray.parse(['#ffffff', '#ff0000', '#00ff00', '#0000ff']));
         const to = constant(ColorArray.parse(['#ffffff', '#ff0000', '#00ff00']));
 

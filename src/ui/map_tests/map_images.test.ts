@@ -1,5 +1,5 @@
 import {beforeEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest, mockConsole} from '../../util/test/util.ts';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
 import {type StyleImageInterface} from '../../style/style_image.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {MessageType} from '../../util/actor_messages.ts';
@@ -7,7 +7,7 @@ import {MessageType} from '../../util/actor_messages.ts';
 beforeEach(() => {
     beforeMapTest();
     global.fetch = null;
-    mockConsole('warn');
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
 test('listImages', async () => {

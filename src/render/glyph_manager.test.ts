@@ -1,7 +1,6 @@
 import {describe, afterEach, test, expect, vi} from 'vitest';
 import {parseGlyphPbf} from '../style/parse_glyph_pbf.ts';
 import {GlyphManager} from './glyph_manager.ts';
-import {mockConsole} from '../util/test/util.ts';
 import fs from 'fs';
 import {type RequestManager} from '../util/request_manager.ts';
 
@@ -258,7 +257,7 @@ describe('GlyphManager', () => {
     });
 
     test('still instantiates TinySDF when document.fonts.load rejects', async () => {
-        mockConsole('warn');
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const loadSpy = vi.fn(() => Promise.reject(new Error('font not found')));
         Object.defineProperty(document, 'fonts', {configurable: true, value: {load: loadSpy}});
         const tinySdfSpy = GlyphManager.TinySDF = vi.fn().mockImplementation(function () {

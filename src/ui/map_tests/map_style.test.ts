@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {Map, type MapOptions} from '../map.ts';
-import {createMap, beforeMapTest, createStyle, createStyleSource, sleep, mockConsole} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '../../util/test/util.ts';
 import {Event as EventedEvent} from '../../util/evented.ts';
 import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed.ts';
 import {extend} from '../../util/util.ts';
@@ -94,7 +94,7 @@ describe('setStyle', () => {
             {id: 'background', type: 'background' as const, paint: {'background-color': 'blue'}},
         ]};
         const map = createMap({style: redStyle});
-        const spy = mockConsole('warn');
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         map.setStyle(blueStyle);
         await map.once('style.load');
         map.setStyle(redStyle);
@@ -523,7 +523,7 @@ describe('getStyle', () => {
         vi.spyOn(map.style, 'setState').mockImplementation(() => {
             throw new Error('Dummy error');
         });
-        mockConsole('warn');
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const previousStyle = map.style;
         map.setStyle(style);

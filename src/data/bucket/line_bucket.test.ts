@@ -1,10 +1,9 @@
-import {beforeAll, describe, test, expect} from 'vitest';
+import {beforeAll, describe, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {SegmentVector} from '../segment.ts';
 import {LineBucket} from './line_bucket.ts';
 import {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
-import {mockConsole} from '../../util/test/util.ts';
 import {type CreateBucketParameters, createPopulateOptions, getFeaturesFromLayer, loadVectorTile} from '../../../test/unit/lib/tile.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
@@ -119,7 +118,7 @@ describe('LineBucket', () => {
     });
 
     test('LineBucket segmentation', () => {
-        mockConsole('warn');
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         // Stub MAX_VERTEX_ARRAY_LENGTH so we can test features
         // breaking across array groups without tests taking a _long_ time.

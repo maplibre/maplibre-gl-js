@@ -13,7 +13,7 @@ import {fakeServer, type FakeServer} from 'nise';
 import {type EvaluationParameters} from './evaluation_parameters.ts';
 import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification, type CameraFunctionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {type GeoJSONSource} from '../source/geojson_source.ts';
-import {StubMap, mockConsole, sleep, waitForEvent} from '../util/test/util.ts';
+import {StubMap, sleep, waitForEvent} from '../util/test/util.ts';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
@@ -71,7 +71,7 @@ let mockConsoleError: MockInstance;
 beforeEach(() => {
     global.fetch = null;
     server = fakeServer.create();
-    mockConsoleError = mockConsole('error');
+    mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -235,7 +235,7 @@ describe('Style.loadJSON', () => {
 
     test('loads a style whose filter mixes legacy and expression syntax, warning instead of blanking the map', async () => {
         const style = new Style(getStubMap());
-        const warnSpy = mockConsole('warn');
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const errorSpy = vi.fn();
         style.on('error', errorSpy);
 
@@ -695,7 +695,7 @@ describe('Style._load', () => {
                 type: 'custom'
             }]
         });
-        const stub = mockConsole('error');
+        const stub = vi.spyOn(console, 'error').mockImplementation(() => {});
 
         style._load(styleSpec, {validate: true});
 
@@ -3080,7 +3080,7 @@ describe('Style.setFilter', () => {
     test('warns instead of emitting for a filter that mixes legacy and expression syntax', async () => {
         const style = createStyle();
         await style.once('style.load');
-        const warnSpy = mockConsole('warn');
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const errorSpy = vi.fn();
         style.on('error', errorSpy);
 

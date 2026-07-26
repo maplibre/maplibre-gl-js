@@ -1,11 +1,11 @@
-import {describe, expect, test} from 'vitest';
+import {describe, expect, test, vi} from 'vitest';
 import {EXTENT} from '../../data/extent.ts';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {GlobeTransform} from './globe_transform.ts';
 import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils.ts';
-import {expectToBeCloseToArray, mockConsole} from '../../util/test/util.ts';
+import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from './mercator_utils.ts';
 import {MercatorTransform} from './mercator_transform.ts';
@@ -601,7 +601,7 @@ describe('GlobeTransform', () => {
     });
 
     test('recalculateZoomAndCenter does not jump center on globe + terrain (#7025)', () => {
-        mockConsole('warn');
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const globeTransform = createGlobeTransform();
         globeTransform.setTransitionState(1);
         globeTransform.setCenter(new LngLat(10, 50));

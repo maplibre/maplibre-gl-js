@@ -1,6 +1,5 @@
 import {describe, test, expect, vi} from 'vitest';
 import {WorkerTile} from '../source/worker_tile.ts';
-import {mockConsole} from '../util/test/util.ts';
 import {type Feature, GeoJSONWrapper, type VectorTileLike} from '@maplibre/vt-pbf';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
@@ -152,7 +151,7 @@ describe('worker tile', () => {
             }
         } as any as VectorTileLike;
 
-        const spy = mockConsole('warn');
+        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const tile = createWorkerTile();
         await tile.parse(data, layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);

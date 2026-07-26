@@ -1,7 +1,6 @@
 import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
 import {workerFactory} from './web_worker.ts';
 import {config} from './config.ts';
-import {mockConsole} from './test/util.ts';
 
 describe('workerFactory', () => {
     const originalWorker = (globalThis as any).Worker;
@@ -55,7 +54,7 @@ describe('workerFactory', () => {
         (globalThis as any).Worker = WorkerSpy;
         config.WORKER_URL = '/path/to/worker.mjs';
 
-        const warnSpy = mockConsole('warn');
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         await workerFactory();
 
