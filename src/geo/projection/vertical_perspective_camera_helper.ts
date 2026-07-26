@@ -123,26 +123,15 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         tr.setZoom(oldZoom + getZoomAdjustment(oldCenterLat, tr.center.lat));
     }
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat, fixedBearing?: boolean): void {
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void {
         if (!deltas.panDelta) {
             return;
         }
 
-        if (fixedBearing === false) {
-            // Quaternion-based "grab a place and move it around" panning that also
-            // changes bearing, staying smooth near and across the poles.
-            quaternionSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around);
-            return;
-        }
-
-        // These are actually very similar to mercator controls, and should converge to them at high zooms.
-        // We avoid using the "grab a place and move it around" approach from mercator here,
-        // since it is not a very pleasant way to pan a globe.
-        const oldLat = tr.center.lat;
-        const oldZoom = tr.zoom;
-        tr.setCenter(computeGlobePanCenter(deltas.panDelta, tr).wrap());
-        // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
-        tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
+        // Rotate the globe with a single quaternion that brings the grabbed location
+        // back under the cursor. This stays consistent near and across the poles, where
+        // the previous bearing-preserving mapping inverted and stalled (#5296).
+        quaternionSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around);
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
