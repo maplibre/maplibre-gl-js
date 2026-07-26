@@ -144,7 +144,6 @@ export type MapControlsScenarioOptions = {
     preZoomAroundLoc: LngLat;
     combinedEventsInProgress: EventsInProgress;
     panDelta?: Point;
-    fixedBearing?: boolean;
 };
 
 function hasChange(result: HandlerResult) {
@@ -582,7 +581,6 @@ export class HandlerManager {
             preZoomAroundLoc,
             combinedEventsInProgress,
             panDelta,
-            fixedBearing: this._map.dragPan.fixedBearing,
         });
 
         this._camera.applyUpdatedTransform(tr);
@@ -658,15 +656,14 @@ export class HandlerManager {
         deltasForHelper,
         preZoomAroundLoc,
         combinedEventsInProgress,
-        panDelta,
-        fixedBearing}: MapControlsScenarioOptions): void {
+        panDelta}: MapControlsScenarioOptions): void {
 
         const cameraHelper = this._camera.cameraHelper;
 
         cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
 
         if (!terrain) {
-            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc, fixedBearing);
+            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
         }
 
@@ -675,14 +672,14 @@ export class HandlerManager {
                 this._terrainMovement = true;
                 this._camera.elevationFreeze = true;
             }
-            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc, fixedBearing);
+            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
         }
 
         if (!this._terrainMovement && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
             this._terrainMovement = true;
             this._camera.elevationFreeze = true;
-            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc, fixedBearing);
+            cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
             return;
         }
 
@@ -693,7 +690,7 @@ export class HandlerManager {
             return;
         }
 
-        cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc, fixedBearing);
+        cameraHelper.handleMapControlsPan(deltasForHelper, tr, preZoomAroundLoc);
     }
 
     _fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {[handlerName: string]: Event}, allowEndAnimation: boolean): void {

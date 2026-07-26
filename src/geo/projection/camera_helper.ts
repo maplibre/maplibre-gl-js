@@ -118,7 +118,7 @@ export interface ICameraHelper {
 
     handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void;
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat, fixedBearing?: boolean): void;
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void;
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
 
