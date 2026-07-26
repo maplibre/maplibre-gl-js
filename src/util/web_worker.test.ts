@@ -171,4 +171,46 @@ describe('workerFactory', () => {
         expect(onError.mock.calls[0][0].message).toContain('Unexpected failure');
         expect(onError.mock.calls[0][0].message).not.toContain('bundler');
     });
+
+    test('reports worker message deserialization failures', async () => {
+        const listeners = new Map<string, EventListener>();
+        const WorkerSpy = vi.fn(function() {
+            return {
+                addEventListener: (type: string, listener: EventListener) => listeners.set(type, listener),
+                removeEventListener: vi.fn(),
+                postMessage: vi.fn(),
+                terminate: vi.fn()
+            };
+        });
+        (globalThis as any).Worker = WorkerSpy;
+        config.WORKER_URL = '/worker.mjs';
+        const onError = vi.fn();
+
+        await workerFactory(onError);
+        listeners.get('messageerror')({} as MessageEvent);
+
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError.mock.calls[0][0].message).toContain('Failed to communicate with the MapLibre worker script');
+    });
+
+    test('preserves a malformed worker URL in the load failure message', async () => {
+        const listeners = new Map<string, EventListener>();
+        const WorkerSpy = vi.fn(function() {
+            return {
+                addEventListener: (type: string, listener: EventListener) => listeners.set(type, listener),
+                removeEventListener: vi.fn(),
+                postMessage: vi.fn(),
+                terminate: vi.fn()
+            };
+        });
+        (globalThis as any).Worker = WorkerSpy;
+        config.WORKER_URL = 'http://[';
+        const onError = vi.fn();
+
+        await workerFactory(onError);
+        listeners.get('error')({message: ''} as ErrorEvent);
+
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError.mock.calls[0][0].message).toContain('Failed to load the MapLibre worker script: http://[');
+    });
 });
