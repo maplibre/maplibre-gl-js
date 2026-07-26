@@ -1,7 +1,7 @@
 import {describe, test, expect, vi, afterEach} from 'vitest';
 import {validateAndEmit, validateStyle, validateStyleAndEmit} from './validate_style.ts';
-import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Evented} from '../util/evented.ts';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 class TestEmitter extends Evented {}
 

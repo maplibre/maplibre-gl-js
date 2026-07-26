@@ -71,7 +71,7 @@ let mockConsoleError: MockInstance;
 beforeEach(() => {
     global.fetch = null;
     server = fakeServer.create();
-    mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => { });
+    mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -695,7 +695,7 @@ describe('Style._load', () => {
                 type: 'custom'
             }]
         });
-        const stub = vi.spyOn(console, 'error');
+        const stub = vi.spyOn(console, 'error').mockImplementation(() => {});
 
         style._load(styleSpec, {validate: true});
 
