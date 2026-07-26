@@ -491,10 +491,10 @@ export class Style extends Evented<MapEventType> {
         this.glyphManager.setURL(nextState.glyphs);
         this._createLayers();
 
-        this.light = new Light(this.stylesheet.light);
+        this.light = new Light(this.stylesheet.light ?? {}, this._globalState);
         this._setProjectionInternal(this.stylesheet.projection?.type || 'mercator');
 
-        this.sky = new Sky(this.stylesheet.sky);
+        this.sky = new Sky(this.stylesheet.sky, this._globalState);
 
         // The stylesheet's terrain was already validated as part of the style itself.
         this.map.setTerrain(this.stylesheet.terrain ?? null, {validate: false});
@@ -1760,7 +1760,7 @@ export class Style extends Evented<MapEventType> {
     }
 
     _setProjectionInternal(name: ProjectionSpecification['type']): void {
-        const projectionObjects = createProjectionFromName(name, this.map._camera?.transform.constrainOverride);
+        const projectionObjects = createProjectionFromName(name, this.map._camera?.transform.constrainOverride, this._globalState);
         this.projection = projectionObjects.projection;
         this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
         for (const key in this.tileManagers) {

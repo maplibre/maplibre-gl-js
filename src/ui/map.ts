@@ -357,6 +357,17 @@ export type MapOptions = {
      */
     rollEnabled?: boolean;
     /**
+     * Degrees the map's bearing changes per pixel of horizontal drag when rotating.
+     * @defaultValue 0.8
+     */
+    rotateSpeed?: number;
+    /**
+     * Degrees the map's pitch changes per pixel of vertical drag. Negative, so that
+     * dragging up pitches the map toward the horizon.
+     * @defaultValue -0.5
+     */
+    pitchSpeed?: number;
+    /**
      * If `true`, gesture inertia (such as panning) is disabled. If not provided, gesture inertia defaults to the user's device settings.
      * @defaultValue undefined
      */
@@ -531,6 +542,8 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     localIdeographFontFamily: 'sans-serif',
     pitchWithRotate: true,
     rollEnabled: false,
+    rotateSpeed: 0.8,
+    pitchSpeed: -0.5,
     reduceMotion: undefined,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
@@ -2930,6 +2943,9 @@ export class Map extends Evented<MapEventType> {
                     warnOnce('You are using the same source for a color-relief layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
                 }
             }
+            if (this.terrain) {
+                this.terrain.destroy();
+            }
             this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this._camera.terrain = this.terrain;
@@ -4242,8 +4258,7 @@ export class Map extends Evented<MapEventType> {
         }
 
         const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
-        this.style.projection?.setErrorQueryLatitudeDegrees(this._camera.transform.center.lat);
-        this._camera.transform.setTransitionState(this.style.projection?.transitionState, this.style.projection?.latitudeErrorCorrectionRadians);
+        this._camera.transform.setTransitionState(this.style.projection?.transitionState);
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update tile managers to check for and load any tiles we

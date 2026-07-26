@@ -1,6 +1,8 @@
-import {describe, test, expect, vi, afterEach} from 'vitest';
-import {Layout, PropertyValue, Transitionable} from './properties.ts';
+import {describe, test, expect, vi, afterEach, beforeEach} from 'vitest';
+import {ColorArray} from '@maplibre/maplibre-gl-style-spec';
+import {DataDrivenProperty, Layout, PossiblyEvaluatedPropertyValue, PropertyValue, Transitionable} from './properties.ts';
 import symbolProperties from './style_layer/symbol_style_layer_properties.g.ts';
+import hillshadeProperties from './style_layer/hillshade_style_layer_properties.g.ts';
 import {type EvaluationParameters} from './evaluation_parameters.ts';
 
 describe('PropertyValue', () => {
@@ -98,5 +100,95 @@ describe('Transitionable', () => {
         evaluated.get('text-color').evaluate({type: 1, properties: {col: 'oops blue'}} as any, {} as any);
 
         expect(warn.mock.calls[0][0]).toBe('layers[0].paint.text-color: Could not parse color from value \'oops blue\' Falling back to rgba(0,0,0,1).');
+    });
+});
+
+describe('paint property transitions between arrays of different length, issue #6606', () => {
+    const transition = {duration: 300, delay: 0};
+
+    beforeEach(() => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    function evaluateMidTransition(from: string[], to: string[]) {
+        const transitionable = new Transitionable(hillshadeProperties.paint, '', {});
+
+        transitionable.setValue('hillshade-highlight-color', from);
+        let transitioning = transitionable.transitioned(
+            {now: 0, transition}, transitionable.untransitioned());
+        transitioning.possiblyEvaluate({zoom: 0, now: 0} as EvaluationParameters, undefined, []);
+
+        transitionable.setValue('hillshade-highlight-color', to);
+        transitioning = transitionable.transitioned({now: 0, transition}, transitioning);
+
+        // Halfway through the 300ms transition, where interpolation is attempted.
+        return transitioning
+            .possiblyEvaluate({zoom: 0, now: 150} as EvaluationParameters, undefined, [])
+            .get('hillshade-highlight-color');
+    }
+
+    test('removing a light snaps to the new colors instead of throwing', () => {
+        const result = evaluateMidTransition(
+            ['#ffffff', '#ff0000', '#00ff00', '#0000ff'],
+            ['#ffffff', '#ff0000', '#00ff00']
+        );
+
+        expect(result.values).toHaveLength(3);
+        expect(result).toEqual(ColorArray.parse(['#ffffff', '#ff0000', '#00ff00']));
+    });
+
+    test('adding a light snaps to the new colors instead of throwing', () => {
+        const result = evaluateMidTransition(
+            ['#ffffff', '#ff0000'],
+            ['#ffffff', '#ff0000', '#00ff00']
+        );
+
+        expect(result.values).toHaveLength(3);
+        expect(result).toEqual(ColorArray.parse(['#ffffff', '#ff0000', '#00ff00']));
+    });
+
+    test('a same-length change still interpolates normally', () => {
+        const result = evaluateMidTransition(
+            ['#000000', '#000000'],
+            ['#ffffff', '#ffffff']
+        );
+
+        expect(result.values).toHaveLength(2);
+        for (const color of result.values) {
+            expect(color.r).toBeGreaterThan(0);
+            expect(color.r).toBeLessThan(1);
+        }
+    });
+});
+
+describe('DataDrivenProperty.interpolate between arrays of different length, issue #6606', () => {
+    const property = new DataDrivenProperty<ColorArray>({type: 'colorArray'} as any, 'color-array');
+
+    function constant(value: ColorArray) {
+        return new PossiblyEvaluatedPropertyValue<ColorArray>(
+            property, {kind: 'constant', value}, {} as EvaluationParameters);
+    }
+
+    test('a length change snaps to the target value instead of throwing', () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const from = constant(ColorArray.parse(['#ffffff', '#ff0000', '#00ff00', '#0000ff']));
+        const to = constant(ColorArray.parse(['#ffffff', '#ff0000', '#00ff00']));
+
+        const result = property.interpolate(from, to, 0.5);
+
+        expect(result.value).toEqual({kind: 'constant', value: ColorArray.parse(['#ffffff', '#ff0000', '#00ff00'])});
+    });
+
+    test('a same-length change still interpolates normally', () => {
+        const a = ColorArray.parse(['#000000', '#000000']);
+        const b = ColorArray.parse(['#ffffff', '#ffffff']);
+
+        const result = property.interpolate(constant(a), constant(b), 0.5);
+
+        expect(result.value).toEqual({kind: 'constant', value: ColorArray.interpolate(a, b, 0.5)});
     });
 });
