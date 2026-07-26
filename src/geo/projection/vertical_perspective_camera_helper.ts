@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, cameraForBoxAndBearing} from './camera_helper.ts';
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
-import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe, versorSetLocationAtPoint} from './globe_utils.ts';
+import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe, quaternionSetLocationAtPoint} from './globe_utils.ts';
 import {clamp, createVec3f64, differenceOfAnglesDegrees, lerp, MAX_VALID_LATITUDE, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
 import {type mat4, vec3} from 'gl-matrix';
 import {normalizeCenter} from '../transform_helper.ts';
@@ -160,7 +160,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         if (fixedBearing === false) {
             // Quaternion-based "grab a place and move it around" panning that also
             // changes bearing, staying smooth near and across the poles.
-            versorSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around);
+            quaternionSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around);
             return;
         }
 

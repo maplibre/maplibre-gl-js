@@ -4,7 +4,7 @@ import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {GlobeTransform} from './globe_transform.ts';
 import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
-import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates, versorSetLocationAtPoint} from './globe_utils.ts';
+import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates, quaternionSetLocationAtPoint} from './globe_utils.ts';
 import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from './mercator_utils.ts';
@@ -644,7 +644,7 @@ describe('GlobeTransform', () => {
         expect(globeTransform.center.lat).toBeCloseTo(originalLat, 10);
     });
 
-    describe('versorSetLocationAtPoint', () => {
+    describe('quaternionSetLocationAtPoint', () => {
         const precisionDigits = 4;
         const globeTransform = createGlobeTransform();
         globeTransform.setZoom(1);
@@ -656,7 +656,7 @@ describe('GlobeTransform', () => {
         test('round-trip accuracy', () => {
             coords = new LngLat(20, 30);
             point = new Point(280, 200);
-            versorSetLocationAtPoint(globeTransform, coords, point);
+            quaternionSetLocationAtPoint(globeTransform, coords, point);
             unprojected = globeTransform.screenPointToLocation(point);
             expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
@@ -665,7 +665,7 @@ describe('GlobeTransform', () => {
         test('round-trip accuracy at center', () => {
             coords = new LngLat(10, 15);
             point = new Point(320, 240);
-            versorSetLocationAtPoint(globeTransform, coords, point);
+            quaternionSetLocationAtPoint(globeTransform, coords, point);
             unprojected = globeTransform.screenPointToLocation(point);
             expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
@@ -675,7 +675,7 @@ describe('GlobeTransform', () => {
             globeTransform.setCenter(new LngLat(0, 80));
             coords = new LngLat(10, 85);
             point = new Point(300, 230);
-            versorSetLocationAtPoint(globeTransform, coords, point);
+            quaternionSetLocationAtPoint(globeTransform, coords, point);
             expect(isNaN(globeTransform.center.lng)).toBe(false);
             expect(isNaN(globeTransform.center.lat)).toBe(false);
             expect(isNaN(globeTransform.bearing)).toBe(false);
@@ -685,7 +685,7 @@ describe('GlobeTransform', () => {
             const centerBefore = globeTransform.center;
             point = new Point(320, 240);
             coords = globeTransform.screenPointToLocation(point);
-            versorSetLocationAtPoint(globeTransform, coords, point);
+            quaternionSetLocationAtPoint(globeTransform, coords, point);
             expect(globeTransform.center.lng).toBeCloseTo(centerBefore.lng, precisionDigits);
             expect(globeTransform.center.lat).toBeCloseTo(centerBefore.lat, precisionDigits);
         });
@@ -694,7 +694,7 @@ describe('GlobeTransform', () => {
             const bearingBefore = globeTransform.bearing;
             coords = new LngLat(20, 30);
             point = new Point(250, 180);
-            versorSetLocationAtPoint(globeTransform, coords, point);
+            quaternionSetLocationAtPoint(globeTransform, coords, point);
             expect(globeTransform.bearing).not.toBeCloseTo(bearingBefore, 1);
         });
 
@@ -708,7 +708,7 @@ describe('GlobeTransform', () => {
             point = new Point(620, 240);
             expect(freshTransform.isPointOnMapSurface(point)).toBe(false);
             coords = freshTransform.screenPointToLocation(point);
-            versorSetLocationAtPoint(freshTransform, coords, point);
+            quaternionSetLocationAtPoint(freshTransform, coords, point);
             expect(freshTransform.center.lng).toBe(centerBefore.lng);
             expect(freshTransform.center.lat).toBe(centerBefore.lat);
             expect(freshTransform.bearing).toBe(bearingBefore);

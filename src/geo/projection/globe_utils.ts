@@ -132,13 +132,13 @@ export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: numbe
 
 /**
  * Rotates the globe so that the given location appears at the given screen point, using a
- * quaternion (versor) rotation that couples center and bearing. Unlike the bearing-preserving
+ * quaternion rotation that couples center and bearing. Unlike the bearing-preserving
  * {@link ITransform.setLocationAtPoint}, this stays smooth when dragging near and across the
  * poles, at the cost of letting the bearing change.
  * Note: automatically adjusts zoom to keep planet size consistent
  * (same size before and after a call), like `setLocationAtPoint` does.
  */
-export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point): void {
+export function quaternionSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point): void {
     // Pixels that miss the globe unproject to a fake location snapped to the
     // visible horizon. Rotating towards such a point mostly twists the globe
     // around the view axis, and these twists compound frame-to-frame into a
