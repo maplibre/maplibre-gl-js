@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <title>Walk around a map in first person</title>
-<meta property="og:description" content="Drive an eye-height, level first-person camera over 3D buildings with the keyboard" />
+<meta property="og:description" content="Drive an eye-height, level first-person camera over 3D buildings with the keyboard or on-screen buttons" />
 <meta property="og:category" content="Camera & Animation" />
 <meta property="og:created" content="2026-07-25" />
 <meta charset='utf-8'>
@@ -11,22 +11,38 @@
 <style>
     body { margin: 0; padding: 0; }
     html, body, #map { height: 100%; }
-    #hint {
+    #controls {
         position: absolute;
-        bottom: 12px;
-        left: 0;
-        right: 0;
-        text-align: center;
-        color: #fff;
-        font: 14px/1.4 system-ui, sans-serif;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, .6);
-        pointer-events: none;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: grid;
+        grid-template-columns: repeat(3, 52px);
+        grid-auto-rows: 52px;
+        gap: 6px;
+        touch-action: none;
     }
+    #controls button {
+        font: 600 18px system-ui, sans-serif;
+        color: #fff;
+        background: rgba(0, 0, 0, .5);
+        border: none;
+        border-radius: 8px;
+    }
+    #controls .up { grid-area: 1 / 2; }
+    #controls .left { grid-area: 2 / 1; }
+    #controls .down { grid-area: 2 / 2; }
+    #controls .right { grid-area: 2 / 3; }
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div id="hint">W / S walk &middot; A / D turn</div>
+<div id="controls">
+    <button type="button" class="up" data-key="KeyW">W</button>
+    <button type="button" class="left" data-key="KeyA">A</button>
+    <button type="button" class="down" data-key="KeyS">S</button>
+    <button type="button" class="right" data-key="KeyD">D</button>
+</div>
 
 <script type="module">
 import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
@@ -68,9 +84,17 @@ function updateCamera() {
     map.jumpTo(map.calculateCameraOptionsFromTo(eye, EYE_HEIGHT, ahead, EYE_HEIGHT));
 }
 
+// Keyboard on desktop, on-screen buttons on touch, both feed the same key set.
 const keysDown = new Set();
 addEventListener('keydown', (event) => keysDown.add(event.code));
 addEventListener('keyup', (event) => keysDown.delete(event.code));
+for (const button of document.querySelectorAll('#controls button')) {
+    const code = button.dataset.key;
+    button.addEventListener('pointerdown', (event) => { event.preventDefault(); keysDown.add(code); });
+    for (const type of ['pointerup', 'pointerleave', 'pointercancel']) {
+        button.addEventListener(type, () => keysDown.delete(code));
+    }
+}
 
 let lastFrameTime = performance.now();
 function loop(now) {
