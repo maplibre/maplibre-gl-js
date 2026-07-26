@@ -850,19 +850,20 @@ export class Marker extends Evented<MarkerEventType> {
             return;
         }
 
-        let movement: Point;
+        let movementX = 0;
+        let movementY = 0;
         switch (e.key) {
             case 'ArrowLeft':
-                movement = new Point(-1, 0);
+                movementX = -1;
                 break;
             case 'ArrowRight':
-                movement = new Point(1, 0);
+                movementX = 1;
                 break;
             case 'ArrowUp':
-                movement = new Point(0, -1);
+                movementY = -1;
                 break;
             case 'ArrowDown':
-                movement = new Point(0, 1);
+                movementY = 1;
                 break;
             default:
                 return;
@@ -871,7 +872,7 @@ export class Marker extends Evented<MarkerEventType> {
         e.preventDefault();
         e.stopPropagation();
 
-        const position = this._map.project(this._lngLat).add(movement);
+        const position = this._map.project(this._lngLat).add(new Point(movementX, movementY));
         this.setLngLat(this._map.unproject(position));
         this.fire(new MarkerDragEvent('dragstart'));
         this.fire(new MarkerDragEvent('drag'));
