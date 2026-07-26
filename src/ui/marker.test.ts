@@ -879,6 +879,42 @@ describe('marker', () => {
         map.remove();
     });
 
+    test.each([
+        ['Alt', {altKey: true}],
+        ['Control', {ctrlKey: true}],
+        ['Meta', {metaKey: true}],
+        ['Shift', {shiftKey: true}]
+    ])('Marker leaves %s+Arrow keyboard handling to the application', (_modifier, modifier) => {
+        const map = createMap();
+        map.keyboard.disable();
+        const marker = new Marker({draggable: true})
+            .setLngLat([0, 0])
+            .addTo(map);
+        const startLngLat = marker.getLngLat();
+        const event = new KeyboardEvent('keydown', {bubbles: true, key: 'ArrowRight', ...modifier});
+
+        marker.getElement().dispatchEvent(event);
+
+        expect(marker.getLngLat()).toEqual(startLngLat);
+        expect(event.defaultPrevented).toBe(false);
+        map.remove();
+    });
+
+    test('Marker ignores non-arrow key presses while draggable', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true})
+            .setLngLat([0, 0])
+            .addTo(map);
+        const startLngLat = marker.getLngLat();
+        const event = new KeyboardEvent('keydown', {bubbles: true, key: 'Enter'});
+
+        marker.getElement().dispatchEvent(event);
+
+        expect(marker.getLngLat()).toEqual(startLngLat);
+        expect(event.defaultPrevented).toBe(false);
+        map.remove();
+    });
+
     test('Marker keyboard movement fires drag lifecycle events', () => {
         const map = createMap();
         const marker = new Marker({draggable: true})
