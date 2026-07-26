@@ -1,4 +1,4 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {WorkerPool} from './worker_pool.ts';
 
 describe('WorkerPool', () => {
@@ -39,5 +39,32 @@ describe('WorkerPool', () => {
         await Promise.resolve();
         expect(workersTerminated).toBe(4);
         expect(pool.workersPromise).toBeFalsy();
+    });
+
+    test('reports a worker failure to current and later consumers', async () => {
+        Object.defineProperty(WorkerPool, 'workerCount', {value: 1});
+        const originalWorker = globalThis.Worker;
+        const worker = new EventTarget() as Worker;
+        worker.terminate = vi.fn();
+        (globalThis as any).Worker = vi.fn(function() {
+            return worker;
+        });
+
+        try {
+            const pool = new WorkerPool();
+            const firstErrorHandler = vi.fn();
+            const secondErrorHandler = vi.fn();
+            await pool.acquire('map-1', firstErrorHandler);
+
+            worker.dispatchEvent(new Event('error'));
+            await Promise.resolve();
+
+            expect(firstErrorHandler).toHaveBeenCalledTimes(1);
+            await pool.acquire('map-2', secondErrorHandler);
+            await Promise.resolve();
+            expect(secondErrorHandler).toHaveBeenCalledWith(firstErrorHandler.mock.calls[0][0]);
+        } finally {
+            (globalThis as any).Worker = originalWorker;
+        }
     });
 });

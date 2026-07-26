@@ -123,4 +123,52 @@ describe('workerFactory', () => {
 
         await expect(workerFactory()).rejects.toThrow('Failed to fetch worker script (404)');
     });
+
+    test('reports worker script load failures with the resolved URL and migration guidance', async () => {
+        const listeners = new Map<string, EventListener>();
+        const WorkerSpy = vi.fn(function() {
+            return {
+                addEventListener: (type: string, listener: EventListener) => listeners.set(type, listener),
+                removeEventListener: vi.fn(),
+                postMessage: vi.fn(),
+                terminate: vi.fn()
+            };
+        });
+        (globalThis as any).Worker = WorkerSpy;
+        config.WORKER_URL = '/missing-worker.mjs';
+        const onError = vi.fn();
+
+        await workerFactory(onError);
+        listeners.get('error')({message: ''} as ErrorEvent);
+
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError.mock.calls[0][0]).toBeInstanceOf(Error);
+        expect(onError.mock.calls[0][0].message).toContain(`Failed to load the MapLibre worker script: ${new URL('/missing-worker.mjs', globalThis.location.href).href}`);
+        expect(onError.mock.calls[0][0].message).toContain('set the worker URL explicitly');
+        expect(onError.mock.calls[0][0].message).toContain('https://maplibre.org/maplibre-gl-js/docs/guides/v5-to-v6-migration-guide/');
+    });
+
+    test('reports worker runtime failures without bundler guidance after receiving a message', async () => {
+        const listeners = new Map<string, EventListener>();
+        const WorkerSpy = vi.fn(function() {
+            return {
+                addEventListener: (type: string, listener: EventListener) => listeners.set(type, listener),
+                removeEventListener: vi.fn(),
+                postMessage: vi.fn(),
+                terminate: vi.fn()
+            };
+        });
+        (globalThis as any).Worker = WorkerSpy;
+        config.WORKER_URL = '/worker.mjs';
+        const onError = vi.fn();
+
+        await workerFactory(onError);
+        listeners.get('message')({} as MessageEvent);
+        listeners.get('error')({message: 'Unexpected failure'} as ErrorEvent);
+
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError.mock.calls[0][0].message).toContain('worker script failed while running');
+        expect(onError.mock.calls[0][0].message).toContain('Unexpected failure');
+        expect(onError.mock.calls[0][0].message).not.toContain('bundler');
+    });
 });

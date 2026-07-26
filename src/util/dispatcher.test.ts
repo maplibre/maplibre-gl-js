@@ -71,4 +71,19 @@ describe('Dispatcher', () => {
         dispatcher.remove();
         expect(actorsRemoved).toHaveLength(4);
     });
+
+    test('reports worker construction failures', async () => {
+        const error = new Error('worker construction failed');
+        const workerPool = {
+            acquire () {
+                return Promise.reject(error);
+            }
+        } as any as WorkerPool;
+        const onWorkerError = vi.fn();
+
+        const dispatcher = new Dispatcher(workerPool, 1, onWorkerError);
+
+        await expect(dispatcher.actorsPromise).rejects.toBe(error);
+        expect(onWorkerError).toHaveBeenCalledWith(error);
+    });
 });
