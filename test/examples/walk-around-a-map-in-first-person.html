@@ -90,10 +90,14 @@ addEventListener('keydown', (event) => keysDown.add(event.code));
 addEventListener('keyup', (event) => keysDown.delete(event.code));
 for (const button of document.querySelectorAll('#controls button')) {
     const code = button.dataset.key;
-    button.addEventListener('pointerdown', (event) => { event.preventDefault(); keysDown.add(code); });
-    for (const type of ['pointerup', 'pointerleave', 'pointercancel']) {
-        button.addEventListener(type, () => keysDown.delete(code));
-    }
+    button.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        // Capture so the single lostpointercapture event below covers release,
+        // leaving the button, and touch cancellation.
+        button.setPointerCapture(event.pointerId);
+        keysDown.add(code);
+    });
+    button.addEventListener('lostpointercapture', () => keysDown.delete(code));
 }
 
 let lastFrameTime = performance.now();
