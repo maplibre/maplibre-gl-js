@@ -174,6 +174,7 @@ describe('DataDrivenProperty.interpolate between arrays of different length, iss
     }
 
     test('a length change snaps to the target value instead of throwing', () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const from = constant(ColorArray.parse(['#ffffff', '#ff0000', '#00ff00', '#0000ff']));
         const to = constant(ColorArray.parse(['#ffffff', '#ff0000', '#00ff00']));
 
