@@ -1,15 +1,19 @@
 ## main
 ### ✨ Features and improvements
+- Add support for updating an `ImageSource` with an already-decoded image (`HTMLImageElement`, `HTMLCanvasElement`, `ImageBitmap` or `ImageData`) directly via `ImageSource.updateImage({image})`, skipping the network request ([#7944](https://github.com/maplibre/maplibre-gl-js/pull/7944)) (by [@mondsichtung](https://github.com/mondsichtung))
 - Add `GeoJSONSource.getClusterOptions` to get a source's current cluster options (`cluster`, `clusterMaxZoom`, `clusterRadius`) ([#7948](https://github.com/maplibre/maplibre-gl-js/pull/7948)) (by [@lazerg](https://github.com/lazerg))
-- Support `global-state` expressions in `sky.*` properties ([#7967](https://github.com/maplibre/maplibre-gl-js/pull/7967)) (by [@CommanderStorm](https://github.com/CommanderStorm))
-- Support `global-state` expressions in `light.*` properties ([#7966](https://github.com/maplibre/maplibre-gl-js/pull/7966)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Support `global-state` expressions in `sky.*`, `light.*` and `projection.type` properties ([#7966](https://github.com/maplibre/maplibre-gl-js/pull/7966), [#7967](https://github.com/maplibre/maplibre-gl-js/pull/7967), [#7968](https://github.com/maplibre/maplibre-gl-js/pull/7968)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - Add `MapOptions.rotateSpeed` and `MapOptions.pitchSpeed`, the degrees the bearing/pitch change per pixel dragged ([#7949](https://github.com/maplibre/maplibre-gl-js/pull/7949)) (by [@clement-igonet](https://github.com/clement-igonet))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Use `role=img` for non-interactive default markers and `role=button` when they become interactive ([#7790](https://github.com/maplibre/maplibre-gl-js/issues/7790)) (by [@cat0825](https://github.com/cat0825))
 - Fix an error thrown when a paint property transitions between arrays of different length ([#6606](https://github.com/maplibre/maplibre-gl-js/issues/6606)) (by [@HarelM](https://github.com/HarelM))
 - Fix renderer crash when `RasterTileSource.setTiles`/`setUrl` is called while the source contains errored tiles ([#7911](https://github.com/maplibre/maplibre-gl-js/pull/7911)) (by [@lazerg](https://github.com/lazerg))
+- Fix 3D buildings disappearing when the camera pitches up to look near the horizon, by growing tile-culling bounds as the frustum's bottom edge (from pitch and FOV) approaches horizontal ([#7633](https://github.com/maplibre/maplibre-gl-js/issues/7633)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Fix globe latitude precision on some GPUs (e.g. Mali) by reformulating the mercator-to-sphere Y coordinate algebraically (`exp` + rational arithmetic instead of `atan`/`sin`/`cos`), avoiding float32 cancellation and imprecise hardware transcendentals near the equator; the runtime GPU `atan`-error measurement/correction this superseded has also been removed ([#7419](https://github.com/maplibre/maplibre-gl-js/issues/7419)) (by [@clement-igonet](https://github.com/clement-igonet))
+- Fix a race in `RasterTileSource.loadTile` and `ImageSource.load` where a tile/image aborted during an awaited `transformRequest` passed an undefined `AbortController` into the image request queue, crashing it with `TypeError: Cannot read properties of undefined (reading 'signal')` ([#8004](https://github.com/maplibre/maplibre-gl-js/issues/8004)) (by [@jan-grzybek](https://github.com/jan-grzybek))
+- Fix `setTerrain` not destroying the previously active terrain when switching to a new configuration, which leaked its GPU resources and left the old source still configured as a terrain source ([#7990](https://github.com/maplibre/maplibre-gl-js/issues/7990)) (by [@lazerg](https://github.com/lazerg))
 - _...Add new stuff here..._
 
 ## 6.0.0
