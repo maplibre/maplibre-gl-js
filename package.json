@@ -109,7 +109,7 @@
     "postcss-inline-svg": "^6.0.0",
     "pretty-bytes": "^7.1.1",
     "puppeteer": "^25.3.0",
-    "react": "^19.2.5",
+    "react": "^19.2.8",
     "react-dom": "^19.2.6",
     "regenerate": "^1.4.2",
     "rolldown": "^1.2.0",
