@@ -45,7 +45,10 @@
                 if (!params.has('compare')) {
                     const response = await fetch('https://registry.npmjs.org/maplibre-gl/latest');
                     const responseJson = await response.json();
-                    requestedVersionsDisplayName.push(responseJson['version'], 'main');
+                    // The npm registry reports a bare semver (e.g. 6.0.0), but the
+                    // benchmark artifacts on gh-pages are stored under the git tag
+                    // name (e.g. v6.0.0).
+                    requestedVersionsDisplayName.push(`v${responseJson['version']}`, 'main');
                 }
                 console.log(`Comparing versions: ${requestedVersionsDisplayName}`);
 
