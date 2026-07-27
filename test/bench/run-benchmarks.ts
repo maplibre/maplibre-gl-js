@@ -34,17 +34,24 @@ const url = new URL('http://localhost:9966/test/bench/versions/index.html');
 
 // Resolves when the page has finished, throws when the page reports a failure
 // (e.g. a benchmark bundle that could not be loaded) instead of waiting forever.
+//
+// Polls from node rather than with `waitForFunction`: a polling `waitForFunction` keeps a single
+// CDP call pending for the whole benchmark, so anything slower than puppeteer's `protocolTimeout`
+// (180s) is killed even with `timeout: 0`. Short-lived polls leave that backstop in place for the
+// calls it is actually meant to guard.
 const waitForBenchmarks = async (webPage) => {
-    await webPage.waitForFunction(
-        () => (window as any).maplibreglBenchmarkFinished || (window as any).maplibreglBenchmarkError,
-        {
-            polling: 200,
-            timeout: 0
+    for (;;) {
+        const {finished, pageError} = await webPage.evaluate(() => ({
+            finished: Boolean((window as any).maplibreglBenchmarkFinished),
+            pageError: (window as any).maplibreglBenchmarkError ?? null
+        }));
+        if (pageError) {
+            throw new Error(`The benchmark page reported an error: ${pageError}`);
         }
-    );
-    const pageError = await webPage.evaluate(() => (window as any).maplibreglBenchmarkError);
-    if (pageError) {
-        throw new Error(`The benchmark page reported an error: ${pageError}`);
+        if (finished) {
+            return;
+        }
+        await new Promise(resolve => setTimeout(resolve, 200));
     }
 };
 
