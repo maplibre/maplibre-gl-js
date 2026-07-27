@@ -22,7 +22,6 @@ import FilterEvaluate from '../benchmarks/filter_evaluate.ts';
 import CustomLayer from '../benchmarks/customlayer.ts';
 import MapIdle from '../benchmarks/map_idle.ts';
 
-import {benchmarkVersionId} from '../lib/version_id.ts';
 import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool.ts';
 import {setWorkerUrl} from '../../../src/index.ts';
 import SymbolCollisionBox from '../benchmarks/symbol_collision_box.ts';
@@ -42,7 +41,13 @@ const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as 
 // Resolve the worker URL relative to this bundle's own URL (set by rollup ESM output).
 setWorkerUrl(new URL('./benchmarks_worker.mjs', import.meta.url).toString());
 
-const version = benchmarkVersionId(process.env.BENCHMARK_VERSION, new URL(import.meta.url).origin, location.origin);
+/*
+ * Published bundles load cross-origin from gh-pages, the working-directory bundle from the page's own origin.
+ * Both bake their version from `git describe`, so a local checkout sitting on a published bundle's commit
+ * would otherwise register under the same id and silently replace it.
+ * Tagging the same-origin bundle keeps them apart.
+ */
+const version = new URL(import.meta.url).origin === location.origin ? `${process.env.BENCHMARK_VERSION} (local)` : process.env.BENCHMARK_VERSION;
 
 function register(name, bench) {
     (window as any).maplibreglBenchmarks[name] = (window as any).maplibreglBenchmarks[name] || {};
