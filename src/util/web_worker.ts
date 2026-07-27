@@ -51,13 +51,13 @@ function resolveWorkerUrl(url: string): string {
     try {
         return new URL(url, globalThis.location?.href || import.meta.url).href;
     } catch {
+        // WORKER_URL is user-configurable. Preserve malformed values for the
+        // diagnostic instead of throwing while handling the worker failure.
         return url;
     }
 }
 
-function monitorWorker(worker: Worker, url: string, onError?: WorkerErrorHandler): void {
-    if (!onError) return;
-
+function monitorWorker(worker: Worker, url: string, onError: WorkerErrorHandler): void {
     let receivedMessage = false;
     worker.addEventListener('message', () => {
         receivedMessage = true;
@@ -96,7 +96,7 @@ function importAsBlobUrl(url: string): string {
     return URL.createObjectURL(blob);
 }
 
-export async function workerFactory(onError?: WorkerErrorHandler): Promise<Worker> {
+export async function workerFactory(onError: WorkerErrorHandler): Promise<Worker> {
     const url = config.WORKER_URL || defaultWorkerUrl();
     const asModule = url?.endsWith('.cjs') ? false : true;
 

@@ -4,10 +4,8 @@ import {WorkerPool} from '../util/worker_pool.ts';
 import {StubMap} from '../util/test/util.ts';
 
 describe('Style worker errors', () => {
-    const originalWorker = globalThis.Worker;
-
     afterEach(() => {
-        (globalThis as any).Worker = originalWorker;
+        vi.restoreAllMocks();
     });
 
     test('forwards worker script load failures to the map error event', async () => {
@@ -15,21 +13,23 @@ describe('Style worker errors', () => {
         const worker = new EventTarget() as Worker;
         worker.postMessage = vi.fn();
         worker.terminate = vi.fn();
-        (globalThis as any).Worker = vi.fn(function() {
+        vi.spyOn(globalThis, 'Worker').mockImplementation(function() {
             return worker;
         });
         const map = new StubMap();
         const style = new Style(map as any);
         style.setEventedParent(map);
-        const onError = vi.fn();
-        map.on('error', onError);
+        const errorPromise = map.once('error');
         await style.dispatcher.actorsPromise;
 
-        worker.dispatchEvent(new Event('error'));
-        await Promise.resolve();
+        worker.dispatchEvent(new ErrorEvent('error'));
+        const event = await errorPromise;
 
-        expect(onError).toHaveBeenCalledTimes(1);
-        expect(onError.mock.calls[0][0].error.message).toContain('Failed to load the MapLibre worker script');
+        expect(event.error.message).toBe(
+            `Failed to load the MapLibre worker script: ${globalThis.location.href}\n` +
+            'If you use a bundler, set the worker URL explicitly; see ' +
+            'https://maplibre.org/maplibre-gl-js/docs/guides/v5-to-v6-migration-guide/'
+        );
         style._remove();
     });
 });

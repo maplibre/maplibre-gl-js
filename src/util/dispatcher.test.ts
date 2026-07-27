@@ -6,7 +6,7 @@ import {WorkerPool} from './worker_pool.ts';
 
 describe('Dispatcher', () => {
     test('requests and releases workers from pool', async () => {
-        const workers = [await workerFactory(), await workerFactory()];
+        const workers = [await workerFactory(vi.fn()), await workerFactory(vi.fn())];
         const mapId = 1;
         const releaseCalled = [];
         const workerPool = {
@@ -32,7 +32,7 @@ describe('Dispatcher', () => {
         const releaseCalled = [];
         const workerPool = {
             async acquire () {
-                workers ||= [await workerFactory(), await workerFactory()];
+                workers ||= [await workerFactory(vi.fn()), await workerFactory(vi.fn())];
                 return workers;
             },
             release (id) {

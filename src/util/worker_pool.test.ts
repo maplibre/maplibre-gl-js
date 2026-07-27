@@ -1,7 +1,11 @@
-import {describe, test, expect, vi} from 'vitest';
+import {afterEach, describe, test, expect, vi} from 'vitest';
 import {WorkerPool} from './worker_pool.ts';
 
 describe('WorkerPool', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     test('acquire', async () => {
         Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
 
@@ -43,28 +47,32 @@ describe('WorkerPool', () => {
 
     test('reports a worker failure to current and later consumers', async () => {
         Object.defineProperty(WorkerPool, 'workerCount', {value: 1});
-        const originalWorker = globalThis.Worker;
         const worker = new EventTarget() as Worker;
         worker.terminate = vi.fn();
-        (globalThis as any).Worker = vi.fn(function() {
+        vi.spyOn(globalThis, 'Worker').mockImplementation(function() {
             return worker;
         });
 
-        try {
-            const pool = new WorkerPool();
-            const firstErrorHandler = vi.fn();
-            const secondErrorHandler = vi.fn();
-            await pool.acquire('map-1', firstErrorHandler);
+        let resolveFirstError!: (error: Error) => void;
+        const firstErrorPromise = new Promise<Error>((resolve) => {
+            resolveFirstError = resolve;
+        });
+        const firstErrorHandler = vi.fn((error: Error) => resolveFirstError(error));
+        const pool = new WorkerPool();
+        await pool.acquire('map-1', firstErrorHandler);
 
-            worker.dispatchEvent(new Event('error'));
-            await Promise.resolve();
+        worker.dispatchEvent(new ErrorEvent('error'));
+        const firstError = await firstErrorPromise;
 
-            expect(firstErrorHandler).toHaveBeenCalledTimes(1);
-            await pool.acquire('map-2', secondErrorHandler);
-            await Promise.resolve();
-            expect(secondErrorHandler).toHaveBeenCalledWith(firstErrorHandler.mock.calls[0][0]);
-        } finally {
-            (globalThis as any).Worker = originalWorker;
-        }
+        expect(firstErrorHandler).toHaveBeenCalledWith(firstError);
+
+        let resolveSecondError!: (error: Error) => void;
+        const secondErrorPromise = new Promise<Error>((resolve) => {
+            resolveSecondError = resolve;
+        });
+        const secondErrorHandler = vi.fn((error: Error) => resolveSecondError(error));
+        await pool.acquire('map-2', secondErrorHandler);
+
+        expect(await secondErrorPromise).toBe(firstError);
     });
 });
