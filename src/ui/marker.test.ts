@@ -543,13 +543,13 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        expect(marker.getElement().classList.contains('maplibregl-marker-draggable')).toBe(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-draggable');
 
         marker.setDraggable(false);
-        expect(marker.getElement().classList.contains('maplibregl-marker-draggable')).toBe(false);
+        expect(marker.getElement().classList).not.toContain('maplibregl-marker-draggable');
 
         marker.setDraggable(true);
-        expect(marker.getElement().classList.contains('maplibregl-marker-draggable')).toBe(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-draggable');
 
         map.remove();
     });
