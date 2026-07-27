@@ -55,7 +55,11 @@
                 const versionDisplayNameByVersion = {};
                 for (const v of requestedVersionsDisplayName) {
                     const beforeVersions = getBenchmarkVersions();
-                    await loadVersion(v);
+                    try {
+                        await loadVersion(v);
+                    } catch (err) {
+                        throw new Error(`Could not load the benchmark bundle for "${v}" from https://maplibre.org/maplibre-gl-js/benchmarks/${v} - available versions are the directories in https://github.com/maplibre/maplibre-gl-js/tree/gh-pages/benchmarks`);
+                    }
                     const afterVersions = getBenchmarkVersions();
                     const newVersions = afterVersions.filter(version => !beforeVersions.includes(version));
                     for (const version of newVersions) {
@@ -102,6 +106,9 @@
                 window.maplibreglBenchmarkFinished = true;
             } catch (ex) {
                 console.error(ex);
+                // Surface the failure to the headless runner, which otherwise
+                // waits for maplibreglBenchmarkFinished forever.
+                window.maplibreglBenchmarkError = ex instanceof Error ? ex.message : String(ex);
             }
         }
 

@@ -32,6 +32,22 @@ if (!fs.existsSync(dir)) {
 
 const url = new URL('http://localhost:9966/test/bench/versions/index.html');
 
+// Resolves when the page has finished, throws when the page reports a failure
+// (e.g. a benchmark bundle that could not be loaded) instead of waiting forever.
+const waitForBenchmarks = async (webPage) => {
+    await webPage.waitForFunction(
+        () => (window as any).maplibreglBenchmarkFinished || (window as any).maplibreglBenchmarkError,
+        {
+            polling: 200,
+            timeout: 0
+        }
+    );
+    const pageError = await webPage.evaluate(() => (window as any).maplibreglBenchmarkError);
+    if (pageError) {
+        throw new Error(`The benchmark page reported an error: ${pageError}`);
+    }
+};
+
 if (argv.compare !== true && argv.compare !== undefined) { // handle --compare without argument as the default
     for (const compare of [].concat(argv.compare))
         url.searchParams.append('compare', compare || '');
@@ -50,7 +66,7 @@ try {
     url.hash = 'NONE'; // this will simply load the page without running any benchmarks
     await webPage.goto(url.toString());
 
-    await webPage.waitForFunction(() => (window as any).maplibreglBenchmarkFinished);
+    await waitForBenchmarks(webPage);
     const allNames = await webPage.evaluate(() => Object.keys((window as any).maplibreglBenchmarks));
     const versions = await webPage.evaluate((name) => Object.keys((window as any).maplibreglBenchmarks[name]), allNames[0]);
     const versionsDisplayName = await webPage.evaluate(() => (window as any).versionsDisplayName);
@@ -71,13 +87,7 @@ try {
         await webPage.goto(url.toString());
         await webPage.reload();
 
-        await webPage.waitForFunction(
-            () => (window as any).maplibreglBenchmarkFinished,
-            {
-                polling: 200,
-                timeout: 0
-            }
-        );
+        await waitForBenchmarks(webPage);
         const results = await webPage.evaluate((name) => (window as any).maplibreglBenchmarkResults[name], name);
         const output = versions.map((v) => {
             if (v && results[v]) {
@@ -115,6 +125,7 @@ try {
     } else {
         console.log(error);
     }
+    process.exitCode = 1;
 } finally {
     await browser.close();
 }
