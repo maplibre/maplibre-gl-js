@@ -16,6 +16,7 @@
 - Fix `setTerrain` not destroying the previously active terrain when switching to a new configuration, which leaked its GPU resources and left the old source still configured as a terrain source ([#7990](https://github.com/maplibre/maplibre-gl-js/issues/7990)) (by [@lazerg](https://github.com/lazerg))
 - Fix the default benchmark comparison requesting the latest release from a URL that does not exist - the npm registry reports a bare semver (`6.0.0`) while the benchmark artifacts on gh-pages are stored under the tag name (`v6.0.0`) ([#8027](https://github.com/maplibre/maplibre-gl-js/pull/8027)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Make the headless benchmark runner report failures and exit non-zero - a benchmark page error (e.g. a version bundle that fails to load) previously left the runner waiting until a puppeteer protocol timeout killed it minutes later, exiting 0 as if it had succeeded ([#8027](https://github.com/maplibre/maplibre-gl-js/pull/8027)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix the working-directory column disappearing from benchmark comparisons when the local checkout is at the same commit a published benchmark bundle was built from - both bundles registered under the same version id and the local one silently replaced the published one while keeping its label ([#8027](https://github.com/maplibre/maplibre-gl-js/pull/8027)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ## 6.0.0
