@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <title>Pan a globe with a free bearing</title>
-    <meta property="og:description" content="Toggle quaternion-based globe panning via DragPanOptions.fixedBearing for smooth dragging near the poles." />
+    <meta property="og:description" content="Toggle DragPanOptions.fixedBearing to let the globe rotate under the cursor while dragging near the poles." />
     <meta property="og:created" content="2026-07-12" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -48,9 +48,10 @@
     });
 
     document.getElementById('fixedBearing').addEventListener('change', (e) => {
-        // Re-enabling dragPan with fixedBearing: false switches to
-        // quaternion-based panning, which stays smooth over the poles
-        // at the cost of letting bearing drift during the drag.
+        // Panning always rotates the globe with a quaternion, which stays smooth
+        // near and across the poles. fixedBearing only decides what happens to the
+        // bearing: keep it fixed (the default), or let it drift during the drag so
+        // that the grabbed location tracks the cursor exactly.
         map.dragPan.enable({fixedBearing: e.target.checked});
     });
 </script>
