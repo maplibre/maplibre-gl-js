@@ -612,9 +612,6 @@ class Subdivider {
         // Add pole geometry if needed
         this._handlePoles(subdividedTriangles);
 
-        // On globe the z0 tile's buffer wraps around the planet onto the tile itself, drawing buffered geometry twice.
-        // To avoid this, we drop all geometry beyond the tile's X extent, including the outlines generated above.
-        // Only globe uses subdivision (granularity >= 2), so mercator is never affected.
         if (this._granularity >= 2 && this._canonical?.z === 0) {
             subdividedTriangles = this._removeTrianglesOutsideTileX(subdividedTriangles);
             subdividedLines = subdividedLines.map(lines => this._removeLinesOutsideTileX(lines));
@@ -632,6 +629,14 @@ class Subdivider {
         return x < 0 || x > EXTENT;
     }
 
+    /**
+     * Drops all triangles that reach beyond the tile's X extent.
+     *
+     * On globe the z0 tile's buffer wraps around the planet onto the tile itself, drawing buffered geometry twice.
+     * Only globe uses subdivision (`granularity >= 2`), so mercator is never affected.
+     * @param indices - Triangle indices into `this._vertexBuffer`.
+     * @returns The indices with every triangle that has a vertex outside the tile's X extent removed.
+     */
     private _removeTrianglesOutsideTileX(indices: number[]): number[] {
         const filtered: number[] = [];
         for (let i = 0; i < indices.length; i += 3) {
@@ -643,6 +648,12 @@ class Subdivider {
         return filtered;
     }
 
+    /**
+     * Drops all outline line segments that reach beyond the tile's X extent,
+     * for the same reason as {@link Subdivider._removeTrianglesOutsideTileX}.
+     * @param indices - Line segment indices into `this._vertexBuffer`.
+     * @returns The indices with every segment that has a vertex outside the tile's X extent removed.
+     */
     private _removeLinesOutsideTileX(indices: number[]): number[] {
         const filtered: number[] = [];
         for (let i = 0; i < indices.length; i += 2) {

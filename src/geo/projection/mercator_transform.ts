@@ -18,7 +18,7 @@ import type {Terrain} from '../../render/terrain.ts';
 import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
-import {type CustomLayerProjectionData, type ProjectionDataParams, type RendererProjectionData} from './projection_data.ts';
+import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
 export class MercatorTransform implements ITransform {

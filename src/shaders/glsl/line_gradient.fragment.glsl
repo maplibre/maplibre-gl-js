@@ -13,10 +13,10 @@ in float v_depth;
 #pragma maplibre: define lowp float opacity
 
 void main() {
-    clipAntimeridian();
-
     #pragma maplibre: initialize lowp float blur
     #pragma maplibre: initialize lowp float opacity
+
+    clipAntimeridian();
 
     // Calculate the distance of the pixel from the line in pixels.
     float dist = length(v_normal) * v_width2.s;
