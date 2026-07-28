@@ -58655,6 +58655,7 @@ var Marker = class extends Evented {
 	*/
 	setDraggable(shouldBeDraggable) {
 		this._draggable = !!shouldBeDraggable;
+		this._element.classList.toggle("maplibregl-marker-draggable", this._draggable);
 		if (this._map) if (shouldBeDraggable) {
 			this._map.on("mousedown", this._addDragHandler);
 			this._map.on("touchstart", this._addDragHandler);
@@ -60923,7 +60924,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main cb98660 (local)` : "main cb98660";
+const version = new URL(import.meta.url).origin === location.origin ? `main 985df32 (local)` : "main 985df32";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
