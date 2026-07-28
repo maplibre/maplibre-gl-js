@@ -28,6 +28,9 @@ const arrowKeyDeltas: {[key: string]: [number, number]} = {
     ArrowDown: [0, 1]
 };
 
+const keyboardDragStep = 1;
+const keyboardDragShiftStep = 10;
+
 /**
  * The {@link Marker} options object
  */
@@ -621,7 +624,7 @@ export class Marker extends Evented<MarkerEventType> {
         // map's KeyboardHandler would also pan (or rotate/pitch with Shift) the camera.
         e.stopPropagation();
 
-        const step = e.shiftKey ? 10 : 1;
+        const step = e.shiftKey ? keyboardDragShiftStep : keyboardDragStep;
         const pos = this._map.project(this._lngLat);
         this.setLngLat(this._map.unproject(new Point(pos.x + delta[0] * step, pos.y + delta[1] * step)));
 
@@ -633,7 +636,7 @@ export class Marker extends Evented<MarkerEventType> {
     };
 
     _onKeyUp = (e: KeyboardEvent): void => {
-        if (!(e.key in arrowKeyDeltas)) return;
+        if (!arrowKeyDeltas[e.key]) return;
         this._endKeyboardDrag();
     };
 
@@ -939,7 +942,6 @@ export class Marker extends Evented<MarkerEventType> {
             }
         }
 
-        // Keyboard parity with pointer drag (#8020), default marker only (#7790).
         if (this._defaultMarker) {
             if (this._draggable) {
                 this._element.addEventListener('keydown', this._onKeyDown);
