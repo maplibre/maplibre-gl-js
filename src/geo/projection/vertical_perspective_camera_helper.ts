@@ -123,15 +123,22 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         tr.setZoom(oldZoom + getZoomAdjustment(oldCenterLat, tr.center.lat));
     }
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void {
+    /**
+     * Pans the globe by rotating it with a single quaternion that brings the grabbed location back
+     * under the cursor. This stays consistent near and across the poles, where the previous
+     * bearing-preserving mapping inverted and stalled (#5296).
+     * @param deltas - The deltas accumulated for this frame.
+     * @param tr - The transform to pan.
+     * @param preZoomAroundLoc - The location that was under the cursor before this frame.
+     * @param fixedBearing - Whether to keep the bearing fixed, the default. When `false`, the
+     * bearing is free to drift so that the grabbed location tracks the cursor exactly.
+     */
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat, fixedBearing?: boolean): void {
         if (!deltas.panDelta) {
             return;
         }
 
-        // Rotate the globe with a single quaternion that brings the grabbed location
-        // back under the cursor. This stays consistent near and across the poles, where
-        // the previous bearing-preserving mapping inverted and stalled (#5296).
-        quaternionSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around);
+        quaternionSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around, fixedBearing !== false, deltas.panDelta);
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
