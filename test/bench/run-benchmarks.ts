@@ -40,7 +40,7 @@ const url = new URL('http://localhost:9966/test/bench/versions/index.html');
 // (180s) is killed even with `timeout: 0`. Short-lived polls leave that backstop in place for the
 // calls it is actually meant to guard.
 const waitForBenchmarks = async (webPage) => {
-    for (;;) {
+    while (true) {
         const {finished, pageError} = await webPage.evaluate(() => ({
             finished: Boolean((window as any).maplibreglBenchmarkFinished),
             pageError: (window as any).maplibreglBenchmarkError ?? null
