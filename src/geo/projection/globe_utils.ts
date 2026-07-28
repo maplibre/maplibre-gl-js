@@ -139,6 +139,12 @@ export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: numbe
  * twist about the view axis, and `bearing` is that twist, so `fixedBearing` selects whether the
  * twist is applied.
  *
+ * With the bearing held, the swing longitude becomes ill-conditioned near the pole and the grabbed
+ * location slips away from the cursor. The globe is therefore treated as having traction under the
+ * cursor: with the pole centered the view is azimuthal, a "dial", so the cursor's angle around the
+ * pole drives longitude while its radial distance drives latitude. The two are blended by how close
+ * the center is to the pole.
+ *
  * Note: automatically adjusts zoom to keep planet size consistent
  * (same size before and after a call), like `setLocationAtPoint` does.
  * @param tr - The transform to rotate.
@@ -146,10 +152,9 @@ export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: numbe
  * @param point - The screen point that `lnglat` should appear at.
  * @param fixedBearing - When `true`, applies the swing only and keeps the bearing fixed, so the
  * globe still moves smoothly across the poles without rotating the map. When `false` (the default),
- * applies the full rotation, so the grabbed point tracks the cursor exactly and the bearing drifts.
- * @param panDelta - The drag's pixel delta. Near the poles the swing longitude is ill-conditioned,
- * so it is derived instead from the tangential sweep of this delta around the pole. Omitting it
- * skips that azimuthal handling.
+ * applies the full rotation, so the grabbed location tracks the cursor exactly and the bearing drifts.
+ * @param panDelta - The drag's pixel delta, which the dial needs. Omitting it skips the azimuthal
+ * handling near the poles.
  */
 export function quaternionSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point, fixedBearing = false, panDelta?: Point): void {
     // Pixels that miss the globe unproject to a fake location snapped to the
@@ -193,11 +198,6 @@ export function quaternionSetLocationAtPoint(tr: ITransform, lnglat: LngLat, poi
     const finalLat = clamp(newCenterLat, -90, 90);
 
     if (fixedBearing) {
-        // Near the pole the swing-only longitude becomes ill-conditioned and the grabbed point
-        // slips off the finger. Model the globe as having traction under the finger: with the pole
-        // centered the view is azimuthal, a "dial", so the finger's angle around the pole's screen
-        // position drives longitude while its radial distance drives latitude (via the swing).
-        // Blend the two by the proximity of the center to the pole.
         const poleLat = oldLat >= 0 ? 90 : -90;
         const polePoint = tr.locationToScreenPoint(new LngLat(0, poleLat));
         const rx = point.x - polePoint.x, ry = point.y - polePoint.y;
@@ -209,13 +209,12 @@ export function quaternionSetLocationAtPoint(tr: ITransform, lnglat: LngLat, poi
         const tRamp = clamp(1 - (MAX_VALID_LATITUDE - Math.abs(oldLat)) / 12, 0, 1);
         const dial = tRamp * tRamp * (3 - 2 * tRamp);
 
-        // Swing longitude delta (shortest signed path), reliable away from the pole.
         const dLngSwing = mod(newCenterLng - oldLng + 180, 360) - 180;
 
-        // Dial longitude delta: the infinitesimal rotation of the finger about the pole,
-        // cross(r, panDelta) / |r|². Deriving it from the real pixel delta rather than a
-        // round-tripped previous finger position avoids the catastrophic cancellation that
-        // otherwise randomizes the sign at the pole. Skipped within ~20px, where the angle is noise.
+        // Rotation of the cursor about the pole, cross(r, panDelta) / |r|². Taking it from the real
+        // pixel delta rather than a round-tripped previous cursor position avoids the catastrophic
+        // cancellation that otherwise randomizes the sign at the pole. Skipped within ~20px of the
+        // pole, where the angle is noise.
         let dLngDial = 0;
         if (dial > 0 && panDelta && r2 > 400) {
             const dTheta = (rx * panDelta.y - ry * panDelta.x) / r2;
