@@ -52,13 +52,6 @@ const SLOWING_RADIUS_STOP = 0.5;
 const SLOWING_RADIUS_SLOW_FACTOR = 0.25;
 
 /**
- * Above this latitude the bearing-preserving pan mapping inverts and stalls
- * (#5296), so globe drag switches to a quaternion rotation there. Below it the
- * bearing-preserving mapping is kept, so ordinary dragging never changes bearing.
- */
-const NEAR_POLE_LATITUDE = 75;
-
-/**
  * @internal
  */
 export class VerticalPerspectiveCameraHelper implements ICameraHelper {
@@ -159,24 +152,22 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         tr.setZoom(oldZoom + getZoomAdjustment(oldCenterLat, tr.center.lat));
     }
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void {
+    /**
+     * Pans the globe by rotating it with a single quaternion that brings the grabbed location back
+     * under the cursor. This stays consistent near and across the poles, where the previous
+     * bearing-preserving mapping inverted and stalled (#5296).
+     * @param deltas - The deltas accumulated for this frame.
+     * @param tr - The transform to pan.
+     * @param preZoomAroundLoc - The location that was under the cursor before this frame.
+     * @param fixedBearing - Whether to keep the bearing fixed, the default. When `false`, the
+     * bearing is free to drift so that the grabbed location tracks the cursor exactly.
+     */
+    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat, fixedBearing?: boolean): void {
         if (!deltas.panDelta) {
             return;
         }
 
-        // Near the poles rotate the globe with a quaternion (bearing may change),
-        // which stays consistent where the bearing-preserving mapping inverts (#5296).
-        if (Math.abs(tr.center.lat) > NEAR_POLE_LATITUDE) {
-            quaternionSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around);
-            return;
-        }
-
-        // Away from the poles keep the bearing fixed, as before.
-        const oldLat = tr.center.lat;
-        const oldZoom = tr.zoom;
-        tr.setCenter(computeGlobePanCenter(deltas.panDelta, tr).wrap());
-        // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
-        tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
+        quaternionSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around, fixedBearing !== false, deltas.panDelta);
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
