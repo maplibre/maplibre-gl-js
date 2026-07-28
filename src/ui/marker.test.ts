@@ -817,6 +817,55 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Marker with draggable:true is keyboard-focusable', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true}).setLngLat([0, 0]).addTo(map);
+        expect(marker.getElement().getAttribute('tabindex')).toBe('0');
+        marker.setDraggable(false);
+        expect(marker.getElement().getAttribute('tabindex')).toBeFalsy();
+        map.remove();
+    });
+
+    test('Marker with draggable:true moves with arrow keys and fires drag events', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true}).setLngLat([0, 0]).addTo(map);
+        const el = marker.getElement();
+        const startPos = map.project(marker.getLngLat());
+
+        const dragstart = vi.fn();
+        const drag = vi.fn();
+        const dragend = vi.fn();
+        marker.on('dragstart', dragstart);
+        marker.on('drag', drag);
+        marker.on('dragend', dragend);
+
+        el.dispatchEvent(new KeyboardEvent('keydown', {code: 'ArrowRight', bubbles: true}));
+
+        const endPos = map.project(marker.getLngLat());
+        expect(Math.round(endPos.x)).toBe(startPos.x + 1);
+        expect(Math.round(endPos.y)).toBe(startPos.y);
+        expect(dragstart).toHaveBeenCalledTimes(1);
+        expect(drag).toHaveBeenCalledTimes(1);
+        expect(dragend).toHaveBeenCalledTimes(1);
+
+        map.remove();
+    });
+
+    test('Marker with draggable:true moves farther with Shift+arrow', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true}).setLngLat([0, 0]).addTo(map);
+        const el = marker.getElement();
+        const startPos = map.project(marker.getLngLat());
+
+        el.dispatchEvent(new KeyboardEvent('keydown', {code: 'ArrowDown', shiftKey: true, bubbles: true}));
+
+        const endPos = map.project(marker.getLngLat());
+        expect(Math.round(endPos.x)).toBe(startPos.x);
+        expect(Math.round(endPos.y)).toBe(startPos.y + 10);
+
+        map.remove();
+    });
+
     test('Marker with draggable:false does not move to new position in response to a mouse-triggered drag', () => {
         const map = createMap();
         const marker = new Marker({})
