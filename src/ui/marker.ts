@@ -468,6 +468,8 @@ export class Marker extends Evented<MarkerEventType> {
         this._element.removeEventListener('keyup', this._onKeyUp);
         this._element.removeEventListener('blur', this._onBlur);
         this._element.removeEventListener('keypress', this._onKeyPress);
+        // Drop any in-flight keyboard drag silently, like a pointer drag interrupted by remove().
+        this._keyboardDragActive = false;
         this._element.remove();
         if (this._popup) this._popup.remove();
         return this;
@@ -979,7 +981,10 @@ export class Marker extends Evented<MarkerEventType> {
                 this._tabIndexManaged = true;
             }
         } else if (this._tabIndexManaged) {
-            this._element.removeAttribute('tabindex');
+            // Only remove the value we set; the application may have overridden it since.
+            if (this._element.getAttribute('tabindex') === '0') {
+                this._element.removeAttribute('tabindex');
+            }
             this._tabIndexManaged = false;
         }
     }

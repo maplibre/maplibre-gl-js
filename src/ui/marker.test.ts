@@ -837,6 +837,35 @@ describe('marker', () => {
         expect(marker.getElement().getAttribute('tabindex')).toBe('5');
     });
 
+    test('Marker keeps a tabindex the application overrode after the marker managed it', () => {
+        const marker = new Marker({draggable: true});
+        marker.setDraggable(true);
+        expect(marker.getElement().getAttribute('tabindex')).toBe('0');
+
+        marker.getElement().setAttribute('tabindex', '5');
+        marker.setDraggable(false);
+        expect(marker.getElement().getAttribute('tabindex')).toBe('5');
+    });
+
+    test('Marker starts a fresh keyboard gesture after being removed mid-drag and re-added', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true}).setLngLat([0, 0]).addTo(map);
+        const el = marker.getElement();
+        const dragstart = vi.fn();
+        marker.on('dragstart', dragstart);
+
+        el.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight', bubbles: true, cancelable: true}));
+        expect(dragstart).toHaveBeenCalledTimes(1);
+
+        // removed mid-gesture (no keyup), then re-added
+        marker.remove();
+        marker.addTo(map);
+
+        el.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight', bubbles: true, cancelable: true}));
+        expect(dragstart).toHaveBeenCalledTimes(2);
+        map.remove();
+    });
+
     test('Marker keeps its tabindex while either dragging or a popup keeps it interactive', () => {
         const marker = new Marker({draggable: true}).setPopup(new Popup());
 
