@@ -65,7 +65,7 @@ describe('Light.setLight', () => {
     test('validates by default', () => {
         const light = new Light({}, {});
         const lightSpy = vi.spyOn(light, '_validate');
-        vi.spyOn(console, 'error').mockImplementation(() => { });
+        vi.spyOn(console, 'error').mockImplementation(() => {});
         light.setLight({color: 'notacolor'});
         light.updateTransitions({transition: false} as any as TransitionParameters);
         light.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);

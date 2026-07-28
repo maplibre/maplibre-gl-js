@@ -227,6 +227,7 @@ export class Marker extends Evented<MarkerEventType> {
     _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
     _subpixelPositioning: boolean;
+    _roleManaged: boolean;
 
     /**
      * @param options - the options
@@ -241,6 +242,7 @@ export class Marker extends Evented<MarkerEventType> {
         this._clickTolerance = options?.clickTolerance || 0;
         this._subpixelPositioning = options?.subpixelPositioning || false;
         this._isDragging = false;
+        this._roleManaged = false;
         this._state = 'inactive';
         this._rotation = options?.rotation || 0;
         this._rotationAlignment = options?.rotationAlignment || 'auto';
@@ -393,15 +395,11 @@ export class Marker extends Evented<MarkerEventType> {
         this.remove();
         this._map = map;
 
-        if (!this._element.hasAttribute('aria-label')) {
+        if (this._defaultMarker && !this._element.hasAttribute('aria-label')) {
             this._element.setAttribute('aria-label', map._getUIString('Marker.Title'));
         }
 
-        // aria-label is set either by user or above default, so set role
-        // since div is interactive and cannot have aria-label without a role
-        if (!this._element.hasAttribute('role')) {
-            this._element.setAttribute('role', 'button');
-        }
+        this._updateAccessibilityRole();
 
         map.getCanvasContainer().appendChild(this._element);
         map.on('move', this._update);
@@ -553,6 +551,7 @@ export class Marker extends Evented<MarkerEventType> {
             this._element.addEventListener('keypress', this._onKeyPress);
         }
 
+        this._updateAccessibilityRole();
         return this;
     }
 
@@ -857,6 +856,7 @@ export class Marker extends Evented<MarkerEventType> {
      */
     setDraggable(shouldBeDraggable?: boolean): this {
         this._draggable = !!shouldBeDraggable; // convert possible undefined value to false
+        this._element.classList.toggle('maplibregl-marker-draggable', this._draggable);
 
         // handle case where map may not exist yet
         // e.g. when setDraggable is called before addTo
@@ -870,6 +870,7 @@ export class Marker extends Evented<MarkerEventType> {
             }
         }
 
+        this._updateAccessibilityRole();
         return this;
     }
 
@@ -879,6 +880,29 @@ export class Marker extends Evented<MarkerEventType> {
      */
     isDraggable(): boolean {
         return this._draggable;
+    }
+
+    /**
+     * Keep the default marker role aligned with interactivity.
+     * Default markers need a role because `aria-label` is set in {@link Marker.addTo}.
+     * Non-interactive markers use `role=img`; interactive ones (draggable or with a popup) use `role=button`.
+     * Click listeners are application-owned and do not automatically change the role.
+     * Custom marker elements are left alone so applications own their a11y tree.
+     * Explicit roles set by the application are preserved.
+     */
+    _updateAccessibilityRole(): void {
+        if (!this._defaultMarker) {
+            return;
+        }
+
+        // Preserve an explicit role chosen by the application unless we previously managed it.
+        if (this._element.hasAttribute('role') && !this._roleManaged) {
+            return;
+        }
+
+        const role = (this._draggable || !!this._popup) ? 'button' : 'img';
+        this._element.setAttribute('role', role);
+        this._roleManaged = true;
     }
 
     /**
