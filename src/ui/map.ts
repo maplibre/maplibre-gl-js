@@ -2951,34 +2951,37 @@ export class Map extends Evented<MapEventType> {
             this._camera.terrain = this.terrain;
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            this._terrainDataCallback = e => {
-                if (e.dataType === 'style') {
-                    this.terrain.tileManager.releaseAllRTT();
-                } else if (e.dataType === 'source') {
-                    if (e.sourceId === options.source) {
-                        this.terrain.resetElevationCache();
-                        if (e.tile && !this._camera.elevationFreeze) {
-                            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-                            if (this.getCenterClampedToGround()) {
-                                this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-                            }
-                        }
-                    }
-
-                    if (e.tile) {
-                        if (e.source?.type === 'image') {
-                            this.terrain.tileManager.releaseAllRTT();
-                        } else {
-                            this.terrain.tileManager.releaseRTT(e.tile.tileID);
-                        }
-                    }
-                }
-            };
+            this._terrainDataCallback = e => this._handleTerrainDataEvent(e, options.source);
             this.style.on('data', this._terrainDataCallback);
         }
 
         this.fire(new MapTerrainEvent({terrain: options}));
         return this;
+    }
+
+    private _handleTerrainDataEvent(event: MapStyleDataEvent | MapSourceDataEvent, terrainSourceId: string): void {
+        if (event.dataType === 'style') {
+            this.terrain.tileManager.releaseAllRTT();
+            return;
+        }
+
+        const isTerrainSourceEvent = event.sourceId === terrainSourceId;
+        if (isTerrainSourceEvent) {
+            this.terrain.resetElevationCache();
+        }
+        if (isTerrainSourceEvent && event.tile && !this._camera.elevationFreeze) {
+            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+            if (this.getCenterClampedToGround()) {
+                this._camera.transform.setElevation(this.terrain.getElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
+            }
+        }
+
+        if (!event.tile) return;
+        if (event.source?.type === 'image') {
+            this.terrain.tileManager.releaseAllRTT();
+            return;
+        }
+        this.terrain.tileManager.releaseRTT(event.tile.tileID);
     }
 
     /**

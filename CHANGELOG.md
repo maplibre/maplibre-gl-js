@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Improve terrain elevation sampling performance by caching DEM tile lookups and coordinate transforms within each render ([#8025](https://github.com/maplibre/maplibre-gl-js/pull/8025)) (by [@DoFabien](https://github.com/DoFabien))
 - Add support for updating an `ImageSource` with an already-decoded image (`HTMLImageElement`, `HTMLCanvasElement`, `ImageBitmap` or `ImageData`) directly via `ImageSource.updateImage({image})`, skipping the network request ([#7944](https://github.com/maplibre/maplibre-gl-js/pull/7944)) (by [@mondsichtung](https://github.com/mondsichtung))
 - Add `GeoJSONSource.getClusterOptions` to get a source's current cluster options (`cluster`, `clusterMaxZoom`, `clusterRadius`) ([#7948](https://github.com/maplibre/maplibre-gl-js/pull/7948)) (by [@lazerg](https://github.com/lazerg))
 - Support `global-state` expressions in `sky.*`, `light.*` and `projection.type` properties ([#7966](https://github.com/maplibre/maplibre-gl-js/pull/7966), [#7967](https://github.com/maplibre/maplibre-gl-js/pull/7967), [#7968](https://github.com/maplibre/maplibre-gl-js/pull/7968)) (by [@CommanderStorm](https://github.com/CommanderStorm))
