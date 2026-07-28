@@ -291,14 +291,55 @@ describe('marker', () => {
         expect(marker.getElement().getAttribute('tabindex')).toBe('5');
     });
 
-    test('Marker.setDraggable leaves custom marker focusability application-owned', () => {
+    test('Marker.setDraggable leaves custom marker focusability and keyboard handling application-owned', () => {
         const map = createMap();
         const element = document.createElement('div');
         const marker = new Marker({draggable: true, element})
             .setLngLat([0, 0])
             .addTo(map);
+        const startLngLat = marker.getLngLat();
+        const applicationHandler = vi.fn();
+        map.getCanvasContainer().addEventListener('keydown', applicationHandler);
+        map.keyboard.disable();
+        const event = new KeyboardEvent('keydown', {
+            bubbles: true,
+            cancelable: true,
+            key: 'ArrowRight'
+        });
+
+        element.dispatchEvent(event);
 
         expect(marker.getElement().hasAttribute('tabindex')).toBe(false);
+        expect(marker.getLngLat()).toEqual(startLngLat);
+        expect(event.defaultPrevented).toBe(false);
+        expect(applicationHandler).toHaveBeenCalledOnce();
+        map.remove();
+    });
+
+    test('Marker does not handle arrow keys from a control in the default marker shadow tree', () => {
+        const map = createMap();
+        map.keyboard.disable();
+        const marker = new Marker({draggable: true})
+            .setLngLat([0, 0])
+            .addTo(map);
+        const shadow = marker.getElement().attachShadow({mode: 'open'});
+        const input = document.createElement('input');
+        shadow.appendChild(input);
+        const startLngLat = marker.getLngLat();
+        const applicationHandler = vi.fn();
+        map.getCanvasContainer().addEventListener('keydown', applicationHandler);
+        const event = new KeyboardEvent('keydown', {
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+            key: 'ArrowRight'
+        });
+
+        input.dispatchEvent(event);
+
+        expect(marker.getLngLat()).toEqual(startLngLat);
+        expect(event.defaultPrevented).toBe(false);
+        expect(applicationHandler).toHaveBeenCalledOnce();
         map.remove();
     });
 
@@ -879,6 +920,33 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Marker handles an arrow key without panning the map', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true})
+            .setLngLat([0, 0])
+            .addTo(map);
+        const startPos = map.project(marker.getLngLat());
+        const applicationHandler = vi.fn();
+        const mapEaseTo = vi.spyOn(map, 'easeTo');
+        map.getCanvasContainer().addEventListener('keydown', applicationHandler);
+        const event = new KeyboardEvent('keydown', {
+            bubbles: true,
+            cancelable: true,
+            key: 'ArrowRight',
+            keyCode: 39
+        });
+
+        marker.getElement().dispatchEvent(event);
+
+        const endPos = map.project(marker.getLngLat());
+        expect(endPos.x).toBeCloseTo(startPos.x + 1);
+        expect(endPos.y).toBeCloseTo(startPos.y);
+        expect(event.defaultPrevented).toBe(true);
+        expect(applicationHandler).not.toHaveBeenCalled();
+        expect(mapEaseTo).not.toHaveBeenCalled();
+        map.remove();
+    });
+
     test.each([
         ['Alt', {altKey: true}],
         ['Control', {ctrlKey: true}],
@@ -891,12 +959,20 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
         const startLngLat = marker.getLngLat();
-        const event = new KeyboardEvent('keydown', {bubbles: true, key: 'ArrowRight', ...modifier});
+        const applicationHandler = vi.fn();
+        map.getCanvasContainer().addEventListener('keydown', applicationHandler);
+        const event = new KeyboardEvent('keydown', {
+            bubbles: true,
+            cancelable: true,
+            key: 'ArrowRight',
+            ...modifier
+        });
 
         marker.getElement().dispatchEvent(event);
 
         expect(marker.getLngLat()).toEqual(startLngLat);
         expect(event.defaultPrevented).toBe(false);
+        expect(applicationHandler).toHaveBeenCalledOnce();
         map.remove();
     });
 
@@ -906,32 +982,73 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
         const startLngLat = marker.getLngLat();
-        const event = new KeyboardEvent('keydown', {bubbles: true, key: 'Enter'});
+        const applicationHandler = vi.fn();
+        map.getCanvasContainer().addEventListener('keydown', applicationHandler);
+        const event = new KeyboardEvent('keydown', {
+            bubbles: true,
+            cancelable: true,
+            key: 'Enter'
+        });
 
         marker.getElement().dispatchEvent(event);
 
         expect(marker.getLngLat()).toEqual(startLngLat);
         expect(event.defaultPrevented).toBe(false);
+        expect(applicationHandler).toHaveBeenCalledOnce();
         map.remove();
     });
 
-    test('Marker keyboard movement fires drag lifecycle events', () => {
+    test('Marker dragstart reports the updated position for pointer and keyboard movement', () => {
         const map = createMap();
         const marker = new Marker({draggable: true})
             .setLngLat([0, 0])
             .addTo(map);
-        const dragstart = vi.fn();
-        const drag = vi.fn();
-        const dragend = vi.fn();
-        marker.on('dragstart', dragstart);
-        marker.on('drag', drag);
-        marker.on('dragend', dragend);
+        const element = marker.getElement();
+        const positionsAtDragstart: LngLat[] = [];
+        marker.on('dragstart', () => positionsAtDragstart.push(marker.getLngLat()));
 
-        simulate.keydown(marker.getElement(), {key: 'ArrowRight'});
+        const pointerStart = map.project(marker.getLngLat());
+        simulate.mousedown(element);
+        simulate.mousemove(element, {clientX: 10, clientY: 10});
+        simulate.mouseup(element);
 
-        expect(dragstart).toHaveBeenCalledOnce();
-        expect(drag).toHaveBeenCalledOnce();
-        expect(dragend).toHaveBeenCalledOnce();
+        expect(positionsAtDragstart).toHaveLength(1);
+        const pointerPositionAtDragstart = map.project(positionsAtDragstart[0]);
+        expect(pointerPositionAtDragstart.x).toBeCloseTo(pointerStart.x + 10);
+        expect(pointerPositionAtDragstart.y).toBeCloseTo(pointerStart.y + 10);
+
+        marker.setLngLat([0, 0]);
+        const keyboardStart = map.project(marker.getLngLat());
+        simulate.keydown(element, {key: 'ArrowRight'});
+
+        expect(positionsAtDragstart).toHaveLength(2);
+        const keyboardPositionAtDragstart = map.project(positionsAtDragstart[1]);
+        expect(keyboardPositionAtDragstart.x).toBeCloseTo(keyboardStart.x + 1);
+        expect(keyboardPositionAtDragstart.y).toBeCloseTo(keyboardStart.y);
+        map.remove();
+    });
+
+    test('Marker treats each arrow keydown as a complete drag lifecycle', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true})
+            .setLngLat([0, 0])
+            .addTo(map);
+        const startPos = map.project(marker.getLngLat());
+        const events: string[] = [];
+        marker.on('dragstart', () => events.push('dragstart'));
+        marker.on('drag', () => events.push('drag'));
+        marker.on('dragend', () => events.push('dragend'));
+
+        for (let i = 0; i < 5; i++) {
+            simulate.keydown(marker.getElement(), {key: 'ArrowRight'});
+        }
+
+        expect(events).toEqual(
+            Array.from({length: 5}, () => ['dragstart', 'drag', 'dragend']).flat()
+        );
+        const endPos = map.project(marker.getLngLat());
+        expect(endPos.x).toBeCloseTo(startPos.x + 5);
+        expect(endPos.y).toBeCloseTo(startPos.y);
 
         map.remove();
     });

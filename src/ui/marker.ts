@@ -52,6 +52,9 @@ export type MarkerOptions = {
     scale?: number;
     /**
      * A boolean indicating whether or not a marker is able to be dragged to a new position on the map.
+     * Default marker elements become keyboard focusable and move by one screen pixel for each unmodified arrow-key press.
+     * Each handled arrow-key press emits a complete `dragstart`, `drag`, and `dragend` event sequence.
+     * Custom marker focusability and keyboard interactions remain application-owned.
      * @defaultValue false
      */
     draggable?: boolean;
@@ -846,6 +849,11 @@ export class Marker extends Evented<MarkerEventType> {
     };
 
     _onKeyDown = (e: KeyboardEvent): void => {
+        // Do not intercept arrow keys from controls nested inside the marker.
+        if (e.composedPath()[0] !== this._element) {
+            return;
+        }
+
         if (!this._map || !this._draggable || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
             return;
         }
@@ -874,13 +882,17 @@ export class Marker extends Evented<MarkerEventType> {
 
         const position = this._map.project(this._lngLat).add(new Point(movementX, movementY));
         this.setLngLat(this._map.unproject(position));
+        // A keydown is a discrete interaction. Completing the lifecycle here
+        // also keeps dragend-driven application UIs in sync after every nudge.
         this.fire(new MarkerDragEvent('dragstart'));
         this.fire(new MarkerDragEvent('drag'));
         this.fire(new MarkerDragEvent('dragend'));
     };
 
     /**
-     * Sets the `draggable` property and functionality of the marker
+     * Sets the `draggable` property and functionality of the marker.
+     * Default marker elements become keyboard focusable and move by one screen pixel for each unmodified arrow-key press.
+     * Custom marker focusability and keyboard interactions remain application-owned.
      * @param shouldBeDraggable - Turns drag functionality on/off
      */
     setDraggable(shouldBeDraggable?: boolean): this {
@@ -898,7 +910,7 @@ export class Marker extends Evented<MarkerEventType> {
             }
         }
 
-        if (shouldBeDraggable) {
+        if (shouldBeDraggable && this._defaultMarker) {
             this._element.addEventListener('keydown', this._onKeyDown);
         } else {
             this._element.removeEventListener('keydown', this._onKeyDown);
