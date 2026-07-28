@@ -447,6 +447,8 @@ export class Marker extends Evented<MarkerEventType> {
             delete this._map;
         }
         this._element.removeEventListener('click', this._onClick);
+        this._element.removeEventListener('keydown', this._onKeyDown);
+        this._element.removeEventListener('keypress', this._onKeyPress);
         this._element.remove();
         if (this._popup) this._popup.remove();
         return this;
@@ -521,7 +523,8 @@ export class Marker extends Evented<MarkerEventType> {
             this._popup = null;
             this._element.removeEventListener('keypress', this._onKeyPress);
 
-            if (!this._originalTabIndex) {
+            // Keep tabindex when the marker remains keyboard-interactive via drag.
+            if (!this._draggable && !this._originalTabIndex) {
                 this._element.removeAttribute('tabindex');
             }
         }
@@ -579,6 +582,33 @@ export class Marker extends Evented<MarkerEventType> {
         if (e.code === 'Space' || e.code === 'Enter') {
             this.togglePopup();
         }
+    };
+
+    /**
+     * Move a focused draggable marker with the arrow keys (1 CSS pixel; 10 with Shift).
+     * Fires the same dragstart / drag / dragend events as pointer dragging.
+     */
+    _onKeyDown = (e: KeyboardEvent): void => {
+        if (!this._draggable || !this._map || !this._lngLat) return;
+
+        const deltas: Record<string, [number, number]> = {
+            ArrowLeft: [-1, 0],
+            ArrowRight: [1, 0],
+            ArrowUp: [0, -1],
+            ArrowDown: [0, 1]
+        };
+        const delta = deltas[e.code];
+        if (!delta) return;
+
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 1;
+        const pos = this._map.project(this._lngLat);
+        const next = new Point(pos.x + delta[0] * step, pos.y + delta[1] * step);
+
+        this.fire(new MarkerDragEvent('dragstart'));
+        this.setLngLat(this._map.unproject(next));
+        this.fire(new MarkerDragEvent('drag'));
+        this.fire(new MarkerDragEvent('dragend'));
     };
 
     _onMapClick = (e: MapMouseEvent): void => {
@@ -867,6 +897,18 @@ export class Marker extends Evented<MarkerEventType> {
                 this._map.off('mousedown', this._addDragHandler);
                 this._map.off('touchstart', this._addDragHandler);
             }
+        }
+
+        // Keyboard parity with pointer drag (#8020): focusable + arrow keys.
+        this._element.removeEventListener('keydown', this._onKeyDown);
+        if (this._draggable) {
+            if (!this._element.getAttribute('tabindex')) {
+                this._originalTabIndex = this._element.getAttribute('tabindex');
+                this._element.setAttribute('tabindex', '0');
+            }
+            this._element.addEventListener('keydown', this._onKeyDown);
+        } else if (!this._popup && !this._originalTabIndex) {
+            this._element.removeAttribute('tabindex');
         }
 
         this._updateAccessibilityRole();
