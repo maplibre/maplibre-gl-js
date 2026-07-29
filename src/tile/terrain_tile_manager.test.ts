@@ -11,6 +11,9 @@ import {type DEMData} from '../data/dem_data.ts';
 import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {StubMap} from '../util/test/util.ts';
 import {type Painter, type RTTObject} from '../render/painter.ts';
+import {TileManager} from './tile_manager.ts';
+import {Terrain} from '../render/terrain.ts';
+import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const transform = new MercatorTransform();
 
@@ -66,6 +69,28 @@ describe('TerrainTileManager', () => {
     test('constructor', () => {
         expect(tsc.tileManager.usedForTerrain).toBeTruthy();
         expect(tsc.tileManager.tileSize).toBe(tsc.tileManager._source.tileSize * 2 ** tsc.deltaZoom);
+    });
+
+    test('source tile LOD does not affect internal render-to-texture tiles', () => {
+        const testTransform = new MercatorTransform();
+        testTransform.resize(512, 512);
+        testTransform.setZoom(10);
+        testTransform.setPitch(60);
+        const tileManager = new TileManager('terrain', {
+            type: 'raster-dem',
+            tiles: [],
+            tileSize: 256
+        }, style.dispatcher);
+        tileManager.onAdd(tsc.tileManager.map);
+        const terrain = new Terrain(null, tileManager, {} as TerrainSpecification);
+
+        terrain.tileManager.update(testTransform, terrain);
+        const defaultTileIds = terrain.tileManager.getRenderableTiles().map((tile) => tile.tileID.key);
+
+        terrain.tileManager.getSource().calculateTileZoom = () => 0;
+        terrain.tileManager.update(testTransform, terrain);
+        const customSourceLodTileIds = terrain.tileManager.getRenderableTiles().map((tile) => tile.tileID.key);
+        expect(customSourceLodTileIds).toEqual(defaultTileIds);
     });
 
     test('getSourceTile', () => {
