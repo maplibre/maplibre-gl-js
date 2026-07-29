@@ -1,6 +1,5 @@
-import {Uniform1f, Uniform1i, Uniform4f, type UniformLocations, UniformMatrix4f} from '../uniform_binding.ts';
+import {Uniform1f, Uniform1i, Uniform4f, type UniformLocations, type UniformValues, UniformMatrix4f} from '../uniform_binding.ts';
 import {type Context} from '../../webgl/context.ts';
-// This next import is needed for the "@link" in the documentation to work properly.
 
 import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 
@@ -23,13 +22,13 @@ export const projectionUniforms = (context: Context, locations: UniformLocations
 });
 
 /**
- * Maps a field name in {@link ProjectionData} to its corresponding uniform name in {@link ProjectionPreludeUniformsType}.
+ * Converts a {@link ProjectionData} object into the values expected by the projection prelude's uniforms.
  */
-export const projectionObjectToUniformMap: {[field in keyof ProjectionData]: keyof ProjectionPreludeUniformsType} = {
-    mainMatrix: 'u_projection_matrix',
-    tileMercatorCoords: 'u_projection_tile_mercator_coords',
-    clippingPlane: 'u_projection_clipping_plane',
-    projectionTransition: 'u_projection_transition',
-    fallbackMatrix: 'u_projection_fallback_matrix',
-    clipAntimeridian: 'u_projection_clip_antimeridian',
-};
+export const projectionUniformValues = (projectionData: ProjectionData): UniformValues<ProjectionPreludeUniformsType> => ({
+    'u_projection_matrix': projectionData.mainMatrix,
+    'u_projection_tile_mercator_coords': projectionData.tileMercatorCoords,
+    'u_projection_clipping_plane': projectionData.clippingPlane,
+    'u_projection_transition': projectionData.projectionTransition,
+    'u_projection_fallback_matrix': projectionData.fallbackMatrix,
+    'u_projection_clip_antimeridian': +projectionData.clipAntimeridian,
+});
