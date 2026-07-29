@@ -30,5 +30,5 @@ export const projectionUniformValues = (projectionData: ProjectionData): Uniform
     'u_projection_clipping_plane': projectionData.clippingPlane,
     'u_projection_transition': projectionData.projectionTransition,
     'u_projection_fallback_matrix': projectionData.fallbackMatrix,
-    'u_projection_clip_antimeridian': +projectionData.clipAntimeridian,
+    'u_projection_clip_antimeridian': projectionData.clipAntimeridian ? 1 : 0,
 });
