@@ -32,6 +32,29 @@ if (!fs.existsSync(dir)) {
 
 const url = new URL('http://localhost:9966/test/bench/versions/index.html');
 
+// Resolves when the page has finished, throws when the page reports a failure
+// (e.g. a benchmark bundle that could not be loaded) instead of waiting forever.
+//
+// Polls from node rather than with `waitForFunction`: a polling `waitForFunction` keeps a single
+// CDP call pending for the whole benchmark, so anything slower than puppeteer's `protocolTimeout`
+// (180s) is killed even with `timeout: 0`. Short-lived polls leave that backstop in place for the
+// calls it is actually meant to guard.
+const waitForBenchmarks = async (webPage) => {
+    while (true) {
+        const {finished, pageError} = await webPage.evaluate(() => ({
+            finished: Boolean((window as any).maplibreglBenchmarkFinished),
+            pageError: (window as any).maplibreglBenchmarkError ?? null
+        }));
+        if (pageError) {
+            throw new Error(`The benchmark page reported an error: ${pageError}`);
+        }
+        if (finished) {
+            return;
+        }
+        await new Promise(resolve => setTimeout(resolve, 200));
+    }
+};
+
 if (argv.compare !== true && argv.compare !== undefined) { // handle --compare without argument as the default
     for (const compare of [].concat(argv.compare))
         url.searchParams.append('compare', compare || '');
@@ -50,7 +73,7 @@ try {
     url.hash = 'NONE'; // this will simply load the page without running any benchmarks
     await webPage.goto(url.toString());
 
-    await webPage.waitForFunction(() => (window as any).maplibreglBenchmarkFinished);
+    await waitForBenchmarks(webPage);
     const allNames = await webPage.evaluate(() => Object.keys((window as any).maplibreglBenchmarks));
     const versions = await webPage.evaluate((name) => Object.keys((window as any).maplibreglBenchmarks[name]), allNames[0]);
     const versionsDisplayName = await webPage.evaluate(() => (window as any).versionsDisplayName);
@@ -71,13 +94,7 @@ try {
         await webPage.goto(url.toString());
         await webPage.reload();
 
-        await webPage.waitForFunction(
-            () => (window as any).maplibreglBenchmarkFinished,
-            {
-                polling: 200,
-                timeout: 0
-            }
-        );
+        await waitForBenchmarks(webPage);
         const results = await webPage.evaluate((name) => (window as any).maplibreglBenchmarkResults[name], name);
         const output = versions.map((v) => {
             if (v && results[v]) {
@@ -115,6 +132,7 @@ try {
     } else {
         console.log(error);
     }
+    process.exitCode = 1;
 } finally {
     await browser.close();
 }
