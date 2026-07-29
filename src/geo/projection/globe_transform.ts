@@ -460,4 +460,12 @@ export class GlobeTransform implements ITransform {
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
         return this.currentTransform.getFastPathSimpleProjectionMatrix(tileID);
     }
+
+    /**
+     * account for wrapping of centerCoord/cameraCoord around the anti-meridian
+     * this ensures that the coordinate difference stays in the range [-0.5, 0.5]
+    */
+    normalizeDeltaX(deltaX: number): number {
+        return deltaX - Math.round(deltaX);
+    }
 }

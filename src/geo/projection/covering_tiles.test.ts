@@ -382,13 +382,13 @@ describe('coveringTiles', () => {
 
         test('z11, antimeridian wrap (crosses 180/-180 longitude)', () => {
             const options = {
-                minzoom: 1,
-                maxzoom: 15,
+                minzoom: 0,
+                maxzoom: 23,
                 tileSize: 512,
                 reparseOverscaled: true
             };
 
-            const transform = new VerticalPerspectiveTransform({
+            const transform = new GlobeTransform({
                 minZoom: 0,
                 maxZoom: 23,
                 minPitch: 0,
@@ -396,18 +396,29 @@ describe('coveringTiles', () => {
                 renderWorldCopies: true
             });
 
-            transform.resize(128, 128);
-            transform.setZoom(5);
+            transform.resize(1200, 600);
+            transform.setZoom(5.5);
 
             transform.setPitch(60.0);
             transform.setBearing(270.0);
-            transform.setCenter(new LngLat(180.0, 0));
+            transform.setCenter(new LngLat(175.596, -39.221));
 
             expect(coveringTiles(transform, options)).toEqual([
+                new OverscaledTileID(5, 0, 5, 31, 19),
+                new OverscaledTileID(5, 0, 5, 31, 20),
+                new OverscaledTileID(5, 0, 5, 30, 19),
+                new OverscaledTileID(5, 0, 5, 31, 18),
+                new OverscaledTileID(5, 0, 5, 30, 20),
+                new OverscaledTileID(5, 0, 5, 30, 18),
+                new OverscaledTileID(5, 0, 5, 31, 21),
+                new OverscaledTileID(5, 0, 5, 30, 21),
+                new OverscaledTileID(4, 0, 4, 14, 11),
+                new OverscaledTileID(4, 0, 4, 14, 10),
                 new OverscaledTileID(4, 0, 4, 15, 8),
-                new OverscaledTileID(4, 0, 4, 15, 7),
-                new OverscaledTileID(6, 1, 6, 0, 31),
-                new OverscaledTileID(6, 1, 6, 0, 32)
+                new OverscaledTileID(4, 0, 4, 14, 9),
+                new OverscaledTileID(6, 1, 6, 0, 38),
+                new OverscaledTileID(6, 1, 6, 0, 39),
+                new OverscaledTileID(6, 1, 6, 0, 40)
             ]);
         });
     });

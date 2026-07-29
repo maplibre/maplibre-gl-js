@@ -501,6 +501,16 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Returns a tile-specific projection matrix. Used for symbol placement fast-path for mercator transform.
      */
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 | undefined;
+
+    /**
+     * @internal
+     * Normalizes horizontal coordinate deltas across anti-meridian boundaries
+     * based on the active projection requirements.
+     *
+     * @param deltaX - The un-wrapped coordinate delta
+     * @returns The normalized coordinate delta
+     */
+    normalizeDeltaX(deltaX: number): number;
 }
 
 /**
