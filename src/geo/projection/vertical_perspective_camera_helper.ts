@@ -13,6 +13,13 @@ import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 
 /**
+ * Above this latitude the bearing-preserving pan mapping inverts and stalls
+ * (#5296), so globe drag switches to a quaternion rotation there. Below it the
+ * bearing-preserving mapping is kept, so ordinary dragging never changes bearing.
+ */
+const NEAR_POLE_LATITUDE = 75;
+
+/**
  * @internal
  */
 export class VerticalPerspectiveCameraHelper implements ICameraHelper {
@@ -127,7 +134,20 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         if (!deltas.panDelta) {
             return;
         }
-        quaternionSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around);
+
+        // Near the poles rotate the globe with a quaternion (bearing may change),
+        // which stays consistent where the bearing-preserving mapping inverts (#5296).
+        if (Math.abs(tr.center.lat) > NEAR_POLE_LATITUDE) {
+            quaternionSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around);
+            return;
+        }
+
+        // Away from the poles keep the bearing fixed, as before.
+        const oldLat = tr.center.lat;
+        const oldZoom = tr.zoom;
+        tr.setCenter(computeGlobePanCenter(deltas.panDelta, tr).wrap());
+        // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
+        tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
     }
 
     cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
