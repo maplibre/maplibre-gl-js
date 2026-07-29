@@ -20,14 +20,15 @@ services:
   # http://localhost:9966/test/examples/ . node_modules lives in a named
   # volume so the host tree (and any host-native builds) are left untouched.
   dev:
-    image: node:22
+    # Node version kept in sync with .nvmrc.
+    image: node:24.11
     working_dir: /app
     volumes:
       - .:/app
       - dev-node-modules:/app/node_modules
     ports:
       - "9966:9966"
-    command: sh -c "npm ci && npm run build-css && npm run build-dev && npx st --no-cache -H 0.0.0.0 --port 9966 ."
+    command: sh -c "npm ci && npm run build-dist && npx st --no-cache -H 0.0.0.0 --port 9966 ."
 
 volumes:
   dev-node-modules:
