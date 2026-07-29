@@ -166,6 +166,7 @@
     "test-watch-roots": "vitest --config vitest.config.unit.ts --watch",
     "test-render": "vitest test/integration/render/render.test.ts",
     "codegen": "run-p --print-label generate-style-code generate-unicode-data generate-struct-arrays generate-shaders && npm run generate-typings",
+    "bench": "vitest bench --run --config vitest.config.bench.ts",
     "benchmark": "node test/bench/run-benchmarks.ts",
     "gl-stats": "node test/bench/gl-stats.ts",
     "prepare": "npm run codegen",

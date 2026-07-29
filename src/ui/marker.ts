@@ -856,6 +856,7 @@ export class Marker extends Evented<MarkerEventType> {
      */
     setDraggable(shouldBeDraggable?: boolean): this {
         this._draggable = !!shouldBeDraggable; // convert possible undefined value to false
+        this._element.classList.toggle('maplibregl-marker-draggable', this._draggable);
 
         // handle case where map may not exist yet
         // e.g. when setDraggable is called before addTo
