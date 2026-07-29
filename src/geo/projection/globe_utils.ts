@@ -119,8 +119,6 @@ export function orientationFromLngLatBearing(lngLat: LngLat, bearing: number): q
 /**
  * Given a globe orientation quaternion, returns the corresponding map center and bearing.
  * The inverse of {@link orientationFromLngLatBearing}.
- * Returns plain numbers so that callers can check for NaN before constructing a {@link LngLat},
- * whose constructor throws on NaN.
  */
 export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: number; bearing: number } {
     const x = q[0], y = q[1], z = q[2], w = q[3];
@@ -167,10 +165,6 @@ export function quaternionSetLocationAtPoint(tr: ITransform, lnglat: LngLat, poi
 
     const newCenterQuat = quat.multiply(createVec4f64(), centerQuat, delta);
     const {lng: newCenterLng, lat: newCenterLat, bearing: newBearing} = lngLatBearingFromOrientation(newCenterQuat);
-
-    if (isNaN(newCenterLng) || isNaN(newCenterLat) || isNaN(newBearing)) {
-        return;
-    }
 
     const oldLat = tr.center.lat;
     tr.setCenter(new LngLat(newCenterLng, clamp(newCenterLat, -90, 90)));

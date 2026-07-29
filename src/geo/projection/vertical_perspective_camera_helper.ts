@@ -127,10 +127,6 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         if (!deltas.panDelta) {
             return;
         }
-
-        // Rotate the globe with a single quaternion that brings the grabbed location
-        // back under the cursor. This stays consistent near and across the poles, where
-        // the previous bearing-preserving mapping inverted and stalled (#5296).
         quaternionSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around);
     }
 
