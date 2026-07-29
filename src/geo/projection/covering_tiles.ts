@@ -149,9 +149,16 @@ export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, t
         thisTileDesiredZ = thisTileDesiredZ + scaleZoom(distanceToCenter3D / distanceToTile3D / Math.max(0.5, Math.cos(degreesToRadians(cameraVerticalFOV / 2))));
         thisTileDesiredZ += pitchTileLoadingBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2;
         thisTileDesiredZ -= scaleZoom(Math.max(1, tileCount / tileCountPitch0 / tileCountMaxMinRatio)) / 2;
+
+        // add zoom levels for narrow lenses
+        const defaultFov = 36.87;
+        if (cameraVerticalFOV < defaultFov) {
+            thisTileDesiredZ += scaleZoom(defaultFov / cameraVerticalFOV);
+        }
         return thisTileDesiredZ;
     };
 }
+
 const defaultMaxZoomLevelsOnScreen = 9.314;
 const defaultTileCountMaxMinRatio = 3.0;
 const defaultCalculateTileZoom = createCalculateTileZoomFunction(defaultMaxZoomLevelsOnScreen, defaultTileCountMaxMinRatio);
@@ -288,6 +295,9 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
         }
 
         const distToTile2d = detailsProvider.distanceToTile2d(cameraCoord.x, cameraCoord.y, tileID, boundingVolume);
+        // console.log('tileId: ', tileID);
+        // console.log('ddt: ', distToTile2d);
+        // console.log('distz: ', distanceZ);
 
         let thisTileDesiredZ = desiredZ;
         if (allowVariableZoom) {
