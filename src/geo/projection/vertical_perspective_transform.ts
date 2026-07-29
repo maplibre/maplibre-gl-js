@@ -304,7 +304,7 @@ export class VerticalPerspectiveTransform implements ITransform {
             clippingPlane: this._cachedClippingPlane as [number, number, number, number],
             projectionTransition: applyGlobeMatrix ? 1 : 0,
             fallbackMatrix: this._globeViewProjMatrix32f,
-            clipAntimeridian: overscaledTileID?.canonical.z === 0 ? 1 : 0,
+            clipAntimeridian: overscaledTileID?.canonical.z === 0,
         };
     }
 

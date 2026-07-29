@@ -204,7 +204,8 @@ export class Program<Us extends UniformBindings> {
         if (projectionData) {
             for (const fieldName in projectionData) {
                 const uniformName = projectionObjectToUniformMap[fieldName];
-                this.projectionUniforms[uniformName].set(projectionData[fieldName]);
+                const value = projectionData[fieldName];
+                this.projectionUniforms[uniformName].set(typeof value === 'boolean' ? +value : value);
             }
         }
 

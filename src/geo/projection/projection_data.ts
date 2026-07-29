@@ -61,13 +61,13 @@ export type ProjectionData<MainMatrix extends mat4 = mat4, FallbackMatrix extend
      */
     fallbackMatrix: FallbackMatrix;
     /**
-     * Whether line fragments outside the tile's X extent should be discarded: 1 for the zoom 0 tile under globe projection, 0 otherwise.
+     * Whether line fragments outside the tile's X extent should be discarded: true for the zoom 0 tile under globe projection, false otherwise.
      * The z0 tile covers the whole world, so its buffer wraps around the planet onto the tile itself,
      * drawing geometry near the antimeridian twice. Stencil clipping cannot remove this same-pixel overlap,
      * so lines are clipped in the fragment shader instead (fills are clipped during subdivision).
      * Uniform name: `u_projection_clip_antimeridian`.
      */
-    clipAntimeridian: number;
+    clipAntimeridian: boolean;
 };
 
 /**
