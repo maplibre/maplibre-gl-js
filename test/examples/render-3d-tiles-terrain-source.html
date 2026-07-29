@@ -22,19 +22,12 @@ import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
 import decode from 'https://unpkg.com/@here/quantized-mesh-decoder@1.2.8/src/index.js';
 import {loadQuantizedMeshDataset, registerQuantizedMeshTerrain} from 'https://unpkg.com/maplibre-gl-3dtiles-terrain@0.1.0/src/index.js';
 
-// The maplibre-gl-3dtiles-terrain plugin resamples a quantized-mesh dataset
-// (issue #4493) into terrarium raster-dem tiles behind an addProtocol handler,
-// so map.setTerrain(), hillshade and draping work with no core changes.
-// Defaults to the live swisstopo terrain (open, no key); its layer.json omits
-// `available`, so availability is synthesized over its extent up to z14. Falls
-// back to a bundled Zermatt-area excerpt when the live endpoint is unreachable.
+// Live swisstopo quantized-mesh terrain (open, no key). Its layer.json omits
+// `available`, so availability is synthesized over its extent up to z14.
 const dataset = await loadQuantizedMeshDataset(
     'https://3d.geo.admin.ch/ch.swisstopo.terrain.3d/v1/layer.json',
     {attribution: 'Terrain: &copy; swisstopo', boundsOverride: {west: 5.6, south: 45.5, east: 11.0, north: 48.2}, maxZoom: 14}
-).catch((err) => {
-    console.warn(`live terrain unavailable (${err.message}); using the bundled fixture`);
-    return loadQuantizedMeshDataset(new URL('../../docs/assets/examples/zermatt-terrain-tiles/layer.json', location.href).href);
-});
+);
 
 const {sourceSpec} = registerQuantizedMeshTerrain(maplibregl, {dataset, decode});
 
@@ -63,7 +56,10 @@ const map = new maplibregl.Map({
 map.on('load', () => {
     map.addSource('qm-terrain', sourceSpec);
     map.setTerrain({source: 'qm-terrain', exaggeration: 1.2});
-    map.addLayer({id: 'qm-hillshade', type: 'hillshade', source: 'qm-terrain', paint: {'hillshade-exaggeration': 0.4}});
+    // A separate source for hillshade (recommended over reusing the terrain
+    // source) avoids tile-cache contention between the two consumers.
+    map.addSource('qm-hillshade-source', {...sourceSpec});
+    map.addLayer({id: 'qm-hillshade', type: 'hillshade', source: 'qm-hillshade-source', paint: {'hillshade-exaggeration': 0.4}});
 });
 </script>
 </body>
