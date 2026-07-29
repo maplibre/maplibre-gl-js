@@ -15723,11 +15723,49 @@ var Subdivider = class {
 		if (generateOutlineLines) subdividedLines = this._generateOutline(polygon);
 		this._ensureNoPoleVertices();
 		this._handlePoles(subdividedTriangles);
+		if (this._granularity >= 2 && this._canonical?.z === 0) {
+			subdividedTriangles = this._removeTrianglesOutsideTileX(subdividedTriangles);
+			subdividedLines = subdividedLines.map((lines) => this._removeLinesOutsideTileX(lines));
+		}
 		return {
 			verticesFlattened: this._vertexBuffer,
 			indicesTriangles: subdividedTriangles,
 			indicesLineList: subdividedLines
 		};
+	}
+	_vertexOutsideTileX(index) {
+		const x = this._vertexBuffer[index * 2];
+		return x < 0 || x > 8192;
+	}
+	/**
+	* Drops all triangles that reach beyond the tile's X extent.
+	*
+	* On globe the z0 tile's buffer wraps around the planet onto the tile itself, drawing buffered geometry twice.
+	* Only globe uses subdivision (`granularity >= 2`), so mercator is never affected.
+	* @param indices - Triangle indices into `this._vertexBuffer`.
+	* @returns The indices with every triangle that has a vertex outside the tile's X extent removed.
+	*/
+	_removeTrianglesOutsideTileX(indices) {
+		const filtered = [];
+		for (let i = 0; i < indices.length; i += 3) {
+			if (this._vertexOutsideTileX(indices[i]) || this._vertexOutsideTileX(indices[i + 1]) || this._vertexOutsideTileX(indices[i + 2])) continue;
+			filtered.push(indices[i], indices[i + 1], indices[i + 2]);
+		}
+		return filtered;
+	}
+	/**
+	* Drops all outline line segments that reach beyond the tile's X extent,
+	* for the same reason as {@link Subdivider._removeTrianglesOutsideTileX}.
+	* @param indices - Line segment indices into `this._vertexBuffer`.
+	* @returns The indices with every segment that has a vertex outside the tile's X extent removed.
+	*/
+	_removeLinesOutsideTileX(indices) {
+		const filtered = [];
+		for (let i = 0; i < indices.length; i += 2) {
+			if (this._vertexOutsideTileX(indices[i]) || this._vertexOutsideTileX(indices[i + 1])) continue;
+			filtered.push(indices[i], indices[i + 1]);
+		}
+		return filtered;
 	}
 	/**
 	* Sometimes the supplies vertex and index array has duplicate vertices - same coordinates that are referenced by multiple different indices.
