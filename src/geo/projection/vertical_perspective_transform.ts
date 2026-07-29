@@ -980,4 +980,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     getFastPathSimpleProjectionMatrix(_tileID: OverscaledTileID): mat4 {
         return undefined;
     }
+
+    normalizeDeltaX(deltaX: number): number {
+        return deltaX;
+    }
 }

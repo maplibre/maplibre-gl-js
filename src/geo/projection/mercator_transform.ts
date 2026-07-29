@@ -831,4 +831,8 @@ export class MercatorTransform implements ITransform {
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
         return this.calculatePosMatrix(tileID);
     }
+
+    normalizeDeltaX(deltaX: number): number {
+        return deltaX;
+    }
 }
