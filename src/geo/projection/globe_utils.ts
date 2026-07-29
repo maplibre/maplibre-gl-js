@@ -130,13 +130,31 @@ export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: numbe
 
 /**
  * Rotates the globe so that the given location appears at the given screen point, using a
- * quaternion rotation that couples center and bearing. Unlike the bearing-preserving
- * {@link ITransform.setLocationAtPoint}, this stays smooth when dragging near and across the
- * poles, at the cost of letting the bearing change.
+ * quaternion rotation. Unlike the bearing-preserving {@link ITransform.setLocationAtPoint}, this
+ * stays smooth when dragging near and across the poles.
+ *
+ * The `(lng, lat)` extracted from the orientation is the swing (center) target, independent of the
+ * twist about the view axis, and `bearing` is that twist, so `fixedBearing` selects whether the
+ * twist is applied.
+ *
+ * With the bearing held, the swing longitude becomes ill-conditioned near the pole and the grabbed
+ * location slips away from the cursor. The globe is therefore treated as having traction under the
+ * cursor: with the pole centered the view is azimuthal, a "dial", so the cursor's angle around the
+ * pole drives longitude while its radial distance drives latitude. The two are blended by how close
+ * the center is to the pole.
+ *
  * Note: automatically adjusts zoom to keep planet size consistent
  * (same size before and after a call), like `setLocationAtPoint` does.
+ * @param tr - The transform to rotate.
+ * @param lnglat - The location to bring under `point`.
+ * @param point - The screen point that `lnglat` should appear at.
+ * @param fixedBearing - When `true`, applies the swing only and keeps the bearing fixed, so the
+ * globe still moves smoothly across the poles without rotating the map. When `false` (the default),
+ * applies the full rotation, so the grabbed location tracks the cursor exactly and the bearing drifts.
+ * @param panDelta - The drag's pixel delta, which the dial needs. Omitting it skips the azimuthal
+ * handling near the poles.
  */
-export function quaternionSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point): void {
+export function quaternionSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point, fixedBearing = false, panDelta?: Point): void {
     // Pixels that miss the globe unproject to a fake location snapped to the
     // visible horizon. Rotating towards such a point mostly twists the globe
     // around the view axis, and these twists compound frame-to-frame into a
@@ -167,8 +185,43 @@ export function quaternionSetLocationAtPoint(tr: ITransform, lnglat: LngLat, poi
     const {lng: newCenterLng, lat: newCenterLat, bearing: newBearing} = lngLatBearingFromOrientation(newCenterQuat);
 
     const oldLat = tr.center.lat;
-    tr.setCenter(new LngLat(newCenterLng, clamp(newCenterLat, -90, 90)));
-    tr.setBearing(newBearing);
+    const oldLng = tr.center.lng;
+    const oldBearing = tr.bearing;
+
+    let finalLng = newCenterLng;
+    const finalLat = clamp(newCenterLat, -90, 90);
+
+    if (fixedBearing) {
+        const poleLat = oldLat >= 0 ? 90 : -90;
+        const polePoint = tr.locationToScreenPoint(new LngLat(0, poleLat));
+        const rx = point.x - polePoint.x, ry = point.y - polePoint.y;
+        const r2 = rx * rx + ry * ry;
+
+        // Ramp the dial in over the last ~12° of latitude, with a smoothstep for a seamless blend.
+        // The globe constrains center latitude to MAX_VALID_LATITUDE, so the pole "lock" happens
+        // there rather than at 90, and the ramp has to be anchored on that reachable limit.
+        const tRamp = clamp(1 - (MAX_VALID_LATITUDE - Math.abs(oldLat)) / 12, 0, 1);
+        const dial = tRamp * tRamp * (3 - 2 * tRamp);
+
+        const dLngSwing = mod(newCenterLng - oldLng + 180, 360) - 180;
+
+        // Rotation of the cursor about the pole, cross(r, panDelta) / |r|². Taking it from the real
+        // pixel delta rather than a round-tripped previous cursor position avoids the catastrophic
+        // cancellation that otherwise randomizes the sign at the pole. Skipped within ~20px of the
+        // pole, where the angle is noise.
+        let dLngDial = 0;
+        if (dial > 0 && panDelta && r2 > 400) {
+            const dTheta = (rx * panDelta.y - ry * panDelta.x) / r2;
+            dLngDial = (poleLat > 0 ? 1 : -1) * dTheta * 180 / Math.PI;
+        }
+
+        finalLng = oldLng + (1 - dial) * dLngSwing + dial * dLngDial;
+    }
+
+    // The dial accumulates longitude incrementally, so keep the center canonical instead of
+    // letting it drift past ±180 and desynchronize from the wrapped longitudes computed elsewhere.
+    tr.setCenter(new LngLat(wrap(finalLng, -180, 180), finalLat));
+    tr.setBearing(fixedBearing ? oldBearing : newBearing);
     tr.setZoom(tr.zoom + getZoomAdjustment(oldLat, tr.center.lat));
 }
 

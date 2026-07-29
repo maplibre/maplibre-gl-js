@@ -24,12 +24,21 @@ describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
         expect(tr.center.lat).not.toBe(20);
     });
 
-    test('rotates with a quaternion near the poles, changing bearing', () => {
+    test('preserves bearing near the poles', () => {
         const {tr, helper} = setup(80);
         const grabbed = tr.screenPointToLocation(new Point(300, 300));
         helper.handleMapControlsPan(
             {panDelta: new Point(50, 30), around: tr.centerPoint} as MapControlsDeltas,
             tr, grabbed);
+        expect(tr.bearing).toBe(0);
+    });
+
+    test('lets bearing drift near the poles with fixedBearing: false', () => {
+        const {tr, helper} = setup(80);
+        const grabbed = tr.screenPointToLocation(new Point(300, 300));
+        helper.handleMapControlsPan(
+            {panDelta: new Point(50, 30), around: tr.centerPoint} as MapControlsDeltas,
+            tr, grabbed, false);
         expect(tr.bearing).not.toBe(0);
     });
 });
