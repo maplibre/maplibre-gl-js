@@ -5,6 +5,9 @@ uniform highp vec4 u_projection_clipping_plane;
 uniform highp float u_projection_transition;
 uniform mat4 u_projection_fallback_matrix;
 
+// The in-tile X coordinate of the projected vertex, used by clipAntimeridian() in the fragment shader (see _projection_globe.fragment.glsl).
+out highp float v_projection_tile_x;
+
 vec3 globeRotateVector(vec3 vec, vec2 angles) {
     vec3 axisRight = vec3(vec.z, 0.0, -vec.x); // Equivalent to cross(vec3(0.0, 1.0, 0.0), vec)
     vec3 axisUp = cross(axisRight, vec);
@@ -36,7 +39,7 @@ float circumferenceRatioAtTileY(float tileY) {
 }
 
 float projectLineThickness(float tileY) {
-    float thickness = 1.0 / circumferenceRatioAtTileY(tileY); 
+    float thickness = 1.0 / circumferenceRatioAtTileY(tileY);
     if (u_projection_transition < 0.999) {
         return mix(1.0, thickness, u_projection_transition);
     } else {
@@ -98,6 +101,7 @@ float globeComputeClippingZ(vec3 spherePos) {
 }
 
 vec4 interpolateProjection(vec2 posInTile, vec3 spherePos, float elevation) {
+    v_projection_tile_x = posInTile.x;
     vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
     vec4 globePosition = u_projection_matrix * vec4(elevatedPos, 1.0);
     // Z is overwritten by glDepthRange anyway - use a custom z value to clip geometry on the invisible side of the sphere.
@@ -127,6 +131,7 @@ vec4 interpolateProjection(vec2 posInTile, vec3 spherePos, float elevation) {
 
 // Unlike interpolateProjection, this variant of the function preserves the Z value of the final vector.
 vec4 interpolateProjectionFor3D(vec2 posInTile, vec3 spherePos, float elevation) {
+    v_projection_tile_x = posInTile.x;
     vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
     vec4 globePosition = u_projection_matrix * vec4(elevatedPos, 1.0);
 

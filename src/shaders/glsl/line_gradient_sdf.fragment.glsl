@@ -29,6 +29,8 @@ void main() {
     #pragma maplibre: initialize mediump vec4 dasharray_from
     #pragma maplibre: initialize mediump vec4 dasharray_to
 
+    clipAntimeridian();
+
     // Calculate the distance of the pixel from the line in pixels.
     float dist = length(v_normal) * v_width2.s;
 
