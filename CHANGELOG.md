@@ -16,6 +16,7 @@
 - Fix a race in `RasterTileSource.loadTile` and `ImageSource.load` where a tile/image aborted during an awaited `transformRequest` passed an undefined `AbortController` into the image request queue, crashing it with `TypeError: Cannot read properties of undefined (reading 'signal')` ([#8004](https://github.com/maplibre/maplibre-gl-js/issues/8004)) (by [@jan-grzybek](https://github.com/jan-grzybek))
 - Fix `setTerrain` not destroying the previously active terrain when switching to a new configuration, which leaked its GPU resources and left the old source still configured as a terrain source ([#7990](https://github.com/maplibre/maplibre-gl-js/issues/7990)) (by [@lazerg](https://github.com/lazerg))
 - Fix globe panning inverting and stalling near and across the poles by rotating the globe with a quaternion, keeping the drag direction consistent at every latitude. The bearing is still preserved while panning, as before; set `DragPanOptions.fixedBearing` to `false` to instead let the globe rotate so the grabbed location tracks the cursor exactly ([#5296](https://github.com/maplibre/maplibre-gl-js/issues/5296)) (by [@jcolot](https://github.com/jcolot))
+- Fix fill and line layers being rendered twice near the antimeridian on globe when looking at poles or when zoomed out ([#6248](https://github.com/maplibre/maplibre-gl-js/issues/6248)) (by [@pabueco](https://github.com/pabueco))
 - _...Add new stuff here..._
 
 ## 6.0.0
