@@ -1,6 +1,6 @@
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {vec2, type vec4} from 'gl-matrix';
-import {MercatorCoordinate} from '../mercator_coordinate.ts';
+import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
 
 import type {IReadonlyTransform} from '../transform_interface.ts';
@@ -65,15 +65,21 @@ export type CoveringTilesOptionsInternal = CoveringTilesOptions & {
  * @param requestedCenterZoom - the requested zoom level, valid at the center point.
  * @param distanceToTile2D - 2D distance from the camera to the candidate tile, in mercator units.
  * @param distanceToTileZ - vertical distance from the camera to the candidate tile, in mercator units.
+ * With terrain, this accounts for the tile's elevation range, so a tile whose surface rises close
+ * to the camera is recognized as close.
  * @param distanceToCenter3D - distance from camera to center point, in mercator units
  * @param cameraVerticalFOV - camera vertical field of view, in degrees
+ * @param distanceToCenterZ - vertical distance from the camera to the center point, in mercator
+ * units. Without terrain it equals `distanceToTileZ`, and it is what older implementations used
+ * this parameter's value for.
  * @return the desired zoom level for this tile. May not be an integer.
  */
 export type CalculateTileZoomFunction = (requestedCenterZoom: number,
     distanceToTile2D: number,
     distanceToTileZ: number,
     distanceToCenter3D: number,
-    cameraVerticalFOV: number) => number;
+    cameraVerticalFOV: number,
+    distanceToCenterZ?: number) => number;
 
 /**
  * A simple/heuristic function that returns whether the tile is visible under the current transform.
@@ -123,7 +129,8 @@ export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, t
         distanceToTile2D: number,
         distanceToTileZ: number,
         distanceToCenter3D: number,
-        cameraVerticalFOV: number): number {
+        cameraVerticalFOV: number,
+        distanceToCenterZ?: number): number {
         /**
         * Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
         * tiles to be loaded. Calculate the value that will result in the selected number of zoom levels in
@@ -134,12 +141,18 @@ export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, t
             scaleZoom(Math.cos(degreesToRadians(maxMercatorHorizonAngle - cameraVerticalFOV)) /
                 Math.cos(degreesToRadians(maxMercatorHorizonAngle))) - 1);
 
-        const centerPitch = Math.acos(distanceToTileZ / distanceToCenter3D);
+        // The foreshortening terms below are computed against the center's elevation plane
+        // (distanceToCenterZ), not the tile's own elevation: a raised tile near the camera is seen
+        // edge-on like a horizon tile, but being close it must not receive the horizon's detail
+        // penalty. Tile elevation instead enters through the 3D distance ratio, so close terrain
+        // gets the detail its proximity warrants (#4703).
+        const pitchReferenceZ = distanceToCenterZ ?? distanceToTileZ;
+        const centerPitch = Math.acos(pitchReferenceZ / distanceToCenter3D);
         const tileCountPitch0 = 2 * integralOfCosXByP(pitchTileLoadingBehavior - 1, 0, degreesToRadians(cameraVerticalFOV / 2));
         const highestPitch = Math.min(degreesToRadians(maxMercatorHorizonAngle), centerPitch + degreesToRadians(cameraVerticalFOV / 2));
         const lowestPitch = Math.min(highestPitch, centerPitch - degreesToRadians(cameraVerticalFOV / 2));
         const tileCount = integralOfCosXByP(pitchTileLoadingBehavior - 1, lowestPitch, highestPitch);
-        const thisTilePitch = Math.atan(distanceToTile2D / distanceToTileZ);
+        const thisTilePitch = Math.atan(distanceToTile2D / pitchReferenceZ);
         const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
 
         let thisTileDesiredZ = requestedCenterZoom;
@@ -280,14 +293,36 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
 
         const distToTile2d = detailsProvider.distanceToTile2d(cameraCoord.x, cameraCoord.y, tileID, boundingVolume);
 
+        // With terrain (mercator only), measure the vertical distance to the tile's own elevation
+        // range instead of to the center's elevation plane, so a peak rising close under the camera
+        // is recognized as close and gets the detail its proximity warrants (#4703). The culling
+        // bounding volume is not used here: its elevation is deliberately overestimated (see
+        // getElevationForTileCulling), which would collapse this distance and explode tile counts.
+        // Tiles whose elevation range is not known yet keep the center-plane distance.
+        // Skipped at maxzoom and beyond: there the refinement cannot add real detail, only
+        // inflate the overscaled zoom, whose key would then shift as DEM tiles load in.
+        let distToTileZ = distanceZ;
+        if (options.terrain && it.zoom < maxZoom) {
+            const {minElevation, maxElevation} = options.terrain.getMinMaxElevation(
+                new OverscaledTileID(tileID.z, it.wrap, tileID.z, tileID.x, tileID.y));
+            if (minElevation !== null && maxElevation !== null) {
+                const minZ = mercatorZfromAltitude(minElevation, transform.center.lat);
+                const maxZ = mercatorZfromAltitude(maxElevation, transform.center.lat);
+                // The distanceZ / 4 floor caps the extra detail near terrain at two zoom
+                // levels over the center-plane estimate, bounding the tile count.
+                distToTileZ = Math.max(minZ - cameraCoord.z, cameraCoord.z - maxZ, distanceZ / 4);
+            }
+        }
+
         let thisTileDesiredZ = desiredZ;
         if (allowVariableZoom) {
             const tileZoomFunc = options.calculateTileZoom || defaultCalculateTileZoom;
             thisTileDesiredZ = tileZoomFunc(transform.zoom + scaleZoom(transform.tileSize / options.tileSize),
                 distToTile2d,
-                distanceZ,
+                distToTileZ,
                 distanceToCenter3d,
-                transform.fov);
+                transform.fov,
+                distanceZ);
         }
         thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(thisTileDesiredZ);
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
