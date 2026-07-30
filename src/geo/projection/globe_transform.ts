@@ -462,10 +462,9 @@ export class GlobeTransform implements ITransform {
     }
 
     /**
-     * account for wrapping of centerCoord/cameraCoord around the anti-meridian
-     * this ensures that the coordinate difference stays in the range [-0.5, 0.5]
+     * normalize delta-x depending on the current zoom level
     */
     normalizeDeltaX(deltaX: number): number {
-        return deltaX - Math.round(deltaX);
+        return this.currentTransform.normalizeDeltaX(deltaX);
     }
 }
