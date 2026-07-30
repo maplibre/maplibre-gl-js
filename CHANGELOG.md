@@ -5,19 +5,10 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-- fix: clip z0 tile at antimeridian on globe to prevent double rendering ([#7896](https://github.com/maplibre/maplibre-gl-js/pull/7896)) (by [@pabueco](https://github.com/pabueco))
-- Add a Vitest bench lane for micro benchmarks ([#8047](https://github.com/maplibre/maplibre-gl-js/pull/8047)) (by [@johncarmack1984](https://github.com/johncarmack1984))
-- chore: prevent unit test console logging ([#8021](https://github.com/maplibre/maplibre-gl-js/pull/8021)) (by [@HarelM](https://github.com/HarelM))
-- Add example: FPS-style first-person movement over a map ([#7778](https://github.com/maplibre/maplibre-gl-js/pull/7778)) (by [@clement-igonet](https://github.com/clement-igonet))
-- fix: await `transformRequest` before creating the `AbortController` in `RasterTileSource.loadTile` and `ImageSource.load` ([#8006](https://github.com/maplibre/maplibre-gl-js/pull/8006)) (by [@jan-grzybek](https://github.com/jan-grzybek))
-- fix(3d-buildings): grow tile culling bounds near the horizon ([#7932](https://github.com/maplibre/maplibre-gl-js/pull/7932)) (by [@clement-igonet](https://github.com/clement-igonet))
-- fix: use role=img for non-interactive default markers ([#7918](https://github.com/maplibre/maplibre-gl-js/pull/7918)) (by [@cat0825](https://github.com/cat0825))
-- Add example: Enter a 360° photosphere (#4428) ([#7942](https://github.com/maplibre/maplibre-gl-js/pull/7942)) (by [@clement-igonet](https://github.com/clement-igonet))
-- ci: serialize benchmark uploads to avoid gh-pages push races ([#8016](https://github.com/maplibre/maplibre-gl-js/pull/8016)) (by [@CommanderStorm](https://github.com/CommanderStorm))
-- test: default and fn lights render tests ([#7965](https://github.com/maplibre/maplibre-gl-js/pull/7965)) (by [@CommanderStorm](https://github.com/CommanderStorm))
-- fix(globe): use algebraic identity for spherical Y, avoid GPU precision loss ([#7916](https://github.com/maplibre/maplibre-gl-js/pull/7916)) (by [@clement-igonet](https://github.com/clement-igonet))
 ## 6.1.0
+
 ### ✨ Features and improvements
+
 - Add support for updating an `ImageSource` with an already-decoded image (`HTMLImageElement`, `HTMLCanvasElement`, `ImageBitmap` or `ImageData`) directly via `ImageSource.updateImage({image})`, skipping the network request ([#7944](https://github.com/maplibre/maplibre-gl-js/pull/7944)) (by [@mondsichtung](https://github.com/mondsichtung))
 - Add `GeoJSONSource.getClusterOptions` to get a source's current cluster options (`cluster`, `clusterMaxZoom`, `clusterRadius`) ([#7948](https://github.com/maplibre/maplibre-gl-js/pull/7948)) (by [@lazerg](https://github.com/lazerg))
 - Support `global-state` expressions in `sky.*`, `light.*` and `projection.type` properties ([#7966](https://github.com/maplibre/maplibre-gl-js/pull/7966), [#7967](https://github.com/maplibre/maplibre-gl-js/pull/7967), [#7968](https://github.com/maplibre/maplibre-gl-js/pull/7968)) (by [@CommanderStorm](https://github.com/CommanderStorm))
@@ -25,6 +16,7 @@
 - Show a grab cursor over draggable markers, including on non-interactive maps ([#8019](https://github.com/maplibre/maplibre-gl-js/issues/8019)) (by [@hugosmoreira](https://github.com/hugosmoreira))
 
 ### 🐞 Bug fixes
+
 - Use `role=img` for non-interactive default markers and `role=button` when they become interactive ([#7790](https://github.com/maplibre/maplibre-gl-js/issues/7790)) (by [@cat0825](https://github.com/cat0825))
 - Fix an error thrown when a paint property transitions between arrays of different length ([#6606](https://github.com/maplibre/maplibre-gl-js/issues/6606)) (by [@HarelM](https://github.com/HarelM))
 - Fix renderer crash when `RasterTileSource.setTiles`/`setUrl` is called while the source contains errored tiles ([#7911](https://github.com/maplibre/maplibre-gl-js/pull/7911)) (by [@lazerg](https://github.com/lazerg))
