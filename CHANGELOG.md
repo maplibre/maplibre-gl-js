@@ -15,6 +15,7 @@
 - Fix globe latitude precision on some GPUs (e.g. Mali) by reformulating the mercator-to-sphere Y coordinate algebraically (`exp` + rational arithmetic instead of `atan`/`sin`/`cos`), avoiding float32 cancellation and imprecise hardware transcendentals near the equator; the runtime GPU `atan`-error measurement/correction this superseded has also been removed ([#7419](https://github.com/maplibre/maplibre-gl-js/issues/7419)) (by [@clement-igonet](https://github.com/clement-igonet))
 - Fix a race in `RasterTileSource.loadTile` and `ImageSource.load` where a tile/image aborted during an awaited `transformRequest` passed an undefined `AbortController` into the image request queue, crashing it with `TypeError: Cannot read properties of undefined (reading 'signal')` ([#8004](https://github.com/maplibre/maplibre-gl-js/issues/8004)) (by [@jan-grzybek](https://github.com/jan-grzybek))
 - Fix `setTerrain` not destroying the previously active terrain when switching to a new configuration, which leaked its GPU resources and left the old source still configured as a terrain source ([#7990](https://github.com/maplibre/maplibre-gl-js/issues/7990)) (by [@lazerg](https://github.com/lazerg))
+- Fix fill and line layers being rendered twice near the antimeridian on globe when looking at poles or when zoomed out ([#6248](https://github.com/maplibre/maplibre-gl-js/issues/6248)) (by [@pabueco](https://github.com/pabueco))
 - _...Add new stuff here..._
 
 ## 6.0.0
