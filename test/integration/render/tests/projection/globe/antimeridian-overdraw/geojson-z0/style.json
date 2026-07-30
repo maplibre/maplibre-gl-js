@@ -1,0 +1,75 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "GeoJSON fill near the antimeridian on globe at zoom 0. Must render as uniform 50% gray: without the zoom 0 antimeridian clip, the wrapped copy in the tile buffer lands back on the tile itself and double-blends lon 90..180. Regression test for #6248.",
+      "width": 512,
+      "height": 512
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    135,
+    0
+  ],
+  "zoom": 0,
+  "projection": {
+    "type": "globe"
+  },
+  "sources": {
+    "rect": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                60,
+                -15
+              ],
+              [
+                180,
+                -15
+              ],
+              [
+                180,
+                15
+              ],
+              [
+                60,
+                15
+              ],
+              [
+                60,
+                -15
+              ]
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "rect-fill",
+      "type": "fill",
+      "source": "rect",
+      "paint": {
+        "fill-color": "black",
+        "fill-opacity": 0.5
+      }
+    }
+  ]
+}
