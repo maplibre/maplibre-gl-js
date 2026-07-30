@@ -981,7 +981,11 @@ export class VerticalPerspectiveTransform implements ITransform {
         return undefined;
     }
 
+    /**
+     * account for wrapping of centerCoord/cameraCoord around the anti-meridian
+     * this ensures that the coordinate difference stays in the range [-0.5, 0.5]
+    */
     normalizeDeltaX(deltaX: number): number {
-        return deltaX;
+        return deltaX - Math.round(deltaX);
     }
 }
