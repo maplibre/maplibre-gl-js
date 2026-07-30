@@ -58,6 +58,13 @@ export type CoveringTilesOptionsInternal = CoveringTilesOptions & {
      * Optional function to redefine how tiles are loaded at high pitch angles.
      */
     calculateTileZoom?: CalculateTileZoomFunction;
+    /**
+     * When true, `calculateTileZoom` runs for every view instead of only when
+     * variable zoom is active (terrain, or pitch above roughly 60 degrees).
+     * Lets a custom function own the level-of-detail decision at any pitch,
+     * for example a position-only LOD for first-person views (#8057).
+     */
+    alwaysCalculateTileZoom?: boolean;
 };
 
 /**
@@ -67,13 +74,17 @@ export type CoveringTilesOptionsInternal = CoveringTilesOptions & {
  * @param distanceToTileZ - vertical distance from the camera to the candidate tile, in mercator units.
  * @param distanceToCenter3D - distance from camera to center point, in mercator units
  * @param cameraVerticalFOV - camera vertical field of view, in degrees
+ * @param cameraAltitudeZ - vertical distance from the camera to the ground plane, in mercator
+ * units. Unlike `distanceToTileZ`, this does not depend on the view center, so it is the vertical
+ * reference for camera-position-only level of detail (#8057).
  * @return the desired zoom level for this tile. May not be an integer.
  */
 export type CalculateTileZoomFunction = (requestedCenterZoom: number,
     distanceToTile2D: number,
     distanceToTileZ: number,
     distanceToCenter3D: number,
-    cameraVerticalFOV: number) => number;
+    cameraVerticalFOV: number,
+    cameraAltitudeZ?: number) => number;
 
 /**
  * A simple/heuristic function that returns whether the tile is visible under the current transform.
@@ -222,7 +233,8 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     cameraCoord.z = centerCoord.z + Math.cos(transform.pitchInRadians) * transform.cameraToCenterDistance / transform.worldSize;
     const elevationForTileCulling = getElevationForTileCulling(transform);
     const detailsProvider = transform.getCoveringTilesDetailsProvider();
-    const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
+    const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options) ||
+        (options.alwaysCalculateTileZoom === true && options.calculateTileZoom !== undefined);
     
     const desiredZ = coveringZoomLevel(transform, options);
     const minZoom = options.minzoom || 0;
@@ -287,7 +299,8 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
                 distToTile2d,
                 distanceZ,
                 distanceToCenter3d,
-                transform.fov);
+                transform.fov,
+                cameraCoord.z);
         }
         thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(thisTileDesiredZ);
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);

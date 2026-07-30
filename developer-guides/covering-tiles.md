@@ -103,3 +103,18 @@ The term $\int_{\theta_1}^{\theta2} \cos^{p}\theta d\theta$ appears twice in the
 $$\int_{\theta_1}^{\theta2} \cos^{p}\theta d\theta = - \frac{\sin\theta_2}{|\sin\theta_2|}\frac{\cos^{p+1}\theta_2}{p+1} {}_2F_1(\frac{1}{2}, \frac{p+1}{2},\frac{p+3}{2}, \cos^2\theta_2) + \frac{\sin\theta_1}{|\sin\theta_1|}\frac{\cos^{p+1}\theta_1}{p+1} {}_2F_1(\frac{1}{2}, \frac{p+1}{2},\frac{p+3}{2}, \cos^2\theta_1)$$
 
 where ${}_2F_1()$ is the hypergeometric function.
+## Camera-position-only level of detail
+
+The default per-tile zoom is relative to the camera-to-center distance, so it changes when the view direction changes. For first-person views where the camera stands still and looks around, a custom `calculateTileZoom` can instead derive the zoom from the camera-to-tile distance alone, using the `cameraAltitudeZ` argument as the orientation-invariant vertical reference:
+
+```js
+map.getSource('mySource').calculateTileZoom =
+    (requestedCenterZoom, distanceToTile2D, distanceToTileZ, distanceToCenter3D, fov, cameraAltitudeZ) => {
+        const distanceToTile3D = Math.hypot(distanceToTile2D, cameraAltitudeZ);
+        const grazing = Math.atan(distanceToTile2D / cameraAltitudeZ);
+        return C - Math.log2(distanceToTile3D) + K * Math.log2(Math.cos(grazing)) / 2;
+    };
+map.getSource('mySource').alwaysCalculateTileZoom = true;
+```
+
+With this, the tile organization depends only on the camera position: looking around never changes it, and the same position always reproduces the same tiles. `C` calibrates the zoom at the nadir (for the default field of view, `C = log2(1.5 * viewportHeightPx / 512)`), and `K` (around 1) recovers the default's coarsening of tiles seen at grazing angles, whose angle for ground tiles depends only on camera height and distance. `alwaysCalculateTileZoom` keeps the function in charge below the pitch threshold that normally disables variable zoom.

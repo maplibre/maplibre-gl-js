@@ -123,6 +123,11 @@ export interface Source {
      */
     calculateTileZoom?: CalculateTileZoomFunction;
     /**
+     * When true, `calculateTileZoom` runs for every view instead of only when
+     * variable zoom is active (terrain, or pitch above roughly 60 degrees).
+     */
+    alwaysCalculateTileZoom?: boolean;
+    /**
      * Optional function to determine whether a tile should be reloaded, given a
      * set of options associated with a `MapSourceDataChangedEvent`.
      * @internal

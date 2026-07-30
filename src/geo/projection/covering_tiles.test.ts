@@ -831,3 +831,50 @@ describe('coveringZoomLevel', () => {
         expect(coveringZoomLevel(transform, options)).toBe(13);
     });
 });
+describe('position-only LOD inputs (#8057)', () => {
+    const makeTransform = (pitch: number, bearing = 0) => {
+        const transform = new MercatorTransform(0, 22, 0, 85, true);
+        transform.setMaxPitch(85);
+        transform.resize(800, 600);
+        transform.setCenter(new LngLat(11.39, 47.27));
+        transform.setZoom(15);
+        transform.setPitch(pitch);
+        transform.setBearing(bearing);
+        return transform;
+    };
+
+    test('calculateTileZoom receives the camera altitude, independent of bearing', () => {
+        const altitudes = new Set<number>();
+        const spy = (requestedCenterZoom: number, d2d: number, dz: number, dc3d: number, fov: number, cameraAltitudeZ?: number) => {
+            altitudes.add(cameraAltitudeZ);
+            return requestedCenterZoom;
+        };
+        for (const bearing of [0, 90, 210]) {
+            coveringTiles(makeTransform(70, bearing), {tileSize: 512, calculateTileZoom: spy});
+        }
+        expect(altitudes.size).toBe(1);
+        const altitude = altitudes.values().next().value;
+        expect(altitude).toBeGreaterThan(0);
+        expect(altitude).toBeLessThan(1);
+    });
+
+    test('custom calculateTileZoom is skipped at low pitch by default', () => {
+        let calls = 0;
+        const spy = (requestedCenterZoom: number) => { calls++; return requestedCenterZoom; };
+        coveringTiles(makeTransform(20), {tileSize: 512, calculateTileZoom: spy});
+        expect(calls).toBe(0);
+    });
+
+    test('alwaysCalculateTileZoom runs the custom function at any pitch', () => {
+        let calls = 0;
+        const spy = (requestedCenterZoom: number) => { calls++; return requestedCenterZoom; };
+        coveringTiles(makeTransform(20), {tileSize: 512, calculateTileZoom: spy, alwaysCalculateTileZoom: true});
+        expect(calls).toBeGreaterThan(0);
+    });
+
+    test('alwaysCalculateTileZoom without a custom function keeps the default gate', () => {
+        const withFlag = coveringTiles(makeTransform(20), {tileSize: 512, alwaysCalculateTileZoom: true});
+        const without = coveringTiles(makeTransform(20), {tileSize: 512});
+        expect(withFlag).toEqual(without);
+    });
+});
