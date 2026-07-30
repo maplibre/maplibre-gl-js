@@ -4614,6 +4614,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../GetClusterOptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GetClusterOptions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../GetResourceResponse/" class="md-nav__link">
         
   
@@ -4703,6 +4730,33 @@
     
   
   HandlerResult
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ImageSourceImage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  ImageSourceImage
 
     
   </span>
@@ -6158,15 +6212,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
+  <a href="#type-declaration" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Properties
+        Type Declaration
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Properties">
+    <nav class="md-nav" aria-label="Type Declaration">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -6174,17 +6228,6 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         coordinates?
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#url" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        url
       </span>
     </span>
   </a>
@@ -8703,6 +8746,41 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/enter-a-360-photosphere/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Enter a 360° photosphere
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/extrude-polygons-for-3d-indoor-mapping/" class="md-nav__link">
         
   
@@ -9988,6 +10066,41 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/walk-around-a-map-in-first-person/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Walk around a map in first person
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/zoom-and-planet-size-relation-on-globe/" class="md-nav__link">
         
   
@@ -10275,15 +10388,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
+  <a href="#type-declaration" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Properties
+        Type Declaration
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Properties">
+    <nav class="md-nav" aria-label="Type Declaration">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -10291,17 +10404,6 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         coordinates?
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#url" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        url
       </span>
     </span>
   </a>
@@ -10333,24 +10435,18 @@
 
 <h1 id="updateimageoptions">UpdateImageOptions</h1>
 <blockquote>
-<p><strong>UpdateImageOptions</strong> = <code>object</code></p>
+<p><strong>UpdateImageOptions</strong> = <code>object</code> &amp; { <code>url</code>: <code>string</code>; } | { <code>image</code>: <a href="../ImageSourceImage/"><code>ImageSourceImage</code></a>; }</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/14dfbcf427bbfa191375628c003936561de62fa2/src/source/image_source.ts#L34">source/image_source.ts:34</a></p>
-<p>The options object for the <a href="../../classes/ImageSource/#updateimage">ImageSource.updateImage</a> method</p>
-<h2 id="properties">Properties</h2>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/3d50bcfd22859f81df16b1859e46c8445495e6e9/src/source/image_source.ts#L43">source/image_source.ts:43</a></p>
+<p>The options object for the <a href="../../classes/ImageSource/#updateimage">ImageSource.updateImage</a> method.</p>
+<p>Provide exactly one of <code>url</code> (to load an image over the network) or <code>image</code>
+(an already-decoded image to display directly, without a network request).</p>
+<h2 id="type-declaration">Type Declaration</h2>
 <h3 id="coordinates">coordinates?</h3>
 <blockquote>
 <p><code>optional</code> <strong>coordinates?</strong>: <a href="../Coordinates/"><code>Coordinates</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/14dfbcf427bbfa191375628c003936561de62fa2/src/source/image_source.ts#L42">source/image_source.ts:42</a></p>
 <p>The image coordinates</p>
-<hr />
-<h3 id="url">url</h3>
-<blockquote>
-<p><strong>url</strong>: <code>string</code></p>
-</blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/14dfbcf427bbfa191375628c003936561de62fa2/src/source/image_source.ts#L38">source/image_source.ts:38</a></p>
-<p>Required image URL.</p>
 
 
 

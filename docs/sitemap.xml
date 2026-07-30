@@ -433,6 +433,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/GestureOptions/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/GetClusterOptions/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/GetResourceResponse/</loc>
       </url>
       <url>
@@ -443,6 +446,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/HandlerResult/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/ImageSourceImage/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/IndicesType/</loc>
@@ -862,6 +868,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/draw-polygon-with-mapbox-gl-draw/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/enter-a-360-photosphere/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/extrude-polygons-for-3d-indoor-mapping/</loc>
       </url>
       <url>
@@ -1001,6 +1010,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/visualize-population-density/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/walk-around-a-map-in-first-person/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/zoom-and-planet-size-relation-on-globe/</loc>
