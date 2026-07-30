@@ -20,7 +20,7 @@ services:
   # http://localhost:9966/test/examples/ . node_modules lives in a named
   # volume so the host tree (and any host-native builds) are left untouched.
   dev:
-    # Node version kept in sync with .nvmrc.
+    # Node version should be kept in sync with .nvmrc.
     image: node:24.11
     working_dir: /app
     volumes:
