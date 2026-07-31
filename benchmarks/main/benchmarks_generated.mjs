@@ -43592,6 +43592,7 @@ var Program = class {
 		for (const name in this.attributes) {
 			const actual = gl.getAttribLocation(this.program, name);
 			if (actual >= 0) this.attributes[name] = actual;
+			else delete this.attributes[name];
 		}
 		if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) throw new Error(`Program failed to link: ${gl.getProgramInfoLog(this.program)}`);
 		gl.deleteShader(vertexShader);
@@ -60968,7 +60969,7 @@ function buildStyle() {
 const styleLocations = locationsWithTileID(features).filter((v) => v.zoom < 15);
 window.maplibreglBenchmarks = window.maplibreglBenchmarks || {};
 setWorkerUrl(new URL("./benchmarks_worker.mjs", import.meta.url).toString());
-const version = new URL(import.meta.url).origin === location.origin ? `main 3d50bcf (local)` : "main 3d50bcf";
+const version = new URL(import.meta.url).origin === location.origin ? `main 7a6b985 (local)` : "main 7a6b985";
 function register(name, bench) {
 	window.maplibreglBenchmarks[name] = window.maplibreglBenchmarks[name] || {};
 	window.maplibreglBenchmarks[name][version] = bench;
