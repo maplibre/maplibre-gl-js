@@ -3,7 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix `line` layers rendering as solid white when both `line-width` and `line-opacity` are data-driven, caused by the unused `a_floorwidth` attribute retaining a stale location that collided with `a_opacity` ([#8065](https://github.com/maplibre/maplibre-gl-js/issues/8065)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Fix rare rendering bug causing two adjacent layers with different data driven property set to render wrong ([#8068](https://github.com/maplibre/maplibre-gl-js/pull/8068)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ## 6.1.0
 
