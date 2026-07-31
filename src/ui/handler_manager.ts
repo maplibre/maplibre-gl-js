@@ -569,17 +569,15 @@ export class HandlerManager {
 
         if (terrain && aroundOnSurface && !this._terrainMovement &&
             (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
-            // Remember the elevation of the terrain point grabbed by the starting gesture:
-            // terrain at another elevation moves at a different pixels-per-meter rate, so
-            // solving the gesture at the center's elevation lets the grabbed point slip.
-            // Null (terrain not loaded there) keeps the previous behavior.
+            // Solve the whole gesture at the elevation of the grabbed terrain point:
+            // terrain at another elevation would slip under the pointer. Null (terrain
+            // not loaded there) keeps the center-elevation path.
             const anchor = terrain.pointCoordinate(around);
             this._terrainGestureAnchorElevation = anchor ? anchor.z : null;
         }
         let aroundElevation = terrain && aroundOnSurface ? this._terrainGestureAnchorElevation ?? undefined : undefined;
         if (aroundElevation !== undefined && around.distSqr(tr.centerPoint) < 1.0e-2) {
-            // `around` is (or collapsed to) the center point: the camera helper's rotation
-            // shortcut would skip the anchored pin and swallow the pan for this frame.
+            // a center-point anchor is skipped by the camera helper and would lose the pan
             aroundElevation = undefined;
         }
         if (aroundElevation !== undefined && aroundElevation - tr.elevation >=
@@ -666,8 +664,7 @@ export class HandlerManager {
 
         if (deltasForHelper.aroundElevation === undefined &&
             combinedEventsInProgress.drag && this._terrainMovement && panDelta) {
-            // The terrain under the gesture was not available at gesture start:
-            // drag the map by pixel-delta on the center-elevation plane.
+            // no usable anchor: drag by pixel-delta on the center-elevation plane
             tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
             return;
         }

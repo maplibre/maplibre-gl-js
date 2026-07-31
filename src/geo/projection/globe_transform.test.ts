@@ -421,8 +421,7 @@ describe('GlobeTransform', () => {
                 point = new Point(320, 200);
                 transform.setLocationAtPoint(coords, point, 500);
                 unprojected = transform.screenPointToLocationAtElevation(point, 500);
-                // The plane solve is exact up to the center-latitude change it causes
-                // (pixels-per-meter moves with the center), a few 1e-5 degrees here.
+                // exact up to the center-latitude change the solve itself causes (~1e-5 deg)
                 expect(unprojected.lng).toBeCloseTo(coords.lng, 3);
                 expect(unprojected.lat).toBeCloseTo(coords.lat, 3);
             });

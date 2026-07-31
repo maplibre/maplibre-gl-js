@@ -18,8 +18,6 @@ let manager: HandlerManager;
 
 beforeEach(() => {
     beforeMapTest();
-    map = createMap();
-    manager = map._handlers;
 });
 
 afterEach(() => {
@@ -28,6 +26,11 @@ afterEach(() => {
 });
 
 describe('HandlerManager terrain scenarios', () => {
+    beforeEach(() => {
+        map = createMap();
+        manager = map._handlers;
+    });
+
     it('_handleMapControls keeps terrain movement disabled when terrain is not enabled', () => {
         const handleZoom = vi.fn();
         const handlePan = vi.fn();
@@ -296,48 +299,40 @@ function createEventInProgress(name: keyof EventsInProgress): EventInProgress {
 }
 
 describe('terrain gesture anchoring', () => {
-    // With terrain enabled, a gesture must keep the terrain point grabbed at gesture
-    // start under the pointer/fingers, exactly as the flat map does: the gesture is
-    // solved against the horizontal plane at the grabbed point's elevation, captured
-    // once at gesture start. When the terrain under the gesture is not available
-    // (raycast miss), the gesture falls back to the center-elevation behavior.
-    // Related: #2937 (rotation float), #7989/#4688 (elevation refreeze snap).
-
-    const setupGestureMap = async (pitch: number = 0): Promise<HTMLElement> => {
-        map.remove();
+    async function setupGestureMap(pitch: number = 0): Promise<HTMLElement> {
         map = createMap({interactive: true, zoom: 11, center: [7.5, 45.9], pitch, bearing: 0});
         map.touchZoomRotate.disableRotation();
         map._handlers._handlersById.tapZoom.disable();
         map.touchPitch.disable();
         await map.once('style.load');
         return map.getCanvas();
-    };
+    }
 
-    const gestureStep = (kind: 'touchstart' | 'touchmove', target: HTMLElement, positions: Point[]) => {
+    function gestureStep(kind: 'touchstart' | 'touchmove', target: HTMLElement, positions: Point[]): void {
         const touches = positions.map((p, i) => ({target, identifier: i + 1, clientX: p.x, clientY: p.y}));
         simulate[kind](target, {touches});
         map._renderTaskQueue.run();
-    };
+    }
 
-    const endGesture = (target: HTMLElement) => {
+    function endGesture(target: HTMLElement): void {
         simulate.touchend(target, {touches: []});
         map._renderTaskQueue.run();
         map._renderTaskQueue.run();
-    };
+    }
 
-    const pinchTouches = (mid: Point, halfSpread: number): Point[] => [
-        new Point(mid.x, mid.y - halfSpread),
-        new Point(mid.x, mid.y + halfSpread),
-    ];
+    function pinchTouches(mid: Point, halfSpread: number): Point[] {
+        return [
+            new Point(mid.x, mid.y - halfSpread),
+            new Point(mid.x, mid.y + halfSpread),
+        ];
+    }
 
-    // Screen distance between where the grabbed terrain point actually renders
-    // (terrain-aware projection) and where the gesture currently holds it.
-    const slipOf = (anchor: LngLat, expectedAt: Point): number => map.project(anchor).dist(expectedAt);
+    function slipOf(anchor: LngLat, expectedAt: Point): number {
+        return map.project(anchor).dist(expectedAt);
+    }
 
     it('moving-centroid pinch with terrain keeps the grabbed terrain point under the fingers', async () => {
         const target = await setupGestureMap();
-        // Uniform 1000 m DEM stub; the grabbed terrain point is returned by the
-        // coords-framebuffer raycast with z in meters, like the real pointCoordinate.
         const anchor = new LngLat(7.49, 45.905);
         const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
         map.terrain = {
@@ -345,8 +340,7 @@ describe('terrain gesture anchoring', () => {
             pointCoordinate: () => new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000),
         } as any as Terrain;
 
-        // Grab a terrain point away from the screen center: start the pinch with the
-        // finger midpoint exactly where that point renders.
+        // Start the pinch with the finger midpoint exactly where the grabbed point renders
         const start = map.project(anchor);
         expect(start.x).toBeGreaterThan(20);
         expect(start.x).toBeLessThan(180);
@@ -354,7 +348,6 @@ describe('terrain gesture anchoring', () => {
         expect(start.y).toBeLessThan(180);
 
         gestureStep('touchstart', target, pinchTouches(start, 30));
-        // Fingers travel while spreading: midpoint moves 3 x (15, 10) px, spread doubles.
         let mid = start;
         let halfSpread = 30;
         for (let step = 0; step < 3; step++) {
@@ -363,7 +356,6 @@ describe('terrain gesture anchoring', () => {
             gestureStep('touchmove', target, pinchTouches(mid, halfSpread));
         }
 
-        // The gesture really ran: pinch zoomed in about one level.
         expect(map.getZoom()).toBeGreaterThan(11.5);
 
         const slip = slipOf(anchor, mid);
@@ -373,8 +365,6 @@ describe('terrain gesture anchoring', () => {
     });
 
     it('pitched moving-centroid pinch with terrain keeps the grabbed terrain point under the fingers', async () => {
-        // The anchored solve must hold on a pitched camera too: an error proportional
-        // to planeElevation * tan(pitch) is invisible at pitch 0.
         const target = await setupGestureMap(60);
         const anchor = new LngLat(7.494, 45.904);
         const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
@@ -423,12 +413,10 @@ describe('terrain gesture anchoring', () => {
             mid = mid.add(new Point(15, 10));
             halfSpread += 10;
             gestureStep('touchmove', target, pinchTouches(mid, halfSpread));
-            // terrain data "loading" after the gesture started: a re-capture on a
-            // later frame would move the solve to a 4000 m plane
+            // terrain "loading" mid-gesture: a re-capture would move to a 4000 m plane
             raycastElevation = 4000;
         }
 
-        // The anchor keeps the elevation captured at gesture start.
         expect(map._handlers._terrainGestureAnchorElevation).toBe(1000);
         const slip = slipOf(anchor, mid);
         endGesture(target);
@@ -456,9 +444,7 @@ describe('terrain gesture anchoring', () => {
 
     it('touch drag with terrain keeps a grabbed point elevated above the center plane under the finger', async () => {
         const target = await setupGestureMap();
-        // A 2000 m ridge east of the center; the center itself sits at 300 m, so the
-        // frozen center-elevation plane and the grabbed point disagree by 1700 m and
-        // the anchor plane must be solved relative to the frozen center elevation.
+        // a 2000 m ridge east of the center, with the center itself at 300 m
         const ridgeStartLng = map.getCenter().lng + 0.003;
         const elevationAt = (lngLat: LngLat) => lngLat.lng > ridgeStartLng ? 2000 : 300;
         const anchor = new LngLat(map.getCenter().lng + 0.012, map.getCenter().lat);
@@ -482,7 +468,6 @@ describe('terrain gesture anchoring', () => {
             gestureStep('touchmove', target, [finger]);
         }
 
-        // The gesture really ran: the map panned.
         expect(map.getCenter().lng).not.toBeCloseTo(7.5, 5);
 
         const slip = slipOf(anchor, finger);
@@ -491,9 +476,6 @@ describe('terrain gesture anchoring', () => {
     });
 
     it('center-anchored pinch over terrain still pans with the centroid', async () => {
-        // With around: 'center', the gesture's `around` collapses to the center point
-        // and the anchored solve must not engage — otherwise the camera helper's
-        // rotation shortcut skips the pin and the pan component of the pinch is lost.
         const target = await setupGestureMap();
         map.touchZoomRotate.enable({around: 'center'});
         const anchor = new LngLat(7.49, 45.905);
@@ -515,16 +497,13 @@ describe('terrain gesture anchoring', () => {
         }
 
         expect(map.getZoom()).toBeGreaterThan(11.5);
-        // Center-anchored zoom keeps the center fixed, so any center movement comes
-        // from the pan component; if the pan were swallowed the center would not move.
+        // center-anchored zoom keeps the center fixed, so only the pan moves it
         const centerMovedPx = map.project(startCenter).dist(new Point(100, 100));
         endGesture(target);
         expect(centerMovedPx).toBeGreaterThan(20);
     });
 
     it('falls back when the grabbed terrain point is above the camera altitude', async () => {
-        // A degenerate anchor plane (at or above the camera) must not be solved
-        // against: the gesture falls back per frame instead of teleporting the map.
         const target = await setupGestureMap();
         map.terrain = {
             ...createTerrain(),
@@ -543,7 +522,6 @@ describe('terrain gesture anchoring', () => {
         }
 
         expect(map.getZoom()).toBeGreaterThan(11.5);
-        // The gesture still pans/zooms sanely near where it started.
         expect(Math.abs(map.getCenter().lng - startCenter.lng)).toBeLessThan(0.5);
         expect(Math.abs(map.getCenter().lat - startCenter.lat)).toBeLessThan(0.5);
         endGesture(target);
@@ -551,8 +529,7 @@ describe('terrain gesture anchoring', () => {
 
     it('falls back to the previous terrain gesture behavior when the terrain under the gesture is not loaded', async () => {
         const target = await setupGestureMap();
-        // createTerrain()'s pointCoordinate returns null (sky / not yet rendered):
-        // the anchored solve must not engage and the gesture must still work.
+        // pointCoordinate returns null (sky / not yet rendered)
         map.terrain = createTerrain();
 
         const start = new Point(80, 90);

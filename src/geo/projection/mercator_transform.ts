@@ -309,11 +309,9 @@ export class MercatorTransform implements ITransform {
     }
 
     setLocationAtPoint(lnglat: LngLat, point: Point, elevation: number = this.elevation): void {
-        // Solve on the horizontal plane at `elevation` (the pixel matrix's z axis is in
-        // meters relative to the center-elevation plane). `b` is the current center, but
-        // computed through the same inverse matrix as `a` so their shared error cancels;
-        // it must stay on the z=0 plane — intersecting the center ray with the elevated
-        // plane instead lands z*tan(pitch) away from the center and the solve drifts.
+        // Solve on the plane at `elevation` (pixel-matrix z is meters relative to the
+        // center's elevation). `b` shares the inverse matrix with `a` so their error
+        // cancels; keep it at z=0 or the solve drifts by z*tan(pitch) per call.
         const z = elevation - this.elevation;
         const a = this.screenPointToMercatorCoordinateAtZ(point, z);
         const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, 0);
