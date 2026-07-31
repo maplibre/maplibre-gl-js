@@ -204,8 +204,11 @@ interface ITransformMutators {
      * Set's the transform's center so that the given point on screen is at the given world coordinates.
      * @param lnglat - Desired world coordinates of the point.
      * @param point - The screen point that should lie at the given coordinates.
+     * @param elevation - Optional elevation in meters of the horizontal plane the solution
+     * is computed on; defaults to the plane at the transform's center elevation.
+     * Projections without a flat ground plane may ignore it.
      */
-    setLocationAtPoint(lnglat: LngLat, point: Point): void;
+    setLocationAtPoint(lnglat: LngLat, point: Point, elevation?: number): void;
 
     /**
      * Sets or clears the map's geographical constraints.
@@ -330,6 +333,17 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @returns lnglat location
      */
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat;
+
+    /**
+     * @internal
+     * Given a point on screen, return its LngLat location on the horizontal plane
+     * at the given elevation (meters). Projections without a flat ground plane may
+     * ignore the elevation.
+     * @param p - screen point
+     * @param elevation - elevation in meters of the plane the ray is intersected with
+     * @returns lnglat location
+     */
+    screenPointToLocationAtElevation(p: Point, elevation: number): LngLat;
 
     /**
      * @internal

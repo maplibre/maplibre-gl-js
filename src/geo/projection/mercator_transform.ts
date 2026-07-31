@@ -308,10 +308,15 @@ export class MercatorTransform implements ITransform {
         this._helper.recalculateZoomAndCenter(elevation);
     }
 
-    setLocationAtPoint(lnglat: LngLat, point: Point): void {
-        const z = mercatorZfromAltitude(this.elevation, this.center.lat);
+    setLocationAtPoint(lnglat: LngLat, point: Point, elevation: number = this.elevation): void {
+        // Solve on the horizontal plane at `elevation` (the pixel matrix's z axis is in
+        // meters relative to the center-elevation plane). `b` is the current center, but
+        // computed through the same inverse matrix as `a` so their shared error cancels;
+        // it must stay on the z=0 plane — intersecting the center ray with the elevated
+        // plane instead lands z*tan(pitch) away from the center and the solve drifts.
+        const z = elevation - this.elevation;
         const a = this.screenPointToMercatorCoordinateAtZ(point, z);
-        const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, z);
+        const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, 0);
         const loc = MercatorCoordinate.fromLngLat(lnglat);
         const newCenter = new MercatorCoordinate(
             loc.x - (a.x - b.x),
@@ -332,6 +337,10 @@ export class MercatorTransform implements ITransform {
         return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
     }
 
+    screenPointToLocationAtElevation(p: Point, elevation: number): LngLat {
+        return this.screenPointToMercatorCoordinateAtZ(p, elevation - this.elevation)?.toLngLat();
+    }
+
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         // get point-coordinate from terrain coordinates framebuffer
         if (terrain) {
@@ -343,10 +352,14 @@ export class MercatorTransform implements ITransform {
         return this.screenPointToMercatorCoordinateAtZ(p);
     }
 
-    screenPointToMercatorCoordinateAtZ(p: Point, mercatorZ?: number): MercatorCoordinate {
+    /**
+     * Intersects the ray through a screen point with the horizontal plane at `z`,
+     * given in meters relative to the plane at the center's elevation (not mercator units).
+     */
+    screenPointToMercatorCoordinateAtZ(p: Point, z?: number): MercatorCoordinate {
 
         // calculate point-coordinate on flat earth
-        const targetZ = mercatorZ ? mercatorZ : 0;
+        const targetZ = z ? z : 0;
         // since we don't know the correct projected z value for the point,
         // unproject two points to get a line and then find the point on that
         // line with z=0
