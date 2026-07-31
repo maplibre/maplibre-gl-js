@@ -1,0 +1,86 @@
+import Benchmark from '../lib/benchmark.ts';
+import TileParser from '../lib/tile_parser.ts';
+import {OverscaledTileID} from '../../../src/tile/tile_id.ts';
+import type {LayerSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+
+type MLTParseOptions = {
+    /**
+     * Tile directory under `test/integration/assets/tiles`.
+     * `mlt` ships a pre-baked triangle mesh
+     * `mlt-untessellated` does not, forcing MapLibre to re-tessellate with earcut.
+     */
+    tilesDir: 'mlt' | 'mlt-untessellated';
+    tileID: OverscaledTileID;
+    /** Layers rendered on top of the shared MLT source. */
+    layers: LayerSpecification[];
+};
+
+/**
+ * Isolates the worker-side cost of turning an MLT tile into renderable geometry.
+ * It drives {@link TileParser} so it covers decode + `loadGeometry` + bucket population + tessellation
+ */
+abstract class MLTParse extends Benchmark {
+    parser: TileParser;
+    tile: {tileID: OverscaledTileID; buffer: ArrayBuffer};
+
+    abstract get options(): MLTParseOptions;
+
+    async setup(): Promise<void> {
+        const style: StyleSpecification = {
+            version: 8,
+            sources: {
+                openmaptiles: {
+                    type: 'vector',
+                    encoding: 'mlt',
+                    maxzoom: 14,
+                    tiles: [`/test/integration/assets/tiles/${this.options.tilesDir}/{z}/{x}/{y}.mlt`]
+                } as any
+            },
+            layers: this.options.layers
+        };
+
+        this.parser = new TileParser(style, 'openmaptiles');
+        await this.parser.setup();
+        this.tile = await this.parser.fetchTile(this.options.tileID);
+        // Warm up: run one parse so the benchmarked loop measures steady state.
+        await this.parser.parseTile(this.tile);
+    }
+
+    async bench(): Promise<void> {
+        await this.parser.parseTile(this.tile);
+    }
+}
+
+const fillLayers: LayerSpecification[] = [
+    {id: 'landcover', type: 'fill', source: 'openmaptiles', 'source-layer': 'landcover', paint: {'fill-color': '#008000'}}
+];
+const fillExtrusionLayers: LayerSpecification[] = [
+    {id: 'background', type: 'background', paint: {'background-color': '#ffffff'}},
+    {id: 'building', type: 'fill-extrusion', source: 'openmaptiles', 'source-layer': 'building', paint: {'fill-extrusion-color': '#c86432', 'fill-extrusion-height': 20}}
+];
+const fillTileID = new OverscaledTileID(5, 0, 5, 22, 12);
+const buildingTileID = new OverscaledTileID(14, 0, 14, 8716, 5685);
+
+export class MLTFillTessellated extends MLTParse {
+    get options(): MLTParseOptions {
+        return {tilesDir: 'mlt', tileID: fillTileID, layers: fillLayers};
+    }
+}
+
+export class MLTFillUntessellated extends MLTParse {
+    get options(): MLTParseOptions {
+        return {tilesDir: 'mlt-untessellated', tileID: fillTileID, layers: fillLayers};
+    }
+}
+
+export class MLTFillExtrusionTessellated extends MLTParse {
+    get options(): MLTParseOptions {
+        return {tilesDir: 'mlt', tileID: buildingTileID, layers: fillExtrusionLayers};
+    }
+}
+
+export class MLTFillExtrusionUntessellated extends MLTParse {
+    get options(): MLTParseOptions {
+        return {tilesDir: 'mlt-untessellated', tileID: buildingTileID, layers: fillExtrusionLayers};
+    }
+}

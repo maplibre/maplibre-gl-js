@@ -33,6 +33,7 @@ import CoveringTilesMercator from '../benchmarks/covering_tiles_mercator.ts';
 import GeoJSONSourceUpdateData from '../benchmarks/geojson_source_update_data.ts';
 import GeoJSONSourceSetData from '../benchmarks/geojson_source_set_data.ts';
 import {Terrain3DGlobe, Terrain3DMercator, Terrain2DGlobe, Terrain2DMercator} from '../benchmarks/terrain.ts';
+import {MLTFillTessellated, MLTFillUntessellated, MLTFillExtrusionTessellated, MLTFillExtrusionUntessellated} from '../benchmarks/mlt_parse.ts';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as Array<GeoJSON.Feature<GeoJSON.Point>>).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
@@ -114,6 +115,10 @@ register('Terrain3DGlobe', new Terrain3DGlobe());
 register('Terrain3DMercator', new Terrain3DMercator());
 register('Terrain2DGlobe', new Terrain2DGlobe());
 register('Terrain2DMercator', new Terrain2DMercator());
+register('MLTFillTessellated', new MLTFillTessellated());
+register('MLTFillUntessellated', new MLTFillUntessellated());
+register('MLTFillExtrusionTessellated', new MLTFillExtrusionTessellated());
+register('MLTFillExtrusionUntessellated', new MLTFillExtrusionUntessellated());
 
 Promise.resolve().then(() => {
     // Ensure the global worker pool is never drained. Browsers have resource limits

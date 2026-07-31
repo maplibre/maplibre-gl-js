@@ -2,6 +2,7 @@ import {PbfReader} from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 
 import {derefLayers} from '@maplibre/maplibre-gl-style-spec';
+import {MLTVectorTile} from '../../../src/source/vector_tile_mlt.ts';
 import {Style} from '../../../src/style/style.ts';
 import {type IReadonlyTransform} from '../../../src/geo/transform_interface.ts';
 import {Evented} from '../../../src/util/evented.ts';
@@ -15,6 +16,7 @@ import type {OverscaledTileID} from '../../../src/tile/tile_id.ts';
 import type {TileJSON} from '../../../src/util/util.ts';
 import type {Map} from '../../../src/ui/map.ts';
 import type {IActor} from '../../../src/util/actor.ts';
+import type {TileEncoding} from '../../../src/source/worker_source.ts';
 import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings.ts';
 import {MessageType, type ActorMessage, type GetImagesParameters, type GetImagesResponse, type GetGlyphsParameters, type GetGlyphsResponse, type GetDashesParameters, type GetDashesResponse} from '../../../src/util/actor_messages.ts';
 
@@ -68,11 +70,13 @@ export default class TileParser {
     dashes: Record<string, GetDashesResponse>;
     style: Style;
     actor: IActor;
+    encoding: TileEncoding;
 
     constructor(styleJSON: StyleSpecification, sourceID: string) {
         this.styleJSON = styleJSON;
         this.sourceID = sourceID;
         this.layerIndex = new StyleLayerIndex(derefLayers(this.styleJSON.layers));
+        this.encoding = (this.styleJSON.sources[sourceID] as any).encoding ?? 'mvt';
         this.glyphs = {};
         this.icons = {};
     }
@@ -119,9 +123,16 @@ export default class TileParser {
             }
         };
 
+        const source = this.styleJSON.sources[this.sourceID] as any;
+        // Sources may point at a TileJSON `url`, or inline the `tiles` templates
+        // directly (used by local-fixture benchmarks that don't serve a TileJSON).
+        const tileJSONPromise: Promise<TileJSON> = source.url
+            ? fetch(source.url).then(response => response.json())
+            : Promise.resolve(source as TileJSON);
+
         return Promise.all([
             createStyle(this.styleJSON),
-            fetch((this.styleJSON.sources[this.sourceID] as any).url).then(response => response.json())
+            tileJSONPromise
         ]).then(([style, tileJSON]) => {
             this.style = style;
             this.tileJSON = tileJSON;
@@ -160,7 +171,9 @@ export default class TileParser {
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
         });
 
-        const vectorTile = new VectorTile(new PbfReader(tile.buffer));
+        const vectorTile = this.encoding === 'mlt'
+            ? new MLTVectorTile(tile.buffer)
+            : new VectorTile(new PbfReader(tile.buffer));
 
         return workerTile.parse(vectorTile, this.layerIndex, [], this.actor, SubdivisionGranularitySetting.noSubdivision);
     }
