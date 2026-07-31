@@ -522,6 +522,33 @@ describe('terrain gesture anchoring', () => {
         expect(centerMovedPx).toBeGreaterThan(20);
     });
 
+    it('falls back when the grabbed terrain point is above the camera altitude', async () => {
+        // A degenerate anchor plane (at or above the camera) must not be solved
+        // against: the gesture falls back per frame instead of teleporting the map.
+        const target = await setupGestureMap();
+        map.terrain = {
+            ...createTerrain(),
+            pointCoordinate: () => new MercatorCoordinate(0.5, 0.35, 1e6),
+        } as any as Terrain;
+
+        const startCenter = map.getCenter();
+        const start = new Point(80, 90);
+        gestureStep('touchstart', target, pinchTouches(start, 30));
+        let mid = start;
+        let halfSpread = 30;
+        for (let step = 0; step < 3; step++) {
+            mid = mid.add(new Point(15, 10));
+            halfSpread += 10;
+            gestureStep('touchmove', target, pinchTouches(mid, halfSpread));
+        }
+
+        expect(map.getZoom()).toBeGreaterThan(11.5);
+        // The gesture still pans/zooms sanely near where it started.
+        expect(Math.abs(map.getCenter().lng - startCenter.lng)).toBeLessThan(0.5);
+        expect(Math.abs(map.getCenter().lat - startCenter.lat)).toBeLessThan(0.5);
+        endGesture(target);
+    });
+
     it('falls back to the previous terrain gesture behavior when the terrain under the gesture is not loaded', async () => {
         const target = await setupGestureMap();
         // createTerrain()'s pointCoordinate returns null (sky / not yet rendered):
