@@ -135,6 +135,8 @@ export class Program<Us extends UniformBindings> {
             const actual = gl.getAttribLocation(this.program, name);
             if (actual >= 0) {
                 this.attributes[name] = actual;
+            } else {
+                delete this.attributes[name];
             }
         }
 
