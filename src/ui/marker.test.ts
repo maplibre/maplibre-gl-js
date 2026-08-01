@@ -290,11 +290,57 @@ describe('marker', () => {
         expect(markerWithHtmlElement.getElement().getAttribute('aria-label')).toBe('custom aria label');
     });
 
-    test('Marker should have a role attribute to satisfy accessibility requirements for the aria-label', () => {
+    test('default non-interactive Marker uses role=img for the aria-label', () => {
         const map = createMap({locale: {'Marker.Title': 'alt title'}});
         const marker = new Marker().setLngLat([0, 0]).addTo(map);
 
+        expect(marker.getElement().getAttribute('role')).toBe('img');
+        map.remove();
+    });
+
+    test('default Marker uses role=button when interactive via popup', () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .setPopup(new Popup().setText('popup'))
+            .addTo(map);
+
         expect(marker.getElement().getAttribute('role')).toBe('button');
+
+        marker.setPopup();
+        expect(marker.getElement().getAttribute('role')).toBe('img');
+        map.remove();
+    });
+
+    test('default Marker uses role=button when draggable', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true}).setLngLat([0, 0]).addTo(map);
+
+        expect(marker.getElement().getAttribute('role')).toBe('button');
+
+        marker.setDraggable(false);
+        expect(marker.getElement().getAttribute('role')).toBe('img');
+        map.remove();
+    });
+
+    test('custom Marker element does not get automatic accessibility attributes', () => {
+        const map = createMap();
+        const element = document.createElement('div');
+        const marker = new Marker({element}).setLngLat([0, 0]).addTo(map);
+
+        expect(marker.getElement().hasAttribute('aria-label')).toBe(false);
+        expect(marker.getElement().hasAttribute('role')).toBe(false);
+        map.remove();
+    });
+
+    test('explicit role on the default Marker element is preserved', () => {
+        const map = createMap();
+        const marker = new Marker().setLngLat([0, 0]);
+        marker.getElement().setAttribute('role', 'presentation');
+        marker.addTo(map);
+
+        expect(marker.getElement().getAttribute('role')).toBe('presentation');
+        map.remove();
     });
 
     test('Marker anchor defaults to center', () => {
@@ -487,6 +533,23 @@ describe('marker', () => {
         marker.setDraggable(false);
 
         expect(marker.isDraggable()).toBe(false);
+
+        map.remove();
+    });
+
+    test('Marker.setDraggable toggles the draggable cursor class', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        expect(marker.getElement().classList).toContain('maplibregl-marker-draggable');
+
+        marker.setDraggable(false);
+        expect(marker.getElement().classList).not.toContain('maplibregl-marker-draggable');
+
+        marker.setDraggable(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-draggable');
 
         map.remove();
     });

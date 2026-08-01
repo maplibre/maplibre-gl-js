@@ -194,6 +194,8 @@ See [`test/README.md`](./test/README.md).
 
 See [`test/bench/README.md`](./test/bench/README.md).
 
+Micro benchmarks live next to the code they measure (`src/**/*.bench.ts`) and run with `npm run bench`; the browser-based version-comparison harness lives in `test/bench/`. If your PR claims a performance effect, include a before/after table from `npm run bench -- --compare` in the description.
+
 ## Further guides
 
 See [`developer-guides`](./developer-guides) directory for guides on the release process and tile lifecycle.

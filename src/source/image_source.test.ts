@@ -5,9 +5,11 @@ import {type FakeServer, fakeServer} from 'nise';
 import {beforeMapTest, createMap, sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {type Texture} from '../webgl/texture.ts';
+import {ImageRequest} from '../util/image_request.ts';
+import type {Texture} from '../webgl/texture.ts';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type Map} from '../ui/map.ts';
+import type {MapSourceDataEvent} from '../ui/events.ts';
+import type {Map} from '../ui/map.ts';
 
 function createSource(options) {
     options = extend({
@@ -35,6 +37,10 @@ describe('ImageSource', () => {
         map.remove();
     });
 
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     test('constructor', () => {
         const source = createSource({url: '/image.png'});
 
@@ -53,6 +59,42 @@ describe('ImageSource', () => {
         server.respond();
         await sleep(0);
         expect(source.image).toBeTruthy();
+    });
+
+    test('passes a live AbortController to ImageRequest when the source is aborted during an async transformRequest', async () => {
+        const source = createSource({url: '/image.png'});
+        let transformStarted: () => void;
+        const transformCalled = new Promise<void>((resolve) => {
+            transformStarted = resolve;
+        });
+        let releaseTransform: (params: {url: string}) => void;
+        map.setTransformRequest(() => {
+            transformStarted();
+            return new Promise<{url: string}>((resolve) => {
+                releaseTransform = resolve;
+            });
+        });
+        const image = {width: 1, height: 1} as ImageBitmap;
+        let requestController: AbortController;
+        let sourceControllerAtRequestTime: AbortController;
+        const getImageSpy = vi.spyOn(ImageRequest, 'getImage').mockImplementation(async (_request, abortController) => {
+            requestController = abortController;
+            sourceControllerAtRequestTime = source._request;
+            return {data: image};
+        });
+
+        source.onAdd(map);
+        await transformCalled; // load() is suspended in the transform
+        source.onRemove(); // the abort lands during that suspension
+        const loaded = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        releaseTransform({url: '/image.png'});
+        await loaded;
+
+        expect(getImageSpy).toHaveBeenCalledTimes(1);
+        // The request must carry the source's own live controller, so an abort
+        // arriving while it is in flight reaches exactly this request.
+        expect(requestController).toBeInstanceOf(AbortController);
+        expect(requestController).toBe(sourceControllerAtRequestTime);
     });
 
     test('transforms url request', () => {
