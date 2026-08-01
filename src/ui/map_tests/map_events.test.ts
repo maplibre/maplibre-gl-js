@@ -3,9 +3,9 @@ import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {type StyleLayer} from '../../style/style_layer.ts';
 import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util.ts';
 import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
-import {type MapLibreEvent} from '../events.ts';
+import {type MapLibreEvent, MapSourceDataEvent} from '../events.ts';
 import {Map} from '../map.ts';
-import {Event as EventedEvent, ErrorEvent} from '../../util/evented.ts';
+import {ErrorEvent} from '../../util/evented.ts';
 import {type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
@@ -980,7 +980,7 @@ describe('map events', () => {
     test('fires sourcedataabort event on dataabort event', async () => {
         const map = createMap();
         const sourcePromise = map.once('sourcedataabort');
-        map.fire(new EventedEvent('dataabort'));
+        map.fire(new MapSourceDataEvent('dataabort'));
         await sourcePromise;
     });
 
