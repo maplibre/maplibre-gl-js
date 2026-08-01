@@ -104,6 +104,7 @@ describe('drawFill', () => {
                     clippingPlane: [0, 0, 0, 0],
                     projectionTransition: 0.0,
                     fallbackMatrix: fallback,
+                    clipAntimeridian: false,
                 };
             },
         } as any as IReadonlyTransform;

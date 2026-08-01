@@ -422,7 +422,7 @@ describe('GeolocateControl with no options', () => {
     });
 
     test('trigger before added to map', () => {
-        vi.spyOn(console, 'warn').mockImplementation(() => { });
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const geolocate = new GeolocateControl(undefined);
 

@@ -62,7 +62,7 @@ describe('Sky.setSky', () => {
     test('validates by default', () => {
         const sky = new Sky({}, {});
         const skySpy = vi.spyOn(sky, '_validate');
-        vi.spyOn(console, 'error').mockImplementation(() => { });
+        vi.spyOn(console, 'error').mockImplementation(() => {});
         sky.setSky({'atmosphere-blend': -1});
         sky.updateTransitions({transition: false} as any as TransitionParameters);
         sky.recalculate({zoom: 16, zoomHistory: {}, now: 10} as EvaluationParameters);

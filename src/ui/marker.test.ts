@@ -619,6 +619,23 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Marker.setDraggable toggles the draggable cursor class', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        expect(marker.getElement().classList).toContain('maplibregl-marker-draggable');
+
+        marker.setDraggable(false);
+        expect(marker.getElement().classList).not.toContain('maplibregl-marker-draggable');
+
+        marker.setDraggable(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-draggable');
+
+        map.remove();
+    });
+
     test('Marker with draggable:true fires dragstart, drag, and dragend events at appropriate times in response to mouse-triggered drag with map-inherited clickTolerance', () => {
         const map = createMap();
         const marker = new Marker({draggable: true})
