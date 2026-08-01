@@ -832,7 +832,7 @@ export class MercatorTransform implements ITransform {
         return this.calculatePosMatrix(tileID);
     }
 
-    normalizeDeltaX(deltaX: number): number {
-        return deltaX;
+    distance2d(a: MercatorCoordinate, b:MercatorCoordinate): number {
+        return Math.hypot(a.x - b.x, a.y - b.y);
     }
 }

@@ -149,11 +149,6 @@ export function createCalculateTileZoomFunction(maxZoomLevelsOnScreen: number, t
         thisTileDesiredZ += pitchTileLoadingBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2;
         thisTileDesiredZ -= scaleZoom(Math.max(1, tileCount / tileCountPitch0 / tileCountMaxMinRatio)) / 2;
 
-        // add zoom levels for narrow lenses
-        const defaultFov = 36.87;
-        if (cameraVerticalFOV < defaultFov) {
-            thisTileDesiredZ += scaleZoom(defaultFov / cameraVerticalFOV);
-        }
         return thisTileDesiredZ;
     };
 }
@@ -240,9 +235,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
     const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
 
-    const deltaX = transform.normalizeDeltaX(centerCoord.x - cameraCoord.x);
-
-    const distanceToCenter2d = Math.hypot(deltaX, centerCoord.y - cameraCoord.y);
+    const distanceToCenter2d = transform.distance2d(centerCoord, cameraCoord);
     const distanceZ = Math.abs(centerCoord.z - cameraCoord.z);
     const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
 

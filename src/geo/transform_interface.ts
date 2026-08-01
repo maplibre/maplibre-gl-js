@@ -504,13 +504,15 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
-     * Normalizes horizontal coordinate deltas across anti-meridian boundaries
-     * based on the active projection requirements.
+     * Computes the horizontal distance of two points
+     * possibly wrapping coordinate differences across the anti-meridian
+     * based on active projection requirements.
      *
-     * @param deltaX - The un-wrapped coordinate delta
-     * @returns The normalized coordinate delta
+     * @param a - first point
+     * @param b - second point
+     * @returns The normalized distance between these two points
      */
-    normalizeDeltaX(deltaX: number): number;
+    distance2d(a: MercatorCoordinate, b: MercatorCoordinate): number;
 }
 
 /**

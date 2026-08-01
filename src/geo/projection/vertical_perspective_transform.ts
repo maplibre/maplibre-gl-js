@@ -985,7 +985,8 @@ export class VerticalPerspectiveTransform implements ITransform {
      * account for wrapping of centerCoord/cameraCoord around the anti-meridian
      * this ensures that the coordinate difference stays in the range [-0.5, 0.5]
     */
-    normalizeDeltaX(deltaX: number): number {
-        return deltaX - Math.round(deltaX);
+    distance2d(a: MercatorCoordinate, b:MercatorCoordinate): number {
+        const deltaX = a.x - b.x;
+        return Math.hypot(deltaX - Math.round(deltaX), a.y - b.y);
     }
 }

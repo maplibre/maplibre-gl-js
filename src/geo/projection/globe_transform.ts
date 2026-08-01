@@ -461,10 +461,7 @@ export class GlobeTransform implements ITransform {
         return this.currentTransform.getFastPathSimpleProjectionMatrix(tileID);
     }
 
-    /**
-     * normalize delta-x depending on the current zoom level
-    */
-    normalizeDeltaX(deltaX: number): number {
-        return this.currentTransform.normalizeDeltaX(deltaX);
+    distance2d(a: MercatorCoordinate, b:MercatorCoordinate): number {
+        return this.currentTransform.distance2d(a, b);
     }
 }
