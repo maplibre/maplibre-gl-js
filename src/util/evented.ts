@@ -3,7 +3,7 @@ import {extend, type Subscription} from './util.ts';
 /**
  * A listener method used as a callback to events
  */
-export type Listener<E> = (event: E) => any;
+export type Listener<E extends Event = Event> = (event: E) => any;
 
 /**
  * A mapping between event names and the event each of them carries.
@@ -168,12 +168,12 @@ export abstract class Evented<EventType extends EventTypeMap = EventTypeMap> {
             firedEvent.target = this;
 
             // make sure adding or removing listeners inside other listeners won't cause an infinite loop
-            const listeners: Listener[] = this._listeners?.[type]?.slice() ?? [];
+            const listeners = this._listeners?.[type]?.slice() ?? [];
             for (const listener of listeners) {
                 listener.call(this, firedEvent);
             }
 
-            const oneTimeListeners: Listener[] = this._oneTimeListeners?.[type]?.slice() ?? [];
+            const oneTimeListeners = this._oneTimeListeners?.[type]?.slice() ?? [];
             for (const listener of oneTimeListeners) {
                 _removeEventListener(type, listener, this._oneTimeListeners);
                 listener.call(this, firedEvent);
