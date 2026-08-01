@@ -29,6 +29,11 @@ type Pattern = {
  */
 const padding = 1;
 
+type ImageManagerEventType = {
+    error: ErrorEvent;
+    styleimagemissing: MapStyleImageMissingEvent;
+};
+
 /**
  * ImageManager does three things:
  *
@@ -40,11 +45,6 @@ const padding = 1;
  * data-driven support for `*-pattern`, we'll likely use per-bucket pattern atlases, and that would be a good time
  * to refactor this.
 */
-type ImageManagerEventType = {
-    error: ErrorEvent;
-    styleimagemissing: MapStyleImageMissingEvent;
-};
-
 export class ImageManager extends Evented<ImageManagerEventType> {
     images: {[_: string]: StyleImage};
     updatedImages: {[_: string]: boolean};
