@@ -2,6 +2,50 @@
 
 Benchmarks help us catch performance regressions and improve performance.
 
+There are two kinds of benchmarks in this repository, answering two different questions:
+
+* **Micro benchmarks** live next to the code they measure as `src/**/*.bench.ts` files and run under [Vitest bench mode](https://vitest.dev/guide/features.html#benchmarking). They answer "did my change make this code path faster on my machine, right now" while you work on it.
+* **The version-comparison harness** under `test/bench/` runs the full benchmark suite in a browser and compares the working copy against published builds of `main` and past releases. It answers "did the library get slower between versions" and is documented from [Running Benchmarks](#running-benchmarks) onward.
+
+## Micro benchmarks
+
+Run all micro benchmarks:
+
+```bash
+npm run bench
+```
+
+Run a single file, or only benchmarks matching a name:
+
+```bash
+npm run bench -- src/render/subdivision.bench.ts
+npm run bench -- -t mercator
+```
+
+To measure a change, record a baseline before it, then compare against that baseline after:
+
+```bash
+git checkout main && npm run bench -- --outputJson bench-baseline.json
+git checkout your-branch && npm run bench -- --compare bench-baseline.json
+```
+
+The compare run annotates every result with its ratio against the baseline. If your PR claims a performance effect, paste that table into the PR description so reviewers can reproduce it with the same two commands.
+
+Results are only comparable on the same machine in the same session: identical code routinely drifts a few percent between runs, so treat small deltas as noise. Vitest also runs the source through its own transform rather than the production build, which makes micro benchmark numbers useful for relative comparison but not as absolute production numbers.
+
+To write a micro benchmark, create a `*.bench.ts` file next to the code you are measuring:
+
+```ts
+import {bench} from 'vitest';
+import {subdividePolygon} from './subdivision.ts';
+
+bench('subdividePolygon', () => {
+    subdividePolygon(polygon, tileID, granularity, true);
+});
+```
+
+Keep setup work (building fixtures, parsing data) at module level so the measured call is the only thing inside `bench()`. See `src/geo/projection/covering_tiles.bench.ts` and `src/render/subdivision.bench.ts` for examples.
+
 ## Running Benchmarks
 
 Start the benchmark server with `npm run start-bench`.
