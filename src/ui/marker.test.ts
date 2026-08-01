@@ -35,7 +35,7 @@ describe('marker', () => {
 
     test('Marker uses a default marker element with custom color', () => {
         const marker = new Marker({color: '#123456'});
-        expect(marker.getElement().innerHTML.includes('#123456')).toBeTruthy();
+        expect(marker.getElement().innerHTML).toContain('#123456');
     });
 
     test('Marker uses a default marker element with custom scale', () => {
@@ -53,22 +53,16 @@ describe('marker', () => {
             .addTo(map);
 
         // initial dimensions of svg element
-        expect(
-            defaultMarker.getElement().children[0].getAttribute('height').includes('41')
-        ).toBeTruthy();
-        expect(defaultMarker.getElement().children[0].getAttribute('width').includes('27')).toBeTruthy();
+        expect(defaultMarker.getElement().children[0].getAttribute('height')).toContain('41');
+        expect(defaultMarker.getElement().children[0].getAttribute('width')).toContain('27');
 
         // (41 * 0.8) = 32.8, (27 * 0.8) = 21.6
-        expect(
-            smallerMarker.getElement().children[0].getAttribute('height').includes('32.8')
-        ).toBeTruthy();
-        expect(
-            smallerMarker.getElement().children[0].getAttribute('width').includes('21.6')
-        ).toBeTruthy();
+        expect(smallerMarker.getElement().children[0].getAttribute('height')).toContain('32.8');
+        expect(smallerMarker.getElement().children[0].getAttribute('width')).toContain('21.6');
 
         // (41 * 2) = 82, (27 * 2) = 54
-        expect(largerMarker.getElement().children[0].getAttribute('height').includes('82')).toBeTruthy();
-        expect(largerMarker.getElement().children[0].getAttribute('width').includes('54')).toBeTruthy();
+        expect(largerMarker.getElement().children[0].getAttribute('height')).toContain('82');
+        expect(largerMarker.getElement().children[0].getAttribute('width')).toContain('54');
 
     });
 
@@ -533,6 +527,23 @@ describe('marker', () => {
         marker.setDraggable(false);
 
         expect(marker.isDraggable()).toBe(false);
+
+        map.remove();
+    });
+
+    test('Marker.setDraggable toggles the draggable cursor class', () => {
+        const map = createMap();
+        const marker = new Marker({draggable: true})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        expect(marker.getElement().classList).toContain('maplibregl-marker-draggable');
+
+        marker.setDraggable(false);
+        expect(marker.getElement().classList).not.toContain('maplibregl-marker-draggable');
+
+        marker.setDraggable(true);
+        expect(marker.getElement().classList).toContain('maplibregl-marker-draggable');
 
         map.remove();
     });
