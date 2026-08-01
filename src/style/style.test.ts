@@ -444,9 +444,9 @@ describe('Style.loadJSON', () => {
         const event = await style.once('error');
         const err = event.error;
         expect(err).toBeTruthy();
-        expect(err.toString().indexOf('-source-layer-') !== -1).toBeTruthy();
-        expect(err.toString().indexOf('-source-id-') !== -1).toBeTruthy();
-        expect(err.toString().indexOf('-layer-id-') !== -1).toBeTruthy();
+        expect(err.toString()).toContain('-source-layer-');
+        expect(err.toString()).toContain('-source-id-');
+        expect(err.toString()).toContain('-layer-id-');
     });
 
     test('sets up layer event forwarding', async () => {
@@ -1419,8 +1419,8 @@ describe('Style.removeSource', () => {
         const promise =  style.once('error');
         style.removeSource('mapLibre-source');
         const event = await promise;
-        expect(event.error.message.includes('"mapLibre-source"')).toBeTruthy();
-        expect(event.error.message.includes('"mapLibre-layer"')).toBeTruthy();
+        expect(event.error.message).toContain('"mapLibre-source"');
+        expect(event.error.message).toContain('"mapLibre-layer"');
     });
 
     test('does not throw if source is not in use', async () => {
@@ -2329,9 +2329,9 @@ describe('Style.addLayer', () => {
         const err = event.error;
 
         expect(err).toBeTruthy();
-        expect(err.toString().indexOf('-source-layer-') !== -1).toBeTruthy();
-        expect(err.toString().indexOf('-source-id-') !== -1).toBeTruthy();
-        expect(err.toString().indexOf('-layer-id-') !== -1).toBeTruthy();
+        expect(err.toString()).toContain('-source-layer-');
+        expect(err.toString()).toContain('-source-id-');
+        expect(err.toString()).toContain('-layer-id-');
     });
 
     test('emits error on invalid layer', async () => {
